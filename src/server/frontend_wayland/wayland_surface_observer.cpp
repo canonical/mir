@@ -193,19 +193,6 @@ void mf::WaylandSurfaceObserver::handle_input_event(MirInputEvent const* event)
     }
 }
 
-void mf::WaylandSurfaceObserver::handle_keymap_event(MirKeymapEvent const* event)
-{
-    char const* buffer;
-    size_t length;
-
-    mir_keymap_event_get_keymap_buffer(event, &buffer, &length);
-
-    seat->for_each_listener(client, [buffer, length](WlKeyboard* keyboard)
-        {
-            keyboard->set_keymap(buffer, length);
-        });
-}
-
 void mf::WaylandSurfaceObserver::handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event)
 {
     MirKeyboardAction const action = mir_keyboard_event_action(event);

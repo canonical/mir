@@ -135,26 +135,6 @@ void mf::WlKeyboard::update_keyboard_state(std::vector<uint32_t> const& keyboard
     update_modifier_state();
 }
 
-void mf::WlKeyboard::set_keymap(char const* const buffer, size_t length)
-{
-    mir::AnonymousShmFile shm_buffer{length};
-    memcpy(shm_buffer.base_ptr(), buffer, length);
-
-    send_keymap_event(KeymapFormat::xkb_v1,
-                      Fd{IntOwnedFd{shm_buffer.fd()}},
-                      length);
-
-    keymap = decltype(keymap)(xkb_keymap_new_from_buffer(
-        context.get(),
-        buffer,
-        length,
-        XKB_KEYMAP_FORMAT_TEXT_V1,
-        XKB_KEYMAP_COMPILE_NO_FLAGS),
-        &xkb_keymap_unref);
-
-    state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
-}
-
 void mf::WlKeyboard::set_keymap(mi::Keymap const& new_keymap)
 {
     xkb_rule_names const names = {

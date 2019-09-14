@@ -100,7 +100,6 @@ private:
     /// Handle user input events
     ///@{
     void handle_input_event(MirInputEvent const* event);
-    void handle_keymap_event(MirKeymapEvent const* event);
     void handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event);
     void handle_pointer_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
     void handle_pointer_button_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
