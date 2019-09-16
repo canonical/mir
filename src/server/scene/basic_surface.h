@@ -145,8 +145,8 @@ public:
     auto depth_layer() const -> MirDepthLayer override;
     void set_depth_layer(MirDepthLayer depth_layer) override;
 
-    optional_value<geometry::Rectangle> clip_area() const override;
-    void set_clip_area(optional_value<geometry::Rectangle> const& area) override;
+    std::experimental::optional<geometry::Rectangle> clip_area() const override;
+    void set_clip_area(std::experimental::optional<geometry::Rectangle> const& area) override;
 
 private:
     bool visible(std::lock_guard<std::mutex> const&) const;
@@ -186,7 +186,7 @@ private:
     std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;
 
     MirDepthLayer depth_layer_ = mir_depth_layer_application;
-    optional_value<geometry::Rectangle> clip_area_;
+    std::experimental::optional<geometry::Rectangle> clip_area_;
 };
 
 }

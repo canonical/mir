@@ -346,12 +346,12 @@ TEST_F(BasicSurfaceTest, surface_doesnt_get_input_outside_clip_area)
         std::shared_ptr<mg::CursorImage>(),
         report};
 
-    surface.set_clip_area(mir::optional_value<geom::Rectangle>({{0,0}, {50,50}}));
+    surface.set_clip_area(std::experimental::optional<geom::Rectangle>({{0,0}, {50,50}}));
 
     EXPECT_FALSE(surface.input_area_contains({75,75}));
     EXPECT_TRUE(surface.input_area_contains({25,25}));
 
-    surface.set_clip_area(mir::optional_value<geom::Rectangle>());
+    surface.set_clip_area(std::experimental::optional<geom::Rectangle>());
 
     EXPECT_TRUE(surface.input_area_contains({75,75}));
 }
@@ -926,12 +926,12 @@ TEST_F(BasicSurfaceTest, does_not_render_if_outside_of_clip_area)
         { buffer_stream2, d2, {} }
     };
     surface.set_streams(streams);
-    surface.set_clip_area(mir::optional_value<geom::Rectangle>({{200,0},{100,100}}));
+    surface.set_clip_area(std::experimental::optional<geom::Rectangle>({{200,0},{100,100}}));
 
     auto renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(0));
 
-    surface.set_clip_area(mir::optional_value<geom::Rectangle>({{0,0},{100,100}}));
+    surface.set_clip_area(std::experimental::optional<geom::Rectangle>({{0,0},{100,100}}));
 
     renderables = surface.generate_renderables(this);
     ASSERT_THAT(renderables.size(), Eq(4));

@@ -206,11 +206,11 @@ void mtd::StubSurface::set_depth_layer(MirDepthLayer /*depth_layer*/)
 {
 }
 
-mir::optional_value<mir::geometry::Rectangle> mtd::StubSurface::clip_area() const
+std::experimental::optional<mir::geometry::Rectangle> mtd::StubSurface::clip_area() const
 {
     return {};
 }
-void mtd::StubSurface::set_clip_area(mir::optional_value<mir::geometry::Rectangle> const& /*area*/)
+void mtd::StubSurface::set_clip_area(std::experimental::optional<mir::geometry::Rectangle> const& /*area*/)
 {
 }
 
