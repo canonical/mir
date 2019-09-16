@@ -203,7 +203,10 @@ void TilingWindowManagerPolicy::handle_modify_window(
 void TilingWindowManagerPolicy::constrain_size_and_place(
     WindowSpecification& mods, Window const& window, Rectangle const& tile) const
 {
-    if ((mods.state().is_set() ? mods.state().value() : tools.info_for(window).state()) == mir_window_state_maximized)
+    auto& info = tools.info_for(window);
+    info.clip_area(tile);
+
+    if ((mods.state().is_set() ? mods.state().value() : info.state()) == mir_window_state_maximized)
     {
         mods.top_left() = tile.top_left;
         mods.size() = tile.size;
@@ -552,6 +555,7 @@ void TilingWindowManagerPolicy::update_surfaces(ApplicationInfo& info, Rectangle
                 WindowSpecification modifications;
                 modifications.top_left() = new_placement.top_left;
                 modifications.size() = new_placement.size;
+                window_info.clip_area(new_tile);
                 tools.modify_window(window_info, modifications);
             }
         }
