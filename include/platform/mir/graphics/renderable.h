@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_RENDERABLE_H_
 #define MIR_GRAPHICS_RENDERABLE_H_
 
+#include <experimental/optional>
 #include <mir/geometry/rectangle.h>
 #include <glm/glm.hpp>
 #include <memory>
@@ -49,6 +50,7 @@ public:
     virtual std::shared_ptr<Buffer> buffer() const = 0;
 
     virtual geometry::Rectangle screen_position() const = 0;
+    virtual std::experimental::optional<geometry::Rectangle> clip_area() const = 0;
 
     // These are from the old CompositingCriteria. There is a little bit
     // of function overlap with the above functions still.

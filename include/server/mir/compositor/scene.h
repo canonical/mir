@@ -30,6 +30,10 @@ namespace scene
 {
 class Observer;
 }
+namespace geometry
+{
+class Rectangle;
+}
 
 namespace compositor
 {

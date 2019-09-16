@@ -94,6 +94,11 @@ public:
     {
         return rect;
     }
+    
+    std::experimental::optional<geometry::Rectangle> clip_area() const override
+    {
+        return std::experimental::optional<geometry::Rectangle>();
+    }
 
     unsigned int swap_interval() const override
     {

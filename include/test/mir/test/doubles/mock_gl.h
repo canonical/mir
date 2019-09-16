@@ -111,6 +111,7 @@ public:
     MOCK_METHOD4(glViewport, void(GLint, GLint, GLsizei, GLsizei));
     MOCK_METHOD1(glGenerateMipmap, void(GLenum target));
     MOCK_METHOD4(glDrawElements, void(GLenum, GLsizei, GLenum, const GLvoid*));
+    MOCK_METHOD4(glScissor, void(GLint, GLint, GLsizei, GLsizei));
 };
 
 }

@@ -652,3 +652,23 @@ void miral::WindowInfo::exclusive_rect(mir::optional_value<mir::geometry::Rectan
 {
     self->exclusive_rect = rect;
 }
+
+auto miral::WindowInfo::clip_area() const -> mir::optional_value<mir::geometry::Rectangle>
+{
+    std::shared_ptr<mir::scene::Surface> const surface = self->window;
+
+    if (surface->clip_area())
+        return mir::optional_value<mir::geometry::Rectangle>(surface->clip_area().value());
+    else
+        return mir::optional_value<mir::geometry::Rectangle>();
+}
+
+void miral::WindowInfo::clip_area(mir::optional_value<mir::geometry::Rectangle> const& area)
+{
+    std::shared_ptr<mir::scene::Surface> const surface = self->window;
+
+    if (area)
+        surface->set_clip_area(std::experimental::optional<mir::geometry::Rectangle>(area.value()));
+    else
+        surface->set_clip_area(std::experimental::optional<mir::geometry::Rectangle>());
+}

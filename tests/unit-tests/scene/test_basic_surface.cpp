@@ -336,6 +336,26 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
     EXPECT_TRUE(surface.input_area_contains({50,50}));
 }
 
+TEST_F(BasicSurfaceTest, surface_doesnt_get_input_outside_clip_area)
+{
+    ms::BasicSurface surface{
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        mir_pointer_unconfined,
+        streams,
+        std::shared_ptr<mg::CursorImage>(),
+        report};
+
+    surface.set_clip_area(std::experimental::optional<geom::Rectangle>({{0,0}, {50,50}}));
+
+    EXPECT_FALSE(surface.input_area_contains({75,75}));
+    EXPECT_TRUE(surface.input_area_contains({25,25}));
+
+    surface.set_clip_area(std::experimental::optional<geom::Rectangle>());
+
+    EXPECT_TRUE(surface.input_area_contains({75,75}));
+}
+
 TEST_F(BasicSurfaceTest, set_input_region)
 {
     std::vector<geom::Rectangle> const rectangles = {
@@ -887,6 +907,35 @@ TEST_F(BasicSurfaceTest, can_set_streams_not_containing_originally_created_with_
     surface.set_streams(streams);
     auto renderables = surface.generate_renderables(this);
     EXPECT_THAT(renderables.size(), Eq(2));
+}
+
+TEST_F(BasicSurfaceTest, does_not_render_if_outside_of_clip_area)
+{
+    using namespace testing;
+    geom::Displacement d0{19,99};
+    geom::Displacement d1{21,101};
+    geom::Displacement d2{20,9};
+    auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+
+    std::list<ms::StreamInfo> streams = {
+        { mock_buffer_stream, {0,0}, {}},
+        { buffer_stream0, d0, {} },
+        { buffer_stream1, d1, {} },
+        { buffer_stream2, d2, {} }
+    };
+    surface.set_streams(streams);
+    surface.set_clip_area(std::experimental::optional<geom::Rectangle>({{200,0},{100,100}}));
+
+    auto renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(0));
+
+    surface.set_clip_area(std::experimental::optional<geom::Rectangle>({{0,0},{100,100}}));
+
+    renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(4));
+
 }
 
 TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_construction)

@@ -431,6 +431,22 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
 
 void mrg::Renderer::draw(mg::Renderable const& renderable) const
 {
+    auto const clip_area = renderable.clip_area();
+    if (clip_area)
+    {
+        glEnable(GL_SCISSOR_TEST);
+        glScissor(
+            clip_area.value().top_left.x.as_int() -
+                viewport.top_left.x.as_int(),
+            viewport.top_left.y.as_int() +
+                viewport.size.height.as_int() -
+                clip_area.value().top_left.y.as_int() -
+                clip_area.value().size.height.as_int(),
+            clip_area.value().size.width.as_int(), 
+            clip_area.value().size.height.as_int()
+        );
+    }
+
     auto const texture = std::dynamic_pointer_cast<mg::gl::Texture>(renderable.buffer());
     auto const surface_tex =
         [this, &renderable]() -> std::shared_ptr<mir::gl::Texture>
@@ -606,6 +622,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
 
     glDisableVertexAttribArray(prog.texcoord_attr);
     glDisableVertexAttribArray(prog.position_attr);
+    if (renderable.clip_area())
+    {
+        glDisable(GL_SCISSOR_TEST);
+    }
 }
 
 void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)

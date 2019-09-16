@@ -480,3 +480,10 @@ global:
     miral::WindowSpecification::exclusive_rect*;
   };
 } MIRAL_2.6;
+
+MIRAL_2.8 {
+global:
+  extern "C++" {
+    miral::WindowInfo::clip_area*;
+  };
+} MIRAL_2.7;

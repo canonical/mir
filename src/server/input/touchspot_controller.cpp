@@ -72,6 +72,11 @@ public:
     {
         return {position, buffer_->size()};
     }
+
+    std::experimental::optional<geometry::Rectangle> clip_area() const override
+    {
+        return std::experimental::optional<geometry::Rectangle>();
+    }
     
     float alpha() const override
     {

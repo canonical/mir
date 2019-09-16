@@ -122,6 +122,8 @@ public:
      * When the depth layer is changed, the surface becomes the top surface on that layer
      */
     virtual void set_depth_layer(MirDepthLayer depth_layer) = 0;
+    virtual std::experimental::optional<geometry::Rectangle> clip_area() const = 0;
+    virtual void set_clip_area(std::experimental::optional<geometry::Rectangle> const& area) = 0;
 };
 }
 }

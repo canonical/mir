@@ -369,6 +369,12 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
     if (!visible(lock))
         return false;
 
+    if (clip_area_) 
+    {
+        if (!clip_area_.value().contains(point))
+            return false;
+    }
+
     if (custom_input_rectangles.empty())
     {
         // no custom input, restrict to bounding rectangle
@@ -792,6 +798,7 @@ public:
         std::shared_ptr<mc::BufferStream> const& stream,
         void const* compositor_id,
         geom::Rectangle const& position,
+        std::experimental::optional<geom::Rectangle> const& clip_area,
         glm::mat4 const& transform,
         float alpha,
         mg::Renderable::ID id)
@@ -799,6 +806,7 @@ public:
       compositor_id{compositor_id},
       alpha_{alpha},
       screen_position_(position),
+      clip_area_(clip_area),
       transformation_(transform),
       id_(id)
     {
@@ -823,6 +831,9 @@ public:
     geom::Rectangle screen_position() const override
     { return screen_position_; }
 
+    std::experimental::optional<geom::Rectangle> clip_area() const override
+    { return clip_area_; }
+
     float alpha() const override
     { return alpha_; }
 
@@ -840,6 +851,7 @@ private:
     void const*const compositor_id;
     float const alpha_;
     geom::Rectangle const screen_position_;
+    std::experimental::optional<geom::Rectangle> const clip_area_;
     glm::mat4 const transformation_;
     mg::Renderable::ID const id_;
 };
@@ -902,6 +914,13 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
 {
     std::lock_guard<std::mutex> lock(guard);
     mg::RenderableList list;
+    
+    if (clip_area_)
+    {
+        if (!surface_rect.overlaps(clip_area_.value()))
+            return list;
+    }
+
     for (auto const& info : layers)
     {
         if (info.stream->has_submitted_buffer())
@@ -915,6 +934,7 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
             list.emplace_back(std::make_shared<SurfaceSnapshot>(
                 info.stream, id,
                 geom::Rectangle{surface_rect.top_left + info.displacement, std::move(size)},
+                clip_area_,
                 transformation_matrix, surface_alpha, info.stream.get()));
         }
     }
@@ -956,4 +976,15 @@ void mir::scene::BasicSurface::set_depth_layer(MirDepthLayer depth_layer)
         depth_layer_ = depth_layer;
     }
     observers.depth_layer_set_to(this, depth_layer);
+}
+
+std::experimental::optional<geom::Rectangle> mir::scene::BasicSurface::clip_area() const
+{
+    std::lock_guard<std::mutex> lock(guard);
+    return clip_area_;
+}
+void mir::scene::BasicSurface::set_clip_area(std::experimental::optional<geom::Rectangle> const& area)
+{
+    std::lock_guard<std::mutex> lock(guard);
+    clip_area_ = area;
 }

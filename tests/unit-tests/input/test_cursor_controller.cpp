@@ -178,6 +178,15 @@ struct StubInputSurface : public mtd::StubSceneSurface
         cursor_image_ = image;
     }
 
+    std::experimental::optional<mir::geometry::Rectangle> clip_area() const override
+    {
+        return std::experimental::optional<mir::geometry::Rectangle>();
+    }
+
+    void set_clip_area(std::experimental::optional<mir::geometry::Rectangle> const& /*area*/) override
+    {
+    }
+
     geom::Rectangle const bounds;
     std::shared_ptr<mg::CursorImage> cursor_image_;
 

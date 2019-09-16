@@ -206,6 +206,14 @@ void mtd::StubSurface::set_depth_layer(MirDepthLayer /*depth_layer*/)
 {
 }
 
+std::experimental::optional<mir::geometry::Rectangle> mtd::StubSurface::clip_area() const
+{
+    return {};
+}
+void mtd::StubSurface::set_clip_area(std::experimental::optional<mir::geometry::Rectangle> const& /*area*/)
+{
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class
