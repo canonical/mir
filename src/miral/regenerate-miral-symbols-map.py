@@ -516,9 +516,9 @@ global:
     miral::WaylandExtensions::disable*;
     miral::WaylandExtensions::enable*;
 #    miral::WaylandExtensions::recommended*;
-    miral::WaylandExtensions::recommended[*;
+    miral::WaylandExtensions::recommended[[]*;
 #    miral::WaylandExtensions::supported*;
-    miral::WaylandExtensions::supported[*;
+    miral::WaylandExtensions::supported[[]*;
     miral::WaylandExtensions::zwlr_layer_shell_v1*;
     miral::WaylandExtensions::zxdg_output_manager_v1*;
     miral::WindowInfo::depth_layer*;
