@@ -24,6 +24,7 @@ if(ENABLE_MEMCHECK_OPTION)
 
   if(VALGRIND_EXECUTABLE)
     set(VALGRIND_CMD "${VALGRIND_EXECUTABLE}" "--error-exitcode=1" "--trace-children=yes")
+    set(VALGRIND_CMD ${VALGRIND_CMD} "--trace-children-skip=*python3*,*dbus-daemon*")
     set(VALGRIND_CMD ${VALGRIND_CMD} "--leak-check=full" "--show-leak-kinds=definite" "--errors-for-leak-kinds=definite")
     set(VALGRIND_CMD ${VALGRIND_CMD} "--track-fds=yes")
     set(VALGRIND_CMD ${VALGRIND_CMD} "--track-origins=yes")
