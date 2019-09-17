@@ -43,7 +43,7 @@ env:
   - DEBEMAIL="mir-ci-bot@canonical.com"
   - SPREAD_PATH=/tmp/spread
   matrix:
-  - SYSTEM=google:ubuntu-devel-64 VARIANT=amd64
+  - SYSTEM=google:ubuntu-devel-64 VARIANT=valgrind
   - SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
   - SYSTEM=google:ubuntu-16.04-64 VARIANT=amd64
   - SYSTEM=google:ubuntu-16.04-64 VARIANT=arm64
