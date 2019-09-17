@@ -230,7 +230,14 @@ void md::add_server_action_gsource(
         {
             auto const sa_gsource = reinterpret_cast<ServerActionGSource*>(source);
             if (sa_gsource->ctx_constructed && sa_gsource->ctx.dispatched)
+            {
                 sa_gsource->ctx.~ServerActionContext();
+            }
+            else
+            {
+                static std::vector<ServerActionContext*> deliberately_leaked;
+                deliberately_leaked.push_back(&sa_gsource->ctx);
+            }
         }
     };
 
