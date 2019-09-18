@@ -75,17 +75,19 @@ TEST_F(Runner, x11_socket_is_not_returned_by_default)
     miral::TestServer::invoke_runner([](auto& runner){ EXPECT_FALSE(runner.x11_display().is_set()); });
 }
 
-TEST_F(Runner, x11_socket_is_returned_if_configured)
-{
-    miral::X11Support x11support;
-    add_server_init(x11support);
-    add_to_environment("MIR_SERVER_x11_DISPLAY_EXPERIMENTAL", "666");
-
-    miral::TestServer::SetUp();
-
-    miral::TestServer::invoke_runner([](auto& runner)
-    {
-        EXPECT_TRUE(runner.x11_display().is_set());
-        EXPECT_THAT(runner.x11_display().value(), Eq(":666"));
-    });
-}
+// We can't spin up the X11 subsystem during LP builds. We would get:
+// "Mir fatal error: Failed to bind socket /tmp/.X11-unix/X666"
+//TEST_F(Runner, x11_socket_is_returned_if_configured)
+//{
+//    miral::X11Support x11support;
+//    add_server_init(x11support);
+//    add_to_environment("MIR_SERVER_x11_DISPLAY_EXPERIMENTAL", "666");
+//
+//    miral::TestServer::SetUp();
+//
+//    miral::TestServer::invoke_runner([](auto& runner)
+//    {
+//        EXPECT_TRUE(runner.x11_display().is_set());
+//        EXPECT_THAT(runner.x11_display().value(), Eq(":666"));
+//    });
+//}
