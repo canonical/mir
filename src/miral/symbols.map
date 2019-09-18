@@ -484,6 +484,8 @@ global:
 MIRAL_2.8 {
 global:
   extern "C++" {
+    miral::MirRunner::wayland_display*;
+    miral::MirRunner::x11_display*;
     miral::WindowInfo::clip_area*;
   };
 } MIRAL_2.7;

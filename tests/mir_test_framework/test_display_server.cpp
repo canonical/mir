@@ -203,3 +203,8 @@ void miral::TestRuntimeEnvironment::add_to_environment(char const* key, char con
 {
     env.emplace_back(key, value);
 }
+
+void TestDisplayServer::invoke_runner(std::function<void(MirRunner& runner)> const& f)
+{
+    f(runner);
+}

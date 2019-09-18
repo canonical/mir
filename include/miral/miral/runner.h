@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -18,6 +18,8 @@
 
 #ifndef MIRAL_RUNNER_H
 #define MIRAL_RUNNER_H
+
+#include "mir/optional_value.h"
 
 #include <functional>
 #include <initializer_list>
@@ -76,6 +78,14 @@ public:
     /// Config file entries are long form (e.g. "x11-output=1200x720")
     /// \remark Since MirAL 2.4
     auto display_config_file() const -> std::string;
+
+    /// Get the Wayland endpoint name (if any) usable as a $WAYLAND_DISPLAY value
+    /// \remark Since MirAL 2.8
+    auto wayland_display() const -> mir::optional_value<std::string>;
+
+    /// Get the X11 socket name (if any) usable as a $DISPLAY value
+    /// \remark Since MirAL 2.8
+    auto x11_display() const -> mir::optional_value<std::string>;
 
 private:
     MirRunner(MirRunner const&) = delete;

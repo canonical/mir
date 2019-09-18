@@ -84,7 +84,7 @@ struct TestDisplayServer : private TestRuntimeEnvironment
 
     /// Wrapper to gain access to WindowManagerTools API (with correct locking in place)
     /// \note call after start_server()
-    void invoke_tools(std::function<void(WindowManagerTools & tools)> const& f);
+    void invoke_tools(std::function<void(WindowManagerTools& tools)> const& f);
 
     /// Stop the server
     /// \note Typically called by TestServer::TearDown()
@@ -92,6 +92,10 @@ struct TestDisplayServer : private TestRuntimeEnvironment
 
     virtual auto
     build_window_manager_policy(WindowManagerTools const& tools) -> std::unique_ptr<WindowManagementPolicy>;
+
+    /// Wrapper to gain access to the MirRunner
+    /// \note call after start_server()
+    void invoke_runner(std::function<void(MirRunner& runner)> const& f);
 
 private:
     MirRunner runner;
