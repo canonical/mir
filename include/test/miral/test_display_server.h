@@ -94,6 +94,7 @@ struct TestDisplayServer : private TestRuntimeEnvironment
     build_window_manager_policy(WindowManagerTools const& tools) -> std::unique_ptr<WindowManagementPolicy>;
 
     /// Wrapper to gain access to the MirRunner
+    /// \note call after start_server()
     void invoke_runner(std::function<void(MirRunner& runner)> const& f);
 
 private:
