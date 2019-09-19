@@ -2452,6 +2452,15 @@ void miral::BasicWindowManager::advise_output_delete(miral::Output const& output
 
     outputs.remove(output.extents());
 
+    for (auto const& area : removed_areas)
+    {
+        for (auto const& window : area->attached_windows)
+        {
+            auto info{info_for(window)};
+            update_attached_and_fullscreen_sets(info, info.state());
+        }
+    }
+
     update_windows_for_outputs();
     for (auto& area : removed_areas)
         policy_application_zone_addendum->advise_application_zone_delete(area->application_zone);

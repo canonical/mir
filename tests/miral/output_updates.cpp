@@ -207,3 +207,26 @@ TEST_F(OutputUpdates, maximized_window_moved_with_its_output)
     ASSERT_THAT(window.top_left(), Eq(display_area_b.top_left));
     ASSERT_THAT(window.size(), Eq(display_area_b.size));
 }
+
+TEST_F(OutputUpdates, maximized_window_moved_when_its_output_disconnected)
+{
+    auto display_config_a = create_fake_display_configuration({display_area_a});
+    auto display_config_a_b = create_fake_display_configuration({display_area_a, display_area_b});
+    notify_configuration_applied(display_config_a_b);
+
+    mir::scene::SurfaceCreationParameters creation_parameters;
+    creation_parameters.type = mir_window_type_normal;
+    creation_parameters.state = mir_window_state_maximized;
+    creation_parameters.output_id = mir::graphics::DisplayConfigurationOutputId{2};
+
+    Window window = create_window(creation_parameters);
+
+    ASSERT_THAT(window.top_left(), Eq(display_area_b.top_left));
+    ASSERT_THAT(window.size(), Eq(display_area_b.size));
+
+    notify_configuration_applied(display_config_a);
+    Mock::VerifyAndClearExpectations(window_manager_policy);
+
+    ASSERT_THAT(window.top_left(), Eq(display_area_a.top_left));
+    ASSERT_THAT(window.size(), Eq(display_area_a.size));
+}
