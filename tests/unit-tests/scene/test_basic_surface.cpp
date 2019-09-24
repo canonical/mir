@@ -681,6 +681,8 @@ TEST_F(BasicSurfaceTest, notifies_when_cursor_stream_set)
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto stub_buffer = std::make_shared<mtd::StubBuffer>();
 
+    ON_CALL(*buffer_stream, buffers_ready_for_compositor(_))
+        .WillByDefault(Return(1));
     ON_CALL(*buffer_stream, lock_compositor_buffer(_))
         .WillByDefault(Return(stub_buffer));
     EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_, _));
@@ -718,6 +720,11 @@ TEST_F(BasicSurfaceTest, cursor_can_be_set_from_stream_that_started_empty)
             FAIL() << "frame_posted_callback should have been set by the surface";
         });
 
+    ON_CALL(*buffer_stream, buffers_ready_for_compositor(_))
+        .WillByDefault(Invoke([&](auto)
+            {
+                return stub_buffer != nullptr;
+            }));
     ON_CALL(*buffer_stream, has_submitted_buffer())
         .WillByDefault(Invoke([&]
             {

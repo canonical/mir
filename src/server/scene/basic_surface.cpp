@@ -200,8 +200,7 @@ struct ms::CursorStreamImageAdapter
         }
 
         hotspot = new_hotspot;
-        if (stream->buffers_ready_for_compositor(this))
-            post_cursor_image_from_current_buffer();
+        post_cursor_image_from_current_buffer();
     }
 
 private:
@@ -209,7 +208,10 @@ private:
     {
         if (stream->has_submitted_buffer())
         {
-            surface.set_cursor_from_buffer(*stream->lock_compositor_buffer(this), hotspot);
+            if (stream->buffers_ready_for_compositor(this))
+            {
+                surface.set_cursor_from_buffer(*stream->lock_compositor_buffer(this), hotspot);
+            }
         }
         else
         {
