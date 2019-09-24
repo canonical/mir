@@ -691,6 +691,24 @@ TEST_F(BasicSurfaceTest, notifies_when_cursor_stream_set)
     surface.set_cursor_stream(buffer_stream, {});
 }
 
+TEST_F(BasicSurfaceTest, does_not_notify_when_cursor_stream_set_has_no_buffers_ready)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto stub_buffer = std::make_shared<mtd::StubBuffer>();
+
+    ON_CALL(*buffer_stream, buffers_ready_for_compositor(_))
+        .WillByDefault(Return(0));
+    ON_CALL(*buffer_stream, lock_compositor_buffer(_))
+        .WillByDefault(Return(stub_buffer));
+    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_, _)).Times(0);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_cursor_stream(buffer_stream, {});
+}
+
 TEST_F(BasicSurfaceTest, notifies_about_cursor_removal_when_empty_stream_set)
 {
     using namespace testing;
