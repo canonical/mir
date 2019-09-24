@@ -105,7 +105,8 @@ TEST(ApplicationSession, stress_test_take_snapshot)
         std::make_shared<ms::NullSessionListener>(),
         mtd::StubDisplayConfig{},
         std::make_shared<mtd::NullEventSink>(),
-        conf.the_buffer_allocator()
+        conf.the_buffer_allocator(),
+        conf.the_display_configuration_observer_registrar()
     };
 
     mg::BufferProperties properties(geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software);

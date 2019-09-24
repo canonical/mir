@@ -66,6 +66,13 @@ void mg::DisplayConfigurationObserverMultiplexer::catastrophic_configuration_err
     for_each_observer(&mg::DisplayConfigurationObserver::catastrophic_configuration_error, failed_fallback, error);
 }
 
+void mg::DisplayConfigurationObserverMultiplexer::configuration_updated_for_session(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<DisplayConfiguration const> const& config)
+{
+    for_each_observer(&mg::DisplayConfigurationObserver::configuration_updated_for_session, session, config);
+}
+
 mg::DisplayConfigurationObserverMultiplexer::DisplayConfigurationObserverMultiplexer(
     std::shared_ptr<Executor> const& default_executor)
     : ObserverMultiplexer(*default_executor),

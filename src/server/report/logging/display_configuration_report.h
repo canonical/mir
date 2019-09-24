@@ -62,6 +62,10 @@ public:
         std::shared_ptr<graphics::DisplayConfiguration const> const& failed_fallback,
         std::exception const& error) override;
 
+    void configuration_updated_for_session(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<graphics::DisplayConfiguration const> const& config) override;
+
 private:
     void log_configuration(
         mir::logging::Severity severity,

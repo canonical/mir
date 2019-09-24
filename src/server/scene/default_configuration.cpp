@@ -172,7 +172,8 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                 the_session_listener(),
                 the_display(),
                 the_application_not_responding_detector(),
-                the_buffer_allocator());
+                the_buffer_allocator(),
+                the_display_configuration_observer_registrar());
         });
 }
 

@@ -69,6 +69,10 @@ void miral::DisplayConfigurationListeners::session_configuration_applied(std::sh
 
 void miral::DisplayConfigurationListeners::session_configuration_removed(std::shared_ptr<mir::scene::Session> const&) {}
 
+void miral::DisplayConfigurationListeners::configuration_updated_for_session(
+    std::shared_ptr<mir::scene::Session> const&,
+    std::shared_ptr<mir::graphics::DisplayConfiguration const> const&) {}
+
 void miral::DisplayConfigurationListeners::configuration_applied(std::shared_ptr<mir::graphics::DisplayConfiguration const> const& config)
 {
     std::lock_guard<decltype(mutex)> lock{mutex};

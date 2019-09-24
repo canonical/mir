@@ -93,6 +93,11 @@ bool compare_display_configurations(
 
 bool compare_display_configurations(
     testing::MatchResultListener* listener,
+    std::shared_ptr<graphics::DisplayConfiguration const> const& display_config1,
+    graphics::DisplayConfiguration const& display_config2);
+
+bool compare_display_configurations(
+    testing::MatchResultListener* listener,
     MirDisplayConfiguration const* display_config2,
     graphics::DisplayConfiguration const& display_config1);
 

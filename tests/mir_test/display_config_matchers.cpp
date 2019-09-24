@@ -360,6 +360,14 @@ bool mt::compare_display_configurations(
 
 bool mt::compare_display_configurations(
     testing::MatchResultListener* listener,
+    std::shared_ptr<mg::DisplayConfiguration const> const& display_config1,
+    mg::DisplayConfiguration const& display_config2)
+{
+    return compare_display_configurations(listener, *display_config1, display_config2);
+}
+
+bool mt::compare_display_configurations(
+    testing::MatchResultListener* listener,
     MirDisplayConfiguration const* display_config2,
     graphics::DisplayConfiguration const& display_config1)
 {

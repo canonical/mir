@@ -60,7 +60,7 @@ public:
             std::exception const& error));
 
     MOCK_METHOD2(
-        configuration_updated_for_session,
+        session_should_send_display_configuration,
         void(
             std::shared_ptr<scene::Session> const&,
             std::shared_ptr<graphics::DisplayConfiguration const> const&));

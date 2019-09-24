@@ -301,7 +301,7 @@ ms::MediatingDisplayChanger::preview_base_configuration(
                     if (auto live_session = session.lock())
                     {
                         apply_base_config();
-                        live_session->send_display_config(*base_configuration());
+                        observer->configuration_updated_for_session(live_session, base_configuration());
                     }
                 });
         preview_configuration_timeout->reschedule_in(timeout);
@@ -317,7 +317,7 @@ ms::MediatingDisplayChanger::preview_base_configuration(
                 try
                 {
                     apply_config(conf);
-                    live_session->send_display_config(*conf);
+                    observer->configuration_updated_for_session(live_session, conf);
                 }
                 catch (std::runtime_error const&)
                 {
@@ -375,7 +375,7 @@ ms::MediatingDisplayChanger::cancel_base_configuration_preview(
                 if (auto live_session = weak_session.lock())
                 {
                     apply_base_config();
-                    live_session->send_display_config(*base_configuration());
+                    observer->configuration_updated_for_session(live_session, base_configuration());
                 }
             });
     }
@@ -519,9 +519,9 @@ void ms::MediatingDisplayChanger::send_config_to_all_sessions(
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
     session_container->for_each(
-        [&conf](std::shared_ptr<Session> const& session)
+        [this, &conf](std::shared_ptr<Session> const& session)
         {
-            session->send_display_config(*conf);
+            observer->configuration_updated_for_session(session, conf);
         });
 }
 

@@ -131,6 +131,11 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
         std::exception const&) override
     {}
 
+    void configuration_updated_for_session(
+        std::shared_ptr<ms::Session> const&,
+        std::shared_ptr<mg::DisplayConfiguration const> const&) override
+    {}
+
     geom::Rectangle get_bounding_rectangle() const
     {
         std::lock_guard<std::mutex> lock(output_mutex);

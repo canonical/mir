@@ -32,6 +32,7 @@
 #include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/display_configuration_observer.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -48,6 +49,61 @@ namespace mg = mir::graphics;
 namespace mev = mir::events;
 namespace mc = mir::compositor;
 
+class mir::scene::ApplicationSession::DisplayConfigurationObserver
+    : public graphics::DisplayConfigurationObserver
+{
+public:
+    DisplayConfigurationObserver(ApplicationSession* session)
+        : session{session}
+    {
+    }
+
+    void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const&) override
+    {
+    }
+
+    void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const&) override
+    {
+    }
+
+    void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const&) override
+    {
+    }
+
+    void session_configuration_applied(
+        std::shared_ptr<scene::Session> const&,
+        std::shared_ptr<mg::DisplayConfiguration> const&) override
+    {
+    }
+
+    void session_configuration_removed(std::shared_ptr<scene::Session> const&) override
+    {
+    }
+
+    void configuration_failed(
+        std::shared_ptr<mg::DisplayConfiguration const> const&,
+        std::exception const&) override
+    {
+    }
+
+    void catastrophic_configuration_error(
+        std::shared_ptr<mg::DisplayConfiguration const> const&,
+        std::exception const&) override
+    {
+    }
+
+    void configuration_updated_for_session(
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+    {
+        if (session.get() == this->session)
+            this->session->send_display_config(*config);
+    }
+
+private:
+    ApplicationSession* const session;
+};
+
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<msh::SurfaceStack> const& surface_stack,
     std::shared_ptr<SurfaceFactory> const& surface_factory,
@@ -58,7 +114,8 @@ ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<SessionListener> const& session_listener,
     mg::DisplayConfiguration const& initial_config,
     std::shared_ptr<mf::EventSink> const& sink,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc) : 
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar) :
     surface_stack(surface_stack),
     surface_factory(surface_factory),
     buffer_stream_factory(buffer_stream_factory),
@@ -68,14 +125,20 @@ ms::ApplicationSession::ApplicationSession(
     session_listener(session_listener),
     event_sink(sink),
     gralloc(gralloc),
+    display_config_registrar{display_config_registrar},
+    display_config_observer{std::make_shared<DisplayConfigurationObserver>(this)},
     next_surface_id(0)
 {
     assert(surface_stack);
     output_cache.update_from(initial_config);
+    display_config_registrar->register_interest(display_config_observer);
 }
 
 ms::ApplicationSession::~ApplicationSession()
 {
+    if (auto const registrar = display_config_registrar.lock())
+        registrar->unregister_interest(*display_config_observer);
+
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     for (auto const& pair_id_surface : surfaces)
     {

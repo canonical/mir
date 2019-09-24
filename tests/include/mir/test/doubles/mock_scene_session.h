@@ -56,7 +56,6 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
 
-    MOCK_METHOD1(send_display_config, void(graphics::DisplayConfiguration const&));
     MOCK_METHOD1(send_error, void(ClientVisibleError const&));
     MOCK_METHOD1(send_input_config, void(MirInputConfig const&));
     MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirWindowAttrib, int));
