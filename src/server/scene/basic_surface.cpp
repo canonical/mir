@@ -200,7 +200,8 @@ struct ms::CursorStreamImageAdapter
         }
 
         hotspot = new_hotspot;
-        post_cursor_image_from_current_buffer();
+        if (stream->buffers_ready_for_compositor(this))
+            post_cursor_image_from_current_buffer();
     }
 
 private:
