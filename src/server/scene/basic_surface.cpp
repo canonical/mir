@@ -208,7 +208,10 @@ private:
     {
         if (stream->has_submitted_buffer())
         {
-            surface.set_cursor_from_buffer(*stream->lock_compositor_buffer(this), hotspot);
+            if (stream->buffers_ready_for_compositor(this))
+            {
+                surface.set_cursor_from_buffer(*stream->lock_compositor_buffer(this), hotspot);
+            }
         }
         else
         {
