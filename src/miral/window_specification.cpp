@@ -39,7 +39,7 @@ struct miral::WindowSpecification::Self
     mir::optional_value<MirWindowType> type;
     mir::optional_value<MirWindowState> state;
     mir::optional_value<MirOrientationMode> preferred_orientation;
-    mir::optional_value<BufferStreamId> content_id;
+    std::weak_ptr<mir::frontend::BufferStream> content;
     mir::optional_value<Rectangle> aux_rect;
     mir::optional_value<MirPlacementHints> placement_hints;
     mir::optional_value<MirPlacementGravity> window_placement_gravity;
@@ -149,6 +149,12 @@ void copy_if_set(Dest& dest, mir::optional_value<Source> const& source)
 }
 
 template<typename Dest, typename Source>
+void copy_if_set(Dest& dest, std::weak_ptr<Source> const& source)
+{
+    if (source.lock()) dest = source;
+}
+
+template<typename Dest, typename Source>
 void copy_if_set(mir::optional_value<Dest>& dest, mir::optional_value<Source> const& source)
 {
     if (source.is_set()) dest = source;
@@ -203,6 +209,7 @@ miral::WindowSpecification::Self::Self(mir::scene::SurfaceCreationParameters con
     type(params.type),
     state(params.state),
     preferred_orientation(params.preferred_orientation),
+    content(params.content),
     aux_rect(params.aux_rect),
     placement_hints(params.placement_hints),
     window_placement_gravity(params.surface_placement_gravity),
@@ -252,9 +259,6 @@ miral::WindowSpecification::Self::Self(mir::scene::SurfaceCreationParameters con
         }
     }
 
-    if (params.content_id.is_set())
-        content_id = BufferStreamId{params.content_id.value().as_value()};
-
     if (params.min_aspect.is_set())
         min_aspect = AspectRatio{params.min_aspect.value().width, params.min_aspect.value().height};
 
@@ -273,7 +277,7 @@ void miral::WindowSpecification::Self::update(mir::scene::SurfaceCreationParamet
     copy_if_set(params.type, type);
     copy_if_set(params.state, state);
     copy_if_set(params.preferred_orientation, preferred_orientation);
-    copy_if_set(params.content_id, content_id);
+    copy_if_set(params.content, content);
     copy_if_set(params.aux_rect, aux_rect);
     copy_if_set(params.min_width, min_width);
     copy_if_set(params.min_height, min_height);

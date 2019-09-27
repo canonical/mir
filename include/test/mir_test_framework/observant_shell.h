@@ -34,7 +34,7 @@ struct ObservantShell : mir::shell::ShellWrapper
     auto create_surface(
         std::shared_ptr<mir::scene::Session> const& session,
         mir::scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<mir::frontend::EventSink> const& sink) -> std::shared_ptr<mir::scene::Surface> override;
+        std::shared_ptr<mir::scene::SurfaceObserver> const& sink) -> std::shared_ptr<mir::scene::Surface> override;
 
 private:
     std::shared_ptr<mir::scene::SurfaceObserver> const surface_observer;

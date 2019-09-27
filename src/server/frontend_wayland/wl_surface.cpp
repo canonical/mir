@@ -43,6 +43,7 @@
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
+namespace msh = mir::shell;
 
 mf::WlSurfaceState::Callback::Callback(wl_resource* new_resource)
     : mw::Callback{new_resource, Version<1>()},
@@ -82,8 +83,7 @@ mf::WlSurface::WlSurface(
     std::shared_ptr<graphics::WaylandAllocator> const& allocator)
     : Surface(new_resource, Version<4>()),
         session{get_session(client)},
-        stream_id{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
-        stream{session->get_buffer_stream(stream_id)},
+        stream{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
         allocator{allocator},
         executor{executor},
         null_role{this},
@@ -107,7 +107,7 @@ mf::WlSurface::~WlSurface()
     }
 
     role->destroy();
-    session->destroy_buffer_stream(stream_id);
+    session->destroy_buffer_stream(stream);
 }
 
 bool mf::WlSurface::synchronized() const
@@ -183,7 +183,7 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
 {
     geometry::Displacement offset = parent_offset + offset_;
 
-    buffer_streams.push_back({stream_id, offset, {}});
+    buffer_streams.push_back(msh::StreamSpecification{stream, offset, {}});
     geom::Rectangle surface_rect = {geom::Point{} + offset, buffer_size_.value_or(geom::Size{})};
     if (input_shape)
     {

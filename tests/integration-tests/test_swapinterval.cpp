@@ -67,14 +67,12 @@ public:
     }
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId id,
         int, mg::BufferProperties const& p) override
     {
-        return create_buffer_stream(id, p);
+        return create_buffer_stream(p);
     }
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId,
         mg::BufferProperties const&) override
     {
         return std::make_shared<StubBufferStream>(framedropping_enabled);

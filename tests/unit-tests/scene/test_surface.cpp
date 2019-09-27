@@ -18,10 +18,10 @@
 
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
+#include "mir/scene/output_properties_cache.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/legacy_surface_change_notification.h"
 #include "src/server/report/null_report_factory.h"
-#include "src/server/scene/output_properties_cache.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface_event_source.h"
@@ -244,7 +244,7 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
 
     auto const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), surface, cache, mock_event_sink);
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
 
     surface.add_observer(observer);
 
@@ -261,7 +261,7 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
     geom::Size const new_size{123, 456};
     auto const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), surface, cache, mock_event_sink);
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
 
     surface.add_observer(observer);
 
@@ -325,7 +325,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
 
     auto const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), surface, cache, mock_event_sink);
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
 
     surface.add_observer(observer);
 

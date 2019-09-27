@@ -64,7 +64,7 @@ public:
         std::shared_ptr<graphics::Display const> const& display,
         std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar);
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
 
     virtual ~SessionManager() noexcept;
 

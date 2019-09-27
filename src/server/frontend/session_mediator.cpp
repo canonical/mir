@@ -314,11 +314,12 @@ void mf::SessionMediator::create_surface(
         std::vector<msh::StreamSpecification> stream_spec;
         for (auto& stream : request->stream())
         {
+            auto const buffer_stream = mir_client_session->buffer_stream(mf::BufferStreamId{stream.id().value()});
             if (stream.has_width() && stream.has_height())
             {
                 stream_spec.emplace_back(
                     msh::StreamSpecification{
-                        mf::BufferStreamId{stream.id().value()},
+                        buffer_stream,
                         geom::Displacement{stream.displacement_x(), stream.displacement_y()},
                         geom::Size{stream.width(), stream.height()}});
             }
@@ -326,7 +327,7 @@ void mf::SessionMediator::create_surface(
             {
                 stream_spec.emplace_back(
                     msh::StreamSpecification{
-                        mf::BufferStreamId{stream.id().value()},
+                        buffer_stream,
                         geom::Displacement{stream.displacement_x(), stream.displacement_y()},
                         {}});
             }
@@ -337,8 +338,8 @@ void mf::SessionMediator::create_surface(
     {
         buffer_stream_id = mir_client_session->create_buffer_stream(
             {params.size, params.pixel_format, params.buffer_usage});
-        legacy_stream = mir_client_session->get_buffer_stream(buffer_stream_id);
-        params.content_id = buffer_stream_id;
+        legacy_stream = mir_client_session->buffer_stream(buffer_stream_id);
+        params.content = legacy_stream;
     }
 
     if (request->has_min_aspect())
@@ -354,7 +355,7 @@ void mf::SessionMediator::create_surface(
 
     auto const surf_id = shell->create_surface(mir_client_session, params, sink);
 
-    auto surface = mir_client_session->get_surface(surf_id);
+    auto surface = mir_client_session->frontend_surface(surf_id);
     auto const& client_size = surface->client_size();
     response->mutable_id()->set_value(surf_id.as_value());
     response->set_width(client_size.width.as_uint32_t());
@@ -367,7 +368,7 @@ void mf::SessionMediator::create_surface(
     for (unsigned int i = 0; i < mir_window_attribs; i++)
     {
         auto setting = response->add_attributes();
-        
+
         setting->mutable_surfaceid()->set_value(surf_id.as_value());
         setting->set_attrib(i);
         setting->set_ivalue(shell->get_surface_attribute(mir_client_session, surf_id, static_cast<MirWindowAttrib>(i)));
@@ -456,7 +457,7 @@ void mf::SessionMediator::submit_buffer(
     
     mf::BufferStreamId const stream_id{request->id().value()};
     mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
-    auto stream = mir_client_session->get_buffer_stream(stream_id);
+    auto stream = mir_client_session->buffer_stream(stream_id);
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
     auto b = buffer_cache.at(buffer_id);
@@ -538,7 +539,7 @@ void mf::SessionMediator::allocate_buffers(
             {
                 auto const stream_id = mf::BufferStreamId{request->id().value()};
                 // We don't need the stream, but we *do* need to know it exists
-                auto stream = mir_client_session->get_buffer_stream(stream_id);
+                auto stream = mir_client_session->buffer_stream(stream_id);
                 stream_associated_buffers.insert(std::make_pair(stream_id, buffer->id()));
             }
 
@@ -727,11 +728,12 @@ void mf::SessionMediator::modify_surface(
         std::vector<msh::StreamSpecification> stream_spec;
         for (auto& stream : surface_specification.stream())
         {
+            auto const buffer_stream = mir_client_session->buffer_stream(mf::BufferStreamId{stream.id().value()});
             if (stream.has_width() && stream.has_height())
             {
                 stream_spec.emplace_back(
                     msh::StreamSpecification{
-                        mf::BufferStreamId{stream.id().value()},
+                        buffer_stream,
                         geom::Displacement{stream.displacement_x(), stream.displacement_y()},
                         geom::Size{stream.width(), stream.height()}});
             }
@@ -739,7 +741,7 @@ void mf::SessionMediator::modify_surface(
             {
                 stream_spec.emplace_back(
                     msh::StreamSpecification{
-                        mf::BufferStreamId{stream.id().value()},
+                        buffer_stream,
                         geom::Displacement{stream.displacement_x(), stream.displacement_y()},
                         {}});
             }
@@ -784,9 +786,9 @@ void mf::SessionMediator::modify_surface(
         surface_specification.has_hotspot_y())
     {
         mf::BufferStreamId id{surface_specification.cursor_id().value()};
-        auto stream = mir_client_session->get_buffer_stream(id);
+        auto stream = mir_client_session->buffer_stream(id);
         mods.stream_cursor = msh::StreamCursor{
-            id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} };
+            stream, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} };
     }
 
     if (surface_specification.input_shape_size() > 0)
@@ -1015,7 +1017,7 @@ void mf::SessionMediator::create_buffer_stream(
         usage);
     
     auto const buffer_stream_id = mir_client_session->create_buffer_stream(props);
-    auto stream = mir_client_session->get_buffer_stream(buffer_stream_id);
+    auto stream = mir_client_session->buffer_stream(buffer_stream_id);
     
     response->mutable_id()->set_value(buffer_stream_id.as_value());
     response->set_pixel_format(stream->pixel_format());
@@ -1078,7 +1080,7 @@ void mf::SessionMediator::configure_cursor(
     observer->session_configure_surface_cursor_called(mir_client_session->name());
 
     auto const id = mf::SurfaceId(cursor_request->surfaceid().value());
-    auto const surface = mir_client_session->get_surface(id);
+    auto const surface = mir_client_session->frontend_surface(id);
 
     if (cursor_request->has_name())
     {
@@ -1089,7 +1091,7 @@ void mf::SessionMediator::configure_cursor(
     {
         auto const& stream_id = mf::BufferStreamId(cursor_request->buffer_stream().value());
         auto hotspot = geom::Displacement{cursor_request->hotspot_x(), cursor_request->hotspot_y()};
-        auto stream = mir_client_session->get_buffer_stream(stream_id);
+        auto stream = mir_client_session->buffer_stream(stream_id);
 
         surface->set_cursor_stream(stream, hotspot);
     }
@@ -1155,9 +1157,10 @@ void mf::SessionMediator::translate_surface_to_screen(
 
     auto const id = mf::SurfaceId(request->surfaceid().value());
 
-    auto const coords = translator->surface_to_screen(mir_client_session->get_surface(id),
-                                                      request->x(),
-                                                      request->y());
+    auto const coords = translator->surface_to_screen(
+        mir_client_session->frontend_surface(id),
+        request->x(),
+        request->y());
 
     response->set_x(coords.x.as_uint32_t());
     response->set_y(coords.y.as_uint32_t());
@@ -1286,7 +1289,7 @@ void mf::SessionMediator::configure_buffer_stream(
     if (!mir_client_session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    auto stream = mir_client_session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
+    auto stream = mir_client_session->buffer_stream(mf::BufferStreamId(request->id().value()));
     if (request->has_swapinterval())
         stream->allow_framedropping(request->swapinterval() == 0);
     if (request->has_scale())

@@ -65,7 +65,7 @@ public:
     auto create_surface(
         std::shared_ptr<scene::Session> const& session,
         scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<scene::Surface> override;
+        std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<scene::Surface> override;
 
     void modify_surface(
         std::shared_ptr<scene::Session> const& session,

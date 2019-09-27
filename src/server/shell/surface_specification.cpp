@@ -30,7 +30,7 @@ auto msh::operator==(SurfaceAspectRatio const& lhs, SurfaceAspectRatio const& rh
 auto msh::operator==(StreamSpecification const& lhs, StreamSpecification const& rhs) -> bool
 {
     return
-        lhs.stream_id == rhs.stream_id &&
+        lhs.stream.lock() == rhs.stream.lock() &&
         lhs.displacement == rhs.displacement &&
         lhs.size == rhs.size;
 }

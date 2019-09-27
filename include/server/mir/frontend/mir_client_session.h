@@ -34,16 +34,20 @@ class Shell;
 namespace scene
 {
 class Session;
+class Surface;
 struct SurfaceCreationParameters;
 }
 namespace graphics
 {
 struct BufferProperties;
 }
+namespace compositor
+{
+class BufferStream;
+}
 namespace frontend
 {
 class Surface;
-class BufferStream;
 class EventSink;
 
 /// Session interface specific to applications using the deprecated mirclient protocol
@@ -53,7 +57,8 @@ public:
     virtual ~MirClientSession() = default;
 
     virtual auto name() const -> std::string = 0;
-    virtual auto get_surface(SurfaceId surface) const -> std::shared_ptr<Surface> = 0;
+    virtual auto frontend_surface(SurfaceId surface) const -> std::shared_ptr<Surface> = 0;
+    virtual auto scene_surface(SurfaceId surface) const -> std::shared_ptr<scene::Surface> = 0;
 
     virtual auto create_surface(
         std::shared_ptr<shell::Shell> const& shell,
@@ -62,7 +67,7 @@ public:
     virtual void destroy_surface(std::shared_ptr<shell::Shell> const& shell, SurfaceId surface) = 0;
 
     virtual auto create_buffer_stream(graphics::BufferProperties const& props) -> BufferStreamId = 0;
-    virtual auto get_buffer_stream(BufferStreamId stream) const -> std::shared_ptr<BufferStream> = 0;
+    virtual auto buffer_stream(BufferStreamId stream) const -> std::shared_ptr<compositor::BufferStream> = 0;
     virtual void destroy_buffer_stream(BufferStreamId stream) = 0;
 
 protected:

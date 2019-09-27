@@ -78,8 +78,11 @@ mir::DefaultServerConfiguration::the_frontend_shell()
 {
     return frontend_shell([this]
         {
-            return std::make_shared<msh::detail::FrontendShell>(the_shell(),
-                                                                the_persistent_surface_store());
+            return std::make_shared<msh::detail::FrontendShell>(
+                the_shell(),
+                the_persistent_surface_store(),
+                the_display(),
+                the_display_configuration_observer_registrar());
         });
 }
 

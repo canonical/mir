@@ -34,7 +34,14 @@
 
 namespace mir
 {
-namespace shell { class SurfaceSpecification; }
+namespace shell
+{
+struct SurfaceSpecification;
+}
+namespace compositor
+{
+class BufferStream;
+}
 namespace scene
 {
 class Surface;
@@ -71,7 +78,7 @@ struct SurfaceCreationParameters
 
     SurfaceCreationParameters& with_edge_attachment(MirEdgeAttachment edge);
 
-    SurfaceCreationParameters& with_buffer_stream(frontend::BufferStreamId const& id);
+    SurfaceCreationParameters& with_buffer_stream(std::shared_ptr<compositor::BufferStream> const& stream);
 
     void update_from(shell::SurfaceSpecification const& that);
 
@@ -87,7 +94,7 @@ struct SurfaceCreationParameters
     mir::optional_value<MirWindowType> type;
     mir::optional_value<MirOrientationMode> preferred_orientation;
     mir::optional_value<frontend::SurfaceId> parent_id;
-    mir::optional_value<frontend::BufferStreamId> content_id;
+    std::weak_ptr<frontend::BufferStream> content;
     mir::optional_value<geometry::Rectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
     optional_value<MirPlacementHints> placement_hints;

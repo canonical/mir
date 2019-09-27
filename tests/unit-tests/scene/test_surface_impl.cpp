@@ -24,7 +24,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
-#include "src/server/scene/output_properties_cache.h"
+#include "mir/scene/output_properties_cache.h"
 
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
@@ -181,7 +181,7 @@ TEST_F(Surface, emits_resize_events)
     geom::Size const new_size{123, 456};
     auto sink = std::make_shared<mtd::MockEventSink>();
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, *surface, cache, sink);
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
 
     surface->add_observer(observer);
 
@@ -201,7 +201,7 @@ TEST_F(Surface, emits_resize_events_only_on_change)
     geom::Size const new_size2{789, 1011};
     auto sink = std::make_shared<mtd::MockEventSink>();
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, *surface, cache, sink);
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
 
     surface->add_observer(observer);
 
@@ -239,7 +239,7 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
     }
 
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, *surface, cache, mt::fake_shared(sink));
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, mt::fake_shared(sink));
 
     surface->add_observer(observer);
 
@@ -257,7 +257,7 @@ TEST_F(Surface, emits_client_close_events)
 
     auto sink = std::make_shared<mtd::MockEventSink>();
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, *surface, cache, sink);
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
 
     surface->add_observer(observer);
 

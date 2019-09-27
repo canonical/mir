@@ -413,10 +413,11 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     }
 }
 
-void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
+void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& weak_surface)
 {
-    fullscreen_surfaces.erase(surface);
-    bool const is_active_surface{surface.lock() == active_surface()};
+    fullscreen_surfaces.erase(weak_surface);
+    auto const surface = weak_surface.lock();
+    bool const is_active_surface{surface == active_surface()};
 
     auto& info = tools->info_for(surface);
 
@@ -426,7 +427,7 @@ void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms
 
         for (auto i = begin(siblings); i != end(siblings); ++i)
         {
-            if (surface.lock() == i->lock())
+            if (surface == i->lock())
             {
                 siblings.erase(i);
                 break;
@@ -440,7 +441,7 @@ void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms
 
     for (auto i = begin(surfaces); i != end(surfaces); ++i)
     {
-        if (surface.lock() == i->lock())
+        if (surface == i->lock())
         {
             surfaces.erase(i);
             break;

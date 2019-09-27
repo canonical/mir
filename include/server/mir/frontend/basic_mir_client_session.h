@@ -20,6 +20,8 @@
 #define MIR_FRONTEND_BASIC_MIR_CLIENT_SESSION_H_
 
 #include "mir/frontend/mir_client_session.h"
+#include "mir/observer_registrar.h"
+#include "mir/scene/output_properties_cache.h"
 
 #include <unordered_map>
 #include <mutex>
@@ -31,32 +33,58 @@ namespace scene
 {
 class Session;
 }
-namespace compositor
+namespace graphics
 {
-class BufferStream;
+class DisplayConfiguration;
+class DisplayConfigurationObserver;
 }
 namespace frontend
 {
 class BasicMirClientSession : public MirClientSession
 {
 public:
-    BasicMirClientSession(std::shared_ptr<scene::Session> session);
+    BasicMirClientSession(
+        std::shared_ptr<scene::Session> session,
+        std::shared_ptr<frontend::EventSink> const& event_sink,
+        graphics::DisplayConfiguration const& initial_display_config,
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
+
+    ~BasicMirClientSession();
 
     auto name() const -> std::string override;
-    auto get_surface(SurfaceId surface) const -> std::shared_ptr<Surface> override;
+    auto frontend_surface(SurfaceId id) const -> std::shared_ptr<Surface> override;
+    auto scene_surface(SurfaceId id) const -> std::shared_ptr<scene::Surface> override;
 
     auto create_surface(
         std::shared_ptr<shell::Shell> const& shell,
         scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<EventSink> const& sink) -> SurfaceId override;
-    void destroy_surface(std::shared_ptr<shell::Shell> const& shell, SurfaceId surface) override;
+        std::shared_ptr<frontend::EventSink> const& sink) -> frontend::SurfaceId override;
+    void destroy_surface(std::shared_ptr<shell::Shell> const& shell, frontend::SurfaceId id) override;
 
     auto create_buffer_stream(graphics::BufferProperties const& props) -> BufferStreamId override;
-    auto get_buffer_stream(BufferStreamId stream) const -> std::shared_ptr<BufferStream> override;
-    void destroy_buffer_stream(BufferStreamId stream) override;
+    auto buffer_stream(BufferStreamId id) const -> std::shared_ptr<compositor::BufferStream> override;
+    void destroy_buffer_stream(BufferStreamId id) override;
 
 private:
+    class DisplayConfigurationObserver;
+    typedef std::unordered_map<SurfaceId, std::weak_ptr<scene::Surface>> Surfaces;
+    typedef std::unordered_map<BufferStreamId, std::weak_ptr<compositor::BufferStream>> Streams;
+
     std::shared_ptr<scene::Session> const session_;
+    std::shared_ptr<frontend::EventSink> const event_sink;
+    std::weak_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const display_config_registrar;
+    std::shared_ptr<DisplayConfigurationObserver> const display_config_observer;
+    scene::OutputPropertiesCache output_cache;
+    Surfaces surfaces;
+    Streams streams;
+    std::atomic<int> next_id;
+    std::mutex mutable surfaces_and_streams_mutex;
+
+    void send_display_config(graphics::DisplayConfiguration const& info);
+
+    auto checked_find(frontend::SurfaceId id) const -> Surfaces::const_iterator;
+    auto checked_find(std::shared_ptr<scene::Surface> const& surface) const -> Surfaces::const_iterator; ///< O(n)
+    auto checked_find(frontend::BufferStreamId id) const -> Streams::const_iterator;
 };
 }
 }

@@ -38,7 +38,6 @@ class SurfaceEventSource : public NullSurfaceObserver
 public:
     SurfaceEventSource(
         frontend::SurfaceId id,
-        Surface const& surface,
         OutputPropertiesCache const& outputs,
         std::shared_ptr<frontend::EventSink> const& event_sink);
 
@@ -60,7 +59,6 @@ public:
 
 private:
     frontend::SurfaceId const id;
-    Surface const& surface;
     OutputPropertiesCache const& outputs;
     std::weak_ptr<OutputProperties const> last_output;
     std::shared_ptr<frontend::EventSink> const event_sink;

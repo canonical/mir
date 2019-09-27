@@ -21,10 +21,10 @@
 
 #include "mir/scene/session.h"
 
-#include "output_properties_cache.h"
 #include "mir/observer_registrar.h"
 
 #include <atomic>
+#include <set>
 #include <map>
 #include <mutex>
 
@@ -32,16 +32,12 @@ namespace mir
 {
 namespace frontend
 {
-class EventSink;
 class ClientBuffers;
 }
-namespace compositor { class BufferStream; }
 namespace graphics
 {
-class DisplayConfiguration;
 class GraphicBufferAllocator;
 class BufferAttribute;
-class DisplayConfigurationObserver;
 }
 namespace shell { class SurfaceStack; }
 namespace scene
@@ -64,20 +60,16 @@ public:
         std::string const& session_name,
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
         std::shared_ptr<SessionListener> const& session_listener,
-        graphics::DisplayConfiguration const& initial_config,
         std::shared_ptr<frontend::EventSink> const& sink,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     ~ApplicationSession();
 
     auto create_surface(
         SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& surface_sink) -> std::shared_ptr<Surface> override;
-    void destroy_surface(frontend::SurfaceId surface) override;
-    auto surface(frontend::SurfaceId surface) const -> std::shared_ptr<Surface> override;
-    auto surface_id(std::shared_ptr<Surface> const& surface) const -> frontend::SurfaceId override;
-    std::shared_ptr<Surface> surface_after(std::shared_ptr<Surface> const&) const override;
+        std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<Surface> override;
+    void destroy_surface(std::shared_ptr<Surface> const& surface) override;
+    auto surface_after(std::shared_ptr<Surface> const& sruface) const -> std::shared_ptr<Surface> override;
 
     void take_snapshot(SnapshotCallback const& snapshot_taken) override;
     std::shared_ptr<Surface> default_surface() const override;
@@ -88,7 +80,6 @@ public:
     void hide() override;
     void show() override;
 
-    void send_display_config(graphics::DisplayConfiguration const& info);
     void send_error(ClientVisibleError const& error) override;
     void send_input_config(MirInputConfig const& devices) override;
 
@@ -99,18 +90,19 @@ public:
     void suspend_prompt_session() override;
     void resume_prompt_session() override;
 
-    std::shared_ptr<frontend::BufferStream> get_buffer_stream(frontend::BufferStreamId stream) const override;
-    frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const& params) override;
-    void destroy_buffer_stream(frontend::BufferStreamId stream) override;
+    auto create_buffer_stream(graphics::BufferProperties const& params)
+        -> std::shared_ptr<compositor::BufferStream> override;
+    void destroy_buffer_stream(std::shared_ptr<frontend::BufferStream> const& stream) override;
     void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) override;
-    void destroy_surface(std::weak_ptr<Surface> const& surface) override;
+
+    /// Returns if the application session knows about the given buffer stream
+    auto has_buffer_stream(std::shared_ptr<compositor::BufferStream> const& stream) -> bool;
+
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
     ApplicationSession& operator=(ApplicationSession const&) = delete;
 
 private:
-    class DisplayConfigurationObserver;
-
     std::shared_ptr<shell::SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
@@ -120,27 +112,14 @@ private:
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;
     std::shared_ptr<graphics::GraphicBufferAllocator> const gralloc;
-    std::weak_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const display_config_registrar;
-    std::shared_ptr<DisplayConfigurationObserver> const display_config_observer;
 
-    frontend::SurfaceId next_id();
-
-    std::atomic<int> next_surface_id;
-
-    OutputPropertiesCache output_cache;
-
-    typedef std::map<frontend::SurfaceId, std::shared_ptr<Surface>> Surfaces;
-    typedef std::map<frontend::BufferStreamId, std::shared_ptr<compositor::BufferStream>> Streams;
-    auto checked_find(frontend::SurfaceId id) const -> Surfaces::const_iterator;
-    auto checked_find(std::shared_ptr<Surface> const& surface) const -> Surfaces::const_iterator;
-    auto checked_find(frontend::BufferStreamId id) const -> Streams::const_iterator;
+    std::vector<std::shared_ptr<Surface>> surfaces;
+    std::set<std::shared_ptr<compositor::BufferStream>> streams;
+    std::map<
+        std::weak_ptr<Surface>,
+        std::weak_ptr<compositor::BufferStream>,
+        std::owner_less<std::weak_ptr<Surface>>> default_content_map;
     std::mutex mutable surfaces_and_streams_mutex;
-    Surfaces surfaces;
-    Streams streams;
-
-    std::map<frontend::SurfaceId, frontend::BufferStreamId> default_content_map;
-
-    void destroy_surface(std::unique_lock<std::mutex>& lock, Surfaces::const_iterator in_surfaces);
 };
 
 }

@@ -22,6 +22,8 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/optional_value.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/frontend/surface_id.h"
+#include "mir/frontend/buffer_stream_id.h"
 
 #include <vector>
 

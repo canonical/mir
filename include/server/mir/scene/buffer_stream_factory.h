@@ -21,7 +21,6 @@
 #ifndef MIR_SCENE_BUFFER_STREAM_FACTORY_H_
 #define MIR_SCENE_BUFFER_STREAM_FACTORY_H_
 
-#include "mir/frontend/buffer_stream_id.h"
 #include <memory>
 
 namespace mir
@@ -36,11 +35,9 @@ public:
     virtual ~BufferStreamFactory() = default;
 
     virtual std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId,
         int nbuffers,
         graphics::BufferProperties const& buffer_properties) = 0;
     virtual std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId,
         graphics::BufferProperties const& buffer_properties) = 0;
 
 protected:

@@ -21,10 +21,8 @@
 
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/client_types.h"
-#include "mir/frontend/surface_id.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/geometry/size.h"
-#include "mir/frontend/buffer_stream_id.h"
 #include "mir/scene/snapshot.h"
 
 #include <vector>
@@ -35,6 +33,10 @@
 namespace mir
 {
 class ClientVisibleError;
+namespace compositor
+{
+class BufferStream;
+}
 namespace frontend
 {
 class EventSink;
@@ -47,13 +49,13 @@ struct StreamSpecification;
 }
 namespace graphics
 {
-class DisplayConfiguration;
 struct BufferProperties;
 class Buffer;
 }
 namespace scene
 {
 class Surface;
+class SurfaceObserver;
 struct SurfaceCreationParameters;
 
 /// A single connection to a client application
@@ -83,18 +85,13 @@ public:
 
     virtual auto create_surface(
         SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<Surface> = 0;
-    virtual void destroy_surface(frontend::SurfaceId surface) = 0;
-    virtual auto surface(frontend::SurfaceId surface) const -> std::shared_ptr<Surface> = 0;
-    virtual auto surface_id(std::shared_ptr<Surface> const& surface) const -> frontend::SurfaceId = 0;
-    virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
+        std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<Surface> = 0;
+    virtual void destroy_surface(std::shared_ptr<Surface> const& surface) = 0;
     virtual auto surface_after(std::shared_ptr<Surface> const& surface) const -> std::shared_ptr<Surface> = 0;
 
     virtual auto create_buffer_stream(graphics::BufferProperties const& props)
-        -> frontend::BufferStreamId = 0;
-    virtual auto get_buffer_stream(frontend::BufferStreamId stream) const
-        -> std::shared_ptr<frontend::BufferStream> = 0;
-    virtual void destroy_buffer_stream(frontend::BufferStreamId stream) = 0;
+        -> std::shared_ptr<compositor::BufferStream> = 0;
+    virtual void destroy_buffer_stream(std::shared_ptr<frontend::BufferStream> const& stream) = 0;
     virtual void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) = 0;
 
 protected:
