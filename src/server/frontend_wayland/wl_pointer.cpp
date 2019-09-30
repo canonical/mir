@@ -64,8 +64,8 @@ mf::WlPointer::WlPointer(
 
 mf::WlPointer::~WlPointer()
 {
-    if (focused_surface)
-        focused_surface.value()->remove_destroy_listener(this);
+    if (surface_under_cursor)
+        surface_under_cursor.value()->remove_destroy_listener(this);
     on_destroy(this);
 }
 
@@ -87,20 +87,20 @@ void mf::WlPointer::enter(WlSurface* parent_surface, geom::Point const& position
         {
             leave();
         });
-    focused_surface = final.surface;
+    surface_under_cursor = final.surface;
 }
 
 void mf::WlPointer::leave()
 {
-    if (!focused_surface)
+    if (!surface_under_cursor)
         return;
-    focused_surface.value()->remove_destroy_listener(this);
+    surface_under_cursor.value()->remove_destroy_listener(this);
     auto const serial = wl_display_next_serial(display);
     send_leave_event(
         serial,
-        focused_surface.value()->raw_resource());
+        surface_under_cursor.value()->raw_resource());
     can_send_frame = true;
-    focused_surface = std::experimental::nullopt;
+    surface_under_cursor = std::experimental::nullopt;
 }
 
 void mf::WlPointer::button(std::chrono::milliseconds const& ms, uint32_t button, bool pressed)
@@ -119,7 +119,7 @@ void mf::WlPointer::motion(
 {
     auto final = parent_surface->transform_point(position_on_parent);
 
-    if (focused_surface && final.surface == focused_surface.value())
+    if (surface_under_cursor && final.surface == surface_under_cursor.value())
     {
         send_motion_event(
             ms.count(),
@@ -200,8 +200,8 @@ void mf::WlPointer::set_cursor(
         cursor = std::make_unique<WlHiddenCursor>();
     }
 
-    if (focused_surface)
-        cursor->apply_to(focused_surface.value());
+    if (surface_under_cursor)
+        cursor->apply_to(surface_under_cursor.value());
 
     (void)serial;
 }
