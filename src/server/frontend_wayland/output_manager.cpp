@@ -32,7 +32,25 @@ mf::Output::Output(wl_display* display, mg::DisplayConfigurationOutput const& in
 
 mf::Output::~Output()
 {
+    // Notify all clients that the wl_output has gone away
     wl_global_destroy(output);
+    /*
+     * The above call doesn't release the wl_resources any client
+     * has bound, merely tells them that the global has gone away.
+     * The server-side wl_resources have to remain valid so that
+     * the client can call wl_output::release on it.
+     *
+     * We therefore need to ensure that destroying the wl_resource-s
+     * doesn't result in attempting to access fields of the now-destroyed
+     * Output.
+     */
+    for (auto const& client : resource_map)
+    {
+        for (auto* resource : client.second)
+        {
+            wl_resource_set_destructor(resource, [](auto) {});
+        }
+    }
 }
 
 void mf::Output::handle_configuration_changed(mg::DisplayConfigurationOutput const& config)
@@ -148,6 +166,18 @@ wl_global* mf::Output::make_output(wl_display* display)
         this, &on_bind);
 }
 
+namespace
+{
+void release_wl_output(wl_client*, wl_resource* releasing)
+{
+    wl_resource_destroy(releasing);
+}
+
+struct wl_output_interface const wl_output_impl{
+    &release_wl_output
+};
+}
+
 void mf::Output::on_bind(wl_client* client, void* data, uint32_t version, uint32_t id)
 {
     auto output = reinterpret_cast<Output*>(data);
@@ -161,8 +191,7 @@ void mf::Output::on_bind(wl_client* client, void* data, uint32_t version, uint32
     }
 
     output->resource_map[client].push_back(resource);
-    wl_resource_set_destructor(resource, &resource_destructor);
-    wl_resource_set_user_data(resource, &(output->resource_map));
+    wl_resource_set_implementation(resource, &wl_output_impl, &(output->resource_map), mf::Output::resource_destructor);
 
     send_initial_config(resource, output->current_config);
 }
