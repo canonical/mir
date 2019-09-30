@@ -72,9 +72,8 @@ private:
     wl_display* const display;
     std::function<void(WlPointer*)> on_destroy;
 
-    MirPointerButtons last_buttons{0};
     bool can_send_frame{false};
-    std::experimental::optional<WlSurface*> focused_surface;
+    std::experimental::optional<WlSurface*> surface_under_cursor;
 
     /// Wayland request handlers
     ///@{
