@@ -169,7 +169,7 @@ Output::Output(
 Output::~Output()
 {
     if (output)
-        wl_output_destroy(output);
+        wl_output_release(output);
 }
 
 Globals::Globals(
@@ -210,10 +210,10 @@ void Globals::new_global(
     }
     else if (strcmp(interface, "wl_output") == 0)
     {
-        // NOTE: We'd normally need to do std::min(version, 2), lest the compositor only support version 1
-        // of the interface. However, we're an internal client of a compositor that supports version 2, so…
+        // NOTE: We'd normally need to do std::min(version, 3), lest the compositor only support version 1
+        // of the interface. However, we're an internal client of a compositor that supports version 3, so…
         auto output =
-            static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, 2));
+            static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, 3));
         self->bound_outputs.insert(
             std::make_pair(
                 id,
