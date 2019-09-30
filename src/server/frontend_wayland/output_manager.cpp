@@ -166,6 +166,18 @@ wl_global* mf::Output::make_output(wl_display* display)
         this, &on_bind);
 }
 
+namespace
+{
+void release_wl_output(wl_client*, wl_resource* releasing)
+{
+    wl_resource_destroy(releasing);
+}
+
+struct wl_output_interface const wl_output_impl{
+    &release_wl_output
+};
+}
+
 void mf::Output::on_bind(wl_client* client, void* data, uint32_t version, uint32_t id)
 {
     auto output = reinterpret_cast<Output*>(data);
@@ -179,8 +191,7 @@ void mf::Output::on_bind(wl_client* client, void* data, uint32_t version, uint32
     }
 
     output->resource_map[client].push_back(resource);
-    wl_resource_set_destructor(resource, &resource_destructor);
-    wl_resource_set_user_data(resource, &(output->resource_map));
+    wl_resource_set_implementation(resource, &wl_output_impl, &(output->resource_map), mf::Output::resource_destructor);
 
     send_initial_config(resource, output->current_config);
 }
