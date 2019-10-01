@@ -22,8 +22,7 @@ set(
   test_client_screencast.cpp
   test_large_messages.cpp
   test_surfaceloop.cpp
-  test_stale_frames.cpp
-  test_test_framework.cpp
+        test_test_framework.cpp
   test_error_reporting.cpp
   test_submit_buffer.cpp
   test_display_info.cpp
@@ -62,7 +61,6 @@ target_link_libraries(
   mir-test-static
   mir-test-framework-static
   mir-test-doubles-static
-  mirclient-debug-extension
   mirdraw
 
   mircommon

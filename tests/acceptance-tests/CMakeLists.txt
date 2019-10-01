@@ -41,7 +41,6 @@ set(
   test_buffer_stream_arrangement.cpp
   test_client_with_custom_display_config_deadlock.cpp
   test_server_without_active_outputs.cpp
-  test_debug_api.cpp
   test_client_platform_operation.cpp
   test_input_device_hub.cpp
   test_render_override.cpp
@@ -108,7 +107,6 @@ target_link_libraries(mir_acceptance_tests
   mir-test-doubles-platform-static
 
   mirclient
-  mirclient-debug-extension
   mirserver
 
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
