@@ -257,12 +257,8 @@ void mf::WlShmBuffer::write(unsigned char const *pixels, size_t size)
 void mf::WlShmBuffer::read(std::function<void(unsigned char const *)> const &do_with_pixels)
 {
     std::lock_guard <std::mutex> lock{wayland->mutex};
-    if (!wayland->buffer) {
-        log_warning("Attempt to read from WlShmBuffer after the wl_buffer has been destroyed");
-        return;
-    }
-
-    if (!consumed) {
+    if (!consumed)
+    {
         on_consumed();
         consumed = true;
     }
