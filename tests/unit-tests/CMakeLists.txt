@@ -91,7 +91,6 @@ CMAKE_DEPENDENT_OPTION(
 
 add_subdirectory(platforms/)
 add_subdirectory(options/)
-add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(console/)
 add_subdirectory(frontend/)
