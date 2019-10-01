@@ -1,0 +1,12 @@
+@MIR_SERVER_GRAPHICS_PLATFORM_VERSION@ {
+  global:
+    add_graphics_platform_options;
+    create_host_platform;
+    create_guest_platform;
+    probe_graphics_platform;
+    describe_graphics_module;
+    create_rendering_platform;
+    create_display_platform;
+  local:
+    *;
+};
