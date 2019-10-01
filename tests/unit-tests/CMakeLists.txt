@@ -197,9 +197,6 @@ target_link_libraries(
   mircommon
   client_platform_common
 
-  mirclient-static
-  mirclientlttng-static
-
   mir-test-static
   mir-test-framework-static
 

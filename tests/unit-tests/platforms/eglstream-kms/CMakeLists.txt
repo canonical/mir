@@ -11,11 +11,6 @@ mir_add_wrapped_executable(mir_unit_tests_eglstream-kms NOINSTALL
 target_link_libraries(
   mir_unit_tests_eglstream-kms
 
-  mirclient-static
-  mirclientlttng-static
-  mirclient-static
-  mirclientlttng-static
-
   mir-test-static
   mir-test-framework-static
   mir-test-doubles-static
