@@ -7,8 +7,9 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/cookie
 
-    ${Boost_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}
+  ${Boost_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}
+  ${DRM_INCLUDE_DIRS}
 )
 
 set(
@@ -48,15 +49,14 @@ set(
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_libinput.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_egl.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_gl.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_drm.cpp
 )
 
 if (MIR_BUILD_PLATFORM_MESA_X11)
   include_directories(
     ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
-    ${DRM_INCLUDE_DIRS}
   )
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
-    ${CMAKE_CURRENT_SOURCE_DIR}/mock_drm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_x11.cpp
   )
@@ -65,12 +65,10 @@ endif()
 if (MIR_BUILD_PLATFORM_MESA_KMS)
   include_directories(
     ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
-    ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
   )
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
-    ${CMAKE_CURRENT_SOURCE_DIR}/mock_drm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm.cpp
   )
 endif()
