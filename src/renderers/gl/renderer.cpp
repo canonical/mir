@@ -449,16 +449,20 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
 
     auto const texture = std::dynamic_pointer_cast<mg::gl::Texture>(renderable.buffer());
     auto const surface_tex =
-        [this, &renderable]() -> std::shared_ptr<mir::gl::Texture>
+        [this, &renderable, need_fallback = !static_cast<bool>(texture)]() -> std::shared_ptr<mir::gl::Texture>
         {
-            try
+            if (need_fallback)
             {
-                return texture_cache->load(renderable);
+                try
+                {
+                    return texture_cache->load(renderable);
+                }
+                catch (std::exception const&)
+                {
+                    report_exception();
+                }
             }
-            catch (std::exception const&)
-            {
-                return {nullptr};
-            }
+            return {nullptr};
         }();
 
     auto const* maybe_prog =
