@@ -93,7 +93,6 @@ add_subdirectory(platforms/)
 add_subdirectory(options/)
 add_subdirectory(compositor/)
 add_subdirectory(console/)
-add_subdirectory(frontend/)
 add_subdirectory(logging/)
 add_subdirectory(shell/)
 add_subdirectory(geometry/)
@@ -158,9 +157,6 @@ target_link_libraries(
   mircommon
   client_platform_common
   server_platform_common
-
-  mirclient-static
-  mirclientlttng-static
 
   mir-test-static
   mir-test-framework-static

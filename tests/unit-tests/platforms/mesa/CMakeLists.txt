@@ -14,6 +14,4 @@ if (MIR_BUILD_PLATFORM_MESA_X11)
   add_subdirectory(x11/)
 endif()
 
-add_subdirectory(client/)
-
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
