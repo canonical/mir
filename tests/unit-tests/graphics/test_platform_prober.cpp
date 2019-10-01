@@ -72,26 +72,33 @@ std::shared_ptr<void> ensure_mesa_probing_succeeds()
     struct MockEnvironment {
         mtf::UdevEnvironment udev;
         testing::NiceMock<mtd::MockEGL> egl;
+#ifdef MIR_BUILD_PLATFORM_MESA_KMS
         testing::NiceMock<mtd::MockGBM> gbm;
         testing::NiceMock<mtd::MockGL> gl;
+#endif
     };
+#ifdef MIR_BUILD_PLATFORM_MESA_KMS
     static auto const fake_gbm_device = reinterpret_cast<gbm_device*>(0xa1b2c3d4);
+#endif
     static auto const fake_egl_display = reinterpret_cast<EGLDisplay>(0xeda);
     auto env = std::make_shared<MockEnvironment>();
 
     env->udev.add_standard_device("standard-drm-devices");
     ON_CALL(env->egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
         .WillByDefault(Return("EGL_MESA_platform_gbm EGL_EXT_platform_base"));
+#ifdef MIR_BUILD_PLATFORM_MESA_KMS
     ON_CALL(env->gbm, gbm_create_device(_))
         .WillByDefault(Return(fake_gbm_device));
     ON_CALL(env->egl, eglGetDisplay(fake_gbm_device))
         .WillByDefault(Return(fake_egl_display));
+#endif
     ON_CALL(env->egl, eglInitialize(fake_egl_display, _, _))
         .WillByDefault(
             DoAll(
                 SetArgPointee<1>(1),
                 SetArgPointee<2>(4),
                 Return(EGL_TRUE)));
+#ifdef MIR_BUILD_PLATFORM_MESA_KMS
     ON_CALL(env->egl, eglGetConfigAttrib(_, env->egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
             .WillByDefault(
                 DoAll(
@@ -99,6 +106,7 @@ std::shared_ptr<void> ensure_mesa_probing_succeeds()
                     Return(EGL_TRUE)));
     ON_CALL(env->gl, glGetString(GL_RENDERER))
         .WillByDefault(Return(reinterpret_cast<GLubyte const*>("Not A Software Renderer, Honest!")));
+#endif
 
     return env;
 }
