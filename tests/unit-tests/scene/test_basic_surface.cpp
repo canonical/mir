@@ -647,6 +647,61 @@ INSTANTIATE_TEST_CASE_P(SurfaceDPIAttributeTest, BasicSurfaceAttributeTest,
 INSTANTIATE_TEST_CASE_P(SurfaceFocusAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_focus_test_parameters));
 
+TEST_F(BasicSurfaceTest, default_focus_state)
+{
+    EXPECT_EQ(mir_window_focus_state_unfocused, surface.focus_state());
+}
+
+TEST_F(BasicSurfaceTest, focus_state_can_be_set)
+{
+    surface.set_focus_state(mir_window_focus_state_focused);
+    EXPECT_EQ(mir_window_focus_state_focused, surface.focus_state());
+}
+
+TEST_F(BasicSurfaceTest, notifies_about_focus_state_changes)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, attrib_changed(_, mir_window_attrib_focus, mir_window_focus_state_focused))
+        .Times(1);
+    EXPECT_CALL(mock_surface_observer, attrib_changed(_, mir_window_attrib_focus, mir_window_focus_state_unfocused))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+
+    surface.set_focus_state(mir_window_focus_state_focused);
+    surface.set_focus_state(mir_window_focus_state_unfocused);
+}
+
+TEST_F(BasicSurfaceTest, does_not_notify_if_focus_state_is_unchanged)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, attrib_changed(_, mir_window_attrib_focus, mir_window_focus_state_focused))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+
+    surface.set_focus_state(mir_window_focus_state_unfocused); // will not notify, since it is default
+    surface.set_focus_state(mir_window_focus_state_focused);
+    surface.set_focus_state(mir_window_focus_state_focused);
+}
+
+TEST_F(BasicSurfaceTest, throws_on_invalid_focus_state)
+{
+    using namespace testing;
+
+    auto const invalid_state = static_cast<MirWindowFocusState>(mir_window_focus_state_focused + 1);
+
+    EXPECT_THROW({
+            surface.configure(mir_window_attrib_focus, invalid_state);
+        }, std::logic_error);
+}
+
 TEST_F(BasicSurfaceTest, notifies_about_cursor_image_change)
 {
     using namespace testing;
