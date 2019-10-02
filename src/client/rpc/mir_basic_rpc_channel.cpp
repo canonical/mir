@@ -26,7 +26,7 @@
 #include "mir/protobuf/protocol_version.h"
 #include "mir/log.h"
 
-#if GOOGLE_PROTOBUF_VERSION >= 3008000
+#if GOOGLE_PROTOBUF_VERSION >= 3007000
 #include <google/protobuf/stubs/callback.h>
 #endif
 
