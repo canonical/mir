@@ -63,7 +63,8 @@ class XdgOutputV1 : public wayland::XdgOutputV1
 public:
     XdgOutputV1(
         wl_resource* new_resource,
-        graphics::DisplayConfigurationOutput const& config);
+        graphics::DisplayConfigurationOutput const& config,
+        wl_resource* wl_output_resource);
 
 private:
     void destroy();
@@ -79,7 +80,7 @@ auto mf::create_xdg_output_manager_v1(struct wl_display* display, OutputManager*
 }
 
 mf::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_display* display, mf::OutputManager* const output_manager)
-    : Global(display, Version<2>()),
+    : Global(display, Version<3>()),
       output_manager{output_manager}
 {
 }
@@ -90,7 +91,7 @@ void mf::XdgOutputManagerV1::bind(wl_resource* new_resource)
 }
 
 mf::XdgOutputManagerV1::Instance::Instance(wl_resource* new_resource, OutputManager* manager)
-    : XdgOutputManagerV1{new_resource, Version<2>()},
+    : XdgOutputManagerV1{new_resource, Version<3>()},
       output_manager{manager}
 {
 }
@@ -105,7 +106,7 @@ void mf::XdgOutputManagerV1::Instance::get_xdg_output(wl_resource* new_output, w
     bool found = false;
     auto const output_id = output_manager->output_id_for(client, output);
     output_manager->display_config()->for_each_output(
-        [&found, output_id, new_output](mg::DisplayConfigurationOutput const& config)
+        [&found, output, output_id, new_output](mg::DisplayConfigurationOutput const& config)
         {
             if (config.id == output_id)
             {
@@ -114,7 +115,7 @@ void mf::XdgOutputManagerV1::Instance::get_xdg_output(wl_resource* new_output, w
                     BOOST_THROW_EXCEPTION(std::runtime_error(
                         "Found multiple output configs with id " + std::to_string(output_id.as_value())));
                 }
-                new XdgOutputV1{new_output, config};
+                new XdgOutputV1{new_output, config, output};
                 found = true;
             }
         });
@@ -128,8 +129,9 @@ void mf::XdgOutputManagerV1::Instance::get_xdg_output(wl_resource* new_output, w
 
 mf::XdgOutputV1::XdgOutputV1(
     wl_resource* new_resource,
-    mg::DisplayConfigurationOutput const& config)
-    : mw::XdgOutputV1(new_resource, Version<2>())
+    mg::DisplayConfigurationOutput const& config,
+    wl_resource* wl_output_resource)
+    : mw::XdgOutputV1(new_resource, Version<3>())
 {
     auto extents = config.extents();
     send_logical_position_event(extents.left().as_int(), extents.top().as_int());
@@ -145,7 +147,30 @@ mf::XdgOutputV1::XdgOutputV1(
     // {
     //     send_description_event("TODO: set this");
     // }
-    send_done_event();
+
+    /* xdg-output-unstable-v1.xml:
+     * For objects version 3 onwards, after all xdg_output properties have been
+     * sent (when the object is created and when properties are updated), a
+     * wl_output.done event is sent. This allows changes to the output
+     * properties to be seen as atomic, even if they happen via multiple events.
+     */
+    if (wl_resource_get_version(resource) >= 3)
+    {
+        // TODO: Use wrapper methods once wl_output is is uing a wrapper
+        if (wl_resource_get_version(wl_output_resource) >= WL_OUTPUT_DONE_SINCE_VERSION)
+        {
+            wl_output_send_done(wl_output_resource);
+        }
+    }
+    else
+    {
+        /* xdg-output-unstable-v1.xml:
+         * For objects version 3 onwards, this event is deprecated. Compositors
+         * are not required to send it anymore and must send wl_output.done
+         * instead.
+         */
+        send_done_event();
+    }
 }
 
 void mf::XdgOutputV1::destroy()

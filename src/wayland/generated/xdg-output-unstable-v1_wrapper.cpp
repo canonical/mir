@@ -114,9 +114,9 @@ struct mw::XdgOutputManagerV1::Thunks
     static void const* request_vtable[];
 };
 
-int const mw::XdgOutputManagerV1::Thunks::supported_version = 2;
+int const mw::XdgOutputManagerV1::Thunks::supported_version = 3;
 
-mw::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_resource* resource, Version<2>)
+mw::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -137,7 +137,7 @@ void mw::XdgOutputManagerV1::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::XdgOutputManagerV1::Global::Global(wl_display* display, Version<2>)
+mw::XdgOutputManagerV1::Global::Global(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
               display,
@@ -198,9 +198,9 @@ struct mw::XdgOutputV1::Thunks
     static void const* request_vtable[];
 };
 
-int const mw::XdgOutputV1::Thunks::supported_version = 2;
+int const mw::XdgOutputV1::Thunks::supported_version = 3;
 
-mw::XdgOutputV1::XdgOutputV1(struct wl_resource* resource, Version<2>)
+mw::XdgOutputV1::XdgOutputV1(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {

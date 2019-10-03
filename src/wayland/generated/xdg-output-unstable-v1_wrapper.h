@@ -30,7 +30,7 @@ public:
 
     static XdgOutputManagerV1* from(struct wl_resource*);
 
-    XdgOutputManagerV1(struct wl_resource* resource, Version<2>);
+    XdgOutputManagerV1(struct wl_resource* resource, Version<3>);
     virtual ~XdgOutputManagerV1() = default;
 
     void destroy_wayland_object() const;
@@ -45,7 +45,7 @@ public:
     class Global : public wayland::Global
     {
     public:
-        Global(wl_display* display, Version<2>);
+        Global(wl_display* display, Version<3>);
 
         auto interface_name() const -> char const* override;
 
@@ -66,7 +66,7 @@ public:
 
     static XdgOutputV1* from(struct wl_resource*);
 
-    XdgOutputV1(struct wl_resource* resource, Version<2>);
+    XdgOutputV1(struct wl_resource* resource, Version<3>);
     virtual ~XdgOutputV1() = default;
 
     void send_logical_position_event(int32_t x, int32_t y) const;
