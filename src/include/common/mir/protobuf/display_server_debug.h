@@ -20,7 +20,7 @@
 #define MIR_PROTOBUF_DISPLAY_SERVER_DEBUG_H_
 
 #include "mir_protobuf.pb.h"
-#if GOOGLE_PROTOBUF_VERSION >= 3008000
+#if GOOGLE_PROTOBUF_VERSION >= 3007000
 #include <google/protobuf/stubs/callback.h>
 #endif
 

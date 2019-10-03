@@ -226,11 +226,11 @@ catch (std::exception const& x)
 MirDisplayConfig* mir_blob_to_display_config(MirBlob* blob)
 try
 {
-    auto config = new mir::protobuf::DisplayConfiguration;
+    auto config = new MirDisplayConfig;
 
     config->ParseFromArray(mir_blob_data(blob), mir_blob_size(blob));
 
-    return static_cast<MirDisplayConfig*>(config);
+    return config;
 }
 catch (std::exception const& x)
 {
