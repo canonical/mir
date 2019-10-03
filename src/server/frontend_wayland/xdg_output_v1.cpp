@@ -134,11 +134,17 @@ mf::XdgOutputV1::XdgOutputV1(
     auto extents = config.extents();
     send_logical_position_event(extents.left().as_int(), extents.top().as_int());
     send_logical_size_event(extents.size.width.as_int(), extents.size.height.as_int());
-    // TODO: Better output names that are consistant between sessions
-    auto output_name = "OUT-" + std::to_string(config.id.as_value());
-    send_name_event(output_name);
+    if (version_supports_name())
+    {
+        // TODO: Better output names that are consistant between sessions
+        auto output_name = "OUT-" + std::to_string(config.id.as_value());
+        send_name_event(output_name);
+    }
     // not sending description is allowed
-    // send_description_event("TODO: set this");
+    // if (version_supports_description())
+    // {
+    //     send_description_event("TODO: set this");
+    // }
     send_done_event();
 }
 
