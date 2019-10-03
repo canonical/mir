@@ -99,21 +99,13 @@ struct TestTouchspotController : public ::testing::Test
     std::shared_ptr<StubScene> const scene;
 };
 
-MATCHER(SoftwareBuffer, "")
-{
-    auto properties = static_cast<mg::BufferProperties const&>(arg);
-    if (properties.usage != mg::BufferUsage::software)
-        return false;
-    return true;
-}
-
 }
 
 TEST_F(TestTouchspotController, allocates_software_buffer_for_touchspots)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
+    EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1)
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, scene);
 }
@@ -121,8 +113,8 @@ TEST_F(TestTouchspotController, allocates_software_buffer_for_touchspots)
 TEST_F(TestTouchspotController, touches_result_in_renderables_in_stack)
 {
     using namespace ::testing;
-    
-    EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
+
+    EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1)
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, scene);
     controller.enable();
@@ -136,7 +128,7 @@ TEST_F(TestTouchspotController, spots_move)
 {
     using namespace ::testing;
     
-    EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
+    EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1)
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, scene);
     controller.enable();
@@ -151,7 +143,7 @@ TEST_F(TestTouchspotController, multiple_spots)
 {
     using namespace ::testing;
     
-    EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
+    EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1)
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, scene);
     controller.enable();
@@ -173,7 +165,7 @@ TEST_F(TestTouchspotController, touches_do_not_result_in_renderables_in_stack_wh
 {
     using namespace ::testing;
     
-    EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
+    EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1)
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, scene);
     controller.enable();
@@ -202,7 +194,8 @@ struct TestTouchspotControllerSceneUpdates : public TestTouchspotController
     TestTouchspotControllerSceneUpdates()
         : scene(std::make_shared<StubSceneWithMockEmission>())
     {
-        EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
+        using namespace ::testing;
+        EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1)
             .WillOnce(testing::Return(std::make_shared<mtd::StubBuffer>()));
     }
 

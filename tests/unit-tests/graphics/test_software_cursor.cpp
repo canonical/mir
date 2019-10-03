@@ -305,7 +305,7 @@ TEST_F(SoftwareCursor, new_buffer_on_each_show)
         std::vector<MirPixelFormat> supported_pixel_formats() { return {mir_pixel_format_abgr_8888}; } 
     } mock_allocator;
 
-    EXPECT_CALL(mock_allocator, alloc_buffer(testing::_))
+    EXPECT_CALL(mock_allocator, alloc_software_buffer(testing::_, testing::_))
         .Times(3)
         .WillRepeatedly(testing::Return(std::make_shared<mtd::StubBuffer>()));;
     mg::SoftwareCursor cursor{
