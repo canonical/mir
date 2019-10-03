@@ -27,10 +27,53 @@
 #include <vector>
 #include <memory>
 
-struct MirDisplayConfig : mir::protobuf::DisplayConfiguration
+struct MirDisplayConfig
 {
-    explicit MirDisplayConfig(mir::protobuf::DisplayConfiguration& pconfig) :
-        mir::protobuf::DisplayConfiguration::DisplayConfiguration{std::move(pconfig)} {}
+    MirDisplayConfig()
+    {
+    }
+
+    explicit MirDisplayConfig(mir::protobuf::DisplayConfiguration& wrapped) :
+        wrapped{std::move(wrapped)}
+    {
+    }
+
+    operator mir::protobuf::DisplayConfiguration const&() const
+    {
+        return wrapped;
+    }
+
+    int ByteSize() const
+    {
+        return wrapped.ByteSize();
+    }
+
+    uint8_t* SerializeWithCachedSizesToArray(uint8_t* target) const
+    {
+        return wrapped.SerializeWithCachedSizesToArray(target);
+    }
+
+    bool ParseFromArray(const void* data, int size)
+    {
+        return wrapped.ParseFromArray(data, size);
+    }
+
+    int display_output_size() const
+    {
+        return wrapped.display_output_size();
+    }
+
+    mir::protobuf::DisplayOutput const& display_output(int index) const
+    {
+        return wrapped.display_output(index);
+    }
+
+    mir::protobuf::DisplayOutput* mutable_display_output(int index)
+    {
+        return wrapped.mutable_display_output(index);
+    }
+
+    mir::protobuf::DisplayConfiguration wrapped;
 };
 
 namespace mir
