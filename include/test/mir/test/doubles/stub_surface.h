@@ -74,6 +74,8 @@ struct StubSurface : scene::Surface
     void set_depth_layer(MirDepthLayer depth_layer) override;
     std::experimental::optional<geometry::Rectangle> clip_area() const override;
     void set_clip_area(std::experimental::optional<geometry::Rectangle> const& area) override;
+    MirWindowFocusState focus_state() const override;
+    void set_focus_state(MirWindowFocusState new_state) override;
 };
 }
 }

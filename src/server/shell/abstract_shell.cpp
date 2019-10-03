@@ -387,7 +387,7 @@ void msh::AbstractShell::notify_focus_locked(
             if (find(begin(new_focus_tree), end(new_focus_tree), item) == end(new_focus_tree) ||
                 item == surface)
             {
-                item->configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
+                item->set_focus_state(mir_window_focus_state_unfocused);
             }
         }
 
@@ -413,7 +413,7 @@ void msh::AbstractShell::notify_focus_locked(
                 if (find(begin(current_focus_tree), end(current_focus_tree), item) == end(current_focus_tree) ||
                     item == surface)
                 {
-                    item->configure(mir_window_attrib_focus, mir_window_focus_state_focused);
+                    item->set_focus_state(mir_window_focus_state_focused);
                 }
             }
         }

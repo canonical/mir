@@ -68,7 +68,7 @@ void mf::WaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAtt
     case mir_window_attrib_focus:
         run_on_wayland_thread_unless_destroyed([this, value]()
             {
-                has_focus = static_cast<bool>(value);
+                auto has_focus = static_cast<bool>(value);
                 if (has_focus)
                     seat->notify_focus(client);
                 window->handle_active_change(has_focus);

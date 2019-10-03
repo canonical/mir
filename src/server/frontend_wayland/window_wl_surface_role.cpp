@@ -290,7 +290,10 @@ auto mf::WindowWlSurfaceRole::window_state() -> MirWindowState
 
 auto mf::WindowWlSurfaceRole::is_active() -> bool
 {
-    return observer->is_active();
+    if (auto const scene_surface = weak_scene_surface.lock())
+        return scene_surface->focus_state() == mir_window_focus_state_focused;
+    else
+        return false;
 }
 
 std::chrono::nanoseconds mf::WindowWlSurfaceRole::latest_timestamp()

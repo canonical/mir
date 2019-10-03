@@ -75,11 +75,6 @@ public:
         return timestamp;
     }
 
-    auto is_active() const -> bool
-    {
-        return has_focus;
-    }
-
     auto state() const -> MirWindowState
     {
         return current_state;
@@ -95,7 +90,6 @@ private:
     geometry::Size window_size;
     std::chrono::nanoseconds timestamp{0};
     std::experimental::optional<geometry::Size> requested_size;
-    bool has_focus{false};
     MirWindowState current_state{mir_window_state_unknown};
     MirPointerButtons last_pointer_buttons{0};
     std::experimental::optional<mir::geometry::Point> last_pointer_position;

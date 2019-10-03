@@ -514,26 +514,6 @@ int ms::BasicSurface::set_swap_interval(int interval)
     return interval;
 }
 
-MirWindowFocusState ms::BasicSurface::set_focus_state(MirWindowFocusState new_state)
-{
-    if (new_state != mir_window_focus_state_focused &&
-        new_state != mir_window_focus_state_unfocused)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid focus state."));
-    }
-
-    std::unique_lock<std::mutex> lock(guard);
-    if (focus_ != new_state)
-    {
-        focus_ = new_state;
-
-        lock.unlock();
-        observers.attrib_changed(this, mir_window_attrib_focus, new_state);
-    }
-
-    return new_state;
-}
-
 MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMode new_orientation_mode)
 {
     if ((new_orientation_mode & mir_orientation_mode_any) == 0)
@@ -565,7 +545,7 @@ int ms::BasicSurface::configure(MirWindowAttrib attrib, int value)
         result = set_state(static_cast<MirWindowState>(result));
         break;
     case mir_window_attrib_focus:
-        result = set_focus_state(static_cast<MirWindowFocusState>(result));
+        set_focus_state(static_cast<MirWindowFocusState>(result));
         break;
     case mir_window_attrib_swapinterval:
         result = set_swap_interval(result);
@@ -983,8 +963,33 @@ std::experimental::optional<geom::Rectangle> mir::scene::BasicSurface::clip_area
     std::lock_guard<std::mutex> lock(guard);
     return clip_area_;
 }
+
 void mir::scene::BasicSurface::set_clip_area(std::experimental::optional<geom::Rectangle> const& area)
 {
     std::lock_guard<std::mutex> lock(guard);
     clip_area_ = area;
+}
+
+auto mir::scene::BasicSurface::focus_state() const -> MirWindowFocusState
+{
+    std::lock_guard<std::mutex> lock(guard);
+    return focus_;
+}
+
+void mir::scene::BasicSurface::set_focus_state(MirWindowFocusState new_state)
+{
+    if (new_state != mir_window_focus_state_focused &&
+        new_state != mir_window_focus_state_unfocused)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid focus state."));
+    }
+
+    std::unique_lock<std::mutex> lock(guard);
+    if (focus_ != new_state)
+    {
+        focus_ = new_state;
+
+        lock.unlock();
+        observers.attrib_changed(this, mir_window_attrib_focus, new_state);
+    }
 }
