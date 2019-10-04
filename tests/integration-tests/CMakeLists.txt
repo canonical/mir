@@ -22,7 +22,7 @@ set(
   test_client_screencast.cpp
   test_large_messages.cpp
   test_surfaceloop.cpp
-        test_test_framework.cpp
+  test_test_framework.cpp
   test_error_reporting.cpp
   test_submit_buffer.cpp
   test_display_info.cpp
