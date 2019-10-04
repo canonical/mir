@@ -626,3 +626,10 @@ MIR_CLIENT_UBSAN {
       typeinfo?for?mir::input::receiver::XKBMapper;
   };
 } MIR_CLIENT_0.26.1;
+
+MIR_CLIENT_DETAIL_1.5 { # New functions in Mir 1.5 (used by mir_umock_unit_tests)
+ global:
+  extern "C++" {
+      vtable?for?mir::input::receiver::XKBMapper;
+  };
+} MIR_CLIENT_DETAIL_0.26.1;

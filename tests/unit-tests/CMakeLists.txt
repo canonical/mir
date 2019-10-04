@@ -195,6 +195,7 @@ target_link_libraries(
   exampleserverconfig
   mirdraw
   mircommon
+  mirclient
   client_platform_common
 
   mir-test-static
