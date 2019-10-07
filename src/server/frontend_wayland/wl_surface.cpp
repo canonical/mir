@@ -39,6 +39,7 @@
 #include "mir/log.h"
 
 #include <algorithm>
+#include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -141,6 +142,8 @@ auto mf::WlSurface::scene_surface() const -> std::experimental::optional<std::sh
 
 void mf::WlSurface::set_role(WlSurfaceRole* role_)
 {
+    if (role != &null_role)
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface already has a role"));
     role = role_;
 }
 
