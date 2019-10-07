@@ -26,13 +26,71 @@
 #include "mir/scene/surface.h"
 #include "mir/frontend/buffer_stream.h"
 #include "mir/geometry/displacement.h"
+#include "mir/graphics/cursor_image.h"
+#include "mir/graphics/buffer.h"
+#include "mir/renderer/sw/pixel_source.h"
+#include "mir/compositor/buffer_stream.h"
 
 #include <linux/input-event-codes.h>
+#include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
+namespace mg = mir::graphics;
+namespace mc = mir::compositor;
+namespace mrs = mir::renderer::software;
+
+namespace
+{
+class BufferCursorImage : public mg::CursorImage
+{
+public:
+    BufferCursorImage(mg::Buffer &buffer, geom::Displacement const& hotspot)
+        : buffer_size(buffer.size()),
+          hotspot_(hotspot)
+    {
+        auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer.native_buffer_base());
+        if (pixel_source)
+        {
+            pixel_source->read([&](unsigned char const* buffer_pixels)
+            {
+                size_t buffer_size_bytes = buffer_size.width.as_int() * buffer_size.height.as_int()
+                    * MIR_BYTES_PER_PIXEL(buffer.pixel_format());
+                pixels = std::unique_ptr<unsigned char[]>(
+                    new unsigned char[buffer_size_bytes]
+                );
+                memcpy(pixels.get(), buffer_pixels, buffer_size_bytes);
+            });
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("Could not read cursor image data from buffer"));
+        }
+    }
+
+    auto as_argb_8888() const -> void const* override
+    {
+        return pixels.get();
+    }
+
+    auto size() const -> geom::Size override
+    {
+        return buffer_size;
+    }
+
+    auto hotspot() const -> geom::Displacement override
+    {
+        return hotspot_;
+    }
+
+private:
+    geom::Size const buffer_size;
+    geom::Displacement const hotspot_;
+    std::unique_ptr<unsigned char[]> pixels;
+};
+}
 
 struct mf::WlPointer::Cursor
 {
@@ -167,12 +225,17 @@ namespace
 struct WlStreamCursor : mf::WlPointer::Cursor
 {
     WlStreamCursor(
-        std::shared_ptr<mf::BufferStream> const& stream,
+        std::shared_ptr<mc::BufferStream> const& stream,
         geom::Displacement hotspot);
+    ~WlStreamCursor();
 
     void apply_to(mf::WlSurface* surface) override;
 
-    std::shared_ptr<mf::BufferStream> const stream;
+private:
+    void apply_latest_buffer();
+
+    std::weak_ptr<ms::Surface> surface_under_cursor;
+    std::shared_ptr<mc::BufferStream> const stream;
     geom::Displacement const hotspot;
 };
 
@@ -190,10 +253,14 @@ void mf::WlPointer::set_cursor(
 {
     if (surface)
     {
-        auto const cursor_stream = WlSurface::from(*surface)->stream;
+        auto const frontend_stream = WlSurface::from(*surface)->stream;
+        auto const compositor_stream = std::dynamic_pointer_cast<mc::BufferStream>(frontend_stream);
         geom::Displacement const cursor_hotspot{hotspot_x, hotspot_y};
 
-        cursor = std::make_unique<WlStreamCursor>(cursor_stream, cursor_hotspot);
+        if (!compositor_stream)
+            BOOST_THROW_EXCEPTION(std::logic_error("Surface does not have a compositor buffer stream"));
+
+        cursor = std::make_unique<WlStreamCursor>(compositor_stream, cursor_hotspot);
     }
     else
     {
@@ -212,18 +279,53 @@ void mf::WlPointer::release()
 }
 
 WlStreamCursor::WlStreamCursor(
-    std::shared_ptr<mf::BufferStream> const& stream,
+    std::shared_ptr<mc::BufferStream> const& stream,
     geom::Displacement hotspot) :
     stream{stream},
     hotspot{hotspot}
 {
+    stream->set_frame_posted_callback(
+        [this](auto)
+        {
+            this->apply_latest_buffer();
+        });
+}
+
+WlStreamCursor::~WlStreamCursor()
+{
+    stream->set_frame_posted_callback([](auto){});
 }
 
 void WlStreamCursor::apply_to(mf::WlSurface* surface)
 {
-    if (auto scene_surface = surface->scene_surface())
+    auto const scene_surface = surface->scene_surface();
+
+    if (scene_surface)
     {
-        scene_surface.value()->set_cursor_stream(stream, hotspot);
+        surface_under_cursor = *scene_surface;
+        apply_latest_buffer();
+    }
+    else
+    {
+        surface_under_cursor.reset();
+    }
+}
+
+void WlStreamCursor::apply_latest_buffer()
+{
+    if (auto const surface = surface_under_cursor.lock())
+    {
+        if (stream->has_submitted_buffer())
+        {
+            auto const cursor_image = std::make_shared<BufferCursorImage>(
+                *stream->lock_compositor_buffer(this),
+                hotspot);
+            surface->set_cursor_image(cursor_image);
+        }
+        else
+        {
+            surface->set_cursor_image(nullptr);
+        }
     }
 }
 
