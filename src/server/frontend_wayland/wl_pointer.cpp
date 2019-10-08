@@ -223,20 +223,25 @@ void mf::WlPointer::frame()
 
 namespace
 {
-struct WlStreamCursor : mf::WlPointer::Cursor
+struct WlSurfaceCursor : mf::WlPointer::Cursor
 {
-    WlStreamCursor(
-        std::shared_ptr<mc::BufferStream> const& stream,
+    WlSurfaceCursor(
+        mf::WlSurface* surface,
         geom::Displacement hotspot);
-    ~WlStreamCursor();
+    ~WlSurfaceCursor();
 
     void apply_to(mf::WlSurface* surface) override;
 
 private:
     void apply_latest_buffer();
 
-    std::weak_ptr<ms::Surface> surface_under_cursor;
+    mf::WlSurface* const surface;
+    // If surface_destroyed is true, surface should not be used
+    std::shared_ptr<bool> surface_destroyed;
     std::shared_ptr<mc::BufferStream> const stream;
+    mf::NullWlSurfaceRole surface_role; // Used only to assert unique ownership
+
+    std::weak_ptr<ms::Surface> surface_under_cursor;
     geom::Displacement const hotspot;
 };
 
@@ -254,15 +259,10 @@ void mf::WlPointer::set_cursor(
 {
     if (surface)
     {
-        auto const frontend_stream = WlSurface::from(*surface)->stream;
-        auto const compositor_stream = std::dynamic_pointer_cast<mc::BufferStream>(frontend_stream);
+        auto const wl_surface = WlSurface::from(*surface);
         geom::Displacement const cursor_hotspot{hotspot_x, hotspot_y};
-
-        if (!compositor_stream)
-            BOOST_THROW_EXCEPTION(std::logic_error("Surface does not have a compositor buffer stream"));
-
-        cursor.reset(); // Destroy the old cursor *before* creating a new one with potentially the same stream
-        cursor = std::make_unique<WlStreamCursor>(compositor_stream, cursor_hotspot);
+        cursor.reset(); // clean up old cursor before creating new one
+        cursor = std::make_unique<WlSurfaceCursor>(wl_surface, cursor_hotspot);
     }
     else
     {
@@ -280,12 +280,18 @@ void mf::WlPointer::release()
     destroy_wayland_object();
 }
 
-WlStreamCursor::WlStreamCursor(
-    std::shared_ptr<mc::BufferStream> const& stream,
-    geom::Displacement hotspot) :
-    stream{stream},
-    hotspot{hotspot}
+WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot)
+    : surface{surface},
+      surface_destroyed{surface->destroyed_flag()},
+      stream{std::dynamic_pointer_cast<mc::BufferStream>(surface->stream)},
+      surface_role{surface},
+      hotspot{hotspot}
 {
+    surface->set_role(&surface_role);
+
+    if (!stream)
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not have a compositor buffer stream"));
+
     stream->set_frame_posted_callback(
         [this](auto)
         {
@@ -293,12 +299,14 @@ WlStreamCursor::WlStreamCursor(
         });
 }
 
-WlStreamCursor::~WlStreamCursor()
+WlSurfaceCursor::~WlSurfaceCursor()
 {
+    if (!*surface_destroyed)
+        surface->clear_role();
     stream->set_frame_posted_callback([](auto){});
 }
 
-void WlStreamCursor::apply_to(mf::WlSurface* surface)
+void WlSurfaceCursor::apply_to(mf::WlSurface* surface)
 {
     auto const scene_surface = surface->scene_surface();
 
@@ -313,7 +321,7 @@ void WlStreamCursor::apply_to(mf::WlSurface* surface)
     }
 }
 
-void WlStreamCursor::apply_latest_buffer()
+void WlSurfaceCursor::apply_latest_buffer()
 {
     if (auto const surface = surface_under_cursor.lock())
     {
