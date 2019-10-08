@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -81,8 +81,20 @@ public:
     void remove_focus_listener(ListenerTracker* listener);
     void notify_focus(wl_client* focus) const;
 
+    void server_restart();
+
 private:
     std::vector<ListenerTracker*> focus_listeners;
+
+    struct FocusClient : ListenerTracker
+    {
+        wl_client* client = nullptr;
+
+        void focus_on(wl_client* client) override
+        {
+            this->client = client;
+        }
+    } focus;
 
     template<class T>
     class ListenerList;

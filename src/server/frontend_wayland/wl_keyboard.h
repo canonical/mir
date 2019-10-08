@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -59,9 +59,11 @@ public:
     void focussed(WlSurface* surface, bool focussed);
     void set_keymap(char const* const buffer, size_t length);
     void set_keymap(mir::input::Keymap const& new_keymap);
+    void resync_keyboard();
 
 private:
     void update_modifier_state();
+    void update_keyboard_state(std::vector<uint32_t> const& keyboard_state);
 
     std::unique_ptr<xkb_keymap, void (*)(xkb_keymap *)> keymap;
     std::unique_ptr<xkb_state, void (*)(xkb_state *)> state;

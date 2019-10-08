@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -176,6 +176,7 @@ mf::WlSeat::WlSeat(
         executor{executor}
 {
     input_hub->add_observer(config_observer);
+    add_focus_listener(&focus);
 }
 
 mf::WlSeat::~WlSeat()
@@ -305,4 +306,10 @@ void mf::WlSeat::add_focus_listener(ListenerTracker* listener)
 void mf::WlSeat::remove_focus_listener(ListenerTracker* listener)
 {
     focus_listeners.erase(remove(begin(focus_listeners), end(focus_listeners), listener), end(focus_listeners));
+}
+
+void mf::WlSeat::server_restart()
+{
+    if (focus.client)
+        for_each_listener(focus.client, [](WlKeyboard* keyboard) { keyboard->resync_keyboard(); });
 }

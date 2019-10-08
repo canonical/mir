@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -91,6 +91,7 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool focussed)
         // TODO: Send the surface's keymap here
 
         auto const keyboard_state = acquire_current_keyboard_state();
+        update_keyboard_state(keyboard_state);
 
         wl_array key_state;
         wl_array_init(&key_state);
@@ -98,6 +99,7 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool focussed)
         auto* const array_storage = wl_array_add(
             &key_state,
             keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
+
         if (!array_storage)
         {
             wl_resource_post_no_memory(resource);
@@ -112,14 +114,6 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool focussed)
                 keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
         }
 
-        // Rebuild xkb state
-        state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
-        for (auto scancode : keyboard_state)
-        {
-            xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
-        }
-        update_modifier_state();
-
         send_enter_event(serial, surface->raw_resource(), &key_state);
         wl_array_release(&key_state);
     }
@@ -127,6 +121,18 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool focussed)
     {
         send_leave_event(serial, surface->raw_resource());
     }
+}
+
+void mf::WlKeyboard::update_keyboard_state(std::vector<uint32_t> const& keyboard_state)
+{
+    // Rebuild xkb state
+    state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
+    for (auto scancode : keyboard_state)
+    {
+        xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
+    }
+
+    update_modifier_state();
 }
 
 void mf::WlKeyboard::set_keymap(char const* const buffer, size_t length)
@@ -218,4 +224,9 @@ void mf::WlKeyboard::update_modifier_state()
 void mf::WlKeyboard::release()
 {
     wl_resource_destroy(resource);
+}
+
+void mir::frontend::WlKeyboard::resync_keyboard()
+{
+    update_keyboard_state(acquire_current_keyboard_state());
 }
