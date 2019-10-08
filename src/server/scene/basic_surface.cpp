@@ -182,22 +182,20 @@ struct ms::CursorStreamImageAdapter
 
     void update(std::shared_ptr<mf::BufferStream> const& new_stream, geom::Displacement const& new_hotspot)
     {
-        if (new_stream == stream && new_hotspot == hotspot)
+        if (stream && new_stream != stream)
         {
-            return;
+            stream->set_frame_posted_callback([](auto){});
         }
-        else if (new_stream != stream)
-        {
-            if (stream)
-                stream->set_frame_posted_callback([](auto){});
 
-            stream = std::dynamic_pointer_cast<mc::BufferStream>(new_stream);
-            stream->set_frame_posted_callback(
-                [this](auto)
-                {
-                    this->post_cursor_image_from_current_buffer();
-                });
-        }
+        stream = std::dynamic_pointer_cast<mc::BufferStream>(new_stream);
+
+        if (!stream) mir::fatal_error("Invalid stream used for cursor");
+
+        stream->set_frame_posted_callback(
+            [this](auto)
+            {
+                this->post_cursor_image_from_current_buffer();
+            });
 
         hotspot = new_hotspot;
         post_cursor_image_from_current_buffer();
