@@ -94,11 +94,16 @@ void mf::WlPointer::leave()
 {
     if (!surface_under_cursor)
         return;
-    surface_under_cursor.value()->remove_destroy_listener(this);
+    auto const surface = surface_under_cursor.value();
+    surface->remove_destroy_listener(this);
+    if (auto mir_surface = surface->scene_surface())
+    {
+        // TODO [purge-mirclient] We should clean up once we've got no mirclient to support:
+        // Called for side-effect set_cursor_image() implicitly detatches the cursor stream
+        mir_surface.value()->set_cursor_image({});
+    }
     auto const serial = wl_display_next_serial(display);
-    send_leave_event(
-        serial,
-        surface_under_cursor.value()->raw_resource());
+    send_leave_event(serial, surface->raw_resource());
     can_send_frame = true;
     surface_under_cursor = std::experimental::nullopt;
 }
