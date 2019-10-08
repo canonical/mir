@@ -260,6 +260,7 @@ void mf::WlPointer::set_cursor(
         if (!compositor_stream)
             BOOST_THROW_EXCEPTION(std::logic_error("Surface does not have a compositor buffer stream"));
 
+        cursor.reset(); // Destroy the old cursor *before* creating a new one with potentially the same stream
         cursor = std::make_unique<WlStreamCursor>(compositor_stream, cursor_hotspot);
     }
     else
