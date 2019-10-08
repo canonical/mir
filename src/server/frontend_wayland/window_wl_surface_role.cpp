@@ -141,6 +141,18 @@ void mf::WindowWlSurfaceRole::set_title(std::string const& title)
     }
 }
 
+void mf::WindowWlSurfaceRole::set_application_id(std::string const& application_id)
+{
+    if (weak_scene_surface.lock())
+    {
+        spec().application_id = application_id;
+    }
+    else
+    {
+        params->application_id = application_id;
+    }
+}
+
 void mf::WindowWlSurfaceRole::initiate_interactive_move()
 {
     if (auto const scene_surface = weak_scene_surface.lock())

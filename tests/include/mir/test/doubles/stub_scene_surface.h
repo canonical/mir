@@ -100,6 +100,9 @@ public:
 
     auto focus_state() const -> MirWindowFocusState override { return mir_window_focus_state_unfocused; }
     void set_focus_state(MirWindowFocusState /*focus_state*/) override {}
+
+    auto application_id() const -> std::string override { return ""; }
+    void set_application_id(std::string const& /*application_id*/) override {}
 };
 
 }

@@ -76,6 +76,8 @@ struct StubSurface : scene::Surface
     void set_clip_area(std::experimental::optional<geometry::Rectangle> const& area) override;
     MirWindowFocusState focus_state() const override;
     void set_focus_state(MirWindowFocusState new_state) override;
+    std::string application_id() const override;
+    void set_application_id(std::string const& application_id) override;
 };
 }
 }

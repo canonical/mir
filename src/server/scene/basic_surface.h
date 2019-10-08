@@ -151,6 +151,9 @@ public:
     auto focus_state() const -> MirWindowFocusState override;
     void set_focus_state(MirWindowFocusState new_state) override;
 
+    auto application_id() const -> std::string override;
+    void set_application_id(std::string const& application_id) override;
+
 private:
     bool visible(std::lock_guard<std::mutex> const&) const;
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
@@ -189,6 +192,7 @@ private:
 
     MirDepthLayer depth_layer_ = mir_depth_layer_application;
     std::experimental::optional<geometry::Rectangle> clip_area_;
+    std::string application_id_;
 };
 
 }
