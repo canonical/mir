@@ -253,9 +253,6 @@ bool ms::operator==(
         lhs.depth_layer == rhs.depth_layer &&
         lhs.attached_edges == rhs.attached_edges &&
         lhs.exclusive_rect == rhs.exclusive_rect &&
-        lhs.depth_layer == rhs.depth_layer &&
-        lhs.attached_edges == rhs.attached_edges &&
-        lhs.exclusive_rect == rhs.exclusive_rect &&
         lhs.application_id == rhs.application_id;
 }
 
