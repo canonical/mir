@@ -397,13 +397,15 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::WindowInfo::attached_edges(MirPlacementGravity)@MIRAL_2.7" 2.7.0
  (c++)"miral::WindowInfo::exclusive_rect() const@MIRAL_2.7" 2.7.0
  (c++)"miral::WindowInfo::exclusive_rect(mir::optional_value<mir::geometry::Rectangle> const&)@MIRAL_2.7" 2.7.0
- (c++)"miral::WindowSpecification::application_id[abi:cxx11]() const@MIRAL_2.7" 2.7.0
- (c++)"miral::WindowSpecification::application_id[abi:cxx11]()@MIRAL_2.7" 2.7.0
  (c++)"miral::WindowSpecification::attached_edges() const@MIRAL_2.7" 2.7.0
  (c++)"miral::WindowSpecification::attached_edges()@MIRAL_2.7" 2.7.0
  (c++)"miral::WindowSpecification::exclusive_rect() const@MIRAL_2.7" 2.7.0
  (c++)"miral::WindowSpecification::exclusive_rect()@MIRAL_2.7" 2.7.0
  MIRAL_2.8@MIRAL_2.8 2.8.0
+ (c++)"miral::WindowInfo::application_id(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_2.8" 2.8.0
+ (c++)"miral::WindowInfo::application_id[abi:cxx11]() const@MIRAL_2.8" 2.8.0
  (c++)"miral::WindowInfo::clip_area() const@MIRAL_2.8" 2.8.0
  (c++)"miral::WindowInfo::clip_area(mir::optional_value<mir::geometry::Rectangle> const&)@MIRAL_2.8" 2.8.0
  (c++)"miral::WindowManagementPolicy::ApplicationZoneAddendum::~ApplicationZoneAddendum()@MIRAL_2.6" 2.8.0
+ (c++)"miral::WindowSpecification::application_id[abi:cxx11]() const@MIRAL_2.8" 2.8.0
+ (c++)"miral::WindowSpecification::application_id[abi:cxx11]()@MIRAL_2.8" 2.8.0

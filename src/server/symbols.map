@@ -938,13 +938,7 @@ MIR_SERVER_0.1.5 {
  global:
   extern "C++" {
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::depth_layer_set_to*;
-    mir::frontend::MirClientSession::*
-  };
-} MIR_SERVER_0.1.4;
-
-MIR_SERVER_0.1.6 {
- global:
-  extern "C++" {
+    mir::frontend::MirClientSession::*;
     mir::scene::NullSurfaceObserver::application_id_set_to*;
   };
-} MIR_SERVER_0.1.5;
+} MIR_SERVER_0.1.4;
