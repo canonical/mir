@@ -54,7 +54,7 @@
     reset.
   </description>
 
-  <interface name="zxdg_output_manager_v1" version="2">
+  <interface name="zxdg_output_manager_v1" version="3">
     <description summary="manage xdg_output objects">
       A global factory interface for xdg_output objects.
     </description>
@@ -77,12 +77,17 @@
     </request>
   </interface>
 
-  <interface name="zxdg_output_v1" version="2">
+  <interface name="zxdg_output_v1" version="3">
     <description summary="compositor logical output region">
       An xdg_output describes part of the compositor geometry.
 
       This typically corresponds to a monitor that displays part of the
       compositor space.
+
+      For objects version 3 onwards, after all xdg_output properties have been
+      sent (when the object is created and when properties are updated), a
+      wl_output.done event is sent. This allows changes to the output
+      properties to be seen as atomic, even if they happen via multiple events.
     </description>
 
     <request name="destroy" type="destructor">
@@ -157,6 +162,10 @@
 
 	This allows changes to the xdg_output properties to be seen as
 	atomic, even if they happen via multiple events.
+
+	For objects version 3 onwards, this event is deprecated. Compositors
+	are not required to send it anymore and must send wl_output.done
+	instead.
       </description>
     </event>
 
@@ -197,10 +206,12 @@
 	output via :1'.
 
 	The description event is sent after creating an xdg_output (see
-	xdg_output_manager.get_xdg_output). This event is only sent once per
+	xdg_output_manager.get_xdg_output) and whenever the description
+	changes. The description is optional, and may not be sent at all.
+
+	For objects of version 2 and lower, this event is only sent once per
 	xdg_output, and the description does not change over the lifetime of
-	the wl_output global. The description is optional, and may not be sent
-	at all.
+	the wl_output global.
       </description>
       <arg name="description" type="string" summary="output description"/>
     </event>

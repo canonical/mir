@@ -21,7 +21,6 @@
 
 #include <mir/abnormal_exit.h>
 #include <mir/frontend/wayland.h>
-#include <mir/frontend/mir_client_session.h>
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
 #include <mir/server.h>
