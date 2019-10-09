@@ -68,6 +68,7 @@ public:
     MOCK_METHOD1(client_surface_close_requested, void(ms::Surface const*));
     MOCK_METHOD2(cursor_image_set_to, void(ms::Surface const*, mir::graphics::CursorImage const& image));
     MOCK_METHOD1(cursor_image_removed, void(ms::Surface const*));
+    MOCK_METHOD2(application_id_set_to, void(ms::Surface const*, std::string const&));
 };
 
 struct BasicSurfaceTest : public testing::Test
@@ -818,6 +819,51 @@ TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)
     surface.add_observer(observer);
 
     surface.set_hidden(true);
+}
+
+
+TEST_F(BasicSurfaceTest, default_application_id)
+{
+    EXPECT_EQ("", surface.application_id());
+}
+
+TEST_F(BasicSurfaceTest, application_id_can_be_set)
+{
+    std::string const id{"test.id"};
+    surface.set_application_id(id);
+    EXPECT_EQ(id, surface.application_id());
+}
+
+TEST_F(BasicSurfaceTest, notifies_about_application_id_changes)
+{
+    using namespace testing;
+
+    std::string const id{"test.id"};
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, application_id_set_to(_, id))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+
+    surface.set_application_id(id);
+}
+
+TEST_F(BasicSurfaceTest, does_not_notify_if_application_id_is_unchanged)
+{
+    using namespace testing;
+
+    std::string const id{"test.id"};
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, application_id_set_to(_, id))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+
+    surface.set_application_id("");
+    surface.set_application_id(id);
+    surface.set_application_id(id);
 }
 
 TEST_F(BasicSurfaceTest, observer_can_remove_itself_within_notification)
