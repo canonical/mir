@@ -37,6 +37,7 @@ struct MockSurface : public scene::BasicSurface
     MockSurface() :
         scene::BasicSurface(
             {},
+            {},
             {{},{}},
             mir_pointer_unconfined,
             { { std::make_shared<testing::NiceMock<MockBufferStream>>(), {0, 0}, {} } },

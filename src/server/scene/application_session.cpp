@@ -81,9 +81,15 @@ ms::ApplicationSession::~ApplicationSession()
 }
 
 auto ms::ApplicationSession::create_surface(
+    std::shared_ptr<Session> const& session,
     SurfaceCreationParameters const& the_params,
     std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<Surface>
 {
+    if (session && session.get() != this)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Incorrect session"));
+    }
+
     //TODO: we take either the content or the first stream's content for now.
     //      Once the surface factory interface takes more than one stream,
     //      we can take all the streams as content.
@@ -116,7 +122,7 @@ auto ms::ApplicationSession::create_surface(
             streams.push_back({std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()), stream.displacement, stream.size});
     }
 
-    auto surface = surface_factory->create_surface(streams, params);
+    auto surface = surface_factory->create_surface(session, streams, params);
 
     surface_stack->add_surface(surface, params.input_mode);
 

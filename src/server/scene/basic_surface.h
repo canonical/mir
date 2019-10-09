@@ -59,6 +59,7 @@ class BasicSurface : public Surface
 {
 public:
     BasicSurface(
+        std::shared_ptr<Session> const& session,
         std::string const& name,
         geometry::Rectangle rect,
         MirPointerConfinementState state,
@@ -67,6 +68,7 @@ public:
         std::shared_ptr<SceneReport> const& report);
 
     BasicSurface(
+        std::shared_ptr<Session> const& session,
         std::string const& name,
         geometry::Rectangle rect,
         std::weak_ptr<Surface> const& parent,

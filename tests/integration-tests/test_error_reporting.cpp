@@ -111,6 +111,7 @@ TEST_F(ErrorReporting, c_api_returns_surface_creation_error)
         {
             std::shared_ptr<mir::scene::Surface>
             create_surface(
+                std::shared_ptr<mir::scene::Session> const&,
                 std::list<mir::scene::StreamInfo> const&,
                 mir::scene::SurfaceCreationParameters const&) override
             {

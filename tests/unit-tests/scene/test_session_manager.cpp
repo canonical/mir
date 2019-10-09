@@ -69,6 +69,7 @@ struct MockSessionEventSink : public ms::SessionEventSink
 struct SessionManagerSetup : public testing::Test
 {
     std::shared_ptr<ms::Surface> dummy_surface = std::make_shared<ms::BasicSurface>(
+        nullptr /* session */,
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
@@ -178,7 +179,7 @@ TEST_F(SessionManagerSessionListenerSetup, additional_listeners_receive_surface_
     auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
     auto bs = std::dynamic_pointer_cast<mc::BufferStream>(session->create_buffer_stream(
         mg::BufferProperties{{640, 480}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware}));
-    session->create_surface(ms::SurfaceCreationParameters().with_buffer_stream(bs), mt::fake_shared(observer));
+    session->create_surface(nullptr, ms::SurfaceCreationParameters().with_buffer_stream(bs), mt::fake_shared(observer));
 }
 
 namespace

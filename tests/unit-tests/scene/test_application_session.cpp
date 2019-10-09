@@ -253,8 +253,10 @@ struct ApplicationSession : public testing::Test
 
 struct MockSurfaceFactory : ms::SurfaceFactory
 {
-    MOCK_METHOD2(create_surface, std::shared_ptr<ms::Surface>(
-        std::list<ms::StreamInfo> const&, ms::SurfaceCreationParameters const& params));
+    MOCK_METHOD3(create_surface, std::shared_ptr<ms::Surface>(
+        std::shared_ptr<ms::Session> const&,
+        std::list<ms::StreamInfo> const&,
+        ms::SurfaceCreationParameters const& params));
 };
 }
 
@@ -266,7 +268,7 @@ TEST_F(ApplicationSession, adds_created_surface_to_coordinator)
     NiceMock<mtd::MockSurfaceStack> surface_stack;
     std::shared_ptr<ms::Surface> mock_surface = make_mock_surface();
 
-    EXPECT_CALL(mock_surface_factory, create_surface(_,_))
+    EXPECT_CALL(mock_surface_factory, create_surface(_, _, _))
         .WillOnce(Return(mock_surface));
     EXPECT_CALL(surface_stack, add_surface(mock_surface,_));
     auto session = make_application_session(
@@ -274,7 +276,7 @@ TEST_F(ApplicationSession, adds_created_surface_to_coordinator)
 
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(session->create_buffer_stream(properties));
-    auto surf = session->create_surface(params, surface_observer);
+    auto surf = session->create_surface(nullptr, params, surface_observer);
 
     session->destroy_surface(surf);
 }
@@ -301,7 +303,7 @@ TEST_F(ApplicationSession, can_destroy_buffer_stream_after_destroying_surface)
     NiceMock<mtd::MockSurfaceStack> surface_stack;
     std::shared_ptr<ms::Surface> mock_surface = make_mock_surface();
 
-    EXPECT_CALL(mock_surface_factory, create_surface(_,_))
+    EXPECT_CALL(mock_surface_factory, create_surface(_, _, _))
         .WillOnce(Return(mock_surface));
     EXPECT_CALL(surface_stack, add_surface(mock_surface,_));
     auto session = make_application_session(
@@ -310,7 +312,7 @@ TEST_F(ApplicationSession, can_destroy_buffer_stream_after_destroying_surface)
     auto buffer_stream = session->create_buffer_stream(properties);
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(buffer_stream);
-    auto surf = session->create_surface(params, surface_observer);
+    auto surf = session->create_surface(nullptr, params, surface_observer);
 
     session->destroy_surface(surf);
     session->destroy_buffer_stream(buffer_stream);
@@ -330,7 +332,7 @@ TEST_F(ApplicationSession, notifies_listener_of_create_and_destroy_surface)
 
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(session->create_buffer_stream(properties));
-    auto surf = session->create_surface(params, surface_observer);
+    auto surf = session->create_surface(nullptr, params, surface_observer);
 
     session->destroy_surface(surf);
 }
@@ -350,7 +352,7 @@ TEST_F(ApplicationSession, notifies_listener_of_surface_destruction_via_session_
 
         ms::SurfaceCreationParameters params = ms::a_surface()
             .with_buffer_stream(session->create_buffer_stream(properties));
-        session->create_surface(params, surface_observer);
+        session->create_surface(nullptr, params, surface_observer);
     }
 }
 
@@ -375,9 +377,9 @@ TEST_F(ApplicationSession, default_surface_is_first_surface)
 
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(app_session->create_buffer_stream(properties));
-    auto surface1 = app_session->create_surface(params, nullptr);
-    auto surface2 = app_session->create_surface(params, nullptr);
-    auto surface3 = app_session->create_surface(params, nullptr);
+    auto surface1 = app_session->create_surface(nullptr, params, nullptr);
+    auto surface2 = app_session->create_surface(nullptr, params, nullptr);
+    auto surface3 = app_session->create_surface(nullptr, params, nullptr);
 
     auto default_surf = app_session->default_surface();
     EXPECT_EQ(surface1, default_surf);
@@ -397,8 +399,8 @@ TEST_F(ApplicationSession, foreign_surface_has_no_successor)
     auto session1 = make_application_session_with_stubs();
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(session1->create_buffer_stream(properties));
-    auto surf1 = session1->create_surface(params, nullptr);
-    auto surf2 = session1->create_surface(params, nullptr);
+    auto surf1 = session1->create_surface(nullptr, params, nullptr);
+    auto surf2 = session1->create_surface(nullptr, params, nullptr);
 
     auto session2 = make_application_session_with_stubs();
 
@@ -414,7 +416,7 @@ TEST_F(ApplicationSession, surface_after_one_is_self)
     auto session = make_application_session_with_stubs();
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(session->create_buffer_stream(properties));
-    auto surf = session->create_surface(params, nullptr);
+    auto surf = session->create_surface(nullptr, params, nullptr);
 
     EXPECT_EQ(surf, session->surface_after(surf));
 
@@ -433,7 +435,7 @@ TEST_F(ApplicationSession, surface_after_cycles_through_all)
 
     for (int i = 0; i < N; ++i)
     {
-        surf[i] = app_session->create_surface(params, nullptr);
+        surf[i] = app_session->create_surface(nullptr, params, nullptr);
 
         if (i > 0)
         {
@@ -457,7 +459,7 @@ TEST_F(ApplicationSession, session_visbility_propagates_to_surfaces)
     auto mock_surface = make_mock_surface();
 
     NiceMock<MockSurfaceFactory> surface_factory;
-    ON_CALL(surface_factory, create_surface(_,_)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
     NiceMock<mtd::MockSurfaceStack> surface_stack;
     auto app_session = make_application_session(mt::fake_shared(surface_stack), mt::fake_shared(surface_factory));
 
@@ -469,7 +471,7 @@ TEST_F(ApplicationSession, session_visbility_propagates_to_surfaces)
 
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(app_session->create_buffer_stream(properties));
-    auto surf = app_session->create_surface(params, surface_observer);
+    auto surf = app_session->create_surface(nullptr, params, surface_observer);
 
     app_session->hide();
     app_session->show();
@@ -486,7 +488,7 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
     MockBufferStreamFactory mock_buffer_stream_factory;
     std::shared_ptr<mc::BufferStream> const mock_stream = std::make_shared<mtd::MockBufferStream>();
     ON_CALL(mock_buffer_stream_factory, create_buffer_stream(_)).WillByDefault(Return(mock_stream));
-    ON_CALL(surface_factory, create_surface(_,_)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
     NiceMock<mtd::MockSurfaceStack> surface_stack;
 
     auto const snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
@@ -506,7 +508,7 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
 
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(app_session.create_buffer_stream(properties));
-    auto surface = app_session.create_surface(params, surface_observer);
+    auto surface = app_session.create_surface(nullptr, params, surface_observer);
     app_session.take_snapshot(ms::SnapshotCallback());
     app_session.destroy_surface(surface);
 }
@@ -561,7 +563,7 @@ TEST_F(ApplicationSession, can_destroy_surface_bstream)
     auto const stream = session->create_buffer_stream(properties);
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(stream);
-    auto id = session->create_surface(params, surface_observer);
+    auto id = session->create_surface(nullptr, params, surface_observer);
     session->destroy_buffer_stream(stream);
     EXPECT_FALSE(session->has_buffer_stream(stream));
     session->destroy_surface(id);
@@ -580,7 +582,7 @@ TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
     NiceMock<MockSurfaceFactory> mock_surface_factory;
 
     auto mock_surface = make_mock_surface();
-    EXPECT_CALL(mock_surface_factory, create_surface(_,_))
+    EXPECT_CALL(mock_surface_factory, create_surface(_, _, _))
         .WillOnce(Return(mock_surface));
     
     std::array<std::shared_ptr<mc::BufferStream>,3> streams {{
@@ -613,7 +615,7 @@ TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
     };
 
     session->create_surface(
-        ms::a_surface().with_buffer_stream(stream0), surface_observer);
+        nullptr, ms::a_surface().with_buffer_stream(stream0), surface_observer);
 
     EXPECT_CALL(*mock_surface, set_streams(Pointwise(StreamEq(), info)));
     session->configure_streams(*mock_surface, {
@@ -694,7 +696,7 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
 
     auto stream = session->create_buffer_stream(properties);
 
-    EXPECT_CALL(mock_surface_factory, create_surface(HasSingleStream(stream),_))
+    EXPECT_CALL(mock_surface_factory, create_surface(_, HasSingleStream(stream), _))
         .WillOnce(Return(make_mock_surface()));
 
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
@@ -702,7 +704,7 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
         .of_type(mir_window_type_normal)
         .with_buffer_stream(stream);
 
-    session->create_surface(params, surface_observer);
+    session->create_surface(nullptr, params, surface_observer);
 }
 
 namespace
@@ -802,6 +804,7 @@ class ObserverPreservingSurfaceFactory : public ms::SurfaceFactory
 {
 public:
     std::shared_ptr<ms::Surface> create_surface(
+        std::shared_ptr<ms::Session> const&,
         std::list<ms::StreamInfo> const&,
         mir::scene::SurfaceCreationParameters const& params) override
     {

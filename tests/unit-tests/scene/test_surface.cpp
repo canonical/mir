@@ -175,10 +175,14 @@ namespace
 struct SurfaceCreation : public ::testing::Test
 {
     SurfaceCreation()
-        : surface(surface_name,
-            rect, mir_pointer_unconfined,
+        : surface(
+            nullptr /* session */,
+            surface_name,
+            rect,
+            mir_pointer_unconfined,
             streams,
-            nullptr /* cursor_image */, report)
+            nullptr /* cursor_image */,
+            report)
     {
     }
 
@@ -309,6 +313,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
 {
     using namespace testing;
     ms::BasicSurface surface(
+        nullptr /* session */,
         surface_name,
         rect,
         mir_pointer_unconfined,

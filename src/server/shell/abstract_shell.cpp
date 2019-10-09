@@ -142,7 +142,7 @@ auto msh::AbstractShell::create_surface(
 {
     auto const build = [observer](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& placed_params)
         {
-            return session->create_surface(placed_params, observer);
+            return session->create_surface(session, placed_params, observer);
         };
 
     auto const result = window_manager->add_surface(session, params, build);

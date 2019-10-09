@@ -57,6 +57,7 @@ struct StubSession : scene::Session
     void resume_prompt_session() override;
 
     auto create_surface(
+        std::shared_ptr<Session> const& session,
         scene::SurfaceCreationParameters const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<scene::Surface> override;
 

@@ -110,6 +110,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     mg::BufferProperties properties(geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software);
     auto stream = std::dynamic_pointer_cast<mc::BufferStream>(session.create_buffer_stream(properties));
     session.create_surface(
+        nullptr /* session */,
         ms::a_surface().with_buffer_stream(stream),
         std::make_shared<ms::NullSurfaceObserver>());
 

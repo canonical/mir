@@ -123,8 +123,10 @@ struct MockSessionManager : ms::SessionManager
 
 struct MockSurfaceFactory : public ms::SurfaceFactory
 {
-    MOCK_METHOD2(create_surface, std::shared_ptr<ms::Surface>(
-        std::list<ms::StreamInfo> const&, ms::SurfaceCreationParameters const&));
+    MOCK_METHOD3(create_surface, std::shared_ptr<ms::Surface>(
+        std::shared_ptr<ms::Session> const&,
+        std::list<ms::StreamInfo> const&,
+        ms::SurfaceCreationParameters const&));
 };
 
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
@@ -164,7 +166,7 @@ struct AbstractShell : Test
             WillByDefault(Invoke(&session_manager, &MockSessionManager::unmocked_set_focus_to));
         ON_CALL(mock_surface, size())
             .WillByDefault(Return(geom::Size{}));
-        ON_CALL(surface_factory, create_surface(_,_))
+        ON_CALL(surface_factory, create_surface(_, _, _))
             .WillByDefault(Return(mt::fake_shared(mock_surface)));
         ON_CALL(seat, create_device_state())
             .WillByDefault(Invoke(
@@ -222,7 +224,7 @@ TEST_F(AbstractShell, close_session_removes_existing_session_surfaces_from_windo
     mtd::StubSurface surface1;
     mtd::StubSurface surface2;
     mtd::StubSurface surface3;
-    EXPECT_CALL(surface_factory, create_surface(_,_)).
+    EXPECT_CALL(surface_factory, create_surface(_, _, _)).
         WillOnce(Return(mt::fake_shared(surface1))).
         WillOnce(Return(mt::fake_shared(surface2))).
         WillOnce(Return(mt::fake_shared(surface3)));
@@ -469,7 +471,7 @@ TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
     auto const session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
     NiceMock<mtd::MockSurface> dummy_surface;
     ON_CALL(dummy_surface, size()).WillByDefault(Return(geom::Size{}));
-    EXPECT_CALL(surface_factory, create_surface(_,_)).Times(AnyNumber())
+    EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(AnyNumber())
         .WillOnce(Return(mt::fake_shared(dummy_surface)))
         .WillOnce(Return(mt::fake_shared(mock_surface)));
 
