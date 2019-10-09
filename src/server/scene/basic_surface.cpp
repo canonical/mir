@@ -1002,15 +1002,18 @@ void mir::scene::BasicSurface::set_focus_state(MirWindowFocusState new_state)
 
 auto mir::scene::BasicSurface::application_id() const -> std::string
 {
-    std::unique_lock<std::mutex> lg(guard);
+    std::unique_lock<std::mutex> lock(guard);
     return application_id_;
 }
 
 void mir::scene::BasicSurface::set_application_id(std::string const& application_id)
 {
+    std::unique_lock<std::mutex> lock(guard);
+    if (application_id_ != application_id)
     {
-        std::unique_lock<std::mutex> lg(guard);
         application_id_ = application_id;
+
+        lock.unlock();
+        observers.application_id_set_to(this, application_id);
     }
-    observers.application_id_set_to(this, application_id);
 }
