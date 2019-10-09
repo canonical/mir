@@ -279,6 +279,72 @@ TEST_F(ApplicationSession, adds_created_surface_to_coordinator)
     session->destroy_surface(surf);
 }
 
+TEST_F(ApplicationSession, does_not_set_session_when_creating_surface)
+{
+    using namespace ::testing;
+
+    NiceMock<MockSurfaceFactory> mock_surface_factory;
+    auto const mock_surface = make_mock_surface();
+
+    EXPECT_CALL(*mock_surface, set_session(_))
+        .Times(0);
+    EXPECT_CALL(mock_surface_factory, create_surface(_,_))
+        .WillOnce(Return(mock_surface));
+    auto session = make_application_session(
+        stub_surface_stack, mt::fake_shared(mock_surface_factory));
+
+    ms::SurfaceCreationParameters params = ms::a_surface()
+        .with_buffer_stream(session->create_buffer_stream(properties));
+    auto surf = session->create_surface(params, surface_observer);
+
+    Mock::VerifyAndClearExpectations(mock_surface.get());
+
+    session->destroy_surface(surf);
+}
+
+TEST_F(ApplicationSession, clears_surface_session_when_destorying_surface)
+{
+    using namespace ::testing;
+
+    NiceMock<MockSurfaceFactory> mock_surface_factory;
+    auto const mock_surface = make_mock_surface();
+
+    EXPECT_CALL(*mock_surface, set_session(std::shared_ptr<mir::scene::Session>{nullptr}))
+        .Times(1);
+    EXPECT_CALL(mock_surface_factory, create_surface(_,_))
+        .WillOnce(Return(mock_surface));
+    auto session = make_application_session(
+        stub_surface_stack, mt::fake_shared(mock_surface_factory));
+
+    ms::SurfaceCreationParameters params = ms::a_surface()
+        .with_buffer_stream(session->create_buffer_stream(properties));
+    auto surf = session->create_surface(params, surface_observer);
+
+    session->destroy_surface(surf);
+}
+
+TEST_F(ApplicationSession, clears_surface_session_when_destroyed)
+{
+    using namespace ::testing;
+
+    NiceMock<MockSurfaceFactory> mock_surface_factory;
+    auto const mock_surface = make_mock_surface();
+
+    EXPECT_CALL(*mock_surface, set_session(std::shared_ptr<mir::scene::Session>{nullptr}))
+        .Times(1);
+    EXPECT_CALL(mock_surface_factory, create_surface(_,_))
+        .WillOnce(Return(mock_surface));
+
+    {
+        auto session = make_application_session(
+            stub_surface_stack, mt::fake_shared(mock_surface_factory));
+
+        ms::SurfaceCreationParameters params = ms::a_surface()
+            .with_buffer_stream(session->create_buffer_stream(properties));
+        auto surf = session->create_surface(params, surface_observer);
+    }
+}
+
 TEST_F(ApplicationSession, attempt_to_destroy_non_existent_stream_throws)
 {
     using namespace ::testing;

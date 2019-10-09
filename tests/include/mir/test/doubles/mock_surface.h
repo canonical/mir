@@ -68,6 +68,9 @@ struct MockSurface : public scene::BasicSurface
     MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());
     MOCK_METHOD1(set_streams, void(std::list<scene::StreamInfo> const&));
 
+    MOCK_CONST_METHOD0(session, std::experimental::optional<std::shared_ptr<scene::Session>>());
+    MOCK_METHOD1(set_session, void(std::shared_ptr<scene::Session> const&));
+
     std::shared_ptr<MockBufferStream> const stream;
 };
 
