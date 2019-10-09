@@ -279,6 +279,35 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
     shell.create_surface(session, params, nullptr);
 }
 
+TEST_F(AbstractShell, create_surface_sets_surfaces_session)
+{
+    struct MockSurface : mtd::MockSurface
+    {
+        MOCK_METHOD1(set_session, void(std::shared_ptr<ms::Session> const&));
+    };
+
+    auto const mock_surface = std::make_shared<MockSurface>();
+
+    std::shared_ptr<ms::Session> session =
+        shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    EXPECT_CALL(*mock_surface, set_session(session))
+        .Times(1);
+
+    EXPECT_CALL(surface_factory, create_surface(_,_)).
+        WillOnce(Return(mock_surface));
+
+    auto params = ms::a_surface()
+        .with_buffer_stream(session->create_buffer_stream(properties));
+
+    shell.create_surface(session, params, nullptr);
+
+    Mock::VerifyAndClearExpectations(mock_surface.get());
+
+    EXPECT_CALL(*mock_surface, set_session(_))
+        .Times(AtLeast(0));
+}
+
 TEST_F(AbstractShell, destroy_surface_removes_surface_from_window_manager)
 {
     std::shared_ptr<ms::Session> const session =
