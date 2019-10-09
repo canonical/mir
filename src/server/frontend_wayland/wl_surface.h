@@ -50,10 +50,12 @@ namespace geometry
 {
 class Rectangle;
 }
-
-namespace frontend
+namespace compositor
 {
 class BufferStream;
+}
+namespace frontend
+{
 class WlSurface;
 class WlSubsurface;
 
@@ -143,7 +145,7 @@ public:
     void remove_destroy_listener(void const* key);
 
     std::shared_ptr<scene::Session> const session;
-    std::shared_ptr<mir::frontend::BufferStream> const stream;
+    std::shared_ptr<compositor::BufferStream> const stream;
 
     static WlSurface* from(wl_resource* resource);
 

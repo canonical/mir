@@ -96,6 +96,9 @@ private:
 struct mf::WlPointer::Cursor
 {
     virtual void apply_to(WlSurface* surface) = 0;
+    virtual void set_hotspot(geom::Displacement const& new_hotspot) = 0;
+    virtual auto cursor_surface() const -> std::experimental::optional<WlSurface*> = 0;
+
     virtual ~Cursor() = default;
     Cursor() = default;
 
@@ -108,6 +111,8 @@ namespace
 struct NullCursor : mf::WlPointer::Cursor
 {
     void apply_to(mf::WlSurface*) override {}
+    void set_hotspot(geom::Displacement const&) override {};
+    auto cursor_surface() const -> std::experimental::optional<mf::WlSurface*> override { return {}; };
 };
 }
 
@@ -223,27 +228,35 @@ void mf::WlPointer::frame()
 
 namespace
 {
-struct WlStreamCursor : mf::WlPointer::Cursor
+struct WlSurfaceCursor : mf::WlPointer::Cursor
 {
-    WlStreamCursor(
-        std::shared_ptr<mc::BufferStream> const& stream,
+    WlSurfaceCursor(
+        mf::WlSurface* surface,
         geom::Displacement hotspot);
-    ~WlStreamCursor();
+    ~WlSurfaceCursor();
 
     void apply_to(mf::WlSurface* surface) override;
+    void set_hotspot(geom::Displacement const& new_hotspot) override;
+    auto cursor_surface() const -> std::experimental::optional<mf::WlSurface*> override;
 
 private:
     void apply_latest_buffer();
 
-    std::weak_ptr<ms::Surface> surface_under_cursor;
+    mf::WlSurface* const surface;
+    // If surface_destroyed is true, surface should not be used
+    std::shared_ptr<bool> surface_destroyed;
     std::shared_ptr<mc::BufferStream> const stream;
-    geom::Displacement const hotspot;
+    mf::NullWlSurfaceRole surface_role; // Used only to assert unique ownership
+
+    std::weak_ptr<ms::Surface> surface_under_cursor;
+    geom::Displacement hotspot;
 };
 
 struct WlHiddenCursor : mf::WlPointer::Cursor
 {
-    WlHiddenCursor();
     void apply_to(mf::WlSurface* surface) override;
+    void set_hotspot(geom::Displacement const&) override {};
+    auto cursor_surface() const -> std::experimental::optional<mf::WlSurface*> override { return {}; };
 };
 }
 
@@ -254,23 +267,26 @@ void mf::WlPointer::set_cursor(
 {
     if (surface)
     {
-        auto const frontend_stream = WlSurface::from(*surface)->stream;
-        auto const compositor_stream = std::dynamic_pointer_cast<mc::BufferStream>(frontend_stream);
+        auto const wl_surface = WlSurface::from(*surface);
         geom::Displacement const cursor_hotspot{hotspot_x, hotspot_y};
-
-        if (!compositor_stream)
-            BOOST_THROW_EXCEPTION(std::logic_error("Surface does not have a compositor buffer stream"));
-
-        cursor.reset(); // Destroy the old cursor *before* creating a new one with potentially the same stream
-        cursor = std::make_unique<WlStreamCursor>(compositor_stream, cursor_hotspot);
+        if (wl_surface == cursor->cursor_surface())
+        {
+            cursor->set_hotspot(cursor_hotspot);
+        }
+        else
+        {
+            cursor.reset(); // clean up old cursor before creating new one
+            cursor = std::make_unique<WlSurfaceCursor>(wl_surface, cursor_hotspot);
+            if (surface_under_cursor)
+                cursor->apply_to(surface_under_cursor.value());
+        }
     }
     else
     {
         cursor = std::make_unique<WlHiddenCursor>();
+        if (surface_under_cursor)
+            cursor->apply_to(surface_under_cursor.value());
     }
-
-    if (surface_under_cursor)
-        cursor->apply_to(surface_under_cursor.value());
 
     (void)serial;
 }
@@ -280,12 +296,15 @@ void mf::WlPointer::release()
     destroy_wayland_object();
 }
 
-WlStreamCursor::WlStreamCursor(
-    std::shared_ptr<mc::BufferStream> const& stream,
-    geom::Displacement hotspot) :
-    stream{stream},
-    hotspot{hotspot}
+WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot)
+    : surface{surface},
+      surface_destroyed{surface->destroyed_flag()},
+      stream{surface->stream},
+      surface_role{surface},
+      hotspot{hotspot}
 {
+    surface->set_role(&surface_role);
+
     stream->set_frame_posted_callback(
         [this](auto)
         {
@@ -293,12 +312,14 @@ WlStreamCursor::WlStreamCursor(
         });
 }
 
-WlStreamCursor::~WlStreamCursor()
+WlSurfaceCursor::~WlSurfaceCursor()
 {
+    if (!*surface_destroyed)
+        surface->clear_role();
     stream->set_frame_posted_callback([](auto){});
 }
 
-void WlStreamCursor::apply_to(mf::WlSurface* surface)
+void WlSurfaceCursor::apply_to(mf::WlSurface* surface)
 {
     auto const scene_surface = surface->scene_surface();
 
@@ -313,7 +334,21 @@ void WlStreamCursor::apply_to(mf::WlSurface* surface)
     }
 }
 
-void WlStreamCursor::apply_latest_buffer()
+void WlSurfaceCursor::set_hotspot(geom::Displacement const& new_hotspot)
+{
+    hotspot = new_hotspot;
+    apply_latest_buffer();
+}
+
+auto WlSurfaceCursor::cursor_surface() const -> std::experimental::optional<mf::WlSurface*>
+{
+    if (!*surface_destroyed)
+        return surface;
+    else
+        return {};
+}
+
+void WlSurfaceCursor::apply_latest_buffer()
 {
     if (auto const surface = surface_under_cursor.lock())
     {
@@ -329,10 +364,6 @@ void WlStreamCursor::apply_latest_buffer()
             surface->set_cursor_image(nullptr);
         }
     }
-}
-
-WlHiddenCursor::WlHiddenCursor()
-{
 }
 
 void WlHiddenCursor::apply_to(mf::WlSurface* surface)
