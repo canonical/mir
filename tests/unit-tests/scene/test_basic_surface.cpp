@@ -30,6 +30,7 @@
 #include "mir/test/doubles/stub_cursor_image.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_session.h"
 #include "mir/test/fake_shared.h"
 
 #include "src/server/report/null_report_factory.h"
@@ -69,6 +70,8 @@ public:
     MOCK_METHOD2(cursor_image_set_to, void(ms::Surface const*, mir::graphics::CursorImage const& image));
     MOCK_METHOD1(cursor_image_removed, void(ms::Surface const*));
     MOCK_METHOD2(application_id_set_to, void(ms::Surface const*, std::string const&));
+    MOCK_METHOD2(session_set_to, void(ms::Surface const*, std::shared_ptr<ms::Session> const& session));
+    MOCK_METHOD1(session_cleared, void(ms::Surface const*));
 };
 
 struct BasicSurfaceTest : public testing::Test
@@ -864,6 +867,88 @@ TEST_F(BasicSurfaceTest, does_not_notify_if_application_id_is_unchanged)
     surface.set_application_id("");
     surface.set_application_id(id);
     surface.set_application_id(id);
+}
+
+
+TEST_F(BasicSurfaceTest, default_session)
+{
+    EXPECT_EQ(std::experimental::nullopt, surface.session());
+}
+
+TEST_F(BasicSurfaceTest, session_can_be_set)
+{
+    std::shared_ptr<mir::scene::Session> const session = std::make_shared<mtd::StubSession>();
+    surface.set_session(session);
+    EXPECT_EQ(std::experimental::make_optional(session), surface.session());
+}
+
+TEST_F(BasicSurfaceTest, holds_weak_pointer_to_session)
+{
+    {
+        std::shared_ptr<mir::scene::Session> const session = std::make_shared<mtd::StubSession>();
+        surface.set_session(session);
+    }
+    EXPECT_EQ(std::experimental::nullopt, surface.session());
+}
+
+TEST_F(BasicSurfaceTest, nullptr_sets_session_to_nullopt)
+{
+    std::shared_ptr<mir::scene::Session> const session = std::make_shared<mtd::StubSession>();
+    surface.set_session(session);
+    surface.set_session(nullptr);
+    EXPECT_EQ(std::experimental::nullopt, surface.session());
+}
+
+TEST_F(BasicSurfaceTest, notifies_about_session_changes)
+{
+    using namespace testing;
+
+    std::shared_ptr<mir::scene::Session> const session = std::make_shared<mtd::StubSession>();
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, session_set_to(_, session))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+
+    surface.set_session(session);
+}
+
+TEST_F(BasicSurfaceTest, notifies_about_session_cleared)
+{
+    using namespace testing;
+
+    std::shared_ptr<mir::scene::Session> const session = std::make_shared<mtd::StubSession>();
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, session_cleared(_))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+
+    surface.set_session(session);
+    surface.set_session(nullptr);
+}
+
+TEST_F(BasicSurfaceTest, does_not_notify_if_session_is_unchanged)
+{
+    using namespace testing;
+
+    std::shared_ptr<mir::scene::Session> const session = std::make_shared<mtd::StubSession>();
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, session_set_to(_, session))
+        .Times(1);
+    EXPECT_CALL(mock_surface_observer, session_cleared(_))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+
+    surface.set_session(nullptr);
+    surface.set_session(session);
+    surface.set_session(session);
+    surface.set_session(nullptr);
+    surface.set_session(nullptr);
 }
 
 TEST_F(BasicSurfaceTest, observer_can_remove_itself_within_notification)
