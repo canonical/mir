@@ -76,6 +76,7 @@ ms::ApplicationSession::~ApplicationSession()
     for (auto const& surface : surfaces)
     {
         session_listener->destroying_surface(*this, surface);
+        surface->set_session(nullptr);
         surface_stack->remove_surface(surface);
     }
 }
@@ -166,6 +167,7 @@ void ms::ApplicationSession::destroy_surface(std::shared_ptr<Surface> const& sur
         surfaces.erase(surface_iter);
     }
 
+    surface->set_session(nullptr);
     surface_stack->remove_surface(surface);
 }
 
