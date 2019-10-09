@@ -299,14 +299,11 @@ void mf::WlPointer::release()
 WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot)
     : surface{surface},
       surface_destroyed{surface->destroyed_flag()},
-      stream{std::dynamic_pointer_cast<mc::BufferStream>(surface->stream)},
+      stream{surface->stream},
       surface_role{surface},
       hotspot{hotspot}
 {
     surface->set_role(&surface_role);
-
-    if (!stream)
-        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not have a compositor buffer stream"));
 
     stream->set_frame_posted_callback(
         [this](auto)
