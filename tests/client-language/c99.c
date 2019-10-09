@@ -2,7 +2,7 @@
  * Stub client to be compiled with -std=c99, just to check we have correct
  * language compatibility in the client header(s).
  *
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -21,7 +21,6 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/debug/surface.h"
 #include "mir_toolkit/event.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_toolkit/extensions/gbm_buffer.h"

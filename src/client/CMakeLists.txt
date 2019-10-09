@@ -17,12 +17,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mirclientcpp.pc.in
 )
 
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/mirclient-debug-extension.pc.in
-  ${CMAKE_CURRENT_BINARY_DIR}/mirclient-debug-extension.pc
-  @ONLY
-)
-
-configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
   ${PROJECT_SOURCE_DIR}/include/client/mir_toolkit/version.h
 )
@@ -172,37 +166,3 @@ install(
 
 set(MIRCLIENT_DEBUG_EXTENSION_ABI 1)
 set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
-
-add_library(mirclient-debug-extension SHARED
-  mir_debug_api.cpp
-)
-
-target_link_libraries(mirclient-debug-extension
-  PRIVATE
-  mirclient-static  # Link statically; only copy what you need.
-                    # This allows access to private symbols normally hidden
-                    # in the shared version of libmirclient.
-  mirclientlttng-static
-  PUBLIC
-  ${LINKS}
-)
-
-set_target_properties(
-  mirclient-debug-extension
-
-  PROPERTIES
-  SOVERSION ${MIRCLIENT_DEBUG_EXTENSION_ABI}
-  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${debug_symbol_map}"
-  LINK_DEPENDS ${debug_symbol_map}
-)
-
-install(
-  TARGETS mirclient-debug-extension
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient-debug-extension.pc
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
-)
-

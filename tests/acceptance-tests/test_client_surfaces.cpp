@@ -17,7 +17,6 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/debug/surface.h"
 
 #include "miral/application_info.h"
 
@@ -119,47 +118,6 @@ TEST_F(ClientSurfaces, are_created_with_correct_size)
 
     mir_window_release_sync(window[1]);
     mir_window_release_sync(window[0]);
-}
-
-TEST_F(ClientSurfaces, have_distinct_ids)
-{
-    auto surface_1 = mtf::make_any_surface(connection);
-    auto surface_2 = mtf::make_any_surface(connection);
-    
-    EXPECT_NE(mir_debug_window_id(surface_1),
-        mir_debug_window_id(surface_2));
-
-    mir_window_release_sync(surface_1);
-    mir_window_release_sync(surface_2);
-}
-
-TEST_F(ClientSurfaces, creates_need_not_be_serialized)
-{
-    for (int i = 0; i != max_surface_count; ++i)
-    {
-        auto spec = mir_create_normal_window_spec(connection, 1, 1);
-        mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-        window[i] = mir_create_window_sync(spec);
-        mir_window_spec_release(spec);
-    }
-
-    for (int i = 0; i != max_surface_count; ++i)
-    {
-        for (int j = 0; j != max_surface_count; ++j)
-        {
-            if (i == j)
-                EXPECT_EQ(
-                    mir_debug_window_id(window[i]),
-                    mir_debug_window_id(window[j]));
-            else
-                EXPECT_NE(
-                    mir_debug_window_id(window[i]),
-                    mir_debug_window_id(window[j]));
-        }
-    }
-
-    for (int i = 0; i != max_surface_count; ++i)
-        mir_window_release_sync(window[i]);
 }
 
 struct WithOrientation : ClientSurfaces, ::testing::WithParamInterface<MirOrientationMode> {};

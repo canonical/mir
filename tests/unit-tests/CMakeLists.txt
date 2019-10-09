@@ -91,10 +91,8 @@ CMAKE_DEPENDENT_OPTION(
 
 add_subdirectory(platforms/)
 add_subdirectory(options/)
-add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(console/)
-add_subdirectory(frontend/)
 add_subdirectory(logging/)
 add_subdirectory(shell/)
 add_subdirectory(geometry/)
@@ -160,9 +158,6 @@ target_link_libraries(
   client_platform_common
   server_platform_common
 
-  mirclient-static
-  mirclientlttng-static
-
   mir-test-static
   mir-test-framework-static
 
@@ -200,10 +195,8 @@ target_link_libraries(
   exampleserverconfig
   mirdraw
   mircommon
+  mirclient
   client_platform_common
-
-  mirclient-static
-  mirclientlttng-static
 
   mir-test-static
   mir-test-framework-static

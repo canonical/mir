@@ -20,7 +20,6 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_screencast.h"
-#include "mir_toolkit/debug/surface.h"
 
 #include "mir/client/client_platform_factory.h"
 #include "mir/client/client_platform.h"

@@ -14,8 +14,6 @@ if (MIR_BUILD_PLATFORM_MESA_KMS)
       mir-test-static
       mir-test-framework-static
       mir-test-doubles-static
-      mirclient-static
-      mirclientlttng-static
       mirsharedmesaservercommon-static
       mircommon
 
@@ -47,8 +45,6 @@ if (MIR_BUILD_PLATFORM_MESA_X11)
       mir-test-static
       mir-test-framework-static
       mir-test-doubles-static
-      mirclient-static
-      mirclientlttng-static
       mirsharedmesaservercommon-static
       mircommon
 
