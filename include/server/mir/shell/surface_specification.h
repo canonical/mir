@@ -104,6 +104,7 @@ struct SurfaceSpecification
     optional_value<MirShellChrome> shell_chrome;
     optional_value<MirPointerConfinementState> confine_pointer;
     optional_value<std::shared_ptr<graphics::CursorImage>> cursor_image;
+    /// \deprecated can be removed along with mirclient
     optional_value<StreamCursor> stream_cursor;
 
     /// Child surfaces are by default created on the same layer as their parent, and updating the depth layer of a parent
