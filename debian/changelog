@@ -1,3 +1,45 @@
+mir (1.5.0) UNRELEASED; urgency=medium
+
+  * New upstream release 1.5.0
+
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 3
+      . mirserver ABI bumped to 51
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 16
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged to 16
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+    - Enhancements:
+      . [snapcraft] Update shared memory handling to work both in confined snaps
+        without the "mir" interface and on pre-3.11 kernels.
+      . Split arch-specific part of libmirwayland-dev into a -bin package
+      . [MirAL] Allow clipping windows to a specified area
+      . [MirAL] Add application_id surface property
+      . [MirAL] Make it possible for Mir based servers to set up the
+        environment variables for launching clients
+      . Fixes for new Protobuf on Arch
+      . [Renderer] Also log supported EGL and GL extensions
+      . [Wayland] Bump xdg output to v3 (workaround an Xwayland problem on eoan)
+    - Bugs fixed:
+      . [MirAL] Can get the Mir window of a layer shell surface. (Fixes #963)
+      . [Wayland] Send wl_buffer.release on the Wayland thread. (Fixes #951)
+      . Set output_id for LayerShell surfaces & clean up and test attached
+        windows on outputs. (Fixes: #980)
+      . [MirAL] Move maximized windows when output is unplugged (Fixes #853)
+      . [Wayland] Fix crashes in wayland::OutputManager when output is unplugged
+      . PixelSource::read() should execute the supplied block. (Fixes #1009)
+      . [build] Fix non-mesa builds.
+      . [Wayland] Resync keyboard state after server is paused. (Fixes #999)
+      . [Wayland] Convert buffer stream to cursor images in wl_pointer.
+        (Fixes #1000)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 9 Oct 2019 11:09:00 +0100
+
 mir (1.4.0) UNRELEASED; urgency=medium
 
   * New upstream release 1.4.0
