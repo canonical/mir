@@ -18,13 +18,11 @@ set(
   test_focus_selection.cpp
   test_touchspot_visualization.cpp
   test_surface_stack_with_compositor.cpp
-  test_buffer_scheduling.cpp
   test_client_screencast.cpp
   test_large_messages.cpp
   test_surfaceloop.cpp
   test_test_framework.cpp
   test_error_reporting.cpp
-  test_submit_buffer.cpp
   test_display_info.cpp
   test_display_server_main_loop_events.cpp
   test_surface_first_frame_sync.cpp
@@ -35,7 +33,6 @@ set(
   session_management.cpp
 )
 
-add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(shell/)
 add_subdirectory(process/)
@@ -54,9 +51,6 @@ add_dependencies(mir_integration_tests GMock)
 
 target_link_libraries(
   mir_integration_tests
-
-  mirclient-static
-  mirclientlttng-static
 
   mir-test-static
   mir-test-framework-static

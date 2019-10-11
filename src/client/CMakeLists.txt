@@ -121,7 +121,6 @@ add_dependencies(mirclientobjects mirprotobuf)
 add_dependencies(mirclientobjects mircapnproto)
 
 add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)
-add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirclientrpc>)
 
 set_target_properties(mirclient
 
