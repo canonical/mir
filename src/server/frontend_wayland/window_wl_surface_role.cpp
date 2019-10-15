@@ -335,7 +335,7 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
             populate_spec_with_surface_data(spec());
         }
 
-        if (pending_changes)
+        if (pending_changes && !pending_changes->is_empty())
             shell->modify_surface(session, scene_surface, *pending_changes);
 
         pending_changes.reset();
