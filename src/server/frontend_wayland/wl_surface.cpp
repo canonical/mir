@@ -395,7 +395,7 @@ void mf::WlSurface::commit()
     if (pending.offset && *pending.offset == offset_)
         pending.offset = std::experimental::nullopt;
 
-    // The same input shape could be represented by the same rectangles in a different order, or event
+    // The same input shape could be represented by the same rectangles in a different order, or even
     // different rectangles. We don't check for that, however, because it would only cause an unnecessary
     // update and not do any real harm. Checking for identical vectors should cover most cases.
     if (pending.input_shape && *pending.input_shape == input_shape)
