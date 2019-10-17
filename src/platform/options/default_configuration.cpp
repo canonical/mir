@@ -23,7 +23,6 @@
 #include "mir/abnormal_exit.h"
 #include "mir/shared_library_prober.h"
 #include "mir/logging/null_shared_library_prober_report.h"
-#include "mir/graphics/platform_probe.h"
 
 namespace mo = mir::options;
 

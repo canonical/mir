@@ -11,7 +11,6 @@ set(
   buffer_basic.cpp
   pixel_format_utils.cpp
   overlapping_output_grouping.cpp
-  platform_probe.cpp
   atomic_frame.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/display.h
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/wayland_allocator.h
