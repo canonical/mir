@@ -344,6 +344,8 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
             populate_spec_with_surface_data(spec());
         }
 
+        apply_pending_size_bounds();
+
         if (pending_changes && !pending_changes->is_empty())
             shell->modify_surface(session, scene_surface, *pending_changes);
 
@@ -392,12 +394,47 @@ mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
     return *pending_changes;
 }
 
+void mf::WindowWlSurfaceRole::apply_pending_size_bounds()
+{
+    if (weak_scene_surface.lock())
+    {
+        if (pending_changes)
+        {
+
+#define SET_IF_CHANGED(pending, committed)  \
+    if (pending)                            \
+    {                                       \
+        if (pending.value() == committed)   \
+            pending.consume();              \
+        else                                \
+            committed = pending.value();    \
+    }
+
+            SET_IF_CHANGED(pending_changes->min_width,  committed_min_size.width);
+            SET_IF_CHANGED(pending_changes->min_height, committed_min_size.height);
+            SET_IF_CHANGED(pending_changes->max_width,  committed_max_size.width);
+            SET_IF_CHANGED(pending_changes->max_height, committed_max_size.height);
+
+#undef set_if_changed
+
+        }
+    }
+    else
+    {
+        if (params->min_width)  committed_min_size.width  = params->min_width.value();
+        if (params->min_height) committed_min_size.height = params->min_height.value();
+        if (params->max_width)  committed_max_size.width  = params->max_width.value();
+        if (params->max_height) committed_max_size.height = params->max_height.value();
+    }
+}
+
 void mf::WindowWlSurfaceRole::create_mir_window()
 {
     params->size = pending_size();
     params->streams = std::vector<shell::StreamSpecification>{};
     params->input_shape = std::vector<geom::Rectangle>{};
     surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
+    apply_pending_size_bounds();
 
     auto const scene_surface = shell->create_surface(session, *params, observer);
     weak_scene_surface = scene_surface;
