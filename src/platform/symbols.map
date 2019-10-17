@@ -1,19 +1,28 @@
-MIRPLATFORM_0.27 {
+MIRPLATFORM_1.6 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirplatform public" | sed "s/mirplatform public: /    /" | sort  
-    mir::graphics::BufferBasic::BufferBasic*;
+#
+# The above is not *quite* true, as we've changed the way we generate the docs, but is worth preserving
+# as you can *almost* re-create it with some tweaks to the doc generation.
+    mir::graphics::AtomicFrame::increment*;
+    mir::graphics::AtomicFrame::load*;
+    mir::graphics::AtomicFrame::store*;
     mir::graphics::Buffer::Buffer*;
+    mir::graphics::BufferBasic::BufferBasic*;
     mir::graphics::DisplayConfiguration::operator*;
+    mir::graphics::DisplayConfiguration::valid*;
     mir::graphics::DisplayConfigurationOutput::extents*;
     mir::graphics::DisplayConfigurationOutput::transformation*;
     mir::graphics::DisplayConfigurationOutput::valid*;
-    mir::graphics::DisplayConfigurationPolicy::apply_to*;
     mir::graphics::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
     mir::graphics::DisplayConfigurationPolicy::DisplayConfigurationPolicy*;
+    mir::graphics::DisplayConfigurationPolicy::apply_to*;
     mir::graphics::DisplayConfigurationPolicy::operator*;
-    mir::graphics::DisplayConfiguration::valid*;
+    mir::graphics::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions*;
+    mir::graphics::EGLExtensions::PlatformBaseEXT*;
+    mir::graphics::EGLExtensions::WaylandExtensions::WaylandExtensions*;
     mir::graphics::EventHandlerRegister::?EventHandlerRegister*;
     mir::graphics::EventHandlerRegister::EventHandlerRegister*;
     mir::graphics::EventHandlerRegister::operator*;
@@ -22,75 +31,36 @@ MIRPLATFORM_0.27 {
     mir::graphics::EventHandlerRegister::unregister_fd_handler*;
     mir::graphics::GammaCurves::GammaCurves*;
     mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
-    mir::graphics::module_for_device*;
-    mir::graphics::operator*;
-    mir::graphics::UserDisplayConfigurationOutput::extents*;
     mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput*;
-    mir::options::arw_server_socket_opt*;
-# Why are server-only options here in libmirplatform?...
-    mir::options::composite_delay_opt*; 
-    mir::options::compositor_report_opt*;
-    mir::options::Configuration::?Configuration*;
-    mir::options::Configuration::Configuration*;
-    mir::options::Configuration::operator*;
-    mir::options::Configuration::the_options*;
-    mir::options::connector_report_opt*;
-    mir::options::DefaultConfiguration::add_options*;
-    mir::options::DefaultConfiguration::?DefaultConfiguration*;
-    mir::options::DefaultConfiguration::DefaultConfiguration*;
-    mir::options::DefaultConfiguration::parse_arguments*;
-    mir::options::DefaultConfiguration::parse_config_file*;
-    mir::options::DefaultConfiguration::parse_environment*;
-    mir::options::DefaultConfiguration::the_options*;
-    mir::options::display_report_opt*;
-    mir::options::debug_opt*;
-    mir::options::enable_input_opt*;
-    mir::options::enable_key_repeat_opt*;
-    mir::options::fatal_except_opt*;
-    mir::options::frontend_threads_opt*;
-    mir::options::glog*;
-    mir::options::glog_log_dir*;
-    mir::options::glog_minloglevel*;
-    mir::options::glog_stderrthreshold*;
-    mir::options::platform_path*;
-    mir::options::host_socket_opt*;
-    mir::options::nested_passthrough_opt*;
-    mir::options::input_report_opt*;
-    mir::options::legacy_input_report_opt*;
-    mir::options::seat_report_opt*;
-    mir::options::log_opt_value*;
-    mir::options::lttng_opt_value*;
-    mir::options::msg_processor_report_opt*;
-    mir::options::name_opt*;
-    mir::options::no_server_socket_opt*;
-    mir::options::platform_input_lib*;
-    mir::options::off_opt_value*;
-    mir::options::offscreen_opt*;
-    mir::options::Option::get*;
-    mir::options::Option::is_set*;
-    mir::options::Option::operator*;
+    mir::graphics::UserDisplayConfigurationOutput::extents*;
+    mir::graphics::WaylandAllocator::?WaylandAllocator*;
+    mir::graphics::WaylandAllocator::WaylandAllocator*;
+    mir::graphics::gl::Program::?Program*;
+    mir::graphics::gl::ProgramFactory::?ProgramFactory*;
+    mir::graphics::gl::ProgramFactory::compile_fragment_shader*;
+    mir::graphics::gl::Texture::?Texture*;
+    mir::graphics::gl_category*;
+    mir::graphics::gl_error*;
+    mir::graphics::operator*;
     mir::options::Option::?Option*;
     mir::options::Option::Option*;
-    mir::options::platform_graphics_lib*;
+    mir::options::Option::is_set*;
+    mir::options::Option::operator*;
+    mir::options::ProgramOption::ProgramOption*;
     mir::options::ProgramOption::get*;
     mir::options::ProgramOption::is_set*;
     mir::options::ProgramOption::parse_arguments*;
     mir::options::ProgramOption::parse_environment*;
     mir::options::ProgramOption::parse_file*;
-    mir::options::ProgramOption::ProgramOption*;
     mir::options::ProgramOption::unparsed_command_line*;
-    mir::options::prompt_socket_opt*;
-    mir::options::scene_report_opt*;
-    mir::options::server_socket_opt*;
-    mir::options::session_mediator_report_opt*;
-    mir::options::shared_library_prober_report_opt*;
-    mir::options::shell_report_opt;
-    mir::options::touchspots_opt*;
-    mir::options::cursor_opt*;
     typeinfo?for?mir::AbnormalExit;
     typeinfo?for?mir::graphics::Buffer;
     typeinfo?for?mir::graphics::BufferBasic;
     typeinfo?for?mir::graphics::DisplayConfiguration;
+    typeinfo?for?mir::graphics::WaylandAllocator;
+    typeinfo?for?mir::graphics::gl::Program;
+    typeinfo?for?mir::graphics::gl::ProgramFactory;
+    typeinfo?for?mir::graphics::gl::Texture;
     typeinfo?for?mir::options::Configuration;
     typeinfo?for?mir::options::DefaultConfiguration;
     typeinfo?for?mir::options::Option;
@@ -99,145 +69,124 @@ MIRPLATFORM_0.27 {
     vtable?for?mir::graphics::Buffer;
     vtable?for?mir::graphics::BufferBasic;
     vtable?for?mir::graphics::DisplayConfiguration;
+    vtable?for?mir::graphics::WaylandAllocator;
+    vtable?for?mir::graphics::gl::Program;
+    vtable?for?mir::graphics::gl::ProgramFactory;
+    vtable?for?mir::graphics::gl::Texture;
     vtable?for?mir::options::Configuration;
     vtable?for?mir::options::DefaultConfiguration;
     vtable?for?mir::options::Option;
     vtable?for?mir::options::ProgramOption;
+
+# Why are server-only options here in libmirplatform?...
+    mir::options::Configuration::?Configuration*;
+    mir::options::Configuration::Configuration*;
+    mir::options::Configuration::operator*;
+    mir::options::Configuration::the_options*;
+    mir::options::DefaultConfiguration::?DefaultConfiguration*;
+    mir::options::DefaultConfiguration::DefaultConfiguration*;
+    mir::options::DefaultConfiguration::add_options*;
+    mir::options::DefaultConfiguration::parse_arguments*;
+    mir::options::DefaultConfiguration::parse_config_file*;
+    mir::options::DefaultConfiguration::parse_environment*;
+    mir::options::DefaultConfiguration::the_options*;
+    mir::options::Option::get*;
+    mir::options::arw_server_socket_opt*;
+    mir::options::auto_console;
+    mir::options::composite_delay_opt*;
+    mir::options::compositor_report_opt*;
+    mir::options::connector_report_opt*;
+    mir::options::console_provider;
+    mir::options::cursor_opt*;
+    mir::options::debug_opt*;
+    mir::options::display_report_opt*;
+    mir::options::enable_input_opt*;
+    mir::options::enable_key_repeat_opt*;
+    mir::options::enable_mirclient_opt;
+    mir::options::fatal_except_opt*;
+    mir::options::frontend_threads_opt*;
+    mir::options::glog*;
+    mir::options::glog_log_dir*;
+    mir::options::glog_minloglevel*;
+    mir::options::glog_stderrthreshold*;
+    mir::options::host_socket_opt*;
+    mir::options::input_report_opt*;
+    mir::options::legacy_input_report_opt*;
+    mir::options::log_opt_value*;
+    mir::options::logind_console;
+    mir::options::lttng_opt_value*;
+    mir::options::msg_processor_report_opt*;
+    mir::options::name_opt*;
+    mir::options::nested_passthrough_opt*;
+    mir::options::no_server_socket_opt*;
+    mir::options::null_console;
+    mir::options::off_opt_value*;
+    mir::options::offscreen_opt*;
+    mir::options::platform_graphics_lib*;
+    mir::options::platform_input_lib*;
+    mir::options::platform_path*;
+    mir::options::prompt_socket_opt*;
+    mir::options::scene_report_opt*;
+    mir::options::seat_report_opt*;
+    mir::options::server_socket_opt*;
+    mir::options::session_mediator_report_opt*;
+    mir::options::shared_library_prober_report_opt*;
+    mir::options::shell_report_opt;
+    mir::options::touchspots_opt*;
+    mir::options::vt_console;
+    mir::options::vt_option_name*;
+    mir::options::wayland_extensions_opt;
+    mir::options::wayland_extensions_value;
+    mir::options::wayland_socket_name_opt*;
+    mir::options::x11_display_opt;
     
     # These are "private" (declared in src/include) but are used by libmirserver.
     # They are also likely to be needed by any 3rd party "graphics platform" 
     # implementation. They should probably become public at some stage.
-    mir::graphics::alpha_channel_depth*;
-    mir::graphics::blue_channel_depth*;
-    mir::graphics::contains_alpha*;
-    mir::graphics::EGLExtensions::EGLExtensions*;
     mir::graphics::EGLContextStore::?EGLContextStore*;
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::operator*;
+    mir::graphics::EGLExtensions::EGLExtensions*;
     mir::graphics::EGLSurfaceStore::?EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::operator*;
-    mir::graphics::egl_category*;
-    mir::graphics::green_channel_depth*;
     mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
     mir::graphics::OverlappingOutputGroup::for_each_output*;
-    mir::graphics::OverlappingOutputGrouping::for_each_group*;
     mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;
+    mir::graphics::OverlappingOutputGrouping::for_each_group*;
+    mir::graphics::alpha_channel_depth*;
+    mir::graphics::blue_channel_depth*;
+    mir::graphics::contains_alpha*;
+    mir::graphics::egl_category*;
+    mir::graphics::green_channel_depth*;
     mir::graphics::red_channel_depth*;
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::udev::Context::?Context*;
     mir::udev::Context::Context*;
     mir::udev::Context::ctx*;
-    mir::udev::Enumerator::begin*;
-    mir::udev::Enumerator::end*;
+    mir::udev::Context::device_from_syspath*;
+    mir::udev::Device::initialised*;
+    mir::udev::Device::sysname*;
+    mir::udev::Device::syspath*;
     mir::udev::Enumerator::?Enumerator*;
     mir::udev::Enumerator::Enumerator*;
+    mir::udev::Enumerator::begin*;
+    mir::udev::Enumerator::end*;
     mir::udev::Enumerator::iterator::operator*;
     mir::udev::Enumerator::match_parent*;
     mir::udev::Enumerator::match_subsystem*;
     mir::udev::Enumerator::match_sysname*;
     mir::udev::Enumerator::scan_devices*;
+    mir::udev::Monitor::?Monitor*;
+    mir::udev::Monitor::Monitor*;
     mir::udev::Monitor::enable*;
     mir::udev::Monitor::fd*;
     mir::udev::Monitor::filter_by_subsystem*;
-    mir::udev::Monitor::?Monitor*;
-    mir::udev::Monitor::Monitor*;
+    mir::udev::Monitor::process_event*;
     mir::udev::Monitor::process_events*;
     mir::udev::operator*;
-
-    mir::graphics::AtomicFrame::load*;
-    mir::graphics::AtomicFrame::store*;
-    mir::graphics::AtomicFrame::increment*
-  };
+ };
  local: *;
 };
-
-MIRPLATFORM_1.0 {
- global:
-  extern "C++" {
-    mir::options::wayland_socket_name_opt*;
-  };
-} MIRPLATFORM_0.27;
-
-# Uuuuh, 1.0 is not yet a thing.
-MIR_PLATFORM_0.31 {
- global:
-  extern "C++" {
-    mir::options::vt_option_name*;
-  };
-} MIRPLATFORM_1.0;
-
-MIR_PLATFORM_0.32 {
- global:
-  extern "C++" {
-   mir::udev::Device::initialised*;
-   mir::udev::Device::sysname*;
-   mir::udev::Device::syspath*;
-   mir::udev::Monitor::process_event*;
-   mir::udev::Context::device_from_syspath*;
-  };
-} MIR_PLATFORM_0.31;
-
-MIR_PLATFORM_0.33 {
- global:
-  extern "C++" {
-   mir::graphics::gl_category*;
-   mir::graphics::gl_error*;
-  };
-} MIR_PLATFORM_0.32;
-
-MIR_PLATFORM_0.32.3 {
- global:
-  extern "C++" {
-    mir::options::auto_console;
-    mir::options::console_provider;
-    mir::options::logind_console;
-    mir::options::null_console;
-    mir::options::vt_console;
-    mir::options::wayland_extensions_opt;
-    mir::options::wayland_extensions_value;
-    mir::options::x11_display_opt;
-  };
-} MIR_PLATFORM_0.33;
-
-MIR_PLATFORM_1.1.0 {
- global:
-  extern "C++" {
-    mir::graphics::WaylandAllocator::WaylandAllocator*;
-    mir::graphics::WaylandAllocator::?WaylandAllocator*;
-    typeinfo?for?mir::graphics::WaylandAllocator;
-    vtable?for?mir::graphics::WaylandAllocator;
-
-    mir::graphics::gl::Texture::?Texture*;
-    typeinfo?for?mir::graphics::gl::Texture;
-    vtable?for?mir::graphics::gl::Texture;
-
-    mir::graphics::gl::Program::?Program*;
-    typeinfo?for?mir::graphics::gl::Program;
-    vtable?for?mir::graphics::gl::Program;
-
-    mir::graphics::gl::ProgramFactory::?ProgramFactory*;
-    mir::graphics::gl::ProgramFactory::compile_fragment_shader*;
-    typeinfo?for?mir::graphics::gl::ProgramFactory;
-    vtable?for?mir::graphics::gl::ProgramFactory;
-
-    mir::graphics::EGLExtensions::WaylandExtensions::WaylandExtensions*;
-    mir::graphics::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions*;
-  };
-} MIR_PLATFORM_0.32.3;
-
-MIR_PLATFORM_1.1.1 {
- global:
-  extern "C++" {
-    mir::graphics::EGLExtensions::PlatformBaseEXT*;
-  };
-} MIR_PLATFORM_1.1.0;
-
-MIR_PLATFORM_1.4.0 {
- global:
-  extern "C++" {
-    mir::options::enable_mirclient_opt;
-  };
-} MIR_PLATFORM_1.1.1;
