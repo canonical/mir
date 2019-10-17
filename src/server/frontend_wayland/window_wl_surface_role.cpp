@@ -40,6 +40,13 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
+namespace
+{
+static geom::Size const max_possible_size{
+    std::numeric_limits<int>::max(),
+    std::numeric_limits<int>::max()};
+}
+
 mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     WlSeat* seat,
     wl_client* client,
@@ -191,8 +198,8 @@ void mf::WindowWlSurfaceRole::set_max_size(int32_t width, int32_t height)
 {
     if (weak_scene_surface.lock())
     {
-        if (width == 0) width = std::numeric_limits<int>::max();
-        if (height == 0) height = std::numeric_limits<int>::max();
+        if (width == 0) width = max_possible_size.width.as_int();
+        if (height == 0) height = max_possible_size.height.as_int();
 
         auto& mods = spec();
         mods.max_width = geom::Width{width};
