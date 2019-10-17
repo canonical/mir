@@ -29,11 +29,11 @@
 #include "null_cursor.h"
 #include "offscreen/display.h"
 #include "software_cursor.h"
+#include "platform_probe.h"
 
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor.h"
-#include "mir/graphics/platform_probe.h"
 #include "display_configuration_observer_multiplexer.h"
 
 #include "mir/shared_library.h"
@@ -100,6 +100,16 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                 if (the_options()->is_set(options::platform_graphics_lib))
                 {
                     platform_library = std::make_shared<mir::SharedLibrary>(the_options()->get<std::string>(options::platform_graphics_lib));
+                    auto const platform_priority =
+                        graphics::probe_module(
+                            *platform_library,
+                            dynamic_cast<mir::options::ProgramOption&>(*the_options()),
+                            the_console_services());
+
+                    if (platform_priority < mir::graphics::PlatformPriority::supported)
+                    {
+                        mir::log_warning("Manually-specified graphics platform does not claim to support this system. Trying anyway...");
+                    }
                 }
                 else
                 {

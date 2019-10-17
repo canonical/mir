@@ -21,7 +21,7 @@
 #include <boost/throw_exception.hpp>
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/platform_probe.h"
+#include "src/server/graphics/platform_probe.h"
 #include "mir/options/program_option.h"
 
 #include "mir/raii.h"
