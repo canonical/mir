@@ -175,7 +175,7 @@ void mf::WindowWlSurfaceRole::set_parent(std::experimental::optional<std::shared
     {
         if (parent)
             spec().parent = parent.value();
-        else
+        else if (spec().parent)
             spec().parent.consume();
     }
     else
