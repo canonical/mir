@@ -33,7 +33,7 @@
 #include "shm_buffer.h"
 #include "buffer_allocator.h"
 
-#define MIR_LOG_COMPONENT "rpi-vc4"
+#define MIR_LOG_COMPONENT "rpi-dispmanx"
 #include <mir/log.h>
 
 
@@ -120,7 +120,7 @@ auto mg::rpi::BufferAllocator::alloc_software_buffer(
 
         std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override
         {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"rpi-vc4 platform does not support mirclient"}));
+            BOOST_THROW_EXCEPTION((std::runtime_error{"rpi-dispmanx platform does not support mirclient"}));
         }
 
     private:

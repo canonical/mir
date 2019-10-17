@@ -62,5 +62,5 @@ mir::graphics::NativeDisplayPlatform* mir::graphics::rpi::DisplayPlatform::nativ
 
 auto mir::graphics::rpi::DisplayPlatform::extensions() const -> std::vector<ExtensionDescription>
 {
-    BOOST_THROW_EXCEPTION((std::runtime_error{"rpi-vc4 platform does not support mirclient"}));
+    BOOST_THROW_EXCEPTION((std::runtime_error{"rpi-dispmanx platform does not support mirclient"}));
 }

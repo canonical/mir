@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "rpi-vc4"
+#define MIR_LOG_COMPONENT "rpi-dispmanx"
 
 #include "mir/log.h"
 #include "mir/graphics/platform.h"
@@ -106,7 +106,7 @@ mg::PlatformPriority probe_graphics_platform(std::shared_ptr<mir::ConsoleService
 namespace
 {
 mir::ModuleProperties const description = {
-    "mir:rpi-vc4",
+    "mir:rpi-dispmanx",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO,

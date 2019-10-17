@@ -1,4 +1,4 @@
-add_library(mirplatformgraphicsrpivc4objects OBJECT
+add_library(mirplatformgraphicsrpidispmanxobjects OBJECT
   platform_symbols.cpp
   platform.cpp
   platform.h
@@ -15,7 +15,7 @@ add_library(mirplatformgraphicsrpivc4objects OBJECT
 )
 
 target_include_directories(
-  mirplatformgraphicsrpivc4objects
+  mirplatformgraphicsrpidispmanxobjects
     PRIVATE
       ${BCM_HOST_INCLUDE_DIRS}
       ${server_common_include_dirs}
@@ -25,15 +25,15 @@ target_include_directories(
 )
 
 target_compile_options(
-  mirplatformgraphicsrpivc4objects
+  mirplatformgraphicsrpidispmanxobjects
     PRIVATE
       -Wno-error=variadic-macros
 )
 
 add_library(
-  mirplatformgraphicsrpivc4 MODULE
+  mirplatformgraphicsrpidispmanx MODULE
 
-  $<TARGET_OBJECTS:mirplatformgraphicsrpivc4objects>
+  $<TARGET_OBJECTS:mirplatformgraphicsrpidispmanxobjects>
 )
 
 configure_file(
@@ -43,7 +43,7 @@ configure_file(
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
 target_link_libraries(
-  mirplatformgraphicsrpivc4
+  mirplatformgraphicsrpidispmanx
   PRIVATE
   mirplatform
   server_platform_common
@@ -55,8 +55,8 @@ target_link_libraries(
 )
 
 set_target_properties(
-  mirplatformgraphicsrpivc4 PROPERTIES
-  OUTPUT_NAME graphics-rpi-vc4
+  mirplatformgraphicsrpidispmanx PROPERTIES
+  OUTPUT_NAME graphics-rpi-dispmanx
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   PREFIX ""
   SUFFIX ".so.${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
@@ -64,5 +64,5 @@ set_target_properties(
   LINK_DEPENDS ${symbol_map}
 )
 
-install(TARGETS mirplatformgraphicsrpivc4 LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
+install(TARGETS mirplatformgraphicsrpidispmanx LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
 
