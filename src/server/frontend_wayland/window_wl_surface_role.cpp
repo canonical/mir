@@ -61,7 +61,9 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
       output_manager{output_manager},
       observer{std::make_shared<WaylandSurfaceObserver>(seat, client, surface, this)},
       params{std::make_unique<scene::SurfaceCreationParameters>(
-          scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))}
+          scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))},
+      committed_min_size{0, 0},
+      committed_max_size{max_possible_size}
 {
     surface->set_role(this);
 }

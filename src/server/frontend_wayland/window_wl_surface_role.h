@@ -141,6 +141,12 @@ private:
     /// The last committed window size (either explicitly set or taken from the surface buffer size)
     std::experimental::optional<geometry::Size> committed_size;
 
+    /// The min and max size of the window as of last commit
+    /// @{
+    geometry::Size committed_min_size;
+    geometry::Size committed_max_size;
+    /// @}
+
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
 
     void visiblity(bool visible) override;
