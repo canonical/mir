@@ -155,30 +155,28 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
     report->update_surface(*session, *surface, modifications);
 
     auto wm_relevant_mods = modifications;
+
     if (wm_relevant_mods.streams.is_set())
     {
         session->configure_streams(*surface, wm_relevant_mods.streams.consume());
     }
-    if (!wm_relevant_mods.is_empty())
-    {
-        window_manager->modify_surface(session, surface, wm_relevant_mods);
-    }
 
-    if (modifications.cursor_image.is_set())
+    if (wm_relevant_mods.cursor_image.is_set())
     {
-        if (modifications.cursor_image.value() == nullptr)
+        auto const cursor_image = wm_relevant_mods.cursor_image.consume();
+        if (cursor_image == nullptr)
         {
             surface->set_cursor_image({});
         }
         else
         {
-            surface->set_cursor_image(modifications.cursor_image.value());
+            surface->set_cursor_image(cursor_image);
         }
     }
 
-    if (modifications.stream_cursor.is_set())
+    if (wm_relevant_mods.stream_cursor.is_set())
     {
-        auto const& cursor = modifications.stream_cursor.value();
+        auto const cursor = wm_relevant_mods.stream_cursor.consume();
         if (auto const stream = cursor.stream.lock())
         {
             auto hotspot = cursor.hotspot;
@@ -188,6 +186,11 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
         {
             surface->set_cursor_image({});
         }
+    }
+
+    if (!wm_relevant_mods.is_empty())
+    {
+        window_manager->modify_surface(session, surface, wm_relevant_mods);
     }
 
     if (modifications.confine_pointer.is_set() && focused_surface() == surface)
