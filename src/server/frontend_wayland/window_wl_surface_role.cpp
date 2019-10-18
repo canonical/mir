@@ -419,13 +419,6 @@ void mf::WindowWlSurfaceRole::apply_pending_size_bounds()
 
         }
     }
-    else
-    {
-        if (params->min_width)  committed_min_size.width  = params->min_width.value();
-        if (params->min_height) committed_min_size.height = params->min_height.value();
-        if (params->max_width)  committed_max_size.width  = params->max_width.value();
-        if (params->max_height) committed_max_size.height = params->max_height.value();
-    }
 }
 
 void mf::WindowWlSurfaceRole::create_mir_window()
@@ -434,10 +427,14 @@ void mf::WindowWlSurfaceRole::create_mir_window()
     params->streams = std::vector<shell::StreamSpecification>{};
     params->input_shape = std::vector<geom::Rectangle>{};
     surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
-    apply_pending_size_bounds();
 
     auto const scene_surface = shell->create_surface(session, *params, observer);
     weak_scene_surface = scene_surface;
+
+    if (params->min_width)  committed_min_size.width  = params->min_width.value();
+    if (params->min_height) committed_min_size.height = params->min_height.value();
+    if (params->max_width)  committed_max_size.width  = params->max_width.value();
+    if (params->max_height) committed_max_size.height = params->max_height.value();
 
     // The shell isn't guaranteed to respect the requested size
     auto const client_size = scene_surface->client_size();
