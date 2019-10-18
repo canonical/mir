@@ -92,7 +92,7 @@ auto miral::Window::size() const
     if (self)
     {
         if (auto const surface = self->surface.lock())
-            return surface->size();
+            return surface->window_size();
     }
 
     return {};

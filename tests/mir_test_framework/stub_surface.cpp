@@ -29,7 +29,7 @@ void mtd::StubSurface::move_to(mir::geometry::Point const& /*top_left*/)
 {
 }
 
-mir::geometry::Size mtd::StubSurface::size() const
+mir::geometry::Size mtd::StubSurface::window_size() const
 {
     return {};
 }

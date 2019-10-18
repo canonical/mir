@@ -219,7 +219,7 @@ void mf::BasicMirClientSession::send_display_config(mg::DisplayConfiguration con
         {
             auto output_properties = output_cache.properties_for(geometry::Rectangle{
                 surface->top_left(),
-                surface->size()});
+                surface->window_size()});
 
             if (output_properties)
             {

@@ -108,7 +108,7 @@ struct BasicSurfaceTest : public testing::Test
 TEST_F(BasicSurfaceTest, basics)
 {
     EXPECT_EQ(name, surface.name());
-    EXPECT_EQ(rect.size, surface.size());
+    EXPECT_EQ(rect.size, surface.window_size());
     EXPECT_EQ(rect.top_left, surface.top_left());
     for (auto& renderable : surface.generate_renderables(this))
         EXPECT_FALSE(renderable->shaped());
@@ -174,15 +174,15 @@ TEST_F(BasicSurfaceTest, update_size)
 
     surface.add_observer(observer);
 
-    EXPECT_EQ(rect.size, surface.size());
-    EXPECT_NE(new_size, surface.size());
+    EXPECT_EQ(rect.size, surface.window_size());
+    EXPECT_NE(new_size, surface.window_size());
 
     auto renderables = surface.generate_renderables(compositor_id);
     ASSERT_THAT(renderables.size(), testing::Eq(1));
     auto old_transformation = renderables[0]->transformation();
 
     surface.resize(new_size);
-    EXPECT_EQ(new_size, surface.size());
+    EXPECT_EQ(new_size, surface.window_size());
     // Size no longer affects transformation:
     renderables = surface.generate_renderables(compositor_id);
     ASSERT_THAT(renderables.size(), testing::Eq(1));
@@ -197,13 +197,13 @@ TEST_F(BasicSurfaceTest, size_equals_client_size)
 {
     geom::Size const new_size{34, 56};
 
-    EXPECT_EQ(rect.size, surface.size());
+    EXPECT_EQ(rect.size, surface.window_size());
     EXPECT_EQ(rect.size, surface.content_size());
-    EXPECT_NE(new_size, surface.size());
+    EXPECT_NE(new_size, surface.window_size());
     EXPECT_NE(new_size, surface.content_size());
 
     surface.resize(new_size);
-    EXPECT_EQ(new_size, surface.size());
+    EXPECT_EQ(new_size, surface.window_size());
     EXPECT_EQ(new_size, surface.content_size());
 }
 

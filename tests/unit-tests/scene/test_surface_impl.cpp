@@ -171,7 +171,7 @@ TEST_F(Surface, clamps_undersized_resize)
     geom::Size const expect_size{1, 1};
 
     surface->resize(try_size);
-    EXPECT_EQ(expect_size, surface->size());
+    EXPECT_EQ(expect_size, surface->window_size());
 }
 
 TEST_F(Surface, emits_resize_events)
@@ -190,7 +190,7 @@ TEST_F(Surface, emits_resize_events)
         .Times(1);
 
     surface->resize(new_size);
-    EXPECT_EQ(new_size, surface->size());
+    EXPECT_EQ(new_size, surface->window_size());
 }
 
 TEST_F(Surface, emits_resize_events_only_on_change)
@@ -214,14 +214,14 @@ TEST_F(Surface, emits_resize_events_only_on_change)
         .Times(1);
 
     surface->resize(new_size);
-    EXPECT_EQ(new_size, surface->size());
+    EXPECT_EQ(new_size, surface->window_size());
     surface->resize(new_size);
-    EXPECT_EQ(new_size, surface->size());
+    EXPECT_EQ(new_size, surface->window_size());
 
     surface->resize(new_size2);
-    EXPECT_EQ(new_size2, surface->size());
+    EXPECT_EQ(new_size2, surface->window_size());
     surface->resize(new_size2);
-    EXPECT_EQ(new_size2, surface->size());
+    EXPECT_EQ(new_size2, surface->window_size());
 }
 
 TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)

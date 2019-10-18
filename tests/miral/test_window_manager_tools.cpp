@@ -100,7 +100,7 @@ struct StubSurface : mir::test::doubles::StubSurface
     mir::geometry::Point top_left() const override { return top_left_; }
     void move_to(mir::geometry::Point const& top_left) override { top_left_ = top_left; }
 
-    mir::geometry::Size size() const override { return  size_; }
+    mir::geometry::Size window_size() const override { return  size_; }
     void resize(mir::geometry::Size const& size) override { size_ = size; }
 
     auto state() const -> MirWindowState override { return state_; }

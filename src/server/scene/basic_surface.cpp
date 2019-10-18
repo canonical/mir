@@ -315,7 +315,7 @@ void ms::BasicSurface::set_hidden(bool hide)
     observers.hidden_set_to(this, hide);
 }
 
-mir::geometry::Size ms::BasicSurface::size() const
+mir::geometry::Size ms::BasicSurface::window_size() const
 {
     std::lock_guard<std::mutex> lock(guard);
     return surface_rect.size;
@@ -323,8 +323,8 @@ mir::geometry::Size ms::BasicSurface::size() const
 
 mir::geometry::Size ms::BasicSurface::content_size() const
 {
-    // TODO: In future when decorated, content_size() would be smaller than size
-    return size();
+    // TODO: In future when decorated, content_size() would be smaller than window_size()
+    return window_size();
 }
 
 std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const

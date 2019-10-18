@@ -48,7 +48,7 @@ void ms::SurfaceEventSource::resized_to(Surface const*, geometry::Size const& si
 
 void ms::SurfaceEventSource::moved_to(Surface const* surface, geometry::Point const& top_left)
 {
-    auto new_output_properties = outputs.properties_for(geom::Rectangle{top_left, surface->size()});
+    auto new_output_properties = outputs.properties_for(geom::Rectangle{top_left, surface->window_size()});
     if (new_output_properties && (new_output_properties != last_output.lock()))
     {
         event_sink->handle_event(mev::make_event(

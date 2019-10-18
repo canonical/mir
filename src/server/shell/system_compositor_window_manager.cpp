@@ -103,7 +103,7 @@ void msh::SystemCompositorWindowManager::modify_surface(
     {
         auto const output_id = modifications.output_id.value();
 
-        mir::geometry::Rectangle rect{surface->top_left(), surface->size()};
+        mir::geometry::Rectangle rect{surface->top_left(), surface->window_size()};
 
         if (display_layout->place_in_output(output_id, rect))
         {
@@ -137,7 +137,7 @@ void msh::SystemCompositorWindowManager::add_display(mir::geometry::Rectangle co
         {
             auto const output_id = so.second;
 
-            mir::geometry::Rectangle rect{surface->top_left(), surface->size()};
+            mir::geometry::Rectangle rect{surface->top_left(), surface->window_size()};
 
             if (display_layout->place_in_output(output_id, rect))
             {
