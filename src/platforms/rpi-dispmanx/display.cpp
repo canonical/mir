@@ -111,7 +111,6 @@ private:
             return mir_pixel_format_rgb_565;
         case DISPLAY_INPUT_FORMAT_INVALID:
             return mir_pixel_format_rgb_888;
-//            BOOST_THROW_EXCEPTION((std::runtime_error{"Display has invalid pixel format?"}));
         }
 #ifndef __clang__
         BOOST_THROW_EXCEPTION((std::logic_error{"Unhandled DISPLAY_INPUT_FORMAT type!"}));
@@ -273,7 +272,6 @@ auto mg::rpi::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
     // an automatically-enabled optimisation when there's a HW plane that can contain it?
 
     return {};
-//    BOOST_THROW_EXCEPTION((std::runtime_error{"HW cursor not implemented"}));
 }
 
 auto mg::rpi::Display::create_virtual_output(int /*width*/, int /*height*/) -> std::unique_ptr<VirtualOutput>
