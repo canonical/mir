@@ -49,7 +49,10 @@ class SurfaceObserver
 {
 public:
     virtual void attrib_changed(Surface const* surf, MirWindowAttrib attrib, int value) = 0;
-    virtual void resized_to(Surface const* surf, geometry::Size const& size) = 0;
+    virtual void resized_to(
+        Surface const* surf,
+        geometry::Size const& frame_size,
+        geometry::Size const& client_size) = 0;
     virtual void moved_to(Surface const* surf, geometry::Point const& top_left) = 0;
     virtual void hidden_set_to(Surface const* surf, bool hide) = 0;
     virtual void frame_posted(Surface const* surf, int frames_available, geometry::Size const& size) = 0;

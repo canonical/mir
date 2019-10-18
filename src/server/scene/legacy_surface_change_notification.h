@@ -34,7 +34,10 @@ public:
         std::function<void()> const& notify_scene_change,
         std::function<void(int)> const& notify_buffer_change);
 
-    void resized_to(Surface const* surf, geometry::Size const&) override;
+    void resized_to(
+        Surface const* surf,
+        geometry::Size const& frame_size,
+        geometry::Size const& client_size) override;
     void moved_to(Surface const* surf, geometry::Point const&) override;
     void hidden_set_to(Surface const* surf, bool) override;
     void frame_posted(Surface const* surf, int frames_available, geometry::Size const& size) override;

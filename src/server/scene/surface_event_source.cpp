@@ -41,9 +41,12 @@ ms::SurfaceEventSource::SurfaceEventSource(
 {
 }
 
-void ms::SurfaceEventSource::resized_to(Surface const*, geometry::Size const& size)
+void ms::SurfaceEventSource::resized_to(
+    Surface const*,
+    geometry::Size const& /*frame_size*/,
+    geometry::Size const& client_size)
 {
-    event_sink->handle_event(mev::make_event(id, size));
+    event_sink->handle_event(mev::make_event(id, client_size));
 }
 
 void ms::SurfaceEventSource::moved_to(Surface const* surface, geometry::Point const& top_left)

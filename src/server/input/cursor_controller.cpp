@@ -48,7 +48,7 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
     {
         // Attribute changing alone wont trigger a cursor update
     }
-    void resized_to(ms::Surface const*, geom::Size const&) override
+    void resized_to(ms::Surface const*, geom::Size const&, geom::Size const&) override
     {
         cursor_controller->update_cursor_image();
     }

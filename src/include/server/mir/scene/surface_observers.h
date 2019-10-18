@@ -35,7 +35,10 @@ public:
     using BasicObservers<SurfaceObserver>::for_each;
 
     void attrib_changed(Surface const* surf, MirWindowAttrib attrib, int value) override;
-    void resized_to(Surface const* surf, geometry::Size const& size) override;
+    void resized_to(
+        Surface const* surf,
+        geometry::Size const& frame_size,
+        geometry::Size const& client_size) override;
     void moved_to(Surface const* surf, geometry::Point const& top_left) override;
     void hidden_set_to(Surface const* surf, bool hide) override;
     void frame_posted(Surface const* surf, int frames_available, geometry::Size const& size) override;

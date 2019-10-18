@@ -47,7 +47,10 @@ public:
     /// Overrides from scene::SurfaceObserver
     ///@{
     void attrib_changed(scene::Surface const*, MirWindowAttrib attrib, int value) override;
-    void resized_to(scene::Surface const*, geometry::Size const& size) override;
+    void resized_to(
+        scene::Surface const*,
+        geometry::Size const& frame_size,
+        geometry::Size const& client_size) override;
     void client_surface_close_requested(scene::Surface const*) override;
     void keymap_changed(
         scene::Surface const*,

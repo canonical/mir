@@ -396,6 +396,6 @@ void mf::WindowWlSurfaceRole::create_mir_window()
     // The shell isn't guaranteed to respect the requested size
     auto const client_size = scene_surface->client_size();
     if (client_size != params->size)
-        observer->resized_to(scene_surface.get(), client_size);
+        observer->resized_to(scene_surface.get(), scene_surface->size(), client_size);
 }
 

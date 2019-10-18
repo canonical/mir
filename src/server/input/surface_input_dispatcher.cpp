@@ -74,7 +74,7 @@ struct InputDispatcherSceneObserver :
         // TODO: Do we need to listen to visibility events?
     }
 
-    void resized_to(ms::Surface const*, mir::geometry::Size const& /*size*/) override
+    void resized_to(ms::Surface const*, mir::geometry::Size const& /*frame_size*/, mir::geometry::Size const& /*client_size*/) override
     {
         on_surface_resized();
     }

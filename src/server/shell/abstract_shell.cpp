@@ -49,7 +49,7 @@ struct UpdateConfinementOnSurfaceChanges : ms::NullSurfaceObserver
     {
     }
 
-    void resized_to(ms::Surface const*, geom::Size const& /*size*/) override
+    void resized_to(ms::Surface const*, geom::Size const& /*frame_size*/, geom::Size const& /*client_size*/) override
     {
         update_confinement_region();
     }

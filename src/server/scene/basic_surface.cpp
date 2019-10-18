@@ -53,10 +53,13 @@ void ms::SurfaceObservers::attrib_changed(Surface const* surf, MirWindowAttrib a
         { observer->attrib_changed(surf, attrib, value); });
 }
 
-void ms::SurfaceObservers::resized_to(Surface const* surf, geometry::Size const& size)
+void ms::SurfaceObservers::resized_to(
+    Surface const* surf,
+    geometry::Size const& frame_size,
+    geometry::Size const& client_size)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->resized_to(surf, size); });
+        { observer->resized_to(surf, frame_size, client_size); });
 }
 
 void ms::SurfaceObservers::moved_to(Surface const* surf, geometry::Point const& top_left)
@@ -351,7 +354,8 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
         surface_rect.size = new_size;
 
         lock.unlock();
-        observers.resized_to(this, new_size);
+        // TODO: subtract the frame from the client size
+        observers.resized_to(this, new_size, new_size);
     }
 }
 
