@@ -154,19 +154,22 @@ EGLConfig choose_config(EGLDisplay display, mg::GLConfig const& requested_config
     return egl_config;
 }
 
+namespace
+{
+EGLint const client_version_2_if_gles_attr[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
+    EGL_CONTEXT_CLIENT_VERSION,
+    2,
+#endif
+    EGL_NONE
+};
+}
+
 EGLContext create_context(EGLDisplay display, EGLConfig config)
 {
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
-    EGLint const context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
-        EGL_CONTEXT_CLIENT_VERSION,
-        2,
-#endif
-        EGL_NONE
-    };
-
-    EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attr);
+    EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, client_version_2_if_gles_attr);
     if (context == EGL_NO_CONTEXT)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
@@ -179,15 +182,7 @@ EGLContext create_context(EGLDisplay display, EGLConfig config, EGLContext share
 {
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
-    EGLint const context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
-        EGL_CONTEXT_CLIENT_VERSION,
-        2,
-#endif
-        EGL_NONE
-    };
-
-    EGLContext context = eglCreateContext(display, config, shared_context, context_attr);
+    EGLContext context = eglCreateContext(display, config, shared_context, client_version_2_if_gles_attr);
     if (context == EGL_NO_CONTEXT)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
