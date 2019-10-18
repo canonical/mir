@@ -42,7 +42,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-static geom::Size const max_possible_size{
+geom::Size const max_possible_size{
     std::numeric_limits<int>::max(),
     std::numeric_limits<int>::max()};
 }
