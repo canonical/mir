@@ -45,6 +45,20 @@ namespace
 geom::Size const max_possible_size{
     std::numeric_limits<int>::max(),
     std::numeric_limits<int>::max()};
+
+/// Clears pending if it holds a value different than cache
+/// sets cache to pending and leaves pending alone if it holds a different value
+template<typename T>
+inline void clear_pending_if_unchanged(mir::optional_value<T>* pending, T* cache)
+{
+    if (*pending)
+    {
+        if (pending->value() == *cache)
+            pending->consume();
+        else
+            *cache = pending->value();
+    }
+}
 }
 
 mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
@@ -344,7 +358,13 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
             populate_spec_with_surface_data(spec());
         }
 
-        apply_pending_size_bounds();
+        if (pending_changes)
+        {
+            clear_pending_if_unchanged(&pending_changes->min_width,  &committed_min_size.width);
+            clear_pending_if_unchanged(&pending_changes->min_height, &committed_min_size.height);
+            clear_pending_if_unchanged(&pending_changes->max_width,  &committed_max_size.width);
+            clear_pending_if_unchanged(&pending_changes->max_height, &committed_max_size.height);
+        }
 
         if (pending_changes && !pending_changes->is_empty())
             shell->modify_surface(session, scene_surface, *pending_changes);
@@ -392,33 +412,6 @@ mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
         pending_changes = std::make_unique<mir::shell::SurfaceSpecification>();
 
     return *pending_changes;
-}
-
-void mf::WindowWlSurfaceRole::apply_pending_size_bounds()
-{
-    if (weak_scene_surface.lock())
-    {
-        if (pending_changes)
-        {
-
-#define SET_IF_CHANGED(pending, committed)  \
-    if (pending)                            \
-    {                                       \
-        if (pending.value() == committed)   \
-            pending.consume();              \
-        else                                \
-            committed = pending.value();    \
-    }
-
-            SET_IF_CHANGED(pending_changes->min_width,  committed_min_size.width);
-            SET_IF_CHANGED(pending_changes->min_height, committed_min_size.height);
-            SET_IF_CHANGED(pending_changes->max_width,  committed_max_size.width);
-            SET_IF_CHANGED(pending_changes->max_height, committed_max_size.height);
-
-#undef set_if_changed
-
-        }
-    }
 }
 
 void mf::WindowWlSurfaceRole::create_mir_window()

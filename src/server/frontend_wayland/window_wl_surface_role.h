@@ -152,9 +152,6 @@ private:
     void visiblity(bool visible) override;
 
     shell::SurfaceSpecification& spec();
-    /// Sets committed_max_size and committed_min_size from the current pending size bounds
-    /// clears pending if its value is the same as currently committed
-    void apply_pending_size_bounds();
     void create_mir_window();
 };
 
