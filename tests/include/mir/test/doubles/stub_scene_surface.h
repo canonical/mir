@@ -105,6 +105,12 @@ public:
     void set_application_id(std::string const& /*application_id*/) override {}
 
     auto session() const -> std::weak_ptr<scene::Session> override { return {}; }
+
+    void set_window_margins(
+        geometry::DeltaY /*top*/,
+        geometry::DeltaX /*left*/,
+        geometry::DeltaY /*bottom*/,
+        geometry::DeltaX /*right*/) override {}
 };
 
 }

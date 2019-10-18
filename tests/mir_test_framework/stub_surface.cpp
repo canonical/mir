@@ -237,6 +237,10 @@ std::weak_ptr<mir::scene::Session> mtd::StubSurface::session() const
     return {};
 }
 
+void mtd::StubSurface::set_window_margins(geometry::DeltaY, geometry::DeltaX, geometry::DeltaY, geometry::DeltaX)
+{
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class

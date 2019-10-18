@@ -1052,3 +1052,16 @@ auto mir::scene::BasicSurface::session() const -> std::weak_ptr<Session>
     std::lock_guard<std::mutex> lock(guard);
     return session_;
 }
+
+void mir::scene::BasicSurface::set_window_margins(
+    geom::DeltaY top,
+    geom::DeltaX left,
+    geom::DeltaY bottom,
+    geom::DeltaX right)
+{
+    (void)top;
+    (void)left;
+    (void)bottom;
+    (void)right;
+    // TODO
+}

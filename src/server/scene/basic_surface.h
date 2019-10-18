@@ -159,6 +159,12 @@ public:
 
     auto session() const -> std::weak_ptr<Session> override;
 
+    void set_window_margins(
+        geometry::DeltaY top,
+        geometry::DeltaX left,
+        geometry::DeltaY bottom,
+        geometry::DeltaX right) override;
+
 private:
     struct ProofOfMutexLock
     {
