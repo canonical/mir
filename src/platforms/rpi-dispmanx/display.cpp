@@ -19,13 +19,12 @@
 
 #include <bcm_host.h>
 
-
 #include "display.h"
 #include "display_buffer.h"
 
 #include "mir/graphics/display_configuration.h"
-#include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
+#include "mir/graphics/gl_config.h"
 #include "mir/graphics/virtual_output.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/signal_blocker.h"
@@ -93,10 +92,10 @@ private:
         // TODO: orientation from mode.transform
         output.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
         output.form_factor = MirFormFactor::mir_form_factor_unknown;
-	output.orientation = mir_orientation_normal;
-	output.scale = 1.0f;
-	output.subpixel_arrangement = mir_subpixel_arrangement_unknown;
-    output.used = true;
+        output.orientation = mir_orientation_normal;
+        output.scale = 1.0f;
+        output.subpixel_arrangement = mir_subpixel_arrangement_unknown;
+        output.used = true;
 
         return output;
     }
@@ -329,6 +328,7 @@ auto mg::rpi::Display::create_gl_context() const -> std::unique_ptr<renderer::gl
                 BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release context"));
             }
         }
+
     private:
         EGLDisplay const dpy;
         EGLContext const ctx;
