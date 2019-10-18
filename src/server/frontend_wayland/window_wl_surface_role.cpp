@@ -49,14 +49,14 @@ geom::Size const max_possible_size{
 /// Clears pending if it holds a value different than cache
 /// sets cache to pending and leaves pending alone if it holds a different value
 template<typename T>
-inline void clear_pending_if_unchanged(mir::optional_value<T>* pending, T* cache)
+inline void clear_pending_if_unchanged(mir::optional_value<T>& pending, T& cache)
 {
-    if (*pending)
+    if (pending)
     {
-        if (pending->value() == *cache)
-            pending->consume();
+        if (pending.value() == cache)
+            pending.consume();
         else
-            *cache = pending->value();
+            cache = pending.value();
     }
 }
 }
@@ -360,10 +360,10 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 
         if (pending_changes)
         {
-            clear_pending_if_unchanged(&pending_changes->min_width,  &committed_min_size.width);
-            clear_pending_if_unchanged(&pending_changes->min_height, &committed_min_size.height);
-            clear_pending_if_unchanged(&pending_changes->max_width,  &committed_max_size.width);
-            clear_pending_if_unchanged(&pending_changes->max_height, &committed_max_size.height);
+            clear_pending_if_unchanged(pending_changes->min_width,  committed_min_size.width);
+            clear_pending_if_unchanged(pending_changes->min_height, committed_min_size.height);
+            clear_pending_if_unchanged(pending_changes->max_width,  committed_max_size.width);
+            clear_pending_if_unchanged(pending_changes->max_height, committed_max_size.height);
         }
 
         if (pending_changes && !pending_changes->is_empty())
