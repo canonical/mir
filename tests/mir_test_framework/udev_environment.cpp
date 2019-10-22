@@ -56,6 +56,11 @@ int udev_device_get_is_initialized(udev_device*)
 mtf::UdevEnvironment::UdevEnvironment()
     : recordings_path(mtf::test_data_path() + "/udev-recordings")
 {
+    if (!getenv("LD_PRELOAD"))
+    {
+        puts("This test expects LD_PRELOAD=libumockdev-preload.so.0");
+        abort();
+    }
     testbed = umockdev_testbed_new();
 }
 
