@@ -65,7 +65,8 @@ class MockSurfaceObserver : public msc::SurfaceObserver
 {
 public:
     MOCK_METHOD3(attrib_changed, void(msc::Surface const*, MirWindowAttrib attrib, int value));
-    MOCK_METHOD2(resized_to, void(msc::Surface const*, geom::Size const& size));
+    MOCK_METHOD2(window_resized_to, void(msc::Surface const*, geom::Size const& window_size));
+    MOCK_METHOD2(content_resized_to, void(msc::Surface const*, geom::Size const& content_size));
     MOCK_METHOD2(moved_to, void(msc::Surface const*, geom::Point const& top_left));
     MOCK_METHOD2(hidden_set_to, void(msc::Surface const*, bool hide));
     MOCK_METHOD3(frame_posted, void(msc::Surface const*, int frames_available, geom::Size const& size));

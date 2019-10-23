@@ -1,4 +1,4 @@
-MIR_SERVER_0.1.5 {
+MIR_SERVER_0.1.6 {
  global:
   extern "C++" {
     mir::check_for_termination_exception*;
@@ -129,7 +129,8 @@ MIR_SERVER_0.1.5 {
     mir::scene::NullSurfaceObserver::placed_relative*;
     mir::scene::NullSurfaceObserver::reception_mode_set_to*;
     mir::scene::NullSurfaceObserver::renamed*;
-    mir::scene::NullSurfaceObserver::resized_to*;
+    mir::scene::NullSurfaceObserver::window_resized_to*;
+    mir::scene::NullSurfaceObserver::content_resized_to*;
     mir::scene::NullSurfaceObserver::start_drag_and_drop*;
     mir::scene::NullSurfaceObserver::transformation_set_to*;
     mir::scene::Observer::?Observer*;
@@ -934,4 +935,4 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
 
     mir::run_mir*;
   };
-} MIR_SERVER_0.1.5;
+} MIR_SERVER_0.1.6;
