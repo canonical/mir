@@ -62,7 +62,7 @@ void ms::SurfaceObservers::window_resized_to(Surface const* surf, geometry::Size
 void ms::SurfaceObservers::content_resized_to(Surface const* surf, geometry::Size const& content_size)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->window_resized_to(surf, content_size); });
+        { observer->content_resized_to(surf, content_size); });
 }
 
 void ms::SurfaceObservers::moved_to(Surface const* surf, geometry::Point const& top_left)
