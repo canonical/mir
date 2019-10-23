@@ -53,7 +53,7 @@ public:
     // resolve ambiguous member function names
 
     std::string name() const override = 0;
-    geometry::Size client_size() const override = 0;
+    geometry::Size content_size() const override = 0;
     geometry::Rectangle input_bounds() const override = 0;
 
     // member functions that don't exist in base classes

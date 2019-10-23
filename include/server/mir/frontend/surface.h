@@ -47,7 +47,7 @@ public:
     virtual ~Surface() = default;
 
     /// Size of the client area of the surface (excluding any decorations)
-    virtual auto client_size() const -> geometry::Size = 0;
+    virtual auto content_size() const -> geometry::Size = 0;
 
     virtual auto primary_buffer_stream() const -> std::shared_ptr<frontend::BufferStream> = 0;
 
