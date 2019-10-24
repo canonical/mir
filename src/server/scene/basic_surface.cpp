@@ -427,7 +427,7 @@ bool ms::BasicSurface::visible() const
     return visible(lock);
 }
 
-bool ms::BasicSurface::visible(std::lock_guard<std::mutex> const&) const
+bool ms::BasicSurface::visible(ProofOfMutexLock const&) const
 {
     bool visible{false};
     for (auto const& info : layers)
