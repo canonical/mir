@@ -259,8 +259,14 @@ void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(Disp
     puts(__PRETTY_FUNCTION__);
     if (!window)
     {
+        static wl_shell_surface_listener const shell_surface_listener{
+            [](void*, wl_shell_surface* shell_surface, uint32_t serial){ wl_shell_surface_pong(shell_surface, serial); },
+            [](void*, wl_shell_surface*, uint32_t, int32_t, int32_t){},
+            [](void*, wl_shell_surface*){}
+        };
+
         window = wl_shell_get_shell_surface(owner->shell, surface);
-//    wl_shell_surface_add_listener(window, &shell_surface_listener, this);
+        wl_shell_surface_add_listener(window, &shell_surface_listener, this);
         wl_shell_surface_set_fullscreen(window, WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, output);
         wl_display_dispatch(owner->display);
 
