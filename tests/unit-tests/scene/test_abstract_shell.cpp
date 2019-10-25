@@ -599,6 +599,102 @@ TEST_F(AbstractShell, modify_surface_does_not_call_wm_for_empty_changes)
     shell.modify_surface(session, surface, stream_modification);
 }
 
+TEST_F(AbstractShell, size_gets_adjusted_for_windows_with_margins)
+{
+    geom::DeltaY const top{3};
+    geom::DeltaX const left{4};
+    geom::DeltaY const bottom{2};
+    geom::DeltaX const right{6};
+    geom::Size const content_size{102, 87};
+    geom::Size const window_size{
+        content_size.width + left + right,
+        content_size.height + top + bottom};
+    std::shared_ptr<ms::Session> session =
+        shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    auto creation_params = ms::a_surface()
+        .with_buffer_stream(session->create_buffer_stream(properties));
+    auto surface = shell.create_surface(session, creation_params, nullptr);
+    surface->resize({50, 50});
+    surface->set_window_margins(top, left, bottom, right);
+
+    msh::SurfaceSpecification modifications;
+    modifications.width = content_size.width;
+    modifications.height = content_size.height;
+
+    msh::SurfaceSpecification wm_modifications;
+    EXPECT_CALL(*wm, modify_surface(_,_,_)).WillOnce(SaveArg<2>(&wm_modifications));
+
+    shell.modify_surface(session, surface, modifications);
+
+    ASSERT_THAT(wm_modifications.width, Eq(mir::optional_value<geom::Width>(window_size.width)));
+    ASSERT_THAT(wm_modifications.height, Eq(mir::optional_value<geom::Height>(window_size.height)));
+}
+
+TEST_F(AbstractShell, max_size_gets_adjusted_for_windows_with_margins)
+{
+    geom::DeltaY const top{3};
+    geom::DeltaX const left{4};
+    geom::DeltaY const bottom{2};
+    geom::DeltaX const right{6};
+    geom::Size const content_size{102, 87};
+    geom::Size const window_size{
+        content_size.width + left + right,
+        content_size.height + top + bottom};
+    std::shared_ptr<ms::Session> session =
+        shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    auto creation_params = ms::a_surface()
+        .with_buffer_stream(session->create_buffer_stream(properties));
+    auto surface = shell.create_surface(session, creation_params, nullptr);
+    surface->resize({50, 50});
+    surface->set_window_margins(top, left, bottom, right);
+
+    msh::SurfaceSpecification modifications;
+    modifications.max_width = content_size.width;
+    modifications.max_height = content_size.height;
+
+    msh::SurfaceSpecification wm_modifications;
+    EXPECT_CALL(*wm, modify_surface(_,_,_)).WillOnce(SaveArg<2>(&wm_modifications));
+
+    shell.modify_surface(session, surface, modifications);
+
+    ASSERT_THAT(wm_modifications.max_width, Eq(mir::optional_value<geom::Width>(window_size.width)));
+    ASSERT_THAT(wm_modifications.max_height, Eq(mir::optional_value<geom::Height>(window_size.height)));
+}
+
+TEST_F(AbstractShell, min_size_gets_adjusted_for_windows_with_margins)
+{
+    geom::DeltaY const top{3};
+    geom::DeltaX const left{4};
+    geom::DeltaY const bottom{2};
+    geom::DeltaX const right{6};
+    geom::Size const content_size{102, 87};
+    geom::Size const window_size{
+        content_size.width + left + right,
+        content_size.height + top + bottom};
+    std::shared_ptr<ms::Session> session =
+        shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    auto creation_params = ms::a_surface()
+        .with_buffer_stream(session->create_buffer_stream(properties));
+    auto surface = shell.create_surface(session, creation_params, nullptr);
+    surface->resize({50, 50});
+    surface->set_window_margins(top, left, bottom, right);
+
+    msh::SurfaceSpecification modifications;
+    modifications.min_width = content_size.width;
+    modifications.min_height = content_size.height;
+
+    msh::SurfaceSpecification wm_modifications;
+    EXPECT_CALL(*wm, modify_surface(_,_,_)).WillOnce(SaveArg<2>(&wm_modifications));
+
+    shell.modify_surface(session, surface, modifications);
+
+    ASSERT_THAT(wm_modifications.min_width, Eq(mir::optional_value<geom::Width>(window_size.width)));
+    ASSERT_THAT(wm_modifications.min_height, Eq(mir::optional_value<geom::Height>(window_size.height)));
+}
+
 // lp:1625401
 TEST_F(AbstractShell, when_remaining_session_has_no_surface_focus_next_session_doesnt_loop_endlessly)
 {
