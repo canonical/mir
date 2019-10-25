@@ -181,6 +181,8 @@ private:
     MirWindowVisibility set_visibility(MirWindowVisibility v);
     int set_swap_interval(int);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
+    auto content_size(ProofOfMutexLock const&) const -> geometry::Size;
+    auto content_top_left(ProofOfMutexLock const&) const -> geometry::Point;
 
     std::shared_ptr<SurfaceObservers> observers = std::make_shared<SurfaceObservers>();
     std::mutex mutable guard;
@@ -215,6 +217,13 @@ private:
     std::string application_id_;
 
     std::weak_ptr<Session> session_;
+
+    struct {
+        geometry::DeltaY top;
+        geometry::DeltaX left;
+        geometry::DeltaY bottom;
+        geometry::DeltaX right;
+    } margins;
 };
 
 }

@@ -348,8 +348,8 @@ mir::geometry::Size ms::BasicSurface::window_size() const
 
 mir::geometry::Size ms::BasicSurface::content_size() const
 {
-    // TODO: In future when decorated, content_size() would be smaller than window_size()
-    return window_size();
+    std::lock_guard<std::mutex> lock(guard);
+    return content_size(lock);
 }
 
 std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const
@@ -374,10 +374,11 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
     if (new_size != surface_rect.size)
     {
         surface_rect.size = new_size;
+        auto const content_size_ = content_size(lock);
 
         lock.unlock();
         observers->window_resized_to(this, new_size);
-        observers->content_resized_to(this, new_size);
+        observers->content_resized_to(this, content_size_);
     }
 }
 
@@ -390,7 +391,7 @@ geom::Point ms::BasicSurface::top_left() const
 geom::Rectangle ms::BasicSurface::input_bounds() const
 {
     std::lock_guard<std::mutex> lock(guard);
-    return surface_rect;
+    return geom::Rectangle{content_top_left(lock), content_size(lock)};
 }
 
 // TODO: Does not account for transformation().
@@ -410,11 +411,12 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
     if (custom_input_rectangles.empty())
     {
         // no custom input, restrict to bounding rectangle
-        return surface_rect.contains(point);
+        auto const input_rect = geom::Rectangle{content_top_left(lock), content_size(lock)};
+        return input_rect.contains(point);
     }
     else
     {
-        auto local_point = geom::Point{0, 0} + (point-surface_rect.top_left);
+        auto local_point = as_point(point - content_top_left(lock));
         for (auto const& rectangle : custom_input_rectangles)
         {
             if (rectangle.contains(local_point))
@@ -936,6 +938,8 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
             return list;
     }
 
+    auto const content_top_left_ = content_top_left(lock);
+
     for (auto const& info : layers)
     {
         if (info.stream->has_submitted_buffer())
@@ -948,7 +952,7 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
 
             list.emplace_back(std::make_shared<SurfaceSnapshot>(
                 info.stream, id,
-                geom::Rectangle{surface_rect.top_left + info.displacement, std::move(size)},
+                geom::Rectangle{content_top_left_ + info.displacement, std::move(size)},
                 clip_area_,
                 transformation_matrix, surface_alpha, info.stream.get()));
         }
@@ -1059,9 +1063,37 @@ void mir::scene::BasicSurface::set_window_margins(
     geom::DeltaY bottom,
     geom::DeltaX right)
 {
-    (void)top;
-    (void)left;
-    (void)bottom;
-    (void)right;
-    // TODO
+    top    = std::max(top,    geom::DeltaY{});
+    left   = std::max(left,   geom::DeltaX{});
+    bottom = std::max(bottom, geom::DeltaY{});
+    right  = std::max(right,  geom::DeltaX{});
+
+    std::unique_lock<std::mutex> lock(guard);
+    if (top    != margins.top    ||
+        left   != margins.left   ||
+        bottom != margins.bottom ||
+        right  != margins.right)
+    {
+        margins.top    = top;
+        margins.left   = left;
+        margins.bottom = bottom;
+        margins.right  = right;
+
+        auto const size = content_size(lock);
+        lock.unlock();
+
+        observers->content_resized_to(this, size);
+    }
+}
+
+auto mir::scene::BasicSurface::content_size(ProofOfMutexLock const&) const -> geometry::Size
+{
+    return geom::Size{
+        std::max(surface_rect.size.width - margins.left - margins.right, geom::Width{}),
+        std::max(surface_rect.size.height - margins.top - margins.bottom, geom::Height{})};
+}
+
+auto mir::scene::BasicSurface::content_top_left(ProofOfMutexLock const&) const -> geometry::Point
+{
+    return surface_rect.top_left + geom::Displacement{margins.left, margins.top};
 }
