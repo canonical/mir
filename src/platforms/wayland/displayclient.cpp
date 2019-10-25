@@ -22,8 +22,6 @@
 
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <sys/poll.h>
-#include <sys/mman.h>
 #include <xkbcommon/xkbcommon.h>
 
 #include <boost/throw_exception.hpp>
