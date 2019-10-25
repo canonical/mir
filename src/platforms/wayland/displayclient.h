@@ -160,7 +160,6 @@ private:
 
     EGLDisplay egldisplay;
     EGLConfig eglconfig;
-    EGLint neglconfigs;
     EGLContext eglctx;
 };
 }

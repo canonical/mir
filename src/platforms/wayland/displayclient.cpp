@@ -348,14 +348,24 @@ mgw::DisplayClient::DisplayClient(wl_display* display) :
 
     static unsigned int const bpp = 32; //8*MIR_BYTES_PER_PIXEL(pixel_format);
 
-    static EGLint const attribs[] =
+    static EGLint const cfgattribs[] =
         {
             EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+            EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
             EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
             EGL_BUFFER_SIZE, (EGLint) bpp,
             EGL_NONE
         };
+
+    static EGLint ctxattribs[] =
+        {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
+            EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
+            EGL_NONE
+        };
+
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
     egldisplay = eglGetDisplay((EGLNativeDisplayType)(display));
     if (egldisplay == EGL_NO_DISPLAY)
@@ -369,17 +379,12 @@ mgw::DisplayClient::DisplayClient(wl_display* display) :
     if (major != 1 || minor < 4)
         throw std::runtime_error("EGL version is not at least 1.4");
 
-    if (!eglChooseConfig(egldisplay, attribs, &eglconfig, 1, &neglconfigs))
+    EGLint neglconfigs;
+    if (!eglChooseConfig(egldisplay, cfgattribs, &eglconfig, 1, &neglconfigs))
         throw std::runtime_error("Could not eglChooseConfig");
 
     if (neglconfigs == 0)
         throw std::runtime_error("No EGL config available");
-
-    EGLint ctxattribs[] =
-        {
-            EGL_CONTEXT_CLIENT_VERSION, 2,
-            EGL_NONE
-        };
 
     eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT, ctxattribs);
     if (eglctx == EGL_NO_CONTEXT)
