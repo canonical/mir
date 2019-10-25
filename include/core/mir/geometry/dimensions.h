@@ -143,6 +143,12 @@ inline Height& operator+=(Height& lhs, DeltaY rhs) { return lhs = lhs + rhs; }
 inline Width& operator-=(Width& lhs, DeltaX rhs) { return lhs = lhs - rhs; }
 inline Height& operator-=(Height& lhs, DeltaY rhs) { return lhs = lhs - rhs; }
 
+// Adding Widths and Heights is fine
+inline constexpr Width operator+(Width lhs, Width rhs) { return Width(lhs.as_int() + rhs.as_int()); }
+inline constexpr Height operator+(Height lhs, Height rhs) { return Height(lhs.as_int() + rhs.as_int()); }
+inline Width& operator+=(Width& lhs, Width rhs) { return lhs = lhs + rhs; }
+inline Height& operator+=(Height& lhs, Height rhs) { return lhs = lhs + rhs; }
+
 // Subtracting coordinates is fine
 inline constexpr DeltaX operator-(X lhs, X rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
 inline constexpr DeltaY operator-(Y lhs, Y rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
