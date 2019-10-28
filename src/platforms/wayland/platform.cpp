@@ -56,38 +56,32 @@ mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
 
 mg::NativeDisplayPlatform* mgw::Platform::native_display_platform()
 {
-    puts(__PRETTY_FUNCTION__);
     return nullptr;
 }
 
 EGLNativeDisplayType mgw::Platform::egl_native_display() const
 {
-    puts(__PRETTY_FUNCTION__);
     return eglGetDisplay(wl_display);
 }
 
 
 std::vector<mir::ExtensionDescription> mgw::Platform::extensions() const
 {
-    puts(__PRETTY_FUNCTION__);
     fatal_error("wayland platform does not support mirclient");
     return {};
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgw::Platform::create_buffer_allocator(mg::Display const& )
 {
-    puts(__PRETTY_FUNCTION__);
     return mir::make_module_ptr<mgw::BufferAllocator>();
 }
 
 mg::NativeRenderingPlatform* mgw::Platform::native_rendering_platform()
 {
-    puts(__PRETTY_FUNCTION__);
     return this;
 }
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgw::Platform::make_ipc_operations() const
 {
-    puts(__PRETTY_FUNCTION__);
     fatal_error("wayland platform does not support mirclient");
     return {};
 }

@@ -254,7 +254,6 @@ void mgw::DisplayClient::Output::done(void* data, struct wl_output* /*wl_output*
 
 void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(DisplayBuffer & )> const& f)
 {
-    puts(__PRETTY_FUNCTION__);
     if (!window)
     {
         static wl_shell_surface_listener const shell_surface_listener{
@@ -749,7 +748,6 @@ auto mgw::DisplayClient::display_configuration() const -> std::unique_ptr<Displa
 
 void mgw::DisplayClient::for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f)
 {
-    puts(__PRETTY_FUNCTION__);
     std::lock_guard<decltype(outputs_mutex)> lock{outputs_mutex};
     for (auto& output : bound_outputs)
     {

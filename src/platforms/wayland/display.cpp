@@ -34,12 +34,10 @@ mgw::Display::Display(wl_display* const wl_display, std::shared_ptr<DisplayRepor
     DisplayClient{wl_display},
     report{report}
 {
-    puts(__PRETTY_FUNCTION__);
 }
 
 auto mgw::Display::configuration() const -> std::unique_ptr<DisplayConfiguration>
 {
-    puts(__PRETTY_FUNCTION__);
     return DisplayClient::display_configuration();
 }
 
@@ -65,31 +63,26 @@ void mgw::Display::register_pause_resume_handlers(
 
 void mgw::Display::pause()
 {
-    puts(__PRETTY_FUNCTION__);
    BOOST_THROW_EXCEPTION(std::runtime_error("'Display::pause()' not yet supported on wayland platform"));
 }
 
 void mgw::Display::resume()
 {
-    puts(__PRETTY_FUNCTION__);
     BOOST_THROW_EXCEPTION(std::runtime_error("'Display::resume()' not yet supported on wayland platform"));
 }
 
 auto mgw::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
-    puts(__PRETTY_FUNCTION__);
     return std::make_shared<platform::wayland::Cursor>(display, std::shared_ptr<CursorImage>{});
 }
 
 auto mgw::Display::create_virtual_output(int /*width*/, int /*height*/) -> std::unique_ptr<VirtualOutput>
 {
-    fatal_error(__PRETTY_FUNCTION__);
     return {};
 }
 
 auto mgw::Display::native_display() -> NativeDisplay*
 {
-    puts(__PRETTY_FUNCTION__);
     return this;
 }
 
@@ -108,11 +101,10 @@ auto mgw::Display::last_frame_on(unsigned) const -> Frame
 auto mgw::Display::create_gl_context() const -> std::unique_ptr<mrg::Context>
 {
     // AFAICS this is only used for snapshotting the display. Stub it out for now, as that's mirclient only.
-    puts(__PRETTY_FUNCTION__);
     class StubContext : public mir::renderer::gl::Context
     {
     public:
-        StubContext() { puts(__PRETTY_FUNCTION__); }
+        StubContext() { }
         void make_current()     const override  { puts(__PRETTY_FUNCTION__); }
         void release_current()  const override  { puts(__PRETTY_FUNCTION__); }
     };

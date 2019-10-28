@@ -31,6 +31,7 @@ mpw::Cursor::~Cursor() = default;
 
 void mpw::Cursor::move_to(geometry::Point)
 {
+    puts(__PRETTY_FUNCTION__);
 }
 
 void mpw::Cursor::show(graphics::CursorImage const& /*cursor_image*/)
