@@ -230,13 +230,13 @@ mgw::DisplayClient::Output::~Output()
     if (output)
         wl_output_destroy(output);
 
-    if (eglsurface)
-        eglDestroySurface(owner->egldisplay, eglsurface);
-
     if (window)
         wl_shell_surface_destroy(window);
 
     wl_surface_destroy(surface);
+
+    if (eglsurface != EGL_NO_SURFACE)
+        eglDestroySurface(owner->egldisplay, eglsurface);
 }
 
 wl_output_listener const mgw::DisplayClient::Output::output_listener = {
@@ -412,8 +412,6 @@ void mgw::DisplayClient::on_new_output(Output const* /*output*/)
 mgw::DisplayClient::~DisplayClient()
 {
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroyContext(egldisplay, eglctx);
-    eglTerminate(egldisplay);
 
     {
         std::lock_guard<decltype(outputs_mutex)> lock{outputs_mutex};
@@ -421,6 +419,9 @@ mgw::DisplayClient::~DisplayClient()
     }
     registry.reset();
     wl_display_roundtrip(display);
+
+    eglDestroyContext(egldisplay, eglctx);
+    eglTerminate(egldisplay);
 }
 
 void mgw::DisplayClient::new_global(
