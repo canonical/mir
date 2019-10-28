@@ -120,8 +120,6 @@ protected:
         int32_t id,
         wl_fixed_t orientation);
 
-    void make_current(EGLSurface eglsurface) const;
-
 private:
     class Output;
     void on_new_output(Output const*);

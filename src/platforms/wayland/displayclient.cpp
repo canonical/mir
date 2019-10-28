@@ -214,8 +214,8 @@ mgw::DisplayClient::Output::Output(
     dcout.id = DisplayConfigurationOutputId{0};   // TODO number outputs
     dcout.card_id = DisplayConfigurationCardId{1};
     dcout.type = DisplayConfigurationOutputType::unknown;
-    dcout.pixel_formats = {mir_pixel_format_argb_8888};
-    dcout.current_format = mir_pixel_format_argb_8888;
+    dcout.pixel_formats = {mir_pixel_format_argb_8888,mir_pixel_format_xrgb_8888};
+    dcout.current_format = mir_pixel_format_xrgb_8888;
     dcout.connected = true;
     dcout.used = true;
     dcout.power_mode = mir_power_mode_on;
@@ -312,12 +312,13 @@ auto mgw::DisplayClient::Output::native_display_buffer() -> NativeDisplayBuffer*
 
 void mgw::DisplayClient::Output::make_current()
 {
-    owner->make_current(eglsurface);
+    if (!eglMakeCurrent(owner->egldisplay, eglsurface, eglsurface, owner->eglctx))
+        throw std::runtime_error("Can't eglMakeCurrent");
 }
 
 void mgw::DisplayClient::Output::release_current()
 {
-    owner->make_current(EGL_NO_SURFACE);
+    eglMakeCurrent(owner->egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 void mgw::DisplayClient::Output::swap_buffers()
@@ -444,6 +445,7 @@ void mgw::DisplayClient::new_global(
         self->shm = static_cast<decltype(self->shm)>(wl_registry_bind(registry, id, &wl_shm_interface, std::min(version, 1u)));
         // Normally we'd add a listener to pick up the supported formats here
         // As luck would have it, I know that argb8888 is the only format we support :)
+        // {arg} TODO needs fixing
     }
     else if (strcmp(interface, "wl_seat") == 0)
     {
@@ -700,12 +702,6 @@ void mgw::DisplayClient::add_seat_listener(DisplayClient* self, wl_seat* seat)
         };
 
     wl_seat_add_listener(seat, &seat_listener, self);
-}
-
-void mgw::DisplayClient::make_current(EGLSurface eglsurface) const
-{
-    if (!eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx))
-        throw std::runtime_error("Can't eglMakeCurrent");
 }
 
 namespace mir

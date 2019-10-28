@@ -107,21 +107,17 @@ auto mgw::Display::last_frame_on(unsigned) const -> Frame
 
 auto mgw::Display::create_gl_context() const -> std::unique_ptr<mrg::Context>
 {
+    // AFAICS this is only used for snapshotting the display. Stub it out for now, as that's mirclient only.
     puts(__PRETTY_FUNCTION__);
-    class WlContext : public mir::renderer::gl::Context
+    class StubContext : public mir::renderer::gl::Context
     {
     public:
-        WlContext(mgw::Display const* display, EGLSurface surface) : display{display}, surface{surface} { puts(__PRETTY_FUNCTION__); }
-        void make_current()     const override  { puts(__PRETTY_FUNCTION__); display->make_current(surface); }
-        void release_current()  const override  { puts(__PRETTY_FUNCTION__); display->make_current(EGL_NO_SURFACE); }
-
-    private:
-        mgw::Display const* const display;
-        EGLSurface const surface;
+        StubContext() { puts(__PRETTY_FUNCTION__); }
+        void make_current()     const override  { puts(__PRETTY_FUNCTION__); }
+        void release_current()  const override  { puts(__PRETTY_FUNCTION__); }
     };
 
-    // TODO: Where do we get a meaningful EGL surface?
-    return std::make_unique<WlContext>(this, EGL_NO_SURFACE);
+    return std::make_unique<StubContext>();
 }
 
 void  mgw::Display::for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f)
