@@ -30,8 +30,11 @@ namespace mgw = mir::graphics::wayland;
 namespace mrg = mir::renderer::gl;
 namespace geom= mir::geometry;
 
-mgw::Display::Display(wl_display* const wl_display, std::shared_ptr<DisplayReport> const& report) :
-    DisplayClient{wl_display},
+mgw::Display::Display(
+    wl_display* const wl_display,
+    std::shared_ptr<GLConfig> const& gl_config,
+    std::shared_ptr<DisplayReport> const& report) :
+    DisplayClient{wl_display, gl_config},
     report{report}
 {
 }

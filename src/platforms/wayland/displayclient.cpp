@@ -16,6 +16,7 @@
  */
 
 #include "displayclient.h"
+#include <mir/graphics/pixel_format_utils.h>
 
 #include <wayland-client.h>
 #include <wayland-egl.h>
@@ -269,10 +270,10 @@ void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(Disp
 
         auto const& size = dcout.modes[dcout.current_mode_index].size;
 
-        eglsurface = eglCreateWindowSurface(
+        eglsurface = eglCreatePlatformWindowSurface(
             owner->egldisplay,
             owner->eglconfig,
-            (EGLNativeWindowType)wl_egl_window_create(surface, size.width.as_int(), size.height.as_int()), NULL);
+            wl_egl_window_create(surface, size.width.as_int(), size.height.as_int()), nullptr);
     }
 
     f(*this);
@@ -330,7 +331,9 @@ void mgw::DisplayClient::Output::bind()
 {
 }
 
-mgw::DisplayClient::DisplayClient(wl_display* display) :
+mgw::DisplayClient::DisplayClient(
+    wl_display* display,
+    std::shared_ptr<GLConfig> const& gl_config) :
     display{display},
     keyboard_context_{xkb_context_new(XKB_CONTEXT_NO_FLAGS)},
     registry{nullptr, [](auto){}}
@@ -344,14 +347,19 @@ mgw::DisplayClient::DisplayClient(wl_display* display) :
 
     wl_registry_add_listener(registry.get(), &registry_listener, this);
 
-    static unsigned int const bpp = 32; //8*MIR_BYTES_PER_PIXEL(pixel_format);
+    // TODO: select this properly
+    auto format = mir_pixel_format_xrgb_8888;
 
-    static EGLint const cfgattribs[] =
+    EGLint const cfgattribs[] =
         {
             EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+            EGL_RED_SIZE, red_channel_depth(format),
+            EGL_GREEN_SIZE, green_channel_depth(format),
+            EGL_BLUE_SIZE, blue_channel_depth(format),
+            EGL_ALPHA_SIZE, alpha_channel_depth(format),
+            EGL_DEPTH_SIZE, gl_config->depth_buffer_bits(),
+            EGL_STENCIL_SIZE, gl_config->stencil_buffer_bits(),
             EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
-            EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
-            EGL_BUFFER_SIZE, (EGLint) bpp,
             EGL_NONE
         };
 

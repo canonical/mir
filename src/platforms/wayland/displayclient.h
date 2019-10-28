@@ -23,6 +23,7 @@
 #include <mir/graphics/display_buffer.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/renderer/gl/render_target.h>
+#include <mir/graphics/gl_config.h>
 
 #include <wayland-client.h>
 #include <EGL/egl.h>
@@ -46,7 +47,8 @@ namespace wayland
 class DisplayClient
 {
 public:
-    DisplayClient(wl_display* display);
+    DisplayClient(wl_display* display,
+    std::shared_ptr<GLConfig> const& gl_config);
 
     virtual ~DisplayClient();
 

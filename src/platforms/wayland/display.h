@@ -32,7 +32,10 @@ class Display : public mir::graphics::Display, public mir::graphics::NativeDispl
                 public mir::renderer::gl::ContextSource, DisplayClient
 {
 public:
-    Display(wl_display* const wl_display, std::shared_ptr<DisplayReport> const& report);
+    Display(
+        wl_display* const wl_display,
+        std::shared_ptr<GLConfig> const& gl_config,
+        std::shared_ptr<DisplayReport> const& report);
 
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f) override;
 
