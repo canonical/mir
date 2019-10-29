@@ -31,10 +31,9 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/raii.h"
 #include "mir/graphics/display.h"
-#include "mir/renderer/gl/context_source.h"
 #include "mir/renderer/gl/context.h"
-#include "mir/graphics/program_factory.h"
-#include "mir/graphics/program.h"
+#include "mir/renderer/gl/context_source.h"
+#include "mir/graphics/egl_wayland_allocator.h"
 #include "mir/executor.h"
 
 #include <boost/throw_exception.hpp>
@@ -362,231 +361,6 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
     return pixel_formats;
 }
 
-namespace
-{
-GLuint get_tex_id()
-{
-    GLuint tex;
-    glGenTextures(1, &tex);
-    return tex;
-}
-
-geom::Size get_wl_buffer_size(wl_resource* buffer, mg::EGLExtensions::WaylandExtensions const& ext)
-{
-    EGLint width, height;
-
-    auto dpy = eglGetCurrentDisplay();
-    if (ext.eglQueryWaylandBufferWL(dpy, buffer, EGL_WIDTH, &width) == EGL_FALSE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WaylandAllocator buffer width"));
-    }
-    if (ext.eglQueryWaylandBufferWL(dpy, buffer, EGL_HEIGHT, &height) == EGL_FALSE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WaylandAllocator buffer height"));
-    }
-
-    return geom::Size{width, height};
-}
-
-mg::gl::Texture::Layout get_texture_layout(
-    wl_resource* resource,
-    mg::EGLExtensions::WaylandExtensions const& ext)
-{
-    EGLint inverted;
-    auto dpy = eglGetCurrentDisplay();
-
-    if (ext.eglQueryWaylandBufferWL(dpy, resource, EGL_WAYLAND_Y_INVERTED_WL, &inverted) == EGL_FALSE)
-    {
-        // EGL_WAYLAND_Y_INVERTED_WL is unsupported; the default is that the texture is in standard
-        // GL texture layout
-        return mg::gl::Texture::Layout::GL;
-    }
-    if (inverted)
-    {
-        // It has the standard y-decreases-with-row layout of GL textures
-        return mg::gl::Texture::Layout::GL;
-    }
-    else
-    {
-        // It has y-increases-with-row layout.
-        return mg::gl::Texture::Layout::TopRowFirst;
-    }
-}
-
-EGLint get_wl_egl_format(wl_resource* resource, mg::EGLExtensions::WaylandExtensions const& ext)
-{
-    EGLint format;
-    auto dpy = eglGetCurrentDisplay();
-
-    if (ext.eglQueryWaylandBufferWL(dpy, resource, EGL_TEXTURE_FORMAT, &format) == EGL_FALSE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query Wayland buffer format"));
-    }
-    return format;
-}
-
-class WaylandTexBuffer :
-    public mg::BufferBasic,
-    public mg::NativeBufferBase,
-    public mg::gl::Texture
-{
-public:
-    // Note: Must be called with a current EGL context
-    WaylandTexBuffer(
-        std::shared_ptr<mir::renderer::gl::Context> ctx,
-        wl_resource* buffer,
-        mg::EGLExtensions const& extensions,
-        std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release,
-        std::shared_ptr<mir::Executor> wayland_executor)
-        : ctx{std::move(ctx)},
-          tex{get_tex_id()},
-          on_consumed{std::move(on_consumed)},
-          on_release{std::move(on_release)},
-          size_{get_wl_buffer_size(buffer, *extensions.wayland)},
-          layout_{get_texture_layout(buffer, *extensions.wayland)},
-          egl_format{get_wl_egl_format(buffer, *extensions.wayland)},
-          wayland_executor{std::move(wayland_executor)}
-    {
-        if (egl_format != EGL_TEXTURE_RGB && egl_format != EGL_TEXTURE_RGBA)
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"YUV textures unimplemented"}));
-        }
-        eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
-
-        const EGLint image_attrs[] =
-            {
-                EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-                EGL_WAYLAND_PLANE_WL, 0,
-                EGL_NONE
-            };
-
-        auto egl_image = extensions.eglCreateImageKHR(
-            eglGetCurrentDisplay(),
-            EGL_NO_CONTEXT,
-            EGL_WAYLAND_BUFFER_WL,
-            buffer,
-            image_attrs);
-
-        if (egl_image == EGL_NO_IMAGE_KHR)
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
-
-        glBindTexture(GL_TEXTURE_2D, tex);
-        extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        // tex is now an EGLImage sibling, so we can free the EGLImage without
-        // freeing the backing data.
-        extensions.eglDestroyImageKHR(eglGetCurrentDisplay(), egl_image);
-    }
-
-    ~WaylandTexBuffer()
-    {
-        wayland_executor->spawn(
-            [context = ctx, tex = tex]()
-            {
-                context->make_current();
-
-                glDeleteTextures(1, &tex);
-
-                context->release_current();
-            });
-
-        on_release();
-    }
-
-    std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const override
-    {
-        return {nullptr};
-    }
-
-    mir::geometry::Size size() const override
-    {
-        return size_;
-    }
-
-    MirPixelFormat pixel_format() const override
-    {
-        /* TODO: These are lies, but the only piece of information external code uses
-         * out of the MirPixelFormat is whether or not the buffer has an alpha channel.
-         */
-        switch(egl_format)
-        {
-            case EGL_TEXTURE_RGB:
-                return mir_pixel_format_xrgb_8888;
-            case EGL_TEXTURE_RGBA:
-                return mir_pixel_format_argb_8888;
-            case EGL_TEXTURE_EXTERNAL_WL:
-                // Unspecified whether it has an alpha channel; say it does.
-                return mir_pixel_format_argb_8888;
-            case EGL_TEXTURE_Y_U_V_WL:
-            case EGL_TEXTURE_Y_UV_WL:
-                // These are just absolutely not RGB at all!
-                // But they're defined to not have an alpha channel, so xrgb it is!
-                return mir_pixel_format_xrgb_8888;
-            case EGL_TEXTURE_Y_XUXV_WL:
-                // This is a planar format, but *does* have alpha.
-                return mir_pixel_format_argb_8888;
-            default:
-                // We've covered all possibilities above
-                BOOST_THROW_EXCEPTION((std::logic_error{"Unexpected texture format!"}));
-        }
-    }
-
-    NativeBufferBase* native_buffer_base() override
-    {
-        return this;
-    }
-
-    mir::graphics::gl::Program const& shader(mir::graphics::gl::ProgramFactory& cache) const override
-    {
-        static std::unique_ptr<mg::gl::Program> shader;
-        if (!shader)
-        {
-            shader = cache.compile_fragment_shader(
-                "",
-                "uniform sampler2D tex;\n"
-                "vec4 sample_to_rgba(in vec2 texcoord)\n"
-                "{\n"
-                "    return texture2D(tex, texcoord);\n"
-                "}\n");
-        }
-        return *shader;
-    }
-
-    Layout layout() const override
-    {
-        return layout_;
-    }
-
-    void bind() override
-    {
-        glBindTexture(GL_TEXTURE_2D, tex);
-        on_consumed();
-        on_consumed = [](){};
-    }
-
-    void add_syncpoint() override
-    {
-    }
-private:
-    std::shared_ptr<mir::renderer::gl::Context> const ctx;
-    GLuint const tex;
-
-    std::function<void()> on_consumed;
-    std::function<void()> const on_release;
-
-    geom::Size const size_;
-    Layout const layout_;
-    EGLint const egl_format;
-
-    std::shared_ptr<mir::Executor> const wayland_executor;
-};
-}
-
 void mgm::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor)
 {
     auto context_guard = mir::raii::paired_calls(
@@ -594,19 +368,8 @@ void mgm::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
         [this]() { ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
-    if (!egl_extensions->wayland)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"No EGL_WL_bind_wayland_display support"}));
-    }
+    mg::wayland::bind_display(dpy, display, *egl_extensions);
 
-    if (egl_extensions->wayland->eglBindWaylandDisplayWL(dpy, display) == EGL_FALSE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to bind Wayland EGL display"));
-    }
-    else
-    {
-        mir::log_info("Bound WaylandAllocator display");
-    }
     this->wayland_executor = std::move(wayland_executor);
 }
 
@@ -619,11 +382,11 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource(
         [this]() { ctx->make_current(); },
         [this]() { ctx->release_current(); });
 
-    return std::make_shared<WaylandTexBuffer>(
-        ctx,
+    return mg::wayland::buffer_from_resource(
         buffer,
-        *egl_extensions,
         std::move(on_consumed),
         std::move(on_release),
+        ctx,
+        *egl_extensions,
         wayland_executor);
 }
