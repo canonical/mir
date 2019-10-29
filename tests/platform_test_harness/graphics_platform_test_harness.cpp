@@ -357,7 +357,7 @@ auto dump_egl_config(mg::Display& display) -> bool
     return true;
 }
 
-auto hex_to_gl(char colour) -> GLclampf
+auto hex_to_gl(unsigned char colour) -> GLclampf
 {
     return static_cast<float>(colour) / 255;
 }
