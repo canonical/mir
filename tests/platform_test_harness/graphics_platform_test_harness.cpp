@@ -55,7 +55,7 @@ namespace
 class MinimalServerEnvironment : private mir::DefaultServerConfiguration
 {
 public:
-    MinimalServerEnvironment() : DefaultServerConfiguration{1, argv}
+    MinimalServerEnvironment() : DefaultServerConfiguration(1, argv)
     {
     }
 
