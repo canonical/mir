@@ -41,6 +41,7 @@
 #include <chrono>
 #include <iostream>
 #include <mir/geometry/displacement.h>
+#include <mir/graphics/wayland_allocator.h>
 #include <mir/renderer/gl/render_target.h>
 #include <thread>
 #include <unistd.h>
@@ -604,6 +605,20 @@ void basic_software_buffer_drawing(
         }
     }
 }
+
+auto test_platform_supports_accelerated_wayland_clients(mg::GraphicBufferAllocator const& allocator) -> bool
+{
+    if (dynamic_cast<mg::WaylandAllocator const*>(&allocator))
+    {
+        std::cout << "Platform supports Wayland EGL" << std::endl;
+        return true;
+    }
+    else
+    {
+        std::cout << "Platform does *not* support Wayland EGL" << std::endl;
+        return false;
+    }
+}
 }
 
 int main(int argc, char const** argv)
@@ -634,10 +649,13 @@ int main(int argc, char const** argv)
 
                 if (auto render_platform = test_render_platform_construction(platform_dso, config))
                 {
-                        basic_software_buffer_drawing(
-                            *display,
-                            *render_platform->create_buffer_allocator(*display),
-                            *config.render_factory());
+                    auto buffer_allocator = render_platform->create_buffer_allocator(*display);
+                    success &= test_platform_supports_accelerated_wayland_clients(*buffer_allocator);
+
+                    basic_software_buffer_drawing(
+                    *display,
+                    *buffer_allocator,
+                    *config.render_factory());
                 }
                 else
                 {
