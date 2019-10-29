@@ -71,9 +71,9 @@ std::vector<mir::ExtensionDescription> mgw::Platform::extensions() const
     return {};
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgw::Platform::create_buffer_allocator(mg::Display const& )
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgw::Platform::create_buffer_allocator(mg::Display const& output)
 {
-    return mir::make_module_ptr<mgw::BufferAllocator>();
+    return mir::make_module_ptr<mgw::BufferAllocator>(output);
 }
 
 mg::NativeRenderingPlatform* mgw::Platform::native_rendering_platform()

@@ -122,7 +122,6 @@ protected:
         int32_t id,
         wl_fixed_t orientation);
 
-private:
     class Output;
     void on_new_output(Output const*);
     void on_output_changed(Output const*);
