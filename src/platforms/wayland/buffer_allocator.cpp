@@ -126,7 +126,6 @@ std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_buffer(geometry::Size, u
 
 void mgw::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor)
 {
-    puts(__PRETTY_FUNCTION__);
     auto context_guard = mir::raii::paired_calls(
         [this]() { ctx->make_current(); },
         [this]() { ctx->release_current(); });
@@ -142,7 +141,6 @@ auto mgw::BufferAllocator::buffer_from_resource(
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release) -> std::shared_ptr<Buffer>
 {
-    puts(__PRETTY_FUNCTION__);
     auto context_guard = mir::raii::paired_calls(
         [this]() { ctx->make_current(); },
         [this]() { ctx->release_current(); });

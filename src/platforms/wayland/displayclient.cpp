@@ -281,12 +281,10 @@ void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(Disp
 
 void mgw::DisplayClient::Output::post()
 {
-    puts(__PRETTY_FUNCTION__);
 }
 
 auto mgw::DisplayClient::Output::recommended_sleep() const -> std::chrono::milliseconds
 {
-    puts(__PRETTY_FUNCTION__);
     return std::chrono::milliseconds{0};
 }
 
@@ -401,19 +399,16 @@ mgw::DisplayClient::DisplayClient(
 
 void mgw::DisplayClient::on_output_changed(Output const* /*output*/)
 {
-    puts(__PRETTY_FUNCTION__);
     // TODO maybe nothing
 }
 
 void mgw::DisplayClient::on_output_gone(Output const* /*output*/)
 {
-    puts(__PRETTY_FUNCTION__);
     // TODO maybe nothing
 }
 
 void mgw::DisplayClient::on_new_output(Output const* /*output*/)
 {
-    puts(__PRETTY_FUNCTION__);
     // TODO maybe nothing
 }
 

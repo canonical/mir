@@ -21,7 +21,9 @@
 
 #include <mir/fatal.h>
 #include <mir/graphics/display_configuration.h>
+#include <mir/graphics/egl_error.h>
 #include <mir/graphics/virtual_output.h>
+#include <mir/log.h>
 #include <mir/renderer/gl/context.h>
 
 #include <boost/throw_exception.hpp>
@@ -53,7 +55,6 @@ void mgw::Display::register_configuration_change_handler(
     EventHandlerRegister& /*handlers*/,
     DisplayConfigurationChangeHandler const& /*conf_change_handler*/)
 {
-    puts(__PRETTY_FUNCTION__);
 }
 
 void mgw::Display::register_pause_resume_handlers(
@@ -61,7 +62,6 @@ void mgw::Display::register_pause_resume_handlers(
     DisplayPauseHandler const& /*pause_handler*/,
     DisplayResumeHandler const& /*resume_handler*/)
 {
-    puts(__PRETTY_FUNCTION__);
 }
 
 void mgw::Display::pause()
@@ -91,7 +91,6 @@ auto mgw::Display::native_display() -> NativeDisplay*
 
 bool mgw::Display::apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& /*conf*/)
 {
-    puts(__PRETTY_FUNCTION__);
     return false;
 }
 
@@ -103,16 +102,33 @@ auto mgw::Display::last_frame_on(unsigned) const -> Frame
 
 auto mgw::Display::create_gl_context() const -> std::unique_ptr<mrg::Context>
 {
-    // AFAICS this is only used for snapshotting the display. Stub it out for now, as that's mirclient only.
-    class StubContext : public mir::renderer::gl::Context
+    class GlContext : public mir::renderer::gl::Context
     {
     public:
-        StubContext() { }
-        void make_current()     const override  { puts(__PRETTY_FUNCTION__); }
-        void release_current()  const override  { puts(__PRETTY_FUNCTION__); }
+        GlContext(EGLDisplay egldisplay, EGLConfig eglconfig, EGLContext eglctx) :
+            egldisplay{egldisplay},
+            eglctx{eglCreateContext(egldisplay, eglconfig, eglctx, nullptr)} {}
+
+        void make_current()     const override
+        {
+            if (eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, eglctx) != EGL_TRUE)
+            {
+                log_warning(
+                    "%s FAILED: %s",
+                    __PRETTY_FUNCTION__,
+                    egl_category().message(eglGetError()).c_str());
+            }
+        }
+
+        void release_current()  const override
+            { eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT); }
+
+    private:
+        EGLDisplay const egldisplay;
+        EGLContext const eglctx;
     };
 
-    return std::make_unique<StubContext>();
+    return std::make_unique<GlContext>(egldisplay, eglconfig, eglctx);
 }
 
 void  mgw::Display::for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f)
