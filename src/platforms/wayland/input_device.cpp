@@ -17,13 +17,14 @@
 
 #include "input_device.h"
 
-#include "mir/input/pointer_settings.h"
-#include "mir/input/touchpad_settings.h"
-#include "mir/input/touchscreen_settings.h"
-#include "mir/input/input_device_info.h"
-#include "mir/input/device_capability.h"
-#include "mir/input/event_builder.h"
-#include "mir/input/input_sink.h"
+#include <mir/dispatch/action_queue.h>
+#include <mir/input/pointer_settings.h>
+#include <mir/input/touchpad_settings.h>
+#include <mir/input/touchscreen_settings.h>
+#include <mir/input/input_device_info.h>
+#include <mir/input/device_capability.h>
+#include <mir/input/event_builder.h>
+#include <mir/input/input_sink.h>
 
 #include <X11/Xlib.h>
 
@@ -67,26 +68,30 @@ MirPointerButtons to_mir_button_state(int x_button_key_state)
 
 }
 
-mix::InputDevice::InputDevice(InputDeviceInfo const& device_info)
-    : info(device_info)
+mix::InputDevice::InputDevice(
+    InputDeviceInfo const& device_info,
+    std::shared_ptr<dispatch::ActionQueue> const& action_queue) :
+    info(device_info),
+    action_queue{action_queue}
 {
 }
 
 void mix::InputDevice::start(InputSink* input_sink, EventBuilder* event_builder)
 {
+    std::lock_guard<decltype(mutex)> lock{mutex};
     sink = input_sink;
     builder = event_builder;
 }
 
 void mix::InputDevice::stop()
 {
+    std::lock_guard<decltype(mutex)> lock{mutex};
     sink = nullptr;
     builder = nullptr;
 }
 
 mi::InputDeviceInfo mix::InputDevice::get_device_info()
 {
-    // TODO
     return info;
 }
 
@@ -134,44 +139,41 @@ bool mix::InputDevice::started() const
     return sink && builder;
 }
 
+void  mix::InputDevice::enqueue(std::function<EventUPtr(EventBuilder* builder)> const& event)
+{
+    action_queue->enqueue([=]
+          {
+              std::lock_guard<decltype(mutex)> lock{mutex};
+              if (started())
+                  sink->handle_input(event(builder));
+          });
+}
+
 void mix::InputDevice::key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code)
 {
-    sink->handle_input(
-        builder->key_event(
-            event_time,
-            mir_keyboard_action_down,
-            key_sym,
-            key_code
-            )
-        );
-
+    enqueue([=](EventBuilder* b) { return b->key_event(event_time, mir_keyboard_action_down, key_sym, key_code); });
 }
 
 void mix::InputDevice::key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code)
 {
-    sink->handle_input(
-        builder->key_event(
-            event_time,
-            mir_keyboard_action_up,
-            key_sym,
-            key_code
-            )
-        );
+    enqueue([=](EventBuilder* b) { return b->key_event(event_time, mir_keyboard_action_up, key_sym, key_code); });
 }
 
 void mix::InputDevice::update_button_state(int button)
 {
+    std::lock_guard<decltype(mutex)> lock{mutex};
     button_state = to_mir_button_state(button);
 }
 
 void mix::InputDevice::pointer_press(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll)
 {
-    button_state |= to_mir_button(button);
+    enqueue([=](EventBuilder* b)
+    {
+        button_state |= to_mir_button(button);
 
-    auto const movement = pos - pointer_pos;
-    pointer_pos = pos;
-    sink->handle_input(
-        builder->pointer_event(
+        auto const movement = pos - pointer_pos;
+        pointer_pos = pos;
+        return b->pointer_event(
             event_time,
             mir_pointer_action_button_down,
             button_state,
@@ -181,18 +183,19 @@ void mix::InputDevice::pointer_press(std::chrono::nanoseconds event_time, int bu
             scroll.dy.as_int(),
             movement.dx.as_int(),
             movement.dy.as_int()
-            )
         );
+    });
 }
 
 void mix::InputDevice::pointer_release(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll)
 {
-    button_state &= ~to_mir_button(button);
+    enqueue([=](EventBuilder* b)
+    {
+        button_state &= ~to_mir_button(button);
 
-    auto const movement = pos - pointer_pos;
-    pointer_pos = pos;
-    sink->handle_input(
-        builder->pointer_event(
+        auto const movement = pos - pointer_pos;
+        pointer_pos = pos;
+        return b->pointer_event(
             event_time,
             mir_pointer_action_button_up,
             button_state,
@@ -202,17 +205,17 @@ void mix::InputDevice::pointer_release(std::chrono::nanoseconds event_time, int 
             scroll.dy.as_int(),
             movement.dx.as_int(),
             movement.dy.as_int()
-            )
         );
-
+    });
 }
 
 void mix::InputDevice::pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll)
 {
-    auto const movement = pos - pointer_pos;
-    pointer_pos = pos;
-    sink->handle_input(
-        builder->pointer_event(
+    enqueue([=](EventBuilder* b)
+    {
+        auto const movement = pos - pointer_pos;
+        pointer_pos = pos;
+        return b->pointer_event(
             event_time,
             mir_pointer_action_motion,
             button_state,
@@ -222,6 +225,6 @@ void mix::InputDevice::pointer_motion(std::chrono::nanoseconds event_time, geome
             scroll.dy.as_int(),
             movement.dx.as_int(),
             movement.dy.as_int()
-            )
         );
+    });
 }

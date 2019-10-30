@@ -18,40 +18,38 @@
 #include "input_platform.h"
 #include "input_device.h"
 
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/input/input_device_info.h"
-#include "mir/input/input_device_registry.h"
+
+#include <mir/dispatch/action_queue.h>
+#include <mir/input/input_device_info.h>
+#include <mir/input/input_device_registry.h>
 
 namespace md = mir::dispatch;
 namespace miw = mir::input::wayland;
 
 miw::InputPlatform::InputPlatform(std::shared_ptr<InputDeviceRegistry> const& input_device_registry) :
-    dispatchable_(std::make_shared<mir::dispatch::MultiplexingDispatchable>()),
+    action_queue(std::make_shared<md::ActionQueue>()),
     registry(input_device_registry),
-    keyboard(std::make_shared<InputDevice>(InputDeviceInfo{"keyboard-device", "key-dev-1", DeviceCapability::keyboard})),
-    pointer(std::make_shared<InputDevice>(InputDeviceInfo{"mouse-device", "mouse-dev-1", DeviceCapability::pointer})),
-    touch(std::make_shared<InputDevice>(InputDeviceInfo{"touch-device", "touch-dev-1", DeviceCapability::touchscreen}))
+    keyboard(std::make_shared<InputDevice>(InputDeviceInfo{"keyboard-device", "key-dev-1", DeviceCapability::keyboard}, action_queue)),
+    pointer(std::make_shared<InputDevice>(InputDeviceInfo{"mouse-device", "mouse-dev-1", DeviceCapability::pointer}, action_queue)),
+    touch(std::make_shared<InputDevice>(InputDeviceInfo{"touch-device", "touch-dev-1", DeviceCapability::touchscreen}, action_queue))
 {
     puts(__PRETTY_FUNCTION__);
 }
 
 void miw::InputPlatform::start()
 {
-    puts(__PRETTY_FUNCTION__);
     registry->add_device(keyboard);
     registry->add_device(pointer);
     registry->add_device(touch);
 }
 
-std::shared_ptr<md::Dispatchable> miw::InputPlatform::dispatchable()
+auto miw::InputPlatform::dispatchable() -> std::shared_ptr<md::Dispatchable>
 {
-    puts(__PRETTY_FUNCTION__);
-    return dispatchable_;
+    return action_queue;
 }
 
 void miw::InputPlatform::stop()
 {
-    puts(__PRETTY_FUNCTION__);
     registry->remove_device(touch);
     registry->remove_device(pointer);
     registry->remove_device(keyboard);
@@ -59,10 +57,8 @@ void miw::InputPlatform::stop()
 
 void miw::InputPlatform::pause_for_config()
 {
-    puts(__PRETTY_FUNCTION__);
 }
 
 void miw::InputPlatform::continue_after_config()
 {
-    puts(__PRETTY_FUNCTION__);
 }

@@ -21,6 +21,10 @@
 
 namespace mir
 {
+namespace dispatch
+{
+class ActionQueue;
+}
 namespace input
 {
 namespace wayland
@@ -33,14 +37,14 @@ public:
     explicit InputPlatform(std::shared_ptr<InputDeviceRegistry> const& input_device_registry);
     ~InputPlatform() = default;
 
-    std::shared_ptr<dispatch::Dispatchable> dispatchable() override;
+    auto dispatchable() -> std::shared_ptr<dispatch::Dispatchable> override;
     void start() override;
     void stop() override;
     void pause_for_config() override;
     void continue_after_config() override;
 
 private:
-    std::shared_ptr<dispatch::Dispatchable> const dispatchable_;
+    std::shared_ptr<dispatch::ActionQueue> const action_queue;
     std::shared_ptr<InputDeviceRegistry> const registry;
     std::shared_ptr<InputDevice> const keyboard;
     std::shared_ptr<InputDevice> const pointer;

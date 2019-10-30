@@ -27,11 +27,18 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include <chrono>
+#include <functional>
+#include <mutex>
+#include <mir/events/event_builders.h>
 
 typedef unsigned int MirPointerButtons;
 
 namespace mir
 {
+namespace dispatch
+{
+class ActionQueue;
+}
 namespace input
 {
 namespace wayland
@@ -40,9 +47,8 @@ namespace wayland
 class InputDevice : public input::InputDevice
 {
 public:
-    InputDevice(InputDeviceInfo const& info);
+    InputDevice(InputDeviceInfo const& info, std::shared_ptr<dispatch::ActionQueue> const& action_queue);
 
-    std::shared_ptr<dispatch::Dispatchable> dispatchable();
     void start(InputSink* destination, EventBuilder* builder) override;
     void stop() override;
     InputDeviceInfo get_device_info() override;
@@ -55,12 +61,16 @@ public:
     virtual void apply_settings(TouchscreenSettings const&) override;
 
 private:
-    MirPointerButtons button_state{0};
+    InputDeviceInfo const info;
+    std::shared_ptr<dispatch::ActionQueue> const action_queue;
+
+    std::mutex mutable mutex;
     InputSink* sink{nullptr};
     EventBuilder* builder{nullptr};
+    MirPointerButtons button_state{0};
     geometry::Point pointer_pos;
-    InputDeviceInfo info;
 
+    void enqueue(std::function<EventUPtr(EventBuilder* builder)> const& event);
     bool started() const;
     void key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code);
     void key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code);
