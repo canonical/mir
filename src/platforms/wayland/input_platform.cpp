@@ -34,6 +34,7 @@ miw::InputPlatform::InputPlatform(std::shared_ptr<InputDeviceRegistry> const& in
 {
     puts(__PRETTY_FUNCTION__);
     graphics::wayland::the_display->set_keyboard_sink(keyboard);
+    graphics::wayland::the_display->set_pointer_sink(pointer);
 }
 
 void miw::InputPlatform::start()

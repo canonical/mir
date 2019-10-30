@@ -68,6 +68,7 @@ public:
     ~Display();
 
     void set_keyboard_sink(std::shared_ptr<input::wayland::InputSinkX> const& keyboard_sink);
+    void set_pointer_sink(std::shared_ptr<input::wayland::InputSinkX> const& pointer_sink);
 
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f) override;
 
@@ -112,12 +113,32 @@ private:
 
     void keyboard_repeat_info(wl_keyboard* wl_keyboard, int32_t rate, int32_t delay) override;
 
+    void pointer_enter(wl_pointer* pointer, uint32_t serial, wl_surface* surface, wl_fixed_t x, wl_fixed_t y) override;
+
+    void pointer_leave(wl_pointer* pointer, uint32_t serial, wl_surface* surface) override;
+
+    void pointer_motion(wl_pointer* pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y) override;
+
+    void pointer_button(wl_pointer* pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state) override;
+
+    void pointer_axis(wl_pointer* pointer, uint32_t time, uint32_t axis, wl_fixed_t value) override;
+
+    void pointer_frame(wl_pointer* pointer) override;
+
+    void pointer_axis_source(wl_pointer* pointer, uint32_t axis_source) override;
+
+    void pointer_axis_stop(wl_pointer* pointer, uint32_t time, uint32_t axis) override;
+
+    void pointer_axis_discrete(wl_pointer* pointer, uint32_t axis, int32_t discrete) override;
+
 private:
     std::shared_ptr<DisplayReport> const report;
     mir::Fd const shutdown_signal;
 
     std::mutex sink_mutex;
     std::shared_ptr<input::wayland::InputSinkX> keyboard_sink;
+    std::shared_ptr<input::wayland::InputSinkX> pointer_sink;
+    geometry::Point pointer;
 
     std::thread runner;
     void run() const;

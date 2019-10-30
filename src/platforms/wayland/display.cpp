@@ -74,7 +74,8 @@ mgw::Display::Display(
     DisplayClient{wl_display, gl_config},
     report{report},
     shutdown_signal{::eventfd(0, EFD_CLOEXEC)},
-    keyboard_sink{std::make_shared<NullInputSink>()}
+    keyboard_sink{std::make_shared<NullInputSink>()},
+    pointer_sink{std::make_shared<NullInputSink>()}
 {
     runner = std::thread{[this] { run(); }};
     the_display = this;
@@ -290,4 +291,77 @@ mir::graphics::wayland::Display::~Display()
     the_display = nullptr;
     stop();
     if (runner.joinable()) runner.join();
+}
+
+void mgw::Display::set_pointer_sink(std::shared_ptr<input::wayland::InputSinkX> const& pointer_sink)
+{
+    std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+    if (pointer_sink)
+    {
+        this->pointer_sink = pointer_sink;
+    }
+    else
+    {
+        this->pointer_sink = std::make_shared<NullInputSink>();
+    }
+}
+
+void mir::graphics::wayland::Display::pointer_enter(
+    wl_pointer* pointer, uint32_t serial, wl_surface* surface, wl_fixed_t x, wl_fixed_t y)
+{
+    DisplayClient::pointer_enter(pointer, serial, surface, x, y);
+}
+
+void mir::graphics::wayland::Display::pointer_leave(wl_pointer* pointer, uint32_t serial, wl_surface* surface)
+{
+    DisplayClient::pointer_leave(pointer, serial, surface);
+}
+
+void mir::graphics::wayland::Display::pointer_motion(wl_pointer*, uint32_t time, wl_fixed_t x, wl_fixed_t y)
+{
+    std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+    pointer = {wl_fixed_to_int(x), wl_fixed_to_int(y)};
+    //            pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll) = 0;
+    pointer_sink->pointer_motion(std::chrono::milliseconds{time}, pointer, {});
+}
+
+void mir::graphics::wayland::Display::pointer_button(wl_pointer*, uint32_t, uint32_t time, uint32_t button, uint32_t state)
+{
+    std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+
+    switch (state)
+    {
+    case WL_POINTER_BUTTON_STATE_PRESSED:
+        pointer_sink->pointer_press(std::chrono::milliseconds{time}, button, pointer, {});
+        break;
+
+    case WL_POINTER_BUTTON_STATE_RELEASED:
+        pointer_sink->pointer_release(std::chrono::milliseconds{time}, button, pointer, {});
+        break;
+    }
+}
+
+void mir::graphics::wayland::Display::pointer_axis(wl_pointer* pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
+{
+    DisplayClient::pointer_axis(pointer, time, axis, value);
+}
+
+void mir::graphics::wayland::Display::pointer_frame(wl_pointer* pointer)
+{
+    DisplayClient::pointer_frame(pointer);
+}
+
+void mir::graphics::wayland::Display::pointer_axis_source(wl_pointer* pointer, uint32_t axis_source)
+{
+    DisplayClient::pointer_axis_source(pointer, axis_source);
+}
+
+void mir::graphics::wayland::Display::pointer_axis_stop(wl_pointer* pointer, uint32_t time, uint32_t axis)
+{
+    DisplayClient::pointer_axis_stop(pointer, time, axis);
+}
+
+void mir::graphics::wayland::Display::pointer_axis_discrete(wl_pointer* pointer, uint32_t axis, int32_t discrete)
+{
+    DisplayClient::pointer_axis_discrete(pointer, axis, discrete);
 }
