@@ -36,7 +36,7 @@
 #include "mir/emergency_cleanup.h"
 
 #include <EGL/egl.h>
-#include <GL/gl.h>
+#include MIR_SERVER_GL_H
 #include <boost/exception/diagnostic_information.hpp>
 #include <chrono>
 #include <iostream>
