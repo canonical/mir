@@ -18,7 +18,6 @@
 #include "input_platform.h"
 #include "input_device.h"
 
-
 #include <mir/dispatch/action_queue.h>
 #include <mir/input/input_device_info.h>
 #include <mir/input/input_device_registry.h>
@@ -34,6 +33,7 @@ miw::InputPlatform::InputPlatform(std::shared_ptr<InputDeviceRegistry> const& in
     touch(std::make_shared<InputDevice>(InputDeviceInfo{"touch-device", "touch-dev-1", DeviceCapability::touchscreen}, action_queue))
 {
     puts(__PRETTY_FUNCTION__);
+    graphics::wayland::the_display->set_keyboard_sink(keyboard);
 }
 
 void miw::InputPlatform::start()

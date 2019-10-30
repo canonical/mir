@@ -18,12 +18,40 @@
 #define MIR_PLATFORMS_WAYLAND_DISPLAY_H_
 
 #include "displayclient.h"
+
+#include <mir/fd.h>
+#include <mir/geometry/displacement.h>
 #include <mir/graphics/display.h>
 #include <mir/graphics/display_report.h>
 #include <mir/renderer/gl/context_source.h>
 
+#include <xkbcommon/xkbcommon.h>
+
+#include <thread>
+
 namespace mir
 {
+namespace input
+{
+namespace wayland
+{
+class InputSinkX
+{
+public:
+    virtual void key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code) = 0;
+    virtual void key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code) = 0;
+    virtual void update_button_state(int button) = 0;
+    virtual void pointer_press(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) = 0;
+    virtual void pointer_release(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) = 0;
+    virtual void pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll) = 0;
+
+    InputSinkX() = default;
+    virtual ~InputSinkX() = default;
+    InputSinkX(InputSinkX const&) = delete;
+    InputSinkX& operator=(InputSinkX const&) = delete;
+};
+}
+}
 namespace graphics
 {
 namespace wayland
@@ -36,6 +64,10 @@ public:
         wl_display* const wl_display,
         std::shared_ptr<GLConfig> const& gl_config,
         std::shared_ptr<DisplayReport> const& report);
+
+    ~Display();
+
+    void set_keyboard_sink(std::shared_ptr<input::wayland::InputSinkX> const& keyboard_sink);
 
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f) override;
 
@@ -66,9 +98,34 @@ public:
     auto create_gl_context() const -> std::unique_ptr<mir::renderer::gl::Context> override;
 
 private:
+    void keyboard_keymap(wl_keyboard* keyboard, uint32_t format, int32_t fd, uint32_t size) override;
+
+    void keyboard_enter(wl_keyboard* keyboard, uint32_t serial, wl_surface* surface, wl_array* keys) override;
+
+    void keyboard_leave(wl_keyboard* keyboard, uint32_t serial, wl_surface* surface) override;
+
+    void keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) override;
+
+    void keyboard_modifiers(
+        wl_keyboard* keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked,
+        uint32_t group) override;
+
+    void keyboard_repeat_info(wl_keyboard* wl_keyboard, int32_t rate, int32_t delay) override;
+
+private:
     std::shared_ptr<DisplayReport> const report;
+    mir::Fd const shutdown_signal;
+
+    std::mutex sink_mutex;
+    std::shared_ptr<input::wayland::InputSinkX> keyboard_sink;
+
+    std::thread runner;
+    void run() const;
+    void stop();
 };
 
+// {arg} TODO: this isn't logically, nor thread safe.
+extern Display* the_display;
 }
 }
 
