@@ -26,46 +26,37 @@
 #include <mir/input/event_builder.h>
 #include <mir/input/input_sink.h>
 
-#include <X11/Xlib.h>
+#include <linux/input.h>
+
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
 
 namespace mi = mir::input;
 namespace mix = mi::wayland;
 
 namespace
 {
-MirPointerButtons to_mir_button(int button)
+// {arg} TODO: this is ripped off from src/platforms/evdev/button_utils.cpp it ought to be shared
+MirPointerButton to_pointer_button(int button, MirPointerHandedness handedness)
 {
-    auto const button_side = 8;
-    auto const button_extra = 9;
-    if (button == Button1)
-        return mir_pointer_button_primary;
-    if (button == Button2)  // tertiary (middle) button is Button2 in X
-        return mir_pointer_button_tertiary;
-    if (button == Button3)
-        return mir_pointer_button_secondary;
-    if (button == button_side)
-        return mir_pointer_button_side;
-    if (button == button_extra)
-        return mir_pointer_button_extra;
-    return 0;
+    switch(button)
+    {
+    case BTN_LEFT: return (handedness == mir_pointer_handedness_right)
+                          ? mir_pointer_button_primary
+                          : mir_pointer_button_secondary;
+    case BTN_RIGHT: return (handedness == mir_pointer_handedness_right)
+                           ? mir_pointer_button_secondary
+                           : mir_pointer_button_primary;
+    case BTN_MIDDLE: return mir_pointer_button_tertiary;
+    case BTN_BACK: return mir_pointer_button_back;
+    case BTN_FORWARD: return mir_pointer_button_forward;
+    case BTN_SIDE: return mir_pointer_button_side;
+    case BTN_EXTRA: return mir_pointer_button_extra;
+    case BTN_TASK: return mir_pointer_button_task;
+    }
+    BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mouse button"));
 }
-
-MirPointerButtons to_mir_button_state(int x_button_key_state)
-{
-    MirPointerButtons button_state = 0;
-    if (x_button_key_state & Button1Mask)
-        button_state |= mir_pointer_button_primary;
-    if (x_button_key_state & Button2Mask)
-        button_state |= mir_pointer_button_tertiary;
-    if (x_button_key_state & Button3Mask)
-        button_state |= mir_pointer_button_secondary;
-    if (x_button_key_state & Button4Mask)
-        button_state |= mir_pointer_button_back;
-    if (x_button_key_state & Button5Mask)
-        button_state |= mir_pointer_button_forward;
-    return button_state;
-}
-
 }
 
 mix::InputDevice::InputDevice(
@@ -159,17 +150,11 @@ void mix::InputDevice::key_release(std::chrono::nanoseconds event_time, xkb_keys
     enqueue([=](EventBuilder* b) { return b->key_event(event_time, mir_keyboard_action_up, key_sym, key_code); });
 }
 
-void mix::InputDevice::update_button_state(int button)
-{
-    std::lock_guard<decltype(mutex)> lock{mutex};
-    button_state = to_mir_button_state(button);
-}
-
 void mix::InputDevice::pointer_press(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll)
 {
     enqueue([=](EventBuilder* b)
     {
-        button_state |= to_mir_button(button);
+        button_state |= to_pointer_button(button, mir_pointer_handedness_right);
 
         auto const movement = pos - pointer_pos;
         pointer_pos = pos;
@@ -191,7 +176,7 @@ void mix::InputDevice::pointer_release(std::chrono::nanoseconds event_time, int 
 {
     enqueue([=](EventBuilder* b)
     {
-        button_state &= ~to_mir_button(button);
+        button_state &= ~to_pointer_button(button, mir_pointer_handedness_right);
 
         auto const movement = pos - pointer_pos;
         pointer_pos = pos;

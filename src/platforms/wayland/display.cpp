@@ -43,8 +43,6 @@ class NullInputSink : public mir::input::wayland::InputSinkX
 
     void key_release(std::chrono::nanoseconds, xkb_keysym_t, int32_t) override {}
 
-    void update_button_state(int) override {}
-
     void pointer_press(
         std::chrono::nanoseconds, int, mir::geometry::Point const&,
         mir::geometry::Displacement) override
@@ -320,9 +318,11 @@ void mir::graphics::wayland::Display::pointer_leave(wl_pointer* pointer, uint32_
 void mir::graphics::wayland::Display::pointer_motion(wl_pointer*, uint32_t time, wl_fixed_t x, wl_fixed_t y)
 {
     std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
-    pointer = {wl_fixed_to_int(x), wl_fixed_to_int(y)};
+    geom::Point const new_pointer{wl_fixed_to_int(x), wl_fixed_to_int(y)};
+    auto const movement = new_pointer - pointer;
+    pointer = new_pointer;
     //            pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll) = 0;
-    pointer_sink->pointer_motion(std::chrono::milliseconds{time}, pointer, {});
+    pointer_sink->pointer_motion(std::chrono::milliseconds{time}, pointer, movement);
 }
 
 void mir::graphics::wayland::Display::pointer_button(wl_pointer*, uint32_t, uint32_t time, uint32_t button, uint32_t state)
