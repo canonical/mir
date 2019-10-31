@@ -38,7 +38,7 @@ class mgw::DisplayClient::Output  :
     public DisplaySyncGroup,
     public renderer::gl::RenderTarget,
     public NativeDisplayBuffer,
-    DisplayBuffer
+    public DisplayBuffer
 {
 public:
     Output(
