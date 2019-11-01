@@ -451,7 +451,8 @@ void mgw::DisplayClient::new_global(
     }
     else if (strcmp(interface, "wl_seat") == 0)
     {
-        self->seat = static_cast<decltype(self->seat)>(wl_registry_bind(registry, id, &wl_seat_interface, std::min(version, 4u)));
+        if (version < 5) self->fake_pointer_frame = true;
+        self->seat = static_cast<decltype(self->seat)>(wl_registry_bind(registry, id, &wl_seat_interface, std::min(version, 6u)));
         add_seat_listener(self, self->seat);
     }
     else if (strcmp(interface, "wl_output") == 0)
@@ -551,25 +552,31 @@ void mgw::DisplayClient::pointer_leave(wl_pointer* /*pointer*/, uint32_t /*seria
 {
 }
 
-void mgw::DisplayClient::pointer_motion(wl_pointer* /*pointer*/, uint32_t /*time*/, wl_fixed_t /*x*/, wl_fixed_t /*y*/)
+void mgw::DisplayClient::pointer_motion(wl_pointer* pointer, uint32_t /*time*/, wl_fixed_t /*x*/, wl_fixed_t /*y*/)
 {
+    if (fake_pointer_frame)
+        pointer_frame(pointer);
 }
 
 void mgw::DisplayClient::pointer_button(
-    wl_pointer* /*pointer*/,
+    wl_pointer* pointer,
     uint32_t /*serial*/,
     uint32_t /*time*/,
     uint32_t /*button*/,
     uint32_t /*state*/)
 {
+    if (fake_pointer_frame)
+        pointer_frame(pointer);
 }
 
 void mgw::DisplayClient::pointer_axis(
-    wl_pointer* /*pointer*/,
+    wl_pointer* pointer,
     uint32_t /*time*/,
     uint32_t /*axis*/,
     wl_fixed_t /*value*/)
 {
+    if (fake_pointer_frame)
+        pointer_frame(pointer);
 }
 
 void mgw::DisplayClient::pointer_frame(wl_pointer* /*pointer*/)

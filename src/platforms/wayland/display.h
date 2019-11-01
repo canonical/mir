@@ -112,10 +112,6 @@ private:
 
     void keyboard_repeat_info(wl_keyboard* wl_keyboard, int32_t rate, int32_t delay) override;
 
-    void pointer_enter(wl_pointer* pointer, uint32_t serial, wl_surface* surface, wl_fixed_t x, wl_fixed_t y) override;
-
-    void pointer_leave(wl_pointer* pointer, uint32_t serial, wl_surface* surface) override;
-
     void pointer_motion(wl_pointer* pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y) override;
 
     void pointer_button(wl_pointer* pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state) override;
@@ -124,12 +120,6 @@ private:
 
     void pointer_frame(wl_pointer* pointer) override;
 
-    void pointer_axis_source(wl_pointer* pointer, uint32_t axis_source) override;
-
-    void pointer_axis_stop(wl_pointer* pointer, uint32_t time, uint32_t axis) override;
-
-    void pointer_axis_discrete(wl_pointer* pointer, uint32_t axis, int32_t discrete) override;
-
 private:
     std::shared_ptr<DisplayReport> const report;
     mir::Fd const shutdown_signal;
@@ -137,7 +127,9 @@ private:
     std::mutex sink_mutex;
     std::shared_ptr<input::wayland::InputSinkX> keyboard_sink;
     std::shared_ptr<input::wayland::InputSinkX> pointer_sink;
-    geometry::Point pointer;
+    geometry::Point pointer_pos;
+    geometry::Displacement pointer_scroll;
+    std::chrono::nanoseconds pointer_time;
 
     std::thread runner;
     void run() const;

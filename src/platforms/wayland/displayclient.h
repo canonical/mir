@@ -151,6 +151,7 @@ protected:
     xkb_context* keyboard_context_;
     xkb_keymap* keyboard_map_ = nullptr;
     xkb_state* keyboard_state_ = nullptr;
+    bool fake_pointer_frame = false;
 
     std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry;
 
