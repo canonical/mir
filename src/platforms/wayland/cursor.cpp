@@ -18,33 +18,35 @@
 
 #include "cursor.h"
 
+#include <wayland-client.h>
+
 namespace mpw = mir::platform::wayland;
 
 mpw::Cursor::Cursor(wl_display* display, std::shared_ptr<graphics::CursorImage> const& default_image) :
     display(display),
     default_image(default_image)
 {
-    puts(__PRETTY_FUNCTION__);
+//    puts(__PRETTY_FUNCTION__);
 }
 
 mpw::Cursor::~Cursor() = default;
 
 void mpw::Cursor::move_to(geometry::Point)
 {
-    puts(__PRETTY_FUNCTION__);
+//    puts(__PRETTY_FUNCTION__);
 }
 
 void mpw::Cursor::show(graphics::CursorImage const& /*cursor_image*/)
 {
-    puts(__PRETTY_FUNCTION__);
+//    puts(__PRETTY_FUNCTION__);
 }
 
 void mpw::Cursor::show()
 {
-    puts(__PRETTY_FUNCTION__);
+//    puts(__PRETTY_FUNCTION__);
 }
 
 void mpw::Cursor::hide()
 {
-    puts(__PRETTY_FUNCTION__);
+//    puts(__PRETTY_FUNCTION__);
 }
