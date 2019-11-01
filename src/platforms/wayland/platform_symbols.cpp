@@ -23,6 +23,7 @@
 
 #include <mir/assert_module_entry_point.h>
 #include <mir/libname.h>
+#include <mir/options/program_option.h>
 
 namespace mg = mir::graphics;
 namespace mo = mir::options;
@@ -41,28 +42,29 @@ mir::ModuleProperties const description = {
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
-    std::shared_ptr<mo::Option> const&,
+    std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const& /*console*/,
     std::shared_ptr<mg::DisplayReport> const& report,
     std::shared_ptr<mir::logging::Logger> const&)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
-    return mir::make_module_ptr<mgw::Platform>(mpw::connection(), report);
+    return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report);
 }
 
-void add_graphics_platform_options(boost::program_options::options_description& /*config*/)
+void add_graphics_platform_options(boost::program_options::options_description& config)
 {
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
+    mpw::add_connection_options(config);
 }
 
 mg::PlatformPriority probe_graphics_platform(
     std::shared_ptr<mir::ConsoleServices> const& /*console*/,
-    mo::ProgramOption const& /*options*/)
+    mo::ProgramOption const& options)
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
 
-    return mpw::connection() ?
+    return mpw::connection(options) ?
         mg::PlatformPriority::best :
         mg::PlatformPriority::unsupported;
 }

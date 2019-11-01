@@ -18,19 +18,41 @@
 
 #include "wayland_display.h"
 
+#include <mir/options/option.h>
+
 namespace mpw = mir::platform::wayland;
 
 namespace
 {
 struct WaylandDisplay
 {
-    struct wl_display* const wl_display = wl_display_connect(getenv("WAYLAND_DISPLAY"));
+    struct wl_display* const wl_display;
+
+    WaylandDisplay(char const* wayland_host) :
+        wl_display{wl_display_connect(wayland_host)} {}
 
     ~WaylandDisplay() { if (wl_display) wl_display_disconnect(wl_display); }
-} wayland_display;
+};
+
+char const* wayland_host_option_name{"wayland-host"};
+char const* wayland_host_option_description{"Socket name for host compositor"};
 }
 
-auto mpw::connection() -> struct wl_display*
+void mpw::add_connection_options(boost::program_options::options_description& config)
 {
-    return wayland_display.wl_display;
+    config.add_options()
+        (wayland_host_option_name,
+         boost::program_options::value<std::string>(),
+         wayland_host_option_description);
+}
+
+auto mpw::connection(options::Option const& options) -> struct wl_display*
+{
+    if (!options.is_set(wayland_host_option_name))
+        return nullptr;
+
+    static auto const wayland_display =
+        std::make_unique<WaylandDisplay>(options.get<std::string>(wayland_host_option_name).c_str());
+
+    return wayland_display->wl_display;
 }

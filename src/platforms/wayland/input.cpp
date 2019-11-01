@@ -45,10 +45,10 @@ void add_input_platform_options(
 }
 
 mi::PlatformPriority probe_input_platform(
-    mo::Option const& /*options*/,
+    mo::Option const& options,
     mir::ConsoleServices&)
 {
-    if (mpw::connection())
+    if (mpw::connection(options))
     {
         return mi::PlatformPriority::supported;
     }

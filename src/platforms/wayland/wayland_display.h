@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #ifndef MIR_PLATFORM_WAYLAND_DISPLAY_H_
@@ -21,13 +19,18 @@
 
 #include <wayland-client.h>
 
+#include <boost/program_options/options_description.hpp>
+
 namespace mir
 {
+namespace options { class Option; }
+
 namespace platform
 {
 namespace wayland
 {
-auto connection() -> wl_display*;
+void add_connection_options(boost::program_options::options_description& config);
+auto connection(mir::options::Option const& options) -> wl_display*;
 }
 }
 }
