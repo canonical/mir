@@ -193,22 +193,6 @@ void mgw::Display::set_keyboard_sink(std::shared_ptr<input::wayland::InputSinkX>
     }
 }
 
-void mir::graphics::wayland::Display::keyboard_keymap(wl_keyboard* keyboard, uint32_t format, int32_t fd, uint32_t size)
-{
-    DisplayClient::keyboard_keymap(keyboard, format, fd, size);
-}
-
-void mir::graphics::wayland::Display::keyboard_enter(
-    wl_keyboard* keyboard, uint32_t serial, wl_surface* surface, wl_array* keys)
-{
-    DisplayClient::keyboard_enter(keyboard, serial, surface, keys);
-}
-
-void mir::graphics::wayland::Display::keyboard_leave(wl_keyboard* keyboard, uint32_t serial, wl_surface* surface)
-{
-    DisplayClient::keyboard_leave(keyboard, serial, surface);
-}
-
 void mir::graphics::wayland::Display::keyboard_key(wl_keyboard*, uint32_t, uint32_t time, uint32_t key, uint32_t state)
 {
     auto const keysym = xkb_state_key_get_one_sym(keyboard_state(), key + 8);
@@ -224,18 +208,6 @@ void mir::graphics::wayland::Display::keyboard_key(wl_keyboard*, uint32_t, uint3
         keyboard_sink->key_release(std::chrono::milliseconds{time}, keysym, key);
         break;
     }
-}
-
-void mir::graphics::wayland::Display::keyboard_modifiers(
-    wl_keyboard* keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked,
-    uint32_t group)
-{
-    DisplayClient::keyboard_modifiers(keyboard, serial, mods_depressed, mods_latched, mods_locked, group);
-}
-
-void mir::graphics::wayland::Display::keyboard_repeat_info(wl_keyboard* wl_keyboard, int32_t rate, int32_t delay)
-{
-    DisplayClient::keyboard_repeat_info(wl_keyboard, rate, delay);
 }
 
 void mir::graphics::wayland::Display::run() const
