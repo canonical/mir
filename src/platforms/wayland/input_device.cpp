@@ -213,3 +213,12 @@ void miw::InputDevice::pointer_motion(std::chrono::nanoseconds event_time, geome
         );
     });
 }
+
+void mir::input::wayland::InputDevice::touch_event(
+    std::chrono::nanoseconds event_time, std::vector<events::ContactState> const& contacts)
+{
+    enqueue([=](EventBuilder* b)
+    {
+        return b->touch_event(event_time, contacts);
+    });
+}

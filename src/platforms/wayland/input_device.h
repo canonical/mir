@@ -79,6 +79,7 @@ private:
     void pointer_press(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) override;
     void pointer_release(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) override;
     void pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll) override;
+    void touch_event(std::chrono::nanoseconds event_time, std::vector<events::ContactState> const& contacts) override;
 };
 }
 }

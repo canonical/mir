@@ -20,6 +20,7 @@
 #include "displayclient.h"
 
 #include <mir/fd.h>
+#include <mir/events/contact_state.h>
 #include <mir/geometry/displacement.h>
 #include <mir/graphics/display.h>
 #include <mir/graphics/display_report.h>
@@ -43,6 +44,7 @@ public:
     virtual void pointer_press(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) = 0;
     virtual void pointer_release(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) = 0;
     virtual void pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll) = 0;
+    virtual void touch_event(std::chrono::nanoseconds event_time, std::vector<events::ContactState> const& contacts) = 0;
 
     InputSinkX() = default;
     virtual ~InputSinkX() = default;
@@ -68,6 +70,7 @@ public:
 
     void set_keyboard_sink(std::shared_ptr<input::wayland::InputSinkX> const& keyboard_sink);
     void set_pointer_sink(std::shared_ptr<input::wayland::InputSinkX> const& pointer_sink);
+    void set_touch_sink(std::shared_ptr<input::wayland::InputSinkX> const& touch_sink);
 
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f) override;
 
@@ -120,6 +123,22 @@ private:
 
     void pointer_frame(wl_pointer* pointer) override;
 
+    void touch_down(
+        wl_touch* touch, uint32_t serial, uint32_t time, wl_surface* surface, int32_t id, wl_fixed_t x,
+        wl_fixed_t y) override;
+
+    void touch_up(wl_touch* touch, uint32_t serial, uint32_t time, int32_t id) override;
+
+    void touch_motion(wl_touch* touch, uint32_t time, int32_t id, wl_fixed_t x, wl_fixed_t y) override;
+
+    void touch_frame(wl_touch* touch) override;
+
+    void touch_cancel(wl_touch* touch) override;
+
+    void touch_shape(wl_touch* touch, int32_t id, wl_fixed_t major, wl_fixed_t minor) override;
+
+    void touch_orientation(wl_touch* touch, int32_t id, wl_fixed_t orientation) override;
+
 private:
     std::shared_ptr<DisplayReport> const report;
     mir::Fd const shutdown_signal;
@@ -127,9 +146,12 @@ private:
     std::mutex sink_mutex;
     std::shared_ptr<input::wayland::InputSinkX> keyboard_sink;
     std::shared_ptr<input::wayland::InputSinkX> pointer_sink;
+    std::shared_ptr<input::wayland::InputSinkX> touch_sink;
     geometry::Point pointer_pos;
     geometry::Displacement pointer_scroll;
     std::chrono::nanoseconds pointer_time;
+    std::vector<events::ContactState> touch_contacts;
+    std::chrono::nanoseconds touch_time;
 
     std::thread runner;
     void run() const;

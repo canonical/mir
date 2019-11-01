@@ -30,6 +30,7 @@
 
 #include <sys/eventfd.h>
 #include <sys/poll.h>
+#include <algorithm>
 
 namespace mgw = mir::graphics::wayland;
 namespace mrg = mir::renderer::gl;
@@ -60,6 +61,10 @@ class NullInputSink : public mir::input::wayland::InputSinkX
         mir::geometry::Displacement) override
     {
     }
+
+    void touch_event(std::chrono::nanoseconds, std::vector<mir::events::ContactState> const&) override
+    {
+    }
 };
 }
 
@@ -73,7 +78,8 @@ mgw::Display::Display(
     report{report},
     shutdown_signal{::eventfd(0, EFD_CLOEXEC)},
     keyboard_sink{std::make_shared<NullInputSink>()},
-    pointer_sink{std::make_shared<NullInputSink>()}
+    pointer_sink{std::make_shared<NullInputSink>()},
+    touch_sink{std::make_shared<NullInputSink>()}
 {
     runner = std::thread{[this] { run(); }};
     the_display = this;
@@ -367,3 +373,154 @@ void mir::graphics::wayland::Display::pointer_frame(wl_pointer* pointer)
     DisplayClient::pointer_frame(pointer);
 }
 
+void mir::graphics::wayland::Display::touch_down(
+    wl_touch* touch, uint32_t serial, uint32_t time, wl_surface* surface, int32_t id, wl_fixed_t x, wl_fixed_t y)
+{
+    {
+        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+
+        auto contact = std::find_if(begin(touch_contacts),end(touch_contacts), [&](auto& c){ return c.touch_id == id; });
+
+        if (contact == end(touch_contacts))
+        {
+            touch_contacts.resize(touch_contacts.size()+1);
+            contact = end(touch_contacts) - 1;
+            contact->touch_id = id;
+            contact->tooltype = mir_touch_tooltype_unknown;
+        }
+
+        touch_time = std::chrono::milliseconds{time};
+        contact->action = mir_touch_action_down;
+        contact->x = wl_fixed_to_double(x);
+        contact->y = wl_fixed_to_double(y);
+    }
+
+    DisplayClient::touch_down(touch, serial, time, surface, id, x, y);
+}
+
+void mir::graphics::wayland::Display::touch_up(wl_touch* touch, uint32_t serial, uint32_t time, int32_t id)
+{
+    {
+        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+
+        auto contact = std::find_if(begin(touch_contacts),end(touch_contacts), [&](auto& c){ return c.touch_id == id; });
+
+        if (contact == end(touch_contacts))
+        {
+            touch_contacts.resize(touch_contacts.size()+1);
+            contact = end(touch_contacts) - 1;
+            contact->touch_id = id;
+            contact->tooltype = mir_touch_tooltype_unknown;
+        }
+
+        touch_time = std::chrono::milliseconds{time};
+        contact->action = mir_touch_action_up;
+    }
+
+    DisplayClient::touch_up(touch, serial, time, id);
+}
+
+void mir::graphics::wayland::Display::touch_motion(wl_touch* touch, uint32_t time, int32_t id, wl_fixed_t x, wl_fixed_t y)
+{
+    {
+        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+
+        auto contact = std::find_if(begin(touch_contacts),end(touch_contacts), [&](auto& c){ return c.touch_id == id; });
+
+        if (contact == end(touch_contacts))
+        {
+            touch_contacts.resize(touch_contacts.size()+1);
+            contact = end(touch_contacts) - 1;
+            contact->touch_id = id;
+            contact->tooltype = mir_touch_tooltype_unknown;
+            contact->action = mir_touch_action_change;
+        }
+
+        contact->x = wl_fixed_to_double(x);
+        contact->y = wl_fixed_to_double(y);
+    }
+
+    DisplayClient::touch_motion(touch, time, id, x, y);
+}
+
+void mir::graphics::wayland::Display::touch_frame(wl_touch* touch)
+{
+    {
+        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+
+        touch_sink->touch_event(touch_time, touch_contacts);
+
+        touch_contacts.resize(0);
+    }
+
+    DisplayClient::touch_frame(touch);
+}
+
+void mir::graphics::wayland::Display::touch_cancel(wl_touch* touch)
+{
+    {
+        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+
+        touch_contacts.resize(0);
+    }
+
+    DisplayClient::touch_cancel(touch);
+}
+
+void mir::graphics::wayland::Display::touch_shape(wl_touch* touch, int32_t id, wl_fixed_t major, wl_fixed_t minor)
+{
+    {
+        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+
+        auto contact = std::find_if(begin(touch_contacts),end(touch_contacts), [&](auto& c){ return c.touch_id == id; });
+
+        if (contact == end(touch_contacts))
+        {
+            touch_contacts.resize(touch_contacts.size()+1);
+            contact = end(touch_contacts) - 1;
+            contact->touch_id = id;
+            contact->tooltype = mir_touch_tooltype_unknown;
+            contact->action = mir_touch_action_change;
+        }
+
+        contact->touch_major = wl_fixed_to_double(major);
+        contact->touch_minor = wl_fixed_to_double(minor);
+    }
+
+    DisplayClient::touch_shape(touch, id, major, minor);
+}
+
+void mir::graphics::wayland::Display::touch_orientation(wl_touch* touch, int32_t id, wl_fixed_t orientation)
+{
+    {
+        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+
+        auto contact = std::find_if(begin(touch_contacts),end(touch_contacts), [&](auto& c){ return c.touch_id == id; });
+
+        if (contact == end(touch_contacts))
+        {
+            touch_contacts.resize(touch_contacts.size()+1);
+            contact = end(touch_contacts) - 1;
+            contact->touch_id = id;
+            contact->tooltype = mir_touch_tooltype_unknown;
+            contact->action = mir_touch_action_change;
+        }
+
+        contact->orientation = wl_fixed_to_double(orientation);
+    }
+
+    DisplayClient::touch_orientation(touch, id, orientation);
+}
+
+void mir::graphics::wayland::Display::set_touch_sink(std::shared_ptr<input::wayland::InputSinkX> const& touch_sink)
+{
+    std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+    if (touch_sink)
+    {
+        this->touch_sink = touch_sink;
+    }
+    else
+    {
+        this->touch_sink = std::make_shared<NullInputSink>();
+    }
+}
