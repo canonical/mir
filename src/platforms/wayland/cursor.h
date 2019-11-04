@@ -21,7 +21,10 @@
 
 #include <mir/graphics/cursor.h>
 #include <mir/graphics/cursor_image.h>
+
 #include <wayland-client.h>
+
+#include <mutex>
 
 namespace mir
 {
@@ -33,7 +36,7 @@ namespace wayland
 class Cursor : public graphics::Cursor
 {
 public:
-    Cursor(wl_display* display, std::shared_ptr<graphics::CursorImage> const& default_image);
+    Cursor(wl_display* display, wl_compositor* compositor, wl_shm* shm, std::shared_ptr<graphics::CursorImage> const& default_image);
 
     ~Cursor();
 
@@ -45,9 +48,21 @@ public:
 
     void move_to(geometry::Point position) override;
 
+    void enter(wl_pointer* pointer);
+    void leave(wl_pointer* pointer);
+
 private:
-    wl_display* const display;
     std::shared_ptr<graphics::CursorImage> const default_image;
+
+    wl_display* const display;
+    wl_compositor* const compositor;
+    wl_shm* const shm;
+
+    wl_surface* surface;
+
+    std::mutex mutable mutex;
+    wl_buffer* buffer{nullptr};
+    wl_pointer* pointer{nullptr};
 };
 }
 }

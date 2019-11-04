@@ -32,6 +32,13 @@
 
 namespace mir
 {
+namespace platform
+{
+namespace wayland
+{
+class Cursor;
+}
+}
 namespace input
 {
 namespace wayland
@@ -112,6 +119,10 @@ private:
 
     void pointer_frame(wl_pointer* pointer) override;
 
+    void pointer_enter(wl_pointer* pointer, uint32_t serial, wl_surface* surface, wl_fixed_t x, wl_fixed_t y) override;
+
+    void pointer_leave(wl_pointer* pointer, uint32_t serial, wl_surface* surface) override;
+
     void touch_down(
         wl_touch* touch, uint32_t serial, uint32_t time, wl_surface* surface, int32_t id, wl_fixed_t x,
         wl_fixed_t y) override;
@@ -131,6 +142,7 @@ private:
 private:
     std::shared_ptr<DisplayReport> const report;
     mir::Fd const shutdown_signal;
+    std::shared_ptr<platform::wayland::Cursor> cursor;
 
     std::mutex sink_mutex;
     std::shared_ptr<input::wayland::InputSinkX> keyboard_sink;

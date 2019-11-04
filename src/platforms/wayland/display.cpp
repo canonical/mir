@@ -120,7 +120,8 @@ void mgw::Display::resume()
 
 auto mgw::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
-    return std::make_shared<platform::wayland::Cursor>(display, std::shared_ptr<CursorImage>{});
+    cursor = std::make_shared<platform::wayland::Cursor>(display, compositor, shm, std::shared_ptr<CursorImage>{});
+    return cursor;
 }
 
 auto mgw::Display::create_virtual_output(int /*width*/, int /*height*/) -> std::unique_ptr<VirtualOutput>
@@ -500,4 +501,17 @@ void mir::graphics::wayland::Display::set_touch_sink(std::shared_ptr<input::wayl
     {
         this->touch_sink = std::make_shared<NullInputSink>();
     }
+}
+
+void mir::graphics::wayland::Display::pointer_enter(
+    wl_pointer* pointer, uint32_t serial, wl_surface* surface, wl_fixed_t x, wl_fixed_t y)
+{
+    if (cursor) cursor->enter(pointer);
+    DisplayClient::pointer_enter(pointer, serial, surface, x, y);
+}
+
+void mir::graphics::wayland::Display::pointer_leave(wl_pointer* pointer, uint32_t serial, wl_surface* surface)
+{
+    if (cursor) cursor->leave(pointer);
+    DisplayClient::pointer_leave(pointer, serial, surface);
 }
