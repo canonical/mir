@@ -159,7 +159,7 @@ private:
     struct ProofOfMutexLock
     {
         ProofOfMutexLock(std::lock_guard<std::mutex> const&) {}
-        ProofOfMutexLock(std::unique_lock<std::mutex> const&) {}
+        ProofOfMutexLock(std::unique_lock<std::mutex> const& lock);
         ProofOfMutexLock(ProofOfMutexLock const&) = delete;
         ProofOfMutexLock operator=(ProofOfMutexLock const&) = delete;
     };
