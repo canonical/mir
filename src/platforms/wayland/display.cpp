@@ -153,6 +153,11 @@ auto mgw::Display::create_gl_context() const -> std::unique_ptr<mrg::Context>
             egldisplay{egldisplay},
             eglctx{eglCreateContext(egldisplay, eglconfig, eglctx, nullptr)} {}
 
+        ~GlContext()
+        {
+            eglDestroyContext(egldisplay, eglctx);
+        }
+
         void make_current()     const override
         {
             if (eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, eglctx) != EGL_TRUE)
