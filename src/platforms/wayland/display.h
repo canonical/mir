@@ -43,21 +43,9 @@ namespace input
 {
 namespace wayland
 {
-class InputSinkX
-{
-public:
-    virtual void key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code) = 0;
-    virtual void key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code) = 0;
-    virtual void pointer_press(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) = 0;
-    virtual void pointer_release(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) = 0;
-    virtual void pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll) = 0;
-    virtual void touch_event(std::chrono::nanoseconds event_time, std::vector<events::ContactState> const& contacts) = 0;
-
-    InputSinkX() = default;
-    virtual ~InputSinkX() = default;
-    InputSinkX(InputSinkX const&) = delete;
-    InputSinkX& operator=(InputSinkX const&) = delete;
-};
+class KeyboardInput;
+class PointerInput;
+class TouchInput;
 }
 }
 namespace graphics
@@ -75,9 +63,9 @@ public:
 
     ~Display();
 
-    void set_keyboard_sink(std::shared_ptr<input::wayland::InputSinkX> const& keyboard_sink);
-    void set_pointer_sink(std::shared_ptr<input::wayland::InputSinkX> const& pointer_sink);
-    void set_touch_sink(std::shared_ptr<input::wayland::InputSinkX> const& touch_sink);
+    void set_keyboard_sink(std::shared_ptr<input::wayland::KeyboardInput> const& keyboard_sink);
+    void set_pointer_sink(std::shared_ptr<input::wayland::PointerInput> const& pointer_sink);
+    void set_touch_sink(std::shared_ptr<input::wayland::TouchInput> const& touch_sink);
 
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f) override;
 
@@ -145,9 +133,9 @@ private:
     std::shared_ptr<platform::wayland::Cursor> cursor;
 
     std::mutex sink_mutex;
-    std::shared_ptr<input::wayland::InputSinkX> keyboard_sink;
-    std::shared_ptr<input::wayland::InputSinkX> pointer_sink;
-    std::shared_ptr<input::wayland::InputSinkX> touch_sink;
+    std::shared_ptr<input::wayland::KeyboardInput> keyboard_sink;
+    std::shared_ptr<input::wayland::PointerInput> pointer_sink;
+    std::shared_ptr<input::wayland::TouchInput> touch_sink;
     geometry::Point pointer_pos;
     geometry::Displacement pointer_scroll;
     std::chrono::nanoseconds pointer_time;

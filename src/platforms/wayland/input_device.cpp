@@ -59,7 +59,7 @@ MirPointerButton to_pointer_button(int button, MirPointerHandedness handedness)
 }
 }
 
-miw::InputDevice::InputDevice(
+miw::GenericInputDevice::GenericInputDevice(
     InputDeviceInfo const& device_info,
     std::shared_ptr<dispatch::ActionQueue> const& action_queue) :
     info(device_info),
@@ -67,26 +67,26 @@ miw::InputDevice::InputDevice(
 {
 }
 
-void miw::InputDevice::start(InputSink* input_sink, EventBuilder* event_builder)
+void miw::GenericInputDevice::start(InputSink* input_sink, EventBuilder* event_builder)
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
     sink = input_sink;
     builder = event_builder;
 }
 
-void miw::InputDevice::stop()
+void miw::GenericInputDevice::stop()
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
     sink = nullptr;
     builder = nullptr;
 }
 
-mi::InputDeviceInfo miw::InputDevice::get_device_info()
+mi::InputDeviceInfo miw::GenericInputDevice::get_device_info()
 {
     return info;
 }
 
-mir::optional_value<mi::PointerSettings> miw::InputDevice::get_pointer_settings() const
+mir::optional_value<mi::PointerSettings> miw::GenericInputDevice::get_pointer_settings() const
 {
     mir::optional_value<PointerSettings> ret;
     if (contains(info.capabilities, DeviceCapability::pointer))
@@ -95,11 +95,11 @@ mir::optional_value<mi::PointerSettings> miw::InputDevice::get_pointer_settings(
     return ret;
 }
 
-void miw::InputDevice::apply_settings(PointerSettings const&)
+void miw::GenericInputDevice::apply_settings(PointerSettings const&)
 {
 }
 
-mir::optional_value<mi::TouchpadSettings> miw::InputDevice::get_touchpad_settings() const
+mir::optional_value<mi::TouchpadSettings> miw::GenericInputDevice::get_touchpad_settings() const
 {
     optional_value<TouchpadSettings> ret;
     if (contains(info.capabilities, DeviceCapability::touchpad))
@@ -108,11 +108,11 @@ mir::optional_value<mi::TouchpadSettings> miw::InputDevice::get_touchpad_setting
     return ret;
 }
 
-void miw::InputDevice::apply_settings(TouchpadSettings const&)
+void miw::GenericInputDevice::apply_settings(TouchpadSettings const&)
 {
 }
 
-mir::optional_value<mi::TouchscreenSettings> miw::InputDevice::get_touchscreen_settings() const
+mir::optional_value<mi::TouchscreenSettings> miw::GenericInputDevice::get_touchscreen_settings() const
 {
     optional_value<TouchscreenSettings> ret;
     if (contains(info.capabilities, DeviceCapability::touchscreen))
@@ -121,16 +121,16 @@ mir::optional_value<mi::TouchscreenSettings> miw::InputDevice::get_touchscreen_s
     return ret;
 }
 
-void miw::InputDevice::apply_settings(TouchscreenSettings const&)
+void miw::GenericInputDevice::apply_settings(TouchscreenSettings const&)
 {
 }
 
-bool miw::InputDevice::started() const
+bool miw::GenericInputDevice::started() const
 {
     return sink && builder;
 }
 
-void  miw::InputDevice::enqueue(std::function<EventUPtr(EventBuilder* builder)> const& event)
+void  miw::GenericInputDevice::enqueue(std::function<EventUPtr(EventBuilder* builder)> const& event)
 {
     action_queue->enqueue([=]
           {
@@ -140,17 +140,27 @@ void  miw::InputDevice::enqueue(std::function<EventUPtr(EventBuilder* builder)> 
           });
 }
 
-void miw::InputDevice::key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code)
+miw::KeyboardInputDevice::KeyboardInputDevice(std::shared_ptr<dispatch::ActionQueue> const& action_queue) :
+    GenericInputDevice{InputDeviceInfo{"keyboard-device", "key-dev-1", DeviceCapability::keyboard}, action_queue}
+{
+}
+
+void miw::KeyboardInputDevice::key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code)
 {
     enqueue([=](EventBuilder* b) { return b->key_event(event_time, mir_keyboard_action_down, key_sym, key_code); });
 }
 
-void miw::InputDevice::key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code)
+void miw::KeyboardInputDevice::key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code)
 {
     enqueue([=](EventBuilder* b) { return b->key_event(event_time, mir_keyboard_action_up, key_sym, key_code); });
 }
 
-void miw::InputDevice::pointer_press(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll)
+miw::PointerInputDevice::PointerInputDevice(std::shared_ptr<dispatch::ActionQueue> const& action_queue) :
+    GenericInputDevice{InputDeviceInfo{"mouse-device", "mouse-dev-1", DeviceCapability::pointer}, action_queue}
+{
+}
+
+void miw::PointerInputDevice::pointer_press(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll)
 {
     enqueue([=](EventBuilder* b)
     {
@@ -172,7 +182,7 @@ void miw::InputDevice::pointer_press(std::chrono::nanoseconds event_time, int bu
     });
 }
 
-void miw::InputDevice::pointer_release(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll)
+void miw::PointerInputDevice::pointer_release(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll)
 {
     enqueue([=](EventBuilder* b)
     {
@@ -194,7 +204,7 @@ void miw::InputDevice::pointer_release(std::chrono::nanoseconds event_time, int 
     });
 }
 
-void miw::InputDevice::pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll)
+void miw::PointerInputDevice::pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll)
 {
     enqueue([=](EventBuilder* b)
     {
@@ -214,7 +224,12 @@ void miw::InputDevice::pointer_motion(std::chrono::nanoseconds event_time, geome
     });
 }
 
-void mir::input::wayland::InputDevice::touch_event(
+miw::TouchInputDevice::TouchInputDevice(std::shared_ptr<dispatch::ActionQueue> const& action_queue) :
+    GenericInputDevice{InputDeviceInfo{"touch-device", "touch-dev-1", DeviceCapability::touchscreen}, action_queue}
+{
+}
+
+void mir::input::wayland::TouchInputDevice::touch_event(
     std::chrono::nanoseconds event_time, std::vector<events::ContactState> const& contacts)
 {
     enqueue([=](EventBuilder* b)

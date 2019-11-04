@@ -17,6 +17,7 @@
 #include <epoxy/egl.h>
 
 #include "display.h"
+#include "display_input.h"
 #include "cursor.h"
 
 #include <mir/fatal.h>
@@ -38,12 +39,15 @@ namespace geom= mir::geometry;
 
 namespace
 {
-class NullInputSink : public mir::input::wayland::InputSinkX
+class NullKeyboardInput : public mir::input::wayland::KeyboardInput
 {
     void key_press(std::chrono::nanoseconds, xkb_keysym_t, int32_t) override {}
 
     void key_release(std::chrono::nanoseconds, xkb_keysym_t, int32_t) override {}
+};
 
+class NullPointerInput : public mir::input::wayland::PointerInput
+{
     void pointer_press(
         std::chrono::nanoseconds, int, mir::geometry::Point const&,
         mir::geometry::Displacement) override
@@ -61,7 +65,10 @@ class NullInputSink : public mir::input::wayland::InputSinkX
         mir::geometry::Displacement) override
     {
     }
+};
 
+class NullTouchInput : public mir::input::wayland::TouchInput
+{
     void touch_event(std::chrono::nanoseconds, std::vector<mir::events::ContactState> const&) override
     {
     }
@@ -77,9 +84,9 @@ mgw::Display::Display(
     DisplayClient{wl_display, gl_config},
     report{report},
     shutdown_signal{::eventfd(0, EFD_CLOEXEC)},
-    keyboard_sink{std::make_shared<NullInputSink>()},
-    pointer_sink{std::make_shared<NullInputSink>()},
-    touch_sink{std::make_shared<NullInputSink>()}
+    keyboard_sink{std::make_shared<NullKeyboardInput>()},
+    pointer_sink{std::make_shared<NullPointerInput>()},
+    touch_sink{std::make_shared<NullTouchInput>()}
 {
     runner = std::thread{[this] { run(); }};
     the_display = this;
@@ -92,7 +99,6 @@ auto mgw::Display::configuration() const -> std::unique_ptr<DisplayConfiguration
 
 void mgw::Display::configure(DisplayConfiguration const& /*conf*/)
 {
-    puts(__PRETTY_FUNCTION__);
 }
 
 void mgw::Display::register_configuration_change_handler(
@@ -186,7 +192,7 @@ void mgw::Display::for_each_display_sync_group(const std::function<void(DisplayS
     DisplayClient::for_each_display_sync_group(f);
 }
 
-void mgw::Display::set_keyboard_sink(std::shared_ptr<input::wayland::InputSinkX> const& keyboard_sink)
+void mgw::Display::set_keyboard_sink(std::shared_ptr<input::wayland::KeyboardInput> const& keyboard_sink)
 {
     std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
     if (keyboard_sink)
@@ -195,7 +201,7 @@ void mgw::Display::set_keyboard_sink(std::shared_ptr<input::wayland::InputSinkX>
     }
     else
     {
-        this->keyboard_sink = std::make_shared<NullInputSink>();
+        this->keyboard_sink = std::make_shared<NullKeyboardInput>();
     }
 }
 
@@ -275,7 +281,7 @@ mir::graphics::wayland::Display::~Display()
     if (runner.joinable()) runner.join();
 }
 
-void mgw::Display::set_pointer_sink(std::shared_ptr<input::wayland::InputSinkX> const& pointer_sink)
+void mgw::Display::set_pointer_sink(std::shared_ptr<input::wayland::PointerInput> const& pointer_sink)
 {
     std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
     if (pointer_sink)
@@ -284,7 +290,7 @@ void mgw::Display::set_pointer_sink(std::shared_ptr<input::wayland::InputSinkX> 
     }
     else
     {
-        this->pointer_sink = std::make_shared<NullInputSink>();
+        this->pointer_sink = std::make_shared<NullPointerInput>();
     }
 }
 
@@ -490,7 +496,7 @@ void mir::graphics::wayland::Display::touch_orientation(wl_touch* touch, int32_t
     DisplayClient::touch_orientation(touch, id, orientation);
 }
 
-void mir::graphics::wayland::Display::set_touch_sink(std::shared_ptr<input::wayland::InputSinkX> const& touch_sink)
+void mir::graphics::wayland::Display::set_touch_sink(std::shared_ptr<input::wayland::TouchInput> const& touch_sink)
 {
     std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
     if (touch_sink)
@@ -499,7 +505,7 @@ void mir::graphics::wayland::Display::set_touch_sink(std::shared_ptr<input::wayl
     }
     else
     {
-        this->touch_sink = std::make_shared<NullInputSink>();
+        this->touch_sink = std::make_shared<NullTouchInput>();
     }
 }
 

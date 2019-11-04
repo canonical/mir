@@ -29,7 +29,9 @@ namespace input
 {
 namespace wayland
 {
-class InputDevice;
+class TouchInputDevice;
+class KeyboardInputDevice;
+class PointerInputDevice;
 
 class InputPlatform : public input::Platform
 {
@@ -46,9 +48,9 @@ public:
 private:
     std::shared_ptr<dispatch::ActionQueue> const action_queue;
     std::shared_ptr<InputDeviceRegistry> const registry;
-    std::shared_ptr<InputDevice> const keyboard;
-    std::shared_ptr<InputDevice> const pointer;
-    std::shared_ptr<InputDevice> const touch;
+    std::shared_ptr<KeyboardInputDevice> const keyboard;
+    std::shared_ptr<PointerInputDevice> const pointer;
+    std::shared_ptr<TouchInputDevice> const touch;
 };
 }
 }

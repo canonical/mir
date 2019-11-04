@@ -17,9 +17,9 @@
 
 #include "input_platform.h"
 #include "input_device.h"
+#include "display.h"
 
 #include <mir/dispatch/action_queue.h>
-#include <mir/input/input_device_info.h>
 #include <mir/input/input_device_registry.h>
 
 namespace md = mir::dispatch;
@@ -28,11 +28,10 @@ namespace miw = mir::input::wayland;
 miw::InputPlatform::InputPlatform(std::shared_ptr<InputDeviceRegistry> const& input_device_registry) :
     action_queue(std::make_shared<md::ActionQueue>()),
     registry(input_device_registry),
-    keyboard(std::make_shared<InputDevice>(InputDeviceInfo{"keyboard-device", "key-dev-1", DeviceCapability::keyboard}, action_queue)),
-    pointer(std::make_shared<InputDevice>(InputDeviceInfo{"mouse-device", "mouse-dev-1", DeviceCapability::pointer}, action_queue)),
-    touch(std::make_shared<InputDevice>(InputDeviceInfo{"touch-device", "touch-dev-1", DeviceCapability::touchscreen}, action_queue))
+    keyboard(std::make_shared<KeyboardInputDevice>(action_queue)),
+    pointer(std::make_shared<PointerInputDevice>(action_queue)),
+    touch(std::make_shared<TouchInputDevice>(action_queue))
 {
-    puts(__PRETTY_FUNCTION__);
     graphics::wayland::the_display->set_keyboard_sink(keyboard);
     graphics::wayland::the_display->set_pointer_sink(pointer);
     graphics::wayland::the_display->set_touch_sink(touch);
