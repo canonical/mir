@@ -148,6 +148,10 @@ protected:
     void seat_capabilities(wl_seat* seat, uint32_t capabilities);
     void seat_name(wl_seat* seat, const char* name);
 
+    static void add_shm_listener(DisplayClient* self, wl_shm* shm);
+    void shm_format(wl_shm *wl_shm, uint32_t format);
+    MirPixelFormat shm_pixel_format{mir_pixel_format_invalid};
+
     xkb_context* keyboard_context_;
     xkb_keymap* keyboard_map_ = nullptr;
     xkb_state* keyboard_state_ = nullptr;

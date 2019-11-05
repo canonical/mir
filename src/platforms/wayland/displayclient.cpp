@@ -345,8 +345,7 @@ mgw::DisplayClient::DisplayClient(
 
     wl_registry_add_listener(registry.get(), &registry_listener, this);
 
-    // TODO: select this properly
-    auto format = mir_pixel_format_xrgb_8888;
+    auto format = shm_pixel_format;
 
     EGLint const cfgattribs[] =
         {
@@ -445,6 +444,7 @@ void mgw::DisplayClient::new_global(
         // Normally we'd add a listener to pick up the supported formats here
         // As luck would have it, I know that argb8888 is the only format we support :)
         // {arg} TODO needs fixing
+        add_shm_listener(self, self->shm);
     }
     else if (strcmp(interface, "wl_seat") == 0)
     {
@@ -708,6 +708,30 @@ void mgw::DisplayClient::add_seat_listener(DisplayClient* self, wl_seat* seat)
         };
 
     wl_seat_add_listener(seat, &seat_listener, self);
+}
+
+void mgw::DisplayClient::add_shm_listener(DisplayClient* self, wl_shm* shm)
+{
+    static struct wl_shm_listener shm_listener =
+        {
+            [](void* self, auto... args) { static_cast<DisplayClient*>(self)->shm_format(args...); },
+        };
+
+    wl_shm_add_listener(shm, &shm_listener, self);
+}
+
+void mir::graphics::wayland::DisplayClient::shm_format(wl_shm* /*wl_shm*/, uint32_t format)
+{
+    switch (format)
+    {
+    case WL_SHM_FORMAT_ARGB8888:
+        if (shm_pixel_format != mir_pixel_format_xrgb_8888)
+            shm_pixel_format = mir_pixel_format_argb_8888;
+        break;
+
+    case WL_SHM_FORMAT_XRGB8888:
+        shm_pixel_format = mir_pixel_format_xrgb_8888;
+    }
 }
 
 namespace mir
