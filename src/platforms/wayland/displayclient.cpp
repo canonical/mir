@@ -249,6 +249,9 @@ mgw::DisplayClient::Output::~Output()
 
     if (eglsurface != EGL_NO_SURFACE)
         eglDestroySurface(owner->egldisplay, eglsurface);
+
+    if (eglctx != EGL_NO_CONTEXT)
+        eglDestroyContext(owner->egldisplay, eglctx);
 }
 
 wl_output_listener const mgw::DisplayClient::Output::output_listener = {
