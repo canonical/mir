@@ -89,6 +89,7 @@ private:
     wl_surface* const surface;
     wl_shell_surface* window{nullptr};
 
+    EGLContext eglctx{EGL_NO_CONTEXT};
     EGLSurface eglsurface{EGL_NO_SURFACE};
 
     std::function<void(Output const&)> on_done;
@@ -111,6 +112,16 @@ private:
     void bind() override;
 };
 
+namespace
+{
+static EGLint const ctxattribs[] =
+    {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
+        EGL_NONE
+    };
+}
 
 void mgw::DisplayClient::Output::geometry(
     void* data,
@@ -310,7 +321,10 @@ auto mgw::DisplayClient::Output::native_display_buffer() -> NativeDisplayBuffer*
 
 void mgw::DisplayClient::Output::make_current()
 {
-    if (!eglMakeCurrent(owner->egldisplay, eglsurface, eglsurface, owner->eglctx))
+    if (eglctx == EGL_NO_CONTEXT)
+        eglctx = eglCreateContext(owner->egldisplay, owner->eglconfig, owner->eglctx, ctxattribs);
+
+    if (!eglMakeCurrent(owner->egldisplay, eglsurface, eglsurface, eglctx))
         throw std::runtime_error("Can't eglMakeCurrent");
 }
 
@@ -357,14 +371,6 @@ mgw::DisplayClient::DisplayClient(
             EGL_DEPTH_SIZE, gl_config->depth_buffer_bits(),
             EGL_STENCIL_SIZE, gl_config->stencil_buffer_bits(),
             EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
-            EGL_NONE
-        };
-
-    static EGLint ctxattribs[] =
-        {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
-            EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
             EGL_NONE
         };
 
