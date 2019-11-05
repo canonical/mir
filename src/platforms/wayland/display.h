@@ -63,9 +63,9 @@ public:
 
     ~Display();
 
-    void set_keyboard_sink(std::shared_ptr<input::wayland::KeyboardInput> const& keyboard_sink);
-    void set_pointer_sink(std::shared_ptr<input::wayland::PointerInput> const& pointer_sink);
-    void set_touch_sink(std::shared_ptr<input::wayland::TouchInput> const& touch_sink);
+    static void set_keyboard_sink(std::shared_ptr<input::wayland::KeyboardInput> const& keyboard_sink);
+    static void set_pointer_sink(std::shared_ptr<input::wayland::PointerInput> const& pointer_sink);
+    static void set_touch_sink(std::shared_ptr<input::wayland::TouchInput> const& touch_sink);
 
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f) override;
 
@@ -147,8 +147,6 @@ private:
     void stop();
 };
 
-// {arg} TODO: this isn't logically, nor thread safe.
-extern Display* the_display;
 }
 }
 

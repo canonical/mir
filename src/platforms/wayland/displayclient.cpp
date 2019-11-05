@@ -212,7 +212,7 @@ mgw::DisplayClient::Output::Output(
 {
     wl_output_add_listener(output, &output_listener, this);
 
-    dcout.id = DisplayConfigurationOutputId{0};   // TODO number outputs
+    dcout.id = (DisplayConfigurationOutputId)owner->bound_outputs.size();
     dcout.card_id = DisplayConfigurationCardId{1};
     dcout.type = DisplayConfigurationOutputType::unknown;
     dcout.pixel_formats = {mir_pixel_format_argb_8888,mir_pixel_format_xrgb_8888};
@@ -399,17 +399,14 @@ mgw::DisplayClient::DisplayClient(
 
 void mgw::DisplayClient::on_output_changed(Output const* /*output*/)
 {
-    // TODO maybe nothing
 }
 
 void mgw::DisplayClient::on_output_gone(Output const* /*output*/)
 {
-    // TODO maybe nothing
 }
 
 void mgw::DisplayClient::on_new_output(Output const* /*output*/)
 {
-    // TODO maybe nothing
 }
 
 mgw::DisplayClient::~DisplayClient()

@@ -73,9 +73,11 @@ class NullTouchInput : public mir::input::wayland::TouchInput
     {
     }
 };
+
+std::mutex the_display_mtx;
+mgw::Display* the_display = nullptr;
 }
 
-mgw::Display* mgw::the_display = nullptr;
 
 mgw::Display::Display(
     wl_display* const wl_display,
@@ -89,6 +91,8 @@ mgw::Display::Display(
     touch_sink{std::make_shared<NullTouchInput>()}
 {
     runner = std::thread{[this] { run(); }};
+
+    std::lock_guard<decltype(the_display_mtx)> lock{the_display_mtx};
     the_display = this;
 }
 
@@ -194,14 +198,18 @@ void mgw::Display::for_each_display_sync_group(const std::function<void(DisplayS
 
 void mgw::Display::set_keyboard_sink(std::shared_ptr<input::wayland::KeyboardInput> const& keyboard_sink)
 {
-    std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+
+    std::lock_guard<decltype(the_display_mtx)> display_lock{the_display_mtx};
+    if (!the_display) fatal_error("mir::graphics::wayland::Display not initialized");
+
+    std::lock_guard<decltype(the_display->sink_mutex)> lock{the_display->sink_mutex};
     if (keyboard_sink)
     {
-        this->keyboard_sink = keyboard_sink;
+        the_display->keyboard_sink = keyboard_sink;
     }
     else
     {
-        this->keyboard_sink = std::make_shared<NullKeyboardInput>();
+        the_display->keyboard_sink = std::make_shared<NullKeyboardInput>();
     }
 }
 
@@ -276,21 +284,27 @@ void mir::graphics::wayland::Display::stop()
 
 mir::graphics::wayland::Display::~Display()
 {
-    the_display = nullptr;
+    {
+        std::lock_guard<decltype(the_display_mtx)> lock{the_display_mtx};
+        the_display = nullptr;
+    }
     stop();
     if (runner.joinable()) runner.join();
 }
 
 void mgw::Display::set_pointer_sink(std::shared_ptr<input::wayland::PointerInput> const& pointer_sink)
 {
-    std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+    std::lock_guard<decltype(the_display_mtx)> display_lock{the_display_mtx};
+    if (!the_display) fatal_error("mir::graphics::wayland::Display not initialized");
+
+    std::lock_guard<decltype(the_display->sink_mutex)> lock{the_display->sink_mutex};
     if (pointer_sink)
     {
-        this->pointer_sink = pointer_sink;
+        the_display->pointer_sink = pointer_sink;
     }
     else
     {
-        this->pointer_sink = std::make_shared<NullPointerInput>();
+        the_display->pointer_sink = std::make_shared<NullPointerInput>();
     }
 }
 
@@ -498,14 +512,17 @@ void mir::graphics::wayland::Display::touch_orientation(wl_touch* touch, int32_t
 
 void mir::graphics::wayland::Display::set_touch_sink(std::shared_ptr<input::wayland::TouchInput> const& touch_sink)
 {
-    std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+    std::lock_guard<decltype(the_display_mtx)> display_lock{the_display_mtx};
+    if (!the_display) fatal_error("mir::graphics::wayland::Display not initialized");
+
+    std::lock_guard<decltype(the_display->sink_mutex)> lock{the_display->sink_mutex};
     if (touch_sink)
     {
-        this->touch_sink = touch_sink;
+        the_display->touch_sink = touch_sink;
     }
     else
     {
-        this->touch_sink = std::make_shared<NullTouchInput>();
+        the_display->touch_sink = std::make_shared<NullTouchInput>();
     }
 }
 

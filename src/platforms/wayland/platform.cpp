@@ -35,8 +35,6 @@ namespace mg = mir::graphics;
 namespace mgw = mir::graphics::wayland;
 using namespace std::literals;
 
-//TODO replace printf debug messages
-
 mgw::Platform::Platform(struct wl_display* const wl_display, std::shared_ptr<mg::DisplayReport> const& report) :
     wl_display{wl_display},
     report{report}

@@ -32,9 +32,9 @@ miw::InputPlatform::InputPlatform(std::shared_ptr<InputDeviceRegistry> const& in
     pointer(std::make_shared<PointerInputDevice>(action_queue)),
     touch(std::make_shared<TouchInputDevice>(action_queue))
 {
-    graphics::wayland::the_display->set_keyboard_sink(keyboard);
-    graphics::wayland::the_display->set_pointer_sink(pointer);
-    graphics::wayland::the_display->set_touch_sink(touch);
+    graphics::wayland::Display::set_keyboard_sink(keyboard);
+    graphics::wayland::Display::set_pointer_sink(pointer);
+    graphics::wayland::Display::set_touch_sink(touch);
 }
 
 void miw::InputPlatform::start()
