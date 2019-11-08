@@ -13,8 +13,8 @@ backends:
                image: ubuntu-daily:devel/amd64
             - ubuntu-devel-proposed:
                image: ubuntu-daily:devel/amd64
-            - fedora-29
             - fedora-30
+            - fedora-31
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
         plan: n1-highcpu-8
@@ -32,8 +32,8 @@ backends:
                 image: ubuntu-os-cloud-devel/ubuntu-2004-lts
             - ubuntu-devel-proposed-64:
                 image: ubuntu-os-cloud-devel/ubuntu-2004-lts
-            - fedora-29-64
             - fedora-30-64
+            - fedora-31-64
             - fedora-rawhide-64
 
 environment:
