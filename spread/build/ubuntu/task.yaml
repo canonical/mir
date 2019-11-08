@@ -19,8 +19,9 @@ execute: |
 
     # Get any out-of-archive dependencies
     # (Currently just libnvidia-egl-wayland-dev)
-    add-apt-repository --yes ppa:mir-team/release
-    add-apt-repository --yes ppa:mir-team/dev
+    for repo in ppa:mir-team/{release,dev}; do
+        add-apt-repository --yes --update ${repo} || add-apt-repository --yes --remove ${repo}
+    done
 
     apt-get update
 
