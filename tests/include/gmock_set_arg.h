@@ -34,8 +34,8 @@ class SetArgumentAction {
 
   template <typename Result, typename ArgumentTuple>
   void Perform(const ArgumentTuple& args) const {
-    CompileAssertTypesEqual<void, Result>();
-    ::std::tr1::get<N>(args) = value_;
+    static_assert(std::is_same<void, Result>::value, "Action must have void Result");
+    ::std::get<N>(args) = value_;
   }
 
  private:
