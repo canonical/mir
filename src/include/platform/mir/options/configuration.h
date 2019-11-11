@@ -27,7 +27,6 @@ namespace mir
 {
 namespace options
 {
-extern char const* const wayland_socket_name_opt;
 extern char const* const server_socket_opt;
 extern char const* const prompt_socket_opt;
 extern char const* const no_server_socket_opt;
@@ -46,7 +45,6 @@ extern char const* const input_report_opt;
 extern char const* const seat_report_opt;
 extern char const* const host_socket_opt;
 extern char const* const nested_passthrough_opt;
-extern char const* const frontend_threads_opt;
 extern char const* const touchspots_opt;
 extern char const* const cursor_opt;
 extern char const* const fatal_except_opt;

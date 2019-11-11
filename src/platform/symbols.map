@@ -106,7 +106,6 @@ MIRPLATFORM_1.6 {
     mir::options::enable_key_repeat_opt*;
     mir::options::enable_mirclient_opt;
     mir::options::fatal_except_opt*;
-    mir::options::frontend_threads_opt*;
     mir::options::glog*;
     mir::options::glog_log_dir*;
     mir::options::glog_minloglevel*;
@@ -139,7 +138,6 @@ MIRPLATFORM_1.6 {
     mir::options::vt_option_name*;
     mir::options::wayland_extensions_opt;
     mir::options::wayland_extensions_value;
-    mir::options::wayland_socket_name_opt*;
     mir::options::x11_display_opt;
     
     # These are "private" (declared in src/include) but are used by libmirserver.

@@ -145,9 +145,6 @@ std::shared_ptr<mf::Connector>
 
             optional_value<std::string> display_name;
 
-            if (options->is_set(options::wayland_socket_name_opt))
-                display_name = options->get<std::string>(options::wayland_socket_name_opt);
-
             auto wayland_extensions = std::set<std::string>{
                 enabled_wayland_extensions.begin(),
                 enabled_wayland_extensions.end()};
