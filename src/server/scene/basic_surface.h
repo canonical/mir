@@ -83,7 +83,7 @@ public:
     void set_hidden(bool is_hidden);
 
     geometry::Size size() const override;
-    geometry::Size client_size() const override;
+    geometry::Size content_size() const override;
 
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
     void set_streams(std::list<scene::StreamInfo> const& streams) override;

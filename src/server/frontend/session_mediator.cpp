@@ -356,10 +356,10 @@ void mf::SessionMediator::create_surface(
     auto const surf_id = shell->create_surface(mir_client_session, params, sink);
 
     auto surface = mir_client_session->frontend_surface(surf_id);
-    auto const& client_size = surface->client_size();
+    auto const& content_size = surface->content_size();
     response->mutable_id()->set_value(surf_id.as_value());
-    response->set_width(client_size.width.as_uint32_t());
-    response->set_height(client_size.height.as_uint32_t());
+    response->set_width(content_size.width.as_uint32_t());
+    response->set_height(content_size.height.as_uint32_t());
 
     // TODO: Deprecate
     response->set_pixel_format(request->pixel_format());
