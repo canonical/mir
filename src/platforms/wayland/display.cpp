@@ -313,7 +313,7 @@ void mir::graphics::wayland::Display::pointer_motion(wl_pointer* pointer, uint32
     {
         std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
         geom::Point const new_pointer{wl_fixed_to_int(x), wl_fixed_to_int(y)};
-        pointer_pos = new_pointer;
+        pointer_pos = new_pointer + pointer_displacement;
         pointer_time = std::chrono::milliseconds{time};
     }
 
@@ -374,6 +374,8 @@ void mir::graphics::wayland::Display::pointer_frame(wl_pointer* pointer)
 void mir::graphics::wayland::Display::touch_down(
     wl_touch* touch, uint32_t serial, uint32_t time, wl_surface* surface, int32_t id, wl_fixed_t x, wl_fixed_t y)
 {
+    DisplayClient::touch_down(touch, serial, time, surface, id, x, y);
+
     {
         std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
 
@@ -389,11 +391,9 @@ void mir::graphics::wayland::Display::touch_down(
 
         touch_time = std::chrono::milliseconds{time};
         contact->action = mir_touch_action_down;
-        contact->x = wl_fixed_to_double(x);
-        contact->y = wl_fixed_to_double(y);
+        contact->x = wl_fixed_to_double(x) + touch_displacement.dx.as_int();
+        contact->y = wl_fixed_to_double(y) + touch_displacement.dy.as_int();
     }
-
-    DisplayClient::touch_down(touch, serial, time, surface, id, x, y);
 }
 
 void mir::graphics::wayland::Display::touch_up(wl_touch* touch, uint32_t serial, uint32_t time, int32_t id)
@@ -434,8 +434,8 @@ void mir::graphics::wayland::Display::touch_motion(wl_touch* touch, uint32_t tim
             contact->action = mir_touch_action_change;
         }
 
-        contact->x = wl_fixed_to_double(x);
-        contact->y = wl_fixed_to_double(y);
+        contact->x = wl_fixed_to_double(x) + touch_displacement.dx.as_int();
+        contact->y = wl_fixed_to_double(y) + touch_displacement.dy.as_int();
     }
 
     DisplayClient::touch_motion(touch, time, id, x, y);

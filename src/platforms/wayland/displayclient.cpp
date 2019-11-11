@@ -56,7 +56,6 @@ public:
 
     DisplayConfigurationOutput dcout;
 
-private:
     static void done(void* data, wl_output* output);
 
     static void geometry(
@@ -512,7 +511,7 @@ void mgw::DisplayClient::keyboard_keymap(wl_keyboard* /*keyboard*/, uint32_t /*f
 void mgw::DisplayClient::keyboard_enter(
     wl_keyboard* /*keyboard*/,
     uint32_t /*serial*/,
-    wl_surface*/*surface*/,
+    wl_surface* /*surface*/,
     wl_array* /*keys*/)
 {
 }
@@ -548,10 +547,20 @@ void mgw::DisplayClient::keyboard_repeat_info(wl_keyboard* /*wl_keyboard*/, int3
 void mgw::DisplayClient::pointer_enter(
     wl_pointer* /*pointer*/,
     uint32_t /*serial*/,
-    wl_surface* /*surface*/,
+    wl_surface* surface,
     wl_fixed_t /*x*/,
     wl_fixed_t /*y*/)
 {
+    std::lock_guard<decltype(outputs_mutex)> lock{outputs_mutex};
+
+    for (auto const& out : bound_outputs)
+    {
+        if (surface == out.second->surface)
+        {
+            pointer_displacement = out.second->dcout.top_left - geometry::Point{};
+            break;
+        }
+    }
 }
 
 void mgw::DisplayClient::pointer_leave(wl_pointer* /*pointer*/, uint32_t /*serial*/, wl_surface* /*surface*/)
@@ -605,11 +614,21 @@ void mgw::DisplayClient::touch_down(
     wl_touch* /*touch*/,
     uint32_t /*serial*/,
     uint32_t /*time*/,
-    wl_surface* /*surface*/,
+    wl_surface* surface,
     int32_t /*id*/,
     wl_fixed_t /*x*/,
     wl_fixed_t /*y*/)
 {
+    std::lock_guard<decltype(outputs_mutex)> lock{outputs_mutex};
+
+    for (auto const& out : bound_outputs)
+    {
+        if (surface == out.second->surface)
+        {
+            touch_displacement = out.second->dcout.top_left - geometry::Point{};
+            break;
+        }
+    }
 }
 
 void mgw::DisplayClient::touch_up(
