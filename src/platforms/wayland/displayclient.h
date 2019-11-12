@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef EGMDE_EGFULLSCREENCLIENT_H
-#define EGMDE_EGFULLSCREENCLIENT_H
+#ifndef MIR_WAYLAND_DISPLAYCLIENT_H_
+#define MIR_WAYLAND_DISPLAYCLIENT_H_
 
 #include <mir/geometry/rectangles.h>
 #include <mir/graphics/display.h>
@@ -173,4 +173,4 @@ protected:
 }
 }
 
-#endif //EGMDE_EGFULLSCREENCLIENT_H
+#endif //MIR_WAYLAND_DISPLAYCLIENT_H_

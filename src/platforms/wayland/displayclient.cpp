@@ -16,6 +16,7 @@
  */
 
 #include "displayclient.h"
+#include "mir/graphics/egl_error.h"
 #include <mir/graphics/pixel_format_utils.h>
 
 #include <wayland-client.h>
@@ -327,7 +328,7 @@ void mgw::DisplayClient::Output::make_current()
         eglctx = eglCreateContext(owner->egldisplay, owner->eglconfig, owner->eglctx, ctxattribs);
 
     if (!eglMakeCurrent(owner->egldisplay, eglsurface, eglsurface, eglctx))
-        throw std::runtime_error("Can't eglMakeCurrent");
+        BOOST_THROW_EXCEPTION(egl_error("Can't eglMakeCurrent"));
 }
 
 void mgw::DisplayClient::Output::release_current()
@@ -338,7 +339,7 @@ void mgw::DisplayClient::Output::release_current()
 void mgw::DisplayClient::Output::swap_buffers()
 {
     if (eglSwapBuffers(owner->egldisplay, eglsurface) != EGL_TRUE)
-        fatal_error("Failed to perform buffer swap");
+        BOOST_THROW_EXCEPTION(egl_error("Failed to perform buffer swap"));
 }
 
 void mgw::DisplayClient::Output::bind()
@@ -380,26 +381,26 @@ mgw::DisplayClient::DisplayClient(
 
     egldisplay = eglGetDisplay((EGLNativeDisplayType)(display));
     if (egldisplay == EGL_NO_DISPLAY)
-        throw std::runtime_error("Can't eglGetDisplay");
+        BOOST_THROW_EXCEPTION(egl_error("Can't eglGetDisplay"));
 
     EGLint major;
     EGLint minor;
     if (!eglInitialize(egldisplay, &major, &minor))
-        throw std::runtime_error("Can't eglInitialize");
+        BOOST_THROW_EXCEPTION(egl_error("Can't eglInitialize"));
 
     if (major != 1 || minor < 4)
-        throw std::runtime_error("EGL version is not at least 1.4");
+        BOOST_THROW_EXCEPTION(egl_error("EGL version is not at least 1.4"));
 
     EGLint neglconfigs;
     if (!eglChooseConfig(egldisplay, cfgattribs, &eglconfig, 1, &neglconfigs))
-        throw std::runtime_error("Could not eglChooseConfig");
+        BOOST_THROW_EXCEPTION(egl_error("Could not eglChooseConfig"));
 
     if (neglconfigs == 0)
-        throw std::runtime_error("No EGL config available");
+        BOOST_THROW_EXCEPTION(egl_error("No EGL config available"));
 
     eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT, ctxattribs);
     if (eglctx == EGL_NO_CONTEXT)
-        throw std::runtime_error("eglCreateContext failed");
+        BOOST_THROW_EXCEPTION(egl_error("eglCreateContext failed"));
 
     wl_display_roundtrip(display);
 }
@@ -671,6 +672,9 @@ void mgw::DisplayClient::touch_orientation(
 {
 }
 
+// TODO support multiple invocations of seat_capabilities()
+// E.g. we should ideally be saving the pointer/keyboard/touch across calls, and release them
+// if the new capabilities do not contain the relevant capability.
 void mgw::DisplayClient::seat_capabilities(wl_seat* seat, uint32_t capabilities)
 {
     if (capabilities & WL_SEAT_CAPABILITY_POINTER) {

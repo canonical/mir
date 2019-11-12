@@ -27,6 +27,7 @@
 #include <mir/log.h>
 #include <mir/renderer/gl/context.h>
 
+#include <boost/exception/diagnostic_information.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <sys/eventfd.h>
@@ -231,6 +232,7 @@ void mir::graphics::wayland::Display::keyboard_key(wl_keyboard*, uint32_t, uint3
 }
 
 void mir::graphics::wayland::Display::run() const
+try
 {
     enum FdIndices {
         display_fd = 0,
@@ -272,6 +274,10 @@ void mir::graphics::wayland::Display::run() const
             wl_display_cancel_read(display);
         }
     }
+}
+catch (std::exception const& e)
+{
+    fatal_error("Critical error in Wayland platform: %s\n", boost::diagnostic_information(e).c_str());
 }
 
 void mir::graphics::wayland::Display::stop()
