@@ -62,6 +62,7 @@ if (EXISTS ${GMOCK_SOURCE})
     find_path(GMOCK_INCLUDE_DIR gmock/gmock.h PATHS /usr/src/googletest/googlemock/include)
 
     add_library(GMock STATIC ${GMOCK_SOURCE})
+    target_link_libraries(GMock ${GTEST_LIBRARY})
 
     if (EXISTS /usr/src/googletest/googlemock/src)
         set_source_files_properties(${GMOCK_SOURCE} PROPERTIES COMPILE_FLAGS "-I/usr/src/googletest/googlemock")

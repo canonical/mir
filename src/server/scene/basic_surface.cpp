@@ -327,9 +327,9 @@ mir::geometry::Size ms::BasicSurface::size() const
     return surface_rect.size;
 }
 
-mir::geometry::Size ms::BasicSurface::client_size() const
+mir::geometry::Size ms::BasicSurface::content_size() const
 {
-    // TODO: In future when decorated, client_size() would be smaller than size
+    // TODO: In future when decorated, content_size() would be smaller than size
     return size();
 }
 

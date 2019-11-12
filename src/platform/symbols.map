@@ -42,6 +42,8 @@ MIRPLATFORM_1.6 {
     mir::graphics::gl_category*;
     mir::graphics::gl_error*;
     mir::graphics::operator*;
+    mir::graphics::wayland::bind_display*;
+    mir::graphics::wayland::buffer_from_resource*;
     mir::options::Option::?Option*;
     mir::options::Option::Option*;
     mir::options::Option::is_set*;

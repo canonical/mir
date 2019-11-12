@@ -61,7 +61,7 @@ public:
 
     virtual bool MatchAndExplain(MirInputConfig const& container, MatchResultListener* listener) const
     {
-        ::std::vector<string> element_printouts;
+        ::std::vector<std::string> element_printouts;
         MatchMatrix matrix = AnalyzeElements(container, &element_printouts, listener);
 
         const size_t actual_count = matrix.LhsSize();
@@ -91,7 +91,7 @@ private:
     typedef ::std::vector<Matcher<const Element&>> MatcherVec;
 
     MatchMatrix AnalyzeElements(MirInputConfig const& config,
-                                ::std::vector<string>* element_printouts,
+                                ::std::vector<std::string>* element_printouts,
                                 MatchResultListener* listener) const
     {
         element_printouts->clear();

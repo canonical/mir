@@ -198,13 +198,13 @@ TEST_F(BasicSurfaceTest, size_equals_client_size)
     geom::Size const new_size{34, 56};
 
     EXPECT_EQ(rect.size, surface.size());
-    EXPECT_EQ(rect.size, surface.client_size());
+    EXPECT_EQ(rect.size, surface.content_size());
     EXPECT_NE(new_size, surface.size());
-    EXPECT_NE(new_size, surface.client_size());
+    EXPECT_NE(new_size, surface.content_size());
 
     surface.resize(new_size);
     EXPECT_EQ(new_size, surface.size());
-    EXPECT_EQ(new_size, surface.client_size());
+    EXPECT_EQ(new_size, surface.content_size());
 }
 
 TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)

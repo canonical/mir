@@ -111,12 +111,12 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
     std::vector<int> contexts;
     EXPECT_CALL(mock_egl, eglCreateContext(_,_,_,_))
         .Times(AtLeast(1))
-        .WillRepeatedly(WithoutArgs(Invoke(
+        .WillRepeatedly(InvokeWithoutArgs(
             [&] ()
             {
                 contexts.push_back(0);
                 return reinterpret_cast<EGLContext>(&contexts.back());
-            })));
+            }));
 
     mgo::Display display{
         native_display,

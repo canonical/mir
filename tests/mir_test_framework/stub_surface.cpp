@@ -34,7 +34,7 @@ mir::geometry::Size mtd::StubSurface::size() const
     return {};
 }
 
-mir::geometry::Size mtd::StubSurface::client_size() const
+mir::geometry::Size mtd::StubSurface::content_size() const
 {
     return {};
 }

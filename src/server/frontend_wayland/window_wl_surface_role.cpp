@@ -40,6 +40,27 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
+namespace
+{
+geom::Size const max_possible_size{
+    std::numeric_limits<int>::max(),
+    std::numeric_limits<int>::max()};
+
+/// Clears pending if it holds a value different than cache
+/// sets cache to pending and leaves pending alone if it holds a different value
+template<typename T>
+inline void clear_pending_if_unchanged(mir::optional_value<T>& pending, T& cache)
+{
+    if (pending)
+    {
+        if (pending.value() == cache)
+            pending.consume();
+        else
+            cache = pending.value();
+    }
+}
+}
+
 mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     WlSeat* seat,
     wl_client* client,
@@ -54,7 +75,9 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
       output_manager{output_manager},
       observer{std::make_shared<WaylandSurfaceObserver>(seat, client, surface, this)},
       params{std::make_unique<scene::SurfaceCreationParameters>(
-          scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))}
+          scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))},
+      committed_min_size{0, 0},
+      committed_max_size{max_possible_size}
 {
     surface->set_role(this);
 }
@@ -191,8 +214,8 @@ void mf::WindowWlSurfaceRole::set_max_size(int32_t width, int32_t height)
 {
     if (weak_scene_surface.lock())
     {
-        if (width == 0) width = std::numeric_limits<int>::max();
-        if (height == 0) height = std::numeric_limits<int>::max();
+        if (width == 0) width = max_possible_size.width.as_int();
+        if (height == 0) height = max_possible_size.height.as_int();
 
         auto& mods = spec();
         mods.max_width = geom::Width{width};
@@ -336,6 +359,14 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
         }
 
         if (pending_changes)
+        {
+            clear_pending_if_unchanged(pending_changes->min_width,  committed_min_size.width);
+            clear_pending_if_unchanged(pending_changes->min_height, committed_min_size.height);
+            clear_pending_if_unchanged(pending_changes->max_width,  committed_max_size.width);
+            clear_pending_if_unchanged(pending_changes->max_height, committed_max_size.height);
+        }
+
+        if (pending_changes && !pending_changes->is_empty())
             shell->modify_surface(session, scene_surface, *pending_changes);
 
         pending_changes.reset();
@@ -393,9 +424,14 @@ void mf::WindowWlSurfaceRole::create_mir_window()
     auto const scene_surface = shell->create_surface(session, *params, observer);
     weak_scene_surface = scene_surface;
 
+    if (params->min_width)  committed_min_size.width  = params->min_width.value();
+    if (params->min_height) committed_min_size.height = params->min_height.value();
+    if (params->max_width)  committed_max_size.width  = params->max_width.value();
+    if (params->max_height) committed_max_size.height = params->max_height.value();
+
     // The shell isn't guaranteed to respect the requested size
-    auto const client_size = scene_surface->client_size();
-    if (client_size != params->size)
-        observer->content_resized_to(scene_surface.get(), client_size);
+    auto const content_size = scene_surface->content_size();
+    if (content_size != params->size)
+        observer->content_resized_to(scene_surface.get(), content_size);
 }
 

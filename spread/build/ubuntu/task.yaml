@@ -7,10 +7,21 @@ systems: [ubuntu-*]
 summary: Build Ubuntu packages
 
 execute: |
+    if [[ "$SPREAD_SYSTEM" == *-proposed-* ]]; then
+        if [[ "amd64 i386" == *$( dpkg-architecture --query DEB_HOST_ARCH )* ]]; then
+            add-apt-repository --yes --no-update \
+              "deb http://archive.ubuntu.com/ubuntu/ $( lsb_release --short --codename )-proposed restricted main multiverse universe"
+        else
+            add-apt-repository --yes --no-update \
+              "deb http://ports.ubuntu.com/ubuntu-ports/ $( lsb_release --short --codename )-proposed restricted main multiverse universe"
+        fi
+    fi
+
     # Get any out-of-archive dependencies
     # (Currently just libnvidia-egl-wayland-dev)
-    add-apt-repository --yes ppa:mir-team/release
-    add-apt-repository --yes ppa:mir-team/dev
+    for repo in ppa:mir-team/{release,dev}; do
+        add-apt-repository --yes --update ${repo} || add-apt-repository --yes --remove ${repo}
+    done
 
     apt-get update
 
