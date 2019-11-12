@@ -35,7 +35,7 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mi::InputReport> const& /*report*/)
 {
     mir::assert_entry_point_signature<mi::CreatePlatform>(&create_input_platform);
-    return mir::make_module_ptr<miw::InputPlatform>(input_device_registry/*, mx::X11Resources::instance.get_conn()*/);
+    return mir::make_module_ptr<miw::InputPlatform>(input_device_registry);
 }
 
 void add_input_platform_options(

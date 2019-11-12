@@ -121,7 +121,7 @@ std::vector<MirPixelFormat> mgw::BufferAllocator::supported_pixel_formats()
 
 std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_buffer(geometry::Size, uint32_t, uint32_t)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("platform incapable of creating buffers"));
+    BOOST_THROW_EXCEPTION(std::runtime_error("platform incapable of creating native buffers"));
 }
 
 void mgw::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor)

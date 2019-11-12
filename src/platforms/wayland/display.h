@@ -63,6 +63,7 @@ public:
 
     ~Display();
 
+    // Set the sinks for input devices. (May be null if there's no corresponding device.)
     static void set_keyboard_sink(std::shared_ptr<input::wayland::KeyboardInput> const& keyboard_sink);
     static void set_pointer_sink(std::shared_ptr<input::wayland::PointerInput> const& pointer_sink);
     static void set_touch_sink(std::shared_ptr<input::wayland::TouchInput> const& touch_sink);

@@ -36,7 +36,7 @@ namespace wayland
 class Cursor : public graphics::Cursor
 {
 public:
-    Cursor(wl_display* display, wl_compositor* compositor, wl_shm* shm, std::shared_ptr<graphics::CursorImage> const& default_image);
+    Cursor(wl_display* display, wl_compositor* compositor, wl_shm* shm);
 
     ~Cursor();
 
@@ -52,8 +52,6 @@ public:
     void leave(wl_pointer* pointer);
 
 private:
-    std::shared_ptr<graphics::CursorImage> const default_image;
-
     wl_display* const display;
     wl_compositor* const compositor;
     wl_shm* const shm;

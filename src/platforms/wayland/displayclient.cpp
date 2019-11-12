@@ -498,8 +498,13 @@ void mgw::DisplayClient::remove_global(
     // TODO: We should probably also delete any other globals we've bound to that disappear.
 }
 
-void mgw::DisplayClient::keyboard_keymap(wl_keyboard* /*keyboard*/, uint32_t /*format*/, int32_t fd, uint32_t size)
+void mgw::DisplayClient::keyboard_keymap(wl_keyboard* /*keyboard*/, uint32_t format, int32_t fd, uint32_t size)
 {
+    if (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("platform currently requires a keymap"));
+    }
+
     char* keymap_string = static_cast<decltype(keymap_string)>(mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0));
     xkb_keymap_unref(keyboard_map_);
     keyboard_map_ = xkb_keymap_new_from_string(keyboard_context(), keymap_string, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);

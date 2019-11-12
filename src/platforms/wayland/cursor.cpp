@@ -38,33 +38,15 @@ namespace
 {
 struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
 {
-    static auto (*open_shm_file)() -> mir::Fd = []
-        {
-            open_shm_file = []
-                {
-                    // As we're a Wayland client, create the shm file like Wayland clients.
-                    // While using O_TMPFILE would be more elegant, this works with Snap-confined servers.
-                    static auto const template_filename =
-                        std::string{getenv("XDG_RUNTIME_DIR")} + "/wayland-cursor-shared-XXXXXX";
+    // As we're a Wayland client, create the shm file like Wayland clients.
+    // While using O_TMPFILE would be more elegant, this works with Snap-confined servers.
+    static auto const template_filename =
+        std::string{getenv("XDG_RUNTIME_DIR")} + "/wayland-cursor-shared-XXXXXX";
 
-                    auto const filename = strdup(template_filename.c_str());
-                    mir::Fd fd{mkostemp(filename, O_CLOEXEC)};
-                    if (fd != -1)
-                    {
-                        if (unlink(filename) < 0)
-                        {
-                            free(filename);
-                            return mir::Fd{};
-                        }
-                    }
-                    free(filename);
-                    return fd;
-                };
-
-            return open_shm_file();
-        };
-
-    auto fd = open_shm_file();
+    auto const filename = strdup(template_filename.c_str());
+    mir::Fd const fd{mkostemp(filename, O_CLOEXEC)};
+    unlink(filename);
+    free(filename);
 
     if (fd < 0) {
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to open shm buffer"}));
@@ -84,14 +66,12 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
 }
 }
 
-mpw::Cursor::Cursor(wl_display* display, wl_compositor* compositor, wl_shm* shm, std::shared_ptr<graphics::CursorImage> const& default_image) :
-    default_image(default_image),
+mpw::Cursor::Cursor(wl_display* display, wl_compositor* compositor, wl_shm* shm) :
     display{display},
     compositor{compositor},
     shm{shm},
     surface{wl_compositor_create_surface(compositor)}
 {
-    if (default_image) show(*default_image);
 }
 
 mpw::Cursor::~Cursor()
