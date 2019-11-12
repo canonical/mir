@@ -2,7 +2,7 @@ summary: Build (on Fedora)
 systems: [fedora-*]
 
 execute: |
-    dnf install --assumeyes \
+    dnf install --assumeyes --allowerasing \
         cmake \
         make \
         gcc-c++ \
