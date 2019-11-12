@@ -37,9 +37,11 @@
 
 #include <memory>
 #include <gmock/gmock.h>
+#include "check_gtest_version.h"
 
 namespace testing
 {
+#if !GTEST_AT_LEAST(1, 8, 1) // This is conservative, but that's fine.
 namespace internal
 {
 
@@ -99,6 +101,7 @@ class ActionResultHolder<std::unique_ptr<T, D>>
 };
 
 }
+#endif // GTEST_AT_LEAST(1, 8, 1)
 
 template<typename T>
 class DefaultValue<std::unique_ptr<T, std::default_delete<T>>> {
