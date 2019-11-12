@@ -127,7 +127,6 @@ struct GLMark2Wayland : AbstractGLMark2Test
 {
     GLMark2Wayland()
     {
-        add_to_environment("MIR_SERVER_WAYLAND_SOCKET_NAME", "GLMark2Wayland");
         add_to_environment("WAYLAND_DISPLAY",                "GLMark2Wayland");
     }
 

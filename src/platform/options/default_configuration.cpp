@@ -26,7 +26,6 @@
 
 namespace mo = mir::options;
 
-char const* const mo::wayland_socket_name_opt     = "wayland-socket-name";
 char const* const mo::server_socket_opt           = "file,f";
 char const* const mo::prompt_socket_opt           = "prompt-file,p";
 char const* const mo::no_server_socket_opt        = "no-file";
@@ -45,7 +44,6 @@ char const* const mo::shared_library_prober_report_opt = "shared-library-prober-
 char const* const mo::shell_report_opt            = "shell-report";
 char const* const mo::host_socket_opt             = "host-socket";
 char const* const mo::nested_passthrough_opt      = "nested-passthrough";
-char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt              = "enable-touchspots";
@@ -151,8 +149,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
     namespace po = boost::program_options;
 
     add_options()
-        (wayland_socket_name_opt, po::value<std::string>(),
-         "Overrides the default socket name used for communicating with clients")
         (host_socket_opt, po::value<std::string>(),
             "Host socket filename")
         (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
