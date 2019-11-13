@@ -194,15 +194,15 @@ bool test_probe(mir::SharedLibrary const& dso, MinimalServerEnvironment& config)
     }
 }
 
-auto test_display_platform_construction(mir::SharedLibrary const& dso, MinimalServerEnvironment& env)
--> std::shared_ptr<mir::graphics::DisplayPlatform>
+auto test_platform_construction(mir::SharedLibrary const& dso, MinimalServerEnvironment& env)
+-> std::shared_ptr<mir::graphics::Platform>
 {
     try
     {
-        auto create_display_platform = dso.load_function<mg::CreateDisplayPlatform>(
-            "create_display_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+        auto create_host_platform = dso.load_function<mg::CreateHostPlatform>(
+            "create_host_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
-        auto display = create_display_platform(
+        auto display = create_host_platform(
             env.options(),
             env.emergency_cleanup_registry(),
             env.console_services(),
@@ -216,26 +216,6 @@ auto test_display_platform_construction(mir::SharedLibrary const& dso, MinimalSe
     catch (...)
     {
         std::throw_with_nested(std::runtime_error{"Failure constructing platform"});
-    }
-}
-
-auto test_render_platform_construction(mir::SharedLibrary const& dso, MinimalServerEnvironment& env)
-    -> std::shared_ptr<mg::RenderingPlatform>
-{
-    try
-    {
-        auto create_render_platform = dso.load_function<mg::CreateRenderingPlatform>(
-            "create_rendering_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-
-        auto render = create_render_platform(env.options(), env.null_platform_authentication());
-
-        std::cout << "Successfully constructed RenderingPlatform" << std::endl;
-
-        return render;
-    }
-    catch (...)
-    {
-        std::throw_with_nested(std::runtime_error{"Failure constructing RenderingPlatform"});
     }
 }
 
@@ -634,9 +614,9 @@ int main(int argc, char const** argv)
         success &= test_probe(platform_dso, config);
         if (success)
         {
-            if (auto display_platform = test_display_platform_construction(platform_dso, config))
+            if (auto platform = test_platform_construction(platform_dso, config))
             {
-                if (auto display = test_display_construction(*display_platform, config))
+                if (auto display = test_display_construction(*platform, config))
                 {
                     success &= test_display_supports_gl(*display);
                     success &= dump_egl_config(*display);
@@ -644,20 +624,13 @@ int main(int argc, char const** argv)
                     success &= test_display_buffers_support_gl(*display);
                     basic_display_swapping(*display);
 
-                    if (auto render_platform = test_render_platform_construction(platform_dso, config))
-                    {
-                        auto buffer_allocator = render_platform->create_buffer_allocator(*display);
-                        success &= test_platform_supports_accelerated_wayland_clients(*buffer_allocator);
+                    auto buffer_allocator = platform->create_buffer_allocator(*display);
+                    success &= test_platform_supports_accelerated_wayland_clients(*buffer_allocator);
 
-                        basic_software_buffer_drawing(
-                            *display,
-                            *buffer_allocator,
-                            *config.render_factory());
-                    }
-                    else
-                    {
-                        success = false;
-                    }
+                    basic_software_buffer_drawing(
+                        *display,
+                        *buffer_allocator,
+                        *config.render_factory());
                 }
                 else
                 {
