@@ -188,15 +188,9 @@ bool test_probe(mir::SharedLibrary const& dso, MinimalServerEnvironment& config)
 
         return result > mg::PlatformPriority::dummy;
     }
-    catch (std::exception const& err)
-    {
-        std::cout << "Probing failed: " << boost::diagnostic_information(err) << std::endl;
-        return false;
-    }
     catch (...)
     {
-        std::cout << "Probing failed with broken exception!" << std::endl;
-        return false;
+        std::throw_with_nested(std::runtime_error{"Failure in probe()"});
     }
 }
 
@@ -219,15 +213,9 @@ auto test_display_platform_construction(mir::SharedLibrary const& dso, MinimalSe
 
         return display;
     }
-    catch (std::exception const& err)
-    {
-        std::cout << "Display construction failed: " << boost::diagnostic_information(err) << std::endl;
-        throw;
-    }
     catch (...)
     {
-        std::cout << "Display construction failed with broken exception!" << std::endl;
-        throw;
+        std::throw_with_nested(std::runtime_error{"Failure constructing platform"});
     }
 }
 
@@ -245,15 +233,9 @@ auto test_render_platform_construction(mir::SharedLibrary const& dso, MinimalSer
 
         return render;
     }
-    catch (std::exception const& err)
-    {
-        std::cout << "RenderingPlatform construction failed: " << boost::diagnostic_information(err) << std::endl;
-        throw;
-    }
     catch (...)
     {
-        std::cout << "RenderingPlatform construction failed with broken exception!" << std::endl;
-        throw;
+        std::throw_with_nested(std::runtime_error{"Failure constructing RenderingPlatform"});
     }
 }
 
@@ -270,15 +252,9 @@ auto test_display_construction(mir::graphics::DisplayPlatform& platform, Minimal
 
         return display;
     }
-    catch (std::exception const& err)
-    {
-        std::cout << "Display construction failed: " << boost::diagnostic_information(err) << std::endl;
-        throw;
-    }
     catch (...)
     {
-        std::cout << "Display construction failed with broken exception!" << std::endl;
-        throw;
+        std::throw_with_nested(std::runtime_error{"Failure constructing Display"});
     }
 }
 
@@ -619,6 +595,25 @@ auto test_platform_supports_accelerated_wayland_clients(mg::GraphicBufferAllocat
         return false;
     }
 }
+
+void print_diagnostic_information(std::exception const& err)
+{
+    std::cout << "Error: " << err.what() << std::endl;
+    std::cout << boost::diagnostic_information(err) << std::endl;
+    try
+    {
+        std::rethrow_if_nested(err);
+    }
+    catch (std::exception const& inner)
+    {
+        std::cout << "Caused by: " << std::endl;
+        print_diagnostic_information(inner);
+    }
+    catch (...)
+    {
+        std::cout << "Caused by broken exception!" << std::endl;
+    }
+}
 }
 
 int main(int argc, char const** argv)
@@ -634,28 +629,35 @@ int main(int argc, char const** argv)
     MinimalServerEnvironment config;
 
     bool success = true;
-    success &= test_probe(platform_dso, config);
-    if (success)
+    try
     {
-        if (auto display_platform = test_display_platform_construction(platform_dso, config))
+        success &= test_probe(platform_dso, config);
+        if (success)
         {
-            if(auto display = test_display_construction(*display_platform, config))
+            if (auto display_platform = test_display_platform_construction(platform_dso, config))
             {
-                success &= test_display_supports_gl(*display);
-                success &= dump_egl_config(*display);
-                success &= test_display_has_at_least_one_enabled_output(*display);
-                success &= test_display_buffers_support_gl(*display);
-                basic_display_swapping(*display);
-
-                if (auto render_platform = test_render_platform_construction(platform_dso, config))
+                if (auto display = test_display_construction(*display_platform, config))
                 {
-                    auto buffer_allocator = render_platform->create_buffer_allocator(*display);
-                    success &= test_platform_supports_accelerated_wayland_clients(*buffer_allocator);
+                    success &= test_display_supports_gl(*display);
+                    success &= dump_egl_config(*display);
+                    success &= test_display_has_at_least_one_enabled_output(*display);
+                    success &= test_display_buffers_support_gl(*display);
+                    basic_display_swapping(*display);
 
-                    basic_software_buffer_drawing(
-                    *display,
-                    *buffer_allocator,
-                    *config.render_factory());
+                    if (auto render_platform = test_render_platform_construction(platform_dso, config))
+                    {
+                        auto buffer_allocator = render_platform->create_buffer_allocator(*display);
+                        success &= test_platform_supports_accelerated_wayland_clients(*buffer_allocator);
+
+                        basic_software_buffer_drawing(
+                            *display,
+                            *buffer_allocator,
+                            *config.render_factory());
+                    }
+                    else
+                    {
+                        success = false;
+                    }
                 }
                 else
                 {
@@ -667,10 +669,16 @@ int main(int argc, char const** argv)
                 success = false;
             }
         }
-        else
-        {
-            success = false;
-        }
+    }
+    catch (std::exception const& e)
+    {
+        print_diagnostic_information(e);
+        success = false;
+    }
+    catch (...)
+    {
+        std::cout << "Error: Broken exception" << std::endl;
+        success = false;
     }
     return success ? 0 : -1;
 }
