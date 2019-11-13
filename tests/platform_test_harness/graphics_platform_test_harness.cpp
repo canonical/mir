@@ -680,5 +680,6 @@ int main(int argc, char const** argv)
         std::cout << "Error: Broken exception" << std::endl;
         success = false;
     }
+    std::cout << (success ? "PASS" : "FAILURE") << std::endl;
     return success ? EXIT_SUCCESS : EXIT_FAILURE;
 }
