@@ -1,4 +1,4 @@
-MIR_SERVER_0.1.6 {
+MIR_SERVER_1.6.0 {
  global:
   extern "C++" {
     mir::check_for_termination_exception*;
@@ -935,4 +935,4 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
 
     mir::run_mir*;
   };
-} MIR_SERVER_0.1.6;
+} MIR_SERVER_1.6.0;
