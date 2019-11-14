@@ -64,7 +64,7 @@ mg::PlatformPriority probe_graphics_platform(
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
 
-    return mpw::connection(options) ?
+    return mpw::supported(options) ?
         mg::PlatformPriority::best :
         mg::PlatformPriority::unsupported;
 }
