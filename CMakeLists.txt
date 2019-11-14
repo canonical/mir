@@ -229,7 +229,7 @@ if (WAYLAND_EGLSTREAM_FOUND)
 else()
   set(
     MIR_PLATFORM
-    mesa-kms;mesa-x11
+    mesa-kms;mesa-x11;wayland
     CACHE
     STRING
     "a list of graphics backends to build (options are 'mesa-kms', 'mesa-x11', or 'eglstream-kms')"
