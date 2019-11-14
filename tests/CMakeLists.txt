@@ -134,6 +134,7 @@ option(MIR_BUILD_INTEGRATION_TESTS "Build integration tests" ON)
 option(MIR_BUILD_PERFORMANCE_TESTS "Build performance tests" ON)
 option(MIR_BUILD_PRIVILEGED_TESTS "Build privileged tests" ON)
 option(MIR_BUILD_UNIT_TESTS "Build unit tests" ON)
+option(MIR_BUILD_PLATFORM_TEST_HARNESS "Build platform test harness" ON)
 
 cmake_dependent_option(MIR_BUILD_INTERPROCESS_TESTS
   "Build interprocess acceptance tests as part of default testing" ON
@@ -167,6 +168,10 @@ endif (MIR_BUILD_INTEGRATION_TESTS)
 if (MIR_BUILD_UNIT_TESTS)
   add_subdirectory(unit-tests/)
 endif (MIR_BUILD_UNIT_TESTS)
+
+if (MIR_BUILD_PLATFORM_TEST_HARNESS)
+  add_subdirectory(platform_test_harness/)
+endif (MIR_BUILD_PLATFORM_TEST_HARNESS)
 
 add_subdirectory(mir_test/)
 add_subdirectory(mir_test_framework/)
