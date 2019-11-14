@@ -143,8 +143,6 @@ std::shared_ptr<mf::Connector>
             auto options = the_options();
             bool const arw_socket = options->is_set(options::arw_server_socket_opt);
 
-            optional_value<std::string> display_name;
-
             auto wayland_extensions = std::set<std::string>{
                 enabled_wayland_extensions.begin(),
                 enabled_wayland_extensions.end()};
@@ -154,7 +152,6 @@ std::shared_ptr<mf::Connector>
                 the_display_configuration_observer_registrar());
 
             return std::make_shared<mf::WaylandConnector>(
-                display_name,
                 the_shell(),
                 display_config,
                 the_input_device_hub(),

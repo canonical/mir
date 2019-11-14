@@ -6,7 +6,7 @@ date --utc --iso-8601=seconds | xargs echo "[timestamp] Start time :"
 mir_rc=0
 timeout=3
 wayland_display="mir-smoke-test"
-options="--wayland-display=${wayland_display} --test-timeout=${timeout}"
+options="--test-timeout=${timeout}"
 
 if [ -v MIR_SOCKET ]
 then

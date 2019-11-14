@@ -612,7 +612,6 @@ void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::fu
 }
 
 mf::WaylandConnector::WaylandConnector(
-    optional_value<std::string> const& display_name,
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<MirDisplay> const& display_config,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
@@ -684,16 +683,16 @@ mf::WaylandConnector::WaylandConnector(
 
     char const* wayland_display = nullptr;
 
-    if (!display_name.is_set())
+    if (auto const display_name = getenv("WAYLAND_DISPLAY"))
     {
-        wayland_display = wl_display_add_socket_auto(display.get());
+        if (!wl_display_add_socket(display.get(), display_name))
+        {
+            wayland_display = display_name;
+        }
     }
     else
     {
-        if (!wl_display_add_socket(display.get(), display_name.value().c_str()))
-        {
-            wayland_display = display_name.value().c_str();
-        }
+        wayland_display = wl_display_add_socket_auto(display.get());
     }
 
     if (wayland_display)
