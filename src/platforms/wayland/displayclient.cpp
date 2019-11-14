@@ -724,8 +724,12 @@ void mgw::DisplayClient::seat_capabilities(wl_seat* seat, uint32_t capabilities)
             [](void* self, auto... args) { static_cast<DisplayClient*>(self)->touch_motion(args...); },
             [](void* self, auto... args) { static_cast<DisplayClient*>(self)->touch_frame(args...); },
             [](void* self, auto... args) { static_cast<DisplayClient*>(self)->touch_cancel(args...); },
+#ifdef WL_TOUCH_SHAPE_SINCE_VERSION
             [](void* self, auto... args) { static_cast<DisplayClient*>(self)->touch_shape(args...); },
+#endif
+#ifdef WL_TOUCH_ORIENTATION_SINCE_VERSION
             [](void* self, auto... args) { static_cast<DisplayClient*>(self)->touch_orientation(args...); },
+#endif
         };
 
         wl_touch_add_listener(wl_seat_get_touch(seat), &touch_listener, this);
@@ -829,7 +833,7 @@ mgw::WaylandDisplayConfiguration::WaylandDisplayConfiguration(std::vector<Displa
 }
 
 mgw::WaylandDisplayConfiguration::WaylandDisplayConfiguration(WaylandDisplayConfiguration const& rhs) :
-    DisplayConfiguration{},
+    DisplayConfiguration(),
     outputs{rhs.outputs}
 {
 }

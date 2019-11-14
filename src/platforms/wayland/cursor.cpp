@@ -68,7 +68,6 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
 
 mpw::Cursor::Cursor(wl_display* display, wl_compositor* compositor, wl_shm* shm) :
     display{display},
-    compositor{compositor},
     shm{shm},
     surface{wl_compositor_create_surface(compositor)}
 {
