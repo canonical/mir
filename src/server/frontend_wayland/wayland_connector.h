@@ -95,7 +95,6 @@ public:
     using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>;
 
     WaylandConnector(
-        optional_value<std::string> const& display_name,
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<MirDisplay> const& display_config,
         std::shared_ptr<input::InputDeviceHub> const& input_hub,
