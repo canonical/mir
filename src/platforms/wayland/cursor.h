@@ -53,7 +53,6 @@ public:
 
 private:
     wl_display* const display;
-    wl_compositor* const compositor;
     wl_shm* const shm;
 
     wl_surface* surface;
