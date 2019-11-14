@@ -343,6 +343,20 @@ Description: Display server for Ubuntu - platform library for NVIDIA
  the hardware platform using the EGLStream EGL extensions, such as the
  NVIDIA binary driver.
 
+Package: mir-platform-graphics-wayland16
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - platform library for Wayland
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared libraries required for the Mir server to interact with
+ a "host" Wayland display server.
+
 Package: mir-graphics-drivers-nvidia
 Section: libs
 Architecture: amd64 i386
@@ -408,6 +422,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          mir-platform-graphics-mesa-kms16,
          mir-platform-graphics-mesa-x16,
+         mir-platform-graphics-wayland16,
          mir-client-platform-mesa5,
          mir-platform-input-evdev7,
 Description: Display server for Ubuntu - desktop driver metapackage
