@@ -86,9 +86,7 @@ auto ms::ApplicationSession::create_surface(
     std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<Surface>
 {
     if (session && session.get() != this)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Incorrect session"));
-    }
+        fatal_error("Incorrect session");
 
     //TODO: we take either the content or the first stream's content for now.
     //      Once the surface factory interface takes more than one stream,
