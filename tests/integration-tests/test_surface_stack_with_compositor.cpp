@@ -127,6 +127,7 @@ struct SurfaceStackCompositor : public Test
         mock_buffer_stream(std::make_shared<NiceMock<mtd::MockBufferStream>>()),
         streams({ { stream, {0,0}, {} } }),
         stub_surface{std::make_shared<ms::BasicSurface>(
+            nullptr /* session */,
             std::string("stub"),
             geom::Rectangle{{0,0},{1,1}},
             mir_pointer_unconfined,

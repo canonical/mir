@@ -29,6 +29,7 @@ namespace compositor { class BufferStream; }
 namespace scene
 {
 class Surface;
+class Session;
 class StreamInfo;
 
 class SurfaceFactory
@@ -38,6 +39,7 @@ public:
     virtual ~SurfaceFactory() = default;
 
     virtual std::shared_ptr<Surface> create_surface(
+        std::shared_ptr<Session> const& session,
         std::list<scene::StreamInfo> const& streams,
         SurfaceCreationParameters const& params) = 0;
 

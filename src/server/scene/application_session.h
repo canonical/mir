@@ -48,8 +48,7 @@ class SnapshotStrategy;
 class BufferStreamFactory;
 class SurfaceFactory;
 
-class ApplicationSession
-    : public Session
+class ApplicationSession : public Session
 {
 public:
     ApplicationSession(
@@ -66,6 +65,7 @@ public:
     ~ApplicationSession();
 
     auto create_surface(
+        std::shared_ptr<Session> const& session,
         SurfaceCreationParameters const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<Surface> override;
     void destroy_surface(std::shared_ptr<Surface> const& surface) override;

@@ -249,6 +249,7 @@ std::shared_ptr<mc::BufferStream> default_stream(std::list<ms::StreamInfo> const
 }
 
 ms::BasicSurface::BasicSurface(
+    std::shared_ptr<Session> const& session,
     std::string const& name,
     geometry::Rectangle rect,
     std::weak_ptr<Surface> const& parent,
@@ -269,7 +270,8 @@ ms::BasicSurface::BasicSurface(
     parent_(parent),
     layers(layers),
     confine_pointer_state_(state),
-    cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)}
+    cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)},
+    session_{session}
 {
     auto callback = [this](auto const& size) { observers.frame_posted(this, 1, size); };
 
@@ -281,13 +283,14 @@ ms::BasicSurface::BasicSurface(
 }
 
 ms::BasicSurface::BasicSurface(
+    std::shared_ptr<Session> const& session,
     std::string const& name,
     geometry::Rectangle rect,
     MirPointerConfinementState state,
     std::list<StreamInfo> const& layers,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
-    BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, state, layers,
+    BasicSurface(session, name, rect, std::shared_ptr<Surface>{nullptr}, state, layers,
                  cursor_image, report)
 {
 }
@@ -1022,4 +1025,10 @@ void mir::scene::BasicSurface::set_application_id(std::string const& application
         lock.unlock();
         observers.application_id_set_to(this, application_id);
     }
+}
+
+auto mir::scene::BasicSurface::session() const -> std::weak_ptr<Session>
+{
+    std::lock_guard<std::mutex> lock(guard);
+    return session_;
 }

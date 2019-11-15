@@ -92,6 +92,7 @@ struct SurfaceStack : public ::testing::Test
         default_params = ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}});
 
         stub_surface1 = std::make_shared<ms::BasicSurface>(
+            nullptr /* session */,
             std::string("stub"),
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
@@ -100,6 +101,7 @@ struct SurfaceStack : public ::testing::Test
             report);
 
         stub_surface2 = std::make_shared<ms::BasicSurface>(
+            nullptr /* session */,
             std::string("stub"),
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
@@ -109,6 +111,7 @@ struct SurfaceStack : public ::testing::Test
 
         
         stub_surface3 = std::make_shared<ms::BasicSurface>(
+            nullptr /* session */,
             std::string("stub"),
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
@@ -118,6 +121,7 @@ struct SurfaceStack : public ::testing::Test
 
         
         invisible_stub_surface = std::make_shared<ms::BasicSurface>(
+            nullptr /* session */,
             std::string("stub"),
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
@@ -234,6 +238,7 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
     auto stream = std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888);
 
     auto surface = std::make_shared<ms::BasicSurface>(
+        nullptr /* session */,
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
@@ -267,6 +272,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
     stack.register_compositor(this);
     auto stream = std::make_shared<mtd::StubBufferStream>();
     auto surface = std::make_shared<ms::BasicSurface>(
+        nullptr /* session */,
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
@@ -299,6 +305,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
     stack.register_compositor(comp2);
     auto stream = std::make_shared<mtd::StubBufferStream>();
     auto surface = std::make_shared<ms::BasicSurface>(
+        nullptr /* session */,
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
@@ -411,6 +418,7 @@ TEST_F(SurfaceStack, generate_elementelements)
     for(auto i = 0u; i < num_surfaces; i++)
     {
         auto const surface = std::make_shared<ms::BasicSurface>(
+            nullptr /* session */,
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             mir_pointer_unconfined,
@@ -594,6 +602,7 @@ TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
     for(auto i = 0u; i < num_surfaces; i++)
     {
         auto const surface = std::make_shared<ms::BasicSurface>(
+            nullptr /* session */,
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             mir_pointer_unconfined,
@@ -625,6 +634,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
         .Times(0);
 
     auto const surface = std::make_shared<ms::BasicSurface>(
+        nullptr /* session */,
         std::string("stub"),
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         mir_pointer_unconfined,
@@ -653,6 +663,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
 
     auto const surface = std::make_shared<ms::BasicSurface>(
+        nullptr /* session */,
         std::string("stub"),
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         mir_pointer_unconfined,
@@ -674,6 +685,7 @@ struct MockConfigureSurface : public ms::BasicSurface
 {
     MockConfigureSurface() :
         ms::BasicSurface(
+            {},
             {},
             {{},{}},
             mir_pointer_unconfined,

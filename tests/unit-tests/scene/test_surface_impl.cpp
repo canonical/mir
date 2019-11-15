@@ -82,10 +82,13 @@ struct Surface : testing::Test
             .WillByDefault(InvokeArgument<0>(nullptr));
         
         surface = std::make_shared<ms::BasicSurface>(
-            std::string("stub"), geom::Rectangle{{},{}},
+            nullptr /* session */,
+            std::string("stub"),
+            geom::Rectangle{{},{}},
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { buffer_stream, {}, {} } },
-            nullptr, report);
+            nullptr,
+            report);
     }
 
     mf::SurfaceId stub_id;
@@ -274,6 +277,7 @@ TEST_F(Surface, preferred_orientation_mode_defaults_to_any)
     using namespace testing;
 
     ms::BasicSurface surf(
+        nullptr /* session */,
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,

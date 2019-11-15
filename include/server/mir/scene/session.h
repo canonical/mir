@@ -83,7 +83,13 @@ public:
     virtual void suspend_prompt_session() = 0;
     virtual void resume_prompt_session() = 0;
 
+    /// \param session can be nullptr (useful for testing). If not nullptr, must be equal to this. Must be passed in
+    ///                because std::enable_shared_from_this causes trouble
+    /// \param params data used to create the surface
+    /// \param observer automatically added to surface after creation
+    /// \return a newly created surface
     virtual auto create_surface(
+        std::shared_ptr<Session> const& session,
         SurfaceCreationParameters const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<Surface> = 0;
     virtual void destroy_surface(std::shared_ptr<Surface> const& surface) = 0;

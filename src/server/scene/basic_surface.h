@@ -59,6 +59,7 @@ class BasicSurface : public Surface
 {
 public:
     BasicSurface(
+        std::shared_ptr<Session> const& session,
         std::string const& name,
         geometry::Rectangle rect,
         MirPointerConfinementState state,
@@ -67,6 +68,7 @@ public:
         std::shared_ptr<SceneReport> const& report);
 
     BasicSurface(
+        std::shared_ptr<Session> const& session,
         std::string const& name,
         geometry::Rectangle rect,
         std::weak_ptr<Surface> const& parent,
@@ -155,6 +157,8 @@ public:
     auto application_id() const -> std::string override;
     void set_application_id(std::string const& application_id) override;
 
+    auto session() const -> std::weak_ptr<Session> override;
+
 private:
     struct ProofOfMutexLock
     {
@@ -203,6 +207,8 @@ private:
     MirDepthLayer depth_layer_ = mir_depth_layer_application;
     std::experimental::optional<geometry::Rectangle> clip_area_;
     std::string application_id_;
+
+    std::weak_ptr<Session> session_;
 };
 
 }

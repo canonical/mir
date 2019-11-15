@@ -37,11 +37,13 @@ ms::SurfaceAllocator::SurfaceAllocator(
 }
 
 std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
+    std::shared_ptr<Session> const& session,
     std::list<ms::StreamInfo> const& streams,
     SurfaceCreationParameters const& params)
 {
     auto confine = params.confine_pointer.is_set() ? params.confine_pointer.value() : mir_pointer_unconfined;
     auto const surface = std::make_shared<BasicSurface>(
+        session,
         params.name,
         geom::Rectangle{params.top_left, params.size},
         params.parent,
