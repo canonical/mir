@@ -611,7 +611,7 @@ int main(int argc, char const** argv)
     bool success = true;
     try
     {
-        test_probe(platform_dso, config);
+        success &= test_probe(platform_dso, config);
         if (auto platform = test_platform_construction(platform_dso, config))
         {
             if (auto display = test_display_construction(*platform, config))
