@@ -35,7 +35,7 @@ class ProgramFactory;
 class Texture
 {
 public:
-    Texture() = default;
+    Texture();
     virtual ~Texture();
 
     Texture(Texture const&) = delete;

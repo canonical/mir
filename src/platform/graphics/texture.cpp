@@ -18,4 +18,6 @@
 
 #include "mir/graphics/texture.h"
 
+mir::graphics::gl::Texture::Texture() = default;
+
 mir::graphics::gl::Texture::~Texture() = default;

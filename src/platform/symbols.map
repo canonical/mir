@@ -38,6 +38,7 @@ MIRPLATFORM_1.6 {
     mir::graphics::gl::Program::?Program*;
     mir::graphics::gl::ProgramFactory::?ProgramFactory*;
     mir::graphics::gl::ProgramFactory::compile_fragment_shader*;
+    mir::graphics::gl::Texture::Texture*;
     mir::graphics::gl::Texture::?Texture*;
     mir::graphics::gl_category*;
     mir::graphics::gl_error*;
