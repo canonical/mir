@@ -156,7 +156,15 @@ public:
     void set_application_id(std::string const& application_id) override;
 
 private:
-    bool visible(std::lock_guard<std::mutex> const&) const;
+    struct ProofOfMutexLock
+    {
+        ProofOfMutexLock(std::lock_guard<std::mutex> const&) {}
+        ProofOfMutexLock(std::unique_lock<std::mutex> const& lock);
+        ProofOfMutexLock(ProofOfMutexLock const&) = delete;
+        ProofOfMutexLock operator=(ProofOfMutexLock const&) = delete;
+    };
+
+    bool visible(ProofOfMutexLock const&) const;
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
     MirWindowState set_state(MirWindowState s);
     int set_dpi(int);
