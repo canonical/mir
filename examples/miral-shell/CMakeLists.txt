@@ -50,10 +50,10 @@ target_link_libraries(miral-shell
     miral-spinner
 )
 
-mir_add_wrapped_executable(spinner
+mir_add_wrapped_executable(mir-spinner
     spinner.cpp
 )
 
-target_link_libraries(spinner
+target_link_libraries(mir-spinner
     miral-spinner
 )
