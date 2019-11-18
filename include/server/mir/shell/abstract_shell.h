@@ -35,6 +35,10 @@ namespace shell
 {
 class ShellReport;
 class WindowManager;
+namespace decoration
+{
+class Manager;
+}
 
 /// Minimal Shell implementation with none of the necessary window management logic
 class AbstractShell : public virtual Shell, public virtual FocusController
@@ -47,7 +51,8 @@ public:
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         std::shared_ptr<ShellReport> const& report,
         WindowManagerBuilder const& wm_builder,
-        std::shared_ptr<input::Seat> const& seat);
+        std::shared_ptr<input::Seat> const& seat,
+        std::shared_ptr<decoration::Manager> const& decoration_manager);
 
     ~AbstractShell() noexcept;
 
@@ -175,6 +180,8 @@ private:
         std::unique_lock<std::mutex> const& lock,
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface);
+
+    std::shared_ptr<decoration::Manager> decoration_manager;
 };
 }
 }

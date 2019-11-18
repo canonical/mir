@@ -29,6 +29,7 @@
 #include "src/server/report/null/shell_report.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
+#include "src/server/shell/decoration/null_manager.h"
 
 #include "mir/test/doubles/mock_window_manager.h"
 #include "mir/test/doubles/mock_surface_stack.h"
@@ -129,6 +130,10 @@ struct MockSurfaceFactory : public ms::SurfaceFactory
         ms::SurfaceCreationParameters const&));
 };
 
+struct MockDecorationManager : public msh::decoration::NullManager
+{
+};
+
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
 
 struct AbstractShell : Test
@@ -139,6 +144,7 @@ struct AbstractShell : Test
     NiceMock<MockSessionEventSink> session_event_sink;
     NiceMock<MockSurfaceFactory> surface_factory;
     NiceMock<mtd::MockInputSeat> seat;
+    NiceMock<MockDecorationManager> decoration_manager;
     mtd::StubDisplay display{3};
 
     NiceMock<MockSessionManager> session_manager{
@@ -158,7 +164,8 @@ struct AbstractShell : Test
         std::make_shared<mtd::NullPromptSessionManager>(),
         std::make_shared<mir::report::null::ShellReport>(),
         [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); },
-        mt::fake_shared(seat)};
+        mt::fake_shared(seat),
+        mt::fake_shared(decoration_manager)};
 
     void SetUp() override
     {
