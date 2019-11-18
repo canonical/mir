@@ -43,7 +43,7 @@ else()
 endif()
 
 string(REGEX MATCH
-  "([0-9])\\.([0-9])\\.([0-9])" GTEST_VERSION_PARSED
+  "([0-9])\\.([0-9]+)\\.([0-9])" GTEST_VERSION_PARSED
   ${GTEST_VERSION_STR})
 if (GTEST_VERSION_PARSED)
   set(GTEST_VERSION_MAJOR ${CMAKE_MATCH_1})
