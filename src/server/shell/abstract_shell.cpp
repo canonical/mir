@@ -28,6 +28,7 @@
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/input/seat.h"
 #include "decoration/manager.h"
 
@@ -151,6 +152,11 @@ auto msh::AbstractShell::create_surface(
 
     auto const result = window_manager->add_surface(session, params, build);
     report->created_surface(*session, *result);
+
+    if (params.server_side_decorated.is_set() && params.server_side_decorated.value())
+    {
+        decoration_manager->decorate(result);
+    }
     return result;
 }
 
