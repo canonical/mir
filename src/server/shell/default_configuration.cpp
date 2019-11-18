@@ -25,7 +25,8 @@
 #include "default_persistent_surface_store.h"
 #include "frontend_shell.h"
 #include "graphics_display_layout.h"
-#include "decoration/null_manager.h"
+#include "decoration/basic_manager.h"
+#include "decoration/decoration.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -67,7 +68,13 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
     return decoration_manager(
         []()->std::shared_ptr<msd::Manager>
         {
-            return std::make_shared<msd::NullManager>();
+            return std::make_shared<msd::BasicManager>([](
+                    std::shared_ptr<shell::Shell> const& /*shell*/,
+                    std::shared_ptr<scene::Session> const& /*session*/,
+                    std::shared_ptr<scene::Surface> const& /*surface*/) -> std::unique_ptr<msd::Decoration>
+                {
+                    return std::make_unique<msd::NullDecoration>();
+                });
         });
 }
 

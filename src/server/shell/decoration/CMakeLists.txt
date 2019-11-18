@@ -3,6 +3,7 @@ set(
 
   manager.h
   null_manager.h
+  basic_manager.h basic_manager.cpp
   decoration.h
 )
 
