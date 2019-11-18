@@ -87,6 +87,7 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirfrontend-wayland>
   $<TARGET_OBJECTS:mirfrontend-xwayland>
   $<TARGET_OBJECTS:mirshell>
+  $<TARGET_OBJECTS:mirshelldecoration>
   $<TARGET_OBJECTS:mirlttng>
   $<TARGET_OBJECTS:mirreport>
   $<TARGET_OBJECTS:mirlogging>
