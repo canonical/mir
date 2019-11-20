@@ -24,6 +24,8 @@
 #include "mir/graphics/wayland_allocator.h"
 #include "mir/graphics/egl_extensions.h"
 
+#include <interface/vmcs_host/vc_dispmanx_types.h>
+
 namespace mir
 {
 class Executor;
@@ -42,6 +44,14 @@ class Display;
 
 namespace rpi
 {
+class DispmanXBuffer
+{
+public:
+    virtual ~DispmanXBuffer() = default;
+
+    virtual explicit operator DISPMANX_RESOURCE_HANDLE_T() const = 0;
+};
+
 class BufferAllocator :
 	public GraphicBufferAllocator,
 	public WaylandAllocator
