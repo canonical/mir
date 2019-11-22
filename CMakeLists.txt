@@ -213,7 +213,7 @@ add_definitions(
 )
 endif(MIR_DISABLE_EPOLL_REACTOR)
 
-add_definitions(-DMESA_EGL_NO_X11_HEADERS)
+add_definitions(-DEGL_NO_X11)
 
 pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream)
 
