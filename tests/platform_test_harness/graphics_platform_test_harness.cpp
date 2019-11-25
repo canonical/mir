@@ -612,35 +612,32 @@ int main(int argc, char const** argv)
     try
     {
         success &= test_probe(platform_dso, config);
-        if (success)
+        if (auto platform = test_platform_construction(platform_dso, config))
         {
-            if (auto platform = test_platform_construction(platform_dso, config))
+            if (auto display = test_display_construction(*platform, config))
             {
-                if (auto display = test_display_construction(*platform, config))
-                {
-                    success &= test_display_supports_gl(*display);
-                    success &= dump_egl_config(*display);
-                    success &= test_display_has_at_least_one_enabled_output(*display);
-                    success &= test_display_buffers_support_gl(*display);
-                    basic_display_swapping(*display);
+                success &= test_display_supports_gl(*display);
+                success &= dump_egl_config(*display);
+                success &= test_display_has_at_least_one_enabled_output(*display);
+                success &= test_display_buffers_support_gl(*display);
+                basic_display_swapping(*display);
 
-                    auto buffer_allocator = platform->create_buffer_allocator(*display);
-                    success &= test_platform_supports_accelerated_wayland_clients(*buffer_allocator);
+                auto buffer_allocator = platform->create_buffer_allocator(*display);
+                success &= test_platform_supports_accelerated_wayland_clients(*buffer_allocator);
 
-                    basic_software_buffer_drawing(
-                        *display,
-                        *buffer_allocator,
-                        *config.render_factory());
-                }
-                else
-                {
-                    success = false;
-                }
+                basic_software_buffer_drawing(
+                    *display,
+                    *buffer_allocator,
+                    *config.render_factory());
             }
             else
             {
                 success = false;
             }
+        }
+        else
+        {
+            success = false;
         }
     }
     catch (std::exception const& e)

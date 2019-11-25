@@ -48,11 +48,13 @@ void mpw::add_connection_options(boost::program_options::options_description& co
 
 auto mpw::connection(options::Option const& options) -> struct wl_display*
 {
-    if (!options.is_set(wayland_host_option_name))
-        return nullptr;
-
-    static auto const wayland_display =
-        std::make_unique<WaylandDisplay>(options.get<std::string>(wayland_host_option_name).c_str());
+    static auto const wayland_display = std::make_unique<WaylandDisplay>(options.is_set(wayland_host_option_name) ?
+        options.get<std::string>(wayland_host_option_name).c_str() : nullptr);
 
     return wayland_display->wl_display;
+}
+
+auto mir::platform::wayland::connection_options_supplied(mir::options::Option const& options) -> bool
+{
+    return options.is_set(wayland_host_option_name);
 }
