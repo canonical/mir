@@ -3,6 +3,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_persistent_surface_store_id.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_default_persistent_surface_store.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_decoration_basic_manager.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_decoration_basic_decoration.cpp
 )
 
 set(
