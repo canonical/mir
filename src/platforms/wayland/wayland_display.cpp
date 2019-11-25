@@ -54,7 +54,7 @@ auto mpw::connection(options::Option const& options) -> struct wl_display*
     return wayland_display->wl_display;
 }
 
-auto mir::platform::wayland::supported(mir::options::Option const& options) -> bool
+auto mir::platform::wayland::connection_options_supplied(mir::options::Option const& options) -> bool
 {
     return options.is_set(wayland_host_option_name);
 }

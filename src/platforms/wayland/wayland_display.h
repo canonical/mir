@@ -30,7 +30,7 @@ namespace platform
 namespace wayland
 {
 void add_connection_options(boost::program_options::options_description& config);
-auto supported(mir::options::Option const& options) -> bool;
+auto connection_options_supplied(mir::options::Option const& options) -> bool;
 auto connection(mir::options::Option const& options) -> wl_display*;
 }
 }
