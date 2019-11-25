@@ -31,6 +31,33 @@
 #include <EGL/eglmesaext.h>
 
 /*
+ * Just enough polyfill for RPi's EGL headers...
+ */
+#ifndef EGL_KHR_stream
+#define EGL_KHR_stream 1
+typedef void* EGLStreamKHR;
+#endif
+
+#ifndef EGL_VERSION_1_5
+#ifndef EGLAttribPolyfil
+#define EGLAttribPolyfil
+typedef intptr_t EGLAttrib;
+#endif
+#endif
+
+#ifndef EGL_EXT_platform_base
+#define EGL_EXT_platform_base 1
+typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYEXTPROC) (EGLenum platform, void *native_display, const EGLint *attrib_list);
+typedef EGLSurface (EGLAPIENTRYP PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC) (EGLDisplay dpy, EGLConfig config, void *native_window, const EGLint *attrib_list);
+typedef EGLSurface (EGLAPIENTRYP PFNEGLCREATEPLATFORMPIXMAPSURFACEEXTPROC) (EGLDisplay dpy, EGLConfig config, void *native_pixmap, const EGLint *attrib_list);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLDisplay EGLAPIENTRY eglGetPlatformDisplayEXT (EGLenum platform, void *native_display, const EGLint *attrib_list);
+EGLAPI EGLSurface EGLAPIENTRY eglCreatePlatformWindowSurfaceEXT (EGLDisplay dpy, EGLConfig config, void *native_window, const EGLint *attrib_list);
+EGLAPI EGLSurface EGLAPIENTRY eglCreatePlatformPixmapSurfaceEXT (EGLDisplay dpy, EGLConfig config, void *native_pixmap, const EGLint *attrib_list);
+#endif
+#endif /* EGL_EXT_platform_base */
+
+/*
  * FIXME: Remove both EGL_EXT_stream_acquire_mode and
  *        EGL_NV_output_drm_flip_event definitions below once both extensions
  *        get published by Khronos and incorportated into Khronos' header files

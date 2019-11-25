@@ -225,7 +225,7 @@ if (WAYLAND_EGLSTREAM_FOUND)
     mesa-kms;mesa-x11;eglstream-kms;wayland
     CACHE
     STRING
-    "a list of graphics backends to build (options are 'mesa-kms', 'mesa-x11', or 'eglstream-kms')"
+    "a list of graphics backends to build (options are 'mesa-kms', 'mesa-x11', 'eglstream-kms', 'wayland', or 'rpi-dispmanx')"
   )
 else()
   set(
@@ -233,7 +233,7 @@ else()
     mesa-kms;mesa-x11;wayland
     CACHE
     STRING
-    "a list of graphics backends to build (options are 'mesa-kms', 'mesa-x11', or 'eglstream-kms')"
+    "a list of graphics backends to build (options are 'mesa-kms', 'mesa-x11', 'eglstream-kms', 'wayland', or 'rpi-dispmanx')"
   )
 endif()
 
@@ -264,6 +264,10 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
   if (platform STREQUAL "wayland")
      set(MIR_BUILD_PLATFORM_WAYLAND TRUE)
+  endif()
+  if (platform STREQUAL "rpi-dispmanx")
+    set(MIR_BUILD_PLATFORM_RPI_DISPMANX TRUE)
+    pkg_check_modules(BCM_HOST REQUIRED bcm_host)
   endif()
 endforeach(platform)
 

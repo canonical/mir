@@ -76,4 +76,8 @@ if (MIR_BUILD_PLATFORM_WAYLAND)
   add_subdirectory(wayland)
 endif()
 
+if (MIR_BUILD_PLATFORM_RPI_DISPMANX)
+  add_subdirectory(rpi-dispmanx)
+endif()
+
 add_subdirectory(evdev/)
