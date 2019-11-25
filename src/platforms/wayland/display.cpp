@@ -419,6 +419,9 @@ void mir::graphics::wayland::Display::touch_up(wl_touch* touch, uint32_t serial,
 
         touch_time = std::chrono::milliseconds{time};
         contact->action = mir_touch_action_up;
+
+        touch_sink->touch_event(touch_time, touch_contacts);
+        touch_contacts.erase(contact);
     }
 
     DisplayClient::touch_up(touch, serial, time, id);
@@ -437,9 +440,10 @@ void mir::graphics::wayland::Display::touch_motion(wl_touch* touch, uint32_t tim
             contact = end(touch_contacts) - 1;
             contact->touch_id = id;
             contact->tooltype = mir_touch_tooltype_unknown;
-            contact->action = mir_touch_action_change;
         }
 
+        touch_time = std::chrono::milliseconds{time};
+        contact->action = mir_touch_action_change;
         contact->x = wl_fixed_to_double(x) + touch_displacement.dx.as_int();
         contact->y = wl_fixed_to_double(y) + touch_displacement.dy.as_int();
     }
@@ -452,9 +456,10 @@ void mir::graphics::wayland::Display::touch_frame(wl_touch* touch)
     {
         std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
 
-        touch_sink->touch_event(touch_time, touch_contacts);
-
-        touch_contacts.resize(0);
+        if (touch_contacts.size())
+        {
+            touch_sink->touch_event(touch_time, touch_contacts);
+        }
     }
 
     DisplayClient::touch_frame(touch);
@@ -465,7 +470,16 @@ void mir::graphics::wayland::Display::touch_cancel(wl_touch* touch)
     {
         std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
 
-        touch_contacts.resize(0);
+        for (auto& contact : touch_contacts)
+        {
+            contact.action = mir_touch_action_up;
+        }
+
+        if (touch_contacts.size())
+        {
+            touch_sink->touch_event(touch_time, touch_contacts);
+            touch_contacts.resize(0);
+        }
     }
 
     DisplayClient::touch_cancel(touch);
