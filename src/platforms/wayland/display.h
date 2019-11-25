@@ -146,6 +146,7 @@ private:
     std::thread runner;
     void run() const;
     void stop();
+    auto get_touch_contact(int32_t id) -> decltype(touch_contacts)::iterator;
 };
 
 }

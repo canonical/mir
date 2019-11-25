@@ -22,7 +22,8 @@ namespace ms = mir::scene;
 namespace mg = mir::graphics;
 
 void ms::NullSurfaceObserver::attrib_changed(Surface const*, MirWindowAttrib, int) {}
-void ms::NullSurfaceObserver::resized_to(Surface const*, geometry::Size const&) {}
+void ms::NullSurfaceObserver::window_resized_to(Surface const*, geometry::Size const&) {}
+void ms::NullSurfaceObserver::content_resized_to(Surface const*, geometry::Size const&) {}
 void ms::NullSurfaceObserver::moved_to(Surface const*, geometry::Point const&) {}
 void ms::NullSurfaceObserver::hidden_set_to(Surface const*, bool) {}
 void ms::NullSurfaceObserver::frame_posted(Surface const*, int, geometry::Size const&) {}

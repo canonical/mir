@@ -31,7 +31,7 @@ ms::LegacySurfaceChangeNotification::LegacySurfaceChangeNotification(
 {
 }
 
-void ms::LegacySurfaceChangeNotification::resized_to(Surface const*, geometry::Size const&)
+void ms::LegacySurfaceChangeNotification::content_resized_to(Surface const*, geometry::Size const&)
 {
     notify_scene_change();
 }

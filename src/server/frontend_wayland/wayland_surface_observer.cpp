@@ -91,15 +91,15 @@ void mf::WaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAtt
     }
 }
 
-void mf::WaylandSurfaceObserver::resized_to(ms::Surface const*, geom::Size const& size)
+void mf::WaylandSurfaceObserver::content_resized_to(ms::Surface const*, geom::Size const& content_size)
 {
     run_on_wayland_thread_unless_destroyed(
-        [this, size]()
+        [this, content_size]()
         {
-            if (size != window_size)
+            if (content_size != window_size)
             {
-                requested_size = size;
-                window->handle_resize(std::experimental::nullopt, size);
+                requested_size = content_size;
+                window->handle_resize(std::experimental::nullopt, content_size);
             }
         });
 }
