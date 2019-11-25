@@ -31,6 +31,8 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <mir/fatal.h>
 
+#include <interface/vmcs_host/vc_vchi_dispmanx.h>
+
 namespace mg = mir::graphics;
 
 namespace
@@ -119,10 +121,9 @@ mg::rpi::DisplayBuffer::DisplayBuffer(
     : view{{0, 0}, size},
       dpy{dpy},
       ctx{ctx},
-      config{config},
       display_handle{display},
-      egl_target_element{DISPMANX_NO_HANDLE},
-      surface{EGL_NO_SURFACE}
+      egl_target_element{create_fullscreen_dispmanx_element(display, size)},
+      surface{surface_for_element(egl_target_element, size, dpy, config)}
 {
 }
 
@@ -233,6 +234,21 @@ bool mg::rpi::DisplayBuffer::overlay(mg::RenderableList const& renderlist)
 
     // TODO: Better algorithm than “remove everything from last frame, add everything from this”
 
+    // Change the EGL layer's output layer to empty.
+    VC_RECT_T empty_output;
+    vc_dispmanx_rect_set(&empty_output, 0, 0, 0, 0);
+
+    vc_dispmanx_element_change_attributes(
+        update_handle,
+        egl_target_element,
+        ELEMENT_CHANGE_DEST_RECT,
+        0,
+        0,
+        &empty_output,
+        nullptr,
+        DISPMANX_NO_HANDLE,
+        DISPMANX_NO_ROTATE);
+
     // First, remove everything
     for (auto const& element : current_elements)
     {
@@ -300,21 +316,6 @@ mg::NativeDisplayBuffer* mg::rpi::DisplayBuffer::native_display_buffer()
 
 void mg::rpi::DisplayBuffer::make_current()
 {
-    if (current_elements.size() != 1 || current_elements.front() != egl_target_element)
-    {
-        auto update_handle = vc_dispmanx_update_start(0);
-
-        for (auto const& element : current_elements)
-        {
-            vc_dispmanx_element_remove(update_handle, element);
-        }
-        current_elements.clear();
-
-        egl_target_element = create_fullscreen_dispmanx_element(display_handle, view.size);
-        current_elements.push_back(egl_target_element);
-        surface = surface_for_element(egl_target_element, view.size, dpy, config);
-    }
-
     if (eglMakeCurrent(dpy, surface, surface, ctx) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make context current"));
@@ -334,6 +335,41 @@ void mg::rpi::DisplayBuffer::swap_buffers()
     if (eglSwapBuffers(dpy, surface) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to swap buffers")));
+    }
+
+    if (!current_elements.empty())
+    {
+        /* Previous frame used overlays; we need to remove them and then re-expand
+         * the EGL layer to fullscreen
+         */
+        auto const update_handle = vc_dispmanx_update_start(0);
+
+        for (auto const& element : current_elements)
+        {
+            vc_dispmanx_element_remove(update_handle, element);
+        }
+        current_elements.clear();
+
+        VC_RECT_T fullscreen_output;
+        vc_dispmanx_rect_set(
+            &fullscreen_output,
+            view_area().top_left.x.as_uint32_t(),
+            view_area().top_left.y.as_uint32_t(),
+            view_area().size.width.as_uint32_t(),
+            view_area().size.height.as_uint32_t());
+
+        vc_dispmanx_element_change_attributes(
+            update_handle,
+            egl_target_element,
+            ELEMENT_CHANGE_DEST_RECT,
+            0,
+            0,
+            &fullscreen_output,
+            nullptr,
+            DISPMANX_NO_HANDLE,
+            DISPMANX_NO_ROTATE);
+
+        vc_dispmanx_update_submit_sync(update_handle);
     }
 }
 
