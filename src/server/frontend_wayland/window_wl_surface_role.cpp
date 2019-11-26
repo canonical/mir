@@ -418,8 +418,10 @@ void mf::WindowWlSurfaceRole::create_mir_window()
 {
     params->size = pending_size();
     params->streams = std::vector<shell::StreamSpecification>{};
-    params->input_shape = std::vector<geom::Rectangle>{};
-    surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
+
+    std::vector<geom::Rectangle> input_shape;
+    surface->populate_surface_data(params->streams.value(), input_shape, {});
+    if (input_shape.size()) params->input_shape = input_shape;
 
     auto const scene_surface = shell->create_surface(session, *params, observer);
     weak_scene_surface = scene_surface;

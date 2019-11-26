@@ -197,10 +197,6 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
             input_shape_accumulator.push_back(rect);
         }
     }
-    else
-    {
-        input_shape_accumulator.push_back(surface_rect);
-    }
 
     for (WlSubsurface* subsurface : children)
     {
