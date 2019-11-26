@@ -820,7 +820,7 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
 
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
     char buffer[32];
-    sprintf(buffer, "wlcs-tests-%d", getpid());
+    snprintf(buffer, sizeof buffer, "wlcs-tests-%d", getpid());
     add_to_environment("WAYLAND_DISPLAY", buffer);
 
     add_server_init([this](mir::Server& server)
