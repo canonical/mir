@@ -4,5 +4,6 @@ usr/bin/miral-kiosk
 usr/bin/miral-xrun
 usr/bin/miral-desktop
 usr/bin/miral-app
+usr/bin/miral-system-compositor
 usr/share/applications/miral-shell.desktop
 usr/share/icons/hicolor/scalable/apps/ubuntu-logo.svg
