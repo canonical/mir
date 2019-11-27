@@ -32,7 +32,6 @@ namespace msh = mir::shell;
 namespace
 {
 char const* const wm_option = "window-manager";
-char const* const wm_system_compositor = "system-compositor";
 char const* const trace_option = "window-management-trace";
 }
 
@@ -40,10 +39,16 @@ void miral::WindowManagerOptions::operator()(mir::Server& server) const
 {
     std::string description = "window management strategy [{";
 
+    auto first = true;
     for (auto const& option : policies)
-        description += option.name + "|";
+    {
+        if (!first) description += "|";
+        first = false;
 
-    description += "system-compositor}]";
+        description += option.name;
+    }
+
+    description += "}]";
 
     server.add_configuration_option(wm_option, description, policies.begin()->name);
     server.add_configuration_option(trace_option, "log trace message", mir::OptionType::null);
@@ -83,14 +88,6 @@ void miral::WindowManagerOptions::operator()(mir::Server& server) const
                          *server.the_display_configuration_observer_registrar(),
                          option.build);
                 }
-            }
-
-            if (selection == wm_system_compositor)
-            {
-                return std::make_shared<msh::SystemCompositorWindowManager>(
-                    focus_controller,
-                    display_layout,
-                    server.the_session_coordinator());
             }
 
             throw mir::AbnormalExit("Unknown window manager: " + selection);
