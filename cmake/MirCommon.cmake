@@ -60,6 +60,11 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
   set(test_cmd "${test_cmd_no_memcheck}")
   set(test_env ${ARGN} ${TEST_ENV_OPTIONS})
 
+  if(NOT DEFINED ENV{XDG_RUNTIME_DIR})
+    message(DEBUG "XDG_RUNTIME_DIR not defined, setting to /tmp")
+    list(APPEND test_env "XDG_RUNTIME_DIR=/tmp")
+  endif()
+
   if (TEST_ENV_OPTIONS)
       set(test_name ${EXECUTABLE}---${TEST_ENV_OPTIONS}---)
   else()
