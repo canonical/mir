@@ -73,13 +73,6 @@ auto msh::SystemCompositorWindowManager::add_surface(
     placed_parameters.top_left = rect.top_left;
     placed_parameters.size = rect.size;
 
-    if (placed_parameters.input_shape.is_set())
-    {
-        // Shouldn't be set anyway as it doesn't make sense for a hosted session.
-        // It is currently set in frontend_wayland, even if the client doesn't want it, as a workaround for #1094
-        placed_parameters.input_shape.consume();
-    }
-
     auto const surface = build(session, placed_parameters);
 
     auto const session_ready_observer = std::make_shared<SurfaceReadyObserver>(
@@ -120,6 +113,11 @@ void msh::SystemCompositorWindowManager::modify_surface(
 
         std::lock_guard<decltype(mutex)> lock{mutex};
         output_map[surface] = output_id;
+    }
+
+    if (modifications.input_shape.is_set())
+    {
+        surface->set_input_region(modifications.input_shape.value());
     }
 }
 
