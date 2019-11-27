@@ -685,10 +685,13 @@ mf::WaylandConnector::WaylandConnector(
 
     if (auto const display_name = getenv("WAYLAND_DISPLAY"))
     {
-        if (!wl_display_add_socket(display.get(), display_name))
+        if (wl_display_add_socket(display.get(), display_name) != 0)
         {
-            wayland_display = display_name;
+            BOOST_THROW_EXCEPTION(
+                std::system_error(errno, std::system_category(), "Failed to add Wayland socket"));
         }
+
+        wayland_display = display_name;
     }
     else
     {
