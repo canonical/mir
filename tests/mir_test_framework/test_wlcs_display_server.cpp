@@ -819,9 +819,7 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
     WlcsDisplayServer::create_touch = &wlcs_server_create_touch;
 
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
-    char buffer[32];
-    snprintf(buffer, sizeof buffer, "wlcs-tests-%d", getpid());
-    add_to_environment("WAYLAND_DISPLAY", buffer);
+    add_to_environment("WAYLAND_DISPLAY", "wlcs-tests");
 
     add_server_init([this](mir::Server& server)
         {
