@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -29,6 +29,8 @@
 #include "mir/scene/surface_creation_parameters.h"
 
 #include <boost/throw_exception.hpp>
+
+#include <linux/input.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -229,4 +231,48 @@ void msh::SystemCompositorWindowManager::handle_request_resize(
     uint64_t /*timestamp*/,
     MirResizeEdge /*edge*/)
 {
+}
+
+bool mir::shell::DefaultWindowManager::handle_keyboard_event(MirKeyboardEvent const* event)
+{
+    static unsigned int const shift_states =
+        mir_input_event_modifier_alt |
+        mir_input_event_modifier_shift |
+        mir_input_event_modifier_sym |
+        mir_input_event_modifier_ctrl |
+        mir_input_event_modifier_meta;
+
+    if (mir_keyboard_event_action(event) != mir_keyboard_action_down)
+        return false;
+
+    auto const shift_state = mir_keyboard_event_modifiers(event) & shift_states;
+
+    if (shift_state != (mir_input_event_modifier_alt|mir_input_event_modifier_ctrl))
+        return false;
+
+    switch (mir_keyboard_event_scan_code(event))
+    {
+    case KEY_PAGEDOWN:
+        focus_controller->focus_next_session();
+        break;
+
+    case KEY_PAGEUP:
+        focus_controller->focus_prev_session();
+        break;
+
+    default:
+        return false;
+    };
+
+    if (auto const session = focus_controller->focused_session())
+    {
+        SurfaceSet surfaces;
+        for (auto surface = session->default_surface(); surface; surface = session->surface_after(surface))
+        {
+            if (!surfaces.insert(surface).second) break;
+        }
+        focus_controller->raise(surfaces);
+        focus_controller->set_focus_to(session, session->default_surface());
+    }
+    return true;
 }
