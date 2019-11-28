@@ -114,6 +114,11 @@ void msh::SystemCompositorWindowManager::modify_surface(
         std::lock_guard<decltype(mutex)> lock{mutex};
         output_map[surface] = output_id;
     }
+
+    if (modifications.input_shape.is_set())
+    {
+        surface->set_input_region(modifications.input_shape.value());
+    }
 }
 
 void msh::SystemCompositorWindowManager::remove_surface(
