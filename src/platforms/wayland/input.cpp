@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "wayland_display.h"
+#include "display.h"
 #include "input_platform.h"
 #include "mir/module_properties.h"
 #include "mir/assert_module_entry_point.h"
@@ -45,10 +45,10 @@ void add_input_platform_options(
 }
 
 mi::PlatformPriority probe_input_platform(
-    mo::Option const& options,
+    mo::Option const&,
     mir::ConsoleServices&)
 {
-    if (mpw::connection(options))
+    if (mir::graphics::wayland::Display::active())
     {
         return mi::PlatformPriority::supported;
     }

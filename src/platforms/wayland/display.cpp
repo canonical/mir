@@ -528,3 +528,9 @@ void mir::graphics::wayland::Display::pointer_leave(wl_pointer* pointer, uint32_
     if (cursor) cursor->leave(pointer);
     DisplayClient::pointer_leave(pointer, serial, surface);
 }
+
+bool mir::graphics::wayland::Display::active()
+{
+    std::lock_guard<decltype(the_display_mtx)> display_lock{the_display_mtx};
+    return the_display != nullptr;
+}
