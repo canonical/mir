@@ -1,0 +1,49 @@
+environment:
+    DEB_BUILD_OPTIONS: "parallel=$( nproc ) noopt ${NOCHECK}"
+    NO_PKG_MANGLE: 1
+
+systems: [ubuntu-19.10*]
+
+summary: Build Ubuntu packages
+
+execute: |
+    apt-get update
+
+    # to get dpkg-architecture and mk-build-deps
+    apt-get install \
+      --yes \
+      --no-install-recommends \
+      debhelper \
+      debootstrap \
+      dh-python \
+      sbuild \
+      schroot \
+      ubuntu-dev-tools
+      
+    # set up sbuild
+    adduser $USER sbuild
+    cat > ~/.sbuildrc <<EOF
+    \$maintainer_name = 'Mir CI Bot <mir-ci-bot@canonical.com>';
+    \$build_arch_all = 1;
+    1;
+    EOF
+
+    # set up mk-sbuild
+    cat > ~/.mk-sbuild.rc <<EOF
+    SCHROOT_CONF_SUFFIX="source-root-users=root,sbuild,admin
+    source-root-groups=root,sbuild,admin
+    preserve-environment=true"
+    SKIP_PROPOSED="1"
+    EOF
+
+    # create the schroot
+    sg sbuild -c "mk-sbuild eoan"
+
+    # go to the code directory
+    cd $SPREAD_PATH
+
+    # mark the "release" in the changelog
+    debchange --release "CI release"
+
+    # build the packages
+    sg sbuild -c "sbuild --dist=eoan-amd64 --jobs=$( nproc ) --nolog"

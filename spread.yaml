@@ -28,6 +28,7 @@ backends:
                 image: ubuntu-os-cloud/ubuntu-1904
             - ubuntu-19.10-64:
                 image: ubuntu-os-cloud/ubuntu-1910
+                workers: 2
             - ubuntu-devel-64:
                 image: ubuntu-os-cloud-devel/ubuntu-2004-lts
             - ubuntu-devel-proposed-64:
