@@ -287,6 +287,8 @@ ms::BasicSurface::BasicSurface(
         {
             if (auto const o = observers.lock())
                 o->frame_posted(this, 1, size);
+            else
+                BOOST_THROW_EXCEPTION(std::runtime_error("Frame posted to dead surface"));
         };
 
     for (auto& layer : layers)
@@ -915,6 +917,8 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
                 {
                     if (auto const o = observers.lock())
                         o->frame_posted(this, 1, size);
+                    else
+                        BOOST_THROW_EXCEPTION(std::runtime_error("Frame posted to dead surface"));
                 });
         surface_top_left = surface_rect.top_left;
     }
