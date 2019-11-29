@@ -823,9 +823,6 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
     snprintf(buffer, sizeof buffer, "wlcs-tests-%d", getpid());
     add_to_environment("WAYLAND_DISPLAY", buffer);
 
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
-        add_to_environment("XDG_RUNTIME_DIR", "/tmp");
-
     add_server_init([this](mir::Server& server)
         {
             server.override_the_session_listener([this]()
