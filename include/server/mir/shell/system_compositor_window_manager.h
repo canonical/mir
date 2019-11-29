@@ -124,6 +124,16 @@ private:
     std::mutex mutable mutex;
     OutputMap output_map;
 };
+
+/**
+ * Mir's default window manager adds Ctrl-Alt-PgUp/Ctrl-Alt-PgDn for session switching
+ */
+class DefaultWindowManager : public SystemCompositorWindowManager
+{
+public:
+    using SystemCompositorWindowManager::SystemCompositorWindowManager;
+    bool handle_keyboard_event(MirKeyboardEvent const* event) override;
+};
 }
 }
 

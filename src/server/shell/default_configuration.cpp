@@ -53,7 +53,7 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 auto mir::DefaultServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
 {
     return [this](msh::FocusController* focus_controller)
-        { return std::make_shared<msh::SystemCompositorWindowManager>(
+        { return std::make_shared<msh::DefaultWindowManager>(
             focus_controller,
             the_shell_display_layout(),
             the_session_coordinator()); };
