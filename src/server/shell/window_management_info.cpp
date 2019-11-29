@@ -35,7 +35,7 @@ msh::SurfaceInfo::SurfaceInfo(
     ms::SurfaceCreationParameters const& params) :
     type{surface->type()},
     state{surface->state()},
-    restore_rect{surface->top_left(), surface->size()},
+    restore_rect{surface->top_left(), surface->window_size()},
     session{session},
     parent{params.parent},
     min_width{params.min_width.is_set() ? params.min_width.value()  : Width{}},
@@ -258,14 +258,14 @@ void msh::SurfaceInfo::constrain_resize(
         // the available workspace and can have any width."
     case mir_window_state_vertmaximized:
         new_pos.y = surface->top_left().y;
-        new_size.height = surface->size().height;
+        new_size.height = surface->window_size().height;
         break;
 
         // "A horizontally maximised surface is anchored to the left and right of
         // the available workspace and can have any height"
     case mir_window_state_horizmaximized:
         new_pos.x = surface->top_left().x;
-        new_size.width = surface->size().width;
+        new_size.width = surface->window_size().width;
         break;
 
         // "A maximised surface is anchored to the top, bottom, left and right of the
@@ -275,8 +275,8 @@ void msh::SurfaceInfo::constrain_resize(
     default:
         new_pos.x = surface->top_left().x;
         new_pos.y = surface->top_left().y;
-        new_size.width = surface->size().width;
-        new_size.height = surface->size().height;
+        new_size.width = surface->window_size().width;
+        new_size.height = surface->window_size().height;
         break;
     }
 

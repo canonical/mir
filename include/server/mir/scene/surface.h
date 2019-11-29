@@ -62,7 +62,7 @@ public:
     /// Top-left corner (of the window frame if present)
     virtual geometry::Point top_left() const = 0;
     /// Size of the surface including window frame (if any)
-    virtual geometry::Size size() const = 0;
+    virtual geometry::Size window_size() const = 0;
 
     virtual graphics::RenderableList generate_renderables(compositor::CompositorID id) const = 0; 
     virtual int buffers_ready_for_compositor(void const* compositor_id) const = 0;
@@ -72,6 +72,7 @@ public:
     virtual void hide() = 0;
     virtual void show() = 0;
     virtual bool visible() const = 0;
+    /// Move the top-left of the frame to the given point
     virtual void move_to(geometry::Point const& top_left) = 0;
 
     /**
@@ -86,7 +87,8 @@ public:
      * set_input_region({Rectangle{}}).
      */
     virtual void set_input_region(std::vector<geometry::Rectangle> const& region) = 0;
-    virtual void resize(geometry::Size const& size) = 0;
+    /// Given value is the frame size of the window
+    virtual void resize(geometry::Size const& window_size) = 0;
     virtual void set_transformation(glm::mat4 const& t) = 0;
     virtual void set_alpha(float alpha) = 0;
     virtual void set_orientation(MirOrientation orientation) = 0;

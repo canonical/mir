@@ -196,7 +196,7 @@ TEST_F(SurfacePlacement, small_window_is_optically_centered_on_first_display)
     ASSERT_THAT(shell_surface, NotNull());  // Compiles here
 
     EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
-    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
+    EXPECT_THAT(shell_surface->window_size(), Eq(Size{width, height}));
 
     mir_window_release_sync(window);
 }
@@ -219,7 +219,7 @@ TEST_F(SurfacePlacement, which_second_display_acive_small_window_is_optically_ce
     ASSERT_THAT(shell_surface, NotNull());  // Compiles here
 
     EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
-    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
+    EXPECT_THAT(shell_surface->window_size(), Eq(Size{width, height}));
 
     mir_window_release_sync(window);
 }
@@ -233,8 +233,8 @@ TEST_F(SurfacePlacement, medium_window_fitted_onto_first_display)
     auto const shell_surface = latest_shell_surface();
 
     EXPECT_THAT(shell_surface->top_left(), Eq(first_display.top_left));
-    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
-    EXPECT_THAT(shell_surface->size(),     Eq(first_display.size));
+    EXPECT_THAT(shell_surface->window_size(), Eq(Size{width, height}));
+    EXPECT_THAT(shell_surface->window_size(), Eq(first_display.size));
 
     mir_window_release_sync(window);
 }
@@ -248,7 +248,7 @@ TEST_F(SurfacePlacement, big_window_keeps_top_on_first_display)
     auto const shell_surface = latest_shell_surface();
 
     EXPECT_THAT(shell_surface->top_left(), Eq(Point{-width/4, 0}));
-    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
+    EXPECT_THAT(shell_surface->window_size(), Eq(Size{width, height}));
 
     mir_window_release_sync(window);
 }
@@ -302,7 +302,7 @@ TEST_F(SurfacePlacement, second_window_is_cascaded_wrt_first)
     EXPECT_THAT(shell_surface2->top_left().x, Lt((shell_surface1->top_left()+max_cascade).x));
     EXPECT_THAT(shell_surface2->top_left().y, Lt((shell_surface1->top_left()+max_cascade).y));
 
-    EXPECT_THAT(shell_surface2->size(), Eq(Size{width, height}));
+    EXPECT_THAT(shell_surface2->window_size(), Eq(Size{width, height}));
 
     mir_window_release_sync(surface1);
     mir_window_release_sync(surface2);
@@ -326,7 +326,7 @@ TEST_F(SurfacePlacement, DISABLED_medium_second_window_is_sized_when_cascaded_wr
     EXPECT_THAT(shell_surface2->top_left().y, Lt((shell_surface1->top_left()+max_cascade).y));
 
     EXPECT_TRUE(first_display.contains({shell_surface2->input_bounds()}));
-    EXPECT_THAT(shell_surface2->size(), Ne(Size{width, height}));
+    EXPECT_THAT(shell_surface2->window_size(), Ne(Size{width, height}));
 
     mir_window_release_sync(surface1);
     mir_window_release_sync(surface2);
@@ -350,7 +350,7 @@ TEST_F(SurfacePlacement, medium_second_window_is_cascaded_wrt_first)
     EXPECT_THAT(shell_surface2->top_left().y, Lt((shell_surface1->top_left()+max_cascade).y));
 
     EXPECT_TRUE(first_display.overlaps({shell_surface2->input_bounds()}));
-    EXPECT_THAT(shell_surface2->size(), Eq(Size{width, height}));
+    EXPECT_THAT(shell_surface2->window_size(), Eq(Size{width, height}));
 
     mir_window_release_sync(surface1);
     mir_window_release_sync(surface2);
@@ -366,7 +366,7 @@ TEST_F(SurfacePlacement, fullscreen_surface_is_sized_to_display)
     auto const shell_surface = latest_shell_surface();
 
     EXPECT_THAT(shell_surface->top_left(), Eq(first_display.top_left));
-    EXPECT_THAT(shell_surface->size(), Eq(first_display.size));
+    EXPECT_THAT(shell_surface->window_size(), Eq(first_display.size));
 
     mir_window_release_sync(window);
 }
@@ -388,7 +388,7 @@ TEST_F(SurfacePlacement, maximized_surface_is_sized_to_display)
     auto const expected_size = as_size(as_displacement(first_display.size)
         + (first_display.top_left - shell_surface->top_left()));
 
-    EXPECT_THAT(shell_surface->size(), Eq(expected_size));
+    EXPECT_THAT(shell_surface->window_size(), Eq(expected_size));
 
     mir_window_release_sync(window);
 }
@@ -406,8 +406,8 @@ TEST_F(SurfacePlacement, horizmaximized_surface_is_sized_to_display)
 
     // Allow for a titlebar...
     EXPECT_THAT(shell_surface->top_left().y, Gt((first_display.top_left+max_cascade).y));
-    EXPECT_THAT(shell_surface->size().height, Eq(Height{10}));
-    EXPECT_THAT(shell_surface->size().width, Eq(first_display.size.width));
+    EXPECT_THAT(shell_surface->window_size().height, Eq(Height{10}));
+    EXPECT_THAT(shell_surface->window_size().width, Eq(first_display.size.width));
 
     mir_window_release_sync(window);
 }
@@ -429,7 +429,7 @@ TEST_F(SurfacePlacement, vertmaximized_surface_is_sized_to_display)
     Size const expected_size{10,
         first_display.size.height + (first_display.top_left.y-shell_surface->top_left().y)};
 
-    EXPECT_THAT(shell_surface->size(), Eq(expected_size));
+    EXPECT_THAT(shell_surface->window_size(), Eq(expected_size));
 
     mir_window_release_sync(window);
 }
@@ -444,7 +444,7 @@ TEST_F(SurfacePlacement, fullscreen_on_output_1_surface_is_sized_to_first_displa
     auto const shell_surface = latest_shell_surface();
 
     EXPECT_THAT(shell_surface->top_left(), Eq(first_display.top_left));
-    EXPECT_THAT(shell_surface->size(), Eq(first_display.size));
+    EXPECT_THAT(shell_surface->window_size(), Eq(first_display.size));
 
     mir_window_release_sync(window);
 }
@@ -459,7 +459,7 @@ TEST_F(SurfacePlacement, fullscreen_on_output_2_surface_is_sized_to_second_displ
     auto const shell_surface = latest_shell_surface();
 
     EXPECT_THAT(shell_surface->top_left(), Eq(second_display.top_left));
-    EXPECT_THAT(shell_surface->size(), Eq(second_display.size));
+    EXPECT_THAT(shell_surface->window_size(), Eq(second_display.size));
 
     mir_window_release_sync(window);
 }
@@ -493,7 +493,7 @@ TEST_P(UnparentedSurface, small_window_is_optically_centered_on_first_display)
     ASSERT_THAT(shell_surface, NotNull());  // Compiles here
 
     EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
-    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
+    EXPECT_THAT(shell_surface->window_size(), Eq(Size{width, height}));
 
     mir_window_release_sync(window);
 }
@@ -536,10 +536,10 @@ TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
     auto const height= 101;
 
     auto const geometric_centre = shell_parent->top_left() +
-                                  0.5*(as_displacement(shell_parent->size()) - Displacement{width, height});
+                                  0.5*(as_displacement(shell_parent->window_size()) - Displacement{width, height});
 
     auto const optically_centred = geometric_centre -
-                                   DeltaY{(shell_parent->size().height.as_int()-height)/6};
+                                   DeltaY{(shell_parent->window_size().height.as_int()-height)/6};
 
     auto const window = create_surface([&](MirWindowSpec* spec)
         {
@@ -558,7 +558,7 @@ TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
     ASSERT_THAT(shell_surface, NotNull());  // Compiles here
 
     EXPECT_THAT(shell_surface->top_left(), Eq(optically_centred));
-    EXPECT_THAT(shell_surface->size(),     Eq(Size{width, height}));
+    EXPECT_THAT(shell_surface->window_size(), Eq(Size{width, height}));
 
     mir_window_release_sync(window);
     mir_window_release_sync(parent);

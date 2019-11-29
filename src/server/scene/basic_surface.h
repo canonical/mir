@@ -84,7 +84,7 @@ public:
 
     void set_hidden(bool is_hidden);
 
-    geometry::Size size() const override;
+    geometry::Size window_size() const override;
     geometry::Size content_size() const override;
 
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;

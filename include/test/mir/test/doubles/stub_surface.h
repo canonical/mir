@@ -32,7 +32,7 @@ struct StubSurface : scene::Surface
 {
     std::string name() const override;
     void move_to(geometry::Point const& top_left) override;
-    geometry::Size size() const override;
+    geometry::Size window_size() const override;
     geometry::Size content_size() const override;
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
     void set_streams(std::list<scene::StreamInfo> const& streams) override;

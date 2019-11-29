@@ -224,7 +224,7 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
 
 TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
 {
-    EXPECT_EQ(size, surface.size());
+    EXPECT_EQ(size, surface.window_size());
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
@@ -252,11 +252,11 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
 
     surface.add_observer(observer);
 
-    ASSERT_THAT(surface.size(), Ne(new_size));
+    ASSERT_THAT(surface.window_size(), Ne(new_size));
 
     EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(1);
     surface.resize(new_size);
-    EXPECT_THAT(surface.size(), Eq(new_size));
+    EXPECT_THAT(surface.window_size(), Eq(new_size));
 }
 
 TEST_F(SurfaceCreation, duplicate_resize_ignored)
@@ -269,18 +269,18 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
 
     surface.add_observer(observer);
 
-    ASSERT_THAT(surface.size(), Ne(new_size));
+    ASSERT_THAT(surface.window_size(), Ne(new_size));
 
     EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(1);
     surface.resize(new_size);
-    EXPECT_THAT(surface.size(), Eq(new_size));
+    EXPECT_THAT(surface.window_size(), Eq(new_size));
 
     Mock::VerifyAndClearExpectations(mock_buffer_stream.get());
     Mock::VerifyAndClearExpectations(mock_event_sink.get());
 
     EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(0);
     surface.resize(new_size);
-    EXPECT_THAT(surface.size(), Eq(new_size));
+    EXPECT_THAT(surface.window_size(), Eq(new_size));
 }
 
 TEST_F(SurfaceCreation, impossible_resize_clamps)
@@ -305,7 +305,7 @@ TEST_F(SurfaceCreation, impossible_resize_clamps)
             expect_size.height = geom::Height{1};
 
         EXPECT_NO_THROW({ surface.resize(size); });
-        EXPECT_EQ(expect_size, surface.size());
+        EXPECT_EQ(expect_size, surface.window_size());
     }
 }
 
