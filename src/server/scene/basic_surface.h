@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -176,7 +176,7 @@ private:
     int set_swap_interval(int);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
 
-    SurfaceObservers observers;
+    std::shared_ptr<SurfaceObservers> observers = std::make_shared<SurfaceObservers>();
     std::mutex mutable guard;
     std::string surface_name;
     geometry::Rectangle surface_rect;
