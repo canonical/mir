@@ -206,8 +206,11 @@ void mgw::DisplayClient::Output::mode(
     }
 }
 
-void mgw::DisplayClient::Output::scale(void* /*data*/, wl_output* /*wl_output*/, int32_t /*factor*/)
+void mgw::DisplayClient::Output::scale(void* data, wl_output* /*wl_output*/, int32_t factor)
 {
+    auto const output = static_cast<Output*>(data);
+    auto& dcout = output->dcout;
+    dcout.scale = factor;
 }
 
 mgw::DisplayClient::Output::Output(
