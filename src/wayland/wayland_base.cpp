@@ -50,7 +50,7 @@ void mw::internal_error_processing_request(wl_client* client, char const* method
     wl_client_post_no_memory(client);
 #endif
     ::mir::log(
-        ::mir::logging::Severity::error,
+        ::mir::logging::Severity::warning,
         "frontend:Wayland",
         std::current_exception(),
         std::string() + "Exception processing " + method_name + " request");
