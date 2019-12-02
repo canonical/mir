@@ -44,17 +44,18 @@ void msd::BasicManager::init(std::weak_ptr<shell::Shell> const& shell_)
 
 void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
 {
-    if (auto const locked_shell = shell.lock())
+    auto const locked_shell = shell.lock();
+    if (!locked_shell)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Shell is null"));
+
+    std::unique_lock<std::mutex> lock{mutex};
+    if (decorations.find(surface.get()) == decorations.end())
     {
-        std::unique_lock<std::mutex> lock{mutex};
-        if (decorations.find(surface.get()) == decorations.end())
-        {
-            decorations[surface.get()] = nullptr;
-            lock.unlock();
-            auto decoration = decoration_builder(locked_shell, surface);
-            lock.lock();
-            decorations[surface.get()] = std::move(decoration);
-        }
+        decorations[surface.get()] = nullptr;
+        lock.unlock();
+        auto decoration = decoration_builder(locked_shell, surface);
+        lock.lock();
+        decorations[surface.get()] = std::move(decoration);
     }
 }
 
