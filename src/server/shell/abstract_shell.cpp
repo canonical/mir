@@ -171,6 +171,9 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
     if (wm_relevant_mods.min_height.is_set())
         wm_relevant_mods.min_height.value() += vert_frame_padding;
 
+    if (wm_relevant_mods.aux_rect.is_set())
+        wm_relevant_mods.aux_rect.value().top_left += surface->content_offset();
+
     report->update_surface(*session, *surface, wm_relevant_mods);
 
     if (wm_relevant_mods.streams.is_set())
