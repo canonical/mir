@@ -346,6 +346,12 @@ mir::geometry::Size ms::BasicSurface::window_size() const
     return surface_rect.size;
 }
 
+mir::geometry::Displacement ms::BasicSurface::content_offset() const
+{
+    std::lock_guard<std::mutex> lock(guard);
+    return geom::Displacement{margins.left, margins.top};
+}
+
 mir::geometry::Size ms::BasicSurface::content_size() const
 {
     std::lock_guard<std::mutex> lock(guard);

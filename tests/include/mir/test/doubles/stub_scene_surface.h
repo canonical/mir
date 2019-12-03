@@ -44,6 +44,7 @@ public:
 
     std::string name() const override { return {}; }
     geometry::Point top_left() const override { return {}; }
+    geometry::Displacement content_offset() const override { return {};}
     geometry::Size content_size() const override { return {};}
     geometry::Size window_size() const override { return {}; }
     geometry::Rectangle input_bounds() const override { return {{},{}}; }

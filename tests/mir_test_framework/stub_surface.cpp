@@ -34,6 +34,11 @@ mir::geometry::Size mtd::StubSurface::window_size() const
     return {};
 }
 
+mir::geometry::Displacement mtd::StubSurface::content_offset() const
+{
+    return {};
+}
+
 mir::geometry::Size mtd::StubSurface::content_size() const
 {
     return {};
