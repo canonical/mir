@@ -18,9 +18,22 @@
 
 #include "spinner/splash.h"
 #include <wayland-client.h>
+#include <csignal>
+
+static void shutdown(int)
+{
+    exit(EXIT_SUCCESS);
+}
 
 int main()
 {
+    struct sigaction action;
+    action.sa_handler = shutdown;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    sigaction(SIGINT, &action, NULL);
+    sigaction(SIGTERM, &action, NULL);
+
     SpinnerSplash spinner;
 
     auto const display = wl_display_connect(nullptr);
