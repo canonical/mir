@@ -695,6 +695,37 @@ TEST_F(AbstractShell, min_size_gets_adjusted_for_windows_with_margins)
     ASSERT_THAT(wm_modifications.min_height, Eq(mir::optional_value<geom::Height>(window_size.height)));
 }
 
+TEST_F(AbstractShell, aux_rect_gets_adjusted_for_windows_with_margins)
+{
+    geom::DeltaY const top{3};
+    geom::DeltaX const left{4};
+    geom::DeltaY const bottom{2};
+    geom::DeltaX const right{6};
+    geom::Size const content_size{102, 87};
+    geom::Rectangle const frontend_aux_rect{{23, 20}, {16, 18}};
+    geom::Rectangle const adjusted_aux_rect{
+        frontend_aux_rect.top_left + geom::Displacement{left, top},
+        frontend_aux_rect.size};
+    std::shared_ptr<ms::Session> session =
+        shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    auto creation_params = ms::a_surface()
+        .with_buffer_stream(session->create_buffer_stream(properties));
+    auto surface = shell.create_surface(session, creation_params, nullptr);
+    surface->resize(content_size);
+    surface->set_window_margins(top, left, bottom, right);
+
+    msh::SurfaceSpecification modifications;
+    modifications.aux_rect = frontend_aux_rect;
+
+    msh::SurfaceSpecification wm_modifications;
+    EXPECT_CALL(*wm, modify_surface(_,_,_)).WillOnce(SaveArg<2>(&wm_modifications));
+
+    shell.modify_surface(session, surface, modifications);
+
+    ASSERT_THAT(wm_modifications.aux_rect, Eq(mir::optional_value<geom::Rectangle>(adjusted_aux_rect)));
+}
+
 // lp:1625401
 TEST_F(AbstractShell, when_remaining_session_has_no_surface_focus_next_session_doesnt_loop_endlessly)
 {
