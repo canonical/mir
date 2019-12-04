@@ -85,6 +85,7 @@ class Shell;
 class ShellReport;
 class SurfaceStack;
 class PersistentSurfaceStore;
+namespace decoration { class Manager; }
 namespace detail { class FrontendShell; }
 }
 namespace time
@@ -289,6 +290,7 @@ public:
      *  @{ */
     virtual auto the_shell() -> std::shared_ptr<shell::Shell>;
     virtual auto the_window_manager_builder() -> shell::WindowManagerBuilder;
+    virtual auto the_decoration_manager() -> std::shared_ptr<shell::decoration::Manager>;
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<scene::PromptSessionListener> the_prompt_session_listener();
@@ -461,6 +463,7 @@ protected:
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
     CachedPtr<shell::ShellReport> shell_report;
+    CachedPtr<shell::decoration::Manager> decoration_manager;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::KeyMapper> key_mapper;

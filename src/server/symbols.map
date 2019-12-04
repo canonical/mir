@@ -934,5 +934,7 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
     vtable?for?mir::DefaultServerConfiguration;
 
     mir::run_mir*;
+
+    mir::DefaultServerConfiguration::the_decoration_manager*;
   };
 } MIR_SERVER_1.6.0;

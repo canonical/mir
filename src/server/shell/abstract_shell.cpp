@@ -29,6 +29,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/input/seat.h"
+#include "decoration/manager.h"
 
 #include <algorithm>
 #include <vector>
@@ -76,7 +77,8 @@ msh::AbstractShell::AbstractShell(
     std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
     std::shared_ptr<ShellReport> const& report,
     std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder,
-    std::shared_ptr<mi::Seat> const& seat) :
+    std::shared_ptr<mi::Seat> const& seat,
+    std::shared_ptr<decoration::Manager> const& decoration_manager) :
     input_targeter(input_targeter),
     surface_stack(surface_stack),
     session_coordinator(session_coordinator),
@@ -84,12 +86,14 @@ msh::AbstractShell::AbstractShell(
     window_manager(wm_builder(this)),
     seat(seat),
     report(report),
-    focus_surface_observer(std::make_shared<UpdateConfinementOnSurfaceChanges>(this))
+    focus_surface_observer(std::make_shared<UpdateConfinementOnSurfaceChanges>(this)),
+    decoration_manager(decoration_manager)
 {
 }
 
 msh::AbstractShell::~AbstractShell() noexcept
 {
+    decoration_manager->undecorate_all();
 }
 
 void msh::AbstractShell::update_focused_surface_confined_region()
@@ -229,6 +233,7 @@ void msh::AbstractShell::destroy_surface(
     std::shared_ptr<scene::Surface> const& surface)
 {
     report->destroying_surface(*session, *surface);
+    decoration_manager->undecorate(surface);
     window_manager->remove_surface(session, surface);
 }
 
