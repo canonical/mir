@@ -37,7 +37,7 @@ msd::BasicManager::~BasicManager()
     undecorate_all();
 }
 
-void msd::BasicManager::set_shell(std::weak_ptr<shell::Shell> const& shell_)
+void msd::BasicManager::init(std::weak_ptr<shell::Shell> const& shell_)
 {
     shell = shell_;
 }

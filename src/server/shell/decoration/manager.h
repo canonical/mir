@@ -41,8 +41,8 @@ public:
     virtual ~Manager() = default;
 
     /// Called by the server configuration when the shell is created
-    /// Can't be a construction parameter because the shell needs to be constructed with a manager
-    virtual void set_shell(std::weak_ptr<shell::Shell> const& shell) = 0;
+    /// shell can't be a construction parameter because the shell needs to be constructed with a manager
+    virtual void init(std::weak_ptr<shell::Shell> const& shell) = 0;
 
     /// Decorates the window
     virtual void decorate(

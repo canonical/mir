@@ -50,7 +50,7 @@ public:
     BasicManager(DecorationBuilder&& decoration_builder);
     ~BasicManager();
 
-    void set_shell(std::weak_ptr<shell::Shell> const& shell) override;
+    void init(std::weak_ptr<shell::Shell> const& shell) override;
     void decorate(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface) override;

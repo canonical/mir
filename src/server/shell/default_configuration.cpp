@@ -48,7 +48,7 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
                 the_decoration_manager()));
 
             the_composite_event_filter()->prepend(result);
-            the_decoration_manager()->set_shell(result);
+            the_decoration_manager()->init(result);
 
             return result;
         });

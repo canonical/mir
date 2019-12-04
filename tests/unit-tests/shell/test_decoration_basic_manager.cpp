@@ -42,7 +42,7 @@ struct DecorationBasicManager
 {
     void SetUp() override
     {
-        manager.set_shell(shell);
+        manager.init(shell);
         EXPECT_CALL(*this, build_decoration())
             .Times(AnyNumber())
             .WillRepeatedly(Invoke([](){ return new StubDecoration; }));

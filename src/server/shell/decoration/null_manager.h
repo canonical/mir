@@ -31,7 +31,7 @@ class NullManager
     : public Manager
 {
 public:
-    void set_shell(std::weak_ptr<shell::Shell> const&) override {}
+    void init(std::weak_ptr<shell::Shell> const&) override {}
     void decorate(
         std::shared_ptr<scene::Session> const&,
         std::shared_ptr<scene::Surface> const&) override {}
