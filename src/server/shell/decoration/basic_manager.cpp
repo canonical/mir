@@ -46,12 +46,14 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Session> const& session, st
 {
     if (auto const locked_shell = shell.lock())
     {
-        auto decoration = decoration_builder(locked_shell, session, surface);
+        std::unique_lock<std::mutex> lock{mutex};
+        if (decorations.find(surface.get()) == decorations.end())
         {
-            std::lock_guard<std::mutex> lock{mutex};
-            if (decorations.find(surface.get()) != decorations.end())
-                BOOST_THROW_EXCEPTION(std::logic_error("Tried to decorate the same surface twice"));
-            decorations.insert(std::make_pair(surface.get(), std::move(decoration)));
+            decorations[surface.get()] = nullptr;
+            lock.unlock();
+            auto decoration = decoration_builder(locked_shell, session, surface);
+            lock.lock();
+            decorations[surface.get()] = std::move(decoration);
         }
     }
 }
