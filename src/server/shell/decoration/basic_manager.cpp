@@ -42,7 +42,7 @@ void msd::BasicManager::init(std::weak_ptr<shell::Shell> const& shell_)
     shell = shell_;
 }
 
-void msd::BasicManager::decorate(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
+void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
 {
     if (auto const locked_shell = shell.lock())
     {
@@ -51,7 +51,7 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Session> const& session, st
         {
             decorations[surface.get()] = nullptr;
             lock.unlock();
-            auto decoration = decoration_builder(locked_shell, session, surface);
+            auto decoration = decoration_builder(locked_shell, surface);
             lock.lock();
             decorations[surface.get()] = std::move(decoration);
         }

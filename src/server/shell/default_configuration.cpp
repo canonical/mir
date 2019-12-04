@@ -70,7 +70,6 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
         {
             return std::make_shared<msd::BasicManager>([](
                     std::shared_ptr<shell::Shell> const& /*shell*/,
-                    std::shared_ptr<scene::Session> const& /*session*/,
                     std::shared_ptr<scene::Surface> const& /*surface*/) -> std::unique_ptr<msd::Decoration>
                 {
                     return std::make_unique<msd::NullDecoration>();

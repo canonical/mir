@@ -45,16 +45,13 @@ class BasicManager
 public:
     using DecorationBuilder = std::function<std::unique_ptr<Decoration>(
         std::shared_ptr<shell::Shell> const& shell,
-        std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface)>;
 
     BasicManager(DecorationBuilder&& decoration_builder);
     ~BasicManager();
 
     void init(std::weak_ptr<shell::Shell> const& shell) override;
-    void decorate(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface) override;
+    void decorate(std::shared_ptr<scene::Surface> const& surface) override;
     void undecorate(std::shared_ptr<scene::Surface> const& surface) override;
     void undecorate_all() override;
 

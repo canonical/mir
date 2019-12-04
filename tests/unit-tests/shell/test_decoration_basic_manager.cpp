@@ -57,7 +57,6 @@ struct DecorationBasicManager
 
     msd::BasicManager manager{[this](
             std::shared_ptr<msh::Shell> const&,
-            std::shared_ptr<ms::Session> const&,
             std::shared_ptr<ms::Surface> const&) -> std::unique_ptr<msd::Decoration>
         {
             return std::unique_ptr<msd::Decoration>(build_decoration());
@@ -84,31 +83,28 @@ public:
 
 TEST_F(DecorationBasicManager, calls_build_decoration)
 {
-    auto const session = std::make_shared<mtd::StubSession>();
     auto const surface = std::make_shared<mtd::StubSurface>();
     EXPECT_CALL(*this, build_decoration())
         .Times(1);
-    manager.decorate(session, surface);
+    manager.decorate(surface);
 }
 
 TEST_F(DecorationBasicManager, decorating_multiple_surfaces_is_fine)
 {
-    auto const session = std::make_shared<mtd::StubSession>();
     auto const surface_a = std::make_shared<mtd::StubSurface>();
     auto const surface_b = std::make_shared<mtd::StubSurface>();
-    manager.decorate(session, surface_a);
-    manager.decorate(session, surface_b);
+    manager.decorate(surface_a);
+    manager.decorate(surface_b);
 }
 
 TEST_F(DecorationBasicManager, decorating_a_surface_is_idempotent)
 {
-    auto const session = std::make_shared<mtd::StubSession>();
     auto const surface = std::make_shared<mtd::StubSurface>();
     EXPECT_CALL(*this, build_decoration())
         .Times(1);
-    manager.decorate(session, surface);
-    manager.decorate(session, surface);
-    manager.decorate(session, surface);
+    manager.decorate(surface);
+    manager.decorate(surface);
+    manager.decorate(surface);
 }
 
 TEST_F(DecorationBasicManager, undecorate_unknown_surface_is_fine)
@@ -123,13 +119,12 @@ TEST_F(DecorationBasicManager, undecorate_unknown_surface_is_fine)
 
 TEST_F(DecorationBasicManager, undecorate_unknown_surface_is_fine_when_there_are_decorations)
 {
-    auto const session = std::make_shared<mtd::StubSession>();
     auto const surface_a = std::make_shared<mtd::StubSurface>();
     auto const surface_b = std::make_shared<mtd::StubSurface>();
     auto const surface_c = std::make_shared<mtd::StubSurface>();
     auto const surface_d = std::make_shared<mtd::StubSurface>();
-    manager.decorate(session, surface_a);
-    manager.decorate(session, surface_b);
+    manager.decorate(surface_a);
+    manager.decorate(surface_b);
     manager.undecorate(surface_c);
     manager.undecorate(surface_d);
 }
@@ -138,7 +133,6 @@ TEST_F(DecorationBasicManager, undecorate_works)
 {
     auto decoration_a = std::make_unique<MockDecoration>(this);
     auto decoration_b = std::make_unique<MockDecoration>(this);
-    auto const session = std::make_shared<mtd::StubSession>();
     auto const surface_a = std::make_shared<mtd::StubSurface>();
     auto const surface_b = std::make_shared<mtd::StubSurface>();
     EXPECT_CALL(*this, decoration_destroyed(decoration_a.get()))
@@ -149,8 +143,8 @@ TEST_F(DecorationBasicManager, undecorate_works)
         .Times(2)
         .WillOnce(Invoke([&](){ return decoration_a.release(); }))
         .WillOnce(Invoke([&](){ return decoration_b.release(); }));
-    manager.decorate(session, surface_a);
-    manager.decorate(session, surface_b);
+    manager.decorate(surface_a);
+    manager.decorate(surface_b);
     manager.undecorate(surface_a);
     Mock::VerifyAndClearExpectations(this);
     EXPECT_CALL(*this, decoration_destroyed(_))
@@ -161,7 +155,6 @@ TEST_F(DecorationBasicManager, undecorate_all_works)
 {
     auto decoration_a = std::make_unique<MockDecoration>(this);
     auto decoration_b = std::make_unique<MockDecoration>(this);
-    auto const session = std::make_shared<mtd::StubSession>();
     auto const surface_a = std::make_shared<mtd::StubSurface>();
     auto const surface_b = std::make_shared<mtd::StubSurface>();
     EXPECT_CALL(*this, decoration_destroyed(decoration_a.get()))
@@ -172,8 +165,8 @@ TEST_F(DecorationBasicManager, undecorate_all_works)
         .Times(2)
         .WillOnce(Invoke([&](){ return decoration_a.release(); }))
         .WillOnce(Invoke([&](){ return decoration_b.release(); }));
-    manager.decorate(session, surface_a);
-    manager.decorate(session, surface_b);
+    manager.decorate(surface_a);
+    manager.decorate(surface_b);
     manager.undecorate_all();
     Mock::VerifyAndClearExpectations(this);
 }
@@ -182,25 +175,23 @@ TEST_F(DecorationBasicManager, does_not_build_decorations_while_locked)
 {
     auto decoration_a = std::make_unique<MockDecoration>(this);
     auto decoration_b = std::make_unique<MockDecoration>(this);
-    auto const session = std::make_shared<mtd::StubSession>();
     auto const surface_a = std::make_shared<mtd::StubSurface>();
     auto const surface_b = std::make_shared<mtd::StubSurface>();
     EXPECT_CALL(*this, build_decoration())
         .Times(2)
         .WillOnce(Invoke([&]()
             {
-                manager.decorate(session, surface_b);
+                manager.decorate(surface_b);
                 return decoration_a.release();
             }))
         .WillOnce(Invoke([&](){ return decoration_b.release(); }));
-    manager.decorate(session, surface_a);
+    manager.decorate(surface_a);
 }
 
 TEST_F(DecorationBasicManager, does_not_destroy_decorations_while_locked)
 {
     auto decoration_a = std::make_unique<MockDecoration>(this);
     auto decoration_b = std::make_unique<MockDecoration>(this);
-    auto const session = std::make_shared<mtd::StubSession>();
     auto const surface_a = std::make_shared<mtd::StubSurface>();
     auto const surface_b = std::make_shared<mtd::StubSurface>();
     EXPECT_CALL(*this, build_decoration())
@@ -215,8 +206,8 @@ TEST_F(DecorationBasicManager, does_not_destroy_decorations_while_locked)
             }));
     EXPECT_CALL(*this, decoration_destroyed(decoration_b.get()))
         .Times(1);
-    manager.decorate(session, surface_a);
-    manager.decorate(session, surface_b);
+    manager.decorate(surface_a);
+    manager.decorate(surface_b);
     manager.undecorate(surface_a);
     Mock::VerifyAndClearExpectations(this);
 }

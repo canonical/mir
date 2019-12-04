@@ -45,9 +45,7 @@ public:
     virtual void init(std::weak_ptr<shell::Shell> const& shell) = 0;
 
     /// Decorates the window
-    virtual void decorate(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface) = 0;
+    virtual void decorate(std::shared_ptr<scene::Surface> const& surface) = 0;
 
     /// Removes decorations from window if present
     /// If window is not currently decorated, does nothing
