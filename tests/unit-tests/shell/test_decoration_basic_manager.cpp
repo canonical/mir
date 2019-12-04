@@ -100,14 +100,15 @@ TEST_F(DecorationBasicManager, decorating_multiple_surfaces_is_fine)
     manager.decorate(session, surface_b);
 }
 
-TEST_F(DecorationBasicManager, decorating_the_same_surface_twice_throws)
+TEST_F(DecorationBasicManager, decorating_a_surface_is_idempotent)
 {
     auto const session = std::make_shared<mtd::StubSession>();
     auto const surface = std::make_shared<mtd::StubSurface>();
+    EXPECT_CALL(*this, build_decoration())
+        .Times(1);
     manager.decorate(session, surface);
-    EXPECT_THROW(
-        manager.decorate(session, surface),
-        std::logic_error);
+    manager.decorate(session, surface);
+    manager.decorate(session, surface);
 }
 
 TEST_F(DecorationBasicManager, undecorate_unknown_surface_is_fine)
