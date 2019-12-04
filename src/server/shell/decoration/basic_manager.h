@@ -37,7 +37,8 @@ class Shell;
 namespace decoration
 {
 class Decoration;
-/// Draws Mir's default window decorations and provides basic move, resize, close, etc functionality
+
+/// Facilitates decorating windows with Mir's built-in server size decorations
 class BasicManager
     : public Manager
 {
