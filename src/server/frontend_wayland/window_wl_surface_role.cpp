@@ -30,6 +30,7 @@
 #include "mir/frontend/wayland.h"
 #include "null_event_sink.h"
 
+#include "mir/log.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 
@@ -272,6 +273,18 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::experimental::optional<struct 
         if (output)
             params->output_id = output_manager->output_id_for(client, output.value());
         create_mir_window();
+    }
+}
+
+void mf::WindowWlSurfaceRole::set_server_side_decorated(bool server_side_decorated)
+{
+    if (weak_scene_surface.lock())
+    {
+        log_warning("server_side_decorated decorated property can not be changed after surface created");
+    }
+    else
+    {
+        params->server_side_decorated = server_side_decorated;
     }
 }
 

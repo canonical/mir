@@ -41,6 +41,7 @@ mf::XWaylandWMShellSurface::XWaylandWMShellSurface(
     : WindowWlSurfaceRole{&seat, client, surface, shell, output_manager}
 {
 //    params->type = mir_window_type_normal;
+    set_server_side_decorated(true);
 }
 
 mf::XWaylandWMShellSurface::~XWaylandWMShellSurface()
