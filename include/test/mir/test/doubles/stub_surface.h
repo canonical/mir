@@ -33,6 +33,7 @@ struct StubSurface : scene::Surface
     std::string name() const override;
     void move_to(geometry::Point const& top_left) override;
     geometry::Size window_size() const override;
+    geometry::Displacement content_offset() const override;
     geometry::Size content_size() const override;
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
     void set_streams(std::list<scene::StreamInfo> const& streams) override;
@@ -78,7 +79,12 @@ struct StubSurface : scene::Surface
     void set_focus_state(MirWindowFocusState new_state) override;
     std::string application_id() const override;
     void set_application_id(std::string const& application_id) override;
-    std::weak_ptr<scene::Session> session() const  override;
+    std::weak_ptr<scene::Session> session() const override;
+    void set_window_margins(
+        geometry::DeltaY top,
+        geometry::DeltaX left,
+        geometry::DeltaY bottom,
+        geometry::DeltaX right) override;
 };
 }
 }

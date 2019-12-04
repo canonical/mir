@@ -142,6 +142,15 @@ public:
 
     /// The session this surface was created by
     virtual auto session() const -> std::weak_ptr<Session> = 0;
+
+    /// Sets the geometry of the margins around a surface
+    /// Margins make room for server-side-decorations, which are attached as a child surface
+    /// This call will trigger the content_size to be adjusted and the window_size will remain unchanged
+    virtual void set_window_margins(
+        geometry::DeltaY top,
+        geometry::DeltaX left,
+        geometry::DeltaY bottom,
+        geometry::DeltaX right) = 0;
 };
 }
 }

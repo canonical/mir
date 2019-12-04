@@ -34,6 +34,11 @@ mir::geometry::Size mtd::StubSurface::window_size() const
     return {};
 }
 
+mir::geometry::Displacement mtd::StubSurface::content_offset() const
+{
+    return {};
+}
+
 mir::geometry::Size mtd::StubSurface::content_size() const
 {
     return {};
@@ -235,6 +240,10 @@ void mtd::StubSurface::set_application_id(std::string const& /*application_id*/)
 std::weak_ptr<mir::scene::Session> mtd::StubSurface::session() const
 {
     return {};
+}
+
+void mtd::StubSurface::set_window_margins(geometry::DeltaY, geometry::DeltaX, geometry::DeltaY, geometry::DeltaX)
+{
 }
 
 namespace

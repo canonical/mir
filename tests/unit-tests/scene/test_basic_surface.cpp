@@ -64,6 +64,8 @@ class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
     MOCK_METHOD3(attrib_changed, void(ms::Surface const*, MirWindowAttrib, int));
+    MOCK_METHOD2(window_resized_to, void(ms::Surface const*, geom::Size const&));
+    MOCK_METHOD2(content_resized_to, void(ms::Surface const*, geom::Size const&));
     MOCK_METHOD2(hidden_set_to, void(ms::Surface const*, bool));
     MOCK_METHOD2(renamed, void(ms::Surface const*, char const*));
     MOCK_METHOD1(client_surface_close_requested, void(ms::Surface const*));
@@ -75,7 +77,7 @@ public:
 struct BasicSurfaceTest : public testing::Test
 {
     std::string const name{"aa"};
-    geom::Rectangle const rect{{4,7},{5,9}};
+    geom::Rectangle const rect{{4,7},{12,15}};
 
     testing::NiceMock<MockCallback> mock_callback;
     std::function<void()> null_change_cb{[]{}};
@@ -111,6 +113,7 @@ TEST_F(BasicSurfaceTest, basics)
 {
     EXPECT_EQ(name, surface.name());
     EXPECT_EQ(rect.size, surface.window_size());
+    EXPECT_EQ(rect.size, surface.content_size());
     EXPECT_EQ(rect.top_left, surface.top_left());
     for (auto& renderable : surface.generate_renderables(this))
         EXPECT_FALSE(renderable->shaped());
@@ -217,22 +220,176 @@ TEST_F(BasicSurfaceTest, update_size)
     EXPECT_THAT(renderables[0]->transformation(), testing::Eq(old_transformation));
 }
 
-/*
- * Until logic is implemented to separate size() from client_size(), verify
- * they do return the same thing for backward compatibility.
- */
-TEST_F(BasicSurfaceTest, size_equals_client_size)
+TEST_F(BasicSurfaceTest, observer_notified_of_window_resize)
 {
+    using namespace testing;
+
+    geom::Size const new_size{34, 56};
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    ASSERT_THAT(new_size, Ne(surface.window_size())) << "Precondition failed";
+
+    EXPECT_CALL(mock_surface_observer, window_resized_to(_, new_size))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.resize(new_size);
+}
+
+TEST_F(BasicSurfaceTest, observer_notified_of_content_resize)
+{
+    using namespace testing;
+
+    geom::Size const new_size{34, 56};
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    ASSERT_THAT(new_size, Ne(surface.content_size())) << "Precondition failed";
+
+    EXPECT_CALL(mock_surface_observer, content_resized_to(_, new_size))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.resize(new_size);
+}
+
+TEST_F(BasicSurfaceTest, resize_notifications_only_sent_when_size_changed)
+{
+    using namespace testing;
+
+    geom::Size const new_size{34, 56};
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    ASSERT_THAT(rect.size, Eq(surface.window_size())) << "Precondition failed";
+    ASSERT_THAT(rect.size, Eq(surface.content_size())) << "Precondition failed";
+    ASSERT_THAT(new_size, Ne(surface.content_size())) << "Precondition failed";
+
+    EXPECT_CALL(mock_surface_observer, window_resized_to(_, _))
+        .Times(1);
+    EXPECT_CALL(mock_surface_observer, content_resized_to(_, _))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.resize(rect.size);
+    surface.resize(new_size);
+    surface.resize(new_size);
+}
+
+TEST_F(BasicSurfaceTest, only_content_is_notified_of_resize_when_frame_geometry_set)
+{
+    using namespace testing;
+
+    geom::DeltaY const top{3};
+    geom::DeltaX const left{2};
+    geom::DeltaY const bottom{5};
+    geom::DeltaX const right{1};
+    geom::Size const new_content_size{
+        rect.size.width - left - right,
+        rect.size.height - top - bottom};
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, window_resized_to(_, _))
+        .Times(0);
+    EXPECT_CALL(mock_surface_observer, content_resized_to(_, new_content_size))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_window_margins(top, left, bottom, right);
+}
+
+TEST_F(BasicSurfaceTest, window_size_equals_content_size_when_frame_geometry_is_not_set)
+{
+    using namespace testing;
+
     geom::Size const new_size{34, 56};
 
-    EXPECT_EQ(rect.size, surface.window_size());
-    EXPECT_EQ(rect.size, surface.content_size());
-    EXPECT_NE(new_size, surface.window_size());
-    EXPECT_NE(new_size, surface.content_size());
+    EXPECT_THAT(rect.size, Eq(surface.window_size()));
+    EXPECT_THAT(rect.size, Eq(surface.content_size()));
+    EXPECT_THAT(new_size, Ne(surface.window_size()));
+    EXPECT_THAT(new_size, Ne(surface.content_size()));
 
     surface.resize(new_size);
-    EXPECT_EQ(new_size, surface.window_size());
-    EXPECT_EQ(new_size, surface.content_size());
+    EXPECT_THAT(new_size, Eq(surface.window_size()));
+    EXPECT_THAT(new_size, Eq(surface.content_size()));
+}
+
+TEST_F(BasicSurfaceTest, window_size_differs_from_content_size_when_frame_geometry_is_set)
+{
+    using namespace testing;
+
+    geom::DeltaY const top{3};
+    geom::DeltaX const left{2};
+    geom::DeltaY const bottom{5};
+    geom::DeltaX const right{1};
+    geom::Size const new_window_size{34, 56};
+    geom::Size const new_content_size{
+        new_window_size.width - left - right,
+        new_window_size.height - top - bottom};
+
+    EXPECT_THAT(rect.size, Eq(surface.window_size()));
+    EXPECT_THAT(rect.size, Eq(surface.content_size()));
+    EXPECT_THAT(new_window_size, Ne(surface.window_size()));
+    EXPECT_THAT(new_content_size, Ne(surface.content_size()));
+
+    surface.set_window_margins(top, left, bottom, right);
+    surface.resize(new_window_size);
+    EXPECT_THAT(new_content_size, Ne(surface.window_size())) << "window_size is what content_size should be";
+    EXPECT_THAT(new_window_size, Ne(surface.content_size())) << "content_size is what window_size should be";
+    EXPECT_THAT(new_window_size, Eq(surface.window_size()));
+    EXPECT_THAT(new_content_size, Eq(surface.content_size()));
+}
+
+TEST_F(BasicSurfaceTest, only_content_is_resized_when_frame_geometry_set)
+{
+    using namespace testing;
+
+    geom::DeltaY const top{3};
+    geom::DeltaX const left{2};
+    geom::DeltaY const bottom{5};
+    geom::DeltaX const right{1};
+    geom::Size const new_content_size{
+        rect.size.width - left - right,
+        rect.size.height - top - bottom};
+
+    surface.set_window_margins(top, left, bottom, right);
+
+    ASSERT_THAT(rect.size, Eq(surface.window_size()));
+    ASSERT_THAT(new_content_size, Eq(surface.content_size()));
+}
+
+TEST_F(BasicSurfaceTest, input_bounds_size_equals_content_size)
+{
+    using namespace testing;
+
+    geom::DeltaY const top{3};
+    geom::DeltaX const left{2};
+    geom::DeltaY const bottom{5};
+    geom::DeltaX const right{1};
+    geom::Size const new_content_size{
+        rect.size.width - left - right,
+        rect.size.height - top - bottom};
+
+    EXPECT_THAT(new_content_size, Ne(surface.input_bounds().size));
+
+    surface.set_window_margins(top, left, bottom, right);
+    EXPECT_THAT(surface.window_size(), Ne(surface.input_bounds().size)) << "input_bounds.size not affected by frame geom";
+    EXPECT_THAT(new_content_size, Eq(surface.input_bounds().size));
+}
+
+TEST_F(BasicSurfaceTest, input_bounds_top_left_is_offset_by_frame_geom)
+{
+    using namespace testing;
+
+    geom::DeltaY const top{3};
+    geom::DeltaX const left{2};
+    geom::DeltaY const bottom{5};
+    geom::DeltaX const right{1};
+    geom::Point const new_content_top_left{rect.top_left + geom::Displacement{left, top}};
+
+    EXPECT_THAT(new_content_top_left, Ne(surface.input_bounds().top_left));
+
+    surface.set_window_margins(top, left, bottom, right);
+    EXPECT_THAT(rect.top_left, Ne(surface.input_bounds().top_left)) << "input_bounds.top_left not affected by frame geom";
+    EXPECT_THAT(new_content_top_left, Eq(surface.input_bounds().top_left));
 }
 
 TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
@@ -428,8 +585,11 @@ TEST_F(BasicSurfaceTest, set_input_region)
 
 TEST_F(BasicSurfaceTest, updates_default_input_region_when_surface_is_resized_to_larger_size)
 {
-    geom::Rectangle const new_rect{rect.top_left,{10,10}};
+    geom::Rectangle const new_rect{rect.top_left,{20,20}};
     surface.resize(new_rect.size);
+
+    ASSERT_GT(new_rect.size.width, rect.size.width) << "Precondition failed";
+    ASSERT_GT(new_rect.size.height, rect.size.height) << "Precondition failed";
 
     for (auto x = new_rect.top_left.x.as_int() - 1;
          x <= new_rect.top_right().x.as_int();
@@ -497,6 +657,82 @@ TEST_F(BasicSurfaceTest, disables_input_when_setting_input_region_with_empty_rec
 {
     surface.set_input_region({geom::Rectangle()});
     EXPECT_FALSE(surface.input_area_contains(rect.top_left));
+}
+
+TEST_F(BasicSurfaceTest, adjusts_default_input_region_for_frame_geometry)
+{
+    geom::DeltaY const top{3};
+    geom::DeltaX const left{2};
+    geom::DeltaY const bottom{5};
+    geom::DeltaX const right{1};
+    geom::Point const content_top_left{rect.top_left + geom::Displacement{left, top}};
+    geom::Size const content_size{
+        rect.size.width - left - right,
+        rect.size.height - top - bottom};
+    geom::Rectangle const input_region{content_top_left, content_size};
+
+    surface.set_window_margins(top, left, bottom, right);
+
+    for (auto x = rect.top_left.x.as_int() - 1;
+         x <= rect.top_right().x.as_int();
+         x++)
+    {
+        for (auto y = rect.top_left.y.as_int() - 1;
+             y <= rect.bottom_left().y.as_int();
+             y++)
+        {
+            auto const test_pt = geom::Point{x, y};
+            auto const contains = surface.input_area_contains(test_pt);
+            if (input_region.contains(test_pt))
+            {
+                EXPECT_TRUE(contains) << " point = " << test_pt;
+            }
+            else
+            {
+                EXPECT_FALSE(contains) << " point = " << test_pt;
+            }
+        }
+    }
+}
+
+TEST_F(BasicSurfaceTest, adjusts_explicit_input_region_for_frame_geometry)
+{
+    geom::DeltaY const top{3};
+    geom::DeltaX const left{2};
+    geom::DeltaY const bottom{5};
+    geom::DeltaX const right{1};
+    geom::Rectangle const local_input_region{{3, 2}, {4, 5}};
+    geom::Point const global_input_region_top_left{
+        rect.top_left +
+        geom::Displacement{left, top} +
+        as_displacement(local_input_region.top_left)};
+    geom::Rectangle const global_input_region{
+        global_input_region_top_left,
+        local_input_region.size};
+
+    surface.set_window_margins(top, left, bottom, right);
+    surface.set_input_region({local_input_region});
+
+    for (auto x = rect.top_left.x.as_int() - 1;
+         x <= rect.top_right().x.as_int();
+         x++)
+    {
+        for (auto y = rect.top_left.y.as_int() - 1;
+             y <= rect.bottom_left().y.as_int();
+             y++)
+        {
+            auto const test_pt = geom::Point{x, y};
+            auto const contains = surface.input_area_contains(test_pt);
+            if (global_input_region.contains(test_pt))
+            {
+                EXPECT_TRUE(contains) << " point = " << test_pt;
+            }
+            else
+            {
+                EXPECT_FALSE(contains) << " point = " << test_pt;
+            }
+        }
+    }
 }
 
 TEST_F(BasicSurfaceTest, reception_mode_is_normal_by_default)

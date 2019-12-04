@@ -85,6 +85,8 @@ public:
     void set_hidden(bool is_hidden);
 
     geometry::Size window_size() const override;
+
+    geometry::Displacement content_offset() const override;
     geometry::Size content_size() const override;
 
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
@@ -159,6 +161,12 @@ public:
 
     auto session() const -> std::weak_ptr<Session> override;
 
+    void set_window_margins(
+        geometry::DeltaY top,
+        geometry::DeltaX left,
+        geometry::DeltaY bottom,
+        geometry::DeltaX right) override;
+
 private:
     struct ProofOfMutexLock
     {
@@ -175,6 +183,8 @@ private:
     MirWindowVisibility set_visibility(MirWindowVisibility v);
     int set_swap_interval(int);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
+    auto content_size(ProofOfMutexLock const&) const -> geometry::Size;
+    auto content_top_left(ProofOfMutexLock const&) const -> geometry::Point;
 
     std::shared_ptr<SurfaceObservers> observers = std::make_shared<SurfaceObservers>();
     std::mutex mutable guard;
@@ -209,6 +219,13 @@ private:
     std::string application_id_;
 
     std::weak_ptr<Session> session_;
+
+    struct {
+        geometry::DeltaY top;
+        geometry::DeltaX left;
+        geometry::DeltaY bottom;
+        geometry::DeltaX right;
+    } margins;
 };
 
 }
