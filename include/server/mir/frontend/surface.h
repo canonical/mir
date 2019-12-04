@@ -46,6 +46,9 @@ class Surface
 public:
     virtual ~Surface() = default;
 
+    /// The offset of the content rect relative to the window's position
+    virtual auto content_offset() const -> geometry::Displacement = 0;
+
     /// Size of the client area of the surface (excluding any decorations)
     virtual auto content_size() const -> geometry::Size = 0;
 

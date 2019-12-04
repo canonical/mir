@@ -91,6 +91,16 @@ inline constexpr Displacement operator-(Point const& lhs, Point const& rhs)
     return Displacement{lhs.x - rhs.x, lhs.y - rhs.y};
 }
 
+inline constexpr Point& operator+=(Point& lhs, Displacement const& rhs)
+{
+    return lhs = lhs + rhs;
+}
+
+inline constexpr Point& operator-=(Point& lhs, Displacement const& rhs)
+{
+    return lhs = lhs - rhs;
+}
+
 inline bool operator<(Displacement const& lhs, Displacement const& rhs)
 {
     return lhs.length_squared() < rhs.length_squared();

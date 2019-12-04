@@ -152,9 +152,30 @@ auto msh::AbstractShell::create_surface(
 
 void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications)
 {
-    report->update_surface(*session, *surface, modifications);
-
     auto wm_relevant_mods = modifications;
+
+    auto const window_size{surface->window_size()};
+    auto const content_size{surface->content_size()};
+    auto const horiz_frame_padding = window_size.width - content_size.width;
+    auto const vert_frame_padding = window_size.height - content_size.height;
+    if (wm_relevant_mods.width.is_set())
+        wm_relevant_mods.width.value() += horiz_frame_padding;
+    if (wm_relevant_mods.height.is_set())
+        wm_relevant_mods.height.value() += vert_frame_padding;
+    if (wm_relevant_mods.max_width.is_set())
+        wm_relevant_mods.max_width.value() += horiz_frame_padding;
+    if (wm_relevant_mods.max_height.is_set())
+        wm_relevant_mods.max_height.value() += vert_frame_padding;
+    if (wm_relevant_mods.min_width.is_set())
+        wm_relevant_mods.min_width.value() += horiz_frame_padding;
+    if (wm_relevant_mods.min_height.is_set())
+        wm_relevant_mods.min_height.value() += vert_frame_padding;
+
+    if (wm_relevant_mods.aux_rect.is_set())
+        wm_relevant_mods.aux_rect.value().top_left += surface->content_offset();
+
+    report->update_surface(*session, *surface, wm_relevant_mods);
+
     if (wm_relevant_mods.streams.is_set())
     {
         session->configure_streams(*surface, wm_relevant_mods.streams.consume());

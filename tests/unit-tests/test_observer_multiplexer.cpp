@@ -20,6 +20,7 @@
 
 #include "mir/test/barrier.h"
 #include "mir/test/auto_unblock_thread.h"
+#include "mir/test/doubles/explicit_executor.h"
 
 #include <memory>
 #include <array>
@@ -31,6 +32,7 @@
 #include <gmock/gmock.h>
 
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -609,37 +611,12 @@ TEST(ObserverMultiplexer, multi_argument_observations_work)
     executor.drain_work();
 }
 
-namespace
-{
-class ExplicitExectutor : public mir::Executor
-{
-public:
-    void spawn(std::function<void()>&& work) override
-    {
-        work_queue.push(std::move(work));
-    }
-
-    void run_work_items()
-    {
-        while(!work_queue.empty())
-        {
-            auto work_item = std::move(work_queue.front());
-            work_queue.pop();
-            work_item();
-        }
-    }
-private:
-    std::queue<std::function<void()>> work_queue;
-};
-
-}
-
 TEST(ObserverMultiplexer, destroyed_observer_is_not_called)
 {
     using namespace testing;
 
 
-    ExplicitExectutor executor;
+    mtd::ExplicitExectutor executor;
     TestObserverMultiplexer multiplexer{executor};
 
     auto observer_owner = std::make_unique<NiceMock<MockObserver>>();
@@ -657,14 +634,14 @@ TEST(ObserverMultiplexer, destroyed_observer_is_not_called)
     // The test requires that our observer's lifetime has ended before we dispatch the observer
     ASSERT_THAT(observer_lifetime_observer.lock(), IsNull());
     // Run the executor; because the observer is dead, this should not dispatch to it.
-    executor.run_work_items();
+    executor.execute();
 }
 
 TEST(ObserverMultiplexer, unregister_interest_prevents_dispatch_of_already_queued_observations)
 {
     using namespace testing;
 
-    ExplicitExectutor executor;
+    mtd::ExplicitExectutor executor;
     TestObserverMultiplexer multiplexer{executor};
 
     auto const observer = std::make_shared<NiceMock<MockObserver>>();
@@ -692,7 +669,7 @@ TEST(ObserverMultiplexer, unregister_interest_prevents_dispatch_of_already_queue
     multiplexer.observation_made("Even though you may be sick at any time?");
 
     //We should now have three observations queued up in the Executor; dispatch them
-    executor.run_work_items();
+    executor.execute();
 
     EXPECT_THAT(call_count, Eq(1));
 }

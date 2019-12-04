@@ -44,6 +44,7 @@ public:
 
     std::string name() const override { return {}; }
     geometry::Point top_left() const override { return {}; }
+    geometry::Displacement content_offset() const override { return {};}
     geometry::Size content_size() const override { return {};}
     geometry::Size window_size() const override { return {}; }
     geometry::Rectangle input_bounds() const override { return {{},{}}; }
@@ -105,6 +106,12 @@ public:
     void set_application_id(std::string const& /*application_id*/) override {}
 
     auto session() const -> std::weak_ptr<scene::Session> override { return {}; }
+
+    void set_window_margins(
+        geometry::DeltaY /*top*/,
+        geometry::DeltaX /*left*/,
+        geometry::DeltaY /*bottom*/,
+        geometry::DeltaX /*right*/) override {}
 };
 
 }
