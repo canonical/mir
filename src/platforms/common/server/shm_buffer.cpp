@@ -127,27 +127,6 @@ MirPixelFormat mgc::ShmBuffer::pixel_format() const
     return pixel_format_;
 }
 
-void mgc::ShmBuffer::gl_bind_to_texture()
-{
-    GLenum format, type;
-
-    if (mg::get_gl_pixel_format(pixel_format_, format, type))
-    {
-        /*
-         * All existing Mir logic assumes that strides are whole multiples of
-         * pixels. And OpenGL defaults to expecting strides are multiples of
-         * 4 bytes. These assumptions used to be compatible when we only had
-         * 4-byte pixels but now we support 2/3-byte pixels we need to be more
-         * careful...
-         */
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, format,
-                     size_.width.as_int(), size_.height.as_int(),
-                     0, format, type, pixels);
-    }
-}
-
 std::shared_ptr<MirBufferPackage> mgc::ShmBuffer::to_mir_buffer_package() const
 {
     auto native_buffer = std::make_shared<MirNativeBuffer>();
@@ -181,31 +160,7 @@ mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
     return this;
 }
 
-void mgc::ShmBuffer::upload_to_texture()
-{
-    gl_bind_to_texture();
-}
-
-void mgc::ShmBuffer::secure_for_render()
-{
-}
-
-void mir::graphics::common::ShmBuffer::bind_for_write()
-{
-    gl_bind_to_texture();
-}
-
-void mir::graphics::common::ShmBuffer::commit()
-{
-    GLenum format, type;
-
-    if (mg::get_gl_pixel_format(pixel_format_, format, type))
-    {
-        glReadPixels(0, 0, size_.width.as_int(), size_.height.as_int(), format, type, pixels);
-    }
-}
-
-void mgc::ShmBuffer::tex_bind()
+void mgc::ShmBuffer::bind()
 {
     bool const needs_initialisation = tex_id == 0;
     if (needs_initialisation)
@@ -220,7 +175,24 @@ void mgc::ShmBuffer::tex_bind()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        gl_bind_to_texture();
+
+        GLenum format, type;
+
+        if (mg::get_gl_pixel_format(pixel_format_, format, type))
+        {
+            /*
+             * All existing Mir logic assumes that strides are whole multiples of
+             * pixels. And OpenGL defaults to expecting strides are multiples of
+             * 4 bytes. These assumptions used to be compatible when we only had
+             * 4-byte pixels but now we support 2/3-byte pixels we need to be more
+             * careful...
+             */
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, format,
+                         size_.width.as_int(), size_.height.as_int(),
+                         0, format, type, pixels);
+        }
     }
 }
 
