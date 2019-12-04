@@ -23,6 +23,7 @@
 
 namespace mir
 {
+class DefaultServerConfiguration;
 namespace scene
 {
 class Surface;
@@ -40,10 +41,6 @@ public:
     Manager() = default;
     virtual ~Manager() = default;
 
-    /// Called by the server configuration when the shell is created
-    /// shell can't be a construction parameter because the shell needs to be constructed with a manager
-    virtual void init(std::weak_ptr<shell::Shell> const& shell) = 0;
-
     /// Decorates the window
     virtual void decorate(std::shared_ptr<scene::Surface> const& surface) = 0;
 
@@ -57,6 +54,12 @@ public:
 private:
     Manager(Manager const&) = delete;
     Manager& operator=(Manager const&) = delete;
+
+    friend DefaultServerConfiguration;
+
+    /// Called by the server configuration when the shell is created
+    /// shell can't be a construction parameter because the shell needs to be constructed with a manager
+    virtual void init(std::weak_ptr<shell::Shell> const& shell) = 0;
 };
 }
 }
