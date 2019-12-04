@@ -1,3 +1,5 @@
+add_subdirectory(decoration)
+
 set(
   SHELL_SOURCES
 

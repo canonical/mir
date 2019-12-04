@@ -25,11 +25,13 @@
 #include "default_persistent_surface_store.h"
 #include "frontend_shell.h"
 #include "graphics_display_layout.h"
+#include "decoration/basic_manager.h"
+#include "decoration/decoration.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
+namespace msd = mir::shell::decoration;
 namespace mf = mir::frontend;
-
 
 auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 {
@@ -42,9 +44,11 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
                 the_prompt_session_manager(),
                 the_shell_report(),
                 the_window_manager_builder(),
-                the_seat()));
+                the_seat(),
+                the_decoration_manager()));
 
             the_composite_event_filter()->prepend(result);
+            the_decoration_manager()->init(result);
 
             return result;
         });
@@ -57,6 +61,20 @@ auto mir::DefaultServerConfiguration::the_window_manager_builder() -> shell::Win
             focus_controller,
             the_shell_display_layout(),
             the_session_coordinator()); };
+}
+
+auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_ptr<msd::Manager>
+{
+    return decoration_manager(
+        []()->std::shared_ptr<msd::Manager>
+        {
+            return std::make_shared<msd::BasicManager>([](
+                    std::shared_ptr<shell::Shell> const& /*shell*/,
+                    std::shared_ptr<scene::Surface> const& /*surface*/) -> std::unique_ptr<msd::Decoration>
+                {
+                    return std::make_unique<msd::NullDecoration>();
+                });
+        });
 }
 
 auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) -> std::shared_ptr<msh::Shell>
