@@ -147,6 +147,7 @@ TEST_F(ShmBufferTest, cant_upload_bgr_888)
 struct BufferUploadDesc
 {
     geom::Size size;
+    int stride_in_px;
     MirPixelFormat format;
     GLenum gl_format;
     GLenum gl_type;
@@ -168,8 +169,10 @@ TEST_P(UploadTest, uploads_correctly)
     ExpectationSet gl_setup;
     gl_setup +=
         EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+    gl_setup +=
+        EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, desc.stride_in_px));
 
-    EXPECT_CALL(
+    Expectation gl_use = EXPECT_CALL(
         mock_gl,
         glTexImage2D(
             GL_TEXTURE_2D, 0,
@@ -178,6 +181,12 @@ TEST_P(UploadTest, uploads_correctly)
             0,
             desc.gl_format, desc.gl_type,
             buf.pixel_buffer()));
+
+    // Ensure we reset GL state to be polite to other users.
+    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT, 4))
+        .After(gl_use);
+    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0))
+        .After(gl_use);
 
     buf.bind();
 
@@ -191,24 +200,28 @@ BufferUploadDesc const test_cases[] = {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     BufferUploadDesc{
         default_size,
+        default_size.width.as_int(),
         mir_pixel_format_xrgb_8888,
         GL_BGRA_EXT,
         GL_UNSIGNED_BYTE
     },
     BufferUploadDesc{
         default_size,
+        default_size.width.as_int(),
         mir_pixel_format_argb_8888,
         GL_BGRA_EXT,
         GL_UNSIGNED_BYTE
     },
     BufferUploadDesc{
         default_size,
+        default_size.width.as_int(),
         mir_pixel_format_xbgr_8888,
         GL_RGBA,
         GL_UNSIGNED_BYTE
     },
     BufferUploadDesc{
         default_size,
+        default_size.width.as_int(),
         mir_pixel_format_abgr_8888,
         GL_RGBA,
         GL_UNSIGNED_BYTE
@@ -216,24 +229,28 @@ BufferUploadDesc const test_cases[] = {
 #endif
     BufferUploadDesc {
         default_size,
+        default_size.width.as_int(),
         mir_pixel_format_rgb_888,
         GL_RGB,
         GL_UNSIGNED_BYTE
     },
     BufferUploadDesc{
         default_size,
+        default_size.width.as_int(),
         mir_pixel_format_rgb_565,
         GL_RGB,
         GL_UNSIGNED_SHORT_5_6_5
     },
     BufferUploadDesc{
         default_size,
+        default_size.width.as_int(),
         mir_pixel_format_rgba_5551,
         GL_RGBA,
         GL_UNSIGNED_SHORT_5_5_5_1
     },
     BufferUploadDesc{
         default_size,
+        default_size.width.as_int(),
         mir_pixel_format_rgba_4444,
         GL_RGBA,
         GL_UNSIGNED_SHORT_4_4_4_4
