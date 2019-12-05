@@ -280,7 +280,7 @@ void mf::WindowWlSurfaceRole::set_server_side_decorated(bool server_side_decorat
 {
     if (weak_scene_surface.lock())
     {
-        log_warning("server_side_decorated decorated property can not be changed after surface created");
+        log_warning("Changing server_side_decorated property after surface created not yet possible");
     }
     else
     {
