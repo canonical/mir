@@ -68,30 +68,28 @@ private:
     GLuint tex_id{0};
 };
 
-class FileBackedShmBuffer :
+class MemoryBackedShmBuffer :
     public ShmBuffer,
     public renderer::software::PixelSource
 {
 public:
+    MemoryBackedShmBuffer(
+        geometry::Size const& size,
+        MirPixelFormat const& pixel_format);
+
     void write(unsigned char const* data, size_t size) override;
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
     geometry::Stride stride() const override;
 
+    std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
+
     void bind() override;
 
-    FileBackedShmBuffer(FileBackedShmBuffer const&) = delete;
-    FileBackedShmBuffer& operator=(FileBackedShmBuffer const&) = delete;
-protected:
-    FileBackedShmBuffer(std::unique_ptr<ShmFile> shm_file,
-              geometry::Size const& size,
-              MirPixelFormat const& pixel_format);
-
-    std::shared_ptr<MirBufferPackage> to_mir_buffer_package() const;
-
+    MemoryBackedShmBuffer(MemoryBackedShmBuffer const&) = delete;
+    MemoryBackedShmBuffer& operator=(MemoryBackedShmBuffer const&) = delete;
 private:
-    std::unique_ptr<ShmFile> const shm_file;
     geometry::Stride const stride_;
-    void* const pixels;
+    std::unique_ptr<unsigned char[]> const pixels;
 };
 
 }

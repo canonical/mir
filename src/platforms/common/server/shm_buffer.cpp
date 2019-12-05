@@ -20,7 +20,6 @@
 #include "mir/graphics/gl_format.h"
 #include "mir/shm_file.h"
 #include "shm_buffer.h"
-#include "buffer_texture_binder.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
 
@@ -100,14 +99,12 @@ mgc::ShmBuffer::ShmBuffer(
 {
 }
 
-mgc::FileBackedShmBuffer::FileBackedShmBuffer(
-    std::unique_ptr<ShmFile> shm_file,
+mgc::MemoryBackedShmBuffer::MemoryBackedShmBuffer(
     geom::Size const& size,
     MirPixelFormat const& pixel_format)
     : ShmBuffer(size, pixel_format),
-      shm_file{std::move(shm_file)},
       stride_{MIR_BYTES_PER_PIXEL(pixel_format) * size.width.as_uint32_t()},
-      pixels{this->shm_file->base_ptr()}
+      pixels{new unsigned char[stride_.as_int() * size.height.as_int()]}
 {
 }
 
@@ -124,7 +121,7 @@ geom::Size mgc::ShmBuffer::size() const
     return size_;
 }
 
-geom::Stride mgc::FileBackedShmBuffer::stride() const
+geom::Stride mgc::MemoryBackedShmBuffer::stride() const
 {
     return stride_;
 }
@@ -155,32 +152,16 @@ void mgc::ShmBuffer::upload_to_texture(void const* pixels)
     }
 }
 
-std::shared_ptr<MirBufferPackage> mgc::FileBackedShmBuffer::to_mir_buffer_package() const
-{
-    auto native_buffer = std::make_shared<MirNativeBuffer>();
-
-    native_buffer->fd_items = 1;
-    native_buffer->fd[0] = shm_file->fd();
-    native_buffer->stride = stride().as_uint32_t();
-    native_buffer->flags = 0;
-
-    auto const& dim = size();
-    native_buffer->width = dim.width.as_int();
-    native_buffer->height = dim.height.as_int();
-
-    return native_buffer;
-}
-
-void mgc::FileBackedShmBuffer::write(unsigned char const* data, size_t data_size)
+void mgc::MemoryBackedShmBuffer::write(unsigned char const* data, size_t data_size)
 {
     if (data_size != stride_.as_uint32_t()*size().height.as_uint32_t())
         BOOST_THROW_EXCEPTION(std::logic_error("Size is not equal to number of pixels in buffer"));
-    memcpy(pixels, data, data_size);
+    memcpy(pixels.get(), data, data_size);
 }
 
-void mgc::FileBackedShmBuffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
+void mgc::MemoryBackedShmBuffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
 {
-    do_with_pixels(static_cast<unsigned char const*>(pixels));
+    do_with_pixels(static_cast<unsigned char const*>(pixels.get()));
 }
 
 mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
@@ -206,10 +187,15 @@ void mgc::ShmBuffer::bind()
     }
 }
 
-void mgc::FileBackedShmBuffer::bind()
+void mgc::MemoryBackedShmBuffer::bind()
 {
     mgc::ShmBuffer::bind();
-    upload_to_texture(pixels);
+    upload_to_texture(pixels.get());
+}
+
+auto mgc::MemoryBackedShmBuffer::native_buffer_handle() const -> std::shared_ptr<mg::NativeBuffer>
+{
+    BOOST_THROW_EXCEPTION((std::runtime_error{"MemoryBackedShmBuffer does not support mirclient APIs"}));
 }
 
 mg::gl::Program const& mgc::ShmBuffer::shader(mg::gl::ProgramFactory& cache) const

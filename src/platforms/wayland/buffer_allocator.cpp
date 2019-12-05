@@ -83,24 +83,6 @@ std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_buffer(
 
 std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_software_buffer(geom::Size size, MirPixelFormat format)
 {
-    class SoftwareBuffer: public common::FileBackedShmBuffer
-    {
-    public:
-        SoftwareBuffer(
-            std::unique_ptr<ShmFile> shm_file,
-            geometry::Size const& size,
-            MirPixelFormat const& pixel_format) :
-            FileBackedShmBuffer(std::move(shm_file), size, pixel_format)
-        {
-        }
-
-        auto native_buffer_handle() const -> std::shared_ptr<NativeBuffer> override
-        {
-            fatal_error("wayland platform does not support mirclient");
-            return {};
-        }
-    };
-
     if (!mgc::ShmBuffer::supports(format))
     {
         BOOST_THROW_EXCEPTION(
@@ -108,10 +90,7 @@ std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_software_buffer(geom::Si
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    auto const stride = geom::Stride{ MIR_BYTES_PER_PIXEL(format) * size.width.as_uint32_t() };
-    size_t const size_in_bytes = stride.as_int() * size.height.as_int();
-    return std::make_shared<SoftwareBuffer>(
-        std::make_unique<AnonymousShmFile>(size_in_bytes), size, format);
+    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format);
 }
 
 std::vector<MirPixelFormat> mgw::BufferAllocator::supported_pixel_formats()
