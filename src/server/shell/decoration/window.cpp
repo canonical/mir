@@ -70,6 +70,9 @@ auto border_type_for(std::shared_ptr<ms::Surface> const& surface) -> msd::Border
     case mir_window_states:
         return BorderType::None;
     }
+
+    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    return {};
 }
 }
 
@@ -117,8 +120,11 @@ auto msd::WindowState::titlebar_width() const -> geom::Width
     case BorderType::Titlebar:
         return window_size().width;
     case BorderType::None:
-        return geom::Width{};
+        return {};
     }
+
+    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    return {};
 }
 
 auto msd::WindowState::titlebar_height() const -> geom::Height
@@ -129,8 +135,11 @@ auto msd::WindowState::titlebar_height() const -> geom::Height
     case BorderType::Titlebar:
         return static_geometry_.titlebar_height;
     case BorderType::None:
-        return geom::Height{};
+        return {};
     }
+
+    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    return {};
 }
 
 auto msd::WindowState::side_border_width() const -> geom::Width
@@ -141,8 +150,11 @@ auto msd::WindowState::side_border_width() const -> geom::Width
         return static_geometry_.border_width;
     case BorderType::Titlebar:
     case BorderType::None:
-        return geom::Width{};
+        return {};
     }
+
+    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    return {};
 }
 
 auto msd::WindowState::side_border_height() const -> geom::Height
@@ -153,8 +165,11 @@ auto msd::WindowState::side_border_height() const -> geom::Height
         return window_size().height - as_delta(titlebar_height()) - as_delta(bottom_border_height());
     case BorderType::Titlebar:
     case BorderType::None:
-        return geom::Height{};
+        return {};
     }
+
+    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    return {};
 }
 
 auto msd::WindowState::bottom_border_width() const -> geom::Width
@@ -170,8 +185,11 @@ auto msd::WindowState::bottom_border_height() const -> geom::Height
         return static_geometry_.border_height;
     case BorderType::Titlebar:
     case BorderType::None:
-        return geom::Height{};
+        return {};
     }
+
+    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    return {};
 }
 
 auto msd::WindowState::titlebar_rect() const -> geom::Rectangle
