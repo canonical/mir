@@ -101,8 +101,8 @@ protected:
 
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> threadsafe_self;
     std::unique_ptr<StaticGeometry const> const static_geometry;
-    std::unique_ptr<WindowState const> window_state{nullptr};
-    std::unique_ptr<InputState const> input_state{nullptr};
+    std::unique_ptr<WindowState const> window_state;
+    std::unique_ptr<InputState const> input_state;
 
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
