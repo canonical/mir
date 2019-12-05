@@ -206,6 +206,7 @@ void ms::SurfaceCreationParameters::update_from(msh::SurfaceSpecification const&
         exclusive_rect = that.exclusive_rect.value();
     if (that.application_id.is_set())
         application_id = that.application_id.value();
+    // server_side_decorated not a property of SurfaceSpecification
     // TODO: should SurfaceCreationParameters support cursors?
 //     if (that.cursor_image.is_set())
 //         cursor_image = that.cursor_image;
@@ -253,7 +254,8 @@ bool ms::operator==(
         lhs.depth_layer == rhs.depth_layer &&
         lhs.attached_edges == rhs.attached_edges &&
         lhs.exclusive_rect == rhs.exclusive_rect &&
-        lhs.application_id == rhs.application_id;
+        lhs.application_id == rhs.application_id &&
+        lhs.server_side_decorated == rhs.server_side_decorated;
 }
 
 bool ms::operator!=(
