@@ -200,6 +200,11 @@ msd::BasicDecoration::~BasicDecoration()
 {
     threadsafe_self->invalidate();
     shell->destroy_surface(session, decoration_surface);
+    window_surface->set_window_margins(
+        geom::DeltaY{},
+        geom::DeltaX{},
+        geom::DeltaY{},
+        geom::DeltaX{});
 }
 
 void msd::BasicDecoration::window_state_updated()
