@@ -24,6 +24,9 @@
 #include "mir/graphics/program.h"
 #include "egl_context_delegate.h"
 
+#define MIR_LOG_COMPONENT "gfx-common"
+#include "mir/log.h"
+
 #include MIR_SERVER_GL_H
 #include MIR_SERVER_GLEXT_H
 
@@ -139,24 +142,46 @@ MirPixelFormat mgc::ShmBuffer::pixel_format() const
     return pixel_format_;
 }
 
-void mgc::ShmBuffer::upload_to_texture(void const* pixels)
+void mgc::ShmBuffer::upload_to_texture(void const* pixels, geom::Stride const& stride)
 {
     GLenum format, type;
 
     if (mg::get_gl_pixel_format(pixel_format_, format, type))
     {
+        auto const stride_in_px =
+            stride.as_int() / MIR_BYTES_PER_PIXEL(pixel_format());
         /*
-         * All existing Mir logic assumes that strides are whole multiples of
-         * pixels. And OpenGL defaults to expecting strides are multiples of
-         * 4 bytes. These assumptions used to be compatible when we only had
-         * 4-byte pixels but now we support 2/3-byte pixels we need to be more
-         * careful...
+         * We assume (as does Weston, AFAICT) that stride is
+         * a multiple of whole pixels, but it need not be.
+         *
+         * TODO: Handle non-pixel-multiple strides.
+         * This should be possible by calculating GL_UNPACK_ALIGNMENT
+         * to match the size of the partial-pixel-stride().
          */
+
+        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, stride_in_px);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, format,
-                     size_.width.as_int(), size_.height.as_int(),
-                     0, format, type, pixels);
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            format,
+            size().width.as_int(), size().height.as_int(),
+            0,
+            format,
+            type,
+            pixels);
+
+        // Be nice to other users of the GL context by reverting our changes to shared state
+        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);     // 0 is default, meaning “use width”
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          // 4 is default; word alignment.
+    }
+    else
+    {
+        mir::log_error(
+            "Buffer %i has non-GL-compatible pixel format %i; rendering will be incomplete",
+            id().as_value(),
+            pixel_format());
     }
 }
 
@@ -198,7 +223,7 @@ void mgc::ShmBuffer::bind()
 void mgc::MemoryBackedShmBuffer::bind()
 {
     mgc::ShmBuffer::bind();
-    upload_to_texture(pixels.get());
+    upload_to_texture(pixels.get(), stride_);
 }
 
 auto mgc::MemoryBackedShmBuffer::native_buffer_handle() const -> std::shared_ptr<mg::NativeBuffer>
