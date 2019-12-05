@@ -132,6 +132,9 @@ struct SurfaceCreationParameters
 
     /// See mir::scene::Surface::application_id()
     optional_value<std::string> application_id;
+
+    /// If to enable server-side decorations for this surface
+    optional_value<bool> server_side_decorated;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
