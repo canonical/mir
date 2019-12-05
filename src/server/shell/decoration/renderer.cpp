@@ -51,11 +51,12 @@ inline void render_row(
     geom::Width length,
     uint32_t color)
 {
-    if (left.y >= as_y(buf_size.height))
+    if (left.y < geom::Y{} || left.y >= as_y(buf_size.height))
         return;
-    length = std::min(length, buf_size.width - as_delta(left.x));
+    geom::X const right = std::min(left.x + as_delta(length), as_x(buf_size.width));
+    left.x = std::max(left.x, geom::X{});
     uint32_t* const start = data + (left.y.as_int() * buf_size.width.as_int()) + left.x.as_int();
-    uint32_t* const end = start + length.as_int();
+    uint32_t* const end = start + right.as_int() - left.x.as_int();
     for (uint32_t* i = start; i < end; i++)
         *i = color;
 }
