@@ -328,7 +328,8 @@ void msd::BasicDecoration::update()
         spec.streams = std::vector<StreamSpecification>{};
         auto const emplace = [&](std::shared_ptr<mc::BufferStream> stream, geom::Rectangle rect)
             {
-                spec.streams.value().emplace_back(StreamSpecification{stream, as_displacement(rect.top_left), rect.size});
+                if (rect.size.width > geom::Width{} && rect.size.height > geom::Height{})
+                    spec.streams.value().emplace_back(StreamSpecification{stream, as_displacement(rect.top_left), rect.size});
             };
 
         switch (window_state->border_type())

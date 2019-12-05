@@ -38,7 +38,10 @@ namespace
 {
 inline auto area(geom::Size size) -> size_t
 {
-    return size.width.as_int() * size.height.as_int();
+    return (size.width > geom::Width{} && size.height > geom::Height{})
+        ? size.width.as_int() * size.height.as_int()
+        : 0;
+
 }
 
 inline void render_row(
