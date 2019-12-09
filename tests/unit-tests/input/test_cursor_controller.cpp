@@ -30,7 +30,7 @@
 #include "mir_toolkit/cursors.h"
 
 #include "mir/test/fake_shared.h"
-#include "mir/test/doubles/stub_scene_surface.h"
+#include "mir/test/doubles/stub_surface.h"
 #include "mir/test/doubles/stub_input_scene.h"
 
 #include <gtest/gtest.h>
@@ -102,10 +102,10 @@ struct MockCursor : public mg::Cursor
 
 // TODO: This should only inherit from mi::Surface but to use the Scene observer we need an
 // ms::Surface base class.
-struct StubInputSurface : public mtd::StubSceneSurface
+struct StubInputSurface : public mtd::StubSurface
 {
     StubInputSurface(geom::Rectangle const& input_bounds, std::shared_ptr<mg::CursorImage> const& cursor_image)
-        : mtd::StubSceneSurface{},
+        : mtd::StubSurface{},
           bounds(input_bounds),
           cursor_image_(cursor_image)
     {
