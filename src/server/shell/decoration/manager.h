@@ -65,4 +65,4 @@ private:
 }
 }
 
-#endif /* MIR_SHELL_DECORATION_MANAGER_H_ */
+#endif // MIR_SHELL_DECORATION_MANAGER_H_
