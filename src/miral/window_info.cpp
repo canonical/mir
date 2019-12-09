@@ -361,6 +361,7 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
     switch (state())
     {
     case mir_window_state_restored:
+    case mir_window_state_attached:
         break;
 
         // "A vertically maximised window is anchored to the top and bottom of
