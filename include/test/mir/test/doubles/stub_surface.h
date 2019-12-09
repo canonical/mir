@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -30,61 +30,61 @@ namespace doubles
 // scene::Surface is a horribly wide interface to expose from Mir
 struct StubSurface : scene::Surface
 {
-    std::string name() const override;
-    void move_to(geometry::Point const& top_left) override;
-    geometry::Size window_size() const override;
-    geometry::Displacement content_offset() const override;
-    geometry::Size content_size() const override;
-    std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
-    void set_streams(std::list<scene::StreamInfo> const& streams) override;
-    input::InputReceptionMode reception_mode() const override;
-    void set_reception_mode(input::InputReceptionMode mode) override;
-    void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
-    void resize(geometry::Size const& size) override;
-    geometry::Point top_left() const override;
-    geometry::Rectangle input_bounds() const override;
-    bool input_area_contains(geometry::Point const& point) const override;
-    void consume(MirEvent const* event) override;
-    void set_alpha(float alpha) override;
-    void set_orientation(MirOrientation orientation) override;
-    void set_transformation(glm::mat4 const&) override;
-    bool visible() const override;
-    graphics::RenderableList generate_renderables(compositor::CompositorID id) const override;
-    int buffers_ready_for_compositor(void const* compositor_id) const override;
-    MirWindowType type() const override;
-    MirWindowState state() const override;
-    int configure(MirWindowAttrib attrib, int value) override;
-    int query(MirWindowAttrib attrib) const override;
-    void hide() override;
-    void show() override;
-    void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override;
-    std::shared_ptr<graphics::CursorImage> cursor_image() const override;
-    void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const& stream, geometry::Displacement const& hotspot) override;
-    void request_client_surface_close() override;
-    std::shared_ptr<Surface> parent() const override;
-    void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) override;
-    void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
-    void set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
-                    std::string const& variant, std::string const& options) override;
-    void rename(std::string const& title) override;
-    void set_confine_pointer_state(MirPointerConfinementState state) override;
-    MirPointerConfinementState confine_pointer_state() const override;
-    void placed_relative(geometry::Rectangle const& placement) override;
-    void start_drag_and_drop(std::vector<uint8_t> const& handle) override;
-    MirDepthLayer depth_layer() const override;
-    void set_depth_layer(MirDepthLayer depth_layer) override;
-    std::experimental::optional<geometry::Rectangle> clip_area() const override;
-    void set_clip_area(std::experimental::optional<geometry::Rectangle> const& area) override;
-    MirWindowFocusState focus_state() const override;
-    void set_focus_state(MirWindowFocusState new_state) override;
-    std::string application_id() const override;
-    void set_application_id(std::string const& application_id) override;
-    std::weak_ptr<scene::Session> session() const override;
+    std::string name() const override { return ""; }
+    void move_to(geometry::Point const&) override {}
+    geometry::Size window_size() const override { return {}; }
+    geometry::Displacement content_offset() const override { return {}; }
+    geometry::Size content_size() const override { return {}; }
+    std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
+    void set_streams(std::list<scene::StreamInfo> const&) override {}
+    input::InputReceptionMode reception_mode() const override { return input::InputReceptionMode::normal; }
+    void set_reception_mode(input::InputReceptionMode) override {}
+    void set_input_region(std::vector<geometry::Rectangle> const&) override {}
+    void resize(geometry::Size const&) override {}
+    geometry::Point top_left() const override { return {}; }
+    geometry::Rectangle input_bounds() const override { return {}; }
+    bool input_area_contains(geometry::Point const&) const override { return false; }
+    void consume(MirEvent const*) override {}
+    void set_alpha(float) override {}
+    void set_orientation(MirOrientation) override {}
+    void set_transformation(glm::mat4 const&) override {}
+    bool visible() const override { return false; }
+    graphics::RenderableList generate_renderables(compositor::CompositorID) const override { return {}; }
+    int buffers_ready_for_compositor(void const*) const override { return 0; }
+    MirWindowType type() const override { return mir_window_type_normal; }
+    MirWindowState state() const override { return mir_window_state_fullscreen; }
+    int configure(MirWindowAttrib, int value) override { return value; }
+    int query(MirWindowAttrib) const override { return 0; }
+    void hide() override {}
+    void show() override {}
+    void set_cursor_image(std::shared_ptr<graphics::CursorImage> const&) override {}
+    std::shared_ptr<graphics::CursorImage> cursor_image() const override { return nullptr; }
+    void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) override {}
+    void request_client_surface_close() override {}
+    std::shared_ptr<Surface> parent() const override { return nullptr; }
+    void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) override {}
+    void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) override {}
+    void set_keymap(MirInputDeviceId, std::string const&, std::string const&, std::string const&,
+                    std::string const&) override {}
+    void rename(std::string const&) override {}
+    void set_confine_pointer_state(MirPointerConfinementState) override {}
+    MirPointerConfinementState confine_pointer_state() const override { return mir_pointer_unconfined; }
+    void placed_relative(geometry::Rectangle const&) override {}
+    void start_drag_and_drop(std::vector<uint8_t> const&) override {}
+    MirDepthLayer depth_layer() const override { return mir_depth_layer_application; }
+    void set_depth_layer(MirDepthLayer) override {}
+    std::experimental::optional<geometry::Rectangle> clip_area() const override { return std::experimental::nullopt; }
+    void set_clip_area(std::experimental::optional<geometry::Rectangle> const&) override {}
+    MirWindowFocusState focus_state() const override { return mir_window_focus_state_unfocused; }
+    void set_focus_state(MirWindowFocusState) override {}
+    std::string application_id() const override { return ""; }
+    void set_application_id(std::string const&) override {}
+    std::weak_ptr<scene::Session> session() const override { return {}; }
     void set_window_margins(
-        geometry::DeltaY top,
-        geometry::DeltaX left,
-        geometry::DeltaY bottom,
-        geometry::DeltaX right) override;
+        geometry::DeltaY,
+        geometry::DeltaX,
+        geometry::DeltaY,
+        geometry::DeltaX) override {}
 };
 }
 }
