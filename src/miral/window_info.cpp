@@ -351,10 +351,10 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
     }
 
     if (left_resize)
-        new_pos.x += new_size.width - requested_size.width;
+        new_pos.x -= new_size.width - requested_size.width;
 
     if (top_resize)
-        new_pos.y += new_size.height - requested_size.height;
+        new_pos.y -= new_size.height - requested_size.height;
 
     // placeholder - constrain onscreen
 
