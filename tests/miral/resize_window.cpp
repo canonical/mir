@@ -177,6 +177,40 @@ TEST_F(ResizeWindow, clamped_when_min_size_applied)
     EXPECT_THAT(window.size(), Eq(clamp_size));
 }
 
+TEST_P(ResizeWindow, clamped_on_resize)
+{
+    auto const edge = GetParam().edge;
+    auto const excessive_size = GetParam().grow ? large_size : small_size;
+    auto const clamp_size = GetParam().grow ? max_size : min_size;
+    auto const requested_new_top_left = top_left_after_resize(window, excessive_size, edge);
+    auto const correct_new_top_left = top_left_after_resize(window, clamp_size, edge);
+
+    {
+        miral::WindowSpecification modifications;
+        if (GetParam().grow)
+        {
+            modifications.max_width() = clamp_size.width;
+            modifications.max_height() = clamp_size.height;
+        }
+        else
+        {
+            modifications.min_width() = clamp_size.width;
+            modifications.min_height() = clamp_size.height;
+        }
+        window_manager_tools.modify_window(window, modifications);
+    }
+
+    {
+        miral::WindowSpecification modifications;
+        modifications.size() = excessive_size;
+        modifications.top_left() = requested_new_top_left;
+        window_manager_tools.modify_window(window, modifications);
+    }
+
+    EXPECT_THAT(window.size(), Eq(clamp_size));
+    EXPECT_THAT(window.top_left(), Eq(correct_new_top_left));
+}
+
 INSTANTIATE_TEST_CASE_P(ResizeLarger, ResizeWindow, ::testing::Values(
     ResizeParam{mir_resize_edge_north, true},
     ResizeParam{mir_resize_edge_south, true},
