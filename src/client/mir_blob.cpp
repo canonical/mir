@@ -109,7 +109,11 @@ try
         protobuf_output->set_orientation(output->orientation);
     }
 
+#if GOOGLE_PROTOBUF_VERSION >= 3010000
+    auto blob = std::make_unique<MirManagedBlob>(static_cast<size_t>(protobuf_config.ByteSizeLong()));
+#else
     auto blob = std::make_unique<MirManagedBlob>(static_cast<size_t>(protobuf_config.ByteSize()));
+#endif
 
     protobuf_config.SerializeWithCachedSizesToArray(blob->data());
 

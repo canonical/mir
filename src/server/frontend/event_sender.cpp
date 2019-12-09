@@ -104,13 +104,21 @@ void mfd::EventSender::handle_input_config_change(MirInputConfig const& config)
 void mfd::EventSender::send_event_sequence(mp::EventSequence& seq, FdSets const& fds)
 {
     mir::VariableLengthArray<frontend::serialization_buffer_size>
+#if GOOGLE_PROTOBUF_VERSION >= 3010000
+        send_buffer{static_cast<size_t>(seq.ByteSizeLong())};
+#else
         send_buffer{static_cast<size_t>(seq.ByteSize())};
+#endif
 
     seq.SerializeWithCachedSizesToArray(send_buffer.data());
 
     mir::protobuf::wire::Result result;
     result.add_events(send_buffer.data(), send_buffer.size());
+#if GOOGLE_PROTOBUF_VERSION >= 3010000
+    send_buffer.resize(result.ByteSizeLong());
+#else
     send_buffer.resize(result.ByteSize());
+#endif
     result.SerializeWithCachedSizesToArray(send_buffer.data());
 
     try
