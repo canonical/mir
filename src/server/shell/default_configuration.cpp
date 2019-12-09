@@ -17,6 +17,7 @@
  */
 
 #include <mir/shell/system_compositor_window_manager.h>
+#include <mir/main_loop.h>
 #include "mir/default_server_configuration.h"
 #include "null_host_lifecycle_event_listener.h"
 
@@ -26,7 +27,7 @@
 #include "frontend_shell.h"
 #include "graphics_display_layout.h"
 #include "decoration/basic_manager.h"
-#include "decoration/decoration.h"
+#include "decoration/basic_decoration.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -66,13 +67,21 @@ auto mir::DefaultServerConfiguration::the_window_manager_builder() -> shell::Win
 auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_ptr<msd::Manager>
 {
     return decoration_manager(
-        []()->std::shared_ptr<msd::Manager>
+        [this]()->std::shared_ptr<msd::Manager>
         {
-            return std::make_shared<msd::BasicManager>([](
-                    std::shared_ptr<shell::Shell> const& /*shell*/,
-                    std::shared_ptr<scene::Surface> const& /*surface*/) -> std::unique_ptr<msd::Decoration>
+            return std::make_shared<msd::BasicManager>(
+                [buffer_allocator = the_buffer_allocator(),
+                 executor = the_main_loop(),
+                 cursor_images = the_cursor_images()](
+                    std::shared_ptr<shell::Shell> const& shell,
+                    std::shared_ptr<scene::Surface> const& surface) -> std::unique_ptr<msd::Decoration>
                 {
-                    return std::make_unique<msd::NullDecoration>();
+                    return std::make_unique<msd::BasicDecoration>(
+                        shell,
+                        buffer_allocator,
+                        executor,
+                        cursor_images,
+                        surface);
                 });
         });
 }

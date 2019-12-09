@@ -42,4 +42,4 @@ typedef Decoration NullDecoration;
 }
 }
 
-#endif /* MIR_SHELL_DECORATION_DECORATION_H_ */
+#endif // MIR_SHELL_DECORATION_DECORATION_H_
