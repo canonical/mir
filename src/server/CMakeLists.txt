@@ -1,4 +1,5 @@
 pkg_check_modules(UUID REQUIRED uuid)
+pkg_check_modules(FREETYPE freetype2 REQUIRED) # For rendering decorated window titles
 
 add_definitions(
   -DMIR_LOG_COMPONENT_FALLBACK="mirserver"
@@ -144,7 +145,13 @@ target_link_libraries(mirserver LINK_PUBLIC
   ${XCB_RENDER_LDFLAGS} ${XCB_RENDER_LIBRARIES}
   ${X11_XCURSOR_LDFLAGS} ${X11_XCURSOR_LIBRARIES}
   ${LTTNG_UST_LDFLAGS} ${LTTNG_UST_LIBRARIES}
+  ${FREETYPE_LDFLAGS} ${FREETYPE_LIBRARIES}
   atomic
+)
+
+target_include_directories(mirshelldecoration
+  PRIVATE
+    ${FREETYPE_INCLUDE_DIRS}
 )
 
 target_include_directories(mirshell
