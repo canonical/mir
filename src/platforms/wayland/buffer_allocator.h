@@ -32,6 +32,11 @@ namespace graphics
 {
 class Display;
 
+namespace common
+{
+class EGLContextDelegate;
+}
+
 namespace wayland
 {
 class BufferAllocator: public GraphicBufferAllocator,
@@ -58,6 +63,7 @@ private:
     std::shared_ptr<Executor> wayland_executor;
     std::shared_ptr<EGLExtensions> const egl_extensions;
     std::shared_ptr<renderer::gl::Context> const ctx;
+    std::shared_ptr<common::EGLContextDelegate> const egl_delegate;
 };
 }
 }

@@ -94,7 +94,9 @@ std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const
 }
 
 mge::BufferAllocator::BufferAllocator(mg::Display const& output)
-    : ctx{context_for_output(output)}
+    : wayland_ctx{context_for_output(output)},
+      egl_delegate{
+          std::make_shared<mgc::EGLContextDelegate>(context_for_output(output))}
 {
 }
 
@@ -117,7 +119,7 @@ std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_software_buffer(geom::Si
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format);
+    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format, egl_delegate);
 }
 
 std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()
@@ -334,7 +336,7 @@ void mge::BufferAllocator::create_buffer_eglstream_resource(
         EGL_NONE
     };
 
-    allocator->ctx->make_current();
+    allocator->wayland_ctx->make_current();
     auto dpy = eglGetCurrentDisplay();
 
     auto stream = allocator->nv_extensions.eglCreateStreamAttribNV(dpy, attribs);
@@ -344,9 +346,9 @@ void mge::BufferAllocator::create_buffer_eglstream_resource(
         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to create EGLStream from Wayland buffer")));
     }
 
-    BoundEGLStream::associate_stream(buffer, allocator->ctx, stream);
+    BoundEGLStream::associate_stream(buffer, allocator->wayland_ctx, stream);
 
-    allocator->ctx->release_current();
+    allocator->wayland_ctx->release_current();
 }
 
 struct wl_eglstream_controller_interface const mge::BufferAllocator::impl{
@@ -391,8 +393,8 @@ void mir::graphics::eglstream::BufferAllocator::bind_display(
     }
 
     auto context_guard = mir::raii::paired_calls(
-        [this]() { ctx->make_current(); },
-        [this]() { ctx->release_current(); });
+        [this]() { wayland_ctx->make_current(); },
+        [this]() { wayland_ctx->release_current(); });
 
     auto dpy = eglGetCurrentDisplay();
 
@@ -524,8 +526,8 @@ mir::graphics::eglstream::BufferAllocator::buffer_from_resource(
     std::function<void()>&& /*on_release*/)
 {
     auto context_guard = mir::raii::paired_calls(
-        [this]() { ctx->make_current(); },
-        [this]() { ctx->release_current(); });
+        [this]() { wayland_ctx->make_current(); },
+        [this]() { wayland_ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
     EGLint width, height;
