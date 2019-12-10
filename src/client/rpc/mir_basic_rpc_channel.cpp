@@ -154,7 +154,11 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     size_t num_side_channel_fds)
 {
     mir::VariableLengthArray<mir::frontend::serialization_buffer_size>
+#if GOOGLE_PROTOBUF_VERSION >= 3010000
+        buffer{static_cast<size_t>(request->ByteSizeLong())};
+#else
         buffer{static_cast<size_t>(request->ByteSize())};
+#endif
 
     request->SerializeWithCachedSizesToArray(buffer.data());
 

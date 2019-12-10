@@ -31,7 +31,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <sys/eventfd.h>
-#include <sys/poll.h>
+#include <poll.h>
 #include <algorithm>
 #include <vector>
 
