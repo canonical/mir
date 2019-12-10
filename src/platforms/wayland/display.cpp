@@ -319,7 +319,7 @@ void mir::graphics::wayland::Display::pointer_motion(wl_pointer* pointer, uint32
 {
     {
         std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
-        geom::Point const new_pointer{wl_fixed_to_int(x), wl_fixed_to_int(y)};
+        geom::Point const new_pointer{wl_fixed_to_int(x)*pointer_scale, wl_fixed_to_int(y)*pointer_scale};
         pointer_pos = new_pointer + pointer_displacement;
         pointer_time = std::chrono::milliseconds{time};
     }
@@ -389,8 +389,8 @@ void mir::graphics::wayland::Display::touch_down(
 
         touch_time = std::chrono::milliseconds{time};
         contact->action = mir_touch_action_down;
-        contact->x = wl_fixed_to_double(x) + touch_displacement.dx.as_int();
-        contact->y = wl_fixed_to_double(y) + touch_displacement.dy.as_int();
+        contact->x = touch_scale*wl_fixed_to_double(x) + touch_displacement.dx.as_int();
+        contact->y = touch_scale*wl_fixed_to_double(y) + touch_displacement.dy.as_int();
     }
 }
 
@@ -418,8 +418,8 @@ void mir::graphics::wayland::Display::touch_motion(wl_touch* touch, uint32_t tim
 
         touch_time = std::chrono::milliseconds{time};
         contact->action = mir_touch_action_change;
-        contact->x = wl_fixed_to_double(x) + touch_displacement.dx.as_int();
-        contact->y = wl_fixed_to_double(y) + touch_displacement.dy.as_int();
+        contact->x = touch_scale*wl_fixed_to_double(x) + touch_displacement.dx.as_int();
+        contact->y = touch_scale*wl_fixed_to_double(y) + touch_displacement.dy.as_int();
     }
 
     DisplayClient::touch_motion(touch, time, id, x, y);
@@ -519,8 +519,12 @@ auto mir::graphics::wayland::Display::get_touch_contact(int32_t id) -> decltype(
 void mir::graphics::wayland::Display::pointer_enter(
     wl_pointer* pointer, uint32_t serial, wl_surface* surface, wl_fixed_t x, wl_fixed_t y)
 {
-    if (cursor) cursor->enter(pointer);
     DisplayClient::pointer_enter(pointer, serial, surface, x, y);
+    if (cursor)
+    {
+        cursor->enter(pointer);
+        cursor->scale(pointer_scale);
+    }
 }
 
 void mir::graphics::wayland::Display::pointer_leave(wl_pointer* pointer, uint32_t serial, wl_surface* surface)
