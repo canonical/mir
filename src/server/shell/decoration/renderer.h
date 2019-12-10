@@ -59,6 +59,8 @@ public:
 private:
     using Pixel = uint32_t;
 
+    class Text;
+
     /// A visual theme for a decoration
     /// Focused and unfocused windows use a different theme
     struct Theme

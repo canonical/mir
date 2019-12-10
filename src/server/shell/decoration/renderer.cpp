@@ -23,9 +23,15 @@
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/renderer/sw/pixel_source.h"
+#include "mir/geometry/displacement.h"
 #include "mir/log.h"
 
-#include "boost/throw_exception.hpp"
+#include <boost/throw_exception.hpp>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+#include <locale>
+#include <codecvt>
 
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
@@ -72,6 +78,202 @@ inline void render_row(
     for (uint32_t* i = start; i < end; i++)
         *i = color;
 }
+}
+
+class msd::Renderer::Text
+{
+public:
+    static auto instance() -> Text&;
+
+    Text();
+
+    void render(
+        Pixel* buf,
+        geom::Size buf_size,
+        std::string const& text,
+        geom::Point top_left,
+        geom::Height height_pixels,
+        Pixel color);
+
+private:
+    static std::unique_ptr<Text> singleton;
+
+    std::mutex mutex;
+    FT_Library library;
+    FT_Face face;
+
+    void set_char_size(geom::Height height);
+    void rasterize_glyph(char32_t glyph);
+    void render_glyph(
+        Pixel* buf,
+        geom::Size buf_size,
+        FT_Bitmap const* glyph,
+        geom::Point top_left,
+        Pixel color);
+
+    static auto font_path() -> std::string;
+    static auto utf8_to_utf32(std::string const& text) -> std::u32string;
+};
+
+std::unique_ptr<msd::Renderer::Text> msd::Renderer::Text::singleton;
+
+auto msd::Renderer::Text::instance() -> Text&
+{
+    if (!singleton)
+        singleton = std::make_unique<Text>();
+    // TODO: catch exceptions and return a null object
+    return *singleton;
+}
+
+msd::Renderer::Text::Text()
+{
+    if (auto const error = FT_Init_FreeType(&library))
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "Initializing freetype library failed with error " + std::to_string(error)));
+
+    auto const path = font_path();
+    if (auto const error = FT_New_Face(library, path.c_str(), 0, &face))
+    {
+        if (error == FT_Err_Unknown_File_Format)
+            BOOST_THROW_EXCEPTION(std::runtime_error(
+                "Font " + path + " has unsupported format"));
+        else
+            BOOST_THROW_EXCEPTION(std::runtime_error(
+                "Loading font from " + path + " failed with error " + std::to_string(error)));
+    }
+}
+
+void msd::Renderer::Text::render(
+    Pixel* buf,
+    geom::Size buf_size,
+    std::string const& text,
+    geom::Point top_left,
+    geom::Height height_pixels,
+    Pixel color)
+{
+    if (!area(buf_size) || height_pixels <= geom::Height{})
+        return;
+
+    try
+    {
+        set_char_size(height_pixels);
+    }
+    catch (std::runtime_error const& error)
+    {
+        log_warning(error.what());
+        return;
+    }
+
+    auto const utf32 = utf8_to_utf32(text);
+
+    for (char32_t const glyph : utf32)
+    {
+        try
+        {
+            rasterize_glyph(glyph);
+
+            geom::Point glyph_top_left =
+                top_left +
+                geom::Displacement{
+                    face->glyph->bitmap_left,
+                    height_pixels.as_int() - face->glyph->bitmap_top};
+            render_glyph(buf, buf_size, &face->glyph->bitmap, glyph_top_left, color);
+
+            top_left += geom::Displacement{
+                face->glyph->advance.x / 64,
+                face->glyph->advance.y / 64};
+        }
+        catch (std::runtime_error const& error)
+        {
+            log_warning(error.what());
+        }
+    }
+}
+
+void msd::Renderer::Text::set_char_size(geom::Height height)
+{
+    if (auto const error = FT_Set_Pixel_Sizes(face, 0, height.as_int()))
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "Setting char size failed with error " + std::to_string(error)));
+}
+
+void msd::Renderer::Text::rasterize_glyph(char32_t glyph)
+{
+    auto const glyph_index = FT_Get_Char_Index(face, glyph);
+
+    if (auto const error = FT_Load_Glyph(face, glyph_index, 0))
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "Failed to load glyph " + std::to_string(glyph_index)));
+
+    if (auto const error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL))
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "Failed to render glyph " + std::to_string(glyph_index)));
+}
+
+void msd::Renderer::Text::render_glyph(
+    Pixel* buf,
+    geom::Size buf_size,
+    FT_Bitmap const* glyph,
+    geom::Point top_left,
+    Pixel color)
+{
+    geom::X const buffer_left = std::max(top_left.x, geom::X{});
+    geom::X const buffer_right = std::min(top_left.x + geom::DeltaX{glyph->width}, as_x(buf_size.width));
+
+    geom::Y const buffer_top = std::max(top_left.y, geom::Y{});
+    geom::Y const buffer_bottom = std::min(top_left.y + geom::DeltaY{glyph->rows}, as_y(buf_size.height));
+
+    geom::Displacement const glyph_offset = as_displacement(top_left);
+
+    unsigned char* const color_pixels = (unsigned char *)&color;
+    unsigned char const color_alpha = color_pixels[3];
+
+    for (geom::Y buffer_y = buffer_top; buffer_y < buffer_bottom; buffer_y += geom::DeltaY{1})
+    {
+        geom::Y const glyph_y = buffer_y - glyph_offset.dy;
+        unsigned char* const glyph_row = glyph->buffer + glyph_y.as_int() * glyph->pitch;
+        Pixel* const buffer_row = buf + buffer_y.as_int() * buf_size.width.as_int();
+
+        for (geom::X buffer_x = buffer_left; buffer_x < buffer_right; buffer_x += geom::DeltaX{1})
+        {
+            geom::X const glyph_x = buffer_x - glyph_offset.dx;
+            unsigned char const glyph_alpha = ((int)glyph_row[glyph_x.as_int()] * color_alpha) / 255;
+            unsigned char* const buffer_pixels = (unsigned char *)(buffer_row + buffer_x.as_int());
+            for (int i = 0; i < 3; i++)
+            {
+                // Blend color with the previous buffer color based on the glyph's alpha
+                buffer_pixels[i] =
+                    ((int)buffer_pixels[i] * (255 - glyph_alpha)) / 255 +
+                    ((int)color_pixels[i] * glyph_alpha) / 255;
+            }
+        }
+    }
+}
+
+auto msd::Renderer::Text::font_path() -> std::string
+{
+    // TODO: Search for multiple fonts in multiple paths as in examples/example-server-lib/wallpaper_config.cpp
+    return "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf";
+}
+
+auto msd::Renderer::Text::utf8_to_utf32(std::string const& text) -> std::u32string
+{
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+    std::u32string utf32_text;
+    try {
+        utf32_text = converter.from_bytes(text);
+    } catch(const std::range_error& e) {
+        log_warning("Window title %s is not valid UTF-8", text.c_str());
+        // fall back to ASCII
+        for (char const c : text)
+        {
+            if (isprint(c))
+                utf32_text += c;
+            else
+                utf32_text += 0xFFFD; // REPLACEMENT CHARACTER (�)
+        }
+    }
+    return utf32_text;
 }
 
 msd::Renderer::Renderer(
@@ -156,6 +358,14 @@ auto msd::Renderer::render_titlebar() -> std::experimental::optional<std::shared
                 {0, y}, titlebar_size.width,
                 current_theme->background_color);
         }
+
+        Text::instance().render(
+            titlebar_pixels.get(),
+            titlebar_size,
+            name,
+            static_geometry->title_font_top_left,
+            static_geometry->title_font_height,
+            current_theme->text_color);
     }
 
     if (needs_titlebar_redraw || needs_titlebar_buttons_redraw)
