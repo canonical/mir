@@ -80,12 +80,12 @@ inline void render_row(
 }
 }
 
-class msd::Renderer::Text
+class msd::Renderer::Text::Impl
+    : public Text
 {
 public:
-    static auto instance() -> Text&;
-
-    Text();
+    Impl();
+    ~Impl();
 
     void render(
         Pixel* buf,
@@ -93,11 +93,9 @@ public:
         std::string const& text,
         geom::Point top_left,
         geom::Height height_pixels,
-        Pixel color);
+        Pixel color) override;
 
 private:
-    static std::unique_ptr<Text> singleton;
-
     std::mutex mutex;
     FT_Library library;
     FT_Face face;
@@ -115,17 +113,43 @@ private:
     static auto utf8_to_utf32(std::string const& text) -> std::u32string;
 };
 
+class msd::Renderer::Text::Null
+    : public Text
+{
+public:
+    void render(
+        Pixel*,
+        geom::Size,
+        std::string const&,
+        geom::Point,
+        geom::Height,
+        Pixel) override
+    {
+    }
+
+private:
+};
+
 std::unique_ptr<msd::Renderer::Text> msd::Renderer::Text::singleton;
 
 auto msd::Renderer::Text::instance() -> Text&
 {
     if (!singleton)
-        singleton = std::make_unique<Text>();
-    // TODO: catch exceptions and return a null object
+    {
+        try
+        {
+            singleton = std::make_unique<Impl>();
+        }
+        catch (std::runtime_error const& error)
+        {
+            log_warning(error.what());
+            singleton = std::make_unique<Null>();
+        }
+    }
     return *singleton;
 }
 
-msd::Renderer::Text::Text()
+msd::Renderer::Text::Impl::Impl()
 {
     if (auto const error = FT_Init_FreeType(&library))
         BOOST_THROW_EXCEPTION(std::runtime_error(
@@ -143,7 +167,12 @@ msd::Renderer::Text::Text()
     }
 }
 
-void msd::Renderer::Text::render(
+msd::Renderer::Text::Impl::~Impl()
+{
+    // TODO: deinit freetype
+}
+
+void msd::Renderer::Text::Impl::render(
     Pixel* buf,
     geom::Size buf_size,
     std::string const& text,
@@ -151,6 +180,8 @@ void msd::Renderer::Text::render(
     geom::Height height_pixels,
     Pixel color)
 {
+    // TODO: threadsafety
+
     if (!area(buf_size) || height_pixels <= geom::Height{})
         return;
 
@@ -190,14 +221,14 @@ void msd::Renderer::Text::render(
     }
 }
 
-void msd::Renderer::Text::set_char_size(geom::Height height)
+void msd::Renderer::Text::Impl::set_char_size(geom::Height height)
 {
     if (auto const error = FT_Set_Pixel_Sizes(face, 0, height.as_int()))
         BOOST_THROW_EXCEPTION(std::runtime_error(
             "Setting char size failed with error " + std::to_string(error)));
 }
 
-void msd::Renderer::Text::rasterize_glyph(char32_t glyph)
+void msd::Renderer::Text::Impl::rasterize_glyph(char32_t glyph)
 {
     auto const glyph_index = FT_Get_Char_Index(face, glyph);
 
@@ -210,7 +241,7 @@ void msd::Renderer::Text::rasterize_glyph(char32_t glyph)
             "Failed to render glyph " + std::to_string(glyph_index)));
 }
 
-void msd::Renderer::Text::render_glyph(
+void msd::Renderer::Text::Impl::render_glyph(
     Pixel* buf,
     geom::Size buf_size,
     FT_Bitmap const* glyph,
@@ -250,13 +281,13 @@ void msd::Renderer::Text::render_glyph(
     }
 }
 
-auto msd::Renderer::Text::font_path() -> std::string
+auto msd::Renderer::Text::Impl::font_path() -> std::string
 {
     // TODO: Search for multiple fonts in multiple paths as in examples/example-server-lib/wallpaper_config.cpp
     return "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf";
 }
 
-auto msd::Renderer::Text::utf8_to_utf32(std::string const& text) -> std::u32string
+auto msd::Renderer::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u32string
 {
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
     std::u32string utf32_text;

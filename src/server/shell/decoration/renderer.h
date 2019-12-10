@@ -59,7 +59,27 @@ public:
 private:
     using Pixel = uint32_t;
 
-    class Text;
+    class Text
+    {
+    public:
+        static auto instance() -> Text&;
+
+        virtual ~Text() = default;
+
+        virtual void render(
+            Pixel* buf,
+            geometry::Size buf_size,
+            std::string const& text,
+            geometry::Point top_left,
+            geometry::Height height_pixels,
+            Pixel color) = 0;
+
+    private:
+        class Impl;
+        class Null;
+
+        static std::unique_ptr<Text> singleton;
+    };
 
     /// A visual theme for a decoration
     /// Focused and unfocused windows use a different theme
