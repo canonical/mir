@@ -39,7 +39,11 @@ void mfd::ProtobufResponder::send_response(
     FdSets const& fd_sets)
 {
     mir::VariableLengthArray<serialization_buffer_size>
+#if GOOGLE_PROTOBUF_VERSION >= 3010000
+        send_response_buffer{static_cast<size_t>(response->ByteSizeLong())};
+#else
         send_response_buffer{static_cast<size_t>(response->ByteSize())};
+#endif
 
     response->SerializeWithCachedSizesToArray(send_response_buffer.data());
 
@@ -49,7 +53,11 @@ void mfd::ProtobufResponder::send_response(
         send_response_result.set_id(id);
         send_response_result.set_response(send_response_buffer.data(), send_response_buffer.size());
 
+#if GOOGLE_PROTOBUF_VERSION >= 3010000
+        send_response_buffer.resize(send_response_result.ByteSizeLong());
+#else
         send_response_buffer.resize(send_response_result.ByteSize());
+#endif
         send_response_result.SerializeWithCachedSizesToArray(send_response_buffer.data());
     }
 

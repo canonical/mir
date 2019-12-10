@@ -265,7 +265,11 @@ void mclr::MirProtobufRpcChannel::send_message(
     mir::protobuf::wire::Invocation const& invocation,
     std::vector<mir::Fd>& fds)
 {
+#if GOOGLE_PROTOBUF_VERSION >= 3010000
+    const size_t size = body.ByteSizeLong();
+#else
     const size_t size = body.ByteSize();
+#endif
     const unsigned char header_bytes[2] =
     {
         static_cast<unsigned char>((size >> 8) & 0xff),

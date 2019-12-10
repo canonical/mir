@@ -43,10 +43,17 @@ struct MirDisplayConfig
         return wrapped;
     }
 
+#if GOOGLE_PROTOBUF_VERSION >= 3010000
+    size_t ByteSize() const
+    {
+        return wrapped.ByteSizeLong();
+    }
+#else
     int ByteSize() const
     {
         return wrapped.ByteSize();
     }
+#endif
 
     uint8_t* SerializeWithCachedSizesToArray(uint8_t* target) const
     {
