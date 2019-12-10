@@ -353,6 +353,19 @@ void msd::BasicDecoration::update()
         shell->modify_surface(session, decoration_surface, spec);
     }
 
+    if (window_updated({
+            &WindowState::focused_state,
+            &WindowState::window_name,
+            &WindowState::titlebar_rect,
+            &WindowState::left_border_rect,
+            &WindowState::right_border_rect,
+            &WindowState::bottom_border_rect}) ||
+        input_updated({
+            &InputState::buttons}))
+    {
+        renderer->update_state(*window_state, *input_state);
+    }
+
     std::vector<std::pair<
         std::shared_ptr<mc::BufferStream>,
         std::experimental::optional<std::shared_ptr<mg::Buffer>>>> new_buffers;
@@ -364,10 +377,10 @@ void msd::BasicDecoration::update()
     {
         new_buffers.emplace_back(
             buffer_streams->left_border,
-            renderer->render_left_border(*window_state));
+            renderer->render_left_border());
         new_buffers.emplace_back(
             buffer_streams->right_border,
-            renderer->render_right_border(*window_state));
+            renderer->render_right_border());
     }
 
     if (window_updated({
@@ -377,7 +390,7 @@ void msd::BasicDecoration::update()
     {
         new_buffers.emplace_back(
             buffer_streams->bottom_border,
-            renderer->render_bottom_border(*window_state));
+            renderer->render_bottom_border());
     }
 
     if (window_updated({
@@ -389,7 +402,7 @@ void msd::BasicDecoration::update()
     {
         new_buffers.emplace_back(
             buffer_streams->titlebar,
-            renderer->render_titlebar(*window_state, *input_state));
+            renderer->render_titlebar());
     }
 
     for (auto const& pair : new_buffers)
