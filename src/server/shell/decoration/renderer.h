@@ -62,7 +62,7 @@ private:
     class Text
     {
     public:
-        static auto instance() -> Text&;
+        static auto instance() -> std::shared_ptr<Text>;
 
         virtual ~Text() = default;
 
@@ -78,7 +78,8 @@ private:
         class Impl;
         class Null;
 
-        static std::unique_ptr<Text> singleton;
+        static std::mutex static_mutex;
+        static std::weak_ptr<Text> singleton;
     };
 
     /// A visual theme for a decoration
@@ -109,6 +110,8 @@ private:
     bool needs_titlebar_buttons_redraw{true};
     std::string name;
     std::vector<ButtonInfo> buttons;
+
+    std::shared_ptr<Text> const text;
 
     void update_solid_color_pixels();
     auto make_buffer(

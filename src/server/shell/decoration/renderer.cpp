@@ -130,23 +130,27 @@ public:
 private:
 };
 
-std::unique_ptr<msd::Renderer::Text> msd::Renderer::Text::singleton;
+std::mutex msd::Renderer::Text::static_mutex;
+std::weak_ptr<msd::Renderer::Text> msd::Renderer::Text::singleton;
 
-auto msd::Renderer::Text::instance() -> Text&
+auto msd::Renderer::Text::instance() -> std::shared_ptr<Text>
 {
-    if (!singleton)
+    std::lock_guard<std::mutex> lock{static_mutex};
+    auto shared = singleton.lock();
+    if (!shared)
     {
         try
         {
-            singleton = std::make_unique<Impl>();
+            shared = std::make_shared<Impl>();
         }
         catch (std::runtime_error const& error)
         {
             log_warning(error.what());
-            singleton = std::make_unique<Null>();
+            shared = std::make_shared<Null>();
         }
+        singleton = shared;
     }
-    return *singleton;
+    return shared;
 }
 
 msd::Renderer::Text::Impl::Impl()
@@ -169,8 +173,6 @@ msd::Renderer::Text::Impl::Impl()
 
 msd::Renderer::Text::Impl::~Impl()
 {
-    std::lock_guard<std::mutex> lock{mutex};
-
     if (auto const error = FT_Done_Face(face))
         log_warning("Failed to uninitialize font face with error %d", error);
     face = nullptr;
@@ -332,7 +334,8 @@ msd::Renderer::Renderer(
           default_unfocused_background,
           default_unfocused_text},
       current_theme{nullptr},
-      static_geometry{static_geometry}
+      static_geometry{static_geometry},
+      text{Text::instance()}
 {
 }
 
@@ -404,7 +407,7 @@ auto msd::Renderer::render_titlebar() -> std::experimental::optional<std::shared
                 current_theme->background_color);
         }
 
-        Text::instance().render(
+        text->render(
             titlebar_pixels.get(),
             titlebar_size,
             name,
