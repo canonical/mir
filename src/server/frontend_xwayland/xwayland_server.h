@@ -37,7 +37,7 @@ class XWaylandWM;
 class XWaylandServer
 {
 public:
-    XWaylandServer(const int xdisp, std::shared_ptr<WaylandConnector> wc);
+    XWaylandServer(const int xdisp, std::shared_ptr<WaylandConnector> wc, std::string const& xwayland_path);
     ~XWaylandServer();
 
     enum Status {
@@ -78,6 +78,7 @@ private:
     bool terminate = false;
     Status xserver_status = STOPPED;
     int xserver_spawn_tries = 0;
+    std::string const xwayland_path;
 };
 } /* frontend */
 } /* mir */

@@ -37,6 +37,10 @@ void miral::X11Support::operator()(mir::Server& server) const
     server.add_configuration_option(
         mo::x11_display_opt,
         "DISPLAY socket to use for experimental X11 support (default: none).", mir::OptionType::integer);
+
+    server.add_configuration_option(
+        "xwayland-path",
+        "Path to Xwayland executable", "/usr/bin/Xwayland");
 }
 
 miral::X11Support::~X11Support() = default;

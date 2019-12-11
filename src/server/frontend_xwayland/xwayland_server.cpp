@@ -45,11 +45,15 @@ namespace md = mir::dispatch;
 
 bool mf::XWaylandServer::xserver_ready = false;
 
-mf::XWaylandServer::XWaylandServer(const int xdisplay, std::shared_ptr<mf::WaylandConnector> wc)
-    : wm(std::make_shared<XWaylandWM>(wc)),
-      xdisplay(xdisplay),
-      wlc(wc),
-      dispatcher{std::make_shared<md::MultiplexingDispatchable>()}
+mf::XWaylandServer::XWaylandServer(
+    const int xdisplay,
+    std::shared_ptr<mf::WaylandConnector> wc,
+    std::string const& xwayland_path) :
+    wm(std::make_shared<XWaylandWM>(wc)),
+    xdisplay(xdisplay),
+    wlc(wc),
+    dispatcher{std::make_shared<md::MultiplexingDispatchable>()},
+    xwayland_path{xwayland_path}
 {
 }
 
@@ -159,7 +163,7 @@ void mf::XWaylandServer::spawn()
         // Last second abort
         if (terminate) return;
 
-        execl("/usr/bin/Xwayland",
+        execl(xwayland_path.c_str(),
             "Xwayland",
             dsp_str.c_str(),
             "-rootless",
