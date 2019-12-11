@@ -96,6 +96,15 @@ public:
         Pixel color) override;
 
 private:
+    struct FontPath
+    {
+        std::string const filename;
+        std::vector<std::string> prefixes;
+    };
+
+    static std::vector<FontPath> const font_paths;
+    static std::vector<std::string> const font_path_search_paths;
+
     std::mutex mutex;
     FT_Library library;
     FT_Face face;
@@ -111,6 +120,27 @@ private:
 
     static auto font_path() -> std::string;
     static auto utf8_to_utf32(std::string const& text) -> std::u32string;
+};
+
+std::vector<msd::Renderer::Text::Impl::FontPath> const msd::Renderer::Text::Impl::font_paths{
+    FontPath{"Ubuntu-B.ttf", {
+        "ubuntu-font-family",   // Ubuntu < 18.04
+        "ubuntu",               // Ubuntu >= 18.04/Arch
+    }},
+    FontPath{"FreeSansBold.ttf", {
+        "freefont",             // Debian/Ubuntu
+        "gnu-free",             // Fedora/Arch
+    }},
+    FontPath{"DejaVuSans-Bold.ttf", {
+        "dejavu",               // Ubuntu (others?)
+        "",                     // Arch
+    }},
+};
+
+std::vector<std::string> const msd::Renderer::Text::Impl::font_path_search_paths{
+    "/usr/share/fonts/truetype",    // Ubuntu/Debian
+    "/usr/share/fonts/TTF",         // Arch
+    "/usr/share/fonts",             // Fedora/Arch
 };
 
 class msd::Renderer::Text::Null
@@ -299,8 +329,29 @@ void msd::Renderer::Text::Impl::render_glyph(
 
 auto msd::Renderer::Text::Impl::font_path() -> std::string
 {
-    // TODO: Search for multiple fonts in multiple paths as in examples/example-server-lib/wallpaper_config.cpp
-    return "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf";
+    // Similar to default_font() in examples/example-server-lib/wallpaper_config.cpp
+
+    std::vector<std::string> usable_search_paths;
+    for (auto const& path : font_path_search_paths)
+    {
+        if (access(path.c_str(), R_OK) == 0)
+            usable_search_paths.push_back(path);
+    }
+
+    for (auto const& font : font_paths)
+    {
+        for (auto const& prefix : font.prefixes)
+        {
+            for (auto const& path : usable_search_paths)
+            {
+                auto const full_font_path = path + '/' + prefix + '/' + font.filename;
+                if (access(full_font_path.c_str(), R_OK) == 0)
+                    return full_font_path;
+            }
+        }
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find a font"));
 }
 
 auto msd::Renderer::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u32string
