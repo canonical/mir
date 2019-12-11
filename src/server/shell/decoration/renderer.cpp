@@ -169,11 +169,15 @@ msd::Renderer::Text::Impl::Impl()
 
 msd::Renderer::Text::Impl::~Impl()
 {
+    std::lock_guard<std::mutex> lock{mutex};
+
     if (auto const error = FT_Done_Face(face))
         log_warning("Failed to uninitialize font face with error %d", error);
+    face = nullptr;
 
     if (auto const error = FT_Done_FreeType(library))
         log_warning("Failed to uninitialize FreeType with error %d", error);
+    library = nullptr;
 }
 
 void msd::Renderer::Text::Impl::render(
@@ -184,10 +188,16 @@ void msd::Renderer::Text::Impl::render(
     geom::Height height_pixels,
     Pixel color)
 {
-    // TODO: threadsafety
-
     if (!area(buf_size) || height_pixels <= geom::Height{})
         return;
+
+    std::lock_guard<std::mutex> lock{mutex};
+
+    if (!library || !face)
+    {
+        log_warning("FreeType not initialized");
+        return;
+    }
 
     try
     {
