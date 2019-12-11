@@ -169,7 +169,11 @@ msd::Renderer::Text::Impl::Impl()
 
 msd::Renderer::Text::Impl::~Impl()
 {
-    // TODO: deinit freetype
+    if (auto const error = FT_Done_Face(face))
+        log_warning("Failed to uninitialize font face with error %d", error);
+
+    if (auto const error = FT_Done_FreeType(library))
+        log_warning("Failed to uninitialize FreeType with error %d", error);
 }
 
 void msd::Renderer::Text::Impl::render(
