@@ -27,23 +27,20 @@
 
 namespace mf = mir::frontend;
 
-mf::XWaylandConnector::XWaylandConnector(const int xdisplay, std::shared_ptr<mf::WaylandConnector> wc)
-    : enabled(!!wc->get_extension("x11-support"))
+mf::XWaylandConnector::XWaylandConnector(
+    const int xdisplay,
+    std::shared_ptr<mf::WaylandConnector> wc,
+    std::string const& xwayland_path) :
+    enabled(!!wc->get_extension("x11-support"))
 {
     if (enabled)
-        xwayland_server = std::make_shared<mf::XWaylandServer>(xdisplay, wc);
+        xwayland_server = std::make_shared<mf::XWaylandServer>(xdisplay, wc, xwayland_path);
 }
 
 void mf::XWaylandConnector::start()
 {
     if (!enabled)
         return;
-
-    if (getenv("MIR_X11_LAZY"))
-    {
-        xwayland_server->spawn_lazy_xserver();
-        return;
-    }
 
     xwayland_server->setup_socket();
     xwayland_server->spawn_xserver_on_event_loop();

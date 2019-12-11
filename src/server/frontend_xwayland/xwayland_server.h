@@ -37,7 +37,7 @@ class XWaylandWM;
 class XWaylandServer
 {
 public:
-    XWaylandServer(const int xdisp, std::shared_ptr<WaylandConnector> wc);
+    XWaylandServer(const int xdisp, std::shared_ptr<WaylandConnector> wc, std::string const& xwayland_path);
     ~XWaylandServer();
 
     enum Status {
@@ -49,7 +49,7 @@ public:
 
     void setup_socket();
     void spawn_xserver_on_event_loop();
-    void spawn_lazy_xserver();
+
     std::shared_ptr<dispatch::MultiplexingDispatchable> const get_dispatcher()
     {
         return dispatcher;
@@ -75,10 +75,10 @@ private:
     std::unique_ptr<std::thread> spawn_thread;
     int socket_fd;
     int abstract_socket_fd;
-    bool lazy = false;
     bool terminate = false;
     Status xserver_status = STOPPED;
     int xserver_spawn_tries = 0;
+    std::string const xwayland_path;
 };
 } /* frontend */
 } /* mir */

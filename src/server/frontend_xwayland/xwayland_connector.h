@@ -35,7 +35,7 @@ class XWaylandServer;
 class XWaylandConnector : public Connector
 {
 public:
-    XWaylandConnector(const int xdisplay, std::shared_ptr<WaylandConnector> wc);
+    XWaylandConnector(const int xdisplay, std::shared_ptr<WaylandConnector> wc, std::string const& xwayland_path);
     void start() override;
     void stop() override;
 

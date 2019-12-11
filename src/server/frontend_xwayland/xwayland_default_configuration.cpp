@@ -67,7 +67,10 @@ std::shared_ptr<mf::Connector> mir::DefaultServerConfiguration::the_xwayland_con
             try
             {
                 auto wc = std::static_pointer_cast<mf::WaylandConnector>(the_wayland_connector());
-                return std::make_shared<mf::XWaylandConnector>(options->get<int>(mo::x11_display_opt), wc);
+                return std::make_shared<mf::XWaylandConnector>(
+                    options->get<int>(mo::x11_display_opt),
+                    wc,
+                    options->get<std::string>("xwayland-path"));
             }
             catch (...)
             {
