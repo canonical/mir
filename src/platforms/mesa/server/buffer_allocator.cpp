@@ -23,7 +23,6 @@
 #include "mir/anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "display_helpers.h"
-#include "software_buffer.h"
 #include "gbm_format_conversions.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
@@ -322,17 +321,14 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     geom::Size size, MirPixelFormat format)
 {
-    if (!mgc::ShmBuffer::supports(format))
+    if (!mgc::MemoryBackedShmBuffer::supports(format))
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    auto const stride = geom::Stride{MIR_BYTES_PER_PIXEL(format) * size.width.as_uint32_t()};
-    size_t const size_in_bytes = stride.as_int() * size.height.as_int();
-    return std::make_shared<mgm::SoftwareBuffer>(
-        std::make_unique<mir::AnonymousShmFile>(size_in_bytes), size, format);
+    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format);
 }
 
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()

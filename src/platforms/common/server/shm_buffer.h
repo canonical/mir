@@ -42,45 +42,54 @@ namespace common
 class ShmBuffer :
     public BufferBasic,
     public NativeBufferBase,
-    public graphics::gl::Texture,
-    public renderer::software::PixelSource
+    public graphics::gl::Texture
 {
 public:
+    ~ShmBuffer() noexcept override;
+
     static bool supports(MirPixelFormat);
 
-    ~ShmBuffer() noexcept;
-
     geometry::Size size() const override;
-    geometry::Stride stride() const override;
     MirPixelFormat pixel_format() const override;
-    void write(unsigned char const* data, size_t size) override;
-    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
     NativeBufferBase* native_buffer_base() override;
 
     void bind() override;
     gl::Program const& shader(gl::ProgramFactory& cache) const override;
     Layout layout() const override;
     void add_syncpoint() override;
-
-    //each platform will have to return the NativeBuffer type that the platform has defined.
-    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override = 0;
 protected:
-    ShmBuffer(std::unique_ptr<ShmFile> shm_file,
-              geometry::Size const& size,
-              MirPixelFormat const& pixel_format);
+    ShmBuffer(geometry::Size const& size, MirPixelFormat const& format);
 
-    std::shared_ptr<MirBufferPackage> to_mir_buffer_package() const;
-
+    /// \note This must be called with a current GL context
+    void upload_to_texture(void const* pixels);
 private:
-    ShmBuffer(ShmBuffer const&) = delete;
-    ShmBuffer& operator=(ShmBuffer const&) = delete;
-
-    std::unique_ptr<ShmFile> const shm_file;
     geometry::Size const size_;
     MirPixelFormat const pixel_format_;
-    geometry::Stride const stride_;
-    void* const pixels;
     GLuint tex_id{0};
+};
+
+class MemoryBackedShmBuffer :
+    public ShmBuffer,
+    public renderer::software::PixelSource
+{
+public:
+    MemoryBackedShmBuffer(
+        geometry::Size const& size,
+        MirPixelFormat const& pixel_format);
+
+    void write(unsigned char const* data, size_t size) override;
+    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
+    geometry::Stride stride() const override;
+
+    std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
+
+    void bind() override;
+
+    MemoryBackedShmBuffer(MemoryBackedShmBuffer const&) = delete;
+    MemoryBackedShmBuffer& operator=(MemoryBackedShmBuffer const&) = delete;
+private:
+    geometry::Stride const stride_;
+    std::unique_ptr<unsigned char[]> const pixels;
 };
 
 }

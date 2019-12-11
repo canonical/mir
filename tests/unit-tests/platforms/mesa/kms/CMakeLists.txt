@@ -1,6 +1,5 @@
 mir_add_wrapped_executable(mir_unit_tests_mesa-kms NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_software_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_allocator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp

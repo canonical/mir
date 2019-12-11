@@ -155,21 +155,6 @@ TEST_F(MesaBufferAllocatorTest, small_buffers_dont_bypass)
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
 }
 
-TEST_F(MesaBufferAllocatorTest, software_buffers_dont_bypass)
-{
-    using namespace testing;
-
-    const mg::BufferProperties properties(geom::Size{1920, 1200},
-                                          mir_pixel_format_argb_8888,
-                                          mg::BufferUsage::software);
-
-    auto buf = allocator->alloc_buffer(properties);
-    ASSERT_TRUE(buf.get() != NULL);
-    auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(buf->native_buffer_handle());
-    ASSERT_THAT(native, Ne(nullptr));
-    EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
-}
-
 TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
 {
     using namespace testing;
