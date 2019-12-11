@@ -261,6 +261,12 @@ TEST_F(ShmBufferTest, texture_is_destroyed_on_thread_with_current_context)
     EGLDisplay const dummy_dpy{reinterpret_cast<EGLDisplay>(0xaabbccdd)};
 
     {
+        /* Use a locally-scoped EGLContextDelegate to make use of
+         * the fact that the destructor ensures the work-queue is drained.
+         */
+        auto egl_delegate = std::make_shared<mgc::EGLContextDelegate>(
+            std::make_unique<DumbGLContext>(reinterpret_cast<EGLContext>(42)));
+
         // Ensure we have a “context” current for creation and bind
         eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, dummy_ctx);
 

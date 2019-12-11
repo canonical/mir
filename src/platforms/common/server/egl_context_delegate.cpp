@@ -24,7 +24,6 @@ namespace mgc = mir::graphics::common;
 mgc::EGLContextDelegate::EGLContextDelegate(
     std::unique_ptr<mir::renderer::gl::Context> context)
     : ctx{std::move(context)},
-      work{nullptr},
       egl_thread(std::thread{process_loop, this})
 {
 }
@@ -39,29 +38,14 @@ mgc::EGLContextDelegate::~EGLContextDelegate() noexcept
     egl_thread.join();
 }
 
-void mgc::EGLContextDelegate::run_in_egl_context(
+void mgc::EGLContextDelegate::defer_to_egl_context(
     std::function<void()>&& functor)
 {
-    auto work_notifier = std::make_shared<std::promise<void>>();
-    auto work_done = work_notifier->get_future();
-
-    std::unique_lock<std::mutex> lock{mutex};
-    if (work)
     {
-        new_work.wait(lock, [this]() { return static_cast<bool>(work); });
+        std::lock_guard<std::mutex> lock{mutex};
+        work_queue.emplace_back(functor);
     }
-
-    work =
-        [notifier = std::move(work_notifier), todo = std::move(functor)]() mutable
-        {
-            todo();
-            notifier->set_value();
-        };
-
-    lock.unlock();
     new_work.notify_all();
-
-    work_done.wait();
 }
 
 void mgc::EGLContextDelegate::process_loop(mgc::EGLContextDelegate* const me)
@@ -72,11 +56,11 @@ void mgc::EGLContextDelegate::process_loop(mgc::EGLContextDelegate* const me)
     while (!me->shutdown_requested)
     {
         me->new_work.wait(lock);
-        if (me->work)
+        for (auto& work : me->work_queue)
         {
-            me->work();
-            me->work = nullptr;
+            work();
         }
+        me->work_queue.clear();
     }
 
     me->ctx->release_current();

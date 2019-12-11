@@ -24,6 +24,7 @@
 #include <thread>
 #include <condition_variable>
 #include <mutex>
+#include <vector>
 
 namespace mir
 {
@@ -45,14 +46,17 @@ public:
     EGLContextDelegate(std::unique_ptr<renderer::gl::Context> context);
     ~EGLContextDelegate() noexcept;
 
-    void run_in_egl_context(std::function<void()>&& functor);
+    /**
+     * Run a run a function on a thread with a current EGL context
+     */
+    void defer_to_egl_context(std::function<void()>&& functor);
 private:
     static void process_loop(EGLContextDelegate* const me);
 
     std::unique_ptr<renderer::gl::Context> const ctx;
     std::mutex mutex;
     std::condition_variable new_work;
-    std::function<void()> work;
+    std::vector<std::function<void()>> work_queue;
     bool shutdown_requested{false};
 
     std::thread egl_thread;

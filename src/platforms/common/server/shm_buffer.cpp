@@ -116,7 +116,7 @@ mgc::ShmBuffer::~ShmBuffer() noexcept
 {
     if (tex_id != 0)
     {
-        egl_delegate->run_in_egl_context(
+        egl_delegate->defer_to_egl_context(
             [id = tex_id]()
             {
                 glDeleteTextures(1, &id);
