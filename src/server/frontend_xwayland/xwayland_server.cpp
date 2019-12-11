@@ -73,9 +73,6 @@ mf::XWaylandServer::~XWaylandServer()
       spawn_thread->join();
     }
 
-    if (lazy)
-      return;
-
     char path[256];
     snprintf(path, sizeof path, "/tmp/.X%d-lock", xdisplay);
     unlink(path);
@@ -162,25 +159,15 @@ void mf::XWaylandServer::spawn()
         // Last second abort
         if (terminate) return;
 
-        if (lazy)
-            execl("/usr/bin/Xwayland",
-                  "Xwayland",
-                  dsp_str.c_str(),
-                  "-rootless",
-                  "-listen", abs_fd_str.c_str(),
-                  "-listen", fd_str.c_str(),
-                  "-wm", wm_fd_str.c_str(),
-                  NULL);
-        else
-            execl("/usr/bin/Xwayland",
-                "Xwayland",
-                dsp_str.c_str(),
-                "-rootless",
-                "-listen", abs_fd_str.c_str(),
-                "-listen", fd_str.c_str(),
-                "-wm", wm_fd_str.c_str(),
-                "-terminate",
-                NULL);
+        execl("/usr/bin/Xwayland",
+            "Xwayland",
+            dsp_str.c_str(),
+            "-rootless",
+            "-listen", abs_fd_str.c_str(),
+            "-listen", fd_str.c_str(),
+            "-wm", wm_fd_str.c_str(),
+            "-terminate",
+            NULL);
         break;
     case -1:
         mir::log_error("Failed to fork");
@@ -420,11 +407,4 @@ void mf::XWaylandServer::spawn_xserver_on_event_loop()
     fd_dispatcher = std::make_shared<md::ReadableFd>(mir::Fd{mir::IntOwnedFd{socket_fd}}, func);
     dispatcher->add_watch(afd_dispatcher);
     dispatcher->add_watch(fd_dispatcher);
-}
-
-void mf::XWaylandServer::spawn_lazy_xserver()
-{
-    lazy = true;
-    setup_socket();
-    new_spawn_thread();
 }

@@ -39,12 +39,6 @@ void mf::XWaylandConnector::start()
     if (!enabled)
         return;
 
-    if (getenv("MIR_X11_LAZY"))
-    {
-        xwayland_server->spawn_lazy_xserver();
-        return;
-    }
-
     xwayland_server->setup_socket();
     xwayland_server->spawn_xserver_on_event_loop();
     xserver_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
