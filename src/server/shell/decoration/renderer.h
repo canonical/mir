@@ -38,6 +38,7 @@ namespace decoration
 {
 class WindowState;
 class InputState;
+struct StaticGeometry;
 
 auto const buffer_format = mir_pixel_format_argb_8888;
 auto const bytes_per_pixel = 4;
@@ -45,7 +46,9 @@ auto const bytes_per_pixel = 4;
 class Renderer
 {
 public:
-    Renderer(std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator);
+    Renderer(
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
+        std::shared_ptr<StaticGeometry const> const& static_geometry);
 
     void update_state(WindowState const& window_state, InputState const& input_state);
     auto render_titlebar() -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
@@ -66,6 +69,7 @@ private:
     Theme const focused_theme;
     Theme const unfocused_theme;
     Theme const* current_theme;
+    std::shared_ptr<StaticGeometry const> const static_geometry;
 
     bool needs_solid_color_redraw{true};
     geometry::Size left_border_size;

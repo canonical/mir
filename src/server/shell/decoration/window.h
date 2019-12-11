@@ -49,11 +49,16 @@ enum class BorderType
 /// Decoration geometry properties that don't change
 struct StaticGeometry
 {
-    geometry::Height titlebar_height;   ///< Visible height of the top titlebar with the window's name and buttons
-    geometry::Width border_width;       ///< Visible width of the side borders
-    geometry::Height border_height;     ///< Visible height of the bottom border
-    geometry::Width button_width;       ///< The width of window control buttons
-    geometry::Size resize_corner_size;  ///< The size of a resizable corner (does not effect surface input area)
+    geometry::Height titlebar_height;           ///< Visible height of the top titlebar with the window's name and buttons
+    geometry::Width side_border_width;          ///< Visible width of the side borders
+    geometry::Height bottom_border_height;      ///< Visible height of the bottom border
+    geometry::Size resize_corner_input_size;    ///< The size of the input area of a resizable corner
+                                                ///< (does not effect surface input area, only where in the surface is
+                                                ///< considered a resize corner)
+    geometry::Width button_width;               ///< The width of window control buttons
+    geometry::Width padding_between_buttons;    ///< The gep between titlebar buttons
+    geometry::Height title_font_height;         ///< Height of the text used to render the window title
+    geometry::Point title_font_top_left;        ///< Where to render the window title
 };
 
 /// Information about the geometry and type of decorations for a given window
@@ -62,10 +67,8 @@ class WindowState
 {
 public:
     WindowState(
-        StaticGeometry const& static_geometry,
+        std::shared_ptr<StaticGeometry const> const& static_geometry,
         std::shared_ptr<scene::Surface> const& window_surface);
-
-    auto static_geometry() const -> StaticGeometry const&;
 
     auto window_size() const -> geometry::Size;
     auto border_type() const -> BorderType;
@@ -93,7 +96,7 @@ private:
     WindowState(WindowState const&) = delete;
     WindowState& operator=(WindowState const&) = delete;
 
-    StaticGeometry const static_geometry_;
+    std::shared_ptr<StaticGeometry const> const static_geometry;
     geometry::Size const window_size_;
     BorderType const border_type_;
     MirWindowFocusState const focus_state_;

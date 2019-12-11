@@ -49,12 +49,16 @@ namespace msd = mir::shell::decoration;
 
 namespace
 {
+// See src/server/shell/decoration/window.h for a full description of each property
 msd::StaticGeometry const default_geometry{
-    /*    titlebar_height */ geom::Height{24},
-    /*       border_width */ geom::Width{6},
-    /*      border_height */ geom::Height{6},
-    /*       button_width */ geom::Width{24},
-    /* resize_corner_size */ geom::Size{16, 16},
+    geom::Height{24},   // titlebar_height
+    geom::Width{6},     // side_border_width
+    geom::Height{6},    // bottom_border_height
+    geom::Size{16, 16}, // resize_corner_input_size
+    geom::Width{24},    // button_width
+    geom::Width{6},     // padding_between_buttons
+    geom::Height{14},   // title_font_height
+    geom::Point{8, 2},  // title_font_top_left
 };
 
 template<typename OBJ>
@@ -157,7 +161,7 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<input::CursorImages> const& cursor_images,
     std::shared_ptr<ms::Surface> const& window_surface)
     : threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(this, executor)},
-      static_geometry{std::make_unique<StaticGeometry>(default_geometry)},
+      static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
       window_state{nullptr},
       input_state{nullptr},
       shell{shell},
@@ -174,13 +178,14 @@ msd::BasicDecoration::BasicDecoration(
               return session;
           }()},
       buffer_streams{std::make_unique<BufferStreams>(session)},
-      renderer{std::make_unique<Renderer>(buffer_allocator)},
+      renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry)},
       window_surface{window_surface},
       decoration_surface{shell->create_surface(session, *creation_params(), nullptr)},
       window_surface_observer_manager{std::make_unique<WindowSurfaceObserverManager>(
           window_surface,
           threadsafe_self)},
       input_manager{std::make_unique<InputManager>(
+          static_geometry,
           decoration_surface,
           *new_window_state(),
           threadsafe_self)}
@@ -260,7 +265,7 @@ void msd::BasicDecoration::set_cursor(std::string const& cursor_image_name)
 
 auto msd::BasicDecoration::new_window_state() const -> std::unique_ptr<WindowState>
 {
-    return std::make_unique<WindowState>(*static_geometry, window_surface);
+    return std::make_unique<WindowState>(static_geometry, window_surface);
 }
 
 auto msd::BasicDecoration::creation_params() const -> std::unique_ptr<scene::SurfaceCreationParameters>

@@ -114,10 +114,12 @@ struct msd::InputManager::Observer
 };
 
 msd::InputManager::InputManager(
+    std::shared_ptr<StaticGeometry const> const& static_geometry,
     std::shared_ptr<ms::Surface> const& decoration_surface,
     WindowState const& window_state,
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration)
-    : decoration_surface{decoration_surface},
+    : static_geometry{static_geometry},
+      decoration_surface{decoration_surface},
       observer{std::make_shared<Observer>(this)},
       decoration{decoration},
       widgets{
@@ -158,7 +160,7 @@ void msd::InputManager::update_window_state(WindowState const& window_state)
         }
         else if (widget->resize_edge)
         {
-            widget->rect = resize_edge_rect(window_state, widget->resize_edge.value());
+            widget->rect = resize_edge_rect(window_state, *static_geometry, widget->resize_edge.value());
         }
         else
         {
@@ -206,7 +208,10 @@ auto msd::InputManager::state() -> std::unique_ptr<InputState>
         input_shape);
 }
 
-auto msd::InputManager::resize_edge_rect(WindowState const& window_state, MirResizeEdge resize_edge) -> geom::Rectangle
+auto msd::InputManager::resize_edge_rect(
+    WindowState const& window_state,
+    StaticGeometry const& static_geometry,
+    MirResizeEdge resize_edge) -> geom::Rectangle
 {
     switch (resize_edge)
     {
@@ -216,7 +221,7 @@ auto msd::InputManager::resize_edge_rect(WindowState const& window_state, MirRes
     case mir_resize_edge_north:
     {
         auto rect = window_state.titlebar_rect();
-        rect.size.height = window_state.static_geometry().border_height;
+        rect.size.height = window_state.bottom_border_height();
         return rect;
     }
 
@@ -230,15 +235,15 @@ auto msd::InputManager::resize_edge_rect(WindowState const& window_state, MirRes
         return window_state.right_border_rect();
 
     case mir_resize_edge_northwest:
-        return {{}, window_state.static_geometry().resize_corner_size};
+        return {{}, static_geometry.resize_corner_input_size};
 
     case mir_resize_edge_northeast:
     {
         geom::Point top_left{
             as_x(window_state.window_size().width) -
-                as_delta(window_state.static_geometry().resize_corner_size.width),
+                as_delta(static_geometry.resize_corner_input_size.width),
             0};
-        return {top_left, window_state.static_geometry().resize_corner_size};
+        return {top_left, static_geometry.resize_corner_input_size};
     }
 
     case mir_resize_edge_southwest:
@@ -246,18 +251,18 @@ auto msd::InputManager::resize_edge_rect(WindowState const& window_state, MirRes
         geom::Point top_left{
             0,
             as_y(window_state.window_size().height) -
-                as_delta(window_state.static_geometry().resize_corner_size.height)};
-        return {top_left, window_state.static_geometry().resize_corner_size};
+                as_delta(static_geometry.resize_corner_input_size.height)};
+        return {top_left, static_geometry.resize_corner_input_size};
     }
 
     case mir_resize_edge_southeast:
     {
         geom::Point top_left{
             as_x(window_state.window_size().width) -
-                as_delta(window_state.static_geometry().resize_corner_size.width),
+                as_delta(static_geometry.resize_corner_input_size.width),
             as_y(window_state.window_size().height) -
-                as_delta(window_state.static_geometry().resize_corner_size.height)};
-        return {top_left, window_state.static_geometry().resize_corner_size};
+                as_delta(static_geometry.resize_corner_input_size.height)};
+        return {top_left, static_geometry.resize_corner_input_size};
     }
 
     default: return {};

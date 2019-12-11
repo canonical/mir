@@ -61,7 +61,9 @@ inline void render_row(
 }
 }
 
-msd::Renderer::Renderer(std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator)
+msd::Renderer::Renderer(
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
+    std::shared_ptr<StaticGeometry const> const& static_geometry)
     : buffer_allocator{buffer_allocator},
       focused_theme{
           /* background */ color(0x32, 0x32, 0x32, 0xFF),
@@ -69,7 +71,8 @@ msd::Renderer::Renderer(std::shared_ptr<graphics::GraphicBufferAllocator> const&
       unfocused_theme{
           /* background */ color(0x54, 0x54, 0x54, 0xFF),
           /*       text */ color(0xA0, 0xA0, 0xA0, 0xFF)},
-      current_theme{nullptr}
+      current_theme{nullptr},
+      static_geometry{static_geometry}
 {
 }
 
