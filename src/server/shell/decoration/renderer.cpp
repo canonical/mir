@@ -44,6 +44,11 @@ static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, u
            ((uint32_t)a << 24);
 }
 
+uint32_t const default_focused_background   = color(0x32, 0x32, 0x32);
+uint32_t const default_unfocused_background = color(0x80, 0x80, 0x80);
+uint32_t const default_focused_text         = color(0xFF, 0xFF, 0xFF);
+uint32_t const default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
+
 inline auto area(geom::Size size) -> size_t
 {
     return (size.width > geom::Width{} && size.height > geom::Height{})
@@ -74,11 +79,11 @@ msd::Renderer::Renderer(
     std::shared_ptr<StaticGeometry const> const& static_geometry)
     : buffer_allocator{buffer_allocator},
       focused_theme{
-          /* background */ color(0x32, 0x32, 0x32, 0xFF),
-          /*       text */ color(0xFF, 0xFF, 0xFF, 0xFF)},
+          default_focused_background,
+          default_focused_text},
       unfocused_theme{
-          /* background */ color(0x54, 0x54, 0x54, 0xFF),
-          /*       text */ color(0xA0, 0xA0, 0xA0, 0xFF)},
+          default_unfocused_background,
+          default_unfocused_text},
       current_theme{nullptr},
       static_geometry{static_geometry}
 {
