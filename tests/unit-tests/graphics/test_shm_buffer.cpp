@@ -29,6 +29,7 @@
 #include <GLES2/gl2ext.h>
 #include <EGL/egl.h>
 #include <endian.h>
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
@@ -243,6 +244,26 @@ TEST_F(ShmBufferTest, uploads_abgr_8888_correctly)
     buf.bind();
 }
 
+namespace
+{
+void wait_for_egl_thread(mgc::EGLContextDelegate& egl_delegate)
+{
+    auto egl_thread_started_promise = std::make_shared<std::promise<void>>();
+    auto const egl_thread_started = egl_thread_started_promise->get_future();
+
+    egl_delegate.defer_to_egl_context(
+        [promise = std::move(egl_thread_started_promise)]()
+        {
+            promise->set_value();
+        });
+
+    if (egl_thread_started.wait_for(std::chrono::seconds{10}) != std::future_status::ready)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Timeout waiting for EGLContextDelegate"}));
+    }
+}
+}
+
 TEST_F(ShmBufferTest, texture_is_destroyed_on_thread_with_current_context)
 {
     GLint const tex_id{0x8086};
@@ -266,6 +287,9 @@ TEST_F(ShmBufferTest, texture_is_destroyed_on_thread_with_current_context)
          */
         auto egl_delegate = std::make_shared<mgc::EGLContextDelegate>(
             std::make_unique<DumbGLContext>(reinterpret_cast<EGLContext>(42)));
+
+        // Ensure that the EGL thread has actually spun up…
+        wait_for_egl_thread(*egl_delegate);
 
         // Ensure we have a “context” current for creation and bind
         eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, dummy_ctx);
