@@ -57,8 +57,9 @@ namespace wayland
  * \note This must be called on the Wayland thread, with a current GL context
  *
  * \param buffer        [in]    The Wayland SHM buffer to import
- * \param on_consumed   [in]    Closure to call when the compositor has consumed this buffer
+ * \param executor      [in]    An Executor that will defer work to the Wayland event loop
  * \param egl_delegate  [in]    An EGL-context-thread delegator
+ * \param on_consumed   [in]    Closure to call when the compositor has consumed this buffer
  * \return                      An mg::Buffer supporting being rendered from in GL and read by the CPU.
  */
 auto buffer_from_wl_shm(
