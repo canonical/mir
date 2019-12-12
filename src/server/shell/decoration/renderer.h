@@ -93,7 +93,6 @@ private:
         Pixel const* pixels,
         geometry::Size size) -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
     static auto alloc_pixels(geometry::Size size) -> std::unique_ptr<Pixel[]>;
-    static auto color(unsigned char r, unsigned char g, unsigned char b, unsigned char a) -> Pixel;
 };
 }
 }

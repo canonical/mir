@@ -36,6 +36,14 @@ namespace msd = mir::shell::decoration;
 
 namespace
 {
+static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
+{
+    return ((uint32_t)b <<  0) |
+           ((uint32_t)g <<  8) |
+           ((uint32_t)r << 16) |
+           ((uint32_t)a << 24);
+}
+
 inline auto area(geom::Size size) -> size_t
 {
     return (size.width > geom::Width{} && size.height > geom::Height{})
@@ -239,12 +247,4 @@ auto msd::Renderer::alloc_pixels(geometry::Size size) -> std::unique_ptr<uint32_
         return std::unique_ptr<uint32_t[]>{new uint32_t[buf_size]};
     else
         return nullptr;
-}
-
-auto msd::Renderer::color(unsigned char r, unsigned char g, unsigned char b, unsigned char a) -> uint32_t
-{
-    return ((uint32_t)b <<  0) |
-           ((uint32_t)g <<  8) |
-           ((uint32_t)r << 16) |
-           ((uint32_t)a << 24);
 }
