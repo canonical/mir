@@ -59,10 +59,12 @@ public:
 private:
     using Pixel = uint32_t;
 
+    /// A visual theme for a decoration
+    /// Focused and unfocused windows use a different theme
     struct Theme
     {
-        Pixel background;
-        Pixel text;
+        Pixel const background_color;   ///< Color for background of the titlebar and borders
+        Pixel const text_color;         ///< Color the window title is drawn in
     };
 
     std::shared_ptr<graphics::GraphicBufferAllocator> buffer_allocator;

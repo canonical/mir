@@ -141,7 +141,7 @@ auto msd::Renderer::render_titlebar() -> std::experimental::optional<std::shared
             render_row(
                 titlebar_pixels.get(), titlebar_size,
                 {0, y}, titlebar_size.width,
-                current_theme->background);
+                current_theme->background_color);
         }
     }
 
@@ -205,7 +205,7 @@ void msd::Renderer::update_solid_color_pixels()
         render_row(
             solid_color_pixels.get(), geom::Size{solid_color_pixels_length, 1},
             geom::Point{}, geom::Width{solid_color_pixels_length},
-            current_theme->background);
+            current_theme->background_color);
     }
 
     needs_solid_color_redraw = false;
