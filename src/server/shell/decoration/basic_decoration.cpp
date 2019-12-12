@@ -59,6 +59,8 @@ msd::StaticGeometry const default_geometry{
     geom::Width{6},     // padding_between_buttons
     geom::Height{14},   // title_font_height
     geom::Point{8, 2},  // title_font_top_left
+    geom::Displacement{5, 5}, // icon_padding
+    geom::Width{1},     // detail_line_width
 };
 
 template<typename OBJ>
