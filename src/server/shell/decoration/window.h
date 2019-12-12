@@ -49,16 +49,16 @@ enum class BorderType
 /// Decoration geometry properties that don't change
 struct StaticGeometry
 {
-    geometry::Height titlebar_height;           ///< Visible height of the top titlebar with the window's name and buttons
-    geometry::Width side_border_width;          ///< Visible width of the side borders
-    geometry::Height bottom_border_height;      ///< Visible height of the bottom border
-    geometry::Size resize_corner_input_size;    ///< The size of the input area of a resizable corner
-                                                ///< (does not effect surface input area, only where in the surface is
-                                                ///< considered a resize corner)
-    geometry::Width button_width;               ///< The width of window control buttons
-    geometry::Width padding_between_buttons;    ///< The gep between titlebar buttons
-    geometry::Height title_font_height;         ///< Height of the text used to render the window title
-    geometry::Point title_font_top_left;        ///< Where to render the window title
+    geometry::Height const titlebar_height;           ///< Visible height of the top titlebar with the window's name and buttons
+    geometry::Width const side_border_width;          ///< Visible width of the side borders
+    geometry::Height const bottom_border_height;      ///< Visible height of the bottom border
+    geometry::Size const resize_corner_input_size;    ///< The size of the input area of a resizable corner
+                                                      ///< (does not effect surface input area, only where in the surface is
+                                                      ///< considered a resize corner)
+    geometry::Width const button_width;               ///< The width of window control buttons
+    geometry::Width const padding_between_buttons;    ///< The gep between titlebar buttons
+    geometry::Height const title_font_height;         ///< Height of the text used to render the window title
+    geometry::Point const title_font_top_left;        ///< Where to render the window title
 };
 
 /// Information about the geometry and type of decorations for a given window
