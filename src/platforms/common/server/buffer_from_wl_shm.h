@@ -29,14 +29,6 @@ namespace mir
 {
 class Executor;
 
-namespace renderer
-{
-namespace gl
-{
-class Context;
-}
-}
-
 namespace graphics
 {
 class Buffer;
