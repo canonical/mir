@@ -27,6 +27,7 @@
 #include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
+#include <boost/filesystem.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -331,7 +332,7 @@ auto msd::Renderer::Text::Impl::font_path() -> std::string
     std::vector<std::string> usable_search_paths;
     for (auto const& path : font_path_search_paths)
     {
-        if (access(path, R_OK) == 0)
+        if (boost::filesystem::exists(path))
             usable_search_paths.push_back(path);
     }
 
@@ -342,7 +343,7 @@ auto msd::Renderer::Text::Impl::font_path() -> std::string
             for (auto const& path : usable_search_paths)
             {
                 auto const full_font_path = path + '/' + prefix + '/' + font.filename;
-                if (access(full_font_path.c_str(), R_OK) == 0)
+                if (boost::filesystem::exists(full_font_path))
                     return full_font_path;
             }
         }
