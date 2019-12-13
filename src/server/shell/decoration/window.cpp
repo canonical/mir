@@ -77,19 +77,14 @@ auto border_type_for(std::shared_ptr<ms::Surface> const& surface) -> msd::Border
 }
 
 msd::WindowState::WindowState(
-    StaticGeometry const& static_geometry,
+    std::shared_ptr<StaticGeometry const> const& static_geometry,
     std::shared_ptr<scene::Surface> const& surface)
-    : static_geometry_{static_geometry},
+    : static_geometry{static_geometry},
       window_size_{surface->window_size()},
       border_type_{border_type_for(surface)},
       focus_state_{surface->focus_state()},
       window_name_{surface->name()}
 {
-}
-
-auto msd::WindowState::static_geometry() const -> StaticGeometry const&
-{
-    return static_geometry_;
 }
 
 auto msd::WindowState::window_size() const -> geom::Size
@@ -133,7 +128,7 @@ auto msd::WindowState::titlebar_height() const -> geom::Height
     {
     case BorderType::Full:
     case BorderType::Titlebar:
-        return static_geometry_.titlebar_height;
+        return static_geometry->titlebar_height;
     case BorderType::None:
         return {};
     }
@@ -147,7 +142,7 @@ auto msd::WindowState::side_border_width() const -> geom::Width
     switch (border_type_)
     {
     case BorderType::Full:
-        return static_geometry_.border_width;
+        return static_geometry->side_border_width;
     case BorderType::Titlebar:
     case BorderType::None:
         return {};
@@ -182,7 +177,7 @@ auto msd::WindowState::bottom_border_height() const -> geom::Height
     switch (border_type_)
     {
     case BorderType::Full:
-        return static_geometry_.border_height;
+        return static_geometry->bottom_border_height;
     case BorderType::Titlebar:
     case BorderType::None:
         return {};
@@ -223,10 +218,14 @@ auto msd::WindowState::bottom_border_rect() const -> geom::Rectangle
 auto msd::WindowState::button_rect(unsigned n) const -> geom::Rectangle
 {
     geom::Rectangle titlebar = titlebar_rect();
-    geom::X x = titlebar.right() - geom::DeltaX{4} - (n + 1) * as_delta(static_geometry_.button_width + geom::DeltaX{4});
+    geom::X x =
+        titlebar.right() -
+        as_delta(side_border_width()) -
+        n * as_delta(static_geometry->button_width + static_geometry->padding_between_buttons) -
+        as_delta(static_geometry->button_width);
     return geom::Rectangle{
         {x, titlebar.top()},
-        {static_geometry_.button_width, titlebar.size.height}};
+        {static_geometry->button_width, titlebar.size.height}};
 }
 
 class msd::WindowSurfaceObserverManager::Observer

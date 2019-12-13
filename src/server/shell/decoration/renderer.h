@@ -38,6 +38,7 @@ namespace decoration
 {
 class WindowState;
 class InputState;
+struct StaticGeometry;
 
 auto const buffer_format = mir_pixel_format_argb_8888;
 auto const bytes_per_pixel = 4;
@@ -45,48 +46,53 @@ auto const bytes_per_pixel = 4;
 class Renderer
 {
 public:
-    Renderer(std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator);
+    Renderer(
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
+        std::shared_ptr<StaticGeometry const> const& static_geometry);
 
-    auto render_titlebar(
-        WindowState const& window_state,
-        InputState const& input_state) -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
-    auto render_left_border(
-        WindowState const& window_state) -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
-    auto render_right_border(
-        WindowState const& window_state) -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
-    auto render_bottom_border(
-        WindowState const& window_state) -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
+    void update_state(WindowState const& window_state, InputState const& input_state);
+    auto render_titlebar() -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
+    auto render_left_border() -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
+    auto render_right_border() -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
+    auto render_bottom_border() -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
 
 private:
     using Pixel = uint32_t;
 
+    /// A visual theme for a decoration
+    /// Focused and unfocused windows use a different theme
     struct Theme
     {
-        Pixel focused;
-        Pixel unfocused;
+        Pixel const background_color;   ///< Color for background of the titlebar and borders
+        Pixel const text_color;         ///< Color the window title is drawn in
     };
 
     std::shared_ptr<graphics::GraphicBufferAllocator> buffer_allocator;
-    Theme theme;
+    Theme const focused_theme;
+    Theme const unfocused_theme;
+    Theme const* current_theme;
+    std::shared_ptr<StaticGeometry const> const static_geometry;
 
+    bool needs_solid_color_redraw{true};
+    geometry::Size left_border_size;
+    geometry::Size right_border_size;
+    geometry::Size bottom_border_size;
     size_t solid_color_pixels_length{0};
-    Pixel solid_color_pixels_color{0};
     std::unique_ptr<Pixel[]> solid_color_pixels; // can be nullptr
 
     geometry::Size titlebar_size{};
     std::unique_ptr<Pixel[]> titlebar_pixels; // can be nullptr
 
-    std::string cached_name;
-    Pixel cached_titlebar_color;
-    std::vector<ButtonInfo> cached_buttons;
+    bool needs_titlebar_redraw{true};
+    bool needs_titlebar_buttons_redraw{true};
+    std::string name;
+    std::vector<ButtonInfo> buttons;
 
-    void update_solid_color_pixels(WindowState const& window_state);
-    auto background_color(WindowState const& window_state) const -> Pixel;
+    void update_solid_color_pixels();
     auto make_buffer(
         Pixel const* pixels,
         geometry::Size size) -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
     static auto alloc_pixels(geometry::Size size) -> std::unique_ptr<Pixel[]>;
-    static auto color(unsigned char r, unsigned char g, unsigned char b, unsigned char a) -> Pixel;
 };
 }
 }

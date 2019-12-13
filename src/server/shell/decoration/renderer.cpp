@@ -36,12 +36,24 @@ namespace msd = mir::shell::decoration;
 
 namespace
 {
+static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
+{
+    return ((uint32_t)b <<  0) |
+           ((uint32_t)g <<  8) |
+           ((uint32_t)r << 16) |
+           ((uint32_t)a << 24);
+}
+
+uint32_t const default_focused_background   = color(0x32, 0x32, 0x32);
+uint32_t const default_unfocused_background = color(0x80, 0x80, 0x80);
+uint32_t const default_focused_text         = color(0xFF, 0xFF, 0xFF);
+uint32_t const default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
+
 inline auto area(geom::Size size) -> size_t
 {
     return (size.width > geom::Width{} && size.height > geom::Height{})
         ? size.width.as_int() * size.height.as_int()
         : 0;
-
 }
 
 inline void render_row(
@@ -62,57 +74,93 @@ inline void render_row(
 }
 }
 
-msd::Renderer::Renderer(std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator)
+msd::Renderer::Renderer(
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
+    std::shared_ptr<StaticGeometry const> const& static_geometry)
     : buffer_allocator{buffer_allocator},
-      theme{
-          /*   focuesed */ color(0x32, 0x32, 0x32, 0xFF),
-          /*  unfocused */ color(0x54, 0x54, 0x54, 0xFF)}
+      focused_theme{
+          default_focused_background,
+          default_focused_text},
+      unfocused_theme{
+          default_unfocused_background,
+          default_unfocused_text},
+      current_theme{nullptr},
+      static_geometry{static_geometry}
 {
 }
 
-auto msd::Renderer::render_titlebar(
-    WindowState const& window_state,
-    InputState const& input_state) -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
+void msd::Renderer::update_state(WindowState const& window_state, InputState const& input_state)
 {
-    bool full_render{false};
+    left_border_size = window_state.left_border_rect().size;
+    right_border_size = window_state.right_border_rect().size;
+    bottom_border_size = window_state.bottom_border_rect().size;
 
-    if (!area(window_state.titlebar_rect().size))
-        return std::experimental::nullopt;
+    size_t length{0};
+    length = std::max(length, area(left_border_size));
+    length = std::max(length, area(right_border_size));
+    length = std::max(length, area(bottom_border_size));
+
+    if (length != solid_color_pixels_length)
+    {
+        solid_color_pixels_length = length;
+        solid_color_pixels.reset(); // force a reallocation next time it's needed
+    }
 
     if (window_state.titlebar_rect().size != titlebar_size)
     {
         titlebar_size = window_state.titlebar_rect().size;
+        titlebar_pixels.reset(); // force a reallocation next time it's needed
+    }
+
+    Theme const* const new_theme = (window_state.focused_state() == mir_window_focus_state_focused) ?
+        &focused_theme :
+        &unfocused_theme;
+
+    if (new_theme != current_theme)
+    {
+        current_theme = new_theme;
+        needs_titlebar_redraw = true;
+        needs_solid_color_redraw = true;
+    }
+
+    if (window_state.window_name() != name)
+    {
+        name = window_state.window_name();
+        needs_titlebar_redraw = true;
+    }
+
+    if (input_state.buttons() != buttons)
+    {
+        buttons = input_state.buttons();
+        needs_titlebar_buttons_redraw = true;
+    }
+}
+
+auto msd::Renderer::render_titlebar() -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
+{
+    if (!area(titlebar_size))
+        return std::experimental::nullopt;
+
+    if (!titlebar_pixels)
+    {
         titlebar_pixels = alloc_pixels(titlebar_size);
-        full_render = true;
+        needs_titlebar_redraw = true;
     }
 
-    if (background_color(window_state) != cached_titlebar_color)
-    {
-        cached_titlebar_color = background_color(window_state);
-        full_render = true;
-    }
-
-    if (window_state.window_name() != cached_name)
-    {
-        cached_name = window_state.window_name();
-        full_render = true;
-    }
-
-    if (full_render)
+    if (needs_titlebar_redraw)
     {
         for (geom::Y y{0}; y < as_y(titlebar_size.height); y += geom::DeltaY{1})
         {
             render_row(
                 titlebar_pixels.get(), titlebar_size,
                 {0, y}, titlebar_size.width,
-                cached_titlebar_color);
+                current_theme->background_color);
         }
     }
 
-    if (full_render || input_state.buttons() != cached_buttons)
+    if (needs_titlebar_redraw || needs_titlebar_buttons_redraw)
     {
-        cached_buttons = input_state.buttons();
-        for (auto const& button : cached_buttons)
+        for (auto const& button : buttons)
         {
             Pixel button_color = color(0x80, 0x80, 0x80, 0xFF);
             if (button.state == ButtonState::Hovered)
@@ -127,70 +175,53 @@ auto msd::Renderer::render_titlebar(
         }
     }
 
+    needs_titlebar_redraw = false;
+    needs_titlebar_buttons_redraw = false;
+
     return make_buffer(titlebar_pixels.get(), titlebar_size);
 }
 
-auto msd::Renderer::render_left_border(
-    WindowState const& window_state) -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
+auto msd::Renderer::render_left_border() -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
 {
-    if (!area(window_state.left_border_rect().size))
+    if (!area(left_border_size))
         return std::experimental::nullopt;
-    update_solid_color_pixels(window_state);
-    return make_buffer(solid_color_pixels.get(), window_state.left_border_rect().size);
+    update_solid_color_pixels();
+    return make_buffer(solid_color_pixels.get(), left_border_size);
 }
 
-auto msd::Renderer::render_right_border(
-    WindowState const& window_state) -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
+auto msd::Renderer::render_right_border() -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
 {
-    if (!area(window_state.right_border_rect().size))
+    if (!area(right_border_size))
         return std::experimental::nullopt;
-    update_solid_color_pixels(window_state);
-    return make_buffer(solid_color_pixels.get(), window_state.right_border_rect().size);
+    update_solid_color_pixels();
+    return make_buffer(solid_color_pixels.get(), right_border_size);
 }
 
-auto msd::Renderer::render_bottom_border(
-    WindowState const& window_state) -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
+auto msd::Renderer::render_bottom_border() -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
 {
-    if (!area(window_state.bottom_border_rect().size))
+    if (!area(bottom_border_size))
         return std::experimental::nullopt;
-    update_solid_color_pixels(window_state);
-    return make_buffer(solid_color_pixels.get(), window_state.bottom_border_rect().size);
+    update_solid_color_pixels();
+    return make_buffer(solid_color_pixels.get(), bottom_border_size);
 }
 
-void msd::Renderer::update_solid_color_pixels(WindowState const& window_state)
+void msd::Renderer::update_solid_color_pixels()
 {
-    bool needs_redraw{false};
-
-    size_t length{};
-    length = std::max(length, area(window_state.left_border_rect().size));
-    length = std::max(length, area(window_state.right_border_rect().size));
-    length = std::max(length, area(window_state.bottom_border_rect().size));
-
-    if (length != solid_color_pixels_length)
+    if (!solid_color_pixels)
     {
-        solid_color_pixels_length = length;
-        solid_color_pixels = alloc_pixels(geom::Size{length, 1});
-        needs_redraw = true;
+        solid_color_pixels = alloc_pixels(geom::Size{solid_color_pixels_length, 1});
+        needs_solid_color_redraw = true;
     }
 
-    if (background_color(window_state) != solid_color_pixels_color)
-    {
-        solid_color_pixels_color = background_color(window_state);
-        needs_redraw = true;
-    }
-
-    if (needs_redraw)
+    if (needs_solid_color_redraw)
     {
         render_row(
             solid_color_pixels.get(), geom::Size{solid_color_pixels_length, 1},
             geom::Point{}, geom::Width{solid_color_pixels_length},
-            solid_color_pixels_color);
+            current_theme->background_color);
     }
-}
 
-auto msd::Renderer::background_color(WindowState const& window_state) const -> Pixel
-{
-    return window_state.focused_state() == mir_window_focus_state_focused ? theme.focused : theme.unfocused;
+    needs_solid_color_redraw = false;
 }
 
 auto msd::Renderer::make_buffer(
@@ -221,12 +252,4 @@ auto msd::Renderer::alloc_pixels(geometry::Size size) -> std::unique_ptr<uint32_
         return std::unique_ptr<uint32_t[]>{new uint32_t[buf_size]};
     else
         return nullptr;
-}
-
-auto msd::Renderer::color(unsigned char r, unsigned char g, unsigned char b, unsigned char a) -> uint32_t
-{
-    return ((uint32_t)b <<  0) |
-           ((uint32_t)g <<  8) |
-           ((uint32_t)r << 16) |
-           ((uint32_t)a << 24);
 }
