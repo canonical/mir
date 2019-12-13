@@ -55,6 +55,33 @@ uint32_t const default_unfocused_background = color(0x80, 0x80, 0x80);
 uint32_t const default_focused_text         = color(0xFF, 0xFF, 0xFF);
 uint32_t const default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
 
+struct FontPath
+{
+    char const* filename;
+    std::vector<char const*> prefixes;
+};
+
+FontPath const font_paths[]{
+    FontPath{"Ubuntu-B.ttf", {
+        "ubuntu-font-family",   // Ubuntu < 18.04
+        "ubuntu",               // Ubuntu >= 18.04/Arch
+    }},
+    FontPath{"FreeSansBold.ttf", {
+        "freefont",             // Debian/Ubuntu
+        "gnu-free",             // Fedora/Arch
+    }},
+    FontPath{"DejaVuSans-Bold.ttf", {
+        "dejavu",               // Ubuntu (others?)
+        "",                     // Arch
+    }},
+};
+
+char const* const font_path_search_paths[]{
+    "/usr/share/fonts/truetype",    // Ubuntu/Debian
+    "/usr/share/fonts/TTF",         // Arch
+    "/usr/share/fonts",             // Fedora/Arch
+};
+
 inline auto area(geom::Size size) -> size_t
 {
     return (size.width > geom::Width{} && size.height > geom::Height{})
@@ -96,15 +123,6 @@ public:
         Pixel color) override;
 
 private:
-    struct FontPath
-    {
-        std::string const filename;
-        std::vector<std::string> prefixes;
-    };
-
-    static std::vector<FontPath> const font_paths;
-    static std::vector<std::string> const font_path_search_paths;
-
     std::mutex mutex;
     FT_Library library;
     FT_Face face;
@@ -120,27 +138,6 @@ private:
 
     static auto font_path() -> std::string;
     static auto utf8_to_utf32(std::string const& text) -> std::u32string;
-};
-
-std::vector<msd::Renderer::Text::Impl::FontPath> const msd::Renderer::Text::Impl::font_paths{
-    FontPath{"Ubuntu-B.ttf", {
-        "ubuntu-font-family",   // Ubuntu < 18.04
-        "ubuntu",               // Ubuntu >= 18.04/Arch
-    }},
-    FontPath{"FreeSansBold.ttf", {
-        "freefont",             // Debian/Ubuntu
-        "gnu-free",             // Fedora/Arch
-    }},
-    FontPath{"DejaVuSans-Bold.ttf", {
-        "dejavu",               // Ubuntu (others?)
-        "",                     // Arch
-    }},
-};
-
-std::vector<std::string> const msd::Renderer::Text::Impl::font_path_search_paths{
-    "/usr/share/fonts/truetype",    // Ubuntu/Debian
-    "/usr/share/fonts/TTF",         // Arch
-    "/usr/share/fonts",             // Fedora/Arch
 };
 
 class msd::Renderer::Text::Null
@@ -334,7 +331,7 @@ auto msd::Renderer::Text::Impl::font_path() -> std::string
     std::vector<std::string> usable_search_paths;
     for (auto const& path : font_path_search_paths)
     {
-        if (access(path.c_str(), R_OK) == 0)
+        if (access(path, R_OK) == 0)
             usable_search_paths.push_back(path);
     }
 
