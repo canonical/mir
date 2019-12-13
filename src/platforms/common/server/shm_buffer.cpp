@@ -22,6 +22,7 @@
 #include "shm_buffer.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
+#include "egl_context_executor.h"
 
 #include MIR_SERVER_GL_H
 #include MIR_SERVER_GLEXT_H
@@ -93,16 +94,19 @@ bool mgc::ShmBuffer::supports(MirPixelFormat mir_format)
 
 mgc::ShmBuffer::ShmBuffer(
     geom::Size const& size,
-    MirPixelFormat const& format)
+    MirPixelFormat const& format,
+    std::shared_ptr<EGLContextExecutor> egl_delegate)
     : size_{size},
-      pixel_format_{format}
+      pixel_format_{format},
+      egl_delegate{std::move(egl_delegate)}
 {
 }
 
 mgc::MemoryBackedShmBuffer::MemoryBackedShmBuffer(
     geom::Size const& size,
-    MirPixelFormat const& pixel_format)
-    : ShmBuffer(size, pixel_format),
+    MirPixelFormat const& pixel_format,
+    std::shared_ptr<EGLContextExecutor> egl_delegate)
+    : ShmBuffer(size, pixel_format, std::move(egl_delegate)),
       stride_{MIR_BYTES_PER_PIXEL(pixel_format) * size.width.as_uint32_t()},
       pixels{new unsigned char[stride_.as_int() * size.height.as_int()]}
 {
@@ -112,7 +116,11 @@ mgc::ShmBuffer::~ShmBuffer() noexcept
 {
     if (tex_id != 0)
     {
-        glDeleteTextures(1, &tex_id);
+        egl_delegate->spawn(
+            [id = tex_id]()
+            {
+                glDeleteTextures(1, &id);
+            });
     }
 }
 

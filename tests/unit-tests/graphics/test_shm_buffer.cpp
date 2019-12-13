@@ -17,14 +17,19 @@
  */
 
 #include "src/platforms/common/server/shm_buffer.h"
+#include "src/platforms/common/server/egl_context_executor.h"
 #include "mir/shm_file.h"
+#include "mir/renderer/gl/context.h"
 
 #include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/mock_egl.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <GLES2/gl2ext.h>
+#include <EGL/egl.h>
 #include <endian.h>
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
@@ -35,14 +40,39 @@ using namespace testing;
 namespace
 {
 
+class DumbGLContext : public mir::renderer::gl::Context
+{
+public:
+    DumbGLContext(EGLContext ctx)
+        : ctx{ctx}
+    {
+    }
+
+    void make_current() const override
+    {
+        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx);
+    }
+
+    void release_current() const override
+    {
+        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+
+private:
+    EGLDisplay const dpy{reinterpret_cast<void*>(0xdeebbeed)};
+    EGLContext const ctx;
+};
+
 struct PlatformlessShmBuffer : mgc::MemoryBackedShmBuffer
 {
     PlatformlessShmBuffer(
         geom::Size const& size,
-        MirPixelFormat const& pixel_format)
-            : MemoryBackedShmBuffer(
-                size,
-                pixel_format)
+        MirPixelFormat const& pixel_format,
+        std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
+        : MemoryBackedShmBuffer(
+            size,
+            pixel_format,
+            std::move(egl_delegate))
     {
     }
 
@@ -66,16 +96,28 @@ struct PlatformlessShmBuffer : mgc::MemoryBackedShmBuffer
 struct ShmBufferTest : public testing::Test
 {
     ShmBufferTest()
-        : size{150,340},
+        : size{150, 340},
           pixel_format{mir_pixel_format_bgr_888},
-          shm_buffer{size, pixel_format}
+          egl_delegate{
+            std::make_shared<mgc::EGLContextExecutor>(
+                std::make_unique<DumbGLContext>(dummy))},
+          shm_buffer{
+            size,
+            pixel_format,
+            std::make_shared<mgc::EGLContextExecutor>(
+                std::make_unique<DumbGLContext>(dummy))}
     {
     }
 
+    testing::NiceMock<mtd::MockEGL> mock_egl;
+    testing::NiceMock<mtd::MockGL> mock_gl;
+
     geom::Size const size;
     MirPixelFormat const pixel_format;
+    EGLContext const dummy{reinterpret_cast<void*>(0x0011223344)};
+    std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
+
     PlatformlessShmBuffer shm_buffer;
-    testing::NiceMock<mtd::MockGL> mock_gl;
 };
 
 }
@@ -92,7 +134,7 @@ TEST_F(ShmBufferTest, has_correct_properties)
 
 TEST_F(ShmBufferTest, cant_upload_bgr_888)
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_bgr_888);
+    PlatformlessShmBuffer buf(size, mir_pixel_format_bgr_888, egl_delegate);
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, _,
                                       size.width.as_int(), size.height.as_int(),
                                       0, _, _,
@@ -104,7 +146,7 @@ TEST_F(ShmBufferTest, cant_upload_bgr_888)
 
 TEST_F(ShmBufferTest, uploads_rgb_888_correctly)
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_rgb_888);
+    PlatformlessShmBuffer buf(size, mir_pixel_format_rgb_888, egl_delegate);
 
     EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
@@ -117,7 +159,7 @@ TEST_F(ShmBufferTest, uploads_rgb_888_correctly)
 
 TEST_F(ShmBufferTest, uploads_rgb_565_correctly)
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_rgb_565);
+    PlatformlessShmBuffer buf(size, mir_pixel_format_rgb_565, egl_delegate);
     EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT,
                                        AnyOf(Eq(1),Eq(2))));
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
@@ -130,7 +172,7 @@ TEST_F(ShmBufferTest, uploads_rgb_565_correctly)
 
 TEST_F(ShmBufferTest, uploads_rgba_5551_correctly)
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_rgba_5551);
+    PlatformlessShmBuffer buf(size, mir_pixel_format_rgba_5551, egl_delegate);
     EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT,
                                        AnyOf(Eq(1),Eq(2))));
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
@@ -143,7 +185,7 @@ TEST_F(ShmBufferTest, uploads_rgba_5551_correctly)
 
 TEST_F(ShmBufferTest, uploads_rgba_4444_correctly)
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_rgba_4444);
+    PlatformlessShmBuffer buf(size, mir_pixel_format_rgba_4444, egl_delegate);
     EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT,
                                        AnyOf(Eq(1),Eq(2))));
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
@@ -156,7 +198,7 @@ TEST_F(ShmBufferTest, uploads_rgba_4444_correctly)
 
 TEST_F(ShmBufferTest, uploads_xrgb_8888_correctly)
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_xrgb_8888);
+    PlatformlessShmBuffer buf(size, mir_pixel_format_xrgb_8888, egl_delegate);
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT,
                                       size.width.as_int(), size.height.as_int(),
@@ -168,7 +210,7 @@ TEST_F(ShmBufferTest, uploads_xrgb_8888_correctly)
 
 TEST_F(ShmBufferTest, uploads_argb_8888_correctly)
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_argb_8888);
+    PlatformlessShmBuffer buf(size, mir_pixel_format_argb_8888, egl_delegate);
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT,
                                       size.width.as_int(), size.height.as_int(),
@@ -180,7 +222,7 @@ TEST_F(ShmBufferTest, uploads_argb_8888_correctly)
 
 TEST_F(ShmBufferTest, uploads_xbgr_8888_correctly)
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_xbgr_8888);
+    PlatformlessShmBuffer buf(size, mir_pixel_format_xbgr_8888, egl_delegate);
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                                       size.width.as_int(), size.height.as_int(),
@@ -192,7 +234,7 @@ TEST_F(ShmBufferTest, uploads_xbgr_8888_correctly)
 
 TEST_F(ShmBufferTest, uploads_abgr_8888_correctly)
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_abgr_8888);
+    PlatformlessShmBuffer buf(size, mir_pixel_format_abgr_8888, egl_delegate);
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                                       size.width.as_int(), size.height.as_int(),
@@ -200,4 +242,63 @@ TEST_F(ShmBufferTest, uploads_abgr_8888_correctly)
                                       buf.pixel_buffer()));
 #endif
     buf.bind();
+}
+
+namespace
+{
+void wait_for_egl_thread(mgc::EGLContextExecutor& egl_delegate)
+{
+    auto egl_thread_started_promise = std::make_shared<std::promise<void>>();
+    auto const egl_thread_started = egl_thread_started_promise->get_future();
+
+    egl_delegate.spawn(
+        [promise = std::move(egl_thread_started_promise)]()
+        {
+            promise->set_value();
+        });
+
+    if (egl_thread_started.wait_for(std::chrono::seconds{10}) != std::future_status::ready)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Timeout waiting for EGLContextDelegate"}));
+    }
+}
+}
+
+TEST_F(ShmBufferTest, texture_is_destroyed_on_thread_with_current_context)
+{
+    GLint const tex_id{0x8086};
+    EXPECT_CALL(mock_gl, glGenTextures(1,_))
+        .WillOnce(SetArgPointee<1>(tex_id));
+    EXPECT_CALL(mock_gl, glDeleteTextures(1,Pointee(Eq(tex_id))))
+        .WillOnce(InvokeWithoutArgs(
+            [this]()
+            {
+                EXPECT_THAT(
+                    mock_egl.current_contexts[std::this_thread::get_id()],
+                    Ne(EGL_NO_CONTEXT));
+            }));
+
+    EGLContext const dummy_ctx{reinterpret_cast<EGLContext>(0x66221144)};
+    EGLDisplay const dummy_dpy{reinterpret_cast<EGLDisplay>(0xaabbccdd)};
+
+    {
+        /* Use a locally-scoped EGLContextDelegate to make use of
+         * the fact that the destructor ensures the work-queue is drained.
+         */
+        auto egl_delegate = std::make_shared<mgc::EGLContextExecutor>(
+            std::make_unique<DumbGLContext>(reinterpret_cast<EGLContext>(42)));
+
+        // Ensure that the EGL thread has actually spun up…
+        wait_for_egl_thread(*egl_delegate);
+
+        // Ensure we have a “context” current for creation and bind
+        eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, dummy_ctx);
+
+        PlatformlessShmBuffer buffer{size, pixel_format, egl_delegate};
+
+        buffer.bind();
+
+        // Ensure this thread does *not* have a “context” current for destruction
+        eglMakeCurrent(dummy_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
 }

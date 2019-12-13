@@ -39,6 +39,8 @@ namespace graphics
 {
 namespace common
 {
+class EGLContextExecutor;
+
 class ShmBuffer :
     public BufferBasic,
     public NativeBufferBase,
@@ -58,13 +60,17 @@ public:
     Layout layout() const override;
     void add_syncpoint() override;
 protected:
-    ShmBuffer(geometry::Size const& size, MirPixelFormat const& format);
+    ShmBuffer(
+        geometry::Size const& size,
+        MirPixelFormat const& format,
+        std::shared_ptr<EGLContextExecutor> egl_delegate);
 
     /// \note This must be called with a current GL context
     void upload_to_texture(void const* pixels);
 private:
     geometry::Size const size_;
     MirPixelFormat const pixel_format_;
+    std::shared_ptr<EGLContextExecutor> const egl_delegate;
     GLuint tex_id{0};
 };
 
@@ -75,7 +81,8 @@ class MemoryBackedShmBuffer :
 public:
     MemoryBackedShmBuffer(
         geometry::Size const& size,
-        MirPixelFormat const& pixel_format);
+        MirPixelFormat const& pixel_format,
+        std::shared_ptr<EGLContextExecutor> egl_delegate);
 
     void write(unsigned char const* data, size_t size) override;
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;

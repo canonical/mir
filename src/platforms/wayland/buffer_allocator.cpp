@@ -19,6 +19,7 @@
 #include "buffer_allocator.h"
 #include "shm_buffer.h"
 #include "display.h"
+#include "egl_context_executor.h"
 
 #include <mir/anonymous_shm_file.h>
 #include <mir/fatal.h>
@@ -69,7 +70,8 @@ std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const
 
 mgw::BufferAllocator::BufferAllocator(graphics::Display const& output) :
     egl_extensions(std::make_shared<mg::EGLExtensions>()),
-    ctx{context_for_output(output)}
+    ctx{context_for_output(output)},
+    egl_delegate{std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))}
 {
 }
 
@@ -90,7 +92,7 @@ std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_software_buffer(geom::Si
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format);
+    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format, egl_delegate);
 }
 
 std::vector<MirPixelFormat> mgw::BufferAllocator::supported_pixel_formats()

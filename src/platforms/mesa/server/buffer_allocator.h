@@ -49,6 +49,11 @@ namespace graphics
 class Display;
 struct EGLExtensions;
 
+namespace common
+{
+class EGLContextExecutor;
+}
+
 namespace mesa
 {
 
@@ -85,6 +90,7 @@ private:
         graphics::BufferProperties const& buffer_properties);
 
     std::shared_ptr<renderer::gl::Context> const ctx;
+    std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<Executor> wayland_executor;
     gbm_device* const device;
     std::shared_ptr<EGLExtensions> const egl_extensions;

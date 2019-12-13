@@ -24,6 +24,7 @@
 #include "shm_buffer.h"
 #include "display_helpers.h"
 #include "gbm_format_conversions.h"
+#include "egl_context_executor.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"
@@ -247,6 +248,8 @@ mgm::BufferAllocator::BufferAllocator(
     BypassOption bypass_option,
     mgm::BufferImportMethod const buffer_import_method)
     : ctx{context_for_output(output)},
+      egl_delegate{
+          std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))},
       device(device),
       egl_extensions(std::make_shared<mg::EGLExtensions>()),
       bypass_option(buffer_import_method == mgm::BufferImportMethod::dma_buf ?
@@ -328,7 +331,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format);
+    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format, egl_delegate);
 }
 
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
