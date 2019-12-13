@@ -23,7 +23,7 @@
 #include "mir/graphics/wayland_allocator.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/egl_extensions.h"
-#include "egl_context_delegate.h"
+#include "egl_context_executor.h"
 
 #include "wayland-eglstream-controller.h"
 
@@ -89,7 +89,7 @@ private:
     EGLExtensions::WaylandExtensions const extensions;
     EGLExtensions::NVStreamAttribExtensions const nv_extensions;
     std::shared_ptr<renderer::gl::Context> const wayland_ctx;
-    std::shared_ptr<common::EGLContextDelegate> const egl_delegate;
+    std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::unique_ptr<gl::Program> shader;
     static struct wl_eglstream_controller_interface const impl;
 };

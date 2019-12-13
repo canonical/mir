@@ -16,8 +16,10 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_EGL_CONTEXT_DELEGATE_H
-#define MIR_EGL_CONTEXT_DELEGATE_H
+#ifndef MIR_EGL_CONTEXT_EXECUTOR_H
+#define MIR_EGL_CONTEXT_EXECUTOR_H
+
+#include "mir/executor.h"
 
 #include <memory>
 #include <future>
@@ -40,18 +42,18 @@ namespace graphics
 {
 namespace common
 {
-class EGLContextDelegate
+class EGLContextExecutor : public Executor
 {
 public:
-    EGLContextDelegate(std::unique_ptr<renderer::gl::Context> context);
-    ~EGLContextDelegate() noexcept;
+    EGLContextExecutor(std::unique_ptr<renderer::gl::Context> context);
+    ~EGLContextExecutor() noexcept;
 
     /**
      * Run a run a function on a thread with a current EGL context
      */
-    void defer_to_egl_context(std::function<void()>&& functor);
+    void spawn(std::function<void()>&& functor) override;
 private:
-    static void process_loop(EGLContextDelegate* const me);
+    static void process_loop(EGLContextExecutor* const me);
 
     std::unique_ptr<renderer::gl::Context> const ctx;
     std::mutex mutex;
@@ -66,4 +68,4 @@ private:
 }
 }
 
-#endif //MIR_EGL_CONTEXT_DELEGATE_H
+#endif //MIR_EGL_CONTEXT_EXECUTOR_H

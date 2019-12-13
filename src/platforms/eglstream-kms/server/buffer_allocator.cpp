@@ -96,7 +96,7 @@ std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const
 mge::BufferAllocator::BufferAllocator(mg::Display const& output)
     : wayland_ctx{context_for_output(output)},
       egl_delegate{
-          std::make_shared<mgc::EGLContextDelegate>(context_for_output(output))}
+          std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))}
 {
 }
 

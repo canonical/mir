@@ -17,7 +17,7 @@
  */
 
 #include "src/platforms/common/server/shm_buffer.h"
-#include "src/platforms/common/server/egl_context_delegate.h"
+#include "src/platforms/common/server/egl_context_executor.h"
 #include "mir/shm_file.h"
 #include "mir/renderer/gl/context.h"
 
@@ -68,7 +68,7 @@ struct PlatformlessShmBuffer : mgc::MemoryBackedShmBuffer
     PlatformlessShmBuffer(
         geom::Size const& size,
         MirPixelFormat const& pixel_format,
-        std::shared_ptr<mgc::EGLContextDelegate> egl_delegate)
+        std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
         : MemoryBackedShmBuffer(
             size,
             pixel_format,
@@ -99,12 +99,12 @@ struct ShmBufferTest : public testing::Test
         : size{150, 340},
           pixel_format{mir_pixel_format_bgr_888},
           egl_delegate{
-            std::make_shared<mgc::EGLContextDelegate>(
+            std::make_shared<mgc::EGLContextExecutor>(
                 std::make_unique<DumbGLContext>(dummy))},
           shm_buffer{
             size,
             pixel_format,
-            std::make_shared<mgc::EGLContextDelegate>(
+            std::make_shared<mgc::EGLContextExecutor>(
                 std::make_unique<DumbGLContext>(dummy))}
     {
     }
@@ -115,7 +115,7 @@ struct ShmBufferTest : public testing::Test
     geom::Size const size;
     MirPixelFormat const pixel_format;
     EGLContext const dummy{reinterpret_cast<void*>(0x0011223344)};
-    std::shared_ptr<mgc::EGLContextDelegate> const egl_delegate;
+    std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
 
     PlatformlessShmBuffer shm_buffer;
 };
@@ -246,12 +246,12 @@ TEST_F(ShmBufferTest, uploads_abgr_8888_correctly)
 
 namespace
 {
-void wait_for_egl_thread(mgc::EGLContextDelegate& egl_delegate)
+void wait_for_egl_thread(mgc::EGLContextExecutor& egl_delegate)
 {
     auto egl_thread_started_promise = std::make_shared<std::promise<void>>();
     auto const egl_thread_started = egl_thread_started_promise->get_future();
 
-    egl_delegate.defer_to_egl_context(
+    egl_delegate.spawn(
         [promise = std::move(egl_thread_started_promise)]()
         {
             promise->set_value();
@@ -285,7 +285,7 @@ TEST_F(ShmBufferTest, texture_is_destroyed_on_thread_with_current_context)
         /* Use a locally-scoped EGLContextDelegate to make use of
          * the fact that the destructor ensures the work-queue is drained.
          */
-        auto egl_delegate = std::make_shared<mgc::EGLContextDelegate>(
+        auto egl_delegate = std::make_shared<mgc::EGLContextExecutor>(
             std::make_unique<DumbGLContext>(reinterpret_cast<EGLContext>(42)));
 
         // Ensure that the EGL thread has actually spun up…

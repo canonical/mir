@@ -12,7 +12,7 @@ add_library(server_platform_common STATIC
   shm_buffer.cpp
   one_shot_device_observer.h
   one_shot_device_observer.cpp
-  egl_context_delegate.cpp egl_context_delegate.h)
+  egl_context_executor.cpp egl_context_executor.h)
 
 target_link_libraries(
   server_platform_common

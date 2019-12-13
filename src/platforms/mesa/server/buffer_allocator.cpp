@@ -24,7 +24,7 @@
 #include "shm_buffer.h"
 #include "display_helpers.h"
 #include "gbm_format_conversions.h"
-#include "egl_context_delegate.h"
+#include "egl_context_executor.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"
@@ -249,7 +249,7 @@ mgm::BufferAllocator::BufferAllocator(
     mgm::BufferImportMethod const buffer_import_method)
     : ctx{context_for_output(output)},
       egl_delegate{
-          std::make_shared<mgc::EGLContextDelegate>(context_for_output(output))},
+          std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))},
       device(device),
       egl_extensions(std::make_shared<mg::EGLExtensions>()),
       bypass_option(buffer_import_method == mgm::BufferImportMethod::dma_buf ?

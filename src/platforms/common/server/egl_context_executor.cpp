@@ -16,19 +16,19 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "egl_context_delegate.h"
+#include "egl_context_executor.h"
 #include "mir/renderer/gl/context.h"
 
 namespace mgc = mir::graphics::common;
 
-mgc::EGLContextDelegate::EGLContextDelegate(
+mgc::EGLContextExecutor::EGLContextExecutor(
     std::unique_ptr<mir::renderer::gl::Context> context)
     : ctx{std::move(context)},
       egl_thread(std::thread{process_loop, this})
 {
 }
 
-mgc::EGLContextDelegate::~EGLContextDelegate() noexcept
+mgc::EGLContextExecutor::~EGLContextExecutor() noexcept
 {
     {
         std::lock_guard<std::mutex> lock{mutex};
@@ -38,7 +38,7 @@ mgc::EGLContextDelegate::~EGLContextDelegate() noexcept
     egl_thread.join();
 }
 
-void mgc::EGLContextDelegate::defer_to_egl_context(
+void mgc::EGLContextExecutor::spawn(
     std::function<void()>&& functor)
 {
     {
@@ -48,7 +48,7 @@ void mgc::EGLContextDelegate::defer_to_egl_context(
     new_work.notify_all();
 }
 
-void mgc::EGLContextDelegate::process_loop(mgc::EGLContextDelegate* const me)
+void mgc::EGLContextExecutor::process_loop(mgc::EGLContextExecutor* const me)
 {
     me->ctx->make_current();
 
