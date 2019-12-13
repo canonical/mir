@@ -334,12 +334,16 @@ bool miral::MinimalWindowManager::Impl::handle_pointer_event(MirPointerEvent con
             shift_keys == gesture_shift_keys &&
             mir_pointer_event_button_state(event, pointer_gesture_button))
         {
-            if (auto const target = tools.window_at(old_cursor))
+            if (gesture_window &&
+                tools.select_active_window(gesture_window) == gesture_window)
             {
-                if (tools.select_active_window(target) == target)
-                    tools.drag_active_window(new_cursor - old_cursor);
+                tools.drag_active_window(new_cursor - old_cursor);
+                consumes_event = true;
             }
-            consumes_event = true;
+            else
+            {
+                gesture = Gesture::none;
+            }
         }
         else
         {
