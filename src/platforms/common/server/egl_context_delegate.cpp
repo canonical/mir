@@ -43,7 +43,7 @@ void mgc::EGLContextDelegate::defer_to_egl_context(
 {
     {
         std::lock_guard<std::mutex> lock{mutex};
-        work_queue.emplace_back(functor);
+        work_queue.emplace_back(std::move(functor));
     }
     new_work.notify_all();
 }
@@ -55,13 +55,22 @@ void mgc::EGLContextDelegate::process_loop(mgc::EGLContextDelegate* const me)
     std::unique_lock<std::mutex> lock{me->mutex};
     while (!me->shutdown_requested)
     {
-        me->new_work.wait(lock);
         for (auto& work : me->work_queue)
         {
             work();
         }
         me->work_queue.clear();
+
+        me->new_work.wait(lock);
     }
+
+    // Drain the work-queue
+    for (auto& work : me->work_queue)
+    {
+        work();
+    }
+    // …and ensure any functor cleanup happens with the EGL context current, too.
+    me->work_queue.clear();
 
     me->ctx->release_current();
 }
