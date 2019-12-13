@@ -46,6 +46,7 @@ namespace decoration
 {
 class WindowState;
 class BasicDecoration;
+class StaticGeometry;
 template<typename T> class ThreadsafeAccess;
 
 enum class ButtonState
@@ -104,6 +105,7 @@ class InputManager
 {
 public:
     InputManager(
+        std::shared_ptr<StaticGeometry const> const& static_geometry,
         std::shared_ptr<scene::Surface> const& decoration_surface,
         WindowState const& window_state,
         std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration);
@@ -116,7 +118,10 @@ private:
     InputManager(InputManager const&) = delete;
     InputManager& operator=(InputManager const&) = delete;
 
-    static auto resize_edge_rect(WindowState const& window_state, MirResizeEdge resize_edge) -> geometry::Rectangle;
+    static auto resize_edge_rect(
+        WindowState const& window_state,
+        StaticGeometry const& static_geometry,
+        MirResizeEdge resize_edge) -> geometry::Rectangle;
     void pointer_event(std::chrono::nanoseconds timestamp, geometry::Point location, bool pressed);
     void pointer_leave(std::chrono::nanoseconds timestamp);
     void touch_event(int32_t id, std::chrono::nanoseconds timestamp, geometry::Point location);
@@ -125,6 +130,7 @@ private:
     class Observer;
 
     std::mutex mutex;
+    std::shared_ptr<StaticGeometry const> const static_geometry;
     std::shared_ptr<scene::Surface> decoration_surface;
     std::shared_ptr<Observer> const observer;
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> decoration;

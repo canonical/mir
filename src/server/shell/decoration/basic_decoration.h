@@ -100,7 +100,7 @@ protected:
     struct DecorationSurfaceObserver;
 
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> threadsafe_self;
-    std::unique_ptr<StaticGeometry const> const static_geometry;
+    std::shared_ptr<StaticGeometry const> const static_geometry;
     std::unique_ptr<WindowState const> window_state;
     std::unique_ptr<InputState const> input_state;
 

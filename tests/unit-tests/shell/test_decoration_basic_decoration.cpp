@@ -50,7 +50,7 @@ using namespace testing;
 namespace
 {
 geom::DeltaX const button_width{28};
-geom::Size const default_window_size{180, 120};
+geom::Size const default_window_size{240, 120};
 geom::Point const local_point_on_titlebar{20, 7};
 geom::Point const local_close_button_location{
     as_x(default_window_size.width) - button_width * 0.5,
