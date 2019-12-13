@@ -162,8 +162,6 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<ms::Surface> const& window_surface)
     : threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(this, executor)},
       static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
-      window_state{nullptr},
-      input_state{nullptr},
       shell{shell},
       buffer_allocator{buffer_allocator},
       cursor_images{cursor_images},
@@ -172,6 +170,7 @@ msd::BasicDecoration::BasicDecoration(
               auto const session = window_surface->session().lock();
               if (!session)
               {
+                  // ThreadsafeAccess calls fatal_error() if destroyed without being invalidated first
                   threadsafe_self->invalidate();
                   BOOST_THROW_EXCEPTION(std::runtime_error("BasicDecoration's window surface has no session"));
               }
@@ -181,21 +180,25 @@ msd::BasicDecoration::BasicDecoration(
       renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry)},
       window_surface{window_surface},
       decoration_surface{shell->create_surface(session, *creation_params(), nullptr)},
+      window_state{new_window_state()},
       window_surface_observer_manager{std::make_unique<WindowSurfaceObserverManager>(
           window_surface,
           threadsafe_self)},
       input_manager{std::make_unique<InputManager>(
           static_geometry,
           decoration_surface,
-          *new_window_state(),
-          threadsafe_self)}
+          *window_state,
+          threadsafe_self)},
+      input_state{input_manager->state()}
 {
     try
     {
-        update();
+        // Trigger a full refresh
+        update(std::experimental::nullopt, std::experimental::nullopt);
     }
     catch (...)
     {
+        // ThreadsafeAccess calls fatal_error() if destroyed without being invalidated first
         threadsafe_self->invalidate();
         throw;
     }
@@ -214,13 +217,25 @@ msd::BasicDecoration::~BasicDecoration()
 
 void msd::BasicDecoration::window_state_updated()
 {
-    input_manager->update_window_state(*new_window_state());
-    update();
+    auto previous_window_state = std::move(window_state);
+    window_state = new_window_state();
+
+    input_manager->update_window_state(*window_state);
+
+    auto const previous_input_state = std::move(input_state);
+    input_state = input_manager->state();
+
+    update(previous_window_state.get(), previous_input_state.get());
 }
 
 void msd::BasicDecoration::input_state_updated()
 {
-    update();
+    // window_state does not need to be updated
+
+    auto const previous_input_state = std::move(input_state);
+    input_state = input_manager->state();
+
+    update(window_state.get(), previous_input_state.get());
 }
 
 void msd::BasicDecoration::request_move(std::chrono::nanoseconds const& timestamp)
@@ -286,15 +301,12 @@ auto msd::BasicDecoration::creation_params() const -> std::unique_ptr<scene::Sur
     return params;
 }
 
-void msd::BasicDecoration::update()
+void msd::BasicDecoration::update(
+    std::experimental::optional<WindowState const*> previous_window_state,
+    std::experimental::optional<InputState const*> previous_input_state)
 {
-    auto const old_window_state = std::move(window_state);
-    window_state = new_window_state();
-    ObjUpdated<WindowState> window_updated{old_window_state.get(), window_state.get()};
-
-    auto const old_input_state = std::move(input_state);
-    input_state = input_manager->state();
-    ObjUpdated<InputState> input_updated{old_input_state.get(), input_state.get()};
+    ObjUpdated<WindowState> window_updated{previous_window_state.value_or(nullptr), window_state.get()};
+    ObjUpdated<InputState> input_updated{previous_input_state.value_or(nullptr), input_state.get()};
 
     if (window_updated({
             &WindowState::titlebar_height,
