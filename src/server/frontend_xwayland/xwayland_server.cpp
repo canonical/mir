@@ -132,6 +132,8 @@ void mf::XWaylandServer::spawn()
         break;
 
     case 0:
+        close(wl_client_fd[server]);
+        close(wm_fd[server]);
         execl_xwayland(wl_client_fd[client], wm_fd[client]);
         break;
 
