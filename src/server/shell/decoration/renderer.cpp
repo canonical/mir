@@ -55,6 +55,11 @@ uint32_t const default_focused_background   = color(0x32, 0x32, 0x32);
 uint32_t const default_unfocused_background = color(0x80, 0x80, 0x80);
 uint32_t const default_focused_text         = color(0xFF, 0xFF, 0xFF);
 uint32_t const default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
+uint32_t const default_normal_button        = color(0x60, 0x60, 0x60);
+uint32_t const default_active_button        = color(0xA0, 0xA0, 0xA0);
+uint32_t const default_close_normal_button  = color(0xA0, 0x20, 0x20);
+uint32_t const default_close_active_button  = color(0xC0, 0x60, 0x60);
+uint32_t const default_button_icon          = color(0xFF, 0xFF, 0xFF);
 
 struct FontPath
 {
@@ -105,6 +110,62 @@ inline void render_row(
     uint32_t* const end = start + right.as_int() - left.x.as_int();
     for (uint32_t* i = start; i < end; i++)
         *i = color;
+}
+
+inline void render_close_icon(
+    uint32_t* const data,
+    geom::Size buf_size,
+    geom::Rectangle box,
+    geom::Width line_width,
+    uint32_t color)
+{
+    for (geom::Y y = box.top(); y < box.bottom(); y += geom::DeltaY{1})
+    {
+        float const height = (y - box.top()).as_int() / (float)box.size.height.as_int();
+        geom::X const left_line_left = box.left() + as_delta(box.size.width * height);
+        geom::X const right_line_left = box.right() - as_delta(box.size.width * height) - as_delta(line_width);
+        render_row(data, buf_size, {left_line_left, y}, line_width, color);
+        render_row(data, buf_size, {right_line_left, y}, line_width, color);
+    }
+}
+
+inline void render_maximize_icon(
+    uint32_t* const data,
+    geom::Size buf_size,
+    geom::Rectangle box,
+    geom::Width line_width,
+    uint32_t color)
+{
+    geom::Y const mini_titlebar_bottom = box.top() + as_delta(box.size.height * 0.25);
+    geom::Y const mini_bottom_border_top = box.bottom() - geom::DeltaY{line_width.as_int()};
+    for (geom::Y y = box.top(); y < mini_titlebar_bottom; y += geom::DeltaY{1})
+    {
+        render_row(data, buf_size, {box.left(), y}, box.size.width, color);
+    }
+    for (geom::Y y = mini_titlebar_bottom; y < mini_bottom_border_top; y += geom::DeltaY{1})
+    {
+        render_row(data, buf_size, {box.left(), y}, line_width, color);
+        render_row(data, buf_size, {box.right() - as_delta(line_width), y}, line_width, color);
+    }
+    for (geom::Y y = mini_bottom_border_top; y < box.bottom(); y += geom::DeltaY{1})
+    {
+        render_row(data, buf_size, {box.left(), y}, box.size.width, color);
+    }
+}
+
+inline void render_minimize_icon(
+    uint32_t* const data,
+    geom::Size buf_size,
+    geom::Rectangle box,
+    geom::Width /*line_width*/,
+    uint32_t color)
+{
+    geom::Y const mini_taskbar_top = box.bottom() - as_delta(box.size.height * 0.25);
+    geom::Width const mini_taskbar_size = box.size.width * 0.6;
+    for (geom::Y y = mini_taskbar_top; y < box.bottom(); y += geom::DeltaY{1})
+    {
+        render_row(data, buf_size, {box.left(), y}, mini_taskbar_size, color);
+    }
 }
 }
 
@@ -383,6 +444,23 @@ msd::Renderer::Renderer(
           default_unfocused_background,
           default_unfocused_text},
       current_theme{nullptr},
+      button_icons{
+          {ButtonFunction::Close, {
+              default_close_normal_button,
+              default_close_active_button,
+              default_button_icon,
+              render_close_icon}},
+          {ButtonFunction::Maximize, {
+              default_normal_button,
+              default_active_button,
+              default_button_icon,
+              render_maximize_icon}},
+          {ButtonFunction::Minimize, {
+              default_normal_button,
+              default_active_button,
+              default_button_icon,
+              render_minimize_icon}},
+      },
       static_geometry{static_geometry},
       text{Text::instance()}
 {
@@ -483,15 +561,35 @@ auto msd::Renderer::render_titlebar() -> std::experimental::optional<std::shared
     {
         for (auto const& button : buttons)
         {
-            Pixel button_color = color(0x80, 0x80, 0x80, 0xFF);
-            if (button.state == ButtonState::Hovered)
-                button_color = color(0xA0, 0xA0, 0xA0, 0xFF);
-            for (geom::Y y{button.rect.top()}; y < button.rect.bottom(); y += geom::DeltaY{1})
+            auto const icon = button_icons.find(button.function);
+            if (icon != button_icons.end())
             {
-                render_row(
-                    titlebar_pixels.get(), titlebar_size,
-                    {button.rect.left(), y}, button.rect.size.width,
-                    button_color);
+                Pixel button_color = icon->second.normal_color;
+                if (button.state == ButtonState::Hovered)
+                    button_color = icon->second.active_color;
+                for (geom::Y y{button.rect.top()}; y < button.rect.bottom(); y += geom::DeltaY{1})
+                {
+                    render_row(
+                        titlebar_pixels.get(),
+                        titlebar_size,
+                        {button.rect.left(), y},
+                        button.rect.size.width,
+                        button_color);
+                }
+                geom::Rectangle const icon_rect = {
+                button.rect.top_left + static_geometry->icon_padding, {
+                    button.rect.size.width - static_geometry->icon_padding.dx * 2,
+                    button.rect.size.height - static_geometry->icon_padding.dy * 2}};
+                icon->second.render_icon(
+                    titlebar_pixels.get(),
+                    titlebar_size,
+                    icon_rect,
+                    static_geometry->icon_line_width,
+                    icon->second.icon_color);
+            }
+            else
+            {
+                log_warning("Could not render decoration button with unknown function %d\n", button.function);
             }
         }
     }
