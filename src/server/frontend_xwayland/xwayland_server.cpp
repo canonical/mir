@@ -89,11 +89,7 @@ mf::XWaylandServer::~XWaylandServer()
 void mf::XWaylandServer::spawn()
 {
     enum { server, client, size };
-
-    int fd;
     int wl_client_fd[size], wm_fd[size];
-    int status;
-    std::string fd_str, abs_fd_str, wm_fd_str;
 
     xserver_status = STARTING;
 
@@ -117,10 +113,6 @@ void mf::XWaylandServer::spawn()
         return;
     }
 
-    std::ostringstream _dsp_str;
-    _dsp_str << ":" << xdisplay;
-    auto dsp_str = _dsp_str.str();
-
     // This is not pretty! but SIGUSR1 is the only way we know the xserver
     // is ready to accept connections to the wm fd
     // If not it will have a race condition on start that might end
@@ -132,110 +124,128 @@ void mf::XWaylandServer::spawn()
 
     mir::log_info("Starting Xwayland");
     pid = fork();
+
     switch (pid)
     {
-    case 0:
-        fd = dup(wl_client_fd[client]);
-        if (fd < 0)
-            mir::log_error("Failed to duplicate xwayland FD");
-        setenv("WAYLAND_SOCKET", std::to_string(fd).c_str(), 1);
-        setenv("EGL_PLATFORM", "DRM", 1);
-
-        set_cloexec(socket_fd, false);
-        set_cloexec(abstract_socket_fd, false);
-
-        fd = dup(socket_fd);
-        if (fd < 0)
-            mir::log_error("Failed to duplicate xwayland FD");
-        fd_str = std::to_string(fd);
-
-        fd = dup(abstract_socket_fd);
-        if (fd < 0)
-            mir::log_error("Failed to duplicate xwayland abstract FD");
-        abs_fd_str = std::to_string(fd);
-
-        fd = dup(wm_fd[client]);
-        if (fd < 0)
-            mir::log_error("Failed to duplicate xwayland wm FD");
-        wm_fd_str = std::to_string(fd);
-
-        // forward SIGUSR1 to parent thread (us)
-        signal(SIGUSR1, SIG_IGN);
-
-        // Last second abort
-        if (terminate) return;
-
-        execl(xwayland_path.c_str(),
-            "Xwayland",
-            dsp_str.c_str(),
-            "-rootless",
-            "-listen", abs_fd_str.c_str(),
-            "-listen", fd_str.c_str(),
-            "-wm", wm_fd_str.c_str(),
-            "-terminate",
-            NULL);
-        break;
     case -1:
         mir::log_error("Failed to fork");
         break;
+
+    case 0:
+        execl_xwayland(wl_client_fd[client], wm_fd[client]);
+        break;
+
     default:
         close(wl_client_fd[client]);
         close(wm_fd[client]);
-        auto wlclient = wl_client_create(wlc->get_wl_display(), wl_client_fd[server]);
-
-        // More ugliness
-        int tries = 0;
-        while (!xserver_ready)
-        {
-          // Last second abort
-          if (terminate) return;
-
-          // Check for stalled startup
-          if (waitpid(pid, NULL, WNOHANG) != 0 || tries > 200) {
-            xserver_status = FAILED;
-            mir::log_info("Stalled start of Xserver, trying to start again!");
-            spawn();
-            return;
-          }
-
-          std::this_thread::sleep_for(std::chrono::milliseconds(10));
-          tries++;
-        }
-
-        // Last second abort
-        if (terminate) return;
-        wm->start(wlclient, wm_fd[server]);
-        mir::log_info("XServer is running");
-        xserver_status = RUNNING;
-
-        // Reset the tries since server is running now
-        xserver_spawn_tries = 0;
-
-        waitpid(pid, &status, 0);  // Blocking
-        if (WIFEXITED(status)) {
-           mir::log_info("Xserver stopped");
-           xserver_status = STOPPED;
-       } else {
-          // Failed, crash or killed
-          mir::log_info("Xserver crashed or got killed");
-          xserver_status = FAILED;
-       }
-
-        if (terminate) return;
-        wm->destroy();
-        xserver_ready = false;
-
-        if (xserver_status == FAILED) {
-          mir::log_info("Trying to start Xwayland again!");
-          spawn();
-          return;
-        }
-
-        spawn_xserver_on_event_loop();
-
-        mir::log_info("Xwayland stopped");
+        connect_to_xwayland(wl_client_fd[server], wm_fd[server]);
         break;
     }
+}
+
+void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_fd)
+{
+    setenv("EGL_PLATFORM", "DRM", 1);
+
+    auto const wl_client_fd = dup(wl_client_client_fd);
+    if (wl_client_fd < 0)
+        mir::log_error("Failed to duplicate xwayland FD");
+    else
+        setenv("WAYLAND_SOCKET", std::to_string(wl_client_fd).c_str(), 1);
+
+    set_cloexec(socket_fd, false);
+    set_cloexec(abstract_socket_fd, false);
+
+    auto const socket_fd = dup(this->socket_fd);
+    if (socket_fd < 0)
+        mir::log_error("Failed to duplicate xwayland FD");
+    auto const socket_fd_str = std::to_string(socket_fd);
+
+    auto const abstract_socket_fd = dup(this->abstract_socket_fd);
+    if (abstract_socket_fd < 0)
+        mir::log_error("Failed to duplicate xwayland abstract FD");
+    auto const abstract_socket_fd_str = std::to_string(abstract_socket_fd);
+
+    auto const wm_fd = dup(wm_client_fd);
+    if (wm_fd < 0)
+    mir::log_error("Failed to duplicate xwayland wm FD");
+    auto const wm_fd_str = std::to_string(wm_fd);
+
+    // forward SIGUSR1 to parent thread (us)
+    signal(SIGUSR1, SIG_IGN);
+
+    // Last second abort
+    if (terminate) return;
+
+    auto const dsp_str = ":" + std::to_string(xdisplay);
+
+    execl(xwayland_path.c_str(),
+    "Xwayland",
+    dsp_str.c_str(),
+    "-rootless",
+    "-listen", abstract_socket_fd_str.c_str(),
+    "-listen", socket_fd_str.c_str(),
+    "-wm", wm_fd_str.c_str(),
+    "-terminate",
+    NULL);
+}
+
+void mf::XWaylandServer::connect_to_xwayland(int wl_client_server_fd, int wm_server_fd)
+{
+    auto wlclient = wl_client_create(wlc->get_wl_display(), wl_client_server_fd);
+
+    // More ugliness
+    int tries = 0;
+    while (!xserver_ready)
+    {
+        // Last second abort
+        if (terminate) return;
+
+        // Check for stalled startup
+        if (waitpid(pid, NULL, WNOHANG) != 0 || tries > 200) {
+        xserver_status = FAILED;
+        mir::log_info("Stalled start of Xserver, trying to start again!");
+        spawn();
+        return;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        tries++;
+    }
+
+    // Last second abort
+    if (terminate) return;
+    wm->start(wlclient, wm_server_fd);
+    mir::log_info("XServer is running");
+    xserver_status = RUNNING;
+
+    // Reset the tries since server is running now
+    xserver_spawn_tries = 0;
+
+    int status;
+    waitpid(pid, &status, 0);  // Blocking
+    if (WIFEXITED(status)) {
+        mir::log_info("Xserver stopped");
+        xserver_status = STOPPED;
+    } else {
+        // Failed, crash or killed
+        mir::log_info("Xserver crashed or got killed");
+        xserver_status = FAILED;
+    }
+
+    if (terminate) return;
+    wm->destroy();
+    xserver_ready = false;
+
+    if (xserver_status == FAILED) {
+        mir::log_info("Trying to start Xwayland again!");
+        spawn();
+        return;
+    }
+
+    spawn_xserver_on_event_loop();
+
+    mir::log_info("Xwayland stopped");
 }
 
 bool mf::XWaylandServer::set_cloexec(int fd, bool cloexec) {
