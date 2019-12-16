@@ -194,7 +194,19 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
 
 void mf::XWaylandServer::connect_to_xwayland(int wl_client_server_fd, int wm_server_fd)
 {
-    auto wlclient = wl_client_create(wlc->get_wl_display(), wl_client_server_fd);
+    wl_client* client = nullptr;
+    std::mutex client_mutex;
+    std::condition_variable client_ready;
+
+    wlc->run_on_wayland_display([wl_client_server_fd, &client, &client_mutex, &client_ready](wl_display* display)
+        {
+            std::lock_guard<std::mutex> lock{client_mutex};
+            client = wl_client_create(display, wl_client_server_fd);
+            client_ready.notify_all();
+        });
+
+    std::unique_lock<std::mutex> lock{client_mutex};
+    client_ready.wait(lock);
 
     // More ugliness
     int tries = 0;
@@ -217,7 +229,7 @@ void mf::XWaylandServer::connect_to_xwayland(int wl_client_server_fd, int wm_ser
 
     // Last second abort
     if (terminate) return;
-    wm->start(wlclient, wm_server_fd);
+    wm->start(client, wm_server_fd);
     mir::log_info("XServer is running");
     xserver_status = RUNNING;
 
