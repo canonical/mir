@@ -88,8 +88,10 @@ mf::XWaylandServer::~XWaylandServer()
 
 void mf::XWaylandServer::spawn()
 {
+    enum { server, client, size };
+
     int fd;
-    int wl_client_fd[2], wm_fd[2];
+    int wl_client_fd[size], wm_fd[size];
     int status;
     std::string fd_str, abs_fd_str, wm_fd_str;
 
@@ -133,7 +135,7 @@ void mf::XWaylandServer::spawn()
     switch (pid)
     {
     case 0:
-        fd = dup(wl_client_fd[1]);
+        fd = dup(wl_client_fd[client]);
         if (fd < 0)
             mir::log_error("Failed to duplicate xwayland FD");
         setenv("WAYLAND_SOCKET", std::to_string(fd).c_str(), 1);
@@ -152,7 +154,7 @@ void mf::XWaylandServer::spawn()
             mir::log_error("Failed to duplicate xwayland abstract FD");
         abs_fd_str = std::to_string(fd);
 
-        fd = dup(wm_fd[1]);
+        fd = dup(wm_fd[client]);
         if (fd < 0)
             mir::log_error("Failed to duplicate xwayland wm FD");
         wm_fd_str = std::to_string(fd);
@@ -177,9 +179,9 @@ void mf::XWaylandServer::spawn()
         mir::log_error("Failed to fork");
         break;
     default:
-        close(wl_client_fd[1]);
-        close(wm_fd[1]);
-        auto wlclient = wl_client_create(wlc->get_wl_display(), wl_client_fd[0]);
+        close(wl_client_fd[client]);
+        close(wm_fd[client]);
+        auto wlclient = wl_client_create(wlc->get_wl_display(), wl_client_fd[server]);
 
         // More ugliness
         int tries = 0;
@@ -202,7 +204,7 @@ void mf::XWaylandServer::spawn()
 
         // Last second abort
         if (terminate) return;
-        wm->start(wlclient, wm_fd[0]);
+        wm->start(wlclient, wm_fd[server]);
         mir::log_info("XServer is running");
         xserver_status = RUNNING;
 
