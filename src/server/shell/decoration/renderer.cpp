@@ -23,9 +23,16 @@
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/renderer/sw/pixel_source.h"
+#include "mir/geometry/displacement.h"
 #include "mir/log.h"
 
-#include "boost/throw_exception.hpp"
+#include <boost/throw_exception.hpp>
+#include <boost/filesystem.hpp>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+#include <locale>
+#include <codecvt>
 
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
@@ -48,6 +55,33 @@ uint32_t const default_focused_background   = color(0x32, 0x32, 0x32);
 uint32_t const default_unfocused_background = color(0x80, 0x80, 0x80);
 uint32_t const default_focused_text         = color(0xFF, 0xFF, 0xFF);
 uint32_t const default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
+
+struct FontPath
+{
+    char const* filename;
+    std::vector<char const*> prefixes;
+};
+
+FontPath const font_paths[]{
+    FontPath{"Ubuntu-B.ttf", {
+        "ubuntu-font-family",   // Ubuntu < 18.04
+        "ubuntu",               // Ubuntu >= 18.04/Arch
+    }},
+    FontPath{"FreeSansBold.ttf", {
+        "freefont",             // Debian/Ubuntu
+        "gnu-free",             // Fedora/Arch
+    }},
+    FontPath{"DejaVuSans-Bold.ttf", {
+        "dejavu",               // Ubuntu (others?)
+        "",                     // Arch
+    }},
+};
+
+char const* const font_path_search_paths[]{
+    "/usr/share/fonts/truetype",    // Ubuntu/Debian
+    "/usr/share/fonts/TTF",         // Arch
+    "/usr/share/fonts",             // Fedora/Arch
+};
 
 inline auto area(geom::Size size) -> size_t
 {
@@ -74,6 +108,270 @@ inline void render_row(
 }
 }
 
+class msd::Renderer::Text::Impl
+    : public Text
+{
+public:
+    Impl();
+    ~Impl();
+
+    void render(
+        Pixel* buf,
+        geom::Size buf_size,
+        std::string const& text,
+        geom::Point top_left,
+        geom::Height height_pixels,
+        Pixel color) override;
+
+private:
+    std::mutex mutex;
+    FT_Library library;
+    FT_Face face;
+
+    void set_char_size(geom::Height height);
+    void rasterize_glyph(char32_t glyph);
+    void render_glyph(
+        Pixel* buf,
+        geom::Size buf_size,
+        FT_Bitmap const* glyph,
+        geom::Point top_left,
+        Pixel color);
+
+    static auto font_path() -> std::string;
+    static auto utf8_to_utf32(std::string const& text) -> std::u32string;
+};
+
+class msd::Renderer::Text::Null
+    : public Text
+{
+public:
+    void render(
+        Pixel*,
+        geom::Size,
+        std::string const&,
+        geom::Point,
+        geom::Height,
+        Pixel) override
+    {
+    }
+
+private:
+};
+
+std::mutex msd::Renderer::Text::static_mutex;
+std::weak_ptr<msd::Renderer::Text> msd::Renderer::Text::singleton;
+
+auto msd::Renderer::Text::instance() -> std::shared_ptr<Text>
+{
+    std::lock_guard<std::mutex> lock{static_mutex};
+    auto shared = singleton.lock();
+    if (!shared)
+    {
+        try
+        {
+            shared = std::make_shared<Impl>();
+        }
+        catch (std::runtime_error const& error)
+        {
+            log_warning(error.what());
+            shared = std::make_shared<Null>();
+        }
+        singleton = shared;
+    }
+    return shared;
+}
+
+msd::Renderer::Text::Impl::Impl()
+{
+    if (auto const error = FT_Init_FreeType(&library))
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "Initializing freetype library failed with error " + std::to_string(error)));
+
+    auto const path = font_path();
+    if (auto const error = FT_New_Face(library, path.c_str(), 0, &face))
+    {
+        if (error == FT_Err_Unknown_File_Format)
+            BOOST_THROW_EXCEPTION(std::runtime_error(
+                "Font " + path + " has unsupported format"));
+        else
+            BOOST_THROW_EXCEPTION(std::runtime_error(
+                "Loading font from " + path + " failed with error " + std::to_string(error)));
+    }
+}
+
+msd::Renderer::Text::Impl::~Impl()
+{
+    if (auto const error = FT_Done_Face(face))
+        log_warning("Failed to uninitialize font face with error %d", error);
+    face = nullptr;
+
+    if (auto const error = FT_Done_FreeType(library))
+        log_warning("Failed to uninitialize FreeType with error %d", error);
+    library = nullptr;
+}
+
+void msd::Renderer::Text::Impl::render(
+    Pixel* buf,
+    geom::Size buf_size,
+    std::string const& text,
+    geom::Point top_left,
+    geom::Height height_pixels,
+    Pixel color)
+{
+    if (!area(buf_size) || height_pixels <= geom::Height{})
+        return;
+
+    std::lock_guard<std::mutex> lock{mutex};
+
+    if (!library || !face)
+    {
+        log_warning("FreeType not initialized");
+        return;
+    }
+
+    try
+    {
+        set_char_size(height_pixels);
+    }
+    catch (std::runtime_error const& error)
+    {
+        log_warning(error.what());
+        return;
+    }
+
+    auto const utf32 = utf8_to_utf32(text);
+
+    for (char32_t const glyph : utf32)
+    {
+        try
+        {
+            rasterize_glyph(glyph);
+
+            geom::Point glyph_top_left =
+                top_left +
+                geom::Displacement{
+                    face->glyph->bitmap_left,
+                    height_pixels.as_int() - face->glyph->bitmap_top};
+            render_glyph(buf, buf_size, &face->glyph->bitmap, glyph_top_left, color);
+
+            top_left += geom::Displacement{
+                face->glyph->advance.x / 64,
+                face->glyph->advance.y / 64};
+        }
+        catch (std::runtime_error const& error)
+        {
+            log_warning(error.what());
+        }
+    }
+}
+
+void msd::Renderer::Text::Impl::set_char_size(geom::Height height)
+{
+    if (auto const error = FT_Set_Pixel_Sizes(face, 0, height.as_int()))
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "Setting char size failed with error " + std::to_string(error)));
+}
+
+void msd::Renderer::Text::Impl::rasterize_glyph(char32_t glyph)
+{
+    auto const glyph_index = FT_Get_Char_Index(face, glyph);
+
+    if (auto const error = FT_Load_Glyph(face, glyph_index, 0))
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "Failed to load glyph " + std::to_string(glyph_index)));
+
+    if (auto const error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL))
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "Failed to render glyph " + std::to_string(glyph_index)));
+}
+
+void msd::Renderer::Text::Impl::render_glyph(
+    Pixel* buf,
+    geom::Size buf_size,
+    FT_Bitmap const* glyph,
+    geom::Point top_left,
+    Pixel color)
+{
+    geom::X const buffer_left = std::max(top_left.x, geom::X{});
+    geom::X const buffer_right = std::min(top_left.x + geom::DeltaX{glyph->width}, as_x(buf_size.width));
+
+    geom::Y const buffer_top = std::max(top_left.y, geom::Y{});
+    geom::Y const buffer_bottom = std::min(top_left.y + geom::DeltaY{glyph->rows}, as_y(buf_size.height));
+
+    geom::Displacement const glyph_offset = as_displacement(top_left);
+
+    unsigned char* const color_pixels = (unsigned char *)&color;
+    unsigned char const color_alpha = color_pixels[3];
+
+    for (geom::Y buffer_y = buffer_top; buffer_y < buffer_bottom; buffer_y += geom::DeltaY{1})
+    {
+        geom::Y const glyph_y = buffer_y - glyph_offset.dy;
+        unsigned char* const glyph_row = glyph->buffer + glyph_y.as_int() * glyph->pitch;
+        Pixel* const buffer_row = buf + buffer_y.as_int() * buf_size.width.as_int();
+
+        for (geom::X buffer_x = buffer_left; buffer_x < buffer_right; buffer_x += geom::DeltaX{1})
+        {
+            geom::X const glyph_x = buffer_x - glyph_offset.dx;
+            unsigned char const glyph_alpha = ((int)glyph_row[glyph_x.as_int()] * color_alpha) / 255;
+            unsigned char* const buffer_pixels = (unsigned char *)(buffer_row + buffer_x.as_int());
+            for (int i = 0; i < 3; i++)
+            {
+                // Blend color with the previous buffer color based on the glyph's alpha
+                buffer_pixels[i] =
+                    ((int)buffer_pixels[i] * (255 - glyph_alpha)) / 255 +
+                    ((int)color_pixels[i] * glyph_alpha) / 255;
+            }
+        }
+    }
+}
+
+auto msd::Renderer::Text::Impl::font_path() -> std::string
+{
+    // Similar to default_font() in examples/example-server-lib/wallpaper_config.cpp
+
+    std::vector<std::string> usable_search_paths;
+    for (auto const& path : font_path_search_paths)
+    {
+        if (boost::filesystem::exists(path))
+            usable_search_paths.push_back(path);
+    }
+
+    for (auto const& font : font_paths)
+    {
+        for (auto const& prefix : font.prefixes)
+        {
+            for (auto const& path : usable_search_paths)
+            {
+                auto const full_font_path = path + '/' + prefix + '/' + font.filename;
+                if (boost::filesystem::exists(full_font_path))
+                    return full_font_path;
+            }
+        }
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find a font"));
+}
+
+auto msd::Renderer::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u32string
+{
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+    std::u32string utf32_text;
+    try {
+        utf32_text = converter.from_bytes(text);
+    } catch(const std::range_error& e) {
+        log_warning("Window title %s is not valid UTF-8", text.c_str());
+        // fall back to ASCII
+        for (char const c : text)
+        {
+            if (isprint(c))
+                utf32_text += c;
+            else
+                utf32_text += 0xFFFD; // REPLACEMENT CHARACTER (�)
+        }
+    }
+    return utf32_text;
+}
+
 msd::Renderer::Renderer(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<StaticGeometry const> const& static_geometry)
@@ -85,7 +383,8 @@ msd::Renderer::Renderer(
           default_unfocused_background,
           default_unfocused_text},
       current_theme{nullptr},
-      static_geometry{static_geometry}
+      static_geometry{static_geometry},
+      text{Text::instance()}
 {
 }
 
@@ -170,6 +469,14 @@ auto msd::Renderer::render_titlebar() -> std::experimental::optional<std::shared
                 {0, y}, titlebar_size.width,
                 current_theme->background_color);
         }
+
+        text->render(
+            titlebar_pixels.get(),
+            titlebar_size,
+            name,
+            static_geometry->title_font_top_left,
+            static_geometry->title_font_height,
+            current_theme->text_color);
     }
 
     if (needs_titlebar_redraw || needs_titlebar_buttons_redraw)

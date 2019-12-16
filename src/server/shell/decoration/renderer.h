@@ -59,6 +59,29 @@ public:
 private:
     using Pixel = uint32_t;
 
+    class Text
+    {
+    public:
+        static auto instance() -> std::shared_ptr<Text>;
+
+        virtual ~Text() = default;
+
+        virtual void render(
+            Pixel* buf,
+            geometry::Size buf_size,
+            std::string const& text,
+            geometry::Point top_left,
+            geometry::Height height_pixels,
+            Pixel color) = 0;
+
+    private:
+        class Impl;
+        class Null;
+
+        static std::mutex static_mutex;
+        static std::weak_ptr<Text> singleton;
+    };
+
     /// A visual theme for a decoration
     /// Focused and unfocused windows use a different theme
     struct Theme
@@ -87,6 +110,8 @@ private:
     bool needs_titlebar_buttons_redraw{true};
     std::string name;
     std::vector<ButtonInfo> buttons;
+
+    std::shared_ptr<Text> const text;
 
     void update_solid_color_pixels();
     auto make_buffer(
