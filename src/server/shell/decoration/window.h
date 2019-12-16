@@ -20,6 +20,7 @@
 #define MIR_SHELL_DECORATION_WINDOW_H_
 
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/displacement.h"
 
 #include <mir_toolkit/common.h>
 
@@ -59,6 +60,8 @@ struct StaticGeometry
     geometry::Width const padding_between_buttons;    ///< The gep between titlebar buttons
     geometry::Height const title_font_height;         ///< Height of the text used to render the window title
     geometry::Point const title_font_top_left;        ///< Where to render the window title
+    geometry::Displacement const icon_padding;        ///< Padding inside buttons around icons
+    geometry::Width const icon_line_width;            ///< Width for lines in button icons
 };
 
 /// Information about the geometry and type of decorations for a given window

@@ -24,6 +24,7 @@
 #include "input.h"
 
 #include <memory>
+#include <map>
 
 namespace mir
 {
@@ -90,10 +91,25 @@ private:
         Pixel const text_color;         ///< Color the window title is drawn in
     };
 
+    // Info needed to render a button icon
+    struct Icon
+    {
+        Pixel const normal_color;   ///< Normal of the background of the button area
+        Pixel const active_color;   ///< Color of the background when button is active
+        Pixel const icon_color;     ///< Color of the icon
+        std::function<void(
+            Pixel* const data,
+            geometry::Size buf_size,
+            geometry::Rectangle box,
+            geometry::Width line_width,
+            Pixel color)> const render_icon; ///< Draws button's icon to the given buffer
+    };
+
     std::shared_ptr<graphics::GraphicBufferAllocator> buffer_allocator;
     Theme const focused_theme;
     Theme const unfocused_theme;
     Theme const* current_theme;
+    std::map<ButtonFunction, Icon const> button_icons;
     std::shared_ptr<StaticGeometry const> const static_geometry;
 
     bool needs_solid_color_redraw{true};
