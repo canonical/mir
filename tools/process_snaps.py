@@ -220,7 +220,7 @@ if __name__ == '__main__':
 
             if all(store_snap is None
                    or mir_version is None
-                   or mir_version.startswith(SNAP_VERSION_RE.match(store_snap["version"]).group("mir"))
+                   or mir_version == SNAP_VERSION_RE.match(store_snap["version"]).group("mir")
                    for store_snap in store_snaps):
 
                 if check_notices:
