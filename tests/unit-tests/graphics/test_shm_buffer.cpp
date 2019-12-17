@@ -24,6 +24,8 @@
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/mock_egl.h"
 
+#include "check_gtest_version.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <GLES2/gl2ext.h>
@@ -286,7 +288,7 @@ std::string to_string(MirPixelFormat format)
 }
 }
 
-
+#if GTEST_AT_LEAST(1, 8, 0)
 INSTANTIATE_TEST_CASE_P(
     ShmBuffer,
     UploadTest,
@@ -295,6 +297,13 @@ INSTANTIATE_TEST_CASE_P(
     {
         return std::to_string(info.param.format);
     });
+#else
+// TODO: The version of gtest in 16.04 doesn't have the “print the test nicely” option.
+INSTANTIATE_TEST_CASE_P(
+    ShmBuffer,
+    UploadTest,
+    ValuesIn(test_cases));
+#endif
 
 namespace
 {
