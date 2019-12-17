@@ -45,8 +45,6 @@
 namespace mf = mir::frontend;
 namespace md = mir::dispatch;
 
-bool mf::XWaylandServer::xserver_ready = false;
-
 mf::XWaylandServer::XWaylandServer(
     const int xdisplay,
     std::shared_ptr<mf::WaylandConnector> wc,
@@ -120,14 +118,14 @@ void mf::XWaylandServer::spawn()
         return;
     }
 
-    // This is not pretty! but SIGUSR1 is the only way we know the xserver
-    // is ready to accept connections to the wm fd
-    // If not it will have a race condition on start that might end
-    // up in a never ending wait
-    std::signal(SIGUSR1, [](int) {
-        xserver_ready = true;
-        mir::log_info("Xwayland running");
-    });
+    static sig_atomic_t xserver_ready{ false };
+
+    struct sigaction action;
+    struct sigaction old_action;
+    action.sa_handler = [](int) { xserver_ready = true; };
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    sigaction(SIGUSR1, &action, &old_action);
 
     mir::log_info("Starting Xwayland");
     pid = fork();
@@ -139,6 +137,10 @@ void mf::XWaylandServer::spawn()
         break;
 
     case 0:
+        // Propagate SIGUSR1 to parent process
+        action.sa_handler = SIG_IGN;
+        sigaction(SIGUSR1, &action, nullptr);
+
         close(wl_client_fd[server]);
         close(wm_fd[server]);
         execl_xwayland(wl_client_fd[client], wm_fd[client]);
@@ -147,9 +149,10 @@ void mf::XWaylandServer::spawn()
     default:
         close(wl_client_fd[client]);
         close(wm_fd[client]);
-        connect_to_xwayland(wl_client_fd[server], wm_fd[server]);
+        connect_to_xwayland(wl_client_fd[server], wm_fd[server], xserver_ready);
         break;
     }
+    sigaction(SIGUSR1, &old_action, nullptr);
 }
 
 void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_fd)
@@ -180,9 +183,6 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
     mir::log_error("Failed to duplicate xwayland wm FD");
     auto const wm_fd_str = std::to_string(wm_fd);
 
-    // forward SIGUSR1 to parent thread (us)
-    signal(SIGUSR1, SIG_IGN);
-
     // Last second abort
     if (terminate) return;
 
@@ -199,7 +199,7 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
     NULL);
 }
 
-void mf::XWaylandServer::connect_to_xwayland(int wl_client_server_fd, int wm_server_fd)
+void mf::XWaylandServer::connect_to_xwayland(int wl_client_server_fd, int wm_server_fd, sig_atomic_t& xserver_ready)
 {
     wl_client* client = nullptr;
     std::mutex client_mutex;

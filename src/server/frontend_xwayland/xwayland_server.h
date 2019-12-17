@@ -23,6 +23,7 @@
 #include <thread>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <signal.h>
 
 namespace mir
 {
@@ -49,9 +50,6 @@ public:
       FAILED = -2
      };
 
-    // Ugh, this is ugly!
-    static bool xserver_ready;
-
 private:
     void setup_socket();
     void spawn_xserver_on_event_loop();
@@ -61,7 +59,7 @@ private:
     /// Called after fork() if we should turn into XWayland
     void execl_xwayland(int wl_client_client_fd, int wm_client_fd);
     /// Called after fork() if we should continue on as Mir
-    void connect_to_xwayland(int wl_client_server_fd, int wm_server_fd);
+    void connect_to_xwayland(int wl_client_server_fd, int wm_server_fd, sig_atomic_t& xserver_ready);
     void new_spawn_thread();
     int create_lockfile();
     int create_socket(struct sockaddr_un *addr, size_t path_size);
