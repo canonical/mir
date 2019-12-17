@@ -10,7 +10,9 @@ set(
   xwayland_wm_shell.cpp xwayland_wm_shell.h
 )
 
+add_definitions(-DMIR_LOG_COMPONENT="xwayland")
 include_directories(../frontend_wayland)
+
 # One day, maybe, we can add include dependences to an OBJECT library. Until then...
 get_property(mirwayland_includes TARGET mirwayland PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 include_directories(${mirwayland_includes})

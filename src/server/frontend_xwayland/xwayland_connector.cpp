@@ -18,7 +18,6 @@
 
 #include "xwayland_connector.h"
 
-#define MIR_LOG_COMPONENT "xwaylandconnector"
 #include "mir/log.h"
 
 #include "wayland_connector.h"
