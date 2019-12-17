@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
+ * Copyright (C) 2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -20,8 +21,6 @@
 #define MIR_LOG_COMPONENT "xwaylandconnector"
 #include "mir/log.h"
 
-#include "mir/optional_value.h"
-#include "mir/terminate_with_current_exception.h"
 #include "wayland_connector.h"
 #include "xwayland_server.h"
 
@@ -29,37 +28,31 @@ namespace mf = mir::frontend;
 
 mf::XWaylandConnector::XWaylandConnector(
     const int xdisplay,
-    std::shared_ptr<mf::WaylandConnector> wc,
+    std::shared_ptr<WaylandConnector> const& wc,
     std::string const& xwayland_path) :
-    enabled(!!wc->get_extension("x11-support"))
+    start_xwayland{!!wc->get_extension("x11-support") ?
+        [=]{ return std::make_unique<XWaylandServer>(xdisplay, wc, xwayland_path); } :
+        decltype(start_xwayland){[]{ return std::unique_ptr<XWaylandServer>{}; }}}
 {
-    if (enabled)
-        xwayland_server = std::make_shared<mf::XWaylandServer>(xdisplay, wc, xwayland_path);
 }
 
 void mf::XWaylandConnector::start()
 {
-    if (!enabled)
-        return;
-
-    xwayland_server->setup_socket();
-    xwayland_server->spawn_xserver_on_event_loop();
-    xserver_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
-        "Mir/X11 Reader", xwayland_server->get_dispatcher(), []() { mir::terminate_with_current_exception(); });
+    xwayland_server = start_xwayland();
     mir::log_info("XWayland loop started");
 }
+
 void mf::XWaylandConnector::stop()
 {
-    if (!enabled)
-        return;
-
     xwayland_server.reset();
-    xserver_thread.reset();
+    mir::log_info("XWayland loop stopped");
 }
+
 int mf::XWaylandConnector::client_socket_fd() const
 {
     return -1;
 }
+
 int mf::XWaylandConnector::client_socket_fd(
     std::function<void(std::shared_ptr<scene::Session> const& session)> const& /*connect_handler*/) const
 {
@@ -70,3 +63,5 @@ auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
 {
     return optional_value<std::string>();
 }
+
+mf::XWaylandConnector::~XWaylandConnector() = default;

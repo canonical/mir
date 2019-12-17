@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
+ * Copyright (C) 2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -26,6 +27,8 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/readable_fd.h"
 #include "mir/fd.h"
+#include "mir/terminate_with_current_exception.h"
+
 #include <csignal>
 #include <fcntl.h>
 #include <memory>
@@ -55,6 +58,11 @@ mf::XWaylandServer::XWaylandServer(
     dispatcher{std::make_shared<md::MultiplexingDispatchable>()},
     xwayland_path{xwayland_path}
 {
+    setup_socket();
+    spawn_xserver_on_event_loop();
+    xserver_thread = std::make_unique<dispatch::ThreadedDispatcher>(
+        "Mir/X11 Reader", dispatcher, []()
+            { terminate_with_current_exception(); });
 }
 
 mf::XWaylandServer::~XWaylandServer()
@@ -438,3 +446,4 @@ void mf::XWaylandServer::spawn_xserver_on_event_loop()
     dispatcher->add_watch(afd_dispatcher);
     dispatcher->add_watch(fd_dispatcher);
 }
+
