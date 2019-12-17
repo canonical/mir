@@ -27,6 +27,7 @@
 #include <memory>
 #include <vector>
 #include <chrono>
+#include <experimental/optional>
 
 namespace mir
 {
@@ -95,14 +96,16 @@ protected:
 
     /// Draw the decoration buffers and submit them to the surface
     /// Current states are stored int window_state and input_state members
-    void update();
+    /// Previous state pointers may be equal to current window_state/input_state to trigger no change
+    /// If previous states are nullopt, a full refresh is performed
+    void update(
+        std::experimental::optional<WindowState const*> previous_window_state,
+        std::experimental::optional<InputState const*> previous_input_state);
 
     struct DecorationSurfaceObserver;
 
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> threadsafe_self;
     std::shared_ptr<StaticGeometry const> const static_geometry;
-    std::unique_ptr<WindowState const> window_state;
-    std::unique_ptr<InputState const> input_state;
 
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
@@ -115,8 +118,11 @@ protected:
 
     std::shared_ptr<scene::Surface> const window_surface;
     std::shared_ptr<scene::Surface> const decoration_surface;
+    std::unique_ptr<WindowState const> window_state;
+
     std::unique_ptr<WindowSurfaceObserverManager> const window_surface_observer_manager;
     std::unique_ptr<InputManager> const input_manager;
+    std::unique_ptr<InputState const> input_state;
 };
 }
 }
