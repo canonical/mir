@@ -147,6 +147,7 @@ TEST_F(ShmBufferTest, cant_upload_bgr_888)
 struct BufferUploadDesc
 {
     geom::Size size;
+    // TODO: Test uploads with stride_in_px != size.width
     int stride_in_px;
     MirPixelFormat format;
     GLenum gl_format;
