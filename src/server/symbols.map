@@ -835,6 +835,14 @@ MIR_SERVER_1.6.0 {
  local: *;
 };
 
+MIR_SERVER_1.7.0 {
+ global:
+  extern "C++" {
+    mir::shell::SurfaceStackWrapper::add_observer*;
+    mir::shell::SurfaceStackWrapper::remove_observer*;
+  };
+} MIR_SERVER_1.6.0;
+
 # these symbols are needed by the "throwback" tests but are not intended to be public
 MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
  global:
@@ -937,4 +945,4 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
 
     mir::DefaultServerConfiguration::the_decoration_manager*;
   };
-} MIR_SERVER_1.6.0;
+} MIR_SERVER_1.7.0;

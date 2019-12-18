@@ -33,6 +33,7 @@ class Surface;
 struct SurfaceCreationParameters;
 class SurfaceObserver;
 class Session;
+class Observer;
 }
 
 namespace shell
@@ -53,6 +54,9 @@ public:
     virtual void remove_surface(std::weak_ptr<scene::Surface> const& surface) = 0;
 
     virtual auto surface_at(geometry::Point) const -> std::shared_ptr<scene::Surface> = 0;
+
+    virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
+    virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
 
 protected:
     SurfaceStack() = default;

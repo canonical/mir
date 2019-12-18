@@ -55,3 +55,13 @@ auto msh::SurfaceStackWrapper::surface_at(geometry::Point point) const -> std::s
 {
     return wrapped->surface_at(point);
 }
+
+void msh::SurfaceStackWrapper::add_observer(std::shared_ptr<scene::Observer> const& observer)
+{
+    wrapped->add_observer(observer);
+}
+
+void msh::SurfaceStackWrapper::remove_observer(std::weak_ptr<scene::Observer> const& observer)
+{
+    wrapped->remove_observer(observer);
+}
