@@ -15,7 +15,6 @@
  *
  */
 
-#define MIR_LOG_COMPONENT "xwaylandwm"
 #include "mir/log.h"
 #include "xwayland_log.h"
 

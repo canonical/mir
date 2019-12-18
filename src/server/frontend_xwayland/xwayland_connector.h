@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
+ * Copyright (C) 2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -18,16 +19,10 @@
 #ifndef MIR_FRONTEND_XWAYLAND_CONNECTOR_H
 #define MIR_FRONTEND_XWAYLAND_CONNECTOR_H
 
-#include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/frontend/connector.h"
-#include <thread>
 
 namespace mir
 {
-namespace dispatch
-{
-class ThreadedDispatcher;
-} /* dispatch */
 namespace frontend
 {
 class WaylandConnector;
@@ -35,7 +30,9 @@ class XWaylandServer;
 class XWaylandConnector : public Connector
 {
 public:
-    XWaylandConnector(const int xdisplay, std::shared_ptr<WaylandConnector> wc, std::string const& xwayland_path);
+    XWaylandConnector(const int xdisplay, std::shared_ptr<WaylandConnector> const& wc, std::string const& xwayland_path);
+    ~XWaylandConnector() override;
+
     void start() override;
     void stop() override;
 
@@ -44,10 +41,10 @@ public:
         std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const override;
 
     auto socket_name() const -> optional_value<std::string> override;
+
 private:
-    bool enabled;
-    std::shared_ptr<XWaylandServer> xwayland_server;
-    std::unique_ptr<dispatch::ThreadedDispatcher> xserver_thread;
+    std::function<std::unique_ptr<XWaylandServer>()> const start_xwayland;
+    std::unique_ptr<XWaylandServer> xwayland_server;
 };
 } /* frontend */
 } /* mir */

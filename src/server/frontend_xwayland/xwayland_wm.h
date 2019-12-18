@@ -119,11 +119,7 @@ public:
     void destroy();
 
     xcb_connection_t *get_xcb_connection();
-    atom_t *get_xcb_atom();
-    std::shared_ptr<dispatch::ReadableFd> get_dispatcher()
-    {
-        return wm_dispatcher;
-    }
+
     void dump_property(xcb_atom_t property, xcb_get_property_reply_t *reply);
     void set_net_active_window(xcb_window_t window);
     std::shared_ptr<WaylandConnector> get_wl_connector()
@@ -166,7 +162,6 @@ private:
 
     // Event handeling
     void handle_events();
-    void run_event_loop();
 
     // Events
     void handle_create_notify(xcb_create_notify_event_t *event);
@@ -186,8 +181,8 @@ private:
     xcb_cursor_t xcb_cursor_images_load_cursor(const XcursorImages *images);
     xcb_cursor_t xcb_cursor_library_load_cursor(const char *file);
 
-    std::shared_ptr<WaylandConnector> wlc;
-    std::shared_ptr<dispatch::MultiplexingDispatchable> dispatcher;
+    std::shared_ptr<WaylandConnector> const wlc;
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     int wm_fd;
     xcb_connection_t *xcb_connection;
     xcb_screen_t *xcb_screen;
@@ -201,7 +196,6 @@ private:
     xcb_render_pictforminfo_t xcb_format_rgb, xcb_format_rgba;
     const xcb_query_extension_reply_t *xfixes;
     std::unique_ptr<dispatch::ThreadedDispatcher> event_thread;
-    bool running_event;
     wl_client *wlclient;
     xcb_visualid_t xcb_visual_id;
     xcb_colormap_t xcb_colormap;

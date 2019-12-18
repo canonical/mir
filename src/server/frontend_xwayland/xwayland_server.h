@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
+ * Copyright (C) 2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -22,12 +23,14 @@
 #include <thread>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <signal.h>
 
 namespace mir
 {
 namespace dispatch
 {
 class ReadableFd;
+class ThreadedDispatcher;
 class MultiplexingDispatchable;
 } /*dispatch */
 namespace frontend
@@ -47,29 +50,22 @@ public:
       FAILED = -2
      };
 
+private:
     void setup_socket();
     void spawn_xserver_on_event_loop();
 
-    std::shared_ptr<dispatch::MultiplexingDispatchable> const get_dispatcher()
-    {
-        return dispatcher;
-    }
-
-    // Ugh, this is ugly!
-    static bool xserver_ready;
-
-private:
     /// Forks off the XWayland process
     void spawn();
     /// Called after fork() if we should turn into XWayland
     void execl_xwayland(int wl_client_client_fd, int wm_client_fd);
     /// Called after fork() if we should continue on as Mir
-    void connect_to_xwayland(int wl_client_server_fd, int wm_server_fd);
+    void connect_to_xwayland(int wl_client_server_fd, int wm_server_fd, sig_atomic_t& xserver_ready);
     void new_spawn_thread();
     int create_lockfile();
     int create_socket(struct sockaddr_un *addr, size_t path_size);
     bool set_cloexec(int fd, bool cloexec);
 
+    std::unique_ptr<dispatch::ThreadedDispatcher> xserver_thread;
     std::shared_ptr<XWaylandWM> wm;
     int xdisplay;
     std::shared_ptr<WaylandConnector> wlc;
