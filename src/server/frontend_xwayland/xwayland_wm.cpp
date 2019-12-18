@@ -879,8 +879,3 @@ xcb_connection_t *mf::XWaylandWM::get_xcb_connection()
 {
     return xcb_connection;
 }
-
-atom_t *mf::XWaylandWM::get_xcb_atom()
-{
-    return &xcb_atom;
-}

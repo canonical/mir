@@ -119,11 +119,7 @@ public:
     void destroy();
 
     xcb_connection_t *get_xcb_connection();
-    atom_t *get_xcb_atom();
-    std::shared_ptr<dispatch::ReadableFd> get_dispatcher()
-    {
-        return wm_dispatcher;
-    }
+
     void dump_property(xcb_atom_t property, xcb_get_property_reply_t *reply);
     void set_net_active_window(xcb_window_t window);
     std::shared_ptr<WaylandConnector> get_wl_connector()
@@ -166,7 +162,6 @@ private:
 
     // Event handeling
     void handle_events();
-    void run_event_loop();
 
     // Events
     void handle_create_notify(xcb_create_notify_event_t *event);
