@@ -21,6 +21,7 @@
 
 #include "miral/window_manager_tools.h"
 
+#include <mir/log.h>
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
 #include <mir/scene/surface_creation_parameters.h>
@@ -96,7 +97,13 @@ void miral::BasicWindowManager::add_session(std::shared_ptr<scene::Session> cons
 void miral::BasicWindowManager::remove_session(std::shared_ptr<scene::Session> const& session)
 {
     Locker lock{this};
-    policy->advise_delete_app(app_info[session]);
+    auto info = app_info.find(session);
+    if (info == app_info.end())
+    {
+        log_warning("Removed unknwon session");
+        return;
+    }
+    policy->advise_delete_app(info->second);
     app_info.erase(session);
 }
 
@@ -170,6 +177,11 @@ void miral::BasicWindowManager::modify_surface(
     shell::SurfaceSpecification const& modifications)
 {
     Locker lock{this};
+    if (!surface_known(surface))
+    {
+        log_warning("Unknown surface modified");
+        return;
+    }
     auto& info = info_for(surface);
     WindowSpecification mods{modifications};
     validate_modification_request(mods, info);
@@ -182,14 +194,17 @@ void miral::BasicWindowManager::remove_surface(
     std::weak_ptr<scene::Surface> const& surface)
 {
     Locker lock{this};
-    try
+    if (app_info.find(session) == app_info.end())
     {
-        remove_window(session, info_for(surface));
+        log_warning("Removed surface with unknwon session");
+        return;
     }
-    catch (std::out_of_range const& ex)
+    if (!surface_known(surface))
     {
-        fatal_error("Could not find surface to remove in miral::BasicWindowManager::remove_surface()");
+        log_warning("Unknown surface removed");
+        return;
     }
+    remove_window(session, info_for(surface));
 }
 
 void miral::BasicWindowManager::remove_window(Application const& application, miral::WindowInfo const& info)
@@ -347,6 +362,11 @@ void miral::BasicWindowManager::handle_raise_surface(
     uint64_t timestamp)
 {
     Locker lock{this};
+    if (!surface_known(surface))
+    {
+        log_warning("Unknown surface raised");
+        return;
+    }
     if (timestamp >= last_input_event_timestamp)
         policy->handle_raise_window(info_for(surface));
 }
@@ -357,6 +377,11 @@ void miral::BasicWindowManager::handle_request_drag_and_drop(
     uint64_t timestamp)
 {
     Locker lock{this};
+    if (!surface_known(surface))
+    {
+        log_warning("Drag-and-drop requested on unknown surface");
+        return;
+    }
     if (timestamp >= last_input_event_timestamp)
         policy->handle_request_drag_and_drop(info_for(surface));
 }
@@ -367,6 +392,11 @@ void miral::BasicWindowManager::handle_request_move(
     uint64_t timestamp)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
+    if (!surface_known(surface))
+    {
+        log_warning("Move requested on unknown surface");
+        return;
+    }
     if (timestamp >= last_input_event_timestamp && last_input_event)
     {
         policy->handle_request_move(info_for(surface), mir_event_get_input_event(last_input_event));
@@ -380,6 +410,11 @@ void miral::BasicWindowManager::handle_request_resize(
     MirResizeEdge edge)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
+    if (!surface_known(surface))
+    {
+        log_warning("Resize requested on unknown surface");
+        return;
+    }
     if (timestamp >= last_input_event_timestamp && last_input_event)
     {
         policy->handle_request_resize(info_for(surface), mir_event_get_input_event(last_input_event), edge);
@@ -423,6 +458,12 @@ int miral::BasicWindowManager::set_surface_attribute(
     }
 
     Locker lock{this};
+    if (!surface_known(surface))
+    {
+        log_warning("Attempted to set attribute on unknwon surface");
+        return 0;
+    }
+
     auto& info = info_for(surface);
 
     validate_modification_request(modification, info);
@@ -1603,6 +1644,11 @@ void miral::BasicWindowManager::drag_window(miral::Window const& window, Displac
     }
 
     move_tree(window_info, movement);
+}
+
+auto miral::BasicWindowManager::surface_known(std::weak_ptr<scene::Surface> const& surface) -> bool
+{
+    return window_info.find(surface) != window_info.end();
 }
 
 auto miral::BasicWindowManager::can_activate_window_for_session(miral::Application const& session) -> bool

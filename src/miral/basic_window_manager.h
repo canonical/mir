@@ -264,6 +264,8 @@ private:
     void update_event_timestamp(MirTouchEvent const* tev);
     void update_event_timestamp(MirInputEvent const* iev);
 
+    auto surface_known(std::weak_ptr<mir::scene::Surface> const& surface) -> bool;
+
     auto can_activate_window_for_session(miral::Application const& session) -> bool;
     auto can_activate_window_for_session_in_workspace(
         miral::Application const& session,
