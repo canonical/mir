@@ -181,6 +181,9 @@ private:
     void handle_unmap_notify(xcb_unmap_notify_event_t *event);
     void handle_destroy_notify(xcb_destroy_notify_event_t *event);
 
+    // Execute Wayland code
+    void run_on_wayland_dispatch(std::function<void()> const& functor) const;
+
     // Cursor
     xcb_cursor_t xcb_cursor_image_load_cursor(const XcursorImage *img);
     xcb_cursor_t xcb_cursor_images_load_cursor(const XcursorImages *images);

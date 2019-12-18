@@ -340,6 +340,32 @@ void mf::XWaylandWM::handle_events()
     }
 }
 
+void mf::XWaylandWM::run_on_wayland_dispatch(std::function<void()> const& functor) const
+{
+    using namespace std::chrono_literals;
+
+    bool ready = false;
+    std::mutex mutex;
+    std::condition_variable cv;
+
+    wlc->run_on_wayland_display([&](auto)
+                                    {
+                                        functor();
+
+                                        std::lock_guard<std::mutex> lock{mutex};
+                                        ready = true;
+                                        cv.notify_all();
+                                    });
+
+    std::unique_lock<std::mutex> lock{mutex};
+
+    if (!cv.wait_for(lock, 10s, [&]{ return ready; }))
+    {
+        // "Shouldn't happen" but this is better than hanging.
+        mir::fatal_error("Failed to run_on_wayland_dispatch");
+    }
+}
+
 void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 {
     mir::log_verbose("XCB_PROPERTY_NOTIFY (window %d)", event->window);
@@ -492,10 +518,13 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surfac
     uint32_t id = event->data.data32[0];
     surface->set_surface_id(id);
 
-    wl_resource *resource = wl_client_get_object(wlclient, id);
-    auto *wlsurface = resource ? WlSurface::from(resource) : nullptr;
-    if (wlsurface)
-        surface->set_surface(wlsurface);
+    run_on_wayland_dispatch([&, this]()
+        {
+            wl_resource* resource = wl_client_get_object(wlclient, id);
+            auto* wlsurface = resource ? WlSurface::from(resource) : nullptr;
+            if (wlsurface)
+                surface->set_surface(wlsurface);
+        });
 
     // TODO: handle unpaired surfaces!
 }
