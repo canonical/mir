@@ -19,7 +19,6 @@
 
 #include "xwayland_wm.h"
 
-#define MIR_LOG_COMPONENT "xwaylandwm"
 #include "mir/log.h"
 #include "xwayland_log.h"
 
@@ -879,9 +878,4 @@ bool mf::XWaylandWM::is_ours(uint32_t id)
 xcb_connection_t *mf::XWaylandWM::get_xcb_connection()
 {
     return xcb_connection;
-}
-
-atom_t *mf::XWaylandWM::get_xcb_atom()
-{
-    return &xcb_atom;
 }

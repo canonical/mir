@@ -17,7 +17,6 @@
 
 #include "xwayland_wm_shell.h"
 
-#define MIR_LOG_COMPONENT "xwaylandwm"
 #include "mir/log.h"
 
 #include "mir/frontend/shell.h"
