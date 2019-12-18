@@ -29,7 +29,7 @@ mf::XWaylandConnector::XWaylandConnector(
     const int xdisplay,
     std::shared_ptr<WaylandConnector> const& wc,
     std::string const& xwayland_path) :
-    start_xwayland{!!wc->get_extension("x11-support") ?
+    start_xwayland{wc->get_extension("x11-support") ?
         [=]{ return std::make_unique<XWaylandServer>(xdisplay, wc, xwayland_path); } :
         decltype(start_xwayland){[]{ return std::unique_ptr<XWaylandServer>{}; }}}
 {
