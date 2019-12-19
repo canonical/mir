@@ -61,7 +61,6 @@ private:
 
     std::shared_ptr<XWaylandWM> const wm;
     std::shared_ptr<WaylandConnector> const wlc;
-    pid_t pid;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     std::unique_ptr<dispatch::ThreadedDispatcher> const xserver_thread;
     struct SocketFd
@@ -75,10 +74,12 @@ private:
     } const sockets;
     std::shared_ptr<dispatch::ReadableFd> const afd_dispatcher;
     std::shared_ptr<dispatch::ReadableFd> const fd_dispatcher;
-    std::thread spawn_thread;
-    bool terminate = false;
-    Status xserver_status = STOPPED;
     std::string const xwayland_path;
+
+    Status xserver_status = STOPPED;
+    std::thread spawn_thread;
+    pid_t pid;
+    bool terminate = false;
 };
 } /* frontend */
 } /* mir */
