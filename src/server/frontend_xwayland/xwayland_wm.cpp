@@ -492,7 +492,7 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surfac
     uint32_t id = event->data.data32[0];
     surface->set_surface_id(id);
 
-    wlc->run_on_wayland_display([=, wlclient=wlclient](auto)
+    wlc->run_on_wayland_display([wlclient=wlclient, id, surface](auto)
         {
             wl_resource* resource = wl_client_get_object(wlclient, id);
             auto* wlsurface = resource ? WlSurface::from(resource) : nullptr;
