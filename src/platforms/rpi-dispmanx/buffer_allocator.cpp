@@ -34,6 +34,7 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
+#include "egl_context_executor.h"
 #include "mir/executor.h"
 #include "shm_buffer.h"
 #include "buffer_allocator.h"
@@ -80,7 +81,9 @@ std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const
 
 mg::rpi::BufferAllocator::BufferAllocator(mir::graphics::Display const& output)
     : egl_extensions{std::make_shared<mg::EGLExtensions>()},
-      ctx{context_for_output(output)}
+      ctx{context_for_output(output)},
+      egl_executor{
+        std::make_shared<mg::common::EGLContextExecutor>(context_for_output(output))}
 {
 }
 
@@ -89,17 +92,20 @@ auto mg::rpi::BufferAllocator::alloc_buffer(mg::BufferProperties const&)
 {
     BOOST_THROW_EXCEPTION((std::runtime_error{"Platform does not support deprecated alloc_buffer()"}));
 }
+
 auto mg::rpi::BufferAllocator::supported_pixel_formats()
     -> std::vector<MirPixelFormat>
 {
     return {mir_pixel_format_argb_8888};
 }
+
 auto mg::rpi::BufferAllocator::alloc_buffer(
     mir::geometry::Size, uint32_t, uint32_t)
     -> std::shared_ptr<Buffer>
 {
     BOOST_THROW_EXCEPTION((std::runtime_error{"Platform does not support mirclient"}));
 }
+
 auto mg::rpi::BufferAllocator::alloc_software_buffer(
     mir::geometry::Size size, MirPixelFormat format)
     -> std::shared_ptr<Buffer>
@@ -115,11 +121,12 @@ auto mg::rpi::BufferAllocator::alloc_software_buffer(
     public:
         SimpleShmBuffer(
             geom::Size size,
-            MirPixelFormat const& pixelFormat) :
+            MirPixelFormat const& pixelFormat,
+            std::shared_ptr<common::EGLContextExecutor> egl_executor) :
             ShmBuffer(
-                std::make_unique<mir::AnonymousShmFile>(size_in_bytes(size, pixelFormat)),
                 size,
-                pixelFormat)
+                pixelFormat,
+                std::move(egl_executor))
         {
         }
 
@@ -129,14 +136,9 @@ auto mg::rpi::BufferAllocator::alloc_software_buffer(
         }
 
     private:
-        static auto size_in_bytes(geom::Size size, MirPixelFormat format) -> size_t
-        {
-            auto const stride = geom::Stride{ MIR_BYTES_PER_PIXEL(format) * size.width.as_uint32_t() };
-            return stride.as_int() * size.height.as_int();
-        }
     };
 
-    return std::make_shared<SimpleShmBuffer>(size, format);
+    return std::make_shared<SimpleShmBuffer>(size, format, egl_executor);
 }
 
 namespace

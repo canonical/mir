@@ -18,6 +18,14 @@
  */
 
 #include <bcm_host.h>
+/*
+ * vcos_types.h “helpfully” #defines countof
+ * Sadly, glm also implements glm::countof, with hilarious consequences.
+ *
+ * No Mir code cares about finding the count of a statically sized C-style array,
+ * so…
+ */
+#undef countof
 
 #include "display.h"
 #include "display_buffer.h"
