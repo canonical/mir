@@ -841,11 +841,6 @@ auto mf::WaylandConnector::get_extension(std::string const& name) const -> std::
     return extensions->get_extension(name);
 }
 
-auto mf::WaylandConnector::get_wl_display() const -> wl_display*
-{
-    return display.get();
-}
-
 bool mf::WaylandConnector::wl_display_global_filter_func_thunk(wl_client const* client, wl_global const* global, void *data)
 {
     return static_cast<WaylandConnector*>(data)->wl_display_global_filter_func(client, global);
