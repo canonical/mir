@@ -90,6 +90,15 @@ mir::DefaultServerConfiguration::the_surface_stack()
              });
 }
 
+std::shared_ptr<mf::SurfaceStack>
+mir::DefaultServerConfiguration::the_frontend_surface_stack()
+{
+    return scene_surface_stack([this]()
+        {
+            return std::make_shared<ms::SurfaceStack>(the_scene_report());
+        });
+}
+
 auto mir::DefaultServerConfiguration::wrap_surface_stack(std::shared_ptr<shell::SurfaceStack> const& wrapped)
 -> std::shared_ptr<shell::SurfaceStack>
 {
