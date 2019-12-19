@@ -1,0 +1,71 @@
+systems: [ubuntu-18.04*]
+variants: [armhf]
+
+summary: Build Ubuntu packages for Raspberry Pi
+
+execute: |
+    # Get any out-of-archive dependencies
+    # (Currently just libnvidia-egl-wayland-dev)
+    for repo in ppa:mir-team/{release,dev}; do
+        add-apt-repository --yes --update ${repo} || add-apt-repository --yes --remove ${repo}
+    done
+
+    apt-get update
+
+    # to get dpkg-architecture and mk-build-deps
+    apt-get install \
+      --yes \
+      --no-install-recommends \
+      devscripts \
+      dpkg-dev \
+      equivs
+
+    # set host and build environment up
+    source <( dpkg-architecture --print-set --host-arch ${ARCH} )
+
+    # if cross-building
+    if [ "${DEB_BUILD_ARCH}" != "${DEB_HOST_ARCH}" ]; then
+        # add host architecture
+        dpkg --add-architecture "${DEB_HOST_ARCH}"
+
+        # don't run tests
+        DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS} nocheck"
+
+        # limit existing apt sources to build architecture
+        sed -i "s/^deb \(\[arch=.*\] \)\?/deb [arch=${DEB_BUILD_ARCH}] /" \
+          /etc/apt/sources.list
+
+        case "${DEB_HOST_ARCH}" in
+          amd64|i386)
+            ARCHIVE_URL="http://archive.ubuntu.com/ubuntu"
+            ;;
+          *)
+            ARCHIVE_URL="http://ports.ubuntu.com/ubuntu-ports"
+            ;;
+        esac
+
+        # add host architecture apt sources
+        printf "deb [arch=${DEB_HOST_ARCH}] ${ARCHIVE_URL} \
+          %s main multiverse universe restricted\n" \
+          $(lsb_release -sc){,-security,-updates} \
+        > /etc/apt/sources.list.d/cross-${DEB_HOST_ARCH}.list
+
+        apt-get update
+    fi
+
+    cd $SPREAD_PATH
+
+    # install dependencies
+    mk-build-deps \
+      --install \
+      --tool "apt-get --yes -o Debug::pkgProblemResolver=yes"
+
+    # Install rpi-userland
+    USERLAND_DIR=$(mktemp -d)
+    git clone --branch old-wayland https://github.com/MirServer/rpi-userland $USERLAND_DIR
+    cd $USERLAND_DIR
+    ./buildme /
+
+    MIR_BUILD_DIR=$(mktemp -d)
+    cmake -H$SPREAD_PATH -B$MIR_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_PLATFORM="rpi-dispmanx"
+    cmake --build $MIR_BUILD_DIR -- -j`nproc` VERBOSE=1
