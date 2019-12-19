@@ -120,7 +120,6 @@ public:
     auto socket_name() const -> optional_value<std::string> override;
 
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
-    auto get_wl_display() const -> wl_display*;
 
 private:
     bool wl_display_global_filter_func(wl_client const* client, wl_global const* global) const;
