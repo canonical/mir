@@ -42,6 +42,11 @@ namespace graphics
 {
 class Display;
 
+namespace common
+{
+class EGLContextExecutor;
+}
+
 namespace rpi
 {
 class DispmanXBuffer
@@ -73,6 +78,7 @@ public:
 private:
     std::shared_ptr<EGLExtensions> const egl_extensions;
     std::shared_ptr<renderer::gl::Context> const ctx;
+    std::shared_ptr<common::EGLContextExecutor> const egl_executor;
     std::shared_ptr<Executor> wayland_executor;
 };
 }
