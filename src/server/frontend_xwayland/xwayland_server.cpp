@@ -54,6 +54,8 @@ mf::XWaylandServer::XWaylandServer(
     wm(std::make_shared<XWaylandWM>(wc)),
     wlc(wc),
     dispatcher{std::make_shared<md::MultiplexingDispatchable>()},
+    xserver_thread{std::make_unique<dispatch::ThreadedDispatcher>(
+        "Mir/X11 Reader", dispatcher, []() { terminate_with_current_exception(); })},
     sockets{xdisplay},
     afd_dispatcher{
         std::make_shared<md::ReadableFd>(Fd{IntOwnedFd{sockets.abstract_socket_fd}}, [this]{ new_spawn_thread(); })},
@@ -63,9 +65,6 @@ mf::XWaylandServer::XWaylandServer(
 {
     dispatcher->add_watch(afd_dispatcher);
     dispatcher->add_watch(fd_dispatcher);
-    xserver_thread = std::make_unique<dispatch::ThreadedDispatcher>(
-        "Mir/X11 Reader", dispatcher, []()
-            { terminate_with_current_exception(); });
 }
 
 mf::XWaylandServer::~XWaylandServer()

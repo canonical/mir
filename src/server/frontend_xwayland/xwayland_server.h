@@ -59,11 +59,11 @@ private:
     void connect_to_xwayland(int wl_client_server_fd, int wm_server_fd);
     void new_spawn_thread();
 
-    std::unique_ptr<dispatch::ThreadedDispatcher> xserver_thread;
     std::shared_ptr<XWaylandWM> const wm;
     std::shared_ptr<WaylandConnector> const wlc;
     pid_t pid;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
+    std::unique_ptr<dispatch::ThreadedDispatcher> const xserver_thread;
     struct SocketFd
     {
         int const xdisplay;
