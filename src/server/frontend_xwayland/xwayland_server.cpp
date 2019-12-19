@@ -44,6 +44,7 @@
 
 namespace mf = mir::frontend;
 namespace md = mir::dispatch;
+using namespace std::chrono_literals;
 
 mf::XWaylandServer::XWaylandServer(
     const int xdisplay,
@@ -118,15 +119,6 @@ void mf::XWaylandServer::spawn()
         return;
     }
 
-    static sig_atomic_t xserver_ready{ false };
-
-    struct sigaction action;
-    struct sigaction old_action;
-    action.sa_handler = [](int) { xserver_ready = true; };
-    sigemptyset(&action.sa_mask);
-    action.sa_flags = 0;
-    sigaction(SIGUSR1, &action, &old_action);
-
     mir::log_info("Starting Xwayland");
     pid = fork();
 
@@ -137,10 +129,6 @@ void mf::XWaylandServer::spawn()
         break;
 
     case 0:
-        // Propagate SIGUSR1 to parent process
-        action.sa_handler = SIG_IGN;
-        sigaction(SIGUSR1, &action, nullptr);
-
         close(wl_client_fd[server]);
         close(wm_fd[server]);
         execl_xwayland(wl_client_fd[client], wm_fd[client]);
@@ -149,10 +137,9 @@ void mf::XWaylandServer::spawn()
     default:
         close(wl_client_fd[client]);
         close(wm_fd[client]);
-        connect_to_xwayland(wl_client_fd[server], wm_fd[server], xserver_ready);
+        connect_to_xwayland(wl_client_fd[server], wm_fd[server]);
         break;
     }
-    sigaction(SIGUSR1, &old_action, nullptr);
 }
 
 void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_fd)
@@ -183,10 +170,17 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
     mir::log_error("Failed to duplicate xwayland wm FD");
     auto const wm_fd_str = std::to_string(wm_fd);
 
+    auto const dsp_str = ":" + std::to_string(xdisplay);
+
     // Last second abort
     if (terminate) return;
 
-    auto const dsp_str = ":" + std::to_string(xdisplay);
+    // Propagate SIGUSR1 to parent process
+    struct sigaction action;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    action.sa_handler = SIG_IGN;
+    sigaction(SIGUSR1, &action, nullptr);
 
     execl(xwayland_path.c_str(),
     "Xwayland",
@@ -199,8 +193,32 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
     NULL);
 }
 
-void mf::XWaylandServer::connect_to_xwayland(int wl_client_server_fd, int wm_server_fd, sig_atomic_t& xserver_ready)
+namespace
 {
+bool spin_wait_for(sig_atomic_t& xserver_ready)
+{
+    auto const end = std::chrono::steady_clock::now() + 5s;
+
+    while (std::chrono::steady_clock::now() < end && !xserver_ready)
+    {
+        std::this_thread::sleep_for(100ms);
+    }
+
+    return xserver_ready;
+}
+}
+
+void mf::XWaylandServer::connect_to_xwayland(int wl_client_server_fd, int wm_server_fd)
+{
+    static sig_atomic_t xserver_ready{ false };
+
+    struct sigaction action;
+    struct sigaction old_action;
+    action.sa_handler = [](int) { xserver_ready = true; };
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    sigaction(SIGUSR1, &action, &old_action);
+
     wl_client* client = nullptr;
     std::mutex client_mutex;
     std::condition_variable client_ready;
@@ -213,25 +231,20 @@ void mf::XWaylandServer::connect_to_xwayland(int wl_client_server_fd, int wm_ser
         });
 
     std::unique_lock<std::mutex> lock{client_mutex};
-    client_ready.wait(lock);
-
-    // More ugliness
-    int tries = 0;
-    while (!xserver_ready)
+    if (!client_ready.wait_for(lock, 10s, [&]{ return client; }))
     {
-        // Last second abort
-        if (terminate) return;
+        // "Shouldn't happen" but this is better than hanging.
+        mir::fatal_error("Failed to create wl_client for Xwayland");
+    }
 
-        // Check for stalled startup
-        if (waitpid(pid, NULL, WNOHANG) != 0 || tries > 200) {
-        xserver_status = FAILED;
+    auto const xwayland_startup_timed_out = !spin_wait_for(xserver_ready);
+    sigaction(SIGUSR1, &old_action, nullptr);
+
+    if (xwayland_startup_timed_out)
+    {
         mir::log_info("Stalled start of Xserver, trying to start again!");
         spawn();
         return;
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        tries++;
     }
 
     // Last second abort
