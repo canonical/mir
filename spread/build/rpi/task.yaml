@@ -20,45 +20,28 @@ execute: |
       dpkg-dev \
       equivs
 
-    # set host and build environment up
-    source <( dpkg-architecture --print-set --host-arch ${ARCH} )
+    dpkg --add-architecture armhf
 
-    # if cross-building
-    if [ "${DEB_BUILD_ARCH}" != "${DEB_HOST_ARCH}" ]; then
-        # add host architecture
-        dpkg --add-architecture "${DEB_HOST_ARCH}"
+    # limit existing apt sources to build architecture
+    sed -i "s/^deb \(\[arch=.*\] \)\?/deb [arch=$(dpkg-architecture -q DEB_BUILD_ARCH)] /" \
+      /etc/apt/sources.list
 
-        # don't run tests
-        DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS} nocheck"
+    # add host architecture apt sources
+    printf "deb [arch=armhf] http://ports.ubuntu.com/ubuntu-ports %s main multiverse universe restricted\n" \
+      $(lsb_release -sc){,-security,-updates} \
+    > /etc/apt/sources.list.d/cross-armhf.list
 
-        # limit existing apt sources to build architecture
-        sed -i "s/^deb \(\[arch=.*\] \)\?/deb [arch=${DEB_BUILD_ARCH}] /" \
-          /etc/apt/sources.list
-
-        case "${DEB_HOST_ARCH}" in
-          amd64|i386)
-            ARCHIVE_URL="http://archive.ubuntu.com/ubuntu"
-            ;;
-          *)
-            ARCHIVE_URL="http://ports.ubuntu.com/ubuntu-ports"
-            ;;
-        esac
-
-        # add host architecture apt sources
-        printf "deb [arch=${DEB_HOST_ARCH}] ${ARCHIVE_URL} \
-          %s main multiverse universe restricted\n" \
-          $(lsb_release -sc){,-security,-updates} \
-        > /etc/apt/sources.list.d/cross-${DEB_HOST_ARCH}.list
-
-        apt-get update
-    fi
+    apt-get update
 
     cd $SPREAD_PATH
 
     # install dependencies
     mk-build-deps \
       --install \
+      --host-arch armhf \
       --tool "apt-get --yes -o Debug::pkgProblemResolver=yes"
+
+    apt-get install --yes pkg-config:armhf
 
     # Install rpi-userland
     USERLAND_DIR=$(mktemp -d)
@@ -67,5 +50,10 @@ execute: |
     ./buildme /
 
     MIR_BUILD_DIR=$(mktemp -d)
+
+    export CC=/usr/bin/arm-linux-gnueabihf-gcc
+    export CXX=/usr/bin/arm-linux-gnueabihf-g++
+    export PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig:/opt/vc/lib/pkgconfig
+
     cmake -H$SPREAD_PATH -B$MIR_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_PLATFORM="rpi-dispmanx"
     cmake --build $MIR_BUILD_DIR -- -j`nproc` VERBOSE=1
