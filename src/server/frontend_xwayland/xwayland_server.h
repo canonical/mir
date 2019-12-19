@@ -73,7 +73,7 @@ private:
     std::shared_ptr<dispatch::MultiplexingDispatchable> dispatcher;
     std::shared_ptr<dispatch::ReadableFd> afd_dispatcher;
     std::shared_ptr<dispatch::ReadableFd> fd_dispatcher;
-    std::unique_ptr<std::thread> spawn_thread;
+    std::thread spawn_thread;
     int socket_fd;
     int abstract_socket_fd;
     bool terminate = false;

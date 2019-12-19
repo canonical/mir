@@ -83,8 +83,8 @@ mf::XWaylandServer::~XWaylandServer()
       }
     }
 
-    if (spawn_thread && spawn_thread->joinable())
-        spawn_thread->join();
+    if (spawn_thread.joinable())
+        spawn_thread.join();
 
     char path[256];
     snprintf(path, sizeof path, "/tmp/.X%d-lock", xdisplay);
@@ -454,7 +454,7 @@ void mf::XWaylandServer::new_spawn_thread() {
   if (xserver_status > 0) return;
   xserver_status = STARTING;
 
-  spawn_thread = std::make_unique<std::thread>(&mf::XWaylandServer::spawn, this);
+  spawn_thread = std::thread{&mf::XWaylandServer::spawn, this};
 }
 
 void mf::XWaylandServer::spawn_xserver_on_event_loop()
