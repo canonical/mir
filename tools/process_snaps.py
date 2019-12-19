@@ -60,7 +60,12 @@ PENDING_BUILD = (
     "Uploading build",
 )
 
-MIR_VERSION_RE = re.compile(r"^(.*)-[^-]+$")
+# See https://regex101.com/r/b8otIx/2
+MIR_VERSION_RE = re.compile(r"^(?P<version>[0-9\.]+)"              # major.minor.patch
+                            r"(?:(?P<build>[+~](?:rc|dev)[0-9]+)"  # optional [~+]{rc,dev}* build tag
+                            r"-g(?P<commit>[0-9a-f]+))?"           # ... with git suffix
+                            r"-(?P<distro>[^-]+)$")                # distro
+
 SNAP_VERSION_RE = re.compile(r"^(?:(?P<server>.+)-mir)?"
                              r"(?P<mir>.+?)"
                              r"(?:-snap(?P<snap>.+))?$")
@@ -181,7 +186,7 @@ if __name__ == '__main__':
                 logger.debug("Latest source: %s", latest_source.display_name)
 
                 mir_version = (
-                    MIR_VERSION_RE.match(latest_source.source_package_version)[1]
+                    "".join(v or "" for v in MIR_VERSION_RE.fullmatch(latest_source.source_package_version).groups()[0:2])
                 )
                 logger.debug("Parsed upstream version: %s", mir_version)
 
