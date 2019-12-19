@@ -49,6 +49,7 @@ env:
   - SYSTEM=google:ubuntu-16.04-64 VARIANT=amd64
   - SYSTEM=google:ubuntu-16.04-64 VARIANT=arm64
   - SYSTEM=google:ubuntu-18.04-64 VARIANT=clang
+  - SYSTEM=google:ubuntu-18.04-64 VARIANT=armhf
   - SYSTEM=google:ubuntu-19.04-64 VARIANT=amd64
   - SYSTEM=google:ubuntu-19.10-64 VARIANT=amd64
   - SYSTEM=google:fedora-30-64 VARIANT=amd64
