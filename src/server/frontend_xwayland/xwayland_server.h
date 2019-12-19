@@ -52,7 +52,6 @@ public:
 
 private:
     void setup_socket();
-    void spawn_xserver_on_event_loop();
 
     /// Forks off the XWayland process
     void spawn();
@@ -70,9 +69,9 @@ private:
     int xdisplay;
     std::shared_ptr<WaylandConnector> wlc;
     pid_t pid;
-    std::shared_ptr<dispatch::MultiplexingDispatchable> dispatcher;
-    std::shared_ptr<dispatch::ReadableFd> afd_dispatcher;
-    std::shared_ptr<dispatch::ReadableFd> fd_dispatcher;
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
+    std::shared_ptr<dispatch::ReadableFd> const afd_dispatcher;
+    std::shared_ptr<dispatch::ReadableFd> const fd_dispatcher;
     std::thread spawn_thread;
     int socket_fd;
     int abstract_socket_fd;

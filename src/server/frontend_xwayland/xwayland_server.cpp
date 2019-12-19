@@ -54,11 +54,17 @@ mf::XWaylandServer::XWaylandServer(
     wm(std::make_shared<XWaylandWM>(wc)),
     xdisplay(xdisplay),
     wlc(wc),
-    dispatcher{std::make_shared<md::MultiplexingDispatchable>()},
+    dispatcher{
+        (setup_socket(), // It's funky using the comma operator to call setup_socket() but it is needed before afd_dispatcher{}
+        std::make_shared<md::MultiplexingDispatchable>())},
+    afd_dispatcher{
+        std::make_shared<md::ReadableFd>(Fd{IntOwnedFd{abstract_socket_fd}}, [this]{ new_spawn_thread(); })},
+    fd_dispatcher{
+        std::make_shared<md::ReadableFd>(Fd{IntOwnedFd{socket_fd}}, [this] { new_spawn_thread(); })},
     xwayland_path{xwayland_path}
 {
-    setup_socket();
-    spawn_xserver_on_event_loop();
+    dispatcher->add_watch(afd_dispatcher);
+    dispatcher->add_watch(fd_dispatcher);
     xserver_thread = std::make_unique<dispatch::ThreadedDispatcher>(
         "Mir/X11 Reader", dispatcher, []()
             { terminate_with_current_exception(); });
@@ -454,23 +460,6 @@ void mf::XWaylandServer::new_spawn_thread() {
   if (xserver_status > 0) return;
   xserver_status = STARTING;
 
+  if (spawn_thread.joinable()) spawn_thread.join();
   spawn_thread = std::thread{&mf::XWaylandServer::spawn, this};
 }
-
-void mf::XWaylandServer::spawn_xserver_on_event_loop()
-{
-    auto func = [this]() {
-      dispatcher->remove_watch(afd_dispatcher);
-      dispatcher->remove_watch(fd_dispatcher);
-      afd_dispatcher.reset();
-      fd_dispatcher.reset();
-
-      new_spawn_thread();
-    };
-
-    afd_dispatcher = std::make_shared<md::ReadableFd>(mir::Fd{mir::IntOwnedFd{abstract_socket_fd}}, func);
-    fd_dispatcher = std::make_shared<md::ReadableFd>(mir::Fd{mir::IntOwnedFd{socket_fd}}, func);
-    dispatcher->add_watch(afd_dispatcher);
-    dispatcher->add_watch(fd_dispatcher);
-}
-
