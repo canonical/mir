@@ -51,8 +51,6 @@ public:
      };
 
 private:
-    void setup_socket();
-
     /// Forks off the XWayland process
     void spawn();
     /// Called after fork() if we should turn into XWayland
@@ -60,21 +58,24 @@ private:
     /// Called after fork() if we should continue on as Mir
     void connect_to_xwayland(int wl_client_server_fd, int wm_server_fd);
     void new_spawn_thread();
-    int create_lockfile();
-    int create_socket(struct sockaddr_un *addr, size_t path_size);
-    bool set_cloexec(int fd, bool cloexec);
 
     std::unique_ptr<dispatch::ThreadedDispatcher> xserver_thread;
-    std::shared_ptr<XWaylandWM> wm;
-    int xdisplay;
-    std::shared_ptr<WaylandConnector> wlc;
+    std::shared_ptr<XWaylandWM> const wm;
+    std::shared_ptr<WaylandConnector> const wlc;
     pid_t pid;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
+    struct SocketFd
+    {
+        int const xdisplay;
+        int socket_fd;
+        int abstract_socket_fd;
+
+        SocketFd(int xdisplay);
+        ~SocketFd();
+    } const sockets;
     std::shared_ptr<dispatch::ReadableFd> const afd_dispatcher;
     std::shared_ptr<dispatch::ReadableFd> const fd_dispatcher;
     std::thread spawn_thread;
-    int socket_fd;
-    int abstract_socket_fd;
     bool terminate = false;
     Status xserver_status = STOPPED;
     std::string const xwayland_path;
