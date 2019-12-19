@@ -168,12 +168,12 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
     set_cloexec(socket_fd, false);
     set_cloexec(abstract_socket_fd, false);
 
-    auto const socket_fd = dup(this->socket_fd);
+    auto const socket_fd = dup(socket_fd);
     if (socket_fd < 0)
         mir::log_error("Failed to duplicate xwayland FD");
     auto const socket_fd_str = std::to_string(socket_fd);
 
-    auto const abstract_socket_fd = dup(this->abstract_socket_fd);
+    auto const abstract_socket_fd = dup(abstract_socket_fd);
     if (abstract_socket_fd < 0)
         mir::log_error("Failed to duplicate xwayland abstract FD");
     auto const abstract_socket_fd_str = std::to_string(abstract_socket_fd);
