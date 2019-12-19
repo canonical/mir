@@ -78,7 +78,6 @@ private:
     int abstract_socket_fd;
     bool terminate = false;
     Status xserver_status = STOPPED;
-    int xserver_spawn_tries = 0;
     std::string const xwayland_path;
 };
 } /* frontend */

@@ -27,6 +27,7 @@
 #include "mir/dispatch/readable_fd.h"
 #include "mir/fd.h"
 #include "mir/terminate_with_current_exception.h"
+#include <mir/thread_name.h>
 
 #include <csignal>
 #include <fcntl.h>
@@ -80,8 +81,10 @@ mf::XWaylandServer::~XWaylandServer()
           if (kill(pid, 0) == 0)    // ...if Xwayland is still running...
             kill(pid, SIGKILL);     // ...then kill it!
       }
-      spawn_thread->join();
     }
+
+    if (spawn_thread && spawn_thread->joinable())
+        spawn_thread->join();
 
     char path[256];
     snprintf(path, sizeof path, "/tmp/.X%d-lock", xdisplay);
@@ -94,52 +97,66 @@ mf::XWaylandServer::~XWaylandServer()
 
 void mf::XWaylandServer::spawn()
 {
+    set_thread_name("XWaylandServer::spawn");
+
     enum { server, client, size };
     int wl_client_fd[size], wm_fd[size];
 
-    xserver_status = STARTING;
+    int xserver_spawn_tries = 0;
 
-    // Try 5 times
-    if (xserver_spawn_tries >= 5) {
-      mir::log_error("Xwayland failed to start 5 times in a row, disabling Xserver");
-      return;
-    }
-    xserver_status = STARTING;
-    xserver_spawn_tries++;
-
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wl_client_fd) < 0)
+    do
     {
-        mir::log_error("wl connection socketpair failed");
-        return;
+        // Try 5 times
+        if (xserver_spawn_tries >= 5) {
+          mir::log_error("Xwayland failed to start 5 times in a row, disabling Xserver");
+          return;
+        }
+        xserver_status = STARTING;
+        xserver_spawn_tries++;
+
+        if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wl_client_fd) < 0)
+        {
+            // "Shouldn't happen" but continuing is weird.
+            mir::fatal_error("wl connection socketpair failed");
+            return; // doesn't reach here
+        }
+
+        if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wm_fd) < 0)
+        {
+            // "Shouldn't happen" but continuing is weird.
+            mir::fatal_error("wm fd socketpair failed");
+            return; // doesn't reach here
+        }
+
+        mir::log_info("Starting Xwayland");
+        pid = fork();
+
+        switch (pid)
+        {
+        case -1:
+            mir::fatal_error("Failed to fork");
+            return; // Keep compiler happy (doesn't reach here)
+
+        case 0:
+            close(wl_client_fd[server]);
+            close(wm_fd[server]);
+            execl_xwayland(wl_client_fd[client], wm_fd[client]);
+            return; // Keep compiler happy (doesn't reach here)
+
+        default:
+            close(wl_client_fd[client]);
+            close(wm_fd[client]);
+            connect_to_xwayland(wl_client_fd[server], wm_fd[server]);
+            if (xserver_status != STARTING)
+            {
+                // Reset the tries since the server started
+                xserver_spawn_tries = 0;
+            }
+
+            break;
+        }
     }
-
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wm_fd) < 0)
-    {
-        mir::log_error("wm fd socketpair failed");
-        return;
-    }
-
-    mir::log_info("Starting Xwayland");
-    pid = fork();
-
-    switch (pid)
-    {
-    case -1:
-        mir::log_error("Failed to fork");
-        break;
-
-    case 0:
-        close(wl_client_fd[server]);
-        close(wm_fd[server]);
-        execl_xwayland(wl_client_fd[client], wm_fd[client]);
-        break;
-
-    default:
-        close(wl_client_fd[client]);
-        close(wm_fd[client]);
-        connect_to_xwayland(wl_client_fd[server], wm_fd[server]);
-        break;
-    }
+    while (xserver_status != STOPPED);
 }
 
 void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_fd)
@@ -210,7 +227,9 @@ bool spin_wait_for(sig_atomic_t& xserver_ready)
 
 void mf::XWaylandServer::connect_to_xwayland(int wl_client_server_fd, int wm_server_fd)
 {
+    // We need to set up the signal handling before connecting wl_client_server_fd
     static sig_atomic_t xserver_ready{ false };
+    xserver_ready = false;
 
     struct sigaction action;
     struct sigaction old_action;
@@ -220,41 +239,48 @@ void mf::XWaylandServer::connect_to_xwayland(int wl_client_server_fd, int wm_ser
     sigaction(SIGUSR1, &action, &old_action);
 
     wl_client* client = nullptr;
-    std::mutex client_mutex;
-    std::condition_variable client_ready;
-
-    wlc->run_on_wayland_display([wl_client_server_fd, &client, &client_mutex, &client_ready](wl_display* display)
-        {
-            std::lock_guard<std::mutex> lock{client_mutex};
-            client = wl_client_create(display, wl_client_server_fd);
-            client_ready.notify_all();
-        });
-
-    std::unique_lock<std::mutex> lock{client_mutex};
-    if (!client_ready.wait_for(lock, 10s, [&]{ return client; }))
     {
-        // "Shouldn't happen" but this is better than hanging.
-        mir::fatal_error("Failed to create wl_client for Xwayland");
+        std::mutex client_mutex;
+        std::condition_variable client_ready;
+
+        wlc->run_on_wayland_display(
+            [wl_client_server_fd, &client, &client_mutex, &client_ready](wl_display* display)
+            {
+                std::lock_guard<std::mutex> lock{client_mutex};
+                client = wl_client_create(display, wl_client_server_fd);
+                client_ready.notify_all();
+            });
+
+        std::unique_lock<std::mutex> lock{client_mutex};
+        if (!client_ready.wait_for(lock, 10s, [&]{ return client; }))
+        {
+            // "Shouldn't happen" but this is better than hanging.
+            mir::fatal_error("Failed to create wl_client for Xwayland");
+        }
     }
 
+    //The client can connect, now wait for it to signal ready (SIGUSR1)
     auto const xwayland_startup_timed_out = !spin_wait_for(xserver_ready);
     sigaction(SIGUSR1, &old_action, nullptr);
 
     if (xwayland_startup_timed_out)
     {
         mir::log_info("Stalled start of Xserver, trying to start again!");
-        spawn();
+        close(wm_server_fd);
         return;
     }
 
     // Last second abort
-    if (terminate) return;
+    if (terminate)
+    {
+        close(wm_server_fd);
+        xserver_status = STOPPED;
+        return;
+    }
+
     wm->start(client, wm_server_fd);
     mir::log_info("XServer is running");
     xserver_status = RUNNING;
-
-    // Reset the tries since server is running now
-    xserver_spawn_tries = 0;
 
     int status;
     waitpid(pid, &status, 0);  // Blocking
@@ -269,17 +295,6 @@ void mf::XWaylandServer::connect_to_xwayland(int wl_client_server_fd, int wm_ser
 
     if (terminate) return;
     wm->destroy();
-    xserver_ready = false;
-
-    if (xserver_status == FAILED) {
-        mir::log_info("Trying to start Xwayland again!");
-        spawn();
-        return;
-    }
-
-    spawn_xserver_on_event_loop();
-
-    mir::log_info("Xwayland stopped");
 }
 
 bool mf::XWaylandServer::set_cloexec(int fd, bool cloexec) {
