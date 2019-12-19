@@ -17,22 +17,19 @@
  */
 
 #include "xwayland_server.h"
-
-#include "mir/log.h"
+#include "xwayland_wm.h"
 
 #include "wayland_connector.h"
-#include "xwayland_wm.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/readable_fd.h"
 #include "mir/fd.h"
+#include "mir/log.h"
 #include "mir/terminate_with_current_exception.h"
 #include <mir/thread_name.h>
 
 #include <csignal>
 #include <fcntl.h>
-#include <memory>
-#include <sstream>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -80,7 +77,7 @@ mf::XWaylandServer::~XWaylandServer()
 
       if (kill(pid, SIGTERM) == 0)
       {
-          usleep(100000);           // After 100ms...
+          std::this_thread::sleep_for(100ms);// After 100ms...
           if (kill(pid, 0) == 0)    // ...if Xwayland is still running...
             kill(pid, SIGKILL);     // ...then kill it!
       }
@@ -141,7 +138,7 @@ void mf::XWaylandServer::spawn()
         default:
             close(wl_client_fd[client]);
             close(wm_fd[client]);
-            connect_to_xwayland(wl_client_fd[server], wm_fd[server]);
+            connect_wm_to_xwayland(wl_client_fd[server], wm_fd[server]);
             if (xserver_status != STARTING)
             {
                 // Reset the tries since the server started
@@ -242,7 +239,7 @@ bool spin_wait_for(sig_atomic_t& xserver_ready)
 }
 }
 
-void mf::XWaylandServer::connect_to_xwayland(int wl_client_server_fd, int wm_server_fd)
+void mf::XWaylandServer::connect_wm_to_xwayland(int wl_client_server_fd, int wm_server_fd)
 {
     // We need to set up the signal handling before connecting wl_client_server_fd
     static sig_atomic_t xserver_ready{ false };
