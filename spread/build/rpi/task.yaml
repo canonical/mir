@@ -42,6 +42,7 @@ execute: |
       --tool "apt-get --yes -o Debug::pkgProblemResolver=yes"
 
 
+    apt-get --yes install capnproto:amd64
     export PKG_CONFIG_LIBDIR=/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig
 
     # Install rpi-userland
