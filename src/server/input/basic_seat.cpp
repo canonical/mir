@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <array>
+#include <map>
 
 namespace mi = mir::input;
 namespace mf = mir::frontend;
@@ -166,7 +167,7 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
 private:
     mutable std::mutex output_mutex;
     mi::SeatInputDeviceTracker& input_state_tracker;
-    std::unordered_map<uint32_t, mi::OutputInfo> outputs;
+    std::map<uint32_t, mi::OutputInfo> outputs;
     geom::Rectangle bounding_rectangle;
 };
 
@@ -242,4 +243,3 @@ void mi::BasicSeat::reset_confinement_regions()
 {
     input_state_tracker.reset_confinement_regions();
 }
-
