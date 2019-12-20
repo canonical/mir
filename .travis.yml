@@ -43,22 +43,22 @@ env:
   - DEBEMAIL="mir-ci-bot@canonical.com"
   - SPREAD_PATH=/tmp/spread
   matrix:
-  - SYSTEM=google:ubuntu-devel-64 VARIANT=amd64
-  - SYSTEM=google:ubuntu-devel-proposed-64 VARIANT=amd64
-  - SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
-  - SYSTEM=google:ubuntu-16.04-64 VARIANT=amd64
-  - SYSTEM=google:ubuntu-16.04-64 VARIANT=arm64
-  - SYSTEM=google:ubuntu-18.04-64 VARIANT=clang
-  - SYSTEM=google:ubuntu-18.04-64 VARIANT=armhf
-  - SYSTEM=google:ubuntu-19.04-64 VARIANT=amd64
-  - SYSTEM=google:ubuntu-19.10-64 VARIANT=amd64
-  - SYSTEM=google:fedora-30-64 VARIANT=amd64
-  - SYSTEM=google:fedora-31-64 VARIANT=amd64
+  - SYSTEM=google:ubuntu-devel-64 TASK=ubuntu VARIANT=amd64
+  - SYSTEM=google:ubuntu-devel-proposed-64 TASK=ubuntu VARIANT=amd64
+  - SYSTEM=google:fedora-rawhide-64 TASK=fedora VARIANT=amd64
+  - SYSTEM=google:ubuntu-16.04-64 TASK=ubuntu VARIANT=amd64
+  - SYSTEM=google:ubuntu-16.04-64 TASK=ubuntu VARIANT=arm64
+  - SYSTEM=google:ubuntu-18.04-64 TASK=ubuntu VARIANT=clang
+  - SYSTEM=google:ubuntu-18.04-64 TASK=rpi VARIANT=armhf
+  - SYSTEM=google:ubuntu-19.04-64 TASK=ubuntu VARIANT=amd64
+  - SYSTEM=google:ubuntu-19.10-64 TASK=ubuntu VARIANT=amd64
+  - SYSTEM=google:fedora-30-64 TASK=fedora VARIANT=amd64
+  - SYSTEM=google:fedora-31-64 TASK=fedora VARIANT=amd64
 
 matrix:
   allow_failures:
-    - env: SYSTEM=google:ubuntu-devel-proposed-64 VARIANT=amd64
-    - env: SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
+    - env: SYSTEM=google:ubuntu-devel-proposed-64 TASK=ubuntu VARIANT=amd64
+    - env: SYSTEM=google:fedora-rawhide-64 TASK=fedora VARIANT=amd64
   fast_finish: true
 
 before_install:
@@ -69,7 +69,7 @@ before_install:
 - popd
 
 script:
-- ${SPREAD_PATH}/spread -v $SYSTEM:...:$VARIANT
+- ${SPREAD_PATH}/spread -v $SYSTEM:spread/build/$TASK:$VARIANT
 
 jobs:
   include:
