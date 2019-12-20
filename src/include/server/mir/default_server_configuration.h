@@ -71,6 +71,7 @@ class EventSink;
 class DisplayChanger;
 class Screencast;
 class InputConfigurationChanger;
+class SurfaceStack;
 }
 
 namespace shell
@@ -279,6 +280,7 @@ public:
     virtual std::shared_ptr<frontend::ConnectionCreator>      the_connection_creator();
     virtual std::shared_ptr<frontend::ConnectionCreator>      the_prompt_connection_creator();
     virtual std::shared_ptr<frontend::ConnectorReport>        the_connector_report();
+    virtual std::shared_ptr<frontend::SurfaceStack>           the_frontend_surface_stack();
     /** @} */
     /** @} */
 
