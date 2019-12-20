@@ -1,8 +1,6 @@
 mir_add_wrapped_executable(mir_performance_tests
     test_glmark2-es2-mir.cpp
-    test_compositor.cpp
     test_client_startup.cpp
-    system_performance_test.cpp
 )
 
 if (MIR_EGL_SUPPORTED)
