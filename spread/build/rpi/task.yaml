@@ -41,7 +41,8 @@ execute: |
       --host-arch armhf \
       --tool "apt-get --yes -o Debug::pkgProblemResolver=yes"
 
-    apt-get install --yes pkg-config:armhf
+
+    export PKG_CONFIG_LIBDIR=/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig
 
     # Install rpi-userland
     USERLAND_DIR=$(mktemp -d)
@@ -53,6 +54,7 @@ execute: |
 
     export CC=/usr/bin/arm-linux-gnueabihf-gcc
     export CXX=/usr/bin/arm-linux-gnueabihf-g++
+    # Prepend the normal sysroot so that we pick up as much as possible from the standard environment
     export PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig:/opt/vc/lib/pkgconfig
 
     cmake -H$SPREAD_PATH -B$MIR_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_PLATFORM="rpi-dispmanx"
