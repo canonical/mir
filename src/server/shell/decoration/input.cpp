@@ -272,7 +272,7 @@ auto msd::InputManager::resize_edge_rect(
 void msd::InputManager::pointer_event(std::chrono::nanoseconds timestamp, geom::Point location, bool pressed)
 {
     std::lock_guard<std::mutex> lock{mutex};
-    last_timestamp = timestamp;
+    event_timestamp = timestamp;
     if (!pointer)
     {
         pointer = Device{location, pressed};
@@ -299,7 +299,7 @@ void msd::InputManager::pointer_event(std::chrono::nanoseconds timestamp, geom::
 void msd::InputManager::pointer_leave(std::chrono::nanoseconds timestamp)
 {
     std::lock_guard<std::mutex> lock{mutex};
-    last_timestamp = timestamp;
+    event_timestamp = timestamp;
     if (pointer)
         process_leave(pointer.value());
     pointer = std::experimental::nullopt;
@@ -308,7 +308,7 @@ void msd::InputManager::pointer_leave(std::chrono::nanoseconds timestamp)
 void msd::InputManager::touch_event(int32_t id, std::chrono::nanoseconds timestamp, geom::Point location)
 {
     std::lock_guard<std::mutex> lock{mutex};
-    last_timestamp = timestamp;
+    event_timestamp = timestamp;
     auto device = touches.find(id);
     if (device == touches.end())
     {
@@ -327,7 +327,7 @@ void msd::InputManager::touch_event(int32_t id, std::chrono::nanoseconds timesta
 void msd::InputManager::touch_up(int32_t id, std::chrono::nanoseconds timestamp)
 {
     std::lock_guard<std::mutex> lock{mutex};
-    last_timestamp = timestamp;
+    event_timestamp = timestamp;
     auto device = touches.find(id);
     if (device != touches.end())
     {
@@ -489,14 +489,14 @@ void msd::InputManager::widget_drag(Widget& widget)
 
             if (edge == mir_resize_edge_none)
             {
-                decoration->spawn([timestamp = last_timestamp](BasicDecoration* decoration)
+                decoration->spawn([timestamp = event_timestamp](BasicDecoration* decoration)
                     {
                         decoration->request_move(timestamp);
                     });
             }
             else
             {
-                decoration->spawn([timestamp = last_timestamp, edge](BasicDecoration* decoration)
+                decoration->spawn([timestamp = event_timestamp, edge](BasicDecoration* decoration)
                     {
                         decoration->request_resize(timestamp, edge);
                     });
@@ -504,7 +504,7 @@ void msd::InputManager::widget_drag(Widget& widget)
         }
         else if (widget.button)
         {
-            decoration->spawn([timestamp = last_timestamp](BasicDecoration* decoration)
+            decoration->spawn([timestamp = event_timestamp](BasicDecoration* decoration)
                 {
                     decoration->request_move(timestamp);
                 });

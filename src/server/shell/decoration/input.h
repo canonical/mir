@@ -135,7 +135,8 @@ private:
     std::shared_ptr<Observer> const observer;
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> decoration;
     std::vector<geometry::Rectangle> input_shape;
-    std::chrono::nanoseconds last_timestamp;
+    /// Timestamp of the most recent event, or the event currently being processed
+    std::chrono::nanoseconds event_timestamp{0};
     std::string current_cursor_name{""};
 
     struct Widget
