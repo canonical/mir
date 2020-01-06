@@ -423,37 +423,6 @@ TEST_F(PromptSessionClientAPI,
     mir_prompt_session_release_sync(prompt_session);
 }
 
-TEST_F(PromptSessionClientAPI, client_pid_is_associated_with_session)
-{
-    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    auto const server_pid = getpid();
-
-    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, application_session_pid, null_state_change_callback, this);
-
-    mir_prompt_session_new_fds_for_prompt_providers(prompt_session, 1, &client_fd_callback, this);
-    wait_for_callback(std::chrono::milliseconds(500));
-
-    EXPECT_CALL(*the_mock_prompt_session_listener(),
-        prompt_provider_added(_, Not(IsSessionWithPid(server_pid))));
-
-    InSequence seq;
-    EXPECT_CALL(*this, process_line(StrEq("Starting")));
-    EXPECT_CALL(*this, process_line(StrEq("Connected")));
-    EXPECT_CALL(*this, process_line(StrEq("Window created")));
-    EXPECT_CALL(*this, process_line(StrEq("Window released")));
-    EXPECT_CALL(*this, process_line(StrEq("Connection released")));
-
-    auto const command = mtf::executable_path() + "/mir_demo_client_basic -m" + fd_connect_string(actual_fds[0]);
-    mir::test::Popen output(command);
-
-    std::string line;
-    while (output.get_line(line)) process_line(line);
-
-    mir_prompt_session_release_sync(prompt_session);
-}
-
 TEST_F(PromptSessionClientAPI, notifies_when_server_closes_prompt_session)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
