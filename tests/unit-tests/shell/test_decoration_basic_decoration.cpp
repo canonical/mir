@@ -179,6 +179,7 @@ struct DecorationBasicDecoration
     void TearDown() override
     {
         basic_decoration.reset();
+        executor.execute();
     }
 
     NiceMock<MockShell> shell;
