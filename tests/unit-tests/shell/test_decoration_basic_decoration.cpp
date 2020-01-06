@@ -46,6 +46,7 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 using namespace testing;
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -236,11 +237,15 @@ auto nine_points(geom::Size size) -> std::vector<std::vector<geom::Point>>
     return points;
 }
 
-auto pointer_event(MirPointerAction action, MirPointerButtons buttons_pressed, geom::Point position) -> mir::EventUPtr
+auto pointer_event(
+    MirPointerAction action,
+    MirPointerButtons buttons_pressed,
+    geom::Point position,
+    std::chrono::nanoseconds timestamp = 0ns) -> mir::EventUPtr
 {
     return mev::make_event(
         (MirInputDeviceId)1,
-        std::chrono::nanoseconds{0},
+        timestamp + 1s,
         std::vector<uint8_t>{},
         mir_input_event_modifier_none,
         action,
@@ -250,11 +255,15 @@ auto pointer_event(MirPointerAction action, MirPointerButtons buttons_pressed, g
         0, 0);
 }
 
-auto touch_event(MirTouchId touch_id, MirTouchAction action, geom::Point position) -> mir::EventUPtr
+auto touch_event(
+    MirTouchId touch_id,
+    MirTouchAction action,
+    geom::Point position,
+    std::chrono::nanoseconds timestamp = 0ns) -> mir::EventUPtr
 {
     auto ev = mev::make_event(
         (MirInputDeviceId)1,
-        std::chrono::nanoseconds{0},
+        timestamp + 1s,
         std::vector<uint8_t>{},
         mir_input_event_modifier_none);
     mev::add_touch(
@@ -560,7 +569,6 @@ TEST_F(DecorationBasicDecoration, restores_on_maximize_click_while_maximized)
     window_surface.configure(mir_window_attrib_state, mir_window_state_maximized);
     executor.execute();
     geom::Point const click_point{local_maximize_button_location};
-    std::shared_ptr<ms::Session> session_{session};
     std::shared_ptr<ms::Surface> window_surface_{mt::fake_shared(window_surface)};
     msh::SurfaceSpecification spec;
     EXPECT_CALL(shell, did_modify_surface(window_surface_, _))
