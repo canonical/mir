@@ -371,6 +371,7 @@ void msd::InputManager::process_up(Device& device)
     {
         widget_up(*device.active_widget.value());
     }
+    previous_up_timestamp = event_timestamp;
 }
 
 void msd::InputManager::process_move(Device& device)
@@ -449,6 +450,21 @@ void msd::InputManager::widget_up(Widget& widget)
 {
     if (widget.state == ButtonState::Down)
     {
+        if (previous_up_timestamp > 0ns &&
+            event_timestamp - previous_up_timestamp <= double_click_threshold)
+        {
+            // A double click happened
+
+            if (widget.resize_edge && widget.resize_edge == mir_resize_edge_none)
+            {
+                // Widget is the titlebar, so we should toggle maximization
+                decoration->spawn([](BasicDecoration* decoration)
+                    {
+                        decoration->request_toggle_maximize();
+                    });
+            }
+        }
+
         if (widget.button)
         {
             switch (widget.button.value())

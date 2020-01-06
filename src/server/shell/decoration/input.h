@@ -139,6 +139,8 @@ private:
     std::vector<geometry::Rectangle> input_shape;
     /// Timestamp of the most recent event, or the event currently being processed
     std::chrono::nanoseconds event_timestamp{0};
+    /// Timestamp of the previous up event (not the one currently being processed)
+    std::chrono::nanoseconds previous_up_timestamp{0};
     std::string current_cursor_name{""};
 
     struct Widget
