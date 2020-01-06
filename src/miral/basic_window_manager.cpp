@@ -180,9 +180,8 @@ void miral::BasicWindowManager::modify_surface(
     shell::SurfaceSpecification const& modifications)
 {
     Locker lock{this};
-    if (!surface_known(surface))
+    if (!surface_known(surface, "modify"))
     {
-        log_warning("Unknown surface modified");
         return;
     }
     auto& info = info_for(surface);
@@ -199,7 +198,10 @@ void miral::BasicWindowManager::remove_surface(
     Locker lock{this};
     if (app_info.find(session) == app_info.end())
     {
-        log_warning("Removed surface with unknwon session");
+        log_debug(
+            "BasicWindowManager::remove_surface() called with unknown or already removed session %s (PID: %d)",
+            session->name().c_str(),
+            session->process_id());
         return;
     }
 
