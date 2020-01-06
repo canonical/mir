@@ -115,6 +115,8 @@ public:
     auto state() -> std::unique_ptr<InputState>;
 
 private:
+    static std::chrono::nanoseconds const double_click_threshold;
+
     InputManager(InputManager const&) = delete;
     InputManager& operator=(InputManager const&) = delete;
 

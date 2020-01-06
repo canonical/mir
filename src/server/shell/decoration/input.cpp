@@ -31,6 +31,10 @@ namespace geom = mir::geometry;
 namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
 
+using namespace std::chrono_literals;
+
+std::chrono::nanoseconds const msd::InputManager::double_click_threshold = 250ms;
+
 struct msd::InputManager::Observer
     : public ms::NullSurfaceObserver
 {
