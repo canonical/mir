@@ -33,20 +33,20 @@ Height const display_height{480};
 Rectangle const display_area{{display_left,  display_top},
                              {display_width, display_height}};
 
-struct InvalidRequests;
+struct IgnoredRequests;
 
-struct InvalidParam
+struct IgnoredRequestParam
 {
     std::string name;
-    std::function<Window(InvalidRequests&)> window;
+    std::function<Window(IgnoredRequests&)> window;
 };
 
-std::ostream& operator<<(std::ostream& ostream, InvalidParam const& param)
+std::ostream& operator<<(std::ostream& ostream, IgnoredRequestParam const& param)
 {
     return ostream << param.name;
 }
 
-struct InvalidRequests : mt::TestWindowManagerTools, WithParamInterface<InvalidParam>
+struct IgnoredRequests : mt::TestWindowManagerTools, WithParamInterface<IgnoredRequestParam>
 {
     Size const window_size{200, 200};
     mir::shell::SurfaceSpecification simple_modification;
@@ -104,70 +104,70 @@ struct InvalidRequests : mt::TestWindowManagerTools, WithParamInterface<InvalidP
 };
 }
 
-TEST_P(InvalidRequests, modify_invalid_surface_noops)
+TEST_P(IgnoredRequests, modify_unknown_surface_noops)
 {
     auto const window = GetParam().window(*this);
     basic_window_manager.modify_surface(session, window, simple_modification);
 }
 
-TEST_P(InvalidRequests, remove_invalid_surface_noops)
+TEST_P(IgnoredRequests, remove_unknown_surface_noops)
 {
     auto const window = GetParam().window(*this);
     basic_window_manager.remove_surface(session, window);
 }
 
-TEST_P(InvalidRequests, set_attribute_on_invalid_surface_noops)
+TEST_P(IgnoredRequests, set_attribute_on_unknown_surface_noops)
 {
     auto const window = GetParam().window(*this);
     basic_window_manager.set_surface_attribute(session, window, mir_window_attrib_state, mir_window_state_maximized);
 }
 
-TEST_P(InvalidRequests, raise_invalid_surface_noops)
+TEST_P(IgnoredRequests, raise_unknown_surface_noops)
 {
     auto const window = GetParam().window(*this);
     basic_window_manager.handle_raise_surface(session, window, 100);
 }
 
-TEST_P(InvalidRequests, drag_and_drop_invalid_surface_noops)
+TEST_P(IgnoredRequests, drag_and_drop_unknown_surface_noops)
 {
     auto const window = GetParam().window(*this);
     basic_window_manager.handle_request_drag_and_drop(session, window, 100);
 }
 
-TEST_P(InvalidRequests, move_invalid_surface_noops)
+TEST_P(IgnoredRequests, move_unknown_surface_noops)
 {
     auto const window = GetParam().window(*this);
     basic_window_manager.handle_request_move(session, window, 100);
 }
 
-TEST_P(InvalidRequests, resize_invalid_surface_noops)
+TEST_P(IgnoredRequests, resize_unknown_surface_noops)
 {
     auto const window = GetParam().window(*this);
 
     basic_window_manager.handle_request_resize(session, window, 100, mir_resize_edge_southeast);
 }
 
-TEST_F(InvalidRequests, remove_session_twice_noops)
+TEST_F(IgnoredRequests, remove_session_twice_noops)
 {
     basic_window_manager.remove_session(session);
     basic_window_manager.remove_session(session);
 }
 
-INSTANTIATE_TEST_CASE_P(InvalidWindow, InvalidRequests, ::testing::Values(
-    InvalidParam{
+INSTANTIATE_TEST_CASE_P(UnknownWindow, IgnoredRequests, ::testing::Values(
+    IgnoredRequestParam{
         "null window",
-        [](InvalidRequests& test){ return test.create_null_window(); }},
-    InvalidParam{
+        [](IgnoredRequests& test){ return test.create_null_window(); }},
+    IgnoredRequestParam{
         "destroyed window",
-        [](InvalidRequests& test){ return test.create_destroyed_window(); }},
-    InvalidParam{
+        [](IgnoredRequests& test){ return test.create_destroyed_window(); }},
+    IgnoredRequestParam{
         "never before seen window",
-        [](InvalidRequests& test){ return test.create_never_before_seen_window(); }}));
+        [](IgnoredRequests& test){ return test.create_never_before_seen_window(); }}));
 
-INSTANTIATE_TEST_CASE_P(InvalidSession, InvalidRequests, ::testing::Values(
-    InvalidParam{
+INSTANTIATE_TEST_CASE_P(UnknownSession, IgnoredRequests, ::testing::Values(
+    IgnoredRequestParam{
         "destroyed session",
-        [](InvalidRequests& test)
+        [](IgnoredRequests& test)
         {
             Window const window = test.create_window();
             test.basic_window_manager.remove_session(test.session);
