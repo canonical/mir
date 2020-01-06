@@ -1,5 +1,0 @@
-examples for mir clients. you should have package 'libmirclient-dev' installed
-
-you can compile with a command like:
-    g++ -std=c++0x -o mir_demo_client_scroll `pkg-config --libs --cflags mirclient` demo_client_scroll.cpp graphics_utils.cpp
-    gcc -o mir_demo_client_flicker `pkg-config --libs --cflags mirclient` demo_client_flicker.c
