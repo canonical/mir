@@ -243,6 +243,10 @@ void mf::XWaylandServer::connect_wm_to_xwayland(int wl_client_server_fd, int wm_
 {
     // We need to set up the signal handling before connecting wl_client_server_fd
     static sig_atomic_t xserver_ready{ false };
+
+    // In practice, there ought to be no contention on xserver_ready, but let's be certain
+    static std::mutex xserver_ready_mutex;
+    std::lock_guard<decltype(xserver_ready_mutex)> lock{xserver_ready_mutex};
     xserver_ready = false;
 
     struct sigaction action;
