@@ -5,4 +5,4 @@ add_subdirectory(miral-kiosk)
 add_subdirectory(miral-system-compositor)
 add_subdirectory(mir_demo_server)
 
-add_subdirectory(mirclient)
+add_subdirectory(client)
