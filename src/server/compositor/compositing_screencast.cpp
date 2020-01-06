@@ -180,12 +180,8 @@ mf::ScreencastSessionId mc::CompositingScreencast::create_session(
     int nbuffers,
     MirMirrorMode mirror_mode)
 {
-#ifdef MIR_EGL_SUPPORTED
-    static auto const buffer_usage = mg::BufferUsage::hardware;
-#else
     static auto const buffer_usage = mg::BufferUsage::software;
-#endif
-    
+
     if (size.width.as_int() == 0 ||
         size.height.as_int() == 0 ||
         region.size.width.as_int() == 0 ||

@@ -364,16 +364,6 @@ if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
   pkg_check_modules(EPOXY REQUIRED epoxy)
 endif()
 
-# This incantation gets the MIR_EGL_SUPPORTED default right for Mesa
-execute_process(COMMAND grep mir_toolkit /usr/include/EGL/eglplatform.h
-        OUTPUT_VARIABLE MIR_EGL_SUPPORTED_OUT)
-
-if (MIR_EGL_SUPPORTED_OUT STREQUAL "")
-  option(MIR_EGL_SUPPORTED "Build examples that depend on Mir EGL." OFF)
-else()
-  option(MIR_EGL_SUPPORTED "Build examples that depend on Mir EGL." ON)
-endif()
-
 if (MIR_BUILD_PLATFORM_WAYLAND)
   pkg_check_modules(EPOXY REQUIRED epoxy)
 endif()
@@ -392,9 +382,6 @@ else ()
 endif ()
 
 add_subdirectory(examples/)
-if (MIR_EGL_SUPPORTED)
-  add_subdirectory(playground/)
-endif()
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
 

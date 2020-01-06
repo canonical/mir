@@ -37,22 +37,6 @@ namespace mclm = mcl::mesa;
 
 namespace
 {
-// Re-export our own symbols from mesa.so.N globally so that Mesa itself can
-// find them with a simple dlsym(NULL,)
-void ensure_loaded_with_rtld_global_mesa_client()
-{
-#ifdef MIR_EGL_SUPPORTED
-    Dl_info info;
-
-    dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global_mesa_client), &info);
-    void* reexport_self_global =
-        dlopen(info.dli_fname, RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
-    // Yes, RTLD_NOLOAD does increase the ref count. So dlclose...
-    if (reexport_self_global)
-        dlclose(reexport_self_global);
-#endif
-}
-
 struct RealBufferFileOps : public mclm::BufferFileOps
 {
     int close(int fd) const
@@ -85,7 +69,6 @@ mir::UniqueModulePtr<mcl::ClientPlatform> create_client_platform(
     std::shared_ptr<mir::logging::Logger> const& /*logger*/)
 {
     mir::assert_entry_point_signature<mcl::CreateClientPlatform>(&create_client_platform);
-    ensure_loaded_with_rtld_global_mesa_client();
     MirPlatformPackage package;
     context->populate_server_package(package);
     if (package.data_items != 0 || package.fd_items != 1)

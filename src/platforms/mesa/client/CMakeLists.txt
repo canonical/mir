@@ -16,10 +16,6 @@ add_library(mirclientplatformmesaobjects OBJECT
   native_surface.cpp
 )
 
-if (MIR_EGL_SUPPORTED)
-    set_source_files_properties(client_platform_factory.cpp PROPERTIES COMPILE_DEFINITIONS MIR_EGL_SUPPORTED)
-endif()
-
 add_library(mirclientplatformmesa MODULE
   $<TARGET_OBJECTS:mirclientplatformmesaobjects>
 )
