@@ -100,7 +100,10 @@ void miral::BasicWindowManager::remove_session(std::shared_ptr<scene::Session> c
     auto info = app_info.find(session);
     if (info == app_info.end())
     {
-        log_warning("Removed unknwon session");
+        log_debug(
+            "BasicWindowManager::remove_session() called with unknown or already removed session %s (PID: %d)",
+            session->name().c_str(),
+            session->process_id());
         return;
     }
     policy->advise_delete_app(info->second);
