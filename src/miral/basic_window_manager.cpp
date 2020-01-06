@@ -202,11 +202,10 @@ void miral::BasicWindowManager::remove_surface(
         log_warning("Removed surface with unknwon session");
         return;
     }
-    if (!surface_known(surface))
-    {
-        log_warning("Unknown surface removed");
+
+    if (!surface_known(surface, "remove"))
         return;
-    }
+
     remove_window(session, info_for(surface));
 }
 
@@ -365,11 +364,10 @@ void miral::BasicWindowManager::handle_raise_surface(
     uint64_t timestamp)
 {
     Locker lock{this};
-    if (!surface_known(surface))
-    {
-        log_warning("Unknown surface raised");
+
+    if (!surface_known(surface, "raise"))
         return;
-    }
+
     if (timestamp >= last_input_event_timestamp)
         policy->handle_raise_window(info_for(surface));
 }
@@ -380,11 +378,10 @@ void miral::BasicWindowManager::handle_request_drag_and_drop(
     uint64_t timestamp)
 {
     Locker lock{this};
-    if (!surface_known(surface))
-    {
-        log_warning("Drag-and-drop requested on unknown surface");
+
+    if (!surface_known(surface, "drag-and-drop"))
         return;
-    }
+
     if (timestamp >= last_input_event_timestamp)
         policy->handle_request_drag_and_drop(info_for(surface));
 }
@@ -395,11 +392,10 @@ void miral::BasicWindowManager::handle_request_move(
     uint64_t timestamp)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    if (!surface_known(surface))
-    {
-        log_warning("Move requested on unknown surface");
+
+    if (!surface_known(surface, "move"))
         return;
-    }
+
     if (timestamp >= last_input_event_timestamp && last_input_event)
     {
         policy->handle_request_move(info_for(surface), mir_event_get_input_event(last_input_event));
@@ -413,11 +409,10 @@ void miral::BasicWindowManager::handle_request_resize(
     MirResizeEdge edge)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    if (!surface_known(surface))
-    {
-        log_warning("Resize requested on unknown surface");
+
+    if (!surface_known(surface, "resize"))
         return;
-    }
+
     if (timestamp >= last_input_event_timestamp && last_input_event)
     {
         policy->handle_request_resize(info_for(surface), mir_event_get_input_event(last_input_event), edge);
@@ -461,11 +456,8 @@ int miral::BasicWindowManager::set_surface_attribute(
     }
 
     Locker lock{this};
-    if (!surface_known(surface))
-    {
-        log_warning("Attempted to set attribute on unknwon surface");
+    if (!surface_known(surface, "set attribute"))
         return 0;
-    }
 
     auto& info = info_for(surface);
 
@@ -1649,9 +1641,30 @@ void miral::BasicWindowManager::drag_window(miral::Window const& window, Displac
     move_tree(window_info, movement);
 }
 
-auto miral::BasicWindowManager::surface_known(std::weak_ptr<scene::Surface> const& surface) -> bool
+auto miral::BasicWindowManager::surface_known(
+    std::weak_ptr<scene::Surface> const& surface,
+    std::string const& action) -> bool
 {
-    return window_info.find(surface) != window_info.end();
+    if (window_info.find(surface) != window_info.end())
+    {
+        return true;
+    }
+    else
+    {
+        std::string description;
+
+        if (auto const shared = surface.lock())
+            description = "unknown or removed surface " + shared->name();
+        else
+            description = "null surface";
+
+        log_debug(
+            "%s requested on %s",
+            action.c_str(),
+            description.c_str());
+
+        return false;
+    }
 }
 
 auto miral::BasicWindowManager::can_activate_window_for_session(miral::Application const& session) -> bool
