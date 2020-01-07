@@ -50,7 +50,6 @@ mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_window_t window)
 
 mf::XWaylandWMSurface::~XWaylandWMSurface()
 {
-    destroyed = true;
 }
 
 void mf::XWaylandWMSurface::dirty_properties()

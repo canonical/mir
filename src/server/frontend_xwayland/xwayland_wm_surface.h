@@ -160,7 +160,6 @@ private:
     bool fullscreen;
 
     bool overrideRedirect;
-    bool destroyed;
 
     //XWaylandWMSurface *transientFor;
 
