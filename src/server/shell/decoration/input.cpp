@@ -31,6 +31,10 @@ namespace geom = mir::geometry;
 namespace msh = mir::shell;
 namespace msd = mir::shell::decoration;
 
+using namespace std::chrono_literals;
+
+std::chrono::nanoseconds const msd::InputManager::double_click_threshold = 250ms;
+
 struct msd::InputManager::Observer
     : public ms::NullSurfaceObserver
 {
@@ -272,7 +276,7 @@ auto msd::InputManager::resize_edge_rect(
 void msd::InputManager::pointer_event(std::chrono::nanoseconds timestamp, geom::Point location, bool pressed)
 {
     std::lock_guard<std::mutex> lock{mutex};
-    last_timestamp = timestamp;
+    event_timestamp = timestamp;
     if (!pointer)
     {
         pointer = Device{location, pressed};
@@ -299,7 +303,7 @@ void msd::InputManager::pointer_event(std::chrono::nanoseconds timestamp, geom::
 void msd::InputManager::pointer_leave(std::chrono::nanoseconds timestamp)
 {
     std::lock_guard<std::mutex> lock{mutex};
-    last_timestamp = timestamp;
+    event_timestamp = timestamp;
     if (pointer)
         process_leave(pointer.value());
     pointer = std::experimental::nullopt;
@@ -308,7 +312,7 @@ void msd::InputManager::pointer_leave(std::chrono::nanoseconds timestamp)
 void msd::InputManager::touch_event(int32_t id, std::chrono::nanoseconds timestamp, geom::Point location)
 {
     std::lock_guard<std::mutex> lock{mutex};
-    last_timestamp = timestamp;
+    event_timestamp = timestamp;
     auto device = touches.find(id);
     if (device == touches.end())
     {
@@ -327,7 +331,7 @@ void msd::InputManager::touch_event(int32_t id, std::chrono::nanoseconds timesta
 void msd::InputManager::touch_up(int32_t id, std::chrono::nanoseconds timestamp)
 {
     std::lock_guard<std::mutex> lock{mutex};
-    last_timestamp = timestamp;
+    event_timestamp = timestamp;
     auto device = touches.find(id);
     if (device != touches.end())
     {
@@ -367,6 +371,7 @@ void msd::InputManager::process_up(Device& device)
     {
         widget_up(*device.active_widget.value());
     }
+    previous_up_timestamp = event_timestamp;
 }
 
 void msd::InputManager::process_move(Device& device)
@@ -445,6 +450,21 @@ void msd::InputManager::widget_up(Widget& widget)
 {
     if (widget.state == ButtonState::Down)
     {
+        if (previous_up_timestamp > 0ns &&
+            event_timestamp - previous_up_timestamp <= double_click_threshold)
+        {
+            // A double click happened
+
+            if (widget.resize_edge && widget.resize_edge == mir_resize_edge_none)
+            {
+                // Widget is the titlebar, so we should toggle maximization
+                decoration->spawn([](BasicDecoration* decoration)
+                    {
+                        decoration->request_toggle_maximize();
+                    });
+            }
+        }
+
         if (widget.button)
         {
             switch (widget.button.value())
@@ -489,14 +509,14 @@ void msd::InputManager::widget_drag(Widget& widget)
 
             if (edge == mir_resize_edge_none)
             {
-                decoration->spawn([timestamp = last_timestamp](BasicDecoration* decoration)
+                decoration->spawn([timestamp = event_timestamp](BasicDecoration* decoration)
                     {
                         decoration->request_move(timestamp);
                     });
             }
             else
             {
-                decoration->spawn([timestamp = last_timestamp, edge](BasicDecoration* decoration)
+                decoration->spawn([timestamp = event_timestamp, edge](BasicDecoration* decoration)
                     {
                         decoration->request_resize(timestamp, edge);
                     });
@@ -504,7 +524,7 @@ void msd::InputManager::widget_drag(Widget& widget)
         }
         else if (widget.button)
         {
-            decoration->spawn([timestamp = last_timestamp](BasicDecoration* decoration)
+            decoration->spawn([timestamp = event_timestamp](BasicDecoration* decoration)
                 {
                     decoration->request_move(timestamp);
                 });
