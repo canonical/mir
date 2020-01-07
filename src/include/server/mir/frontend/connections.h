@@ -48,12 +48,6 @@ public:
         connections.erase(id);
     }
 
-    bool includes(int id) const
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        return connections.find(id) != connections.end();
-    }
-
     void clear()
     {
         std::unique_lock<std::mutex> lock(mutex);
