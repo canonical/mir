@@ -103,10 +103,10 @@ struct ResizeWindow : mt::TestWindowManagerTools, WithParamInterface<ResizeParam
         Size old_size = window.size();
         Point result = window.top_left();
 
-        if (edge | mir_resize_edge_west)
+        if (edge & mir_resize_edge_west)
             result.x += old_size.width - new_size.width;
 
-        if (edge | mir_resize_edge_north)
+        if (edge & mir_resize_edge_north)
             result.y += old_size.height - new_size.height;
 
         return result;
