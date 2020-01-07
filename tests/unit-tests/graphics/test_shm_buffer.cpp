@@ -24,6 +24,8 @@
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/mock_egl.h"
 
+#include "check_gtest_version.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <GLES2/gl2ext.h>
@@ -144,105 +146,164 @@ TEST_F(ShmBufferTest, cant_upload_bgr_888)
     buf.bind();
 }
 
-TEST_F(ShmBufferTest, uploads_rgb_888_correctly)
+struct BufferUploadDesc
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_rgb_888, egl_delegate);
+    geom::Size size;
+    // TODO: Test uploads with stride_in_px != size.width
+    int stride_in_px;
+    MirPixelFormat format;
+    GLenum gl_format;
+    GLenum gl_type;
+};
 
-    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                                      size.width.as_int(), size.height.as_int(),
-                                      0, GL_RGB, GL_UNSIGNED_BYTE,
-                                      buf.pixel_buffer()));
+class UploadTest :
+    public ShmBufferTest,
+    public WithParamInterface<BufferUploadDesc>
+{
+};
+
+TEST_P(UploadTest, uploads_correctly)
+{
+    auto const desc = GetParam();
+
+    PlatformlessShmBuffer buf(
+        desc.size, desc.format, egl_delegate);
+
+    ExpectationSet gl_setup;
+    gl_setup +=
+        EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+    gl_setup +=
+        EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, desc.stride_in_px));
+
+    Expectation gl_use = EXPECT_CALL(
+        mock_gl,
+        glTexImage2D(
+            GL_TEXTURE_2D, 0,
+            desc.gl_format,
+            desc.size.width.as_int(), desc.size.height.as_int(),
+            0,
+            desc.gl_format, desc.gl_type,
+            buf.pixel_buffer()));
+
+    // Ensure we reset GL state to be polite to other users.
+    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT, 4))
+        .After(gl_use);
+    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0))
+        .After(gl_use);
 
     buf.bind();
+
 }
 
-TEST_F(ShmBufferTest, uploads_rgb_565_correctly)
+namespace
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_rgb_565, egl_delegate);
-    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT,
-                                       AnyOf(Eq(1),Eq(2))));
-    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-                                      size.width.as_int(), size.height.as_int(),
-                                      0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5,
-                                      buf.pixel_buffer()));
+geom::Size const default_size{245, 553};
 
-    buf.bind();
-}
-
-TEST_F(ShmBufferTest, uploads_rgba_5551_correctly)
-{
-    PlatformlessShmBuffer buf(size, mir_pixel_format_rgba_5551, egl_delegate);
-    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT,
-                                       AnyOf(Eq(1),Eq(2))));
-    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                                      size.width.as_int(), size.height.as_int(),
-                                      0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1,
-                                      buf.pixel_buffer()));
-
-    buf.bind();
-}
-
-TEST_F(ShmBufferTest, uploads_rgba_4444_correctly)
-{
-    PlatformlessShmBuffer buf(size, mir_pixel_format_rgba_4444, egl_delegate);
-    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT,
-                                       AnyOf(Eq(1),Eq(2))));
-    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                                      size.width.as_int(), size.height.as_int(),
-                                      0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4,
-                                      buf.pixel_buffer()));
-
-    buf.bind();
-}
-
-TEST_F(ShmBufferTest, uploads_xrgb_8888_correctly)
-{
-    PlatformlessShmBuffer buf(size, mir_pixel_format_xrgb_8888, egl_delegate);
+BufferUploadDesc const test_cases[] = {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT,
-                                      size.width.as_int(), size.height.as_int(),
-                                      0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
-                                      buf.pixel_buffer()));
+    BufferUploadDesc{
+        default_size,
+        default_size.width.as_int(),
+        mir_pixel_format_xrgb_8888,
+        GL_BGRA_EXT,
+        GL_UNSIGNED_BYTE
+    },
+    BufferUploadDesc{
+        default_size,
+        default_size.width.as_int(),
+        mir_pixel_format_argb_8888,
+        GL_BGRA_EXT,
+        GL_UNSIGNED_BYTE
+    },
+    BufferUploadDesc{
+        default_size,
+        default_size.width.as_int(),
+        mir_pixel_format_xbgr_8888,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE
+    },
+    BufferUploadDesc{
+        default_size,
+        default_size.width.as_int(),
+        mir_pixel_format_abgr_8888,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE
+    },
 #endif
-    buf.bind();
+    BufferUploadDesc {
+        default_size,
+        default_size.width.as_int(),
+        mir_pixel_format_rgb_888,
+        GL_RGB,
+        GL_UNSIGNED_BYTE
+    },
+    BufferUploadDesc{
+        default_size,
+        default_size.width.as_int(),
+        mir_pixel_format_rgb_565,
+        GL_RGB,
+        GL_UNSIGNED_SHORT_5_6_5
+    },
+    BufferUploadDesc{
+        default_size,
+        default_size.width.as_int(),
+        mir_pixel_format_rgba_5551,
+        GL_RGBA,
+        GL_UNSIGNED_SHORT_5_5_5_1
+    },
+    BufferUploadDesc{
+        default_size,
+        default_size.width.as_int(),
+        mir_pixel_format_rgba_4444,
+        GL_RGBA,
+        GL_UNSIGNED_SHORT_4_4_4_4
+    },
+};
 }
 
-TEST_F(ShmBufferTest, uploads_argb_8888_correctly)
+namespace std
 {
-    PlatformlessShmBuffer buf(size, mir_pixel_format_argb_8888, egl_delegate);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT,
-                                      size.width.as_int(), size.height.as_int(),
-                                      0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
-                                      buf.pixel_buffer()));
-#endif
-    buf.bind();
+std::string to_string(MirPixelFormat format)
+{
+    // TODO: Wouldn't it be nice if these were much more usable?
+    switch(format)
+    {
+#define ENUM_TO_STR(value) \
+    case value: return #value
+
+        ENUM_TO_STR(mir_pixel_format_invalid);
+        ENUM_TO_STR(mir_pixel_format_abgr_8888);
+        ENUM_TO_STR(mir_pixel_format_xbgr_8888);
+        ENUM_TO_STR(mir_pixel_format_argb_8888);
+        ENUM_TO_STR(mir_pixel_format_xrgb_8888);
+        ENUM_TO_STR(mir_pixel_format_bgr_888);
+        ENUM_TO_STR(mir_pixel_format_rgb_888);
+        ENUM_TO_STR(mir_pixel_format_rgb_565);
+        ENUM_TO_STR(mir_pixel_format_rgba_5551);
+        ENUM_TO_STR(mir_pixel_format_rgba_4444);
+#undef ENUM_TO_STR
+    default:
+        return "UNKNOWN MirPixelFormat";
+    }
+}
 }
 
-TEST_F(ShmBufferTest, uploads_xbgr_8888_correctly)
-{
-    PlatformlessShmBuffer buf(size, mir_pixel_format_xbgr_8888, egl_delegate);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                                      size.width.as_int(), size.height.as_int(),
-                                      0, GL_RGBA, GL_UNSIGNED_BYTE,
-                                      buf.pixel_buffer()));
+#if GTEST_AT_LEAST(1, 8, 0)
+INSTANTIATE_TEST_CASE_P(
+    ShmBuffer,
+    UploadTest,
+    ValuesIn(test_cases),
+    [](const testing::TestParamInfo<UploadTest::ParamType>& info)
+    {
+        return std::to_string(info.param.format);
+    });
+#else
+// TODO: The version of gtest in 16.04 doesn't have the “print the test nicely” option.
+INSTANTIATE_TEST_CASE_P(
+    ShmBuffer,
+    UploadTest,
+    ValuesIn(test_cases));
 #endif
-    buf.bind();
-}
-
-TEST_F(ShmBufferTest, uploads_abgr_8888_correctly)
-{
-    PlatformlessShmBuffer buf(size, mir_pixel_format_abgr_8888, egl_delegate);
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                                      size.width.as_int(), size.height.as_int(),
-                                      0, GL_RGBA, GL_UNSIGNED_BYTE,
-                                      buf.pixel_buffer()));
-#endif
-    buf.bind();
-}
 
 namespace
 {
