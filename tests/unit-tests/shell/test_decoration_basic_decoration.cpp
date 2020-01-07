@@ -46,6 +46,7 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 using namespace testing;
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -178,6 +179,7 @@ struct DecorationBasicDecoration
     void TearDown() override
     {
         basic_decoration.reset();
+        executor.execute();
     }
 
     NiceMock<MockShell> shell;
@@ -236,11 +238,15 @@ auto nine_points(geom::Size size) -> std::vector<std::vector<geom::Point>>
     return points;
 }
 
-auto pointer_event(MirPointerAction action, MirPointerButtons buttons_pressed, geom::Point position) -> mir::EventUPtr
+auto pointer_event(
+    MirPointerAction action,
+    MirPointerButtons buttons_pressed,
+    geom::Point position,
+    std::chrono::nanoseconds timestamp = 0ns) -> mir::EventUPtr
 {
     return mev::make_event(
         (MirInputDeviceId)1,
-        std::chrono::nanoseconds{0},
+        timestamp + 1s,
         std::vector<uint8_t>{},
         mir_input_event_modifier_none,
         action,
@@ -250,11 +256,15 @@ auto pointer_event(MirPointerAction action, MirPointerButtons buttons_pressed, g
         0, 0);
 }
 
-auto touch_event(MirTouchId touch_id, MirTouchAction action, geom::Point position) -> mir::EventUPtr
+auto touch_event(
+    MirTouchId touch_id,
+    MirTouchAction action,
+    geom::Point position,
+    std::chrono::nanoseconds timestamp = 0ns) -> mir::EventUPtr
 {
     auto ev = mev::make_event(
         (MirInputDeviceId)1,
-        std::chrono::nanoseconds{0},
+        timestamp + 1s,
         std::vector<uint8_t>{},
         mir_input_event_modifier_none);
     mev::add_touch(
@@ -560,7 +570,6 @@ TEST_F(DecorationBasicDecoration, restores_on_maximize_click_while_maximized)
     window_surface.configure(mir_window_attrib_state, mir_window_state_maximized);
     executor.execute();
     geom::Point const click_point{local_maximize_button_location};
-    std::shared_ptr<ms::Session> session_{session};
     std::shared_ptr<ms::Surface> window_surface_{mt::fake_shared(window_surface)};
     msh::SurfaceSpecification spec;
     EXPECT_CALL(shell, did_modify_surface(window_surface_, _))
@@ -587,6 +596,76 @@ TEST_F(DecorationBasicDecoration, minimizes_on_minimize_click)
     decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point));
     ASSERT_TRUE(spec.state.is_set());
     EXPECT_THAT(spec.state.value(), Eq(mir_window_state_minimized));
+}
+
+TEST_F(DecorationBasicDecoration, maximizes_on_titlebar_double_click)
+{
+    geom::Point const click_point{local_point_on_titlebar};
+    std::shared_ptr<ms::Surface> window_surface_{mt::fake_shared(window_surface)};
+    msh::SurfaceSpecification spec;
+    EXPECT_CALL(shell, did_modify_surface(window_surface_, _))
+        .Times(1)
+        .WillOnce(SaveArg<1>(&spec));
+    std::chrono::nanoseconds t{0};
+    decoration_event(pointer_event(mir_pointer_action_enter, (MirPointerButtons)0, click_point, t += 0ms));
+    decoration_event(pointer_event(mir_pointer_action_button_down, mir_pointer_button_primary, click_point, t += 100ms));
+    decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point, t += 9ms));
+    decoration_event(pointer_event(mir_pointer_action_button_down, mir_pointer_button_primary, click_point, t += 90ms));
+    decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point, t += 9ms));
+    ASSERT_TRUE(spec.state.is_set());
+    EXPECT_THAT(spec.state.value(), Eq(mir_window_state_maximized));
+}
+
+TEST_F(DecorationBasicDecoration, restores_on_titlebar_double_click_while_maximized)
+{
+    window_surface.configure(mir_window_attrib_state, mir_window_state_maximized);
+    executor.execute();
+    geom::Point const click_point{local_point_on_titlebar};
+    std::shared_ptr<ms::Surface> window_surface_{mt::fake_shared(window_surface)};
+    msh::SurfaceSpecification spec;
+    EXPECT_CALL(shell, did_modify_surface(window_surface_, _))
+        .Times(1)
+        .WillOnce(SaveArg<1>(&spec));
+    std::chrono::nanoseconds t{0};
+    decoration_event(pointer_event(mir_pointer_action_enter, (MirPointerButtons)0, click_point, t += 0ms));
+    decoration_event(pointer_event(mir_pointer_action_button_down, mir_pointer_button_primary, click_point, t += 100ms));
+    decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point, t += 9ms));
+    decoration_event(pointer_event(mir_pointer_action_button_down, mir_pointer_button_primary, click_point, t += 90ms));
+    decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point, t += 9ms));
+    ASSERT_TRUE(spec.state.is_set());
+    EXPECT_THAT(spec.state.value(), Eq(mir_window_state_restored));
+}
+
+TEST_F(DecorationBasicDecoration, maximizes_on_titlebar_double_tap)
+{
+    geom::Point const tap_point{local_point_on_titlebar};
+    int32_t const touch_id{1};
+    std::shared_ptr<ms::Surface> window_surface_{mt::fake_shared(window_surface)};
+    msh::SurfaceSpecification spec;
+    EXPECT_CALL(shell, did_modify_surface(window_surface_, _))
+        .Times(1)
+        .WillOnce(SaveArg<1>(&spec));
+    std::chrono::nanoseconds t{0};
+    decoration_event(touch_event(touch_id, mir_touch_action_down, tap_point, t += 100ms));
+    decoration_event(touch_event(touch_id, mir_touch_action_up, tap_point, t += 9ms));
+    decoration_event(touch_event(touch_id, mir_touch_action_down, tap_point, t += 90ms));
+    decoration_event(touch_event(touch_id, mir_touch_action_up, tap_point, t += 9ms));
+    ASSERT_TRUE(spec.state.is_set());
+    EXPECT_THAT(spec.state.value(), Eq(mir_window_state_maximized));
+}
+
+TEST_F(DecorationBasicDecoration, does_not_maximize_on_slow_titlebar_double_click)
+{
+    geom::Point const click_point{local_point_on_titlebar};
+    std::shared_ptr<ms::Surface> window_surface_{mt::fake_shared(window_surface)};
+    EXPECT_CALL(shell, did_modify_surface(window_surface_, _))
+        .Times(0);
+    std::chrono::nanoseconds t{0};
+    decoration_event(pointer_event(mir_pointer_action_enter, (MirPointerButtons)0, click_point, t += 0ms));
+    decoration_event(pointer_event(mir_pointer_action_button_down, mir_pointer_button_primary, click_point, t += 100ms));
+    decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point, t += 9ms));
+    decoration_event(pointer_event(mir_pointer_action_button_down, mir_pointer_button_primary, click_point, t += 1500ms));
+    decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point, t += 9ms));
 }
 
 TEST_P(ResizeBasicDecoration, resizes_on_pointer_drag)

@@ -115,6 +115,8 @@ public:
     auto state() -> std::unique_ptr<InputState>;
 
 private:
+    static std::chrono::nanoseconds const double_click_threshold;
+
     InputManager(InputManager const&) = delete;
     InputManager& operator=(InputManager const&) = delete;
 
@@ -135,7 +137,10 @@ private:
     std::shared_ptr<Observer> const observer;
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> decoration;
     std::vector<geometry::Rectangle> input_shape;
-    std::chrono::nanoseconds last_timestamp;
+    /// Timestamp of the most recent event, or the event currently being processed
+    std::chrono::nanoseconds event_timestamp{0};
+    /// Timestamp of the previous up event (not the one currently being processed)
+    std::chrono::nanoseconds previous_up_timestamp{0};
     std::string current_cursor_name{""};
 
     struct Widget
