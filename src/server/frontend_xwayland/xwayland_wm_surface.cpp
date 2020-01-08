@@ -52,7 +52,14 @@ auto wm_resize_edge_to_mir_resize_edge(uint32_t wm_resize_edge) -> std::experime
 }
 
 mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event_t *event)
-    : xwm(wm), window(event->window), props_dirty(true)
+    : xwm(wm),
+      window(event->window),
+      props_dirty(true),
+      init{
+          event->parent,
+          {event->x, event->y},
+          {event->width, event->height},
+          (bool)event->override_redirect}
 {
     uint32_t values[1];
     xcb_get_geometry_cookie_t geometry_cookie;

@@ -159,6 +159,14 @@ private:
 
     struct
     {
+        xcb_window_t parent;
+        geometry::Point position;
+        geometry::Size size;
+        bool override_redirect;
+    } const init;
+
+    struct
+    {
         std::string title;
         std::string appId;
         int deleteWindow;
