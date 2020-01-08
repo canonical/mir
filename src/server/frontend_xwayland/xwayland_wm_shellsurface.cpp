@@ -70,6 +70,7 @@ void mf::XWaylandWMShellSurface::set_transient(struct wl_resource* parent, int32
     (void)flags;
     mir::log_verbose("set transidient");
 }
+
 void mf::XWaylandWMShellSurface::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
                                                geometry::Size const& new_size)
 {
@@ -81,33 +82,6 @@ void mf::XWaylandWMShellSurface::handle_resize(std::experimental::optional<geome
 void mf::XWaylandWMShellSurface::handle_close_request()
 {
     surface->send_close_request();
-}
-
-// This is just a wrapper to avoid needing nullptr to use this method
-void mf::XWaylandWMShellSurface::set_fullscreen()
-{
-    WindowWlSurfaceRole::set_fullscreen(nullptr);
-    mir::log_verbose("set fullscreen");
-}
-
-void mf::XWaylandWMShellSurface::set_popup(
-    struct wl_resource* /*seat*/, uint32_t /*serial*/, struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
-{
-    (void)parent;
-    (void)x;
-    (void)y;
-    (void)flags;
-    // TODO
-}
-
-void mf::XWaylandWMShellSurface::set_title(std::string const& title)
-{
-    WindowWlSurfaceRole::set_title(title);
-}
-
-void mf::XWaylandWMShellSurface::move()
-{
-    WindowWlSurfaceRole::initiate_interactive_move();
 }
 
 void mf::XWaylandWMShellSurface::resize(uint32_t edges)
@@ -151,5 +125,5 @@ void mf::XWaylandWMShellSurface::resize(uint32_t edges)
     default:;
     }
 
-    WindowWlSurfaceRole::initiate_interactive_resize(edge);
+    initiate_interactive_resize(edge);
 }

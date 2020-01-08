@@ -255,7 +255,7 @@ void mf::XWaylandWMSurface::move_resize(uint32_t detail)
   switch (detail)
   {
   case _NET_WM_MOVERESIZE_MOVE:
-      shell_surface->move();
+      shell_surface->initiate_interactive_move();
       mir::log_verbose("Move!");
       break;
   case _NET_WM_MOVERESIZE_SIZE_TOPLEFT:
