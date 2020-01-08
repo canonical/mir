@@ -79,7 +79,10 @@ mf::XWaylandServer::~XWaylandServer()
       {
           std::this_thread::sleep_for(100ms);// After 100ms...
           if (kill(pid, 0) == 0)    // ...if Xwayland is still running...
-            kill(pid, SIGKILL);     // ...then kill it!
+          {
+              mir::log_info("Xwayland didn't close, killing it");
+              kill(pid, SIGKILL);     // ...then kill it!
+          }
       }
     }
 
@@ -311,7 +314,12 @@ void mf::XWaylandServer::connect_wm_to_xwayland(int wl_client_server_fd, int wm_
         xserver_status = FAILED;
     }
 
-    if (terminate) return;
+    if (terminate)
+    {
+        xserver_status = STOPPED;   // We don't want to retry Xwayland
+        return;
+    }
+
     wm->destroy();
 }
 
