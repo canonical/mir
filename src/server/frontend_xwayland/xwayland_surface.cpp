@@ -32,6 +32,8 @@
 #include <experimental/optional>
 
 namespace mf = mir::frontend;
+namespace msh = mir::shell;
+namespace ms = mir::scene;
 namespace geom = mir::geometry;
 
 namespace
@@ -67,6 +69,22 @@ auto wm_resize_edge_to_mir_resize_edge(uint32_t wm_resize_edge) -> std::experime
     default:                                    return std::experimental::nullopt;
     }
 }
+
+template<typename T>
+auto property_handler(
+    std::shared_ptr<mf::XCBConnection> const& connection,
+    xcb_window_t window,
+    xcb_atom_t property,
+    std::function<void(T)>&& handler,
+    std::function<void()>&& on_error = [](){}) -> std::pair<xcb_atom_t, std::function<std::function<void()>()>>
+{
+    return std::make_pair(
+        property,
+        [connection, window, property, handler = move(handler), on_error = move(on_error)]()
+        {
+            return connection->read_property(window, property, handler, on_error);
+        });
+}
 }
 
 struct mf::XWaylandSurface::InitialWlSurfaceData
@@ -86,7 +104,73 @@ mf::XWaylandSurface::XWaylandSurface(
       seat(seat),
       shell{shell},
       window(event->window),
-      props_dirty(true),
+      property_handlers{
+          property_handler<std::string const&>(
+              connection,
+              window,
+              XCB_ATOM_WM_CLASS,
+              [this](auto value)
+              {
+                  std::lock_guard<std::mutex> lock{mutex};
+                  pending_spec(lock).application_id = value;
+              }),
+          property_handler<std::string const&>(
+              connection,
+              window,
+              XCB_ATOM_WM_NAME,
+              [this](auto value)
+              {
+                  std::lock_guard<std::mutex> lock{mutex};
+                  pending_spec(lock).name = value;
+              }),
+          property_handler<std::string const&>(
+              connection,
+              window,
+              connection->net_wm_name,
+              [this](auto value)
+              {
+                  std::lock_guard<std::mutex> lock{mutex};
+                  pending_spec(lock).name = value;
+              }),
+          property_handler<xcb_window_t>(
+              connection,
+              window,
+              connection->wm_transient_for,
+              [this](xcb_window_t value)
+              {
+                  std::shared_ptr<scene::Surface> parent_scene_surface;
+
+                  auto const parent_surface = xwm->get_wm_surface(value);
+                  if (parent_surface)
+                  {
+                      std::lock_guard<std::mutex> parent_lock{parent_surface.value()->mutex};
+                      parent_scene_surface = parent_surface.value()->weak_scene_surface.lock();
+                  }
+
+                  {
+                      std::lock_guard<std::mutex> lock{mutex};
+                      pending_spec(lock).parent = parent_scene_surface;
+                  }
+              },
+              [this]()
+              {
+                  std::lock_guard<std::mutex> lock{mutex};
+                  pending_spec(lock).parent = std::weak_ptr<scene::Surface>{};
+              }),
+          property_handler<std::vector<xcb_atom_t> const&>(
+              connection,
+              window,
+              connection->wm_protocols,
+              [this](std::vector<xcb_atom_t> const& value)
+              {
+                  std::lock_guard<std::mutex> lock{mutex};
+                  supported_wm_protocols = std::set<xcb_atom_t>{value.begin(), value.end()};
+              },
+              [this]()
+              {
+                  std::lock_guard<std::mutex> lock{mutex};
+                  supported_wm_protocols.clear();
+              })},
       init{
           event->parent,
           {event->x, event->y},
@@ -323,10 +407,30 @@ void mf::XWaylandSurface::wm_change_state_client_message(uint32_t const (&data)[
     request_scene_surface_state(new_window_state.mir_window_state());
 }
 
-void mf::XWaylandSurface::dirty_properties()
+void mf::XWaylandSurface::property_notify(xcb_atom_t property)
 {
-    std::lock_guard<std::mutex> lock{mutex};
-    props_dirty = true;
+    auto const handler = property_handlers.find(property);
+    if (handler != property_handlers.end())
+    {
+        std::shared_ptr<scene::Surface> scene_surface;
+        std::experimental::optional<std::unique_ptr<shell::SurfaceSpecification>> spec;
+
+        {
+            std::lock_guard<std::mutex> lock{mutex};
+            scene_surface = weak_scene_surface.lock();
+            spec = consume_pending_spec(lock);
+        }
+
+        if (scene_surface)
+        {
+            auto completion = handler->second();
+            completion();
+            if (spec)
+            {
+                shell->modify_surface(scene_surface->session().lock(), scene_surface, *spec.value());
+            }
+        }
+    }
 }
 
 void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
@@ -355,64 +459,6 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     // If a buffer has alread been committed, we need to create the scene::Surface without waiting for next commit
     if (wl_surface->buffer_size())
         create_scene_surface_if_needed();
-}
-
-void mf::XWaylandSurface::read_properties()
-{
-    std::lock_guard<std::mutex> lock{mutex};
-
-    if (!props_dirty)
-        return;
-    props_dirty = false;
-
-    std::vector<std::function<void()>> actions;
-
-    actions.push_back(connection->read_property(
-        window,
-        XCB_ATOM_WM_CLASS,
-        [this](std::string const& value)
-        {
-            properties.appId = value;
-        }));
-
-    actions.push_back(connection->read_property(
-        window,
-        XCB_ATOM_WM_NAME,
-        [this](std::string const& value)
-        {
-            properties.title = value;
-        }));
-
-    actions.push_back(connection->read_property(
-        window,
-        connection->net_wm_name,
-        [this](std::string const& value)
-        {
-            properties.title = value;
-        }));
-
-    properties.deleteWindow = false;
-
-    actions.push_back(connection->read_property(
-        window,
-        connection->wm_protocols,
-        [this](std::vector<xcb_atom_t> const& value)
-        {
-            if (std::find(value.begin(), value.end(), connection->wm_delete_window) != value.end())
-            {
-                properties.deleteWindow = true;
-            }
-        }));
-
-    // TODO: XCB_ATOM_WM_TRANSIENT_FOR
-    // TODO: wm_normal_hints
-    // TODO: net_wm_window_type
-    // TODO: motif_wm_hints
-
-    for (auto const& action : actions)
-    {
-        action();
-    }
 }
 
 void mf::XWaylandSurface::move_resize(uint32_t detail)
@@ -564,8 +610,25 @@ auto mf::XWaylandSurface::scene_surface() const -> std::experimental::optional<s
         return std::experimental::nullopt;
 }
 
+auto mf::XWaylandSurface::pending_spec(std::lock_guard<std::mutex> const&) -> msh::SurfaceSpecification&
+{
+    if (!nullable_pending_spec)
+        nullable_pending_spec = std::make_unique<msh::SurfaceSpecification>();
+    return *nullable_pending_spec;
+}
+
+auto mf::XWaylandSurface::consume_pending_spec(
+    std::lock_guard<std::mutex> const&) -> std::experimental::optional<std::unique_ptr<msh::SurfaceSpecification>>
+{
+    if (nullable_pending_spec)
+        return move(nullable_pending_spec);
+    else
+        return std::experimental::nullopt;
+}
+
 void mf::XWaylandSurface::create_scene_surface_if_needed()
 {
+    WindowState state;
     scene::SurfaceCreationParameters params;
     std::shared_ptr<scene::SurfaceObserver> observer;
     std::shared_ptr<scene::Session> session;
@@ -584,6 +647,9 @@ void mf::XWaylandSurface::create_scene_surface_if_needed()
             return;
         }
 
+        state = window_state;
+        state.withdrawn = false;
+
         observer = surface_observer.value();
 
         params.streams = std::move(initial_wl_surface_data.value()->streams);
@@ -591,15 +657,61 @@ void mf::XWaylandSurface::create_scene_surface_if_needed()
         initial_wl_surface_data = std::experimental::nullopt;
 
         params.type = mir_window_type_freestyle;
-        if (!properties.title.empty())
-            params.name = properties.title;
-        if (!properties.appId.empty())
-            params.application_id = properties.appId;
-        params.size = init.size;
-        params.server_side_decorated = true;
+        params.state = state.mir_window_state();
+    }
+
+    std::vector<std::function<void()>> reply_functions;
+
+    auto const geom_cookie = xcb_get_geometry(*connection, window);
+    reply_functions.push_back([this, &params, geom_cookie]()
+        {
+            auto const reply = xcb_get_geometry_reply(*connection, geom_cookie, nullptr);
+            if (reply)
+            {
+                params.top_left = {reply->x, reply->y};
+                params.size = {reply->width, reply->height};
+                free(reply);
+            }
+        });
+
+    auto const window_attrib_cookie = xcb_get_window_attributes(*connection, window);
+    reply_functions.push_back([this, &params, window_attrib_cookie]
+        {
+            auto const reply = xcb_get_window_attributes_reply(*connection, window_attrib_cookie, nullptr);
+            if (reply)
+            {
+                params.server_side_decorated = !reply->override_redirect;
+                free(reply);
+            }
+        });
+
+    // Read all properties
+    for (auto const& handler : property_handlers)
+    {
+        reply_functions.push_back(handler.second());
+    }
+
+    // Wait for and process all the XCB replies
+    for (auto const& reply_function : reply_functions)
+    {
+        reply_function();
+    }
+
+    // property_handlers will have updated the pending spec. Use it.
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (auto const spec = consume_pending_spec(lock))
+        {
+            params.update_from(*spec.value());
+        }
     }
 
     auto const surface = shell->create_surface(session, params, observer);
+    inform_client_of_window_state(state);
+    connection->configure_window(
+        window,
+        surface->top_left() + surface->content_offset(),
+        surface->content_size());
 
     {
         std::lock_guard<std::mutex> lock{mutex};

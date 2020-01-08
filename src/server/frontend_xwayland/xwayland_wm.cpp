@@ -442,7 +442,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 
     if (auto const surface = get_wm_surface(event->window))
     {
-        surface.value()->dirty_properties();
+        surface.value()->property_notify(event->atom);
     }
 }
 
@@ -531,7 +531,6 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
 
     if (auto const surface = get_wm_surface(event->window))
     {
-        surface.value()->read_properties();
         surface.value()->map();
     }
 }
