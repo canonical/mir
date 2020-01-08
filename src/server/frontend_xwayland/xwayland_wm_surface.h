@@ -155,8 +155,6 @@ private:
     bool maximized;
     bool fullscreen;
 
-    bool overrideRedirect;
-
     //XWaylandWMSurface *transientFor;
 
     struct
@@ -165,8 +163,6 @@ private:
         std::string appId;
         int deleteWindow;
     } properties;
-
-    bool decorate;
 };
 } /* frontend */
 } /* mir */

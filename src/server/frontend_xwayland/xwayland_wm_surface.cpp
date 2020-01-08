@@ -167,11 +167,6 @@ void mf::XWaylandWMSurface::read_properties()
 
     properties.deleteWindow = 0;
 
-    if (overrideRedirect)
-    {
-        decorate = false;
-    }
-
     mir::log_verbose("Properties:");
 
     for (const auto &atom_ptr : props)
