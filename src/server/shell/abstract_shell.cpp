@@ -134,7 +134,10 @@ void msh::AbstractShell::close_session(
     // this is an ugly kludge to remove the each of the surfaces owned by the session
     // We could likely do this better (and atomically) within the WindowManager
     for (auto const& surface : surfaces)
+    {
+        decoration_manager->undecorate(surface);
         window_manager->remove_surface(session, surface);
+    }
 
     session_coordinator->close_session(session);
     window_manager->remove_session(session);
