@@ -99,7 +99,7 @@ void mf::XWaylandWMSurface::set_surface(WlSurface *wls)
     if (!properties.title.empty())
       shell_surface->set_title(properties.title);
 
-    shell_surface->set_toplevel();
+    shell_surface->set_state_now(mir_window_state_restored);
     xcb_flush(xwm->get_xcb_connection());
 }
 

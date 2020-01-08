@@ -41,8 +41,6 @@ public:
         OutputManager* const output_manager);
     ~XWaylandWMShellSurface();
 
-    void set_toplevel();
-
 protected:
     void destroy() override;
     void handle_commit() override {};

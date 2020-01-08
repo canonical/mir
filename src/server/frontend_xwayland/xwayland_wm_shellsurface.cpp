@@ -55,11 +55,6 @@ void mf::XWaylandWMShellSurface::destroy()
 
 }
 
-void mf::XWaylandWMShellSurface::set_toplevel()
-{
-    set_state_now(MirWindowState::mir_window_state_restored);
-}
-
 void mf::XWaylandWMShellSurface::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
                                                geometry::Size const& new_size)
 {
