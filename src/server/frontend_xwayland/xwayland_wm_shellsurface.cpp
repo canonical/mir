@@ -32,12 +32,14 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 mf::XWaylandWMShellSurface::XWaylandWMShellSurface(
+    XWaylandWMSurface* xwayland_surface,
     wl_client* client,
-    WlSurface* surface,
+    WlSurface* wayland_surface,
     std::shared_ptr<msh::Shell> const& shell,
     WlSeat& seat,
     OutputManager* const output_manager)
-    : WindowWlSurfaceRole{&seat, client, surface, shell, output_manager}
+    : WindowWlSurfaceRole{&seat, client, wayland_surface, shell, output_manager},
+      surface{xwayland_surface}
 {
 //    params->type = mir_window_type_normal;
     set_server_side_decorated(true);
@@ -58,10 +60,6 @@ void mf::XWaylandWMShellSurface::set_toplevel()
     set_state_now(MirWindowState::mir_window_state_restored);
 }
 
-void mf::XWaylandWMShellSurface::set_surface(XWaylandWMSurface *sur) {
-    surface = sur;
-}
-
 void mf::XWaylandWMShellSurface::set_transient(struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
 {
     (void)parent;
@@ -74,9 +72,7 @@ void mf::XWaylandWMShellSurface::set_transient(struct wl_resource* parent, int32
 void mf::XWaylandWMShellSurface::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
                                                geometry::Size const& new_size)
 {
-    mir::log_verbose("handle resize");
-    if (surface != NULL)
-      surface->send_resize(new_size);
+    surface->send_resize(new_size);
 }
 
 void mf::XWaylandWMShellSurface::handle_close_request()

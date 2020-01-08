@@ -33,16 +33,16 @@ class XWaylandWMShellSurface : public WindowWlSurfaceRole
 {
 public:
     XWaylandWMShellSurface(
+        XWaylandWMSurface* xwayland_surface,
         wl_client* client,
-        WlSurface* surface,
+        WlSurface* wayland_surface,
         std::shared_ptr<shell::Shell> const& shell,
         WlSeat& seat,
         OutputManager* const output_manager);
     ~XWaylandWMShellSurface();
 
-    void resize(uint32_t edges);
     void set_toplevel();
-    void set_surface(XWaylandWMSurface* sur);
+    void resize(uint32_t edges);
 
 protected:
     void destroy() override;
@@ -54,7 +54,7 @@ protected:
     void handle_close_request() override;
 
 private:
-    XWaylandWMSurface *surface;
+    XWaylandWMSurface* const surface;
 };
 } /* frontend */
 } /* mir */

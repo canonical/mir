@@ -38,9 +38,16 @@ mf::XWaylandWMShell::XWaylandWMShell(
 {
 }
 
-std::shared_ptr<mf::XWaylandWMShellSurface> mf::XWaylandWMShell::get_shell_surface(wl_client* client,
-                                                                                   WlSurface* surface)
+std::shared_ptr<mf::XWaylandWMShellSurface> mf::XWaylandWMShell::build_shell_surface(
+    XWaylandWMSurface* xwayland_surface,
+    wl_client* client,
+    WlSurface* surface)
 {
-    return std::make_shared<mf::XWaylandWMShellSurface>(client, surface, shell,
-                                                        seat, output_manager);
+    return std::make_shared<mf::XWaylandWMShellSurface>(
+        xwayland_surface,
+        client,
+        surface,
+        shell,
+        seat,
+        output_manager);
 }
