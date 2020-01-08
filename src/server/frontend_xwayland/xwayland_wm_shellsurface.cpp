@@ -60,15 +60,6 @@ void mf::XWaylandWMShellSurface::set_toplevel()
     set_state_now(MirWindowState::mir_window_state_restored);
 }
 
-void mf::XWaylandWMShellSurface::set_transient(struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
-{
-    (void)parent;
-    (void)x;
-    (void)y;
-    (void)flags;
-    mir::log_verbose("set transidient");
-}
-
 void mf::XWaylandWMShellSurface::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
                                                geometry::Size const& new_size)
 {
