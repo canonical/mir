@@ -459,7 +459,7 @@ void mf::XWaylandWM::handle_change_state(std::shared_ptr<XWaylandWMSurface> surf
     mir::log_verbose("Handle change state");
 
     if (event->data.data32[0] == 3)
-        surface->get_shell_surface()->set_state_now(mir_window_state_minimized);
+        surface->set_state(mir_window_state_minimized);
 }
 
 void mf::XWaylandWM::handle_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)

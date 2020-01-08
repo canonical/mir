@@ -279,6 +279,11 @@ void mf::XWaylandWMSurface::move_resize(uint32_t detail)
         mir::log_warning("XWaylandWMSurface::move_resize() called with unknown detail %d", detail);
 }
 
+void mf::XWaylandWMSurface::set_state(MirWindowState state)
+{
+    shell_surface->set_state_now(state);
+}
+
 void mf::XWaylandWMSurface::send_resize(const geometry::Size& new_size)
 {
     uint32_t mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
