@@ -26,10 +26,30 @@
 #include <wayland-client-core.h>
 #include <wayland-client.h>
 #include <string.h>
+#include <experimental/optional>
 
 #include <map>
 
 namespace mf = mir::frontend;
+
+namespace
+{
+auto wm_resize_edge_to_mir_resize_edge(uint32_t wm_resize_edge) -> std::experimental::optional<MirResizeEdge>
+{
+    switch (wm_resize_edge)
+    {
+    case _NET_WM_MOVERESIZE_SIZE_TOP:           return mir_resize_edge_north;
+    case _NET_WM_MOVERESIZE_SIZE_BOTTOM:        return mir_resize_edge_south;
+    case _NET_WM_MOVERESIZE_SIZE_LEFT:          return mir_resize_edge_west;
+    case _NET_WM_MOVERESIZE_SIZE_TOPLEFT:       return mir_resize_edge_northwest;
+    case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT:    return mir_resize_edge_southwest;
+    case _NET_WM_MOVERESIZE_SIZE_RIGHT:         return mir_resize_edge_east;
+    case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT:      return mir_resize_edge_northeast;
+    case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:   return mir_resize_edge_southeast;
+    default:                                    return std::experimental::nullopt;
+    }
+}
+}
 
 mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event_t *event)
     : xwm(wm), window(event->window), props_dirty(true)
@@ -251,26 +271,12 @@ void mf::XWaylandWMSurface::read_properties()
 
 void mf::XWaylandWMSurface::move_resize(uint32_t detail)
 {
-  switch (detail)
-  {
-  case _NET_WM_MOVERESIZE_MOVE:
-      shell_surface->initiate_interactive_move();
-      mir::log_verbose("Move!");
-      break;
-  case _NET_WM_MOVERESIZE_SIZE_TOPLEFT:
-  case _NET_WM_MOVERESIZE_SIZE_TOP:
-  case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT:
-  case _NET_WM_MOVERESIZE_SIZE_RIGHT:
-  case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:
-  case _NET_WM_MOVERESIZE_SIZE_BOTTOM:
-  case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT:
-  case _NET_WM_MOVERESIZE_SIZE_LEFT:
-      shell_surface->resize(detail);
-      mir::log_verbose("resize!");
-      break;
-  default:
-      break;
-  }
+    if (detail == _NET_WM_MOVERESIZE_MOVE)
+        shell_surface->initiate_interactive_move();
+    else if (auto const edge = wm_resize_edge_to_mir_resize_edge(detail))
+        shell_surface->initiate_interactive_resize(edge.value());
+    else
+        mir::log_warning("XWaylandWMSurface::move_resize() called with unknown detail %d", detail);
 }
 
 void mf::XWaylandWMSurface::send_resize(const geometry::Size& new_size)

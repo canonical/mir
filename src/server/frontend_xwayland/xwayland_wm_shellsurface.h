@@ -42,7 +42,6 @@ public:
     ~XWaylandWMShellSurface();
 
     void set_toplevel();
-    void resize(uint32_t edges);
 
 protected:
     void destroy() override;
