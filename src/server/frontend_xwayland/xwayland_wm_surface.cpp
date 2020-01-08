@@ -31,8 +31,8 @@
 
 namespace mf = mir::frontend;
 
-mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_window_t window)
-    : xwm(wm), window(window), props_dirty(true)
+mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event_t *event)
+    : xwm(wm), window(event->window), props_dirty(true)
 {
     uint32_t values[1];
     xcb_get_geometry_cookie_t geometry_cookie;

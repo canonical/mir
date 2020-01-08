@@ -127,7 +127,7 @@ public:
         IconicState = 3
     };
 
-    XWaylandWMSurface(XWaylandWM *wm, xcb_window_t window);
+    XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event_t *event);
     ~XWaylandWMSurface();
     void dirty_properties();
     void read_properties();

@@ -246,11 +246,6 @@ void mf::XWaylandWM::set_net_active_window(xcb_window_t window)
                         xcb_atom.window, 32, 1, &window);
 }
 
-void mf::XWaylandWM::create_window(xcb_window_t id)
-{
-    surfaces[id] = std::make_shared<XWaylandWMSurface>(this, id);
-}
-
 /* Events */
 void mf::XWaylandWM::handle_events()
 {
@@ -357,9 +352,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 
 void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 {
-    mir::log_verbose("XCB_CREATE_NOTIFY (window %d, at (%d, %d), width %d, height %d %s)", event->window, event->x,
-                     event->y, event->width, event->height, event->override_redirect ? ", override" : "");
-    create_window(event->window);
+    surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
 }
 
 void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
