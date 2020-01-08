@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -55,12 +55,9 @@ struct CompositorPerformance : SystemPerformanceTest
 
 TEST_F(CompositorPerformance, regression_test_1563287)
 {
-    spawn_clients({"mir_demo_client_flicker",
-                   "mir_demo_client_egltriangle -b0.5 -f",
-                   "mir_demo_client_progressbar",
-                   "mir_demo_client_scroll",
-                   "mir_demo_client_egltriangle -b0.5",
-                   "mir_demo_client_multiwin"});
+    spawn_clients({"mir_demo_client_wayland", "mir_demo_client_wayland_egl_spinner",
+                   "mir_demo_client_wayland", "mir_demo_client_wayland_egl_spinner",
+                   "mir_demo_client_wayland", "mir_demo_client_wayland_egl_spinner"});
     run_server_for(10s);
 
     read_compositor_report();
