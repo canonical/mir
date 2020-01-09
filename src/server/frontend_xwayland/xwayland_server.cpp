@@ -291,8 +291,7 @@ void mf::XWaylandServer::connect_wm_to_xwayland(
         return;
     }
 
-    std::shared_ptr<XWaylandWM> const wm{std::make_shared<XWaylandWM>(wlc)};
-    wm->start(client, wm_server_fd);
+    XWaylandWM wm{wlc, client, wm_server_fd};
     mir::log_info("XServer is running");
     spawn_thread_xserver_status = RUNNING;
     auto const pid = spawn_thread_pid; // For clarity only as this is only written on this thread
@@ -311,8 +310,6 @@ void mf::XWaylandServer::connect_wm_to_xwayland(
         mir::log_info("Xserver crashed or got killed");
         spawn_thread_xserver_status = FAILED;
     }
-
-    wm->destroy();
 }
 
 namespace

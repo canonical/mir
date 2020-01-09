@@ -78,15 +78,19 @@ static const struct cursor_alternatives cursors[] = {
 
 namespace mf = mir::frontend;
 
-mf::XWaylandWM::XWaylandWM(std::shared_ptr<mf::WaylandConnector> wc)
+mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wc, wl_client* wlc, int fd)
     : wlc(wc),
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
+      wlclient{wlc},
+      wm_fd{fd},
       xcb_connection(nullptr)
 {
+    start();
 }
 
 mf::XWaylandWM::~XWaylandWM()
 {
+    destroy();
 }
 
 void mf::XWaylandWM::destroy() {
@@ -106,13 +110,10 @@ void mf::XWaylandWM::destroy() {
   close(wm_fd);
 }
 
-void mf::XWaylandWM::start(wl_client *wlc, const int fd)
+void mf::XWaylandWM::start()
 {
     uint32_t values[1];
     xcb_atom_t supported[6];
-
-    wlclient = wlc;
-    wm_fd = fd;
 
     xcb_connection = xcb_connect_to_fd(wm_fd, nullptr);
     if (xcb_connection_has_error(xcb_connection))

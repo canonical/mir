@@ -112,11 +112,8 @@ class XWaylandWMSurface;
 class XWaylandWM
 {
 public:
-    XWaylandWM(std::shared_ptr<WaylandConnector> wc);
+    XWaylandWM(std::shared_ptr<WaylandConnector> wc, wl_client* wlc, int fd);
     ~XWaylandWM();
-
-    void start(wl_client *wlclient, const int fd);
-    void destroy();
 
     xcb_connection_t *get_xcb_connection();
 
@@ -134,6 +131,10 @@ public:
     atom_t xcb_atom;
 
 private:
+
+    void start();
+    void destroy();
+
     enum CursorType
     {
         CursorUnset = -1,
@@ -183,7 +184,9 @@ private:
 
     std::shared_ptr<WaylandConnector> const wlc;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
-    int wm_fd;
+    wl_client* const wlclient;
+    int const wm_fd;
+
     xcb_connection_t *xcb_connection;
     xcb_screen_t *xcb_screen;
     xcb_window_t xcb_window;
@@ -196,7 +199,6 @@ private:
     xcb_render_pictforminfo_t xcb_format_rgb, xcb_format_rgba;
     const xcb_query_extension_reply_t *xfixes;
     std::unique_ptr<dispatch::ThreadedDispatcher> event_thread;
-    wl_client *wlclient;
     xcb_visualid_t xcb_visual_id;
     xcb_colormap_t xcb_colormap;
 };
