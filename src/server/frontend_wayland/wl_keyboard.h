@@ -57,7 +57,6 @@ public:
 
     void key(std::chrono::milliseconds const& ms, int scancode, bool down);
     void focussed(WlSurface* surface, bool focussed);
-    void set_keymap(char const* const buffer, size_t length);
     void set_keymap(mir::input::Keymap const& new_keymap);
     void resync_keyboard();
 
