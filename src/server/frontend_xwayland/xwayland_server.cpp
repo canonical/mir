@@ -48,7 +48,7 @@ mf::XWaylandServer::XWaylandServer(
     const int xdisplay,
     std::shared_ptr<mf::WaylandConnector> wc,
     std::string const& xwayland_path) :
-    wm(std::make_shared<XWaylandWM>(wc)),
+    wc(wc),
     wlc(wc),
     dispatcher{std::make_shared<md::MultiplexingDispatchable>()},
     xserver_thread{std::make_unique<dispatch::ThreadedDispatcher>(
@@ -71,9 +71,6 @@ mf::XWaylandServer::~XWaylandServer()
     // Terminate any running xservers
     if (xserver_status > 0) {
       terminate = true;
-
-      if (xserver_status == RUNNING)
-        wm->destroy();
 
       if (kill(pid, SIGTERM) == 0)
       {
@@ -299,6 +296,7 @@ void mf::XWaylandServer::connect_wm_to_xwayland(int wl_client_server_fd, int wm_
         return;
     }
 
+    std::shared_ptr<XWaylandWM> const wm{std::make_shared<XWaylandWM>(wc)};
     wm->start(client, wm_server_fd);
     mir::log_info("XServer is running");
     xserver_status = RUNNING;
@@ -317,7 +315,6 @@ void mf::XWaylandServer::connect_wm_to_xwayland(int wl_client_server_fd, int wm_
     if (terminate)
     {
         xserver_status = STOPPED;   // We don't want to retry Xwayland
-        return;
     }
 
     wm->destroy();

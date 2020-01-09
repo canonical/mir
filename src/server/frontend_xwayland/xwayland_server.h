@@ -34,7 +34,6 @@ class MultiplexingDispatchable;
 namespace frontend
 {
 class WaylandConnector;
-class XWaylandWM;
 
 class XWaylandServer
 {
@@ -68,7 +67,7 @@ private:
         FAILED = -2
     };
 
-    std::shared_ptr<XWaylandWM> const wm;
+    std::shared_ptr<WaylandConnector> wc;
     std::shared_ptr<WaylandConnector> const wlc;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     std::unique_ptr<dispatch::ThreadedDispatcher> const xserver_thread;
