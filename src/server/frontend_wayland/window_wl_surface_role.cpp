@@ -429,6 +429,9 @@ mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
 
 void mf::WindowWlSurfaceRole::create_scene_surface()
 {
+    if (weak_scene_surface.lock())
+        return;
+
     params->size = pending_size();
     params->streams = std::vector<shell::StreamSpecification>{};
     params->input_shape = std::vector<geom::Rectangle>{};
