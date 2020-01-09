@@ -246,11 +246,6 @@ void mf::XWaylandWM::set_net_active_window(xcb_window_t window)
                         xcb_atom.window, 32, 1, &window);
 }
 
-void mf::XWaylandWM::create_window(xcb_window_t id)
-{
-    surfaces[id] = std::make_shared<XWaylandWMSurface>(this, id);
-}
-
 /* Events */
 void mf::XWaylandWM::handle_events()
 {
@@ -357,9 +352,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 
 void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 {
-    mir::log_verbose("XCB_CREATE_NOTIFY (window %d, at (%d, %d), width %d, height %d %s)", event->window, event->x,
-                     event->y, event->width, event->height, event->override_redirect ? ", override" : "");
-    create_window(event->window);
+    surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
 }
 
 void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
@@ -466,7 +459,7 @@ void mf::XWaylandWM::handle_change_state(std::shared_ptr<XWaylandWMSurface> surf
     mir::log_verbose("Handle change state");
 
     if (event->data.data32[0] == 3)
-        surface->get_shell_surface()->set_state_now(mir_window_state_minimized);
+        surface->set_state(mir_window_state_minimized);
 }
 
 void mf::XWaylandWM::handle_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)

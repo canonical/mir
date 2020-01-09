@@ -127,7 +127,7 @@ public:
         IconicState = 3
     };
 
-    XWaylandWMSurface(XWaylandWM *wm, xcb_window_t window);
+    XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event_t *event);
     ~XWaylandWMSurface();
     void dirty_properties();
     void read_properties();
@@ -137,16 +137,12 @@ public:
     void set_wm_state(WmState state);
     void set_net_wm_state();
     void move_resize(uint32_t detail);
+    void set_state(MirWindowState state);
     void send_resize(const geometry::Size& new_size);
     void send_close_request();
     bool has_surface()
     {
         return !!shell_surface;
-    }
-
-    std::shared_ptr<XWaylandWMShellSurface> get_shell_surface()
-    {
-        return shell_surface;
     }
 
 private:
@@ -159,10 +155,15 @@ private:
     bool maximized;
     bool fullscreen;
 
-    bool overrideRedirect;
-    bool destroyed;
-
     //XWaylandWMSurface *transientFor;
+
+    struct
+    {
+        xcb_window_t parent;
+        geometry::Point position;
+        geometry::Size size;
+        bool override_redirect;
+    } const init;
 
     struct
     {
@@ -170,8 +171,6 @@ private:
         std::string appId;
         int deleteWindow;
     } properties;
-
-    bool decorate;
 };
 } /* frontend */
 } /* mir */
