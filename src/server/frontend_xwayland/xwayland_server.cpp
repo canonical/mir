@@ -46,9 +46,9 @@ using namespace std::chrono_literals;
 
 mf::XWaylandServer::XWaylandServer(
     const int xdisplay,
-    std::shared_ptr<mf::WaylandConnector> wc,
+    std::shared_ptr<mf::WaylandConnector> wayland_connector,
     std::string const& xwayland_path) :
-    wlc(wc),
+    wayland_connector{wayland_connector},
     dispatcher{std::make_shared<md::MultiplexingDispatchable>()},
     xserver_thread{std::make_unique<dispatch::ThreadedDispatcher>(
         "Mir/X11 Reader", dispatcher, []() { terminate_with_current_exception(); })},
@@ -264,7 +264,7 @@ void mf::XWaylandServer::connect_wm_to_xwayland(
         std::mutex client_mutex;
         std::condition_variable client_ready;
 
-        wlc->run_on_wayland_display(
+        wayland_connector->run_on_wayland_display(
             [wl_client_server_fd, &client, &client_mutex, &client_ready](wl_display* display)
             {
                 std::lock_guard<std::mutex> lock{client_mutex};
@@ -291,7 +291,7 @@ void mf::XWaylandServer::connect_wm_to_xwayland(
         return;
     }
 
-    XWaylandWM wm{wlc, client, wm_server_fd};
+    XWaylandWM wm{wayland_connector, client, wm_server_fd};
     mir::log_info("XServer is running");
     spawn_thread_xserver_status = RUNNING;
     auto const pid = spawn_thread_pid; // For clarity only as this is only written on this thread

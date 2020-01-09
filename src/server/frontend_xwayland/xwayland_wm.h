@@ -112,7 +112,7 @@ class XWaylandWMSurface;
 class XWaylandWM
 {
 public:
-    XWaylandWM(std::shared_ptr<WaylandConnector> wc, wl_client* wlc, int fd);
+    XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd);
     ~XWaylandWM();
 
     xcb_connection_t *get_xcb_connection();
@@ -121,11 +121,11 @@ public:
     void set_net_active_window(xcb_window_t window);
     std::shared_ptr<WaylandConnector> get_wl_connector()
     {
-        return wlc;
+        return wayland_connector;
     }
     wl_client *get_wl_client()
     {
-        return wlclient;
+        return wayland_client;
     }
 
     atom_t xcb_atom;
@@ -182,9 +182,9 @@ private:
     xcb_cursor_t xcb_cursor_images_load_cursor(const XcursorImages *images);
     xcb_cursor_t xcb_cursor_library_load_cursor(const char *file);
 
-    std::shared_ptr<WaylandConnector> const wlc;
+    std::shared_ptr<WaylandConnector> const wayland_connector;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
-    wl_client* const wlclient;
+    wl_client* const wayland_client;
     int const wm_fd;
 
     xcb_connection_t *xcb_connection;

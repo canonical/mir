@@ -78,10 +78,10 @@ static const struct cursor_alternatives cursors[] = {
 
 namespace mf = mir::frontend;
 
-mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wc, wl_client* wlc, int fd)
-    : wlc(wc),
+mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
+    : wayland_connector(wayland_connector),
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
-      wlclient{wlc},
+      wayland_client{wayland_client},
       wm_fd{fd},
       xcb_connection(nullptr)
 {
@@ -485,9 +485,9 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surfac
     uint32_t id = event->data.data32[0];
     surface->set_surface_id(id);
 
-    wlc->run_on_wayland_display([wlclient=wlclient, id, surface](auto)
+    wayland_connector->run_on_wayland_display([client=wayland_client, id, surface](auto)
         {
-            wl_resource* resource = wl_client_get_object(wlclient, id);
+            wl_resource* resource = wl_client_get_object(client, id);
             auto* wlsurface = resource ? WlSurface::from(resource) : nullptr;
             if (wlsurface)
                 surface->set_surface(wlsurface);
