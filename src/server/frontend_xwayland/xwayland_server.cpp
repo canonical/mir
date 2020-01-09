@@ -48,7 +48,6 @@ mf::XWaylandServer::XWaylandServer(
     const int xdisplay,
     std::shared_ptr<mf::WaylandConnector> wc,
     std::string const& xwayland_path) :
-    wc(wc),
     wlc(wc),
     dispatcher{std::make_shared<md::MultiplexingDispatchable>()},
     xserver_thread{std::make_unique<dispatch::ThreadedDispatcher>(
@@ -292,7 +291,7 @@ void mf::XWaylandServer::connect_wm_to_xwayland(
         return;
     }
 
-    std::shared_ptr<XWaylandWM> const wm{std::make_shared<XWaylandWM>(wc)};
+    std::shared_ptr<XWaylandWM> const wm{std::make_shared<XWaylandWM>(wlc)};
     wm->start(client, wm_server_fd);
     mir::log_info("XServer is running");
     spawn_thread_xserver_status = RUNNING;

@@ -69,7 +69,6 @@ private:
         FAILED = -2
     };
 
-    std::shared_ptr<WaylandConnector> const wc;
     std::shared_ptr<WaylandConnector> const wlc;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     std::unique_ptr<dispatch::ThreadedDispatcher> const xserver_thread;
