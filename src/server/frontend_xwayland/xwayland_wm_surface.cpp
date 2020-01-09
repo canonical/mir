@@ -26,13 +26,40 @@
 #include <wayland-client-core.h>
 #include <wayland-client.h>
 #include <string.h>
+#include <experimental/optional>
 
 #include <map>
 
 namespace mf = mir::frontend;
 
-mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_window_t window)
-    : xwm(wm), window(window), props_dirty(true)
+namespace
+{
+auto wm_resize_edge_to_mir_resize_edge(uint32_t wm_resize_edge) -> std::experimental::optional<MirResizeEdge>
+{
+    switch (wm_resize_edge)
+    {
+    case _NET_WM_MOVERESIZE_SIZE_TOP:           return mir_resize_edge_north;
+    case _NET_WM_MOVERESIZE_SIZE_BOTTOM:        return mir_resize_edge_south;
+    case _NET_WM_MOVERESIZE_SIZE_LEFT:          return mir_resize_edge_west;
+    case _NET_WM_MOVERESIZE_SIZE_TOPLEFT:       return mir_resize_edge_northwest;
+    case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT:    return mir_resize_edge_southwest;
+    case _NET_WM_MOVERESIZE_SIZE_RIGHT:         return mir_resize_edge_east;
+    case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT:      return mir_resize_edge_northeast;
+    case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:   return mir_resize_edge_southeast;
+    default:                                    return std::experimental::nullopt;
+    }
+}
+}
+
+mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event_t *event)
+    : xwm(wm),
+      window(event->window),
+      props_dirty(true),
+      init{
+          event->parent,
+          {event->x, event->y},
+          {event->width, event->height},
+          (bool)event->override_redirect}
 {
     uint32_t values[1];
     xcb_get_geometry_cookie_t geometry_cookie;
@@ -50,7 +77,6 @@ mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_window_t window)
 
 mf::XWaylandWMSurface::~XWaylandWMSurface()
 {
-    destroyed = true;
 }
 
 void mf::XWaylandWMSurface::dirty_properties()
@@ -68,13 +94,12 @@ void mf::XWaylandWMSurface::set_surface(WlSurface *wls)
     wlsurface = wls;
 
     auto shell = std::static_pointer_cast<XWaylandWMShell>(xwm->get_wl_connector()->get_extension("x11-support"));
-    shell_surface = shell->get_shell_surface(xwm->get_wl_client(), wlsurface);
-    shell_surface->set_surface(this);
+    shell_surface = shell->build_shell_surface(this, xwm->get_wl_client(), wlsurface);
 
     if (!properties.title.empty())
       shell_surface->set_title(properties.title);
 
-    shell_surface->set_toplevel();
+    shell_surface->set_state_now(mir_window_state_restored);
     xcb_flush(xwm->get_xcb_connection());
 }
 
@@ -148,11 +173,6 @@ void mf::XWaylandWMSurface::read_properties()
     }
 
     properties.deleteWindow = 0;
-
-    if (overrideRedirect)
-    {
-        decorate = false;
-    }
 
     mir::log_verbose("Properties:");
 
@@ -253,26 +273,17 @@ void mf::XWaylandWMSurface::read_properties()
 
 void mf::XWaylandWMSurface::move_resize(uint32_t detail)
 {
-  switch (detail)
-  {
-  case _NET_WM_MOVERESIZE_MOVE:
-      shell_surface->move();
-      mir::log_verbose("Move!");
-      break;
-  case _NET_WM_MOVERESIZE_SIZE_TOPLEFT:
-  case _NET_WM_MOVERESIZE_SIZE_TOP:
-  case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT:
-  case _NET_WM_MOVERESIZE_SIZE_RIGHT:
-  case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:
-  case _NET_WM_MOVERESIZE_SIZE_BOTTOM:
-  case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT:
-  case _NET_WM_MOVERESIZE_SIZE_LEFT:
-      shell_surface->resize(detail);
-      mir::log_verbose("resize!");
-      break;
-  default:
-      break;
-  }
+    if (detail == _NET_WM_MOVERESIZE_MOVE)
+        shell_surface->initiate_interactive_move();
+    else if (auto const edge = wm_resize_edge_to_mir_resize_edge(detail))
+        shell_surface->initiate_interactive_resize(edge.value());
+    else
+        mir::log_warning("XWaylandWMSurface::move_resize() called with unknown detail %d", detail);
+}
+
+void mf::XWaylandWMSurface::set_state(MirWindowState state)
+{
+    shell_surface->set_state_now(state);
 }
 
 void mf::XWaylandWMSurface::send_resize(const geometry::Size& new_size)
