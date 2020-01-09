@@ -109,6 +109,9 @@ class MultiplexingDispatchable;
 namespace frontend
 {
 class XWaylandWMSurface;
+class XWaylandWMShellSurface;
+class WlSurface;
+
 class XWaylandWM
 {
 public:
@@ -119,14 +122,9 @@ public:
 
     void dump_property(xcb_atom_t property, xcb_get_property_reply_t *reply);
     void set_net_active_window(xcb_window_t window);
-    std::shared_ptr<WaylandConnector> get_wl_connector()
-    {
-        return wayland_connector;
-    }
-    wl_client *get_wl_client()
-    {
-        return wayland_client;
-    }
+    auto build_shell_surface(
+        XWaylandWMSurface* wm_surface,
+        WlSurface* wayland_surface) -> std::shared_ptr<XWaylandWMShellSurface>;
 
     atom_t xcb_atom;
 

@@ -25,6 +25,7 @@
 #include "wl_surface.h"
 #include "xwayland_wm_shellsurface.h"
 #include "xwayland_wm_surface.h"
+#include "xwayland_wm_shell.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/readable_fd.h"
@@ -245,6 +246,14 @@ void mf::XWaylandWM::set_net_active_window(xcb_window_t window)
 {
     xcb_change_property(xcb_connection, XCB_PROP_MODE_REPLACE, xcb_screen->root, xcb_atom.net_active_window,
                         xcb_atom.window, 32, 1, &window);
+}
+
+auto mf::XWaylandWM::build_shell_surface(
+    XWaylandWMSurface* wm_surface,
+    WlSurface* wayland_surface) -> std::shared_ptr<XWaylandWMShellSurface>
+{
+    auto const shell = std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"));
+    return shell->build_shell_surface(wm_surface, wayland_client, wayland_surface);
 }
 
 /* Events */

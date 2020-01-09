@@ -19,8 +19,6 @@
 #include "xwayland_log.h"
 
 #include "xwayland_wm_surface.h"
-
-#include "xwayland_wm_shell.h"
 #include "xwayland_wm_shellsurface.h"
 
 #include <wayland-client-core.h>
@@ -93,8 +91,7 @@ void mf::XWaylandWMSurface::set_surface(WlSurface *wls)
 {
     wlsurface = wls;
 
-    auto shell = std::static_pointer_cast<XWaylandWMShell>(xwm->get_wl_connector()->get_extension("x11-support"));
-    shell_surface = shell->build_shell_surface(this, xwm->get_wl_client(), wlsurface);
+    shell_surface = xwm->build_shell_surface(this, wlsurface);
 
     if (!properties.title.empty())
       shell_surface->set_title(properties.title);
