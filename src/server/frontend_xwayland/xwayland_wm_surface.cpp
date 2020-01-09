@@ -99,7 +99,10 @@ void mf::XWaylandWMSurface::set_surface(WlSurface *wls)
     if (!properties.title.empty())
       shell_surface->set_title(properties.title);
 
-    shell_surface->set_state_now(mir_window_state_restored);
+    // If a buffer has alread been committed, we need to create the scene::Surface without waiting for next commit
+    if (wls->buffer_size())
+        shell_surface->create_scene_surface();
+
     xcb_flush(xwm->get_xcb_connection());
 }
 

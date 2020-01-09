@@ -272,7 +272,7 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::experimental::optional<struct 
         params->state = mir_window_state_fullscreen;
         if (output)
             params->output_id = output_manager->output_id_for(client, output.value());
-        create_mir_window();
+        create_scene_surface();
     }
 }
 
@@ -299,7 +299,7 @@ void mf::WindowWlSurfaceRole::set_state_now(MirWindowState state)
     else
     {
         params->state = state;
-        create_mir_window();
+        create_scene_surface();
     }
 }
 
@@ -386,7 +386,7 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     }
     else
     {
-        create_mir_window();
+        create_scene_surface();
     }
 
     committed_size = size;
@@ -427,8 +427,11 @@ mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
     return *pending_changes;
 }
 
-void mf::WindowWlSurfaceRole::create_mir_window()
+void mf::WindowWlSurfaceRole::create_scene_surface()
 {
+    if (weak_scene_surface.lock())
+        return;
+
     params->size = pending_size();
     params->streams = std::vector<shell::StreamSpecification>{};
     params->input_shape = std::vector<geom::Rectangle>{};
