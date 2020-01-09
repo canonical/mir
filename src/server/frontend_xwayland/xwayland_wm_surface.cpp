@@ -87,17 +87,15 @@ void mf::XWaylandWMSurface::set_surface_id(uint32_t id)
     surface_id = id;
 }
 
-void mf::XWaylandWMSurface::set_surface(WlSurface *wls)
+void mf::XWaylandWMSurface::set_surface(WlSurface* wayland_surface)
 {
-    wlsurface = wls;
-
-    shell_surface = xwm->build_shell_surface(this, wlsurface);
+    shell_surface = xwm->build_shell_surface(this, wayland_surface);
 
     if (!properties.title.empty())
       shell_surface->set_title(properties.title);
 
     // If a buffer has alread been committed, we need to create the scene::Surface without waiting for next commit
-    if (wls->buffer_size())
+    if (wayland_surface->buffer_size())
         shell_surface->create_scene_surface();
 
     xcb_flush(xwm->get_xcb_connection());
