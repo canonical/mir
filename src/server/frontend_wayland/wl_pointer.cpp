@@ -55,13 +55,12 @@ public:
         auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer.native_buffer_base());
         if (pixel_source)
         {
-            pixel_source->read([&](unsigned char const* buffer_pixels)
+            size_t const buffer_size_bytes = buffer_size.width.as_int() * buffer_size.height.as_int()
+                * MIR_BYTES_PER_PIXEL(buffer.pixel_format());
+            pixels = std::unique_ptr<unsigned char[]>(new unsigned char[buffer_size_bytes]);
+
+            pixel_source->read([this, buffer_size_bytes](unsigned char const* buffer_pixels)
             {
-                size_t buffer_size_bytes = buffer_size.width.as_int() * buffer_size.height.as_int()
-                    * MIR_BYTES_PER_PIXEL(buffer.pixel_format());
-                pixels = std::unique_ptr<unsigned char[]>(
-                    new unsigned char[buffer_size_bytes]
-                );
                 memcpy(pixels.get(), buffer_pixels, buffer_size_bytes);
             });
         }
