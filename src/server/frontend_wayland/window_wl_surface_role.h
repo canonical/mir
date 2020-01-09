@@ -88,6 +88,7 @@ public:
     void set_server_side_decorated(bool server_side_decorated);
 
     void set_state_now(MirWindowState state);
+    void create_mir_window();
 
     /// Gets called after the surface has committed (so current_size() may return the committed buffer size) but before
     /// the Mir window is modified (so if a pending size is set or a spec is applied those changes will take effect)
@@ -153,7 +154,6 @@ private:
     void visiblity(bool visible) override;
 
     shell::SurfaceSpecification& spec();
-    void create_mir_window();
 };
 
 }
