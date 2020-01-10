@@ -256,6 +256,11 @@ auto mf::XWaylandWM::build_shell_surface(
     return shell->build_shell_surface(wm_surface, wayland_client, wayland_surface);
 }
 
+void mf::XWaylandWM::run_on_wayland_thread(std::function<void()>&& work)
+{
+    wayland_connector->run_on_wayland_display([work = move(work)](auto){ work(); });
+}
+
 /* Events */
 void mf::XWaylandWM::handle_events()
 {

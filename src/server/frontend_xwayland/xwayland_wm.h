@@ -125,6 +125,7 @@ public:
     auto build_shell_surface(
         XWaylandWMSurface* wm_surface,
         WlSurface* wayland_surface) -> XWaylandWMShellSurface*;
+    void run_on_wayland_thread(std::function<void()>&& work);
 
     atom_t xcb_atom;
 
