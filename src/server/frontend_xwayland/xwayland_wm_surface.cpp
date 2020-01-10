@@ -282,15 +282,25 @@ void mf::XWaylandWMSurface::read_properties()
 
 void mf::XWaylandWMSurface::move_resize(uint32_t detail)
 {
-    aquire_shell_surface([detail](auto shell_surface)
+
+    if (detail == _NET_WM_MOVERESIZE_MOVE)
+    {
+        aquire_shell_surface([](auto shell_surface)
         {
-            if (detail == _NET_WM_MOVERESIZE_MOVE)
-                shell_surface->initiate_interactive_move();
-            else if (auto const edge = wm_resize_edge_to_mir_resize_edge(detail))
-                shell_surface->initiate_interactive_resize(edge.value());
-            else
-                mir::log_warning("XWaylandWMSurface::move_resize() called with unknown detail %d", detail);
+            shell_surface->initiate_interactive_move();
         });
+    }
+    else if (auto const edge = wm_resize_edge_to_mir_resize_edge(detail))
+    {
+        aquire_shell_surface([edge](auto shell_surface)
+        {
+            shell_surface->initiate_interactive_resize(edge.value());
+        });
+    }
+    else
+    {
+        mir::log_warning("XWaylandWMSurface::move_resize() called with unknown detail %d", detail);
+    }
 }
 
 void mf::XWaylandWMSurface::set_state(MirWindowState state)
