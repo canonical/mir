@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
+ * Copyright (C) 2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -118,7 +119,10 @@ public:
     XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd);
     ~XWaylandWM();
 
-    xcb_connection_t *get_xcb_connection();
+    auto get_xcb_connection() const -> xcb_connection_t*
+    {
+        return xcb_connection;
+    }
 
     void dump_property(xcb_atom_t property, xcb_get_property_reply_t *reply);
     void set_net_active_window(xcb_window_t window);
