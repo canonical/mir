@@ -41,22 +41,17 @@ execute: |
       --host-arch armhf \
       --tool "apt-get --yes -o Debug::pkgProblemResolver=yes"
 
-
     apt-get --yes install capnproto:amd64
-    export PKG_CONFIG_LIBDIR=/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/share/pkgconfig
 
     # Install rpi-userland
-    USERLAND_DIR=$(mktemp -d)
-    git clone --branch old-wayland https://github.com/MirServer/rpi-userland $USERLAND_DIR
-    cd $USERLAND_DIR
-    ./buildme /
+    snap install --edge rpi-userland
 
     MIR_BUILD_DIR=$(mktemp -d)
 
     export CC=/usr/bin/arm-linux-gnueabihf-gcc
     export CXX=/usr/bin/arm-linux-gnueabihf-g++
     # Prepend the normal sysroot so that we pick up as much as possible from the standard environment
-    export PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig:/opt/vc/lib/pkgconfig
+    export PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig:/snap/rpi-userland/current/opt/vc/lib/pkgconfig
 
     cmake -H$SPREAD_PATH -B$MIR_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_PLATFORM="rpi-dispmanx"
     cmake --build $MIR_BUILD_DIR -- -j`nproc` VERBOSE=1
