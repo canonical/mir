@@ -42,11 +42,13 @@ environment:
     ARCH/arm64: arm64
     ARCH/armhf: armhf
     ARCH/i386: i386
+    ARCH/rpi: armhf
     CLANG: 0
     CLANG/clang,asan_clang,tsan_clang,ubsan_clang: 1
     VALGRIND: 0
     VALGRIND/valgrind: 1
     BUILD_TYPE: RelWithDebInfo
+    BUILD_TYPE/rpi: Debug
     BUILD_TYPE/asan,asan_clang: AddressSanitizer
     BUILD_TYPE/tsan,tsan_clang: ThreadSanitizer
     BUILD_TYPE/ubsan,ubsan_clang: UBSanitizer
