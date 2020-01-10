@@ -146,8 +146,9 @@ public:
 
 private:
     XWaylandWM* const xwm;
-    xcb_window_t window;
+    xcb_window_t const window;
     std::shared_ptr<XWaylandWMShellSurface> shell_surface;
+
     bool props_dirty;
     bool maximized;
     bool fullscreen;
