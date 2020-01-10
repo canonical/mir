@@ -133,26 +133,11 @@ private:
     void start();
     void destroy();
 
-    enum CursorType
-    {
-        CursorUnset = -1,
-        CursorTop,
-        CursorBottom,
-        CursorLeft,
-        CursorRight,
-        CursorTopLeft,
-        CursorTopRight,
-        CursorBottomLeft,
-        CursorBottomRight,
-        CursorLeftPointer
-    };
-
     void create_wm_window();
     void wm_selector();
 
     void create_window(xcb_window_t id);
-    void set_cursor(xcb_window_t id, const CursorType &cursor);
-    void create_wm_cursor();
+
     void wm_get_resources();
     void read_and_dump_property(xcb_window_t window, xcb_atom_t property);
     const char *get_atom_name(xcb_atom_t atom);
@@ -175,11 +160,6 @@ private:
     void handle_unmap_notify(xcb_unmap_notify_event_t *event);
     void handle_destroy_notify(xcb_destroy_notify_event_t *event);
 
-    // Cursor
-    xcb_cursor_t xcb_cursor_image_load_cursor(const XcursorImage *img);
-    xcb_cursor_t xcb_cursor_images_load_cursor(const XcursorImages *images);
-    xcb_cursor_t xcb_cursor_library_load_cursor(const char *file);
-
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     wl_client* const wayland_client;
@@ -190,8 +170,6 @@ private:
     xcb_window_t xcb_window;
     std::map<xcb_window_t, std::shared_ptr<XWaylandWMSurface>> surfaces;
     std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;
-    int xcb_cursor;
-    std::vector<xcb_cursor_t> xcb_cursors;
     xcb_window_t xcb_selection_window;
     xcb_selection_request_event_t xcb_selection_request;
     xcb_render_pictforminfo_t xcb_format_rgb, xcb_format_rgba;
