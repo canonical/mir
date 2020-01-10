@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
+ * Copyright (C) 2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -15,17 +16,13 @@
  *
  */
 
-#include "mir/log.h"
+#include "xwayland_wm_shellsurface.h"
+#include "xwayland_wm_surface.h"
 #include "xwayland_log.h"
 
-#include "xwayland_wm_surface.h"
-#include "xwayland_wm_shellsurface.h"
-
-#include <wayland-client-core.h>
-#include <wayland-client.h>
 #include <string.h>
-#include <experimental/optional>
 
+#include <experimental/optional>
 #include <map>
 
 namespace mf = mir::frontend;

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
+ * Copyright (C) 2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -18,10 +19,7 @@
 #ifndef MIR_FRONTEND_XWAYLAND_WM_SHELLSURFACE_ROLE_H
 #define MIR_FRONTEND_XWAYLAND_WM_SHELLSURFACE_ROLE_H
 
-#include "wayland_wrapper.h"
-#include "wl_surface.h"
 #include "window_wl_surface_role.h"
-#include "xwayland_wm_surface.h"
 
 namespace mir
 {
