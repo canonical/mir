@@ -131,8 +131,7 @@ public:
     ~XWaylandWMSurface();
     void dirty_properties();
     void read_properties();
-    void set_surface_id(uint32_t surface_id);
-    void set_surface(WlSurface *wls);
+    void set_surface(WlSurface* wayland_surface);
     void set_workspace(int workspace);
     void set_wm_state(WmState state);
     void set_net_wm_state();
@@ -146,12 +145,11 @@ public:
     }
 
 private:
-    XWaylandWM *xwm;
-    xcb_window_t window;
-    WlSurface *wlsurface;
+    XWaylandWM* const xwm;
+    xcb_window_t const window;
     std::shared_ptr<XWaylandWMShellSurface> shell_surface;
+
     bool props_dirty;
-    uint32_t surface_id;
     bool maximized;
     bool fullscreen;
 

@@ -19,8 +19,6 @@
 #include "xwayland_log.h"
 
 #include "xwayland_wm_surface.h"
-
-#include "xwayland_wm_shell.h"
 #include "xwayland_wm_shellsurface.h"
 
 #include <wayland-client-core.h>
@@ -84,23 +82,15 @@ void mf::XWaylandWMSurface::dirty_properties()
     props_dirty = true;
 }
 
-void mf::XWaylandWMSurface::set_surface_id(uint32_t id)
+void mf::XWaylandWMSurface::set_surface(WlSurface* wayland_surface)
 {
-    surface_id = id;
-}
-
-void mf::XWaylandWMSurface::set_surface(WlSurface *wls)
-{
-    wlsurface = wls;
-
-    auto shell = std::static_pointer_cast<XWaylandWMShell>(xwm->get_wl_connector()->get_extension("x11-support"));
-    shell_surface = shell->build_shell_surface(this, xwm->get_wl_client(), wlsurface);
+    shell_surface = xwm->build_shell_surface(this, wayland_surface);
 
     if (!properties.title.empty())
       shell_surface->set_title(properties.title);
 
     // If a buffer has alread been committed, we need to create the scene::Surface without waiting for next commit
-    if (wls->buffer_size())
+    if (wayland_surface->buffer_size())
         shell_surface->create_scene_surface();
 
     xcb_flush(xwm->get_xcb_connection());

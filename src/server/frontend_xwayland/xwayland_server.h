@@ -39,7 +39,7 @@ class WaylandConnector;
 class XWaylandServer
 {
 public:
-    XWaylandServer(const int xdisp, std::shared_ptr<WaylandConnector> wc, std::string const& xwayland_path);
+    XWaylandServer(const int xdisp, std::shared_ptr<WaylandConnector> wayland_connector, std::string const& xwayland_path);
     ~XWaylandServer();
 
 private:
@@ -69,7 +69,7 @@ private:
         FAILED = -2
     };
 
-    std::shared_ptr<WaylandConnector> const wlc;
+    std::shared_ptr<WaylandConnector> const wayland_connector;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     std::unique_ptr<dispatch::ThreadedDispatcher> const xserver_thread;
     SocketFd const sockets;
