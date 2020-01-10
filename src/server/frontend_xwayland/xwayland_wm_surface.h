@@ -21,6 +21,8 @@
 #include "wl_surface.h"
 #include "xwayland_wm.h"
 
+#include <mutex>
+
 extern "C" {
 #include <xcb/xcb.h>
 }
@@ -131,7 +133,7 @@ public:
     ~XWaylandWMSurface();
     void dirty_properties();
     void read_properties();
-    void set_surface(WlSurface* wayland_surface);
+    void set_surface(WlSurface* wayland_surface); ///< Should only be called on the Wayland thread
     void set_workspace(int workspace);
     void set_wm_state(WmState state);
     void set_net_wm_state();
@@ -139,21 +141,25 @@ public:
     void set_state(MirWindowState state);
     void send_resize(const geometry::Size& new_size);
     void send_close_request();
-    bool has_surface()
-    {
-        return !!shell_surface;
-    }
 
 private:
+    /// Runs work on the Wayland thread if the shell surface hasn't been destroyed
+    void aquire_shell_surface(std::function<void(XWaylandWMShellSurface* shell_surface)>&& work);
+
     XWaylandWM* const xwm;
     xcb_window_t const window;
-    std::shared_ptr<XWaylandWMShellSurface> shell_surface;
+
+    std::mutex mutex;
 
     bool props_dirty;
     bool maximized;
     bool fullscreen;
-
-    //XWaylandWMSurface *transientFor;
+    struct
+    {
+        std::string title;
+        std::string appId;
+        int deleteWindow;
+    } properties;
 
     struct
     {
@@ -163,12 +169,17 @@ private:
         bool override_redirect;
     } const init;
 
-    struct
-    {
-        std::string title;
-        std::string appId;
-        int deleteWindow;
-    } properties;
+    /// shell_surface should not be accessed unless this is false
+    /// Should only be accessed on the Wayland thread
+    std::shared_ptr<bool> shell_surface_destroyed;
+
+    /// Only safe to access when shell_surface_destroyed is false and on the Wayland thread (use aquire_shell_surface())
+    /// When the associated wl_surface is destroyed:
+    /// - The WlSurface will call destory() on its role (this shell surface)
+    /// - shell_surface_destroyed will be set to true
+    /// - The shell surface will delete itself
+    /// Can be deleted on the Wayland thread at any time (which will result in shell_surface_destroyed being set to true)
+    XWaylandWMShellSurface* shell_surface_unsafe;
 };
 } /* frontend */
 } /* mir */
