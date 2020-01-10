@@ -76,10 +76,10 @@ mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event
 
 mf::XWaylandWMSurface::~XWaylandWMSurface()
 {
-    if (!*shell_surface_destroyed)
-    {
-        delete shell_surface;
-    }
+    aquire_shell_surface([](auto shell_surface)
+        {
+            delete shell_surface;
+        });
 }
 
 void mf::XWaylandWMSurface::dirty_properties()
@@ -90,7 +90,8 @@ void mf::XWaylandWMSurface::dirty_properties()
 
 void mf::XWaylandWMSurface::set_surface(WlSurface* wayland_surface)
 {
-    shell_surface = xwm->build_shell_surface(this, wayland_surface);
+    auto const shell_surface = xwm->build_shell_surface(this, wayland_surface);
+    shell_surface_unsafe = shell_surface;
     shell_surface_destroyed = shell_surface->destroyed_flag();
 
     {
@@ -281,17 +282,23 @@ void mf::XWaylandWMSurface::read_properties()
 
 void mf::XWaylandWMSurface::move_resize(uint32_t detail)
 {
-    if (detail == _NET_WM_MOVERESIZE_MOVE)
-        shell_surface->initiate_interactive_move();
-    else if (auto const edge = wm_resize_edge_to_mir_resize_edge(detail))
-        shell_surface->initiate_interactive_resize(edge.value());
-    else
-        mir::log_warning("XWaylandWMSurface::move_resize() called with unknown detail %d", detail);
+    aquire_shell_surface([detail](auto shell_surface)
+        {
+            if (detail == _NET_WM_MOVERESIZE_MOVE)
+                shell_surface->initiate_interactive_move();
+            else if (auto const edge = wm_resize_edge_to_mir_resize_edge(detail))
+                shell_surface->initiate_interactive_resize(edge.value());
+            else
+                mir::log_warning("XWaylandWMSurface::move_resize() called with unknown detail %d", detail);
+        });
 }
 
 void mf::XWaylandWMSurface::set_state(MirWindowState state)
 {
-    shell_surface->set_state_now(state);
+    aquire_shell_surface([state](auto shell_surface)
+        {
+            shell_surface->set_state_now(state);
+        });
 }
 
 void mf::XWaylandWMSurface::send_resize(const geometry::Size& new_size)
@@ -310,4 +317,14 @@ void mf::XWaylandWMSurface::send_close_request()
 {
     xcb_destroy_window(xwm->get_xcb_connection(), window);
     xcb_flush(xwm->get_xcb_connection());
+}
+
+void mf::XWaylandWMSurface::aquire_shell_surface(std::function<void(XWaylandWMShellSurface* shell_surface)>&& work)
+{
+    xwm->run_on_wayland_thread(
+        [work = move(work), shell_surface = shell_surface_unsafe, destroyed = shell_surface_destroyed]()
+        {
+            if (!*destroyed)
+                work(shell_surface);
+        });
 }

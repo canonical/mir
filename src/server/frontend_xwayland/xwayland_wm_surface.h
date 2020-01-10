@@ -143,6 +143,9 @@ public:
     void send_close_request();
 
 private:
+    /// Runs work on the Wayland thread if the shell surface hasn't been destroyed
+    void aquire_shell_surface(std::function<void(XWaylandWMShellSurface* shell_surface)>&& work);
+
     XWaylandWM* const xwm;
     xcb_window_t const window;
 
@@ -170,13 +173,13 @@ private:
     /// Should only be accessed on the Wayland thread
     std::shared_ptr<bool> shell_surface_destroyed;
 
-    /// Should only be accessed on the Wayland thread
+    /// Only safe to access when shell_surface_destroyed is false and on the Wayland thread (use aquire_shell_surface())
     /// When the associated wl_surface is destroyed:
     /// - The WlSurface will call destory() on its role (this shell surface)
     /// - shell_surface_destroyed will be set to true
     /// - The shell surface will delete itself
-    /// This class may also safely delete the shell surface at any time (as long as it's on the Wayland thread)
-    XWaylandWMShellSurface* shell_surface;
+    /// Can be deleted on the Wayland thread at any time (which will result in shell_surface_destroyed being set to true)
+    XWaylandWMShellSurface* shell_surface_unsafe;
 };
 } /* frontend */
 } /* mir */
