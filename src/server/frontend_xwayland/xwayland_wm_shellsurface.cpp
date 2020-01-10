@@ -52,7 +52,8 @@ mf::XWaylandWMShellSurface::~XWaylandWMShellSurface()
 
 void mf::XWaylandWMShellSurface::destroy()
 {
-
+    *destroyed = true;
+    delete this;
 }
 
 void mf::XWaylandWMShellSurface::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,

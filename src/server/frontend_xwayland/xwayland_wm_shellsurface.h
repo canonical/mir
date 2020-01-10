@@ -27,6 +27,8 @@ namespace frontend
 {
 class OutputManager;
 class XWaylandWMSurface;
+
+/// Should only be accessed on the Wayland thread
 class XWaylandWMShellSurface : public WindowWlSurfaceRole
 {
 public:

@@ -54,7 +54,8 @@ mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event
           event->parent,
           {event->x, event->y},
           {event->width, event->height},
-          (bool)event->override_redirect}
+          (bool)event->override_redirect},
+      shell_surface_destroyed{std::make_shared<bool>(true)}
 {
     uint32_t values[1];
     xcb_get_geometry_cookie_t geometry_cookie;
@@ -72,19 +73,29 @@ mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event
 
 mf::XWaylandWMSurface::~XWaylandWMSurface()
 {
+    aquire_shell_surface([](auto shell_surface)
+        {
+            delete shell_surface;
+        });
 }
 
 void mf::XWaylandWMSurface::dirty_properties()
 {
+    std::lock_guard<std::mutex> lock{mutex};
     props_dirty = true;
 }
 
 void mf::XWaylandWMSurface::set_surface(WlSurface* wayland_surface)
 {
-    shell_surface = xwm->build_shell_surface(this, wayland_surface);
+    auto const shell_surface = xwm->build_shell_surface(this, wayland_surface);
+    shell_surface_unsafe = shell_surface;
+    shell_surface_destroyed = shell_surface->destroyed_flag();
 
-    if (!properties.title.empty())
-      shell_surface->set_title(properties.title);
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (!properties.title.empty())
+            shell_surface->set_title(properties.title);
+    }
 
     // If a buffer has alread been committed, we need to create the scene::Surface without waiting for next commit
     if (wayland_surface->buffer_size())
@@ -124,12 +135,15 @@ void mf::XWaylandWMSurface::set_net_wm_state()
     uint32_t property[3];
     uint32_t i = 0;
 
-    if (fullscreen)
-        property[i++] = xwm->xcb_atom.net_wm_state_fullscreen;
-    if (maximized)
     {
-        property[i++] = xwm->xcb_atom.net_wm_state_maximized_horz;
-        property[i++] = xwm->xcb_atom.net_wm_state_maximized_vert;
+        std::lock_guard<std::mutex> lock{mutex};
+        if (fullscreen)
+            property[i++] = xwm->xcb_atom.net_wm_state_fullscreen;
+        if (maximized)
+        {
+            property[i++] = xwm->xcb_atom.net_wm_state_maximized_horz;
+            property[i++] = xwm->xcb_atom.net_wm_state_maximized_vert;
+        }
     }
 
     xcb_change_property(xwm->get_xcb_connection(), XCB_PROP_MODE_REPLACE, window, xwm->xcb_atom.net_wm_state,
@@ -139,6 +153,8 @@ void mf::XWaylandWMSurface::set_net_wm_state()
 
 void mf::XWaylandWMSurface::read_properties()
 {
+    std::lock_guard<std::mutex> lock{mutex};
+
     if (!props_dirty)
         return;
     props_dirty = false;
@@ -263,17 +279,33 @@ void mf::XWaylandWMSurface::read_properties()
 
 void mf::XWaylandWMSurface::move_resize(uint32_t detail)
 {
+
     if (detail == _NET_WM_MOVERESIZE_MOVE)
-        shell_surface->initiate_interactive_move();
+    {
+        aquire_shell_surface([](auto shell_surface)
+        {
+            shell_surface->initiate_interactive_move();
+        });
+    }
     else if (auto const edge = wm_resize_edge_to_mir_resize_edge(detail))
-        shell_surface->initiate_interactive_resize(edge.value());
+    {
+        aquire_shell_surface([edge](auto shell_surface)
+        {
+            shell_surface->initiate_interactive_resize(edge.value());
+        });
+    }
     else
+    {
         mir::log_warning("XWaylandWMSurface::move_resize() called with unknown detail %d", detail);
+    }
 }
 
 void mf::XWaylandWMSurface::set_state(MirWindowState state)
 {
-    shell_surface->set_state_now(state);
+    aquire_shell_surface([state](auto shell_surface)
+        {
+            shell_surface->set_state_now(state);
+        });
 }
 
 void mf::XWaylandWMSurface::send_resize(const geometry::Size& new_size)
@@ -292,4 +324,14 @@ void mf::XWaylandWMSurface::send_close_request()
 {
     xcb_destroy_window(xwm->get_xcb_connection(), window);
     xcb_flush(xwm->get_xcb_connection());
+}
+
+void mf::XWaylandWMSurface::aquire_shell_surface(std::function<void(XWaylandWMShellSurface* shell_surface)>&& work)
+{
+    xwm->run_on_wayland_thread(
+        [work = move(work), shell_surface = shell_surface_unsafe, destroyed = shell_surface_destroyed]()
+        {
+            if (!*destroyed)
+                work(shell_surface);
+        });
 }

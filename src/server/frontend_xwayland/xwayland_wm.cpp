@@ -247,10 +247,15 @@ void mf::XWaylandWM::set_net_active_window(xcb_window_t window)
 
 auto mf::XWaylandWM::build_shell_surface(
     XWaylandWMSurface* wm_surface,
-    WlSurface* wayland_surface) -> std::shared_ptr<XWaylandWMShellSurface>
+    WlSurface* wayland_surface) -> XWaylandWMShellSurface*
 {
     auto const shell = std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"));
     return shell->build_shell_surface(wm_surface, wayland_client, wayland_surface);
+}
+
+void mf::XWaylandWM::run_on_wayland_thread(std::function<void()>&& work)
+{
+    wayland_connector->run_on_wayland_display([work = move(work)](auto){ work(); });
 }
 
 /* Events */
@@ -481,12 +486,6 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surfac
         return;
     mir::log_verbose("handle surface_id");
 
-    if (surface->has_surface())
-    {
-        mir::log_verbose("Window already has a surface id");
-        return;
-    }
-
     uint32_t id = event->data.data32[0];
 
     wayland_connector->run_on_wayland_display([client=wayland_client, id, surface](auto)
@@ -513,31 +512,19 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
     if (event->value_mask & XCB_CONFIG_WINDOW_X)
     {
         values[++i] = event->x;
-        if (shellSurface && shellSurface->has_surface())
-        {
-        }
     }
     if (event->value_mask & XCB_CONFIG_WINDOW_Y)
     {
         values[++i] = event->y;
-        if (shellSurface && shellSurface->has_surface())
-        {
-        }
     }
 
     if (event->value_mask & XCB_CONFIG_WINDOW_WIDTH)
     {
         values[++i] = event->width;
-        if (shellSurface && shellSurface->has_surface())
-        {
-        }
     }
     if (event->value_mask & XCB_CONFIG_WINDOW_HEIGHT)
     {
         values[++i] = event->height;
-        if (shellSurface && shellSurface->has_surface())
-        {
-        }
     }
 
     if (event->value_mask & XCB_CONFIG_WINDOW_SIBLING)
