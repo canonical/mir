@@ -145,7 +145,7 @@ public:
     }
 
 private:
-    XWaylandWM *xwm;
+    XWaylandWM* const xwm;
     xcb_window_t window;
     std::shared_ptr<XWaylandWMShellSurface> shell_surface;
     bool props_dirty;
