@@ -34,6 +34,7 @@ class WlSeat;
 class WlSurface;
 class XWaylandWMSurface;
 class XWaylandWMShellSurface;
+
 class XWaylandWMShell
 {
 public:

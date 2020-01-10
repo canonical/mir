@@ -25,6 +25,7 @@
 #include "wl_surface.h"
 #include "xwayland_wm_shellsurface.h"
 #include "xwayland_wm_surface.h"
+#include "xwayland_wm_shell.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/readable_fd.h"
@@ -78,10 +79,10 @@ static const struct cursor_alternatives cursors[] = {
 
 namespace mf = mir::frontend;
 
-mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wc, wl_client* wlc, int fd)
-    : wlc(wc),
+mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
+    : wayland_connector(wayland_connector),
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
-      wlclient{wlc},
+      wayland_client{wayland_client},
       wm_fd{fd},
       xcb_connection(nullptr)
 {
@@ -245,6 +246,14 @@ void mf::XWaylandWM::set_net_active_window(xcb_window_t window)
 {
     xcb_change_property(xcb_connection, XCB_PROP_MODE_REPLACE, xcb_screen->root, xcb_atom.net_active_window,
                         xcb_atom.window, 32, 1, &window);
+}
+
+auto mf::XWaylandWM::build_shell_surface(
+    XWaylandWMSurface* wm_surface,
+    WlSurface* wayland_surface) -> std::shared_ptr<XWaylandWMShellSurface>
+{
+    auto const shell = std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"));
+    return shell->build_shell_surface(wm_surface, wayland_client, wayland_surface);
 }
 
 /* Events */
@@ -411,7 +420,6 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 
     auto surface = surfaces[event->window];
 
-    surface->set_surface_id(0);
     surface->set_wm_state(XWaylandWMSurface::WithdrawnState);
     surface->set_workspace(-1);
     xcb_unmap_window(xcb_connection, event->window);
@@ -483,11 +491,10 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surfac
     }
 
     uint32_t id = event->data.data32[0];
-    surface->set_surface_id(id);
 
-    wlc->run_on_wayland_display([wlclient=wlclient, id, surface](auto)
+    wayland_connector->run_on_wayland_display([client=wayland_client, id, surface](auto)
         {
-            wl_resource* resource = wl_client_get_object(wlclient, id);
+            wl_resource* resource = wl_client_get_object(client, id);
             auto* wlsurface = resource ? WlSurface::from(resource) : nullptr;
             if (wlsurface)
                 surface->set_surface(wlsurface);
