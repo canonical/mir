@@ -115,9 +115,6 @@ void mf::XWaylandWM::start()
 
     xcb_flush(xcb_connection);
 
-//    create_wm_cursor();
-//    set_cursor(xcb_screen->root, CursorLeftPointer);
-
     create_wm_window();
     xcb_flush(xcb_connection);
 }
