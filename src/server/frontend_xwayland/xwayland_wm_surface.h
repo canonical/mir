@@ -133,7 +133,7 @@ public:
     ~XWaylandWMSurface();
     void dirty_properties();
     void read_properties();
-    void set_surface(WlSurface* wayland_surface);
+    void set_surface(WlSurface* wayland_surface); ///< Should only be called on the Wayland thread
     void set_workspace(int workspace);
     void set_wm_state(WmState state);
     void set_net_wm_state();

@@ -43,6 +43,7 @@ public:
         WlSeat& seat,
         OutputManager* const output_manager);
 
+    /// Should only be called on the Wayland thread
     auto build_shell_surface(
         XWaylandWMSurface* xwayland_surface,
         wl_client* client,
