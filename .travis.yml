@@ -43,22 +43,22 @@ env:
   - DEBEMAIL="mir-ci-bot@canonical.com"
   - SPREAD_PATH=/tmp/spread
   matrix:
-  - SYSTEM=google:ubuntu-devel-64 TASK=ubuntu VARIANT=amd64
-  - SYSTEM=google:ubuntu-devel-proposed-64 TASK=ubuntu VARIANT=amd64
-  - SYSTEM=google:fedora-rawhide-64 TASK=fedora VARIANT=amd64
-  - SYSTEM=google:ubuntu-16.04-64 TASK=ubuntu VARIANT=amd64
-  - SYSTEM=google:ubuntu-16.04-64 TASK=ubuntu VARIANT=arm64
-  - SYSTEM=google:ubuntu-18.04-64 TASK=ubuntu VARIANT=clang
-  - SYSTEM=google:ubuntu-18.04-64 TASK=rpi VARIANT=armhf
-  - SYSTEM=google:ubuntu-19.04-64 TASK=ubuntu VARIANT=amd64
-  - SYSTEM=google:ubuntu-19.10-64 TASK=ubuntu VARIANT=amd64
-  - SYSTEM=google:fedora-30-64 TASK=fedora VARIANT=amd64
-  - SYSTEM=google:fedora-31-64 TASK=fedora VARIANT=amd64
+  - TASK=google:ubuntu-devel-64:spread/build/ubuntu:amd64
+  - TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
+  - TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
+  - TASK=google:ubuntu-16.04-64:spread/build/ubuntu:amd64
+  - TASK=google:ubuntu-16.04-64:spread/build/ubuntu:arm64
+  - TASK=google:ubuntu-18.04-64:spread/build/ubuntu:clang
+  - TASK=google:ubuntu-18.04-64:spread/build/rpi:armhf
+  - TASK=google:ubuntu-19.04-64:spread/build/ubuntu:amd64
+  - TASK=google:ubuntu-19.10-64:spread/build/ubuntu:amd64
+  - TASK=google:fedora-30-64:spread/build/fedora:amd64
+  - TASK=google:fedora-31-64:spread/build/fedora:amd64
 
 matrix:
   allow_failures:
-    - env: SYSTEM=google:ubuntu-devel-proposed-64 TASK=ubuntu VARIANT=amd64
-    - env: SYSTEM=google:fedora-rawhide-64 TASK=fedora VARIANT=amd64
+    - env: TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
+    - env: TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
   fast_finish: true
 
 before_install:
@@ -69,7 +69,7 @@ before_install:
 - popd
 
 script:
-- ${SPREAD_PATH}/spread -v $SYSTEM:spread/build/$TASK:$VARIANT
+- ${SPREAD_PATH}/spread -v ${TASK}
 
 jobs:
   include:
@@ -108,17 +108,17 @@ jobs:
     notifications:
       email:
       - mir-ci-bot@canonical.com
-    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=asan
+    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:asan
   - <<: *sanitize
-    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=tsan
+    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:tsan
   - <<: *sanitize
-    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=ubsan
+    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:ubsan
   - <<: *sanitize
-    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=asan_clang
+    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:asan_clang
   - <<: *sanitize
-    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=tsan_clang
+    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:tsan_clang
   - <<: *sanitize
-    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=ubsan_clang
+    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:ubsan_clang
 
   - stage: process snaps
     env: ~
