@@ -139,10 +139,6 @@ public:
     void set_state(MirWindowState state);
     void send_resize(const geometry::Size& new_size);
     void send_close_request();
-    bool has_surface()
-    {
-        return !*shell_surface_destroyed;
-    }
 
 private:
     XWaylandWM* const xwm;

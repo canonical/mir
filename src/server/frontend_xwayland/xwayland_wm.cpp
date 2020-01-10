@@ -484,12 +484,6 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surfac
         return;
     mir::log_verbose("handle surface_id");
 
-    if (surface->has_surface())
-    {
-        mir::log_verbose("Window already has a surface id");
-        return;
-    }
-
     uint32_t id = event->data.data32[0];
 
     wayland_connector->run_on_wayland_display([client=wayland_client, id, surface](auto)
@@ -516,31 +510,19 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
     if (event->value_mask & XCB_CONFIG_WINDOW_X)
     {
         values[++i] = event->x;
-        if (shellSurface && shellSurface->has_surface())
-        {
-        }
     }
     if (event->value_mask & XCB_CONFIG_WINDOW_Y)
     {
         values[++i] = event->y;
-        if (shellSurface && shellSurface->has_surface())
-        {
-        }
     }
 
     if (event->value_mask & XCB_CONFIG_WINDOW_WIDTH)
     {
         values[++i] = event->width;
-        if (shellSurface && shellSurface->has_surface())
-        {
-        }
     }
     if (event->value_mask & XCB_CONFIG_WINDOW_HEIGHT)
     {
         values[++i] = event->height;
-        if (shellSurface && shellSurface->has_surface())
-        {
-        }
     }
 
     if (event->value_mask & XCB_CONFIG_WINDOW_SIBLING)
