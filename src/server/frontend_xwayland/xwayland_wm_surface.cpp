@@ -82,11 +82,6 @@ void mf::XWaylandWMSurface::dirty_properties()
     props_dirty = true;
 }
 
-void mf::XWaylandWMSurface::set_surface_id(uint32_t id)
-{
-    surface_id = id;
-}
-
 void mf::XWaylandWMSurface::set_surface(WlSurface* wayland_surface)
 {
     shell_surface = xwm->build_shell_surface(this, wayland_surface);

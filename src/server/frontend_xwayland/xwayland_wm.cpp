@@ -420,7 +420,6 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 
     auto surface = surfaces[event->window];
 
-    surface->set_surface_id(0);
     surface->set_wm_state(XWaylandWMSurface::WithdrawnState);
     surface->set_workspace(-1);
     xcb_unmap_window(xcb_connection, event->window);
@@ -492,7 +491,6 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surfac
     }
 
     uint32_t id = event->data.data32[0];
-    surface->set_surface_id(id);
 
     wayland_connector->run_on_wayland_display([client=wayland_client, id, surface](auto)
         {
