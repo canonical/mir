@@ -84,6 +84,7 @@ mf::XWaylandWMSurface::~XWaylandWMSurface()
 
 void mf::XWaylandWMSurface::dirty_properties()
 {
+    std::lock_guard<std::mutex> lock{mutex};
     props_dirty = true;
 }
 
@@ -92,8 +93,11 @@ void mf::XWaylandWMSurface::set_surface(WlSurface* wayland_surface)
     shell_surface = xwm->build_shell_surface(this, wayland_surface);
     shell_surface_destroyed = shell_surface->destroyed_flag();
 
-    if (!properties.title.empty())
-      shell_surface->set_title(properties.title);
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (!properties.title.empty())
+            shell_surface->set_title(properties.title);
+    }
 
     // If a buffer has alread been committed, we need to create the scene::Surface without waiting for next commit
     if (wayland_surface->buffer_size())
@@ -133,12 +137,15 @@ void mf::XWaylandWMSurface::set_net_wm_state()
     uint32_t property[3];
     uint32_t i = 0;
 
-    if (fullscreen)
-        property[i++] = xwm->xcb_atom.net_wm_state_fullscreen;
-    if (maximized)
     {
-        property[i++] = xwm->xcb_atom.net_wm_state_maximized_horz;
-        property[i++] = xwm->xcb_atom.net_wm_state_maximized_vert;
+        std::lock_guard<std::mutex> lock{mutex};
+        if (fullscreen)
+            property[i++] = xwm->xcb_atom.net_wm_state_fullscreen;
+        if (maximized)
+        {
+            property[i++] = xwm->xcb_atom.net_wm_state_maximized_horz;
+            property[i++] = xwm->xcb_atom.net_wm_state_maximized_vert;
+        }
     }
 
     xcb_change_property(xwm->get_xcb_connection(), XCB_PROP_MODE_REPLACE, window, xwm->xcb_atom.net_wm_state,
@@ -148,6 +155,8 @@ void mf::XWaylandWMSurface::set_net_wm_state()
 
 void mf::XWaylandWMSurface::read_properties()
 {
+    std::lock_guard<std::mutex> lock{mutex};
+
     if (!props_dirty)
         return;
     props_dirty = false;

@@ -21,6 +21,8 @@
 #include "wl_surface.h"
 #include "xwayland_wm.h"
 
+#include <mutex>
+
 extern "C" {
 #include <xcb/xcb.h>
 }
@@ -144,11 +146,17 @@ private:
     XWaylandWM* const xwm;
     xcb_window_t const window;
 
+    std::mutex mutex;
+
     bool props_dirty;
     bool maximized;
     bool fullscreen;
-
-    //XWaylandWMSurface *transientFor;
+    struct
+    {
+        std::string title;
+        std::string appId;
+        int deleteWindow;
+    } properties;
 
     struct
     {
@@ -157,13 +165,6 @@ private:
         geometry::Size size;
         bool override_redirect;
     } const init;
-
-    struct
-    {
-        std::string title;
-        std::string appId;
-        int deleteWindow;
-    } properties;
 
     /// shell_surface should not be accessed unless this is false
     /// Should only be accessed on the Wayland thread
