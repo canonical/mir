@@ -250,7 +250,7 @@ void mf::XWaylandWM::set_net_active_window(xcb_window_t window)
 
 auto mf::XWaylandWM::build_shell_surface(
     XWaylandWMSurface* wm_surface,
-    WlSurface* wayland_surface) -> std::shared_ptr<XWaylandWMShellSurface>
+    WlSurface* wayland_surface) -> XWaylandWMShellSurface*
 {
     auto const shell = std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"));
     return shell->build_shell_surface(wm_surface, wayland_client, wayland_surface);

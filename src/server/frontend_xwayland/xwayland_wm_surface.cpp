@@ -57,7 +57,8 @@ mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event
           event->parent,
           {event->x, event->y},
           {event->width, event->height},
-          (bool)event->override_redirect}
+          (bool)event->override_redirect},
+      shell_surface_destroyed{std::make_shared<bool>(true)}
 {
     uint32_t values[1];
     xcb_get_geometry_cookie_t geometry_cookie;
@@ -75,6 +76,10 @@ mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event
 
 mf::XWaylandWMSurface::~XWaylandWMSurface()
 {
+    if (!*shell_surface_destroyed)
+    {
+        delete shell_surface;
+    }
 }
 
 void mf::XWaylandWMSurface::dirty_properties()
@@ -85,6 +90,7 @@ void mf::XWaylandWMSurface::dirty_properties()
 void mf::XWaylandWMSurface::set_surface(WlSurface* wayland_surface)
 {
     shell_surface = xwm->build_shell_surface(this, wayland_surface);
+    shell_surface_destroyed = shell_surface->destroyed_flag();
 
     if (!properties.title.empty())
       shell_surface->set_title(properties.title);

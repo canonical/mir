@@ -124,7 +124,7 @@ public:
     void set_net_active_window(xcb_window_t window);
     auto build_shell_surface(
         XWaylandWMSurface* wm_surface,
-        WlSurface* wayland_surface) -> std::shared_ptr<XWaylandWMShellSurface>;
+        WlSurface* wayland_surface) -> XWaylandWMShellSurface*;
 
     atom_t xcb_atom;
 

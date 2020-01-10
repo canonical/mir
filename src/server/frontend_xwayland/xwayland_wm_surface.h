@@ -141,13 +141,12 @@ public:
     void send_close_request();
     bool has_surface()
     {
-        return !!shell_surface;
+        return !*shell_surface_destroyed;
     }
 
 private:
     XWaylandWM* const xwm;
     xcb_window_t const window;
-    std::shared_ptr<XWaylandWMShellSurface> shell_surface;
 
     bool props_dirty;
     bool maximized;
@@ -169,6 +168,18 @@ private:
         std::string appId;
         int deleteWindow;
     } properties;
+
+    /// shell_surface should not be accessed unless this is false
+    /// Should only be accessed on the Wayland thread
+    std::shared_ptr<bool> shell_surface_destroyed;
+
+    /// Should only be accessed on the Wayland thread
+    /// When the associated wl_surface is destroyed:
+    /// - The WlSurface will call destory() on its role (this shell surface)
+    /// - shell_surface_destroyed will be set to true
+    /// - The shell surface will delete itself
+    /// This class may also safely delete the shell surface at any time (as long as it's on the Wayland thread)
+    XWaylandWMShellSurface* shell_surface;
 };
 } /* frontend */
 } /* mir */
