@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
+ * Copyright (C) 2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -18,11 +19,7 @@
  */
 
 #include "xwayland_wm.h"
-
-#include "mir/log.h"
 #include "xwayland_log.h"
-
-#include "wl_surface.h"
 #include "xwayland_wm_shellsurface.h"
 #include "xwayland_wm_surface.h"
 #include "xwayland_wm_shell.h"
@@ -875,11 +872,4 @@ bool mf::XWaylandWM::is_ours(uint32_t id)
 {
     auto setup = xcb_get_setup(xcb_connection);
     return (id & ~setup->resource_id_mask) == setup->resource_id_base;
-}
-
-// getters
-
-xcb_connection_t *mf::XWaylandWM::get_xcb_connection()
-{
-    return xcb_connection;
 }
