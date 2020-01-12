@@ -177,7 +177,6 @@ add_subdirectory(mir_test/)
 add_subdirectory(mir_test_framework/)
 add_subdirectory(mir_test_doubles/)
 add_subdirectory(client-language/)
-add_subdirectory(test-clients/)
 add_subdirectory(loader-tests/)
 
 add_library(mir-test-assist STATIC

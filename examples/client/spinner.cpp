@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "spinner/splash.h"
+#include "splash.h"
 #include <wayland-client.h>
 #include <csignal>
 

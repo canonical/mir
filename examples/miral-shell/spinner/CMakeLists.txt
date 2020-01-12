@@ -68,10 +68,13 @@ pkg_check_modules(WAYLAND_EGL REQUIRED wayland-egl)
 
 target_link_libraries(miral-spinner
   example-shell-lib
-  mirclientcpp
   EGL
   ${WAYLAND_EGL_LDFLAGS} ${WAYLAND_EGL_LIBRARIES}
   ${GLIB_LDFLAGS}
   ${GLESv2_LIBRARIES}
   ${MIRCLIENT_LDFLAGS}
+)
+
+target_include_directories(miral-spinner
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
 )

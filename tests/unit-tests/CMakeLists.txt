@@ -1,5 +1,8 @@
 include(CMakeDependentOption)
 
+add_library(mirdraw STATIC graphics_utils.cpp graphics.h)
+target_include_directories(mirdraw PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_definitions(
   -DMIR_CLIENT_PLATFORM_VERSION="${MIR_CLIENT_PLATFORM_VERSION}"
   -DMIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
