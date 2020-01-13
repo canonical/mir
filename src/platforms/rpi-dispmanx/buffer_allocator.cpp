@@ -38,6 +38,7 @@
 #include "mir/executor.h"
 #include "shm_buffer.h"
 #include "buffer_allocator.h"
+#include "buffer_from_wl_shm.h"
 
 #define MIR_LOG_COMPONENT "rpi-dispmanx"
 #include <mir/log.h>
@@ -330,5 +331,17 @@ std::shared_ptr<mg::Buffer> mg::rpi::BufferAllocator::buffer_from_resource(
         buffer,
         std::move(on_consumed),
         std::move(on_release));
+}
+
+auto mg::rpi::BufferAllocator::buffer_from_shm(
+    wl_resource* buffer,
+    std::shared_ptr<mir::Executor> wayland_executor,
+    std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer>
+{
+    return mg::wayland::buffer_from_wl_shm(
+        buffer,
+        std::move(wayland_executor),
+        egl_executor,
+        std::move(on_consumed));
 }
 
