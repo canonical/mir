@@ -85,10 +85,6 @@ struct mir::DisplayServer::Private
                 [this] { wayland_connector->stop(); },
                 [this] { wayland_connector->start(); });
 
-            auto xwayland = try_but_revert_if_unwinding(
-                [this] { xwayland_connector->stop(); },
-                [this] { xwayland_connector->start(); });
-
             auto prompt = try_but_revert_if_unwinding(
                 [this] { prompt_connector->stop(); },
                 [&, this] { prompt_connector->start(); });
@@ -169,10 +165,6 @@ struct mir::DisplayServer::Private
             auto wayland = try_but_revert_if_unwinding(
                 [this] { wayland_connector->start(); },
                 [&, this] { wayland_connector->stop(); });
-
-            auto xwayland = try_but_revert_if_unwinding(
-                [this] { xwayland_connector->start(); },
-                [&, this] { xwayland_connector->stop(); });
 
             connector->start();
         }
