@@ -75,6 +75,9 @@ public:
 	std::function<void()>&& ,
 	std::function<void()>&&) override;
 
+    std::shared_ptr<Buffer> buffer_from_shm(wl_resource* buffer, std::shared_ptr<mir::Executor> wayland_executor,
+                                            std::function<void()>&& on_consumed) override;
+
 private:
     std::shared_ptr<EGLExtensions> const egl_extensions;
     std::shared_ptr<renderer::gl::Context> const ctx;
