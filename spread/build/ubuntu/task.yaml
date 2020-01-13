@@ -81,6 +81,21 @@ execute: |
       --install \
       --tool "apt-get --yes -o Debug::pkgProblemResolver=yes"
 
+    # build for Raspberry Pi
+    if [ "${SPREAD_VARIANT}" == "rpi" ]; then
+        # Install the Pi userland
+        snap install --edge rpi-userland
+
+        # Install the right capnproto binary
+        apt-get --yes install capnproto:amd64
+
+        # Prepend the normal pkgconfig so that we pick up as much as possible from the standard environment
+        export PKG_CONFIG_PATH=/usr/share/pkgconfig:/usr/lib/pkgconfig:/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig:/snap/rpi-userland/current/opt/vc/lib/pkgconfig
+
+        # Enable the platform
+        echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_PLATFORM=rpi-dispmanx" >> debian/opts.mk
+    fi
+
     # use clang
     if [ "${CLANG}" -eq 1 ]; then
       apt-get install --yes --no-install-recommends clang
