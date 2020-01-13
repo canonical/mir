@@ -88,13 +88,11 @@ override_dh_install:
 # Delete the symlink so that --fail-missing doesn't think we've missed it
 # accidentally.
 	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
-	-dh_install -pmir-utils usr/bin/mirvanity
 
 ifeq ($(filter xenial yakkety zesty,$(DEB_DISTRIBUTION)),)
 	dh_install
 else
 	# xenial, yakkety & zesty predate dh_missing
-	rm debian/tmp/usr/bin/mirvanity
 	dh_install --fail-missing
 endif
 

@@ -1,4 +1,3 @@
-usr/bin/mir_stress
 usr/bin/mir_performance_tests
 usr/bin/mir-smoke-test-runner
 usr/bin/mir_platform_graphics_test_harness
