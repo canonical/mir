@@ -41,13 +41,12 @@ mf::XWaylandWMShellSurface::XWaylandWMShellSurface(
     : WindowWlSurfaceRole{&seat, client, wayland_surface, shell, output_manager},
       surface{xwayland_surface}
 {
-//    params->type = mir_window_type_normal;
     set_server_side_decorated(true);
 }
 
 mf::XWaylandWMShellSurface::~XWaylandWMShellSurface()
 {
-    mir::log_verbose("Im gone");
+    log_verbose("XWaylandWMShellSurface destroyed");
 }
 
 void mf::XWaylandWMShellSurface::destroy()

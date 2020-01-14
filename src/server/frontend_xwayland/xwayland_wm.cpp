@@ -76,6 +76,23 @@ static const struct cursor_alternatives cursors[] = {
 
 namespace mf = mir::frontend;
 
+namespace
+{
+template<typename T>
+auto c_array_to_string(T* data, size_t size) -> std::string
+{
+    std::string result = "[";
+    for (unsigned i = 0; i < size; i++)
+    {
+        if (i)
+            result += ", ";
+        result += std::to_string(*(data + i));
+    }
+    result += "]";
+    return result;
+}
+}
+
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
     : wayland_connector(wayland_connector),
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
@@ -283,15 +300,13 @@ void mf::XWaylandWM::handle_events()
             //(reinterpret_cast<xcb_leave_notify_event_t *>(event));
             break;
         case XCB_MOTION_NOTIFY:
-            mir::log_verbose("XCB_MOTION_NOTIFY");
+            handle_motion_notify(reinterpret_cast<xcb_motion_notify_event_t *>(event));
             //(reinterpret_cast<xcb_motion_notify_event_t *>(event));
             break;
         case XCB_CREATE_NOTIFY:
-            mir::log_verbose("XCB_CREATE_NOTIFY");
             handle_create_notify(reinterpret_cast<xcb_create_notify_event_t *>(event));
             break;
         case XCB_MAP_REQUEST:
-            mir::log_verbose("XCB_MAP_REQUEST");
             handle_map_request(reinterpret_cast<xcb_map_request_event_t *>(event));
             break;
         case XCB_MAP_NOTIFY:
@@ -299,7 +314,6 @@ void mf::XWaylandWM::handle_events()
             //(reinterpret_cast<xcb_map_notify_event_t *>(event));
             break;
         case XCB_UNMAP_NOTIFY:
-            mir::log_verbose("XCB_UNMAP_NOTIFY");
             handle_unmap_notify(reinterpret_cast<xcb_unmap_notify_event_t *>(event));
             break;
         case XCB_REPARENT_NOTIFY:
@@ -307,7 +321,6 @@ void mf::XWaylandWM::handle_events()
             //(reinterpret_cast<xcb_reparent_notify_event_t *>(event));
             break;
         case XCB_CONFIGURE_REQUEST:
-            mir::log_verbose("XCB_CONFIGURE_REQUEST");
             handle_configure_request(reinterpret_cast<xcb_configure_request_event_t *>(event));
             break;
         case XCB_CONFIGURE_NOTIFY:
@@ -315,18 +328,15 @@ void mf::XWaylandWM::handle_events()
             //(reinterpret_cast<xcb_configure_notify_event_t *>(event));
             break;
         case XCB_DESTROY_NOTIFY:
-            mir::log_verbose("XCB_DESTROY_NOTIFY");
             handle_destroy_notify(reinterpret_cast<xcb_destroy_notify_event_t *>(event));
             break;
         case XCB_MAPPING_NOTIFY:
             mir::log_verbose("XCB_MAPPING_NOTIFY");
             break;
         case XCB_PROPERTY_NOTIFY:
-            mir::log_verbose("XCB_PROPERTY_NOTIFY");
             handle_property_notify(reinterpret_cast<xcb_property_notify_event_t *>(event));
             break;
         case XCB_CLIENT_MESSAGE:
-            mir::log_verbose("XCB_CLIENT_MESSAGE");
             handle_client_message(reinterpret_cast<xcb_client_message_event_t *>(event));
             break;
         case XCB_FOCUS_IN:
@@ -348,8 +358,6 @@ void mf::XWaylandWM::handle_events()
 
 void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 {
-    mir::log_verbose("XCB_PROPERTY_NOTIFY (window %d)", event->window);
-
     auto surface = surfaces[event->window];
     if (!surface)
         return;
@@ -357,20 +365,48 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
     surface->dirty_properties();
 
     if (event->state == XCB_PROPERTY_DELETE)
-        mir::log_verbose("XCB_PROPERTY_NOTIFY: deleted");
+    {
+        log_verbose(
+            "XCB_PROPERTY_NOTIFY (%s).%s deleted",
+            get_window_debug_string(event->window).c_str(),
+            get_atom_name(event->atom).c_str());
+    }
     else
-        read_and_dump_property(event->window, event->atom);
+    {
+        read_and_log_property(event->window, event->atom);
+    }
 }
 
 void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 {
+    log_verbose(
+        "XCB_CREATE_NOTIFY: creating new XWaylandWMSurface from %s",
+        get_window_debug_string(event->window).c_str());
     surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
+}
+
+void mf::XWaylandWM::handle_motion_notify(xcb_motion_notify_event_t *event)
+{
+    log_verbose(
+        "XCB_MOTION_NOTIFY:\n"
+        "   root:       %s\n"
+        "   event:      %s\n"
+        "   child:      %s\n"
+        "   root pos:   %d, %d\n"
+        "   event pos:  %d, %d",
+        get_window_debug_string(event->root).c_str(),
+        get_window_debug_string(event->event).c_str(),
+        get_window_debug_string(event->child).c_str(),
+        event->root_x, event->root_y,
+        event->event_x, event->event_y);
 }
 
 void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
 {
-    mir::log_verbose("XCB_DESTROY_NOTIFY (window %d, event %d%s)", event->window, event->event,
-                     is_ours(event->window) ? ", ours" : "");
+    log_verbose(
+        "XCB_DESTROY_NOTIFY window: %s, event: %s",
+        get_window_debug_string(event->window).c_str(),
+        get_window_debug_string(event->event).c_str());
 
     if (is_ours(event->window))
         return;
@@ -383,18 +419,17 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
 
 void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
 {
+    log_verbose(
+        "XCB_MAP_REQUEST %s",
+        get_window_debug_string(event->window).c_str());
+
     if (is_ours(event->window))
-    {
-        mir::log_verbose("XCB_MAP_REQUEST (window %d, ours)", event->window);
         return;
-    }
 
     if (surfaces.find(event->window) == surfaces.end())
         return;
 
     auto surface = surfaces[event->window];
-
-    mir::log_verbose("XCB_MAP_REQUEST (window %d)", event->window);
 
     surface->read_properties();
     surface->set_wm_state(XWaylandWMSurface::NormalState);
@@ -406,8 +441,10 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
 
 void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 {
-    mir::log_verbose("XCB_UNMAP_NOTIFY (window %d, event %d%s)", event->window, event->event,
-                     is_ours(event->window) ? ", ours" : "");
+    log_verbose(
+        "XCB_UNMAP_NOTIFY window: %s, event: %s",
+        get_window_debug_string(event->window).c_str(),
+        get_window_debug_string(event->event).c_str());
 
     if (is_ours(event->window))
         return;
@@ -430,14 +467,10 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 
 void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
 {
-    mir::log_verbose("XCB_CLIENT_MESSAGE (%s %d %d %d %d %d win %d)",
-                     get_atom_name(event->type),
-                     event->data.data32[0],
-                     event->data.data32[1],
-                     event->data.data32[2],
-                     event->data.data32[3],
-                     event->data.data32[4],
-                     event->window);
+    log_verbose(
+        "XCB_CLIENT_MESSAGE %s on %s",
+        get_atom_name(event->type).c_str(),
+        get_window_debug_string(event->window).c_str());
 
     if (surfaces.find(event->window) == surfaces.end())
         return;
@@ -457,8 +490,6 @@ void mf::XWaylandWM::handle_move_resize(std::shared_ptr<XWaylandWMSurface> surfa
     if (!surface || !event)
         return;
 
-    mir::log_verbose("handle move resize");
-
     int detail = event->data.data32[2];
     surface->move_resize(detail);
 }
@@ -467,7 +498,6 @@ void mf::XWaylandWM::handle_change_state(std::shared_ptr<XWaylandWMSurface> surf
 {
     if (!surface || !event)
         return;
-    mir::log_verbose("Handle change state");
 
     if (event->data.data32[0] == 3)
         surface->set_state(mir_window_state_minimized);
@@ -477,14 +507,12 @@ void mf::XWaylandWM::handle_state(std::shared_ptr<XWaylandWMSurface> surface, xc
 {
     if (!surface || !event)
         return;
-    mir::log_verbose("Handle state");
 }
 
 void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
 {
     if (!surface || !event)
         return;
-    mir::log_verbose("handle surface_id");
 
     uint32_t id = event->data.data32[0];
 
@@ -501,8 +529,18 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surfac
 
 void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *event)
 {
-    mir::log_verbose("XCB_CONFIGURE_REQUEST (window %d) %d,%d @ %dx%d", event->window, event->x, event->y, event->width,
-                     event->height);
+    log_verbose(
+        "XCB_CONFIGURE_REQUEST:\n"
+        "   parent:     %s\n"
+        "   window:     %s\n"
+        "   sibling:    %s\n"
+        "   position:   %d, %d\n"
+        "   size:       %dx%d",
+        get_window_debug_string(event->parent).c_str(),
+        get_window_debug_string(event->window).c_str(),
+        get_window_debug_string(event->sibling).c_str(),
+        event->x, event->y,
+        event->width, event->height);
 
     auto shellSurface = surfaces[event->window];
 
@@ -740,91 +778,146 @@ void mf::XWaylandWM::wm_get_resources()
     free(formats_reply);
 }
 
-void mf::XWaylandWM::read_and_dump_property(xcb_window_t window, xcb_atom_t property)
+void mf::XWaylandWM::read_and_log_property(xcb_window_t window, xcb_atom_t property)
 {
-    xcb_get_property_reply_t *reply;
-    xcb_get_property_cookie_t cookie;
+    // TODO: this might hurt performence, is used only for logging and runs even when logging isn't enabled
 
-    cookie = xcb_get_property(xcb_connection, 0, window, property, XCB_ATOM_ANY, 0, 2048);
-    reply = xcb_get_property_reply(xcb_connection, cookie, NULL);
+    xcb_get_property_cookie_t const cookie = xcb_get_property(
+        xcb_connection,
+        0, // don't delete
+        window,
+        property,
+        XCB_ATOM_ANY,
+        0,
+        2048);
 
-    dump_property(property, reply);
+    xcb_get_property_reply_t* const reply = xcb_get_property_reply(xcb_connection, cookie, NULL);
+
+    log_property(window, property, reply);
 
     free(reply);
 }
 
-void mf::XWaylandWM::dump_property(xcb_atom_t property, xcb_get_property_reply_t *reply)
+void mf::XWaylandWM::log_property(xcb_window_t window, xcb_atom_t property, xcb_get_property_reply_t* reply)
 {
-    int32_t *incr_value;
-    const char *text_value, *name;
-    xcb_atom_t *atom_value;
-    int len;
-    uint32_t i;
+    auto const prop_name = get_atom_name(property);
+    auto const reply_str = get_reply_debug_string(reply);
 
-    mir::log_verbose("prop name %s: ", get_atom_name(property));
-    if (reply == NULL)
+    log_verbose(
+        "XCB_PROPERTY_NOTIFY (%s).%s = %s",
+        get_window_debug_string(window).c_str(),
+        prop_name.c_str(),
+        reply_str.c_str());
+}
+
+auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> std::string
+{
+    if (reply == nullptr)
     {
-        mir::log_verbose("(no reply)\n");
-        return;
+        return "(null reply)";
     }
-
-    mir::log_verbose("%s/%d, length %d (value_len %d): ",
-                     get_atom_name(reply->type),
-                     reply->format,
-                     xcb_get_property_value_length(reply),
-                     reply->value_len);
-
-    if (reply->type == xcb_atom.incr)
+    else if (auto const text = get_reply_string(reply))
     {
-        incr_value = (int32_t *)xcb_get_property_value(reply);
-        mir::log_verbose("%d\n", *incr_value);
-    }
-    else if (reply->type == xcb_atom.utf8_string || reply->type == xcb_atom.string)
-    {
-        text_value = (const char *)xcb_get_property_value(reply);
-        if (reply->value_len > 40)
-            len = 40;
-        else
-            len = reply->value_len;
-        mir::log_verbose("\"%.*s\"\n", len, text_value);
+        return "\"" + text.value() + "\"";
     }
     else if (reply->type == XCB_ATOM_ATOM)
     {
-        atom_value = (xcb_atom_t *)xcb_get_property_value(reply);
-        for (i = 0; i < reply->value_len; i++)
-        {
-            name = get_atom_name(atom_value[i]);
+        xcb_atom_t const* atoms_ptr = (xcb_atom_t *)xcb_get_property_value(reply);
+        std::vector<xcb_atom_t> atoms{atoms_ptr, atoms_ptr + reply->value_len};
 
-            mir::log_verbose("name: %s", name);
+        std::string result{"atoms: ["};
+        bool first = true;
+        for (auto const& atom : atoms)
+        {
+            if (!first)
+                result += ", ";
+            first = false;
+            result += get_atom_name(atom);
         }
+        result += "]";
+
+        return result;
+    }
+    else
+    {
+        size_t const len = reply->value_len;
+        std::string result =
+            std::to_string(reply->format) + "bit " +
+            get_atom_name(len) +
+            "[" + std::to_string(reply->value_len) + "]";
+
+        if ((reply->type == XCB_ATOM_CARDINAL || reply->type == XCB_ATOM_INTEGER) && len < 32)
+        {
+            result += ": ";
+            void* const ptr = xcb_get_property_value(reply);
+            switch (reply->type)
+            {
+            case XCB_ATOM_CARDINAL: // unsigned number
+                switch (reply->format)
+                {
+                case 8: result += c_array_to_string((uint8_t*)ptr, len); break;
+                case 16: result += c_array_to_string((uint16_t*)ptr, len); break;
+                case 32: result += c_array_to_string((uint32_t*)ptr, len); break;
+                }
+                break;
+
+            case XCB_ATOM_INTEGER: // signed number
+                switch (reply->format)
+                {
+                case 8: result += c_array_to_string((int8_t*)ptr, len); break;
+                case 16: result += c_array_to_string((int16_t*)ptr, len); break;
+                case 32: result += c_array_to_string((int32_t*)ptr, len); break;
+                }
+                break;
+            }
+        }
+        return result;
     }
 }
 
-const char *mf::XWaylandWM::get_atom_name(xcb_atom_t atom)
+auto mf::XWaylandWM::get_window_debug_string(xcb_window_t window) -> std::string
 {
-    xcb_get_atom_name_cookie_t cookie;
-    xcb_get_atom_name_reply_t *reply;
-    xcb_generic_error_t *e;
-    static char buffer[64];
+    if (window)
+        return std::string{} + (is_ours(window) ? "our " : "") + "window " + std::to_string(window);
+    else
+        return "null window";
+}
+
+auto mf::XWaylandWM::get_reply_string(xcb_get_property_reply_t* reply) -> std::experimental::optional<std::string>
+{
+    if (reply->type == xcb_atom.string || reply->type == xcb_atom.utf8_string)
+        return std::string{(const char *)xcb_get_property_value(reply), reply->value_len};
+    else
+        return std::experimental::nullopt;
+
+}
+
+auto mf::XWaylandWM::get_atom_name(xcb_atom_t atom) -> std::string
+{
+    // TODO: cache, for cheaper lookup or eliminate usage altogether
 
     if (atom == XCB_ATOM_NONE)
         return "None";
 
-    cookie = xcb_get_atom_name(xcb_connection, atom);
-    reply = xcb_get_atom_name_reply(xcb_connection, cookie, &e);
+    xcb_get_atom_name_cookie_t const cookie = xcb_get_atom_name(xcb_connection, atom);
+    xcb_get_atom_name_reply_t* const reply = xcb_get_atom_name_reply(xcb_connection, cookie, nullptr);
+
+    std::string name;
 
     if (reply)
     {
-        snprintf(buffer, sizeof buffer, "%.*s", xcb_get_atom_name_name_length(reply), xcb_get_atom_name_name(reply));
+        auto const name_data = xcb_get_atom_name_name(reply);
+        auto const name_len = xcb_get_atom_name_name_length(reply);
+        name = std::string{name_data, name_data + name_len};
     }
     else
     {
-        snprintf(buffer, sizeof buffer, "(atom %u)", atom);
+        name = "Atom " + std::to_string(atom);
     }
 
     free(reply);
 
-    return buffer;
+    return name;
 }
 
 void mf::XWaylandWM::setup_visual_and_colormap()
