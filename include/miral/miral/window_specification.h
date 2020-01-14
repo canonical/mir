@@ -105,6 +105,8 @@ public:
     auto type() -> mir::optional_value<MirWindowType>&;
     auto state() -> mir::optional_value<MirWindowState>&;
     auto preferred_orientation() -> mir::optional_value<MirOrientationMode>&;
+    /// Relative to window's surface's CONTENT offset and size
+    /// (not equal to the top_left and size exposed by this interface if server-side decorations are in use)
     auto aux_rect() -> mir::optional_value<Rectangle>&;
     auto placement_hints() -> mir::optional_value<MirPlacementHints>&;
     auto window_placement_gravity() -> mir::optional_value<MirPlacementGravity>&;
