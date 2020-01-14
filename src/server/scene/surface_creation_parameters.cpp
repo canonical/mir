@@ -147,7 +147,7 @@ void ms::SurfaceCreationParameters::update_from(msh::SurfaceSpecification const&
     if (that.buffer_usage.is_set())
         buffer_usage = that.buffer_usage.value();
     if (that.name.is_set())
-        name = that.name;
+        name = that.name.value();
     if (that.output_id.is_set())
         output_id = that.output_id.value();
     if (that.type.is_set())
