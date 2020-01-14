@@ -120,12 +120,29 @@ struct StubSurface : mir::test::doubles::StubSurface
     auto depth_layer() const -> MirDepthLayer override { return depth_layer_; }
     void set_depth_layer(MirDepthLayer depth_layer) override { depth_layer_ = depth_layer; }
 
+    mir::geometry::Displacement content_offset() const override { return content_offset_; }
+    mir::geometry::Size content_size() const override
+    {
+        return {size_.width - content_size_offset.dx, size_.height - content_size_offset.dy};
+    }
+    void set_window_margins(
+        mir::geometry::DeltaY top,
+        mir::geometry::DeltaX left,
+        mir::geometry::DeltaY bottom,
+        mir::geometry::DeltaX right) override
+    {
+        content_offset_ = mir::geometry::Displacement{left, top};
+        content_size_offset = mir::geometry::Displacement{left + right, top + bottom};
+    }
+
     std::string name_;
     MirWindowType type_;
     mir::geometry::Point top_left_;
     mir::geometry::Size size_;
     MirWindowState state_ = mir_window_state_restored;
     MirDepthLayer depth_layer_;
+    mir::geometry::Displacement content_offset_;
+    mir::geometry::Displacement content_size_offset;
 };
 
 struct StubStubSession : mir::test::doubles::StubSession
