@@ -93,6 +93,11 @@ struct BracedItemStream
         out.fill(fill);
         return *this;
     }
+
+    auto append(char const* name, std::weak_ptr<mir::scene::Surface> item) const -> BracedItemStream const&
+    {
+        return append(name, item.lock());
+    }
 };
 
 auto operator<< (std::ostream& out, miral::WindowSpecification::AspectRatio const& ratio) -> std::ostream&
@@ -136,6 +141,7 @@ auto dump_of(miral::WindowInfo const& info) -> std::string
         APPEND(name);
         APPEND(type);
         APPEND(state);
+        APPEND(parent);
         bout.append("top_left", info.window().top_left());
         bout.append("size", info.window().size());
         if (info.state() != mir_window_state_restored) APPEND(restore_rect);
@@ -175,6 +181,7 @@ auto dump_of(miral::WindowSpecification const& specification) -> std::string
 #define APPEND_IF_SET(field) if (specification.field().is_set()) bout.append(#field, specification.field().value());
         APPEND_IF_SET(name);
         APPEND_IF_SET(type);
+        APPEND_IF_SET(parent);
         APPEND_IF_SET(top_left);
         APPEND_IF_SET(size);
         APPEND_IF_SET(output_id);
