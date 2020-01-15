@@ -76,11 +76,6 @@ static const struct cursor_alternatives cursors[] = {
 
 namespace mf = mir::frontend;
 
-namespace
-{
-std::string const wm_name{"Mir XWM"};
-}
-
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
     : wayland_connector(wayland_connector),
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
@@ -236,6 +231,8 @@ void mf::XWaylandWM::create_wm_cursor()
 
 void mf::XWaylandWM::create_wm_window()
 {
+    std::string const wm_name{"Mir XWM"};
+
     xcb_window = xcb_generate_id(xcb_connection);
     xcb_create_window(xcb_connection, XCB_COPY_FROM_PARENT, xcb_window, xcb_screen->root, 0, 0, 10, 10, 0,
                       XCB_WINDOW_CLASS_INPUT_OUTPUT, xcb_screen->root_visual, 0, NULL);
