@@ -46,7 +46,8 @@ mf::XWaylandWMShellSurface::XWaylandWMShellSurface(
 
 mf::XWaylandWMShellSurface::~XWaylandWMShellSurface()
 {
-    log_verbose("XWaylandWMShellSurface destroyed");
+    if (verbose_xwayland_logging_enabled())
+        log_debug("XWaylandWMShellSurface destroyed");
 }
 
 void mf::XWaylandWMShellSurface::destroy()

@@ -288,15 +288,18 @@ void mf::XWaylandWM::handle_events()
         {
         case XCB_BUTTON_PRESS:
         case XCB_BUTTON_RELEASE:
-            mir::log_verbose("XCB_BUTTON_RELEASE");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_BUTTON_RELEASE");
             //(reinterpret_cast<xcb_button_press_event_t *>(event));
             break;
         case XCB_ENTER_NOTIFY:
-            mir::log_verbose("XCB_ENTER_NOTIFY");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_ENTER_NOTIFY");
             //(reinterpret_cast<xcb_enter_notify_event_t *>(event));
             break;
         case XCB_LEAVE_NOTIFY:
-            mir::log_verbose("XCB_LEAVE_NOTIFY");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_LEAVE_NOTIFY");
             //(reinterpret_cast<xcb_leave_notify_event_t *>(event));
             break;
         case XCB_MOTION_NOTIFY:
@@ -310,28 +313,32 @@ void mf::XWaylandWM::handle_events()
             handle_map_request(reinterpret_cast<xcb_map_request_event_t *>(event));
             break;
         case XCB_MAP_NOTIFY:
-            mir::log_verbose("XCB_MAP_NOTIFY");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_MAP_NOTIFY");
             //(reinterpret_cast<xcb_map_notify_event_t *>(event));
             break;
         case XCB_UNMAP_NOTIFY:
             handle_unmap_notify(reinterpret_cast<xcb_unmap_notify_event_t *>(event));
             break;
         case XCB_REPARENT_NOTIFY:
-            mir::log_verbose("XCB_REPARENT_NOTIFY");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_REPARENT_NOTIFY");
             //(reinterpret_cast<xcb_reparent_notify_event_t *>(event));
             break;
         case XCB_CONFIGURE_REQUEST:
             handle_configure_request(reinterpret_cast<xcb_configure_request_event_t *>(event));
             break;
         case XCB_CONFIGURE_NOTIFY:
-            mir::log_verbose("XCB_CONFIGURE_NOTIFY");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_CONFIGURE_NOTIFY");
             //(reinterpret_cast<xcb_configure_notify_event_t *>(event));
             break;
         case XCB_DESTROY_NOTIFY:
             handle_destroy_notify(reinterpret_cast<xcb_destroy_notify_event_t *>(event));
             break;
         case XCB_MAPPING_NOTIFY:
-            mir::log_verbose("XCB_MAPPING_NOTIFY");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_MAPPING_NOTIFY");
             break;
         case XCB_PROPERTY_NOTIFY:
             handle_property_notify(reinterpret_cast<xcb_property_notify_event_t *>(event));
@@ -340,7 +347,8 @@ void mf::XWaylandWM::handle_events()
             handle_client_message(reinterpret_cast<xcb_client_message_event_t *>(event));
             break;
         case XCB_FOCUS_IN:
-            mir::log_verbose("XCB_FOCUS_IN");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_FOCUS_IN");
             //(reinterpret_cast<xcb_focus_in_event_t *>(event));
         default:
             break;
@@ -366,10 +374,13 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 
     if (event->state == XCB_PROPERTY_DELETE)
     {
-        log_verbose(
-            "XCB_PROPERTY_NOTIFY (%s).%s deleted",
-            get_window_debug_string(event->window).c_str(),
-            get_atom_name(event->atom).c_str());
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "XCB_PROPERTY_NOTIFY (%s).%s deleted",
+                get_window_debug_string(event->window).c_str(),
+                get_atom_name(event->atom).c_str());
+        }
     }
     else
     {
@@ -379,34 +390,44 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 
 void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 {
-    log_verbose(
-        "XCB_CREATE_NOTIFY: creating new XWaylandWMSurface from %s",
-        get_window_debug_string(event->window).c_str());
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "XCB_CREATE_NOTIFY: creating new XWaylandWMSurface from %s",
+            get_window_debug_string(event->window).c_str());
+    }
+
     surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
 }
 
 void mf::XWaylandWM::handle_motion_notify(xcb_motion_notify_event_t *event)
 {
-    log_verbose(
-        "XCB_MOTION_NOTIFY:\n"
-        "   root:       %s\n"
-        "   event:      %s\n"
-        "   child:      %s\n"
-        "   root pos:   %d, %d\n"
-        "   event pos:  %d, %d",
-        get_window_debug_string(event->root).c_str(),
-        get_window_debug_string(event->event).c_str(),
-        get_window_debug_string(event->child).c_str(),
-        event->root_x, event->root_y,
-        event->event_x, event->event_y);
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "XCB_MOTION_NOTIFY:\n"
+            "   root:       %s\n"
+            "   event:      %s\n"
+            "   child:      %s\n"
+            "   root pos:   %d, %d\n"
+            "   event pos:  %d, %d",
+            get_window_debug_string(event->root).c_str(),
+            get_window_debug_string(event->event).c_str(),
+            get_window_debug_string(event->child).c_str(),
+            event->root_x, event->root_y,
+            event->event_x, event->event_y);
+    }
 }
 
 void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
 {
-    log_verbose(
-        "XCB_DESTROY_NOTIFY window: %s, event: %s",
-        get_window_debug_string(event->window).c_str(),
-        get_window_debug_string(event->event).c_str());
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "XCB_DESTROY_NOTIFY window: %s, event: %s",
+            get_window_debug_string(event->window).c_str(),
+            get_window_debug_string(event->event).c_str());
+    }
 
     if (is_ours(event->window))
         return;
@@ -419,9 +440,12 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
 
 void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
 {
-    log_verbose(
-        "XCB_MAP_REQUEST %s",
-        get_window_debug_string(event->window).c_str());
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "XCB_MAP_REQUEST %s",
+            get_window_debug_string(event->window).c_str());
+    }
 
     if (is_ours(event->window))
         return;
@@ -441,10 +465,13 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
 
 void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 {
-    log_verbose(
-        "XCB_UNMAP_NOTIFY window: %s, event: %s",
-        get_window_debug_string(event->window).c_str(),
-        get_window_debug_string(event->event).c_str());
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "XCB_UNMAP_NOTIFY window: %s, event: %s",
+            get_window_debug_string(event->window).c_str(),
+            get_window_debug_string(event->event).c_str());
+    }
 
     if (is_ours(event->window))
         return;
@@ -467,10 +494,13 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 
 void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
 {
-    log_verbose(
-        "XCB_CLIENT_MESSAGE %s on %s",
-        get_atom_name(event->type).c_str(),
-        get_window_debug_string(event->window).c_str());
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "XCB_CLIENT_MESSAGE %s on %s",
+            get_atom_name(event->type).c_str(),
+            get_window_debug_string(event->window).c_str());
+    }
 
     if (surfaces.find(event->window) == surfaces.end())
         return;
@@ -529,18 +559,21 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surfac
 
 void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *event)
 {
-    log_verbose(
-        "XCB_CONFIGURE_REQUEST:\n"
-        "   parent:     %s\n"
-        "   window:     %s\n"
-        "   sibling:    %s\n"
-        "   position:   %d, %d\n"
-        "   size:       %dx%d",
-        get_window_debug_string(event->parent).c_str(),
-        get_window_debug_string(event->window).c_str(),
-        get_window_debug_string(event->sibling).c_str(),
-        event->x, event->y,
-        event->width, event->height);
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "XCB_CONFIGURE_REQUEST:\n"
+            "   parent:     %s\n"
+            "   window:     %s\n"
+            "   sibling:    %s\n"
+            "   position:   %d, %d\n"
+            "   size:       %dx%d",
+            get_window_debug_string(event->parent).c_str(),
+            get_window_debug_string(event->window).c_str(),
+            get_window_debug_string(event->sibling).c_str(),
+            event->x, event->y,
+            event->width, event->height);
+    }
 
     auto shellSurface = surfaces[event->window];
 
@@ -750,12 +783,13 @@ void mf::XWaylandWM::wm_get_resources()
 
     xfixes = xcb_get_extension_data(xcb_connection, &xcb_xfixes_id);
     if (!xfixes || !xfixes->present)
-        mir::log_warning("xfixes not available");
+        log_warning("xfixes not available");
 
     xfixes_cookie = xcb_xfixes_query_version(xcb_connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
     xfixes_reply = xcb_xfixes_query_version_reply(xcb_connection, xfixes_cookie, NULL);
 
-    mir::log_verbose("xfixes version: %d.%d", xfixes_reply->major_version, xfixes_reply->minor_version);
+    if (verbose_xwayland_logging_enabled())
+        log_debug("xfixes version: %d.%d", xfixes_reply->major_version, xfixes_reply->minor_version);
 
     free(xfixes_reply);
 
@@ -803,11 +837,14 @@ void mf::XWaylandWM::log_property(xcb_window_t window, xcb_atom_t property, xcb_
     auto const prop_name = get_atom_name(property);
     auto const reply_str = get_reply_debug_string(reply);
 
-    log_verbose(
-        "XCB_PROPERTY_NOTIFY (%s).%s = %s",
-        get_window_debug_string(window).c_str(),
-        prop_name.c_str(),
-        reply_str.c_str());
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "XCB_PROPERTY_NOTIFY (%s).%s = %s",
+            get_window_debug_string(window).c_str(),
+            prop_name.c_str(),
+            reply_str.c_str());
+    }
 }
 
 auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> std::string
