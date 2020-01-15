@@ -899,10 +899,14 @@ auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> 
 
 auto mf::XWaylandWM::get_window_debug_string(xcb_window_t window) -> std::string
 {
-    if (window)
-        return std::string{} + (is_ours(window) ? "our " : "") + "window " + std::to_string(window);
-    else
+    if (!window)
         return "null window";
+    else if (window == xcb_screen->root)
+        return "root window";
+    else if (is_ours(window))
+        return "our window " + std::to_string(window);
+    else
+        return "window " + std::to_string(window);
 }
 
 auto mf::XWaylandWM::get_reply_string(xcb_get_property_reply_t* reply) -> std::experimental::optional<std::string>
