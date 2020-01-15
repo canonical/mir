@@ -79,10 +79,10 @@ namespace mf = mir::frontend;
 namespace
 {
 template<typename T>
-auto c_array_to_string(T* data, size_t size) -> std::string
+auto data_buffer_to_debug_string(T* data, size_t elements) -> std::string
 {
     std::string result = "[";
-    for (unsigned i = 0; i < size; i++)
+    for (unsigned i = 0; i < elements; i++)
     {
         if (i)
             result += ", ";
@@ -877,18 +877,18 @@ auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> 
             case XCB_ATOM_CARDINAL: // unsigned number
                 switch (reply->format)
                 {
-                case 8: result += c_array_to_string((uint8_t*)ptr, len); break;
-                case 16: result += c_array_to_string((uint16_t*)ptr, len); break;
-                case 32: result += c_array_to_string((uint32_t*)ptr, len); break;
+                case 8: result += data_buffer_to_debug_string((uint8_t*)ptr, len); break;
+                case 16: result += data_buffer_to_debug_string((uint16_t*)ptr, len); break;
+                case 32: result += data_buffer_to_debug_string((uint32_t*)ptr, len); break;
                 }
                 break;
 
             case XCB_ATOM_INTEGER: // signed number
                 switch (reply->format)
                 {
-                case 8: result += c_array_to_string((int8_t*)ptr, len); break;
-                case 16: result += c_array_to_string((int16_t*)ptr, len); break;
-                case 32: result += c_array_to_string((int32_t*)ptr, len); break;
+                case 8: result += data_buffer_to_debug_string((int8_t*)ptr, len); break;
+                case 16: result += data_buffer_to_debug_string((int16_t*)ptr, len); break;
+                case 32: result += data_buffer_to_debug_string((int32_t*)ptr, len); break;
                 }
                 break;
             }
