@@ -372,19 +372,39 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 
     surface->dirty_properties();
 
-    if (event->state == XCB_PROPERTY_DELETE)
+    if (verbose_xwayland_logging_enabled())
     {
-        if (verbose_xwayland_logging_enabled())
+        if (event->state == XCB_PROPERTY_DELETE)
         {
             log_debug(
                 "XCB_PROPERTY_NOTIFY (%s).%s deleted",
                 get_window_debug_string(event->window).c_str(),
                 get_atom_name(event->atom).c_str());
         }
-    }
-    else
-    {
-        read_and_log_property(event->window, event->atom);
+        else
+        {
+            xcb_get_property_cookie_t const cookie = xcb_get_property(
+                xcb_connection,
+                0, // don't delete
+                event->window,
+                event->atom,
+                XCB_ATOM_ANY,
+                0,
+                2048);
+
+            xcb_get_property_reply_t* const reply = xcb_get_property_reply(xcb_connection, cookie, NULL);
+
+            auto const prop_name = get_atom_name(event->atom);
+            auto const reply_str = get_reply_debug_string(reply);
+
+            log_debug(
+                "XCB_PROPERTY_NOTIFY (%s).%s = %s",
+                get_window_debug_string(event->window).c_str(),
+                prop_name.c_str(),
+                reply_str.c_str());
+
+            free(reply);
+        }
     }
 }
 
@@ -810,41 +830,6 @@ void mf::XWaylandWM::wm_get_resources()
     }
 
     free(formats_reply);
-}
-
-void mf::XWaylandWM::read_and_log_property(xcb_window_t window, xcb_atom_t property)
-{
-    // TODO: this might hurt performence, is used only for logging and runs even when logging isn't enabled
-
-    xcb_get_property_cookie_t const cookie = xcb_get_property(
-        xcb_connection,
-        0, // don't delete
-        window,
-        property,
-        XCB_ATOM_ANY,
-        0,
-        2048);
-
-    xcb_get_property_reply_t* const reply = xcb_get_property_reply(xcb_connection, cookie, NULL);
-
-    log_property(window, property, reply);
-
-    free(reply);
-}
-
-void mf::XWaylandWM::log_property(xcb_window_t window, xcb_atom_t property, xcb_get_property_reply_t* reply)
-{
-    auto const prop_name = get_atom_name(property);
-    auto const reply_str = get_reply_debug_string(reply);
-
-    if (verbose_xwayland_logging_enabled())
-    {
-        log_debug(
-            "XCB_PROPERTY_NOTIFY (%s).%s = %s",
-            get_window_debug_string(window).c_str(),
-            prop_name.c_str(),
-            reply_str.c_str());
-    }
 }
 
 auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> std::string

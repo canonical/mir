@@ -160,8 +160,6 @@ private:
     void set_cursor(xcb_window_t id, const CursorType &cursor);
     void create_wm_cursor();
     void wm_get_resources();
-    void read_and_log_property(xcb_window_t window, xcb_atom_t property);
-    void log_property(xcb_window_t window, xcb_atom_t property, xcb_get_property_reply_t* reply);
     auto get_reply_string(xcb_get_property_reply_t* reply) -> std::experimental::optional<std::string>;
     auto get_reply_debug_string(xcb_get_property_reply_t* reply) -> std::string;
     auto get_window_debug_string(xcb_window_t window) -> std::string;
