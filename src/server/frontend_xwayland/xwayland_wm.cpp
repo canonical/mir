@@ -329,9 +329,7 @@ void mf::XWaylandWM::handle_events()
             handle_configure_request(reinterpret_cast<xcb_configure_request_event_t *>(event));
             break;
         case XCB_CONFIGURE_NOTIFY:
-            if (verbose_xwayland_logging_enabled())
-                log_debug("XCB_CONFIGURE_NOTIFY");
-            //(reinterpret_cast<xcb_configure_notify_event_t *>(event));
+            handle_configure_notify(reinterpret_cast<xcb_configure_notify_event_t *>(event));
             break;
         case XCB_DESTROY_NOTIFY:
             handle_destroy_notify(reinterpret_cast<xcb_destroy_notify_event_t *>(event));
@@ -377,7 +375,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
         if (event->state == XCB_PROPERTY_DELETE)
         {
             log_debug(
-                "XCB_PROPERTY_NOTIFY (%s).%s deleted",
+                "XCB_PROPERTY_NOTIFY (%s).%s: deleted",
                 get_window_debug_string(event->window).c_str(),
                 get_atom_name(event->atom).c_str());
         }
@@ -398,7 +396,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
             auto const reply_str = get_reply_debug_string(reply);
 
             log_debug(
-                "XCB_PROPERTY_NOTIFY (%s).%s = %s",
+                "XCB_PROPERTY_NOTIFY (%s).%s: %s",
                 get_window_debug_string(event->window).c_str(),
                 prop_name.c_str(),
                 reply_str.c_str());
@@ -412,18 +410,11 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug(
-            "XCB_CREATE_NOTIFY:\n"
-            "   parent:             %s\n"
-            "   window:             %s\n"
-            "   position:           %d, %d\n"
-            "   size:               %dx%d\n"
-            "   override_redirect:  %s",
-            get_window_debug_string(event->parent).c_str(),
-            get_window_debug_string(event->window).c_str(),
-            event->x, event->y,
-            event->width, event->height,
-            event->override_redirect ? "yes" : "no");
+        log_debug("XCB_CREATE_NOTIFY parent: %s", get_window_debug_string(event->parent).c_str());
+        log_debug("                  window: %s", get_window_debug_string(event->window).c_str());
+        log_debug("                  position: %d, %d", event->x, event->y);
+        log_debug("                  size: %dx%d", event->width, event->height);
+        log_debug("                  override_redirect: %s", event->override_redirect ? "yes" : "no");
 
         if (event->border_width)
             log_warning("border width unsupported (border width %d)", event->border_width);
@@ -436,18 +427,11 @@ void mf::XWaylandWM::handle_motion_notify(xcb_motion_notify_event_t *event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug(
-            "XCB_MOTION_NOTIFY:\n"
-            "   root:       %s\n"
-            "   event:      %s\n"
-            "   child:      %s\n"
-            "   root pos:   %d, %d\n"
-            "   event pos:  %d, %d",
-            get_window_debug_string(event->root).c_str(),
-            get_window_debug_string(event->event).c_str(),
-            get_window_debug_string(event->child).c_str(),
-            event->root_x, event->root_y,
-            event->event_x, event->event_y);
+        log_debug("XCB_MOTION_NOTIFY root: %s", get_window_debug_string(event->root).c_str());
+        log_debug("                  event: %s", get_window_debug_string(event->event).c_str());
+        log_debug("                  child: %s", get_window_debug_string(event->child).c_str());
+        log_debug("                  root pos: %d, %d", event->root_x, event->root_y);
+        log_debug("                  event pos: %d, %d", event->event_x, event->event_y);
     }
 }
 
@@ -501,7 +485,7 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
     if (verbose_xwayland_logging_enabled())
     {
         log_debug(
-            "XCB_UNMAP_NOTIFY window: %s, event: %s",
+            "XCB_UNMAP_NOTIFY %s with event %s",
             get_window_debug_string(event->window).c_str(),
             get_window_debug_string(event->event).c_str());
     }
@@ -594,18 +578,11 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug(
-            "XCB_CONFIGURE_REQUEST:\n"
-            "   parent:     %s\n"
-            "   window:     %s\n"
-            "   sibling:    %s\n"
-            "   position:   %d, %d\n"
-            "   size:       %dx%d",
-            get_window_debug_string(event->parent).c_str(),
-            get_window_debug_string(event->window).c_str(),
-            get_window_debug_string(event->sibling).c_str(),
-            event->x, event->y,
-            event->width, event->height);
+        log_debug("XCB_CONFIGURE_REQUEST parent: %s", get_window_debug_string(event->parent).c_str());
+        log_debug("                      window: %s", get_window_debug_string(event->window).c_str());
+        log_debug("                      sibling: %s", get_window_debug_string(event->sibling).c_str());
+        log_debug("                      position: %d, %d", event->x, event->y);
+        log_debug("                      size: %dx%d", event->width, event->height);
 
         if (event->border_width)
             log_warning("border width unsupported (border width %d)", event->border_width);
@@ -651,20 +628,12 @@ void mf::XWaylandWM::handle_configure_notify(xcb_configure_notify_event_t *event
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug(
-            "XCB_CONFIGURE_NOTIFY:\n"
-            "   event:              %s\n"
-            "   window:             %s\n"
-            "   above_sibling:      %s\n"
-            "   position:           %d, %d\n"
-            "   size:               %dx%d\n"
-            "   override_redirect:  %s",
-            get_window_debug_string(event->event).c_str(),
-            get_window_debug_string(event->window).c_str(),
-            get_window_debug_string(event->above_sibling).c_str(),
-            event->x, event->y,
-            event->width, event->height,
-            event->override_redirect ? "yes" : "no");
+        log_debug("XCB_CONFIGURE_NOTIFY event: %s", get_window_debug_string(event->event).c_str());
+        log_debug("                     window: %s", get_window_debug_string(event->window).c_str());
+        log_debug("                     above_sibling: %s", get_window_debug_string(event->above_sibling).c_str());
+        log_debug("                     position: %d, %d", event->x, event->y);
+        log_debug("                     size: %dx%d", event->width, event->height);
+        log_debug("                     override_redirect: %s", event->override_redirect ? "yes" : "no");
 
         if (event->border_width)
             log_warning("border width unsupported (border width %d)", event->border_width);
