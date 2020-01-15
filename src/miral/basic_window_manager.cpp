@@ -1117,14 +1117,20 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     {
         if (auto parent = window_info.parent())
         {
-            auto new_pos = place_relative({parent.top_left(), parent.size()}, modifications, window.size());
+            std::shared_ptr<scene::Surface> const parent_scene_surface{parent};
+            Rectangle const parent_content_area{
+                parent_scene_surface->top_left() + parent_scene_surface->content_offset(),
+                parent_scene_surface->content_size()};
+            auto new_pos = place_relative(parent_content_area, modifications, window.size());
 
             if (new_pos.is_set())
                 place_and_size(window_info, new_pos.value().top_left, new_pos.value().size);
 
-            Rectangle relative_placement{window.top_left() - (parent.top_left()-Point{}), window.size()};
-            auto const mir_surface = std::shared_ptr<scene::Surface>(window);
-            mir_surface->placed_relative(relative_placement);
+            std::shared_ptr<scene::Surface> const child_scene_surface{window};
+            Rectangle const relative_placement{
+                child_scene_surface->top_left() - as_displacement(parent_content_area.top_left),
+                child_scene_surface->content_size()};
+            child_scene_surface->placed_relative(relative_placement);
         }
     }
 
@@ -1742,16 +1748,21 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
 
     bool positioned = false;
 
-    bool const has_parent{parameters.parent().is_set() && parameters.parent().value().lock()};
+    std::shared_ptr<scene::Surface> parent_scene_surface =
+        parameters.parent().is_set() ?
+        parameters.parent().value().lock() :
+        nullptr;
 
-    if (has_parent)
+    if (parent_scene_surface)
     {
-        auto const parent = info_for(parameters.parent().value()).window();
-
         if (parameters.aux_rect().is_set() && parameters.placement_hints().is_set())
         {
+            Rectangle const parent_content_area{
+                parent_scene_surface->top_left() + parent_scene_surface->content_offset(),
+                parent_scene_surface->content_size()};
+
             auto const position = place_relative(
-                {parent.top_left(), parent.size()},
+                parent_content_area,
                 parameters,
                 parameters.size().value());
 
@@ -1771,6 +1782,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
             //      o Otherwise, it should be cascaded vertically (but not horizontally)
             //        relative to its parent, unless, this would cause at least part of
             //        it to extend into shell space.
+            auto const parent = info_for(parameters.parent().value()).window();
             auto const parent_top_left = parent.top_left();
             auto const centred = parent_top_left
                                  + 0.5*(as_displacement(parent.size()) - as_displacement(parameters.size().value()))

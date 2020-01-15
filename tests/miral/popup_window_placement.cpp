@@ -90,8 +90,11 @@ struct PopupWindowPlacement : mt::TestWindowManagerTools
 
     auto aux_rect_position() -> Rectangle
     {
-        auto const rectangle = modification.aux_rect().value();
-        return {rectangle.top_left + (parent.top_left() - Point{}), rectangle.size};
+        auto rectangle = modification.aux_rect().value();
+        std::shared_ptr<mir::scene::Surface> const parent_scene_surface{parent};
+        rectangle.top_left += as_displacement(parent_scene_surface->top_left());
+        rectangle.top_left += parent_scene_surface->content_offset();
+        return rectangle;
     }
 
     auto on_top_edge() -> Point
@@ -551,4 +554,41 @@ TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_right_and_offset_placeme
     basic_window_manager.modify_window(basic_window_manager.info_for(child), modification);
     ASSERT_THAT(child.top_left(), Eq(expected_position));
     ASSERT_THAT(child.size(), Eq(expected_size));
+}
+
+TEST_F(PopupWindowPlacement, correctly_placed_when_surface_has_content_offset)
+{
+    Displacement const content_offset{20, 25};
+    std::shared_ptr<mir::scene::Surface> const parent_scene_surface{parent};
+    parent_scene_surface->set_window_margins(content_offset.dy, content_offset.dx, DeltaY{10}, DeltaX{35});
+
+    Point const aux_rect_top_left{100, 50};
+    modification.aux_rect() = Rectangle{aux_rect_top_left, {20, 20}};
+    modification.placement_hints() = MirPlacementHints{};
+
+    for (auto const rect_gravity : all_gravities)
+    {
+        modification.aux_rect_placement_gravity() = rect_gravity;
+
+        ASSERT_THAT(
+            aux_rect_position().top_left,
+            Eq(aux_rect_top_left + as_displacement(parent.top_left()) + content_offset))
+                << "Test did not correctly account for content offset";
+
+        auto const rect_anchor = position_of(rect_gravity, aux_rect_position());
+
+        for (auto const window_gravity : all_gravities)
+        {
+            modification.window_placement_gravity() = window_gravity;
+
+            EXPECT_CALL(*window_manager_policy, advise_move_to(_, _));
+            basic_window_manager.modify_window(basic_window_manager.info_for(child), modification);
+
+            Rectangle child_rect{child.top_left(), child.size()};
+
+            EXPECT_THAT(position_of(window_gravity, child_rect), Eq(rect_anchor))
+                        << "rect_gravity=" << rect_gravity << ", window_gravity=" << window_gravity;
+            Mock::VerifyAndClearExpectations(window_manager_policy);
+        }
+    }
 }
