@@ -140,6 +140,8 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_buffer_stream
 
 void ms::SurfaceCreationParameters::update_from(msh::SurfaceSpecification const& that)
 {
+    if (that.top_left.is_set())
+        top_left = that.top_left.value();
     if (that.width.is_set() && that.height.is_set())
         size = geom::Size{that.width.value(), that.height.value()};
     if (that.pixel_format.is_set())

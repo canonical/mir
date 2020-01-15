@@ -67,7 +67,7 @@ struct miral::WindowSpecification::Self
 };
 
 miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& spec) :
-    top_left(),
+    top_left(spec.top_left),
     size(),
     pixel_format(spec.pixel_format),
     buffer_usage(),
