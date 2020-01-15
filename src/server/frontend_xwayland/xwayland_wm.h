@@ -181,6 +181,7 @@ private:
     void handle_move_resize(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
     void handle_client_message(xcb_client_message_event_t *event);
     void handle_configure_request(xcb_configure_request_event_t *event);
+    void handle_configure_notify(xcb_configure_notify_event_t *event);
     void handle_unmap_notify(xcb_unmap_notify_event_t *event);
     void handle_destroy_notify(xcb_destroy_notify_event_t *event);
 

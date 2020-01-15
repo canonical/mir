@@ -413,8 +413,20 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
     if (verbose_xwayland_logging_enabled())
     {
         log_debug(
-            "XCB_CREATE_NOTIFY: creating new XWaylandWMSurface from %s",
-            get_window_debug_string(event->window).c_str());
+            "XCB_CREATE_NOTIFY:\n"
+            "   parent:             %s\n"
+            "   window:             %s\n"
+            "   position:           %d, %d\n"
+            "   size:               %dx%d\n"
+            "   override_redirect:  %s",
+            get_window_debug_string(event->parent).c_str(),
+            get_window_debug_string(event->window).c_str(),
+            event->x, event->y,
+            event->width, event->height,
+            event->override_redirect ? "yes" : "no");
+
+        if (event->border_width)
+            log_warning("border width unsupported (border width %d)", event->border_width);
     }
 
     surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
@@ -463,8 +475,9 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
     if (verbose_xwayland_logging_enabled())
     {
         log_debug(
-            "XCB_MAP_REQUEST %s",
-            get_window_debug_string(event->window).c_str());
+            "XCB_MAP_REQUEST %s with parent %s",
+            get_window_debug_string(event->window).c_str(),
+            get_window_debug_string(event->parent).c_str());
     }
 
     if (is_ours(event->window))
@@ -593,6 +606,9 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
             get_window_debug_string(event->sibling).c_str(),
             event->x, event->y,
             event->width, event->height);
+
+        if (event->border_width)
+            log_warning("border width unsupported (border width %d)", event->border_width);
     }
 
     auto shellSurface = surfaces[event->window];
@@ -628,6 +644,30 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
     {
         xcb_configure_window(xcb_connection, event->window, event->value_mask, values);
         xcb_flush(xcb_connection);
+    }
+}
+
+void mf::XWaylandWM::handle_configure_notify(xcb_configure_notify_event_t *event)
+{
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "XCB_CONFIGURE_NOTIFY:\n"
+            "   event:              %s\n"
+            "   window:             %s\n"
+            "   above_sibling:      %s\n"
+            "   position:           %d, %d\n"
+            "   size:               %dx%d\n"
+            "   override_redirect:  %s",
+            get_window_debug_string(event->event).c_str(),
+            get_window_debug_string(event->window).c_str(),
+            get_window_debug_string(event->above_sibling).c_str(),
+            event->x, event->y,
+            event->width, event->height,
+            event->override_redirect ? "yes" : "no");
+
+        if (event->border_width)
+            log_warning("border width unsupported (border width %d)", event->border_width);
     }
 }
 
