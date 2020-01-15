@@ -39,7 +39,8 @@ bool msh::SurfaceSpecification::is_empty() const
 {
     // You know, compile-time reflection would be pretty
     // useful here :)
-    return !width.is_set() &&
+    return !top_left.is_set() &&
+        !width.is_set() &&
         !height.is_set() &&
         !pixel_format.is_set() &&
         !buffer_usage.is_set() &&
@@ -71,6 +72,8 @@ bool msh::SurfaceSpecification::is_empty() const
 
 void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
 {
+    if (that.top_left.is_set())
+        top_left = that.top_left;
     if (that.width.is_set())
         width = that.width;
     if (that.height.is_set())
