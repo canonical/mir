@@ -82,11 +82,11 @@ template<typename T>
 auto data_buffer_to_debug_string(T* data, size_t elements) -> std::string
 {
     std::string result = "[";
-    for (unsigned i = 0; i < elements; i++)
+    for (T* const element : {data, data + elements})
     {
-        if (i)
+        if (element != data)
             result += ", ";
-        result += std::to_string(*(data + i));
+        result += std::to_string(*element);
     }
     result += "]";
     return result;
