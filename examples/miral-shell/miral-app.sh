@@ -4,12 +4,18 @@ miral_server=miral-shell
 hostsocket=
 bindir=$(dirname $0)
 
-for terminal in x-terminal-emulator weston-terminal gnome-terminal qterminal
+for terminal in gnome-terminal weston-terminal qterminal lxterminal x-terminal-emulator
 do
   if which $terminal > /dev/null
   then break;
   fi
 done
+
+# Fixup for weird gnome-terminal script on Ubuntu
+if [ "${terminal}" == "gnome-terminal" ] && [ -e "/usr/bin/gnome-terminal.real" ]
+then
+  terminal="gnome-terminal --disable-factory"
+fi
 
 if [ "$(lsb_release -c -s)" != "xenial" ]
 then
@@ -71,9 +77,18 @@ if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 if [ -e "${socket}" ]; then echo "Error: session endpoint '${socket}' already exists"; exit 1 ;fi
 if [ -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; then echo "Error: wayland endpoint '${wayland_display}' already exists"; exit 1 ;fi
 
+unset QT_QPA_PLATFORMTHEME
+
 if [ "${miral_server}" == "miral-shell" ]
 then
-  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} NO_AT_BRIDGE=1 ${hostsocket} dbus-run-session -- ${bindir}${miral_server} ${enable_mirclient} $*
+  # miral-shell can launch it's own terminal with Ctrl-Alt-T
+  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} NO_AT_BRIDGE=1 ${hostsocket} exec dbus-run-session -- ${bindir}${miral_server} ${enable_mirclient} $*
 else
-  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display}                                                NO_AT_BRIDGE=1 ${hostsocket} dbus-run-session -- ${bindir}${miral_server} ${enable_mirclient} $*
+  # miral-kiosk (and mir_demo_server) need a terminal launched
+  sh -c "MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*"&
+
+  while [ ! -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; do echo "waiting for ${wayland_display}"; sleep 1 ;done
+
+  MIR_SOCKET=${socket} XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 dbus-run-session -- ${terminal}
+  killall ${bindir}${miral_server} || killall ${bindir}${miral_server}.bin
 fi
