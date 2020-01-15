@@ -34,7 +34,6 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     modify_window_specification.cpp
     display_reconfiguration.cpp
     raise_tree.cpp
-    resize_window.cpp
     static_display_config.cpp
     client_mediated_gestures.cpp
     test_window_manager_tools.cpp           test_window_manager_tools.h
