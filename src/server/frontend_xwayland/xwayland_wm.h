@@ -115,6 +115,12 @@ class XWaylandWMSurface;
 class XWaylandWMShellSurface;
 class WlSurface;
 
+template<typename T, size_t length>
+constexpr size_t length_of(T(&)[length])
+{
+    return length;
+}
+
 class XWaylandWM
 {
 public:

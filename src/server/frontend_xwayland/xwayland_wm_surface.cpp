@@ -120,12 +120,17 @@ void mf::XWaylandWMSurface::set_workspace(int workspace)
 
 void mf::XWaylandWMSurface::set_wm_state(WmState state)
 {
-    uint32_t property[2];
-    property[0] = state;
-    property[1] = XCB_WINDOW_NONE;
+    uint32_t const properties[]{
+        state,
+        XCB_WINDOW_NONE // Icon window
+    };
 
-    xcb_change_property(xwm->get_xcb_connection(), XCB_PROP_MODE_REPLACE, window, xwm->xcb_atom.wm_state,
-                        xwm->xcb_atom.wm_state, 32, 2, property);
+    xcb_change_property(
+        xwm->get_xcb_connection(),
+        XCB_PROP_MODE_REPLACE,
+        window, xwm->xcb_atom.wm_state,
+        xwm->xcb_atom.wm_state, 32,
+        length_of(properties), properties);
     xcb_flush(xwm->get_xcb_connection());
 }
 

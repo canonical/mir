@@ -36,10 +36,8 @@
 #include <sstream>
 
 #ifndef ARRAY_LENGTH
-#define ARRAY_LENGTH(a) length_of(a)
+#define ARRAY_LENGTH(a) mir::frontend::length_of(a)
 #endif
-
-namespace { template<typename T, size_t size> constexpr size_t length_of(T(&)[size]) {return size;} }
 
 #define CURSOR_ENTRY(x)        \
     {                          \
