@@ -23,16 +23,9 @@
 
 namespace mir
 {
-inline void log_verbose(std::string const& message)
+inline auto verbose_xwayland_logging_enabled() -> bool
 {
-    if (getenv("MIR_X11_VERBOSE_LOG"))
-        log_info(message);
-}
-template <typename... Args>
-void log_verbose(char const* fmt, Args&&... args)
-{
-    if (getenv("MIR_X11_VERBOSE_LOG"))
-        log_info(fmt, std::forward<Args>(args)...);
+    return getenv("MIR_X11_VERBOSE_LOG");
 }
 } /* mir */
 

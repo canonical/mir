@@ -26,6 +26,8 @@
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "wayland_connector.h"
 
+#include <experimental/optional>
+
 extern "C" {
 #include <X11/Xcursor/Xcursor.h>
 #include <xcb/composite.h>
@@ -124,7 +126,6 @@ public:
         return xcb_connection;
     }
 
-    void dump_property(xcb_atom_t property, xcb_get_property_reply_t *reply);
     void set_net_active_window(xcb_window_t window);
     auto build_shell_surface(
         XWaylandWMSurface* wm_surface,
@@ -159,8 +160,10 @@ private:
     void set_cursor(xcb_window_t id, const CursorType &cursor);
     void create_wm_cursor();
     void wm_get_resources();
-    void read_and_dump_property(xcb_window_t window, xcb_atom_t property);
-    const char *get_atom_name(xcb_atom_t atom);
+    auto get_reply_string(xcb_get_property_reply_t* reply) -> std::experimental::optional<std::string>;
+    auto get_reply_debug_string(xcb_get_property_reply_t* reply) -> std::string;
+    auto get_window_debug_string(xcb_window_t window) -> std::string;
+    auto get_atom_name(xcb_atom_t atom) -> std::string;
     bool is_ours(uint32_t id);
     void setup_visual_and_colormap();
 
@@ -169,6 +172,7 @@ private:
 
     // Events
     void handle_create_notify(xcb_create_notify_event_t *event);
+    void handle_motion_notify(xcb_motion_notify_event_t *event);
     void handle_property_notify(xcb_property_notify_event_t *event);
     void handle_map_request(xcb_map_request_event_t *event);
     void handle_change_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
@@ -177,6 +181,7 @@ private:
     void handle_move_resize(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
     void handle_client_message(xcb_client_message_event_t *event);
     void handle_configure_request(xcb_configure_request_event_t *event);
+    void handle_configure_notify(xcb_configure_notify_event_t *event);
     void handle_unmap_notify(xcb_unmap_notify_event_t *event);
     void handle_destroy_notify(xcb_destroy_notify_event_t *event);
 

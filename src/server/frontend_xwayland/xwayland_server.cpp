@@ -173,7 +173,6 @@ bool set_cloexec(int fd, bool cloexec) {
         mir::fatal_error("fcntl failed");
         return false;
     }
-    mir::log_info("set ok");
     return true;
 }
 }
