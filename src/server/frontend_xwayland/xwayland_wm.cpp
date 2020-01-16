@@ -33,7 +33,7 @@
 #include <poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
-
+#include <sstream>
 
 #ifndef ARRAY_LENGTH
 #define ARRAY_LENGTH(a) length_of(a)
@@ -76,6 +76,23 @@ static const struct cursor_alternatives cursors[] = {
     CURSOR_ENTRY(bottom_left_corners), CURSOR_ENTRY(bottom_right_corners), CURSOR_ENTRY(left_ptrs)};
 
 namespace mf = mir::frontend;
+
+namespace
+{
+template<typename T>
+auto data_buffer_to_debug_string(T* data, size_t elements) -> std::string
+{
+    std::stringstream ss{"["};
+    for (T* i = data; i != data + elements; i++)
+    {
+        if (i != data)
+            ss << ", ";
+        ss << *i;
+    }
+    ss << "]";
+    return ss.str();
+}
+}
 
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
     : wayland_connector(wayland_connector),
@@ -288,66 +305,65 @@ void mf::XWaylandWM::handle_events()
         {
         case XCB_BUTTON_PRESS:
         case XCB_BUTTON_RELEASE:
-            mir::log_verbose("XCB_BUTTON_RELEASE");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_BUTTON_RELEASE");
             //(reinterpret_cast<xcb_button_press_event_t *>(event));
             break;
         case XCB_ENTER_NOTIFY:
-            mir::log_verbose("XCB_ENTER_NOTIFY");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_ENTER_NOTIFY");
             //(reinterpret_cast<xcb_enter_notify_event_t *>(event));
             break;
         case XCB_LEAVE_NOTIFY:
-            mir::log_verbose("XCB_LEAVE_NOTIFY");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_LEAVE_NOTIFY");
             //(reinterpret_cast<xcb_leave_notify_event_t *>(event));
             break;
         case XCB_MOTION_NOTIFY:
-            mir::log_verbose("XCB_MOTION_NOTIFY");
+            handle_motion_notify(reinterpret_cast<xcb_motion_notify_event_t *>(event));
             //(reinterpret_cast<xcb_motion_notify_event_t *>(event));
             break;
         case XCB_CREATE_NOTIFY:
-            mir::log_verbose("XCB_CREATE_NOTIFY");
             handle_create_notify(reinterpret_cast<xcb_create_notify_event_t *>(event));
             break;
         case XCB_MAP_REQUEST:
-            mir::log_verbose("XCB_MAP_REQUEST");
             handle_map_request(reinterpret_cast<xcb_map_request_event_t *>(event));
             break;
         case XCB_MAP_NOTIFY:
-            mir::log_verbose("XCB_MAP_NOTIFY");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_MAP_NOTIFY");
             //(reinterpret_cast<xcb_map_notify_event_t *>(event));
             break;
         case XCB_UNMAP_NOTIFY:
-            mir::log_verbose("XCB_UNMAP_NOTIFY");
             handle_unmap_notify(reinterpret_cast<xcb_unmap_notify_event_t *>(event));
             break;
         case XCB_REPARENT_NOTIFY:
-            mir::log_verbose("XCB_REPARENT_NOTIFY");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_REPARENT_NOTIFY");
             //(reinterpret_cast<xcb_reparent_notify_event_t *>(event));
             break;
         case XCB_CONFIGURE_REQUEST:
-            mir::log_verbose("XCB_CONFIGURE_REQUEST");
             handle_configure_request(reinterpret_cast<xcb_configure_request_event_t *>(event));
             break;
         case XCB_CONFIGURE_NOTIFY:
-            mir::log_verbose("XCB_CONFIGURE_NOTIFY");
-            //(reinterpret_cast<xcb_configure_notify_event_t *>(event));
+            handle_configure_notify(reinterpret_cast<xcb_configure_notify_event_t *>(event));
             break;
         case XCB_DESTROY_NOTIFY:
-            mir::log_verbose("XCB_DESTROY_NOTIFY");
             handle_destroy_notify(reinterpret_cast<xcb_destroy_notify_event_t *>(event));
             break;
         case XCB_MAPPING_NOTIFY:
-            mir::log_verbose("XCB_MAPPING_NOTIFY");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_MAPPING_NOTIFY");
             break;
         case XCB_PROPERTY_NOTIFY:
-            mir::log_verbose("XCB_PROPERTY_NOTIFY");
             handle_property_notify(reinterpret_cast<xcb_property_notify_event_t *>(event));
             break;
         case XCB_CLIENT_MESSAGE:
-            mir::log_verbose("XCB_CLIENT_MESSAGE");
             handle_client_message(reinterpret_cast<xcb_client_message_event_t *>(event));
             break;
         case XCB_FOCUS_IN:
-            mir::log_verbose("XCB_FOCUS_IN");
+            if (verbose_xwayland_logging_enabled())
+                log_debug("XCB_FOCUS_IN");
             //(reinterpret_cast<xcb_focus_in_event_t *>(event));
         default:
             break;
@@ -365,29 +381,86 @@ void mf::XWaylandWM::handle_events()
 
 void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 {
-    mir::log_verbose("XCB_PROPERTY_NOTIFY (window %d)", event->window);
-
     auto surface = surfaces[event->window];
     if (!surface)
         return;
 
     surface->dirty_properties();
 
-    if (event->state == XCB_PROPERTY_DELETE)
-        mir::log_verbose("XCB_PROPERTY_NOTIFY: deleted");
-    else
-        read_and_dump_property(event->window, event->atom);
+    if (verbose_xwayland_logging_enabled())
+    {
+        if (event->state == XCB_PROPERTY_DELETE)
+        {
+            log_debug(
+                "XCB_PROPERTY_NOTIFY (%s).%s: deleted",
+                get_window_debug_string(event->window).c_str(),
+                get_atom_name(event->atom).c_str());
+        }
+        else
+        {
+            xcb_get_property_cookie_t const cookie = xcb_get_property(
+                xcb_connection,
+                0, // don't delete
+                event->window,
+                event->atom,
+                XCB_ATOM_ANY,
+                0,
+                2048);
+
+            xcb_get_property_reply_t* const reply = xcb_get_property_reply(xcb_connection, cookie, NULL);
+
+            auto const prop_name = get_atom_name(event->atom);
+            auto const reply_str = get_reply_debug_string(reply);
+
+            log_debug(
+                "XCB_PROPERTY_NOTIFY (%s).%s: %s",
+                get_window_debug_string(event->window).c_str(),
+                prop_name.c_str(),
+                reply_str.c_str());
+
+            free(reply);
+        }
+    }
 }
 
 void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 {
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("XCB_CREATE_NOTIFY parent: %s", get_window_debug_string(event->parent).c_str());
+        log_debug("                  window: %s", get_window_debug_string(event->window).c_str());
+        log_debug("                  position: %d, %d", event->x, event->y);
+        log_debug("                  size: %dx%d", event->width, event->height);
+        log_debug("                  override_redirect: %s", event->override_redirect ? "yes" : "no");
+
+        if (event->border_width)
+            log_warning("border width unsupported (border width %d)", event->border_width);
+    }
+
     surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
+}
+
+void mf::XWaylandWM::handle_motion_notify(xcb_motion_notify_event_t *event)
+{
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("XCB_MOTION_NOTIFY root: %s", get_window_debug_string(event->root).c_str());
+        log_debug("                  event: %s", get_window_debug_string(event->event).c_str());
+        log_debug("                  child: %s", get_window_debug_string(event->child).c_str());
+        log_debug("                  root pos: %d, %d", event->root_x, event->root_y);
+        log_debug("                  event pos: %d, %d", event->event_x, event->event_y);
+    }
 }
 
 void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
 {
-    mir::log_verbose("XCB_DESTROY_NOTIFY (window %d, event %d%s)", event->window, event->event,
-                     is_ours(event->window) ? ", ours" : "");
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "XCB_DESTROY_NOTIFY window: %s, event: %s",
+            get_window_debug_string(event->window).c_str(),
+            get_window_debug_string(event->event).c_str());
+    }
 
     if (is_ours(event->window))
         return;
@@ -400,19 +473,22 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
 
 void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
 {
-    if (is_ours(event->window))
+    if (verbose_xwayland_logging_enabled())
     {
-        mir::log_verbose("XCB_MAP_REQUEST (window %d, ours)", event->window);
-        return;
+        log_debug(
+            "XCB_MAP_REQUEST %s with parent %s",
+            get_window_debug_string(event->window).c_str(),
+            get_window_debug_string(event->parent).c_str());
     }
+
+    if (is_ours(event->window))
+        return;
 
     auto const surface_iter = surfaces.find(event->window);
     if (surface_iter == surfaces.end())
         return;
 
     auto const surface = surface_iter->second;
-
-    mir::log_verbose("XCB_MAP_REQUEST (window %d)", event->window);
 
     surface->read_properties();
     surface->set_wm_state(XWaylandWMSurface::NormalState);
@@ -424,8 +500,13 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
 
 void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 {
-    mir::log_verbose("XCB_UNMAP_NOTIFY (window %d, event %d%s)", event->window, event->event,
-                     is_ours(event->window) ? ", ours" : "");
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "XCB_UNMAP_NOTIFY %s with event %s",
+            get_window_debug_string(event->window).c_str(),
+            get_window_debug_string(event->event).c_str());
+    }
 
     if (is_ours(event->window))
         return;
@@ -449,14 +530,13 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 
 void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
 {
-    mir::log_verbose("XCB_CLIENT_MESSAGE (%s %d %d %d %d %d win %d)",
-                     get_atom_name(event->type),
-                     event->data.data32[0],
-                     event->data.data32[1],
-                     event->data.data32[2],
-                     event->data.data32[3],
-                     event->data.data32[4],
-                     event->window);
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "XCB_CLIENT_MESSAGE %s on %s",
+            get_atom_name(event->type).c_str(),
+            get_window_debug_string(event->window).c_str());
+    }
 
     auto const surface_iter = surfaces.find(event->window);
     if (surface_iter == surfaces.end())
@@ -477,8 +557,6 @@ void mf::XWaylandWM::handle_move_resize(std::shared_ptr<XWaylandWMSurface> surfa
     if (!surface || !event)
         return;
 
-    mir::log_verbose("handle move resize");
-
     int detail = event->data.data32[2];
     surface->move_resize(detail);
 }
@@ -487,7 +565,6 @@ void mf::XWaylandWM::handle_change_state(std::shared_ptr<XWaylandWMSurface> surf
 {
     if (!surface || !event)
         return;
-    mir::log_verbose("Handle change state");
 
     if (event->data.data32[0] == 3)
         surface->set_state(mir_window_state_minimized);
@@ -497,14 +574,12 @@ void mf::XWaylandWM::handle_state(std::shared_ptr<XWaylandWMSurface> surface, xc
 {
     if (!surface || !event)
         return;
-    mir::log_verbose("Handle state");
 }
 
 void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
 {
     if (!surface || !event)
         return;
-    mir::log_verbose("handle surface_id");
 
     uint32_t id = event->data.data32[0];
 
@@ -521,8 +596,17 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surfac
 
 void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *event)
 {
-    mir::log_verbose("XCB_CONFIGURE_REQUEST (window %d) %d,%d @ %dx%d", event->window, event->x, event->y, event->width,
-                     event->height);
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("XCB_CONFIGURE_REQUEST parent: %s", get_window_debug_string(event->parent).c_str());
+        log_debug("                      window: %s", get_window_debug_string(event->window).c_str());
+        log_debug("                      sibling: %s", get_window_debug_string(event->sibling).c_str());
+        log_debug("                      position: %d, %d", event->x, event->y);
+        log_debug("                      size: %dx%d", event->width, event->height);
+
+        if (event->border_width)
+            log_warning("border width unsupported (border width %d)", event->border_width);
+    }
 
     std::vector<uint32_t> values;
 
@@ -546,6 +630,22 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
     {
         xcb_configure_window(xcb_connection, event->window, event->value_mask, values.data());
         xcb_flush(xcb_connection);
+    }
+}
+
+void mf::XWaylandWM::handle_configure_notify(xcb_configure_notify_event_t *event)
+{
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("XCB_CONFIGURE_NOTIFY event: %s", get_window_debug_string(event->event).c_str());
+        log_debug("                     window: %s", get_window_debug_string(event->window).c_str());
+        log_debug("                     above_sibling: %s", get_window_debug_string(event->above_sibling).c_str());
+        log_debug("                     position: %d, %d", event->x, event->y);
+        log_debug("                     size: %dx%d", event->width, event->height);
+        log_debug("                     override_redirect: %s", event->override_redirect ? "yes" : "no");
+
+        if (event->border_width)
+            log_warning("border width unsupported (border width %d)", event->border_width);
     }
 }
 
@@ -721,12 +821,13 @@ void mf::XWaylandWM::wm_get_resources()
 
     xfixes = xcb_get_extension_data(xcb_connection, &xcb_xfixes_id);
     if (!xfixes || !xfixes->present)
-        mir::log_warning("xfixes not available");
+        log_warning("xfixes not available");
 
     xfixes_cookie = xcb_xfixes_query_version(xcb_connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
     xfixes_reply = xcb_xfixes_query_version_reply(xcb_connection, xfixes_cookie, NULL);
 
-    mir::log_verbose("xfixes version: %d.%d", xfixes_reply->major_version, xfixes_reply->minor_version);
+    if (verbose_xwayland_logging_enabled())
+        log_debug("xfixes version: %d.%d", xfixes_reply->major_version, xfixes_reply->minor_version);
 
     free(xfixes_reply);
 
@@ -749,91 +850,115 @@ void mf::XWaylandWM::wm_get_resources()
     free(formats_reply);
 }
 
-void mf::XWaylandWM::read_and_dump_property(xcb_window_t window, xcb_atom_t property)
+auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> std::string
 {
-    xcb_get_property_reply_t *reply;
-    xcb_get_property_cookie_t cookie;
-
-    cookie = xcb_get_property(xcb_connection, 0, window, property, XCB_ATOM_ANY, 0, 2048);
-    reply = xcb_get_property_reply(xcb_connection, cookie, NULL);
-
-    dump_property(property, reply);
-
-    free(reply);
-}
-
-void mf::XWaylandWM::dump_property(xcb_atom_t property, xcb_get_property_reply_t *reply)
-{
-    int32_t *incr_value;
-    const char *text_value, *name;
-    xcb_atom_t *atom_value;
-    int len;
-    uint32_t i;
-
-    mir::log_verbose("prop name %s: ", get_atom_name(property));
-    if (reply == NULL)
+    if (reply == nullptr)
     {
-        mir::log_verbose("(no reply)\n");
-        return;
+        return "(null reply)";
     }
-
-    mir::log_verbose("%s/%d, length %d (value_len %d): ",
-                     get_atom_name(reply->type),
-                     reply->format,
-                     xcb_get_property_value_length(reply),
-                     reply->value_len);
-
-    if (reply->type == xcb_atom.incr)
+    else if (auto const text = get_reply_string(reply))
     {
-        incr_value = (int32_t *)xcb_get_property_value(reply);
-        mir::log_verbose("%d\n", *incr_value);
-    }
-    else if (reply->type == xcb_atom.utf8_string || reply->type == xcb_atom.string)
-    {
-        text_value = (const char *)xcb_get_property_value(reply);
-        if (reply->value_len > 40)
-            len = 40;
-        else
-            len = reply->value_len;
-        mir::log_verbose("\"%.*s\"\n", len, text_value);
+        return "\"" + text.value() + "\"";
     }
     else if (reply->type == XCB_ATOM_ATOM)
     {
-        atom_value = (xcb_atom_t *)xcb_get_property_value(reply);
-        for (i = 0; i < reply->value_len; i++)
-        {
-            name = get_atom_name(atom_value[i]);
+        xcb_atom_t const* atoms_ptr = (xcb_atom_t *)xcb_get_property_value(reply);
+        std::vector<xcb_atom_t> atoms{atoms_ptr, atoms_ptr + reply->value_len};
 
-            mir::log_verbose("name: %s", name);
+        std::stringstream ss{"atoms: ["};
+        bool first = true;
+        for (auto const& atom : atoms)
+        {
+            if (!first)
+                ss << ", ";
+            first = false;
+            ss << get_atom_name(atom);
         }
+        ss << "]";
+
+        return ss.str();
+    }
+    else
+    {
+        size_t const len = reply->value_len;
+        std::stringstream ss;
+        ss << reply->format << "bit " << get_atom_name(reply->type) << "[" << len << "]";
+        if ((reply->type == XCB_ATOM_CARDINAL || reply->type == XCB_ATOM_INTEGER) && len < 32)
+        {
+            ss << ": ";
+            void* const ptr = xcb_get_property_value(reply);
+            switch (reply->type)
+            {
+            case XCB_ATOM_CARDINAL: // unsigned number
+                switch (reply->format)
+                {
+                case 8: ss << data_buffer_to_debug_string((uint8_t*)ptr, len); break;
+                case 16: ss << data_buffer_to_debug_string((uint16_t*)ptr, len); break;
+                case 32: ss << data_buffer_to_debug_string((uint32_t*)ptr, len); break;
+                }
+                break;
+
+            case XCB_ATOM_INTEGER: // signed number
+                switch (reply->format)
+                {
+                case 8: ss << data_buffer_to_debug_string((int8_t*)ptr, len); break;
+                case 16: ss << data_buffer_to_debug_string((int16_t*)ptr, len); break;
+                case 32: ss << data_buffer_to_debug_string((int32_t*)ptr, len); break;
+                }
+                break;
+            }
+        }
+        return ss.str();
     }
 }
 
-const char *mf::XWaylandWM::get_atom_name(xcb_atom_t atom)
+auto mf::XWaylandWM::get_window_debug_string(xcb_window_t window) -> std::string
 {
-    xcb_get_atom_name_cookie_t cookie;
-    xcb_get_atom_name_reply_t *reply;
-    xcb_generic_error_t *e;
-    static char buffer[64];
+    if (!window)
+        return "null window";
+    else if (window == xcb_screen->root)
+        return "root window";
+    else if (is_ours(window))
+        return "our window " + std::to_string(window);
+    else
+        return "window " + std::to_string(window);
+}
+
+auto mf::XWaylandWM::get_reply_string(xcb_get_property_reply_t* reply) -> std::experimental::optional<std::string>
+{
+    if (reply->type == xcb_atom.string || reply->type == xcb_atom.utf8_string)
+        return std::string{(const char *)xcb_get_property_value(reply), reply->value_len};
+    else
+        return std::experimental::nullopt;
+
+}
+
+auto mf::XWaylandWM::get_atom_name(xcb_atom_t atom) -> std::string
+{
+    // TODO: cache, for cheaper lookup or eliminate usage altogether
 
     if (atom == XCB_ATOM_NONE)
         return "None";
 
-    cookie = xcb_get_atom_name(xcb_connection, atom);
-    reply = xcb_get_atom_name_reply(xcb_connection, cookie, &e);
+    xcb_get_atom_name_cookie_t const cookie = xcb_get_atom_name(xcb_connection, atom);
+    xcb_get_atom_name_reply_t* const reply = xcb_get_atom_name_reply(xcb_connection, cookie, nullptr);
+
+    std::string name;
 
     if (reply)
     {
-        snprintf(buffer, sizeof buffer, "%.*s", xcb_get_atom_name_name_length(reply), xcb_get_atom_name_name(reply));
+        auto const name_data = xcb_get_atom_name_name(reply);
+        auto const name_len = xcb_get_atom_name_name_length(reply);
+        name = std::string{name_data, name_data + name_len};
     }
     else
     {
-        snprintf(buffer, sizeof buffer, "(atom %u)", atom);
+        name = "Atom " + std::to_string(atom);
     }
 
     free(reply);
 
-    return buffer;
+    return name;
 }
 
 void mf::XWaylandWM::setup_visual_and_colormap()

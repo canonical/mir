@@ -1,3 +1,37 @@
+mir (1.7.0) UNRELEASED; urgency=medium
+
+  * New upstream release 1.7.0
+
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 3
+      . mirserver ABI bumped to 53
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI bumped to 17
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged to 16
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+    - Enhancements:
+      . [X11] Add basic window decorations
+      . [X11] Add a configuration option to specify the Xwayland executable
+      . [X11] Code cleanup: fix threading, initialization, style, etc.
+      . [server/input] Use a sorted map for outputs
+      . BasicWindowManager requests on unknown windows should noop
+    - Bugs fixed:
+      . [X11] Don't restart Xwayland if we killed it deliberately (Fixes: #1169)
+      . [X11] We don't need to stop Xwayland when pausing the Mir server.
+        (Fixes: #1188)
+      . [wayland-platform] Apply output scale. (Fixes: #1133)
+      . [wayland] (cursor code) don't assume PixelSource::read() will execute
+        the do_with_pixels functor. (Fixes: #1180)
+      . [packaging] Add libwayland-dev to Build-Depends
+      . Fix clang found clangers
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 13 Jan 17:39:00 +0100
+
 mir (1.6.0) UNRELEASED; urgency=medium
 
   * New upstream release 1.6.0
