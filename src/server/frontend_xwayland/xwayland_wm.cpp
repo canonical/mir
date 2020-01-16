@@ -34,6 +34,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <sstream>
+#include <boost/throw_exception.hpp>
 
 #ifndef ARRAY_LENGTH
 #define ARRAY_LENGTH(a) mir::frontend::length_of(a)
@@ -448,6 +449,10 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 
     if (!is_ours(event->window))
     {
+        if (surfaces.find(event->window) != surfaces.end())
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error(get_window_debug_string(event->window) + " created, but already known"));
+
         surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
     }
 }
