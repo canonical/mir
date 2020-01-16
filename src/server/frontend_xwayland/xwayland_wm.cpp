@@ -578,15 +578,6 @@ void mf::XWaylandWM::handle_move_resize(std::shared_ptr<XWaylandWMSurface> surfa
     surface->move_resize(detail);
 }
 
-void mf::XWaylandWM::handle_change_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
-{
-    if (!surface || !event)
-        return;
-
-    if (event->data.data32[0] == 3)
-        surface->set_state(mir_window_state_minimized);
-}
-
 void mf::XWaylandWM::handle_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
 {
     if (!surface || !event)
