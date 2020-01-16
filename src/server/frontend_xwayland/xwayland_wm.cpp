@@ -298,7 +298,14 @@ void mf::XWaylandWM::handle_events()
 
     while (xcb_generic_event_t* const event = xcb_poll_for_event(xcb_connection))
     {
-        handle_event(event);
+        try
+        {
+            handle_event(event);
+        }
+        catch (std::exception const& e)
+        {
+            log_error(e.what());
+        }
         free(event);
         got_events = true;
     }
