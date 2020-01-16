@@ -388,12 +388,6 @@ void mf::XWaylandWM::handle_events()
 
 void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 {
-    auto surface = surfaces[event->window];
-    if (!surface)
-        return;
-
-    surface->dirty_properties();
-
     if (verbose_xwayland_logging_enabled())
     {
         if (event->state == XCB_PROPERTY_DELETE)
@@ -427,6 +421,13 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 
             free(reply);
         }
+    }
+
+    auto const surface = get_wm_surface(event->window);
+
+    if (surface)
+    {
+        surface.value()->dirty_properties();
     }
 }
 
@@ -469,12 +470,6 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
             get_window_debug_string(event->event).c_str());
     }
 
-    if (is_ours(event->window))
-        return;
-
-    if (surfaces.find(event->window) == surfaces.end())
-        return;
-
     surfaces.erase(event->window);
 }
 
@@ -488,21 +483,17 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
             get_window_debug_string(event->parent).c_str());
     }
 
-    if (is_ours(event->window))
-        return;
+    auto const surface = get_wm_surface(event->window);
 
-    auto const surface_iter = surfaces.find(event->window);
-    if (surface_iter == surfaces.end())
-        return;
-
-    auto const surface = surface_iter->second;
-
-    surface->read_properties();
-    surface->set_wm_state(XWaylandWMSurface::NormalState);
-    surface->set_net_wm_state();
-    surface->set_workspace(0);
-    xcb_map_window(xcb_connection, event->window);
-    xcb_flush(xcb_connection);
+    if (surface)
+    {
+        surface.value()->read_properties();
+        surface.value()->set_wm_state(XWaylandWMSurface::NormalState);
+        surface.value()->set_net_wm_state();
+        surface.value()->set_workspace(0);
+        xcb_map_window(xcb_connection, event->window);
+        xcb_flush(xcb_connection);
+    }
 }
 
 void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
@@ -523,16 +514,15 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
     if (event->response_type & ~0x80)
         return;
 
-    auto const surface_iter = surfaces.find(event->window);
-    if (surface_iter == surfaces.end())
-        return;
+    auto const surface = get_wm_surface(event->window);
 
-    auto const surface = surface_iter->second;
-
-    surface->set_wm_state(XWaylandWMSurface::WithdrawnState);
-    surface->set_workspace(-1);
-    xcb_unmap_window(xcb_connection, event->window);
-    xcb_flush(xcb_connection);
+    if (surface)
+    {
+        surface.value()->set_wm_state(XWaylandWMSurface::WithdrawnState);
+        surface.value()->set_workspace(-1);
+        xcb_unmap_window(xcb_connection, event->window);
+        xcb_flush(xcb_connection);
+    }
 }
 
 void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
@@ -545,18 +535,17 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
             get_window_debug_string(event->window).c_str());
     }
 
-    auto const surface_iter = surfaces.find(event->window);
-    if (surface_iter == surfaces.end())
-        return;
+    auto const surface = get_wm_surface(event->window);
 
-    auto const surface = surface_iter->second;
-
-    if (event->type == xcb_atom.net_wm_moveresize)
-        handle_move_resize(surface, event);
-    else if (event->type == xcb_atom.net_wm_state)
-        handle_state(surface, event);
-    else if (event->type == xcb_atom.wl_surface_id)
-        handle_surface_id(surface, event);
+    if (surface)
+    {
+        if (event->type == xcb_atom.net_wm_moveresize)
+            handle_move_resize(surface.value(), event);
+        else if (event->type == xcb_atom.net_wm_state)
+            handle_state(surface.value(), event);
+        else if (event->type == xcb_atom.wl_surface_id)
+            handle_surface_id(surface.value(), event);
+    }
 }
 
 void mf::XWaylandWM::handle_move_resize(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
