@@ -33,7 +33,7 @@
 #include <poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
-
+#include <sstream>
 
 #ifndef ARRAY_LENGTH
 namespace { template<typename T, size_t size> constexpr size_t length_of(T(&)[size]) {return size;} }
@@ -81,15 +81,15 @@ namespace
 template<typename T>
 auto data_buffer_to_debug_string(T* data, size_t elements) -> std::string
 {
-    std::string result = "[";
+    std::stringstream ss{"["};
     for (T* i = data; i != data + elements; i++)
     {
         if (i != data)
-            result += ", ";
-        result += std::to_string(*i);
+            ss << ", ";
+        ss << *i;
     }
-    result += "]";
-    return result;
+    ss << "]";
+    return ss.str();
 }
 }
 
@@ -856,53 +856,50 @@ auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> 
         xcb_atom_t const* atoms_ptr = (xcb_atom_t *)xcb_get_property_value(reply);
         std::vector<xcb_atom_t> atoms{atoms_ptr, atoms_ptr + reply->value_len};
 
-        std::string result{"atoms: ["};
+        std::stringstream ss{"atoms: ["};
         bool first = true;
         for (auto const& atom : atoms)
         {
             if (!first)
-                result += ", ";
+                ss << ", ";
             first = false;
-            result += get_atom_name(atom);
+            ss << get_atom_name(atom);
         }
-        result += "]";
+        ss << "]";
 
-        return result;
+        return ss.str();
     }
     else
     {
         size_t const len = reply->value_len;
-        std::string result =
-            std::to_string(reply->format) + "bit " +
-            get_atom_name(len) +
-            "[" + std::to_string(reply->value_len) + "]";
-
+        std::stringstream ss;
+        ss << reply->format << "bit " << get_atom_name(reply->type) << "[" << len << "]";
         if ((reply->type == XCB_ATOM_CARDINAL || reply->type == XCB_ATOM_INTEGER) && len < 32)
         {
-            result += ": ";
+            ss << ": ";
             void* const ptr = xcb_get_property_value(reply);
             switch (reply->type)
             {
             case XCB_ATOM_CARDINAL: // unsigned number
                 switch (reply->format)
                 {
-                case 8: result += data_buffer_to_debug_string((uint8_t*)ptr, len); break;
-                case 16: result += data_buffer_to_debug_string((uint16_t*)ptr, len); break;
-                case 32: result += data_buffer_to_debug_string((uint32_t*)ptr, len); break;
+                case 8: ss << data_buffer_to_debug_string((uint8_t*)ptr, len); break;
+                case 16: ss << data_buffer_to_debug_string((uint16_t*)ptr, len); break;
+                case 32: ss << data_buffer_to_debug_string((uint32_t*)ptr, len); break;
                 }
                 break;
 
             case XCB_ATOM_INTEGER: // signed number
                 switch (reply->format)
                 {
-                case 8: result += data_buffer_to_debug_string((int8_t*)ptr, len); break;
-                case 16: result += data_buffer_to_debug_string((int16_t*)ptr, len); break;
-                case 32: result += data_buffer_to_debug_string((int32_t*)ptr, len); break;
+                case 8: ss << data_buffer_to_debug_string((int8_t*)ptr, len); break;
+                case 16: ss << data_buffer_to_debug_string((int16_t*)ptr, len); break;
+                case 32: ss << data_buffer_to_debug_string((int32_t*)ptr, len); break;
                 }
                 break;
             }
         }
-        return result;
+        return ss.str();
     }
 }
 
