@@ -180,26 +180,22 @@ void mf::XWaylandWMSurface::read_properties()
 
     properties.deleteWindow = 0;
 
-    mir::log_verbose("Properties:");
-
     for (const auto &atom_ptr : props)
     {
         xcb_atom_t atom = atom_ptr.first;
         xcb_get_property_reply_t *reply = xcb_get_property_reply(xwm->get_xcb_connection(), cookies[atom], nullptr);
         if (!reply)
         {
-            mir::log_verbose("read_properties: Bad window, usually");
+            // Bad window, usually
             continue;
         }
 
         if (reply->type == XCB_ATOM_NONE)
         {
-            mir::log_verbose("read_properties: No such info");
+            // No such info
             free(reply);
             continue;
         }
-
-        xwm->dump_property(atom, reply);
 
         switch (props[atom])
         {
@@ -214,25 +210,21 @@ void mf::XWaylandWMSurface::read_properties()
             } else {
                 free(p);
             }
-            mir::log_verbose("XCB_ATOM_STRING");
             break;
         }
         case XCB_ATOM_WINDOW:
         {
-            mir::log_verbose("XCB_ATOM_WINDOW");
             break;
         }
         case XCB_ATOM_ATOM:
         {
             if (atom == xwm->xcb_atom.net_wm_window_type)
             {
-                mir::log_verbose("XCB_ATOM_ATOM net_wm_window_type");
             }
             break;
         }
         case TYPE_WM_PROTOCOLS:
         {
-            mir::log_verbose("TYPE_WM_PROTOCOLS");
             xcb_atom_t *atoms = reinterpret_cast<xcb_atom_t *>(xcb_get_property_value(reply));
             for (uint32_t i = 0; i < reply->value_len; ++i)
                 if (atoms[i] == xwm->xcb_atom.wm_delete_window)
@@ -241,12 +233,10 @@ void mf::XWaylandWMSurface::read_properties()
         }
         case TYPE_WM_NORMAL_HINTS:
         {
-            mir::log_verbose("TYPE_WM_NORMAL_HINTS");
             break;
         }
         case TYPE_NET_WM_STATE:
         {
-            mir::log_verbose("TYPE_NET_WM_STATE");
             xcb_atom_t *value = reinterpret_cast<xcb_atom_t *>(xcb_get_property_value(reply));
             uint32_t i;
             for (i = 0; i < reply->value_len; i++)
@@ -267,7 +257,6 @@ void mf::XWaylandWMSurface::read_properties()
             break;
         }
         case TYPE_MOTIF_WM_HINTS:
-            mir::log_verbose("TYPE_MOTIF_WM_HINTS");
             break;
         default:
             break;
