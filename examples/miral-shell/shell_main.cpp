@@ -34,6 +34,7 @@
 #include <miral/wayland_extensions.h>
 
 #include <linux/input.h>
+#include <unistd.h>
 
 int main(int argc, char const* argv[])
 {
@@ -54,6 +55,8 @@ int main(int argc, char const* argv[])
     runner.add_stop_callback([&] { shutdown_hook(); });
 
     ExternalClientLauncher external_client_launcher;
+
+    std::string terminal_cmd{"weston-terminal"};
 
     auto const quit_on_ctrl_alt_bksp = [&](MirEvent const* event)
         {
@@ -79,7 +82,7 @@ int main(int argc, char const* argv[])
                 return true;
 
             case KEY_T:
-                external_client_launcher.launch({"weston-terminal"});
+                external_client_launcher.launch({terminal_cmd});
                 return false;
 
             default:
@@ -103,6 +106,8 @@ int main(int argc, char const* argv[])
             AppendEventFilter{quit_on_ctrl_alt_bksp},
             StartupInternalClient{spinner},
             pre_init(CommandLineOption{[&](std::string const& typeface) { ::wallpaper::font_file(typeface); },
-                              "shell-wallpaper-font", "font file to use for wallpaper", ::wallpaper::font_file()})
+                                       "shell-wallpaper-font", "font file to use for wallpaper", ::wallpaper::font_file()}),
+            CommandLineOption{[&](std::string const& cmd) { terminal_cmd = cmd; },
+                              "shell-terminal-emulator", "terminal emulator to use", terminal_cmd}
         });
 }
