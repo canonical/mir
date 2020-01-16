@@ -36,9 +36,10 @@
 
 
 #ifndef ARRAY_LENGTH
-namespace { template<typename T, size_t size> constexpr size_t length_of(T(&)[size]) {return size;} }
 #define ARRAY_LENGTH(a) length_of(a)
 #endif
+
+namespace { template<typename T, size_t size> constexpr size_t length_of(T(&)[size]) {return size;} }
 
 #define CURSOR_ENTRY(x)        \
     {                          \
@@ -131,14 +132,14 @@ void mf::XWaylandWM::start()
     wm_get_resources();
     setup_visual_and_colormap();
 
-    std::vector<uint32_t> const attrib_values{
+    uint32_t const attrib_values[]{
         XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_PROPERTY_CHANGE};
 
-    xcb_change_window_attributes(xcb_connection, xcb_screen->root, XCB_CW_EVENT_MASK, attrib_values.data());
+    xcb_change_window_attributes(xcb_connection, xcb_screen->root, XCB_CW_EVENT_MASK, attrib_values);
 
     xcb_composite_redirect_subwindows(xcb_connection, xcb_screen->root, XCB_COMPOSITE_REDIRECT_MANUAL);
 
-    std::vector<xcb_atom_t> const supported{
+    xcb_atom_t const supported[]{
         xcb_atom.net_wm_moveresize,
         xcb_atom.net_wm_state,
         xcb_atom.net_wm_state_fullscreen,
@@ -152,7 +153,7 @@ void mf::XWaylandWM::start()
         xcb_screen->root,
         xcb_atom.net_supported,
         XCB_ATOM_ATOM, 32, // type and format
-        supported.size(), supported.data());
+        length_of(supported), supported);
 
     set_net_active_window(XCB_WINDOW_NONE);
     wm_selector();
@@ -170,7 +171,7 @@ void mf::XWaylandWM::wm_selector()
 {
     xcb_selection_request.requestor = XCB_NONE;
 
-    std::vector<uint32_t> const values{
+    uint32_t const values[]{
         XCB_EVENT_MASK_PROPERTY_CHANGE};
 
     xcb_selection_window = xcb_generate_id(xcb_connection);
@@ -186,7 +187,7 @@ void mf::XWaylandWM::wm_selector()
         XCB_WINDOW_CLASS_INPUT_OUTPUT,
         xcb_screen->root_visual,
         XCB_CW_EVENT_MASK,
-        values.data());
+        values);
 
     xcb_set_selection_owner(xcb_connection, xcb_selection_window, xcb_atom.clipboard_manager, XCB_TIME_CURRENT_TIME);
 
