@@ -446,7 +446,10 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
             log_warning("border width unsupported (border width %d)", event->border_width);
     }
 
-    surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
+    if (!is_ours(event->window))
+    {
+        surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
+    }
 }
 
 void mf::XWaylandWM::handle_motion_notify(xcb_motion_notify_event_t *event)
