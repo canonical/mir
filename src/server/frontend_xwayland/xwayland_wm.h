@@ -112,6 +112,7 @@ private:
 
     // Event handeling
     void handle_events();
+    void handle_event(xcb_generic_event_t* event);
 
     // Events
     void handle_create_notify(xcb_create_notify_event_t *event);
