@@ -93,11 +93,11 @@ auto data_buffer_to_debug_string(T* data, size_t elements) -> std::string
 }
 
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
-    : wayland_connector(wayland_connector),
+    : wm_fd{fd},
+      xcb_connection{xcb_connect_to_fd(wm_fd, nullptr)},
+      wayland_connector(wayland_connector),
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
-      wayland_client{wayland_client},
-      wm_fd{fd},
-      xcb_connection(nullptr)
+      wayland_client{wayland_client}
 {
     start();
 }
@@ -126,7 +126,6 @@ void mf::XWaylandWM::destroy() {
 
 void mf::XWaylandWM::start()
 {
-    xcb_connection = xcb_connect_to_fd(wm_fd, nullptr);
     if (xcb_connection_has_error(xcb_connection))
     {
         mir::log_error("XWAYLAND: xcb_connect_to_fd failed");
