@@ -286,6 +286,15 @@ auto mf::XWaylandWM::build_shell_surface(
     return shell->build_shell_surface(wm_surface, wayland_client, wayland_surface);
 }
 
+auto mf::XWaylandWM::get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandWMSurface>>
+{
+    auto const surface = surfaces.find(xcb_window);
+    if (surface == surfaces.end() || !surface->second)
+        return std::experimental::nullopt;
+    else
+        return surface->second;
+}
+
 void mf::XWaylandWM::run_on_wayland_thread(std::function<void()>&& work)
 {
     wayland_connector->run_on_wayland_display([work = move(work)](auto){ work(); });
