@@ -95,6 +95,7 @@ auto data_buffer_to_debug_string(T* data, size_t elements) -> std::string
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
     : wm_fd{fd},
       xcb_connection{xcb_connect_to_fd(wm_fd, nullptr)},
+      xcb_atom{xcb_connection},
       wayland_connector(wayland_connector),
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
       wayland_client{wayland_client}
@@ -731,85 +732,8 @@ xcb_cursor_t mf::XWaylandWM::xcb_cursor_library_load_cursor(const char *file)
 
 void mf::XWaylandWM::wm_get_resources()
 {
-
-#define F(field) offsetof(struct atom_t, field)
-
-    static const struct
-    {
-        const char *name;
-        int offset;
-    } atoms[] = {{"WM_PROTOCOLS", F(wm_protocols)},
-                 {"WM_NORMAL_HINTS", F(wm_normal_hints)},
-                 {"WM_TAKE_FOCUS", F(wm_take_focus)},
-                 {"WM_DELETE_WINDOW", F(wm_delete_window)},
-                 {"WM_STATE", F(wm_state)},
-                 {"WM_S0", F(wm_s0)},
-                 {"WM_CLIENT_MACHINE", F(wm_client_machine)},
-                 {"_NET_WM_CM_S0", F(net_wm_cm_s0)},
-                 {"_NET_WM_NAME", F(net_wm_name)},
-                 {"_NET_WM_PID", F(net_wm_pid)},
-                 {"_NET_WM_ICON", F(net_wm_icon)},
-                 {"_NET_WM_STATE", F(net_wm_state)},
-                 {"_NET_WM_STATE_MAXIMIZED_VERT", F(net_wm_state_maximized_vert)},
-                 {"_NET_WM_STATE_MAXIMIZED_HORZ", F(net_wm_state_maximized_horz)},
-                 {"_NET_WM_STATE_FULLSCREEN", F(net_wm_state_fullscreen)},
-                 {"_NET_WM_USER_TIME", F(net_wm_user_time)},
-                 {"_NET_WM_ICON_NAME", F(net_wm_icon_name)},
-                 {"_NET_WM_DESKTOP", F(net_wm_desktop)},
-                 {"_NET_WM_WINDOW_TYPE", F(net_wm_window_type)},
-
-                 {"_NET_WM_WINDOW_TYPE_DESKTOP", F(net_wm_window_type_desktop)},
-                 {"_NET_WM_WINDOW_TYPE_DOCK", F(net_wm_window_type_dock)},
-                 {"_NET_WM_WINDOW_TYPE_TOOLBAR", F(net_wm_window_type_toolbar)},
-                 {"_NET_WM_WINDOW_TYPE_MENU", F(net_wm_window_type_menu)},
-                 {"_NET_WM_WINDOW_TYPE_UTILITY", F(net_wm_window_type_utility)},
-                 {"_NET_WM_WINDOW_TYPE_SPLASH", F(net_wm_window_type_splash)},
-                 {"_NET_WM_WINDOW_TYPE_DIALOG", F(net_wm_window_type_dialog)},
-                 {"_NET_WM_WINDOW_TYPE_DROPDOWN_MENU", F(net_wm_window_type_dropdown)},
-                 {"_NET_WM_WINDOW_TYPE_POPUP_MENU", F(net_wm_window_type_popup)},
-                 {"_NET_WM_WINDOW_TYPE_TOOLTIP", F(net_wm_window_type_tooltip)},
-                 {"_NET_WM_WINDOW_TYPE_NOTIFICATION", F(net_wm_window_type_notification)},
-                 {"_NET_WM_WINDOW_TYPE_COMBO", F(net_wm_window_type_combo)},
-                 {"_NET_WM_WINDOW_TYPE_DND", F(net_wm_window_type_dnd)},
-                 {"_NET_WM_WINDOW_TYPE_NORMAL", F(net_wm_window_type_normal)},
-
-                 {"_NET_WM_MOVERESIZE", F(net_wm_moveresize)},
-                 {"_NET_SUPPORTING_WM_CHECK", F(net_supporting_wm_check)},
-                 {"_NET_SUPPORTED", F(net_supported)},
-                 {"_NET_ACTIVE_WINDOW", F(net_active_window)},
-                 {"_MOTIF_WM_HINTS", F(motif_wm_hints)},
-                 {"CLIPBOARD", F(clipboard)},
-                 {"CLIPBOARD_MANAGER", F(clipboard_manager)},
-                 {"TARGETS", F(targets)},
-                 {"UTF8_STRING", F(utf8_string)},
-                 {"_WL_SELECTION", F(wl_selection)},
-                 {"INCR", F(incr)},
-                 {"TIMESTAMP", F(timestamp)},
-                 {"MULTIPLE", F(multiple)},
-                 {"UTF8_STRING", F(utf8_string)},
-                 {"COMPOUND_TEXT", F(compound_text)},
-                 {"TEXT", F(text)},
-                 {"STRING", F(string)},
-                 {"WINDOW", F(window)},
-                 {"text/plain;charset=utf-8", F(text_plain_utf8)},
-                 {"text/plain", F(text_plain)},
-                 {"XdndSelection", F(xdnd_selection)},
-                 {"XdndAware", F(xdnd_aware)},
-                 {"XdndEnter", F(xdnd_enter)},
-                 {"XdndLeave", F(xdnd_leave)},
-                 {"XdndDrop", F(xdnd_drop)},
-                 {"XdndStatus", F(xdnd_status)},
-                 {"XdndFinished", F(xdnd_finished)},
-                 {"XdndTypeList", F(xdnd_type_list)},
-                 {"XdndActionCopy", F(xdnd_action_copy)},
-                 {"_XWAYLAND_ALLOW_COMMITS", F(allow_commits)},
-                 {"WL_SURFACE_ID", F(wl_surface_id)}};
-#undef F
-
     xcb_xfixes_query_version_cookie_t xfixes_cookie;
     xcb_xfixes_query_version_reply_t *xfixes_reply;
-    xcb_intern_atom_cookie_t cookies[ARRAY_LENGTH(atoms)];
-    xcb_intern_atom_reply_t *reply;
     xcb_render_query_pict_formats_reply_t *formats_reply;
     xcb_render_query_pict_formats_cookie_t formats_cookie;
     xcb_render_pictforminfo_t *formats;
@@ -819,16 +743,6 @@ void mf::XWaylandWM::wm_get_resources()
     xcb_prefetch_extension_data(xcb_connection, &xcb_composite_id);
 
     formats_cookie = xcb_render_query_pict_formats(xcb_connection);
-
-    for (i = 0; i < ARRAY_LENGTH(atoms); i++)
-        cookies[i] = xcb_intern_atom(xcb_connection, 0, strlen(atoms[i].name), atoms[i].name);
-
-    for (i = 0; i < ARRAY_LENGTH(atoms); i++)
-    {
-        reply = xcb_intern_atom_reply(xcb_connection, cookies[i], NULL);
-        *(xcb_atom_t *)((char *)&xcb_atom + atoms[i].offset) = reply->atom;
-        free(reply);
-    }
 
     xfixes = xcb_get_extension_data(xcb_connection, &xcb_xfixes_id);
     if (!xfixes || !xfixes->present)
