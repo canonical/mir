@@ -89,7 +89,12 @@ then
   MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_X11_DISPLAY=${x11_display} MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} NO_AT_BRIDGE=1 ${hostsocket} exec dbus-run-session -- ${bindir}${miral_server} ${enable_mirclient} $*
 else
   # miral-kiosk (and mir_demo_server) need a terminal launched
-  sh -c "MIR_SERVER_FILE=${socket} MIR_SERVER_SHELL_X11_DISPLAY=${x11_display} WAYLAND_DISPLAY=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*"&
+  if [ "${miral_server}" == "mir_demo_server" ]
+  then
+    sh -c "MIR_SERVER_FILE=${socket} MIR_SERVER_X11_DISPLAY=${x11_display} WAYLAND_DISPLAY=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*"&
+  else # miral-kiosk
+    sh -c "MIR_SERVER_FILE=${socket}                                       WAYLAND_DISPLAY=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*"&
+  fi
 
   # Fixup for weird gnome-terminal script on Ubuntu
   if [ "${terminal}" == "gnome-terminal" ] && [ -e "/usr/bin/gnome-terminal.real" ]
