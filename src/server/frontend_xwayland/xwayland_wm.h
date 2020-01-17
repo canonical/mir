@@ -115,8 +115,18 @@ class XWaylandWMSurface;
 class XWaylandWMShellSurface;
 class WlSurface;
 
+template<typename T, size_t length>
+constexpr size_t length_of(T(&)[length])
+{
+    return length;
+}
+
 class XWaylandWM
 {
+private:
+    int const wm_fd;
+    xcb_connection_t* const xcb_connection;
+
 public:
     XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd);
     ~XWaylandWM();
@@ -193,9 +203,7 @@ private:
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     wl_client* const wayland_client;
-    int const wm_fd;
 
-    xcb_connection_t *xcb_connection;
     xcb_screen_t *xcb_screen;
     xcb_window_t xcb_window;
     std::map<xcb_window_t, std::shared_ptr<XWaylandWMSurface>> surfaces;
