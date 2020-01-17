@@ -57,17 +57,16 @@ mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event
           (bool)event->override_redirect},
       shell_surface_destroyed{std::make_shared<bool>(true)}
 {
-    uint32_t values[1];
-    xcb_get_geometry_cookie_t geometry_cookie;
-    xcb_get_geometry_reply_t *geometry_reply;
+    xcb_get_geometry_cookie_t const geometry_cookie = xcb_get_geometry(xwm->get_xcb_connection(), window);
 
-    geometry_cookie = xcb_get_geometry(xwm->get_xcb_connection(), window);
-
-    values[0] = XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE;
+    uint32_t const values[]{
+        XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE};
     xcb_change_window_attributes(xwm->get_xcb_connection(), window, XCB_CW_EVENT_MASK, values);
 
-    geometry_reply = xcb_get_geometry_reply(xwm->get_xcb_connection(), geometry_cookie, NULL);
-    if (geometry_reply == NULL)
+    xcb_get_geometry_reply_t* const geometry_reply =
+        xcb_get_geometry_reply(xwm->get_xcb_connection(), geometry_cookie, nullptr);
+
+    if (!geometry_reply)
         mir::log_error("xcb gemom reply faled");
 }
 
@@ -121,33 +120,45 @@ void mf::XWaylandWMSurface::set_workspace(int workspace)
 
 void mf::XWaylandWMSurface::set_wm_state(WmState state)
 {
-    uint32_t property[2];
-    property[0] = state;
-    property[1] = XCB_WINDOW_NONE;
+    uint32_t const properties[]{
+        state,
+        XCB_WINDOW_NONE // Icon window
+    };
 
-    xcb_change_property(xwm->get_xcb_connection(), XCB_PROP_MODE_REPLACE, window, xwm->xcb_atom.wm_state,
-                        xwm->xcb_atom.wm_state, 32, 2, property);
+    xcb_change_property(
+        xwm->get_xcb_connection(),
+        XCB_PROP_MODE_REPLACE,
+        window, xwm->xcb_atom.wm_state,
+        xwm->xcb_atom.wm_state, 32,
+        length_of(properties), properties);
     xcb_flush(xwm->get_xcb_connection());
 }
 
 void mf::XWaylandWMSurface::set_net_wm_state()
 {
-    uint32_t property[3];
-    uint32_t i = 0;
+    std::vector<uint32_t> properties;
 
     {
         std::lock_guard<std::mutex> lock{mutex};
+
         if (fullscreen)
-            property[i++] = xwm->xcb_atom.net_wm_state_fullscreen;
+            properties.push_back(xwm->xcb_atom.net_wm_state_fullscreen);
+
         if (maximized)
         {
-            property[i++] = xwm->xcb_atom.net_wm_state_maximized_horz;
-            property[i++] = xwm->xcb_atom.net_wm_state_maximized_vert;
+            properties.push_back(xwm->xcb_atom.net_wm_state_maximized_horz);
+            properties.push_back(xwm->xcb_atom.net_wm_state_maximized_vert);
         }
     }
 
-    xcb_change_property(xwm->get_xcb_connection(), XCB_PROP_MODE_REPLACE, window, xwm->xcb_atom.net_wm_state,
-                        XCB_ATOM_ATOM, 32, i, property);
+    xcb_change_property(
+        xwm->get_xcb_connection(),
+        XCB_PROP_MODE_REPLACE,
+        window,
+        xwm->xcb_atom.net_wm_state,
+        XCB_ATOM_ATOM, 32, // type and format
+        properties.size(), properties.data());
+
     xcb_flush(xwm->get_xcb_connection());
 }
 
@@ -299,11 +310,11 @@ void mf::XWaylandWMSurface::set_state(MirWindowState state)
 
 void mf::XWaylandWMSurface::send_resize(const geometry::Size& new_size)
 {
-    uint32_t mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
-    uint32_t values[2];
+    uint32_t const mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
 
-    values[0] = new_size.width.as_uint32_t();
-    values[1] = new_size.height.as_uint32_t();
+    uint32_t const values[]{
+        new_size.width.as_uint32_t(),
+        new_size.height.as_uint32_t()};
 
     xcb_configure_window(xwm->get_xcb_connection(), window, mask, values);
     xcb_flush(xwm->get_xcb_connection());
