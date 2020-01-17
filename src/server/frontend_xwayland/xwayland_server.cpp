@@ -215,7 +215,7 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
     sigaction(SIGUSR1, &action, nullptr);
 
     execl(xwayland_path.c_str(),
-    "Xwayland",
+          xwayland_path.c_str(),
     dsp_str.c_str(),
     "-rootless",
     "-listen", abstract_socket_fd_str.c_str(),
