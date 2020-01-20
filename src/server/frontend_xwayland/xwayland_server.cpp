@@ -214,15 +214,16 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
     action.sa_handler = SIG_IGN;
     sigaction(SIGUSR1, &action, nullptr);
 
-    execl(xwayland_path.c_str(),
-    "Xwayland",
-    dsp_str.c_str(),
-    "-rootless",
-    "-listen", abstract_socket_fd_str.c_str(),
-    "-listen", socket_fd_str.c_str(),
-    "-wm", wm_fd_str.c_str(),
-    "-terminate",
-    NULL);
+    execl(
+        xwayland_path.c_str(),
+        xwayland_path.c_str(),
+        dsp_str.c_str(),
+        "-rootless",
+        "-listen", abstract_socket_fd_str.c_str(),
+        "-listen", socket_fd_str.c_str(),
+        "-wm", wm_fd_str.c_str(),
+        "-terminate",
+        NULL);
 }
 
 namespace
