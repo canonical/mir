@@ -1,5 +1,6 @@
 summary: Build (on Fedora)
 systems: [fedora-*]
+variants: [-rpi]
 
 execute: |
     dnf install --assumeyes --allowerasing \
