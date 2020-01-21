@@ -423,9 +423,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
         }
     }
 
-    auto const surface = get_wm_surface(event->window);
-
-    if (surface)
+    if (auto const surface = get_wm_surface(event->window))
     {
         surface.value()->dirty_properties();
     }
@@ -483,9 +481,7 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
             get_window_debug_string(event->parent).c_str());
     }
 
-    auto const surface = get_wm_surface(event->window);
-
-    if (surface)
+    if (auto const surface = get_wm_surface(event->window))
     {
         surface.value()->read_properties();
         surface.value()->set_wm_state(XWaylandWMSurface::NormalState);
@@ -514,9 +510,7 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
     if (event->response_type & ~0x80)
         return;
 
-    auto const surface = get_wm_surface(event->window);
-
-    if (surface)
+    if (auto const surface = get_wm_surface(event->window))
     {
         surface.value()->set_wm_state(XWaylandWMSurface::WithdrawnState);
         surface.value()->set_workspace(-1);
@@ -535,9 +529,7 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
             get_window_debug_string(event->window).c_str());
     }
 
-    auto const surface = get_wm_surface(event->window);
-
-    if (surface)
+    if (auto const surface = get_wm_surface(event->window))
     {
         if (event->type == xcb_atom.net_wm_moveresize)
             handle_move_resize(surface.value(), event);
