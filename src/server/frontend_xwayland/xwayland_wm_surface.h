@@ -138,7 +138,6 @@ public:
     void set_wm_state(WmState state);
     void set_net_wm_state();
     void move_resize(uint32_t detail);
-    void set_state(MirWindowState state);
     void send_resize(const geometry::Size& new_size);
     void send_close_request();
 

@@ -300,14 +300,6 @@ void mf::XWaylandWMSurface::move_resize(uint32_t detail)
     }
 }
 
-void mf::XWaylandWMSurface::set_state(MirWindowState state)
-{
-    aquire_shell_surface([state](auto shell_surface)
-        {
-            shell_surface->set_state_now(state);
-        });
-}
-
 void mf::XWaylandWMSurface::send_resize(const geometry::Size& new_size)
 {
     uint32_t const mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
