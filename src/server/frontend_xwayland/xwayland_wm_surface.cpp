@@ -305,3 +305,75 @@ void mf::XWaylandWMSurface::aquire_shell_surface(std::function<void(XWaylandWMSh
                 work(shell_surface);
         });
 }
+
+void mf::XWaylandWMSurface::set_window_state(WindowState const& new_window_state)
+{
+    WmState const wm_state{
+        new_window_state.minimized ?
+        WmState::ICONIC :
+        WmState::NORMAL};
+
+    uint32_t const wm_state_properties[]{
+        static_cast<uint32_t>(wm_state),
+        XCB_WINDOW_NONE // Icon window
+    };
+
+    xcb_change_property(
+        xwm->get_xcb_connection(),
+        XCB_PROP_MODE_REPLACE,
+        window, xwm->xcb_atom.wm_state,
+        xwm->xcb_atom.wm_state, 32,
+        length_of(wm_state_properties), wm_state_properties);
+
+    std::vector<xcb_atom_t> net_wm_states;
+
+    if (new_window_state.maximized)
+    {
+        net_wm_states.push_back(xwm->xcb_atom.net_wm_state_hidden);
+    }
+    if (new_window_state.maximized)
+    {
+        net_wm_states.push_back(xwm->xcb_atom.net_wm_state_maximized_horz);
+        net_wm_states.push_back(xwm->xcb_atom.net_wm_state_maximized_vert);
+    }
+    if (new_window_state.fullscreen)
+    {
+        net_wm_states.push_back(xwm->xcb_atom.net_wm_state_fullscreen);
+    }
+
+    xcb_change_property(
+        xwm->get_xcb_connection(),
+        XCB_PROP_MODE_REPLACE,
+        window,
+        xwm->xcb_atom.net_wm_state,
+        XCB_ATOM_ATOM, 32, // type and format
+        net_wm_states.size(), net_wm_states.data());
+
+    xcb_flush(xwm->get_xcb_connection());
+
+    MirWindowState mir_window_state;
+
+    if (new_window_state.minimized)
+        mir_window_state = mir_window_state_minimized;
+    else if (new_window_state.fullscreen)
+        mir_window_state = mir_window_state_fullscreen;
+    else if (new_window_state.maximized)
+        mir_window_state = mir_window_state_maximized;
+    else
+        mir_window_state = mir_window_state_restored;
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+
+        window_state = new_window_state;
+
+        if (mir_window_state != cached_mir_window_state)
+        {
+            cached_mir_window_state = mir_window_state;
+            aquire_shell_surface([mir_window_state](auto shell_surface)
+                {
+                    shell_surface->set_state_now(mir_window_state);
+                });
+        }
+    }
+}

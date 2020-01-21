@@ -145,10 +145,33 @@ private:
     /// Runs work on the Wayland thread if the shell surface hasn't been destroyed
     void aquire_shell_surface(std::function<void(XWaylandWMShellSurface* shell_surface)>&& work);
 
+    /// contains more information than just a MirWindowState
+    /// (for example if a minimized window would otherwise be maximized)
+    struct WindowState
+    {
+        bool minimized{false};
+        bool maximized{false};
+        bool fullscreen{false};
+    };
+
+    /// The last state we have either requested of Mir or been informed of by Mir
+    /// Prevents requesting a window state that we are already in
+    MirWindowState cached_mir_window_state{mir_window_state_unknown};
+
+    /// Sets the window's _NET_WM_STATE property based on the contents of window_state
+    /// Also sets the state of the scene surface to match window_state
+    /// Should be called after every change to window_state
+    /// Should NOT be called under lock
+    void set_window_state(WindowState const& new_window_state);
+
     XWaylandWM* const xwm;
     xcb_window_t const window;
 
     std::mutex mutex;
+
+    /// Reflects the _NET_WM_STATE and WM_STATE we have currently set on the window
+    /// Should only be modified by set_wm_state()
+    WindowState window_state;
 
     bool props_dirty;
     bool maximized;
