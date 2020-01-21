@@ -176,7 +176,6 @@ void mf::XWaylandWMSurface::read_properties()
     props[XCB_ATOM_WM_TRANSIENT_FOR] = XCB_ATOM_WINDOW;
     props[xwm->xcb_atom.wm_protocols] = TYPE_WM_PROTOCOLS;
     props[xwm->xcb_atom.wm_normal_hints] = TYPE_WM_NORMAL_HINTS;
-    props[xwm->xcb_atom.net_wm_state] = TYPE_NET_WM_STATE;
     props[xwm->xcb_atom.net_wm_window_type] = XCB_ATOM_ATOM;
     props[xwm->xcb_atom.net_wm_name] = XCB_ATOM_STRING;
     props[xwm->xcb_atom.motif_wm_hints] = TYPE_MOTIF_WM_HINTS;
@@ -244,27 +243,6 @@ void mf::XWaylandWMSurface::read_properties()
         }
         case TYPE_WM_NORMAL_HINTS:
         {
-            break;
-        }
-        case TYPE_NET_WM_STATE:
-        {
-            xcb_atom_t *value = reinterpret_cast<xcb_atom_t *>(xcb_get_property_value(reply));
-            uint32_t i;
-            for (i = 0; i < reply->value_len; i++)
-            {
-                if (value[i] == xwm->xcb_atom.net_wm_state_fullscreen && !fullscreen)
-                {
-                    fullscreen = true;
-                }
-            }
-            if (value[i] == xwm->xcb_atom.net_wm_state_maximized_horz && !maximized)
-            {
-                maximized = true;
-            }
-            if (value[i] == xwm->xcb_atom.net_wm_state_maximized_vert && !maximized)
-            {
-                maximized = true;
-            }
             break;
         }
         case TYPE_MOTIF_WM_HINTS:
