@@ -148,6 +148,37 @@ void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t (&data)[5])
     set_window_state(new_window_state);
 }
 
+void mf::XWaylandWMSurface::wm_change_state_client_message(uint32_t (&data)[5])
+{
+    // See ICCCM 4.1.4 (https://tronche.com/gui/x/icccm/sec-4.html)
+
+    WmState requested_state = (WmState)data[0];
+
+    WindowState new_window_state;
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+
+        new_window_state = window_state;
+
+        switch (requested_state)
+        {
+        case WmState::NORMAL:
+            new_window_state.minimized = false;
+            break;
+
+        case WmState::ICONIC:
+            new_window_state.minimized = true;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    set_window_state(new_window_state);
+}
+
 void mf::XWaylandWMSurface::dirty_properties()
 {
     std::lock_guard<std::mutex> lock{mutex};

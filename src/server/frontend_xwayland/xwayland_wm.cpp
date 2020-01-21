@@ -557,6 +557,8 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
             handle_move_resize(surface.value(), event);
         else if (event->type == xcb_atom.net_wm_state)
             surface.value()->net_wm_state_client_message(event->data.data32);
+        else if (event->type == xcb_atom.wm_change_state)
+            surface.value()->wm_change_state_client_message(event->data.data32);
         else if (event->type == xcb_atom.wl_surface_id)
             handle_surface_id(surface.value(), event);
     }
