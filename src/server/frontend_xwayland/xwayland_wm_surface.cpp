@@ -29,11 +29,20 @@ namespace mf = mir::frontend;
 
 namespace
 {
+/// See ICCCM 4.1.3.1 (https://tronche.com/gui/x/icccm/sec-4.html)
 enum class WmState: uint32_t
 {
     WITHDRAWN = 0,
     NORMAL = 1,
     ICONIC = 3,
+};
+
+/// See https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#sourceindication
+enum class SourceIndication: uint32_t
+{
+    UNKNOWN = 0,
+    APPLICATION = 1,
+    PAGER = 2,
 };
 
 auto wm_resize_edge_to_mir_resize_edge(uint32_t wm_resize_edge) -> std::experimental::optional<MirResizeEdge>
@@ -83,6 +92,60 @@ mf::XWaylandWMSurface::~XWaylandWMSurface()
         {
             delete shell_surface;
         });
+}
+
+void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t (&data)[5])
+{
+    // The client is requesting a change in state
+    // see https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#idm45390969565536
+
+    enum class NetWmStateClientMessageAction: uint32_t
+    {
+        REMOVE = 0,
+        ADD = 1,
+        TOGGLE = 2,
+    };
+
+    struct NetWmStateClientMessage
+    {
+        NetWmStateClientMessageAction const action;
+        xcb_atom_t const properties[2];
+        SourceIndication const source_indication;
+    };
+
+    auto const message = (NetWmStateClientMessage*)data;
+
+    WindowState new_window_state;
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+
+        new_window_state = window_state;
+
+        for (size_t i = 0; i < length_of(message->properties); i++)
+        {
+            if (xcb_atom_t const property = message->properties[i]) // if there is only one property, the 2nd is 0
+            {
+                bool nil{false}, *prop_ptr = &nil;
+
+                if (property == xwm->xcb_atom.net_wm_state_hidden)
+                    prop_ptr = &new_window_state.minimized;
+                else if (property == xwm->xcb_atom.net_wm_state_maximized_horz) // assume vert is also set
+                    prop_ptr = &new_window_state.maximized;
+                else if (property == xwm->xcb_atom.net_wm_state_fullscreen)
+                    prop_ptr = &new_window_state.fullscreen;
+
+                switch (message->action)
+                {
+                case NetWmStateClientMessageAction::REMOVE: *prop_ptr = false; break;
+                case NetWmStateClientMessageAction::ADD: *prop_ptr = true; break;
+                case NetWmStateClientMessageAction::TOGGLE: *prop_ptr = !*prop_ptr; break;
+                }
+            }
+        }
+    }
+
+    set_window_state(new_window_state);
 }
 
 void mf::XWaylandWMSurface::dirty_properties()
