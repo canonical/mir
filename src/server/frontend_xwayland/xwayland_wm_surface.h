@@ -22,6 +22,7 @@
 #include "xwayland_wm.h"
 
 #include <mutex>
+#include <set>
 
 extern "C" {
 #include <xcb/xcb.h>
@@ -122,21 +123,14 @@ class XWaylandWMShellSurface;
 class XWaylandWMSurface
 {
 public:
-    enum WmState
-    {
-        WithdrawnState = 0,
-        NormalState = 1,
-        IconicState = 3
-    };
-
     XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event_t *event);
     ~XWaylandWMSurface();
     void dirty_properties();
     void read_properties();
     void set_surface(WlSurface* wayland_surface); ///< Should only be called on the Wayland thread
     void set_workspace(int workspace);
-    void set_wm_state(WmState state);
-    void set_net_wm_state();
+    void apply_mir_state_to_window(MirWindowState new_state);
+    void unmap();
     void move_resize(uint32_t detail);
     void send_resize(const geometry::Size& new_size);
     void send_close_request();
@@ -174,8 +168,6 @@ private:
     WindowState window_state;
 
     bool props_dirty;
-    bool maximized;
-    bool fullscreen;
     struct
     {
         std::string title;

@@ -29,6 +29,13 @@ namespace mf = mir::frontend;
 
 namespace
 {
+enum class WmState: uint32_t
+{
+    WITHDRAWN = 0,
+    NORMAL = 1,
+    ICONIC = 3,
+};
+
 auto wm_resize_edge_to_mir_resize_edge(uint32_t wm_resize_edge) -> std::experimental::optional<MirResizeEdge>
 {
     switch (wm_resize_edge)
@@ -118,10 +125,61 @@ void mf::XWaylandWMSurface::set_workspace(int workspace)
     xcb_flush(xwm->get_xcb_connection());
 }
 
-void mf::XWaylandWMSurface::set_wm_state(WmState state)
+void mf::XWaylandWMSurface::apply_mir_state_to_window(MirWindowState new_state)
 {
-    uint32_t const properties[]{
-        state,
+    std::vector<xcb_atom_t> net_wm_states;
+
+    WindowState new_window_state;
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+
+        cached_mir_window_state = new_state;
+        new_window_state = window_state;
+
+        switch (new_state)
+        {
+        case mir_window_state_minimized:
+        case mir_window_state_hidden:
+            new_window_state.minimized = true;
+            // don't change new_window_state.maximized
+            // don't change new_window_state.fullscreen
+            break;
+
+        case mir_window_state_fullscreen:
+            new_window_state.minimized = false;
+            // don't change new_window_state.maximized
+            new_window_state.fullscreen = true;
+            break;
+
+        case mir_window_state_maximized:
+        case mir_window_state_vertmaximized:
+        case mir_window_state_horizmaximized:
+        case mir_window_state_attached:
+            new_window_state.minimized = false;
+            new_window_state.maximized = true;
+            new_window_state.fullscreen = false;
+            break;
+
+        case mir_window_state_restored:
+        case mir_window_state_unknown:
+            new_window_state.minimized = false;
+            new_window_state.maximized = false;
+            new_window_state.fullscreen = false;
+            break;
+
+        case mir_window_states:
+            break;
+        }
+    }
+
+    set_window_state(new_window_state);
+}
+
+void mf::XWaylandWMSurface::unmap()
+{
+    uint32_t const wm_state_properties[]{
+        static_cast<uint32_t>(WmState::WITHDRAWN),
         XCB_WINDOW_NONE // Icon window
     };
 
@@ -130,34 +188,12 @@ void mf::XWaylandWMSurface::set_wm_state(WmState state)
         XCB_PROP_MODE_REPLACE,
         window, xwm->xcb_atom.wm_state,
         xwm->xcb_atom.wm_state, 32,
-        length_of(properties), properties);
-    xcb_flush(xwm->get_xcb_connection());
-}
+        length_of(wm_state_properties), wm_state_properties);
 
-void mf::XWaylandWMSurface::set_net_wm_state()
-{
-    std::vector<uint32_t> properties;
-
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-
-        if (fullscreen)
-            properties.push_back(xwm->xcb_atom.net_wm_state_fullscreen);
-
-        if (maximized)
-        {
-            properties.push_back(xwm->xcb_atom.net_wm_state_maximized_horz);
-            properties.push_back(xwm->xcb_atom.net_wm_state_maximized_vert);
-        }
-    }
-
-    xcb_change_property(
+    xcb_delete_property(
         xwm->get_xcb_connection(),
-        XCB_PROP_MODE_REPLACE,
         window,
-        xwm->xcb_atom.net_wm_state,
-        XCB_ATOM_ATOM, 32, // type and format
-        properties.size(), properties.data());
+        xwm->xcb_atom.net_wm_state);
 
     xcb_flush(xwm->get_xcb_connection());
 }

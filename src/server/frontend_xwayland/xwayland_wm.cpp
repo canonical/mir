@@ -507,9 +507,8 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
     if (auto const surface = get_wm_surface(event->window))
     {
         surface.value()->read_properties();
-        surface.value()->set_wm_state(XWaylandWMSurface::NormalState);
-        surface.value()->set_net_wm_state();
         surface.value()->set_workspace(0);
+        surface.value()->apply_mir_state_to_window(mir_window_state_restored); // TODO: get the actual state
         xcb_map_window(xcb_connection, event->window);
         xcb_flush(xcb_connection);
     }
@@ -535,7 +534,7 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 
     if (auto const surface = get_wm_surface(event->window))
     {
-        surface.value()->set_wm_state(XWaylandWMSurface::WithdrawnState);
+        surface.value()->unmap();
         surface.value()->set_workspace(-1);
         xcb_unmap_window(xcb_connection, event->window);
         xcb_flush(xcb_connection);
