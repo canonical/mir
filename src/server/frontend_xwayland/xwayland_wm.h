@@ -113,13 +113,13 @@ private:
 
     // Event handeling
     void handle_events();
+    void handle_event(xcb_generic_event_t* event);
 
     // Events
     void handle_create_notify(xcb_create_notify_event_t *event);
     void handle_motion_notify(xcb_motion_notify_event_t *event);
     void handle_property_notify(xcb_property_notify_event_t *event);
     void handle_map_request(xcb_map_request_event_t *event);
-    void handle_change_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
     void handle_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
     void handle_surface_id(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
     void handle_move_resize(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
