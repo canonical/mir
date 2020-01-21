@@ -73,6 +73,7 @@ public:
     auto build_shell_surface(
         XWaylandWMSurface* wm_surface,
         WlSurface* wayland_surface) -> XWaylandWMShellSurface*;
+    auto get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandWMSurface>>;
     void run_on_wayland_thread(std::function<void()>&& work);
 
     XCBAtoms const xcb_atom;
