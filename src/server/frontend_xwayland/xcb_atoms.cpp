@@ -62,6 +62,7 @@ mf::XCBAtoms::XCBAtoms(xcb_connection_t* xcb_connection)
       net_wm_state{"_NET_WM_STATE", context},
       net_wm_state_maximized_vert{"_NET_WM_STATE_MAXIMIZED_VERT", context},
       net_wm_state_maximized_horz{"_NET_WM_STATE_MAXIMIZED_HORZ", context},
+      net_wm_state_hidden{"_NET_WM_STATE_HIDDEN", context},
       net_wm_state_fullscreen{"_NET_WM_STATE_FULLSCREEN", context},
       net_wm_user_time{"_NET_WM_USER_TIME", context},
       net_wm_icon_name{"_NET_WM_ICON_NAME", context},

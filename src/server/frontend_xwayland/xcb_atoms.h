@@ -71,6 +71,7 @@ public:
     Atom const net_wm_state;
     Atom const net_wm_state_maximized_vert;
     Atom const net_wm_state_maximized_horz;
+    Atom const net_wm_state_hidden;
     Atom const net_wm_state_fullscreen;
     Atom const net_wm_user_time;
     Atom const net_wm_icon_name;
