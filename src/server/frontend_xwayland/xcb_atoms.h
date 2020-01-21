@@ -62,6 +62,7 @@ public:
     Atom const wm_take_focus;
     Atom const wm_delete_window;
     Atom const wm_state;
+    Atom const wm_change_state;
     Atom const wm_s0;
     Atom const wm_client_machine;
     Atom const net_wm_cm_s0;

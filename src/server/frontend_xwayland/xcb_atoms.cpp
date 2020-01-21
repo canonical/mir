@@ -53,6 +53,7 @@ mf::XCBAtoms::XCBAtoms(xcb_connection_t* xcb_connection)
       wm_take_focus{"WM_TAKE_FOCUS", context},
       wm_delete_window{"WM_DELETE_WINDOW", context},
       wm_state{"WM_STATE", context},
+      wm_change_state{"WM_CHANGE_STATE", context},
       wm_s0{"WM_S0", context},
       wm_client_machine{"WM_CLIENT_MACHINE", context},
       net_wm_cm_s0{"_NET_WM_CM_S0", context},
