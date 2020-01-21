@@ -221,12 +221,13 @@ void mf::XWaylandWMSurface::set_workspace(int workspace)
 
 void mf::XWaylandWMSurface::apply_mir_state_to_window(MirWindowState new_state)
 {
-    std::vector<xcb_atom_t> net_wm_states;
-
     WindowState new_window_state;
 
     {
         std::lock_guard<std::mutex> lock{mutex};
+
+        if (new_state == cached_mir_window_state)
+            return;
 
         cached_mir_window_state = new_state;
         new_window_state = window_state;
