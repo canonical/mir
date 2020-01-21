@@ -34,6 +34,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <sstream>
+#include <boost/throw_exception.hpp>
 
 #ifndef ARRAY_LENGTH
 #define ARRAY_LENGTH(a) mir::frontend::length_of(a)
@@ -307,75 +308,18 @@ void mf::XWaylandWM::handle_events()
 
     while (xcb_generic_event_t* const event = xcb_poll_for_event(xcb_connection))
     {
-        int type = event->response_type & ~0x80;
-        switch (type)
+        try
         {
-        case XCB_BUTTON_PRESS:
-        case XCB_BUTTON_RELEASE:
-            if (verbose_xwayland_logging_enabled())
-                log_debug("XCB_BUTTON_RELEASE");
-            //(reinterpret_cast<xcb_button_press_event_t *>(event));
-            break;
-        case XCB_ENTER_NOTIFY:
-            if (verbose_xwayland_logging_enabled())
-                log_debug("XCB_ENTER_NOTIFY");
-            //(reinterpret_cast<xcb_enter_notify_event_t *>(event));
-            break;
-        case XCB_LEAVE_NOTIFY:
-            if (verbose_xwayland_logging_enabled())
-                log_debug("XCB_LEAVE_NOTIFY");
-            //(reinterpret_cast<xcb_leave_notify_event_t *>(event));
-            break;
-        case XCB_MOTION_NOTIFY:
-            handle_motion_notify(reinterpret_cast<xcb_motion_notify_event_t *>(event));
-            //(reinterpret_cast<xcb_motion_notify_event_t *>(event));
-            break;
-        case XCB_CREATE_NOTIFY:
-            handle_create_notify(reinterpret_cast<xcb_create_notify_event_t *>(event));
-            break;
-        case XCB_MAP_REQUEST:
-            handle_map_request(reinterpret_cast<xcb_map_request_event_t *>(event));
-            break;
-        case XCB_MAP_NOTIFY:
-            if (verbose_xwayland_logging_enabled())
-                log_debug("XCB_MAP_NOTIFY");
-            //(reinterpret_cast<xcb_map_notify_event_t *>(event));
-            break;
-        case XCB_UNMAP_NOTIFY:
-            handle_unmap_notify(reinterpret_cast<xcb_unmap_notify_event_t *>(event));
-            break;
-        case XCB_REPARENT_NOTIFY:
-            if (verbose_xwayland_logging_enabled())
-                log_debug("XCB_REPARENT_NOTIFY");
-            //(reinterpret_cast<xcb_reparent_notify_event_t *>(event));
-            break;
-        case XCB_CONFIGURE_REQUEST:
-            handle_configure_request(reinterpret_cast<xcb_configure_request_event_t *>(event));
-            break;
-        case XCB_CONFIGURE_NOTIFY:
-            handle_configure_notify(reinterpret_cast<xcb_configure_notify_event_t *>(event));
-            break;
-        case XCB_DESTROY_NOTIFY:
-            handle_destroy_notify(reinterpret_cast<xcb_destroy_notify_event_t *>(event));
-            break;
-        case XCB_MAPPING_NOTIFY:
-            if (verbose_xwayland_logging_enabled())
-                log_debug("XCB_MAPPING_NOTIFY");
-            break;
-        case XCB_PROPERTY_NOTIFY:
-            handle_property_notify(reinterpret_cast<xcb_property_notify_event_t *>(event));
-            break;
-        case XCB_CLIENT_MESSAGE:
-            handle_client_message(reinterpret_cast<xcb_client_message_event_t *>(event));
-            break;
-        case XCB_FOCUS_IN:
-            if (verbose_xwayland_logging_enabled())
-                log_debug("XCB_FOCUS_IN");
-            //(reinterpret_cast<xcb_focus_in_event_t *>(event));
-        default:
-            break;
+            handle_event(event);
         }
-
+        catch (...)
+        {
+            log(
+                logging::Severity::warning,
+                MIR_LOG_COMPONENT,
+                std::current_exception(),
+                "Failed to handle xcb event.");
+        }
         free(event);
         got_events = true;
     }
@@ -383,6 +327,78 @@ void mf::XWaylandWM::handle_events()
     if (got_events)
     {
         xcb_flush(xcb_connection);
+    }
+}
+
+void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
+{
+    int type = event->response_type & ~0x80;
+    switch (type)
+    {
+    case XCB_BUTTON_PRESS:
+    case XCB_BUTTON_RELEASE:
+        if (verbose_xwayland_logging_enabled())
+            log_debug("XCB_BUTTON_RELEASE");
+        //(reinterpret_cast<xcb_button_press_event_t *>(event));
+        break;
+    case XCB_ENTER_NOTIFY:
+        if (verbose_xwayland_logging_enabled())
+            log_debug("XCB_ENTER_NOTIFY");
+        //(reinterpret_cast<xcb_enter_notify_event_t *>(event));
+        break;
+    case XCB_LEAVE_NOTIFY:
+        if (verbose_xwayland_logging_enabled())
+            log_debug("XCB_LEAVE_NOTIFY");
+        //(reinterpret_cast<xcb_leave_notify_event_t *>(event));
+        break;
+    case XCB_MOTION_NOTIFY:
+        handle_motion_notify(reinterpret_cast<xcb_motion_notify_event_t *>(event));
+        //(reinterpret_cast<xcb_motion_notify_event_t *>(event));
+        break;
+    case XCB_CREATE_NOTIFY:
+        handle_create_notify(reinterpret_cast<xcb_create_notify_event_t *>(event));
+        break;
+    case XCB_MAP_REQUEST:
+        handle_map_request(reinterpret_cast<xcb_map_request_event_t *>(event));
+        break;
+    case XCB_MAP_NOTIFY:
+        if (verbose_xwayland_logging_enabled())
+            log_debug("XCB_MAP_NOTIFY");
+        //(reinterpret_cast<xcb_map_notify_event_t *>(event));
+        break;
+    case XCB_UNMAP_NOTIFY:
+        handle_unmap_notify(reinterpret_cast<xcb_unmap_notify_event_t *>(event));
+        break;
+    case XCB_REPARENT_NOTIFY:
+        if (verbose_xwayland_logging_enabled())
+            log_debug("XCB_REPARENT_NOTIFY");
+        //(reinterpret_cast<xcb_reparent_notify_event_t *>(event));
+        break;
+    case XCB_CONFIGURE_REQUEST:
+        handle_configure_request(reinterpret_cast<xcb_configure_request_event_t *>(event));
+        break;
+    case XCB_CONFIGURE_NOTIFY:
+        handle_configure_notify(reinterpret_cast<xcb_configure_notify_event_t *>(event));
+        break;
+    case XCB_DESTROY_NOTIFY:
+        handle_destroy_notify(reinterpret_cast<xcb_destroy_notify_event_t *>(event));
+        break;
+    case XCB_MAPPING_NOTIFY:
+        if (verbose_xwayland_logging_enabled())
+            log_debug("XCB_MAPPING_NOTIFY");
+        break;
+    case XCB_PROPERTY_NOTIFY:
+        handle_property_notify(reinterpret_cast<xcb_property_notify_event_t *>(event));
+        break;
+    case XCB_CLIENT_MESSAGE:
+        handle_client_message(reinterpret_cast<xcb_client_message_event_t *>(event));
+        break;
+    case XCB_FOCUS_IN:
+        if (verbose_xwayland_logging_enabled())
+            log_debug("XCB_FOCUS_IN");
+        //(reinterpret_cast<xcb_focus_in_event_t *>(event));
+    default:
+        break;
     }
 }
 
@@ -443,7 +459,14 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
             log_warning("border width unsupported (border width %d)", event->border_width);
     }
 
-    surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
+    if (!is_ours(event->window))
+    {
+        if (surfaces.find(event->window) != surfaces.end())
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error(get_window_debug_string(event->window) + " created, but already known"));
+
+        surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
+    }
 }
 
 void mf::XWaylandWM::handle_motion_notify(xcb_motion_notify_event_t *event)
@@ -547,15 +570,6 @@ void mf::XWaylandWM::handle_move_resize(std::shared_ptr<XWaylandWMSurface> surfa
 
     int detail = event->data.data32[2];
     surface->move_resize(detail);
-}
-
-void mf::XWaylandWM::handle_change_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
-{
-    if (!surface || !event)
-        return;
-
-    if (event->data.data32[0] == 3)
-        surface->set_state(mir_window_state_minimized);
 }
 
 void mf::XWaylandWM::handle_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
