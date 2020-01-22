@@ -94,7 +94,7 @@ mf::XWaylandWMSurface::~XWaylandWMSurface()
         });
 }
 
-void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t (&data)[5])
+void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t const (&data)[5])
 {
     // The client is requesting a change in state
     // see https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#idm45390969565536
@@ -148,11 +148,11 @@ void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t (&data)[5])
     set_window_state(new_window_state);
 }
 
-void mf::XWaylandWMSurface::wm_change_state_client_message(uint32_t (&data)[5])
+void mf::XWaylandWMSurface::wm_change_state_client_message(uint32_t const (&data)[5])
 {
     // See ICCCM 4.1.4 (https://tronche.com/gui/x/icccm/sec-4.html)
 
-    WmState requested_state = (WmState)data[0];
+    WmState const requested_state = (WmState)data[0];
 
     WindowState new_window_state;
 

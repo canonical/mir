@@ -125,8 +125,8 @@ class XWaylandWMSurface
 public:
     XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event_t *event);
     ~XWaylandWMSurface();
-    void net_wm_state_client_message(uint32_t (&data)[5]);
-    void wm_change_state_client_message(uint32_t (&data)[5]);
+    void net_wm_state_client_message(uint32_t const (&data)[5]);
+    void wm_change_state_client_message(uint32_t const (&data)[5]);
     void dirty_properties();
     void read_properties();
     void set_surface(WlSurface* wayland_surface); ///< Should only be called on the Wayland thread
