@@ -284,8 +284,11 @@ auto mf::XWaylandWM::build_shell_surface(
     return shell->build_shell_surface(wm_surface, wayland_client, wayland_surface);
 }
 
-auto mf::XWaylandWM::get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandWMSurface>>
+auto mf::XWaylandWM::get_wm_surface(
+    xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandWMSurface>>
 {
+    std::lock_guard<std::mutex> lock{mutex};
+
     auto const surface = surfaces.find(xcb_window);
     if (surface == surfaces.end() || !surface->second)
         return std::experimental::nullopt;
@@ -458,11 +461,17 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 
     if (!is_ours(event->window))
     {
-        if (surfaces.find(event->window) != surfaces.end())
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error(get_window_debug_string(event->window) + " created, but already known"));
+        auto const surface = std::make_shared<XWaylandWMSurface>(this, event);
 
-        surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
+        {
+            std::lock_guard<std::mutex> lock{mutex};
+
+            if (surfaces.find(event->window) != surfaces.end())
+                BOOST_THROW_EXCEPTION(
+                    std::runtime_error(get_window_debug_string(event->window) + " created, but already known"));
+
+            surfaces[event->window] = surface;
+        }
     }
 }
 
@@ -488,7 +497,10 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
             get_window_debug_string(event->event).c_str());
     }
 
-    surfaces.erase(event->window);
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        surfaces.erase(event->window);
+    }
 }
 
 void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)

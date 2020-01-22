@@ -19,15 +19,16 @@
 #ifndef MIR_FRONTEND_XWAYLAND_WM_H
 #define MIR_FRONTEND_XWAYLAND_WM_H
 
-#include <map>
-#include <thread>
-#include <wayland-server-core.h>
-
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "wayland_connector.h"
 #include "xcb_atoms.h"
 
+#include <map>
+#include <thread>
 #include <experimental/optional>
+#include <mutex>
+
+#include <wayland-server-core.h>
 
 #include <X11/Xcursor/Xcursor.h>
 #include <xcb/composite.h>
@@ -69,9 +70,11 @@ public:
         return xcb_connection;
     }
 
+    /// Should always be called on the Wayland thread
     auto build_shell_surface(
         XWaylandWMSurface* wm_surface,
         WlSurface* wayland_surface) -> XWaylandWMShellSurface*;
+
     auto get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandWMSurface>>;
     void run_on_wayland_thread(std::function<void()>&& work);
 
@@ -124,6 +127,8 @@ private:
     void handle_configure_notify(xcb_configure_notify_event_t *event);
     void handle_unmap_notify(xcb_unmap_notify_event_t *event);
     void handle_destroy_notify(xcb_destroy_notify_event_t *event);
+
+    std::mutex mutex;
 
     // Cursor
     xcb_cursor_t xcb_cursor_image_load_cursor(const XcursorImage *img);
