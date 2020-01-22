@@ -29,6 +29,27 @@ namespace mf = mir::frontend;
 
 namespace
 {
+struct ClientMessageData
+{
+    ClientMessageData(uint32_t const(&data)[5])
+        : data{data}
+    {
+    }
+
+    template<typename T>
+    T unpack()
+    {
+        if (i >= 5)
+            mir::fatal_error("ClientMessageData::unpack() called too many times");
+        auto prev = i;
+        i++;
+        return static_cast<T>(data[prev]);
+    }
+
+    uint32_t const* const data;
+    size_t i{0};
+};
+
 /// See ICCCM 4.1.3.1 (https://tronche.com/gui/x/icccm/sec-4.html)
 enum class WmState: uint32_t
 {
@@ -99,24 +120,20 @@ void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t const (&data)[5
     // The client is requesting a change in state
     // see https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#idm45390969565536
 
-    enum class NetWmStateClientMessageAction: uint32_t
+    enum class Action: uint32_t
     {
         REMOVE = 0,
         ADD = 1,
         TOGGLE = 2,
     };
 
-    struct NetWmStateClientMessage
-    {
-        NetWmStateClientMessageAction const action;
-        xcb_atom_t const properties[2];
-        SourceIndication const source_indication;
-        uint32_t const pad;
-    };
+    ClientMessageData values{data};
+    auto const action = values.unpack<Action>();
+    auto const prop_a = values.unpack<xcb_atom_t>();
+    auto const prop_b = values.unpack<xcb_atom_t>();
+    auto const source_indication = values.unpack<SourceIndication>();
 
-    static_assert(sizeof(NetWmStateClientMessage) == sizeof(data), "Structure size incorrect");
-
-    auto const message = reinterpret_cast<NetWmStateClientMessage const*>(data);
+    (void)source_indication;
 
     WindowState new_window_state;
 
@@ -125,9 +142,9 @@ void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t const (&data)[5
 
         new_window_state = window_state;
 
-        for (size_t i = 0; i < length_of(message->properties); i++)
+        for (xcb_atom_t const property : {prop_a, prop_b})
         {
-            if (xcb_atom_t const property = message->properties[i]) // if there is only one property, the 2nd is 0
+            if (property) // if there is only one property, the 2nd is 0
             {
                 bool nil{false}, *prop_ptr = &nil;
 
@@ -138,11 +155,11 @@ void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t const (&data)[5
                 else if (property == xwm->xcb_atom.net_wm_state_fullscreen)
                     prop_ptr = &new_window_state.fullscreen;
 
-                switch (message->action)
+                switch (action)
                 {
-                case NetWmStateClientMessageAction::REMOVE: *prop_ptr = false; break;
-                case NetWmStateClientMessageAction::ADD: *prop_ptr = true; break;
-                case NetWmStateClientMessageAction::TOGGLE: *prop_ptr = !*prop_ptr; break;
+                case Action::REMOVE: *prop_ptr = false; break;
+                case Action::ADD: *prop_ptr = true; break;
+                case Action::TOGGLE: *prop_ptr = !*prop_ptr; break;
                 }
             }
         }
