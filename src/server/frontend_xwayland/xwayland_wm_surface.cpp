@@ -111,9 +111,12 @@ void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t const (&data)[5
         NetWmStateClientMessageAction const action;
         xcb_atom_t const properties[2];
         SourceIndication const source_indication;
+        uint32_t const pad;
     };
 
-    auto const message = (NetWmStateClientMessage*)data;
+    static_assert(sizeof(NetWmStateClientMessage) == sizeof(data), "Structure size incorrect");
+
+    auto const message = reinterpret_cast<NetWmStateClientMessage const*>(data);
 
     WindowState new_window_state;
 
@@ -152,7 +155,7 @@ void mf::XWaylandWMSurface::wm_change_state_client_message(uint32_t const (&data
 {
     // See ICCCM 4.1.4 (https://tronche.com/gui/x/icccm/sec-4.html)
 
-    WmState const requested_state = (WmState)data[0];
+    WmState const requested_state = static_cast<WmState>(data[0]);
 
     WindowState new_window_state;
 
