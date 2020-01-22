@@ -458,7 +458,7 @@ void mf::XWaylandWMSurface::set_window_state(WindowState const& new_window_state
 
     std::vector<xcb_atom_t> net_wm_states;
 
-    if (new_window_state.maximized)
+    if (new_window_state.minimized)
     {
         net_wm_states.push_back(xwm->xcb_atom.net_wm_state_hidden);
     }
