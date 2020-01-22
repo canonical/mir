@@ -171,7 +171,13 @@ void mf::XWaylandWM::start()
         XCB_ATOM_ATOM, 32, // type and format
         length_of(supported), supported);
 
-    set_net_active_window(XCB_WINDOW_NONE);
+    uint32_t const window_none = XCB_WINDOW_NONE;
+    xcb_change_property(
+        xcb_connection,
+        XCB_PROP_MODE_REPLACE,
+        xcb_screen->root, xcb_atom.net_active_window,
+        xcb_atom.window, 32,
+        1, &window_none);
     wm_selector();
 
     xcb_flush(xcb_connection);
@@ -271,12 +277,6 @@ void mf::XWaylandWM::create_wm_window()
     xcb_set_selection_owner(xcb_connection, xcb_window, xcb_atom.wm_s0, XCB_TIME_CURRENT_TIME);
 
     xcb_set_selection_owner(xcb_connection, xcb_window, xcb_atom.net_wm_cm_s0, XCB_TIME_CURRENT_TIME);
-}
-
-void mf::XWaylandWM::set_net_active_window(xcb_window_t window)
-{
-    xcb_change_property(xcb_connection, XCB_PROP_MODE_REPLACE, xcb_screen->root, xcb_atom.net_active_window,
-                        xcb_atom.window, 32, 1, &window);
 }
 
 auto mf::XWaylandWM::build_shell_surface(

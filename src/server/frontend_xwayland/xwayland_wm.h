@@ -69,7 +69,6 @@ public:
         return xcb_connection;
     }
 
-    void set_net_active_window(xcb_window_t window);
     auto build_shell_surface(
         XWaylandWMSurface* wm_surface,
         WlSurface* wayland_surface) -> XWaylandWMShellSurface*;
