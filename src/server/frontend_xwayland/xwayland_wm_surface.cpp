@@ -491,6 +491,7 @@ void mf::XWaylandWMSurface::set_window_state(WindowState const& new_window_state
     {
         net_wm_states.push_back(xwm->xcb_atom.net_wm_state_fullscreen);
     }
+    // TODO: Set _NET_WM_STATE_MODAL if appropriate
 
     xcb_change_property(
         xwm->get_xcb_connection(),
