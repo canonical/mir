@@ -101,33 +101,6 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
       wayland_client{wayland_client}
 {
-    start();
-}
-
-mf::XWaylandWM::~XWaylandWM()
-{
-    destroy();
-}
-
-void mf::XWaylandWM::destroy() {
-  if (event_thread) {
-    dispatcher->remove_watch(wm_dispatcher);
-    event_thread.reset();
-  }
-
-  // xcb_cursors == 2 when its empty
-  if (xcb_cursors.size() != 2) {
-    mir::log_info("Cleaning cursors");
-    for (auto xcb_cursor : xcb_cursors)
-      xcb_free_cursor(xcb_connection, xcb_cursor);
-  }
-  if (xcb_connection != nullptr)
-    xcb_disconnect(xcb_connection);
-  close(wm_fd);
-}
-
-void mf::XWaylandWM::start()
-{
     if (xcb_connection_has_error(xcb_connection))
     {
         mir::log_error("XWAYLAND: xcb_connect_to_fd failed");
@@ -187,6 +160,30 @@ void mf::XWaylandWM::start()
 
     create_wm_window();
     xcb_flush(xcb_connection);
+}
+
+mf::XWaylandWM::~XWaylandWM()
+{
+    if (event_thread)
+    {
+        dispatcher->remove_watch(wm_dispatcher);
+        event_thread.reset();
+    }
+
+    // xcb_cursors == 2 when its empty
+    if (xcb_cursors.size() != 2)
+    {
+        mir::log_info("Cleaning cursors");
+        for (auto xcb_cursor : xcb_cursors)
+        xcb_free_cursor(xcb_connection, xcb_cursor);
+    }
+
+    if (xcb_connection != nullptr)
+    {
+        xcb_disconnect(xcb_connection);
+    }
+
+    close(wm_fd);
 }
 
 void mf::XWaylandWM::wm_selector()

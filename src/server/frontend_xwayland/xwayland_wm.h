@@ -79,9 +79,6 @@ public:
 
 private:
 
-    void start();
-    void destroy();
-
     enum CursorType
     {
         CursorUnset = -1,
