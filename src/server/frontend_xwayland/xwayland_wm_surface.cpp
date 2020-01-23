@@ -29,27 +29,6 @@ namespace mf = mir::frontend;
 
 namespace
 {
-struct ClientMessageData
-{
-    ClientMessageData(uint32_t const(&data)[5])
-        : data{data}
-    {
-    }
-
-    template<typename T>
-    T unpack()
-    {
-        if (i >= 5)
-            mir::fatal_error("ClientMessageData::unpack() called too many times");
-        auto prev = i;
-        i++;
-        return static_cast<T>(data[prev]);
-    }
-
-    uint32_t const* const data;
-    size_t i{0};
-};
-
 /// See ICCCM 4.1.3.1 (https://tronche.com/gui/x/icccm/sec-4.html)
 enum class WmState: uint32_t
 {
@@ -127,11 +106,14 @@ void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t const (&data)[5
         TOGGLE = 2,
     };
 
-    ClientMessageData values{data};
-    auto const action = values.unpack<Action>();
-    auto const prop_a = values.unpack<xcb_atom_t>();
-    auto const prop_b = values.unpack<xcb_atom_t>();
-    auto const source_indication = values.unpack<SourceIndication>();
+    int i = 0;
+    auto const action = static_cast<Action>(data[i]);
+    i++;
+    auto const prop_a = static_cast<xcb_atom_t>(data[i]);
+    i++;
+    auto const prop_b = static_cast<xcb_atom_t>(data[i]);
+    i++;
+    auto const source_indication = static_cast<SourceIndication>(data[i]);
 
     (void)source_indication;
 
