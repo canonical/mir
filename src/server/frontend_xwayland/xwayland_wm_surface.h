@@ -22,7 +22,6 @@
 #include "xwayland_wm.h"
 
 #include <mutex>
-#include <set>
 
 extern "C" {
 #include <xcb/xcb.h>
