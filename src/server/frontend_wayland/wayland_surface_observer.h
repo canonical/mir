@@ -36,6 +36,7 @@ namespace frontend
 class WlSurface;
 class WlSeat;
 class WindowWlSurfaceRole;
+class WaylandInputDispatcher;
 
 class WaylandSurfaceObserver
     : public scene::NullSurfaceObserver
@@ -70,10 +71,7 @@ public:
         return requested_size;
     }
 
-    auto latest_timestamp() const -> std::chrono::nanoseconds
-    {
-        return timestamp;
-    }
+    auto latest_timestamp() const -> std::chrono::nanoseconds;
 
     auto state() const -> MirWindowState
     {
@@ -83,29 +81,16 @@ public:
     void disconnect() { *destroyed = true; }
 
 private:
-    WlSeat* const seat;
-    wl_client* const client;
-    WlSurface* const surface;
-    WindowWlSurfaceRole* window;
+    WlSeat* const seat; // only used by run_on_wayland_thread_unless_destroyed()
+    WindowWlSurfaceRole* const window;
+    std::unique_ptr<WaylandInputDispatcher> const input_dispatcher;
+
     geometry::Size window_size;
-    std::chrono::nanoseconds timestamp{0};
     std::experimental::optional<geometry::Size> requested_size;
     MirWindowState current_state{mir_window_state_unknown};
-    MirPointerButtons last_pointer_buttons{0};
-    std::experimental::optional<mir::geometry::Point> last_pointer_position;
     std::shared_ptr<bool> const destroyed;
 
     void run_on_wayland_thread_unless_destroyed(std::function<void()>&& work);
-
-    /// Handle user input events
-    ///@{
-    void handle_input_event(MirInputEvent const* event);
-    void handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event);
-    void handle_pointer_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
-    void handle_pointer_button_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
-    void handle_pointer_motion_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
-    void handle_touch_event(std::chrono::milliseconds const& ms, MirTouchEvent const* event);
-    ///@}
 };
 }
 }
