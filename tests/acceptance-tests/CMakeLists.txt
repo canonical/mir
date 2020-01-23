@@ -30,7 +30,7 @@ set(
   test_custom_input_dispatcher.cpp
   test_client_focus_notification.cpp
   test_mirblob.cpp
-        test_display_configuration.cpp
+  test_display_configuration.cpp
   test_surfaces_with_output_id.cpp
   test_prompt_session_client_api.cpp
   test_client_scaling.cpp
