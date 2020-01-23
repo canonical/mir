@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -42,8 +42,6 @@ char const* const mo::input_report_opt            = "input-report";
 char const* const mo::seat_report_opt            = "seat-report";
 char const* const mo::shared_library_prober_report_opt = "shared-library-prober-report";
 char const* const mo::shell_report_opt            = "shell-report";
-char const* const mo::host_socket_opt             = "host-socket";
-char const* const mo::nested_passthrough_opt      = "nested-passthrough";
 char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt              = "enable-touchspots";
@@ -149,8 +147,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
     namespace po = boost::program_options;
 
     add_options()
-        (host_socket_opt, po::value<std::string>(),
-            "Host socket filename")
         (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
             "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
@@ -193,9 +189,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Default: A negative value means decide automatically.")
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
-        (nested_passthrough_opt, po::value<bool>()->default_value(true),
-            "When nested, attempt to pass a client's graphics content directly to the host"
-            " to avoid a composition pass")
         (offscreen_opt,
             "Render to offscreen buffers instead of the real outputs.")
         (touchspots_opt,

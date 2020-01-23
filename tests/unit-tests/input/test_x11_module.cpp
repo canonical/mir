@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -40,7 +40,6 @@ auto get_x11_platform()
 }
 
 char const probe_input_platform_symbol[] = "probe_input_platform";
-char const host_socket_opt[] = "host-socket";
 
 struct X11Platform : Test
 {
@@ -69,15 +68,3 @@ TEST_F(X11Platform, probes_as_supported_with_display)
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
     EXPECT_THAT(probe_fun(options, console), Ge(mir::input::PlatformPriority::supported));
 }
-
-TEST_F(X11Platform, probes_as_unsupported_on_nested_configs)
-{
-    ON_CALL(options,is_set(StrEq(host_socket_opt)))
-        .WillByDefault(Return(true));
-    ON_CALL(options,get(StrEq(host_socket_opt), Matcher<char const*>(_)))
-        .WillByDefault(Return("something"));
-
-    auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
-    EXPECT_THAT(probe_fun(options, console), Eq(mir::input::PlatformPriority::unsupported));
-}
-

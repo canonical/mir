@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2016 Canonical Ltd.
+ * Copyright © 2013-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -30,7 +30,6 @@
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/declarative_placement_window_manage_policy.h"
-#include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/observant_shell.h"
 #include "mir/test/doubles/mock_egl.h"
 
@@ -752,56 +751,4 @@ TEST_F(ClientCursor, from_a_surface_is_applied)
 
     expectations_satisfied.wait_for(60s);
     expect_client_shutdown();
-}
-
-namespace
-{
-// The nested server fixture we use is using the 'CanonicalWindowManager' which will place
-// surfaces in the center...in order to ensure the window appears under the cursor we use
-// the fullscreen state.
-struct FullscreenDisabledCursorClient : CursorClient
-{
-    using CursorClient::CursorClient;
-
-    void configure_cursor() override
-    {
-        // Workaround race condition (lp:1525003). I've tried, but I've not
-        // found a better way to ensure that the host Mir server is "ready"
-        // for the test logic. - alan_g
-        std::this_thread::sleep_for(20ms);
-
-        mir_window_set_state(window, mir_window_state_fullscreen);
-        CursorConfiguration conf{mir_disabled_cursor_name};
-        conf.apply(window);
-    }
-};
-
-}
-
-TEST_F(ClientCursor, passes_through_nested_server)
-{
-    mtf::HeadlessNestedServerRunner nested_mir(new_connection());
-    nested_mir.start_server();
-
-    EXPECT_CALL(cursor, hide())
-        .WillOnce(mt::WakeUp(&expectations_satisfied));
-
-    { // Ensure we finalize the client prior stopping the nested server
-        FullscreenDisabledCursorClient client{nested_mir.new_connection(), client_name_1};
-
-        mt::Signal wait;
-
-        EXPECT_CALL(*mock_surface_observer, cursor_image_removed(_))
-            .Times(1)
-            .WillOnce(mt::WakeUp(&wait));
-
-        client.configure_cursor();
-
-        EXPECT_TRUE(wait.wait_for(timeout));
-
-        expectations_satisfied.wait_for(60s);
-        expect_client_shutdown();
-    }
-
-    nested_mir.stop_server();
 }

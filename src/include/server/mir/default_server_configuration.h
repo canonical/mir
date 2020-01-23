@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2019 Canonical Ltd.
+ * Copyright © 2012-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -228,7 +228,7 @@ public:
     virtual std::shared_ptr<renderer::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<shell::DisplayConfigurationController> the_display_configuration_controller();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
-    virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
+
     virtual std::shared_ptr<graphics::GLConfig> the_gl_config();
     /** @} */
 
@@ -374,7 +374,6 @@ private:
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
-    std::shared_ptr<graphics::nested::MirClientHostConnection>  the_mir_client_host_connection();
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
     std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
     std::shared_ptr<input::SeatObserver> the_seat_observer();

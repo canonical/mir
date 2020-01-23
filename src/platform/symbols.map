@@ -1,4 +1,4 @@
-MIRPLATFORM_1.6 {
+MIRPLATFORM_2.0 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
@@ -111,7 +111,6 @@ MIRPLATFORM_1.6 {
     mir::options::glog_log_dir*;
     mir::options::glog_minloglevel*;
     mir::options::glog_stderrthreshold*;
-    mir::options::host_socket_opt*;
     mir::options::input_report_opt*;
     mir::options::legacy_input_report_opt*;
     mir::options::log_opt_value*;
