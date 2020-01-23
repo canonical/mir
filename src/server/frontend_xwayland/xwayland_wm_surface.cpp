@@ -106,14 +106,10 @@ void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t const (&data)[5
         TOGGLE = 2,
     };
 
-    int i = 0;
-    auto const action = static_cast<Action>(data[i]);
-    i++;
-    auto const prop_a = static_cast<xcb_atom_t>(data[i]);
-    i++;
-    auto const prop_b = static_cast<xcb_atom_t>(data[i]);
-    i++;
-    auto const source_indication = static_cast<SourceIndication>(data[i]);
+    auto const* pdata = data;
+    auto const action = static_cast<Action>(*pdata++);
+    xcb_atom_t const properties[2] = { static_cast<xcb_atom_t>(*pdata++),  static_cast<xcb_atom_t>(*pdata++) };
+    auto const source_indication = static_cast<SourceIndication>(*pdata++);
 
     (void)source_indication;
 
@@ -124,7 +120,7 @@ void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t const (&data)[5
 
         new_window_state = window_state;
 
-        for (xcb_atom_t const property : {prop_a, prop_b})
+        for (xcb_atom_t const property : properties)
         {
             if (property) // if there is only one property, the 2nd is 0
             {
