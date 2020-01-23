@@ -252,7 +252,6 @@ void mf::XWaylandWMSurface::apply_mir_state_to_window(MirWindowState new_state)
         case mir_window_state_maximized:
         case mir_window_state_vertmaximized:
         case mir_window_state_horizmaximized:
-        case mir_window_state_attached:
             new_window_state.minimized = false;
             new_window_state.maximized = true;
             new_window_state.fullscreen = false;
@@ -260,6 +259,7 @@ void mf::XWaylandWMSurface::apply_mir_state_to_window(MirWindowState new_state)
 
         case mir_window_state_restored:
         case mir_window_state_unknown:
+        case mir_window_state_attached:
             new_window_state.minimized = false;
             new_window_state.maximized = false;
             new_window_state.fullscreen = false;
