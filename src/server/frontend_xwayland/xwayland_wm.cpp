@@ -101,33 +101,6 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
       wayland_client{wayland_client}
 {
-    start();
-}
-
-mf::XWaylandWM::~XWaylandWM()
-{
-    destroy();
-}
-
-void mf::XWaylandWM::destroy() {
-  if (event_thread) {
-    dispatcher->remove_watch(wm_dispatcher);
-    event_thread.reset();
-  }
-
-  // xcb_cursors == 2 when its empty
-  if (xcb_cursors.size() != 2) {
-    mir::log_info("Cleaning cursors");
-    for (auto xcb_cursor : xcb_cursors)
-      xcb_free_cursor(xcb_connection, xcb_cursor);
-  }
-  if (xcb_connection != nullptr)
-    xcb_disconnect(xcb_connection);
-  close(wm_fd);
-}
-
-void mf::XWaylandWM::start()
-{
     if (xcb_connection_has_error(xcb_connection))
     {
         mir::log_error("XWAYLAND: xcb_connect_to_fd failed");
@@ -171,7 +144,13 @@ void mf::XWaylandWM::start()
         XCB_ATOM_ATOM, 32, // type and format
         length_of(supported), supported);
 
-    set_net_active_window(XCB_WINDOW_NONE);
+    uint32_t const window_none = XCB_WINDOW_NONE;
+    xcb_change_property(
+        xcb_connection,
+        XCB_PROP_MODE_REPLACE,
+        xcb_screen->root, xcb_atom.net_active_window,
+        xcb_atom.window, 32,
+        1, &window_none);
     wm_selector();
 
     xcb_flush(xcb_connection);
@@ -181,6 +160,30 @@ void mf::XWaylandWM::start()
 
     create_wm_window();
     xcb_flush(xcb_connection);
+}
+
+mf::XWaylandWM::~XWaylandWM()
+{
+    if (event_thread)
+    {
+        dispatcher->remove_watch(wm_dispatcher);
+        event_thread.reset();
+    }
+
+    // xcb_cursors == 2 when its empty
+    if (xcb_cursors.size() != 2)
+    {
+        mir::log_info("Cleaning cursors");
+        for (auto xcb_cursor : xcb_cursors)
+        xcb_free_cursor(xcb_connection, xcb_cursor);
+    }
+
+    if (xcb_connection != nullptr)
+    {
+        xcb_disconnect(xcb_connection);
+    }
+
+    close(wm_fd);
 }
 
 void mf::XWaylandWM::wm_selector()
@@ -273,12 +276,6 @@ void mf::XWaylandWM::create_wm_window()
     xcb_set_selection_owner(xcb_connection, xcb_window, xcb_atom.net_wm_cm_s0, XCB_TIME_CURRENT_TIME);
 }
 
-void mf::XWaylandWM::set_net_active_window(xcb_window_t window)
-{
-    xcb_change_property(xcb_connection, XCB_PROP_MODE_REPLACE, xcb_screen->root, xcb_atom.net_active_window,
-                        xcb_atom.window, 32, 1, &window);
-}
-
 auto mf::XWaylandWM::build_shell_surface(
     XWaylandWMSurface* wm_surface,
     WlSurface* wayland_surface) -> XWaylandWMShellSurface*
@@ -287,8 +284,11 @@ auto mf::XWaylandWM::build_shell_surface(
     return shell->build_shell_surface(wm_surface, wayland_client, wayland_surface);
 }
 
-auto mf::XWaylandWM::get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandWMSurface>>
+auto mf::XWaylandWM::get_wm_surface(
+    xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandWMSurface>>
 {
+    std::lock_guard<std::mutex> lock{mutex};
+
     auto const surface = surfaces.find(xcb_window);
     if (surface == surfaces.end() || !surface->second)
         return std::experimental::nullopt;
@@ -461,11 +461,17 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 
     if (!is_ours(event->window))
     {
-        if (surfaces.find(event->window) != surfaces.end())
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error(get_window_debug_string(event->window) + " created, but already known"));
+        auto const surface = std::make_shared<XWaylandWMSurface>(this, event);
 
-        surfaces[event->window] = std::make_shared<XWaylandWMSurface>(this, event);
+        {
+            std::lock_guard<std::mutex> lock{mutex};
+
+            if (surfaces.find(event->window) != surfaces.end())
+                BOOST_THROW_EXCEPTION(
+                    std::runtime_error(get_window_debug_string(event->window) + " created, but already known"));
+
+            surfaces[event->window] = surface;
+        }
     }
 }
 
@@ -491,7 +497,10 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
             get_window_debug_string(event->event).c_str());
     }
 
-    surfaces.erase(event->window);
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        surfaces.erase(event->window);
+    }
 }
 
 void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
