@@ -42,7 +42,7 @@ class WaylandSurfaceObserver
     : public scene::NullSurfaceObserver
 {
 public:
-    WaylandSurfaceObserver(WlSeat* seat, wl_client* client, WlSurface* surface, WindowWlSurfaceRole* window);
+    WaylandSurfaceObserver(WlSeat* seat, WlSurface* surface, WindowWlSurfaceRole* window);
     ~WaylandSurfaceObserver();
 
     /// Overrides from scene::SurfaceObserver

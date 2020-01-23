@@ -37,10 +37,9 @@ namespace mi = mir::input;
 
 mf::WaylandInputDispatcher::WaylandInputDispatcher(
     WlSeat* seat,
-    wl_client* client,
     WlSurface* wl_surface)
     : seat{seat},
-      client{client},
+      client{wl_surface->client},
       wl_surface{wl_surface},
       wl_surface_destroyed{wl_surface->destroyed_flag()}
 {

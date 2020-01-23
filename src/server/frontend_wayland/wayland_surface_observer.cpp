@@ -36,12 +36,11 @@ namespace mi = mir::input;
 
 mf::WaylandSurfaceObserver::WaylandSurfaceObserver(
     WlSeat* seat,
-    wl_client* client,
     WlSurface* surface,
     WindowWlSurfaceRole* window)
     : seat{seat},
       window{window},
-      input_dispatcher{std::make_unique<WaylandInputDispatcher>(seat, client, surface)},
+      input_dispatcher{std::make_unique<WaylandInputDispatcher>(seat, surface)},
       window_size{geometry::Size{0,0}},
       destroyed{std::make_shared<bool>(false)}
 {

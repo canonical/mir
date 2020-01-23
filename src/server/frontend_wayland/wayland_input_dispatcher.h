@@ -47,7 +47,6 @@ class WaylandInputDispatcher
 public:
     WaylandInputDispatcher(
         WlSeat* seat,
-        wl_client* client,
         WlSurface* wl_surface);
     ~WaylandInputDispatcher() = default;
 
