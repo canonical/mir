@@ -7,7 +7,6 @@ backends:
         systems:
             - ubuntu-16.04
             - ubuntu-18.04
-            - ubuntu-19.04
             - ubuntu-19.10
             - ubuntu-devel:
                image: ubuntu-daily:devel/amd64
@@ -24,8 +23,6 @@ backends:
                 image: ubuntu-os-cloud/ubuntu-1604-lts
             - ubuntu-18.04-64:
                 image: ubuntu-os-cloud/ubuntu-1804-lts
-            - ubuntu-19.04-64:
-                image: ubuntu-os-cloud/ubuntu-1904
             - ubuntu-19.10-64:
                 image: ubuntu-os-cloud/ubuntu-1910
             - ubuntu-devel-64:
