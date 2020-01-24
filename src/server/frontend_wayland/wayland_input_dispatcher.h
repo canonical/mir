@@ -41,7 +41,7 @@ class WlSeat;
 class WlSurface;
 
 /// Dispatches input events to Wayland clients
-/// Should only be used from the Wayland thread
+/// Should only be created and used from the Wayland thread
 class WaylandInputDispatcher
 {
 public:

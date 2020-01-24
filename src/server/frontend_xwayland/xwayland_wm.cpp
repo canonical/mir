@@ -20,9 +20,9 @@
 
 #include "xwayland_wm.h"
 #include "xwayland_log.h"
-#include "xwayland_wm_shellsurface.h"
 #include "xwayland_wm_surface.h"
 #include "xwayland_wm_shell.h"
+#include "xwayland_surface_role.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/readable_fd.h"
@@ -99,7 +99,8 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       xcb_atom{xcb_connection},
       wayland_connector(wayland_connector),
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
-      wayland_client{wayland_client}
+      wayland_client{wayland_client},
+      wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))}
 {
     if (xcb_connection_has_error(xcb_connection))
     {
@@ -164,6 +165,29 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
 
 mf::XWaylandWM::~XWaylandWM()
 {
+    // clear the surfaces map and then destroy all surfaces
+    std::map<xcb_window_t, std::shared_ptr<XWaylandWMSurface>> local_surfaces;
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        local_surfaces = std::move(surfaces);
+        surfaces.clear();
+    }
+
+    if (verbose_xwayland_logging_enabled())
+        log_debug("Closing %d XWayland surface(s)...", local_surfaces.size());
+
+    for (auto const surface : local_surfaces)
+    {
+        if (surface.second)
+            surface.second->close();
+    }
+
+    local_surfaces.clear();
+
+    if (verbose_xwayland_logging_enabled())
+        log_debug("...done closing surfaces");
+
     if (event_thread)
     {
         dispatcher->remove_watch(wm_dispatcher);
@@ -274,14 +298,6 @@ void mf::XWaylandWM::create_wm_window()
     xcb_set_selection_owner(xcb_connection, xcb_window, xcb_atom.wm_s0, XCB_TIME_CURRENT_TIME);
 
     xcb_set_selection_owner(xcb_connection, xcb_window, xcb_atom.net_wm_cm_s0, XCB_TIME_CURRENT_TIME);
-}
-
-auto mf::XWaylandWM::build_shell_surface(
-    XWaylandWMSurface* wm_surface,
-    WlSurface* wayland_surface) -> XWaylandWMShellSurface*
-{
-    auto const shell = std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"));
-    return shell->build_shell_surface(wm_surface, wayland_client, wayland_surface);
 }
 
 auto mf::XWaylandWM::get_wm_surface(
@@ -461,7 +477,7 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 
     if (!is_ours(event->window))
     {
-        auto const surface = std::make_shared<XWaylandWMSurface>(this, event);
+        auto const surface = std::make_shared<XWaylandWMSurface>(this, wm_shell->seat, wm_shell->shell, event);
 
         {
             std::lock_guard<std::mutex> lock{mutex};
@@ -497,10 +513,20 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
             get_window_debug_string(event->event).c_str());
     }
 
+    std::shared_ptr<XWaylandWMSurface> surface{nullptr};
+
     {
         std::lock_guard<std::mutex> lock{mutex};
-        surfaces.erase(event->window);
+        auto iter = surfaces.find(event->window);
+        if (iter != surfaces.end())
+        {
+            surface = iter->second;
+            surfaces.erase(iter);
+        }
     }
+
+    if (surface)
+        surface->close();
 }
 
 void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
@@ -589,12 +615,17 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surfac
 
     uint32_t id = event->data.data32[0];
 
-    wayland_connector->run_on_wayland_display([client=wayland_client, id, surface](auto)
+    wayland_connector->run_on_wayland_display([client=wayland_client, id, surface, shell = wm_shell->shell](auto)
         {
             wl_resource* resource = wl_client_get_object(client, id);
-            auto* wlsurface = resource ? WlSurface::from(resource) : nullptr;
-            if (wlsurface)
-                surface->set_surface(wlsurface);
+            auto* wl_surface = resource ? WlSurface::from(resource) : nullptr;
+            if (wl_surface)
+            {
+                surface->set_surface(wl_surface);
+
+                // will destroy itself
+                new XWaylandSurfaceRole{shell, surface, wl_surface};
+            }
         });
 
     // TODO: handle unpaired surfaces!
