@@ -18,5 +18,4 @@ add_library(
   platform_probe.h
 )
 
-add_subdirectory(nested/)
 add_subdirectory(offscreen/)

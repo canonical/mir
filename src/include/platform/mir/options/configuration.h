@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -43,8 +43,6 @@ extern char const* const connector_report_opt;
 extern char const* const scene_report_opt;
 extern char const* const input_report_opt;
 extern char const* const seat_report_opt;
-extern char const* const host_socket_opt;
-extern char const* const nested_passthrough_opt;
 extern char const* const touchspots_opt;
 extern char const* const cursor_opt;
 extern char const* const fatal_except_opt;

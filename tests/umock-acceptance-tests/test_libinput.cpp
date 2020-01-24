@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -45,7 +45,6 @@ auto get_libinput_platform()
 }
 
 char const probe_input_platform_symbol[] = "probe_input_platform";
-char const host_socket_opt[] = "host-socket";
 
 }
 
@@ -71,23 +70,6 @@ TEST(LibInput, probes_as_supported_with_at_least_one_device_to_deal_with)
     auto library = get_libinput_platform();
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
     EXPECT_THAT(probe_fun(options, console), Ge(mir::input::PlatformPriority::supported));
-}
-
-TEST(LibInput, probes_as_unsupported_on_nested_configs)
-{
-    mtf::UdevEnvironment env;
-    env.add_standard_device("laptop-keyboard");
-    NiceMock<mtd::MockOption> options;
-    mtd::StubConsoleServices console;
-
-    ON_CALL(options,is_set(StrEq(host_socket_opt)))
-        .WillByDefault(Return(true));
-    ON_CALL(options,get(StrEq(host_socket_opt), Matcher<char const*>(_)))
-        .WillByDefault(Return("something"));
-
-    auto library = get_libinput_platform();
-    auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
-    EXPECT_THAT(probe_fun(options, console), Eq(mir::input::PlatformPriority::unsupported));
 }
 
 TEST(LibInput, probes_as_supported_when_umock_dev_available_or_before_input_devices_are_available)

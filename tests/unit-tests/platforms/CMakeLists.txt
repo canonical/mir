@@ -6,6 +6,4 @@ if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
   add_subdirectory(eglstream-kms)
 endif()
 
-add_subdirectory(nested/)
-
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

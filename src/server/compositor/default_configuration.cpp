@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -79,7 +79,7 @@ mir::DefaultServerConfiguration::the_compositor()
                 the_shell(),
                 the_compositor_report(),
                 composite_delay,
-                !the_options()->is_set(options::host_socket_opt));
+                true);
         });
 }
 

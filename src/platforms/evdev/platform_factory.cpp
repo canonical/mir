@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -37,8 +37,6 @@ namespace mie = mi::evdev;
 
 namespace
 {
-char const* const host_socket_opt = "host-socket";
-
 mir::ModuleProperties const description = {
     "mir:evdev-input",
     MIR_VERSION_MAJOR,
@@ -128,15 +126,10 @@ void add_input_platform_options(
 }
 
 mi::PlatformPriority probe_input_platform(
-    mo::Option const& options,
+    mo::Option const& /*options*/,
     mir::ConsoleServices& console)
 {
     mir::assert_entry_point_signature<mi::ProbePlatform>(&probe_input_platform);
-    if (options.is_set(host_socket_opt))
-    {
-        return mi::PlatformPriority::unsupported;
-    }
-
     if (can_open_input_devices(console))
         return mi::PlatformPriority::supported;
 
