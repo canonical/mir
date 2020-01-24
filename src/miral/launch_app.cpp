@@ -17,12 +17,12 @@
  */
 
 #include "launch_app.h"
+#include <mir/log.h>
 
 #include <unistd.h>
 
 #include <stdexcept>
 #include <cstring>
-
 
 auto miral::launch_app(
     std::vector<std::string> const& app,
@@ -80,7 +80,8 @@ auto miral::launch_app(
 
         execvp(exec_args[0], const_cast<char*const*>(exec_args.data()));
 
-        throw std::logic_error(std::string("Failed to execute client (") + exec_args[0] + ") error: " + strerror(errno));
+        mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], strerror(errno));
+        exit(EXIT_FAILURE);
     }
 
     return pid;
