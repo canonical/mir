@@ -81,7 +81,8 @@ namespace
 template<typename T>
 auto data_buffer_to_debug_string(T* data, size_t elements) -> std::string
 {
-    std::stringstream ss{"["};
+    std::stringstream ss;
+    ss << "[";
     for (T* i = data; i != data + elements; i++)
     {
         if (i != data)
@@ -580,10 +581,30 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
 {
     if (verbose_xwayland_logging_enabled())
     {
+        std::string data;
+        switch (event->format)
+        {
+        case 8:
+            data = data_buffer_to_debug_string(event->data.data8, 20);
+            break;
+
+        case 16:
+            data = data_buffer_to_debug_string(event->data.data16, 10);
+            break;
+
+        case 32:
+            data = data_buffer_to_debug_string(event->data.data32, 5);
+            break;
+
+        default:
+            data = "unknown format " + std::to_string(event->format);
+        }
+
         log_debug(
-            "XCB_CLIENT_MESSAGE %s on %s",
+            "XCB_CLIENT_MESSAGE %s on %s: %s",
             get_atom_name(event->type).c_str(),
-            get_window_debug_string(event->window).c_str());
+            get_window_debug_string(event->window).c_str(),
+            data.c_str());
     }
 
     if (auto const surface = get_wm_surface(event->window))

@@ -514,11 +514,11 @@ void mf::XWaylandWMSurface::create_scene_surface_if_needed(WlSurface* wl_surface
         if (!properties.appId.empty())
             params.application_id = properties.appId;
         params.size = init.size;
-        params.streams = std::vector<shell::StreamSpecification>{};
-        params.input_shape = std::vector<geom::Rectangle>{};
         params.server_side_decorated = true;
     }
 
+    params.streams = std::vector<shell::StreamSpecification>{};
+    params.input_shape = std::vector<geom::Rectangle>{};
     wl_surface->populate_surface_data(params.streams.value(), params.input_shape.value(), {});
 
     auto const observer = std::make_shared<XWaylandSurfaceObserver>(seat, wl_surface, this);
