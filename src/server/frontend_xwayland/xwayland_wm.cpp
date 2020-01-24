@@ -516,9 +516,8 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
     if (auto const surface = get_wm_surface(event->window))
     {
         surface.value()->read_properties();
-        surface.value()->set_wm_state(XWaylandWMSurface::NormalState);
-        surface.value()->set_net_wm_state();
         surface.value()->set_workspace(0);
+        surface.value()->apply_mir_state_to_window(mir_window_state_restored); // TODO: get the actual state
         xcb_map_window(xcb_connection, event->window);
         xcb_flush(xcb_connection);
     }
@@ -544,7 +543,7 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 
     if (auto const surface = get_wm_surface(event->window))
     {
-        surface.value()->set_wm_state(XWaylandWMSurface::WithdrawnState);
+        surface.value()->unmap();
         surface.value()->set_workspace(-1);
         xcb_unmap_window(xcb_connection, event->window);
         xcb_flush(xcb_connection);
@@ -566,7 +565,9 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
         if (event->type == xcb_atom.net_wm_moveresize)
             handle_move_resize(surface.value(), event);
         else if (event->type == xcb_atom.net_wm_state)
-            handle_state(surface.value(), event);
+            surface.value()->net_wm_state_client_message(event->data.data32);
+        else if (event->type == xcb_atom.wm_change_state)
+            surface.value()->wm_change_state_client_message(event->data.data32);
         else if (event->type == xcb_atom.wl_surface_id)
             handle_surface_id(surface.value(), event);
     }
@@ -579,12 +580,6 @@ void mf::XWaylandWM::handle_move_resize(std::shared_ptr<XWaylandWMSurface> surfa
 
     int detail = event->data.data32[2];
     surface->move_resize(detail);
-}
-
-void mf::XWaylandWM::handle_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
-{
-    if (!surface || !event)
-        return;
 }
 
 void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)

@@ -122,23 +122,17 @@ class XWaylandWMShellSurface;
 class XWaylandWMSurface
 {
 public:
-    enum WmState
-    {
-        WithdrawnState = 0,
-        NormalState = 1,
-        IconicState = 3
-    };
-
     XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event_t *event);
     ~XWaylandWMSurface();
+    void net_wm_state_client_message(uint32_t const (&data)[5]);
+    void wm_change_state_client_message(uint32_t const (&data)[5]);
     void dirty_properties();
     void read_properties();
     void set_surface(WlSurface* wayland_surface); ///< Should only be called on the Wayland thread
     void set_workspace(int workspace);
-    void set_wm_state(WmState state);
-    void set_net_wm_state();
+    void apply_mir_state_to_window(MirWindowState new_state);
+    void unmap();
     void move_resize(uint32_t detail);
-    void set_state(MirWindowState state);
     void send_resize(const geometry::Size& new_size);
     void send_close_request();
 
@@ -146,14 +140,35 @@ private:
     /// Runs work on the Wayland thread if the shell surface hasn't been destroyed
     void aquire_shell_surface(std::function<void(XWaylandWMShellSurface* shell_surface)>&& work);
 
+    /// contains more information than just a MirWindowState
+    /// (for example if a minimized window would otherwise be maximized)
+    struct WindowState
+    {
+        bool minimized{false};
+        bool maximized{false};
+        bool fullscreen{false};
+    };
+
+    /// The last state we have either requested of Mir or been informed of by Mir
+    /// Prevents requesting a window state that we are already in
+    MirWindowState cached_mir_window_state{mir_window_state_unknown};
+
+    /// Sets the window's _NET_WM_STATE property based on the contents of window_state
+    /// Also sets the state of the scene surface to match window_state
+    /// Should be called after every change to window_state
+    /// Should NOT be called under lock
+    void set_window_state(WindowState const& new_window_state);
+
     XWaylandWM* const xwm;
     xcb_window_t const window;
 
     std::mutex mutex;
 
+    /// Reflects the _NET_WM_STATE and WM_STATE we have currently set on the window
+    /// Should only be modified by set_wm_state()
+    WindowState window_state;
+
     bool props_dirty;
-    bool maximized;
-    bool fullscreen;
     struct
     {
         std::string title;
