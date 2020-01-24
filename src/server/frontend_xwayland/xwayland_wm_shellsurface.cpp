@@ -56,6 +56,11 @@ void mf::XWaylandWMShellSurface::destroy()
     delete this;
 }
 
+void mf::XWaylandWMShellSurface::handle_state_change(MirWindowState new_state)
+{
+    surface->apply_mir_state_to_window(new_state);
+}
+
 void mf::XWaylandWMShellSurface::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
                                                geometry::Size const& new_size)
 {

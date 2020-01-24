@@ -62,6 +62,7 @@ public:
     Atom const wm_take_focus;
     Atom const wm_delete_window;
     Atom const wm_state;
+    Atom const wm_change_state;
     Atom const wm_s0;
     Atom const wm_client_machine;
     Atom const net_wm_cm_s0;
@@ -71,6 +72,7 @@ public:
     Atom const net_wm_state;
     Atom const net_wm_state_maximized_vert;
     Atom const net_wm_state_maximized_horz;
+    Atom const net_wm_state_hidden;
     Atom const net_wm_state_fullscreen;
     Atom const net_wm_user_time;
     Atom const net_wm_icon_name;
