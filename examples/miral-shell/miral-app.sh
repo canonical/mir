@@ -11,12 +11,6 @@ do
   fi
 done
 
-# Fixup for weird gnome-terminal script on Ubuntu
-if [ "${terminal}" == "gnome-terminal" ] && [ -e "/usr/bin/gnome-terminal.real" ]
-then
-  terminal="gnome-terminal --disable-factory"
-fi
-
 if [ "$(lsb_release -c -s)" != "xenial" ]
 then
   qt_qpa=wayland
@@ -86,6 +80,12 @@ then
 else
   # miral-kiosk (and mir_demo_server) need a terminal launched
   sh -c "MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*"&
+
+  # Fixup for weird gnome-terminal script on Ubuntu
+  if [ "${terminal}" == "gnome-terminal" ] && [ -e "/usr/bin/gnome-terminal.real" ]
+  then
+    terminal="gnome-terminal --disable-factory"
+  fi
 
   while [ ! -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; do echo "waiting for ${wayland_display}"; sleep 1 ;done
 
