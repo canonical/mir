@@ -17,6 +17,7 @@
  */
 
 #include "xwayland_surface_observer.h"
+#include "xwayland_surface_observer_surface.h"
 #include "xwayland_surface.h"
 #include "wl_seat.h"
 #include "wayland_utils.h"
@@ -37,7 +38,7 @@ namespace mi = mir::input;
 mf::XWaylandSurfaceObserver::XWaylandSurfaceObserver(
     WlSeat& seat,
     WlSurface* wl_surface,
-    XWaylandSurface* wm_surface)
+    XWaylandSurfaceObserverSurface* wm_surface)
     : wm_surface{wm_surface},
       input_dispatcher{std::make_shared<ThreadsafeInputDispatcher>(
           std::make_unique<WaylandInputDispatcher>(&seat, wl_surface))}
@@ -68,7 +69,7 @@ void mf::XWaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAt
     case mir_window_attrib_state:
     {
         auto state = static_cast<MirWindowState>(value);
-        wm_surface->apply_mir_state_to_window(state);
+        wm_surface->scene_surface_state_set(state);
     }   break;
 
     default:;
@@ -77,12 +78,12 @@ void mf::XWaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAt
 
 void mf::XWaylandSurfaceObserver::content_resized_to(ms::Surface const*, geom::Size const& content_size)
 {
-    wm_surface->send_resize(content_size);
+    wm_surface->scene_surface_resized(content_size);
 }
 
 void mf::XWaylandSurfaceObserver::client_surface_close_requested(ms::Surface const*)
 {
-    wm_surface->send_close_request();
+    wm_surface->scene_surface_close_requested();
 }
 
 void mf::XWaylandSurfaceObserver::keymap_changed(

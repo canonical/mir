@@ -21,6 +21,7 @@
 #include "wl_surface.h"
 #include "xwayland_wm.h"
 #include "xwayland_surface_role_surface.h"
+#include "xwayland_surface_observer_surface.h"
 
 #include <mutex>
 #include <chrono>
@@ -128,7 +129,8 @@ class XWaylandWM;
 class XWaylandSurfaceObserver;
 
 class XWaylandSurface
-    : public XWaylandSurfaceRoleSurface
+    : public XWaylandSurfaceRoleSurface,
+      public XWaylandSurfaceObserverSurface
 {
 public:
     XWaylandSurface(
@@ -140,20 +142,14 @@ public:
 
     void map();
     void close(); ///< Idempotent
-
-    void run_on_wayland_thread(std::function<void()>&& work);
-
     void net_wm_state_client_message(uint32_t const (&data)[5]);
     void wm_change_state_client_message(uint32_t const (&data)[5]);
     void dirty_properties();
     void read_properties();
     void set_surface(WlSurface* wl_surface); ///< Should only be called on the Wayland thread
     void set_workspace(int workspace);
-    void apply_mir_state_to_window(MirWindowState new_state);
     void unmap();
     void move_resize(uint32_t detail);
-    void send_resize(const geometry::Size& new_size);
-    void send_close_request();
 
 private:
     /// contains more information than just a MirWindowState
@@ -165,7 +161,15 @@ private:
         bool fullscreen{false};
     };
 
-    /// Overrides XWaylandSurfaceRoleSurface
+    /// Overrides from XWaylandSurfaceObserverSurface
+    /// @{
+    void scene_surface_state_set(MirWindowState new_state) override;
+    void scene_surface_resized(const geometry::Size& new_size) override;
+    void scene_surface_close_requested() override;
+    void run_on_wayland_thread(std::function<void()>&& work) override;
+    /// @}
+
+    /// Overrides from XWaylandSurfaceRoleSurface
     /// Should only be called on the Wayland thread
     /// @{
     void wl_surface_destroyed() override;
