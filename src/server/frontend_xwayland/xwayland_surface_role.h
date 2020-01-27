@@ -36,7 +36,7 @@ class Shell;
 namespace frontend
 {
 class WlSurface;
-class XWaylandWMSurface;
+class XWaylandSurfaceRoleSurface;
 
 /// Should only be created on the Wayland thread
 /// Destroys itself when the wl_surface is destroyed
@@ -45,13 +45,13 @@ class XWaylandSurfaceRole : private WlSurfaceRole
 public:
     XWaylandSurfaceRole(
         std::shared_ptr<shell::Shell> const& shell,
-        std::shared_ptr<XWaylandWMSurface> const& wm_surface,
+        std::shared_ptr<XWaylandSurfaceRoleSurface> const& wm_surface,
         WlSurface* wl_surface);
     ~XWaylandSurfaceRole(); ///< Must be called on the Wayland thread!
 
 private:
     std::shared_ptr<shell::Shell> const shell;
-    std::weak_ptr<XWaylandWMSurface> const weak_wm_surface;
+    std::weak_ptr<XWaylandSurfaceRoleSurface> const weak_wm_surface;
     WlSurface* const wl_surface;
 
     /// Overrides from WlSurfaceRole

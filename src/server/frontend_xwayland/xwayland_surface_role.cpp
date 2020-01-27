@@ -17,8 +17,9 @@
  */
 
 #include "xwayland_surface_role.h"
-#include "xwayland_wm_surface.h"
+#include "xwayland_surface_role_surface.h"
 
+#include "wl_surface.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/scene/surface.h"
 #include "mir/shell/shell.h"
@@ -30,7 +31,7 @@ namespace geom = mir::geometry;
 
 mf::XWaylandSurfaceRole::XWaylandSurfaceRole(
     std::shared_ptr<shell::Shell> const& shell,
-    std::shared_ptr<XWaylandWMSurface> const& wm_surface,
+    std::shared_ptr<XWaylandSurfaceRoleSurface> const& wm_surface,
     WlSurface* wl_surface)
     : shell{shell},
       weak_wm_surface{wm_surface},
@@ -101,7 +102,7 @@ void mf::XWaylandSurfaceRole::destroy()
 {
     if (auto const wm_surface = weak_wm_surface.lock())
     {
-        wm_surface->close();
+        wm_surface->wl_surface_destroyed();
     }
 
     delete this;

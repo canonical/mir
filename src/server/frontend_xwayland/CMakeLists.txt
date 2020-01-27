@@ -8,6 +8,7 @@ set(
   xwayland_wm.cpp         xwayland_wm.h
   xwayland_wm_surface.cpp xwayland_wm_surface.h
   xwayland_surface_role.cpp xwayland_surface_role.h
+                          xwayland_surface_role_surface.h
   xwayland_surface_observer.cpp xwayland_surface_observer.h
   xwayland_wm_shell.cpp   xwayland_wm_shell.h
 )

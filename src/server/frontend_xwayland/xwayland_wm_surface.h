@@ -20,6 +20,7 @@
 
 #include "wl_surface.h"
 #include "xwayland_wm.h"
+#include "xwayland_surface_role_surface.h"
 
 #include <mutex>
 #include <chrono>
@@ -124,10 +125,10 @@ namespace frontend
 {
 class WlSeat;
 class XWaylandWM;
-class XWaylandSurfaceRole;
 class XWaylandSurfaceObserver;
 
 class XWaylandWMSurface
+    : public XWaylandSurfaceRoleSurface
 {
 public:
     XWaylandWMSurface(
@@ -138,8 +139,6 @@ public:
     ~XWaylandWMSurface();
 
     void close(); ///< Idempotent
-    void wl_surface_committed(WlSurface* wl_surface); ///< Should only be called on the Wayland thread
-    auto scene_surface() -> std::experimental::optional<std::shared_ptr<scene::Surface>>;
 
     void run_on_wayland_thread(std::function<void()>&& work);
 
@@ -165,6 +164,14 @@ private:
         bool fullscreen{false};
     };
 
+    /// Overrides XWaylandSurfaceRoleSurface
+    /// Should only be called on the Wayland thread
+    /// @{
+    void wl_surface_destroyed() override;
+    void wl_surface_committed(WlSurface* wl_surface) override;
+    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
+    /// @}
+
     /// The last state we have either requested of Mir or been informed of by Mir
     /// Prevents requesting a window state that we are already in
     MirWindowState cached_mir_window_state{mir_window_state_unknown};
@@ -187,7 +194,7 @@ private:
     std::shared_ptr<shell::Shell> const shell;
     xcb_window_t const window;
 
-    std::mutex mutex;
+    std::mutex mutable mutex;
 
     /// Reflects the _NET_WM_STATE and WM_STATE we have currently set on the window
     /// Should only be modified by set_wm_state()

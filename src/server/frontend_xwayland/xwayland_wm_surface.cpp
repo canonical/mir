@@ -147,20 +147,6 @@ void mf::XWaylandWMSurface::close()
     }
 }
 
-void mf::XWaylandWMSurface::wl_surface_committed(WlSurface* wl_surface)
-{
-    create_scene_surface_if_needed(wl_surface);
-}
-
-auto mf::XWaylandWMSurface::scene_surface() -> std::experimental::optional<std::shared_ptr<scene::Surface>>
-{
-    std::lock_guard<std::mutex> lock{mutex};
-    if (auto const scene_surface = weak_scene_surface.lock())
-        return scene_surface;
-    else
-        return std::experimental::nullopt;
-}
-
 void mf::XWaylandWMSurface::run_on_wayland_thread(std::function<void()>&& work)
 {
     xwm->run_on_wayland_thread(std::move(work));
@@ -494,6 +480,25 @@ void mf::XWaylandWMSurface::send_close_request()
 {
     xcb_destroy_window(xwm->get_xcb_connection(), window);
     xcb_flush(xwm->get_xcb_connection());
+}
+
+void mf::XWaylandWMSurface::wl_surface_destroyed()
+{
+    close();
+}
+
+void mf::XWaylandWMSurface::wl_surface_committed(WlSurface* wl_surface)
+{
+    create_scene_surface_if_needed(wl_surface);
+}
+
+auto mf::XWaylandWMSurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
+{
+    std::lock_guard<std::mutex> lock{mutex};
+    if (auto const scene_surface = weak_scene_surface.lock())
+        return scene_surface;
+    else
+        return std::experimental::nullopt;
 }
 
 void mf::XWaylandWMSurface::create_scene_surface_if_needed(WlSurface* wl_surface)
