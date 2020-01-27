@@ -103,6 +103,11 @@ mf::XWaylandSurface::~XWaylandSurface()
     close();
 }
 
+void mf::XWaylandSurface::map()
+{
+    scene_surface_state_set(mir_window_state_restored); // TODO: use the real window state
+}
+
 void mf::XWaylandSurface::close()
 {
     std::shared_ptr<scene::Surface> scene_surface;

@@ -544,7 +544,7 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
     {
         surface.value()->read_properties();
         surface.value()->set_workspace(0);
-        surface.value()->apply_mir_state_to_window(mir_window_state_restored); // TODO: get the actual state
+        surface.value()->map();
         xcb_map_window(xcb_connection, event->window);
         xcb_flush(xcb_connection);
     }

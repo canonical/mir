@@ -138,6 +138,7 @@ public:
         xcb_create_notify_event_t *event);
     ~XWaylandSurface();
 
+    void map();
     void close(); ///< Idempotent
 
     void run_on_wayland_thread(std::function<void()>&& work);
