@@ -46,7 +46,7 @@ class MultiplexingDispatchable;
 namespace frontend
 {
 class XWaylandWMSurface;
-class XWaylandWMShellSurface;
+class XWaylandWMShell;
 class WlSurface;
 
 template<typename T, size_t length>
@@ -69,11 +69,6 @@ public:
     {
         return xcb_connection;
     }
-
-    /// Should always be called on the Wayland thread
-    auto build_shell_surface(
-        XWaylandWMSurface* wm_surface,
-        WlSurface* wayland_surface) -> XWaylandWMShellSurface*;
 
     auto get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandWMSurface>>;
     void run_on_wayland_thread(std::function<void()>&& work);
@@ -137,6 +132,7 @@ private:
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     wl_client* const wayland_client;
+    std::shared_ptr<XWaylandWMShell> const wm_shell;
 
     xcb_screen_t *xcb_screen;
     xcb_window_t xcb_window;

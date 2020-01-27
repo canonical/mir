@@ -16,16 +16,23 @@
  *
  */
 
-#include "xwayland_wm_shellsurface.h"
 #include "xwayland_wm_surface.h"
 #include "xwayland_log.h"
+#include "xwayland_surface_observer.h"
+
+#include "mir/frontend/wayland.h"
+#include "mir/scene/surface_creation_parameters.h"
+#include "mir/scene/surface.h"
+#include "mir/shell/shell.h"
+
+#include "boost/throw_exception.hpp"
 
 #include <string.h>
-
 #include <experimental/optional>
 #include <map>
 
 namespace mf = mir::frontend;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -62,16 +69,21 @@ auto wm_resize_edge_to_mir_resize_edge(uint32_t wm_resize_edge) -> std::experime
 }
 }
 
-mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event_t *event)
+mf::XWaylandWMSurface::XWaylandWMSurface(
+    XWaylandWM *wm,
+    WlSeat& seat,
+    std::shared_ptr<shell::Shell> const& shell,
+    xcb_create_notify_event_t *event)
     : xwm(wm),
+      seat(seat),
+      shell(shell),
       window(event->window),
       props_dirty(true),
       init{
           event->parent,
           {event->x, event->y},
           {event->width, event->height},
-          (bool)event->override_redirect},
-      shell_surface_destroyed{std::make_shared<bool>(true)}
+          (bool)event->override_redirect}
 {
     xcb_get_geometry_cookie_t const geometry_cookie = xcb_get_geometry(xwm->get_xcb_connection(), window);
 
@@ -88,10 +100,70 @@ mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event
 
 mf::XWaylandWMSurface::~XWaylandWMSurface()
 {
-    aquire_shell_surface([](auto shell_surface)
+    close();
+}
+
+void mf::XWaylandWMSurface::close()
+{
+    std::shared_ptr<scene::Surface> scene_surface;
+    std::shared_ptr<XWaylandSurfaceObserver> observer;
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+
+        scene_surface = weak_scene_surface.lock();
+        weak_scene_surface.reset();
+
+        if (surface_observer)
         {
-            delete shell_surface;
-        });
+            observer = surface_observer.value();
+        }
+        surface_observer = std::experimental::nullopt;
+    }
+
+    if (scene_surface && observer)
+    {
+        scene_surface->remove_observer(observer);
+    }
+
+    if (scene_surface)
+    {
+        shell->destroy_surface(scene_surface->session().lock(), scene_surface);
+        scene_surface.reset();
+        // Someone may still be holding on to the surface somewhere, and that's fine
+    }
+
+    if (observer)
+    {
+        // make sure surface observer is deleted and will not spew any more events
+        std::weak_ptr<XWaylandSurfaceObserver> const weak_observer{observer};
+        observer.reset();
+        if (auto const should_be_dead_observer = weak_observer.lock())
+        {
+            fatal_error(
+                "surface observer should have been deleted, but was not (use count %d)",
+                should_be_dead_observer.use_count());
+        }
+    }
+}
+
+void mf::XWaylandWMSurface::wl_surface_committed(WlSurface* wl_surface)
+{
+    create_scene_surface_if_needed(wl_surface);
+}
+
+auto mf::XWaylandWMSurface::scene_surface() -> std::experimental::optional<std::shared_ptr<scene::Surface>>
+{
+    std::lock_guard<std::mutex> lock{mutex};
+    if (auto const scene_surface = weak_scene_surface.lock())
+        return scene_surface;
+    else
+        return std::experimental::nullopt;
+}
+
+void mf::XWaylandWMSurface::run_on_wayland_thread(std::function<void()>&& work)
+{
+    xwm->run_on_wayland_thread(std::move(work));
 }
 
 void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t const (&data)[5])
@@ -183,23 +255,14 @@ void mf::XWaylandWMSurface::dirty_properties()
     props_dirty = true;
 }
 
-void mf::XWaylandWMSurface::set_surface(WlSurface* wayland_surface)
+void mf::XWaylandWMSurface::set_surface(WlSurface* wl_surface)
 {
-    auto const shell_surface = xwm->build_shell_surface(this, wayland_surface);
-    shell_surface_unsafe = shell_surface;
-    shell_surface_destroyed = shell_surface->destroyed_flag();
-
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        if (!properties.title.empty())
-            shell_surface->set_title(properties.title);
-    }
-
+    // We assume we are on the Wayland thread
     // If a buffer has alread been committed, we need to create the scene::Surface without waiting for next commit
-    if (wayland_surface->buffer_size())
-        shell_surface->create_scene_surface();
-
-    xcb_flush(xwm->get_xcb_connection());
+    if (wl_surface->buffer_size())
+    {
+        create_scene_surface_if_needed(wl_surface);
+    }
 }
 
 void mf::XWaylandWMSurface::set_workspace(int workspace)
@@ -386,20 +449,28 @@ void mf::XWaylandWMSurface::read_properties()
 
 void mf::XWaylandWMSurface::move_resize(uint32_t detail)
 {
-
     if (detail == _NET_WM_MOVERESIZE_MOVE)
     {
-        aquire_shell_surface([](auto shell_surface)
+        std::lock_guard<std::mutex> lock{mutex};
+        if (auto const scene_surface = weak_scene_surface.lock())
         {
-            shell_surface->initiate_interactive_move();
-        });
+            shell->request_move(
+                scene_surface->session().lock(),
+                scene_surface,
+                latest_input_timestamp(lock).count());
+        }
     }
     else if (auto const edge = wm_resize_edge_to_mir_resize_edge(detail))
     {
-        aquire_shell_surface([edge](auto shell_surface)
+        std::lock_guard<std::mutex> lock{mutex};
+        if (auto const scene_surface = weak_scene_surface.lock())
         {
-            shell_surface->initiate_interactive_resize(edge.value());
-        });
+            shell->request_resize(
+                scene_surface->session().lock(),
+                scene_surface,
+                latest_input_timestamp(lock).count(),
+                edge.value());
+        }
     }
     else
     {
@@ -425,14 +496,40 @@ void mf::XWaylandWMSurface::send_close_request()
     xcb_flush(xwm->get_xcb_connection());
 }
 
-void mf::XWaylandWMSurface::aquire_shell_surface(std::function<void(XWaylandWMShellSurface* shell_surface)>&& work)
+void mf::XWaylandWMSurface::create_scene_surface_if_needed(WlSurface* wl_surface)
 {
-    xwm->run_on_wayland_thread(
-        [work = move(work), shell_surface = shell_surface_unsafe, destroyed = shell_surface_destroyed]()
-        {
-            if (!*destroyed)
-                work(shell_surface);
-        });
+    scene::SurfaceCreationParameters params;
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+
+        if (creating_scene_surface || weak_scene_surface.lock())
+            return;
+
+        creating_scene_surface = true;
+
+        params.type = mir_window_type_freestyle;
+        if (!properties.title.empty())
+            params.name = properties.title;
+        if (!properties.appId.empty())
+            params.application_id = properties.appId;
+        params.size = wl_surface->buffer_size().value_or(init.size);
+        params.server_side_decorated = true;
+    }
+
+    params.streams = std::vector<shell::StreamSpecification>{};
+    params.input_shape = std::vector<geom::Rectangle>{};
+    wl_surface->populate_surface_data(params.streams.value(), params.input_shape.value(), {});
+
+    auto const observer = std::make_shared<XWaylandSurfaceObserver>(seat, wl_surface, this);
+    auto const surface = shell->create_surface(get_session(wl_surface->resource), params, observer);
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        surface_observer = observer;
+        weak_scene_surface = surface;
+        creating_scene_surface = false;
+    }
 }
 
 void mf::XWaylandWMSurface::set_window_state(WindowState const& new_window_state)
@@ -492,6 +589,8 @@ void mf::XWaylandWMSurface::set_window_state(WindowState const& new_window_state
     else
         mir_window_state = mir_window_state_restored;
 
+    bool update_mir_window_state = false;
+
     {
         std::lock_guard<std::mutex> lock{mutex};
 
@@ -499,11 +598,31 @@ void mf::XWaylandWMSurface::set_window_state(WindowState const& new_window_state
 
         if (mir_window_state != cached_mir_window_state)
         {
+            update_mir_window_state = true;
             cached_mir_window_state = mir_window_state;
-            aquire_shell_surface([mir_window_state](auto shell_surface)
-                {
-                    shell_surface->set_state_now(mir_window_state);
-                });
         }
+    }
+
+    if (update_mir_window_state)
+    {
+        if (auto const scene_surface = weak_scene_surface.lock())
+        {
+            shell::SurfaceSpecification mods;
+            mods.state = mir_window_state;
+            shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
+        }
+    }
+}
+
+auto mf::XWaylandWMSurface::latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds
+{
+    if (surface_observer)
+    {
+        return surface_observer.value()->latest_timestamp();
+    }
+    else
+    {
+        log_warning("Can not get timestamp because surface_observer is null");
+        return {};
     }
 }

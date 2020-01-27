@@ -22,7 +22,6 @@
 #include "mir/frontend/shell.h"
 #include "wl_seat.h"
 #include "wl_surface.h"
-#include "xwayland_wm_shellsurface.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -36,18 +35,4 @@ mf::XWaylandWMShell::XWaylandWMShell(
       seat{seat},
       output_manager{output_manager}
 {
-}
-
-auto mf::XWaylandWMShell::build_shell_surface(
-    XWaylandWMSurface* xwayland_surface,
-    wl_client* client,
-    WlSurface* surface) -> XWaylandWMShellSurface*
-{
-    return new XWaylandWMShellSurface{
-        xwayland_surface,
-        client,
-        surface,
-        shell,
-        seat,
-        output_manager};
 }

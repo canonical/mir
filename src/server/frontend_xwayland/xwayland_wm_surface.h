@@ -22,6 +22,7 @@
 #include "xwayland_wm.h"
 
 #include <mutex>
+#include <chrono>
 
 extern "C" {
 #include <xcb/xcb.h>
@@ -115,20 +116,38 @@ struct motif_wm_hints
 
 namespace mir
 {
+namespace shell
+{
+class Shell;
+}
 namespace frontend
 {
+class WlSeat;
 class XWaylandWM;
-class XWaylandWMShellSurface;
+class XWaylandSurfaceRole;
+class XWaylandSurfaceObserver;
+
 class XWaylandWMSurface
 {
 public:
-    XWaylandWMSurface(XWaylandWM *wm, xcb_create_notify_event_t *event);
+    XWaylandWMSurface(
+        XWaylandWM *wm,
+        WlSeat& seat,
+        std::shared_ptr<shell::Shell> const& shell,
+        xcb_create_notify_event_t *event);
     ~XWaylandWMSurface();
+
+    void close(); ///< Idempotent
+    void wl_surface_committed(WlSurface* wl_surface); ///< Should only be called on the Wayland thread
+    auto scene_surface() -> std::experimental::optional<std::shared_ptr<scene::Surface>>;
+
+    void run_on_wayland_thread(std::function<void()>&& work);
+
     void net_wm_state_client_message(uint32_t const (&data)[5]);
     void wm_change_state_client_message(uint32_t const (&data)[5]);
     void dirty_properties();
     void read_properties();
-    void set_surface(WlSurface* wayland_surface); ///< Should only be called on the Wayland thread
+    void set_surface(WlSurface* wl_surface); ///< Should only be called on the Wayland thread
     void set_workspace(int workspace);
     void apply_mir_state_to_window(MirWindowState new_state);
     void unmap();
@@ -137,9 +156,6 @@ public:
     void send_close_request();
 
 private:
-    /// Runs work on the Wayland thread if the shell surface hasn't been destroyed
-    void aquire_shell_surface(std::function<void(XWaylandWMShellSurface* shell_surface)>&& work);
-
     /// contains more information than just a MirWindowState
     /// (for example if a minimized window would otherwise be maximized)
     struct WindowState
@@ -153,13 +169,22 @@ private:
     /// Prevents requesting a window state that we are already in
     MirWindowState cached_mir_window_state{mir_window_state_unknown};
 
+    /// Should only be called on the Wayland thread
+    /// Should NOT be called under lock
+    /// Does nothing if we already have a scene::Surface
+    void create_scene_surface_if_needed(WlSurface* wl_surface);
+
     /// Sets the window's _NET_WM_STATE property based on the contents of window_state
     /// Also sets the state of the scene surface to match window_state
     /// Should be called after every change to window_state
     /// Should NOT be called under lock
     void set_window_state(WindowState const& new_window_state);
 
+    auto latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds;
+
     XWaylandWM* const xwm;
+    WlSeat& seat;
+    std::shared_ptr<shell::Shell> const shell;
     xcb_window_t const window;
 
     std::mutex mutex;
@@ -184,17 +209,11 @@ private:
         bool override_redirect;
     } const init;
 
-    /// shell_surface should not be accessed unless this is false
-    /// Should only be accessed on the Wayland thread
-    std::shared_ptr<bool> shell_surface_destroyed;
+    std::experimental::optional<std::shared_ptr<XWaylandSurfaceObserver>> surface_observer;
 
-    /// Only safe to access when shell_surface_destroyed is false and on the Wayland thread (use aquire_shell_surface())
-    /// When the associated wl_surface is destroyed:
-    /// - The WlSurface will call destory() on its role (this shell surface)
-    /// - shell_surface_destroyed will be set to true
-    /// - The shell surface will delete itself
-    /// Can be deleted on the Wayland thread at any time (which will result in shell_surface_destroyed being set to true)
-    XWaylandWMShellSurface* shell_surface_unsafe;
+    /// Only true when we are in the process of creating a scene surface
+    bool creating_scene_surface{false};
+    std::weak_ptr<scene::Surface> weak_scene_surface;
 };
 } /* frontend */
 } /* mir */
