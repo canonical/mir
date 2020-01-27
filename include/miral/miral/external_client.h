@@ -39,6 +39,11 @@ public:
 
     void launch(std::vector<std::string> const& command_line) const;
 
+    /// Launch using only X11 support (if enabled).
+    /// For the occasions it is desired to coerce applications into using X11
+    /// \remark Since MirAL 2.9
+    void launch_using_x11(std::vector<std::string> const& command_line) const;
+
     /// The pid of the latest process that was launched or -1.
     /// \note there's no guarantee that the process still exists, or that
     /// another process has not subsequently been assigned the same id.

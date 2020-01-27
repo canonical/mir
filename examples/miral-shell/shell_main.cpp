@@ -86,6 +86,10 @@ int main(int argc, char const* argv[])
                 external_client_launcher.launch({terminal_cmd});
                 return false;
 
+            case KEY_X:
+                external_client_launcher.launch_using_x11({"xterm"});
+                return false;
+
             default:
                 return false;
             };
