@@ -7,8 +7,9 @@ set(
   xcb_atoms.cpp           xcb_atoms.h
   xwayland_wm.cpp         xwayland_wm.h
   xwayland_wm_surface.cpp xwayland_wm_surface.h
-  xwayland_wm_shellsurface.cpp xwayland_wm_shellsurface.h
-  xwayland_wm_shell.cpp xwayland_wm_shell.h
+  xwayland_surface_role.cpp xwayland_surface_role.h
+  xwayland_surface_observer.cpp xwayland_surface_observer.h
+  xwayland_wm_shell.cpp   xwayland_wm_shell.h
 )
 
 add_definitions(-DMIR_LOG_COMPONENT="xwayland")

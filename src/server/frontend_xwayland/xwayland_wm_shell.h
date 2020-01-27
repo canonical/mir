@@ -33,7 +33,6 @@ class OutputManager;
 class WlSeat;
 class WlSurface;
 class XWaylandWMSurface;
-class XWaylandWMShellSurface;
 
 class XWaylandWMShell
 {
@@ -43,13 +42,6 @@ public:
         WlSeat& seat,
         OutputManager* const output_manager);
 
-    /// Should only be called on the Wayland thread
-    auto build_shell_surface(
-        XWaylandWMSurface* xwayland_surface,
-        wl_client* client,
-        WlSurface* surface) -> XWaylandWMShellSurface*;
-
-private:
     std::shared_ptr<shell::Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
