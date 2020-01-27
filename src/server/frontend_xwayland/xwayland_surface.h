@@ -185,19 +185,18 @@ private:
     auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
     /// @}
 
-    /// The last state we have either requested of Mir or been informed of by Mir
-    /// Prevents requesting a window state that we are already in
-    MirWindowState cached_mir_window_state{mir_window_state_unknown};
-
     /// Should NOT be called under lock
     /// Does nothing if we already have a scene::Surface
     void create_scene_surface_if_needed();
 
-    /// Sets the window's _NET_WM_STATE property based on the contents of window_state
-    /// Also sets the state of the scene surface to match window_state
-    /// Should be called after every change to window_state
+    /// Updates the window's WM_STATE and _NET_WM_STATE properties
     /// Should NOT be called under lock
-    void set_window_state(WindowState const& new_window_state);
+    void inform_client_of_window_state(WindowState const& state);
+
+    /// Requests the scene surface be put into the given state
+    /// If the request results in an actual surface state change, the observer will be notified
+    /// Should NOT be called under lock
+    void request_scene_surface_state(MirWindowState new_state);
 
     auto latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds;
 

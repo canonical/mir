@@ -110,7 +110,8 @@ void mf::XWaylandSurface::map()
         state = window_state;
     }
     state.withdrawn = false;
-    set_window_state(state);
+    inform_client_of_window_state(state);
+    request_scene_surface_state(state.mir_window_state());
 }
 
 void mf::XWaylandSurface::close()
@@ -210,7 +211,8 @@ void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
         }
     }
 
-    set_window_state(new_window_state);
+    inform_client_of_window_state(new_window_state);
+    request_scene_surface_state(new_window_state.mir_window_state());
 }
 
 void mf::XWaylandSurface::wm_change_state_client_message(uint32_t const (&data)[5])
@@ -241,7 +243,8 @@ void mf::XWaylandSurface::wm_change_state_client_message(uint32_t const (&data)[
         }
     }
 
-    set_window_state(new_window_state);
+    inform_client_of_window_state(new_window_state);
+    request_scene_surface_state(new_window_state.mir_window_state());
 }
 
 void mf::XWaylandSurface::dirty_properties()
@@ -303,7 +306,8 @@ void mf::XWaylandSurface::unmap()
         state = window_state;
     }
     state.withdrawn = true;
-    set_window_state(state);
+    inform_client_of_window_state(state);
+    request_scene_surface_state(state.mir_window_state());
 }
 
 void mf::XWaylandSurface::read_properties()
@@ -463,54 +467,12 @@ auto mf::XWaylandSurface::WindowState::updated_from(MirWindowState state) const 
 
 void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
 {
-    WindowState new_window_state;
-
+    WindowState state;
     {
         std::lock_guard<std::mutex> lock{mutex};
-
-        if (new_state == cached_mir_window_state)
-            return;
-
-        cached_mir_window_state = new_state;
-        new_window_state = window_state;
-
-        switch (new_state)
-        {
-        case mir_window_state_minimized:
-        case mir_window_state_hidden:
-            new_window_state.minimized = true;
-            // don't change new_window_state.maximized
-            // don't change new_window_state.fullscreen
-            break;
-
-        case mir_window_state_fullscreen:
-            new_window_state.minimized = false;
-            // don't change new_window_state.maximized
-            new_window_state.fullscreen = true;
-            break;
-
-        case mir_window_state_maximized:
-        case mir_window_state_vertmaximized:
-        case mir_window_state_horizmaximized:
-            new_window_state.minimized = false;
-            new_window_state.maximized = true;
-            new_window_state.fullscreen = false;
-            break;
-
-        case mir_window_state_restored:
-        case mir_window_state_unknown:
-        case mir_window_state_attached:
-            new_window_state.minimized = false;
-            new_window_state.maximized = false;
-            new_window_state.fullscreen = false;
-            break;
-
-        case mir_window_states:
-            break;
-        }
+        state = window_state.updated_from(new_state);
     }
-
-    set_window_state(new_window_state);
+    inform_client_of_window_state(state);
 }
 
 void mf::XWaylandSurface::scene_surface_resized(const geometry::Size& new_size)
@@ -598,8 +560,25 @@ void mf::XWaylandSurface::create_scene_surface_if_needed()
     }
 }
 
-void mf::XWaylandSurface::set_window_state(WindowState const& new_window_state)
+void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_window_state)
 {
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("inform_client_of_window_state(withdrawn:  %s", new_window_state.withdrawn ? "yes" : "no");
+        log_debug("                              minimized:  %s", new_window_state.minimized ? "yes" : "no");
+        log_debug("                              maximized:  %s", new_window_state.maximized ? "yes" : "no");
+        log_debug("                              fullscreen: %s)", new_window_state.fullscreen ? "yes" : "no");
+    }
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+
+        if (new_window_state == window_state)
+            return;
+
+        window_state = new_window_state;
+    }
+
     WmState wm_state;
 
     if (new_window_state.withdrawn)
@@ -644,41 +623,23 @@ void mf::XWaylandSurface::set_window_state(WindowState const& new_window_state)
         connection->set_property<XCBType::ATOM>(window, connection->net_wm_state, net_wm_states);
     }
 
-    MirWindowState mir_window_state;
+    connection->flush();
+}
 
-    if (new_window_state.withdrawn)
-        mir_window_state = mir_window_state_hidden;
-    if (new_window_state.minimized)
-        mir_window_state = mir_window_state_minimized;
-    else if (new_window_state.fullscreen)
-        mir_window_state = mir_window_state_fullscreen;
-    else if (new_window_state.maximized)
-        mir_window_state = mir_window_state_maximized;
-    else
-        mir_window_state = mir_window_state_restored;
-
-    bool update_mir_window_state = false;
+void mf::XWaylandSurface::request_scene_surface_state(MirWindowState new_state)
+{
+    std::shared_ptr<scene::Surface> scene_surface;
 
     {
         std::lock_guard<std::mutex> lock{mutex};
-
-        window_state = new_window_state;
-
-        if (mir_window_state != cached_mir_window_state)
-        {
-            update_mir_window_state = true;
-            cached_mir_window_state = mir_window_state;
-        }
+        scene_surface = weak_scene_surface.lock();
     }
 
-    if (update_mir_window_state)
+    if (scene_surface && scene_surface->state() != new_state)
     {
-        if (auto const scene_surface = weak_scene_surface.lock())
-        {
-            shell::SurfaceSpecification mods;
-            mods.state = mir_window_state;
-            shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
-        }
+        shell::SurfaceSpecification mods;
+        mods.state = new_state;
+        shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
     }
 }
 
