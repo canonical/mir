@@ -4,7 +4,7 @@ miral_server=miral-shell
 hostsocket=
 bindir=$(dirname $0)
 
-for terminal in gnome-terminal weston-terminal qterminal lxterminal x-terminal-emulator
+for terminal in gnome-terminal weston-terminal qterminal lxterminal x-terminal-emulator xdg-terminal
 do
   if which $terminal > /dev/null
   then break;
