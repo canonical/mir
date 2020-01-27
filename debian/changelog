@@ -7,7 +7,7 @@ mir (1.7.0) UNRELEASED; urgency=medium
       . miral ABI unchanged at 3
       . mirserver ABI bumped to 53
       . mircommon ABI unchanged at 7
-      . mirplatform ABI bumped to 17
+      . mirplatform ABI unchanged at 17
       . mirprotobuf ABI unchanged at 3
       . mirplatformgraphics ABI unchanged to 16
       . mirclientplatform ABI unchanged at 5
