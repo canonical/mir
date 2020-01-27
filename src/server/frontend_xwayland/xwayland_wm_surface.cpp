@@ -513,7 +513,7 @@ void mf::XWaylandWMSurface::create_scene_surface_if_needed(WlSurface* wl_surface
             params.name = properties.title;
         if (!properties.appId.empty())
             params.application_id = properties.appId;
-        params.size = init.size;
+        params.size = wl_surface->buffer_size().value_or(init.size);
         params.server_side_decorated = true;
     }
 
