@@ -16,7 +16,7 @@
  *
  */
 
-#include "xwayland_wm_surface.h"
+#include "xwayland_surface.h"
 #include "xwayland_log.h"
 #include "xwayland_surface_observer.h"
 
@@ -69,7 +69,7 @@ auto wm_resize_edge_to_mir_resize_edge(uint32_t wm_resize_edge) -> std::experime
 }
 }
 
-mf::XWaylandWMSurface::XWaylandWMSurface(
+mf::XWaylandSurface::XWaylandSurface(
     XWaylandWM *wm,
     WlSeat& seat,
     std::shared_ptr<shell::Shell> const& shell,
@@ -98,12 +98,12 @@ mf::XWaylandWMSurface::XWaylandWMSurface(
         mir::log_error("xcb gemom reply faled");
 }
 
-mf::XWaylandWMSurface::~XWaylandWMSurface()
+mf::XWaylandSurface::~XWaylandSurface()
 {
     close();
 }
 
-void mf::XWaylandWMSurface::close()
+void mf::XWaylandSurface::close()
 {
     std::shared_ptr<scene::Surface> scene_surface;
     std::shared_ptr<XWaylandSurfaceObserver> observer;
@@ -147,12 +147,12 @@ void mf::XWaylandWMSurface::close()
     }
 }
 
-void mf::XWaylandWMSurface::run_on_wayland_thread(std::function<void()>&& work)
+void mf::XWaylandSurface::run_on_wayland_thread(std::function<void()>&& work)
 {
     xwm->run_on_wayland_thread(std::move(work));
 }
 
-void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t const (&data)[5])
+void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
 {
     // The client is requesting a change in state
     // see https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#idm45390969565536
@@ -204,7 +204,7 @@ void mf::XWaylandWMSurface::net_wm_state_client_message(uint32_t const (&data)[5
     set_window_state(new_window_state);
 }
 
-void mf::XWaylandWMSurface::wm_change_state_client_message(uint32_t const (&data)[5])
+void mf::XWaylandSurface::wm_change_state_client_message(uint32_t const (&data)[5])
 {
     // See ICCCM 4.1.4 (https://tronche.com/gui/x/icccm/sec-4.html)
 
@@ -235,13 +235,13 @@ void mf::XWaylandWMSurface::wm_change_state_client_message(uint32_t const (&data
     set_window_state(new_window_state);
 }
 
-void mf::XWaylandWMSurface::dirty_properties()
+void mf::XWaylandSurface::dirty_properties()
 {
     std::lock_guard<std::mutex> lock{mutex};
     props_dirty = true;
 }
 
-void mf::XWaylandWMSurface::set_surface(WlSurface* wl_surface)
+void mf::XWaylandSurface::set_surface(WlSurface* wl_surface)
 {
     // We assume we are on the Wayland thread
     // If a buffer has alread been committed, we need to create the scene::Surface without waiting for next commit
@@ -251,7 +251,7 @@ void mf::XWaylandWMSurface::set_surface(WlSurface* wl_surface)
     }
 }
 
-void mf::XWaylandWMSurface::set_workspace(int workspace)
+void mf::XWaylandSurface::set_workspace(int workspace)
 {
     // Passing a workspace < 0 deletes the property
     if (workspace >= 0)
@@ -266,7 +266,7 @@ void mf::XWaylandWMSurface::set_workspace(int workspace)
     xcb_flush(xwm->get_xcb_connection());
 }
 
-void mf::XWaylandWMSurface::apply_mir_state_to_window(MirWindowState new_state)
+void mf::XWaylandSurface::apply_mir_state_to_window(MirWindowState new_state)
 {
     WindowState new_window_state;
 
@@ -318,7 +318,7 @@ void mf::XWaylandWMSurface::apply_mir_state_to_window(MirWindowState new_state)
     set_window_state(new_window_state);
 }
 
-void mf::XWaylandWMSurface::unmap()
+void mf::XWaylandSurface::unmap()
 {
     uint32_t const wm_state_properties[]{
         static_cast<uint32_t>(WmState::WITHDRAWN),
@@ -340,7 +340,7 @@ void mf::XWaylandWMSurface::unmap()
     xcb_flush(xwm->get_xcb_connection());
 }
 
-void mf::XWaylandWMSurface::read_properties()
+void mf::XWaylandSurface::read_properties()
 {
     std::lock_guard<std::mutex> lock{mutex};
 
@@ -433,7 +433,7 @@ void mf::XWaylandWMSurface::read_properties()
     }
 }
 
-void mf::XWaylandWMSurface::move_resize(uint32_t detail)
+void mf::XWaylandSurface::move_resize(uint32_t detail)
 {
     if (detail == _NET_WM_MOVERESIZE_MOVE)
     {
@@ -460,11 +460,11 @@ void mf::XWaylandWMSurface::move_resize(uint32_t detail)
     }
     else
     {
-        mir::log_warning("XWaylandWMSurface::move_resize() called with unknown detail %d", detail);
+        mir::log_warning("XWaylandSurface::move_resize() called with unknown detail %d", detail);
     }
 }
 
-void mf::XWaylandWMSurface::send_resize(const geometry::Size& new_size)
+void mf::XWaylandSurface::send_resize(const geometry::Size& new_size)
 {
     uint32_t const mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
 
@@ -476,23 +476,23 @@ void mf::XWaylandWMSurface::send_resize(const geometry::Size& new_size)
     xcb_flush(xwm->get_xcb_connection());
 }
 
-void mf::XWaylandWMSurface::send_close_request()
+void mf::XWaylandSurface::send_close_request()
 {
     xcb_destroy_window(xwm->get_xcb_connection(), window);
     xcb_flush(xwm->get_xcb_connection());
 }
 
-void mf::XWaylandWMSurface::wl_surface_destroyed()
+void mf::XWaylandSurface::wl_surface_destroyed()
 {
     close();
 }
 
-void mf::XWaylandWMSurface::wl_surface_committed(WlSurface* wl_surface)
+void mf::XWaylandSurface::wl_surface_committed(WlSurface* wl_surface)
 {
     create_scene_surface_if_needed(wl_surface);
 }
 
-auto mf::XWaylandWMSurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
+auto mf::XWaylandSurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
 {
     std::lock_guard<std::mutex> lock{mutex};
     if (auto const scene_surface = weak_scene_surface.lock())
@@ -501,7 +501,7 @@ auto mf::XWaylandWMSurface::scene_surface() const -> std::experimental::optional
         return std::experimental::nullopt;
 }
 
-void mf::XWaylandWMSurface::create_scene_surface_if_needed(WlSurface* wl_surface)
+void mf::XWaylandSurface::create_scene_surface_if_needed(WlSurface* wl_surface)
 {
     scene::SurfaceCreationParameters params;
 
@@ -537,7 +537,7 @@ void mf::XWaylandWMSurface::create_scene_surface_if_needed(WlSurface* wl_surface
     }
 }
 
-void mf::XWaylandWMSurface::set_window_state(WindowState const& new_window_state)
+void mf::XWaylandSurface::set_window_state(WindowState const& new_window_state)
 {
     WmState const wm_state{
         new_window_state.minimized ?
@@ -619,7 +619,7 @@ void mf::XWaylandWMSurface::set_window_state(WindowState const& new_window_state
     }
 }
 
-auto mf::XWaylandWMSurface::latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds
+auto mf::XWaylandSurface::latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds
 {
     if (surface_observer)
     {

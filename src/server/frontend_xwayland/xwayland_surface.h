@@ -127,16 +127,16 @@ class WlSeat;
 class XWaylandWM;
 class XWaylandSurfaceObserver;
 
-class XWaylandWMSurface
+class XWaylandSurface
     : public XWaylandSurfaceRoleSurface
 {
 public:
-    XWaylandWMSurface(
+    XWaylandSurface(
         XWaylandWM *wm,
         WlSeat& seat,
         std::shared_ptr<shell::Shell> const& shell,
         xcb_create_notify_event_t *event);
-    ~XWaylandWMSurface();
+    ~XWaylandSurface();
 
     void close(); ///< Idempotent
 

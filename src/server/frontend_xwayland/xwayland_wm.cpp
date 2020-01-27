@@ -20,7 +20,7 @@
 
 #include "xwayland_wm.h"
 #include "xwayland_log.h"
-#include "xwayland_wm_surface.h"
+#include "xwayland_surface.h"
 #include "xwayland_wm_shell.h"
 #include "xwayland_surface_role.h"
 
@@ -167,7 +167,7 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
 mf::XWaylandWM::~XWaylandWM()
 {
     // clear the surfaces map and then destroy all surfaces
-    std::map<xcb_window_t, std::shared_ptr<XWaylandWMSurface>> local_surfaces;
+    std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> local_surfaces;
 
     {
         std::lock_guard<std::mutex> lock{mutex};
@@ -302,7 +302,7 @@ void mf::XWaylandWM::create_wm_window()
 }
 
 auto mf::XWaylandWM::get_wm_surface(
-    xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandWMSurface>>
+    xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandSurface>>
 {
     std::lock_guard<std::mutex> lock{mutex};
 
@@ -478,7 +478,7 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 
     if (!is_ours(event->window))
     {
-        auto const surface = std::make_shared<XWaylandWMSurface>(this, wm_shell->seat, wm_shell->shell, event);
+        auto const surface = std::make_shared<XWaylandSurface>(this, wm_shell->seat, wm_shell->shell, event);
 
         {
             std::lock_guard<std::mutex> lock{mutex};
@@ -514,7 +514,7 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
             get_window_debug_string(event->event).c_str());
     }
 
-    std::shared_ptr<XWaylandWMSurface> surface{nullptr};
+    std::shared_ptr<XWaylandSurface> surface{nullptr};
 
     {
         std::lock_guard<std::mutex> lock{mutex};
@@ -620,7 +620,7 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
     }
 }
 
-void mf::XWaylandWM::handle_move_resize(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
+void mf::XWaylandWM::handle_move_resize(std::shared_ptr<XWaylandSurface> surface, xcb_client_message_event_t *event)
 {
     if (!surface || !event)
         return;
@@ -629,7 +629,7 @@ void mf::XWaylandWM::handle_move_resize(std::shared_ptr<XWaylandWMSurface> surfa
     surface->move_resize(detail);
 }
 
-void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
+void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandSurface> surface, xcb_client_message_event_t *event)
 {
     if (!surface || !event)
         return;

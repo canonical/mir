@@ -17,7 +17,7 @@
  */
 
 #include "xwayland_surface_observer.h"
-#include "xwayland_wm_surface.h"
+#include "xwayland_surface.h"
 #include "wl_seat.h"
 #include "wayland_utils.h"
 #include "window_wl_surface_role.h"
@@ -37,7 +37,7 @@ namespace mi = mir::input;
 mf::XWaylandSurfaceObserver::XWaylandSurfaceObserver(
     WlSeat& seat,
     WlSurface* wl_surface,
-    XWaylandWMSurface* wm_surface)
+    XWaylandSurface* wm_surface)
     : wm_surface{wm_surface},
       input_dispatcher{std::make_shared<ThreadsafeInputDispatcher>(
           std::make_unique<WaylandInputDispatcher>(&seat, wl_surface))}

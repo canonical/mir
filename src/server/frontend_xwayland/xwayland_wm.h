@@ -45,7 +45,7 @@ class MultiplexingDispatchable;
 } /*dispatch */
 namespace frontend
 {
-class XWaylandWMSurface;
+class XWaylandSurface;
 class XWaylandWMShell;
 class WlSurface;
 
@@ -70,7 +70,7 @@ public:
         return xcb_connection;
     }
 
-    auto get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandWMSurface>>;
+    auto get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandSurface>>;
     void run_on_wayland_thread(std::function<void()>&& work);
 
     XCBAtoms const xcb_atom;
@@ -114,8 +114,8 @@ private:
     void handle_motion_notify(xcb_motion_notify_event_t *event);
     void handle_property_notify(xcb_property_notify_event_t *event);
     void handle_map_request(xcb_map_request_event_t *event);
-    void handle_surface_id(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
-    void handle_move_resize(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
+    void handle_surface_id(std::shared_ptr<XWaylandSurface> surface, xcb_client_message_event_t *event);
+    void handle_move_resize(std::shared_ptr<XWaylandSurface> surface, xcb_client_message_event_t *event);
     void handle_client_message(xcb_client_message_event_t *event);
     void handle_configure_request(xcb_configure_request_event_t *event);
     void handle_configure_notify(xcb_configure_notify_event_t *event);
@@ -136,7 +136,7 @@ private:
 
     xcb_screen_t *xcb_screen;
     xcb_window_t xcb_window;
-    std::map<xcb_window_t, std::shared_ptr<XWaylandWMSurface>> surfaces;
+    std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
     std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;
     int xcb_cursor;
     std::vector<xcb_cursor_t> xcb_cursors;

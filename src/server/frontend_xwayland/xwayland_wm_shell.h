@@ -32,7 +32,7 @@ namespace frontend
 class OutputManager;
 class WlSeat;
 class WlSurface;
-class XWaylandWMSurface;
+class XWaylandSurface;
 
 class XWaylandWMShell
 {

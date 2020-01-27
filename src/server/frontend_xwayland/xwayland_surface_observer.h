@@ -37,9 +37,9 @@ namespace frontend
 class WlSeat;
 class WlSurface;
 class WaylandInputDispatcher;
-class XWaylandWMSurface;
+class XWaylandSurface;
 
-/// Must not outlive the XWaylandWMSurface
+/// Must not outlive the XWaylandSurface
 class XWaylandSurfaceObserver
     : public scene::NullSurfaceObserver
 {
@@ -47,7 +47,7 @@ public:
     XWaylandSurfaceObserver(
         WlSeat& seat,
         WlSurface* wl_surface,
-        XWaylandWMSurface* wm_surface);
+        XWaylandSurface* wm_surface);
     ~XWaylandSurfaceObserver();
 
     /// Overrides from scene::SurfaceObserver
@@ -81,7 +81,7 @@ private:
         std::experimental::optional<std::unique_ptr<WaylandInputDispatcher>> dispatcher;
     };
 
-    XWaylandWMSurface* const wm_surface;
+    XWaylandSurface* const wm_surface;
     std::shared_ptr<ThreadsafeInputDispatcher> const input_dispatcher;
 
     /// Runs work on the Wayland thread if the input dispatcher still exists

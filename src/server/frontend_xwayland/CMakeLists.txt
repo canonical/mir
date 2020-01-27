@@ -6,7 +6,7 @@ set(
   xwayland_server.cpp     xwayland_server.h
   xcb_atoms.cpp           xcb_atoms.h
   xwayland_wm.cpp         xwayland_wm.h
-  xwayland_wm_surface.cpp xwayland_wm_surface.h
+  xwayland_surface.cpp    xwayland_surface.h
   xwayland_surface_role.cpp xwayland_surface_role.h
                           xwayland_surface_role_surface.h
   xwayland_surface_observer.cpp xwayland_surface_observer.h
