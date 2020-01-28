@@ -2,7 +2,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/server
-  ${PROJECT_SOURCE_DIR}/src/include/platform
 )
 
 set(MIRAL_ABI 3)
@@ -68,6 +67,9 @@ add_library(miral SHARED
     x11_support.cpp                     ${miral_include}/miral/x11_support.h
     zone.cpp                            ${miral_include}/miral/zone.h
 )
+
+#include <mir/udev/wrapper.h>
+set_source_files_properties(keymap.cpp PROPERTIES COMPILE_FLAGS "-I${PROJECT_SOURCE_DIR}/src/include/platform")
 
 check_cxx_compiler_flag(-Wno-attribute-alias HAS_W_NO_ATTRIBUTE_ALIAS)
 if(HAS_W_NO_ATTRIBUTE_ALIAS)
