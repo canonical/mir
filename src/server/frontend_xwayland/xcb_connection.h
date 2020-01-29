@@ -30,7 +30,7 @@ namespace frontend
 class XCBConnection
 {
 public:
-    explicit XCBConnection(xcb_connection_t* xcb_connection);
+    explicit XCBConnection(int fd);
     ~XCBConnection();
 
     operator xcb_connection_t*() const;

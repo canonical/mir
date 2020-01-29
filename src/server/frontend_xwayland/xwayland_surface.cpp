@@ -177,11 +177,11 @@ void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
             {
                 bool nil{false}, *prop_ptr = &nil;
 
-                if (property == xwm->xcb_atom.net_wm_state_hidden)
+                if (property == xwm->connection->net_wm_state_hidden)
                     prop_ptr = &new_window_state.minimized;
-                else if (property == xwm->xcb_atom.net_wm_state_maximized_horz) // assume vert is also set
+                else if (property == xwm->connection->net_wm_state_maximized_horz) // assume vert is also set
                     prop_ptr = &new_window_state.maximized;
-                else if (property == xwm->xcb_atom.net_wm_state_fullscreen)
+                else if (property == xwm->connection->net_wm_state_fullscreen)
                     prop_ptr = &new_window_state.fullscreen;
 
                 switch (action)
@@ -249,12 +249,12 @@ void mf::XWaylandSurface::set_workspace(int workspace)
     // Passing a workspace < 0 deletes the property
     if (workspace >= 0)
     {
-        xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, xwm->xcb_atom.net_wm_desktop,
+        xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, xwm->connection->net_wm_desktop,
                             XCB_ATOM_CARDINAL, 31, 1, &workspace);
     }
     else
     {
-        xcb_delete_property(connection, window, xwm->xcb_atom.net_wm_desktop);
+        xcb_delete_property(connection, window, xwm->connection->net_wm_desktop);
     }
     xcb_flush(connection);
 }
@@ -269,14 +269,14 @@ void mf::XWaylandSurface::unmap()
     xcb_change_property(
         connection,
         XCB_PROP_MODE_REPLACE,
-        window, xwm->xcb_atom.wm_state,
-        xwm->xcb_atom.wm_state, 32,
+        window, xwm->connection->wm_state,
+        xwm->connection->wm_state, 32,
         length_of(wm_state_properties), wm_state_properties);
 
     xcb_delete_property(
         connection,
         window,
-        xwm->xcb_atom.net_wm_state);
+        xwm->connection->net_wm_state);
 
     xcb_flush(connection);
 }
@@ -293,11 +293,11 @@ void mf::XWaylandSurface::read_properties()
     props[XCB_ATOM_WM_CLASS] = XCB_ATOM_STRING;
     props[XCB_ATOM_WM_NAME] = XCB_ATOM_STRING;
     props[XCB_ATOM_WM_TRANSIENT_FOR] = XCB_ATOM_WINDOW;
-    props[xwm->xcb_atom.wm_protocols] = TYPE_WM_PROTOCOLS;
-    props[xwm->xcb_atom.wm_normal_hints] = TYPE_WM_NORMAL_HINTS;
-    props[xwm->xcb_atom.net_wm_window_type] = XCB_ATOM_ATOM;
-    props[xwm->xcb_atom.net_wm_name] = XCB_ATOM_STRING;
-    props[xwm->xcb_atom.motif_wm_hints] = TYPE_MOTIF_WM_HINTS;
+    props[xwm->connection->wm_protocols] = TYPE_WM_PROTOCOLS;
+    props[xwm->connection->wm_normal_hints] = TYPE_WM_NORMAL_HINTS;
+    props[xwm->connection->net_wm_window_type] = XCB_ATOM_ATOM;
+    props[xwm->connection->net_wm_name] = XCB_ATOM_STRING;
+    props[xwm->connection->motif_wm_hints] = TYPE_MOTIF_WM_HINTS;
 
     std::map<xcb_atom_t, xcb_get_property_cookie_t> cookies;
     for (const auto &atom : props)
@@ -334,7 +334,7 @@ void mf::XWaylandSurface::read_properties()
                               xcb_get_property_value_length(reply));
             if (atom == XCB_ATOM_WM_CLASS) {
                 properties.appId = std::string(p);
-            } else if (atom == XCB_ATOM_WM_NAME || xwm->xcb_atom.net_wm_name) {
+            } else if (atom == XCB_ATOM_WM_NAME || xwm->connection->net_wm_name) {
                 properties.title = std::string(p);
             } else {
                 free(p);
@@ -347,7 +347,7 @@ void mf::XWaylandSurface::read_properties()
         }
         case XCB_ATOM_ATOM:
         {
-            if (atom == xwm->xcb_atom.net_wm_window_type)
+            if (atom == xwm->connection->net_wm_window_type)
             {
             }
             break;
@@ -356,7 +356,7 @@ void mf::XWaylandSurface::read_properties()
         {
             xcb_atom_t *atoms = reinterpret_cast<xcb_atom_t *>(xcb_get_property_value(reply));
             for (uint32_t i = 0; i < reply->value_len; ++i)
-                if (atoms[i] == xwm->xcb_atom.wm_delete_window)
+                if (atoms[i] == xwm->connection->wm_delete_window)
                     properties.deleteWindow = 1;
             break;
         }
@@ -550,24 +550,24 @@ void mf::XWaylandSurface::set_window_state(WindowState const& new_window_state)
     xcb_change_property(
         connection,
         XCB_PROP_MODE_REPLACE,
-        window, xwm->xcb_atom.wm_state,
-        xwm->xcb_atom.wm_state, 32,
+        window, xwm->connection->wm_state,
+        xwm->connection->wm_state, 32,
         length_of(wm_state_properties), wm_state_properties);
 
     std::vector<xcb_atom_t> net_wm_states;
 
     if (new_window_state.minimized)
     {
-        net_wm_states.push_back(xwm->xcb_atom.net_wm_state_hidden);
+        net_wm_states.push_back(xwm->connection->net_wm_state_hidden);
     }
     if (new_window_state.maximized)
     {
-        net_wm_states.push_back(xwm->xcb_atom.net_wm_state_maximized_horz);
-        net_wm_states.push_back(xwm->xcb_atom.net_wm_state_maximized_vert);
+        net_wm_states.push_back(xwm->connection->net_wm_state_maximized_horz);
+        net_wm_states.push_back(xwm->connection->net_wm_state_maximized_vert);
     }
     if (new_window_state.fullscreen)
     {
-        net_wm_states.push_back(xwm->xcb_atom.net_wm_state_fullscreen);
+        net_wm_states.push_back(xwm->connection->net_wm_state_fullscreen);
     }
     // TODO: Set _NET_WM_STATE_MODAL if appropriate
 
@@ -575,7 +575,7 @@ void mf::XWaylandSurface::set_window_state(WindowState const& new_window_state)
         connection,
         XCB_PROP_MODE_REPLACE,
         window,
-        xwm->xcb_atom.net_wm_state,
+        xwm->connection->net_wm_state,
         XCB_ATOM_ATOM, 32, // type and format
         net_wm_states.size(), net_wm_states.data());
 

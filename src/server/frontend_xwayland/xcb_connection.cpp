@@ -46,8 +46,8 @@ auto mf::XCBConnection::Atom::name() const -> std::string
     return name_;
 }
 
-mf::XCBConnection::XCBConnection(xcb_connection_t* xcb_connection)
-    : xcb_connection{xcb_connection},
+mf::XCBConnection::XCBConnection(int fd)
+    : xcb_connection{xcb_connect_to_fd(fd, nullptr)},
       wm_protocols{"WM_PROTOCOLS", this},
       wm_normal_hints{"WM_NORMAL_HINTS", this},
       wm_take_focus{"WM_TAKE_FOCUS", this},

@@ -59,7 +59,6 @@ class XWaylandWM
 {
 private:
     int const wm_fd;
-    xcb_connection_t* const xcb_connection;
 
 public:
     XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd);
@@ -68,7 +67,7 @@ public:
     auto get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandSurface>>;
     void run_on_wayland_thread(std::function<void()>&& work);
 
-    XCBConnection const xcb_atom;
+    std::shared_ptr<XCBConnection> const connection;
 
 private:
 
