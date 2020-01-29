@@ -12,7 +12,7 @@ pkg_check_modules(YAML REQUIRED yaml-cpp)
 
 add_library(mirclientcpp INTERFACE)
 
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miral")
+add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miral" -DMIRAL_ENABLE_DEPRECATIONS=0)
 
 add_library(miral-internal STATIC
     active_outputs.cpp                  active_outputs.h

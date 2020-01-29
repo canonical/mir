@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Canonical Ltd.
+ * Copyright © 2015-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -20,6 +20,7 @@
 #define MIRAL_APPLICATION_INFO_H
 
 #include "miral/application.h"
+#include <miral/deprecations.h>
 
 #include <string>
 #include <vector>
@@ -39,7 +40,10 @@ struct ApplicationInfo
     auto name() const -> std::string;
     auto application()  const -> Application;
     auto windows() const -> std::vector <Window>&;
+
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not add or remove application windows")
     void add_window(Window const& window);
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not add or remove application windows")
     void remove_window(Window const& window);
 
     /// This can be used by client code to store window manager specific information
