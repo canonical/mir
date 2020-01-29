@@ -115,3 +115,8 @@ mf::XCBConnection::XCBConnection(xcb_connection_t* xcb_connection)
       allow_commits{"_XWAYLAND_ALLOW_COMMITS", context}
 {
 }
+
+mf::XCBConnection::operator xcb_connection_t*() const
+{
+    return context.xcb_connection;
+}

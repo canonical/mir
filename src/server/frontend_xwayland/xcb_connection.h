@@ -36,7 +36,9 @@ private:
     } const context;
 
 public:
-    XCBConnection(xcb_connection_t* xcb_connection);
+    explicit XCBConnection(xcb_connection_t* xcb_connection);
+
+    operator xcb_connection_t*() const;
 
     class Atom
     {
