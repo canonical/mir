@@ -65,11 +65,6 @@ public:
     XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd);
     ~XWaylandWM();
 
-    auto get_xcb_connection() const -> xcb_connection_t*
-    {
-        return xcb_connection;
-    }
-
     auto get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandSurface>>;
     void run_on_wayland_thread(std::function<void()>&& work);
 

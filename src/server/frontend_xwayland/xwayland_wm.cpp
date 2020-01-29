@@ -478,7 +478,12 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 
     if (!is_ours(event->window))
     {
-        auto const surface = std::make_shared<XWaylandSurface>(this, wm_shell->seat, wm_shell->shell, event);
+        auto const surface = std::make_shared<XWaylandSurface>(
+            this,
+            wm_shell->seat,
+            wm_shell->shell,
+            xcb_connection,
+            event);
 
         {
             std::lock_guard<std::mutex> lock{mutex};

@@ -137,6 +137,7 @@ public:
         XWaylandWM *wm,
         WlSeat& seat,
         std::shared_ptr<shell::Shell> const& shell,
+        xcb_connection_t* connection,
         xcb_create_notify_event_t *event);
     ~XWaylandSurface();
 
@@ -197,6 +198,7 @@ private:
     XWaylandWM* const xwm;
     WlSeat& seat;
     std::shared_ptr<shell::Shell> const shell;
+    xcb_connection_t* const connection;
     xcb_window_t const window;
 
     std::mutex mutable mutex;
