@@ -18,7 +18,6 @@
  */
 
 #include "mir/graphics/gl_format.h"
-#include "mir/shm_file.h"
 #include "shm_buffer.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
