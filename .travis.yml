@@ -97,9 +97,6 @@ jobs:
 
   - &sanitize
     stage: sanitize
-    notifications:
-      email:
-      - mir-ci-bot@canonical.com
     env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:asan
   - <<: *sanitize
     env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:tsan
@@ -115,7 +112,7 @@ jobs:
   - stage: process snaps
     env: ~
     language: python
-    python: [3.6]
+    python: 3.6
     dist: xenial
     before_install: *decrypt-bot-data
     install:
