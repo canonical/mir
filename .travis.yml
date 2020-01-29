@@ -1,4 +1,5 @@
 language: cpp
+os: linux
 
 branches:
   only:
@@ -42,7 +43,7 @@ env:
   - DEBFULLNAME="Mir CI Bot"
   - DEBEMAIL="mir-ci-bot@canonical.com"
   - SPREAD_PATH=/tmp/spread
-  matrix:
+  jobs:
   - TASK=google:ubuntu-devel-64:spread/build/ubuntu:amd64
   - TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
   - TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
