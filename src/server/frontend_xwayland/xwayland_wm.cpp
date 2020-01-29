@@ -479,9 +479,9 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
     {
         auto const surface = std::make_shared<XWaylandSurface>(
             this,
+            connection,
             wm_shell->seat,
             wm_shell->shell,
-            *connection,
             event);
 
         {

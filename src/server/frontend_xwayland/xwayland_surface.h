@@ -135,9 +135,9 @@ class XWaylandSurface
 public:
     XWaylandSurface(
         XWaylandWM *wm,
+        std::shared_ptr<XCBConnection> const& connection,
         WlSeat& seat,
         std::shared_ptr<shell::Shell> const& shell,
-        xcb_connection_t* connection,
         xcb_create_notify_event_t *event);
     ~XWaylandSurface();
 
@@ -196,9 +196,9 @@ private:
     auto latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds;
 
     XWaylandWM* const xwm;
+    std::shared_ptr<XCBConnection> const connection;
     WlSeat& seat;
     std::shared_ptr<shell::Shell> const shell;
-    xcb_connection_t* const connection;
     xcb_window_t const window;
 
     std::mutex mutable mutex;
