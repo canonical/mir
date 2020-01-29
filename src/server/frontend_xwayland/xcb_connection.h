@@ -29,22 +29,25 @@ namespace frontend
 {
 class XCBConnection
 {
-private:
-    struct Context
-    {
-        xcb_connection_t* const xcb_connection;
-    } const context;
-
 public:
     explicit XCBConnection(xcb_connection_t* xcb_connection);
+    ~XCBConnection();
 
     operator xcb_connection_t*() const;
 
+private:
+    XCBConnection(XCBConnection&) = delete;
+    XCBConnection(XCBConnection&&) = delete;
+    XCBConnection& operator=(XCBConnection&) = delete;
+
+    xcb_connection_t* const xcb_connection;
+
+public:
     class Atom
     {
     public:
         /// Context should outlive the atom
-        Atom(std::string const& name, Context const& context);
+        Atom(std::string const& name, XCBConnection* connection);
         operator xcb_atom_t() const;
         auto name() const -> std::string;
 
@@ -53,7 +56,7 @@ public:
         Atom(Atom&&) = delete;
         Atom& operator=(Atom&) = delete;
 
-        Context const& context;
+        XCBConnection* const connection;
         std::string const name_;
         xcb_intern_atom_cookie_t const cookie;
         std::experimental::optional<xcb_atom_t> mutable atom;
@@ -124,11 +127,6 @@ public:
     Atom const xdnd_action_copy;
     Atom const wl_surface_id;
     Atom const allow_commits;
-
-private:
-    XCBConnection(XCBConnection&) = delete;
-    XCBConnection(XCBConnection&&) = delete;
-    XCBConnection& operator=(XCBConnection&) = delete;
 };
 }
 }
