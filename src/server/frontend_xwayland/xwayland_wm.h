@@ -21,7 +21,7 @@
 
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "wayland_connector.h"
-#include "xcb_atoms.h"
+#include "xcb_connection.h"
 
 #include <map>
 #include <thread>
@@ -68,7 +68,7 @@ public:
     auto get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandSurface>>;
     void run_on_wayland_thread(std::function<void()>&& work);
 
-    XCBAtoms const xcb_atom;
+    XCBConnection const xcb_atom;
 
 private:
 

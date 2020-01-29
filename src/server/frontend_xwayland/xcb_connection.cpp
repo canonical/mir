@@ -16,19 +16,19 @@
  *
  */
 
-#include "xcb_atoms.h"
+#include "xcb_connection.h"
 #include "boost/throw_exception.hpp"
 
 namespace mf = mir::frontend;
 
-mf::XCBAtoms::Atom::Atom(std::string const& name, Context const& context)
+mf::XCBConnection::Atom::Atom(std::string const& name, Context const& context)
     : context{context},
       name_{name},
       cookie{xcb_intern_atom(context.xcb_connection, 0, name_.size(), name_.c_str())}
 {
 }
 
-mf::XCBAtoms::Atom::operator xcb_atom_t() const
+mf::XCBConnection::Atom::operator xcb_atom_t() const
 {
     if (!atom)
     {
@@ -41,12 +41,12 @@ mf::XCBAtoms::Atom::operator xcb_atom_t() const
     return atom.value();
 }
 
-auto mf::XCBAtoms::Atom::name() const -> std::string
+auto mf::XCBConnection::Atom::name() const -> std::string
 {
     return name_;
 }
 
-mf::XCBAtoms::XCBAtoms(xcb_connection_t* xcb_connection)
+mf::XCBConnection::XCBConnection(xcb_connection_t* xcb_connection)
     : context{xcb_connection},
       wm_protocols{"WM_PROTOCOLS", context},
       wm_normal_hints{"WM_NORMAL_HINTS", context},

@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef MIR_FRONTEND_XCB_ATOMS_H
-#define MIR_FRONTEND_XCB_ATOMS_H
+#ifndef MIR_FRONTEND_XCB_CONNECTION_H
+#define MIR_FRONTEND_XCB_CONNECTION_H
 
 #include <xcb/xcb.h>
 #include <string>
@@ -27,7 +27,7 @@ namespace mir
 {
 namespace frontend
 {
-class XCBAtoms
+class XCBConnection
 {
 private:
     struct Context
@@ -36,7 +36,7 @@ private:
     } const context;
 
 public:
-    XCBAtoms(xcb_connection_t* xcb_connection);
+    XCBConnection(xcb_connection_t* xcb_connection);
 
     class Atom
     {
@@ -124,11 +124,11 @@ public:
     Atom const allow_commits;
 
 private:
-    XCBAtoms(XCBAtoms&) = delete;
-    XCBAtoms(XCBAtoms&&) = delete;
-    XCBAtoms& operator=(XCBAtoms&) = delete;
+    XCBConnection(XCBConnection&) = delete;
+    XCBConnection(XCBConnection&&) = delete;
+    XCBConnection& operator=(XCBConnection&) = delete;
 };
 }
 }
 
-#endif // MIR_FRONTEND_XCB_ATOMS_H
+#endif // MIR_FRONTEND_XCB_CONNECTION_H
