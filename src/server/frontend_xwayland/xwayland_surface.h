@@ -20,6 +20,8 @@
 
 #include "wl_surface.h"
 #include "xwayland_wm.h"
+#include "xwayland_surface_role_surface.h"
+#include "xwayland_surface_observer_surface.h"
 
 #include <mutex>
 #include <chrono>
@@ -124,36 +126,30 @@ namespace frontend
 {
 class WlSeat;
 class XWaylandWM;
-class XWaylandSurfaceRole;
 class XWaylandSurfaceObserver;
 
-class XWaylandWMSurface
+class XWaylandSurface
+    : public XWaylandSurfaceRoleSurface,
+      public XWaylandSurfaceObserverSurface
 {
 public:
-    XWaylandWMSurface(
+    XWaylandSurface(
         XWaylandWM *wm,
         WlSeat& seat,
         std::shared_ptr<shell::Shell> const& shell,
         xcb_create_notify_event_t *event);
-    ~XWaylandWMSurface();
+    ~XWaylandSurface();
 
+    void map();
     void close(); ///< Idempotent
-    void wl_surface_committed(WlSurface* wl_surface); ///< Should only be called on the Wayland thread
-    auto scene_surface() -> std::experimental::optional<std::shared_ptr<scene::Surface>>;
-
-    void run_on_wayland_thread(std::function<void()>&& work);
-
     void net_wm_state_client_message(uint32_t const (&data)[5]);
     void wm_change_state_client_message(uint32_t const (&data)[5]);
     void dirty_properties();
     void read_properties();
     void set_surface(WlSurface* wl_surface); ///< Should only be called on the Wayland thread
     void set_workspace(int workspace);
-    void apply_mir_state_to_window(MirWindowState new_state);
     void unmap();
     void move_resize(uint32_t detail);
-    void send_resize(const geometry::Size& new_size);
-    void send_close_request();
 
 private:
     /// contains more information than just a MirWindowState
@@ -164,6 +160,22 @@ private:
         bool maximized{false};
         bool fullscreen{false};
     };
+
+    /// Overrides from XWaylandSurfaceObserverSurface
+    /// @{
+    void scene_surface_state_set(MirWindowState new_state) override;
+    void scene_surface_resized(const geometry::Size& new_size) override;
+    void scene_surface_close_requested() override;
+    void run_on_wayland_thread(std::function<void()>&& work) override;
+    /// @}
+
+    /// Overrides from XWaylandSurfaceRoleSurface
+    /// Should only be called on the Wayland thread
+    /// @{
+    void wl_surface_destroyed() override;
+    void wl_surface_committed(WlSurface* wl_surface) override;
+    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
+    /// @}
 
     /// The last state we have either requested of Mir or been informed of by Mir
     /// Prevents requesting a window state that we are already in
@@ -187,7 +199,7 @@ private:
     std::shared_ptr<shell::Shell> const shell;
     xcb_window_t const window;
 
-    std::mutex mutex;
+    std::mutex mutable mutex;
 
     /// Reflects the _NET_WM_STATE and WM_STATE we have currently set on the window
     /// Should only be modified by set_wm_state()
