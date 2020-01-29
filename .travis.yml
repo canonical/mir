@@ -54,12 +54,6 @@ env:
   - TASK=google:fedora-30-64:spread/build/fedora:amd64
   - TASK=google:fedora-31-64:spread/build/fedora:amd64
 
-matrix:
-  allow_failures:
-    - env: TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
-    - env: TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
-  fast_finish: true
-
 before_install:
 - mkdir -p ${SPREAD_PATH}
 - pushd "${SPREAD_PATH}"
@@ -128,3 +122,7 @@ jobs:
     - if [ ${TRAVIS_EVENT_TYPE} == cron ]; then sudo snap install review-tools; fi
     script:
     - tools/process_snaps.py
+  allow_failures:
+    - env: TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
+    - env: TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
+  fast_finish: true
