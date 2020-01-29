@@ -85,17 +85,8 @@ mf::XWaylandSurface::XWaylandSurface(
           {event->width, event->height},
           (bool)event->override_redirect}
 {
-    xcb_get_geometry_cookie_t const geometry_cookie = xcb_get_geometry(xwm->get_xcb_connection(), window);
-
-    uint32_t const values[]{
-        XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE};
-    xcb_change_window_attributes(xwm->get_xcb_connection(), window, XCB_CW_EVENT_MASK, values);
-
-    xcb_get_geometry_reply_t* const geometry_reply =
-        xcb_get_geometry_reply(xwm->get_xcb_connection(), geometry_cookie, nullptr);
-
-    if (!geometry_reply)
-        mir::log_error("xcb gemom reply faled");
+    uint32_t const value = XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE;
+    xcb_change_window_attributes(xwm->get_xcb_connection(), window, XCB_CW_EVENT_MASK, &value);
 }
 
 mf::XWaylandSurface::~XWaylandSurface()
