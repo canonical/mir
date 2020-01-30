@@ -1,4 +1,6 @@
 language: cpp
+os: linux
+version: ~> 1.0
 
 branches:
   only:
@@ -42,23 +44,17 @@ env:
   - DEBFULLNAME="Mir CI Bot"
   - DEBEMAIL="mir-ci-bot@canonical.com"
   - SPREAD_PATH=/tmp/spread
-  matrix:
-  - SYSTEM=google:ubuntu-devel-64 VARIANT=amd64
-  - SYSTEM=google:ubuntu-devel-proposed-64 VARIANT=amd64
-  - SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
-  - SYSTEM=google:ubuntu-16.04-64 VARIANT=amd64
-  - SYSTEM=google:ubuntu-16.04-64 VARIANT=arm64
-  - SYSTEM=google:ubuntu-18.04-64 VARIANT=clang
-  - SYSTEM=google:ubuntu-19.04-64 VARIANT=amd64
-  - SYSTEM=google:ubuntu-19.10-64 VARIANT=amd64
-  - SYSTEM=google:fedora-30-64 VARIANT=amd64
-  - SYSTEM=google:fedora-31-64 VARIANT=amd64
-
-matrix:
-  allow_failures:
-    - env: SYSTEM=google:ubuntu-devel-proposed-64 VARIANT=amd64
-    - env: SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
-  fast_finish: true
+  jobs:
+  - TASK=google:ubuntu-devel-64:spread/build/ubuntu:amd64
+  - TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
+  - TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
+  - TASK=google:ubuntu-16.04-64:spread/build/ubuntu:amd64
+  - TASK=google:ubuntu-16.04-64:spread/build/ubuntu:arm64
+  - TASK=google:ubuntu-18.04-64:spread/build/ubuntu:clang
+  - TASK=google:ubuntu-18.04-64:spread/build/ubuntu:rpi
+  - TASK=google:ubuntu-19.10-64:spread/build/ubuntu:amd64
+  - TASK=google:fedora-30-64:spread/build/fedora:amd64
+  - TASK=google:fedora-31-64:spread/build/fedora:amd64
 
 before_install:
 - mkdir -p ${SPREAD_PATH}
@@ -68,7 +64,7 @@ before_install:
 - popd
 
 script:
-- ${SPREAD_PATH}/spread -v $SYSTEM:...:$VARIANT
+- ${SPREAD_PATH}/spread -v ${TASK}
 
 jobs:
   include:
@@ -96,33 +92,28 @@ jobs:
   - <<: *ppa-upload
     env: RELEASE=18.04
   - <<: *ppa-upload
-    env: RELEASE=19.04
-  - <<: *ppa-upload
     env: RELEASE=19.10
   - <<: *ppa-upload
     env: RELEASE=devel
 
   - &sanitize
     stage: sanitize
-    notifications:
-      email:
-      - mir-ci-bot@canonical.com
-    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=asan
+    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:asan
   - <<: *sanitize
-    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=tsan
+    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:tsan
   - <<: *sanitize
-    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=ubsan
+    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:ubsan
   - <<: *sanitize
-    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=asan_clang
+    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:asan_clang
   - <<: *sanitize
-    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=tsan_clang
+    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:tsan_clang
   - <<: *sanitize
-    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=ubsan_clang
+    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:ubsan_clang
 
   - stage: process snaps
     env: ~
     language: python
-    python: [3.6]
+    python: 3.6
     dist: xenial
     before_install: *decrypt-bot-data
     install:
@@ -130,3 +121,7 @@ jobs:
     - if [ ${TRAVIS_EVENT_TYPE} == cron ]; then sudo snap install review-tools; fi
     script:
     - tools/process_snaps.py
+  allow_failures:
+    - env: TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
+    - env: TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
+  fast_finish: true
