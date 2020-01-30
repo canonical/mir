@@ -1,4 +1,6 @@
 language: cpp
+os: linux
+version: ~> 1.0
 
 branches:
   only:
@@ -42,7 +44,7 @@ env:
   - DEBFULLNAME="Mir CI Bot"
   - DEBEMAIL="mir-ci-bot@canonical.com"
   - SPREAD_PATH=/tmp/spread
-  matrix:
+  jobs:
   - TASK=google:ubuntu-devel-64:spread/build/ubuntu:amd64
   - TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
   - TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
@@ -53,12 +55,6 @@ env:
   - TASK=google:ubuntu-19.10-64:spread/build/ubuntu:amd64
   - TASK=google:fedora-30-64:spread/build/fedora:amd64
   - TASK=google:fedora-31-64:spread/build/fedora:amd64
-
-matrix:
-  allow_failures:
-    - env: TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
-    - env: TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
-  fast_finish: true
 
 before_install:
 - mkdir -p ${SPREAD_PATH}
@@ -102,9 +98,6 @@ jobs:
 
   - &sanitize
     stage: sanitize
-    notifications:
-      email:
-      - mir-ci-bot@canonical.com
     env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:asan
   - <<: *sanitize
     env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:tsan
@@ -120,7 +113,7 @@ jobs:
   - stage: process snaps
     env: ~
     language: python
-    python: [3.6]
+    python: 3.6
     dist: xenial
     before_install: *decrypt-bot-data
     install:
@@ -128,3 +121,7 @@ jobs:
     - if [ ${TRAVIS_EVENT_TYPE} == cron ]; then sudo snap install review-tools; fi
     script:
     - tools/process_snaps.py
+  allow_failures:
+    - env: TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
+    - env: TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
+  fast_finish: true
