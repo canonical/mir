@@ -411,3 +411,5 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::WindowManagementPolicy::ApplicationZoneAddendum::~ApplicationZoneAddendum()@MIRAL_2.6" 2.8.0
  (c++)"miral::WindowSpecification::application_id[abi:cxx11]() const@MIRAL_2.8" 2.8.0
  (c++)"miral::WindowSpecification::application_id[abi:cxx11]()@MIRAL_2.8" 2.8.0
+ MIRAL_2.9@MIRAL_2.9 2.9.0
+ (c++)"miral::ExternalClientLauncher::launch_using_x11(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) const@MIRAL_2.9" 2.9.0
