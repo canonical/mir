@@ -4,7 +4,7 @@ set(
   xwayland_default_configuration.cpp
   xwayland_connector.cpp  xwayland_connector.h
   xwayland_server.cpp     xwayland_server.h
-  xcb_atoms.cpp           xcb_atoms.h
+  xcb_connection.cpp      xcb_connection.h
   xwayland_wm.cpp         xwayland_wm.h
   xwayland_surface.cpp    xwayland_surface.h
   xwayland_surface_role.cpp xwayland_surface_role.h
