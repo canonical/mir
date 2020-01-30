@@ -11,7 +11,7 @@ add_library(
   gl_extensions_base.cpp
   surfaceless_egl_context.cpp
   software_cursor.cpp
-  ${PROJECT_SOURCE_DIR}/include/server/mir/graphics/display_configuration_observer.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/graphics/display_configuration_observer.h
   display_configuration_observer_multiplexer.cpp
   display_configuration_observer_multiplexer.h
   platform_probe.cpp
