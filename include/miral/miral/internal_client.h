@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -19,6 +19,7 @@
 #ifndef MIRAL_INTERNAL_CLIENT_H
 #define MIRAL_INTERNAL_CLIENT_H
 
+#include <miral/deprecations.h>
 #include <mir/client/connection.h>
 
 #include <functional>
@@ -41,6 +42,7 @@ namespace miral
 class StartupInternalClient
 {
 public:
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("mirclient support is deprecated")
     explicit StartupInternalClient(
         std::string name,
         std::function<void(mir::client::Connection connection)> client_code,

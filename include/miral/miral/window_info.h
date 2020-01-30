@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -21,6 +21,7 @@
 
 #include "miral/window.h"
 #include "miral/window_specification.h"
+#include <miral/deprecations.h>
 
 #include <mir/geometry/rectangles.h>
 #include <mir/optional_value.h>
@@ -56,59 +57,78 @@ struct WindowInfo
     auto window() const -> Window&;
 
     auto name() const -> std::string;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void name(std::string const& name);
 
     auto type() const -> MirWindowType;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void type(MirWindowType type);
 
     auto state() const -> MirWindowState;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void state(MirWindowState state);
 
     auto restore_rect() const -> mir::geometry::Rectangle;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void restore_rect(mir::geometry::Rectangle const& restore_rect);
 
     auto parent() const -> Window;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void parent(Window const& parent);
 
     auto children() const -> std::vector <Window> const&;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not add or remove child windows")
     void add_child(Window const& child);
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not add or remove child windows")
     void remove_child(Window const& child);
 
     auto min_width() const -> mir::geometry::Width;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void min_width(mir::geometry::Width min_width);
 
     auto min_height() const -> mir::geometry::Height;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void min_height(mir::geometry::Height min_height);
 
     auto max_width() const -> mir::geometry::Width;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void max_width(mir::geometry::Width max_width);
 
     auto max_height() const -> mir::geometry::Height;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void max_height(mir::geometry::Height max_height);
 
     auto width_inc() const -> mir::geometry::DeltaX;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void width_inc(mir::geometry::DeltaX width_inc);
 
     auto height_inc() const -> mir::geometry::DeltaY;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void height_inc(mir::geometry::DeltaY height_inc);
 
     auto min_aspect() const -> AspectRatio;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void min_aspect(AspectRatio min_aspect);
 
     auto max_aspect() const -> AspectRatio;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void max_aspect(AspectRatio max_aspect);
 
     bool has_output_id() const;
     auto output_id() const -> int;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void output_id(mir::optional_value<int> output_id);
 
     auto preferred_orientation() const -> MirOrientationMode;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void preferred_orientation(MirOrientationMode preferred_orientation);
 
     auto confine_pointer() const -> MirPointerConfinementState;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void confine_pointer(MirPointerConfinementState confinement);
 
     auto shell_chrome() const -> MirShellChrome;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void shell_chrome(MirShellChrome chrome);
 
     /// This can be used by client code to store window manager specific information
@@ -118,6 +138,7 @@ struct WindowInfo
     void swap(WindowInfo& rhs) { std::swap(self, rhs.self); }
 
     auto depth_layer() const -> MirDepthLayer;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void depth_layer(MirDepthLayer depth_layer);
 
     /// Get the edges of the output that the window is attached to
@@ -125,6 +146,7 @@ struct WindowInfo
     auto attached_edges() const -> MirPlacementGravity;
     /// Set the edges of the output that the window should be attached to
     /// (only meaningful for windows in state mir_window_state_attached)
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void attached_edges(MirPlacementGravity edges);
 
     /// Mir will try to avoid occluding the area covered by this rectangle (relative to the window)
@@ -132,6 +154,7 @@ struct WindowInfo
     auto exclusive_rect() const -> mir::optional_value<mir::geometry::Rectangle>;
     /// Set the area to keep exclusive to this window
     /// (only meaningful when the window is attached to an edge)
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void exclusive_rect(mir::optional_value<mir::geometry::Rectangle> const& rect);
 
     /// Mir will not render anything outside this rectangle
@@ -143,6 +166,7 @@ struct WindowInfo
     /// \remark Since MirAL 2.8
     ///@{
     auto application_id() const -> std::string;
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not update windows directly")
     void application_id(std::string const& application_id);
     ///@}
 
