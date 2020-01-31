@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2019 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -31,6 +31,7 @@
 #include <miral/command_line_option.h>
 #include <miral/cursor_theme.h>
 #include <miral/keymap.h>
+#include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 
 #include <linux/input.h>
@@ -85,6 +86,10 @@ int main(int argc, char const* argv[])
                 external_client_launcher.launch({terminal_cmd});
                 return false;
 
+            case KEY_X:
+                external_client_launcher.launch_using_x11({"xterm"});
+                return false;
+
             default:
                 return false;
             };
@@ -97,6 +102,7 @@ int main(int argc, char const* argv[])
         {
             CursorTheme{"default:DMZ-White"},
             WaylandExtensions{},
+            X11Support{},
             window_managers,
             display_configuration_options,
             external_client_launcher,
