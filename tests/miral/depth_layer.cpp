@@ -276,7 +276,7 @@ TEST_P(DepthLayer, grand_child_moved_with_grand_parent)
     EXPECT_THAT(grand_child_surface->depth_layer(), Eq(layer));
 }
 
-INSTANTIATE_TEST_CASE_P(DepthLayer, DepthLayer, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(DepthLayer, DepthLayer, ::testing::Values(
     mir_depth_layer_background,
     mir_depth_layer_below,
     mir_depth_layer_application,

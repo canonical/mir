@@ -48,7 +48,7 @@ TEST_P(EvdevDeviceDetection, evaluates_expected_input_class)
     EXPECT_THAT(info.capabilities, Eq(std::get<1>(param)));
 }
 
-INSTANTIATE_TEST_CASE_P(InputDeviceCapabilityDetection,
+INSTANTIATE_TEST_SUITE_P(InputDeviceCapabilityDetection,
                         EvdevDeviceDetection,
                         ::testing::Values(
                             std::make_tuple(

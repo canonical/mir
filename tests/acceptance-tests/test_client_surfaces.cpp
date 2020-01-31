@@ -140,7 +140,7 @@ TEST_P(WithOrientation, have_requested_preferred_orientation)
     mir_window_release_sync(window);
 }
 
-INSTANTIATE_TEST_CASE_P(ClientSurfaces,
+INSTANTIATE_TEST_SUITE_P(ClientSurfaces,
     WithOrientation, ::testing::Values(
         mir_orientation_mode_portrait, mir_orientation_mode_landscape,
         mir_orientation_mode_portrait_inverted, mir_orientation_mode_landscape_inverted,

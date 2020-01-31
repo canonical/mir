@@ -711,7 +711,7 @@ TEST_P(ResizeBasicDecoration, sets_cursor)
     EXPECT_TRUE(spec.cursor_image.is_set());
 }
 
-INSTANTIATE_TEST_CASE_P(ResizeBasicDecorationInsideCorners, ResizeBasicDecoration, Values(
+INSTANTIATE_TEST_SUITE_P(ResizeBasicDecorationInsideCorners, ResizeBasicDecoration, Values(
     ResizeParam{nine_points(default_window_size)[0][0], mir_resize_edge_northwest},
     ResizeParam{nine_points(default_window_size)[0][1], mir_resize_edge_north},
     ResizeParam{nine_points(default_window_size)[0][2], mir_resize_edge_northeast},

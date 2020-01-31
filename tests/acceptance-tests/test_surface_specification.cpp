@@ -729,11 +729,11 @@ TEST_P(SurfaceMayHaveParent, not_setting_parent_succeeds)
     EXPECT_THAT(surface, IsValidSurface());
 }
 
-INSTANTIATE_TEST_CASE_P(SurfaceSpecification, SurfaceWithoutParent,
+INSTANTIATE_TEST_SUITE_P(SurfaceSpecification, SurfaceWithoutParent,
                         Values(mir_window_type_utility, mir_window_type_normal));
 
-INSTANTIATE_TEST_CASE_P(SurfaceSpecification, SurfaceNeedingParent,
+INSTANTIATE_TEST_SUITE_P(SurfaceSpecification, SurfaceNeedingParent,
                         Values(mir_window_type_satellite, mir_window_type_gloss, mir_window_type_tip));
 
-INSTANTIATE_TEST_CASE_P(SurfaceSpecification, SurfaceMayHaveParent,
+INSTANTIATE_TEST_SUITE_P(SurfaceSpecification, SurfaceMayHaveParent,
                         Values(mir_window_type_dialog, mir_window_type_freestyle));

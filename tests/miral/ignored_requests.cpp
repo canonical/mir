@@ -153,7 +153,7 @@ TEST_F(IgnoredRequests, remove_session_twice_noops)
     basic_window_manager.remove_session(session);
 }
 
-INSTANTIATE_TEST_CASE_P(UnknownWindow, IgnoredRequests, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(UnknownWindow, IgnoredRequests, ::testing::Values(
     IgnoredRequestParam{
         "null window",
         [](IgnoredRequests& test){ return test.create_null_window(); }},
@@ -164,7 +164,7 @@ INSTANTIATE_TEST_CASE_P(UnknownWindow, IgnoredRequests, ::testing::Values(
         "never before seen window",
         [](IgnoredRequests& test){ return test.create_never_before_seen_window(); }}));
 
-INSTANTIATE_TEST_CASE_P(UnknownSession, IgnoredRequests, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(UnknownSession, IgnoredRequests, ::testing::Values(
     IgnoredRequestParam{
         "destroyed session",
         [](IgnoredRequests& test)
