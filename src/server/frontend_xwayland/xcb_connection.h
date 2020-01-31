@@ -114,6 +114,11 @@ public:
         xcb_delete_property(xcb_connection, window, property);
     }
 
+    inline void flush()
+    {
+        xcb_flush(xcb_connection);
+    }
+
     Atom const wm_protocols;
     Atom const wm_normal_hints;
     Atom const wm_take_focus;
