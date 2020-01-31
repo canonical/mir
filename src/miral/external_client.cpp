@@ -60,4 +60,22 @@ auto miral::ExternalClientLauncher::pid() const -> pid_t
     return self->pid;
 }
 
+void miral::ExternalClientLauncher::launch_using_x11(std::vector<std::string> const& command_line) const
+{
+    if (!self->server)
+        throw std::logic_error("Cannot launch apps when server has not started");
+
+    mir::optional_value<std::string> const wayland_display;
+    mir::optional_value<std::string> const mir_socket;
+    mir::optional_value<std::string> x11_display;
+
+    auto const options = self->server->get_options();
+    if (options->is_set(mo::x11_display_opt))
+    {
+        x11_display = std::string(":") + std::to_string(options->get<int>(mo::x11_display_opt));
+
+        self->pid = launch_app(command_line, wayland_display, mir_socket, x11_display);
+    }
+}
+
 miral::ExternalClientLauncher::~ExternalClientLauncher() = default;

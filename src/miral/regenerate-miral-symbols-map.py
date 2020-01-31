@@ -565,9 +565,19 @@ global:
 } MIRAL_2.6;
 
 MIRAL_2.8 {
+global:
+  extern "C++" {
+    miral::MirRunner::wayland_display*;
+    miral::MirRunner::x11_display*;
+    miral::WindowInfo::application_id*;
+    miral::WindowInfo::clip_area*;
+    miral::WindowSpecification::application_id*;
+  };
+} MIRAL_2.7;
+MIRAL_2.9 {
 global:'''
 
-END_NEW_STANZA = '''} MIRAL_2.7;'''
+END_NEW_STANZA = '''} MIRAL_2.8;'''
 
 def _print_report():
     print(OLD_STANZAS)

@@ -39,9 +39,35 @@ auto miral::launch_app(
 
     if (pid == 0)
     {
+        std::string gdk_backend;
+        std::string qt_qpa_platform;
+        std::string sdl_videodriver;
+
+        if (x11_display)
+        {
+            setenv("DISPLAY", x11_display.value().c_str(),  true);   // configure X11 socket
+            gdk_backend = "x11";
+            qt_qpa_platform = "xcb";
+            sdl_videodriver = "x11";
+        }
+        else
+        {
+            unsetenv("DISPLAY");
+        }
+
         if (mir_socket)
         {
             setenv("MIR_SOCKET", mir_socket.value().c_str(),  true);   // configure Mir socket
+            if (gdk_backend.empty())
+            {
+                gdk_backend = "mir";
+            }
+            else
+            {
+                gdk_backend = "mir," + gdk_backend;
+            }
+
+            qt_qpa_platform = "mir";
         }
         else
         {
@@ -51,25 +77,25 @@ auto miral::launch_app(
         if (wayland_display)
         {
             setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(),  true);   // configure Wayland socket
+            if (gdk_backend.empty())
+            {
+                gdk_backend = "wayland";
+            }
+            else
+            {
+                gdk_backend = "wayland," + gdk_backend;
+            }
+            qt_qpa_platform = "wayland";
+            sdl_videodriver = "wayland";
         }
         else
         {
             unsetenv("WAYLAND_DISPLAY");
         }
 
-        if (x11_display)
-        {
-            setenv("DISPLAY", x11_display.value().c_str(),  true);   // configure X11 socket
-        }
-        else
-        {
-            unsetenv("DISPLAY");
-        }
-
-        setenv("GDK_BACKEND", "wayland,mir", true);         // configure GTK to use Wayland (or Mir)
-        setenv("QT_QPA_PLATFORM", "wayland", true);         // configure Qt to use Wayland
-        unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
-        setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
+        setenv("GDK_BACKEND", gdk_backend.c_str(), true);
+        setenv("QT_QPA_PLATFORM", qt_qpa_platform.c_str(), true);
+        setenv("SDL_VIDEODRIVER", sdl_videodriver.c_str(), true);
 
         std::vector<char const*> exec_args;
 
