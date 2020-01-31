@@ -249,14 +249,16 @@ void mf::XWaylandSurface::set_workspace(int workspace)
     // Passing a workspace < 0 deletes the property
     if (workspace >= 0)
     {
-        xcb_change_property(*connection, XCB_PROP_MODE_REPLACE, window, connection->net_wm_desktop,
-                            XCB_ATOM_CARDINAL, 31, 1, &workspace);
+        connection->set_property<XCBType::CARDINAL32>(
+            window,
+            connection->net_wm_desktop,
+            static_cast<uint32_t>(workspace));
     }
     else
     {
-        xcb_delete_property(*connection, window, connection->net_wm_desktop);
+        connection->delete_property(window, connection->net_wm_desktop);
     }
-    xcb_flush(*connection);
+    connection->flush();
 }
 
 void mf::XWaylandSurface::unmap()
@@ -265,20 +267,9 @@ void mf::XWaylandSurface::unmap()
         static_cast<uint32_t>(WmState::WITHDRAWN),
         XCB_WINDOW_NONE // Icon window
     };
-
-    xcb_change_property(
-        *connection,
-        XCB_PROP_MODE_REPLACE,
-        window, connection->wm_state,
-        connection->wm_state, 32,
-        length_of(wm_state_properties), wm_state_properties);
-
-    xcb_delete_property(
-        *connection,
-        window,
-        connection->net_wm_state);
-
-    xcb_flush(*connection);
+    connection->set_property<XCBType::WM_STATE>(window, connection->wm_state, wm_state_properties);
+    connection->delete_property(window, connection->net_wm_state);
+    connection->flush();
 }
 
 void mf::XWaylandSurface::read_properties()
@@ -466,13 +457,13 @@ void mf::XWaylandSurface::scene_surface_resized(const geometry::Size& new_size)
         new_size.height.as_uint32_t()};
 
     xcb_configure_window(*connection, window, mask, values);
-    xcb_flush(*connection);
+    connection->flush();
 }
 
 void mf::XWaylandSurface::scene_surface_close_requested()
 {
     xcb_destroy_window(*connection, window);
-    xcb_flush(*connection);
+    connection->flush();
 }
 
 void mf::XWaylandSurface::run_on_wayland_thread(std::function<void()>&& work)
@@ -546,13 +537,7 @@ void mf::XWaylandSurface::set_window_state(WindowState const& new_window_state)
         static_cast<uint32_t>(wm_state),
         XCB_WINDOW_NONE // Icon window
     };
-
-    xcb_change_property(
-        *connection,
-        XCB_PROP_MODE_REPLACE,
-        window, connection->wm_state,
-        connection->wm_state, 32,
-        length_of(wm_state_properties), wm_state_properties);
+    connection->set_property<XCBType::WM_STATE>(window, connection->wm_state, wm_state_properties);
 
     std::vector<xcb_atom_t> net_wm_states;
 
@@ -571,13 +556,7 @@ void mf::XWaylandSurface::set_window_state(WindowState const& new_window_state)
     }
     // TODO: Set _NET_WM_STATE_MODAL if appropriate
 
-    xcb_change_property(
-        *connection,
-        XCB_PROP_MODE_REPLACE,
-        window,
-        connection->net_wm_state,
-        XCB_ATOM_ATOM, 32, // type and format
-        net_wm_states.size(), net_wm_states.data());
+    connection->set_property<XCBType::ATOM>(window, connection->net_wm_state, net_wm_states);
 
     MirWindowState mir_window_state;
 
