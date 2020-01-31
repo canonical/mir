@@ -22,6 +22,7 @@
 #include <xcb/xcb.h>
 #include <string>
 #include <vector>
+#include <functional>
 #include <experimental/optional>
 
 namespace mir
@@ -81,6 +82,30 @@ public:
     auto query_name(xcb_atom_t atom) -> std::string;
     auto reply_contains_string_data(xcb_get_property_reply_t const* reply) -> bool;
     auto string_from(xcb_get_property_reply_t const* reply) -> std::string;
+
+    /// Read a single property of various types from the window
+    /// Returns a function that will wait on the reply before calling action()
+    /// @{
+    auto read_property(
+        xcb_window_t window,
+        xcb_atom_t prop,
+        std::function<void(xcb_get_property_reply_t*)> action) -> std::function<void()>;
+
+    auto read_property(
+        xcb_window_t window,
+        xcb_atom_t prop,
+        std::function<void(std::string const&)> action) -> std::function<void()>;
+
+    auto read_property(
+        xcb_window_t window,
+        xcb_atom_t prop,
+        std::function<void(uint32_t)> action) -> std::function<void()>;
+
+    auto read_property(
+        xcb_window_t window,
+        xcb_atom_t prop,
+        std::function<void(std::vector<uint32_t>)> action) -> std::function<void()>;
+    /// @}
 
     /// Set X11 window properties
     /// Safer and more fun than the C-style function provided by XCB

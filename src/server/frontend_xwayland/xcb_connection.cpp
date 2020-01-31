@@ -17,6 +17,9 @@
  */
 
 #include "xcb_connection.h"
+
+#include "mir/log.h"
+
 #include "boost/throw_exception.hpp"
 
 namespace mf = mir::frontend;
@@ -168,6 +171,103 @@ auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) -> st
     return std::string{
         static_cast<const char *>(xcb_get_property_value(reply)),
         static_cast<unsigned long>(xcb_get_property_value_length(reply))};
+}
+
+auto mf::XCBConnection::read_property(
+    xcb_window_t window,
+    xcb_atom_t prop,
+    std::function<void(xcb_get_property_reply_t*)> action) -> std::function<void()>
+{
+    xcb_get_property_cookie_t cookie = xcb_get_property(
+        xcb_connection,
+        0, // don't delete
+        window,
+        prop,
+        XCB_ATOM_ANY,
+        0, // no offset
+        2048); // big buffer
+
+    return [xcb_connection = xcb_connection, cookie, action]()
+        {
+            xcb_get_property_reply_t *reply = xcb_get_property_reply(xcb_connection, cookie, nullptr);
+            if (reply && reply->type != XCB_ATOM_NONE)
+            {
+                try
+                {
+                    action(reply);
+                }
+                catch (...)
+                {
+                    log(
+                        logging::Severity::warning,
+                        MIR_LOG_COMPONENT,
+                        std::current_exception(),
+                        "Failed to process property reply.");
+                }
+            }
+            free(reply);
+        };
+}
+
+auto mf::XCBConnection::read_property(
+    xcb_window_t window,
+    xcb_atom_t prop,
+    std::function<void(std::string const&)> action) -> std::function<void()>
+{
+    return read_property(window, prop, [this, action](xcb_get_property_reply_t const* reply)
+        {
+            action(string_from(reply));
+        });
+}
+
+auto mf::XCBConnection::read_property(
+    xcb_window_t window,
+    xcb_atom_t prop,
+    std::function<void(uint32_t)> action) -> std::function<void()>
+{
+    return read_property(window, prop, [this, action](xcb_get_property_reply_t const* reply)
+        {
+            if (reply->format != 32)
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error(
+                    "Reply of type " + query_name(reply->type) +
+                    " has a format " + std::to_string(reply->format) +
+                    " instead of expected 32"));
+            }
+
+            if (xcb_get_property_value_length(reply) != 1)
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error(
+                    "Reply of type " + query_name(reply->type) +
+                    " has a value length " + std::to_string(xcb_get_property_value_length(reply)) +
+                    " instead of expected 1"));
+            }
+
+            action(*static_cast<uint32_t const*>(xcb_get_property_value(reply)));
+        });
+}
+
+auto mf::XCBConnection::read_property(
+    xcb_window_t window,
+    xcb_atom_t prop,
+    std::function<void(std::vector<uint32_t>)> action) -> std::function<void()>
+{
+    return read_property(window, prop, [this, action](xcb_get_property_reply_t const* reply)
+        {
+            if (reply->format != 32)
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error(
+                    "Reply of type " + query_name(reply->type) +
+                    " has a format " + std::to_string(reply->format) +
+                    " instead of expected 32"));
+            }
+
+            auto const start = static_cast<uint32_t const*>(xcb_get_property_value(reply));
+            auto const end = start + static_cast<size_t>(xcb_get_property_value_length(reply));
+            std::vector<uint32_t> const values{start, end};
+
+            action(values);
+        });
 }
 
 auto mf::XCBConnection::xcb_type_atom(XCBType type) const -> xcb_atom_t
