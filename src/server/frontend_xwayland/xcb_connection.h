@@ -77,6 +77,11 @@ public:
 
     operator xcb_connection_t*() const;
 
+    /// Does a round-trip to the X server and does not cache. Should be improved if needed on normal code paths
+    auto query_name(xcb_atom_t atom) -> std::string;
+    auto reply_contains_string_data(xcb_get_property_reply_t const* reply) -> bool;
+    auto string_from(xcb_get_property_reply_t const* reply) -> std::string;
+
     /// Set X11 window properties
     /// Safer and more fun than the C-style function provided by XCB
     /// @{

@@ -126,6 +126,50 @@ mf::XCBConnection::operator xcb_connection_t*() const
     return xcb_connection;
 }
 
+auto mf::XCBConnection::query_name(xcb_atom_t atom) -> std::string
+{
+    // TODO: cache, for cheaper lookup
+
+    if (atom == XCB_ATOM_NONE)
+        return "None";
+
+    xcb_get_atom_name_cookie_t const cookie = xcb_get_atom_name(xcb_connection, atom);
+    xcb_get_atom_name_reply_t* const reply = xcb_get_atom_name_reply(xcb_connection, cookie, nullptr);
+
+    std::string name;
+
+    if (reply)
+    {
+        name = std::string{xcb_get_atom_name_name(reply), static_cast<size_t>(xcb_get_atom_name_name_length(reply))};
+    }
+    else
+    {
+        name = "Atom " + std::to_string(atom);
+    }
+
+    free(reply);
+
+    return name;
+}
+
+auto mf::XCBConnection::reply_contains_string_data(xcb_get_property_reply_t const* reply) -> bool
+{
+    return reply->type == XCB_ATOM_STRING || reply->type == utf8_string;
+}
+
+auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) -> std::string
+{
+    if (!reply_contains_string_data(reply))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "Supplied reply is of type " + query_name(reply->type) + " and does not hold string data"));
+    }
+
+    return std::string{
+        static_cast<const char *>(xcb_get_property_value(reply)),
+        static_cast<unsigned long>(xcb_get_property_value_length(reply))};
+}
+
 auto mf::XCBConnection::xcb_type_atom(XCBType type) const -> xcb_atom_t
 {
     switch (type)
