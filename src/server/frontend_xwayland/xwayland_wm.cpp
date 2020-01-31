@@ -202,11 +202,6 @@ mf::XWaylandWM::~XWaylandWM()
         xcb_free_cursor(*connection, xcb_cursor);
     }
 
-    if (*connection != nullptr)
-    {
-        xcb_disconnect(*connection);
-    }
-
     close(wm_fd);
 }
 
