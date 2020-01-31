@@ -408,7 +408,6 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::WindowInfo::application_id[abi:cxx11]() const@MIRAL_2.8" 2.8.0
  (c++)"miral::WindowInfo::clip_area() const@MIRAL_2.8" 2.8.0
  (c++)"miral::WindowInfo::clip_area(mir::optional_value<mir::geometry::Rectangle> const&)@MIRAL_2.8" 2.8.0
- (c++)"miral::WindowManagementPolicy::ApplicationZoneAddendum::~ApplicationZoneAddendum()@MIRAL_2.6" 2.8.0
  (c++)"miral::WindowSpecification::application_id[abi:cxx11]() const@MIRAL_2.8" 2.8.0
  (c++)"miral::WindowSpecification::application_id[abi:cxx11]()@MIRAL_2.8" 2.8.0
  MIRAL_2.9@MIRAL_2.9 2.9.0
