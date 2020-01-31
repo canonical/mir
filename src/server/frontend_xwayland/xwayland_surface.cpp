@@ -395,6 +395,72 @@ void mf::XWaylandSurface::move_resize(uint32_t detail)
     }
 }
 
+auto mf::XWaylandSurface::WindowState::operator==(WindowState const& that) const -> bool
+{
+    return
+        withdrawn == that.withdrawn &&
+        minimized == that.minimized &&
+        maximized == that.maximized &&
+        fullscreen == that.fullscreen;
+}
+
+auto mf::XWaylandSurface::WindowState::mir_window_state() const -> MirWindowState
+{
+    // withdrawn is ignored
+    if (minimized)
+        return mir_window_state_minimized;
+    else if (fullscreen)
+        return mir_window_state_fullscreen;
+    else if (maximized)
+        return mir_window_state_maximized;
+    else
+        return mir_window_state_restored;
+}
+
+auto mf::XWaylandSurface::WindowState::updated_from(MirWindowState state) const -> WindowState
+{
+    auto updated = *this;
+
+    // If there is a MirWindowState to update from, the surface should not be withdrawn
+    updated.withdrawn = false;
+
+    switch (state)
+    {
+    case mir_window_state_hidden:
+    case mir_window_state_minimized:
+        updated.minimized = true;
+        // don't change maximized or fullscreen
+        break;
+
+    case mir_window_state_fullscreen:
+        updated.minimized = false;
+        updated.fullscreen = true;
+        // don't change maximizeds
+        break;
+
+    case mir_window_state_maximized:
+    case mir_window_state_vertmaximized:
+    case mir_window_state_horizmaximized:
+        updated.minimized = false;
+        updated.maximized = true;
+        updated.fullscreen = false;
+        break;
+
+    case mir_window_state_restored:
+    case mir_window_state_unknown:
+    case mir_window_state_attached:
+        updated.minimized = false;
+        updated.maximized = false;
+        updated.fullscreen = false;
+        break;
+
+    case mir_window_states:
+        break;
+    }
+
+    return updated;
+}
+
 void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
 {
     WindowState new_window_state;

@@ -161,6 +161,10 @@ private:
         bool minimized{false};
         bool maximized{false};
         bool fullscreen{false};
+
+        auto operator==(WindowState const& that) const -> bool;
+        auto mir_window_state() const -> MirWindowState;
+        auto updated_from(MirWindowState state) const -> WindowState; ///< Does not change original
     };
 
     struct InitialWlSurfaceData;
