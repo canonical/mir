@@ -28,8 +28,8 @@
 #include "boost/throw_exception.hpp"
 
 #include <string.h>
+#include <algorithm>
 #include <experimental/optional>
-#include <map>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -280,88 +280,53 @@ void mf::XWaylandSurface::read_properties()
         return;
     props_dirty = false;
 
-    std::map<xcb_atom_t, xcb_atom_t> props;
-    props[XCB_ATOM_WM_CLASS] = XCB_ATOM_STRING;
-    props[XCB_ATOM_WM_NAME] = XCB_ATOM_STRING;
-    props[XCB_ATOM_WM_TRANSIENT_FOR] = XCB_ATOM_WINDOW;
-    props[connection->wm_protocols] = TYPE_WM_PROTOCOLS;
-    props[connection->wm_normal_hints] = TYPE_WM_NORMAL_HINTS;
-    props[connection->net_wm_window_type] = XCB_ATOM_ATOM;
-    props[connection->net_wm_name] = XCB_ATOM_STRING;
-    props[connection->motif_wm_hints] = TYPE_MOTIF_WM_HINTS;
+    std::vector<std::function<void()>> actions;
 
-    std::map<xcb_atom_t, xcb_get_property_cookie_t> cookies;
-    for (const auto &atom : props)
-    {
-        xcb_get_property_cookie_t cookie =
-            xcb_get_property(*connection, 0, window, atom.first, XCB_ATOM_ANY, 0, 2048);
-        cookies[atom.first] = cookie;
-    }
+    actions.push_back(connection->read_property(
+        window,
+        XCB_ATOM_WM_CLASS,
+        [this](std::string const& value)
+        {
+            properties.appId = value;
+        }));
 
-    properties.deleteWindow = 0;
+    actions.push_back(connection->read_property(
+        window,
+        XCB_ATOM_WM_NAME,
+        [this](std::string const& value)
+        {
+            properties.title = value;
+        }));
 
-    for (const auto &atom_ptr : props)
-    {
-        xcb_atom_t atom = atom_ptr.first;
-        xcb_get_property_reply_t *reply = xcb_get_property_reply(*connection, cookies[atom], nullptr);
-        if (!reply)
+    actions.push_back(connection->read_property(
+        window,
+        connection->net_wm_name,
+        [this](std::string const& value)
         {
-            // Bad window, usually
-            continue;
-        }
+            properties.title = value;
+        }));
 
-        if (reply->type == XCB_ATOM_NONE)
-        {
-            // No such info
-            free(reply);
-            continue;
-        }
+    properties.deleteWindow = false;
 
-        switch (props[atom])
+    actions.push_back(connection->read_property(
+        window,
+        connection->wm_protocols,
+        [this](std::vector<xcb_atom_t> const& value)
         {
-        case XCB_ATOM_STRING:
-        {
-            char *p = strndup(reinterpret_cast<char *>(xcb_get_property_value(reply)),
-                              xcb_get_property_value_length(reply));
-            if (atom == XCB_ATOM_WM_CLASS) {
-                properties.appId = std::string(p);
-            } else if (atom == XCB_ATOM_WM_NAME || connection->net_wm_name) {
-                properties.title = std::string(p);
-            } else {
-                free(p);
-            }
-            break;
-        }
-        case XCB_ATOM_WINDOW:
-        {
-            break;
-        }
-        case XCB_ATOM_ATOM:
-        {
-            if (atom == connection->net_wm_window_type)
+            if (std::find(value.begin(), value.end(), connection->wm_delete_window) != value.end())
             {
+                properties.deleteWindow = true;
             }
-            break;
-        }
-        case TYPE_WM_PROTOCOLS:
-        {
-            xcb_atom_t *atoms = reinterpret_cast<xcb_atom_t *>(xcb_get_property_value(reply));
-            for (uint32_t i = 0; i < reply->value_len; ++i)
-                if (atoms[i] == connection->wm_delete_window)
-                    properties.deleteWindow = 1;
-            break;
-        }
-        case TYPE_WM_NORMAL_HINTS:
-        {
-            break;
-        }
-        case TYPE_MOTIF_WM_HINTS:
-            break;
-        default:
-            break;
-        }
+        }));
 
-        free(reply);
+    // TODO: XCB_ATOM_WM_TRANSIENT_FOR
+    // TODO: wm_normal_hints
+    // TODO: net_wm_window_type
+    // TODO: motif_wm_hints
+
+    for (auto const& action : actions)
+    {
+        action();
     }
 }
 
