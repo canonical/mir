@@ -239,7 +239,9 @@ void mf::XWaylandSurface::wm_change_state_client_message(uint32_t const (&data)[
             break;
 
         default:
-            break;
+            BOOST_THROW_EXCEPTION(std::runtime_error(
+                "WM_CHANGE_STATE client message sent invalid state " +
+                std::to_string(static_cast<std::underlying_type<WmState>::type>(requested_state))));
         }
     }
 
