@@ -21,25 +21,35 @@
 
 #include <xcb/xcb.h>
 #include <string>
+#include <vector>
 #include <experimental/optional>
 
 namespace mir
 {
 namespace frontend
 {
+/// Types for window properties
+enum class XCBType
+{
+    ATOM,
+    WINDOW,
+    CARDINAL32, ///< also known as an unsigned int
+    STRING,
+    UTF8_STRING,
+    WM_STATE,
+};
+
+template<XCBType T> struct NativeXCBType                { typedef void type;};
+template<> struct NativeXCBType<XCBType::ATOM>          { typedef xcb_atom_t type; };
+template<> struct NativeXCBType<XCBType::WINDOW>        { typedef xcb_window_t type; };
+template<> struct NativeXCBType<XCBType::CARDINAL32>    { typedef uint32_t type; };
+template<> struct NativeXCBType<XCBType::STRING>        { typedef char type; };
+template<> struct NativeXCBType<XCBType::UTF8_STRING>   { typedef char type; };
+template<> struct NativeXCBType<XCBType::WM_STATE>      { typedef uint32_t type; };
+
 class XCBConnection
 {
-public:
-    explicit XCBConnection(int fd);
-    ~XCBConnection();
-
-    operator xcb_connection_t*() const;
-
 private:
-    XCBConnection(XCBConnection&) = delete;
-    XCBConnection(XCBConnection&&) = delete;
-    XCBConnection& operator=(XCBConnection&) = delete;
-
     xcb_connection_t* const xcb_connection;
 
 public:
@@ -61,6 +71,48 @@ public:
         xcb_intern_atom_cookie_t const cookie;
         std::experimental::optional<xcb_atom_t> mutable atom;
     };
+
+    explicit XCBConnection(int fd);
+    ~XCBConnection();
+
+    operator xcb_connection_t*() const;
+
+    /// Set X11 window properties
+    /// Safer and more fun than the C-style function provided by XCB
+    /// @{
+    template<XCBType type, typename T>
+    inline void set_property(xcb_window_t window, xcb_atom_t property, T data)
+    {
+        set_property<type>(window, property, 1, &data);
+    }
+
+    template<XCBType type, typename T, size_t length>
+    inline void set_property(xcb_window_t window, xcb_atom_t property, T(&data)[length])
+    {
+        set_property<type>(window, property, length, data);
+    }
+
+    template<XCBType type, typename T>
+    inline void set_property(xcb_window_t window, xcb_atom_t property, std::vector<T> const& data)
+    {
+        set_property<type>(window, property, data.size(), data.data());
+    }
+
+    template<XCBType type>
+    inline void set_property(xcb_window_t window, xcb_atom_t property, std::string const& data)
+    {
+        static_assert(
+            type == XCBType::STRING || type == XCBType::UTF8_STRING,
+            "String data should only be used with a string type");
+        set_property<type>(window, property, data.size(), data.c_str());
+    }
+    /// @}
+
+    /// Delete an X11 window property
+    inline void delete_property(xcb_window_t window, xcb_atom_t property)
+    {
+        xcb_delete_property(xcb_connection, window, property);
+    }
 
     Atom const wm_protocols;
     Atom const wm_normal_hints;
@@ -127,6 +179,37 @@ public:
     Atom const xdnd_action_copy;
     Atom const wl_surface_id;
     Atom const allow_commits;
+
+private:
+    XCBConnection(XCBConnection&) = delete;
+    XCBConnection(XCBConnection&&) = delete;
+    XCBConnection& operator=(XCBConnection&) = delete;
+
+    auto xcb_type_atom(XCBType type) const -> xcb_atom_t;
+
+    template<XCBType type, typename T>
+    inline void set_property(
+        xcb_window_t window,
+        xcb_atom_t property,
+        size_t length,
+        T const* data)
+    {
+        // Accidentally sending a pointer instead of the actual data is an easy error to make
+        static_assert(!std::is_pointer<T>::value, "Data type should not be a pointer");
+        static_assert(!std::is_same<typename NativeXCBType<type>::type, void>::value, "Missing Native specialization");
+        static_assert(std::is_same<typename NativeXCBType<type>::type, T>::value, "Specified type does not match data type");
+        auto const format = sizeof(typename NativeXCBType<type>::type) * 8;
+        static_assert(format == 8 || format == 16 || format == 32, "Invalid format");
+        xcb_change_property(
+            xcb_connection,
+            XCB_PROP_MODE_REPLACE,
+            window,
+            property,
+            xcb_type_atom(type),
+            format,
+            length,
+            data);
+    }
 };
 }
 }

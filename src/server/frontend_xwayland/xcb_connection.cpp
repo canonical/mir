@@ -125,3 +125,20 @@ mf::XCBConnection::operator xcb_connection_t*() const
 {
     return xcb_connection;
 }
+
+auto mf::XCBConnection::xcb_type_atom(XCBType type) const -> xcb_atom_t
+{
+    switch (type)
+    {
+        case XCBType::ATOM:         return XCB_ATOM_ATOM;
+        case XCBType::WINDOW:       return XCB_ATOM_WINDOW;
+        case XCBType::CARDINAL32:   return XCB_ATOM_CARDINAL;
+        case XCBType::STRING:       return XCB_ATOM_STRING;
+        case XCBType::UTF8_STRING:  return utf8_string;
+        case XCBType::WM_STATE:     return wm_state;
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error(
+        "Invalid XCB type " +
+        std::to_string(static_cast<std::underlying_type<XCBType>::type>(type))));
+}
