@@ -477,15 +477,15 @@ void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
     inform_client_of_window_state(state);
 }
 
-void mf::XWaylandSurface::scene_surface_resized(const geometry::Size& new_size)
+void mf::XWaylandSurface::scene_surface_resized(geometry::Size const& new_size)
 {
-    uint32_t const mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
+    connection->configure_window(window, std::experimental::nullopt, new_size);
+    connection->flush();
+}
 
-    uint32_t const values[]{
-        new_size.width.as_uint32_t(),
-        new_size.height.as_uint32_t()};
-
-    xcb_configure_window(*connection, window, mask, values);
+void mf::XWaylandSurface::scene_surface_moved_to(geometry::Point const& new_top_left)
+{
+    connection->configure_window(window, new_top_left, std::experimental::nullopt);
     connection->flush();
 }
 

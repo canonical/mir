@@ -172,7 +172,8 @@ private:
     /// Overrides from XWaylandSurfaceObserverSurface
     /// @{
     void scene_surface_state_set(MirWindowState new_state) override;
-    void scene_surface_resized(const geometry::Size& new_size) override;
+    void scene_surface_resized(geometry::Size const& new_size) override;
+    void scene_surface_moved_to(geometry::Point const& new_top_left) override;
     void scene_surface_close_requested() override;
     void run_on_wayland_thread(std::function<void()>&& work) override;
     /// @}
