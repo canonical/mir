@@ -60,6 +60,7 @@ mf::XCBConnection::XCBConnection(int fd)
       wm_change_state{"WM_CHANGE_STATE", this},
       wm_s0{"WM_S0", this},
       wm_client_machine{"WM_CLIENT_MACHINE", this},
+      wm_transient_for{"WM_TRANSIENT_FOR", this},
       net_wm_cm_s0{"_NET_WM_CM_S0", this},
       net_wm_name{"_NET_WM_NAME", this},
       net_wm_pid{"_NET_WM_PID", this},

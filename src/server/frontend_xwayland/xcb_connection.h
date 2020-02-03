@@ -166,6 +166,7 @@ public:
     Atom const wm_change_state;
     Atom const wm_s0;
     Atom const wm_client_machine;
+    Atom const wm_transient_for;
     Atom const net_wm_cm_s0;
     Atom const net_wm_name;
     Atom const net_wm_pid;
