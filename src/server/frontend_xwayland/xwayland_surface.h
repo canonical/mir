@@ -143,6 +143,7 @@ public:
 
     void map();
     void close(); ///< Idempotent
+    void configure_request(xcb_configure_request_event_t* event);
     void net_wm_state_client_message(uint32_t const (&data)[5]);
     void wm_change_state_client_message(uint32_t const (&data)[5]);
     void dirty_properties();

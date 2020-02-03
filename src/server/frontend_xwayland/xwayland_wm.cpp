@@ -649,42 +649,9 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
             log_warning("border width unsupported (border width %d)", event->border_width);
     }
 
-    std::vector<uint32_t> values;
-
-    if (event->value_mask & XCB_CONFIG_WINDOW_X)
+    if (auto const surface = get_wm_surface(event->window))
     {
-        values.push_back(event->x);
-    }
-
-    if (event->value_mask & XCB_CONFIG_WINDOW_Y)
-    {
-        values.push_back(event->y);
-    }
-
-    if (event->value_mask & XCB_CONFIG_WINDOW_WIDTH)
-    {
-        values.push_back(event->width);
-    }
-
-    if (event->value_mask & XCB_CONFIG_WINDOW_HEIGHT)
-    {
-        values.push_back(event->height);
-    }
-
-    if (event->value_mask & XCB_CONFIG_WINDOW_SIBLING)
-    {
-        values.push_back(event->sibling);
-    }
-
-    if (event->value_mask & XCB_CONFIG_WINDOW_STACK_MODE)
-    {
-        values.push_back(event->stack_mode);
-    }
-
-    if (!values.empty())
-    {
-        xcb_configure_window(*connection, event->window, event->value_mask, values.data());
-        connection->flush();
+        surface.value()->configure_request(event);
     }
 }
 

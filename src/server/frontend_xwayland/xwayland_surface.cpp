@@ -162,6 +162,50 @@ void mf::XWaylandSurface::close()
     }
 }
 
+void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event)
+{
+    std::shared_ptr<scene::Surface> scene_surface;
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        scene_surface = weak_scene_surface.lock();
+    }
+
+    if (scene_surface)
+    {
+        geom::Point const old_position{scene_surface->top_left()};
+        geom::Point const new_position{
+            event->value_mask & XCB_CONFIG_WINDOW_X ? geom::X{event->x} : old_position.x,
+            event->value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{event->y} : old_position.y,
+        };
+
+        geom::Size const old_size{scene_surface->content_size()};
+        geom::Size const new_size{
+            event->value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{event->width} : old_size.width,
+            event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{event->height} : old_size.height,
+        };
+
+        shell::SurfaceSpecification mods;
+
+        if (old_position != new_position)
+        {
+            mods.top_left = new_position;
+        }
+
+        if (old_size != new_size)
+        {
+            // Mir appears to not respect size request unless both width and height are set
+            mods.width = new_size.width;
+            mods.height = new_size.height;
+        }
+
+        if (!mods.is_empty())
+        {
+            shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
+        }
+    }
+}
+
 void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
 {
     // The client is requesting a change in state
