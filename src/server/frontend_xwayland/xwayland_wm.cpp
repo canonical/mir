@@ -137,30 +137,21 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
         connection->net_wm_state_maximized_horz,
         connection->net_active_window};
 
-    xcb_change_property(
-        *connection,
-        XCB_PROP_MODE_REPLACE,
-        xcb_screen->root,
-        connection->net_supported,
-        XCB_ATOM_ATOM, 32, // type and format
-        length_of(supported), supported);
+    connection->set_property<XCBType::ATOM>(xcb_screen->root, connection->net_supported, supported);
 
-    uint32_t const window_none = XCB_WINDOW_NONE;
-    xcb_change_property(
-        *connection,
-        XCB_PROP_MODE_REPLACE,
-        xcb_screen->root, connection->net_active_window,
-        connection->window, 32,
-        1, &window_none);
+    connection->set_property<XCBType::WINDOW>(
+        xcb_screen->root,
+        connection->net_active_window,
+        static_cast<xcb_window_t>(XCB_WINDOW_NONE));
     wm_selector();
 
-    xcb_flush(*connection);
+    connection->flush();
 
     create_wm_cursor();
     set_cursor(xcb_screen->root, CursorLeftPointer);
 
     create_wm_window();
-    xcb_flush(*connection);
+    connection->flush();
 }
 
 mf::XWaylandWM::~XWaylandWM()
@@ -245,7 +236,7 @@ void mf::XWaylandWM::set_cursor(xcb_window_t id, const CursorType &cursor)
     xcb_cursor = cursor;
     uint32_t cursor_value_list = xcb_cursors[cursor];
     xcb_change_window_attributes(*connection, id, XCB_CW_CURSOR, &cursor_value_list);
-    xcb_flush(*connection);
+    connection->flush();
 }
 
 void mf::XWaylandWM::create_wm_cursor()
@@ -276,17 +267,10 @@ void mf::XWaylandWM::create_wm_window()
     xcb_create_window(*connection, XCB_COPY_FROM_PARENT, xcb_window, xcb_screen->root, 0, 0, 10, 10, 0,
                       XCB_WINDOW_CLASS_INPUT_OUTPUT, xcb_screen->root_visual, 0, NULL);
 
-    xcb_change_property(*connection, XCB_PROP_MODE_REPLACE, xcb_window, connection->net_supporting_wm_check,
-                        XCB_ATOM_WINDOW, 32, /* format */
-                        1, &xcb_window);
+    connection->set_property<XCBType::WINDOW>(xcb_window, connection->net_supporting_wm_check, xcb_window);
+    connection->set_property<XCBType::UTF8_STRING>(xcb_window, connection->net_wm_name, wm_name);
 
-    xcb_change_property(*connection, XCB_PROP_MODE_REPLACE, xcb_window, connection->net_wm_name, connection->utf8_string,
-                        8, /* format */
-                        wm_name.size(), wm_name.c_str());
-
-    xcb_change_property(*connection, XCB_PROP_MODE_REPLACE, xcb_screen->root, connection->net_supporting_wm_check,
-                        XCB_ATOM_WINDOW, 32, /* format */
-                        1, &xcb_window);
+    connection->set_property<XCBType::WINDOW>(xcb_screen->root, connection->net_supporting_wm_check, xcb_window);
 
     /* Claim the WM_S0 selection even though we don't support
      * the --replace functionality. */
@@ -337,7 +321,7 @@ void mf::XWaylandWM::handle_events()
 
     if (got_events)
     {
-        xcb_flush(*connection);
+        connection->flush();
     }
 }
 
@@ -422,7 +406,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
             log_debug(
                 "XCB_PROPERTY_NOTIFY (%s).%s: deleted",
                 get_window_debug_string(event->window).c_str(),
-                get_atom_name(event->atom).c_str());
+                connection->query_name(event->atom).c_str());
         }
         else
         {
@@ -437,7 +421,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 
             xcb_get_property_reply_t* const reply = xcb_get_property_reply(*connection, cookie, NULL);
 
-            auto const prop_name = get_atom_name(event->atom);
+            auto const prop_name = connection->query_name(event->atom);
             auto const reply_str = get_reply_debug_string(reply);
 
             log_debug(
@@ -545,7 +529,7 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
         surface.value()->set_workspace(0);
         surface.value()->map();
         xcb_map_window(*connection, event->window);
-        xcb_flush(*connection);
+        connection->flush();
     }
 }
 
@@ -572,7 +556,7 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
         surface.value()->unmap();
         surface.value()->set_workspace(-1);
         xcb_unmap_window(*connection, event->window);
-        xcb_flush(*connection);
+        connection->flush();
     }
 }
 
@@ -601,7 +585,7 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
 
         log_debug(
             "XCB_CLIENT_MESSAGE %s on %s: %s",
-            get_atom_name(event->type).c_str(),
+            connection->query_name(event->type).c_str(),
             get_window_debug_string(event->window).c_str(),
             data.c_str());
     }
@@ -700,7 +684,7 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
     if (!values.empty())
     {
         xcb_configure_window(*connection, event->window, event->value_mask, values.data());
-        xcb_flush(*connection);
+        connection->flush();
     }
 }
 
@@ -836,13 +820,15 @@ void mf::XWaylandWM::wm_get_resources()
 
 auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> std::string
 {
+
     if (reply == nullptr)
     {
         return "(null reply)";
     }
-    else if (auto const text = get_reply_string(reply))
+    else if (connection->reply_contains_string_data(reply))
     {
-        return "\"" + text.value() + "\"";
+        auto const text = connection->string_from(reply);
+        return "\"" + text + "\"";
     }
     else if (reply->type == XCB_ATOM_ATOM)
     {
@@ -856,7 +842,7 @@ auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> 
             if (!first)
                 ss << ", ";
             first = false;
-            ss << get_atom_name(atom);
+            ss << connection->query_name(atom);
         }
         ss << "]";
 
@@ -866,7 +852,7 @@ auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> 
     {
         size_t const len = reply->value_len;
         std::stringstream ss;
-        ss << reply->format << "bit " << get_atom_name(reply->type) << "[" << len << "]";
+        ss << reply->format << "bit " << connection->query_name(reply->type) << "[" << len << "]";
         if ((reply->type == XCB_ATOM_CARDINAL || reply->type == XCB_ATOM_INTEGER) && len < 32)
         {
             ss << ": ";
@@ -906,43 +892,6 @@ auto mf::XWaylandWM::get_window_debug_string(xcb_window_t window) -> std::string
         return "our window " + std::to_string(window);
     else
         return "window " + std::to_string(window);
-}
-
-auto mf::XWaylandWM::get_reply_string(xcb_get_property_reply_t* reply) -> std::experimental::optional<std::string>
-{
-    if (reply->type == connection->string || reply->type == connection->utf8_string)
-        return std::string{(const char *)xcb_get_property_value(reply), reply->value_len};
-    else
-        return std::experimental::nullopt;
-
-}
-
-auto mf::XWaylandWM::get_atom_name(xcb_atom_t atom) -> std::string
-{
-    // TODO: cache, for cheaper lookup or eliminate usage altogether
-
-    if (atom == XCB_ATOM_NONE)
-        return "None";
-
-    xcb_get_atom_name_cookie_t const cookie = xcb_get_atom_name(*connection, atom);
-    xcb_get_atom_name_reply_t* const reply = xcb_get_atom_name_reply(*connection, cookie, nullptr);
-
-    std::string name;
-
-    if (reply)
-    {
-        auto const name_data = xcb_get_atom_name_name(reply);
-        auto const name_len = xcb_get_atom_name_name_length(reply);
-        name = std::string{name_data, name_data + name_len};
-    }
-    else
-    {
-        name = "Atom " + std::to_string(atom);
-    }
-
-    free(reply);
-
-    return name;
 }
 
 void mf::XWaylandWM::setup_visual_and_colormap()
