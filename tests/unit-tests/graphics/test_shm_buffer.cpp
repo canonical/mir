@@ -288,7 +288,7 @@ std::string to_string(MirPixelFormat format)
 }
 
 #if GTEST_AT_LEAST(1, 8, 0)
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     ShmBuffer,
     UploadTest,
     ValuesIn(test_cases),
@@ -298,7 +298,7 @@ INSTANTIATE_TEST_CASE_P(
     });
 #else
 // TODO: The version of gtest in 16.04 doesn't have the “print the test nicely” option.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     ShmBuffer,
     UploadTest,
     ValuesIn(test_cases));

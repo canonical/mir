@@ -90,7 +90,7 @@ TEST_P(AbortDeathTest, cleanup_handler_is_called_for)
     cleanup_done.wait_for_signal_ready_for(timeout);
 }
 
-INSTANTIATE_TEST_CASE_P(ServerSignal, AbortDeathTest,
+INSTANTIATE_TEST_SUITE_P(ServerSignal, AbortDeathTest,
     ::testing::Values(SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS));
 
 using ServerSignalDeathTest = ServerSignal;

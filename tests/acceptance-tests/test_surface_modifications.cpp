@@ -555,7 +555,7 @@ TEST_P(SurfaceSpecStateCase, set_state_affects_surface_visibility)
        });
 }
 
-INSTANTIATE_TEST_CASE_P(SurfaceModifications, SurfaceSpecStateCase,
+INSTANTIATE_TEST_SUITE_P(SurfaceModifications, SurfaceSpecStateCase,
     Values(
         StatePair{mir_window_state_hidden, mir_window_state_restored},
         StatePair{mir_window_state_hidden, mir_window_state_maximized},
@@ -589,7 +589,7 @@ TEST_P(SurfaceStateCase, set_state_affects_surface_visibility)
     received_new_state.wait_for(400ms);
 }
 
-INSTANTIATE_TEST_CASE_P(SurfaceModifications, SurfaceStateCase,
+INSTANTIATE_TEST_SUITE_P(SurfaceModifications, SurfaceStateCase,
     Values(
         StatePair{mir_window_state_hidden, mir_window_state_restored},
         StatePair{mir_window_state_hidden, mir_window_state_maximized},

@@ -88,7 +88,7 @@ if (HAS_W_INCONSISTENT_MISSING_OVERRIDE)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
 endif()
 if (HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-  # INSTANTIATE_TEST_CASE_P hits this like a slice of lemon wrapped around a large gold brick.
+  # INSTANTIATE_TEST_SUITE_P hits this like a slice of lemon wrapped around a large gold brick.
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
 else()
   # GCC is a bit less flexible than clang and needs a bigger hammer...
@@ -111,6 +111,13 @@ list(APPEND CMAKE_REQUIRED_LIBRARIES "-lpthread")
 string(REPLACE " -Werror " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})    # This flag breaks check_symbol_exists()
 check_symbol_exists(pthread_getname_np pthread.h HAVE_PTHREAD_GETNAME_NP)
 list(REMOVE_ITEM CMAKE_REQUIRED_LIBRARIES "-lpthread")
+
+list(APPEND CMAKE_REQUIRED_HEADERS ${GTEST_INCLUDE_DIRECTORIES})
+check_cxx_symbol_exists(INSTANTIATE_TEST_SUITE_P "gtest/gtest.h" HAVE_INSTANTIATE_TEST_SUITE_P)
+if (NOT HAVE_INSTANTIATE_TEST_SUITE_P)
+  #GTest conveniently renamed INSTANTIATE_TEST_CASE_P and then deprecated it.
+  add_definitions(-DINSTANTIATE_TEST_SUITE_P=INSTANTIATE_TEST_CASE_P)
+endif()
 
 if (MIR_BUILD_PLATFORM_MESA_KMS)
   add_definitions(-DMIR_BUILD_PLATFORM_MESA_KMS)

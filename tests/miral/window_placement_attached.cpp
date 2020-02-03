@@ -682,7 +682,7 @@ TEST_P(WindowPlacementAttached, window_placed_correctly_when_output_id_changes)
     EXPECT_THAT(window.size(), Eq(placement.size));
 }
 
-INSTANTIATE_TEST_CASE_P(WindowPlacementAttached, WindowPlacementAttached, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(WindowPlacementAttached, WindowPlacementAttached, ::testing::Values(
     mir_placement_gravity_center,
     mir_placement_gravity_west,
     mir_placement_gravity_east,

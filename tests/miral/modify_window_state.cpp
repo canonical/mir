@@ -92,7 +92,7 @@ TEST_P(ForNormalSurface, state)
 }
 }
 
-INSTANTIATE_TEST_CASE_P(ModifyWindowState, ForNormalSurface, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(ModifyWindowState, ForNormalSurface, ::testing::Values(
 //    mir_window_state_unknown,
     mir_window_state_restored,
     mir_window_state_minimized,
