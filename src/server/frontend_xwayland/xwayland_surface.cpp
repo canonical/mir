@@ -28,8 +28,8 @@
 #include "boost/throw_exception.hpp"
 
 #include <string.h>
+#include <algorithm>
 #include <experimental/optional>
-#include <map>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -249,14 +249,16 @@ void mf::XWaylandSurface::set_workspace(int workspace)
     // Passing a workspace < 0 deletes the property
     if (workspace >= 0)
     {
-        xcb_change_property(*connection, XCB_PROP_MODE_REPLACE, window, connection->net_wm_desktop,
-                            XCB_ATOM_CARDINAL, 31, 1, &workspace);
+        connection->set_property<XCBType::CARDINAL32>(
+            window,
+            connection->net_wm_desktop,
+            static_cast<uint32_t>(workspace));
     }
     else
     {
-        xcb_delete_property(*connection, window, connection->net_wm_desktop);
+        connection->delete_property(window, connection->net_wm_desktop);
     }
-    xcb_flush(*connection);
+    connection->flush();
 }
 
 void mf::XWaylandSurface::unmap()
@@ -265,20 +267,9 @@ void mf::XWaylandSurface::unmap()
         static_cast<uint32_t>(WmState::WITHDRAWN),
         XCB_WINDOW_NONE // Icon window
     };
-
-    xcb_change_property(
-        *connection,
-        XCB_PROP_MODE_REPLACE,
-        window, connection->wm_state,
-        connection->wm_state, 32,
-        length_of(wm_state_properties), wm_state_properties);
-
-    xcb_delete_property(
-        *connection,
-        window,
-        connection->net_wm_state);
-
-    xcb_flush(*connection);
+    connection->set_property<XCBType::WM_STATE>(window, connection->wm_state, wm_state_properties);
+    connection->delete_property(window, connection->net_wm_state);
+    connection->flush();
 }
 
 void mf::XWaylandSurface::read_properties()
@@ -289,88 +280,53 @@ void mf::XWaylandSurface::read_properties()
         return;
     props_dirty = false;
 
-    std::map<xcb_atom_t, xcb_atom_t> props;
-    props[XCB_ATOM_WM_CLASS] = XCB_ATOM_STRING;
-    props[XCB_ATOM_WM_NAME] = XCB_ATOM_STRING;
-    props[XCB_ATOM_WM_TRANSIENT_FOR] = XCB_ATOM_WINDOW;
-    props[connection->wm_protocols] = TYPE_WM_PROTOCOLS;
-    props[connection->wm_normal_hints] = TYPE_WM_NORMAL_HINTS;
-    props[connection->net_wm_window_type] = XCB_ATOM_ATOM;
-    props[connection->net_wm_name] = XCB_ATOM_STRING;
-    props[connection->motif_wm_hints] = TYPE_MOTIF_WM_HINTS;
+    std::vector<std::function<void()>> actions;
 
-    std::map<xcb_atom_t, xcb_get_property_cookie_t> cookies;
-    for (const auto &atom : props)
-    {
-        xcb_get_property_cookie_t cookie =
-            xcb_get_property(*connection, 0, window, atom.first, XCB_ATOM_ANY, 0, 2048);
-        cookies[atom.first] = cookie;
-    }
+    actions.push_back(connection->read_property(
+        window,
+        XCB_ATOM_WM_CLASS,
+        [this](std::string const& value)
+        {
+            properties.appId = value;
+        }));
 
-    properties.deleteWindow = 0;
+    actions.push_back(connection->read_property(
+        window,
+        XCB_ATOM_WM_NAME,
+        [this](std::string const& value)
+        {
+            properties.title = value;
+        }));
 
-    for (const auto &atom_ptr : props)
-    {
-        xcb_atom_t atom = atom_ptr.first;
-        xcb_get_property_reply_t *reply = xcb_get_property_reply(*connection, cookies[atom], nullptr);
-        if (!reply)
+    actions.push_back(connection->read_property(
+        window,
+        connection->net_wm_name,
+        [this](std::string const& value)
         {
-            // Bad window, usually
-            continue;
-        }
+            properties.title = value;
+        }));
 
-        if (reply->type == XCB_ATOM_NONE)
-        {
-            // No such info
-            free(reply);
-            continue;
-        }
+    properties.deleteWindow = false;
 
-        switch (props[atom])
+    actions.push_back(connection->read_property(
+        window,
+        connection->wm_protocols,
+        [this](std::vector<xcb_atom_t> const& value)
         {
-        case XCB_ATOM_STRING:
-        {
-            char *p = strndup(reinterpret_cast<char *>(xcb_get_property_value(reply)),
-                              xcb_get_property_value_length(reply));
-            if (atom == XCB_ATOM_WM_CLASS) {
-                properties.appId = std::string(p);
-            } else if (atom == XCB_ATOM_WM_NAME || connection->net_wm_name) {
-                properties.title = std::string(p);
-            } else {
-                free(p);
-            }
-            break;
-        }
-        case XCB_ATOM_WINDOW:
-        {
-            break;
-        }
-        case XCB_ATOM_ATOM:
-        {
-            if (atom == connection->net_wm_window_type)
+            if (std::find(value.begin(), value.end(), connection->wm_delete_window) != value.end())
             {
+                properties.deleteWindow = true;
             }
-            break;
-        }
-        case TYPE_WM_PROTOCOLS:
-        {
-            xcb_atom_t *atoms = reinterpret_cast<xcb_atom_t *>(xcb_get_property_value(reply));
-            for (uint32_t i = 0; i < reply->value_len; ++i)
-                if (atoms[i] == connection->wm_delete_window)
-                    properties.deleteWindow = 1;
-            break;
-        }
-        case TYPE_WM_NORMAL_HINTS:
-        {
-            break;
-        }
-        case TYPE_MOTIF_WM_HINTS:
-            break;
-        default:
-            break;
-        }
+        }));
 
-        free(reply);
+    // TODO: XCB_ATOM_WM_TRANSIENT_FOR
+    // TODO: wm_normal_hints
+    // TODO: net_wm_window_type
+    // TODO: motif_wm_hints
+
+    for (auto const& action : actions)
+    {
+        action();
     }
 }
 
@@ -466,13 +422,13 @@ void mf::XWaylandSurface::scene_surface_resized(const geometry::Size& new_size)
         new_size.height.as_uint32_t()};
 
     xcb_configure_window(*connection, window, mask, values);
-    xcb_flush(*connection);
+    connection->flush();
 }
 
 void mf::XWaylandSurface::scene_surface_close_requested()
 {
     xcb_destroy_window(*connection, window);
-    xcb_flush(*connection);
+    connection->flush();
 }
 
 void mf::XWaylandSurface::run_on_wayland_thread(std::function<void()>&& work)
@@ -546,13 +502,7 @@ void mf::XWaylandSurface::set_window_state(WindowState const& new_window_state)
         static_cast<uint32_t>(wm_state),
         XCB_WINDOW_NONE // Icon window
     };
-
-    xcb_change_property(
-        *connection,
-        XCB_PROP_MODE_REPLACE,
-        window, connection->wm_state,
-        connection->wm_state, 32,
-        length_of(wm_state_properties), wm_state_properties);
+    connection->set_property<XCBType::WM_STATE>(window, connection->wm_state, wm_state_properties);
 
     std::vector<xcb_atom_t> net_wm_states;
 
@@ -571,13 +521,7 @@ void mf::XWaylandSurface::set_window_state(WindowState const& new_window_state)
     }
     // TODO: Set _NET_WM_STATE_MODAL if appropriate
 
-    xcb_change_property(
-        *connection,
-        XCB_PROP_MODE_REPLACE,
-        window,
-        connection->net_wm_state,
-        XCB_ATOM_ATOM, 32, // type and format
-        net_wm_states.size(), net_wm_states.data());
+    connection->set_property<XCBType::ATOM>(window, connection->net_wm_state, net_wm_states);
 
     MirWindowState mir_window_state;
 
