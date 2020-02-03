@@ -191,4 +191,4 @@ TEST_P(SurfaceScaling, compositor_sees_size_different_when_scaled)
     EXPECT_TRUE(an_entry_with_differing_size);
 }
 
-INSTANTIATE_TEST_CASE_P(PerSwapInterval, SurfaceScaling, ::testing::Values(0,1));
+INSTANTIATE_TEST_SUITE_P(PerSwapInterval, SurfaceScaling, ::testing::Values(0,1));

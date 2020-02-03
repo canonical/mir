@@ -403,7 +403,7 @@ TEST_P(TargetMayHaveParent, not_setting_parent_succeeds)
         });
 }
 
-INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetWithoutParent,
+INSTANTIATE_TEST_SUITE_P(SurfaceMorphing, TargetWithoutParent,
     Values(
         TypePair{mir_window_type_normal, mir_window_type_utility},
         TypePair{mir_window_type_utility, mir_window_type_normal},
@@ -411,14 +411,14 @@ INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetWithoutParent,
         TypePair{mir_window_type_dialog, mir_window_type_normal}
     ));
 
-INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetNeedingParent,
+INSTANTIATE_TEST_SUITE_P(SurfaceMorphing, TargetNeedingParent,
     Values(
         TypePair{mir_window_type_normal, mir_window_type_satellite},
         TypePair{mir_window_type_utility, mir_window_type_satellite},
         TypePair{mir_window_type_dialog, mir_window_type_satellite}
     ));
 
-INSTANTIATE_TEST_CASE_P(SurfaceMorphing, TargetMayHaveParent,
+INSTANTIATE_TEST_SUITE_P(SurfaceMorphing, TargetMayHaveParent,
     Values(
         TypePair{mir_window_type_normal, mir_window_type_dialog},
         TypePair{mir_window_type_utility, mir_window_type_dialog}

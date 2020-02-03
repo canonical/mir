@@ -1,4 +1,4 @@
-# We can't tell which version of gtest we're building against and INSTANTIATE_TEST_CASE_P changed in
+# We can't tell which version of gtest we're building against and INSTANTIATE_TEST_SUITE_P changed in
 # a way that relies on a gcc extension to support backward-compatible code, So...
 check_cxx_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments MIRAL_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
 check_cxx_compiler_flag(-Wno-pedantic MIRAL_COMPILE_WITH_W_NO_PEDANTIC)

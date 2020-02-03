@@ -498,7 +498,7 @@ TEST_P(UnparentedSurface, small_window_is_optically_centered_on_first_display)
     mir_window_release_sync(window);
 }
 
-INSTANTIATE_TEST_CASE_P(SurfacePlacement, UnparentedSurface,
+INSTANTIATE_TEST_SUITE_P(SurfacePlacement, UnparentedSurface,
     ::testing::Values(
         mir_window_type_normal,
         mir_window_type_utility,
@@ -564,7 +564,7 @@ TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
     mir_window_release_sync(parent);
 }
 
-INSTANTIATE_TEST_CASE_P(SurfacePlacement, ParentedSurface,
+INSTANTIATE_TEST_SUITE_P(SurfacePlacement, ParentedSurface,
     ::testing::Values(
         mir_window_type_dialog,
         mir_window_type_satellite,

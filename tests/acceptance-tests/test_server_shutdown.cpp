@@ -73,7 +73,7 @@ TEST_P(ServerShutdownWithGraphicsPlatformException, clean_shutdown_on_exception)
     server.run();
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     PlatformExceptions,
     ServerShutdownWithGraphicsPlatformException,
     ::testing::Values(
@@ -243,7 +243,7 @@ TEST_P(OnSignalDeathTest, removes_endpoint)
     }
 }
 
-INSTANTIATE_TEST_CASE_P(ServerShutdown,
+INSTANTIATE_TEST_SUITE_P(ServerShutdown,
     OnSignalDeathTest,
     ::testing::Values(SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS));
 

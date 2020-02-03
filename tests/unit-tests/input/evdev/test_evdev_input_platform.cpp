@@ -230,7 +230,7 @@ TEST_P(EvdevInputPlatform, removes_devices_on_stop)
     platform->stop();
 }
 
-INSTANTIATE_TEST_CASE_P(DeviceHandling,
+INSTANTIATE_TEST_SUITE_P(DeviceHandling,
                         EvdevInputPlatform,
                         ::testing::Values(
                             "synaptics-touchpad",

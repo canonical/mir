@@ -899,22 +899,22 @@ TEST_P(BasicSurfaceAttributeTest, throws_on_invalid_value)
         }, std::logic_error);
 }
 
-INSTANTIATE_TEST_CASE_P(SurfaceTypeAttributeTest, BasicSurfaceAttributeTest,
+INSTANTIATE_TEST_SUITE_P(SurfaceTypeAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_type_test_parameters));
 
-INSTANTIATE_TEST_CASE_P(SurfaceVisibilityAttributeTest, BasicSurfaceAttributeTest,
+INSTANTIATE_TEST_SUITE_P(SurfaceVisibilityAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_visibility_test_parameters));
 
-INSTANTIATE_TEST_CASE_P(SurfaceStateAttributeTest, BasicSurfaceAttributeTest,
+INSTANTIATE_TEST_SUITE_P(SurfaceStateAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_state_test_parameters));
 
-INSTANTIATE_TEST_CASE_P(SurfaceSwapintervalAttributeTest, BasicSurfaceAttributeTest,
+INSTANTIATE_TEST_SUITE_P(SurfaceSwapintervalAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_swapinterval_test_parameters));
 
-INSTANTIATE_TEST_CASE_P(SurfaceDPIAttributeTest, BasicSurfaceAttributeTest,
+INSTANTIATE_TEST_SUITE_P(SurfaceDPIAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_dpi_test_parameters));
 
-INSTANTIATE_TEST_CASE_P(SurfaceFocusAttributeTest, BasicSurfaceAttributeTest,
+INSTANTIATE_TEST_SUITE_P(SurfaceFocusAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_focus_test_parameters));
 
 TEST_F(BasicSurfaceTest, default_focus_state)

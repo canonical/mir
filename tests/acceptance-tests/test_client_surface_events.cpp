@@ -267,7 +267,7 @@ TEST_P(OrientationEvents, surface_receives_orientation_events)
     EXPECT_THAT(last_event, mt::OrientationEvent(direction));
 }
 
-INSTANTIATE_TEST_CASE_P(ClientSurfaceEvents,
+INSTANTIATE_TEST_SUITE_P(ClientSurfaceEvents,
     OrientationEvents,
     Values(mir_orientation_normal, mir_orientation_left, mir_orientation_inverted, mir_orientation_right));
 
