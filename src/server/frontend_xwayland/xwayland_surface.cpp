@@ -274,7 +274,9 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
 
     if (scene_surface)
     {
-        geom::Point const old_position{scene_surface->top_left()};
+        auto const content_offset = scene_surface->content_offset();
+
+        geom::Point const old_position{scene_surface->top_left() + content_offset};
         geom::Point const new_position{
             event->value_mask & XCB_CONFIG_WINDOW_X ? geom::X{event->x} : old_position.x,
             event->value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{event->y} : old_position.y,
@@ -290,7 +292,7 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
 
         if (old_position != new_position)
         {
-            mods.top_left = new_position;
+            mods.top_left = new_position - content_offset;
         }
 
         if (old_size != new_size)
@@ -577,7 +579,13 @@ void mf::XWaylandSurface::scene_surface_resized(geometry::Size const& new_size)
 
 void mf::XWaylandSurface::scene_surface_moved_to(geometry::Point const& new_top_left)
 {
-    connection->configure_window(window, new_top_left, std::experimental::nullopt);
+    std::shared_ptr<scene::Surface> scene_surface;
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        scene_surface = weak_scene_surface.lock();
+    }
+    auto const content_offset = scene_surface ? scene_surface->content_offset() : geom::Displacement{};
+    connection->configure_window(window, new_top_left + content_offset, std::experimental::nullopt);
     connection->flush();
 }
 
