@@ -619,7 +619,7 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandSurface> surface,
             auto* wl_surface = resource ? WlSurface::from(resource) : nullptr;
             if (wl_surface)
             {
-                surface->set_wl_surface(wl_surface);
+                surface->attach_wl_surface(wl_surface);
 
                 // will destroy itself
                 new XWaylandSurfaceRole{shell, surface, wl_surface};

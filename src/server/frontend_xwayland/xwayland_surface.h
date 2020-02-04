@@ -148,7 +148,7 @@ public:
     void wm_change_state_client_message(uint32_t const (&data)[5]);
     void dirty_properties();
     void read_properties();
-    void set_wl_surface(WlSurface* wl_surface); ///< Should only be called on the Wayland thread
+    void attach_wl_surface(WlSurface* wl_surface); ///< Should only be called on the Wayland thread
     void move_resize(uint32_t detail);
 
 private:

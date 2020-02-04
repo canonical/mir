@@ -329,7 +329,7 @@ void mf::XWaylandSurface::dirty_properties()
     props_dirty = true;
 }
 
-void mf::XWaylandSurface::set_wl_surface(WlSurface* wl_surface)
+void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 {
     // We assume we are on the Wayland thread
 
