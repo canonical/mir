@@ -413,15 +413,27 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
         }
         else
         {
-            auto const reply_function = connection->read_property(event->window, event->atom, [this, event](xcb_get_property_reply_t* reply)
+            auto const log_prop = [this, event](std::string const& value)
                 {
                     auto const prop_name = connection->query_name(event->atom);
-                    auto const reply_str = get_reply_debug_string(reply);
                     log_debug(
                         "XCB_PROPERTY_NOTIFY (%s).%s: %s",
                         get_window_debug_string(event->window).c_str(),
                         prop_name.c_str(),
-                        reply_str.c_str());
+                        value.c_str());
+                };
+
+            auto const reply_function = connection->read_property(
+                event->window,
+                event->atom,
+                [this, log_prop](xcb_get_property_reply_t* reply)
+                {
+                    auto const reply_str = get_reply_debug_string(reply);
+                    log_prop(reply_str);
+                },
+                [log_prop]()
+                {
+                    log_prop("Error getting value");
                 });
 
             reply_function();

@@ -92,22 +92,26 @@ public:
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
-        std::function<void(xcb_get_property_reply_t*)> action) -> std::function<void()>;
+        std::function<void(xcb_get_property_reply_t*)> action,
+        std::function<void()> on_error) -> std::function<void()>;
 
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
-        std::function<void(std::string const&)> action) -> std::function<void()>;
+        std::function<void(std::string const&)> action,
+        std::function<void()> on_error = [](){}) -> std::function<void()>;
 
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
-        std::function<void(uint32_t)> action) -> std::function<void()>;
+        std::function<void(uint32_t)> action,
+        std::function<void()> on_error = [](){}) -> std::function<void()>;
 
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
-        std::function<void(std::vector<uint32_t>)> action) -> std::function<void()>;
+        std::function<void(std::vector<uint32_t>)> action,
+        std::function<void()> on_error = [](){}) -> std::function<void()>;
     /// @}
 
     /// Set X11 window properties

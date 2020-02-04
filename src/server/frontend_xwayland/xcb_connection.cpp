@@ -178,7 +178,8 @@ auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) -> st
 auto mf::XCBConnection::read_property(
     xcb_window_t window,
     xcb_atom_t prop,
-    std::function<void(xcb_get_property_reply_t*)> action) -> std::function<void()>
+    std::function<void(xcb_get_property_reply_t*)> action,
+    std::function<void()> on_error) -> std::function<void()>
 {
     xcb_get_property_cookie_t cookie = xcb_get_property(
         xcb_connection,
@@ -189,7 +190,7 @@ auto mf::XCBConnection::read_property(
         0, // no offset
         2048); // big buffer
 
-    return [xcb_connection = xcb_connection, cookie, action]()
+    return [xcb_connection = xcb_connection, cookie, action, on_error]()
         {
             xcb_get_property_reply_t *reply = xcb_get_property_reply(xcb_connection, cookie, nullptr);
             if (reply && reply->type != XCB_ATOM_NONE)
@@ -207,6 +208,21 @@ auto mf::XCBConnection::read_property(
                         "Failed to process property reply.");
                 }
             }
+            else
+            {
+                try
+                {
+                    on_error();
+                }
+                catch (...)
+                {
+                    log(
+                        logging::Severity::warning,
+                        MIR_LOG_COMPONENT,
+                        std::current_exception(),
+                        "Failed to run property error callback.");
+                }
+            }
             free(reply);
         };
 }
@@ -214,20 +230,29 @@ auto mf::XCBConnection::read_property(
 auto mf::XCBConnection::read_property(
     xcb_window_t window,
     xcb_atom_t prop,
-    std::function<void(std::string const&)> action) -> std::function<void()>
+    std::function<void(std::string const&)> action,
+    std::function<void()> on_error) -> std::function<void()>
 {
-    return read_property(window, prop, [this, action](xcb_get_property_reply_t const* reply)
+    return read_property(
+        window,
+        prop,
+        [this, action](xcb_get_property_reply_t const* reply)
         {
             action(string_from(reply));
-        });
+        },
+        on_error);
 }
 
 auto mf::XCBConnection::read_property(
     xcb_window_t window,
     xcb_atom_t prop,
-    std::function<void(uint32_t)> action) -> std::function<void()>
+    std::function<void(uint32_t)> action,
+    std::function<void()> on_error) -> std::function<void()>
 {
-    return read_property(window, prop, [this, prop, action](xcb_get_property_reply_t const* reply)
+    return read_property(
+        window,
+        prop,
+        [this, prop, action](xcb_get_property_reply_t const* reply)
         {
             uint8_t const expected_format = 32;
             if (reply->format != expected_format)
@@ -252,15 +277,20 @@ auto mf::XCBConnection::read_property(
             }
 
             action(*static_cast<uint32_t const*>(xcb_get_property_value(reply)));
-        });
+        },
+        on_error);
 }
 
 auto mf::XCBConnection::read_property(
     xcb_window_t window,
     xcb_atom_t prop,
-    std::function<void(std::vector<uint32_t>)> action) -> std::function<void()>
+    std::function<void(std::vector<uint32_t>)> action,
+    std::function<void()> on_error) -> std::function<void()>
 {
-    return read_property(window, prop, [this, action](xcb_get_property_reply_t const* reply)
+    return read_property(
+        window,
+        prop,
+        [this, action](xcb_get_property_reply_t const* reply)
         {
             uint8_t const expected_format = 32;
             if (reply->format != expected_format)
@@ -278,7 +308,8 @@ auto mf::XCBConnection::read_property(
             std::vector<uint32_t> const values{start, end};
 
             action(values);
-        });
+        },
+        on_error);
 }
 
 void mf::XCBConnection::configure_window(
