@@ -520,10 +520,7 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
     if (auto const surface = get_wm_surface(event->window))
     {
         surface.value()->read_properties();
-        surface.value()->set_workspace(0);
         surface.value()->map();
-        xcb_map_window(*connection, event->window);
-        connection->flush();
     }
 }
 
@@ -547,10 +544,7 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 
     if (auto const surface = get_wm_surface(event->window))
     {
-        surface.value()->unmap();
-        surface.value()->set_workspace(-1);
-        xcb_unmap_window(*connection, event->window);
-        connection->flush();
+        surface.value()->close();
     }
 }
 
@@ -619,7 +613,7 @@ void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandSurface> surface,
             auto* wl_surface = resource ? WlSurface::from(resource) : nullptr;
             if (wl_surface)
             {
-                surface->set_surface(wl_surface);
+                surface->attach_wl_surface(wl_surface);
 
                 // will destroy itself
                 new XWaylandSurfaceRole{shell, surface, wl_surface};
@@ -643,42 +637,9 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
             log_warning("border width unsupported (border width %d)", event->border_width);
     }
 
-    std::vector<uint32_t> values;
-
-    if (event->value_mask & XCB_CONFIG_WINDOW_X)
+    if (auto const surface = get_wm_surface(event->window))
     {
-        values.push_back(event->x);
-    }
-
-    if (event->value_mask & XCB_CONFIG_WINDOW_Y)
-    {
-        values.push_back(event->y);
-    }
-
-    if (event->value_mask & XCB_CONFIG_WINDOW_WIDTH)
-    {
-        values.push_back(event->width);
-    }
-
-    if (event->value_mask & XCB_CONFIG_WINDOW_HEIGHT)
-    {
-        values.push_back(event->height);
-    }
-
-    if (event->value_mask & XCB_CONFIG_WINDOW_SIBLING)
-    {
-        values.push_back(event->sibling);
-    }
-
-    if (event->value_mask & XCB_CONFIG_WINDOW_STACK_MODE)
-    {
-        values.push_back(event->stack_mode);
-    }
-
-    if (!values.empty())
-    {
-        xcb_configure_window(*connection, event->window, event->value_mask, values.data());
-        connection->flush();
+        surface.value()->configure_request(event);
     }
 }
 

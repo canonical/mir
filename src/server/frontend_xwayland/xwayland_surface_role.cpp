@@ -89,7 +89,7 @@ void mf::XWaylandSurfaceRole::commit(WlSurfaceState const& state)
 
     if (auto const wm_surface = weak_wm_surface.lock())
     {
-        wm_surface->wl_surface_committed(wl_surface);
+        wm_surface->wl_surface_committed();
     }
 }
 

@@ -143,13 +143,12 @@ public:
 
     void map();
     void close(); ///< Idempotent
+    void configure_request(xcb_configure_request_event_t* event);
     void net_wm_state_client_message(uint32_t const (&data)[5]);
     void wm_change_state_client_message(uint32_t const (&data)[5]);
     void dirty_properties();
     void read_properties();
-    void set_surface(WlSurface* wl_surface); ///< Should only be called on the Wayland thread
-    void set_workspace(int workspace);
-    void unmap();
+    void attach_wl_surface(WlSurface* wl_surface); ///< Should only be called on the Wayland thread
     void move_resize(uint32_t detail);
 
 private:
@@ -157,15 +156,23 @@ private:
     /// (for example if a minimized window would otherwise be maximized)
     struct WindowState
     {
+        bool withdrawn{true};
         bool minimized{false};
         bool maximized{false};
         bool fullscreen{false};
+
+        auto operator==(WindowState const& that) const -> bool;
+        auto mir_window_state() const -> MirWindowState;
+        auto updated_from(MirWindowState state) const -> WindowState; ///< Does not change original
     };
+
+    struct InitialWlSurfaceData;
 
     /// Overrides from XWaylandSurfaceObserverSurface
     /// @{
     void scene_surface_state_set(MirWindowState new_state) override;
-    void scene_surface_resized(const geometry::Size& new_size) override;
+    void scene_surface_resized(geometry::Size const& new_size) override;
+    void scene_surface_moved_to(geometry::Point const& new_top_left) override;
     void scene_surface_close_requested() override;
     void run_on_wayland_thread(std::function<void()>&& work) override;
     /// @}
@@ -174,24 +181,22 @@ private:
     /// Should only be called on the Wayland thread
     /// @{
     void wl_surface_destroyed() override;
-    void wl_surface_committed(WlSurface* wl_surface) override;
+    void wl_surface_committed() override;
     auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
     /// @}
 
-    /// The last state we have either requested of Mir or been informed of by Mir
-    /// Prevents requesting a window state that we are already in
-    MirWindowState cached_mir_window_state{mir_window_state_unknown};
-
-    /// Should only be called on the Wayland thread
     /// Should NOT be called under lock
     /// Does nothing if we already have a scene::Surface
-    void create_scene_surface_if_needed(WlSurface* wl_surface);
+    void create_scene_surface_if_needed();
 
-    /// Sets the window's _NET_WM_STATE property based on the contents of window_state
-    /// Also sets the state of the scene surface to match window_state
-    /// Should be called after every change to window_state
+    /// Updates the window's WM_STATE and _NET_WM_STATE properties
     /// Should NOT be called under lock
-    void set_window_state(WindowState const& new_window_state);
+    void inform_client_of_window_state(WindowState const& state);
+
+    /// Requests the scene surface be put into the given state
+    /// If the request results in an actual surface state change, the observer will be notified
+    /// Should NOT be called under lock
+    void request_scene_surface_state(MirWindowState new_state);
 
     auto latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds;
 
@@ -221,12 +226,12 @@ private:
         geometry::Point position;
         geometry::Size size;
         bool override_redirect;
-    } const init;
+    } init;
 
+    /// Set in set_wl_surface and cleared when a scene surface is created from it
+    std::experimental::optional<std::unique_ptr<InitialWlSurfaceData>> initial_wl_surface_data;
     std::experimental::optional<std::shared_ptr<XWaylandSurfaceObserver>> surface_observer;
-
-    /// Only true when we are in the process of creating a scene surface
-    bool creating_scene_surface{false};
+    std::weak_ptr<scene::Session> weak_session;
     std::weak_ptr<scene::Surface> weak_scene_surface;
 };
 } /* frontend */

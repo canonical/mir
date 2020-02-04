@@ -54,6 +54,7 @@ public:
     ///@{
     void attrib_changed(scene::Surface const*, MirWindowAttrib attrib, int value) override;
     void content_resized_to(scene::Surface const*, geometry::Size const& content_size) override;
+    void moved_to(scene::Surface const*, geometry::Point const& top_left) override;
     void client_surface_close_requested(scene::Surface const*) override;
     void keymap_changed(
         scene::Surface const*,
