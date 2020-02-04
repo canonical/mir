@@ -146,6 +146,7 @@ public:
     void map();
     void close(); ///< Idempotent
     void configure_request(xcb_configure_request_event_t* event);
+    void configure_notify(xcb_configure_notify_event_t* event);
     void net_wm_state_client_message(uint32_t const (&data)[5]);
     void wm_change_state_client_message(uint32_t const (&data)[5]);
     void property_notify(xcb_atom_t property);
@@ -222,16 +223,11 @@ private:
     /// Should only be modified by set_wm_state()
     WindowState window_state;
 
+    geometry::Size latest_size;
+    geometry::Point latest_position; ///< Always in global coordinates
+
     /// The contents of the _NET_SUPPORTED property set by the client
     std::set<xcb_atom_t> supported_wm_protocols;
-
-    struct
-    {
-        xcb_window_t parent;
-        geometry::Point position;
-        geometry::Size size;
-        bool override_redirect;
-    } init;
 
     /// Set in set_wl_surface and cleared when a scene surface is created from it
     std::experimental::optional<std::unique_ptr<InitialWlSurfaceData>> initial_wl_surface_data;

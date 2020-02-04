@@ -668,6 +668,11 @@ void mf::XWaylandWM::handle_configure_notify(xcb_configure_notify_event_t *event
         if (event->border_width)
             log_warning("border width unsupported (border width %d)", event->border_width);
     }
+
+    if (auto const surface = get_wm_surface(event->window))
+    {
+        surface.value()->configure_notify(event);
+    }
 }
 
 // Cursor

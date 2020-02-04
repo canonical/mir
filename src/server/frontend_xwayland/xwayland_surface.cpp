@@ -171,11 +171,8 @@ mf::XWaylandSurface::XWaylandSurface(
                   std::lock_guard<std::mutex> lock{mutex};
                   supported_wm_protocols.clear();
               })},
-      init{
-          event->parent,
-          {event->x, event->y},
-          {event->width, event->height},
-          (bool)event->override_redirect}
+      latest_size{event->width, event->height},
+      latest_position{event->x, event->y}
 {
     uint32_t const value = XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE;
     xcb_change_window_attributes(*connection, window, XCB_CW_EVENT_MASK, &value);
@@ -314,10 +311,14 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
             window,
             geom::Point{event->x, event->y},
             geom::Size{event->width, event->height});
-
-        init.position = {event->x, event->y};
-        init.size = {event->width, event->height};
     }
+}
+
+void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
+{
+    std::lock_guard<std::mutex> lock{mutex};
+    latest_position = geom::Point{event->x, event->y},
+    latest_size = geom::Size{event->width, event->height};
 }
 
 void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
@@ -656,23 +657,13 @@ void mf::XWaylandSurface::create_scene_surface_if_needed()
         params.input_shape = std::move(initial_wl_surface_data.value()->input_shape);
         initial_wl_surface_data = std::experimental::nullopt;
 
+        params.size = latest_size;
+        params.top_left = latest_position;
         params.type = mir_window_type_freestyle;
         params.state = state.mir_window_state();
     }
 
     std::vector<std::function<void()>> reply_functions;
-
-    auto const geom_cookie = xcb_get_geometry(*connection, window);
-    reply_functions.push_back([this, &params, geom_cookie]()
-        {
-            auto const reply = xcb_get_geometry_reply(*connection, geom_cookie, nullptr);
-            if (reply)
-            {
-                params.top_left = {reply->x, reply->y};
-                params.size = {reply->width, reply->height};
-                free(reply);
-            }
-        });
 
     auto const window_attrib_cookie = xcb_get_window_attributes(*connection, window);
     reply_functions.push_back([this, &params, window_attrib_cookie]
