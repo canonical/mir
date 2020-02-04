@@ -225,21 +225,27 @@ auto mf::XCBConnection::read_property(
     xcb_atom_t prop,
     std::function<void(uint32_t)> action) -> std::function<void()>
 {
-    return read_property(window, prop, [this, action](xcb_get_property_reply_t const* reply)
+    return read_property(window, prop, [this, prop, action](xcb_get_property_reply_t const* reply)
         {
-            if (reply->format != 32)
+            uint8_t const expected_format = 32;
+            if (reply->format != expected_format)
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error(
-                    "Reply of type " + query_name(reply->type) +
+                    "Failed to read " + query_name(prop) + " window property." +
+                    " Reply of type " + query_name(reply->type) +
                     " has a format " + std::to_string(reply->format) +
-                    " instead of expected 32"));
+                    " instead of expected " + std::to_string(expected_format)));
             }
 
-            if (xcb_get_property_value_length(reply) != 1)
+            // The length returned by xcb_get_property_value_length() is in bytes for some reason
+            size_t const len = xcb_get_property_value_length(reply) / sizeof(uint32_t);
+
+            if (len != 1)
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error(
-                    "Reply of type " + query_name(reply->type) +
-                    " has a value length " + std::to_string(xcb_get_property_value_length(reply)) +
+                    "Failed to read " + query_name(prop) + " window property." +
+                    " Reply of type " + query_name(reply->type) +
+                    " has a value length " + std::to_string(len) +
                     " instead of expected 1"));
             }
 
@@ -254,16 +260,19 @@ auto mf::XCBConnection::read_property(
 {
     return read_property(window, prop, [this, action](xcb_get_property_reply_t const* reply)
         {
-            if (reply->format != 32)
+            uint8_t const expected_format = 32;
+            if (reply->format != expected_format)
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error(
                     "Reply of type " + query_name(reply->type) +
                     " has a format " + std::to_string(reply->format) +
-                    " instead of expected 32"));
+                    " instead of expected " + std::to_string(expected_format)));
             }
 
             auto const start = static_cast<uint32_t const*>(xcb_get_property_value(reply));
-            auto const end = start + static_cast<size_t>(xcb_get_property_value_length(reply));
+            // The length returned by xcb_get_property_value_length() is in bytes for some reason
+            size_t const len = xcb_get_property_value_length(reply) / sizeof(uint32_t);
+            auto const end = start + len;
             std::vector<uint32_t> const values{start, end};
 
             action(values);

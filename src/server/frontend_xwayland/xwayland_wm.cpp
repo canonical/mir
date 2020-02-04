@@ -78,8 +78,11 @@ namespace mf = mir::frontend;
 
 namespace
 {
-template<typename T>
-auto data_buffer_to_debug_string(T* data, size_t elements) -> std::string
+template<typename T, typename U = T>
+auto data_buffer_to_debug_string(
+    T* data,
+    size_t elements,
+    std::function<U(T element)> converter = [](T e) -> T { return e; }) -> std::string
 {
     std::stringstream ss;
     ss << "[";
@@ -87,7 +90,7 @@ auto data_buffer_to_debug_string(T* data, size_t elements) -> std::string
     {
         if (i != data)
             ss << ", ";
-        ss << *i;
+        ss << converter(*i);
     }
     ss << "]";
     return ss.str();
@@ -410,27 +413,18 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
         }
         else
         {
-            xcb_get_property_cookie_t const cookie = xcb_get_property(
-                *connection,
-                0, // don't delete
-                event->window,
-                event->atom,
-                XCB_ATOM_ANY,
-                0,
-                2048);
+            auto const reply_function = connection->read_property(event->window, event->atom, [this, event](xcb_get_property_reply_t* reply)
+                {
+                    auto const prop_name = connection->query_name(event->atom);
+                    auto const reply_str = get_reply_debug_string(reply);
+                    log_debug(
+                        "XCB_PROPERTY_NOTIFY (%s).%s: %s",
+                        get_window_debug_string(event->window).c_str(),
+                        prop_name.c_str(),
+                        reply_str.c_str());
+                });
 
-            xcb_get_property_reply_t* const reply = xcb_get_property_reply(*connection, cookie, NULL);
-
-            auto const prop_name = connection->query_name(event->atom);
-            auto const reply_str = get_reply_debug_string(reply);
-
-            log_debug(
-                "XCB_PROPERTY_NOTIFY (%s).%s: %s",
-                get_window_debug_string(event->window).c_str(),
-                prop_name.c_str(),
-                reply_str.c_str());
-
-            free(reply);
+            reply_function();
         }
     }
 
@@ -820,7 +814,6 @@ void mf::XWaylandWM::wm_get_resources()
 
 auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> std::string
 {
-
     if (reply == nullptr)
     {
         return "(null reply)";
@@ -830,30 +823,17 @@ auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> 
         auto const text = connection->string_from(reply);
         return "\"" + text + "\"";
     }
-    else if (reply->type == XCB_ATOM_ATOM)
-    {
-        xcb_atom_t const* atoms_ptr = (xcb_atom_t *)xcb_get_property_value(reply);
-        std::vector<xcb_atom_t> atoms{atoms_ptr, atoms_ptr + reply->value_len};
-
-        std::stringstream ss{"atoms: ["};
-        bool first = true;
-        for (auto const& atom : atoms)
-        {
-            if (!first)
-                ss << ", ";
-            first = false;
-            ss << connection->query_name(atom);
-        }
-        ss << "]";
-
-        return ss.str();
-    }
     else
     {
-        size_t const len = reply->value_len;
+        // The length returned by xcb_get_property_value_length() is in bytes for some reason
+        size_t const len = xcb_get_property_value_length(reply) / (reply->format / 8);
         std::stringstream ss;
-        ss << reply->format << "bit " << connection->query_name(reply->type) << "[" << len << "]";
-        if ((reply->type == XCB_ATOM_CARDINAL || reply->type == XCB_ATOM_INTEGER) && len < 32)
+        ss << std::to_string(reply->format) << "bit " << connection->query_name(reply->type) << "[" << len << "]";
+        if (len < 32 && (
+            reply->type == XCB_ATOM_CARDINAL ||
+            reply->type == XCB_ATOM_INTEGER ||
+            reply->type == XCB_ATOM_ATOM ||
+            reply->type == XCB_ATOM_WINDOW))
         {
             ss << ": ";
             void* const ptr = xcb_get_property_value(reply);
@@ -862,19 +842,49 @@ auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> 
             case XCB_ATOM_CARDINAL: // unsigned number
                 switch (reply->format)
                 {
-                case 8: ss << data_buffer_to_debug_string((uint8_t*)ptr, len); break;
-                case 16: ss << data_buffer_to_debug_string((uint16_t*)ptr, len); break;
-                case 32: ss << data_buffer_to_debug_string((uint32_t*)ptr, len); break;
+                case 8: ss << data_buffer_to_debug_string(static_cast<uint8_t*>(ptr), len); break;
+                case 16: ss << data_buffer_to_debug_string(static_cast<uint16_t*>(ptr), len); break;
+                case 32: ss << data_buffer_to_debug_string(static_cast<uint32_t*>(ptr), len); break;
                 }
                 break;
 
             case XCB_ATOM_INTEGER: // signed number
                 switch (reply->format)
                 {
-                case 8: ss << data_buffer_to_debug_string((int8_t*)ptr, len); break;
-                case 16: ss << data_buffer_to_debug_string((int16_t*)ptr, len); break;
-                case 32: ss << data_buffer_to_debug_string((int32_t*)ptr, len); break;
+                case 8: ss << data_buffer_to_debug_string(static_cast<int8_t*>(ptr), len); break;
+                case 16: ss << data_buffer_to_debug_string(static_cast<int16_t*>(ptr), len); break;
+                case 32: ss << data_buffer_to_debug_string(static_cast<int32_t*>(ptr), len); break;
                 }
+                break;
+
+            case XCB_ATOM_ATOM:
+                if (reply->format != sizeof(xcb_atom_t) * 8)
+                {
+                    ss << "Atom property has format " << std::to_string(reply->format);
+                    break;
+                }
+                ss << data_buffer_to_debug_string<xcb_atom_t, std::string>(
+                    static_cast<xcb_atom_t*>(ptr),
+                    len,
+                    [this](xcb_atom_t atom) -> std::string
+                    {
+                        return connection->query_name(atom);
+                    });
+                break;
+
+            case XCB_ATOM_WINDOW:
+                if (reply->format != sizeof(xcb_window_t) * 8)
+                {
+                    ss << "Window property has format " << std::to_string(reply->format);
+                    break;
+                }
+                ss << data_buffer_to_debug_string<xcb_window_t, std::string>(
+                    static_cast<xcb_window_t*>(ptr),
+                    len,
+                    [this](xcb_window_t window) -> std::string
+                    {
+                        return get_window_debug_string(window);
+                    });
                 break;
             }
         }
