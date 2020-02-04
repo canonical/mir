@@ -224,6 +224,16 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
             shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
         }
     }
+    else
+    {
+        connection->configure_window(
+            window,
+            geom::Point{event->x, event->y},
+            geom::Size{event->width, event->height});
+
+        init.position = {event->x, event->y};
+        init.size = {event->width, event->height};
+    }
 }
 
 void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])

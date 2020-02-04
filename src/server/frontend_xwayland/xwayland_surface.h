@@ -226,7 +226,7 @@ private:
         geometry::Point position;
         geometry::Size size;
         bool override_redirect;
-    } const init;
+    } init;
 
     /// Set in set_wl_surface and cleared when a scene surface is created from it
     std::experimental::optional<std::unique_ptr<InitialWlSurfaceData>> initial_wl_surface_data;
