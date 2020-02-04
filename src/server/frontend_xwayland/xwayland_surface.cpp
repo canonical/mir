@@ -109,6 +109,13 @@ void mf::XWaylandSurface::map()
         std::lock_guard<std::mutex> lock{mutex};
         state = window_state;
     }
+
+    uint32_t const workspace = 1;
+    connection->set_property<XCBType::CARDINAL32>(
+        window,
+        connection->net_wm_desktop,
+        workspace);
+
     state.withdrawn = false;
     inform_client_of_window_state(state);
     request_scene_surface_state(state.mir_window_state());
@@ -138,6 +145,8 @@ void mf::XWaylandSurface::close()
 
         initial_wl_surface_data = std::experimental::nullopt;
     }
+
+    connection->delete_property(window, connection->net_wm_desktop);
 
     state.withdrawn = true;
     inform_client_of_window_state(state);
@@ -331,23 +340,6 @@ void mf::XWaylandSurface::set_wl_surface(WlSurface* wl_surface)
     // If a buffer has alread been committed, we need to create the scene::Surface without waiting for next commit
     if (wl_surface->buffer_size())
         create_scene_surface_if_needed();
-}
-
-void mf::XWaylandSurface::set_workspace(int workspace)
-{
-    // Passing a workspace < 0 deletes the property
-    if (workspace >= 0)
-    {
-        connection->set_property<XCBType::CARDINAL32>(
-            window,
-            connection->net_wm_desktop,
-            static_cast<uint32_t>(workspace));
-    }
-    else
-    {
-        connection->delete_property(window, connection->net_wm_desktop);
-    }
-    connection->flush();
 }
 
 void mf::XWaylandSurface::read_properties()
