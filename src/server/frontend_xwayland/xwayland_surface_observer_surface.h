@@ -33,7 +33,8 @@ class XWaylandSurfaceObserverSurface
 {
 public:
     virtual void scene_surface_state_set(MirWindowState new_state) = 0;
-    virtual void scene_surface_resized(const geometry::Size& new_size) = 0;
+    virtual void scene_surface_resized(geometry::Size const& new_size) = 0;
+    virtual void scene_surface_moved_to(geometry::Point const& new_top_left) = 0;
     virtual void scene_surface_close_requested() = 0;
     virtual void run_on_wayland_thread(std::function<void()>&& work) = 0;
 

@@ -23,6 +23,7 @@
 #include "boost/throw_exception.hpp"
 
 namespace mf = mir::frontend;
+namespace geom = mir::geometry;
 
 mf::XCBConnection::Atom::Atom(std::string const& name, XCBConnection* connection)
     : connection{connection},
@@ -277,6 +278,34 @@ auto mf::XCBConnection::read_property(
 
             action(values);
         });
+}
+
+void mf::XCBConnection::configure_window(
+    xcb_window_t window,
+    std::experimental::optional<geometry::Point> position,
+    std::experimental::optional<geometry::Size> size)
+{
+    std::vector<uint32_t> values;
+    uint32_t mask = 0;
+
+    if (position)
+    {
+        mask |= XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
+        values.push_back(position.value().x.as_int());
+        values.push_back(position.value().y.as_int());
+    }
+
+    if (size)
+    {
+        mask |= XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
+        values.push_back(size.value().width.as_int());
+        values.push_back(size.value().height.as_int());
+    }
+
+    if (!values.empty())
+    {
+        xcb_configure_window(xcb_connection, window, mask, values.data());
+    }
 }
 
 auto mf::XCBConnection::xcb_type_atom(XCBType type) const -> xcb_atom_t

@@ -81,6 +81,11 @@ void mf::XWaylandSurfaceObserver::content_resized_to(ms::Surface const*, geom::S
     wm_surface->scene_surface_resized(content_size);
 }
 
+void mf::XWaylandSurfaceObserver::moved_to(ms::Surface const*, geom::Point const& top_left)
+{
+    wm_surface->scene_surface_moved_to(top_left);
+}
+
 void mf::XWaylandSurfaceObserver::client_surface_close_requested(ms::Surface const*)
 {
     wm_surface->scene_surface_close_requested();

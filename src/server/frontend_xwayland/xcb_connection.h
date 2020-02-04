@@ -19,6 +19,9 @@
 #ifndef MIR_FRONTEND_XCB_CONNECTION_H
 #define MIR_FRONTEND_XCB_CONNECTION_H
 
+#include "mir/geometry/point.h"
+#include "mir/geometry/size.h"
+
 #include <xcb/xcb.h>
 #include <string>
 #include <vector>
@@ -143,6 +146,12 @@ public:
     {
         xcb_delete_property(xcb_connection, window, property);
     }
+
+    /// Wrapper around xcb_configure_window
+    void configure_window(
+        xcb_window_t window,
+        std::experimental::optional<geometry::Point> position,
+        std::experimental::optional<geometry::Size> size);
 
     inline void flush()
     {

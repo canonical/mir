@@ -37,7 +37,7 @@ class XWaylandSurfaceRoleSurface
 {
 public:
     virtual void wl_surface_destroyed() = 0;
-    virtual void wl_surface_committed(WlSurface* wl_surface) = 0;
+    virtual void wl_surface_committed() = 0;
     virtual auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> = 0;
 
     virtual ~XWaylandSurfaceRoleSurface() = default;
