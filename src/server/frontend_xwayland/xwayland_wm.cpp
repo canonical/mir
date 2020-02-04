@@ -553,7 +553,7 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
 
     if (auto const surface = get_wm_surface(event->window))
     {
-        surface.value()->unmap();
+        surface.value()->close();
         surface.value()->set_workspace(-1);
         xcb_unmap_window(*connection, event->window);
         connection->flush();

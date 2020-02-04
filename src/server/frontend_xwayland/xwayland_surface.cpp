@@ -116,11 +116,14 @@ void mf::XWaylandSurface::map()
 
 void mf::XWaylandSurface::close()
 {
+    WindowState state;
     std::shared_ptr<scene::Surface> scene_surface;
     std::shared_ptr<XWaylandSurfaceObserver> observer;
 
     {
         std::lock_guard<std::mutex> lock{mutex};
+
+        state = window_state;
 
         scene_surface = weak_scene_surface.lock();
         weak_scene_surface.reset();
@@ -135,6 +138,9 @@ void mf::XWaylandSurface::close()
 
         initial_wl_surface_data = std::experimental::nullopt;
     }
+
+    state.withdrawn = true;
+    inform_client_of_window_state(state);
 
     if (scene_surface && observer)
     {
@@ -342,18 +348,6 @@ void mf::XWaylandSurface::set_workspace(int workspace)
         connection->delete_property(window, connection->net_wm_desktop);
     }
     connection->flush();
-}
-
-void mf::XWaylandSurface::unmap()
-{
-    WindowState state;
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        state = window_state;
-    }
-    state.withdrawn = true;
-    inform_client_of_window_state(state);
-    request_scene_surface_state(state.mir_window_state());
 }
 
 void mf::XWaylandSurface::read_properties()
