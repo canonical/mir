@@ -119,6 +119,8 @@ void mf::XWaylandSurface::map()
     state.withdrawn = false;
     inform_client_of_window_state(state);
     request_scene_surface_state(state.mir_window_state());
+    xcb_map_window(*connection, window);
+    connection->flush();
 }
 
 void mf::XWaylandSurface::close()
@@ -150,6 +152,9 @@ void mf::XWaylandSurface::close()
 
     state.withdrawn = true;
     inform_client_of_window_state(state);
+
+    xcb_unmap_window(*connection, window);
+    connection->flush();
 
     if (scene_surface && observer)
     {
