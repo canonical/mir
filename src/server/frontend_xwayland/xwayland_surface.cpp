@@ -70,6 +70,28 @@ auto wm_resize_edge_to_mir_resize_edge(uint32_t wm_resize_edge) -> std::experime
     }
 }
 
+/// Sets up the position, either as a child window with and aux rect or a toplevel
+/// Parent can be nullptr
+/// top_left should be desired global top_left of the decorations of this window
+void set_position(std::shared_ptr<ms::Surface> parent, geom::Point top_left, msh::SurfaceSpecification& spec)
+{
+    if (parent)
+    {
+        auto const local_top_left =
+            top_left -
+            as_displacement(parent->top_left()) -
+            parent->content_offset();
+        spec.aux_rect = {local_top_left, {1, 1}};
+        spec.placement_hints = MirPlacementHints{};
+        spec.surface_placement_gravity = mir_placement_gravity_northwest;
+        spec.aux_rect_placement_gravity = mir_placement_gravity_northwest;
+    }
+    else
+    {
+        spec.top_left = top_left;
+    }
+}
+
 template<typename T>
 auto property_handler(
     std::shared_ptr<mf::XCBConnection> const& connection,
@@ -149,7 +171,9 @@ mf::XWaylandSurface::XWaylandSurface(
 
                   {
                       std::lock_guard<std::mutex> lock{mutex};
-                      pending_spec(lock).parent = parent_scene_surface;
+                      auto const parent = parent_surface.value()->weak_scene_surface.lock(); // Can be nullptr
+                      pending_spec(lock).parent = parent;
+                      set_position(parent, latest_position, pending_spec(lock));
                   }
               },
               [this]()
@@ -292,7 +316,7 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
 
         if (old_position != new_position)
         {
-            mods.top_left = new_position - content_offset;
+            set_position(scene_surface->parent(), new_position - content_offset, mods);
         }
 
         if (old_size != new_size)
