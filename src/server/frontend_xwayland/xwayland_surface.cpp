@@ -160,7 +160,7 @@ mf::XWaylandSurface::XWaylandSurface(
               connection->wm_transient_for,
               [this](xcb_window_t value)
               {
-                  std::shared_ptr<scene::Surface> parent_scene_surface;
+                  std::shared_ptr<scene::Surface> parent_scene_surface; // May remain nullptr
 
                   auto const parent_surface = this->xwm->get_wm_surface(value);
                   if (parent_surface)
@@ -171,9 +171,8 @@ mf::XWaylandSurface::XWaylandSurface(
 
                   {
                       std::lock_guard<std::mutex> lock{this->mutex};
-                      auto const parent = parent_surface.value()->weak_scene_surface.lock(); // Can be nullptr
-                      this->pending_spec(lock).parent = parent;
-                      set_position(parent, this->latest_position, this->pending_spec(lock));
+                      this->pending_spec(lock).parent = parent_scene_surface;
+                      set_position(parent_scene_surface, this->latest_position, this->pending_spec(lock));
                   }
               },
               [this]()
