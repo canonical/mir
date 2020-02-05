@@ -134,7 +134,7 @@ mf::XWaylandSurface::XWaylandSurface(
               [this](auto value)
               {
                   std::lock_guard<std::mutex> lock{mutex};
-                  pending_spec(lock).application_id = value;
+                  this->pending_spec(lock).application_id = value;
               }),
           property_handler<std::string const&>(
               connection,
@@ -143,7 +143,7 @@ mf::XWaylandSurface::XWaylandSurface(
               [this](auto value)
               {
                   std::lock_guard<std::mutex> lock{mutex};
-                  pending_spec(lock).name = value;
+                  this->pending_spec(lock).name = value;
               }),
           property_handler<std::string const&>(
               connection,
@@ -152,7 +152,7 @@ mf::XWaylandSurface::XWaylandSurface(
               [this](auto value)
               {
                   std::lock_guard<std::mutex> lock{mutex};
-                  pending_spec(lock).name = value;
+                  this->pending_spec(lock).name = value;
               }),
           property_handler<xcb_window_t>(
               connection,
@@ -162,7 +162,7 @@ mf::XWaylandSurface::XWaylandSurface(
               {
                   std::shared_ptr<scene::Surface> parent_scene_surface;
 
-                  auto const parent_surface = xwm->get_wm_surface(value);
+                  auto const parent_surface = this->xwm->get_wm_surface(value);
                   if (parent_surface)
                   {
                       std::lock_guard<std::mutex> parent_lock{parent_surface.value()->mutex};
@@ -170,16 +170,16 @@ mf::XWaylandSurface::XWaylandSurface(
                   }
 
                   {
-                      std::lock_guard<std::mutex> lock{mutex};
+                      std::lock_guard<std::mutex> lock{this->mutex};
                       auto const parent = parent_surface.value()->weak_scene_surface.lock(); // Can be nullptr
-                      pending_spec(lock).parent = parent;
-                      set_position(parent, latest_position, pending_spec(lock));
+                      this->pending_spec(lock).parent = parent;
+                      set_position(parent, this->latest_position, this->pending_spec(lock));
                   }
               },
               [this]()
               {
                   std::lock_guard<std::mutex> lock{mutex};
-                  pending_spec(lock).parent = std::weak_ptr<scene::Surface>{};
+                  this->pending_spec(lock).parent = std::weak_ptr<scene::Surface>{};
               }),
           property_handler<std::vector<xcb_atom_t> const&>(
               connection,
@@ -188,12 +188,12 @@ mf::XWaylandSurface::XWaylandSurface(
               [this](std::vector<xcb_atom_t> const& value)
               {
                   std::lock_guard<std::mutex> lock{mutex};
-                  supported_wm_protocols = std::set<xcb_atom_t>{value.begin(), value.end()};
+                  this->supported_wm_protocols = std::set<xcb_atom_t>{value.begin(), value.end()};
               },
               [this]()
               {
                   std::lock_guard<std::mutex> lock{mutex};
-                  supported_wm_protocols.clear();
+                  this->supported_wm_protocols.clear();
               })},
       latest_size{event->width, event->height},
       latest_position{event->x, event->y}
