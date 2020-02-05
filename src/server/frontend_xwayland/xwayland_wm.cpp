@@ -413,15 +413,27 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
         }
         else
         {
-            auto const reply_function = connection->read_property(event->window, event->atom, [this, event](xcb_get_property_reply_t* reply)
+            auto const log_prop = [this, event](std::string const& value)
                 {
                     auto const prop_name = connection->query_name(event->atom);
-                    auto const reply_str = get_reply_debug_string(reply);
                     log_debug(
                         "XCB_PROPERTY_NOTIFY (%s).%s: %s",
                         get_window_debug_string(event->window).c_str(),
                         prop_name.c_str(),
-                        reply_str.c_str());
+                        value.c_str());
+                };
+
+            auto const reply_function = connection->read_property(
+                event->window,
+                event->atom,
+                [this, log_prop](xcb_get_property_reply_t* reply)
+                {
+                    auto const reply_str = get_reply_debug_string(reply);
+                    log_prop(reply_str);
+                },
+                [log_prop]()
+                {
+                    log_prop("Error getting value");
                 });
 
             reply_function();
@@ -430,7 +442,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 
     if (auto const surface = get_wm_surface(event->window))
     {
-        surface.value()->dirty_properties();
+        surface.value()->property_notify(event->atom);
     }
 }
 
@@ -519,7 +531,6 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
 
     if (auto const surface = get_wm_surface(event->window))
     {
-        surface.value()->read_properties();
         surface.value()->map();
     }
 }
@@ -656,6 +667,11 @@ void mf::XWaylandWM::handle_configure_notify(xcb_configure_notify_event_t *event
 
         if (event->border_width)
             log_warning("border width unsupported (border width %d)", event->border_width);
+    }
+
+    if (auto const surface = get_wm_surface(event->window))
+    {
+        surface.value()->configure_notify(event);
     }
 }
 
