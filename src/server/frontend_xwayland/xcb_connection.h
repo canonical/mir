@@ -92,22 +92,26 @@ public:
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
-        std::function<void(xcb_get_property_reply_t*)> action) -> std::function<void()>;
+        std::function<void(xcb_get_property_reply_t*)> action,
+        std::function<void()> on_error) -> std::function<void()>;
 
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
-        std::function<void(std::string const&)> action) -> std::function<void()>;
+        std::function<void(std::string const&)> action,
+        std::function<void()> on_error = [](){}) -> std::function<void()>;
 
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
-        std::function<void(uint32_t)> action) -> std::function<void()>;
+        std::function<void(uint32_t)> action,
+        std::function<void()> on_error = [](){}) -> std::function<void()>;
 
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
-        std::function<void(std::vector<uint32_t>)> action) -> std::function<void()>;
+        std::function<void(std::vector<uint32_t>)> action,
+        std::function<void()> on_error = [](){}) -> std::function<void()>;
     /// @}
 
     /// Set X11 window properties
@@ -166,6 +170,7 @@ public:
     Atom const wm_change_state;
     Atom const wm_s0;
     Atom const wm_client_machine;
+    Atom const wm_transient_for;
     Atom const net_wm_cm_s0;
     Atom const net_wm_name;
     Atom const net_wm_pid;

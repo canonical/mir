@@ -25,6 +25,7 @@
 
 #include <mutex>
 #include <chrono>
+#include <set>
 
 extern "C" {
 #include <xcb/xcb.h>
@@ -121,6 +122,7 @@ namespace mir
 namespace shell
 {
 class Shell;
+class SurfaceSpecification;
 }
 namespace frontend
 {
@@ -144,10 +146,10 @@ public:
     void map();
     void close(); ///< Idempotent
     void configure_request(xcb_configure_request_event_t* event);
+    void configure_notify(xcb_configure_notify_event_t* event);
     void net_wm_state_client_message(uint32_t const (&data)[5]);
     void wm_change_state_client_message(uint32_t const (&data)[5]);
-    void dirty_properties();
-    void read_properties();
+    void property_notify(xcb_atom_t property);
     void attach_wl_surface(WlSurface* wl_surface); ///< Should only be called on the Wayland thread
     void move_resize(uint32_t detail);
 
@@ -185,6 +187,14 @@ private:
     auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
     /// @}
 
+    /// Creates a pending spec if needed and returns a reference
+    auto pending_spec(
+        std::lock_guard<std::mutex> const&) -> shell::SurfaceSpecification&;
+
+    /// Clears the pending spec and returns what it was
+    auto consume_pending_spec(
+        std::lock_guard<std::mutex> const&) -> std::experimental::optional<std::unique_ptr<shell::SurfaceSpecification>>;
+
     /// Should NOT be called under lock
     /// Does nothing if we already have a scene::Surface
     void create_scene_surface_if_needed();
@@ -205,6 +215,7 @@ private:
     WlSeat& seat;
     std::shared_ptr<shell::Shell> const shell;
     xcb_window_t const window;
+    std::map<xcb_window_t, std::function<std::function<void()>()>> const property_handlers;
 
     std::mutex mutable mutex;
 
@@ -212,26 +223,17 @@ private:
     /// Should only be modified by set_wm_state()
     WindowState window_state;
 
-    bool props_dirty;
-    struct
-    {
-        std::string title;
-        std::string appId;
-        int deleteWindow;
-    } properties;
+    geometry::Size latest_size;
+    geometry::Point latest_position; ///< Always in global coordinates
 
-    struct
-    {
-        xcb_window_t parent;
-        geometry::Point position;
-        geometry::Size size;
-        bool override_redirect;
-    } init;
+    /// The contents of the _NET_SUPPORTED property set by the client
+    std::set<xcb_atom_t> supported_wm_protocols;
 
     /// Set in set_wl_surface and cleared when a scene surface is created from it
     std::experimental::optional<std::unique_ptr<InitialWlSurfaceData>> initial_wl_surface_data;
     std::experimental::optional<std::shared_ptr<XWaylandSurfaceObserver>> surface_observer;
     std::weak_ptr<scene::Session> weak_session;
+    std::unique_ptr<shell::SurfaceSpecification> nullable_pending_spec;
     std::weak_ptr<scene::Surface> weak_scene_surface;
 };
 } /* frontend */
