@@ -162,8 +162,7 @@ mf::XWaylandSurface::XWaylandSurface(
               {
                   std::shared_ptr<scene::Surface> parent_scene_surface; // May remain nullptr
 
-                  auto const parent_surface = this->xwm->get_wm_surface(value);
-                  if (parent_surface)
+                  if (auto const parent_surface = this->xwm->get_wm_surface(value))
                   {
                       std::lock_guard<std::mutex> parent_lock{parent_surface.value()->mutex};
                       parent_scene_surface = parent_surface.value()->weak_scene_surface.lock();
