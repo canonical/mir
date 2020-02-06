@@ -45,14 +45,13 @@ namespace md = mir::dispatch;
 using namespace std::chrono_literals;
 
 mf::XWaylandServer::XWaylandServer(
-    const int xdisplay,
     std::shared_ptr<mf::WaylandConnector> wayland_connector,
     std::string const& xwayland_path) :
     wayland_connector{wayland_connector},
     dispatcher{std::make_shared<md::MultiplexingDispatchable>()},
     xserver_thread{std::make_unique<dispatch::ThreadedDispatcher>(
         "Mir/X11 Reader", dispatcher, []() { terminate_with_current_exception(); })},
-    sockets{xdisplay},
+    sockets{},
     afd_dispatcher{
         std::make_shared<md::ReadableFd>(Fd{IntOwnedFd{sockets.abstract_socket_fd}}, [this]{ new_spawn_thread(); })},
     fd_dispatcher{
@@ -389,7 +388,7 @@ auto choose_display() -> int
 }
 }
 
-mf::XWaylandServer::SocketFd::SocketFd(int) :
+mf::XWaylandServer::SocketFd::SocketFd() :
     xdisplay{choose_display()}
 {
     char path[256];

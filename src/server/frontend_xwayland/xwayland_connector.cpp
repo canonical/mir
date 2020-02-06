@@ -26,11 +26,9 @@
 namespace mf = mir::frontend;
 
 mf::XWaylandConnector::XWaylandConnector(
-    const int xdisplay,
-    std::shared_ptr<WaylandConnector> const& wayland_connector,
-    std::string const& xwayland_path) :
+    std::shared_ptr<WaylandConnector> const& wayland_connector, std::string const& xwayland_path) :
     start_xwayland{wayland_connector->get_extension("x11-support") ?
-        [=]{ return std::make_unique<XWaylandServer>(xdisplay, wayland_connector, xwayland_path); } :
+        [=]{ return std::make_unique<XWaylandServer>(wayland_connector, xwayland_path); } :
         decltype(start_xwayland){[]{ return std::unique_ptr<XWaylandServer>{}; }}}
 {
 }
