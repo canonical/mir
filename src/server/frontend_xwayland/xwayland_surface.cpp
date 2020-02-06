@@ -157,7 +157,7 @@ mf::XWaylandSurface::XWaylandSurface(
           property_handler<xcb_window_t>(
               connection,
               window,
-              connection->wm_transient_for,
+              XCB_ATOM_WM_TRANSIENT_FOR,
               [this](xcb_window_t value)
               {
                   std::shared_ptr<scene::Surface> parent_scene_surface; // May remain nullptr

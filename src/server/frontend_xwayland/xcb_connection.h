@@ -163,18 +163,14 @@ public:
     }
 
     Atom const wm_protocols;
-    Atom const wm_normal_hints;
     Atom const wm_take_focus;
     Atom const wm_delete_window;
     Atom const wm_state;
     Atom const wm_change_state;
     Atom const wm_s0;
-    Atom const wm_client_machine;
-    Atom const wm_transient_for;
     Atom const net_wm_cm_s0;
     Atom const net_wm_name;
     Atom const net_wm_pid;
-    Atom const net_wm_icon;
     Atom const net_wm_state;
     Atom const net_wm_state_maximized_vert;
     Atom const net_wm_state_maximized_horz;
@@ -205,29 +201,8 @@ public:
     Atom const motif_wm_hints;
     Atom const clipboard;
     Atom const clipboard_manager;
-    Atom const targets;
     Atom const utf8_string;
-    Atom const wl_selection;
-    Atom const incr;
-    Atom const timestamp;
-    Atom const multiple;
-    Atom const compound_text;
-    Atom const text;
-    Atom const string;
-    Atom const window;
-    Atom const text_plain_utf8;
-    Atom const text_plain;
-    Atom const xdnd_selection;
-    Atom const xdnd_aware;
-    Atom const xdnd_enter;
-    Atom const xdnd_leave;
-    Atom const xdnd_drop;
-    Atom const xdnd_status;
-    Atom const xdnd_finished;
-    Atom const xdnd_type_list;
-    Atom const xdnd_action_copy;
     Atom const wl_surface_id;
-    Atom const allow_commits;
 
 private:
     XCBConnection(XCBConnection&) = delete;
