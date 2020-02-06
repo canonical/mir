@@ -236,6 +236,24 @@ private:
 
     auto xcb_type_atom(XCBType type) const -> xcb_atom_t;
 
+    template<XCBType type>
+    static inline constexpr uint8_t xcb_type_format()
+    {
+        static_assert(!std::is_same<typename NativeXCBType<type>::type, void>::value, "Missing Native specialization");
+        auto const format = sizeof(typename NativeXCBType<type>::type) * 8;
+        static_assert(format == 8 || format == 16 || format == 32, "Invalid format");
+        return format;
+    }
+
+    template<XCBType type, typename T>
+    static inline void validate_xcb_type()
+    {
+        // Accidentally sending a pointer instead of the actual data is an easy error to make
+        static_assert(!std::is_pointer<T>::value, "Data type should not be a pointer");
+        static_assert(!std::is_same<typename NativeXCBType<type>::type, void>::value, "Missing Native specialization");
+        static_assert(std::is_same<typename NativeXCBType<type>::type, T>::value, "Specified type does not match data type");
+    }
+
     template<XCBType type, typename T>
     inline void set_property(
         xcb_window_t window,
@@ -243,19 +261,14 @@ private:
         size_t length,
         T const* data)
     {
-        // Accidentally sending a pointer instead of the actual data is an easy error to make
-        static_assert(!std::is_pointer<T>::value, "Data type should not be a pointer");
-        static_assert(!std::is_same<typename NativeXCBType<type>::type, void>::value, "Missing Native specialization");
-        static_assert(std::is_same<typename NativeXCBType<type>::type, T>::value, "Specified type does not match data type");
-        auto const format = sizeof(typename NativeXCBType<type>::type) * 8;
-        static_assert(format == 8 || format == 16 || format == 32, "Invalid format");
+        validate_xcb_type<type, T>();
         xcb_change_property(
             xcb_connection,
             XCB_PROP_MODE_REPLACE,
             window,
             property,
             xcb_type_atom(type),
-            format,
+            xcb_type_format<type>(),
             length,
             data);
     }
