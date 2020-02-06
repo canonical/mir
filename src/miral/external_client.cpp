@@ -21,7 +21,6 @@
 #include "launch_app.h"
 
 #include <mir/server.h>
-#include <mir/options/configuration.h>
 
 namespace mo = mir::options;
 
@@ -42,13 +41,8 @@ void miral::ExternalClientLauncher::launch(std::vector<std::string> const& comma
         throw std::logic_error("Cannot launch apps when server has not started");
 
     auto const wayland_display = self->server->wayland_display();
+    auto const x11_display = self->server->x11_display();
     auto const mir_socket = self->server->mir_socket_name();
-
-    mir::optional_value<std::string> x11_display;
-
-    auto const options = self->server->get_options();
-    if (options->is_set(mo::x11_display_opt))
-        x11_display = std::string(":") + std::to_string(options->get<int>(mo::x11_display_opt));
 
     self->pid = launch_app(command_line, wayland_display, mir_socket, x11_display);
 }
@@ -67,13 +61,9 @@ void miral::ExternalClientLauncher::launch_using_x11(std::vector<std::string> co
 
     mir::optional_value<std::string> const wayland_display;
     mir::optional_value<std::string> const mir_socket;
-    mir::optional_value<std::string> x11_display;
 
-    auto const options = self->server->get_options();
-    if (options->is_set(mo::x11_display_opt))
+    if (auto const x11_display = self->server->x11_display())
     {
-        x11_display = std::string(":") + std::to_string(options->get<int>(mo::x11_display_opt));
-
         self->pid = launch_app(command_line, wayland_display, mir_socket, x11_display);
     }
 }

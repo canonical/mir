@@ -42,6 +42,8 @@ public:
     XWaylandServer(const int xdisp, std::shared_ptr<WaylandConnector> wayland_connector, std::string const& xwayland_path);
     ~XWaylandServer();
 
+    auto x11_display() const -> std::string;
+
 private:
     /// Forks off the XWayland process
     void spawn();

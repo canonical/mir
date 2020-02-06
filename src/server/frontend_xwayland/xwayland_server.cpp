@@ -472,3 +472,8 @@ void mf::XWaylandServer::new_spawn_thread()
     if (spawn_thread.joinable()) spawn_thread.join();
     spawn_thread = std::thread{&mf::XWaylandServer::spawn, this};
 }
+
+auto mir::frontend::XWaylandServer::x11_display() const -> std::string
+{
+    return std::string(":") + std::to_string(sockets.xdisplay);
+}

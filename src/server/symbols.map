@@ -842,6 +842,13 @@ MIR_SERVER_1.7.0 {
   };
 } MIR_SERVER_1.6.0;
 
+MIR_SERVER_1.8.0 {
+ global:
+  extern "C++" {
+    mir::Server::x11_display*;
+  };
+} MIR_SERVER_1.7.0;
+
 # these symbols are needed by the "throwback" tests but are not intended to be public
 MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
  global:
@@ -945,3 +952,4 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
     mir::DefaultServerConfiguration::the_decoration_manager*;
   };
 } MIR_SERVER_1.6.0;
+

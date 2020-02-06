@@ -60,7 +60,14 @@ int mf::XWaylandConnector::client_socket_fd(
 
 auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
 {
-    return optional_value<std::string>();
+    if (xwayland_server)
+    {
+        return xwayland_server->x11_display();
+    }
+    else
+    {
+        return optional_value<std::string>();
+    }
 }
 
 mf::XWaylandConnector::~XWaylandConnector() = default;
