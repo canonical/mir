@@ -360,73 +360,41 @@ int create_socket(struct sockaddr_un *addr, size_t path_size) {
 int create_lockfile(int xdisplay)
 {
     char lockfile[256];
-    char pid[11];
-    int fd, size;
-    pid_t other;
 
     snprintf(lockfile, sizeof lockfile, "/tmp/.X%d-lock", xdisplay);
-    fd = open(lockfile, O_WRONLY | O_CLOEXEC | O_CREAT | O_EXCL, 0444);
-    if (fd < 0 && errno == EEXIST)
-    {
-        fd = open(lockfile, O_CLOEXEC | O_RDONLY);
-        if (fd < 0 || read(fd, pid, 11) != 11)
-        {
-            if (fd >= 0)
-                close(fd);
-            return EEXIST;
-        }
 
-        /* Trim the trailing LF, or at least ensure it's NULL. */
-        pid[10] = '\0';
-
-        other = std::stoi(pid);
-
-        if (kill(other, 0) < 0 && errno == ESRCH)
-        {
-            /* stale lock file; unlink and try again */
-            close(fd);
-            if (unlink(lockfile))
-                return EEXIST;
-            else
-                return EAGAIN;
-        }
-
-        close(fd);
-        return EEXIST;
-    }
-    else if (fd < 0)
+    mir::Fd const fd{open(lockfile, O_WRONLY | O_CLOEXEC | O_CREAT | O_EXCL, 0444)};
+    if (fd < 0)
         return EEXIST;
 
-    size = dprintf(fd, "%10d\n", getpid());
+    int const size = dprintf(fd, "%10d\n", getpid());
     if (size != 11)
     {
         unlink(lockfile);
-        close(fd);
         return EEXIST;
     }
 
-    close(fd);
-
     return 0;
 }
+
+auto choose_display() -> int
+{
+    for (auto xdisplay = 0; xdisplay != 10000; ++xdisplay)
+    {
+        if (create_lockfile(xdisplay) == 0) return xdisplay;
+    }
+
+    mir::fatal_error("Cannot create X11 lockfile!");
+    return -1;
+}
 }
 
-mf::XWaylandServer::SocketFd::SocketFd(int xdisplay) :
-    xdisplay{xdisplay}
+mf::XWaylandServer::SocketFd::SocketFd(int) :
+    xdisplay{choose_display()}
 {
     char path[256];
     struct sockaddr_un addr;
     size_t path_size;
-
-    int i = create_lockfile(xdisplay);
-    while (i == EAGAIN)
-    {
-        i = create_lockfile(xdisplay);
-    }
-    if (i != 0) {
-      mir::fatal_error("X11 lockfile already exists!");
-      return;
-    }
 
     // Make sure we remove the Xserver socket before creating new ones
     snprintf(path, sizeof path, "/tmp/.X11-unix/X%d", xdisplay);
