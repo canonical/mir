@@ -86,6 +86,9 @@ public:
     auto reply_contains_string_data(xcb_get_property_reply_t const* reply) -> bool;
     auto string_from(xcb_get_property_reply_t const* reply) -> std::string;
 
+    /// If the window was created by us
+    auto is_ours(xcb_window_t window) -> bool;
+
     /// Read a single property of various types from the window
     /// Returns a function that will wait on the reply before calling action()
     /// @{

@@ -93,7 +93,6 @@ private:
     void wm_get_resources();
     auto get_reply_debug_string(xcb_get_property_reply_t* reply) -> std::string;
     auto get_window_debug_string(xcb_window_t window) -> std::string;
-    bool is_ours(uint32_t id);
     void setup_visual_and_colormap();
 
     // Event handeling

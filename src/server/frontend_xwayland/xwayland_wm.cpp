@@ -460,7 +460,7 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
             log_warning("border width unsupported (border width %d)", event->border_width);
     }
 
-    if (!is_ours(event->window))
+    if (!connection->is_ours(event->window))
     {
         auto const surface = std::make_shared<XWaylandSurface>(
             this,
@@ -545,7 +545,7 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
             get_window_debug_string(event->event).c_str());
     }
 
-    if (is_ours(event->window))
+    if (connection->is_ours(event->window))
         return;
 
     // We just ignore the ICCCM 4.1.4 synthetic unmap notify
@@ -875,7 +875,7 @@ auto mf::XWaylandWM::get_window_debug_string(xcb_window_t window) -> std::string
         return "null window";
     else if (window == xcb_screen->root)
         return "root window";
-    else if (is_ours(window))
+    else if (connection->is_ours(window))
         return "our window " + std::to_string(window);
     else
         return "window " + std::to_string(window);
@@ -907,10 +907,4 @@ void mf::XWaylandWM::setup_visual_and_colormap()
     xcb_visual_id = visualType->visual_id;
     xcb_colormap = xcb_generate_id(*connection);
     xcb_create_colormap(*connection, XCB_COLORMAP_ALLOC_NONE, xcb_colormap, xcb_screen->root, xcb_visual_id);
-}
-
-bool mf::XWaylandWM::is_ours(uint32_t id)
-{
-    auto setup = xcb_get_setup(*connection);
-    return (id & ~setup->resource_id_mask) == setup->resource_id_base;
 }

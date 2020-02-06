@@ -175,6 +175,12 @@ auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) -> st
         static_cast<unsigned long>(xcb_get_property_value_length(reply))};
 }
 
+bool mf::XCBConnection::is_ours(uint32_t id)
+{
+    auto setup = xcb_get_setup(xcb_connection);
+    return (id & ~setup->resource_id_mask) == setup->resource_id_base;
+}
+
 auto mf::XCBConnection::read_property(
     xcb_window_t window,
     xcb_atom_t prop,
