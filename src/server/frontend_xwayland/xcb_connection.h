@@ -42,6 +42,7 @@ enum class XCBType
     STRING,
     UTF8_STRING,
     WM_STATE,
+    WM_PROTOCOLS,
 };
 
 template<XCBType T> struct NativeXCBType                { typedef void type;};
@@ -51,6 +52,7 @@ template<> struct NativeXCBType<XCBType::CARDINAL32>    { typedef uint32_t type;
 template<> struct NativeXCBType<XCBType::STRING>        { typedef char type; };
 template<> struct NativeXCBType<XCBType::UTF8_STRING>   { typedef char type; };
 template<> struct NativeXCBType<XCBType::WM_STATE>      { typedef uint32_t type; };
+template<> struct NativeXCBType<XCBType::WM_PROTOCOLS>  { typedef uint32_t type; };
 
 class XCBConnection
 {
