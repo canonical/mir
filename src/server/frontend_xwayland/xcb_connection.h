@@ -21,6 +21,7 @@
 
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
+#include "mir/fatal.h"
 
 #include <xcb/xcb.h>
 #include <string>
@@ -157,6 +158,16 @@ public:
         std::experimental::optional<geometry::Point> position,
         std::experimental::optional<geometry::Size> size);
 
+    /// Send client message
+    /// @{
+    template<XCBType type, typename T, size_t length>
+    void send_client_message(xcb_window_t window, uint32_t event_mask, T(&data)[length])
+    {
+        static_assert(length * sizeof(T) <= sizeof(xcb_client_message_data_t), "Too much data");
+        send_client_message<type>(window, event_mask, length, data);
+    }
+    /// @}
+
     inline void flush()
     {
         xcb_flush(xcb_connection);
@@ -271,6 +282,55 @@ private:
             xcb_type_format<type>(),
             length,
             data);
+    }
+
+    template<typename T, size_t dest_len>
+    static inline void copy_into_array(T(&dest)[dest_len], size_t src_len, T const* src)
+    {
+        if (src_len > dest_len)
+        {
+            fatal_error("%u elements of data does not fit in %u element long array", src_len, dest_len);
+        }
+        for (unsigned i = 0; i < src_len; i++)
+        {
+            dest[i] = src[i];
+        }
+    }
+
+    static inline void set_client_message_data(xcb_client_message_data_t& dest, size_t length, uint8_t const* source)
+    {
+        copy_into_array(dest.data8, length, source);
+    }
+
+    static inline void set_client_message_data(xcb_client_message_data_t& dest, size_t length, uint16_t const* source)
+    {
+        copy_into_array(dest.data16, length, source);
+    }
+
+    static inline void set_client_message_data(xcb_client_message_data_t& dest, size_t length, uint32_t const* source)
+    {
+        copy_into_array(dest.data32, length, source);
+    }
+
+    template<XCBType type, typename T>
+    void send_client_message(xcb_window_t window, uint32_t event_mask, size_t length, T const* data)
+    {
+        validate_xcb_type<type, T>();
+        auto event = xcb_client_message_event_t{
+            XCB_CLIENT_MESSAGE,
+            xcb_type_format<type>(),
+            0, // Sequence is apparently ignored
+            window,
+            xcb_type_atom(type),
+            {{uint32_t{0}, uint32_t{0}, uint32_t{0}, uint32_t{0}, uint32_t{0}}}
+        };
+        set_client_message_data(event.data, length, data);
+        xcb_send_event(
+            xcb_connection,
+            0, // Don't propagate
+            window,
+            event_mask,
+            reinterpret_cast<const char*>(&event));
     }
 };
 }
