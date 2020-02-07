@@ -91,8 +91,6 @@ private:
     void set_cursor(xcb_window_t id, const CursorType &cursor);
     void create_wm_cursor();
     void wm_get_resources();
-    auto get_reply_debug_string(xcb_get_property_reply_t* reply) -> std::string;
-    auto get_window_debug_string(xcb_window_t window) -> std::string;
     void setup_visual_and_colormap();
 
     // Event handeling
@@ -124,7 +122,6 @@ private:
     wl_client* const wayland_client;
     std::shared_ptr<XWaylandWMShell> const wm_shell;
 
-    xcb_screen_t *xcb_screen;
     xcb_window_t xcb_window;
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
     std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;

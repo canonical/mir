@@ -33,7 +33,6 @@
 #include <poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <sstream>
 #include <boost/throw_exception.hpp>
 
 #ifndef ARRAY_LENGTH
@@ -76,27 +75,6 @@ static const struct cursor_alternatives cursors[] = {
 
 namespace mf = mir::frontend;
 
-namespace
-{
-template<typename T, typename U = T>
-auto data_buffer_to_debug_string(
-    T* data,
-    size_t elements,
-    std::function<U(T element)> converter = [](T e) -> T { return e; }) -> std::string
-{
-    std::stringstream ss;
-    ss << "[";
-    for (T* i = data; i != data + elements; i++)
-    {
-        if (i != data)
-            ss << ", ";
-        ss << converter(*i);
-    }
-    ss << "]";
-    return ss.str();
-}
-}
-
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
     : wm_fd{fd},
       connection{std::make_shared<XCBConnection>(fd)},
@@ -112,9 +90,6 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
         return;
     }
 
-    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(*connection));
-    xcb_screen = iter.data;
-
     wm_dispatcher =
         std::make_shared<mir::dispatch::ReadableFd>(mir::Fd{mir::IntOwnedFd{wm_fd}}, [this]() { handle_events(); });
     dispatcher->add_watch(wm_dispatcher);
@@ -128,9 +103,9 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
     uint32_t const attrib_values[]{
         XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_PROPERTY_CHANGE};
 
-    xcb_change_window_attributes(*connection, xcb_screen->root, XCB_CW_EVENT_MASK, attrib_values);
+    xcb_change_window_attributes(*connection, connection->root_window(), XCB_CW_EVENT_MASK, attrib_values);
 
-    xcb_composite_redirect_subwindows(*connection, xcb_screen->root, XCB_COMPOSITE_REDIRECT_MANUAL);
+    xcb_composite_redirect_subwindows(*connection, connection->root_window(), XCB_COMPOSITE_REDIRECT_MANUAL);
 
     xcb_atom_t const supported[]{
         connection->net_wm_moveresize,
@@ -140,10 +115,10 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
         connection->net_wm_state_maximized_horz,
         connection->net_active_window};
 
-    connection->set_property<XCBType::ATOM>(xcb_screen->root, connection->net_supported, supported);
+    connection->set_property<XCBType::ATOM>(connection->root_window(), connection->net_supported, supported);
 
     connection->set_property<XCBType::WINDOW>(
-        xcb_screen->root,
+        connection->root_window(),
         connection->net_active_window,
         static_cast<xcb_window_t>(XCB_WINDOW_NONE));
     wm_selector();
@@ -151,7 +126,7 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
     connection->flush();
 
     create_wm_cursor();
-    set_cursor(xcb_screen->root, CursorLeftPointer);
+    set_cursor(connection->root_window(), CursorLeftPointer);
 
     create_wm_window();
     connection->flush();
@@ -212,12 +187,12 @@ void mf::XWaylandWM::wm_selector()
         *connection,
         XCB_COPY_FROM_PARENT,
         xcb_selection_window,
-        xcb_screen->root,
+        connection->root_window(),
         0, 0, // position
         10, 10, // size
         0, // border width
         XCB_WINDOW_CLASS_INPUT_OUTPUT,
-        xcb_screen->root_visual,
+        connection->screen()->root_visual,
         XCB_CW_EVENT_MASK,
         values);
 
@@ -267,13 +242,23 @@ void mf::XWaylandWM::create_wm_window()
     std::string const wm_name{"Mir XWM"};
 
     xcb_window = xcb_generate_id(*connection);
-    xcb_create_window(*connection, XCB_COPY_FROM_PARENT, xcb_window, xcb_screen->root, 0, 0, 10, 10, 0,
-                      XCB_WINDOW_CLASS_INPUT_OUTPUT, xcb_screen->root_visual, 0, NULL);
+    xcb_create_window(
+        *connection,
+        XCB_COPY_FROM_PARENT,
+        xcb_window,
+        connection->root_window(),
+        0, 0, 10, 10, 0,
+        XCB_WINDOW_CLASS_INPUT_OUTPUT,
+        connection->screen()->root_visual,
+        0, NULL);
 
     connection->set_property<XCBType::WINDOW>(xcb_window, connection->net_supporting_wm_check, xcb_window);
     connection->set_property<XCBType::UTF8_STRING>(xcb_window, connection->net_wm_name, wm_name);
 
-    connection->set_property<XCBType::WINDOW>(xcb_screen->root, connection->net_supporting_wm_check, xcb_window);
+    connection->set_property<XCBType::WINDOW>(
+        connection->root_window(),
+        connection->net_supporting_wm_check,
+        xcb_window);
 
     /* Claim the WM_S0 selection even though we don't support
      * the --replace functionality. */
@@ -408,7 +393,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
         {
             log_debug(
                 "XCB_PROPERTY_NOTIFY (%s).%s: deleted",
-                get_window_debug_string(event->window).c_str(),
+                connection->window_debug_string(event->window).c_str(),
                 connection->query_name(event->atom).c_str());
         }
         else
@@ -418,7 +403,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
                     auto const prop_name = connection->query_name(event->atom);
                     log_debug(
                         "XCB_PROPERTY_NOTIFY (%s).%s: %s",
-                        get_window_debug_string(event->window).c_str(),
+                        connection->window_debug_string(event->window).c_str(),
                         prop_name.c_str(),
                         value.c_str());
                 };
@@ -428,7 +413,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
                 event->atom,
                 [this, log_prop](xcb_get_property_reply_t* reply)
                 {
-                    auto const reply_str = get_reply_debug_string(reply);
+                    auto const reply_str = connection->reply_debug_string(reply);
                     log_prop(reply_str);
                 },
                 [log_prop]()
@@ -450,8 +435,8 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("XCB_CREATE_NOTIFY parent: %s", get_window_debug_string(event->parent).c_str());
-        log_debug("                  window: %s", get_window_debug_string(event->window).c_str());
+        log_debug("XCB_CREATE_NOTIFY parent: %s", connection->window_debug_string(event->parent).c_str());
+        log_debug("                  window: %s", connection->window_debug_string(event->window).c_str());
         log_debug("                  position: %d, %d", event->x, event->y);
         log_debug("                  size: %dx%d", event->width, event->height);
         log_debug("                  override_redirect: %s", event->override_redirect ? "yes" : "no");
@@ -474,7 +459,7 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 
             if (surfaces.find(event->window) != surfaces.end())
                 BOOST_THROW_EXCEPTION(
-                    std::runtime_error(get_window_debug_string(event->window) + " created, but already known"));
+                    std::runtime_error(connection->window_debug_string(event->window) + " created, but already known"));
 
             surfaces[event->window] = surface;
         }
@@ -485,9 +470,9 @@ void mf::XWaylandWM::handle_motion_notify(xcb_motion_notify_event_t *event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("XCB_MOTION_NOTIFY root: %s", get_window_debug_string(event->root).c_str());
-        log_debug("                  event: %s", get_window_debug_string(event->event).c_str());
-        log_debug("                  child: %s", get_window_debug_string(event->child).c_str());
+        log_debug("XCB_MOTION_NOTIFY root: %s", connection->window_debug_string(event->root).c_str());
+        log_debug("                  event: %s", connection->window_debug_string(event->event).c_str());
+        log_debug("                  child: %s", connection->window_debug_string(event->child).c_str());
         log_debug("                  root pos: %d, %d", event->root_x, event->root_y);
         log_debug("                  event pos: %d, %d", event->event_x, event->event_y);
     }
@@ -499,8 +484,8 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
     {
         log_debug(
             "XCB_DESTROY_NOTIFY window: %s, event: %s",
-            get_window_debug_string(event->window).c_str(),
-            get_window_debug_string(event->event).c_str());
+            connection->window_debug_string(event->window).c_str(),
+            connection->window_debug_string(event->event).c_str());
     }
 
     std::shared_ptr<XWaylandSurface> surface{nullptr};
@@ -525,8 +510,8 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
     {
         log_debug(
             "XCB_MAP_REQUEST %s with parent %s",
-            get_window_debug_string(event->window).c_str(),
-            get_window_debug_string(event->parent).c_str());
+            connection->window_debug_string(event->window).c_str(),
+            connection->window_debug_string(event->parent).c_str());
     }
 
     if (auto const surface = get_wm_surface(event->window))
@@ -541,8 +526,8 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
     {
         log_debug(
             "XCB_UNMAP_NOTIFY %s with event %s",
-            get_window_debug_string(event->window).c_str(),
-            get_window_debug_string(event->event).c_str());
+            connection->window_debug_string(event->window).c_str(),
+            connection->window_debug_string(event->event).c_str());
     }
 
     if (connection->is_ours(event->window))
@@ -563,30 +548,11 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        std::string data;
-        switch (event->format)
-        {
-        case 8:
-            data = data_buffer_to_debug_string(event->data.data8, 20);
-            break;
-
-        case 16:
-            data = data_buffer_to_debug_string(event->data.data16, 10);
-            break;
-
-        case 32:
-            data = data_buffer_to_debug_string(event->data.data32, 5);
-            break;
-
-        default:
-            data = "unknown format " + std::to_string(event->format);
-        }
-
         log_debug(
             "XCB_CLIENT_MESSAGE %s on %s: %s",
             connection->query_name(event->type).c_str(),
-            get_window_debug_string(event->window).c_str(),
-            data.c_str());
+            connection->window_debug_string(event->window).c_str(),
+            connection->client_message_debug_string(event).c_str());
     }
 
     if (auto const surface = get_wm_surface(event->window))
@@ -638,9 +604,9 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("XCB_CONFIGURE_REQUEST parent: %s", get_window_debug_string(event->parent).c_str());
-        log_debug("                      window: %s", get_window_debug_string(event->window).c_str());
-        log_debug("                      sibling: %s", get_window_debug_string(event->sibling).c_str());
+        log_debug("XCB_CONFIGURE_REQUEST parent: %s", connection->window_debug_string(event->parent).c_str());
+        log_debug("                      window: %s", connection->window_debug_string(event->window).c_str());
+        log_debug("                      sibling: %s", connection->window_debug_string(event->sibling).c_str());
         log_debug("                      position: %d, %d", event->x, event->y);
         log_debug("                      size: %dx%d", event->width, event->height);
 
@@ -658,9 +624,9 @@ void mf::XWaylandWM::handle_configure_notify(xcb_configure_notify_event_t *event
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("XCB_CONFIGURE_NOTIFY event: %s", get_window_debug_string(event->event).c_str());
-        log_debug("                     window: %s", get_window_debug_string(event->window).c_str());
-        log_debug("                     above_sibling: %s", get_window_debug_string(event->above_sibling).c_str());
+        log_debug("XCB_CONFIGURE_NOTIFY event: %s", connection->window_debug_string(event->event).c_str());
+        log_debug("                     window: %s", connection->window_debug_string(event->window).c_str());
+        log_debug("                     above_sibling: %s", connection->window_debug_string(event->above_sibling).c_str());
         log_debug("                     position: %d, %d", event->x, event->y);
         log_debug("                     size: %dx%d", event->width, event->height);
         log_debug("                     override_redirect: %s", event->override_redirect ? "yes" : "no");
@@ -789,101 +755,9 @@ void mf::XWaylandWM::wm_get_resources()
     free(formats_reply);
 }
 
-auto mf::XWaylandWM::get_reply_debug_string(xcb_get_property_reply_t* reply) -> std::string
-{
-    if (reply == nullptr)
-    {
-        return "(null reply)";
-    }
-    else if (connection->reply_contains_string_data(reply))
-    {
-        auto const text = connection->string_from(reply);
-        return "\"" + text + "\"";
-    }
-    else
-    {
-        // The length returned by xcb_get_property_value_length() is in bytes for some reason
-        size_t const len = xcb_get_property_value_length(reply) / (reply->format / 8);
-        std::stringstream ss;
-        ss << std::to_string(reply->format) << "bit " << connection->query_name(reply->type) << "[" << len << "]";
-        if (len < 32 && (
-            reply->type == XCB_ATOM_CARDINAL ||
-            reply->type == XCB_ATOM_INTEGER ||
-            reply->type == XCB_ATOM_ATOM ||
-            reply->type == XCB_ATOM_WINDOW))
-        {
-            ss << ": ";
-            void* const ptr = xcb_get_property_value(reply);
-            switch (reply->type)
-            {
-            case XCB_ATOM_CARDINAL: // unsigned number
-                switch (reply->format)
-                {
-                case 8: ss << data_buffer_to_debug_string(static_cast<uint8_t*>(ptr), len); break;
-                case 16: ss << data_buffer_to_debug_string(static_cast<uint16_t*>(ptr), len); break;
-                case 32: ss << data_buffer_to_debug_string(static_cast<uint32_t*>(ptr), len); break;
-                }
-                break;
-
-            case XCB_ATOM_INTEGER: // signed number
-                switch (reply->format)
-                {
-                case 8: ss << data_buffer_to_debug_string(static_cast<int8_t*>(ptr), len); break;
-                case 16: ss << data_buffer_to_debug_string(static_cast<int16_t*>(ptr), len); break;
-                case 32: ss << data_buffer_to_debug_string(static_cast<int32_t*>(ptr), len); break;
-                }
-                break;
-
-            case XCB_ATOM_ATOM:
-                if (reply->format != sizeof(xcb_atom_t) * 8)
-                {
-                    ss << "Atom property has format " << std::to_string(reply->format);
-                    break;
-                }
-                ss << data_buffer_to_debug_string<xcb_atom_t, std::string>(
-                    static_cast<xcb_atom_t*>(ptr),
-                    len,
-                    [this](xcb_atom_t atom) -> std::string
-                    {
-                        return connection->query_name(atom);
-                    });
-                break;
-
-            case XCB_ATOM_WINDOW:
-                if (reply->format != sizeof(xcb_window_t) * 8)
-                {
-                    ss << "Window property has format " << std::to_string(reply->format);
-                    break;
-                }
-                ss << data_buffer_to_debug_string<xcb_window_t, std::string>(
-                    static_cast<xcb_window_t*>(ptr),
-                    len,
-                    [this](xcb_window_t window) -> std::string
-                    {
-                        return get_window_debug_string(window);
-                    });
-                break;
-            }
-        }
-        return ss.str();
-    }
-}
-
-auto mf::XWaylandWM::get_window_debug_string(xcb_window_t window) -> std::string
-{
-    if (!window)
-        return "null window";
-    else if (window == xcb_screen->root)
-        return "root window";
-    else if (connection->is_ours(window))
-        return "our window " + std::to_string(window);
-    else
-        return "window " + std::to_string(window);
-}
-
 void mf::XWaylandWM::setup_visual_and_colormap()
 {
-    xcb_depth_iterator_t depthIterator = xcb_screen_allowed_depths_iterator(xcb_screen);
+    xcb_depth_iterator_t depthIterator = xcb_screen_allowed_depths_iterator(connection->screen());
     xcb_visualtype_t *visualType = nullptr;
     xcb_visualtype_iterator_t visualTypeIterator;
     while (depthIterator.rem > 0)
@@ -906,5 +780,5 @@ void mf::XWaylandWM::setup_visual_and_colormap()
 
     xcb_visual_id = visualType->visual_id;
     xcb_colormap = xcb_generate_id(*connection);
-    xcb_create_colormap(*connection, XCB_COLORMAP_ALLOC_NONE, xcb_colormap, xcb_screen->root, xcb_visual_id);
+    xcb_create_colormap(*connection, XCB_COLORMAP_ALLOC_NONE, xcb_colormap, connection->root_window(), xcb_visual_id);
 }
