@@ -488,6 +488,9 @@ public:
     /// Get the name of the Wayland endpoint (if any) usable as a $WAYLAND_DISPLAY value
     auto wayland_display() const -> optional_value<std::string>;
 
+    /// Get the name of the X11 display usable as a $DISPLAY value
+    auto x11_display() const -> optional_value<std::string>;
+
     /// Overrides the standard set of Wayland extensions (mir::frontend::get_standard_extensions()) with a new list
     void set_enabled_wayland_extensions(std::vector<std::string> const& extensions);
 /** @} */
