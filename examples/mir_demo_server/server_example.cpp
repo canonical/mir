@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2019 Canonical Ltd.
+ * Copyright © 2012-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -31,7 +31,6 @@
 #include <miral/runner.h>
 #include <miral/set_window_management_policy.h>
 #include <miral/wayland_extensions.h>
-#include <miral/x11_support.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
@@ -136,7 +135,6 @@ try
         miral::display_configuration_options,
         me::add_log_host_lifecycle_option_to,
         me::add_glog_options_to,
-        miral::X11Support{},
         miral::WaylandExtensions{}
             .enable(miral::WaylandExtensions::zwlr_layer_shell_v1)
             .enable(miral::WaylandExtensions::zxdg_output_manager_v1),

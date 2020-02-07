@@ -147,11 +147,7 @@ void miral::MirRunner::Self::launch_startup_applications(::mir::Server& server)
                     if (app[0] == "gnome-terminal")
                         app.push_back("--app-id"),app.push_back("com.canonical.miral.Terminal");
 
-                    mir::optional_value<std::string> x11_display;
-
-                    auto const options = server.get_options();
-                    if (options->is_set(mo::x11_display_opt))
-                        x11_display = std::string(":") + std::to_string(options->get<int>(mo::x11_display_opt));
+                    mir::optional_value<std::string> x11_display = server.x11_display();
 
                     launch_app(app, wayland_display, mir_socket, x11_display);
 
@@ -294,9 +290,7 @@ auto miral::MirRunner::x11_display() const -> mir::optional_value<std::string>
 
     if (auto const server = self->weak_server.lock())
     {
-        auto const options = server->get_options();
-        if (options->is_set(mo::x11_display_opt))
-            return std::string(":") + std::to_string(options->get<int>(mo::x11_display_opt));
+        return server->x11_display();
     }
 
     return {};

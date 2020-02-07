@@ -41,6 +41,8 @@ while [ -e "${XDG_RUNTIME_DIR}/wayland-${port}" ]; do
 done
 wayland_display=wayland-${port}
 
+port=0
+
 while [ $# -gt 0 ]
 do
   if [ "$1" == "--help" -o "$1" == "-h" ]
@@ -76,10 +78,10 @@ unset QT_QPA_PLATFORMTHEME
 if [ "${miral_server}" == "miral-shell" ]
 then
   # miral-shell can launch it's own terminal with Ctrl-Alt-T
-  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} NO_AT_BRIDGE=1 ${hostsocket} exec dbus-run-session -- ${bindir}${miral_server} ${enable_mirclient} $*
+  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} NO_AT_BRIDGE=1 ${hostsocket} exec dbus-run-session -- ${bindir}${miral_server} ${enable_mirclient} $*
 else
   # miral-kiosk (and mir_demo_server) need a terminal launched
-  sh -c "MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*"&
+  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*&
 
   # Fixup for weird gnome-terminal script on Ubuntu
   if [ "${terminal}" == "gnome-terminal" ] && [ -e "/usr/bin/gnome-terminal.real" ]
