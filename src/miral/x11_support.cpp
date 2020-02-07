@@ -36,7 +36,7 @@ void miral::X11Support::operator()(mir::Server& server) const
 {
     server.add_configuration_option(
         mo::x11_display_opt,
-        "Enable DISPLAY socket to use for X11 support", mir::OptionType::null);
+        "Enable X11 support", mir::OptionType::null);
 
     server.add_configuration_option(
         "xwayland-path",

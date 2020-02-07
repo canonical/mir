@@ -81,7 +81,7 @@ then
   MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} NO_AT_BRIDGE=1 ${hostsocket} exec dbus-run-session -- ${bindir}${miral_server} ${enable_mirclient} $*
 else
   # miral-kiosk (and mir_demo_server) need a terminal launched
-    MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*&
+  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*&
 
   # Fixup for weird gnome-terminal script on Ubuntu
   if [ "${terminal}" == "gnome-terminal" ] && [ -e "/usr/bin/gnome-terminal.real" ]
