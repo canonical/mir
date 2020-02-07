@@ -66,7 +66,7 @@ void miral::X11Support::operator()(mir::Server& server) const
 
                             if (write(fd, display.c_str(), display.size()) != static_cast<ssize_t>(display.size()))
                             {
-                                mir::fatal_error("Cannot write X11 display number to fd %d\n", fd);
+                                mir::fatal_error("Cannot write X11 display number to fd %d\n", static_cast<int>(fd));
                             }
                         }
                     });
