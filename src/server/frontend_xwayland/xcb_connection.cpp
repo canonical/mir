@@ -131,7 +131,7 @@ mf::XCBConnection::operator xcb_connection_t*() const
     return xcb_connection;
 }
 
-auto mf::XCBConnection::query_name(xcb_atom_t atom) -> std::string
+auto mf::XCBConnection::query_name(xcb_atom_t atom) const -> std::string
 {
     // TODO: cache, for cheaper lookup
 
@@ -157,12 +157,12 @@ auto mf::XCBConnection::query_name(xcb_atom_t atom) -> std::string
     return name;
 }
 
-auto mf::XCBConnection::reply_contains_string_data(xcb_get_property_reply_t const* reply) -> bool
+auto mf::XCBConnection::reply_contains_string_data(xcb_get_property_reply_t const* reply) const -> bool
 {
     return reply->type == XCB_ATOM_STRING || reply->type == utf8_string;
 }
 
-auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) -> std::string
+auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) const -> std::string
 {
     if (!reply_contains_string_data(reply))
     {
@@ -175,7 +175,7 @@ auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) -> st
         static_cast<unsigned long>(xcb_get_property_value_length(reply))};
 }
 
-bool mf::XCBConnection::is_ours(uint32_t id)
+bool mf::XCBConnection::is_ours(uint32_t id) const
 {
     auto setup = xcb_get_setup(xcb_connection);
     return (id & ~setup->resource_id_mask) == setup->resource_id_base;
