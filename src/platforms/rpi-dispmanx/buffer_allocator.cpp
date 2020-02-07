@@ -152,7 +152,7 @@ public:
                 vc_dispmanx_rect_set(
                     &rect,
                     0, row,
-                    size().width.as_uint32_t(), row + 1);
+                    size().width.as_uint32_t(), 1);
                 vc_dispmanx_resource_write_data(
                     handle,
                     vc_format,
