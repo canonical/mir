@@ -137,6 +137,7 @@ void Printer::printhelp(BackgroundInfo const& region)
             "Keyboard shortcuts:",
             "",
             "  o Terminal: Ctrl-Alt-T/Ctrl-Alt-Shift-T",
+            "  o X Terminal: Ctrl-Alt-X (if X11 is enabled)",
             "",
             "  o Switch apps: Alt-Tab, tap or click on the corresponding window",
             "  o Next (previous) app window: Alt-` (Alt-Shift-`)",

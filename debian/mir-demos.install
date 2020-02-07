@@ -1,8 +1,5 @@
 usr/bin/miral-shell
-usr/bin/miral-run
 usr/bin/miral-kiosk
-usr/bin/miral-xrun
-usr/bin/miral-desktop
 usr/bin/miral-app
 usr/bin/miral-system-compositor
 usr/share/applications/miral-shell.desktop

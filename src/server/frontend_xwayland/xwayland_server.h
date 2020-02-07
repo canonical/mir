@@ -39,8 +39,10 @@ class WaylandConnector;
 class XWaylandServer
 {
 public:
-    XWaylandServer(const int xdisp, std::shared_ptr<WaylandConnector> wayland_connector, std::string const& xwayland_path);
+    XWaylandServer(std::shared_ptr<WaylandConnector> wayland_connector, std::string const& xwayland_path);
     ~XWaylandServer();
+
+    auto x11_display() const -> std::string;
 
 private:
     /// Forks off the XWayland process
@@ -58,7 +60,7 @@ private:
         int socket_fd;
         int abstract_socket_fd;
 
-        SocketFd(int xdisplay);
+        SocketFd();
         ~SocketFd();
     };
 
