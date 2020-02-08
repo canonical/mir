@@ -55,6 +55,7 @@ class XCBConnection
 {
 private:
     xcb_connection_t* const xcb_connection;
+    xcb_screen_t* const xcb_screen;
 
 public:
     class Atom
@@ -80,11 +81,17 @@ public:
     ~XCBConnection();
 
     operator xcb_connection_t*() const;
+    auto screen() const -> xcb_screen_t*;
+    auto root_window() const -> xcb_window_t;
+
 
     /// Does a round-trip to the X server and does not cache. Should be improved if needed on normal code paths
-    auto query_name(xcb_atom_t atom) -> std::string;
-    auto reply_contains_string_data(xcb_get_property_reply_t const* reply) -> bool;
-    auto string_from(xcb_get_property_reply_t const* reply) -> std::string;
+    auto query_name(xcb_atom_t atom) const -> std::string;
+    auto reply_contains_string_data(xcb_get_property_reply_t const* reply) const -> bool;
+    auto string_from(xcb_get_property_reply_t const* reply) const -> std::string;
+
+    /// If the window was created by us
+    auto is_ours(xcb_window_t window) const -> bool;
 
     /// Read a single property of various types from the window
     /// Returns a function that will wait on the reply before calling action()
@@ -161,6 +168,13 @@ public:
     {
         xcb_flush(xcb_connection);
     }
+
+    /// Create strings for debug messages
+    /// @{
+    auto reply_debug_string(xcb_get_property_reply_t* reply) const -> std::string;
+    auto client_message_debug_string(xcb_client_message_event_t* event) const -> std::string;
+    auto window_debug_string(xcb_window_t window) const -> std::string;
+    /// @}
 
     Atom const wm_protocols;
     Atom const wm_take_focus;

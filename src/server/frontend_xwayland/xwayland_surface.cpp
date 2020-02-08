@@ -624,6 +624,10 @@ void mf::XWaylandSurface::run_on_wayland_thread(std::function<void()>&& work)
 
 void mf::XWaylandSurface::wl_surface_destroyed()
 {
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("%s's wl_surface destoyed", connection->window_debug_string(window).c_str());
+    }
     close();
 }
 
@@ -676,6 +680,11 @@ void mf::XWaylandSurface::create_scene_surface_if_needed()
         {
             // surface is already created, being created or not ready to be created
             return;
+        }
+
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug("creating scene surface for %s", connection->window_debug_string(window).c_str());
         }
 
         state = window_state;
@@ -744,7 +753,8 @@ void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_w
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("inform_client_of_window_state(withdrawn:  %s", new_window_state.withdrawn ? "yes" : "no");
+        log_debug("inform_client_of_window_state(window:     %s", connection->window_debug_string(window).c_str());
+        log_debug("                              withdrawn:  %s", new_window_state.withdrawn ? "yes" : "no");
         log_debug("                              minimized:  %s", new_window_state.minimized ? "yes" : "no");
         log_debug("                              maximized:  %s", new_window_state.maximized ? "yes" : "no");
         log_debug("                              fullscreen: %s)", new_window_state.fullscreen ? "yes" : "no");
