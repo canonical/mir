@@ -21,9 +21,31 @@
 #include "mir/log.h"
 
 #include "boost/throw_exception.hpp"
+#include <sstream>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
+
+namespace
+{
+template<typename T, typename U = T>
+auto data_buffer_to_debug_string(
+    T* data,
+    size_t elements,
+    std::function<U(T element)> converter = [](T e) -> T { return e; }) -> std::string
+{
+    std::stringstream ss;
+    ss << "[";
+    for (T* i = data; i != data + elements; i++)
+    {
+        if (i != data)
+            ss << ", ";
+        ss << converter(*i);
+    }
+    ss << "]";
+    return ss.str();
+}
+}
 
 mf::XCBConnection::Atom::Atom(std::string const& name, XCBConnection* connection)
     : connection{connection},
@@ -52,6 +74,7 @@ auto mf::XCBConnection::Atom::name() const -> std::string
 
 mf::XCBConnection::XCBConnection(int fd)
     : xcb_connection{xcb_connect_to_fd(fd, nullptr)},
+      xcb_screen{xcb_setup_roots_iterator(xcb_get_setup(xcb_connection)).data},
       wm_protocols{"WM_PROTOCOLS", this},
       wm_take_focus{"WM_TAKE_FOCUS", this},
       wm_delete_window{"WM_DELETE_WINDOW", this},
@@ -106,7 +129,17 @@ mf::XCBConnection::operator xcb_connection_t*() const
     return xcb_connection;
 }
 
-auto mf::XCBConnection::query_name(xcb_atom_t atom) -> std::string
+auto mf::XCBConnection::screen() const -> xcb_screen_t*
+{
+    return xcb_screen;
+}
+
+auto mf::XCBConnection::root_window() const -> xcb_window_t
+{
+    return xcb_screen->root;
+}
+
+auto mf::XCBConnection::query_name(xcb_atom_t atom) const -> std::string
 {
     // TODO: cache, for cheaper lookup
 
@@ -132,12 +165,12 @@ auto mf::XCBConnection::query_name(xcb_atom_t atom) -> std::string
     return name;
 }
 
-auto mf::XCBConnection::reply_contains_string_data(xcb_get_property_reply_t const* reply) -> bool
+auto mf::XCBConnection::reply_contains_string_data(xcb_get_property_reply_t const* reply) const -> bool
 {
     return reply->type == XCB_ATOM_STRING || reply->type == utf8_string;
 }
 
-auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) -> std::string
+auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) const -> std::string
 {
     if (!reply_contains_string_data(reply))
     {
@@ -148,6 +181,12 @@ auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) -> st
     return std::string{
         static_cast<const char *>(xcb_get_property_value(reply)),
         static_cast<unsigned long>(xcb_get_property_value_length(reply))};
+}
+
+bool mf::XCBConnection::is_ours(uint32_t id) const
+{
+    auto setup = xcb_get_setup(xcb_connection);
+    return (id & ~setup->resource_id_mask) == setup->resource_id_base;
 }
 
 auto mf::XCBConnection::read_property(
@@ -313,6 +352,109 @@ void mf::XCBConnection::configure_window(
     {
         xcb_configure_window(xcb_connection, window, mask, values.data());
     }
+}
+
+auto mf::XCBConnection::reply_debug_string(xcb_get_property_reply_t* reply) const -> std::string
+{
+    if (reply == nullptr)
+    {
+        return "(null reply)";
+    }
+    else if (reply_contains_string_data(reply))
+    {
+        auto const text = string_from(reply);
+        return "\"" + text + "\"";
+    }
+    else
+    {
+        // The length returned by xcb_get_property_value_length() is in bytes for some reason
+        size_t const len = xcb_get_property_value_length(reply) / (reply->format / 8);
+        std::stringstream ss;
+        ss << std::to_string(reply->format) << "bit " << query_name(reply->type) << "[" << len << "]";
+        if (len < 32 && (
+            reply->type == XCB_ATOM_CARDINAL ||
+            reply->type == XCB_ATOM_INTEGER ||
+            reply->type == XCB_ATOM_ATOM ||
+            reply->type == XCB_ATOM_WINDOW))
+        {
+            ss << ": ";
+            void* const ptr = xcb_get_property_value(reply);
+            switch (reply->type)
+            {
+            case XCB_ATOM_CARDINAL: // unsigned number
+                switch (reply->format)
+                {
+                case 8: ss << data_buffer_to_debug_string(static_cast<uint8_t*>(ptr), len); break;
+                case 16: ss << data_buffer_to_debug_string(static_cast<uint16_t*>(ptr), len); break;
+                case 32: ss << data_buffer_to_debug_string(static_cast<uint32_t*>(ptr), len); break;
+                }
+                break;
+
+            case XCB_ATOM_INTEGER: // signed number
+                switch (reply->format)
+                {
+                case 8: ss << data_buffer_to_debug_string(static_cast<int8_t*>(ptr), len); break;
+                case 16: ss << data_buffer_to_debug_string(static_cast<int16_t*>(ptr), len); break;
+                case 32: ss << data_buffer_to_debug_string(static_cast<int32_t*>(ptr), len); break;
+                }
+                break;
+
+            case XCB_ATOM_ATOM:
+                if (reply->format != sizeof(xcb_atom_t) * 8)
+                {
+                    ss << "Atom property has format " << std::to_string(reply->format);
+                    break;
+                }
+                ss << data_buffer_to_debug_string<xcb_atom_t, std::string>(
+                    static_cast<xcb_atom_t*>(ptr),
+                    len,
+                    [this](xcb_atom_t atom) -> std::string
+                    {
+                        return query_name(atom);
+                    });
+                break;
+
+            case XCB_ATOM_WINDOW:
+                if (reply->format != sizeof(xcb_window_t) * 8)
+                {
+                    ss << "Window property has format " << std::to_string(reply->format);
+                    break;
+                }
+                ss << data_buffer_to_debug_string<xcb_window_t, std::string>(
+                    static_cast<xcb_window_t*>(ptr),
+                    len,
+                    [this](xcb_window_t window) -> std::string
+                    {
+                        return window_debug_string(window);
+                    });
+                break;
+            }
+        }
+        return ss.str();
+    }
+}
+
+auto mf::XCBConnection::client_message_debug_string(xcb_client_message_event_t* event) const -> std::string
+{
+    switch (event->format)
+    {
+    case 8: return data_buffer_to_debug_string(event->data.data8, 20);
+    case 16: return data_buffer_to_debug_string(event->data.data16, 10);
+    case 32: return data_buffer_to_debug_string(event->data.data32, 5);
+    }
+    return "unknown format " + std::to_string(event->format);
+}
+
+auto mf::XCBConnection::window_debug_string(xcb_window_t window) const -> std::string
+{
+    if (!window)
+        return "null window";
+    else if (window == xcb_screen->root)
+        return "root window";
+    else if (is_ours(window))
+        return "our window " + std::to_string(window);
+    else
+        return "window " + std::to_string(window);
 }
 
 auto mf::XCBConnection::xcb_type_atom(XCBType type) const -> xcb_atom_t
