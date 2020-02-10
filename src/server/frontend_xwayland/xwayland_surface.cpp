@@ -613,7 +613,24 @@ void mf::XWaylandSurface::scene_surface_moved_to(geometry::Point const& new_top_
 
 void mf::XWaylandSurface::scene_surface_close_requested()
 {
-    xcb_destroy_window(*connection, window);
+    bool delete_window;
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        delete_window = (supported_wm_protocols.find(connection->wm_delete_window) != supported_wm_protocols.end());
+    }
+
+    if (delete_window)
+    {
+        uint32_t const client_message_data[]{
+            connection->wm_delete_window,
+            XCB_TIME_CURRENT_TIME,
+        };
+        connection->send_client_message<XCBType::WM_PROTOCOLS>(window, XCB_EVENT_MASK_NO_EVENT, client_message_data);
+    }
+    else
+    {
+        xcb_kill_client(*connection, window);
+    }
     connection->flush();
 }
 
