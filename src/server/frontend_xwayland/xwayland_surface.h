@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
+ * Copyright (C) 2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -23,13 +24,11 @@
 #include "xwayland_surface_role_surface.h"
 #include "xwayland_surface_observer_surface.h"
 
+#include <xcb/xcb.h>
+
 #include <mutex>
 #include <chrono>
 #include <set>
-
-extern "C" {
-#include <xcb/xcb.h>
-}
 
 struct wm_size_hints
 {
@@ -239,4 +238,4 @@ private:
 } /* frontend */
 } /* mir */
 
-#endif /* end of include guard: MIR_FRONTEND_XWAYLAND_WM_SHELLSURFACE_H */
+#endif // MIR_FRONTEND_XWAYLAND_WM_SHELLSURFACE_H
