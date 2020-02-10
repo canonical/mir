@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
+ * Copyright (C) 2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -19,7 +20,6 @@
 #define MIR_FRONTEND_XWAYLAND_WM_SHELL_H
 
 #include <memory>
-#include <wayland-server-core.h>
 
 namespace mir
 {
@@ -50,4 +50,4 @@ public:
 } /* frontend*/
 } /* mir */
 
-#endif /* end of include guard: MIR_FRONTEND_XWAYLAND_WM_SHELL_H */
+#endif // MIR_FRONTEND_XWAYLAND_WM_SHELL_H
