@@ -42,12 +42,11 @@ namespace dispatch
 class ReadableFd;
 class ThreadedDispatcher;
 class MultiplexingDispatchable;
-} /*dispatch */
+}
 namespace frontend
 {
 class XWaylandSurface;
 class XWaylandWMShell;
-class WlSurface;
 
 template<typename T, size_t length>
 constexpr size_t length_of(T(&)[length])
@@ -69,7 +68,6 @@ public:
     void run_on_wayland_thread(std::function<void()>&& work);
 
 private:
-
     enum CursorType
     {
         CursorUnset = -1,

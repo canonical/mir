@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
+ * Copyright (C) 2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -23,99 +24,11 @@
 #include "xwayland_surface_role_surface.h"
 #include "xwayland_surface_observer_surface.h"
 
+#include <xcb/xcb.h>
+
 #include <mutex>
 #include <chrono>
 #include <set>
-
-extern "C" {
-#include <xcb/xcb.h>
-}
-
-struct wm_size_hints
-{
-    uint32_t flags;
-    int32_t x, y;
-    int32_t width, height; /* should set so old wm's don't mess up */
-    int32_t min_width, min_height;
-    int32_t max_width, max_height;
-    int32_t width_inc, height_inc;
-    struct
-    {
-        int32_t x;
-        int32_t y;
-    } min_aspect, max_aspect;
-    int32_t base_width, base_height;
-    int32_t win_gravity;
-};
-
-#define USPosition (1L << 0)
-#define USSize (1L << 1)
-#define PPosition (1L << 2)
-#define PSize (1L << 3)
-#define PMinSize (1L << 4)
-#define PMaxSize (1L << 5)
-#define PResizeInc (1L << 6)
-#define PAspect (1L << 7)
-#define PBaseSize (1L << 8)
-#define PWinGravity (1L << 9)
-
-struct motif_wm_hints
-{
-    uint32_t flags;
-    uint32_t functions;
-    uint32_t decorations;
-    int32_t input_mode;
-    uint32_t status;
-};
-
-#define MWM_HINTS_FUNCTIONS (1L << 0)
-#define MWM_HINTS_DECORATIONS (1L << 1)
-#define MWM_HINTS_INPUT_MODE (1L << 2)
-#define MWM_HINTS_STATUS (1L << 3)
-
-#define MWM_FUNC_ALL (1L << 0)
-#define MWM_FUNC_RESIZE (1L << 1)
-#define MWM_FUNC_MOVE (1L << 2)
-#define MWM_FUNC_MINIMIZE (1L << 3)
-#define MWM_FUNC_MAXIMIZE (1L << 4)
-#define MWM_FUNC_CLOSE (1L << 5)
-
-#define MWM_DECOR_ALL (1L << 0)
-#define MWM_DECOR_BORDER (1L << 1)
-#define MWM_DECOR_RESIZEH (1L << 2)
-#define MWM_DECOR_TITLE (1L << 3)
-#define MWM_DECOR_MENU (1L << 4)
-#define MWM_DECOR_MINIMIZE (1L << 5)
-#define MWM_DECOR_MAXIMIZE (1L << 6)
-
-#define MWM_DECOR_EVERYTHING \
-    (MWM_DECOR_BORDER | MWM_DECOR_RESIZEH | MWM_DECOR_TITLE | MWM_DECOR_MENU | MWM_DECOR_MINIMIZE | MWM_DECOR_MAXIMIZE)
-
-#define MWM_INPUT_MODELESS 0
-#define MWM_INPUT_PRIMARY_APPLICATION_MODAL 1
-#define MWM_INPUT_SYSTEM_MODAL 2
-#define MWM_INPUT_FULL_APPLICATION_MODAL 3
-#define MWM_INPUT_APPLICATION_MODAL MWM_INPUT_PRIMARY_APPLICATION_MODAL
-
-#define MWM_TEAROFF_WINDOW (1L << 0)
-
-#define _NET_WM_MOVERESIZE_SIZE_TOPLEFT 0
-#define _NET_WM_MOVERESIZE_SIZE_TOP 1
-#define _NET_WM_MOVERESIZE_SIZE_TOPRIGHT 2
-#define _NET_WM_MOVERESIZE_SIZE_RIGHT 3
-#define _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT 4
-#define _NET_WM_MOVERESIZE_SIZE_BOTTOM 5
-#define _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT 6
-#define _NET_WM_MOVERESIZE_SIZE_LEFT 7
-#define _NET_WM_MOVERESIZE_MOVE 8           /* movement only */
-#define _NET_WM_MOVERESIZE_SIZE_KEYBOARD 9  /* size via keyboard */
-#define _NET_WM_MOVERESIZE_MOVE_KEYBOARD 10 /* move via keyboard */
-#define _NET_WM_MOVERESIZE_CANCEL 11        /* cancel operation */
-
-#define TYPE_WM_PROTOCOLS XCB_ATOM_CUT_BUFFER0
-#define TYPE_MOTIF_WM_HINTS XCB_ATOM_CUT_BUFFER1
-#define TYPE_NET_WM_STATE XCB_ATOM_CUT_BUFFER2
-#define TYPE_WM_NORMAL_HINTS XCB_ATOM_CUT_BUFFER3
 
 namespace mir
 {
@@ -239,4 +152,4 @@ private:
 } /* frontend */
 } /* mir */
 
-#endif /* end of include guard: MIR_FRONTEND_XWAYLAND_WM_SHELLSURFACE_H */
+#endif // MIR_FRONTEND_XWAYLAND_WM_SHELLSURFACE_H

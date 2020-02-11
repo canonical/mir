@@ -67,7 +67,6 @@ public:
         /// Context should outlive the atom
         Atom(std::string const& name, XCBConnection* connection);
         operator xcb_atom_t() const;
-        auto name() const -> std::string;
 
     private:
         Atom(Atom&) = delete;
