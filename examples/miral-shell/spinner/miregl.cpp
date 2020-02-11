@@ -25,6 +25,7 @@
 
 #include <chrono>
 #include <algorithm>
+#include <stdexcept>
 
 static void new_global(
     void* data,

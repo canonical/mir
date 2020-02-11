@@ -22,6 +22,7 @@
 #include "mir_toolkit/client_types.h"
 
 #include <exception>
+#include <stdexcept>
 
 namespace mir
 {

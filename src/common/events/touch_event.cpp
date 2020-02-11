@@ -19,6 +19,8 @@
 #include <boost/throw_exception.hpp>
 #include "mir/events/touch_event.h"
 
+#include <stdexcept>
+
 MirTouchEvent::MirTouchEvent()
 {
     event.initInput();

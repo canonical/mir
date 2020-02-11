@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <functional>
+#include <string>
 #include <unordered_map>
 
 namespace mir

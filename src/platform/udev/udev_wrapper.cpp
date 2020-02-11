@@ -21,6 +21,8 @@
 #include <cstring>
 #include <boost/throw_exception.hpp>
 
+#include <stdexcept>
+
 namespace mu = mir::udev;
 
 /////////////////////

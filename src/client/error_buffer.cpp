@@ -18,6 +18,7 @@
 
 #include "error_buffer.h"
 #include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mcl = mir::client;
 namespace geom = mir::geometry;
