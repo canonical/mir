@@ -616,6 +616,11 @@ auto mf::XWaylandSurface::WindowState::updated_from(MirWindowState state) const 
     return updated;
 }
 
+void mf::XWaylandSurface::scene_surface_focus_set(bool has_focus)
+{
+    xwm->set_focus(window, has_focus);
+}
+
 void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
 {
     WindowState state;
