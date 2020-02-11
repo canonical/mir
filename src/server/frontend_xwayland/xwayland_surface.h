@@ -219,15 +219,19 @@ private:
 
     std::mutex mutable mutex;
 
-    /// Reflects the _NET_WM_STATE and WM_STATE we have currently set on the window
-    /// Should only be modified by set_wm_state()
-    WindowState window_state;
+    /// Cached version of properties on the X server
+    struct
+    {
+        /// Reflects the _NET_WM_STATE and WM_STATE we have currently set on the window
+        /// Should only be modified by set_wm_state()
+        WindowState state;
 
-    geometry::Size latest_size;
-    geometry::Point latest_position; ///< Always in global coordinates
+        geometry::Size size;
+        geometry::Point top_left; ///< Always in global coordinates
 
-    /// The contents of the _NET_SUPPORTED property set by the client
-    std::set<xcb_atom_t> supported_wm_protocols;
+        /// The contents of the _NET_SUPPORTED property set by the client
+        std::set<xcb_atom_t> supported_wm_protocols;
+    } cached;
 
     /// Set in set_wl_surface and cleared when a scene surface is created from it
     std::experimental::optional<std::unique_ptr<InitialWlSurfaceData>> initial_wl_surface_data;
