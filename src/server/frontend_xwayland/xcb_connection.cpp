@@ -67,11 +67,6 @@ mf::XCBConnection::Atom::operator xcb_atom_t() const
     return atom.value();
 }
 
-auto mf::XCBConnection::Atom::name() const -> std::string
-{
-    return name_;
-}
-
 mf::XCBConnection::XCBConnection(int fd)
     : xcb_connection{xcb_connect_to_fd(fd, nullptr)},
       xcb_screen{xcb_setup_roots_iterator(xcb_get_setup(xcb_connection)).data},

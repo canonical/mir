@@ -54,20 +54,42 @@ enum class SourceIndication: uint32_t
     PAGER = 2,
 };
 
-auto wm_resize_edge_to_mir_resize_edge(uint32_t wm_resize_edge) -> std::experimental::optional<MirResizeEdge>
+///See https://specifications.freedesktop.org/wm-spec/latest/ar01s04.html
+enum class NetWmMoveresize: uint32_t
+{
+    SIZE_TOPLEFT = 0,
+    SIZE_TOP = 1,
+    SIZE_TOPRIGHT = 2,
+    SIZE_RIGHT = 3,
+    SIZE_BOTTOMRIGHT = 4,
+    SIZE_BOTTOM = 5,
+    SIZE_BOTTOMLEFT = 6,
+    SIZE_LEFT = 7,
+    MOVE = 8,           /* movement only */
+    SIZE_KEYBOARD = 9,  /* size via keyboard */
+    MOVE_KEYBOARD = 10, /* move via keyboard */
+    CANCEL = 11,        /* cancel operation */
+};
+
+auto wm_resize_edge_to_mir_resize_edge(NetWmMoveresize wm_resize_edge) -> std::experimental::optional<MirResizeEdge>
 {
     switch (wm_resize_edge)
     {
-    case _NET_WM_MOVERESIZE_SIZE_TOP:           return mir_resize_edge_north;
-    case _NET_WM_MOVERESIZE_SIZE_BOTTOM:        return mir_resize_edge_south;
-    case _NET_WM_MOVERESIZE_SIZE_LEFT:          return mir_resize_edge_west;
-    case _NET_WM_MOVERESIZE_SIZE_TOPLEFT:       return mir_resize_edge_northwest;
-    case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT:    return mir_resize_edge_southwest;
-    case _NET_WM_MOVERESIZE_SIZE_RIGHT:         return mir_resize_edge_east;
-    case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT:      return mir_resize_edge_northeast;
-    case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:   return mir_resize_edge_southeast;
-    default:                                    return std::experimental::nullopt;
+    case NetWmMoveresize::SIZE_TOPLEFT:         return mir_resize_edge_northwest;
+    case NetWmMoveresize::SIZE_TOP:             return mir_resize_edge_north;
+    case NetWmMoveresize::SIZE_TOPRIGHT:        return mir_resize_edge_northeast;
+    case NetWmMoveresize::SIZE_RIGHT:           return mir_resize_edge_east;
+    case NetWmMoveresize::SIZE_BOTTOMRIGHT:     return mir_resize_edge_southeast;
+    case NetWmMoveresize::SIZE_BOTTOM:          return mir_resize_edge_south;
+    case NetWmMoveresize::SIZE_BOTTOMLEFT:      return mir_resize_edge_southwest;
+    case NetWmMoveresize::SIZE_LEFT:            return mir_resize_edge_west;
+    case NetWmMoveresize::MOVE:                 break;
+    case NetWmMoveresize::SIZE_KEYBOARD:        break;
+    case NetWmMoveresize::MOVE_KEYBOARD:        break;
+    case NetWmMoveresize::CANCEL:               break;
     }
+
+    return std::experimental::nullopt;
 }
 
 /// Sets up the position, either as a child window with and aux rect or a toplevel
@@ -488,7 +510,8 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
 void mf::XWaylandSurface::move_resize(uint32_t detail)
 {
-    if (detail == _NET_WM_MOVERESIZE_MOVE)
+    auto const action = static_cast<NetWmMoveresize>(detail);
+    if (action == NetWmMoveresize::MOVE)
     {
         std::lock_guard<std::mutex> lock{mutex};
         if (auto const scene_surface = weak_scene_surface.lock())
@@ -499,7 +522,7 @@ void mf::XWaylandSurface::move_resize(uint32_t detail)
                 latest_input_timestamp(lock).count());
         }
     }
-    else if (auto const edge = wm_resize_edge_to_mir_resize_edge(detail))
+    else if (auto const edge = wm_resize_edge_to_mir_resize_edge(action))
     {
         std::lock_guard<std::mutex> lock{mutex};
         if (auto const scene_surface = weak_scene_surface.lock())
