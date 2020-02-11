@@ -287,6 +287,36 @@ void mf::XWaylandSurface::close()
     }
 }
 
+void mf::XWaylandSurface::take_focus()
+{
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+
+        if (cached.override_redirect)
+            return;
+    }
+
+    // We may want to respect requested input focus model here
+    // see https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.7
+
+    uint32_t const client_message_data[]{
+        connection->wm_take_focus,
+        XCB_TIME_CURRENT_TIME};
+
+    connection->send_client_message<XCBType::WM_PROTOCOLS>(
+        window,
+        XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT,
+        client_message_data);
+
+    xcb_set_input_focus(
+        *connection,
+        XCB_INPUT_FOCUS_POINTER_ROOT,
+        window,
+        XCB_CURRENT_TIME);
+
+    connection->flush();
+}
+
 void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event)
 {
     std::shared_ptr<scene::Surface> scene_surface;
