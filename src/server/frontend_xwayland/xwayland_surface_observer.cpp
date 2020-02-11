@@ -58,7 +58,7 @@ void mf::XWaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAt
     case mir_window_attrib_focus:
     {
         auto has_focus = static_cast<bool>(value);
-        /// TODO: update the active state on the wm_window
+        wm_surface->scene_surface_focus_set(has_focus);
         aquire_input_dispatcher(
             [has_focus](auto input_dispatcher)
             {

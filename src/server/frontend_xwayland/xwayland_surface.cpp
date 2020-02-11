@@ -193,7 +193,7 @@ mf::XWaylandSurface::XWaylandSurface(
                   {
                       std::lock_guard<std::mutex> lock{this->mutex};
                       this->pending_spec(lock).parent = parent_scene_surface;
-                      set_position(parent_scene_surface, this->latest_position, this->pending_spec(lock));
+                      set_position(parent_scene_surface, this->cached.top_left, this->pending_spec(lock));
                   }
               },
               [this]()
@@ -208,16 +208,18 @@ mf::XWaylandSurface::XWaylandSurface(
               [this](std::vector<xcb_atom_t> const& value)
               {
                   std::lock_guard<std::mutex> lock{mutex};
-                  this->supported_wm_protocols = std::set<xcb_atom_t>{value.begin(), value.end()};
+                  this->cached.supported_wm_protocols = std::set<xcb_atom_t>{value.begin(), value.end()};
               },
               [this]()
               {
                   std::lock_guard<std::mutex> lock{mutex};
-                  this->supported_wm_protocols.clear();
-              })},
-      latest_size{event->width, event->height},
-      latest_position{event->x, event->y}
+                  this->cached.supported_wm_protocols.clear();
+              })}
 {
+    cached.override_redirect = event->override_redirect;
+    cached.size = {event->width, event->height};
+    cached.top_left = {event->x, event->y};
+
     uint32_t const value = XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE;
     xcb_change_window_attributes(*connection, window, XCB_CW_EVENT_MASK, &value);
 }
@@ -232,7 +234,7 @@ void mf::XWaylandSurface::map()
     WindowState state;
     {
         std::lock_guard<std::mutex> lock{mutex};
-        state = window_state;
+        state = cached.state;
     }
 
     uint32_t const workspace = 1;
@@ -257,7 +259,7 @@ void mf::XWaylandSurface::close()
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        state = window_state;
+        state = cached.state;
 
         scene_surface = weak_scene_surface.lock();
         weak_scene_surface.reset();
@@ -305,6 +307,36 @@ void mf::XWaylandSurface::close()
                 should_be_dead_observer.use_count());
         }
     }
+}
+
+void mf::XWaylandSurface::take_focus()
+{
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+
+        if (cached.override_redirect)
+            return;
+    }
+
+    // We may want to respect requested input focus model here
+    // see https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.7
+
+    uint32_t const client_message_data[]{
+        connection->wm_take_focus,
+        XCB_TIME_CURRENT_TIME};
+
+    connection->send_client_message<XCBType::WM_PROTOCOLS>(
+        window,
+        XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT,
+        client_message_data);
+
+    xcb_set_input_focus(
+        *connection,
+        XCB_INPUT_FOCUS_POINTER_ROOT,
+        window,
+        XCB_CURRENT_TIME);
+
+    connection->flush();
 }
 
 void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event)
@@ -363,8 +395,9 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
 void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
 {
     std::lock_guard<std::mutex> lock{mutex};
-    latest_position = geom::Point{event->x, event->y},
-    latest_size = geom::Size{event->width, event->height};
+    cached.override_redirect = event->override_redirect;
+    cached.top_left = geom::Point{event->x, event->y},
+    cached.size = geom::Size{event->width, event->height};
 }
 
 void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
@@ -391,7 +424,7 @@ void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        new_window_state = window_state;
+        new_window_state = cached.state;
 
         for (xcb_atom_t const property : properties)
         {
@@ -431,7 +464,7 @@ void mf::XWaylandSurface::wm_change_state_client_message(uint32_t const (&data)[
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        new_window_state = window_state;
+        new_window_state = cached.state;
 
         switch (requested_state)
         {
@@ -606,12 +639,17 @@ auto mf::XWaylandSurface::WindowState::updated_from(MirWindowState state) const 
     return updated;
 }
 
+void mf::XWaylandSurface::scene_surface_focus_set(bool has_focus)
+{
+    xwm->set_focus(window, has_focus);
+}
+
 void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
 {
     WindowState state;
     {
         std::lock_guard<std::mutex> lock{mutex};
-        state = window_state.updated_from(new_state);
+        state = cached.state.updated_from(new_state);
     }
     inform_client_of_window_state(state);
 }
@@ -639,7 +677,9 @@ void mf::XWaylandSurface::scene_surface_close_requested()
     bool delete_window;
     {
         std::lock_guard<std::mutex> lock{mutex};
-        delete_window = (supported_wm_protocols.find(connection->wm_delete_window) != supported_wm_protocols.end());
+        delete_window = (
+            cached.supported_wm_protocols.find(connection->wm_delete_window) !=
+            cached.supported_wm_protocols.end());
     }
 
     if (delete_window)
@@ -727,7 +767,7 @@ void mf::XWaylandSurface::create_scene_surface_if_needed()
             log_debug("creating scene surface for %s", connection->window_debug_string(window).c_str());
         }
 
-        state = window_state;
+        state = cached.state;
         state.withdrawn = false;
 
         observer = surface_observer.value();
@@ -736,24 +776,14 @@ void mf::XWaylandSurface::create_scene_surface_if_needed()
         params.input_shape = std::move(initial_wl_surface_data.value()->input_shape);
         initial_wl_surface_data = std::experimental::nullopt;
 
-        params.size = latest_size;
-        params.top_left = latest_position;
+        params.size = cached.size;
+        params.top_left = cached.top_left;
         params.type = mir_window_type_freestyle;
         params.state = state.mir_window_state();
+        params.server_side_decorated = !cached.override_redirect;
     }
 
     std::vector<std::function<void()>> reply_functions;
-
-    auto const window_attrib_cookie = xcb_get_window_attributes(*connection, window);
-    reply_functions.push_back([this, &params, window_attrib_cookie]
-        {
-            auto const reply = xcb_get_window_attributes_reply(*connection, window_attrib_cookie, nullptr);
-            if (reply)
-            {
-                params.server_side_decorated = !reply->override_redirect;
-                free(reply);
-            }
-        });
 
     // Read all properties
     for (auto const& handler : property_handlers)
@@ -803,10 +833,10 @@ void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_w
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        if (new_window_state == window_state)
+        if (new_window_state == cached.state)
             return;
 
-        window_state = new_window_state;
+        cached.state = new_window_state;
     }
 
     WmState wm_state;

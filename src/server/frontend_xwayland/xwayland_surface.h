@@ -58,6 +58,7 @@ public:
 
     void map();
     void close(); ///< Idempotent
+    void take_focus();
     void configure_request(xcb_configure_request_event_t* event);
     void configure_notify(xcb_configure_notify_event_t* event);
     void net_wm_state_client_message(uint32_t const (&data)[5]);
@@ -85,6 +86,7 @@ private:
 
     /// Overrides from XWaylandSurfaceObserverSurface
     /// @{
+    void scene_surface_focus_set(bool has_focus) override;
     void scene_surface_state_set(MirWindowState new_state) override;
     void scene_surface_resized(geometry::Size const& new_size) override;
     void scene_surface_moved_to(geometry::Point const& new_top_left) override;
@@ -132,15 +134,21 @@ private:
 
     std::mutex mutable mutex;
 
-    /// Reflects the _NET_WM_STATE and WM_STATE we have currently set on the window
-    /// Should only be modified by set_wm_state()
-    WindowState window_state;
+    /// Cached version of properties on the X server
+    struct
+    {
+        /// Reflects the _NET_WM_STATE and WM_STATE we have currently set on the window
+        /// Should only be modified by set_wm_state()
+        WindowState state;
 
-    geometry::Size latest_size;
-    geometry::Point latest_position; ///< Always in global coordinates
+        bool override_redirect;
 
-    /// The contents of the _NET_SUPPORTED property set by the client
-    std::set<xcb_atom_t> supported_wm_protocols;
+        geometry::Size size;
+        geometry::Point top_left; ///< Always in global coordinates
+
+        /// The contents of the _NET_SUPPORTED property set by the client
+        std::set<xcb_atom_t> supported_wm_protocols;
+    } cached;
 
     /// Set in set_wl_surface and cleared when a scene surface is created from it
     std::experimental::optional<std::unique_ptr<InitialWlSurfaceData>> initial_wl_surface_data;
