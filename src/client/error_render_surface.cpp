@@ -20,6 +20,8 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <stdexcept>
+
 namespace mcl = mir::client;
 
 mcl::ErrorRenderSurface::ErrorRenderSurface(

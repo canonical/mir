@@ -21,6 +21,8 @@
 #include <limits>
 #include <boost/throw_exception.hpp>
 
+#include <stdexcept>
+
 namespace mtd = mir::test::doubles;
 
 mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(

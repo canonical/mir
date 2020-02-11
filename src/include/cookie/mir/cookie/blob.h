@@ -19,6 +19,8 @@
 #ifndef MIR_COOKIE_BLOB_H_
 #define MIR_COOKIE_BLOB_H_
 
+#include <stddef.h>
+#include <stdint.h>
 #include <array>
 
 namespace mir

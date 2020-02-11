@@ -21,6 +21,8 @@
 
 #include <mir/server.h>
 #include <mir/options/configuration.h>
+#include <mir/main_loop.h>
+#include <mir/fd.h>
 
 namespace mo = mir::options;
 
@@ -34,6 +36,8 @@ miral::X11Support::X11Support() : self{std::make_shared<Self>()}
 
 void miral::X11Support::operator()(mir::Server& server) const
 {
+    static auto const x11_displayfd_opt = "x11-displayfd";
+
     server.add_configuration_option(
         mo::x11_display_opt,
         "Enable X11 support", mir::OptionType::null);
@@ -41,6 +45,35 @@ void miral::X11Support::operator()(mir::Server& server) const
     server.add_configuration_option(
         "xwayland-path",
         "Path to Xwayland executable", "/usr/bin/Xwayland");
+
+    server.add_configuration_option(
+        x11_displayfd_opt,
+        "file descriptor to write X11 DISPLAY number to when ready to connect", mir::OptionType::integer);
+
+    server.add_init_callback([this, &server]
+        {
+            auto const options = server.get_options();
+
+            if (options->is_set(x11_displayfd_opt))
+            {
+                mir::Fd const fd{options->get<int>(x11_displayfd_opt)};
+
+                server.the_main_loop()->enqueue(this, [fd, &server]
+                    {
+                        if (auto const x11_display = server.x11_display())
+                        {
+                            // x11_display is in the ":<n>" format used for $DISPLAY
+                            // Drop the leading ":" and append a newline...
+                            auto const display = x11_display.value().substr(1) + "\n";
+
+                            if (write(fd, display.c_str(), display.size()) != static_cast<ssize_t>(display.size()))
+                            {
+                                mir::fatal_error("Cannot write X11 display number to fd %d\n", static_cast<int>(fd));
+                            }
+                        }
+                    });
+            }
+        });
 }
 
 miral::X11Support::~X11Support() = default;

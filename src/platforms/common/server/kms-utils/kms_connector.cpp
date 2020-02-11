@@ -21,6 +21,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <algorithm>
+#include <stdexcept>
 
 namespace mgk = mir::graphics::kms;
 
