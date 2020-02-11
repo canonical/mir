@@ -279,6 +279,56 @@ auto mf::XWaylandWM::get_wm_surface(
         return surface->second;
 }
 
+void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
+{
+    bool was_focused;
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        was_focused = (focused_window && focused_window.value() == xcb_window);
+        focused_window = should_be_focused;
+    }
+
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "%s %s %s...",
+            should_be_focused ? "Focusing" : "Unfocusing",
+            was_focused ? "focused" : "unfocused",
+            connection->window_debug_string(xcb_window).c_str());
+    }
+
+    if (should_be_focused == was_focused)
+        return;
+
+    if (should_be_focused)
+    {
+        connection->set_property<XCBType::WINDOW>(
+            connection->root_window(),
+            connection->net_active_window,
+            static_cast<xcb_window_t>(xcb_window));
+
+        if (auto const surface = get_wm_surface(xcb_window))
+        {
+            surface.value()->take_focus();
+        }
+    }
+    else
+    {
+        connection->set_property<XCBType::WINDOW>(
+            connection->root_window(),
+            connection->net_active_window,
+            static_cast<xcb_window_t>(XCB_WINDOW_NONE));
+
+        xcb_set_input_focus_checked(
+            *connection,
+            XCB_INPUT_FOCUS_POINTER_ROOT,
+            XCB_NONE,
+            XCB_CURRENT_TIME);
+    }
+
+    connection->flush();
+}
+
 void mf::XWaylandWM::run_on_wayland_thread(std::function<void()>&& work)
 {
     wayland_connector->run_on_wayland_display([work = move(work)](auto){ work(); });
