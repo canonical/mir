@@ -62,6 +62,8 @@ void miral::X11Support::operator()(mir::Server& server) const
                     {
                         if (auto const x11_display = server.x11_display())
                         {
+                            // x11_display is in the ":<n>" format used for $DISPLAY
+                            // Drop the leading ":" and append a newline...
                             auto const display = x11_display.value().substr(1) + "\n";
 
                             if (write(fd, display.c_str(), display.size()) != static_cast<ssize_t>(display.size()))

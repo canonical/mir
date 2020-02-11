@@ -80,13 +80,14 @@ then
   # miral-shell can launch it's own terminal with Ctrl-Alt-T
   MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} NO_AT_BRIDGE=1 ${hostsocket} exec dbus-run-session -- ${bindir}${miral_server} ${enable_mirclient} $*
 else
+  # With mir_demo_server we will get the display saved to this file
   x11_display_file=$(tempfile)
   # miral-kiosk (and mir_demo_server) need a terminal launched
   if [ "${miral_server}" == "mir_demo_server" ]
   then
     MIR_SERVER_FILE=${socket} MIR_SERVER_ENABLE_X11=1 WAYLAND_DISPLAY=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $* --x11-displayfd 5 5>${x11_display_file}&
   else # miral-kiosk
-    MIR_SERVER_FILE=${socket}                                       WAYLAND_DISPLAY=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*&
+    MIR_SERVER_FILE=${socket}                         WAYLAND_DISPLAY=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*&
   fi
 
   # Fixup for weird gnome-terminal script on Ubuntu
@@ -97,6 +98,7 @@ else
 
   while [ ! -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; do echo "waiting for ${wayland_display}"; sleep 1 ;done
 
+  # With mir_demo_server ${x11_display_file} contains the X11 display
   if [ -e "${x11_display_file}" ]
   then
     export DISPLAY=$(cat "${x11_display_file}")
