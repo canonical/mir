@@ -427,9 +427,7 @@ void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
         handle_client_message(reinterpret_cast<xcb_client_message_event_t *>(event));
         break;
     case XCB_FOCUS_IN:
-        if (verbose_xwayland_logging_enabled())
-            log_debug("XCB_FOCUS_IN");
-        //(reinterpret_cast<xcb_focus_in_event_t *>(event));
+        handle_focus_in(reinterpret_cast<xcb_focus_in_event_t*>(event));
     default:
         break;
     }
@@ -688,6 +686,32 @@ void mf::XWaylandWM::handle_configure_notify(xcb_configure_notify_event_t *event
     if (auto const surface = get_wm_surface(event->window))
     {
         surface.value()->configure_notify(event);
+    }
+}
+
+void mf::XWaylandWM::handle_focus_in(xcb_focus_in_event_t* event)
+{
+    if (verbose_xwayland_logging_enabled())
+    {
+        std::string mode_str;
+        switch (event->mode)
+        {
+        case XCB_NOTIFY_MODE_NORMAL:        mode_str = "normal focus"; break;
+        case XCB_NOTIFY_MODE_GRAB:          mode_str = "focus grabbed"; break;
+        case XCB_NOTIFY_MODE_UNGRAB:        mode_str = "focus ungrabbed"; break;
+        case XCB_NOTIFY_MODE_WHILE_GRABBED: mode_str = "focus while grabbed"; break;
+        default: mode_str = "unknown focus mode " + std::to_string(event->mode); break;
+        }
+        log_debug("XCB_FOCUS_IN %s on %s", mode_str.c_str(), connection->window_debug_string(event->event).c_str());
+    }
+
+    // Ignore grabs
+    if (event->mode != XCB_NOTIFY_MODE_GRAB && event->mode != XCB_NOTIFY_MODE_UNGRAB)
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        focused_window = event->event;
+        // We might want to keep X11 focus and Mir focus in sync
+        // (either by requesting a focus change in Mir, reverting this X11 focus change or both)
     }
 }
 
