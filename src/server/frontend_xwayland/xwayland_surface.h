@@ -226,6 +226,8 @@ private:
         /// Should only be modified by set_wm_state()
         WindowState state;
 
+        bool override_redirect;
+
         geometry::Size size;
         geometry::Point top_left; ///< Always in global coordinates
 

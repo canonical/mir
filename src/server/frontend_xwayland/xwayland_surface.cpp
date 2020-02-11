@@ -194,6 +194,7 @@ mf::XWaylandSurface::XWaylandSurface(
                   this->cached.supported_wm_protocols.clear();
               })}
 {
+    cached.override_redirect = event->override_redirect;
     cached.size = {event->width, event->height};
     cached.top_left = {event->x, event->y};
 
@@ -342,6 +343,7 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
 void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
 {
     std::lock_guard<std::mutex> lock{mutex};
+    cached.override_redirect = event->override_redirect;
     cached.top_left = geom::Point{event->x, event->y},
     cached.size = geom::Size{event->width, event->height};
 }
@@ -720,20 +722,10 @@ void mf::XWaylandSurface::create_scene_surface_if_needed()
         params.top_left = cached.top_left;
         params.type = mir_window_type_freestyle;
         params.state = state.mir_window_state();
+        params.server_side_decorated = !cached.override_redirect;
     }
 
     std::vector<std::function<void()>> reply_functions;
-
-    auto const window_attrib_cookie = xcb_get_window_attributes(*connection, window);
-    reply_functions.push_back([this, &params, window_attrib_cookie]
-        {
-            auto const reply = xcb_get_window_attributes_reply(*connection, window_attrib_cookie, nullptr);
-            if (reply)
-            {
-                params.server_side_decorated = !reply->override_redirect;
-                free(reply);
-            }
-        });
 
     // Read all properties
     for (auto const& handler : property_handlers)
