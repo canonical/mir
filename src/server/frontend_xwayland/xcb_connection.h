@@ -307,14 +307,14 @@ private:
     void send_client_message(xcb_window_t window, uint32_t event_mask, size_t length, T const* data)
     {
         validate_xcb_type<type, T>();
-        auto event = xcb_client_message_event_t{
-            XCB_CLIENT_MESSAGE,
-            xcb_type_format<type>(),
-            0, // Sequence is apparently ignored
-            window,
-            xcb_type_atom(type),
-            {{uint32_t{0}, uint32_t{0}, uint32_t{0}, uint32_t{0}, uint32_t{0}}}
-        };
+        xcb_client_message_event_t event;
+        event.response_type = XCB_CLIENT_MESSAGE;
+        event.format = xcb_type_format<type>();
+        event.sequence = 0; // Sequence is apparently ignored
+        event.window = window;
+        event.type = xcb_type_atom(type);
+        event.data = {{uint32_t{0}, uint32_t{0}, uint32_t{0}, uint32_t{0}, uint32_t{0}}};
+
         set_client_message_data(event.data, length, data);
         xcb_send_event(
             xcb_connection,
