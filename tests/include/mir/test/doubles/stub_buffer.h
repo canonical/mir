@@ -29,6 +29,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <exception>
+#include <stdexcept>
 
 namespace mir
 {

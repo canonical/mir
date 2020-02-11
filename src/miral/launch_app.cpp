@@ -96,6 +96,7 @@ auto miral::launch_app(
         setenv("GDK_BACKEND", gdk_backend.c_str(), true);
         setenv("QT_QPA_PLATFORM", qt_qpa_platform.c_str(), true);
         setenv("SDL_VIDEODRIVER", sdl_videodriver.c_str(), true);
+        setenv("_JAVA_AWT_WM_NONREPARENTING", "1", true);
 
         std::vector<char const*> exec_args;
 

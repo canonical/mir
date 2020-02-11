@@ -23,6 +23,7 @@
 #include <sys/sysmacros.h>
 
 #include "mir/fd.h"
+#include <string>
 
 namespace mir
 {

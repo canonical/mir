@@ -22,6 +22,7 @@
 #include <mir/optional_value.h>
 #include <functional>
 #include <memory>
+#include <string>
 
 namespace mir
 {

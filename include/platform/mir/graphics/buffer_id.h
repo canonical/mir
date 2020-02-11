@@ -21,6 +21,8 @@
 
 #include "mir/int_wrapper.h"
 
+#include <stdint.h>
+
 namespace mir
 {
 namespace graphics

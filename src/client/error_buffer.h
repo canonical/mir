@@ -21,6 +21,8 @@
 
 #include "mir/mir_buffer.h"
 
+#include <string>
+
 namespace mir
 {
 namespace client

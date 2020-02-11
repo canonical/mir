@@ -26,6 +26,7 @@
 
 #include <memory>
 #include <functional>
+#include <string>
 
 namespace mir
 {

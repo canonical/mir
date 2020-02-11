@@ -20,6 +20,9 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <stdexcept>
+#include <string>
+
 namespace msh = mir::shell;
 using Id = mir::shell::PersistentSurfaceStore::Id;
 

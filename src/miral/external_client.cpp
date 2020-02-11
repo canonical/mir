@@ -22,6 +22,8 @@
 
 #include <mir/server.h>
 
+#include <stdexcept>
+
 namespace mo = mir::options;
 
 struct miral::ExternalClientLauncher::Self

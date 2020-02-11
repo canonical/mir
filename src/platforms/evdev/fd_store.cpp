@@ -24,6 +24,8 @@
 #include <algorithm>
 #include <boost/throw_exception.hpp>
 
+#include <stdexcept>
+
 namespace mie = mir::input::evdev;
 
 void mie::FdStore::store_fd(char const* path, mir::Fd&& fd)

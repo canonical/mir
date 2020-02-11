@@ -21,6 +21,8 @@
 
 #include "mir/mir_render_surface.h"
 
+#include <string>
+
 namespace mir
 {
 namespace client
