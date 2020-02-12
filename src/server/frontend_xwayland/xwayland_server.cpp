@@ -355,19 +355,32 @@ int create_socket(struct sockaddr_un *addr, size_t path_size) {
 
     }
 
+auto const x11_lock_fmt = "/tmp/.X%d-lock";
+auto const x11_socket_fmt = "/tmp/.X11-unix/X%d";
+
 // TODO this can be written with more modern c++
 int create_lockfile(int xdisplay)
 {
     char lockfile[256];
 
-    snprintf(lockfile, sizeof lockfile, "/tmp/.X%d-lock", xdisplay);
+    snprintf(lockfile, sizeof lockfile, x11_lock_fmt, xdisplay);
 
     mir::Fd const fd{open(lockfile, O_WRONLY | O_CLOEXEC | O_CREAT | O_EXCL, 0444)};
     if (fd < 0)
         return EEXIST;
 
-    int const size = dprintf(fd, "%10d\n", getpid());
-    if (size != 11)
+    // We format for consistency with the corresponding code in xorg-server (os/utils.c) which
+    // requires 11 characters. Vis:
+    //
+    //    snprintf(pid_str, sizeof(pid_str), "%10lu\n", (unsigned long) getpid());
+    //    if (write(lfd, pid_str, 11) != 11)
+    bool const success_writing_to_lock_file = dprintf(fd, "%10lu\n", (unsigned long) getpid()) == 11;
+
+    // Check if anyone else has created the socket (even though we have the lockfile)
+    char x11_socket[256];
+    snprintf(x11_socket, sizeof x11_socket, x11_socket_fmt, xdisplay);
+
+    if (!success_writing_to_lock_file || access(x11_socket, F_OK) == 0)
     {
         unlink(lockfile);
         return EEXIST;
@@ -391,23 +404,18 @@ auto choose_display() -> int
 mf::XWaylandServer::SocketFd::SocketFd() :
     xdisplay{choose_display()}
 {
-    char path[256];
     struct sockaddr_un addr;
     size_t path_size;
 
-    // Make sure we remove the Xserver socket before creating new ones
-    snprintf(path, sizeof path, "/tmp/.X11-unix/X%d", xdisplay);
-    unlink(path);
-
     addr.sun_family = AF_UNIX;
     addr.sun_path[0] = 0;
-    path_size = snprintf(addr.sun_path + 1, sizeof(addr.sun_path) - 1, "/tmp/.X11-unix/X%d", xdisplay);
+    path_size = snprintf(addr.sun_path + 1, sizeof(addr.sun_path) - 1, x11_socket_fmt, xdisplay);
     abstract_socket_fd = create_socket(&addr, path_size);
     if (abstract_socket_fd < 0) {
       return;
     }
 
-    path_size = snprintf(addr.sun_path, sizeof(addr.sun_path), "/tmp/.X11-unix/X%d", xdisplay);
+    path_size = snprintf(addr.sun_path, sizeof(addr.sun_path), x11_socket_fmt, xdisplay);
     socket_fd = create_socket(&addr, path_size);
     if (socket_fd < 0) {
       close(abstract_socket_fd);
@@ -419,9 +427,9 @@ mf::XWaylandServer::SocketFd::SocketFd() :
 mf::XWaylandServer::SocketFd::~SocketFd()
 {
     char path[256];
-    snprintf(path, sizeof path, "/tmp/.X%d-lock", xdisplay);
+    snprintf(path, sizeof path, x11_lock_fmt, xdisplay);
     unlink(path);
-    snprintf(path, sizeof path, "/tmp/.X11-unix/X%d", xdisplay);
+    snprintf(path, sizeof path, x11_socket_fmt, xdisplay);
     unlink(path);
     close(abstract_socket_fd);
     close(socket_fd);
