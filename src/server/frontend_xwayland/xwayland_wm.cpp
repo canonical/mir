@@ -550,7 +550,7 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 
             if (surfaces.find(event->window) != surfaces.end())
                 BOOST_THROW_EXCEPTION(
-                    std::runtime_error(connection->window_debug_string(event->window) + " created, but already known"));
+                    std::runtime_error("X11 window " + std::to_string(event->window) + " created, but already known"));
 
             surfaces[event->window] = surface;
         }
