@@ -245,9 +245,12 @@ public:
     {
     }
 
+    void on_surface_created(wl_client* client, uint32_t id, std::function<void(WlSurface*)> const& callback);
+
 private:
     std::shared_ptr<mg::WaylandAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
+    std::map<std::pair<wl_client*, uint32_t>, std::vector<std::function<void(WlSurface*)>>> surface_callbacks;
 
     class Instance : wayland::Compositor
     {
@@ -270,9 +273,34 @@ private:
     }
 };
 
+void WlCompositor::on_surface_created(wl_client* client, uint32_t id, std::function<void(WlSurface*)> const& callback)
+{
+    wl_resource* resource = wl_client_get_object(client, id);
+    auto const wl_surface = resource ? WlSurface::from(resource) : nullptr;
+    if (wl_surface)
+    {
+        callback(wl_surface);
+    }
+    else
+    {
+        surface_callbacks[std::make_pair(client, id)].push_back(callback);
+    }
+}
+
 void WlCompositor::Instance::create_surface(wl_resource* new_surface)
 {
-    new WlSurface{new_surface, compositor->executor, compositor->allocator};
+    auto const surface = new WlSurface{new_surface, compositor->executor, compositor->allocator};
+    auto const key = std::make_pair(wl_resource_get_client(new_surface), wl_resource_get_id(new_surface));
+    auto const callbacks = compositor->surface_callbacks.find(key);
+    if (callbacks != compositor->surface_callbacks.end())
+    {
+        for (auto const& callback : callbacks->second)
+        {
+            callback(surface);
+        }
+        compositor->surface_callbacks.erase(callbacks);
+    }
+    // Wayland ojects delete themselves
 }
 
 void WlCompositor::Instance::create_region(wl_resource* new_region)
@@ -829,6 +857,14 @@ int mf::WaylandConnector::client_socket_fd(
 void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*)> const& functor)
 {
     executor->spawn([display_ref = display.get(), functor]() { functor(display_ref); });
+}
+
+void mf::WaylandConnector::on_surface_created(
+    wl_client* client,
+    uint32_t id,
+    std::function<void(WlSurface*)> const& callback)
+{
+    compositor_global->on_surface_created(client, id, callback);
 }
 
 auto mf::WaylandConnector::socket_name() const -> optional_value<std::string>

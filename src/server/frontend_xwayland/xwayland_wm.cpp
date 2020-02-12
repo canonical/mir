@@ -625,27 +625,41 @@ void mf::XWaylandWM::handle_move_resize(std::shared_ptr<XWaylandSurface> surface
     surface->move_resize(detail);
 }
 
-void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandSurface> surface, xcb_client_message_event_t *event)
+void mf::XWaylandWM::handle_surface_id(
+    std::weak_ptr<XWaylandSurface> const& weak_surface,
+    xcb_client_message_event_t *event)
 {
-    if (!surface || !event)
-        return;
-
     uint32_t id = event->data.data32[0];
 
-    wayland_connector->run_on_wayland_display([client=wayland_client, id, surface, shell = wm_shell->shell](auto)
+    wayland_connector->run_on_wayland_display([
+            wayland_connector = wayland_connector,
+            client=wayland_client,
+            id,
+            weak_surface,
+            weak_shell = std::weak_ptr<shell::Shell>{wm_shell->shell}](auto)
         {
-            wl_resource* resource = wl_client_get_object(client, id);
-            auto* wl_surface = resource ? WlSurface::from(resource) : nullptr;
-            if (wl_surface)
-            {
-                surface->attach_wl_surface(wl_surface);
+            wayland_connector->on_surface_created(client, id, [weak_surface, weak_shell](WlSurface* wl_surface)
+                {
+                    auto const surface = weak_surface.lock();
+                    auto const shell = weak_shell.lock();
+                    if (surface && shell)
+                    {
+                        surface->attach_wl_surface(wl_surface);
 
-                // will destroy itself
-                new XWaylandSurfaceRole{shell, surface, wl_surface};
-            }
+                        // Will destroy itself
+                        new XWaylandSurfaceRole{shell, surface, wl_surface};
+                    }
+                    else
+                    {
+                        if (verbose_xwayland_logging_enabled())
+                        {
+                            log_debug(
+                                "wl_surface@%d created but surface or shell has been destroyed",
+                                wl_resource_get_id(wl_surface->resource));
+                        }
+                    }
+                });
         });
-
-    // TODO: handle unpaired surfaces!
 }
 
 void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *event)

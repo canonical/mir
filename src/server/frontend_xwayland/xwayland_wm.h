@@ -101,7 +101,7 @@ private:
     void handle_motion_notify(xcb_motion_notify_event_t *event);
     void handle_property_notify(xcb_property_notify_event_t *event);
     void handle_map_request(xcb_map_request_event_t *event);
-    void handle_surface_id(std::shared_ptr<XWaylandSurface> surface, xcb_client_message_event_t *event);
+    void handle_surface_id(std::weak_ptr<XWaylandSurface> const& weak_surface, xcb_client_message_event_t *event);
     void handle_move_resize(std::shared_ptr<XWaylandSurface> surface, xcb_client_message_event_t *event);
     void handle_client_message(xcb_client_message_event_t *event);
     void handle_configure_request(xcb_configure_request_event_t *event);
