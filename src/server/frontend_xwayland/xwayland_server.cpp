@@ -369,7 +369,12 @@ int create_lockfile(int xdisplay)
     if (fd < 0)
         return EEXIST;
 
-    bool const success_writing_to_lock_file = dprintf(fd, "%10d\n", getpid()) == 11;
+    // We format for consistency with the corresponding code in xorg-server (os/utils.c) which
+    // requires 11 characters. Vis:
+    //
+    //    snprintf(pid_str, sizeof(pid_str), "%10lu\n", (unsigned long) getpid());
+    //    if (write(lfd, pid_str, 11) != 11)
+    bool const success_writing_to_lock_file = dprintf(fd, "%10lu\n", (unsigned long) getpid()) == 11;
 
     // Check if anyone else has created the socket (even though we have the lockfile)
     char x11_socket[256];
