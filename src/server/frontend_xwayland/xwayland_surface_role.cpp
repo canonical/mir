@@ -18,6 +18,7 @@
 
 #include "xwayland_surface_role.h"
 #include "xwayland_surface_role_surface.h"
+#include "xwayland_log.h"
 
 #include "wl_surface.h"
 #include "mir/shell/surface_specification.h"
@@ -38,11 +39,19 @@ mf::XWaylandSurfaceRole::XWaylandSurfaceRole(
       wl_surface{wl_surface}
 {
     wl_surface->set_role(this);
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("Created XWaylandSurfaceRole for wl_surface@%d", wl_resource_get_id(wl_surface->resource));
+    }
 }
 
 mf::XWaylandSurfaceRole::~XWaylandSurfaceRole()
 {
     wl_surface->clear_role();
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("Destroyed XWaylandSurfaceRole for wl_surface@%d", wl_resource_get_id(wl_surface->resource));
+    }
 }
 
 auto mf::XWaylandSurfaceRole::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
