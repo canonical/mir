@@ -517,6 +517,14 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 {
     // We assume we are on the Wayland thread
 
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "Attaching wl_surface@%d to %s...",
+            wl_resource_get_id(wl_surface->resource),
+            connection->window_debug_string(window).c_str());
+    }
+
     auto const observer = std::make_shared<XWaylandSurfaceObserver>(seat, wl_surface, this);
 
     {
@@ -821,15 +829,6 @@ void mf::XWaylandSurface::create_scene_surface_if_needed()
 
 void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_window_state)
 {
-    if (verbose_xwayland_logging_enabled())
-    {
-        log_debug("inform_client_of_window_state(window:     %s", connection->window_debug_string(window).c_str());
-        log_debug("                              withdrawn:  %s", new_window_state.withdrawn ? "yes" : "no");
-        log_debug("                              minimized:  %s", new_window_state.minimized ? "yes" : "no");
-        log_debug("                              maximized:  %s", new_window_state.maximized ? "yes" : "no");
-        log_debug("                              fullscreen: %s)", new_window_state.fullscreen ? "yes" : "no");
-    }
-
     {
         std::lock_guard<std::mutex> lock{mutex};
 
@@ -837,6 +836,17 @@ void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_w
             return;
 
         cached.state = new_window_state;
+    }
+
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "%s state set to %s%s%s%s",
+            connection->window_debug_string(window).c_str(),
+            new_window_state.withdrawn ? "withdrawn, " : "",
+            new_window_state.minimized ? "minimized, " : "",
+            new_window_state.fullscreen ? "fullscreen, " : "",
+            new_window_state.maximized ? "maximized" : "unmaximized");
     }
 
     WmState wm_state;
