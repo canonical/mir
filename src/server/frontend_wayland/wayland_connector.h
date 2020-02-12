@@ -65,6 +65,7 @@ class OutputManager;
 class MirDisplay;
 class SessionAuthorizer;
 class DataDeviceManager;
+class WlSurface;
 
 class WaylandExtensions
 {
@@ -116,6 +117,10 @@ public:
         std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const override;
 
     void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
+
+    /// Runs callback the first time a wl_surface with the given id is created, or immediately if one currently exists
+    /// Callback is never called if a wl_surface with the id is never created
+    void on_surface_created(wl_client* client, uint32_t id, std::function<void(WlSurface*)> const& callback);
 
     auto socket_name() const -> optional_value<std::string> override;
 
