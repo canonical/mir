@@ -20,8 +20,10 @@
 
 #include "launch_app.h"
 
+#include <mir/options/option.h>
 #include <mir/server.h>
 
+#include <map>
 #include <stdexcept>
 
 namespace mo = mir::options;
@@ -30,11 +32,47 @@ struct miral::ExternalClientLauncher::Self
 {
     mir::Server* server = nullptr;
     pid_t pid = -1;
+
+    std::map<std::string, std::string> env;
 };
 
 void miral::ExternalClientLauncher::operator()(mir::Server& server)
 {
     self->server = &server;
+
+    static auto const app_env = "app-env";
+
+    static auto const default_env = "GDK_BACKEND=wayland:QT_QPA_PLATFORM=wayland:SDL_VIDEODRIVER=wayland:_JAVA_AWT_WM_NONREPARENTING=1";
+
+    server.add_configuration_option(
+        app_env,
+        "Environment for launched apps",
+        default_env);
+
+    server.add_init_callback([self=self, &server]
+         {
+             auto const options = server.get_options();
+             auto const value = options->get(app_env, default_env);
+
+             for (auto i = begin(value); i != end(value); )
+             {
+                 auto const j = find(i, end(value), ':');
+
+                 auto equals = find(i, j, '=');
+
+                 auto const key = std::string(i, equals);
+                 if (j != equals) ++equals;
+                 auto const val = std::string(equals, j);
+
+                 self->env[key] = val;
+
+                 if ((i = j) != end(value)) ++i;
+             }
+
+             // DEBUG
+             for (auto const& kv : self->env)
+                 puts(("*****************> " + kv.first + "=" + kv.second).c_str());
+         });
 }
 
 void miral::ExternalClientLauncher::launch(std::vector<std::string> const& command_line) const
