@@ -369,13 +369,13 @@ int create_lockfile(int xdisplay)
     if (fd < 0)
         return EEXIST;
 
-    int const size = dprintf(fd, "%10d\n", getpid());
+    bool const success_writing_to_lock_file = dprintf(fd, "%10d\n", getpid()) == 11;
 
     // Check if anyone else has created the socket (even though we have the lockfile)
     char x11_socket[256];
     snprintf(x11_socket, sizeof x11_socket, x11_socket_fmt, xdisplay);
 
-    if (size != 11 || access(x11_socket, F_OK) == 0)
+    if (!success_writing_to_lock_file || access(x11_socket, F_OK) == 0)
     {
         unlink(lockfile);
         return EEXIST;
