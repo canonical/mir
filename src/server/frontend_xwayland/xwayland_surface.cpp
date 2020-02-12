@@ -756,10 +756,6 @@ void mf::XWaylandSurface::wl_surface_destroyed()
     close();
 }
 
-void mf::XWaylandSurface::wl_surface_committed()
-{
-}
-
 auto mf::XWaylandSurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
 {
     std::lock_guard<std::mutex> lock{mutex};

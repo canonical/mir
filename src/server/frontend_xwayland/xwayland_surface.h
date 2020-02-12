@@ -98,7 +98,6 @@ private:
     /// Should only be called on the Wayland thread
     /// @{
     void wl_surface_destroyed() override;
-    void wl_surface_committed() override;
     auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
     /// @}
 
