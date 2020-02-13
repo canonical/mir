@@ -770,12 +770,49 @@ void mf::XWaylandSurface::is_transient_for(xcb_window_t transient_for)
 {
     std::shared_ptr<scene::Surface> parent_scene_surface; // May remain nullptr
 
-    if (transient_for != XCB_WINDOW_NONE)
+    if (transient_for == XCB_WINDOW_NONE)
+    {
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "%s is not transient",
+                this->connection->window_debug_string(window).c_str());
+        }
+    }
+    else
     {
         if (auto const parent_surface = this->xwm->get_wm_surface(transient_for))
         {
             std::lock_guard<std::mutex> parent_lock{parent_surface.value()->mutex};
             parent_scene_surface = parent_surface.value()->weak_scene_surface.lock();
+            if (verbose_xwayland_logging_enabled() && parent_scene_surface)
+            {
+                log_debug(
+                    "%s set as transient for %s",
+                    this->connection->window_debug_string(window).c_str(),
+                    this->connection->window_debug_string(transient_for).c_str());
+            }
+            else
+            {
+                log_debug(
+                    "%s can not be transient for %s as the latter does not have a scene surface",
+                    this->connection->window_debug_string(window).c_str(),
+                    this->connection->window_debug_string(transient_for).c_str());
+            }
+        }
+        else if (verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "%s can not be transient for %s as the latter does not have an XWayland surface",
+                this->connection->window_debug_string(window).c_str(),
+                this->connection->window_debug_string(transient_for).c_str());
+        }
+
+        if (verbose_xwayland_logging_enabled() && !parent_scene_surface)
+        {
+            log_debug(
+                "Failed to find a scene surface for %s to be transient for",
+                this->connection->window_debug_string(window).c_str());
         }
     }
 
