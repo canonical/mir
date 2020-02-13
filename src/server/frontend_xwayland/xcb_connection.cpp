@@ -56,15 +56,22 @@ mf::XCBConnection::Atom::Atom(std::string const& name, XCBConnection* connection
 
 mf::XCBConnection::Atom::operator xcb_atom_t() const
 {
-    if (!atom)
+    if (atom == XCB_ATOM_NONE)
     {
-        auto const reply = xcb_intern_atom_reply(*connection, cookie, nullptr);
-        if (!reply)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to look up atom " + name_));
-        atom = reply->atom;
-        free(reply);
+        std::lock_guard<std::mutex> lock{mutex};
+
+        // The initial atomic check is faster, but we need to check again once we've got the lock
+        if (atom == XCB_ATOM_NONE)
+        {
+            auto const reply = xcb_intern_atom_reply(*connection, cookie, nullptr);
+            if (!reply)
+                BOOST_THROW_EXCEPTION(std::runtime_error("Failed to look up atom " + name_));
+            atom = reply->atom;
+            free(reply);
+        }
     }
-    return atom.value();
+
+    return atom;
 }
 
 mf::XCBConnection::XCBConnection(int fd)

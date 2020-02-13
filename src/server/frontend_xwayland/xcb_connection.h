@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <mutex>
+#include <atomic>
 #include <experimental/optional>
 
 namespace mir
@@ -76,7 +78,12 @@ public:
         XCBConnection* const connection;
         std::string const name_;
         xcb_intern_atom_cookie_t const cookie;
-        std::experimental::optional<xcb_atom_t> mutable atom;
+        std::mutex mutable mutex;
+
+        /// XCB_ATOM_NONE until set
+        /// Accessed locklessly, but only set under lock
+        /// Once set to a value other than XCB_ATOM_NONE, not changed again
+        std::atomic<xcb_atom_t> mutable atom;
     };
 
     explicit XCBConnection(int fd);
