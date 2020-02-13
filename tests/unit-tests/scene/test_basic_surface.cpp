@@ -1319,8 +1319,10 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_construction)
         { buffer_stream1, {0,0}, {} }
     };
 
-    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_));
-    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_));
+    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_))
+        .Times(2); // Once on construction, once on destruction
+    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_))
+        .Times(2); // Once on construction, once on destruction
 
     ms::BasicSurface child{
         nullptr /* session */,
@@ -1344,8 +1346,10 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_set_streams)
         { buffer_stream1, {0,0}, {} }
     };
 
-    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_));
-    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_));
+    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_))
+        .Times(2); // Once on construction, once on destruction
+    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_))
+        .Times(2); // Once on construction, once on destruction
 
     surface.set_streams(streams);
 }
@@ -1581,4 +1585,56 @@ TEST_F(BasicSurfaceTest, notifies_when_first_visible)
 
     EXPECT_THAT(observer->exposes(), Eq(1));
     EXPECT_THAT(observer->hides(), Eq(0));
+}
+
+TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_original_stream_after_surface_destroyed)
+{
+    using namespace testing;
+
+    auto local_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    std::list<ms::StreamInfo> local_stream_list = { { local_stream, {}, {} } };
+    std::function<void(geom::Size const&)> callback = [](auto){};
+
+    EXPECT_CALL(*local_stream, set_frame_posted_callback(_))
+        .Times(2)
+        .WillRepeatedly(SaveArg<0>(&callback));
+
+    auto surface = std::make_unique<ms::BasicSurface>(
+        nullptr, // session
+        name,
+        rect,
+        mir_pointer_unconfined,
+        local_stream_list,
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+
+    surface.reset();
+    callback({10, 10});
+}
+
+TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_set_stream_after_surface_destroyed)
+{
+    using namespace testing;
+
+    auto local_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    std::list<ms::StreamInfo> local_stream_list = { { local_stream, {}, {} } };
+    std::function<void(geom::Size const&)> callback = [](auto){};
+
+    EXPECT_CALL(*local_stream, set_frame_posted_callback(_))
+        .Times(2)
+        .WillRepeatedly(SaveArg<0>(&callback));
+
+    auto surface = std::make_unique<ms::BasicSurface>(
+        nullptr, // session
+        name,
+        rect,
+        mir_pointer_unconfined,
+        streams, // use the default list from the class initially
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+
+    surface->set_streams(local_stream_list);
+
+    surface.reset();
+    callback({10, 10});
 }
