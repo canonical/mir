@@ -131,12 +131,6 @@ auto property_handler(
 }
 }
 
-struct mf::XWaylandSurface::InitialWlSurfaceData
-{
-    std::vector<shell::StreamSpecification> streams;
-    std::vector<geom::Rectangle> input_shape;
-};
-
 mf::XWaylandSurface::XWaylandSurface(
     XWaylandWM *wm,
     std::shared_ptr<XCBConnection> const& connection,
@@ -271,8 +265,6 @@ void mf::XWaylandSurface::close()
             observer = surface_observer.value();
         }
         surface_observer = std::experimental::nullopt;
-
-        initial_wl_surface_data = std::experimental::nullopt;
     }
 
     connection->delete_property(window, connection->net_wm_desktop);
@@ -525,28 +517,73 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
             connection->window_debug_string(window).c_str());
     }
 
+    WindowState state;
+    std::shared_ptr<scene::Session> session;
+    scene::SurfaceCreationParameters params;
+
     auto const observer = std::make_shared<XWaylandSurfaceObserver>(seat, wl_surface, this);
 
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        if (surface_observer || weak_session.lock() || initial_wl_surface_data)
+        if (surface_observer || weak_session.lock() || weak_scene_surface.lock())
             BOOST_THROW_EXCEPTION(std::runtime_error("XWaylandSurface::set_wl_surface() called multiple times"));
 
+        session = get_session(wl_surface->resource);
+
         surface_observer = observer;
+        weak_session = session;
 
-        weak_session = get_session(wl_surface->resource);
+        state = cached.state;
+        state.withdrawn = false;
 
-        initial_wl_surface_data = std::make_unique<InitialWlSurfaceData>();
+        params.streams = std::vector<shell::StreamSpecification>{};
+        params.input_shape = std::vector<geom::Rectangle>{};
         wl_surface->populate_surface_data(
-            initial_wl_surface_data.value()->streams,
-            initial_wl_surface_data.value()->input_shape,
+            params.streams.value(),
+            params.input_shape.value(),
             {});
+        params.size = cached.size;
+        params.top_left = cached.top_left;
+        params.type = mir_window_type_freestyle;
+        params.state = state.mir_window_state();
+        params.server_side_decorated = !cached.override_redirect;
     }
 
-    // If a buffer has alread been committed, we need to create the scene::Surface without waiting for next commit
-    if (wl_surface->buffer_size())
-        create_scene_surface_if_needed();
+    std::vector<std::function<void()>> reply_functions;
+
+    // Read all properties
+    for (auto const& handler : property_handlers)
+    {
+        reply_functions.push_back(handler.second());
+    }
+
+    // Wait for and process all the XCB replies
+    for (auto const& reply_function : reply_functions)
+    {
+        reply_function();
+    }
+
+    // property_handlers will have updated the pending spec. Use it.
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (auto const spec = consume_pending_spec(lock))
+        {
+            params.update_from(*spec.value());
+        }
+    }
+
+    auto const surface = shell->create_surface(session, params, observer);
+    inform_client_of_window_state(state);
+    connection->configure_window(
+        window,
+        surface->top_left() + surface->content_offset(),
+        surface->content_size());
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        weak_scene_surface = surface;
+    }
 }
 
 void mf::XWaylandSurface::move_resize(uint32_t detail)
@@ -719,11 +756,6 @@ void mf::XWaylandSurface::wl_surface_destroyed()
     close();
 }
 
-void mf::XWaylandSurface::wl_surface_committed()
-{
-    create_scene_surface_if_needed();
-}
-
 auto mf::XWaylandSurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
 {
     std::lock_guard<std::mutex> lock{mutex};
@@ -747,84 +779,6 @@ auto mf::XWaylandSurface::consume_pending_spec(
         return move(nullable_pending_spec);
     else
         return std::experimental::nullopt;
-}
-
-void mf::XWaylandSurface::create_scene_surface_if_needed()
-{
-    WindowState state;
-    scene::SurfaceCreationParameters params;
-    std::shared_ptr<scene::SurfaceObserver> observer;
-    std::shared_ptr<scene::Session> session;
-
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-
-        session = weak_session.lock();
-
-        if (weak_scene_surface.lock() ||
-            !initial_wl_surface_data ||
-            !surface_observer ||
-            !session)
-        {
-            // surface is already created, being created or not ready to be created
-            return;
-        }
-
-        if (verbose_xwayland_logging_enabled())
-        {
-            log_debug("creating scene surface for %s", connection->window_debug_string(window).c_str());
-        }
-
-        state = cached.state;
-        state.withdrawn = false;
-
-        observer = surface_observer.value();
-
-        params.streams = std::move(initial_wl_surface_data.value()->streams);
-        params.input_shape = std::move(initial_wl_surface_data.value()->input_shape);
-        initial_wl_surface_data = std::experimental::nullopt;
-
-        params.size = cached.size;
-        params.top_left = cached.top_left;
-        params.type = mir_window_type_freestyle;
-        params.state = state.mir_window_state();
-        params.server_side_decorated = !cached.override_redirect;
-    }
-
-    std::vector<std::function<void()>> reply_functions;
-
-    // Read all properties
-    for (auto const& handler : property_handlers)
-    {
-        reply_functions.push_back(handler.second());
-    }
-
-    // Wait for and process all the XCB replies
-    for (auto const& reply_function : reply_functions)
-    {
-        reply_function();
-    }
-
-    // property_handlers will have updated the pending spec. Use it.
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        if (auto const spec = consume_pending_spec(lock))
-        {
-            params.update_from(*spec.value());
-        }
-    }
-
-    auto const surface = shell->create_surface(session, params, observer);
-    inform_client_of_window_state(state);
-    connection->configure_window(
-        window,
-        surface->top_left() + surface->content_offset(),
-        surface->content_size());
-
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        weak_scene_surface = surface;
-    }
 }
 
 void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_window_state)

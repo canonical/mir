@@ -95,11 +95,6 @@ void mf::XWaylandSurfaceRole::commit(WlSurfaceState const& state)
     {
         refresh_surface_data_now();
     }
-
-    if (auto const wm_surface = weak_wm_surface.lock())
-    {
-        wm_surface->wl_surface_committed();
-    }
 }
 
 void mf::XWaylandSurfaceRole::visiblity(bool /*visible*/)
