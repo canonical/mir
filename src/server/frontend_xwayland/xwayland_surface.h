@@ -98,7 +98,6 @@ private:
     /// Should only be called on the Wayland thread
     /// @{
     void wl_surface_destroyed() override;
-    void wl_surface_committed() override;
     auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
     /// @}
 
@@ -109,10 +108,6 @@ private:
     /// Clears the pending spec and returns what it was
     auto consume_pending_spec(
         std::lock_guard<std::mutex> const&) -> std::experimental::optional<std::unique_ptr<shell::SurfaceSpecification>>;
-
-    /// Should NOT be called under lock
-    /// Does nothing if we already have a scene::Surface
-    void create_scene_surface_if_needed();
 
     /// Updates the window's WM_STATE and _NET_WM_STATE properties
     /// Should NOT be called under lock
@@ -151,7 +146,6 @@ private:
     } cached;
 
     /// Set in set_wl_surface and cleared when a scene surface is created from it
-    std::experimental::optional<std::unique_ptr<InitialWlSurfaceData>> initial_wl_surface_data;
     std::experimental::optional<std::shared_ptr<XWaylandSurfaceObserver>> surface_observer;
     std::weak_ptr<scene::Session> weak_session;
     std::unique_ptr<shell::SurfaceSpecification> nullable_pending_spec;
