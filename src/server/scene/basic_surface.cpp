@@ -313,6 +313,8 @@ ms::BasicSurface::BasicSurface(
 
 ms::BasicSurface::~BasicSurface() noexcept
 {
+    for(auto& layer : layers)
+        layer.stream->set_frame_posted_callback([](auto){});
     report->surface_deleted(this, surface_name);
 }
 
