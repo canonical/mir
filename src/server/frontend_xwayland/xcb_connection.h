@@ -26,6 +26,7 @@
 #include <xcb/xcb.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <functional>
 #include <mutex>
 #include <atomic>
@@ -61,6 +62,9 @@ class XCBConnection
 private:
     xcb_connection_t* const xcb_connection;
     xcb_screen_t* const xcb_screen;
+
+    std::mutex mutable atom_name_cache_mutex;
+    std::unordered_map<xcb_atom_t, std::string> mutable atom_name_cache;
 
 public:
     class Atom

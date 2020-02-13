@@ -68,6 +68,9 @@ mf::XCBConnection::Atom::operator xcb_atom_t() const
                 BOOST_THROW_EXCEPTION(std::runtime_error("Failed to look up atom " + name_));
             atom = reply->atom;
             free(reply);
+
+            std::lock_guard<std::mutex> lock{connection->atom_name_cache_mutex};
+            connection->atom_name_cache[atom] = name_;
         }
     }
 
@@ -77,6 +80,8 @@ mf::XCBConnection::Atom::operator xcb_atom_t() const
 mf::XCBConnection::XCBConnection(int fd)
     : xcb_connection{xcb_connect_to_fd(fd, nullptr)},
       xcb_screen{xcb_setup_roots_iterator(xcb_get_setup(xcb_connection)).data},
+      atom_name_cache{
+          {XCB_ATOM_NONE, "None/Any"}},
       wm_protocols{"WM_PROTOCOLS", this},
       wm_take_focus{"WM_TAKE_FOCUS", this},
       wm_delete_window{"WM_DELETE_WINDOW", this},
@@ -143,28 +148,31 @@ auto mf::XCBConnection::root_window() const -> xcb_window_t
 
 auto mf::XCBConnection::query_name(xcb_atom_t atom) const -> std::string
 {
-    // TODO: cache, for cheaper lookup
+    std::lock_guard<std::mutex>{atom_name_cache_mutex};
+    auto const iter = atom_name_cache.find(atom);
 
-    if (atom == XCB_ATOM_NONE)
-        return "None";
-
-    xcb_get_atom_name_cookie_t const cookie = xcb_get_atom_name(xcb_connection, atom);
-    xcb_get_atom_name_reply_t* const reply = xcb_get_atom_name_reply(xcb_connection, cookie, nullptr);
-
-    std::string name;
-
-    if (reply)
+    if (iter == atom_name_cache.end())
     {
-        name = std::string{xcb_get_atom_name_name(reply), static_cast<size_t>(xcb_get_atom_name_name_length(reply))};
+        xcb_get_atom_name_cookie_t const cookie = xcb_get_atom_name(xcb_connection, atom);
+        xcb_get_atom_name_reply_t* const reply = xcb_get_atom_name_reply(xcb_connection, cookie, nullptr);
+
+        std::string name;
+
+        if (reply)
+            name = std::string{xcb_get_atom_name_name(reply), static_cast<size_t>(xcb_get_atom_name_name_length(reply))};
+        else
+            name = "Atom " + std::to_string(atom);
+
+        free(reply);
+
+        atom_name_cache[atom] = name;
+
+        return name;
     }
     else
     {
-        name = "Atom " + std::to_string(atom);
+        return iter->second;
     }
-
-    free(reply);
-
-    return name;
 }
 
 auto mf::XCBConnection::reply_contains_string_data(xcb_get_property_reply_t const* reply) const -> bool
