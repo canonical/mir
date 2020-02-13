@@ -65,6 +65,7 @@ public:
     ~XWaylandWM();
 
     auto get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandSurface>>;
+    auto get_focused_window() -> std::experimental::optional<xcb_window_t>;
     void set_focus(xcb_window_t xcb_window, bool should_be_focused);
     void run_on_wayland_thread(std::function<void()>&& work);
 
