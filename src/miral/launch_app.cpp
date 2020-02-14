@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -114,4 +114,71 @@ auto miral::launch_app(
     return pid;
 }
 
+auto miral::launch_app_env(
+    std::vector<std::string> const& app, mir::optional_value<std::string> const& wayland_display,
+    mir::optional_value<std::string> const& mir_socket, mir::optional_value<std::string> const& x11_display,
+    miral::AppEnvironment const& app_env) -> pid_t
+{
+    pid_t pid = fork();
 
+    if (pid < 0)
+    {
+        throw std::runtime_error("Failed to fork process");
+    }
+
+    if (pid == 0)
+    {
+        if (x11_display)
+        {
+            setenv("DISPLAY", x11_display.value().c_str(),  true);   // configure X11 socket
+        }
+        else
+        {
+            unsetenv("DISPLAY");
+        }
+
+        if (mir_socket)
+        {
+            setenv("MIR_SOCKET", mir_socket.value().c_str(),  true);   // configure Mir socket
+        }
+        else
+        {
+            unsetenv("MIR_SOCKET");
+        }
+
+        if (wayland_display)
+        {
+            setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(),  true);   // configure Wayland socket
+        }
+        else
+        {
+            unsetenv("WAYLAND_DISPLAY");
+        }
+
+        for (auto const& env : app_env)
+        {
+            if (env.second)
+            {
+                setenv(env.first.c_str(), env.second.value().c_str(), true);
+            }
+            else
+            {
+                unsetenv(env.first.c_str());
+            }
+        }
+
+        std::vector<char const*> exec_args;
+
+        for (auto const& arg : app)
+            exec_args.push_back(arg.c_str());
+
+        exec_args.push_back(nullptr);
+
+        execvp(exec_args[0], const_cast<char*const*>(exec_args.data()));
+
+        mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    return pid;
+}
