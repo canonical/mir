@@ -372,7 +372,7 @@ protected:
 
     void handle_close_request() override
     {
-        destroy_wayland_object();
+        // It seems there is no way to request close of a wl_shell_surface
     }
 
     void set_fullscreen(
