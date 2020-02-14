@@ -770,50 +770,86 @@ void mf::XWaylandSurface::is_transient_for(xcb_window_t transient_for)
 {
     std::shared_ptr<scene::Surface> parent_scene_surface; // May remain nullptr
 
-    if (transient_for == XCB_WINDOW_NONE)
-    {
-        if (verbose_xwayland_logging_enabled())
+    // returns nullptr on error
+    auto const get_scene_surface_from = [this](xcb_window_t xcb_window) -> std::shared_ptr<scene::Surface>
         {
-            log_debug(
-                "%s is not transient",
-                this->connection->window_debug_string(window).c_str());
-        }
-    }
-    else
-    {
-        if (auto const parent_surface = this->xwm->get_wm_surface(transient_for))
-        {
-            std::lock_guard<std::mutex> parent_lock{parent_surface.value()->mutex};
-            parent_scene_surface = parent_surface.value()->weak_scene_surface.lock();
-            if (verbose_xwayland_logging_enabled() && parent_scene_surface)
+            if (auto const xwayland_surface = this->xwm->get_wm_surface(xcb_window))
             {
-                log_debug(
-                    "%s set as transient for %s",
-                    this->connection->window_debug_string(window).c_str(),
-                    this->connection->window_debug_string(transient_for).c_str());
+                std::lock_guard<std::mutex> lock{xwayland_surface.value()->mutex};
+                auto const scene_surface = xwayland_surface.value()->weak_scene_surface.lock();
+                if (verbose_xwayland_logging_enabled())
+                {
+                    if (scene_surface)
+                    {
+                        log_debug(
+                            "%s set as transient for %s",
+                            connection->window_debug_string(window).c_str(),
+                            connection->window_debug_string(xcb_window).c_str());
+                    }
+                    else
+                    {
+                        log_debug(
+                            "%s can not be transient for %s as the latter does not have a scene surface",
+                            connection->window_debug_string(window).c_str(),
+                            connection->window_debug_string(xcb_window).c_str());
+                    }
+                }
+                return scene_surface;
             }
             else
             {
-                log_debug(
-                    "%s can not be transient for %s as the latter does not have a scene surface",
-                    this->connection->window_debug_string(window).c_str(),
-                    this->connection->window_debug_string(transient_for).c_str());
+                if (verbose_xwayland_logging_enabled())
+                {
+                    log_debug(
+                        "%s can not be transient for %s as the latter does not have an XWayland surface",
+                        connection->window_debug_string(window).c_str(),
+                        connection->window_debug_string(xcb_window).c_str());
+                }
+                return nullptr;
+            }
+        };
+
+    if (transient_for != XCB_WINDOW_NONE)
+    {
+        parent_scene_surface = get_scene_surface_from(transient_for);
+
+        if (!parent_scene_surface)
+        {
+            auto const focused_window = xwm->get_focused_window();
+            if (focused_window)
+            {
+                if (verbose_xwayland_logging_enabled())
+                {
+                    log_debug(
+                        "Falling back to the currently focused window (%s)",
+                        connection->window_debug_string(focused_window.value()).c_str());
+                }
+                parent_scene_surface = get_scene_surface_from(focused_window.value());
+            }
+            else
+            {
+                if (verbose_xwayland_logging_enabled())
+                {
+                    log_debug(
+                        "There is no focused window",
+                        connection->window_debug_string(window).c_str(),
+                        connection->window_debug_string(transient_for).c_str());
+                }
             }
         }
-        else if (verbose_xwayland_logging_enabled())
-        {
-            log_debug(
-                "%s can not be transient for %s as the latter does not have an XWayland surface",
-                this->connection->window_debug_string(window).c_str(),
-                this->connection->window_debug_string(transient_for).c_str());
-        }
 
-        if (verbose_xwayland_logging_enabled() && !parent_scene_surface)
+        if (!parent_scene_surface && verbose_xwayland_logging_enabled())
         {
             log_debug(
-                "Failed to find a scene surface for %s to be transient for",
-                this->connection->window_debug_string(window).c_str());
+                "Failed to find a window for %s to be transient for",
+                connection->window_debug_string(window).c_str());
         }
+    }
+    else if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "%s is not transient",
+            connection->window_debug_string(window).c_str());
     }
 
     {
