@@ -100,3 +100,96 @@ TEST_F(ExternalClient, default_app_env_x11_is_as_expected)
     EXPECT_THAT(client_env_x11_value("NO_AT_BRIDGE"), StrEq("1"));
     EXPECT_THAT(client_env_x11_value("_JAVA_AWT_WM_NONREPARENTING"), StrEq("1"));
 }
+
+TEST_F(ExternalClient, override_app_env_can_set_gdk_backend)
+{
+    add_to_environment(app_env, "GDK_BACKEND=mir");
+    start_server();
+
+    EXPECT_THAT(client_env_value("GDK_BACKEND"), StrEq("mir"));
+}
+
+TEST_F(ExternalClient, override_app_env_x11_can_unset)
+{
+    add_to_environment(app_x11_env, "-GDK_BACKEND");
+    add_server_init(x11);
+    add_to_environment("MIR_SERVER_ENABLE_X11", "");
+    start_server();
+
+    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq(""));
+}
+
+TEST_F(ExternalClient, override_app_env_x11_can_unset_and_set)
+{
+    add_to_environment(app_x11_env, "-GDK_BACKEND:QT_QPA_PLATFORM=xcb");
+    add_server_init(x11);
+    add_to_environment("MIR_SERVER_ENABLE_X11", "");
+    start_server();
+
+    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq(""));
+    EXPECT_THAT(client_env_x11_value("QT_QPA_PLATFORM"), StrEq("xcb"));
+}
+
+TEST_F(ExternalClient, override_app_env_x11_can_set_and_unset)
+{
+    add_to_environment(app_x11_env, "QT_QPA_PLATFORM=xcb:-GDK_BACKEND");
+    add_server_init(x11);
+    add_to_environment("MIR_SERVER_ENABLE_X11", "");
+    start_server();
+
+    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq(""));
+    EXPECT_THAT(client_env_x11_value("QT_QPA_PLATFORM"), StrEq("xcb"));
+}
+
+TEST_F(ExternalClient, stray_separators_are_ignored)
+{
+    add_to_environment(app_x11_env, "::QT_QPA_PLATFORM=xcb::-GDK_BACKEND::");
+    add_server_init(x11);
+    add_to_environment("MIR_SERVER_ENABLE_X11", "");
+    start_server();
+
+    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq(""));
+    EXPECT_THAT(client_env_x11_value("QT_QPA_PLATFORM"), StrEq("xcb"));
+}
+
+TEST_F(ExternalClient, empty_override_does_nothing)
+{
+    add_to_environment(app_x11_env, "");
+    add_server_init(x11);
+    add_to_environment("MIR_SERVER_ENABLE_X11", "");
+    start_server();
+
+    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq("wayland"));
+    EXPECT_THAT(client_env_x11_value("QT_QPA_PLATFORM"), StrEq("wayland"));
+    EXPECT_THAT(client_env_x11_value("SDL_VIDEODRIVER"), StrEq("wayland"));
+    EXPECT_THAT(client_env_x11_value("NO_AT_BRIDGE"), StrEq("1"));
+    EXPECT_THAT(client_env_x11_value("_JAVA_AWT_WM_NONREPARENTING"), StrEq("1"));
+}
+
+TEST_F(ExternalClient, strange_override_does_nothing)
+{
+    add_to_environment(app_x11_env, "=====");
+    add_server_init(x11);
+    add_to_environment("MIR_SERVER_ENABLE_X11", "");
+    start_server();
+
+    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq("wayland"));
+    EXPECT_THAT(client_env_x11_value("QT_QPA_PLATFORM"), StrEq("wayland"));
+    EXPECT_THAT(client_env_x11_value("SDL_VIDEODRIVER"), StrEq("wayland"));
+    EXPECT_THAT(client_env_x11_value("NO_AT_BRIDGE"), StrEq("1"));
+    EXPECT_THAT(client_env_x11_value("_JAVA_AWT_WM_NONREPARENTING"), StrEq("1"));
+}
+
+TEST_F(ExternalClient, another_strange_override_does_nothing)
+{
+    add_to_environment(app_x11_env, ":::");
+    add_server_init(x11);
+    add_to_environment("MIR_SERVER_ENABLE_X11", "");
+    start_server();
+
+    EXPECT_THAT(client_env_x11_value("GDK_BACKEND"), StrEq("wayland"));
+    EXPECT_THAT(client_env_x11_value("QT_QPA_PLATFORM"), StrEq("wayland"));
+    EXPECT_THAT(client_env_x11_value("SDL_VIDEODRIVER"), StrEq("wayland"));
+    EXPECT_THAT(client_env_x11_value("NO_AT_BRIDGE"), StrEq("1"));
+    EXPECT_THAT(client_env_x11_value("_JAVA_AWT_WM_NONREPARENTING"), StrEq("1"));
+}
