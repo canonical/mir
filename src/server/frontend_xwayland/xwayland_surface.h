@@ -109,6 +109,9 @@ private:
     auto consume_pending_spec(
         std::lock_guard<std::mutex> const&) -> std::experimental::optional<std::unique_ptr<shell::SurfaceSpecification>>;
 
+    /// Updates the pending spec
+    void is_transient_for(xcb_window_t transient_for);
+
     /// Updates the window's WM_STATE and _NET_WM_STATE properties
     /// Should NOT be called under lock
     void inform_client_of_window_state(WindowState const& state);

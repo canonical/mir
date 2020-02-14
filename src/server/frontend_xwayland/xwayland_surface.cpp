@@ -176,24 +176,11 @@ mf::XWaylandSurface::XWaylandSurface(
               XCB_ATOM_WM_TRANSIENT_FOR,
               [this](xcb_window_t value)
               {
-                  std::shared_ptr<scene::Surface> parent_scene_surface; // May remain nullptr
-
-                  if (auto const parent_surface = this->xwm->get_wm_surface(value))
-                  {
-                      std::lock_guard<std::mutex> parent_lock{parent_surface.value()->mutex};
-                      parent_scene_surface = parent_surface.value()->weak_scene_surface.lock();
-                  }
-
-                  {
-                      std::lock_guard<std::mutex> lock{this->mutex};
-                      this->pending_spec(lock).parent = parent_scene_surface;
-                      set_position(parent_scene_surface, this->cached.top_left, this->pending_spec(lock));
-                  }
+                  is_transient_for(value);
               },
               [this]()
               {
-                  std::lock_guard<std::mutex> lock{mutex};
-                  this->pending_spec(lock).parent = std::weak_ptr<scene::Surface>{};
+                  is_transient_for(XCB_WINDOW_NONE);
               }),
           property_handler<std::vector<xcb_atom_t> const&>(
               connection,
@@ -779,6 +766,26 @@ auto mf::XWaylandSurface::consume_pending_spec(
         return move(nullable_pending_spec);
     else
         return std::experimental::nullopt;
+}
+
+void mf::XWaylandSurface::is_transient_for(xcb_window_t transient_for)
+{
+    std::shared_ptr<scene::Surface> parent_scene_surface; // May remain nullptr
+
+    if (transient_for != XCB_WINDOW_NONE)
+    {
+        if (auto const parent_surface = this->xwm->get_wm_surface(transient_for))
+        {
+            std::lock_guard<std::mutex> parent_lock{parent_surface.value()->mutex};
+            parent_scene_surface = parent_surface.value()->weak_scene_surface.lock();
+        }
+    }
+
+    {
+        std::lock_guard<std::mutex> lock{this->mutex};
+        this->pending_spec(lock).parent = parent_scene_surface;
+        set_position(parent_scene_surface, this->cached.top_left, this->pending_spec(lock));
+    }
 }
 
 void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_window_state)
