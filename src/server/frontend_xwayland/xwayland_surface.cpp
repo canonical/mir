@@ -471,6 +471,9 @@ void mf::XWaylandSurface::property_notify(xcb_atom_t property)
     auto const handler = property_handlers.find(property);
     if (handler != property_handlers.end())
     {
+        auto completion = handler->second();
+        completion();
+
         std::shared_ptr<scene::Surface> scene_surface;
         std::experimental::optional<std::unique_ptr<shell::SurfaceSpecification>> spec;
 
@@ -480,14 +483,9 @@ void mf::XWaylandSurface::property_notify(xcb_atom_t property)
             spec = consume_pending_spec(lock);
         }
 
-        if (scene_surface)
+        if (spec && scene_surface)
         {
-            auto completion = handler->second();
-            completion();
-            if (spec)
-            {
-                shell->modify_surface(scene_surface->session().lock(), scene_surface, *spec.value());
-            }
+            shell->modify_surface(scene_surface->session().lock(), scene_surface, *spec.value());
         }
     }
 }
