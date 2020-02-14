@@ -84,10 +84,9 @@ public:
         xcb_intern_atom_cookie_t const cookie;
         std::mutex mutable mutex;
 
-        /// XCB_ATOM_NONE until set
         /// Accessed locklessly, but only set under lock
         /// Once set to a value other than XCB_ATOM_NONE, not changed again
-        std::atomic<xcb_atom_t> mutable atom;
+        std::atomic<xcb_atom_t> mutable atom{XCB_ATOM_NONE};
     };
 
     explicit XCBConnection(int fd);

@@ -80,8 +80,7 @@ mf::XCBConnection::Atom::operator xcb_atom_t() const
 mf::XCBConnection::XCBConnection(int fd)
     : xcb_connection{xcb_connect_to_fd(fd, nullptr)},
       xcb_screen{xcb_setup_roots_iterator(xcb_get_setup(xcb_connection)).data},
-      atom_name_cache{
-          {XCB_ATOM_NONE, "None/Any"}},
+      atom_name_cache{{XCB_ATOM_NONE, "None/Any"}},
       wm_protocols{"WM_PROTOCOLS", this},
       wm_take_focus{"WM_TAKE_FOCUS", this},
       wm_delete_window{"WM_DELETE_WINDOW", this},
