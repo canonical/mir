@@ -281,24 +281,27 @@ auto mf::XWaylandWM::get_wm_surface(
 
 void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
 {
-    bool was_focused;
     {
         std::lock_guard<std::mutex> lock{mutex};
-        was_focused = (focused_window && focused_window.value() == xcb_window);
-        focused_window = should_be_focused;
-    }
+        bool const was_focused = (focused_window && focused_window.value() == xcb_window);
 
-    if (verbose_xwayland_logging_enabled())
-    {
-        log_debug(
-            "%s %s %s...",
-            should_be_focused ? "Focusing" : "Unfocusing",
-            was_focused ? "focused" : "unfocused",
-            connection->window_debug_string(xcb_window).c_str());
-    }
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "%s %s %s...",
+                should_be_focused ? "Focusing" : "Unfocusing",
+                was_focused ? "focused" : "unfocused",
+                connection->window_debug_string(xcb_window).c_str());
+        }
 
-    if (should_be_focused == was_focused)
-        return;
+        if (should_be_focused == was_focused)
+            return;
+
+        if (should_be_focused)
+            focused_window = xcb_window;
+        else
+            focused_window = std::experimental::nullopt;
+    }
 
     if (should_be_focused)
     {
