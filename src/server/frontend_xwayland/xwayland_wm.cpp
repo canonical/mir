@@ -241,30 +241,30 @@ void mf::XWaylandWM::create_wm_window()
 {
     std::string const wm_name{"Mir XWM"};
 
-    xcb_window = xcb_generate_id(*connection);
+    wm_window = xcb_generate_id(*connection);
     xcb_create_window(
         *connection,
         XCB_COPY_FROM_PARENT,
-        xcb_window,
+        wm_window,
         connection->root_window(),
         0, 0, 10, 10, 0,
         XCB_WINDOW_CLASS_INPUT_OUTPUT,
         connection->screen()->root_visual,
         0, NULL);
 
-    connection->set_property<XCBType::WINDOW>(xcb_window, connection->net_supporting_wm_check, xcb_window);
-    connection->set_property<XCBType::UTF8_STRING>(xcb_window, connection->net_wm_name, wm_name);
+    connection->set_property<XCBType::WINDOW>(wm_window, connection->net_supporting_wm_check, wm_window);
+    connection->set_property<XCBType::UTF8_STRING>(wm_window, connection->net_wm_name, wm_name);
 
     connection->set_property<XCBType::WINDOW>(
         connection->root_window(),
         connection->net_supporting_wm_check,
-        xcb_window);
+        wm_window);
 
     /* Claim the WM_S0 selection even though we don't support
      * the --replace functionality. */
-    xcb_set_selection_owner(*connection, xcb_window, connection->wm_s0, XCB_TIME_CURRENT_TIME);
+    xcb_set_selection_owner(*connection, wm_window, connection->wm_s0, XCB_TIME_CURRENT_TIME);
 
-    xcb_set_selection_owner(*connection, xcb_window, connection->net_wm_cm_s0, XCB_TIME_CURRENT_TIME);
+    xcb_set_selection_owner(*connection, wm_window, connection->net_wm_cm_s0, XCB_TIME_CURRENT_TIME);
 }
 
 auto mf::XWaylandWM::get_wm_surface(

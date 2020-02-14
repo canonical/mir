@@ -122,7 +122,7 @@ private:
     wl_client* const wayland_client;
     std::shared_ptr<XWaylandWMShell> const wm_shell;
 
-    xcb_window_t xcb_window;
+    xcb_window_t wm_window;
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
     std::experimental::optional<xcb_window_t> focused_window;
     std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;
