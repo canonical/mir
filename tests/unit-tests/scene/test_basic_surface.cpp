@@ -1319,8 +1319,10 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_construction)
         { buffer_stream1, {0,0}, {} }
     };
 
-    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_));
-    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_));
+    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_))
+        .Times(AtLeast(1));
+    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_))
+        .Times(AtLeast(1));
 
     ms::BasicSurface child{
         nullptr /* session */,
@@ -1344,8 +1346,10 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_set_streams)
         { buffer_stream1, {0,0}, {} }
     };
 
-    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_));
-    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_));
+    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_))
+        .Times(AtLeast(1));
+    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_))
+        .Times(AtLeast(1));
 
     surface.set_streams(streams);
 }
