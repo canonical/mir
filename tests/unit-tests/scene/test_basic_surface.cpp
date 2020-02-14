@@ -1319,10 +1319,8 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_construction)
         { buffer_stream1, {0,0}, {} }
     };
 
-    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_))
-        .Times(2); // Once on construction, once on destruction
-    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_))
-        .Times(2); // Once on construction, once on destruction
+    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_));
+    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_));
 
     ms::BasicSurface child{
         nullptr /* session */,
@@ -1346,10 +1344,8 @@ TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_set_streams)
         { buffer_stream1, {0,0}, {} }
     };
 
-    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_))
-        .Times(2); // Once on construction, once on destruction
-    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_))
-        .Times(2); // Once on construction, once on destruction
+    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_));
+    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_));
 
     surface.set_streams(streams);
 }
@@ -1596,7 +1592,7 @@ TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_original_stream_after_surfac
     std::function<void(geom::Size const&)> callback = [](auto){};
 
     EXPECT_CALL(*local_stream, set_frame_posted_callback(_))
-        .Times(2)
+        .Times(AtLeast(1))
         .WillRepeatedly(SaveArg<0>(&callback));
 
     auto surface = std::make_unique<ms::BasicSurface>(
@@ -1621,7 +1617,7 @@ TEST_F(BasicSurfaceTest, buffer_can_be_submitted_to_set_stream_after_surface_des
     std::function<void(geom::Size const&)> callback = [](auto){};
 
     EXPECT_CALL(*local_stream, set_frame_posted_callback(_))
-        .Times(2)
+        .Times(AtLeast(1))
         .WillRepeatedly(SaveArg<0>(&callback));
 
     auto surface = std::make_unique<ms::BasicSurface>(
