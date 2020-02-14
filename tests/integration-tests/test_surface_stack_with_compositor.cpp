@@ -215,7 +215,8 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor(_))
         .WillByDefault(Return(5));
     EXPECT_CALL(*mock_buffer_stream, set_frame_posted_callback(_))
-        .WillOnce(SaveArg<0>(&frame_callback));
+        .WillOnce(SaveArg<0>(&frame_callback))
+        .WillRepeatedly(Return());
     stub_surface->set_streams(std::list<ms::StreamInfo>{ { mock_buffer_stream, {0,0}, geom::Size{100, 100} } });
 
     mc::MultiThreadedCompositor mt_compositor(
@@ -242,7 +243,8 @@ TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffe
     ON_CALL(*mock_buffer_stream, lock_compositor_buffer(_))
         .WillByDefault(Return(mt::fake_shared(*stub_buffer)));
     EXPECT_CALL(*mock_buffer_stream, set_frame_posted_callback(_))
-        .WillOnce(SaveArg<0>(&frame_callback));
+        .WillOnce(SaveArg<0>(&frame_callback))
+        .WillRepeatedly(Return());
     stub_surface->set_streams(std::list<ms::StreamInfo>{ { mock_buffer_stream, {0,0}, geom::Size{100, 100} } });
 
     stub_surface->resize(geom::Size{10,10});
