@@ -714,6 +714,12 @@ void mf::XWaylandSurface::scene_surface_close_requested()
 
     if (delete_window)
     {
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "Sending WM_DELETE_WINDOW request to %s",
+                connection->window_debug_string(window).c_str());
+        }
         uint32_t const client_message_data[]{
             connection->wm_delete_window,
             XCB_TIME_CURRENT_TIME,
@@ -722,6 +728,12 @@ void mf::XWaylandSurface::scene_surface_close_requested()
     }
     else
     {
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "Killing %s because it does not support WM_DELETE_WINDOW",
+                connection->window_debug_string(window).c_str());
+        }
         xcb_kill_client(*connection, window);
     }
     connection->flush();
