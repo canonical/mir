@@ -33,7 +33,7 @@ struct miral::ExternalClientLauncher::Self
     mir::Server* server = nullptr;
     pid_t pid = -1;
 
-    std::map<std::string, std::string> env;
+    AppEnvironment env;
 };
 
 void miral::ExternalClientLauncher::operator()(mir::Server& server)
@@ -64,14 +64,17 @@ void miral::ExternalClientLauncher::operator()(mir::Server& server)
                  if (j != equals) ++equals;
                  auto const val = std::string(equals, j);
 
-                 self->env[key] = val;
+                 if (key[0] == '-')
+                 {
+                     self->env[key.substr(1)] = std::experimental::nullopt;
+                 }
+                 else
+                 {
+                     self->env[key] = val;
+                 }
 
                  if ((i = j) != end(value)) ++i;
              }
-
-             // DEBUG
-             for (auto const& kv : self->env)
-                 puts(("*****************> " + kv.first + "=" + kv.second).c_str());
          });
 }
 
@@ -84,7 +87,7 @@ void miral::ExternalClientLauncher::launch(std::vector<std::string> const& comma
     auto const x11_display = self->server->x11_display();
     auto const mir_socket = self->server->mir_socket_name();
 
-    self->pid = launch_app(command_line, wayland_display, mir_socket, x11_display);
+    self->pid = launch_app_env(command_line, wayland_display, mir_socket, x11_display, self->env);
 }
 
 miral::ExternalClientLauncher::ExternalClientLauncher() : self{std::make_shared<Self>()} {}
@@ -99,12 +102,18 @@ void miral::ExternalClientLauncher::launch_using_x11(std::vector<std::string> co
     if (!self->server)
         throw std::logic_error("Cannot launch apps when server has not started");
 
-    mir::optional_value<std::string> const wayland_display;
-    mir::optional_value<std::string> const mir_socket;
+    auto const wayland_display = self->server->wayland_display();
+    auto const mir_socket = self->server->mir_socket_name();
 
     if (auto const x11_display = self->server->x11_display())
     {
-        self->pid = launch_app(command_line, wayland_display, mir_socket, x11_display);
+        auto app_env = self->env;
+
+        app_env["GDK_BACKEND"] = "x11";
+        app_env["QT_QPA_PLATFORM"] = "xcb";
+        app_env["SDL_VIDEODRIVER"] = "x11";
+
+        self->pid = launch_app_env(command_line, wayland_display, mir_socket, x11_display, app_env);
     }
 }
 
