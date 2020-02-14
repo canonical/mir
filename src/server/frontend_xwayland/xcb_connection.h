@@ -26,7 +26,10 @@
 #include <xcb/xcb.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <functional>
+#include <mutex>
+#include <atomic>
 #include <experimental/optional>
 
 namespace mir
@@ -60,6 +63,9 @@ private:
     xcb_connection_t* const xcb_connection;
     xcb_screen_t* const xcb_screen;
 
+    std::mutex mutable atom_name_cache_mutex;
+    std::unordered_map<xcb_atom_t, std::string> mutable atom_name_cache;
+
 public:
     class Atom
     {
@@ -76,7 +82,11 @@ public:
         XCBConnection* const connection;
         std::string const name_;
         xcb_intern_atom_cookie_t const cookie;
-        std::experimental::optional<xcb_atom_t> mutable atom;
+        std::mutex mutable mutex;
+
+        /// Accessed locklessly, but only set under lock
+        /// Once set to a value other than XCB_ATOM_NONE, not changed again
+        std::atomic<xcb_atom_t> mutable atom{XCB_ATOM_NONE};
     };
 
     explicit XCBConnection(int fd);
