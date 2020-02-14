@@ -65,6 +65,7 @@ target_link_libraries(miral-test-internal
 add_subdirectory(generated/)
 
 mir_add_wrapped_executable(miral-test NOINSTALL
+    external_client.cpp
     window_id.cpp
     runner.cpp
     window_placement_client_api.cpp
