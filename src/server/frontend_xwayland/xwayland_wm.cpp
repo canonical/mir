@@ -491,6 +491,49 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 
         if (event->border_width)
             log_warning("border width unsupported (border width %d)", event->border_width);
+
+        auto const props_cookie = xcb_list_properties(*connection, event->window);
+        auto const props_reply = xcb_list_properties_reply(*connection, props_cookie, nullptr);
+        if (props_reply)
+        {
+            std::vector<std::function<void()>> functions;
+            int const prop_count = xcb_list_properties_atoms_length(props_reply);
+            for (int i = 0; i < prop_count; i++)
+            {
+                auto const atom = xcb_list_properties_atoms(props_reply)[i];
+
+                auto const log_prop = [this, atom](std::string const& value)
+                    {
+                        auto const prop_name = connection->query_name(atom);
+                        log_debug(
+                            "                  | %s: %s",
+                            prop_name.c_str(),
+                            value.c_str());
+                    };
+
+                functions.push_back(connection->read_property(
+                    event->window,
+                    atom,
+                    [this, log_prop](xcb_get_property_reply_t* reply)
+                    {
+                        auto const reply_str = connection->reply_debug_string(reply);
+                        log_prop(reply_str);
+                    },
+                    [log_prop]()
+                    {
+                        log_prop("Error getting value");
+                    }));
+            }
+            free(props_reply);
+
+            log_debug("                  initial properties: %d", prop_count);
+            for (auto const& f : functions)
+                f();
+        }
+        else
+        {
+            log_debug("                  initial properties: failed to load");
+        }
     }
 
     if (!connection->is_ours(event->window))
