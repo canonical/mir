@@ -35,6 +35,8 @@ struct ExternalClient : miral::TestServer
 {
     ExternalClient()
     {
+        if (getenv("XDG_RUNTIME_DIR") == nullptr)
+            add_to_environment("XDG_RUNTIME_DIR", "/tmp");
         start_server_in_setup = false;
         add_server_init(external_client);
     }
