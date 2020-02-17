@@ -429,7 +429,7 @@ auto miral::StaticDisplayConfig::list_layouts() const -> std::vector<std::string
 {
     std::vector<std::string> result;
 
-    for (auto const c: config)
+    for (auto const& c: config)
     {
         result.push_back(c.first);
     }
