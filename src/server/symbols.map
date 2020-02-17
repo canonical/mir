@@ -842,7 +842,7 @@ MIR_SERVER_1.7.0 {
   };
 } MIR_SERVER_1.6.0;
 
-MIR_SERVER_1.8.0 {
+MIR_SERVER_1.7.1 {
  global:
   extern "C++" {
     mir::Server::x11_display*;
