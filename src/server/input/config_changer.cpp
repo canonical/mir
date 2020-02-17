@@ -222,12 +222,12 @@ void mi::ConfigChanger::devices_updated(std::vector<std::shared_ptr<Device>> con
             session_config.second.remove_device_by_id(id);
     }
 
-    for (auto const dev : added)
+    for (auto const& dev : added)
     {
         auto initial_config = get_device_config(*dev);
         base.add_device_config(initial_config);
 
-        for(auto & session_config : config_map)
+        for(auto& session_config : config_map)
             session_config.second.add_device_config(initial_config);
     }
 

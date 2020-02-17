@@ -146,7 +146,7 @@ mf::XWaylandWM::~XWaylandWM()
     if (verbose_xwayland_logging_enabled())
         log_debug("Closing %d XWayland surface(s)...", local_surfaces.size());
 
-    for (auto const surface : local_surfaces)
+    for (auto const& surface : local_surfaces)
     {
         if (surface.second)
             surface.second->close();
