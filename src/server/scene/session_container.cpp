@@ -54,7 +54,7 @@ void ms::SessionContainer::for_each(std::function<void(std::shared_ptr<Session> 
 {
     std::unique_lock<std::mutex> lk(guard);
 
-    for (auto const ptr : apps)
+    for (auto const& ptr : apps)
     {
         f(ptr);
     }

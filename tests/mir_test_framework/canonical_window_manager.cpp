@@ -98,7 +98,7 @@ void msh::CanonicalWindowManagerPolicy::handle_displays_updated(SessionInfoMap& 
 {
     display_area = displays.bounding_rectangle();
 
-    for (auto const weak_surface : fullscreen_surfaces)
+    for (auto const& weak_surface : fullscreen_surfaces)
     {
         if (auto const surface = weak_surface.lock())
         {
