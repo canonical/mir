@@ -101,7 +101,7 @@ else
   # With mir_demo_server ${x11_display_file} contains the X11 display
   if [ -e "${x11_display_file}" ]
   then
-    export DISPLAY=$(cat "${x11_display_file}")
+    export DISPLAY=:$(cat "${x11_display_file}")
     rm "${x11_display_file}"
   else
     unset DISPLAY
