@@ -7,6 +7,10 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/miral-shell.desktop
     DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications
 )
 
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/miral-shell.desktop
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/share/wayland-sessions
+)
+
 install(FILES ${ICON_NAME}.svg
     DESTINATION ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps
 )

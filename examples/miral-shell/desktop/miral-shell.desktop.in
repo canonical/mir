@@ -1,8 +1,8 @@
 [Desktop Entry]
 Version=1.0
-Name=Miral Shell
+Name=Mir Shell
 GenericName=Mir Shell
-Comment=A Mir Shell
+Comment=Mir Shell: "miral-shell" Demo
 Keywords=Mir;Server;Shell
 Type=Application
 Icon=@ICON_NAME@
