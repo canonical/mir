@@ -648,6 +648,7 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
 
     if (auto const surface = get_wm_surface(event->window))
     {
+        // TODO: net_active_window?
         if (event->type == connection->net_wm_moveresize)
             handle_move_resize(surface.value(), event);
         else if (event->type == connection->net_wm_state)
