@@ -235,7 +235,7 @@ Depends: ${misc:Depends},
 Recommends: dmz-cursor-theme,
             fonts-liberation,
             qtwayland5,
-            xwayland
+            xwayland,
 Description: Display server for Ubuntu - demonstration programs
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
