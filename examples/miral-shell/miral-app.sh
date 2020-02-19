@@ -79,7 +79,7 @@ if [ "${miral_server}" == "miral-shell" ]
 then
   if [ "$(lsb_release -c -s)" == "xenial" ]
   then
-    export MIR_SERVER_APP_ENV=GDK_BACKEND=x11:QT_QPA_PLATFORM=ubuntumirclient:SDL_VIDEODRIVER=mir:NO_AT_BRIDGE=1
+    export MIR_SERVER_APP_ENV="GDK_BACKEND=x11:QT_QPA_PLATFORM=ubuntumirclient:SDL_VIDEODRIVER=mir:NO_AT_BRIDGE=1"
     export MIR_SERVER_ENABLE_MIRCLIENT=
   fi
 
