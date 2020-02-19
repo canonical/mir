@@ -305,7 +305,7 @@ void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
         connection->set_property<XCBType::WINDOW>(
             connection->root_window(),
             connection->net_active_window,
-            static_cast<xcb_window_t>(xcb_window));
+            xcb_window);
 
         if (auto const surface = get_wm_surface(xcb_window))
         {
