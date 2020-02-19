@@ -77,8 +77,14 @@ unset QT_QPA_PLATFORMTHEME
 
 if [ "${miral_server}" == "miral-shell" ]
 then
+  if [ "$(lsb_release -c -s)" == "xenial" ]
+  then
+    export MIR_SERVER_APP_ENV="GDK_BACKEND=x11:QT_QPA_PLATFORM=ubuntumirclient:SDL_VIDEODRIVER=mir:NO_AT_BRIDGE=1"
+    export MIR_SERVER_ENABLE_MIRCLIENT=
+  fi
+
   # miral-shell can launch it's own terminal with Ctrl-Alt-T
-  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} ${hostsocket} exec dbus-run-session -- ${bindir}${miral_server} ${enable_mirclient} $*
+  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} ${hostsocket} exec dbus-run-session -- ${bindir}${miral_server}$*
 else
   # With mir_demo_server we will get the display saved to this file
   x11_display_file=$(tempfile)

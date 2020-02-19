@@ -36,6 +36,7 @@
 
 #include <linux/input.h>
 #include <unistd.h>
+#include <boost/filesystem.hpp>
 
 int main(int argc, char const* argv[])
 {
@@ -83,7 +84,18 @@ int main(int argc, char const* argv[])
                 return true;
 
             case KEY_T:
-                external_client_launcher.launch({terminal_cmd});
+                {
+                    std::vector<std::string> command_line{terminal_cmd};
+                    if (terminal_cmd == "gnome-terminal" && boost::filesystem::exists("/usr/bin/gnome-terminal.real"))
+                    {
+                        // gnome-terminal is a horrid wrapper script on Ubuntu that needs frigging
+                        command_line.emplace_back("--disable-factory");
+                        command_line.emplace_back("--app-id");
+                        command_line.emplace_back("com.canonical.miral.Terminal");
+                    }
+
+                    external_client_launcher.launch(command_line);
+                }
                 return false;
 
             case KEY_X:
