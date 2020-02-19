@@ -30,6 +30,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <cstring>
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;
@@ -116,14 +117,14 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
       enabled(false),
       renderables_in_use(0)
 {
-    unsigned int const pixels_size = touchspot_size.width.as_uint32_t()*touchspot_size.height.as_uint32_t() *
-        MIR_BYTES_PER_PIXEL(touchspot_pixel_format);
-
-    auto pixel_source = dynamic_cast<mrs::PixelSource*>(touchspot_buffer->native_buffer_base());
-    if (pixel_source)
-        pixel_source->write(touchspot_image.pixel_data, pixels_size);
-    else
-        BOOST_THROW_EXCEPTION(std::logic_error("could not write to buffer for touchspot"));
+    // TODO: The buffer pixel format may not be argb_8888, leading to
+    // incorrect cursor colors. We need to transform the data to match
+    // the buffer pixel format.
+    auto const mapping = mrs::as_write_mappable_buffer(touchspot_buffer)->map_writeable();
+    ::memcpy(
+        mapping->data(),
+        static_cast<unsigned char const*>(touchspot_image.pixel_data),
+        mapping->len());
 }
 
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)

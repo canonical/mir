@@ -653,14 +653,21 @@ auto msd::Renderer::make_buffer(
         return std::experimental::nullopt;
     }
     std::shared_ptr<graphics::Buffer> const buffer = buffer_allocator->alloc_software_buffer(size, buffer_format);
-    auto const pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base());
-    if (!pixel_source)
+    std::shared_ptr<mrs::WriteMappableBuffer> writable;
+    try
+    {
+        writable = mrs::as_write_mappable_buffer(buffer);
+    }
+    catch (std::runtime_error const&)
     {
         log_warning("Failed to draw SSD: software buffer not a pixel source");
         return std::experimental::nullopt;
     }
-    size_t const buf_pixels_size{area(size) * sizeof(Pixel)};
-    pixel_source->write((unsigned char const*)pixels, buf_pixels_size);
+    auto const mapping = writable->map_writeable();
+    ::memcpy(
+        mapping->data(),
+        reinterpret_cast<unsigned char const*>(pixels),
+        mapping->len());
     return buffer;
 }
 

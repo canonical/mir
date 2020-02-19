@@ -28,6 +28,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <mutex>
+#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
@@ -197,11 +198,11 @@ mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom:
     // TODO: The buffer pixel format may not be argb_8888, leading to
     // incorrect cursor colors. We need to transform the data to match
     // the buffer pixel format.
-    auto pixel_source = dynamic_cast<mrs::PixelSource*>(new_renderable->buffer()->native_buffer_base());
-    if (pixel_source)
-        pixel_source->write(static_cast<unsigned char const*>(cursor_image.as_argb_8888()), pixels_size);
-    else
-        BOOST_THROW_EXCEPTION(std::logic_error("could not write to buffer for software cursor"));
+    auto const mapping = mrs::as_write_mappable_buffer(new_renderable->buffer())->map_writeable();
+    ::memcpy(
+        mapping->data(),
+        static_cast<unsigned char const*>(cursor_image.as_argb_8888()),
+        mapping->len());
     return new_renderable;
 }
 

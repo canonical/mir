@@ -357,18 +357,6 @@ void basic_display_swapping(mg::Display& display)
         });
 }
 
-std::unique_ptr<unsigned char[]> make_pixel_buffer(size_t size, uint32_t value)
-{
-    auto pixels = std::make_unique<unsigned char[]>(size);
-
-    std::fill(
-        reinterpret_cast<uint32_t*>(pixels.get()),
-        reinterpret_cast<uint32_t*>(pixels.get() + size),
-        value);
-
-    return pixels;
-}
-
 std::shared_ptr<mg::Buffer> alloc_and_fill_sw_buffer(
     mg::GraphicBufferAllocator& allocator,
     mir::geometry::Size size,
@@ -376,12 +364,22 @@ std::shared_ptr<mg::Buffer> alloc_and_fill_sw_buffer(
     uint32_t fill_value)
 {
     auto const buffer = allocator.alloc_software_buffer(size, format);
-    auto const writable_buffer = std::dynamic_pointer_cast<mir::renderer::software::PixelSource>(buffer);
+    auto const mapping = mir::renderer::software::as_write_mappable_buffer(buffer)->map_writeable();
 
-    auto const size_in_bytes = writable_buffer->stride().as_uint32_t() * size.height.as_uint32_t();
-    auto const pixels = make_pixel_buffer(size_in_bytes, fill_value);
-
-    writable_buffer->write(pixels.get(), size_in_bytes);
+    if (mapping->stride().as_uint32_t() % sizeof(fill_value))
+    {
+        // Weird stride; just filling the buffer naïvely will result in incorrect colours
+        for (auto y = 0u; y < size.height.as_uint32_t(); ++y)
+        {
+            auto const row_start = mapping->data() + (mapping->stride().as_uint32_t() * y);
+            std::fill(row_start, row_start + mapping->stride().as_uint32_t(), fill_value);
+        }
+    }
+    else
+    {
+        // Stride is a whole number of pixels, so we can just fill the whole buffer
+        std::fill(mapping->data(), mapping->data() + mapping->len(), fill_value);
+    }
 
     return buffer;
 }

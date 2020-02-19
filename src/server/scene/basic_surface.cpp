@@ -226,7 +226,7 @@ private:
     {
         if (stream->has_submitted_buffer())
         {
-            surface.set_cursor_from_buffer(*stream->lock_compositor_buffer(this), hotspot);
+            surface.set_cursor_from_buffer(stream->lock_compositor_buffer(this), hotspot);
         }
         else
         {
@@ -667,36 +667,22 @@ namespace
 {
 struct CursorImageFromBuffer : public mg::CursorImage
 {
-    CursorImageFromBuffer(mg::Buffer &buffer, geom::Displacement const& hotspot)
-        : buffer_size(buffer.size()),
+    CursorImageFromBuffer(
+        std::shared_ptr<mg::Buffer> buffer,
+        geom::Displacement const& hotspot)
+        : buffer{mrs::as_read_mappable_buffer(std::move(buffer))},
+          mapping{this->buffer->map_readable()},
           hotspot_(hotspot)
     {
-        auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer.native_buffer_base());
-        if (pixel_source)
-        {
-            pixel_source->read([&](unsigned char const* buffer_pixels)
-            {
-                size_t buffer_size_bytes = buffer_size.width.as_int() * buffer_size.height.as_int()
-                    * MIR_BYTES_PER_PIXEL(buffer.pixel_format());
-                pixels = std::unique_ptr<unsigned char[]>(
-                    new unsigned char[buffer_size_bytes]
-                );
-                memcpy(pixels.get(), buffer_pixels, buffer_size_bytes);
-            });
-        }
-        else
-        {
-            BOOST_THROW_EXCEPTION(std::logic_error("could not read from buffer"));
-        }
     }
     void const* as_argb_8888() const
     {
-        return pixels.get();
+        return mapping->data();
     }
 
     geom::Size size() const
     {
-        return buffer_size;
+        return mapping->size();
     }
 
     geom::Displacement hotspot() const
@@ -704,14 +690,15 @@ struct CursorImageFromBuffer : public mg::CursorImage
         return hotspot_;
     }
 
-    geom::Size const buffer_size;
+    std::shared_ptr<mrs::ReadMappableBuffer> const buffer;
+    std::unique_ptr<mrs::Mapping<unsigned char const>> const mapping;
     geom::Displacement const hotspot_;
-
-    std::unique_ptr<unsigned char[]> pixels;
 };
 }
 
-void ms::BasicSurface::set_cursor_from_buffer(mg::Buffer& buffer, geom::Displacement const& hotspot)
+void ms::BasicSurface::set_cursor_from_buffer(
+    std::shared_ptr<mg::Buffer> buffer,
+    geom::Displacement const& hotspot)
 {
     auto image = std::make_shared<CursorImageFromBuffer>(buffer, hotspot);
     {
