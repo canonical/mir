@@ -33,7 +33,7 @@ mir (1.7.1) UNRELEASED; urgency=medium
       . Use ByteSizeLong instead of deprecated ByteSize. (Fixes #1127)
       . Fix unnecessary copies in range-for loops (Clang-11 fixes)
 
- -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 17 Feb 12:09:00 +0000
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 17 Feb 2020 12:09:00 +0000
 
 mir (1.7.0) UNRELEASED; urgency=medium
 
@@ -67,7 +67,7 @@ mir (1.7.0) UNRELEASED; urgency=medium
       . [packaging] Add libwayland-dev to Build-Depends
       . Fix clang found clangers
 
- -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 13 Jan 17:39:00 +0100
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 13 Jan 2020 17:39:00 +0100
 
 mir (1.6.0) UNRELEASED; urgency=medium
 
