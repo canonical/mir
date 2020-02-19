@@ -290,25 +290,32 @@ void mf::XWaylandSurface::close()
 
 void mf::XWaylandSurface::take_focus()
 {
+    bool supports_take_focus;
     {
         std::lock_guard<std::mutex> lock{mutex};
 
         if (cached.override_redirect)
             return;
+
+        supports_take_focus = (
+            cached.supported_wm_protocols.find(connection->wm_take_focus) !=
+            cached.supported_wm_protocols.end());
     }
 
-    // We may want to respect requested input focus model here
+    if (supports_take_focus)
+    {
+        uint32_t const client_message_data[]{
+            connection->wm_take_focus,
+            XCB_TIME_CURRENT_TIME};
+
+        connection->send_client_message<XCBType::WM_PROTOCOLS>(
+            window,
+            XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT,
+            client_message_data);
+    }
+
+    // TODO: only send if allowed based on wm hints input mode
     // see https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.7
-
-    uint32_t const client_message_data[]{
-        connection->wm_take_focus,
-        XCB_TIME_CURRENT_TIME};
-
-    connection->send_client_message<XCBType::WM_PROTOCOLS>(
-        window,
-        XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT,
-        client_message_data);
-
     xcb_set_input_focus(
         *connection,
         XCB_INPUT_FOCUS_POINTER_ROOT,
