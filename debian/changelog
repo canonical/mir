@@ -22,6 +22,8 @@ mir (1.7.1) UNRELEASED; urgency=medium
       . [miral] Make app launch environment configurable. (Fixes: #1268)
       . [miral] Add ExternalClientLauncher::launch_using_x11()
       . [demos] Simplify miral-app script and make terminal logic more robust
+      . [demos] Add "Mir Shell" to greeter
+      . [demos] Install Wayland dependences via Debian "Recommends"
       . Tell Java toolkits that we're a non-reparenting window manager
     - Bugs fixed:
       . [X11] Lots of fixes to Xwayland & X11 window managment code
