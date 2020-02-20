@@ -192,6 +192,28 @@ TEST_F(X11DisplayTest, calculates_physical_size_of_display_based_on_default_scre
     EXPECT_THAT(reported_size, Eq(expected_size));
 }
 
+TEST_F(X11DisplayTest, sets_output_scale)
+{
+    auto const scale = 2.5f;
+    auto const pixel = geom::Size{2880, 1800};
+    auto const mm = geom::Size{677, 290};
+    auto const window = geom::Size{1280, 1024};
+
+    setup_x11_screen(pixel, mm, {{window, scale}});
+
+    auto display = create_display();
+    auto config = display->configuration();
+    float reported_scale = -10.0f;
+    config->for_each_output(
+        [&reported_scale](mg::DisplayConfigurationOutput const& output)
+        {
+            reported_scale = output.scale;
+        }
+        );
+
+    EXPECT_THAT(reported_scale, FloatEq(scale));
+}
+
 TEST_F(X11DisplayTest, reports_a_resolution_that_matches_the_window_size)
 {
     auto const pixel = geom::Size{2880, 1800};
