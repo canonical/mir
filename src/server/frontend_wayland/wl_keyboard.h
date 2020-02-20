@@ -56,7 +56,7 @@ public:
     ~WlKeyboard();
 
     void key(std::chrono::milliseconds const& ms, int scancode, bool down);
-    void focussed(WlSurface* surface, bool focussed);
+    void focussed(WlSurface* surface, bool should_be_focused);
     void set_keymap(mir::input::Keymap const& new_keymap);
     void resync_keyboard();
 
@@ -70,6 +70,9 @@ private:
 
     std::function<void(WlKeyboard*)> on_destroy;
     std::function<std::vector<uint32_t>()> const acquire_current_keyboard_state;
+
+    std::shared_ptr<bool> focused_surface_destroyed{std::make_shared<bool>(true)};
+    WlSurface* focused_surface{nullptr}; ///< Should only be used if *focused_surface_destroyed == false
 
     uint32_t mods_depressed{0};
     uint32_t mods_latched{0};

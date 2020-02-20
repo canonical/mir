@@ -83,10 +83,20 @@ void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, int scancode, bool
     update_modifier_state();
 }
 
-void mf::WlKeyboard::focussed(WlSurface* surface, bool focussed)
+void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
 {
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
-    if (focussed)
+    bool const is_currently_focused = (*focused_surface_destroyed == false && focused_surface == surface);
+
+    if (should_be_focused == is_currently_focused)
+        return;
+
+    if (*focused_surface_destroyed == false)
+    {
+        auto const serial = wl_display_next_serial(wl_client_get_display(client));
+        send_leave_event(serial, focused_surface->raw_resource());
+    }
+
+    if (should_be_focused)
     {
         // TODO: Send the surface's keymap here
 
@@ -114,12 +124,17 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool focussed)
                 keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
         }
 
+        auto const serial = wl_display_next_serial(wl_client_get_display(client));
         send_enter_event(serial, surface->raw_resource(), &key_state);
         wl_array_release(&key_state);
+
+        focused_surface = surface;
+        focused_surface_destroyed = surface->destroyed_flag();
     }
     else
     {
-        send_leave_event(serial, surface->raw_resource());
+        focused_surface = nullptr;
+        focused_surface_destroyed = std::make_shared<bool>(true);
     }
 }
 
