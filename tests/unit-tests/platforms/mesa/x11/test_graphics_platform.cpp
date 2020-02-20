@@ -80,6 +80,7 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
+        std::vector<mg::X::X11OutputConfig> const output_config{{{1280, 1024}}};
         return std::make_shared<mg::X::Platform>(
             std::shared_ptr<::Display>(
                 XOpenDisplay(nullptr),
@@ -87,7 +88,7 @@ public:
                 {
                     XCloseDisplay(display);
                 }),
-            std::vector<mir::geometry::Size>{{1280, 1024}},
+            std::make_unique<std::vector<mg::X::X11OutputConfig>>(output_config),
             std::make_shared<mir::report::null::DisplayReport>());
     }
 

@@ -30,7 +30,22 @@
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/udev_environment.h"
 
+namespace mir
+{
+namespace graphics
+{
+namespace X
+{
+auto operator==(X11OutputConfig const& a, X11OutputConfig const& b) -> bool
+{
+    return a.size == b.size;
+}
+}
+}
+}
+
 namespace mg = mir::graphics;
+namespace mgx = mir::graphics::X;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -49,6 +64,7 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
+        std::vector<mg::X::X11OutputConfig> const output_config{{{1280, 1024}}};
         return std::make_shared<mg::X::Platform>(
             std::shared_ptr<::Display>(
                 XOpenDisplay(nullptr),
@@ -56,7 +72,7 @@ public:
                 {
                     XCloseDisplay(display);
                 }),
-            std::vector<mir::geometry::Size>{{1280, 1024}},
+            std::make_unique<std::vector<mg::X::X11OutputConfig>>(output_config),
             std::make_shared<mir::report::null::DisplayReport>());
     }
 
@@ -139,7 +155,7 @@ TEST_F(X11GraphicsPlatformTest, parses_simple_output_size)
     auto str = "1280x720";
     auto parsed = mg::X::Platform::parse_output_sizes(str);
 
-    EXPECT_THAT(parsed, Eq(std::vector<mir::geometry::Size>{{1280, 720}}));
+    EXPECT_THAT(*parsed, Eq(std::vector<mgx::X11OutputConfig>{{{1280, 720}}}));
 }
 
 TEST_F(X11GraphicsPlatformTest, parses_multiple_output_size)
@@ -149,7 +165,7 @@ TEST_F(X11GraphicsPlatformTest, parses_multiple_output_size)
     auto str = "1280x1024:600x600:30x750";
     auto parsed = mg::X::Platform::parse_output_sizes(str);
 
-    EXPECT_THAT(parsed, Eq(std::vector<mir::geometry::Size>{{1280, 1024}, {600, 600}, {30, 750}}));
+    EXPECT_THAT(*parsed, Eq(std::vector<mgx::X11OutputConfig>{{{1280, 1024}}, {{600, 600}}, {{30, 750}}}));
 }
 
 TEST_F(X11GraphicsPlatformTest, output_size_parsing_throws_on_bad_input)

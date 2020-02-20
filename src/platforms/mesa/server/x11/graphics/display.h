@@ -45,6 +45,7 @@ namespace X
 {
 
 class DisplayBuffer;
+class X11OutputConfig;
 
 class X11Window
 {
@@ -70,7 +71,7 @@ class Display : public graphics::Display,
 {
 public:
     explicit Display(::Display* x_dpy,
-                     std::vector<geometry::Size> const& requested_size,
+                     std::vector<X11OutputConfig> const& requested_size,
                      std::shared_ptr<GLConfig> const& gl_config,
                      std::shared_ptr<DisplayReport> const& report);
     ~Display() noexcept;

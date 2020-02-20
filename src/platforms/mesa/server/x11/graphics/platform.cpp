@@ -49,40 +49,39 @@ auto parse_size_dimension(std::string const& str) -> int
     }
 }
 
-auto parse_size(std::string const& str) -> geom::Size
+auto parse_size(std::string const& str) -> mgx::X11OutputConfig
 {
     size_t x = str.find('x');
     if (x == std::string::npos || x <= 0 || x >= str.size() - 1)
         BOOST_THROW_EXCEPTION(std::runtime_error("Output size \"" + str + "\" does not have two dimensions"));
-    return geom::Size{
+    return mgx::X11OutputConfig{geom::Size{
         parse_size_dimension(str.substr(0, x)),
-        parse_size_dimension(str.substr(x + 1, std::string::npos))};
-
+        parse_size_dimension(str.substr(x + 1, std::string::npos))}};
 }
 }
 
-std::vector<geom::Size> mgx::Platform::parse_output_sizes(std::string output_sizes)
+auto mgx::Platform::parse_output_sizes(std::string output_sizes) -> std::unique_ptr<std::vector<mgx::X11OutputConfig>>
 {
-    std::vector<geom::Size> sizes;
+    auto sizes = std::make_unique<std::vector<mgx::X11OutputConfig>>();
     for (int start = 0, end; start - 1 < (int)output_sizes.size(); start = end + 1)
     {
         end = output_sizes.find(':', start);
         if (end == (int)std::string::npos)
             end = output_sizes.size();
-        sizes.push_back(parse_size(output_sizes.substr(start, end - start)));
+        sizes->push_back(parse_size(output_sizes.substr(start, end - start)));
     }
     return sizes;
 }
 
 mgx::Platform::Platform(std::shared_ptr<::Display> const& conn,
-                        std::vector<geom::Size> const output_sizes,
+                        std::unique_ptr<std::vector<X11OutputConfig>> output_sizes,
                         std::shared_ptr<mg::DisplayReport> const& report)
     : x11_connection{conn},
       udev{std::make_shared<mir::udev::Context>()},
       drm{mgm::helpers::DRMHelper::open_any_render_node(udev)},
       report{report},
       gbm{drm->fd},
-      output_sizes{output_sizes}
+      output_sizes{move(output_sizes)}
 {
     if (!x11_connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
@@ -100,7 +99,7 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return make_module_ptr<mgx::Display>(x11_connection.get(), output_sizes, gl_config, report);
+    return make_module_ptr<mgx::Display>(x11_connection.get(), *output_sizes, gl_config, report);
 }
 
 mg::NativeDisplayPlatform* mgx::Platform::native_display_platform()

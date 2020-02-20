@@ -35,6 +35,17 @@ namespace graphics
 {
 namespace X
 {
+struct X11OutputConfig
+{
+    inline X11OutputConfig(geometry::Size const& size)
+        : size{size}
+    {
+    }
+
+    ~X11OutputConfig() = default;
+
+    geometry::Size size;
+};
 
 class Platform : public graphics::Platform,
                  public graphics::NativeRenderingPlatform,
@@ -42,10 +53,10 @@ class Platform : public graphics::Platform,
 {
 public:
     // Parses colon separated list of sizes in the form WIDTHxHEIGHT
-    static std::vector<geometry::Size> parse_output_sizes(std::string output_sizes);
+    static auto parse_output_sizes(std::string output_sizes) -> std::unique_ptr<std::vector<X11OutputConfig>>;
 
     explicit Platform(std::shared_ptr<::Display> const& conn,
-                      std::vector<mir::geometry::Size> const output_sizes,
+                      std::unique_ptr<std::vector<X11OutputConfig>> output_sizes,
                       std::shared_ptr<DisplayReport> const& report);
     ~Platform() = default;
 
@@ -69,7 +80,7 @@ private:
     std::shared_ptr<mesa::helpers::DRMHelper> const drm;
     std::shared_ptr<DisplayReport> const report;
     mesa::helpers::GBMHelper gbm;
-    std::vector<mir::geometry::Size> const output_sizes;
+    std::unique_ptr<std::vector<X11OutputConfig>> const output_sizes;
     std::unique_ptr<mesa::DRMNativePlatformAuthFactory> auth_factory;
 };
 

@@ -55,7 +55,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
     return mir::make_module_ptr<mgx::Platform>(
         mx::X11Resources::instance.get_conn(),
-        output_sizes,
+        move(output_sizes),
         report
     );
 }
@@ -125,7 +125,7 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
 
     return mir::make_module_ptr<mgx::Platform>(
         mx::X11Resources::instance.get_conn(),
-        output_sizes,
+        move(output_sizes),
         report);
 }
 
