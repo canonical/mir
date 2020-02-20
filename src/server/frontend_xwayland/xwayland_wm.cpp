@@ -281,24 +281,27 @@ auto mf::XWaylandWM::get_wm_surface(
 
 void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
 {
-    bool was_focused;
     {
         std::lock_guard<std::mutex> lock{mutex};
-        was_focused = (focused_window && focused_window.value() == xcb_window);
-        focused_window = should_be_focused;
-    }
+        bool const was_focused = (focused_window && focused_window.value() == xcb_window);
 
-    if (verbose_xwayland_logging_enabled())
-    {
-        log_debug(
-            "%s %s %s...",
-            should_be_focused ? "Focusing" : "Unfocusing",
-            was_focused ? "focused" : "unfocused",
-            connection->window_debug_string(xcb_window).c_str());
-    }
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "%s %s %s...",
+                should_be_focused ? "Focusing" : "Unfocusing",
+                was_focused ? "focused" : "unfocused",
+                connection->window_debug_string(xcb_window).c_str());
+        }
 
-    if (should_be_focused == was_focused)
-        return;
+        if (should_be_focused == was_focused)
+            return;
+
+        if (should_be_focused)
+            focused_window = xcb_window;
+        else
+            focused_window = std::experimental::nullopt;
+    }
 
     if (should_be_focused)
     {
@@ -319,11 +322,14 @@ void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
             connection->net_active_window,
             static_cast<xcb_window_t>(XCB_WINDOW_NONE));
 
-        xcb_set_input_focus_checked(
-            *connection,
-            XCB_INPUT_FOCUS_POINTER_ROOT,
-            XCB_NONE,
-            XCB_CURRENT_TIME);
+        // TODO: enable clearing of input focus once github.com/MirServer/mir/issues/1295 is fixed
+        // at time of writing, focus is momentarily cleared when unmapping a popup
+        // clearing input focus results in the client closing any parent popups, so don't do that
+        // xcb_set_input_focus_checked(
+        //     *connection,
+        //     XCB_INPUT_FOCUS_POINTER_ROOT,
+        //     XCB_NONE,
+        //     XCB_CURRENT_TIME);
     }
 
     connection->flush();
