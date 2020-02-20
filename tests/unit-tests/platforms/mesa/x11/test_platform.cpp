@@ -38,7 +38,8 @@ namespace X
 {
 auto operator==(X11OutputConfig const& a, X11OutputConfig const& b) -> bool
 {
-    return a.size == b.size;
+    return a.size == b.size &&
+           testing::Value(a.scale, testing::FloatEq(b.scale));
 }
 }
 }

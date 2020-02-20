@@ -38,13 +38,21 @@ namespace X
 struct X11OutputConfig
 {
     inline X11OutputConfig(geometry::Size const& size)
-        : size{size}
+        : size{size},
+          scale{1.0f}
+    {
+    }
+
+    inline X11OutputConfig(geometry::Size const& size, float scale)
+        : size{size},
+          scale{scale}
     {
     }
 
     ~X11OutputConfig() = default;
 
     geometry::Size size;
+    float scale;
 };
 
 class Platform : public graphics::Platform,

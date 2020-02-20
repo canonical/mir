@@ -263,7 +263,7 @@ mgx::Display::Display(::Display* x_dpy,
             actual_size,
             top_left,
             geom::Size{actual_size.width * pixel_width, actual_size.height * pixel_height},
-            1.0f,
+            requested_size.scale,
             mir_orientation_normal);
         auto display_buffer = std::make_unique<mgx::DisplayBuffer>(
             x_dpy,
