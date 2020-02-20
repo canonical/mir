@@ -98,6 +98,18 @@ void check_xfixes(mf::XCBConnection const& connection)
 
     free(xfixes_reply);
 }
+
+auto focus_mode_to_string(uint32_t focus_mode) -> std::string
+{
+    switch (focus_mode)
+    {
+    case XCB_NOTIFY_MODE_NORMAL:        return "normal focus";
+    case XCB_NOTIFY_MODE_GRAB:          return "focus grabbed";
+    case XCB_NOTIFY_MODE_UNGRAB:        return "focus ungrabbed";
+    case XCB_NOTIFY_MODE_WHILE_GRABBED: return "focus while grabbed";
+    }
+    return "unknown focus mode " + std::to_string(focus_mode);
+}
 }
 
 class mf::XWaylandSceneObserver
@@ -764,16 +776,10 @@ void mf::XWaylandWM::handle_focus_in(xcb_focus_in_event_t* event)
 {
     if (verbose_xwayland_logging_enabled())
     {
-        std::string mode_str;
-        switch (event->mode)
-        {
-        case XCB_NOTIFY_MODE_NORMAL:        mode_str = "normal focus"; break;
-        case XCB_NOTIFY_MODE_GRAB:          mode_str = "focus grabbed"; break;
-        case XCB_NOTIFY_MODE_UNGRAB:        mode_str = "focus ungrabbed"; break;
-        case XCB_NOTIFY_MODE_WHILE_GRABBED: mode_str = "focus while grabbed"; break;
-        default: mode_str = "unknown focus mode " + std::to_string(event->mode); break;
-        }
-        log_debug("XCB_FOCUS_IN %s on %s", mode_str.c_str(), connection->window_debug_string(event->event).c_str());
+        log_debug(
+            "XCB_FOCUS_IN %s on %s",
+            focus_mode_to_string(event->mode).c_str(),
+            connection->window_debug_string(event->event).c_str());
     }
 
     // Ignore grabs
