@@ -24,6 +24,7 @@
 #include "mir/executor.h"
 #include "mir/anonymous_shm_file.h"
 #include "mir/input/keymap.h"
+#include "mir/log.h"
 
 #include <xkbcommon/xkbcommon.h>
 #include <boost/throw_exception.hpp>
@@ -68,8 +69,16 @@ mf::WlKeyboard::~WlKeyboard()
     on_destroy(this);
 }
 
-void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, int scancode, bool down)
+void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, WlSurface* surface, int scancode, bool down)
 {
+    if (*focused_surface_destroyed || focused_surface != surface)
+    {
+        log_warning(
+            "Sending key to wl_surface@%u even though it was not explicitly given keyboard focus",
+            wl_resource_get_id(surface->resource));
+        focussed(surface, true);
+    }
+
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
     /*
      * HACK! Maintain our own XKB state, so we can serialise it for
