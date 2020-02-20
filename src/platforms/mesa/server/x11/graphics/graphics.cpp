@@ -66,7 +66,8 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     config.add_options()
         (x11_displays_option_name,
          boost::program_options::value<std::string>()->default_value("1280x1024"),
-         "[mir-on-X specific] Colon separated list of WIDTHxHEIGHT sizes for \"output\" windows.");
+         "[mir-on-X specific] Colon separated list of WIDTHxHEIGHT sizes for \"output\" windows."
+         " ^SCALE may also be appended to any output");
 }
 
 mg::PlatformPriority probe_graphics_platform(

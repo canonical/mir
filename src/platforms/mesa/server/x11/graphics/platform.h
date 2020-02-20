@@ -60,7 +60,7 @@ class Platform : public graphics::Platform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
-    // Parses colon separated list of sizes in the form WIDTHxHEIGHT
+    // Parses colon separated list of sizes in the form WIDTHxHEIGHT^SCALE (^SCALE is optional)
     static auto parse_output_sizes(std::string output_sizes) -> std::unique_ptr<std::vector<X11OutputConfig>>;
 
     explicit Platform(std::shared_ptr<::Display> const& conn,
