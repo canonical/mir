@@ -290,25 +290,32 @@ void mf::XWaylandSurface::close()
 
 void mf::XWaylandSurface::take_focus()
 {
+    bool supports_take_focus;
     {
         std::lock_guard<std::mutex> lock{mutex};
 
         if (cached.override_redirect)
             return;
+
+        supports_take_focus = (
+            cached.supported_wm_protocols.find(connection->wm_take_focus) !=
+            cached.supported_wm_protocols.end());
     }
 
-    // We may want to respect requested input focus model here
+    if (supports_take_focus)
+    {
+        uint32_t const client_message_data[]{
+            connection->wm_take_focus,
+            XCB_TIME_CURRENT_TIME};
+
+        connection->send_client_message<XCBType::WM_PROTOCOLS>(
+            window,
+            XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT,
+            client_message_data);
+    }
+
+    // TODO: only send if allowed based on wm hints input mode
     // see https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.7
-
-    uint32_t const client_message_data[]{
-        connection->wm_take_focus,
-        XCB_TIME_CURRENT_TIME};
-
-    connection->send_client_message<XCBType::WM_PROTOCOLS>(
-        window,
-        XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT,
-        client_message_data);
-
     xcb_set_input_focus(
         *connection,
         XCB_INPUT_FOCUS_POINTER_ROOT,
@@ -714,6 +721,12 @@ void mf::XWaylandSurface::scene_surface_close_requested()
 
     if (delete_window)
     {
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "Sending WM_DELETE_WINDOW request to %s",
+                connection->window_debug_string(window).c_str());
+        }
         uint32_t const client_message_data[]{
             connection->wm_delete_window,
             XCB_TIME_CURRENT_TIME,
@@ -722,6 +735,12 @@ void mf::XWaylandSurface::scene_surface_close_requested()
     }
     else
     {
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "Killing %s because it does not support WM_DELETE_WINDOW",
+                connection->window_debug_string(window).c_str());
+        }
         xcb_kill_client(*connection, window);
     }
     connection->flush();
@@ -770,13 +789,86 @@ void mf::XWaylandSurface::is_transient_for(xcb_window_t transient_for)
 {
     std::shared_ptr<scene::Surface> parent_scene_surface; // May remain nullptr
 
+    // returns nullptr on error
+    auto const get_scene_surface_from = [this](xcb_window_t xcb_window) -> std::shared_ptr<scene::Surface>
+        {
+            if (auto const xwayland_surface = this->xwm->get_wm_surface(xcb_window))
+            {
+                std::lock_guard<std::mutex> lock{xwayland_surface.value()->mutex};
+                auto const scene_surface = xwayland_surface.value()->weak_scene_surface.lock();
+                if (verbose_xwayland_logging_enabled())
+                {
+                    if (scene_surface)
+                    {
+                        log_debug(
+                            "%s set as transient for %s",
+                            connection->window_debug_string(window).c_str(),
+                            connection->window_debug_string(xcb_window).c_str());
+                    }
+                    else
+                    {
+                        log_debug(
+                            "%s can not be transient for %s as the latter does not have a scene surface",
+                            connection->window_debug_string(window).c_str(),
+                            connection->window_debug_string(xcb_window).c_str());
+                    }
+                }
+                return scene_surface;
+            }
+            else
+            {
+                if (verbose_xwayland_logging_enabled())
+                {
+                    log_debug(
+                        "%s can not be transient for %s as the latter does not have an XWayland surface",
+                        connection->window_debug_string(window).c_str(),
+                        connection->window_debug_string(xcb_window).c_str());
+                }
+                return nullptr;
+            }
+        };
+
     if (transient_for != XCB_WINDOW_NONE)
     {
-        if (auto const parent_surface = this->xwm->get_wm_surface(transient_for))
+        parent_scene_surface = get_scene_surface_from(transient_for);
+
+        if (!parent_scene_surface)
         {
-            std::lock_guard<std::mutex> parent_lock{parent_surface.value()->mutex};
-            parent_scene_surface = parent_surface.value()->weak_scene_surface.lock();
+            auto const focused_window = xwm->get_focused_window();
+            if (focused_window)
+            {
+                if (verbose_xwayland_logging_enabled())
+                {
+                    log_debug(
+                        "Falling back to the currently focused window (%s)",
+                        connection->window_debug_string(focused_window.value()).c_str());
+                }
+                parent_scene_surface = get_scene_surface_from(focused_window.value());
+            }
+            else
+            {
+                if (verbose_xwayland_logging_enabled())
+                {
+                    log_debug(
+                        "There is no focused window",
+                        connection->window_debug_string(window).c_str(),
+                        connection->window_debug_string(transient_for).c_str());
+                }
+            }
         }
+
+        if (!parent_scene_surface && verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "Failed to find a window for %s to be transient for",
+                connection->window_debug_string(window).c_str());
+        }
+    }
+    else if (verbose_xwayland_logging_enabled())
+    {
+        log_debug(
+            "%s is not transient",
+            connection->window_debug_string(window).c_str());
     }
 
     {

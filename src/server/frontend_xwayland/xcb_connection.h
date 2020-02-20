@@ -96,8 +96,7 @@ public:
     auto screen() const -> xcb_screen_t*;
     auto root_window() const -> xcb_window_t;
 
-
-    /// Does a round-trip to the X server and does not cache. Should be improved if needed on normal code paths
+    /// Looks up an atom's name, or requests it from the X server if it is not already cached
     auto query_name(xcb_atom_t atom) const -> std::string;
     auto reply_contains_string_data(xcb_get_property_reply_t const* reply) const -> bool;
     auto string_from(xcb_get_property_reply_t const* reply) const -> std::string;

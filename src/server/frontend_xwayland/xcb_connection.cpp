@@ -187,9 +187,14 @@ auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) const
             "Supplied reply is of type " + query_name(reply->type) + " and does not hold string data"));
     }
 
-    return std::string{
+    auto const result = std::string{
         static_cast<const char *>(xcb_get_property_value(reply)),
         static_cast<unsigned long>(xcb_get_property_value_length(reply))};
+    auto const end = result.find('\0');
+    if (end == std::string::npos)
+        return result;
+    else
+        return result.substr(0, end);
 }
 
 bool mf::XCBConnection::is_ours(uint32_t id) const
