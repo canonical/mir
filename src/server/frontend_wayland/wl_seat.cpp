@@ -204,10 +204,14 @@ void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlTouch
     touch_listeners->for_each(client, func);
 }
 
-void mf::WlSeat::notify_focus(wl_client *focus) const
+void mf::WlSeat::notify_focus(wl_client *focus)
 {
-    for (auto const listener : focus_listeners)
-        listener->focus_on(focus);
+    if (focus != focused_client)
+    {
+        focused_client = focus;
+        for (auto const listener : focus_listeners)
+            listener->focus_on(focus);
+    }
 }
 
 void mf::WlSeat::spawn(std::function<void()>&& work)
