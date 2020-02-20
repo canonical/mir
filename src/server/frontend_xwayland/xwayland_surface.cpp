@@ -580,28 +580,27 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
 void mf::XWaylandSurface::move_resize(uint32_t detail)
 {
+    std::shared_ptr<scene::Surface> scene_surface;
+    std::chrono::nanoseconds timestamp;
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        scene_surface = weak_scene_surface.lock();
+        timestamp = latest_input_timestamp(lock);
+    }
+
     auto const action = static_cast<NetWmMoveresize>(detail);
     if (action == NetWmMoveresize::MOVE)
     {
-        std::lock_guard<std::mutex> lock{mutex};
-        if (auto const scene_surface = weak_scene_surface.lock())
+        if (scene_surface)
         {
-            shell->request_move(
-                scene_surface->session().lock(),
-                scene_surface,
-                latest_input_timestamp(lock).count());
+            shell->request_move(scene_surface->session().lock(), scene_surface, timestamp.count());
         }
     }
     else if (auto const edge = wm_resize_edge_to_mir_resize_edge(action))
     {
-        std::lock_guard<std::mutex> lock{mutex};
-        if (auto const scene_surface = weak_scene_surface.lock())
+        if (scene_surface)
         {
-            shell->request_resize(
-                scene_surface->session().lock(),
-                scene_surface,
-                latest_input_timestamp(lock).count(),
-                edge.value());
+            shell->request_resize(scene_surface->session().lock(), scene_surface, timestamp.count(), edge.value());
         }
     }
     else
