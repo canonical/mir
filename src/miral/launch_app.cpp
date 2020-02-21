@@ -24,6 +24,30 @@
 #include <stdexcept>
 #include <cstring>
 
+namespace
+{
+void strip_mir_env_variables()
+{
+    static char const mir_prefix[] = "MIR_";
+
+    for (auto var = environ; *var; ++var)
+    {
+        auto const var_begin = *var;
+        if (strncmp(var_begin, mir_prefix, sizeof(mir_prefix) - 1) == 0)
+        {
+            if (auto var_end = strchr(var_begin, '='))
+            {
+                unsetenv(std::string(var_begin, var_end).c_str());
+            }
+            else
+            {
+                unsetenv(var_begin);
+            }
+        }
+    }
+}
+}
+
 auto miral::launch_app(
     std::vector<std::string> const& app,
     mir::optional_value<std::string> const& wayland_display,
@@ -39,6 +63,8 @@ auto miral::launch_app(
 
     if (pid == 0)
     {
+        strip_mir_env_variables();
+
         std::string gdk_backend;
         std::string qt_qpa_platform;
         std::string sdl_videodriver;
@@ -128,6 +154,8 @@ auto miral::launch_app_env(
 
     if (pid == 0)
     {
+        strip_mir_env_variables();
+
         if (x11_display)
         {
             setenv("DISPLAY", x11_display.value().c_str(),  true);   // configure X11 socket
