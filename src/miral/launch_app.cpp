@@ -56,6 +56,30 @@ void strip_mir_env_variables()
 }
 }
 
+namespace
+{
+void strip_mir_env_variables()
+{
+    static char const mir_prefix[] = "MIR_";
+
+    for (auto var = environ; *var; ++var)
+    {
+        auto const var_begin = *var;
+        if (strncmp(var_begin, mir_prefix, sizeof(mir_prefix) - 1) == 0)
+        {
+            if (auto var_end = strchr(var_begin, '='))
+            {
+                unsetenv(std::string(var_begin, var_end).c_str());
+            }
+            else
+            {
+                unsetenv(var_begin);
+            }
+        }
+    }
+}
+}
+
 auto miral::launch_app(
     std::vector<std::string> const& app,
     mir::optional_value<std::string> const& wayland_display,
