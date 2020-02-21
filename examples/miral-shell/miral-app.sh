@@ -84,7 +84,7 @@ then
   fi
 
   # miral-shell can launch it's own terminal with Ctrl-Alt-T
-  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} ${hostsocket} exec dbus-run-session -- ${bindir}${miral_server}$*
+  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} ${hostsocket} exec dbus-run-session -- ${bindir}${miral_server} $*
 else
   # With mir_demo_server we will get the display saved to this file
   x11_display_file=$(tempfile)
