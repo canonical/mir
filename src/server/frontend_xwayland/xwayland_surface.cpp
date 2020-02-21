@@ -492,7 +492,20 @@ void mf::XWaylandSurface::property_notify(xcb_atom_t property)
 
         if (spec && scene_surface)
         {
-            shell->modify_surface(scene_surface->session().lock(), scene_surface, *spec.value());
+            if (spec.value()->application_id.is_set() &&
+                spec.value()->application_id.value() == scene_surface->application_id())
+                spec.value()->application_id.consume();
+
+            if (spec.value()->name.is_set() &&
+                spec.value()->name.value() == scene_surface->name())
+                spec.value()->name.consume();
+
+            if (spec.value()->parent.is_set() &&
+                spec.value()->parent.value().lock() == scene_surface->parent())
+                spec.value()->parent.consume();
+
+            if (!spec.value()->is_empty())
+                shell->modify_surface(scene_surface->session().lock(), scene_surface, *spec.value());
         }
     }
 }
