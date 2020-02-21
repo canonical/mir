@@ -79,11 +79,12 @@ public:
 
     void add_focus_listener(ListenerTracker* listener);
     void remove_focus_listener(ListenerTracker* listener);
-    void notify_focus(wl_client* focus) const;
+    void notify_focus(wl_client* focus);
 
     void server_restart();
 
 private:
+    wl_client* focused_client{nullptr}; ///< Can be null
     std::vector<ListenerTracker*> focus_listeners;
 
     struct FocusClient : ListenerTracker

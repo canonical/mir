@@ -119,9 +119,9 @@ void mf::WaylandInputDispatcher::handle_keyboard_event(std::chrono::milliseconds
     {
         int const scancode = mir_keyboard_event_scan_code(event);
         bool const down = action == mir_keyboard_action_down;
-        seat->for_each_listener(client, [&ms, scancode, down](WlKeyboard* keyboard)
+        seat->for_each_listener(client, [&ms, wl_surface = wl_surface, scancode, down](WlKeyboard* keyboard)
             {
-                keyboard->key(ms, scancode, down);
+                keyboard->key(ms, wl_surface, scancode, down);
             });
     }
 }

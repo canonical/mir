@@ -328,14 +328,11 @@ void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
             connection->net_active_window,
             static_cast<xcb_window_t>(XCB_WINDOW_NONE));
 
-        // TODO: enable clearing of input focus once github.com/MirServer/mir/issues/1295 is fixed
-        // at time of writing, focus is momentarily cleared when unmapping a popup
-        // clearing input focus results in the client closing any parent popups, so don't do that
-        // xcb_set_input_focus_checked(
-        //     *connection,
-        //     XCB_INPUT_FOCUS_POINTER_ROOT,
-        //     XCB_NONE,
-        //     XCB_CURRENT_TIME);
+        xcb_set_input_focus_checked(
+            *connection,
+            XCB_INPUT_FOCUS_POINTER_ROOT,
+            XCB_NONE,
+            XCB_CURRENT_TIME);
     }
 
     connection->flush();
