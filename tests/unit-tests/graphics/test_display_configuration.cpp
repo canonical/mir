@@ -391,3 +391,37 @@ TEST(DisplayConfiguration, output_extents_empty_when_there_are_no_modes)
     geom::Rectangle empty{};
     EXPECT_EQ(empty, out.extents());
 }
+
+TEST(DisplayConfiguration, output_extents_are_scaled)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    out.scale = 2.0f;
+
+    EXPECT_EQ(out.modes[out.current_mode_index].size * 0.5, out.extents().size);
+}
+
+TEST(DisplayConfiguration, output_extents_are_scaled_fractionally)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    out.scale = 0.8f;
+
+    EXPECT_EQ(out.modes[out.current_mode_index].size * 1.25, out.extents().size);
+}
+
+TEST(DisplayConfiguration, user_display_configuration_output_extents_are_scaled)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    mg::UserDisplayConfigurationOutput user{out};
+    user.scale = 2.0f;
+
+    EXPECT_EQ(user.modes[user.current_mode_index].size * 0.5, user.extents().size);
+}
+
+TEST(DisplayConfiguration, user_display_configuration_output_extents_are_scaled_fractionally)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    mg::UserDisplayConfigurationOutput user{out};
+    user.scale = 0.8f;
+
+    EXPECT_EQ(user.modes[user.current_mode_index].size * 1.25, user.extents().size);
+}
