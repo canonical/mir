@@ -213,7 +213,7 @@ void miral::BasicWindowManager::remove_surface(
 
 void miral::BasicWindowManager::remove_window(Application const& application, miral::WindowInfo const& info)
 {
-    bool const is_active_window{mru_active_windows.top() == info.window()};
+    bool const is_active_window{active_window() == info.window()};
     auto const workspaces_containing_window = workspaces_containing(info.window());
 
     {

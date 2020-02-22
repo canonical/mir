@@ -507,3 +507,21 @@ TEST_F(ActiveWindow, when_null_window_is_active_dont_refocus_on_last_active_wind
     EXPECT_FALSE(sync1.signal_raised());
     assert_no_active_window();
 }
+
+TEST_F(ActiveWindow, when_null_window_is_active_dont_refocus_on_last_active_window_removed)
+{
+    char const* const test_name = __PRETTY_FUNCTION__;
+    auto const connection = connect_client(test_name);
+
+    auto const first_window = create_window(connection, test_name, sync1);
+    auto second_window = create_window(connection, another_name, sync2);
+
+    sync2.exec([&]{ invoke_tools([&](WindowManagerTools& tools){ tools.select_active_window(miral::Window{}); }); });
+    EXPECT_TRUE(sync2.signal_raised());
+    assert_no_active_window();
+
+    // Expect this to timeout: the first window should not receive focus
+    sync1.exec([&]{ second_window = Window{}; });
+    EXPECT_FALSE(sync1.signal_raised());
+    assert_no_active_window();
+}
