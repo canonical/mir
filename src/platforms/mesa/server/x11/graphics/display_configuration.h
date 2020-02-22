@@ -37,7 +37,7 @@ public:
         MirPixelFormat pf,
         geometry::Size const pixels,
         geometry::Point const top_left,
-        geometry::Size const size_mm,
+        geometry::Size const physical_size_mm,
         float const scale,
         MirOrientation orientation);
 
