@@ -23,12 +23,15 @@
 
 #include <stdexcept>
 #include <cstring>
+#include <vector>
 
 namespace
 {
 void strip_mir_env_variables()
 {
     static char const mir_prefix[] = "MIR_";
+
+    std::vector<std::string> vars_to_remove;
 
     for (auto var = environ; *var; ++var)
     {
@@ -37,13 +40,18 @@ void strip_mir_env_variables()
         {
             if (auto var_end = strchr(var_begin, '='))
             {
-                unsetenv(std::string(var_begin, var_end).c_str());
+                vars_to_remove.emplace_back(var_begin, var_end);
             }
             else
             {
-                unsetenv(var_begin);
+                vars_to_remove.emplace_back(var_begin);
             }
         }
+    }
+
+    for (auto const& var : vars_to_remove)
+    {
+        unsetenv(var.c_str());
     }
 }
 }
