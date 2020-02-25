@@ -73,13 +73,11 @@ if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 if [ -e "${socket}" ]; then echo "Error: session endpoint '${socket}' already exists"; exit 1 ;fi
 if [ -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; then echo "Error: wayland endpoint '${wayland_display}' already exists"; exit 1 ;fi
 
-unset QT_QPA_PLATFORMTHEME
-
 if [ "${miral_server}" == "miral-shell" ]
 then
   if [ "$(lsb_release -c -s)" == "xenial" ]
   then
-    export MIR_SERVER_APP_ENV="GDK_BACKEND=x11:QT_QPA_PLATFORM=ubuntumirclient:SDL_VIDEODRIVER=mir:NO_AT_BRIDGE=1"
+    export MIR_SERVER_APP_ENV="GDK_BACKEND=wayland:QT_QPA_PLATFORM=wayland:SDL_VIDEODRIVER=wayland:-QT_QPA_PLATFORMTHEME:NO_AT_BRIDGE=1:QT_ACCESSIBILITY:QT_LINUX_ACCESSIBILITY_ALWAYS_ON:_JAVA_AWT_WM_NONREPARENTING=1:-GTK_MODULES:-OOO_FORCE_DESKTOP:-GNOME_ACCESSIBILITY:"
     export MIR_SERVER_ENABLE_MIRCLIENT=
   fi
 
