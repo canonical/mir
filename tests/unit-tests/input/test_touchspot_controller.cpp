@@ -17,11 +17,12 @@
  */
 
 #include "src/server/input/touchspot_controller.h"
+#include "src/server/input/touchspot_image.c"
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/renderable.h"
 #include "mir/test/fake_shared.h"
-#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_scene.h"
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/stub_input_scene.h"
@@ -43,12 +44,24 @@ namespace geom = mir::geometry;
 namespace
 {
 
-struct MockBufferAllocator : public mg::GraphicBufferAllocator
+struct MockBufferAllocator : public mtd::StubBufferAllocator
 {
-    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
-    MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>(void));
-    MOCK_METHOD2(alloc_software_buffer, std::shared_ptr<mg::Buffer>(geom::Size, MirPixelFormat));
-    MOCK_METHOD3(alloc_buffer, std::shared_ptr<mg::Buffer>(geom::Size, uint32_t, uint32_t));
+    MockBufferAllocator()
+    {
+        using namespace testing;
+        ON_CALL(*this, supported_pixel_formats())
+            .WillByDefault(Return(std::vector<MirPixelFormat>{ mir_pixel_format_argb_8888 }));
+        ON_CALL(*this, alloc_software_buffer(_, _))
+            .WillByDefault(
+                Invoke(
+                    [this](auto size, auto pf)
+                    {
+                        return mtd::StubBufferAllocator::alloc_software_buffer(size, pf);
+                    }));
+    }
+
+    MOCK_METHOD(std::vector<MirPixelFormat>, supported_pixel_formats, (), (override));
+    MOCK_METHOD(std::shared_ptr<mg::Buffer>, alloc_software_buffer, (geom::Size, MirPixelFormat), (override));
 };
 
 struct StubScene : public mtd::StubInputScene
@@ -91,7 +104,7 @@ struct StubScene : public mtd::StubInputScene
 struct TestTouchspotController : public ::testing::Test
 {
     TestTouchspotController()
-        : allocator(std::make_shared<MockBufferAllocator>()),
+        : allocator(std::make_shared<testing::NiceMock<MockBufferAllocator>>()),
           scene(std::make_shared<StubScene>())
     {
     }
@@ -105,17 +118,53 @@ TEST_F(TestTouchspotController, allocates_software_buffer_for_touchspots)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1)
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
+    EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1);
     mi::TouchspotController controller(allocator, scene);
+}
+
+TEST_F(TestTouchspotController, handles_stride_mismatch_in_buffer)
+{
+    using namespace ::testing;
+
+    ON_CALL(*allocator, alloc_software_buffer(_, _))
+        .WillByDefault(
+            Invoke(
+                [](auto size, auto pf)
+                {
+                    mg::BufferProperties properties{size, pf, mg::BufferUsage::software};
+                    return std::make_shared<mtd::StubBuffer>(
+                        nullptr,
+                        properties,
+                        geom::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pf) + 29}); // Return a stride != width
+                }));
+
+    mi::TouchspotController controller{allocator, scene};
+    controller.enable();
+    controller.visualize_touches({ {{0, 0}, 1} });
+
+    ASSERT_THAT(scene->overlays, Not(IsEmpty()));
+
+    auto touchspot_buffer = scene->overlays[0]->buffer();
+    auto const mapping = mir::renderer::software::as_read_mappable_buffer(touchspot_buffer)->map_readable();
+
+    // Verify that each row of the touchspot buffer starts with the corresponding row of the touchspot image
+    // We don't care what else is in the buffer; the content of the padding in the stride doesn't matter.
+    auto const source_stride = touchspot_image.width * touchspot_image.bytes_per_pixel;
+    bool difference_found = false;
+    for (auto y = 0u; y < mapping->size().height.as_uint32_t(); ++y)
+    {
+        difference_found |= ::memcmp(
+                mapping->data() + (y * mapping->stride().as_uint32_t()),
+                touchspot_image.pixel_data + (y * source_stride),
+                source_stride) != 0;
+    }
+    EXPECT_FALSE(difference_found) << "Image portion of buffer did not match";
 }
 
 TEST_F(TestTouchspotController, touches_result_in_renderables_in_stack)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1)
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, scene);
     controller.enable();
     
@@ -128,8 +177,6 @@ TEST_F(TestTouchspotController, spots_move)
 {
     using namespace ::testing;
     
-    EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1)
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, scene);
     controller.enable();
     
@@ -143,8 +190,6 @@ TEST_F(TestTouchspotController, multiple_spots)
 {
     using namespace ::testing;
     
-    EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1)
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, scene);
     controller.enable();
     
@@ -165,8 +210,6 @@ TEST_F(TestTouchspotController, touches_do_not_result_in_renderables_in_stack_wh
 {
     using namespace ::testing;
     
-    EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1)
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, scene);
     controller.enable();
 
@@ -194,9 +237,6 @@ struct TestTouchspotControllerSceneUpdates : public TestTouchspotController
     TestTouchspotControllerSceneUpdates()
         : scene(std::make_shared<StubSceneWithMockEmission>())
     {
-        using namespace ::testing;
-        EXPECT_CALL(*allocator, alloc_software_buffer(_, _)).Times(1)
-            .WillOnce(testing::Return(std::make_shared<mtd::StubBuffer>()));
     }
 
     std::shared_ptr<StubSceneWithMockEmission> const scene;

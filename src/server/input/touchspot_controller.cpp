@@ -117,14 +117,30 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
       enabled(false),
       renderables_in_use(0)
 {
-    // TODO: The buffer pixel format may not be argb_8888, leading to
-    // incorrect cursor colors. We need to transform the data to match
-    // the buffer pixel format.
     auto const mapping = mrs::as_write_mappable_buffer(touchspot_buffer)->map_writeable();
-    ::memcpy(
-        mapping->data(),
-        static_cast<unsigned char const*>(touchspot_image.pixel_data),
-        mapping->len());
+    if (
+        mapping->stride().as_uint32_t() ==
+        MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888) * touchspot_size.width.as_uint32_t())
+    {
+        // Happy case: Buffer is packed, like the cursor_image; we can just blit.
+        ::memcpy(
+            mapping->data(),
+            static_cast<unsigned char const*>(touchspot_image.pixel_data),
+            mapping->len());
+    }
+    else
+    {
+        // Less happy path: the buffer has a different stride; we need to copy row-by-row
+        auto const dest_stride = mapping->stride().as_uint32_t();
+        auto const src_stride = touchspot_size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888);
+        for (auto y = 0u; y < touchspot_size.height.as_uint32_t(); ++y)
+        {
+            ::memcpy(
+                mapping->data() + (dest_stride * y),
+                static_cast<unsigned char const*>(touchspot_image.pixel_data) + src_stride * y,
+                src_stride);
+        }
+    }
 }
 
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)
