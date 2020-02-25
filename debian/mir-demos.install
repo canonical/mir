@@ -1,7 +1,8 @@
 usr/bin/miral-shell
 usr/bin/miral-kiosk
 usr/bin/miral-app
+usr/bin/mir-shell
 usr/bin/miral-system-compositor
 usr/share/applications/miral-shell.desktop
-usr/share/wayland-sessions/miral-shell.desktop
+usr/share/wayland-sessions/mir-shell.desktop
 usr/share/icons/hicolor/scalable/apps/ubuntu-logo.svg
