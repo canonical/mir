@@ -8,7 +8,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/miral-shell.desktop
 )
 
 add_custom_target(mir-shell ALL
-    cp desktop/mir-shell.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-shell
+    cp ${CMAKE_CURRENT_SOURCE_DIR}/mir-shell.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-shell
 )
 
 install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-shell
