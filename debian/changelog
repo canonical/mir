@@ -1,3 +1,42 @@
+mir (1.7.1) UNRELEASED; urgency=medium
+
+  * New upstream release 1.7.1
+
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 3
+      . mirserver ABI unchanged at 53
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 17
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged to 16
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+    - Enhancements:
+      . [X11] Lots of improvements to Xwayland & X11 window managment
+      . [X11] X11 support is no longer "experimental" (--enable-x11 replaces
+        --x11-display-experimental <socket>)
+      . [X11] add --x11-displayfd option
+      . [miral] Make app launch environment configurable. (Fixes: #1268)
+      . [miral] Add ExternalClientLauncher::launch_using_x11()
+      . [demos] Simplify miral-app script and make terminal logic more robust
+      . [demos] Add "Mir Shell" to greeter
+      . [demos] Install Wayland dependences via Debian "Recommends"
+      . Tell Java toolkits that we're a non-reparenting window manager
+    - Bugs fixed:
+      . [X11] Lots of fixes to Xwayland & X11 window managment code
+      . [miral] Occasionally input locks when launching apps. (#1218)
+      . Fix FTBFS with g++-10. (Fixes: #1259)
+      . Correct logic to locate gmock when gtest has package configuration.
+        (Fixes: #1228)
+      . Fix FTBFS caused by GTest deprecation of INSTANTIATE_TEST_CASE_P
+      . Use ByteSizeLong instead of deprecated ByteSize. (Fixes #1127)
+      . Fix unnecessary copies in range-for loops (Clang-11 fixes)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 17 Feb 2020 12:09:00 +0000
+
 mir (1.7.0) UNRELEASED; urgency=medium
 
   * New upstream release 1.7.0
@@ -30,7 +69,7 @@ mir (1.7.0) UNRELEASED; urgency=medium
       . [packaging] Add libwayland-dev to Build-Depends
       . Fix clang found clangers
 
- -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 13 Jan 17:39:00 +0100
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 13 Jan 2020 17:39:00 +0100
 
 mir (1.6.0) UNRELEASED; urgency=medium
 
