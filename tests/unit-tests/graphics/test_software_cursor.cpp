@@ -32,6 +32,7 @@ namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 namespace geom = mir::geometry;
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -57,19 +58,37 @@ struct StubCursorImage : mg::CursorImage
     {
     }
 
-    void const* as_argb_8888() const
+    void const* as_argb_8888() const override
     {
         return pixels.data();
     }
 
-    geom::Size size() const
+    geom::Size size() const override
     {
         return {64, 64};
     }
 
-    geom::Displacement hotspot() const
+    geom::Displacement hotspot() const override
     {
         return hotspot_;
+    }
+
+    void fill_with(
+        unsigned char r,
+        unsigned char g,
+        unsigned char b,
+        unsigned char a)
+    {
+        uint32_t const fill_colour =
+            (static_cast<uint32_t>(a) << 24) |
+            (static_cast<uint32_t>(r) << 16) |
+            (static_cast<uint32_t>(g) << 8) |
+            (static_cast<uint32_t>(b) << 0);
+
+        std::fill(
+            reinterpret_cast<uint32_t*>(&*pixels.begin()),
+            reinterpret_cast<uint32_t*>(&*pixels.end()),
+            fill_colour);
     }
 
 private:
@@ -78,15 +97,36 @@ private:
     std::vector<unsigned char> pixels;
 };
 
+class MockBufferAllocator : public mtd::StubBufferAllocator
+{
+public:
+    MockBufferAllocator()
+    {
+        using namespace testing;
+        ON_CALL(*this, supported_pixel_formats())
+            .WillByDefault(Return(std::vector<MirPixelFormat>{ mir_pixel_format_argb_8888 }));
+        ON_CALL(*this, alloc_software_buffer(_, _))
+            .WillByDefault(
+                Invoke(
+                    [this](auto sz, auto pf)
+                    {
+                        return mtd::StubBufferAllocator::alloc_software_buffer(sz, pf);
+                    }));
+    }
+
+    MOCK_METHOD(std::shared_ptr<mg::Buffer>, alloc_software_buffer, (geom::Size, MirPixelFormat), (override));
+    MOCK_METHOD(std::vector<MirPixelFormat>, supported_pixel_formats, (), (override));
+};
+
 struct SoftwareCursor : testing::Test
 {
     StubCursorImage stub_cursor_image{{3,4}};
     StubCursorImage another_stub_cursor_image{{10,9}};
-    mtd::StubBufferAllocator stub_buffer_allocator;
+    testing::NiceMock<MockBufferAllocator> mock_buffer_allocator;
     testing::NiceMock<MockInputScene> mock_input_scene;
 
     mg::SoftwareCursor cursor{
-        mt::fake_shared(stub_buffer_allocator),
+        mt::fake_shared(mock_buffer_allocator),
         mt::fake_shared(mock_input_scene)};
 };
 
@@ -297,19 +337,10 @@ TEST_F(SoftwareCursor, places_new_cursor_renderable_at_correct_position)
 //lp: #1413211
 TEST_F(SoftwareCursor, new_buffer_on_each_show)
 {
-    struct MockBufferAllocator : public mg::GraphicBufferAllocator
-    {
-        MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
-        MOCK_METHOD2(alloc_software_buffer, std::shared_ptr<mg::Buffer>(geom::Size, MirPixelFormat));
-        MOCK_METHOD3(alloc_buffer, std::shared_ptr<mg::Buffer>(geom::Size, uint32_t, uint32_t));
-        std::vector<MirPixelFormat> supported_pixel_formats() { return {mir_pixel_format_abgr_8888}; } 
-    } mock_allocator;
-
-    EXPECT_CALL(mock_allocator, alloc_software_buffer(testing::_, testing::_))
-        .Times(3)
-        .WillRepeatedly(testing::Return(std::make_shared<mtd::StubBuffer>()));;
+    EXPECT_CALL(mock_buffer_allocator, alloc_software_buffer(testing::_, testing::_))
+        .Times(3);
     mg::SoftwareCursor cursor{
-        mt::fake_shared(mock_allocator),
+        mt::fake_shared(mock_buffer_allocator),
         mt::fake_shared(mock_input_scene)};
     cursor.show(another_stub_cursor_image);
     cursor.show(another_stub_cursor_image);
@@ -332,4 +363,237 @@ TEST_F(SoftwareCursor, doesnt_try_to_remove_after_hiding)
     cursor.hide(); //should remove here
     cursor.show(stub_cursor_image); //should add, but not remove a second time
     Mock::VerifyAndClearExpectations(&mock_input_scene);
+}
+
+TEST_F(SoftwareCursor, handles_abgr_8888_cursor_surface)
+{
+    using namespace testing;
+
+    ON_CALL(mock_buffer_allocator, supported_pixel_formats())
+        .WillByDefault(Return(std::vector<MirPixelFormat>{ mir_pixel_format_abgr_8888 }));
+
+    StubCursorImage test_image{{8, 8}};
+    unsigned char const r = 0xab;
+    unsigned char const g = 0xcd;
+    unsigned char const b = 0xef;
+    unsigned char const a = 0x01;
+    test_image.fill_with(r, g, b, a);
+
+    std::shared_ptr<mrs::ReadMappableBuffer> cursor_buffer;
+    EXPECT_CALL(mock_buffer_allocator, alloc_software_buffer(_,mir_pixel_format_abgr_8888))
+        .Times(1)
+        .WillOnce(
+            Invoke(
+                [this, &cursor_buffer](auto sz, auto pf)
+                {
+                  auto buffer = mock_buffer_allocator.mtd::StubBufferAllocator::alloc_software_buffer(sz, pf);
+                  cursor_buffer = mrs::as_read_mappable_buffer(buffer);
+                  return buffer;
+                }));
+
+
+    mg::SoftwareCursor cursor{
+        mt::fake_shared(mock_buffer_allocator),
+        mt::fake_shared(mock_input_scene)
+    };
+    cursor.show(test_image);
+    ASSERT_THAT(cursor_buffer, NotNull());
+
+    uint32_t const expected_pixel =
+        (static_cast<uint32_t>(a) << 24) |
+        (static_cast<uint32_t>(b) << 16) |
+        (static_cast<uint32_t>(g) << 8)  |
+        (static_cast<uint32_t>(r) << 0);
+
+    auto const mapping = cursor_buffer->map_readable();
+    ASSERT_THAT(mapping->format(), Eq(mir_pixel_format_abgr_8888));
+
+    auto const stride = mapping->stride().as_uint32_t();
+    for (auto y = 0u; y < mapping->size().height.as_uint32_t(); ++y)
+    {
+        auto const line = std::vector<uint32_t>{
+            reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y)),
+            reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y) + mapping->size().width.as_uint32_t())};
+        EXPECT_THAT(line, Each(Eq(expected_pixel)));
+    }
+}
+TEST_F(SoftwareCursor, handles_abgr_8888_buffer_with_stride)
+{
+    using namespace testing;
+
+    ON_CALL(mock_buffer_allocator, supported_pixel_formats())
+        .WillByDefault(Return(std::vector<MirPixelFormat>{ mir_pixel_format_abgr_8888 }));
+
+    StubCursorImage test_image{{8, 8}};
+    unsigned char const r = 0x11;
+    unsigned char const g = 0x55;
+    unsigned char const b = 0xbb;
+    unsigned char const a = 0xaa;
+    test_image.fill_with(r, g, b, a);
+
+    std::shared_ptr<mrs::ReadMappableBuffer> cursor_buffer;
+    EXPECT_CALL(mock_buffer_allocator, alloc_software_buffer(_,mir_pixel_format_abgr_8888))
+        .Times(1)
+        .WillOnce(
+            Invoke(
+                [&cursor_buffer](auto sz, auto pf)
+                {
+                   // Set a stride that's not a multiple of the pixel width,
+                   // for maximum testing.
+                   geom::Stride const stride{
+                       sz.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pf) + 41
+                   };
+                   auto buffer = std::make_shared<mtd::StubBuffer>(
+                       nullptr,
+                       mg::BufferProperties{
+                           sz,
+                           pf,
+                           mg::BufferUsage::hardware
+                       },
+                       stride);
+                   cursor_buffer = mrs::as_read_mappable_buffer(buffer);
+                   return buffer;
+                }));
+
+    mg::SoftwareCursor cursor{
+        mt::fake_shared(mock_buffer_allocator),
+        mt::fake_shared(mock_input_scene)
+    };
+    cursor.show(test_image);
+    ASSERT_THAT(cursor_buffer, NotNull());
+
+    uint32_t const expected_pixel =
+        (static_cast<uint32_t>(a) << 24) |
+        (static_cast<uint32_t>(b) << 16) |
+        (static_cast<uint32_t>(g) << 8)  |
+        (static_cast<uint32_t>(r) << 0);
+
+    auto const mapping = cursor_buffer->map_readable();
+    ASSERT_THAT(mapping->format(), Eq(mir_pixel_format_abgr_8888));
+
+    auto const stride = mapping->stride().as_uint32_t();
+    for (auto y = 0u; y < mapping->size().height.as_uint32_t(); ++y)
+    {
+        auto const line = std::vector<uint32_t>{
+            reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y)),
+            reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y) + mapping->size().width.as_uint32_t())};
+        EXPECT_THAT(line, Each(Eq(expected_pixel)));
+    }
+}
+
+TEST_F(SoftwareCursor, handles_argb_8888_cursor_surface)
+{
+    using namespace testing;
+
+    ON_CALL(mock_buffer_allocator, supported_pixel_formats())
+        .WillByDefault(Return(std::vector<MirPixelFormat>{ mir_pixel_format_argb_8888 }));
+
+    StubCursorImage test_image{{8, 8}};
+    unsigned char const r = 0x11;
+    unsigned char const g = 0x55;
+    unsigned char const b = 0xbb;
+    unsigned char const a = 0xaa;
+    test_image.fill_with(r, g, b, a);
+
+    std::shared_ptr<mrs::ReadMappableBuffer> cursor_buffer;
+    EXPECT_CALL(mock_buffer_allocator, alloc_software_buffer(_,mir_pixel_format_argb_8888))
+        .Times(1)
+        .WillOnce(
+            Invoke(
+                [this, &cursor_buffer](auto sz, auto pf)
+                {
+                   auto buffer = mock_buffer_allocator.mtd::StubBufferAllocator::alloc_software_buffer(sz, pf);
+                   cursor_buffer = mrs::as_read_mappable_buffer(buffer);
+                   return buffer;
+                }));
+
+
+    mg::SoftwareCursor cursor{
+        mt::fake_shared(mock_buffer_allocator),
+        mt::fake_shared(mock_input_scene)
+    };
+    cursor.show(test_image);
+    ASSERT_THAT(cursor_buffer, NotNull());
+
+    uint32_t const expected_pixel =
+        (static_cast<uint32_t>(a) << 24) |
+        (static_cast<uint32_t>(r) << 16) |
+        (static_cast<uint32_t>(g) << 8)  |
+        (static_cast<uint32_t>(b) << 0);
+
+    auto const mapping = cursor_buffer->map_readable();
+    ASSERT_THAT(mapping->format(), Eq(mir_pixel_format_argb_8888));
+
+    auto const stride = mapping->stride().as_uint32_t();
+    for (auto y = 0u; y < mapping->size().height.as_uint32_t(); ++y)
+    {
+        auto const line = std::vector<uint32_t>{
+            reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y)),
+            reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y) + mapping->size().width.as_uint32_t())};
+        EXPECT_THAT(line, Each(Eq(expected_pixel)));
+    }
+}
+
+TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
+{
+    using namespace testing;
+
+    ON_CALL(mock_buffer_allocator, supported_pixel_formats())
+        .WillByDefault(Return(std::vector<MirPixelFormat>{ mir_pixel_format_argb_8888 }));
+
+    StubCursorImage test_image{{8, 8}};
+    unsigned char const r = 0x42;
+    unsigned char const g = 0x39;
+    unsigned char const b = 0xce;
+    unsigned char const a = 0xdf;
+    test_image.fill_with(r, g, b, a);
+
+    std::shared_ptr<mrs::ReadMappableBuffer> cursor_buffer;
+    EXPECT_CALL(mock_buffer_allocator, alloc_software_buffer(_,mir_pixel_format_argb_8888))
+        .Times(1)
+        .WillOnce(
+            Invoke(
+                [&cursor_buffer](auto sz, auto pf)
+                {
+                    // Set a stride that's not a multiple of the pixel width,
+                    // for maximum testing.
+                    geom::Stride const stride{
+                        sz.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pf) + 41
+                    };
+                    auto buffer = std::make_shared<mtd::StubBuffer>(
+                        nullptr,
+                        mg::BufferProperties{
+                            sz,
+                            pf,
+                            mg::BufferUsage::hardware
+                        },
+                        stride);
+                    cursor_buffer = mrs::as_read_mappable_buffer(buffer);
+                    return buffer;
+                }));
+
+    mg::SoftwareCursor cursor{
+        mt::fake_shared(mock_buffer_allocator),
+        mt::fake_shared(mock_input_scene)
+    };
+    cursor.show(test_image);
+    ASSERT_THAT(cursor_buffer, NotNull());
+
+    uint32_t const expected_pixel =
+        (static_cast<uint32_t>(a) << 24) |
+        (static_cast<uint32_t>(r) << 16) |
+        (static_cast<uint32_t>(g) << 8)  |
+        (static_cast<uint32_t>(b) << 0);
+
+    auto const mapping = cursor_buffer->map_readable();
+    ASSERT_THAT(mapping->format(), Eq(mir_pixel_format_argb_8888));
+
+    auto const stride = mapping->stride().as_uint32_t();
+    for (auto y = 0u; y < mapping->size().height.as_uint32_t(); ++y)
+    {
+        auto const line = std::vector<uint32_t>{
+            reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y)),
+            reinterpret_cast<uint32_t const*>(mapping->data() + (stride * y) + mapping->size().width.as_uint32_t())};
+        EXPECT_THAT(line, Each(Eq(expected_pixel)));
+    }
 }
