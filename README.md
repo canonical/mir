@@ -46,7 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Website
 -------
-Mir's website is hosted on <http://www.mirserver.io/>.
+Mir's website is hosted on <https://mir-server.io/>.
 
 \copyright Copyright © 2012-2018 Canonical Ltd.
 \author Alan Griffiths <alan@octopull.co.uk>
