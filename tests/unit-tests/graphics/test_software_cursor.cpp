@@ -110,7 +110,7 @@ public:
                 Invoke(
                     [this](auto sz, auto pf)
                     {
-                        return mtd::StubBufferAllocator::alloc_software_buffer(sz, pf);
+                        return this->mtd::StubBufferAllocator::alloc_software_buffer(sz, pf);
                     }));
     }
 

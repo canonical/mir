@@ -56,7 +56,7 @@ struct MockBufferAllocator : public mtd::StubBufferAllocator
                 Invoke(
                     [this](auto size, auto pf)
                     {
-                        return mtd::StubBufferAllocator::alloc_software_buffer(size, pf);
+                        return this->mtd::StubBufferAllocator::alloc_software_buffer(size, pf);
                     }));
     }
 
