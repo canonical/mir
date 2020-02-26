@@ -373,18 +373,39 @@ void mgm::Cursor::place_cursor_at_locked(
     for_each_used_output([&](KMSOutput& output, DisplayConfigurationOutput const& conf)
     {
         auto const output_rect = conf.extents();
-        auto const orientation = conf.orientation;
 
         if (output_rect.contains(position))
         {
-            auto dp = transform(output_rect, position - output_rect.top_left, orientation);
-            auto hs = transform(geom::Rectangle{{0,0}, size}, hotspot, orientation);
+            auto const orientation = conf.orientation;
+            auto const relative_to_extants = position - output_rect.top_left;
+            auto const relative_to_extants_vec = glm::vec2{
+                relative_to_extants.dx.as_int(),
+                relative_to_extants.dy.as_int()};
+
+            // Cursor position scaled such that (-1, -1) is at the bottom left of the logical output extents and (1, 1)
+            // is at the upper right
+            auto const scaled_vec = glm::vec2{
+                relative_to_extants_vec.x / output_rect.size.width.as_int(),
+                relative_to_extants_vec.y / output_rect.size.height.as_int()} * 2.0f - glm::vec2{1};
+
+            // Cursor position with the output transform applied on the same (-1, -1) to (1, 1) coordinates
+            auto const transformed_vec = scaled_vec * conf.transformation();
+
+            auto const output_size_vec = glm::vec2{output.size().width.as_int(), output.size().height.as_int()};
+
+            // Cursor position in actual output pixels
+            auto const output_space_vec = ((transformed_vec + glm::vec2{1}) / 2.0f) * output_size_vec;
+
+            auto const position_on_output = geom::Point{roundf(output_space_vec.x), roundf(output_space_vec.y)};
+
+            //geom::Point const hotspot_position_on_output = transform(output_rect, position - output_rect.top_left, orientation);
+            auto const hotspot_displacement = transform(geom::Rectangle{{}, size}, hotspot, orientation);
 
             // It's a little strange that we implement hotspot this way as there is
             // drmModeSetCursor2 with hotspot support. However it appears to not actually
             // work on radeon and intel. There also seems to be precedent in weston for
             // implementing hotspot in this fashion.
-            output.move_cursor(geom::Point{} + dp - hs);
+            output.move_cursor(position_on_output - hotspot_displacement);
             auto& buffer = buffer_for_output(output);
 
             auto const changed_orientation = buffer.change_orientation(orientation);
