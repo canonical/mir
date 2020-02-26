@@ -488,7 +488,7 @@ void mgm::Display::configure_locked(
             // Each vector<KMSOutput> is a single GPU memory domain
             std::vector<std::vector<std::shared_ptr<KMSOutput>>> kms_output_groups;
             glm::mat2 transformation;
-            geom::Size physical_size{};
+            geom::Size current_mode_resolution;
 
             group.for_each_output(
                 [&](DisplayConfigurationOutput const& conf_output)
@@ -511,7 +511,7 @@ void mgm::Display::configure_locked(
                      */
                     transformation = conf_output.transformation();
                     if (conf_output.current_mode_index < conf_output.modes.size())
-                        physical_size = conf_output.modes[conf_output.current_mode_index].size;
+                        current_mode_resolution = conf_output.modes[conf_output.current_mode_index].size;
                 });
 
             if (comp)
@@ -521,8 +521,8 @@ void mgm::Display::configure_locked(
             }
             else
             {
-                uint32_t const width  = physical_size.width.as_uint32_t();
-                uint32_t const height = physical_size.height.as_uint32_t();
+                uint32_t const width  = current_mode_resolution.width.as_uint32_t();
+                uint32_t const height = current_mode_resolution.height.as_uint32_t();
 
                 for (auto const& group : kms_output_groups)
                 {
