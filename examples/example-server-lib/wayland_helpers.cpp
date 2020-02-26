@@ -139,11 +139,11 @@ void output_mode(
     output->height = height;
 }
 
-void output_scale(void* data, struct wl_output* wl_output, int32_t factor)
+void output_scale(void* data, struct wl_output* /*wl_output*/, int32_t factor)
 {
-    (void)data;
-    (void)wl_output;
-    (void)factor;
+    auto const output = static_cast<Output*>(data);
+
+    output->scale = factor;
 }
 
 }

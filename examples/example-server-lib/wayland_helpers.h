@@ -51,6 +51,7 @@ public:
     int32_t x, y;
     int32_t width, height;
     int32_t transform;
+    int32_t scale{1};
     wl_output* output;
 private:
     static void output_done(void* data, wl_output* output);

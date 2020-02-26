@@ -116,7 +116,7 @@ struct BackgroundInfo
         Size const unscaled = (rotated ?
             Size{output.height, output.width} :
             Size{output.width, output.height});
-        return unscaled;
+        return unscaled * (1.0f / output.scale);
     }
 
     // Screen description
