@@ -61,10 +61,10 @@ class Platform : public graphics::Platform,
 {
 public:
     // Parses colon separated list of sizes in the form WIDTHxHEIGHT^SCALE (^SCALE is optional)
-    static auto parse_output_sizes(std::string output_sizes) -> std::unique_ptr<std::vector<X11OutputConfig>>;
+    static auto parse_output_sizes(std::string output_sizes) -> std::vector<X11OutputConfig>;
 
     explicit Platform(std::shared_ptr<::Display> const& conn,
-                      std::unique_ptr<std::vector<X11OutputConfig>> output_sizes,
+                      std::vector<X11OutputConfig> output_sizes,
                       std::shared_ptr<DisplayReport> const& report);
     ~Platform() = default;
 
@@ -88,7 +88,7 @@ private:
     std::shared_ptr<mesa::helpers::DRMHelper> const drm;
     std::shared_ptr<DisplayReport> const report;
     mesa::helpers::GBMHelper gbm;
-    std::unique_ptr<std::vector<X11OutputConfig>> const output_sizes;
+    std::vector<X11OutputConfig> const output_sizes;
     std::unique_ptr<mesa::DRMNativePlatformAuthFactory> auth_factory;
 };
 

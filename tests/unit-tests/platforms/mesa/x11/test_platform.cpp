@@ -70,7 +70,6 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-        std::vector<mg::X::X11OutputConfig> const output_config{{{1280, 1024}}};
         return std::make_shared<mg::X::Platform>(
             std::shared_ptr<::Display>(
                 XOpenDisplay(nullptr),
@@ -78,7 +77,7 @@ public:
                 {
                     XCloseDisplay(display);
                 }),
-            std::make_unique<std::vector<mg::X::X11OutputConfig>>(output_config),
+            std::vector<mg::X::X11OutputConfig>{{{1280, 1024}}},
             std::make_shared<mir::report::null::DisplayReport>());
     }
 
@@ -161,7 +160,7 @@ TEST_F(X11GraphicsPlatformTest, parses_simple_output_size)
     auto str = "1280x720";
     auto parsed = mg::X::Platform::parse_output_sizes(str);
 
-    EXPECT_THAT(*parsed, ElementsAre(mgx::X11OutputConfig{{1280, 720}}));
+    EXPECT_THAT(parsed, ElementsAre(mgx::X11OutputConfig{{1280, 720}}));
 }
 
 TEST_F(X11GraphicsPlatformTest, parses_output_size_with_whole_number_scale)
@@ -171,7 +170,7 @@ TEST_F(X11GraphicsPlatformTest, parses_output_size_with_whole_number_scale)
     auto str = "1280x720^2";
     auto parsed = mg::X::Platform::parse_output_sizes(str);
 
-    EXPECT_THAT(*parsed, ElementsAre(mgx::X11OutputConfig{{1280, 720}, 2}));
+    EXPECT_THAT(parsed, ElementsAre(mgx::X11OutputConfig{{1280, 720}, 2}));
 }
 
 TEST_F(X11GraphicsPlatformTest, parses_output_size_with_fractional_scale)
@@ -182,7 +181,7 @@ TEST_F(X11GraphicsPlatformTest, parses_output_size_with_fractional_scale)
     auto parsed = mg::X::Platform::parse_output_sizes(str);
 
     // X11OutputConfig equality operator does not do exact float comparison
-    EXPECT_THAT(*parsed, ElementsAre(mgx::X11OutputConfig{{1280, 720}, 0.8}));
+    EXPECT_THAT(parsed, ElementsAre(mgx::X11OutputConfig{{1280, 720}, 0.8}));
 }
 
 TEST_F(X11GraphicsPlatformTest, parses_multiple_output_sizes)
@@ -192,7 +191,7 @@ TEST_F(X11GraphicsPlatformTest, parses_multiple_output_sizes)
     auto str = "1280x1024:600x600:30x750";
     auto parsed = mg::X::Platform::parse_output_sizes(str);
 
-    EXPECT_THAT(*parsed, ElementsAre(
+    EXPECT_THAT(parsed, ElementsAre(
         mgx::X11OutputConfig{{1280, 1024}},
         mgx::X11OutputConfig{{600, 600}},
         mgx::X11OutputConfig{{30, 750}}));
@@ -205,7 +204,7 @@ TEST_F(X11GraphicsPlatformTest, parses_multiple_output_sizes_some_with_scales)
     auto str = "1280x1024^.9:600x600:30x750^12";
     auto parsed = mg::X::Platform::parse_output_sizes(str);
 
-    EXPECT_THAT(*parsed, ElementsAre(
+    EXPECT_THAT(parsed, ElementsAre(
         mgx::X11OutputConfig{{1280, 1024}, 0.9},
         mgx::X11OutputConfig{{600, 600}},
         mgx::X11OutputConfig{{30, 750}, 12}));

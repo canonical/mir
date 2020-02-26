@@ -97,7 +97,6 @@ public:
 
     std::shared_ptr<mg::Display> create_display()
     {
-        std::vector<mg::X::X11OutputConfig> const output_config{{{1280, 1024}}};
         auto const platform = std::make_shared<mg::X::Platform>(
             std::shared_ptr<::Display>(
                 XOpenDisplay(nullptr),
@@ -105,7 +104,7 @@ public:
                 {
                     XCloseDisplay(display);
                 }),
-            std::make_unique<std::vector<mg::X::X11OutputConfig>>(output_config),
+            std::vector<mg::X::X11OutputConfig>{{{1280, 1024}}},
             std::make_shared<mir::report::null::DisplayReport>());
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),

@@ -88,21 +88,21 @@ auto parse_size(std::string const& str) -> mgx::X11OutputConfig
 }
 }
 
-auto mgx::Platform::parse_output_sizes(std::string output_sizes) -> std::unique_ptr<std::vector<mgx::X11OutputConfig>>
+auto mgx::Platform::parse_output_sizes(std::string output_sizes) -> std::vector<mgx::X11OutputConfig>
 {
-    auto sizes = std::make_unique<std::vector<mgx::X11OutputConfig>>();
+    std::vector<mgx::X11OutputConfig> sizes;
     for (int start = 0, end; start - 1 < (int)output_sizes.size(); start = end + 1)
     {
         end = output_sizes.find(':', start);
         if (end == (int)std::string::npos)
             end = output_sizes.size();
-        sizes->push_back(parse_size(output_sizes.substr(start, end - start)));
+        sizes.push_back(parse_size(output_sizes.substr(start, end - start)));
     }
     return sizes;
 }
 
 mgx::Platform::Platform(std::shared_ptr<::Display> const& conn,
-                        std::unique_ptr<std::vector<X11OutputConfig>> output_sizes,
+                        std::vector<X11OutputConfig> output_sizes,
                         std::shared_ptr<mg::DisplayReport> const& report)
     : x11_connection{conn},
       udev{std::make_shared<mir::udev::Context>()},
@@ -127,7 +127,7 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return make_module_ptr<mgx::Display>(x11_connection.get(), *output_sizes, gl_config, report);
+    return make_module_ptr<mgx::Display>(x11_connection.get(), output_sizes, gl_config, report);
 }
 
 mg::NativeDisplayPlatform* mgx::Platform::native_display_platform()
