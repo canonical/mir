@@ -43,6 +43,7 @@ struct Rectangle;
 namespace graphics
 {
 class CursorImage;
+class DisplayConfigurationOutput;
 
 namespace mesa
 {
@@ -85,7 +86,7 @@ public:
 private:
     enum ForceCursorState { UpdateState, ForceState };
     struct GBMBOWrapper;
-    void for_each_used_output(std::function<void(KMSOutput&, geometry::Rectangle const&, MirOrientation orientation)> const& f);
+    void for_each_used_output(std::function<void(KMSOutput& output, DisplayConfigurationOutput const& conf)> const& f);
     void place_cursor_at(geometry::Point position, ForceCursorState force_state);
     void place_cursor_at_locked(std::lock_guard<std::mutex> const&, geometry::Point position, ForceCursorState force_state);
     void write_buffer_data_locked(

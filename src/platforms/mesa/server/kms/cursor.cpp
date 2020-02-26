@@ -333,7 +333,7 @@ void mgm::Cursor::hide()
 }
 
 void mgm::Cursor::for_each_used_output(
-    std::function<void(KMSOutput&, geom::Rectangle const&, MirOrientation orientation)> const& f)
+    std::function<void(KMSOutput& output, DisplayConfigurationOutput const& conf)> const& f)
 {
     current_configuration->with_current_configuration_do(
         [&f](KMSDisplayConfiguration const& kms_conf)
@@ -343,8 +343,7 @@ void mgm::Cursor::for_each_used_output(
                 if (conf_output.used)
                 {
                     auto output = kms_conf.get_output_for(conf_output.id);
-
-                    f(*output, conf_output.extents(), conf_output.orientation);
+                    f(*output, conf_output);
                 }
             });
         });
@@ -371,8 +370,11 @@ void mgm::Cursor::place_cursor_at_locked(
 
     bool set_on_all_outputs = true;
 
-    for_each_used_output([&](KMSOutput& output, geom::Rectangle const& output_rect, MirOrientation orientation)
+    for_each_used_output([&](KMSOutput& output, DisplayConfigurationOutput const& conf)
     {
+        auto const output_rect = conf.extents();
+        auto const orientation = conf.orientation;
+
         if (output_rect.contains(position))
         {
             auto dp = transform(output_rect, position - output_rect.top_left, orientation);
