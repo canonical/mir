@@ -13,7 +13,7 @@ while [ $# -gt 0 ]
 do
   if [ "$1" == "--help" -o "$1" == "-h" ]
   then
-    echo "$(basename $0) - Launch script for \"Mir Shell\"
+    echo "$(basename $0) - Launch script for \"Mir Shell\""
     echo "Usage: $(basename $0) [options] [shell options]"
     echo "Options are:"
     echo "    -terminal <terminal>        use <terminal> instead of '${terminal}'"
