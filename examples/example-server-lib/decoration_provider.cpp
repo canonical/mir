@@ -110,6 +110,15 @@ struct BackgroundInfo
             wl_surface_destroy(surface);
     }
 
+    auto content_size() const -> Size
+    {
+        bool const rotated = output.transform == WL_OUTPUT_TRANSFORM_90 || output.transform == WL_OUTPUT_TRANSFORM_270;
+        Size const unscaled = (rotated ?
+            Size{output.height, output.width} :
+            Size{output.width, output.height});
+        return unscaled;
+    }
+
     // Screen description
     Output const& output;
 
@@ -125,10 +134,7 @@ void Printer::printhelp(BackgroundInfo const& region)
     if (!working)
         return;
 
-    bool rotated = region.output.transform == WL_OUTPUT_TRANSFORM_90 || region.output.transform == WL_OUTPUT_TRANSFORM_270;
-    auto const region_size = rotated ?
-        Size{region.output.height, region.output.width} :
-        Size{region.output.width, region.output.height};
+    auto const region_size = region.content_size();
 
     static char const* const helptext[] =
         {
@@ -292,9 +298,9 @@ void DecorationProviderClient::on_new_output(Output const* output)
 
 void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 {
-    bool rotated = ctx.output.transform == WL_OUTPUT_TRANSFORM_90 || ctx.output.transform == WL_OUTPUT_TRANSFORM_270;
-    auto const width = rotated ? ctx.output.height : ctx.output.width;
-    auto const height = rotated ? ctx.output.width : ctx.output.height;
+    Size const size = ctx.content_size();
+    int const width = size.width.as_int();
+    int const height = size.height.as_int();
 
     if (width <= 0 || height <= 0)
         return;
