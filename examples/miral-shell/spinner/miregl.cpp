@@ -242,7 +242,6 @@ MirEglSurface::MirEglSurface(
     window = wl_shell_get_shell_surface(mir_egl_app->shell, surface);
     wl_shell_surface_add_listener(window, &shell_surface_listener, this);
     wl_shell_surface_set_fullscreen(window, WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, wl_output);
-    wl_display_dispatch(display);
 
     eglsurface = mir_egl_app->create_eglsurface(surface, width(), height());
 
