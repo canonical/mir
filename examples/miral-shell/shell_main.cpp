@@ -90,8 +90,6 @@ int main(int argc, char const* argv[])
                     {
                         // gnome-terminal is a horrid wrapper script on Ubuntu that needs frigging
                         command_line.emplace_back("--disable-factory");
-                        command_line.emplace_back("--app-id");
-                        command_line.emplace_back("com.canonical.miral.Terminal");
                     }
 
                     external_client_launcher.launch(command_line);
