@@ -70,7 +70,9 @@ void miral::ExternalClientLauncher::operator()(mir::Server& server)
     self->server = &server;
 
     static auto const app_env = "app-env";
-    static auto const default_env = "GDK_BACKEND=wayland:QT_QPA_PLATFORM=wayland:SDL_VIDEODRIVER=wayland:NO_AT_BRIDGE=1:_JAVA_AWT_WM_NONREPARENTING=1";
+    static auto const default_env = "GDK_BACKEND=wayland:QT_QPA_PLATFORM=wayland:SDL_VIDEODRIVER=wayland:"
+        "-QT_QPA_PLATFORMTHEME:NO_AT_BRIDGE=1:QT_ACCESSIBILITY:QT_LINUX_ACCESSIBILITY_ALWAYS_ON:"
+        "_JAVA_AWT_WM_NONREPARENTING=1:-GTK_MODULES:-OOO_FORCE_DESKTOP:-GNOME_ACCESSIBILITY:";
     static auto const app_x11_env = "app-env-x11";
     static auto const default_x11_env = "GDK_BACKEND=x11:QT_QPA_PLATFORM=xcb:SDL_VIDEODRIVER=x11";
 
