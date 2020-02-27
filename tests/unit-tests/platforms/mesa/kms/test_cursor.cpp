@@ -54,22 +54,23 @@ namespace
 struct StubKMSOutputContainer : public mgm::KMSOutputContainer
 {
     StubKMSOutputContainer()
-        : outputs{
-            std::make_shared<testing::NiceMock<MockKMSOutput>>(),
-            std::make_shared<testing::NiceMock<MockKMSOutput>>(),
-            std::make_shared<testing::NiceMock<MockKMSOutput>>()}
     {
-        // These need to be established before Cursor construction:
-        for (auto& output : outputs)
-        {
-            auto& out = *output;
-            ON_CALL(out, has_cursor())
-                .WillByDefault(Return(true));
-            ON_CALL(out, set_cursor(_))
-                .WillByDefault(Return(true));
-            ON_CALL(out, clear_cursor())
-                .WillByDefault(Return(true));
-        }
+    }
+
+    void add_output(geom::Size size)
+    {
+        auto const output = std::make_shared<testing::NiceMock<MockKMSOutput>>();
+        outputs.push_back(output);
+
+        auto& out = *output;
+        ON_CALL(out, size())
+            .WillByDefault(Return(size));
+        ON_CALL(out, has_cursor())
+            .WillByDefault(Return(true));
+        ON_CALL(out, set_cursor(_))
+            .WillByDefault(Return(true));
+        ON_CALL(out, clear_cursor())
+            .WillByDefault(Return(true));
     }
 
     void for_each_output(std::function<void(std::shared_ptr<mgm::KMSOutput> const&)> functor) const
@@ -93,7 +94,7 @@ struct StubKMSOutputContainer : public mgm::KMSOutputContainer
 
 struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
 {
-    StubKMSDisplayConfiguration(mgm::KMSOutputContainer& container)
+    StubKMSDisplayConfiguration(StubKMSOutputContainer& container)
         : mgm::KMSDisplayConfiguration(),
           container{container},
           stub_config{
@@ -176,7 +177,15 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 {}
             }}}
     {
-        update();
+        stub_config.for_each_output([&container](auto const& conf)
+            {
+                container.add_output(conf.modes[conf.current_mode_index].size);
+            });
+        container.for_each_output(
+            [this](auto const& output)
+            {
+                outputs.push_back(output);
+            });
     }
 
     void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const override
@@ -216,11 +225,6 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
 
     void update() override
     {
-        container.for_each_output(
-            [this](auto const& output)
-            {
-                outputs.push_back(output);
-            });
     }
 
     void set_orentation_of_output(mg::DisplayConfigurationOutputId id, MirOrientation orientation)
@@ -233,14 +237,14 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
             });
     }
 
-    mgm::KMSOutputContainer& container;
+    StubKMSOutputContainer& container;
     mtd::StubDisplayConfig stub_config;
     std::vector<std::shared_ptr<mgm::KMSOutput>> outputs;
 };
 
 struct StubCurrentConfiguration : public mgm::CurrentConfiguration
 {
-    StubCurrentConfiguration(mgm::KMSOutputContainer& container)
+    StubCurrentConfiguration(StubKMSOutputContainer& container)
         : conf(container)
     {
     }
