@@ -30,7 +30,28 @@
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/udev_environment.h"
 
+namespace mir
+{
+namespace graphics
+{
+namespace X
+{
+auto operator==(X11OutputConfig const& a, X11OutputConfig const& b) -> bool
+{
+    return a.size == b.size &&
+           testing::Value(a.scale, testing::FloatEq(b.scale));
+}
+
+auto operator<<(std::ostream& os, X11OutputConfig const& config) -> std::ostream&
+{
+    return os << "size: " << config.size << ", scale: " << config.scale;
+}
+}
+}
+}
+
 namespace mg = mir::graphics;
+namespace mgx = mir::graphics::X;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -56,7 +77,7 @@ public:
                 {
                     XCloseDisplay(display);
                 }),
-            std::vector<mir::geometry::Size>{{1280, 1024}},
+            std::vector<mg::X::X11OutputConfig>{{{1280, 1024}}},
             std::make_shared<mir::report::null::DisplayReport>());
     }
 
@@ -139,17 +160,54 @@ TEST_F(X11GraphicsPlatformTest, parses_simple_output_size)
     auto str = "1280x720";
     auto parsed = mg::X::Platform::parse_output_sizes(str);
 
-    EXPECT_THAT(parsed, Eq(std::vector<mir::geometry::Size>{{1280, 720}}));
+    EXPECT_THAT(parsed, ElementsAre(mgx::X11OutputConfig{{1280, 720}}));
 }
 
-TEST_F(X11GraphicsPlatformTest, parses_multiple_output_size)
+TEST_F(X11GraphicsPlatformTest, parses_output_size_with_whole_number_scale)
+{
+    using namespace ::testing;
+
+    auto str = "1280x720^2";
+    auto parsed = mg::X::Platform::parse_output_sizes(str);
+
+    EXPECT_THAT(parsed, ElementsAre(mgx::X11OutputConfig{{1280, 720}, 2}));
+}
+
+TEST_F(X11GraphicsPlatformTest, parses_output_size_with_fractional_scale)
+{
+    using namespace ::testing;
+
+    auto str = "1280x720^0.8";
+    auto parsed = mg::X::Platform::parse_output_sizes(str);
+
+    // X11OutputConfig equality operator does not do exact float comparison
+    EXPECT_THAT(parsed, ElementsAre(mgx::X11OutputConfig{{1280, 720}, 0.8}));
+}
+
+TEST_F(X11GraphicsPlatformTest, parses_multiple_output_sizes)
 {
     using namespace ::testing;
 
     auto str = "1280x1024:600x600:30x750";
     auto parsed = mg::X::Platform::parse_output_sizes(str);
 
-    EXPECT_THAT(parsed, Eq(std::vector<mir::geometry::Size>{{1280, 1024}, {600, 600}, {30, 750}}));
+    EXPECT_THAT(parsed, ElementsAre(
+        mgx::X11OutputConfig{{1280, 1024}},
+        mgx::X11OutputConfig{{600, 600}},
+        mgx::X11OutputConfig{{30, 750}}));
+}
+
+TEST_F(X11GraphicsPlatformTest, parses_multiple_output_sizes_some_with_scales)
+{
+    using namespace ::testing;
+
+    auto str = "1280x1024^.9:600x600:30x750^12";
+    auto parsed = mg::X::Platform::parse_output_sizes(str);
+
+    EXPECT_THAT(parsed, ElementsAre(
+        mgx::X11OutputConfig{{1280, 1024}, 0.9},
+        mgx::X11OutputConfig{{600, 600}},
+        mgx::X11OutputConfig{{30, 750}, 12}));
 }
 
 TEST_F(X11GraphicsPlatformTest, output_size_parsing_throws_on_bad_input)
@@ -161,6 +219,7 @@ TEST_F(X11GraphicsPlatformTest, output_size_parsing_throws_on_bad_input)
     EXPECT_THROW(mg::X::Platform::parse_output_sizes("=20x40"), std::runtime_error) << "Random equals";
     EXPECT_THROW(mg::X::Platform::parse_output_sizes("20x30x40"), std::runtime_error) << "Too many dimensions";
     EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280x720:"), std::runtime_error) << "Ends with delim";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280.5x720"), std::runtime_error) << "Fractional size";
     EXPECT_THROW(mg::X::Platform::parse_output_sizes(":1280x720"), std::runtime_error) << "Starts with delim";
     EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280x720:500"), std::runtime_error) << "No height or x on 2nd size";
     EXPECT_THROW(mg::X::Platform::parse_output_sizes("50x50:x20:50x50"), std::runtime_error) << "No width on 2nd size";
@@ -168,4 +227,8 @@ TEST_F(X11GraphicsPlatformTest, output_size_parsing_throws_on_bad_input)
     EXPECT_THROW(mg::X::Platform::parse_output_sizes("0x0"), std::runtime_error) << "Zero size";
     EXPECT_THROW(mg::X::Platform::parse_output_sizes("0x200"), std::runtime_error) << "Zero width";
     EXPECT_THROW(mg::X::Platform::parse_output_sizes("200x-300"), std::runtime_error) << "Negative height";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("200x300^"), std::runtime_error) << "Ends with ^";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("200x^2"), std::runtime_error) << "Scale but no height";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("200x300^2^2"), std::runtime_error) << "Multiple scales";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("200x300^2..8"), std::runtime_error) << "Multiple scale decimal points";
 }

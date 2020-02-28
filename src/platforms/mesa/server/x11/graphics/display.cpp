@@ -27,6 +27,7 @@
 #include "mir/graphics/transformation.h"
 #include "display_configuration.h"
 #include "display.h"
+#include "platform.h"
 #include "display_buffer.h"
 #include "../X11_resources.h"
 
@@ -234,7 +235,7 @@ unsigned long mgx::X11Window::red_mask() const
 }
 
 mgx::Display::Display(::Display* x_dpy,
-                      std::vector<geom::Size> const& requested_sizes,
+                      std::vector<X11OutputConfig> const& requested_sizes,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& report)
     : shared_egl{*gl_config},
@@ -251,7 +252,7 @@ mgx::Display::Display(::Display* x_dpy,
 
     for (auto const& requested_size : requested_sizes)
     {
-        auto actual_size = clip_to_display(x_dpy, requested_size);
+        auto actual_size = clip_to_display(x_dpy, requested_size.size);
         auto window = std::make_unique<X11Window>(x_dpy, shared_egl.display(), actual_size, shared_egl.config());
         auto red_mask = window->red_mask();
         auto pf = (red_mask == 0xFF0000 ?
@@ -262,7 +263,7 @@ mgx::Display::Display(::Display* x_dpy,
             actual_size,
             top_left,
             geom::Size{actual_size.width * pixel_width, actual_size.height * pixel_height},
-            1.0f,
+            requested_size.scale,
             mir_orientation_normal);
         auto display_buffer = std::make_unique<mgx::DisplayBuffer>(
             x_dpy,

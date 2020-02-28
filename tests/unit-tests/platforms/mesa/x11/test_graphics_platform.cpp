@@ -87,7 +87,7 @@ public:
                 {
                     XCloseDisplay(display);
                 }),
-            std::vector<mir::geometry::Size>{{1280, 1024}},
+            std::vector<mg::X::X11OutputConfig>{{{1280, 1024}}},
             std::make_shared<mir::report::null::DisplayReport>());
     }
 
