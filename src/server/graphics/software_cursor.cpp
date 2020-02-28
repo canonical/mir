@@ -186,75 +186,18 @@ mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom:
     if (cursor_image.size().width.as_uint32_t() == 0 || cursor_image.size().height.as_uint32_t() == 0)
         BOOST_THROW_EXCEPTION(std::logic_error("zero sized software cursor image is invalid"));
 
+    auto buffer = mrs::alloc_buffer_with_content(
+        *allocator,
+        static_cast<unsigned char const*>(cursor_image.as_argb_8888()),
+        cursor_image.size(),
+        geom::Stride{
+            cursor_image.size().width.as_uint32_t() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)},
+        mir_pixel_format_argb_8888);
+
     auto new_renderable = std::make_shared<detail::CursorRenderable>(
-        allocator->alloc_software_buffer(cursor_image.size(), format),
+        std::move(buffer),
         position + hotspot - cursor_image.hotspot());
 
-    auto const mapping = mrs::as_write_mappable_buffer(new_renderable->buffer())->map_writeable();
-
-    if (mapping->format() == mir_pixel_format_argb_8888)
-    {
-        if (
-            mapping->stride().as_uint32_t() ==
-            MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888) * cursor_image.size().width.as_uint32_t())
-        {
-            // Happy case: Buffer is packed, like the cursor_image; we can just blit.
-            ::memcpy(
-                mapping->data(),
-                static_cast<unsigned char const*>(cursor_image.as_argb_8888()),
-                mapping->len());
-        }
-        else
-        {
-            // Less happy path: the buffer has a different stride; we need to copy row-by-row
-            auto const dest_stride = mapping->stride().as_uint32_t();
-            auto const src_stride = cursor_image.size().width.as_uint32_t() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888);
-            for (auto y = 0u; y < cursor_image.size().height.as_uint32_t(); ++y)
-            {
-                ::memcpy(
-                    mapping->data() + (dest_stride * y),
-                    static_cast<unsigned char const*>(cursor_image.as_argb_8888()) + src_stride * y,
-                    src_stride);
-            }
-        }
-    }
-    else if (mapping->format() == mir_pixel_format_abgr_8888)
-    {
-        // We need to do format conversion. Yay!
-        // On the plus side, this means we don't have to do anything special to handle stride.
-        auto const dest_stride = mapping->stride().as_uint32_t();
-        auto const src_stride = cursor_image.size().width.as_uint32_t() * MIR_BYTES_PER_PIXEL(format);
-        for (auto y = 0u; y < cursor_image.size().height.as_uint32_t(); ++y)
-        {
-            for (auto x = 0u; x < cursor_image.size().width.as_uint32_t(); ++x)
-            {
-                auto* const dst_pixel =
-                    reinterpret_cast<uint32_t*>(
-                        mapping->data() + (dest_stride * y) + (x * sizeof(uint32_t)));
-                auto* const src_pixel =
-                    reinterpret_cast<uint32_t const*>(
-                        static_cast<unsigned char const*>(cursor_image.as_argb_8888()) +
-                        (src_stride * y) +
-                        (sizeof(uint32_t) * x));
-                // TODO: This should be trivially-SIMD-able, for performance.
-                auto const a = (*src_pixel >> 24) & 255;
-                auto const r = (*src_pixel >> 16) & 255;
-                auto const g = (*src_pixel >> 8) & 255;
-                auto const b = (*src_pixel >> 0) & 255;
-
-                *dst_pixel =
-                    (a << 24) |
-                    (b << 16) |
-                    (g << 8)  |
-                    (r << 0);
-            }
-        }
-    }
-    else
-    {
-        // There should be only two 8888 formats, and we should have covered them above!
-        BOOST_THROW_EXCEPTION((std::logic_error{"Unexpected buffer format for cursor"}));
-    }
     return new_renderable;
 }
 

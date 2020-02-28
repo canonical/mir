@@ -30,6 +30,10 @@
 
 namespace mir
 {
+namespace graphics
+{
+class GraphicBufferAllocator;
+}
 namespace renderer
 {
 namespace software
@@ -100,8 +104,13 @@ public:
 
 auto as_read_mappable_buffer(
     std::shared_ptr<graphics::Buffer> buffer) -> std::shared_ptr<ReadMappableBuffer>;
-auto as_write_mappable_buffer(
-    std::shared_ptr<graphics::Buffer> buffer) -> std::shared_ptr<WriteMappableBuffer>;
+
+auto alloc_buffer_with_content(
+    graphics::GraphicBufferAllocator& allocator,
+    unsigned char const* content,
+    geometry::Size const& size,
+    geometry::Stride const& src_stride,
+    MirPixelFormat src_format) -> std::shared_ptr<graphics::Buffer>;
 
 class PixelSource
 {

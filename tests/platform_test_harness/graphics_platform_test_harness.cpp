@@ -47,6 +47,7 @@
 #include <unistd.h>
 
 namespace mg = mir::graphics;
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -363,25 +364,19 @@ std::shared_ptr<mg::Buffer> alloc_and_fill_sw_buffer(
     MirPixelFormat format,
     uint32_t fill_value)
 {
-    auto const buffer = allocator.alloc_software_buffer(size, format);
-    auto const mapping = mir::renderer::software::as_write_mappable_buffer(buffer)->map_writeable();
+    auto const num_px = size.width.as_uint32_t() * size.height.as_uint32_t();
+    auto buffer = std::make_unique<unsigned char[]>(num_px* MIR_BYTES_PER_PIXEL(format));
+    std::fill(
+        reinterpret_cast<uint32_t*>(buffer.get()),
+        reinterpret_cast<uint32_t*>(buffer.get() + num_px),
+        fill_value);
 
-    if (mapping->stride().as_uint32_t() % sizeof(fill_value))
-    {
-        // Weird stride; just filling the buffer naïvely will result in incorrect colours
-        for (auto y = 0u; y < size.height.as_uint32_t(); ++y)
-        {
-            auto const row_start = mapping->data() + (mapping->stride().as_uint32_t() * y);
-            std::fill(row_start, row_start + mapping->stride().as_uint32_t(), fill_value);
-        }
-    }
-    else
-    {
-        // Stride is a whole number of pixels, so we can just fill the whole buffer
-        std::fill(mapping->data(), mapping->data() + mapping->len(), fill_value);
-    }
-
-    return buffer;
+    return mrs::alloc_buffer_with_content(
+        allocator,
+        buffer.get(),
+        size,
+        mir::geometry::Stride(size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(format)),
+        format);
 }
 
 template<typename Period, typename Rep>

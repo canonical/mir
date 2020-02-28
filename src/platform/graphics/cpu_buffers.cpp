@@ -18,13 +18,16 @@
 
 #include "mir/renderer/sw/pixel_source.h"
 
+#include <algorithm>
 #include <boost/throw_exception.hpp>
-#include <stdexcept>
-#include <memory>
 #include <cstring>
+#include <memory>
+#include <mir/graphics/graphic_buffer_allocator.h>
+#include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mrs = mir::renderer::software;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -180,52 +183,54 @@ auto mrs::as_read_mappable_buffer(std::shared_ptr<mg::Buffer> buffer) -> std::sh
     BOOST_THROW_EXCEPTION((std::runtime_error{"Buffer does not support CPU access"}));
 }
 
-auto mrs::as_write_mappable_buffer(std::shared_ptr<mg::Buffer> buffer) -> std::shared_ptr<WriteMappableBuffer>
+namespace
 {
-    class CopyingWrapper : public WriteMappableBuffer
+auto as_write_mappable_buffer(
+    std::shared_ptr<mg::Buffer> const& buffer) -> std::shared_ptr<mrs::WriteMappableBuffer>
+{
+    class CopyingWrapper : public mrs::WriteMappableBuffer
     {
     public:
-        CopyingWrapper(std::shared_ptr<WriteTransferableBuffer> underlying_buffer)
+        explicit CopyingWrapper(std::shared_ptr<mrs::WriteTransferableBuffer> underlying_buffer)
             : buffer{std::move(underlying_buffer)}
         {
         }
 
-        std::unique_ptr<Mapping<unsigned char>> map_writeable() override
+        std::unique_ptr<mrs::Mapping<unsigned char>> map_writeable() override
         {
             return std::make_unique<
                 CopyMap<
-                    WriteTransferableBuffer,
+                    mrs::WriteTransferableBuffer,
                     unsigned char,
                     &noop,
                     &write_to_buffer>>(buffer);
         }
 
     private:
-        std::shared_ptr<WriteTransferableBuffer> const buffer;
-
+        std::shared_ptr<mrs::WriteTransferableBuffer> const buffer;
     };
 
-    if (auto mappable_buffer = dynamic_cast<WriteMappableBuffer*>(buffer->native_buffer_base()))
+    if (auto mappable_buffer = dynamic_cast<mrs::WriteMappableBuffer*>(buffer->native_buffer_base()))
     {
-        return std::shared_ptr<WriteMappableBuffer>{std::move(buffer), mappable_buffer};
+        return std::shared_ptr<mrs::WriteMappableBuffer>{buffer, mappable_buffer};
     }
-    else if (auto transferrable_buffer = dynamic_cast<WriteTransferableBuffer*>(buffer->native_buffer_base()))
+    else if (auto transferable_buffer = dynamic_cast<mrs::WriteTransferableBuffer*>(buffer->native_buffer_base()))
     {
         return std::make_shared<CopyingWrapper>(
-            std::shared_ptr<WriteTransferableBuffer>{std::move(buffer), transferrable_buffer});
-    } else if (dynamic_cast<PixelSource*>(buffer->native_buffer_base()))
+            std::shared_ptr<mrs::WriteTransferableBuffer>{buffer, transferable_buffer});
+    }
+    else if (dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base()))
     {
-        class PixelSourceAdaptor : public WriteTransferableBuffer
+        class PixelSourceAdaptor : public mrs::WriteTransferableBuffer
         {
         public:
-            PixelSourceAdaptor(std::shared_ptr<mg::Buffer> buffer)
+            explicit PixelSourceAdaptor(std::shared_ptr<mg::Buffer> buffer)
                 : buffer{std::move(buffer)}
             {
-                if (!dynamic_cast<PixelSource*>(this->buffer->native_buffer_base()))
+                if (!dynamic_cast<mrs::PixelSource*>(this->buffer->native_buffer_base()))
                 {
-                    BOOST_THROW_EXCEPTION((
-                        std::logic_error{
-                            "Attempt to create a PixelSourceAdaptor for a non-PixelSource buffer!"}));
+                    BOOST_THROW_EXCEPTION(
+                        (std::logic_error{"Attempt to create a PixelSourceAdaptor for a non-PixelSource buffer!"}));
                 }
             }
 
@@ -234,30 +239,60 @@ auto mrs::as_write_mappable_buffer(std::shared_ptr<mg::Buffer> buffer) -> std::s
                 return buffer->pixel_format();
             }
 
-            geometry::Stride stride() const override
+            geom::Stride stride() const override
             {
-                return dynamic_cast<PixelSource const&>(*buffer->native_buffer_base()).stride();
+                return dynamic_cast<mrs::PixelSource const&>(*buffer->native_buffer_base()).stride();
             }
 
-            geometry::Size size() const override
+            geom::Size size() const override
             {
                 return buffer->size();
             }
 
             void transfer_into_buffer(unsigned char const* source) override
             {
-                dynamic_cast<PixelSource&>(*buffer->native_buffer_base()).write(
-                    source,
-                    stride().as_uint32_t() * size().height.as_uint32_t());
+                dynamic_cast<mrs::PixelSource&>(*buffer->native_buffer_base())
+                    .write(source, stride().as_uint32_t() * size().height.as_uint32_t());
             }
+
         private:
             std::shared_ptr<mg::Buffer> const buffer;
         };
 
-        return std::make_shared<CopyingWrapper>(
-            std::make_shared<PixelSourceAdaptor>(std::move(buffer)));
+        return std::make_shared<CopyingWrapper>(std::make_shared<PixelSourceAdaptor>(buffer));
     }
 
     BOOST_THROW_EXCEPTION((std::runtime_error{"Buffer does not support CPU access"}));
+}
+}
+
+auto mrs::alloc_buffer_with_content(
+    mg::GraphicBufferAllocator& allocator,
+    unsigned char const* content,
+    mir::geometry::Size const& size,
+    mir::geometry::Stride const& src_stride,
+    MirPixelFormat src_format) -> std::shared_ptr<graphics::Buffer>
+{
+    auto const buffer = allocator.alloc_software_buffer(size, src_format);
+
+    auto mapping = as_write_mappable_buffer(buffer)->map_writeable();
+    if (mapping->stride() == src_stride)
+    {
+        // Happy case: Buffer is packed, like the cursor_image; we can just blit.
+        ::memcpy(mapping->data(), content, mapping->len());
+    }
+    else
+    {
+        // Less happy path: the buffer has a different stride; we need to copy row-by-row
+        auto const dest_stride = mapping->stride().as_uint32_t();
+        for (auto y = 0u; y < size.height.as_uint32_t(); ++y)
+        {
+            ::memcpy(
+                mapping->data() + (dest_stride * y),
+                content + (src_stride.as_uint32_t() * y),
+                src_stride.as_uint32_t());
+        }
+    }
+    return buffer;
 }
 

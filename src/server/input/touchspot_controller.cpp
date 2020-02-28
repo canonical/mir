@@ -112,35 +112,17 @@ private:
 
 mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mi::Scene> const& scene)
-    : touchspot_buffer(allocator->alloc_software_buffer(touchspot_size, touchspot_pixel_format)),
+    : touchspot_buffer{
+          mrs::alloc_buffer_with_content(
+              *allocator,
+              touchspot_image.pixel_data,
+              touchspot_size,
+              geom::Stride{touchspot_image.width * touchspot_image.bytes_per_pixel},
+              touchspot_pixel_format)},
       scene(scene),
       enabled(false),
       renderables_in_use(0)
 {
-    auto const mapping = mrs::as_write_mappable_buffer(touchspot_buffer)->map_writeable();
-    if (
-        mapping->stride().as_uint32_t() ==
-        MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888) * touchspot_size.width.as_uint32_t())
-    {
-        // Happy case: Buffer is packed, like the cursor_image; we can just blit.
-        ::memcpy(
-            mapping->data(),
-            static_cast<unsigned char const*>(touchspot_image.pixel_data),
-            mapping->len());
-    }
-    else
-    {
-        // Less happy path: the buffer has a different stride; we need to copy row-by-row
-        auto const dest_stride = mapping->stride().as_uint32_t();
-        auto const src_stride = touchspot_size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888);
-        for (auto y = 0u; y < touchspot_size.height.as_uint32_t(); ++y)
-        {
-            ::memcpy(
-                mapping->data() + (dest_stride * y),
-                static_cast<unsigned char const*>(touchspot_image.pixel_data) + src_stride * y,
-                src_stride);
-        }
-    }
 }
 
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)
