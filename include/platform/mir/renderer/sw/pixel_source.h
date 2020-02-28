@@ -73,17 +73,59 @@ class WriteMappableBuffer
 public:
     virtual ~WriteMappableBuffer() = default;
 
+    /**
+     * Map the buffer into CPU-writeable memory.
+     *
+     * \note    The content of the mapping is undefined. In the absence of other guarantees, reading from unwritten
+     *          areas of the mapping are undefined behaviour.
+     * \note    The mapping may not be coherent with the GPU. Updates made to the mapping are guaranteed to be
+     *          GPU-visible only once the mapping is destroyed.
+     * \note    Pixels not written to while the mapping is active are left unchanged in the underlying buffer
+     *          after unmap.
+     * \return  A CPU-mapped view of the buffer.
+     */
     virtual std::unique_ptr<Mapping<unsigned char>> map_writeable() = 0;
 };
 
 /**
- * A Buffer that can be mapped into CPU-accessible memory and directly read from.
+ * A Buffer that can be mapped into CPU-readable memory.
  */
 class ReadMappableBuffer
 {
 public:
     virtual ~ReadMappableBuffer() = default;
+
+    /**
+     * Map the buffer into CPU-readable memory.
+     *
+     * \note    The mapping may not be coherent with the GPU. Updates made by the GPU to the buffer after creation
+     *          of the mapping are not guaranteed to be visible.
+     * \return  A CPU-mapped view of the buffer.
+     */
     virtual std::unique_ptr<Mapping<unsigned char const>> map_readable() = 0;
+};
+
+/**
+ * A buffer that can be mapped into CPU-accessible memory for both reading and writing.
+ */
+class RWMappableBuffer :
+    public ReadMappableBuffer,
+    public WriteMappableBuffer
+{
+public:
+    ~RWMappableBuffer() override = default;
+
+    /**
+     * Map the buffer into CPU-accessible memory for both reading and writing.
+     *
+     * \note    While this has the same signature as \ref map_writable(), the content of the mapping is
+     *          defined. Reads to unwritten areas will return the content of the buffer at map time.
+     * \note    The mapping may not be coherent with the GPU. Updates made by the GPU to the buffer after creation
+     *          of the mapping are not guaranteed to be visible in the mapping, nor are changes to the mapping
+     *          guaranteed to be visible to the GPU until the mapping is destroyed.
+     * \return A CPU-mapped view of the buffer.
+     */
+    virtual std::unique_ptr<Mapping<unsigned char>> map_rw() = 0;
 };
 
 class ReadTransferableBuffer : public virtual BufferDescriptor
