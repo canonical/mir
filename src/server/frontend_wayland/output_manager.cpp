@@ -242,6 +242,15 @@ auto mf::OutputManager::output_id_for(wl_client* client, wl_resource* output) co
     return std::experimental::nullopt;
 }
 
+auto mf::OutputManager::output_for(graphics::DisplayConfigurationOutputId id) -> std::experimental::optional<Output*>
+{
+    auto const result = outputs.find(id);
+    if (result != outputs.end())
+        return result->second.get();
+    else
+        return std::experimental::nullopt;
+}
+
 void mf::OutputManager::create_output(mg::DisplayConfigurationOutput const& initial_config)
 {
     if (initial_config.used)
