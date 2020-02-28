@@ -103,7 +103,7 @@ public:
 };
 
 auto as_read_mappable_buffer(
-    std::shared_ptr<graphics::Buffer> buffer) -> std::shared_ptr<ReadMappableBuffer>;
+    std::shared_ptr<graphics::Buffer> const& buffer) -> std::shared_ptr<ReadMappableBuffer>;
 
 auto alloc_buffer_with_content(
     graphics::GraphicBufferAllocator& allocator,

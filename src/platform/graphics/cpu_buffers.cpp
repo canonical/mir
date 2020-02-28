@@ -99,12 +99,13 @@ void noop(Buffer&, DataType*)
 
 }
 
-auto mrs::as_read_mappable_buffer(std::shared_ptr<mg::Buffer> buffer) -> std::shared_ptr<ReadMappableBuffer>
+auto mrs::as_read_mappable_buffer(
+    std::shared_ptr<mg::Buffer> const& buffer) -> std::shared_ptr<ReadMappableBuffer>
 {
     class CopyingWrapper : public ReadMappableBuffer
     {
     public:
-        CopyingWrapper(std::shared_ptr<ReadTransferableBuffer> underlying_buffer)
+        explicit CopyingWrapper(std::shared_ptr<ReadTransferableBuffer> underlying_buffer)
             : buffer{std::move(underlying_buffer)}
         {
         }
@@ -126,18 +127,18 @@ auto mrs::as_read_mappable_buffer(std::shared_ptr<mg::Buffer> buffer) -> std::sh
 
     if (auto mappable_buffer = dynamic_cast<ReadMappableBuffer*>(buffer->native_buffer_base()))
     {
-        return std::shared_ptr<ReadMappableBuffer>{std::move(buffer), mappable_buffer};
+        return std::shared_ptr<ReadMappableBuffer>{buffer, mappable_buffer};
     }
-    else if (auto transferrable_buffer = dynamic_cast<ReadTransferableBuffer*>(buffer->native_buffer_base()))
+    else if (auto transferable_buffer = dynamic_cast<ReadTransferableBuffer*>(buffer->native_buffer_base()))
     {
         return std::make_shared<CopyingWrapper>(
-            std::shared_ptr<ReadTransferableBuffer>{std::move(buffer), transferrable_buffer});
+            std::shared_ptr<ReadTransferableBuffer>{buffer, transferable_buffer});
     } else if (dynamic_cast<PixelSource*>(buffer->native_buffer_base()))
     {
         class PixelSourceAdaptor : public ReadTransferableBuffer
         {
         public:
-            PixelSourceAdaptor(std::shared_ptr<mg::Buffer> buffer)
+            explicit PixelSourceAdaptor(std::shared_ptr<mg::Buffer> buffer)
                 : buffer{std::move(buffer)}
             {
                 if (!dynamic_cast<PixelSource*>(this->buffer->native_buffer_base()))
@@ -176,7 +177,7 @@ auto mrs::as_read_mappable_buffer(std::shared_ptr<mg::Buffer> buffer) -> std::sh
         };
 
         return std::make_shared<CopyingWrapper>(
-            std::make_shared<PixelSourceAdaptor>(std::move(buffer)));
+            std::make_shared<PixelSourceAdaptor>(buffer));
 
     }
 
