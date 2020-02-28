@@ -47,7 +47,7 @@ public:
 
     void handle_configuration_changed(graphics::DisplayConfigurationOutput const& /*config*/);
 
-    bool matches_client_resource(wl_client* client, struct wl_resource* resource) const;
+    void for_each_output_resource_bound_by(wl_client* client, std::function<void(wl_resource*)> const& functor);
 
 private:
     static void send_initial_config(wl_resource* client_resource, graphics::DisplayConfigurationOutput const& config);

@@ -65,18 +65,17 @@ void mf::Output::handle_configuration_changed(mg::DisplayConfigurationOutput con
     }
 }
 
-bool mf::Output::matches_client_resource(wl_client* client, struct wl_resource* resource) const
+void mf::Output::for_each_output_resource_bound_by(wl_client* client, std::function<void(wl_resource*)> const& functor)
 {
-    auto const rp = resource_map.find(client);
+    auto const resources = resource_map.find(client);
 
-    if (rp == resource_map.end())
-        return false;
-
-    for (auto const& r : rp->second)
-        if (r == resource)
-            return true;
-
-    return false;
+    if (resources != resource_map.end())
+    {
+        for (auto const& resource : resources->second)
+        {
+            functor(resource);
+        }
+    }
 }
 
 namespace
@@ -228,9 +227,17 @@ mf::OutputManager::~OutputManager()
 auto mf::OutputManager::output_id_for(wl_client* client, wl_resource* output) const
     -> std::experimental::optional<graphics::DisplayConfigurationOutputId>
 {
-    for (auto const& dd: outputs)
-        if (dd.second->matches_client_resource(client, output))
+    for (auto const& dd : outputs)
+    {
+        bool found{false};
+        dd.second->for_each_output_resource_bound_by(client, [&found, &output](wl_resource* resource)
+            {
+                if (output == resource)
+                    found = true;
+            });
+        if (found)
             return dd.first;
+    }
 
     return std::experimental::nullopt;
 }
