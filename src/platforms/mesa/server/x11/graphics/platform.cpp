@@ -49,21 +49,48 @@ auto parse_size_dimension(std::string const& str) -> int
     }
 }
 
-auto parse_size(std::string const& str) -> geom::Size
+auto parse_scale(std::string const& str) -> float
 {
-    size_t x = str.find('x');
+    try
+    {
+        size_t num_end = 0;
+        float const value = std::stof(str, &num_end);
+        if (num_end != str.size())
+            BOOST_THROW_EXCEPTION(std::runtime_error("Scale \"" + str + "\" is not a valid float"));
+        if (value <= 0.000001)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Scale must be greater than zero"));
+        return value;
+    }
+    catch (std::invalid_argument const &e)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Scale \"" + str + "\" is not a valid float"));
+    }
+}
+
+auto parse_size(std::string const& str) -> mgx::X11OutputConfig
+{
+    auto const x = str.find('x'); // "x" between width and height
     if (x == std::string::npos || x <= 0 || x >= str.size() - 1)
         BOOST_THROW_EXCEPTION(std::runtime_error("Output size \"" + str + "\" does not have two dimensions"));
-    return geom::Size{
-        parse_size_dimension(str.substr(0, x)),
-        parse_size_dimension(str.substr(x + 1, std::string::npos))};
-
+    auto const scale_start = str.find('^'); // start of output scale
+    float scale = 1.0f;
+    if (scale_start != std::string::npos)
+    {
+        if (scale_start >= str.size() - 1)
+            BOOST_THROW_EXCEPTION(std::runtime_error("In \"" + str + "\", '^' is not followed by a scale"));
+        scale = parse_scale(str.substr(scale_start + 1, std::string::npos));
+    }
+    return mgx::X11OutputConfig{
+        geom::Size{
+            parse_size_dimension(str.substr(0, x)),
+            parse_size_dimension(str.substr(x + 1, scale_start - x - 1))},
+        scale};
 }
 }
 
-std::vector<geom::Size> mgx::Platform::parse_output_sizes(std::string output_sizes)
+auto mgx::Platform::parse_output_sizes(std::string output_sizes) -> std::vector<mgx::X11OutputConfig>
 {
-    std::vector<geom::Size> sizes;
+    std::vector<mgx::X11OutputConfig> sizes;
     for (int start = 0, end; start - 1 < (int)output_sizes.size(); start = end + 1)
     {
         end = output_sizes.find(':', start);
@@ -75,14 +102,14 @@ std::vector<geom::Size> mgx::Platform::parse_output_sizes(std::string output_siz
 }
 
 mgx::Platform::Platform(std::shared_ptr<::Display> const& conn,
-                        std::vector<geom::Size> const output_sizes,
+                        std::vector<X11OutputConfig> output_sizes,
                         std::shared_ptr<mg::DisplayReport> const& report)
     : x11_connection{conn},
       udev{std::make_shared<mir::udev::Context>()},
       drm{mgm::helpers::DRMHelper::open_any_render_node(udev)},
       report{report},
       gbm{drm->fd},
-      output_sizes{output_sizes}
+      output_sizes{move(output_sizes)}
 {
     if (!x11_connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));

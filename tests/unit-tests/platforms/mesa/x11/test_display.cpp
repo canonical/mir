@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 
 #include "src/platforms/mesa/server/x11/graphics/display.h"
+#include "src/platforms/mesa/server/x11/graphics/platform.h"
 #include "src/server/report/null/display_report.h"
 
 #include "mir/graphics/display_configuration.h"
@@ -45,7 +46,7 @@ namespace
 class X11DisplayTest : public ::testing::Test
 {
 public:
-    std::vector<geom::Size> sizes{{1280, 1024}};
+    std::vector<mgx::X11OutputConfig> sizes{{geom::Size{1280, 1024}}};
 
     X11DisplayTest()
     {
@@ -66,14 +67,14 @@ public:
                                           mock_egl.fake_egl_surface,
                                           EGL_WIDTH,
                                           _))
-            .WillByDefault(DoAll(SetArgPointee<3>(sizes[0].width.as_int()),
+            .WillByDefault(DoAll(SetArgPointee<3>(sizes[0].size.width.as_int()),
                             Return(EGL_TRUE)));
 
         ON_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display,
                                           mock_egl.fake_egl_surface,
                                           EGL_HEIGHT,
                                           _))
-            .WillByDefault(DoAll(SetArgPointee<3>(sizes[0].height.as_int()),
+            .WillByDefault(DoAll(SetArgPointee<3>(sizes[0].size.height.as_int()),
                             Return(EGL_TRUE)));
 
         ON_CALL(mock_egl, eglGetConfigAttrib(mock_egl.fake_egl_display,
@@ -89,7 +90,10 @@ public:
                        Return(1)));
     }
 
-    void setup_x11_screen(geom::Size const& pixel, geom::Size const& mm, std::vector<geom::Size> const& window_sizes)
+    void setup_x11_screen(
+        geom::Size const& pixel,
+        geom::Size const& mm,
+        std::vector<mgx::X11OutputConfig> const& window_sizes)
     {
         mock_x11.fake_x11.screen.width = pixel.width.as_int();
         mock_x11.fake_x11.screen.height = pixel.height.as_int();
@@ -122,7 +126,14 @@ TEST_F(X11DisplayTest, creates_display_successfully)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_x11, XCreateWindow_wrapper(mock_x11.fake_x11.display,_, sizes[0].width.as_int(), sizes[0].height.as_int(),_,_,_,_,_,_))
+    EXPECT_CALL(
+        mock_x11,
+        XCreateWindow_wrapper(
+            mock_x11.fake_x11.display,
+            _,
+            sizes[0].size.width.as_int(),
+            sizes[0].size.height.as_int()
+            ,_ ,_ ,_ ,_ ,_ ,_))
         .Times(Exactly(1));
 
     EXPECT_CALL(mock_x11, XNextEvent(mock_x11.fake_x11.display,_))
@@ -181,6 +192,28 @@ TEST_F(X11DisplayTest, calculates_physical_size_of_display_based_on_default_scre
     EXPECT_THAT(reported_size, Eq(expected_size));
 }
 
+TEST_F(X11DisplayTest, sets_output_scale)
+{
+    auto const scale = 2.5f;
+    auto const pixel = geom::Size{2880, 1800};
+    auto const mm = geom::Size{677, 290};
+    auto const window = geom::Size{1280, 1024};
+
+    setup_x11_screen(pixel, mm, {{window, scale}});
+
+    auto display = create_display();
+    auto config = display->configuration();
+    float reported_scale = -10.0f;
+    config->for_each_output(
+        [&reported_scale](mg::DisplayConfigurationOutput const& output)
+        {
+            reported_scale = output.scale;
+        }
+        );
+
+    EXPECT_THAT(reported_scale, FloatEq(scale));
+}
+
 TEST_F(X11DisplayTest, reports_a_resolution_that_matches_the_window_size)
 {
     auto const pixel = geom::Size{2880, 1800};
@@ -206,7 +239,7 @@ TEST_F(X11DisplayTest, reports_resolutions_that_match_multiple_window_sizes)
 {
     auto const pixel = geom::Size{2880, 1800};
     auto const mm = geom::Size{677, 290};
-    auto const window_sizes = std::vector<geom::Size>{{1280, 1024}, {600, 500}, {20, 50}, {600, 500}};
+    auto const window_sizes = std::vector<mgx::X11OutputConfig>{{{1280, 1024}}, {{600, 500}}, {{20, 50}}, {{600, 500}}};
 
     setup_x11_screen(pixel, mm, window_sizes);
 
@@ -219,7 +252,7 @@ TEST_F(X11DisplayTest, reports_resolutions_that_match_multiple_window_sizes)
             bool output_found = false;
             for (auto i = 0u; i < remaining_sizes.size(); i++)
             {
-                if (remaining_sizes[i] == output.modes[0].size)
+                if (remaining_sizes[i].size == output.modes[0].size)
                 {
                     output_found = true;
                     remaining_sizes.erase(remaining_sizes.begin() + i);
@@ -237,7 +270,7 @@ TEST_F(X11DisplayTest, multiple_outputs_are_organized_horizontally)
 {
     auto const pixel = geom::Size{2880, 1800};
     auto const mm = geom::Size{677, 290};
-    auto const window_sizes = std::vector<geom::Size>{{1280, 1024}, {600, 500}, {20, 50}, {600, 500}};
+    auto const window_sizes = std::vector<mgx::X11OutputConfig>{{{1280, 1024}}, {{600, 500}}, {{20, 50}}, {{600, 500}}};
     auto const top_lefts = std::vector<geom::Point>{{0, 0}, {1280, 0}, {1880, 0}, {1900, 0}};
 
     setup_x11_screen(pixel, mm, window_sizes);
@@ -250,7 +283,7 @@ TEST_F(X11DisplayTest, multiple_outputs_are_organized_horizontally)
             bool output_found = false;
             for (auto i = 0u; i < window_sizes.size(); i++)
             {
-                if (window_sizes[i] == output.modes[0].size && top_lefts[i] == output.top_left)
+                if (window_sizes[i].size == output.modes[0].size && top_lefts[i] == output.top_left)
                 {
                     output_found = true;
                     break;
@@ -287,7 +320,7 @@ TEST_F(X11DisplayTest, multiple_outputs_are_organized_horizontally_after_adjusti
     auto const pixel = geom::Size{1000, 1000};
     auto const mm = geom::Size{677, 290};
     auto const border = 150; //must match the border value in clip_to_display()
-    auto const window_sizes = std::vector<geom::Size>{{1280, 1024}, {100, 100}};
+    auto const window_sizes = std::vector<mgx::X11OutputConfig>{{{1280, 1024}}, {{100, 100}}};
 
     setup_x11_screen(pixel, mm, window_sizes);
 
