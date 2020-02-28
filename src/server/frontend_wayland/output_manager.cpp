@@ -225,29 +225,14 @@ mf::OutputManager::~OutputManager()
     display_config_->unregister_interest(this);
 }
 
-auto mf::OutputManager::output_id_for(
-    wl_client* client,
-    std::experimental::optional<struct wl_resource*> const& output) const
-    -> mir::optional_value<graphics::DisplayConfigurationOutputId>
-{
-    if (output)
-    {
-        return output_id_for(client, output.value());
-    }
-    else
-    {
-        return {};
-    }
-}
-
-auto mf::OutputManager::output_id_for(wl_client* client, struct wl_resource* output) const
-    -> mir::graphics::DisplayConfigurationOutputId
+auto mf::OutputManager::output_id_for(wl_client* client, wl_resource* output) const
+    -> std::experimental::optional<graphics::DisplayConfigurationOutputId>
 {
     for (auto const& dd: outputs)
         if (dd.second->matches_client_resource(client, output))
-            return {dd.first};
+            return dd.first;
 
-    return {};
+    return std::experimental::nullopt;
 }
 
 void mf::OutputManager::create_output(mg::DisplayConfigurationOutput const& initial_config)

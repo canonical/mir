@@ -70,11 +70,8 @@ public:
     OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config, std::shared_ptr<Executor> const& executor);
     ~OutputManager();
 
-    auto output_id_for(wl_client* client, std::experimental::optional<struct wl_resource*> const& /*output*/) const
-        -> optional_value<graphics::DisplayConfigurationOutputId>;
-
-    auto output_id_for(wl_client* client, struct wl_resource* /*output*/) const
-        -> graphics::DisplayConfigurationOutputId;
+    auto output_id_for(wl_client* client, wl_resource* output) const
+        -> std::experimental::optional<graphics::DisplayConfigurationOutputId>;
 
     auto display_config() const -> std::shared_ptr<MirDisplay> {return display_config_;}
 

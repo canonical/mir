@@ -264,14 +264,21 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::experimental::optional<struct 
     {
         shell::SurfaceSpecification mods;
         mods.state = mir_window_state_fullscreen;
-        mods.output_id = output_manager->output_id_for(client, output);
+        auto const output_id = output ?
+            output_manager->output_id_for(client, output.value()) :
+            std::experimental::nullopt;
+        if (output_id)
+            mods.output_id = output_id.value();
         shell->modify_surface(session, scene_surface, mods);
     }
     else
     {
         params->state = mir_window_state_fullscreen;
-        if (output)
-            params->output_id = output_manager->output_id_for(client, output.value());
+        auto const output_id = output ?
+            output_manager->output_id_for(client, output.value()) :
+            std::experimental::nullopt;
+        if (output_id)
+            params->output_id = output_id.value();
         create_scene_surface();
     }
 }
