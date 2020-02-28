@@ -57,11 +57,6 @@ public:
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 
-    auto buffer_from_shm(
-        wl_resource* buffer,
-        std::shared_ptr<Executor> wayland_executor,
-        std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer> override;
-
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
 private:

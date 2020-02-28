@@ -12,17 +12,12 @@ add_library(server_platform_common STATIC
   shm_buffer.cpp
   one_shot_device_observer.h
   one_shot_device_observer.cpp
-  egl_context_executor.cpp
-  egl_context_executor.h
-  buffer_from_wl_shm.h
-  buffer_from_wl_shm.cpp
-)
+  egl_context_executor.cpp egl_context_executor.h)
 
 target_link_libraries(
   server_platform_common
 
   ${KMS_UTILS_STATIC_LIBRARY}
   ${Boost_SYSTEM_LIBRARY}
-  ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
   ${GL_LDFLAGS} ${GL_LIBRARIES}
 )
