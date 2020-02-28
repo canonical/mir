@@ -188,12 +188,8 @@ public:
 
 private:
     std::thread thread;
-    std::mutex mutable mutex;
-    std::condition_variable mutable cv;
-    int fd;
-    std::weak_ptr<mir::scene::Session> session;
     std::function<void(struct ::wl_display* display)> const client_code;
-    std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification;
+    std::function<void(std::weak_ptr<mir::scene::Session> const session)> const connect_notification;
 };
 
 template<typename Base>
@@ -208,15 +204,12 @@ WlInternalClientRunner<Base>::WlInternalClientRunner(
 template<typename Base>
 void WlInternalClientRunner<Base>::run(mir::Server& server)
 {
-    fd = server.open_client_wayland([this](std::shared_ptr<mir::scene::Session> const& mf_session)
+    int fd = server.open_client_wayland([this](std::shared_ptr<mir::scene::Session> const& mf_session)
         {
-            std::lock_guard<decltype(mutex)> lock_guard{mutex};
-            session = std::dynamic_pointer_cast<mir::scene::Session>(mf_session);
-            connect_notification(session);
-            cv.notify_one();
+            connect_notification(std::dynamic_pointer_cast<mir::scene::Session>(mf_session));
         });
 
-    thread = std::thread{[this]
+    thread = std::thread{[this, fd]
         {
             try
             {
