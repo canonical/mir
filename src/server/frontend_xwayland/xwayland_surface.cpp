@@ -714,6 +714,15 @@ void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
         state = cached.state.updated_from(new_state);
     }
     inform_client_of_window_state(state);
+    if (new_state == mir_window_state_minimized || new_state == mir_window_state_minimized)
+    {
+        connection->configure_window(
+            window,
+            std::experimental::nullopt,
+            std::experimental::nullopt,
+            std::experimental::nullopt,
+            XCB_STACK_MODE_BELOW);
+    }
 }
 
 void mf::XWaylandSurface::scene_surface_resized(geometry::Size const& new_size)
