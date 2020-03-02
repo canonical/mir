@@ -696,6 +696,14 @@ auto mf::XWaylandSurface::WindowState::updated_from(MirWindowState state) const 
 void mf::XWaylandSurface::scene_surface_focus_set(bool has_focus)
 {
     xwm->set_focus(window, has_focus);
+    // HACK: A window being focused does not necessarily mean it's on top
+    // TODO: plumb through access to the real stacking order
+    connection->configure_window(
+        window,
+        std::experimental::nullopt,
+        std::experimental::nullopt,
+        std::experimental::nullopt,
+        XCB_STACK_MODE_ABOVE);
 }
 
 void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
