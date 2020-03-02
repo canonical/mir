@@ -22,6 +22,7 @@
 
 #include <mir/fatal.h>
 #include <mir/graphics/display_configuration.h>
+#include <mir/graphics/display_configuration_policy.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/virtual_output.h>
 #include <mir/log.h>
@@ -84,6 +85,7 @@ mgw::Display* the_display = nullptr;
 mgw::Display::Display(
     wl_display* const wl_display,
     std::shared_ptr<GLConfig> const& gl_config,
+    std::shared_ptr<DisplayConfigurationPolicy> const& policy,
     std::shared_ptr<DisplayReport> const& report) :
     DisplayClient{wl_display, gl_config},
     report{report},
@@ -96,6 +98,9 @@ mgw::Display::Display(
 
     std::lock_guard<decltype(the_display_mtx)> lock{the_display_mtx};
     the_display = this;
+    auto const display_config = DisplayClient::display_configuration();
+    policy->apply_to(*display_config);
+    configure(*display_config);
 }
 
 auto mgw::Display::configuration() const -> std::unique_ptr<DisplayConfiguration>
@@ -103,8 +108,9 @@ auto mgw::Display::configuration() const -> std::unique_ptr<DisplayConfiguration
     return DisplayClient::display_configuration();
 }
 
-void mgw::Display::configure(DisplayConfiguration const& /*conf*/)
+void mgw::Display::configure(DisplayConfiguration const& conf)
 {
+    DisplayClient::apply(conf);
 }
 
 void mgw::Display::register_configuration_change_handler(

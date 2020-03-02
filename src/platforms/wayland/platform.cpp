@@ -46,10 +46,10 @@ mgw::Platform::Platform(struct wl_display* const wl_display, std::shared_ptr<mg:
 }
 
 mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
-    std::shared_ptr<DisplayConfigurationPolicy> const&,
+    std::shared_ptr<DisplayConfigurationPolicy> const& policy,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-  return mir::make_module_ptr<mgw::Display>(wl_display, gl_config, report);
+  return mir::make_module_ptr<mgw::Display>(wl_display, gl_config, policy, report);
 }
 
 mg::NativeDisplayPlatform* mgw::Platform::native_display_platform()
