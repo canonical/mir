@@ -371,13 +371,22 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
     }
     else
     {
-        // TODO: only use values specified in the mask
+        geom::Point const top_left{
+            event->value_mask & XCB_CONFIG_WINDOW_X ? geom::X{event->x} : cached.top_left.x,
+            event->value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{event->y} : cached.top_left.y};
+
+        geom::Size const size{
+            event->value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{event->width} : cached.size.width,
+            event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{event->height} : cached.size.height};
+
         connection->configure_window(
             window,
-            geom::Point{event->x, event->y},
-            geom::Size{event->width, event->height},
+            top_left,
+            size,
             std::experimental::nullopt,
             std::experimental::nullopt);
+
+        connection->flush();
     }
 }
 
