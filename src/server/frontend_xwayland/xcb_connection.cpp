@@ -343,7 +343,9 @@ auto mf::XCBConnection::read_property(
 void mf::XCBConnection::configure_window(
     xcb_window_t window,
     std::experimental::optional<geometry::Point> position,
-    std::experimental::optional<geometry::Size> size)
+    std::experimental::optional<geometry::Size> size,
+    std::experimental::optional<xcb_window_t> sibling,
+    std::experimental::optional<xcb_stack_mode_t> stack_mode)
 {
     std::vector<uint32_t> values;
     uint32_t mask = 0;
@@ -360,6 +362,18 @@ void mf::XCBConnection::configure_window(
         mask |= XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
         values.push_back(size.value().width.as_int());
         values.push_back(size.value().height.as_int());
+    }
+
+    if (sibling)
+    {
+        mask |= XCB_CONFIG_WINDOW_SIBLING;
+        values.push_back(sibling.value());
+    }
+
+    if (stack_mode)
+    {
+        mask |= XCB_CONFIG_WINDOW_STACK_MODE;
+        values.push_back(stack_mode.value());
     }
 
     if (!values.empty())

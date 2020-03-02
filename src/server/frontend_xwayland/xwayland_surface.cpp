@@ -371,10 +371,22 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
     }
     else
     {
+        geom::Point const top_left{
+            event->value_mask & XCB_CONFIG_WINDOW_X ? geom::X{event->x} : cached.top_left.x,
+            event->value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{event->y} : cached.top_left.y};
+
+        geom::Size const size{
+            event->value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{event->width} : cached.size.width,
+            event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{event->height} : cached.size.height};
+
         connection->configure_window(
             window,
-            geom::Point{event->x, event->y},
-            geom::Size{event->width, event->height});
+            top_left,
+            size,
+            std::experimental::nullopt,
+            std::experimental::nullopt);
+
+        connection->flush();
     }
 }
 
@@ -583,7 +595,9 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     connection->configure_window(
         window,
         surface->top_left() + surface->content_offset(),
-        surface->content_size());
+        surface->content_size(),
+        std::experimental::nullopt,
+        XCB_STACK_MODE_ABOVE);
 
     {
         std::lock_guard<std::mutex> lock{mutex};
@@ -691,6 +705,14 @@ auto mf::XWaylandSurface::WindowState::updated_from(MirWindowState state) const 
 void mf::XWaylandSurface::scene_surface_focus_set(bool has_focus)
 {
     xwm->set_focus(window, has_focus);
+    // HACK: A window being focused does not necessarily mean it's on top
+    // TODO: plumb through access to the real stacking order
+    connection->configure_window(
+        window,
+        std::experimental::nullopt,
+        std::experimental::nullopt,
+        std::experimental::nullopt,
+        XCB_STACK_MODE_ABOVE);
 }
 
 void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
@@ -701,11 +723,25 @@ void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
         state = cached.state.updated_from(new_state);
     }
     inform_client_of_window_state(state);
+    if (new_state == mir_window_state_minimized || new_state == mir_window_state_minimized)
+    {
+        connection->configure_window(
+            window,
+            std::experimental::nullopt,
+            std::experimental::nullopt,
+            std::experimental::nullopt,
+            XCB_STACK_MODE_BELOW);
+    }
 }
 
 void mf::XWaylandSurface::scene_surface_resized(geometry::Size const& new_size)
 {
-    connection->configure_window(window, std::experimental::nullopt, new_size);
+    connection->configure_window(
+        window,
+        std::experimental::nullopt,
+        new_size,
+        std::experimental::nullopt,
+        std::experimental::nullopt);
     connection->flush();
 }
 
@@ -717,7 +753,12 @@ void mf::XWaylandSurface::scene_surface_moved_to(geometry::Point const& new_top_
         scene_surface = weak_scene_surface.lock();
     }
     auto const content_offset = scene_surface ? scene_surface->content_offset() : geom::Displacement{};
-    connection->configure_window(window, new_top_left + content_offset, std::experimental::nullopt);
+    connection->configure_window(
+        window,
+        new_top_left + content_offset,
+        std::experimental::nullopt,
+        std::experimental::nullopt,
+        std::experimental::nullopt);
     connection->flush();
 }
 
