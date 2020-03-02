@@ -173,7 +173,9 @@ public:
     void configure_window(
         xcb_window_t window,
         std::experimental::optional<geometry::Point> position,
-        std::experimental::optional<geometry::Size> size);
+        std::experimental::optional<geometry::Size> size,
+        std::experimental::optional<xcb_window_t> sibling,
+        std::experimental::optional<xcb_stack_mode_t> stack_mode);
 
     /// Send client message
     /// @{

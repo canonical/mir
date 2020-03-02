@@ -371,10 +371,13 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
     }
     else
     {
+        // TODO: only use values specified in the mask
         connection->configure_window(
             window,
             geom::Point{event->x, event->y},
-            geom::Size{event->width, event->height});
+            geom::Size{event->width, event->height},
+            std::experimental::nullopt,
+            std::experimental::nullopt);
     }
 }
 
@@ -583,7 +586,9 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     connection->configure_window(
         window,
         surface->top_left() + surface->content_offset(),
-        surface->content_size());
+        surface->content_size(),
+        std::experimental::nullopt,
+        XCB_STACK_MODE_ABOVE);
 
     {
         std::lock_guard<std::mutex> lock{mutex};
@@ -705,7 +710,12 @@ void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
 
 void mf::XWaylandSurface::scene_surface_resized(geometry::Size const& new_size)
 {
-    connection->configure_window(window, std::experimental::nullopt, new_size);
+    connection->configure_window(
+        window,
+        std::experimental::nullopt,
+        new_size,
+        std::experimental::nullopt,
+        std::experimental::nullopt);
     connection->flush();
 }
 
@@ -717,7 +727,12 @@ void mf::XWaylandSurface::scene_surface_moved_to(geometry::Point const& new_top_
         scene_surface = weak_scene_surface.lock();
     }
     auto const content_offset = scene_surface ? scene_surface->content_offset() : geom::Displacement{};
-    connection->configure_window(window, new_top_left + content_offset, std::experimental::nullopt);
+    connection->configure_window(
+        window,
+        new_top_left + content_offset,
+        std::experimental::nullopt,
+        std::experimental::nullopt,
+        std::experimental::nullopt);
     connection->flush();
 }
 
