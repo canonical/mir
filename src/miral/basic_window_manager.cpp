@@ -213,7 +213,7 @@ void miral::BasicWindowManager::remove_surface(
 
 void miral::BasicWindowManager::remove_window(Application const& application, miral::WindowInfo const& info)
 {
-    bool const is_active_window{mru_active_windows.top() == info.window()};
+    bool const is_active_window{active_window() == info.window()};
     auto const workspaces_containing_window = workspaces_containing(info.window());
 
     {
@@ -547,7 +547,7 @@ void miral::BasicWindowManager::force_close(Window const& window)
 
 auto miral::BasicWindowManager::active_window() const -> Window
 {
-    return mru_active_windows.top();
+    return allow_active_window ? mru_active_windows.top() : Window{};
 }
 
 void miral::BasicWindowManager::focus_next_application()
@@ -1532,6 +1532,9 @@ void miral::BasicWindowManager::invoke_under_lock(std::function<void()> const& c
 auto miral::BasicWindowManager::select_active_window(Window const& hint) -> miral::Window
 {
     auto const prev_window = active_window();
+
+    // Lomiri "selects" a null Window to implicitly disable the active window
+    allow_active_window = hint;
 
     if (!hint)
     {
