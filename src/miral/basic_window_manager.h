@@ -245,6 +245,7 @@ private:
     uint64_t last_input_event_timestamp{0};
     MirEvent const* last_input_event{nullptr};
     miral::MRUWindowList mru_active_windows;
+    bool allow_active_window = true;
     std::set<Window> fullscreen_surfaces;
     std::vector<std::shared_ptr<DisplayArea>> display_areas; ///< For now these will map 1:1 to outputs, but this should not be assumed
 
