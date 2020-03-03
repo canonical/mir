@@ -41,16 +41,21 @@ public:
     /**
      * Compile and link a fragment-shader fragment into a full shader Program
      *
-     * \param extension_fragment [in]    Fragment to include necessary extensions
+     * \note    As the id needs to be globally unique, we suggest using the address of a local
+     *          static variable as the id.
+     *
+     * \param id [in]                   An opaque ID for this shader. This *must* be globally unique
+     * \param extension_fragment [in]   Fragment to include necessary extensions
      * \param fragment_fragment [in]    The fragment-shader fragment. This must be a GLSL
-     *                                          fragment defining a function:
-     *                                          vec4 sample_to_rgba(in vec2 texcoord)
-     *                                          returning a vector containing the RGBA value at texcoord.
-     *                                          The elements of the uniform array tex[n] will be bound to
-     *                                          GL_TEXTURE0, GL_TEXTURE1, …, GL_TEXTURE(n-1). (n <= 8)
-     * \return  A fully compiled and linked Program
+     *                                  fragment defining a function:
+     *                                  vec4 sample_to_rgba(in vec2 texcoord)
+     *                                  returning a vector containing the RGBA value at texcoord.
+     *                                  The elements of the uniform array tex[n] will be bound to
+     *                                  GL_TEXTURE0, GL_TEXTURE1, …, GL_TEXTURE(n-1). (n <= 8)
+     * \return  A reference to the fully compiled and linked Program
      */
-    virtual std::unique_ptr<Program> compile_fragment_shader(
+    virtual Program& compile_fragment_shader(
+        void* id,
         char const* extension_fragment,
         char const* fragment_fragment) = 0;
 };

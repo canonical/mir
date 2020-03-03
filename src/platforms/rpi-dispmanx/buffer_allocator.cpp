@@ -212,18 +212,15 @@ public:
 
     auto shader(mg::gl::ProgramFactory& factory) const -> mg::gl::Program const& override
     {
-        static std::unique_ptr<mg::gl::Program> shader;
-        if (!shader)
-        {
-            shader = factory.compile_fragment_shader(
-                "",
-                "uniform sampler2D tex;\n"
-                "vec4 sample_to_rgba(in vec2 texcoord)\n"
-                "{\n"
-                "    return texture2D(tex, texcoord);\n"
-                "}\n");
-        }
-        return *shader;
+        static int rgba_shader_tag{0};
+        return factory.compile_fragment_shader(
+            &rgba_shader_tag,
+            "",
+            "uniform sampler2D tex;\n"
+            "vec4 sample_to_rgba(in vec2 texcoord)\n"
+            "{\n"
+            "    return texture2D(tex, texcoord);\n"
+            "}\n");
     }
 
     auto layout() const -> Layout override
