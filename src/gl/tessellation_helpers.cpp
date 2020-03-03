@@ -26,7 +26,6 @@ namespace geom = mir::geometry;
 mgl::Primitive mgl::tessellate_renderable_into_rectangle(
     mg::Renderable const& renderable, geom::Displacement const& offset)
 {
-    auto const& buf_size = renderable.buffer()->size();
     auto rect = renderable.screen_position();
     rect.top_left = rect.top_left - offset;
     GLfloat left = rect.top_left.x.as_int();
@@ -37,10 +36,8 @@ mgl::Primitive mgl::tessellate_renderable_into_rectangle(
     mgl::Primitive rectangle;
     rectangle.type = GL_TRIANGLE_STRIP;
 
-    GLfloat tex_right = static_cast<GLfloat>(rect.size.width.as_int()) /
-                        buf_size.width.as_int();
-    GLfloat tex_bottom = static_cast<GLfloat>(rect.size.height.as_int()) /
-                         buf_size.height.as_int();
+    GLfloat const tex_right = 1.0f;
+    GLfloat const tex_bottom = 1.0f;
 
     auto& vertices = rectangle.vertices;
     vertices[0] = {{left,  top,    0.0f}, {0.0f,      0.0f}};
