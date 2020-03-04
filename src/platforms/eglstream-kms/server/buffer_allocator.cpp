@@ -444,14 +444,12 @@ public:
         std::function<void()>&& on_consumed,
         MirPixelFormat format,
         geom::Size size,
-        Layout layout,
-        std::unique_ptr<mg::gl::Program>& shader)
+        Layout layout)
         : size_{size},
           layout_{layout},
           format{format},
           tex{std::move(tex)},
-          on_consumed{std::move(on_consumed)},
-          shader_{shader}
+          on_consumed{std::move(on_consumed)}
     {
     }
 
@@ -477,19 +475,17 @@ public:
 
     mg::gl::Program const& shader(mg::gl::ProgramFactory& cache) const override
     {
-        if (!shader_)
-        {
-            shader_ = cache.compile_fragment_shader(
-                "#ifdef GL_ES\n"
-                "#extension GL_OES_EGL_image_external : require\n"
-                "#endif\n",
-                "uniform samplerExternalOES tex;\n"
-                "vec4 sample_to_rgba(in vec2 texcoord)\n"
-                "{\n"
-                "    return texture2D(tex, texcoord);\n"
-                "}\n");
-        }
-        return *shader_;
+        static int shader_id{0};
+        return cache.compile_fragment_shader(
+            &shader_id,
+            "#ifdef GL_ES\n"
+            "#extension GL_OES_EGL_image_external : require\n"
+            "#endif\n",
+            "uniform samplerExternalOES tex;\n"
+            "vec4 sample_to_rgba(in vec2 texcoord)\n"
+            "{\n"
+            "    return texture2D(tex, texcoord);\n"
+            "}\n");
     }
 
     void bind() override
@@ -517,7 +513,6 @@ private:
     MirPixelFormat const format;
     BoundEGLStream::TextureHandle tex;
     std::function<void()> on_consumed;
-    std::unique_ptr<mg::gl::Program>& shader_;
 };
 }
 
@@ -565,6 +560,5 @@ mir::graphics::eglstream::BufferAllocator::buffer_from_resource(
         std::move(on_consumed),
         mir_pixel_format_argb_8888,
         geom::Size{width, height},
-        layout,
-        shader);
+        layout);
 }

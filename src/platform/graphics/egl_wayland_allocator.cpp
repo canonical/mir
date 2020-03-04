@@ -218,18 +218,15 @@ public:
 
     mir::graphics::gl::Program const& shader(mir::graphics::gl::ProgramFactory& cache) const override
     {
-        static std::unique_ptr<mg::gl::Program> shader;
-        if (!shader)
-        {
-            shader = cache.compile_fragment_shader(
-                "",
-                "uniform sampler2D tex;\n"
-                "vec4 sample_to_rgba(in vec2 texcoord)\n"
-                "{\n"
-                "    return texture2D(tex, texcoord);\n"
-                "}\n");
-        }
-        return *shader;
+        static int argb_shader{0};
+        return cache.compile_fragment_shader(
+            &argb_shader,
+            "",
+            "uniform sampler2D tex;\n"
+            "vec4 sample_to_rgba(in vec2 texcoord)\n"
+            "{\n"
+            "    return texture2D(tex, texcoord);\n"
+            "}\n");
     }
 
     Layout layout() const override
