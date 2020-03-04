@@ -133,7 +133,7 @@ public:
     {
         if (written_pixels.size() == 0)
         {
-            auto length = buf_size.width.as_int()*buf_size.height.as_int()*MIR_BYTES_PER_PIXEL(buf_pixel_format);
+            auto length = buf_stride.as_int()*buf_size.height.as_int();
             written_pixels.resize(length);
             memset(written_pixels.data(), 0, length);
         }

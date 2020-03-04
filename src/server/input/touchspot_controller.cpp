@@ -30,6 +30,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <cstring>
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;
@@ -111,19 +112,17 @@ private:
 
 mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mi::Scene> const& scene)
-    : touchspot_buffer(allocator->alloc_software_buffer(touchspot_size, touchspot_pixel_format)),
+    : touchspot_buffer{
+          mrs::alloc_buffer_with_content(
+              *allocator,
+              touchspot_image.pixel_data,
+              touchspot_size,
+              geom::Stride{touchspot_image.width * touchspot_image.bytes_per_pixel},
+              touchspot_pixel_format)},
       scene(scene),
       enabled(false),
       renderables_in_use(0)
 {
-    unsigned int const pixels_size = touchspot_size.width.as_uint32_t()*touchspot_size.height.as_uint32_t() *
-        MIR_BYTES_PER_PIXEL(touchspot_pixel_format);
-
-    auto pixel_source = dynamic_cast<mrs::PixelSource*>(touchspot_buffer->native_buffer_base());
-    if (pixel_source)
-        pixel_source->write(touchspot_image.pixel_data, pixels_size);
-    else
-        BOOST_THROW_EXCEPTION(std::logic_error("could not write to buffer for touchspot"));
 }
 
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)

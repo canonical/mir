@@ -48,36 +48,21 @@ namespace
 class BufferCursorImage : public mg::CursorImage
 {
 public:
-    BufferCursorImage(mg::Buffer &buffer, geom::Displacement const& hotspot)
-        : buffer_size(buffer.size()),
+    BufferCursorImage(std::shared_ptr<mg::Buffer> buffer, geom::Displacement const& hotspot)
+        : buffer{mrs::as_read_mappable_buffer(std::move(buffer))},
+          mapping{this->buffer->map_readable()},
           hotspot_(hotspot)
     {
-        auto pixel_source = dynamic_cast<mrs::PixelSource*>(buffer.native_buffer_base());
-        if (pixel_source)
-        {
-            size_t const buffer_size_bytes = buffer_size.width.as_int() * buffer_size.height.as_int()
-                * MIR_BYTES_PER_PIXEL(buffer.pixel_format());
-            pixels = std::unique_ptr<unsigned char[]>(new unsigned char[buffer_size_bytes]);
-
-            pixel_source->read([this, buffer_size_bytes](unsigned char const* buffer_pixels)
-            {
-                memcpy(pixels.get(), buffer_pixels, buffer_size_bytes);
-            });
-        }
-        else
-        {
-            BOOST_THROW_EXCEPTION(std::logic_error("Could not read cursor image data from buffer"));
-        }
     }
 
     auto as_argb_8888() const -> void const* override
     {
-        return pixels.get();
+        return mapping->data();
     }
 
     auto size() const -> geom::Size override
     {
-        return buffer_size;
+        return mapping->size();
     }
 
     auto hotspot() const -> geom::Displacement override
@@ -86,9 +71,9 @@ public:
     }
 
 private:
-    geom::Size const buffer_size;
+    std::shared_ptr<mrs::ReadMappableBuffer> const buffer;
+    std::unique_ptr<mrs::Mapping<unsigned char const>> const mapping;
     geom::Displacement const hotspot_;
-    std::unique_ptr<unsigned char[]> pixels;
 };
 }
 
@@ -354,7 +339,7 @@ void WlSurfaceCursor::apply_latest_buffer()
         if (stream->has_submitted_buffer())
         {
             auto const cursor_image = std::make_shared<BufferCursorImage>(
-                *stream->lock_compositor_buffer(this),
+                stream->lock_compositor_buffer(this),
                 hotspot);
             surface->set_cursor_image(cursor_image);
         }

@@ -125,7 +125,7 @@ public:
     /// \deprecated can be removed along with mirclient
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const& stream,
                            geometry::Displacement const& hotspot) override;
-    void set_cursor_from_buffer(graphics::Buffer& buffer,
+    void set_cursor_from_buffer(std::shared_ptr<graphics::Buffer> buffer,
                                 geometry::Displacement const& hotspot);
 
     void request_client_surface_close() override;

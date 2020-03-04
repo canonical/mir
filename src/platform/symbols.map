@@ -190,3 +190,11 @@ MIRPLATFORM_2.0 {
  };
  local: *;
 };
+
+MIRPLATFORM_2.1 {
+ global:
+  extern "C++" {
+    mir::renderer::software::as_read_mappable_buffer*;
+    mir::renderer::software::alloc_buffer_with_content*;
+ };
+} MIRPLATFORM_2.0;
