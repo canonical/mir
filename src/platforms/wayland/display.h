@@ -50,6 +50,8 @@ class TouchInput;
 }
 namespace graphics
 {
+class DisplayConfigurationPolicy;
+
 namespace wayland
 {
 class Display : public mir::graphics::Display, public mir::graphics::NativeDisplay,
@@ -59,6 +61,7 @@ public:
     Display(
         wl_display* const wl_display,
         std::shared_ptr<GLConfig> const& gl_config,
+        std::shared_ptr<DisplayConfigurationPolicy> const& policy,
         std::shared_ptr<DisplayReport> const& report);
 
     ~Display();
