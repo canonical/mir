@@ -41,10 +41,12 @@ public:
     /**
      * Compile and link a fragment-shader fragment into a full shader Program
      *
-     * \note    As the id needs to be globally unique, we suggest using the address of a local
-     *          static variable as the id.
+     * \note    The ID is used to identify this shader program for caching purposes. Accidentally
+     *          using an ID which is already used by another shader will result in incorrect rendering.
+     *          We recommend using the address of a static local variable as the ID to guarantee
+     *          uniqueness.
      *
-     * \param id [in]                   An opaque ID for this shader. This *must* be globally unique
+     * \param id [in]                   An opaque ID for this shader.
      * \param extension_fragment [in]   Fragment to include necessary extensions
      * \param fragment_fragment [in]    The fragment-shader fragment. This must be a GLSL
      *                                  fragment defining a function:
