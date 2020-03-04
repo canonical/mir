@@ -104,6 +104,8 @@ struct MockCursor : public mg::Cursor
     void move_to(geom::Point) override {}
 };
 
+char const* const dummy_cursor_data[16 * 16 * 4] = {0};
+
 struct NamedCursorImage : public mg::CursorImage
 {
     NamedCursorImage(std::string const& name)
@@ -111,7 +113,7 @@ struct NamedCursorImage : public mg::CursorImage
     {
     }
 
-    void const* as_argb_8888() const override { return nullptr; }
+    void const* as_argb_8888() const override { return dummy_cursor_data; }
     geom::Size size() const override { return geom::Size{16, 16}; }
     geom::Displacement hotspot() const override { return geom::Displacement{0, 0}; }
 
