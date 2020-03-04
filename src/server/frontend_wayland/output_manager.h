@@ -47,7 +47,7 @@ public:
 
     void handle_configuration_changed(graphics::DisplayConfigurationOutput const& /*config*/);
 
-    bool matches_client_resource(wl_client* client, struct wl_resource* resource) const;
+    void for_each_output_resource_bound_by(wl_client* client, std::function<void(wl_resource*)> const& functor);
 
 private:
     static void send_initial_config(wl_resource* client_resource, graphics::DisplayConfigurationOutput const& config);
@@ -70,11 +70,10 @@ public:
     OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config, std::shared_ptr<Executor> const& executor);
     ~OutputManager();
 
-    auto output_id_for(wl_client* client, std::experimental::optional<struct wl_resource*> const& /*output*/) const
-        -> optional_value<graphics::DisplayConfigurationOutputId>;
+    auto output_id_for(wl_client* client, wl_resource* output) const
+        -> std::experimental::optional<graphics::DisplayConfigurationOutputId>;
 
-    auto output_id_for(wl_client* client, struct wl_resource* /*output*/) const
-        -> graphics::DisplayConfigurationOutputId;
+    auto output_for(graphics::DisplayConfigurationOutputId id) -> std::experimental::optional<Output*>;
 
     auto display_config() const -> std::shared_ptr<MirDisplay> {return display_config_;}
 

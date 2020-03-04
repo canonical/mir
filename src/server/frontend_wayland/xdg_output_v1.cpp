@@ -104,7 +104,14 @@ void mf::XdgOutputManagerV1::Instance::destroy()
 void mf::XdgOutputManagerV1::Instance::get_xdg_output(wl_resource* new_output, wl_resource* output)
 {
     bool found = false;
-    auto const output_id = output_manager->output_id_for(client, output);
+    auto const output_id_opt = output_manager->output_id_for(client, output);
+    if (!output_id_opt)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "No output for wl_output@" + std::to_string(wl_resource_get_id(output))));
+    }
+    auto const output_id = output_id_opt.value();
+
     output_manager->display_config()->for_each_output(
         [&found, output, output_id, new_output](mg::DisplayConfigurationOutput const& config)
         {
