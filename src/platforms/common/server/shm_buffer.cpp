@@ -232,15 +232,15 @@ auto mgc::MemoryBackedShmBuffer::native_buffer_handle() const -> std::shared_ptr
 
 mg::gl::Program const& mgc::ShmBuffer::shader(mg::gl::ProgramFactory& cache) const
 {
-    static auto const program = cache.compile_fragment_shader(
+    static int argb_shader{0};
+    return cache.compile_fragment_shader(
+        &argb_shader,
         "",
         "uniform sampler2D tex;\n"
         "vec4 sample_to_rgba(in vec2 texcoord)\n"
         "{\n"
         "    return texture2D(tex, texcoord);\n"
         "}\n");
-
-    return *program;
 }
 
 auto mgc::ShmBuffer::layout() const -> Layout

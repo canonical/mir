@@ -141,15 +141,16 @@ void mgm::GBMBuffer::bind_for_write()
 mg::gl::Program const& mgm::GBMBuffer::shader(
     mg::gl::ProgramFactory& cache) const
 {
-    static auto const program = cache.compile_fragment_shader(
+    static int argb_program{0};
+
+    return cache.compile_fragment_shader(
+        &argb_program,
         "",
         "uniform sampler2D tex;\n"
         "vec4 sample_to_rgba(in vec2 texcoord)\n"
         "{\n"
         "    return texture2D(tex, texcoord);\n"
         "}\n");
-
-    return *program;
 }
 
 mir::graphics::gl::Texture::Layout mgm::GBMBuffer::layout() const

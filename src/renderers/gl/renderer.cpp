@@ -204,11 +204,24 @@ public:
     {
     }
 
-    std::unique_ptr<mir::graphics::gl::Program>
-    compile_fragment_shader(
-        char const* extension_fragment,
-        char const* fragment_fragment) override
+    mir::graphics::gl::Program&
+        compile_fragment_shader(
+            void* id,
+            char const* extension_fragment,
+            char const* fragment_fragment) override
     {
+        /* NOTE: This does not lock the programs vector as there is one ProgramFactory instance
+         * per rendering thread.
+         */
+
+        for (auto const& pair : programs)
+        {
+            if (pair.first == id)
+            {
+                return *pair.second;
+            }
+        }
+
         std::stringstream opaque_fragment;
         opaque_fragment
             <<
@@ -252,9 +265,11 @@ public:
         ShaderHandle const alpha_shader{
             compile_shader(GL_FRAGMENT_SHADER, alpha_fragment.str().c_str())};
 
-        return std::make_unique<::Program>(
+        programs.emplace_back(id, std::make_unique<::Program>(
             link_shader(vertex_shader, opaque_shader),
-            link_shader(vertex_shader, alpha_shader));
+            link_shader(vertex_shader, alpha_shader)));
+
+        return *programs.back().second;
 
         // We delete opaque_shader and alpha_shader here. This is fine; it only marks them
         // for deletion. GL will only delete them once the GL Program they're linked in is destroyed.
@@ -310,6 +325,7 @@ private:
     }
 
     ShaderHandle const vertex_shader;
+    std::vector<std::pair<void*, std::unique_ptr<::Program>>> programs;
     // GL requires us to synchronise multi-threaded access to the shader APIs.
     std::mutex compilation_mutex;
 };
