@@ -49,8 +49,7 @@ public:
 
     void setup(GBMHelper const& gbm);
     void setup(GBMHelper const& gbm, EGLContext shared_context);
-    void setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
-               EGLContext shared_context);
+    void setup(GBMHelper const& gbm, gbm_surface* surface_gbm, EGLContext shared_context, bool owns_egl);
 
     bool swap_buffers();
     bool make_current() const;

@@ -25,7 +25,10 @@
 #include "mir/fatal.h"
 #include "mir/log.h"
 #include "native_buffer.h"
+#include "display_helpers.h"
+#include "egl_helper.h"
 #include "mir/graphics/egl_error.h"
+#include "mir/graphics/gl_config.h"
 
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>
@@ -43,6 +46,7 @@
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
+namespace mgmh = mir::graphics::mesa::helpers;
 
 mgm::GBMOutputSurface::FrontBuffer::FrontBuffer()
     : surf{nullptr},
@@ -212,89 +216,53 @@ private:
     GLuint buf_id;
 };
 
+class NoAuxGlConfig : public mg::GLConfig
+{
+public:
+    int depth_buffer_bits() const override
+    {
+        return 0;
+    }
+    int stencil_buffer_bits() const override
+    {
+        return 0;
+    }
+};
+
 class EGLBufferCopier
 {
 public:
     EGLBufferCopier(
-        int drm_fd,
+        mir::Fd const& drm_fd,
         uint32_t width,
         uint32_t height,
-        uint32_t format)
+        uint32_t /*format*/)
         : eglCreateImageKHR{
               reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"))},
           eglDestroyImageKHR{
               reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"))},
           glEGLImageTargetTexture2DOES{
               reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))},
-          device{gbm_create_device(drm_fd), &gbm_device_destroy},
+          device{drm_fd},
           width{width},
           height{height},
-          surface{create_scanout_surface(*device, width, height, format)}
+          surface{device.create_scanout_surface(width, height, false)},
+          egl{NoAuxGlConfig{}}
     {
+        egl.setup(device, surface.get(), EGL_NO_CONTEXT, true);
+
         require_gl_extensions({
             "GL_OES_EGL_image"
         });
 
-        EGLint const config_attr[] = {
-            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-            EGL_RED_SIZE, 5,
-            EGL_GREEN_SIZE, 5,
-            EGL_BLUE_SIZE, 5,
-            EGL_ALPHA_SIZE, 0,
-            EGL_DEPTH_SIZE, 0,
-            EGL_STENCIL_SIZE, 0,
-            EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
-            EGL_NONE
-        };
-
-        static const EGLint required_egl_version_major = 1;
-        static const EGLint required_egl_version_minor = 4;
-
-        EGLint num_egl_configs;
-        EGLConfig egl_config;
-
-        display = eglGetDisplay(static_cast<EGLNativeDisplayType>(device.get()));
-        if (display == EGL_NO_DISPLAY)
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get EGL display"));
-
-        EGLint major, minor;
-
-        if (eglInitialize(display, &major, &minor) == EGL_FALSE)
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialize EGL display"));
-
-        if ((major < required_egl_version_major) ||
-            (major == required_egl_version_major && minor < required_egl_version_minor))
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error("Incompatible EGL version"));
-        }
-
         require_egl_extensions(
-            display,
+            eglGetCurrentDisplay(),
             {
                 "EGL_KHR_image_base",
                 "EGL_EXT_image_dma_buf_import"
-            });
+        });
 
-        if (eglChooseConfig(display, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
-            num_egl_configs != 1)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to choose ARGB EGL config"));
-        }
-
-        eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
-        static const EGLint context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
-            EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
-            EGL_NONE
-        };
-
-        context = eglCreateContext(display, egl_config, EGL_NO_CONTEXT, context_attr);
-        if (context == EGL_NO_CONTEXT)
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
-
-        egl_surface = eglCreateWindowSurface(display, egl_config, surface.get(), nullptr);
-        eglMakeCurrent(display, egl_surface, egl_surface, context);
+        egl.make_current();
 
         auto vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vshader, nullptr);
@@ -379,18 +347,14 @@ public:
 
     ~EGLBufferCopier()
     {
-        eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context);
+        egl.make_current();
         vert_data = nullptr;
         tex_data = nullptr;
-        eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        eglDestroySurface(display, egl_surface);
-        eglDestroyContext(display, context);
-        eglTerminate(display);
     }
 
     mgm::GBMOutputSurface::FrontBuffer copy_front_buffer_from(mgm::GBMOutputSurface::FrontBuffer&& from)
     {
-        eglMakeCurrent(display, egl_surface, egl_surface, context);
+        egl.make_current();
         mir::Fd const dma_buf{gbm_bo_get_fd(from)};
 
         glUseProgram(prog);
@@ -406,7 +370,7 @@ public:
         };
 
         auto image = eglCreateImageKHR(
-            display,
+            eglGetCurrentDisplay(),
             EGL_NO_CONTEXT,
             EGL_LINUX_DMA_BUF_EXT,
             nullptr,
@@ -433,47 +397,25 @@ public:
         GLubyte const idx[] = { 0, 1, 3, 2 };
         glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, idx);
 
-        if (eglSwapBuffers(display, egl_surface) != EGL_TRUE)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to swap bounce buffers"));
-        }
+        egl.swap_buffers();
 
-        eglDestroyImageKHR(display, image);
+        eglDestroyImageKHR(eglGetCurrentDisplay(), image);
 
-        eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        egl.release_current();
         return mgm::GBMOutputSurface::FrontBuffer(surface.get());
     }
 
     private:
-    static mgm::GBMSurfaceUPtr create_scanout_surface(
-        gbm_device& on,
-        uint32_t width,
-        uint32_t height,
-        uint32_t format)
-    {
-        auto* const device = &on;
-
-        return {
-            gbm_surface_create(
-                device,
-                width,
-                height,
-                format,
-                GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING),
-            &gbm_surface_destroy};
-    }
 
     PFNEGLCREATEIMAGEKHRPROC const eglCreateImageKHR;
     PFNEGLDESTROYIMAGEKHRPROC const eglDestroyImageKHR;
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const glEGLImageTargetTexture2DOES;
 
-    std::unique_ptr<gbm_device, decltype(&gbm_device_destroy)> const device;
+    mgmh::GBMHelper const device;
     uint32_t const width;
     uint32_t const height;
     mgm::GBMSurfaceUPtr const surface;
-    EGLDisplay display;
-    EGLContext context;
-    EGLSurface egl_surface;
+    mgmh::EGLHelper egl;
     GLuint prog;
     GLuint tex;
     GLint attrtex;
@@ -521,7 +463,7 @@ mgm::DisplayBuffer::DisplayBuffer(
         get_front_buffer = std::bind(
             std::mem_fn(&EGLBufferCopier::copy_front_buffer_from),
             std::make_shared<EGLBufferCopier>(
-                outputs.front()->drm_fd(),
+                mir::Fd{mir::IntOwnedFd{outputs.front()->drm_fd()}},
                 surface.size().width.as_int(),
                 surface.size().height.as_int(),
                 GBM_FORMAT_XRGB8888),

@@ -333,7 +333,7 @@ mgmh::GBMHelper::GBMHelper(mir::Fd const& drm_fd)
 mgm::GBMSurfaceUPtr mgmh::GBMHelper::create_scanout_surface(
     uint32_t width,
     uint32_t height,
-    bool sharable)
+    bool sharable) const
 {
     auto format_flags = GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
 
