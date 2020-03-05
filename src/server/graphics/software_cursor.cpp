@@ -153,35 +153,28 @@ void mg::SoftwareCursor::show()
 
 void mg::SoftwareCursor::show(CursorImage const& cursor_image)
 {
-    std::shared_ptr<detail::CursorRenderable> new_renderable;
-    std::shared_ptr<detail::CursorRenderable> old_renderable;
-    bool old_visibility = false;
-    // Do a lock dance to make this function threadsafe,
-    // while avoiding calling scene methods under lock
+    std::shared_ptr<detail::CursorRenderable> to_add;
+    std::shared_ptr<detail::CursorRenderable> to_remove;
+
     {
         geom::Point position{0,0};
         std::lock_guard<std::mutex> lg{guard};
         if (renderable)
             position = renderable->screen_position().top_left;
-        new_renderable = create_renderable_for(cursor_image, position);
-        old_visibility = visible;
+        to_add = create_renderable_for(cursor_image, position);
+        if (visible && renderable)
+            to_remove = renderable;
+        renderable = to_add;
+        hotspot = cursor_image.hotspot();
         visible = true;
     }
 
     // Add the new renderable first, then remove the old one to avoid
     // visual glitches
-    scene->add_input_visualization(new_renderable);
+    scene->add_input_visualization(to_add);
 
-    // The second part of the lock dance
-    {
-        std::lock_guard<std::mutex> lg{guard};
-        old_renderable = renderable;
-        renderable = new_renderable;
-        hotspot = cursor_image.hotspot();
-    }
-
-    if (old_renderable && old_visibility)
-        scene->remove_input_visualization(old_renderable);
+    if (to_remove)
+        scene->remove_input_visualization(to_remove);
 }
 
 std::shared_ptr<mg::detail::CursorRenderable>
