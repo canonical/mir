@@ -65,6 +65,12 @@ inline constexpr Size operator*(Size const& size, Scalar scale)
     return scale*size;
 }
 
+template<typename Scalar>
+inline constexpr Size operator/(Size const& size, Scalar scale)
+{
+    return Size{size.width / scale, size.height / scale};
+}
+
 inline constexpr Size as_size(Point const& point)
 {
     return Size{point.x.as_int(), point.y.as_int()};
