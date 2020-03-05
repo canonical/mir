@@ -45,7 +45,7 @@ mgmh::EGLHelper::EGLHelper(
     EGLContext shared_context)
     : EGLHelper(gl_config)
 {
-    setup(gbm, surface, shared_context);
+    setup(gbm, surface, shared_context, false);
 }
 
 mgmh::EGLHelper::EGLHelper(EGLHelper&& from)
@@ -101,8 +101,11 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 }
 
-void mgmh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
-                            EGLContext shared_context)
+void mgmh::EGLHelper::setup(
+    GBMHelper const& gbm,
+    gbm_surface* surface_gbm,
+    EGLContext shared_context,
+    bool owns_egl)
 {
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
@@ -114,7 +117,7 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
     };
 
     // TODO: Take the required format as a parameter, so we can select the framebuffer format.
-    setup_internal(gbm, false, GBM_FORMAT_XRGB8888);
+    setup_internal(gbm, owns_egl, GBM_FORMAT_XRGB8888);
 
     egl_surface = platform_base.eglCreatePlatformWindowSurface(
         egl_display,
