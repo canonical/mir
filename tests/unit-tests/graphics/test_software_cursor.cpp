@@ -174,6 +174,43 @@ TEST_F(SoftwareCursor, is_removed_from_scene_on_destruction)
     cursor.show(stub_cursor_image);
 }
 
+TEST_F(SoftwareCursor, tolerates_being_hidden_while_being_shown)
+{
+    using namespace testing;
+
+    InSequence s;
+    EXPECT_CALL(mock_input_scene, add_input_visualization(_))
+        .WillOnce(Invoke([&](auto)
+            {
+                cursor.hide(); // should do nothing
+            }));
+    EXPECT_CALL(mock_input_scene, remove_input_visualization(_)).Times(0);
+
+    cursor.show(stub_cursor_image);
+
+    Mock::VerifyAndClearExpectations(&mock_input_scene);
+}
+
+TEST_F(SoftwareCursor, tolerates_being_hidden_while_being_reshown)
+{
+    using namespace testing;
+
+    InSequence s;
+    EXPECT_CALL(mock_input_scene, add_input_visualization(_));
+    EXPECT_CALL(mock_input_scene, remove_input_visualization(_));
+    EXPECT_CALL(mock_input_scene, add_input_visualization(_))
+        .WillOnce(Invoke([&](auto)
+            {
+                cursor.hide(); // should do nothing
+            }));
+
+    cursor.show(stub_cursor_image);
+    cursor.hide();
+    cursor.show();
+
+    Mock::VerifyAndClearExpectations(&mock_input_scene);
+}
+
 TEST_F(SoftwareCursor, is_removed_from_scene_when_hidden)
 {
     using namespace testing;
