@@ -175,6 +175,16 @@ inline constexpr DeltaX operator*(DeltaX const& dx, Scalar scale) { return scale
 template<typename Scalar>
 inline constexpr DeltaY operator*(DeltaY const& dy, Scalar scale) { return scale*dy; }
 
+// Dividing by a scaler value is fine
+template<typename Scalar>
+inline constexpr Width operator/(Width const& w, Scalar scale) { return Width{w.as_int() / scale}; }
+template<typename Scalar>
+inline constexpr Height operator/(Height const& h, Scalar scale) { return Height{h.as_int() / scale}; }
+template<typename Scalar>
+inline constexpr DeltaX operator/(DeltaX const& dx, Scalar scale) { return DeltaX{dx.as_int() / scale}; }
+template<typename Scalar>
+inline constexpr DeltaY operator/(DeltaY const& dy, Scalar scale) { return DeltaY{dy.as_int() / scale}; }
+
 // Converting between types is fine, as long as they are along the same axis
 inline constexpr Width as_width(DeltaX const& dx) { return Width{dx.as_int()}; }
 inline constexpr Height as_height(DeltaY const& dy) { return Height{dy.as_int()}; }
