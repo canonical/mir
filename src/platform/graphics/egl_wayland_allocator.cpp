@@ -20,6 +20,7 @@
 #include "mir/graphics/egl_wayland_allocator.h"
 
 #include <boost/throw_exception.hpp>
+#include <mutex>
 
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
@@ -237,6 +238,8 @@ public:
     void bind() override
     {
         glBindTexture(GL_TEXTURE_2D, tex);
+
+        std::lock_guard<decltype(consumed_mutex)> lock(consumed_mutex);
         on_consumed();
         on_consumed = [](){};
     }
@@ -248,6 +251,7 @@ private:
     std::shared_ptr<mir::renderer::gl::Context> const ctx;
     GLuint const tex;
 
+    std::mutex consumed_mutex;
     std::function<void()> on_consumed;
     std::function<void()> const on_release;
 
