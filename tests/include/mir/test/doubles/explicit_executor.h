@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_EXPLICIT_EXECUTOR_H_
 
 #include "mir/executor.h"
+#include "gtest/gtest.h"
 
 #include <mutex>
 
@@ -34,6 +35,17 @@ class ExplicitExectutor
     : public Executor
 {
 public:
+    ~ExplicitExectutor()
+    {
+        if (!work_items.empty())
+        {
+            ADD_FAILURE() <<
+                "ExplicitExectutor destroyed with " <<
+                work_items.size() <<
+                " work items left in the queue";
+        }
+    }
+
     void spawn(std::function<void()>&& work) override
     {
         std::lock_guard<std::mutex> lock{mutex};
