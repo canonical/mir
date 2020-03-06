@@ -26,6 +26,7 @@
 
 namespace mir
 {
+class Executor;
 namespace input { class Scene; }
 namespace graphics
 {
@@ -42,6 +43,7 @@ class SoftwareCursor : public Cursor
 public:
     SoftwareCursor(
         std::shared_ptr<GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<Executor> const& scene_executor,
         std::shared_ptr<input::Scene> const& scene);
     ~SoftwareCursor();
 
@@ -57,6 +59,11 @@ private:
     std::shared_ptr<GraphicBufferAllocator> const allocator;
     std::shared_ptr<input::Scene> const scene;
     MirPixelFormat const format;
+
+    /// If input visualisations are removed from the scene before they are added, the scene throws and Mir crashes
+    /// We don't want to call into the scene under lock, so we make these calls on with an executor
+    std::shared_ptr<Executor> const scene_executor;
+
     std::mutex guard;
     std::shared_ptr<detail::CursorRenderable> renderable;
     bool visible;
