@@ -223,7 +223,12 @@ void mgc::ShmBuffer::bind()
 void mgc::MemoryBackedShmBuffer::bind()
 {
     mgc::ShmBuffer::bind();
-    upload_to_texture(pixels.get(), stride_);
+    std::lock_guard<decltype(uploaded_mutex)> lock{uploaded_mutex};
+    if (!uploaded)
+    {
+        upload_to_texture(pixels.get(), stride_);
+        uploaded = true;
+    }
 }
 
 auto mgc::MemoryBackedShmBuffer::native_buffer_handle() const -> std::shared_ptr<mg::NativeBuffer>

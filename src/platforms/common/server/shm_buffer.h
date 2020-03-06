@@ -100,6 +100,8 @@ public:
 private:
     geometry::Stride const stride_;
     std::unique_ptr<unsigned char[]> const pixels;
+    std::mutex uploaded_mutex;
+    bool uploaded{false};
 };
 
 }
