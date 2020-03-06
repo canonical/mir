@@ -297,28 +297,6 @@ TEST_F(SoftwareCursor, notifies_scene_when_moving)
     cursor.move_to({22,23});
 }
 
-TEST_F(SoftwareCursor, multiple_shows_just_show)
-{
-    using namespace testing;
-
-    InSequence s;
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_));
-
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_));
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_));
-
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_)); // removal on destruction
-
-    cursor.show(stub_cursor_image);
-    executor.execute();
-    cursor.hide();
-    executor.execute();
-    cursor.show(stub_cursor_image);
-    executor.execute();
-    cursor.show(stub_cursor_image);
-}
-
-
 TEST_F(SoftwareCursor, creates_renderable_with_filled_buffer)
 {
     using namespace testing;
