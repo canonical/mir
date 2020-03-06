@@ -47,7 +47,6 @@ public:
         std::shared_ptr<input::Scene> const& scene);
     ~SoftwareCursor();
 
-    void show() override;
     void show(CursorImage const& cursor_image) override;
     void hide() override;
     void move_to(geometry::Point position) override;

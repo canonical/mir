@@ -138,20 +138,6 @@ mg::SoftwareCursor::~SoftwareCursor()
     hide();
 }
 
-void mg::SoftwareCursor::show()
-{
-    std::lock_guard<std::mutex> lg{guard};
-
-    if (!visible)
-    {
-        visible = true;
-        scene_executor->spawn([scene = scene, to_add = renderable]()
-            {
-                scene->add_input_visualization(to_add);
-            });
-    }
-}
-
 void mg::SoftwareCursor::show(CursorImage const& cursor_image)
 {
     std::lock_guard<std::mutex> lg{guard};
