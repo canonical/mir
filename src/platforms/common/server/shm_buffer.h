@@ -31,6 +31,8 @@
 
 #include MIR_SERVER_GL_H
 
+#include <mutex>
+
 namespace mir
 {
 class ShmFile;
@@ -71,6 +73,7 @@ private:
     geometry::Size const size_;
     MirPixelFormat const pixel_format_;
     std::shared_ptr<EGLContextExecutor> const egl_delegate;
+    std::mutex tex_id_mutex;
     GLuint tex_id{0};
 };
 

@@ -203,6 +203,7 @@ mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
 
 void mgc::ShmBuffer::bind()
 {
+    std::lock_guard<decltype(tex_id_mutex)> lock{tex_id_mutex};
     bool const needs_initialisation = tex_id == 0;
     if (needs_initialisation)
     {
