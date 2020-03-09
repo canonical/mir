@@ -254,3 +254,13 @@ Status XGetGeometry(Display* display, Drawable d,
                                      width_return, height_return,
                                      border_width_return, depth_return);
 }
+
+extern "C" void XFixesHideCursor(Display *dpy, Window win)
+{
+    global_mock->XFixesHideCursor(dpy, win);
+}
+
+extern "C" void XFixesShowCursor(Display *dpy, Window win)
+{
+    global_mock->XFixesShowCursor(dpy, win);
+}

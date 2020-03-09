@@ -90,6 +90,8 @@ public:
     MOCK_METHOD3(XInternAtom, Atom(Display*, const char*, Bool));
     MOCK_METHOD4(XSetWMProtocols, Status(Display*, Window, Atom*, int));
     MOCK_METHOD9(XGetGeometry, Status(Display*, Drawable, Window*, int*, int*, unsigned int*, unsigned int*, unsigned int*, unsigned int*));
+    MOCK_METHOD2(XFixesHideCursor, void(Display *dpy, Window win));
+    MOCK_METHOD2(XFixesShowCursor, void(Display *dpy, Window win));
 
     FakeX11Resources fake_x11;
 };
