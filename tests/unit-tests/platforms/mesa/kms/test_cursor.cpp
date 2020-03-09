@@ -752,18 +752,6 @@ TEST_F(MesaCursorTest, show_with_param_places_cursor_on_output)
     cursor.show(stub_image);
 }
 
-TEST_F(MesaCursorTest, show_without_param_places_cursor_on_output_output)
-{
-    using namespace testing;
-    EXPECT_CALL(*output_container.outputs[0], clear_cursor());
-
-    cursor.hide();
-    output_container.verify_and_clear_expectations();
-
-    EXPECT_CALL(*output_container.outputs[0], set_cursor(_));
-    cursor.show();
-}
-
 TEST_F(MesaCursorTest, show_cursor_sets_cursor_with_hotspot)
 {
     using namespace testing;

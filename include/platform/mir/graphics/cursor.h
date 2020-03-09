@@ -33,7 +33,6 @@ class CursorImage;
 class Cursor
 {
 public:
-    virtual void show() = 0;
     virtual void show(CursorImage const& cursor_image) = 0;
     virtual void hide() = 0;
 

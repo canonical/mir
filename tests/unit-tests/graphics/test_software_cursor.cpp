@@ -22,6 +22,7 @@
 
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_input_scene.h"
+#include "mir/test/doubles/explicit_executor.h"
 
 #include "mir/test/fake_shared.h"
 
@@ -118,15 +119,26 @@ public:
     MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
 };
 
+class ExplicitExectutor : public mtd::ExplicitExectutor
+{
+public:
+    ~ExplicitExectutor()
+    {
+        execute();
+    }
+};
+
 struct SoftwareCursor : testing::Test
 {
     StubCursorImage stub_cursor_image{{3,4}};
     StubCursorImage another_stub_cursor_image{{10,9}};
     testing::NiceMock<MockBufferAllocator> mock_buffer_allocator;
     testing::NiceMock<MockInputScene> mock_input_scene;
+    ExplicitExectutor executor;
 
     mg::SoftwareCursor cursor{
         mt::fake_shared(mock_buffer_allocator),
+        mt::fake_shared(executor),
         mt::fake_shared(mock_input_scene)};
 };
 
@@ -174,6 +186,47 @@ TEST_F(SoftwareCursor, is_removed_from_scene_on_destruction)
     cursor.show(stub_cursor_image);
 }
 
+TEST_F(SoftwareCursor, tolerates_being_hidden_while_being_shown)
+{
+    using namespace testing;
+
+    InSequence s;
+    EXPECT_CALL(mock_input_scene, add_input_visualization(_))
+        .WillOnce(Invoke([&](auto)
+            {
+                cursor.hide(); // should do nothing
+            }));
+    EXPECT_CALL(mock_input_scene, remove_input_visualization(_)).Times(0);
+
+    cursor.show(stub_cursor_image);
+    executor.execute();
+
+    Mock::VerifyAndClearExpectations(&mock_input_scene);
+}
+
+TEST_F(SoftwareCursor, tolerates_being_hidden_while_being_reshown)
+{
+    using namespace testing;
+
+    InSequence s;
+    EXPECT_CALL(mock_input_scene, add_input_visualization(_));
+    EXPECT_CALL(mock_input_scene, remove_input_visualization(_));
+    EXPECT_CALL(mock_input_scene, add_input_visualization(_))
+        .WillOnce(Invoke([&](auto)
+            {
+                cursor.hide(); // should do nothing
+            }));
+
+    cursor.show(stub_cursor_image);
+    executor.execute();
+    cursor.hide();
+    executor.execute();
+    cursor.show(stub_cursor_image);
+    executor.execute();
+
+    Mock::VerifyAndClearExpectations(&mock_input_scene);
+}
+
 TEST_F(SoftwareCursor, is_removed_from_scene_when_hidden)
 {
     using namespace testing;
@@ -183,7 +236,9 @@ TEST_F(SoftwareCursor, is_removed_from_scene_when_hidden)
     EXPECT_CALL(mock_input_scene, remove_input_visualization(_));
 
     cursor.show(stub_cursor_image);
+    executor.execute();
     cursor.hide();
+    executor.execute();
 
     Mock::VerifyAndClearExpectations(&mock_input_scene);
 }
@@ -221,9 +276,11 @@ TEST_F(SoftwareCursor, moves_scene_renderable_offset_by_hotspot_when_moved)
         .WillOnce(SaveArg<0>(&cursor_renderable));
 
     cursor.show(stub_cursor_image);
+    executor.execute();
 
     geom::Point const new_position{12,34};
     cursor.move_to(new_position);
+    executor.execute();
 
     EXPECT_THAT(cursor_renderable->screen_position().top_left,
                 Eq(new_position - stub_cursor_image.hotspot()));
@@ -236,27 +293,9 @@ TEST_F(SoftwareCursor, notifies_scene_when_moving)
     EXPECT_CALL(mock_input_scene, emit_scene_changed());
 
     cursor.show(stub_cursor_image);
+    executor.execute();
     cursor.move_to({22,23});
 }
-
-TEST_F(SoftwareCursor, multiple_shows_just_show)
-{
-    using namespace testing;
-
-    InSequence s;
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_));
-
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_));
-    EXPECT_CALL(mock_input_scene, add_input_visualization(_));
-
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_)); // removal on destruction
-
-    cursor.show(stub_cursor_image);
-    cursor.hide();
-    cursor.show();
-    cursor.show();
-}
-
 
 TEST_F(SoftwareCursor, creates_renderable_with_filled_buffer)
 {
@@ -274,6 +313,7 @@ TEST_F(SoftwareCursor, creates_renderable_with_filled_buffer)
         WillOnce(SaveArg<0>(&cursor_renderable));
 
     cursor.show(stub_cursor_image);
+    executor.execute();
 
     auto buffer = static_cast<mtd::StubBuffer*>(cursor_renderable->buffer().get());
 
@@ -289,6 +329,7 @@ TEST_F(SoftwareCursor, does_not_hide_or_move_when_already_hidden)
 
     // Already hidden, nothing should happen
     cursor.hide();
+    executor.execute();
     // Hidden, nothing should happen
     cursor.move_to({3,4});
 }
@@ -303,6 +344,7 @@ TEST_F(SoftwareCursor, creates_new_renderable_for_new_cursor_image)
         WillOnce(SaveArg<0>(&first_cursor_renderable));
 
     cursor.show(stub_cursor_image);
+    executor.execute();
 
     Mock::VerifyAndClearExpectations(&mock_input_scene);
 
@@ -311,6 +353,7 @@ TEST_F(SoftwareCursor, creates_new_renderable_for_new_cursor_image)
     EXPECT_CALL(mock_input_scene, add_input_visualization(Ne(first_cursor_renderable)));
 
     cursor.show(another_stub_cursor_image);
+    executor.execute();
 
     Mock::VerifyAndClearExpectations(&mock_input_scene);
 }
@@ -322,7 +365,9 @@ TEST_F(SoftwareCursor, places_new_cursor_renderable_at_correct_position)
     auto const cursor_position = geom::Point{3, 4};
 
     cursor.show(stub_cursor_image);
+    executor.execute();
     cursor.move_to(cursor_position);
+    executor.execute();
 
     Mock::VerifyAndClearExpectations(&mock_input_scene);
 
@@ -341,6 +386,7 @@ TEST_F(SoftwareCursor, new_buffer_on_each_show)
         .Times(3);
     mg::SoftwareCursor cursor{
         mt::fake_shared(mock_buffer_allocator),
+        mt::fake_shared(executor),
         mt::fake_shared(mock_input_scene)};
     cursor.show(another_stub_cursor_image);
     cursor.show(another_stub_cursor_image);
@@ -360,8 +406,11 @@ TEST_F(SoftwareCursor, doesnt_try_to_remove_after_hiding)
     EXPECT_CALL(mock_input_scene, add_input_visualization(_))
         .InSequence(seq);
     cursor.show(stub_cursor_image);
+    executor.execute();
     cursor.hide(); //should remove here
+    executor.execute();
     cursor.show(stub_cursor_image); //should add, but not remove a second time
+    executor.execute();
     Mock::VerifyAndClearExpectations(&mock_input_scene);
 }
 
@@ -395,6 +444,7 @@ TEST_F(SoftwareCursor, handles_argb_8888_cursor_surface)
 
     mg::SoftwareCursor cursor{
         mt::fake_shared(mock_buffer_allocator),
+        mt::fake_shared(executor),
         mt::fake_shared(mock_input_scene)
     };
     cursor.show(test_image);
@@ -459,6 +509,7 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
 
     mg::SoftwareCursor cursor{
         mt::fake_shared(mock_buffer_allocator),
+        mt::fake_shared(executor),
         mt::fake_shared(mock_input_scene)
     };
     cursor.show(test_image);

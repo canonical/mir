@@ -109,10 +109,6 @@ void mpw::Cursor::show(graphics::CursorImage const& cursor_image)
     wl_display_roundtrip(display);
 }
 
-void mpw::Cursor::show()
-{
-}
-
 void mpw::Cursor::hide()
 {
 }
