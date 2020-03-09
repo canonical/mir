@@ -24,6 +24,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/input/scene.h"
 #include "mir/renderer/sw/pixel_source.h"
+#include "mir/executor.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -120,10 +121,12 @@ private:
 
 mg::SoftwareCursor::SoftwareCursor(
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<Executor> const& scene_executor,
     std::shared_ptr<mi::Scene> const& scene)
     : allocator{allocator},
       scene{scene},
       format{get_8888_format(allocator->supported_pixel_formats())},
+      scene_executor{scene_executor},
       visible(false),
       hotspot{0,0}
 {
@@ -134,49 +137,30 @@ mg::SoftwareCursor::~SoftwareCursor()
     hide();
 }
 
-void mg::SoftwareCursor::show()
-{
-    bool needs_scene_change = false;
-    {
-        std::lock_guard<std::mutex> lg{guard};
-        if (!visible)
-            visible = needs_scene_change = true;
-    }
-    if (needs_scene_change && renderable)
-        scene->add_input_visualization(renderable);
-}
-
 void mg::SoftwareCursor::show(CursorImage const& cursor_image)
 {
-    std::shared_ptr<detail::CursorRenderable> new_renderable;
-    std::shared_ptr<detail::CursorRenderable> old_renderable;
-    bool old_visibility = false;
-    // Do a lock dance to make this function threadsafe,
-    // while avoiding calling scene methods under lock
-    {
-        geom::Point position{0,0};
-        std::lock_guard<std::mutex> lg{guard};
-        if (renderable)
-            position = renderable->screen_position().top_left;
-        new_renderable = create_renderable_for(cursor_image, position);
-        old_visibility = visible;
-        visible = true;
-    }
+    std::lock_guard<std::mutex> lg{guard};
 
-    // Add the new renderable first, then remove the old one to avoid
-    // visual glitches
-    scene->add_input_visualization(new_renderable);
+    auto const to_remove = visible ? renderable : nullptr;
 
-    // The second part of the lock dance
-    {
-        std::lock_guard<std::mutex> lg{guard};
-        old_renderable = renderable;
-        renderable = new_renderable;
-        hotspot = cursor_image.hotspot();
-    }
+    geom::Point position{0,0};
+    if (renderable)
+        position = renderable->screen_position().top_left;
 
-    if (old_renderable && old_visibility)
-        scene->remove_input_visualization(old_renderable);
+    renderable = create_renderable_for(cursor_image, position);
+    hotspot = cursor_image.hotspot();
+    visible = true;
+
+    scene_executor->spawn([scene = scene, to_remove = to_remove, to_add = renderable]()
+        {
+            // Add the new renderable first, then remove the old one to avoid visual glitches
+            scene->add_input_visualization(to_add);
+
+            if (to_remove)
+            {
+                scene->remove_input_visualization(to_remove);
+            }
+        });
 }
 
 std::shared_ptr<mg::detail::CursorRenderable>
@@ -207,17 +191,17 @@ mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom:
 
 void mg::SoftwareCursor::hide()
 {
-    bool needs_scene_change = false;
+    std::lock_guard<std::mutex> lg{guard};
+
+    if (visible && renderable)
     {
-        std::lock_guard<std::mutex> lg{guard};
-        if (visible)
-        {
-            visible = false;
-            needs_scene_change = true;
-        }
+        scene_executor->spawn([scene = scene, to_remove = renderable]()
+            {
+                scene->remove_input_visualization(to_remove);
+            });
     }
-    if (needs_scene_change && renderable)
-        scene->remove_input_visualization(renderable);
+
+    visible = false;
 }
 
 void mg::SoftwareCursor::move_to(geometry::Point position)
@@ -231,5 +215,6 @@ void mg::SoftwareCursor::move_to(geometry::Point position)
         renderable->move_to(position - hotspot);
     }
 
+    // This doesn't need to be called in a specific order with other potential calls, so it doesn't go on the executor
     scene->emit_scene_changed();
 }

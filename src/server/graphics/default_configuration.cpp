@@ -255,6 +255,7 @@ mir::DefaultServerConfiguration::the_cursor()
                 mir::log_info("Using software cursor");
                 primary_cursor = std::make_shared<mg::SoftwareCursor>(
                     the_buffer_allocator(),
+                    the_main_loop(),
                     the_input_scene());
             }
 
