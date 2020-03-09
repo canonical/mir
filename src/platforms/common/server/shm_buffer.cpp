@@ -203,6 +203,7 @@ mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
 
 void mgc::ShmBuffer::bind()
 {
+    std::lock_guard<decltype(tex_id_mutex)> lock{tex_id_mutex};
     bool const needs_initialisation = tex_id == 0;
     if (needs_initialisation)
     {
@@ -222,7 +223,12 @@ void mgc::ShmBuffer::bind()
 void mgc::MemoryBackedShmBuffer::bind()
 {
     mgc::ShmBuffer::bind();
-    upload_to_texture(pixels.get(), stride_);
+    std::lock_guard<decltype(uploaded_mutex)> lock{uploaded_mutex};
+    if (!uploaded)
+    {
+        upload_to_texture(pixels.get(), stride_);
+        uploaded = true;
+    }
 }
 
 auto mgc::MemoryBackedShmBuffer::native_buffer_handle() const -> std::shared_ptr<mg::NativeBuffer>

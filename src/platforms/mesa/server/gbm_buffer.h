@@ -29,6 +29,7 @@
 #include MIR_SERVER_GL_H
 
 #include <memory>
+#include <mutex>
 #include <limits>
 
 namespace mir
@@ -113,6 +114,8 @@ private:
     uint32_t bo_flags;
     std::unique_ptr<common::BufferTextureBinder> const texture_binder;
     int prime_fd;
+
+    std::mutex tex_id_mutex;
     GLuint tex_id{0};
 };
 

@@ -339,6 +339,7 @@ public:
                 });
             on_consumed();
             on_consumed = [](){};
+            uploaded = true;
         }
     }
 
