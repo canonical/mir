@@ -380,3 +380,66 @@ TEST_F(X11PlatformTest, does_not_block_on_events)
 
     process_input_event();
 }
+
+TEST_F(X11PlatformTest, enter_hides_X_cursor)
+{
+    XEvent events[] =
+        {
+            mock_x11.fake_x11.focus_in_event_return,
+            mock_x11.fake_x11.enter_notify_event_return,
+        };
+
+    mock_x11.fake_x11.pending_events = std::distance(std::begin(events), std::end(events));
+    prepare_event_processing();
+
+    auto const* next_event = std::begin(events);
+
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(Invoke([this, &next_event](Display*, XEvent* xev)
+        {
+            *xev = *next_event++;
+
+            return 1;
+        }));
+
+    EXPECT_CALL(mock_x11, XFixesHideCursor(_,_))
+        .Times(Exactly(1));
+
+    for (auto unused: events)
+    {
+        (void)unused;
+        process_input_event();
+    }
+}
+
+TEST_F(X11PlatformTest, leave_shows_X_cursor)
+{
+    XEvent events[] =
+        {
+            mock_x11.fake_x11.focus_in_event_return,
+            mock_x11.fake_x11.enter_notify_event_return,
+            mock_x11.fake_x11.leave_notify_event_return,
+        };
+
+    mock_x11.fake_x11.pending_events = std::distance(std::begin(events), std::end(events));
+    prepare_event_processing();
+
+    auto const* next_event = std::begin(events);
+
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(Invoke([&next_event](Display*, XEvent* xev)
+        {
+            *xev = *next_event++;
+
+            return 1;
+        }));
+
+    EXPECT_CALL(mock_x11, XFixesShowCursor(_,_))
+        .Times(Exactly(1));
+
+    for (auto unused: events)
+    {
+        (void)unused;
+        process_input_event();
+    }
+}
