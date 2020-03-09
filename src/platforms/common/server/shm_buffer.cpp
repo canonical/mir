@@ -207,6 +207,7 @@ void mir::graphics::common::ShmBuffer::commit()
 
 void mgc::ShmBuffer::tex_bind()
 {
+    std::lock_guard<decltype(tex_id_mutex)> lock{tex_id_mutex};
     bool const needs_initialisation = tex_id == 0;
     if (needs_initialisation)
     {
