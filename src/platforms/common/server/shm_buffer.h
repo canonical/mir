@@ -32,6 +32,8 @@
 
 #include MIR_SERVER_GL_H
 
+#include <mutex>
+
 namespace mir
 {
 class ShmFile;
@@ -125,6 +127,7 @@ private:
     MirPixelFormat const pixel_format_;
     geometry::Stride const stride_;
     void* const pixels;
+    std::mutex tex_id_mutex;
     GLuint tex_id{0};
 };
 
