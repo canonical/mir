@@ -28,6 +28,7 @@
 #define MIR_LOG_COMPONENT "x11-input"
 #include "mir/log.h"
 
+#include <X11/extensions/Xfixes.h>
 #include <X11/Xutil.h>
 #include <X11/Xlib.h>
 #include <linux/input.h>
@@ -153,6 +154,7 @@ void mix::XInputPlatform::process_input_event()
                         auto const& xenev = xev.xcrossing;
                         XGrabPointer(xenev.display, xenev.window, True, 0, GrabModeAsync,
                                      GrabModeAsync, None, None, CurrentTime);
+                        XFixesHideCursor(xenev.display, xenev.window);
                         ptr_grabbed = true;
                     }
                     break;
@@ -164,6 +166,7 @@ void mix::XInputPlatform::process_input_event()
                     {
                         auto const& xlnev = xev.xcrossing;
                         XUngrabPointer(xlnev.display, CurrentTime);
+                        XFixesShowCursor(xlnev.display, xlnev.window);
                         ptr_grabbed = false;
                     }
                     break;
