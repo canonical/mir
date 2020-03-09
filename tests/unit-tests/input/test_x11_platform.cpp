@@ -395,7 +395,7 @@ TEST_F(X11PlatformTest, enter_hides_X_cursor)
     auto const* next_event = std::begin(events);
 
     ON_CALL(mock_x11, XNextEvent(_,_))
-        .WillByDefault(Invoke([this, &next_event](Display*, XEvent* xev)
+        .WillByDefault(Invoke([&next_event](Display*, XEvent* xev)
         {
             *xev = *next_event++;
 
