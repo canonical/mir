@@ -211,7 +211,6 @@ void mgw::DisplayClient::Output::scale(void* data, wl_output* /*wl_output*/, int
     auto const output = static_cast<Output*>(data);
     auto& dcout = output->dcout;
     dcout.scale = factor;
-    wl_surface_set_buffer_scale(output->surface, factor);
 }
 
 mgw::DisplayClient::Output::Output(
@@ -568,7 +567,6 @@ void mgw::DisplayClient::pointer_enter(
         if (surface == out.second->surface)
         {
             pointer_displacement = out.second->dcout.top_left - geometry::Point{};
-            pointer_scale = out.second->dcout.scale;
             break;
         }
     }
@@ -637,7 +635,6 @@ void mgw::DisplayClient::touch_down(
         if (surface == out.second->surface)
         {
             touch_displacement = out.second->dcout.top_left - geometry::Point{};
-            touch_scale = out.second->dcout.scale;
             break;
         }
     }
