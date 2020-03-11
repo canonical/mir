@@ -236,12 +236,13 @@ mir::geometry::Rectangle extents_of(
     std::vector<mg::DisplayConfigurationMode> const& modes,
     size_t current_mode_index,
     MirOrientation orientation,
-    mir::geometry::Point top_left)
+    mir::geometry::Point top_left,
+    float scale)
 {
     if (current_mode_index >= modes.size())
         return mir::geometry::Rectangle();
 
-    auto const& size = modes[current_mode_index].size;
+    auto const& size = modes[current_mode_index].size * (1.0f / scale);
 
     if (orientation == mir_orientation_normal ||
         orientation == mir_orientation_inverted)
@@ -260,7 +261,7 @@ mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
 {
     return custom_logical_size.is_set() ?
            mir::geometry::Rectangle(top_left, custom_logical_size.value()) :
-           extents_of(modes, current_mode_index, orientation, top_left);
+           extents_of(modes, current_mode_index, orientation, top_left, scale);
 }
 
 glm::mat2 mg::DisplayConfigurationOutput::transformation() const
@@ -334,7 +335,7 @@ mir::geometry::Rectangle mg::UserDisplayConfigurationOutput::extents() const
 {
     return custom_logical_size.is_set() ?
            mir::geometry::Rectangle(top_left, custom_logical_size.value()) :
-           extents_of(modes, current_mode_index, orientation, top_left);
+           extents_of(modes, current_mode_index, orientation, top_left, scale);
 }
 
 

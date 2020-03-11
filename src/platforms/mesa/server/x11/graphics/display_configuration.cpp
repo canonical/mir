@@ -30,7 +30,7 @@ std::shared_ptr<mg::DisplayConfigurationOutput> mgx::DisplayConfiguration::build
     MirPixelFormat pf,
     geom::Size const pixels,
     geom::Point const top_left,
-    geom::Size const size,
+    geom::Size const physical_size_mm,
     const float scale,
     MirOrientation orientation)
 {
@@ -44,7 +44,7 @@ std::shared_ptr<mg::DisplayConfigurationOutput> mgx::DisplayConfiguration::build
             //TODO: query fps
             {mg::DisplayConfigurationMode{pixels, 60.0}},
             0,
-            size,
+            physical_size_mm,
             true,
             true,
             top_left,
