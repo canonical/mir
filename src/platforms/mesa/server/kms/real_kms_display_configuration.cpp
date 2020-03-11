@@ -213,7 +213,7 @@ bool mgm::compatible(mgm::RealKMSDisplayConfiguration const& conf1, mgm::RealKMS
                 compatible &= (conf1.outputs[i].first == clone);
             }
             else
-            	break;
+                break;
         }
     }
 
