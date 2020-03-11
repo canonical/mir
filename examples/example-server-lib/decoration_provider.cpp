@@ -94,10 +94,15 @@ Printer::~Printer()
 
 struct BackgroundInfo
 {
-    BackgroundInfo(Output const& output) :
-        output{output}
+    BackgroundInfo(
+        wl_display* display,
+        Output const* output,
+        std::function<void(BackgroundInfo&)> redraw_func)
+        : output{output},
+          display{display},
+          redraw_func{redraw_func}
     {}
-    
+
     ~BackgroundInfo()
     {
         if (buffer)
@@ -108,27 +113,63 @@ struct BackgroundInfo
 
         if (surface)
             wl_surface_destroy(surface);
+
+        wl_display_roundtrip(display);
     }
 
     // Screen description
-    Output const& output;
+    Output const* const output;
+    Size size;
 
     // Content
     void* content_area = nullptr;
     wl_surface* surface = nullptr;
     wl_shell_surface* shell_surface = nullptr;
     wl_buffer* buffer = nullptr;
+
+    static wl_shell_surface_listener const shell_surface_listener;
+
+private:
+    BackgroundInfo(BackgroundInfo const&) = delete;
+    BackgroundInfo& operator=(BackgroundInfo const&) = delete;
+
+    static void shell_surface_configure(
+        void *data,
+        wl_shell_surface *,
+        uint32_t /*edges*/,
+        int32_t width,
+        int32_t height)
+    {
+        if (width <= 0)
+            width = 640;
+
+        if (height <= 0)
+            height = 480;
+
+        auto const self = static_cast<BackgroundInfo*>(data);
+
+        self->size = Size{width, height};
+        self->redraw_func(*self);
+    }
+
+    wl_display *const display;
+    std::function<void(BackgroundInfo&)> redraw_func;
 };
+
+wl_shell_surface_listener const BackgroundInfo::shell_surface_listener {
+    [](auto, auto, auto){}, // ping
+    &BackgroundInfo::shell_surface_configure,
+    [](auto, auto){}}; // popup_done
 
 void Printer::printhelp(BackgroundInfo const& region)
 {
     if (!working)
         return;
 
-    bool rotated = region.output.transform == WL_OUTPUT_TRANSFORM_90 || region.output.transform == WL_OUTPUT_TRANSFORM_270;
-    auto const region_size = rotated ?
-        Size{region.output.height, region.output.width} :
-        Size{region.output.width, region.output.height};
+    auto const region_size = region.size;
+
+    if (region_size.width <= Width{} || region_size.height <= Height{})
+        return;
 
     static char const* const helptext[] =
         {
@@ -243,7 +284,7 @@ void Printer::printhelp(BackgroundInfo const& region)
     }
 }
 
-using Outputs = std::map<Output const*, BackgroundInfo>;
+using Outputs = std::map<Output const*, std::shared_ptr<BackgroundInfo>>;
 
 struct DecorationProviderClient
 {
@@ -254,7 +295,7 @@ public:
 private:
     void draw_background(BackgroundInfo& ctx) const;
     void on_new_output(Output const*);
-    void on_output_changed(Output const*);
+    void on_output_changed(Output const* output);
     void on_output_gone(Output const*);
 
     wl_display* display = nullptr;
@@ -277,7 +318,7 @@ void DecorationProviderClient::on_output_changed(Output const* output)
 {
     auto const p = outputs.find(output);
     if (p != end(outputs))
-        draw_background(p->second);
+        draw_background(*p->second);
 }
 
 void DecorationProviderClient::on_output_gone(Output const* output)
@@ -287,20 +328,20 @@ void DecorationProviderClient::on_output_gone(Output const* output)
 
 void DecorationProviderClient::on_new_output(Output const* output)
 {
-    draw_background(outputs.insert({output, BackgroundInfo{*output}}).first->second);
+    draw_background(
+        *outputs.insert({
+            output,
+            std::make_shared<BackgroundInfo>(
+                display,
+                output,
+                [this](BackgroundInfo& background)
+                {
+                    draw_background(background);
+                })}).first->second);
 }
 
 void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 {
-    bool rotated = ctx.output.transform == WL_OUTPUT_TRANSFORM_90 || ctx.output.transform == WL_OUTPUT_TRANSFORM_270;
-    auto const width = rotated ? ctx.output.height : ctx.output.width;
-    auto const height = rotated ? ctx.output.width : ctx.output.height;
-
-    if (width <= 0 || height <= 0)
-        return;
-
-    auto const stride = 4*width;
-
     if (!ctx.surface)
     {
         ctx.surface = wl_compositor_create_surface(this->globals.compositor);
@@ -309,17 +350,28 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
     if (!ctx.shell_surface)
     {
         ctx.shell_surface = wl_shell_get_shell_surface(this->globals.shell, ctx.surface);
+        wl_shell_surface_add_listener(ctx.shell_surface, &BackgroundInfo::shell_surface_listener, &ctx);
         wl_shell_surface_set_fullscreen(
             ctx.shell_surface,
             WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT,
             0,
-            ctx.output.output);
+            ctx.output->output);
+        wl_surface_commit(ctx.surface);
+        wl_display_roundtrip(display);
     }
 
     if (ctx.buffer)
     {
         wl_buffer_destroy(ctx.buffer);
     }
+
+    auto const width = ctx.size.width.as_int();
+    auto const height = ctx.size.height.as_int();
+
+    if (width <= 0 || height <= 0)
+        return;
+
+    auto const stride = 4*width;
 
     {
         auto const shm_pool = make_scoped(
