@@ -90,18 +90,16 @@ void mpw::Cursor::show(graphics::CursorImage const& cursor_image)
     {
         std::lock_guard<decltype(mutex)> lock{mutex};
         if (buffer) wl_buffer_destroy(buffer);
-        hotspot = cursor_image.hotspot();
 
         auto const width = cursor_image.size().width.as_uint32_t();
         auto const height = cursor_image.size().height.as_uint32_t();
-        auto const hotspot_x = hotspot.dx.as_uint32_t()/scale_factor;
-        auto const hotspot_y = hotspot.dy.as_uint32_t()/scale_factor;
+        auto const hotspot_x = cursor_image.hotspot().dx.as_uint32_t();
+        auto const hotspot_y = cursor_image.hotspot().dy.as_uint32_t();
         void* data_buffer;
         auto const shm_pool = make_shm_pool(shm, 4 * width * height, &data_buffer);
         memcpy(data_buffer, cursor_image.as_argb_8888(), 4 * width * height);
         buffer = wl_shm_pool_create_buffer(shm_pool, 0, width, height, 4 * width, WL_SHM_FORMAT_ARGB8888);
         wl_surface_attach(surface, buffer, 0, 0);
-        wl_surface_set_buffer_scale(surface, scale_factor);
         wl_surface_commit(surface);
         wl_shm_pool_destroy(shm_pool);
         if (pointer) wl_pointer_set_cursor(pointer, 0, surface, hotspot_x, hotspot_y);
@@ -123,15 +121,4 @@ void mir::platform::wayland::Cursor::leave(wl_pointer* /*pointer*/)
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
     pointer = nullptr;
-}
-
-void mir::platform::wayland::Cursor::scale(int factor)
-{
-    std::lock_guard<decltype(mutex)> lock{mutex};
-    scale_factor = factor;
-    auto const hotspot_x = hotspot.dx.as_uint32_t()/scale_factor;
-    auto const hotspot_y = hotspot.dy.as_uint32_t()/scale_factor;
-    wl_surface_set_buffer_scale(surface, factor);
-    wl_surface_commit(surface);
-    if (pointer) wl_pointer_set_cursor(pointer, 0, surface, hotspot_x, hotspot_y);
 }

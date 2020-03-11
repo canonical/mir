@@ -48,15 +48,12 @@ public:
 
     void enter(wl_pointer* pointer);
     void leave(wl_pointer* pointer);
-    void scale(int factor);
 
 private:
     wl_display* const display;
     wl_shm* const shm;
 
     wl_surface* surface;
-    geometry::Displacement hotspot;
-    int scale_factor = 1;
 
     std::mutex mutable mutex;
     wl_buffer* buffer{nullptr};

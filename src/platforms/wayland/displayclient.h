@@ -159,9 +159,7 @@ protected:
     xkb_state* keyboard_state_ = nullptr;
     bool fake_pointer_frame = false;
     geometry::Displacement pointer_displacement; // Position of current output
-    int pointer_scale = 1;
     geometry::Displacement touch_displacement;   // Position of current output
-    int touch_scale = 1;
 
     std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry;
 

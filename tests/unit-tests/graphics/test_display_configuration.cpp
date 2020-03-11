@@ -22,6 +22,7 @@
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+using namespace testing;
 
 namespace
 {
@@ -67,9 +68,9 @@ TEST(DisplayConfiguration, same_cards_compare_equal)
     mg::DisplayConfigurationCard const card1{id, max_outputs};
     mg::DisplayConfigurationCard const card2 = card1;
 
-    EXPECT_EQ(card1, card1);
-    EXPECT_EQ(card1, card2);
-    EXPECT_EQ(card2, card1);
+    EXPECT_THAT(card1, Eq(card1));
+    EXPECT_THAT(card1, Eq(card2));
+    EXPECT_THAT(card2, Eq(card1));
 }
 
 TEST(DisplayConfiguration, different_cards_compare_unequal)
@@ -83,12 +84,12 @@ TEST(DisplayConfiguration, different_cards_compare_unequal)
     mg::DisplayConfigurationCard const card2{id1, max_outputs2};
     mg::DisplayConfigurationCard const card3{id2, max_outputs1};
 
-    EXPECT_NE(card1, card2);
-    EXPECT_NE(card2, card1);
-    EXPECT_NE(card2, card3);
-    EXPECT_NE(card3, card2);
-    EXPECT_NE(card1, card3);
-    EXPECT_NE(card3, card1);
+    EXPECT_THAT(card1, Ne(card2));
+    EXPECT_THAT(card2, Ne(card1));
+    EXPECT_THAT(card2, Ne(card3));
+    EXPECT_THAT(card3, Ne(card2));
+    EXPECT_THAT(card1, Ne(card3));
+    EXPECT_THAT(card3, Ne(card1));
 }
 
 TEST(DisplayConfiguration, same_modes_compare_equal)
@@ -99,9 +100,9 @@ TEST(DisplayConfiguration, same_modes_compare_equal)
     mg::DisplayConfigurationMode const mode1{size, vrefresh};
     mg::DisplayConfigurationMode const mode2 = mode1;
 
-    EXPECT_EQ(mode1, mode1);
-    EXPECT_EQ(mode1, mode2);
-    EXPECT_EQ(mode2, mode1);
+    EXPECT_THAT(mode1, Eq(mode1));
+    EXPECT_THAT(mode1, Eq(mode2));
+    EXPECT_THAT(mode2, Eq(mode1));
 }
 
 TEST(DisplayConfiguration, different_modes_compare_unequal)
@@ -115,12 +116,12 @@ TEST(DisplayConfiguration, different_modes_compare_unequal)
     mg::DisplayConfigurationMode const mode2{size1, vrefresh2};
     mg::DisplayConfigurationMode const mode3{size2, vrefresh1};
 
-    EXPECT_NE(mode1, mode2);
-    EXPECT_NE(mode2, mode1);
-    EXPECT_NE(mode2, mode3);
-    EXPECT_NE(mode3, mode2);
-    EXPECT_NE(mode1, mode3);
-    EXPECT_NE(mode3, mode1);
+    EXPECT_THAT(mode1, Ne(mode2));
+    EXPECT_THAT(mode2, Ne(mode1));
+    EXPECT_THAT(mode2, Ne(mode3));
+    EXPECT_THAT(mode3, Ne(mode2));
+    EXPECT_THAT(mode1, Ne(mode3));
+    EXPECT_THAT(mode3, Ne(mode1));
 }
 
 TEST(DisplayConfiguration, same_outputs_compare_equal)
@@ -128,9 +129,9 @@ TEST(DisplayConfiguration, same_outputs_compare_equal)
     mg::DisplayConfigurationOutput const output1 = tmpl_output;
     mg::DisplayConfigurationOutput output2 = tmpl_output;
 
-    EXPECT_EQ(output1, output1);
-    EXPECT_EQ(output1, output2);
-    EXPECT_EQ(output2, output1);
+    EXPECT_THAT(output1, Eq(output1));
+    EXPECT_THAT(output1, Eq(output2));
+    EXPECT_THAT(output2, Eq(output1));
 }
 
 TEST(DisplayConfiguration, outputs_with_different_ids_compare_unequal)
@@ -142,12 +143,12 @@ TEST(DisplayConfiguration, outputs_with_different_ids_compare_unequal)
     output2.id = mg::DisplayConfigurationOutputId{15};
     output3.card_id = mg::DisplayConfigurationCardId{12};
 
-    EXPECT_NE(output1, output2);
-    EXPECT_NE(output2, output1);
-    EXPECT_NE(output2, output3);
-    EXPECT_NE(output3, output2);
-    EXPECT_NE(output1, output3);
-    EXPECT_NE(output3, output1);
+    EXPECT_THAT(output1, Ne(output2));
+    EXPECT_THAT(output2, Ne(output1));
+    EXPECT_THAT(output2, Ne(output3));
+    EXPECT_THAT(output3, Ne(output2));
+    EXPECT_THAT(output1, Ne(output3));
+    EXPECT_THAT(output3, Ne(output1));
 }
 
 TEST(DisplayConfiguration, outputs_with_different_modes_compare_unequal)
@@ -171,12 +172,12 @@ TEST(DisplayConfiguration, outputs_with_different_modes_compare_unequal)
     output2.modes = modes2;
     output3.modes = modes3;
 
-    EXPECT_NE(output1, output2);
-    EXPECT_NE(output2, output1);
-    EXPECT_NE(output2, output3);
-    EXPECT_NE(output3, output2);
-    EXPECT_NE(output1, output3);
-    EXPECT_NE(output3, output1);
+    EXPECT_THAT(output1, Ne(output2));
+    EXPECT_THAT(output2, Ne(output1));
+    EXPECT_THAT(output2, Ne(output3));
+    EXPECT_THAT(output3, Ne(output2));
+    EXPECT_THAT(output1, Ne(output3));
+    EXPECT_THAT(output3, Ne(output1));
 }
 
 TEST(DisplayConfiguration, outputs_with_different_physical_size_compare_unequal)
@@ -188,8 +189,8 @@ TEST(DisplayConfiguration, outputs_with_different_physical_size_compare_unequal)
 
     output2.physical_size_mm = physical_size2;
 
-    EXPECT_NE(output1, output2);
-    EXPECT_NE(output2, output1);
+    EXPECT_THAT(output1, Ne(output2));
+    EXPECT_THAT(output2, Ne(output1));
 }
 
 TEST(DisplayConfiguration, outputs_with_different_connected_status_compare_unequal)
@@ -199,8 +200,8 @@ TEST(DisplayConfiguration, outputs_with_different_connected_status_compare_unequ
 
     output2.connected = false;
 
-    EXPECT_NE(output1, output2);
-    EXPECT_NE(output2, output1);
+    EXPECT_THAT(output1, Ne(output2));
+    EXPECT_THAT(output2, Ne(output1));
 }
 
 TEST(DisplayConfiguration, outputs_with_different_current_mode_index_compare_unequal)
@@ -210,8 +211,8 @@ TEST(DisplayConfiguration, outputs_with_different_current_mode_index_compare_une
 
     output2.current_mode_index = 0;
 
-    EXPECT_NE(output1, output2);
-    EXPECT_NE(output2, output1);
+    EXPECT_THAT(output1, Ne(output2));
+    EXPECT_THAT(output2, Ne(output1));
 }
 
 TEST(DisplayConfiguration, outputs_with_different_preferred_mode_index_compare_unequal)
@@ -221,8 +222,8 @@ TEST(DisplayConfiguration, outputs_with_different_preferred_mode_index_compare_u
 
     output2.preferred_mode_index = 1;
 
-    EXPECT_NE(output1, output2);
-    EXPECT_NE(output2, output1);
+    EXPECT_THAT(output1, Ne(output2));
+    EXPECT_THAT(output2, Ne(output1));
 }
 
 TEST(DisplayConfiguration, outputs_with_different_orientation_compare_unequal)
@@ -230,12 +231,12 @@ TEST(DisplayConfiguration, outputs_with_different_orientation_compare_unequal)
     mg::DisplayConfigurationOutput a = tmpl_output;
     mg::DisplayConfigurationOutput b = tmpl_output;
 
-    EXPECT_EQ(a, b);
-    EXPECT_EQ(b, a);
+    EXPECT_THAT(a, Eq(b));
+    EXPECT_THAT(b, Eq(a));
     a.orientation = mir_orientation_left;
     b.orientation = mir_orientation_inverted;
-    EXPECT_NE(a, b);
-    EXPECT_NE(b, a);
+    EXPECT_THAT(a, Ne(b));
+    EXPECT_THAT(b, Ne(a));
 }
 
 TEST(DisplayConfiguration, outputs_with_different_power_mode_compare_equal)
@@ -243,12 +244,12 @@ TEST(DisplayConfiguration, outputs_with_different_power_mode_compare_equal)
     mg::DisplayConfigurationOutput a = tmpl_output;
     mg::DisplayConfigurationOutput b = tmpl_output;
 
-    EXPECT_EQ(a, b);
-    EXPECT_EQ(b, a);
+    EXPECT_THAT(a, Eq(b));
+    EXPECT_THAT(b, Eq(a));
     a.power_mode = mir_power_mode_on;
     b.power_mode = mir_power_mode_off;
-    EXPECT_EQ(a, b);
-    EXPECT_EQ(b, a);
+    EXPECT_THAT(a, Eq(b));
+    EXPECT_THAT(b, Eq(a));
 }
 
 TEST(DisplayConfiguration, outputs_with_different_scaling_factors_compare_unequal)
@@ -256,12 +257,12 @@ TEST(DisplayConfiguration, outputs_with_different_scaling_factors_compare_unequa
     mg::DisplayConfigurationOutput a = tmpl_output;
     mg::DisplayConfigurationOutput b = tmpl_output;
 
-    EXPECT_EQ(a, b);
-    EXPECT_EQ(b, a);
+    EXPECT_THAT(a, Eq(b));
+    EXPECT_THAT(b, Eq(a));
     a.scale = 2.0f;
     b.scale = 3.0f;
-    EXPECT_NE(a, b);
-    EXPECT_NE(b, a);
+    EXPECT_THAT(a, Ne(b));
+    EXPECT_THAT(b, Ne(a));
 }
 
 TEST(DisplayConfiguration, outputs_with_different_form_factors_compare_unequal)
@@ -269,12 +270,12 @@ TEST(DisplayConfiguration, outputs_with_different_form_factors_compare_unequal)
     mg::DisplayConfigurationOutput a = tmpl_output;
     mg::DisplayConfigurationOutput b = tmpl_output;
 
-    EXPECT_EQ(a, b);
-    EXPECT_EQ(b, a);
+    EXPECT_THAT(a, Eq(b));
+    EXPECT_THAT(b, Eq(a));
     a.form_factor = mir_form_factor_monitor;
     b.form_factor = mir_form_factor_projector;
-    EXPECT_NE(a, b);
-    EXPECT_NE(b, a);
+    EXPECT_THAT(a, Ne(b));
+    EXPECT_THAT(b, Ne(a));
 }
 
 TEST(DisplayConfiguration, output_extents_uses_current_mode)
@@ -282,9 +283,9 @@ TEST(DisplayConfiguration, output_extents_uses_current_mode)
     mg::DisplayConfigurationOutput out = tmpl_output;
 
     out.current_mode_index = 2;
-    ASSERT_NE(out.modes[0], out.modes[2]);
+    ASSERT_THAT(out.modes[0], Ne(out.modes[2]));
 
-    EXPECT_EQ(out.modes[out.current_mode_index].size, out.extents().size);
+    EXPECT_THAT(out.modes[out.current_mode_index].size, Eq(out.extents().size));
 }
 
 TEST(DisplayConfiguration, output_extents_are_customizable)
@@ -294,7 +295,7 @@ TEST(DisplayConfiguration, output_extents_are_customizable)
     geom::Size const custom_size{1234, 9876};
     out.custom_logical_size = custom_size;
 
-    EXPECT_EQ(custom_size, out.extents().size);
+    EXPECT_THAT(custom_size, Eq(out.extents().size));
 }
 
 TEST(DisplayConfiguration, output_extents_rotates_with_orientation)
@@ -305,22 +306,22 @@ TEST(DisplayConfiguration, output_extents_rotates_with_orientation)
     int w = size.width.as_int();
     int h = size.height.as_int();
 
-    ASSERT_NE(w, h);
+    ASSERT_THAT(w, Ne(h));
 
     geom::Rectangle normal{out.top_left, {w, h}};
     geom::Rectangle swapped{out.top_left, {h, w}};
 
     out.orientation = mir_orientation_normal;
-    EXPECT_EQ(normal, out.extents());
+    EXPECT_THAT(normal, Eq(out.extents()));
 
     out.orientation = mir_orientation_inverted;
-    EXPECT_EQ(normal, out.extents());
+    EXPECT_THAT(normal, Eq(out.extents()));
 
     out.orientation = mir_orientation_left;
-    EXPECT_EQ(swapped, out.extents());
+    EXPECT_THAT(swapped, Eq(out.extents()));
 
     out.orientation = mir_orientation_right;
-    EXPECT_EQ(swapped, out.extents());
+    EXPECT_THAT(swapped, Eq(out.extents()));
 }
 
 TEST(DisplayConfiguration, default_valid)
@@ -389,5 +390,39 @@ TEST(DisplayConfiguration, output_extents_empty_when_there_are_no_modes)
     out.current_mode_index = 0;
 
     geom::Rectangle empty{};
-    EXPECT_EQ(empty, out.extents());
+    EXPECT_THAT(empty, Eq(out.extents()));
+}
+
+TEST(DisplayConfiguration, output_extents_are_scaled)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    out.scale = 2.0f;
+
+    EXPECT_THAT(out.modes[out.current_mode_index].size * 0.5, Eq(out.extents().size));
+}
+
+TEST(DisplayConfiguration, output_extents_are_scaled_fractionally)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    out.scale = 0.8f;
+
+    EXPECT_THAT(out.modes[out.current_mode_index].size * 1.25, Eq(out.extents().size));
+}
+
+TEST(DisplayConfiguration, user_display_configuration_output_extents_are_scaled)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    mg::UserDisplayConfigurationOutput user{out};
+    user.scale = 2.0f;
+
+    EXPECT_THAT(user.modes[user.current_mode_index].size * 0.5, Eq(user.extents().size));
+}
+
+TEST(DisplayConfiguration, user_display_configuration_output_extents_are_scaled_fractionally)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+    mg::UserDisplayConfigurationOutput user{out};
+    user.scale = 0.8f;
+
+    EXPECT_THAT(user.modes[user.current_mode_index].size * 1.25, Eq(user.extents().size));
 }
