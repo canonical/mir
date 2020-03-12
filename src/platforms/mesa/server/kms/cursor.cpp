@@ -388,7 +388,7 @@ void mgm::Cursor::place_cursor_at_locked(
                 relative_to_extants_vec.x / output_rect.size.width.as_int(),
                 relative_to_extants_vec.y / output_rect.size.height.as_int()} * 2.0f - glm::vec2{1};
 
-            // Cursor position with the output transform applied on the same (-1, -1) to (1, 1) coordinates
+            // Cursor position on the same (-1, -1) to (1, 1) coordinate system, but with the output transform applied
             auto const transformed_vec = scaled_vec * conf.transformation();
 
             auto const output_size_vec = glm::vec2{output.size().width.as_int(), output.size().height.as_int()};
@@ -398,7 +398,6 @@ void mgm::Cursor::place_cursor_at_locked(
 
             auto const position_on_output = geom::Point{roundf(output_space_vec.x), roundf(output_space_vec.y)};
 
-            //geom::Point const hotspot_position_on_output = transform(output_rect, position - output_rect.top_left, orientation);
             auto const hotspot_displacement = transform(geom::Rectangle{{}, size}, hotspot, orientation);
 
             // It's a little strange that we implement hotspot this way as there is
