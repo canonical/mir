@@ -271,12 +271,11 @@ mgx::Display::Display(::Display* x_dpy,
             x_dpy,
             configuration->id,
             *window,
-            actual_size,
+            configuration->extents(),
             shared_egl.context(),
             last_frame,
             report,
             *gl_config);
-        display_buffer->set_view_area(configuration->extents());
         outputs.push_back(std::make_unique<OutputInfo>(move(window), move(display_buffer), configuration));
         top_left.x = geom::X{top_left.x.as_int() + actual_size.width.as_int()};
     }
