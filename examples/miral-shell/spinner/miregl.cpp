@@ -91,20 +91,11 @@ public:
 
     ~MirEglApp();
 
-    struct OutputInfo
-    {
-        struct wl_output* wl_output;
-        int32_t x;
-        int32_t y;
-        int32_t width;
-        int32_t height;
-    };
-
     struct wl_display* const display;
     struct wl_compositor* compositor;
     struct wl_shm* shm;
     struct wl_seat* seat;
-    std::vector<OutputInfo> output_info;
+    std::vector<wl_output*> outputs;
     struct wl_shell* shell;
 
 private:
@@ -124,8 +115,8 @@ private:
 
 static void output_geometry(void *data,
     struct wl_output *wl_output,
-    int32_t x,
-    int32_t y,
+    int32_t /*x*/,
+    int32_t /*y*/,
     int32_t /*physical_width*/,
     int32_t /*physical_height*/,
     int32_t /*subpixel*/,
@@ -135,23 +126,15 @@ static void output_geometry(void *data,
 {
     struct MirEglApp* app = static_cast<decltype(app)>(data);
 
-    for (auto& oi : app->output_info)
-    {
-        if (wl_output == oi.wl_output)
-        {
-            oi.x = x;
-            oi.y = y;
-            return;
-        }
-    }
-    app->output_info.push_back({wl_output, x, y, 0, 0});
+    if (std::find(app->outputs.begin(), app->outputs.end(), wl_output) == app->outputs.end())
+        app->outputs.push_back({wl_output});
 }
 
 static void output_mode(void *data,
     struct wl_output *wl_output,
     uint32_t flags,
-    int32_t width,
-    int32_t height,
+    int32_t /*width*/,
+    int32_t /*height*/,
     int32_t /*refresh*/)
 {
     if (!(WL_OUTPUT_MODE_CURRENT & flags))
@@ -159,16 +142,8 @@ static void output_mode(void *data,
 
     struct MirEglApp* app = static_cast<decltype(app)>(data);
 
-    for (auto& oi : app->output_info)
-    {
-        if (wl_output == oi.wl_output)
-        {
-            oi.width = width;
-            oi.height = height;
-            return;
-        }
-    }
-    app->output_info.push_back({wl_output, 0, 0, width, height});
+    if (std::find(app->outputs.begin(), app->outputs.end(), wl_output) == app->outputs.end())
+        app->outputs.push_back({wl_output});
 }
 
 static void new_global(
@@ -199,7 +174,7 @@ static void new_global(
     {
         wl_output* output = static_cast<decltype(output)>(wl_registry_bind(registry, id, &wl_output_interface, 2));
 
-        app->output_info.push_back({output, 0, 0, 0, 0});
+        app->outputs.push_back(output);
     }
     else if (strcmp(interface, "wl_shell") == 0)
     {
@@ -216,9 +191,9 @@ std::vector<std::shared_ptr<MirEglSurface>> mir_surface_init(std::shared_ptr<Mir
 {
     std::vector<std::shared_ptr<MirEglSurface>> result;
 
-    for (auto const& oi : mir_egl_app->output_info)
+    for (auto const& output : mir_egl_app->outputs)
     {
-        result.push_back(std::make_shared<MirEglSurface>(mir_egl_app, oi.wl_output, oi.width, oi.height));
+        result.push_back(std::make_shared<MirEglSurface>(mir_egl_app, output));
     }
 
     return result;
@@ -226,10 +201,8 @@ std::vector<std::shared_ptr<MirEglSurface>> mir_surface_init(std::shared_ptr<Mir
 
 MirEglSurface::MirEglSurface(
     std::shared_ptr<MirEglApp> const& mir_egl_app,
-    struct wl_output* wl_output, int width_, int height_) :
-    mir_egl_app{mir_egl_app},
-    width_{width_},
-    height_{height_}
+    struct wl_output* wl_output) :
+    mir_egl_app{mir_egl_app}
 {
     static struct wl_shell_surface_listener const shell_surface_listener = {
         shell_surface_ping,
@@ -242,9 +215,10 @@ MirEglSurface::MirEglSurface(
     window = wl_shell_get_shell_surface(mir_egl_app->shell, surface);
     wl_shell_surface_add_listener(window, &shell_surface_listener, this);
     wl_shell_surface_set_fullscreen(window, WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, wl_output);
+    wl_surface_commit(surface);
+    wl_display_roundtrip(display); // get initial configure
 
     eglsurface = mir_egl_app->create_eglsurface(surface, width(), height());
-
     mir_egl_app->set_swap_interval(eglsurface, -1);
 }
 
@@ -315,8 +289,8 @@ MirEglApp::MirEglApp(struct wl_display* display) :
         &output_scale,
     };
 
-    for (auto const oi : output_info)
-        wl_output_add_listener(oi.wl_output, &output_listener, this);
+    for (auto const output : outputs)
+        wl_output_add_listener(output, &output_listener, this);
 
     wl_display_roundtrip(display);
 
