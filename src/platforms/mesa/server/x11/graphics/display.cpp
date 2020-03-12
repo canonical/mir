@@ -277,7 +277,7 @@ mgx::Display::Display(::Display* x_dpy,
             report,
             *gl_config);
         outputs.push_back(std::make_unique<OutputInfo>(move(window), move(display_buffer), configuration));
-        top_left.x = geom::X{top_left.x.as_int() + actual_size.width.as_int()};
+        top_left.x += as_delta(configuration->extents().size.width);
     }
 
     shared_egl.make_current();
