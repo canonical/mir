@@ -49,6 +49,7 @@ public:
     Output& operator=(Output&&) = delete;
 
     int32_t transform;
+    int scale{1};
     wl_output* output;
 private:
     static void output_done(void* data, wl_output* output);

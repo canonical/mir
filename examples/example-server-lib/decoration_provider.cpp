@@ -117,9 +117,12 @@ struct BackgroundInfo
         wl_display_roundtrip(display);
     }
 
+    /// returns the size (in pixels) the buffer should be
+    auto buffer_size() const -> Size { return logical_size * output->scale; }
+
     // Screen description
     Output const* const output;
-    Size size;
+    Size logical_size; ///< the size the client was configured to be
 
     // Content
     void* content_area = nullptr;
@@ -148,7 +151,7 @@ private:
 
         auto const self = static_cast<BackgroundInfo*>(data);
 
-        self->size = Size{width, height};
+        self->logical_size = Size{width, height};
         self->redraw_func(*self);
     }
 
@@ -166,7 +169,7 @@ void Printer::printhelp(BackgroundInfo const& region)
     if (!working)
         return;
 
-    auto const region_size = region.size;
+    auto const region_size = region.buffer_size();
 
     if (region_size.width <= Width{} || region_size.height <= Height{})
         return;
@@ -365,8 +368,8 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
         wl_buffer_destroy(ctx.buffer);
     }
 
-    auto const width = ctx.size.width.as_int();
-    auto const height = ctx.size.height.as_int();
+    auto const width = ctx.buffer_size().width.as_int();
+    auto const height = ctx.buffer_size().height.as_int();
 
     if (width <= 0 || height <= 0)
         return;
@@ -409,6 +412,7 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 
     printer.printhelp(ctx);
 
+    wl_surface_set_buffer_scale(ctx.surface, ctx.output->scale);
     wl_surface_attach(ctx.surface, ctx.buffer, 0, 0);
     wl_surface_commit(ctx.surface);
     wl_display_roundtrip(display);
