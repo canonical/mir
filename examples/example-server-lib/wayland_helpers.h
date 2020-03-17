@@ -48,8 +48,6 @@ public:
     Output& operator=(Output const&) = delete;
     Output& operator=(Output&&) = delete;
 
-    int32_t x, y;
-    int32_t width, height;
     int32_t transform;
     wl_output* output;
 private:
