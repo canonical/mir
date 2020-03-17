@@ -31,7 +31,7 @@ std::vector<std::shared_ptr<MirEglSurface>> mir_surface_init(std::shared_ptr<Mir
 class MirEglSurface
 {
 public:
-    MirEglSurface(std::shared_ptr<MirEglApp> const& mir_egl_app, struct wl_output* wl_output, int width, int height);
+    MirEglSurface(std::shared_ptr<MirEglApp> const& mir_egl_app, struct wl_output* wl_output);
 
     ~MirEglSurface();
 
@@ -65,8 +65,8 @@ private:
     bool waiting_for_buffer = true;
 
     EGLSurface eglsurface;
-    int width_;
-    int height_;
+    int width_{640};
+    int height_{480};
 
     static void shell_surface_ping(void *data, struct wl_shell_surface *wl_shell_surface, uint32_t serial);
 

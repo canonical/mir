@@ -32,16 +32,6 @@
 
 namespace
 {
-struct OutputInfo
-{
-    int32_t x;
-    int32_t y;
-    int32_t width;
-    int32_t height;
-};
-
-using Outputs = std::vector<OutputInfo>;
-
 struct DrawContext
 {
     int width = 400;
@@ -143,10 +133,7 @@ struct SwSplash::Self : SplashSession
 {
     Self()
         : globals{
-              [this](Output const& output)
-              {
-                  outputs.emplace_back(OutputInfo{output.x, output.y, output.width, output.height});
-              },
+              [](auto const&) {},
               [](auto const&) {},
               [](auto const&) {}}
     {
@@ -155,8 +142,6 @@ struct SwSplash::Self : SplashSession
     }
 
     Globals globals;
-
-    Outputs outputs;
 
     DrawContext ctx;
 
@@ -191,11 +176,35 @@ void SwSplash::Self::operator()(struct wl_display* display)
 {
     globals.init(display);
 
-    for (auto const& oi : outputs)
+    ctx.display = display;
+    ctx.surface = wl_compositor_create_surface(globals.compositor);
+
+    static wl_shell_surface_listener const shell_surface_listener
     {
-        ctx.width = std::max(ctx.width, oi.width);
-        ctx.height = std::max(ctx.height, oi.height);
-    }
+        // ping
+        [](auto, auto, auto){},
+
+        // configure
+        [](void *data, wl_shell_surface *, uint32_t /*edges*/, int32_t width, int32_t height)
+        {
+            auto const ctx = static_cast<DrawContext*>(data);
+
+            if (width > 0)
+                ctx->width = width;
+
+            if (height > 0)
+                ctx->height = height;
+        },
+
+        // popup_done
+        [](auto, auto){}, // popup_done
+    };
+
+    auto const shell_surface = wl_shell_get_shell_surface(globals.shell, ctx.surface);
+    wl_shell_surface_add_listener(shell_surface, &shell_surface_listener, &ctx);
+    wl_shell_surface_set_fullscreen(shell_surface, WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT, 0, nullptr);
+    wl_surface_commit(ctx.surface);
+    wl_display_roundtrip(display);
 
     struct wl_shm_pool* shm_pool = make_shm_pool(globals.shm, ctx.width * ctx.height * 4, &ctx.content_area);
 
@@ -207,13 +216,6 @@ void SwSplash::Self::operator()(struct wl_display* display)
     }
 
     wl_shm_pool_destroy(shm_pool);
-
-    ctx.display = display;
-    ctx.surface = wl_compositor_create_surface(globals.compositor);
-
-    auto const window = make_scoped(wl_shell_get_shell_surface(globals.shell, ctx.surface), &wl_shell_surface_destroy);
-    wl_shell_surface_set_fullscreen(window.get(), WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT, 0, nullptr);
-    wl_shell_surface_set_toplevel(window.get());
 
     struct wl_callback* first_frame = wl_display_sync(display);
     wl_callback_add_listener(first_frame, &frame_listener, &ctx);
@@ -239,9 +241,10 @@ void SwSplash::Self::operator()(struct wl_display* display)
             wl_buffer_destroy(b.buffer);
     }
 
+    wl_shell_surface_destroy(shell_surface);
     wl_surface_destroy(ctx.surface);
-    outputs.clear();
     globals.teardown();
+    wl_display_roundtrip(display);
 }
 
 void SwSplash::operator()(struct wl_display* display)

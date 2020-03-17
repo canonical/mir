@@ -105,8 +105,8 @@ namespace
 void output_geometry(
     void* data,
     struct wl_output* /*wl_output*/,
-    int32_t x,
-    int32_t y,
+    int32_t /*x*/,
+    int32_t /*y*/,
     int32_t /*physical_width*/,
     int32_t /*physical_height*/,
     int32_t /*subpixel*/,
@@ -116,27 +116,19 @@ void output_geometry(
 {
     auto output = static_cast<Output*>(data);
 
-    output->x = x;
-    output->y = y;
     output->transform = transform;
 }
-
 
 void output_mode(
     void *data,
     struct wl_output* /*wl_output*/,
-    uint32_t flags,
-    int32_t width,
-    int32_t height,
+    uint32_t /*flags*/,
+    int32_t /*width*/,
+    int32_t /*height*/,
     int32_t /*refresh*/)
 {
-    if (!(WL_OUTPUT_MODE_CURRENT & flags))
-        return;
-
     auto output = static_cast<Output*>(data);
-
-    output->width = width,
-    output->height = height;
+    (void)output;
 }
 
 void output_scale(void* data, struct wl_output* wl_output, int32_t factor)
