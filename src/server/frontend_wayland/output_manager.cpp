@@ -104,29 +104,12 @@ auto as_subpixel_arrangement(MirSubpixelArrangement arrangement) -> wl_output_su
         return WL_OUTPUT_SUBPIXEL_NONE;
     }
 }
-
-auto as_transform(MirOrientation orientation) -> wl_output_transform
-{
-    switch (orientation)
-    {
-    default:
-    case mir_orientation_normal:
-        return WL_OUTPUT_TRANSFORM_NORMAL;
-
-    case mir_orientation_left:
-        return WL_OUTPUT_TRANSFORM_90;
-
-    case mir_orientation_inverted:
-        return WL_OUTPUT_TRANSFORM_180;
-
-    case mir_orientation_right:
-        return WL_OUTPUT_TRANSFORM_270;
-    }
-}
 }
 
 void mf::Output::send_initial_config(wl_resource* client_resource, mg::DisplayConfigurationOutput const& config)
 {
+    // TODO: send correct output transform
+    //       this will cause some clients to send transformed buffers, which we must be able to deal with
     wl_output_send_geometry(
         client_resource,
         config.top_left.x.as_int(),
@@ -136,7 +119,7 @@ void mf::Output::send_initial_config(wl_resource* client_resource, mg::DisplayCo
         as_subpixel_arrangement(config.subpixel_arrangement),
         "Fake manufacturer",
         "Fake model",
-        as_transform(config.orientation));
+        WL_OUTPUT_TRANSFORM_NORMAL);
     for (size_t i = 0; i < config.modes.size(); ++i)
     {
         auto const& mode = config.modes[i];
