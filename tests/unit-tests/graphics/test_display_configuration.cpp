@@ -398,7 +398,9 @@ TEST(DisplayConfiguration, output_extents_are_scaled)
     mg::DisplayConfigurationOutput out = tmpl_output;
     out.scale = 2.0f;
 
-    EXPECT_THAT(out.modes[out.current_mode_index].size * 0.5, Eq(out.extents().size));
+    EXPECT_THAT(out.extents().size, Eq(geom::Size{
+        roundf(out.modes[out.current_mode_index].size.width.as_int() * 0.5),
+        roundf(out.modes[out.current_mode_index].size.height.as_int() * 0.5)}));
 }
 
 TEST(DisplayConfiguration, output_extents_are_scaled_fractionally)
@@ -406,7 +408,9 @@ TEST(DisplayConfiguration, output_extents_are_scaled_fractionally)
     mg::DisplayConfigurationOutput out = tmpl_output;
     out.scale = 0.8f;
 
-    EXPECT_THAT(out.modes[out.current_mode_index].size * 1.25, Eq(out.extents().size));
+    EXPECT_THAT(out.extents().size, Eq(geom::Size{
+        roundf(out.modes[out.current_mode_index].size.width.as_int() * 1.25),
+        roundf(out.modes[out.current_mode_index].size.height.as_int() * 1.25)}));
 }
 
 TEST(DisplayConfiguration, user_display_configuration_output_extents_are_scaled)
@@ -415,7 +419,9 @@ TEST(DisplayConfiguration, user_display_configuration_output_extents_are_scaled)
     mg::UserDisplayConfigurationOutput user{out};
     user.scale = 2.0f;
 
-    EXPECT_THAT(user.modes[user.current_mode_index].size * 0.5, Eq(user.extents().size));
+    EXPECT_THAT(user.extents().size, Eq(geom::Size{
+        roundf(out.modes[out.current_mode_index].size.width.as_int() * 0.5),
+        roundf(out.modes[out.current_mode_index].size.height.as_int() * 0.5)}));
 }
 
 TEST(DisplayConfiguration, user_display_configuration_output_extents_are_scaled_fractionally)
@@ -424,5 +430,7 @@ TEST(DisplayConfiguration, user_display_configuration_output_extents_are_scaled_
     mg::UserDisplayConfigurationOutput user{out};
     user.scale = 0.8f;
 
-    EXPECT_THAT(user.modes[user.current_mode_index].size * 1.25, Eq(user.extents().size));
+    EXPECT_THAT(user.extents().size, Eq(geom::Size{
+        roundf(out.modes[out.current_mode_index].size.width.as_int() * 1.25),
+        roundf(out.modes[out.current_mode_index].size.height.as_int() * 1.25)}));
 }
