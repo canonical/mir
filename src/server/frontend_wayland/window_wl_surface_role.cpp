@@ -456,5 +456,19 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     auto const content_size = scene_surface->content_size();
     if (content_size != params->size)
         observer->content_resized_to(scene_surface.get(), content_size);
+
+    // Send wl_surface.enter events for every output
+    // TODO: send enter/leave when the surface actually enters and leaves outputs
+    output_manager->display_config()->for_each_output([&](graphics::DisplayConfigurationOutput const& conf)
+        {
+            auto const output = output_manager->output_for(conf.id);
+            if (output)
+            {
+                output.value()->for_each_output_resource_bound_by(client, [&](wl_resource* resource)
+                    {
+                        surface->send_enter_event(resource);
+                    });
+            }
+        });
 }
 
