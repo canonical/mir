@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2020 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -19,7 +19,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_configuration.h"
-#include <mir/graphics/display_configuration_policy.h>
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/virtual_output.h"
 #include "mir/renderer/gl/context.h"
@@ -237,7 +236,6 @@ unsigned long mgx::X11Window::red_mask() const
 
 mgx::Display::Display(::Display* x_dpy,
                       std::vector<X11OutputConfig> const& requested_sizes,
-                      std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& report)
     : shared_egl{*gl_config},
@@ -283,9 +281,6 @@ mgx::Display::Display(::Display* x_dpy,
 
     shared_egl.make_current();
 
-    auto const display_config = configuration();
-    initial_conf_policy->apply_to(*display_config);
-    configure(*display_config);
     report->report_successful_display_construction();
 }
 

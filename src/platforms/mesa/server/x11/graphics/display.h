@@ -40,7 +40,6 @@ class AtomicFrame;
 class GLConfig;
 class DisplayReport;
 struct DisplayConfigurationOutput;
-class DisplayConfigurationPolicy;
 
 namespace X
 {
@@ -73,7 +72,6 @@ class Display : public graphics::Display,
 public:
     explicit Display(::Display* x_dpy,
                      std::vector<X11OutputConfig> const& requested_size,
-                     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                      std::shared_ptr<GLConfig> const& gl_config,
                      std::shared_ptr<DisplayReport> const& report);
     ~Display() noexcept;
