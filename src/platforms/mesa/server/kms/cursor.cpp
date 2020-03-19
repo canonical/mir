@@ -344,7 +344,7 @@ void mgm::Cursor::hide()
 }
 
 void mgm::Cursor::for_each_used_output(
-    std::function<void(KMSOutput&, geom::Rectangle const&, MirOrientation orientation)> const& f)
+    std::function<void(KMSOutput& output, DisplayConfigurationOutput const& conf)> const& f)
 {
     current_configuration->with_current_configuration_do(
         [&f](KMSDisplayConfiguration const& kms_conf)
@@ -354,8 +354,7 @@ void mgm::Cursor::for_each_used_output(
                 if (conf_output.used)
                 {
                     auto output = kms_conf.get_output_for(conf_output.id);
-
-                    f(*output, conf_output.extents(), conf_output.orientation);
+                    f(*output, conf_output);
                 }
             });
         });
@@ -382,18 +381,41 @@ void mgm::Cursor::place_cursor_at_locked(
 
     bool set_on_all_outputs = true;
 
-    for_each_used_output([&](KMSOutput& output, geom::Rectangle const& output_rect, MirOrientation orientation)
+    for_each_used_output([&](KMSOutput& output, DisplayConfigurationOutput const& conf)
     {
+        auto const output_rect = conf.extents();
+
         if (output_rect.contains(position))
         {
-            auto dp = transform(output_rect, position - output_rect.top_left, orientation);
-            auto hs = transform(geom::Rectangle{{0,0}, size}, hotspot, orientation);
+            auto const orientation = conf.orientation;
+            auto const relative_to_extants = position - output_rect.top_left;
+            auto const relative_to_extants_vec = glm::vec2{
+                relative_to_extants.dx.as_int(),
+                relative_to_extants.dy.as_int()};
+
+            // Cursor position scaled such that (-1, -1) is at the bottom left of the logical output extents and (1, 1)
+            // is at the upper right
+            auto const scaled_vec = glm::vec2{
+                relative_to_extants_vec.x / output_rect.size.width.as_int(),
+                relative_to_extants_vec.y / output_rect.size.height.as_int()} * 2.0f - glm::vec2{1};
+
+            // Cursor position on the same (-1, -1) to (1, 1) coordinate system, but with the output transform applied
+            auto const transformed_vec = scaled_vec * conf.transformation();
+
+            auto const output_size_vec = glm::vec2{output.size().width.as_int(), output.size().height.as_int()};
+
+            // Cursor position in actual output pixels
+            auto const output_space_vec = ((transformed_vec + glm::vec2{1}) / 2.0f) * output_size_vec;
+
+            auto const position_on_output = geom::Point{roundf(output_space_vec.x), roundf(output_space_vec.y)};
+
+            auto const hotspot_displacement = transform(geom::Rectangle{{}, size}, hotspot, orientation);
 
             // It's a little strange that we implement hotspot this way as there is
             // drmModeSetCursor2 with hotspot support. However it appears to not actually
             // work on radeon and intel. There also seems to be precedent in weston for
             // implementing hotspot in this fashion.
-            output.move_cursor(geom::Point{} + dp - hs);
+            output.move_cursor(position_on_output - hotspot_displacement);
             auto& buffer = buffer_for_output(output);
 
             auto const changed_orientation = buffer.change_orientation(orientation);
