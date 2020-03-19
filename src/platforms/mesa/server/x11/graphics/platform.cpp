@@ -124,10 +124,10 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_al
 }
 
 mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
-    std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,
+    std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return make_module_ptr<mgx::Display>(x11_connection.get(), output_sizes, gl_config, report);
+    return make_module_ptr<mgx::Display>(x11_connection.get(), output_sizes, initial_conf_policy, gl_config, report);
 }
 
 mg::NativeDisplayPlatform* mgx::Platform::native_display_platform()
