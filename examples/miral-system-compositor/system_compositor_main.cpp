@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Canonical Ltd.
+ * Copyright © 2019-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -18,6 +18,7 @@
 
 #include <miral/append_event_filter.h>
 #include <miral/command_line_option.h>
+#include <miral/display_configuration_option.h>
 #include <miral/runner.h>
 
 #include <linux/input.h>
@@ -70,5 +71,5 @@ int main(int argc, char const* argv[])
             };
         }};
 
-    return runner.run_with({quit_on_ctrl_alt_bksp, disable_quit});
+    return runner.run_with({quit_on_ctrl_alt_bksp, disable_quit, display_configuration_options });
 }
