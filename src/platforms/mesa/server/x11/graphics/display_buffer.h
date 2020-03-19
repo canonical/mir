@@ -51,7 +51,7 @@ public:
             ::Display* const x_dpy,
             DisplayConfigurationOutputId output_id,
             Window const win,
-            geometry::Size const& view_area_size,
+            geometry::Rectangle const& view_area,
             EGLContext const shared_context,
             std::shared_ptr<AtomicFrame> const& f,
             std::shared_ptr<DisplayReport> const& r,
