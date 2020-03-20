@@ -756,7 +756,6 @@ mf::WaylandConnector::WaylandConnector(
 
     pause_source = wl_event_loop_add_fd(wayland_loop, pause_signal, WL_EVENT_READABLE, &halt_eventloop, display.get());
 }
-
 mf::WaylandConnector::~WaylandConnector()
 {
     if (dispatch_thread.joinable())

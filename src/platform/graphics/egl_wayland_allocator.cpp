@@ -117,7 +117,6 @@ public:
         std::shared_ptr<mir::Executor> wayland_executor)
         : ctx{std::move(ctx)},
           tex{get_tex_id()},
-          on_consumed{std::move(on_consumed)},
           on_release{std::move(on_release)},
           size_{get_wl_buffer_size(buffer, *extensions.wayland)},
           layout_{get_texture_layout(buffer, *extensions.wayland)},
@@ -157,6 +156,7 @@ public:
         // tex is now an EGLImage sibling, so we can free the EGLImage without
         // freeing the backing data.
         extensions.eglDestroyImageKHR(eglGetCurrentDisplay(), egl_image);
+        on_consumed();
     }
 
     ~WaylandTexBuffer()
@@ -238,10 +238,6 @@ public:
     void bind() override
     {
         glBindTexture(GL_TEXTURE_2D, tex);
-
-        std::lock_guard<decltype(consumed_mutex)> lock(consumed_mutex);
-        on_consumed();
-        on_consumed = [](){};
     }
 
     void add_syncpoint() override
@@ -251,8 +247,6 @@ private:
     std::shared_ptr<mir::renderer::gl::Context> const ctx;
     GLuint const tex;
 
-    std::mutex consumed_mutex;
-    std::function<void()> on_consumed;
     std::function<void()> const on_release;
 
     geom::Size const size_;
