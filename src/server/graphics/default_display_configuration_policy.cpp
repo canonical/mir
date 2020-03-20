@@ -105,7 +105,7 @@ void mg::SideBySideDisplayConfigurationPolicy::apply_to(graphics::DisplayConfigu
                 conf_output.current_mode_index = preferred_mode_index;
                 conf_output.power_mode = mir_power_mode_on;
                 conf_output.orientation = mir_orientation_normal;
-                max_x += conf_output.modes[preferred_mode_index].size.width.as_int();
+                max_x += conf_output.extents().size.width.as_int();
             }
             else
             {
