@@ -323,6 +323,37 @@ TEST(SideBySideDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
     });
 }
 
+TEST(SideBySideDisplayConfigurationPolicyTest, placement_respects_scale)
+{
+    using namespace ::testing;
+
+    SideBySideDisplayConfigurationPolicy policy;
+    StubDisplayConfiguration conf{create_default_configuration()};
+
+    conf.for_each_output([&](UserDisplayConfigurationOutput const& output)
+    {
+        output.scale = 2.0f;
+    });
+
+    policy.apply_to(conf);
+
+    Point expected_position;
+
+    conf.for_each_output([&](DisplayConfigurationOutput const& output)
+    {
+        if (output.connected && output.modes.size() > 0)
+        {
+            EXPECT_EQ(expected_position, output.top_left);
+
+            expected_position.x += DeltaX{round(output.modes[output.current_mode_index].size.width.as_int()/2.0f)};
+        }
+        else
+        {
+            EXPECT_FALSE(output.used);
+        }
+    });
+}
+
 TEST(SideBySideDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
 {
     using namespace ::testing;
