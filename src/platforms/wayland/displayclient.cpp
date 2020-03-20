@@ -283,6 +283,7 @@ void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(Disp
         window = wl_shell_get_shell_surface(owner->shell, surface);
         wl_shell_surface_add_listener(window, &shell_surface_listener, this);
         wl_shell_surface_set_fullscreen(window, WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, output);
+        wl_surface_set_buffer_scale(surface, round(dcout.scale));
         wl_display_dispatch(owner->display);
 
         auto const& size = dcout.modes[dcout.current_mode_index].size;
