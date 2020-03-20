@@ -830,21 +830,6 @@ void mgw::DisplayClient::for_each_display_sync_group(const std::function<void(Di
     }
 }
 
-void mir::graphics::wayland::DisplayClient::apply(mir::graphics::DisplayConfiguration const& config)
-{
-    std::lock_guard<decltype(outputs_mutex)> lock{outputs_mutex};
-
-    // There's no way for the underlying outputs to change, so these iterations will zip
-    auto bound_output = bound_outputs.begin();
-    config.for_each_output([&bound_output](DisplayConfigurationOutput const& output)
-    {
-        bound_output->second->dcout.used = output.used;
-        bound_output->second->dcout.top_left = output.top_left;
-        bound_output->second->dcout.current_mode_index = output.current_mode_index;
-        ++bound_output;
-    });
-}
-
 mgw::WaylandDisplayConfiguration::WaylandDisplayConfiguration(std::vector<DisplayConfigurationOutput> && outputs) :
     outputs{outputs}
 {
