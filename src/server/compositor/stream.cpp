@@ -39,7 +39,7 @@ mc::Stream::Stream(
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
     arbiter(std::make_shared<mc::MultiMonitorArbiter>(schedule)),
-    size(size),
+    latest_buffer_size(size),
     pf(pf),
     first_frame_posted(false),
     frame_callback{[](auto){}}
@@ -54,10 +54,10 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot submit null buffer"));
 
     {
-        std::lock_guard<decltype(mutex)> lk(mutex); 
+        std::lock_guard<decltype(mutex)> lk(mutex);
         first_frame_posted = true;
         pf = buffer->pixel_format();
-        size = buffer->size();
+        latest_buffer_size = buffer->size();
         schedule->schedule(buffer);
     }
     {
@@ -68,7 +68,7 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& fn)
 {
-    std::lock_guard<decltype(mutex)> lk(mutex); 
+    std::lock_guard<decltype(mutex)> lk(mutex);
     fn(*arbiter->snapshot_acquire());
 }
 
@@ -93,12 +93,14 @@ std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
 geom::Size mc::Stream::stream_size()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    return size;
+    return geom::Size{
+        roundf(latest_buffer_size.width.as_int() / scale_),
+        roundf(latest_buffer_size.height.as_int() / scale_)};
 }
 
 void mc::Stream::allow_framedropping(bool dropping)
 {
-    std::lock_guard<decltype(mutex)> lk(mutex); 
+    std::lock_guard<decltype(mutex)> lk(mutex);
     if (dropping && schedule_mode == ScheduleMode::Queueing)
     {
         transition_schedule(std::make_shared<mc::DroppingSchedule>(), lk);
@@ -130,7 +132,7 @@ void mc::Stream::transition_schedule(
 
 int mc::Stream::buffers_ready_for_compositor(void const* id) const
 {
-    std::lock_guard<decltype(mutex)> lk(mutex); 
+    std::lock_guard<decltype(mutex)> lk(mutex);
     if (arbiter->buffer_ready_for(id))
         return 1;
     return 0;
@@ -138,7 +140,7 @@ int mc::Stream::buffers_ready_for_compositor(void const* id) const
 
 void mc::Stream::drop_old_buffers()
 {
-    std::lock_guard<decltype(mutex)> lk(mutex); 
+    std::lock_guard<decltype(mutex)> lk(mutex);
     std::vector<std::shared_ptr<mg::Buffer>> transferred_buffers;
     while(schedule->num_scheduled())
         transferred_buffers.emplace_back(schedule->next_buffer());
@@ -154,10 +156,12 @@ void mc::Stream::drop_old_buffers()
 
 bool mc::Stream::has_submitted_buffer() const
 {
-    std::lock_guard<decltype(mutex)> lk(mutex); 
+    std::lock_guard<decltype(mutex)> lk(mutex);
     return first_frame_posted;
 }
 
-void mc::Stream::set_scale(float)
+void mc::Stream::set_scale(float scale)
 {
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    scale_ = scale;
 }

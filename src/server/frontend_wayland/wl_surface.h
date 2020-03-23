@@ -80,6 +80,7 @@ struct WlSurfaceState
     // if it's nullptr, there is a new buffer and it is a null buffer, which should replace the current buffer
     std::experimental::optional<wl_resource*> buffer;
 
+    std::experimental::optional<int> scale;
     std::experimental::optional<geometry::Displacement> offset;
     std::experimental::optional<std::experimental::optional<std::vector<geometry::Rectangle>>> input_shape;
     std::vector<std::shared_ptr<Callback>> frame_callbacks;
