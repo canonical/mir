@@ -57,6 +57,9 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
     if (source.buffer)
         buffer = source.buffer;
 
+    if (source.scale)
+        scale = source.scale;
+
     if (source.offset)
         offset = source.offset;
 
@@ -313,6 +316,9 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     if (state.input_shape)
         input_shape = state.input_shape.value();
 
+    if (state.scale)
+        stream->set_scale(state.scale.value());
+
     if (state.buffer)
     {
         wl_resource * buffer = *state.buffer;
@@ -371,12 +377,15 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     mir_buffer->id().as_value());
             }
 
-            if (!input_shape && (!buffer_size_ || mir_buffer->size() != buffer_size_.value()))
+            stream->submit_buffer(mir_buffer);
+            auto const new_buffer_size = stream->stream_size();
+
+            if (!input_shape && std::experimental::make_optional(new_buffer_size) != buffer_size_)
             {
                 state.invalidate_surface_data(); // input shape needs to be recalculated for the new size
             }
-            buffer_size_ = mir_buffer->size();
-            stream->submit_buffer(mir_buffer);
+
+            buffer_size_ = new_buffer_size;
         }
     }
     else
@@ -415,8 +424,7 @@ void mf::WlSurface::set_buffer_transform(int32_t transform)
 
 void mf::WlSurface::set_buffer_scale(int32_t scale)
 {
-    (void)scale;
-    // TODO
+    pending.scale = scale;
 }
 
 mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :
