@@ -49,32 +49,38 @@ else()
     endif()
 endif()
 
-find_file(GMOCK_SOURCE
-        NAMES gmock-all.cc
-        DOC "GMock source"
-        PATHS /usr/src/googletest/googlemock/src/ /usr/src/gmock/ /usr/src/gmock/src)
+pkg_check_modules(GMOCK QUIET gmock)
 
-if (EXISTS ${GMOCK_SOURCE})
-    find_path(GMOCK_INCLUDE_DIR gmock/gmock.h PATHS /usr/src/googletest/googlemock/include)
-
-    add_library(GMock STATIC ${GMOCK_SOURCE})
-    target_link_libraries(GMock ${GTEST_LIBRARY})
-
-    if (EXISTS /usr/src/googletest/googlemock/src)
-        set_source_files_properties(${GMOCK_SOURCE} PROPERTIES COMPILE_FLAGS "-I/usr/src/googletest/googlemock")
-    endif()
-
-    if (EXISTS /usr/src/gmock/src)
-        set_source_files_properties(${GMOCK_SOURCE} PROPERTIES COMPILE_FLAGS "-I/usr/src/gmock")
-    endif()
-
-    find_package_handle_standard_args(GMock DEFAULT_MSG GMOCK_INCLUDE_DIR)
-
-    set(GMOCK_LIBRARY GMock)
-else()
-    # Assume gmock is no longer source, we'll find out soon enough if that's wrong
+if (GMOCK_FOUND)
     add_custom_target(GMock)
-    string(REPLACE gtest gmock GMOCK_LIBRARY ${GTEST_LIBRARY})
-endif()
+else()
+    find_file(GMOCK_SOURCE
+            NAMES gmock-all.cc
+            DOC "GMock source"
+            PATHS /usr/src/googletest/googlemock/src/ /usr/src/gmock/ /usr/src/gmock/src)
 
-set(GMOCK_LIBRARIES ${GTEST_BOTH_LIBRARIES} ${GMOCK_LIBRARY})
+    if (EXISTS ${GMOCK_SOURCE})
+        find_path(GMOCK_INCLUDE_DIR gmock/gmock.h PATHS /usr/src/googletest/googlemock/include)
+
+        add_library(GMock STATIC ${GMOCK_SOURCE})
+        target_link_libraries(GMock ${GTEST_LIBRARY})
+
+        if (EXISTS /usr/src/googletest/googlemock/src)
+            set_source_files_properties(${GMOCK_SOURCE} PROPERTIES COMPILE_FLAGS "-I/usr/src/googletest/googlemock")
+        endif()
+
+        if (EXISTS /usr/src/gmock/src)
+            set_source_files_properties(${GMOCK_SOURCE} PROPERTIES COMPILE_FLAGS "-I/usr/src/gmock")
+        endif()
+
+        find_package_handle_standard_args(GMock DEFAULT_MSG GMOCK_INCLUDE_DIR)
+
+        set(GMOCK_LIBRARY GMock)
+    else()
+        # Assume gmock is no longer source, we'll find out soon enough if that's wrong
+        add_custom_target(GMock)
+        string(REPLACE gtest gmock GMOCK_LIBRARY ${GTEST_LIBRARY})
+    endif()
+
+    set(GMOCK_LIBRARIES ${GTEST_BOTH_LIBRARIES} ${GMOCK_LIBRARY})
+endif()
