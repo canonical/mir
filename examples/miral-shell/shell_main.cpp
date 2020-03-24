@@ -84,16 +84,7 @@ int main(int argc, char const* argv[])
                 return true;
 
             case KEY_T:
-                {
-                    std::vector<std::string> command_line{terminal_cmd};
-                    if (terminal_cmd == "gnome-terminal" && boost::filesystem::exists("/usr/bin/gnome-terminal.real"))
-                    {
-                        // gnome-terminal is a horrid wrapper script on Ubuntu that needs frigging
-                        command_line.emplace_back("--disable-factory");
-                    }
-
-                    external_client_launcher.launch(command_line);
-                }
+                external_client_launcher.launch({terminal_cmd});
                 return false;
 
             case KEY_X:
