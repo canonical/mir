@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2019 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -24,12 +24,13 @@ namespace
 {
 auto default_font() -> std::string
 {
-    for (std::string const file : { "Ubuntu-B.ttf", "FreeSansBold.ttf" })
+    for (std::string const file : { "Ubuntu-B.ttf", "FreeSansBold.ttf", "LiberationSans-Bold.ttf" })
     {
         for (auto const path : { "/usr/share/fonts/truetype/ubuntu-font-family/",   // Ubuntu < 18.04 Ubuntu-B.ttf
                                  "/usr/share/fonts/truetype/ubuntu/",               // Ubuntu >= 18.04 Ubuntu-B.ttf
                                  "/usr/share/fonts/truetype/freefont/",             // Debian FreeSansBold.ttf
                                  "/usr/share/fonts/gnu-free/",                      // Fedora FreeSansBold.ttf
+                                 "/usr/share/fonts/liberation-sans/",               // Fedora LiberationSans-Bold.ttf
                                  "/usr/share/fonts/TTF/"})                          // Arch Ubuntu-B.ttf
         {
             auto const full_path = path + file;
