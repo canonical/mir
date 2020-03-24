@@ -13,7 +13,7 @@ then
 else
   for terminal_server in /usr/libexec/gnome-terminal-server /usr/lib/gnome-terminal/gnome-terminal-server
   do
-    if [[ -x "$terminal_server" ]];  then break; fi
+    if [ -x "$terminal_server" ];  then break; fi
   done
   $terminal_server --app-id io.mirserver.Terminal&
   pid=$!
