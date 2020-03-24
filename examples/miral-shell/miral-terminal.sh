@@ -1,7 +1,8 @@
 #!/bin/sh
+
 for terminal in gnome-terminal.real gnome-terminal weston-terminal qterminal lxterminal x-terminal-emulator xdg-terminal
 do
-  if which $terminal > /dev/null
+  if which $terminal > /dev/null 2>&1
   then break;
   fi
 done
@@ -26,7 +27,7 @@ else
   #
   # In Ubuntu 16.04 and 18.04 gnome-terminal-server is in /usr/lib/gnome-terminal
   # In Fedora and Ubuntu 20.04 gnome-terminal-server is in /usr/libexec/
-  for terminal_server in /usr/libexec/gnome-terminal-server /usr/lib/gnome-terminal/gnome-terminal-server
+  for terminal_server in /usr/libexec/gnome-terminal-server /usr/lib/gnome-terminal/gnome-terminal-server /usr/lib/gnome-terminal-server
   do
     if [ -x "$terminal_server" ];  then break; fi
   done
