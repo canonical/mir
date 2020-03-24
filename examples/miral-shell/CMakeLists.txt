@@ -9,6 +9,14 @@ install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/miral-app
     DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
 )
 
+add_custom_target(miral-terminal ALL
+    cp ${CMAKE_CURRENT_SOURCE_DIR}/miral-terminal.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/miral-terminal
+)
+
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/miral-terminal
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+)
+
 mir_add_wrapped_executable(miral-shell
     shell_main.cpp
 )
