@@ -77,7 +77,7 @@ then
   fi
 
   # miral-shell can launch it's own terminal with Ctrl-Alt-T
-  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} ${hostsocket} exec ${bindir}${miral_server} $*
+  MIR_SERVER_FILE=${socket} WAYLAND_DISPLAY=${wayland_display} MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} ${hostsocket} exec dbus-run-session -- ${bindir}${miral_server} $*
 else
   # With mir_demo_server we will get the display saved to this file
   x11_display_file=$(tempfile)
@@ -106,6 +106,6 @@ else
     unset DISPLAY
   fi
 
-  MIR_SOCKET=${socket} XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 ${terminal}
+  MIR_SOCKET=${socket} XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 dbus-run-session -- ${terminal}
   killall ${bindir}${miral_server} || killall ${bindir}${miral_server}.bin
 fi
