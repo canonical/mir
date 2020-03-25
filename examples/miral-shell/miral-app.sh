@@ -32,28 +32,21 @@ if [ "${miral_server}" == "miral-shell" ]
 then
   if [ "$(lsb_release -c -s)" == "xenial" ]
   then
-    export MIR_SERVER_APP_ENV="GDK_BACKEND=x11:QT_QPA_PLATFORM=ubuntumirclient:SDL_VIDEODRIVER=mir:-QT_QPA_PLATFORMTHEME:NO_AT_BRIDGE=1:QT_ACCESSIBILITY:QT_LINUX_ACCESSIBILITY_ALWAYS_ON:_JAVA_AWT_WM_NONREPARENTING=1:-GTK_MODULES:-OOO_FORCE_DESKTOP:-GNOME_ACCESSIBILITY:"
-    export MIR_SERVER_ENABLE_MIRCLIENT=
+    export MIR_SERVER_APP_ENV="GDK_BACKEND=x11:QT_QPA_PLATFORM=xcb:SDL_VIDEODRIVER=x11:-QT_QPA_PLATFORMTHEME:NO_AT_BRIDGE=1:QT_ACCESSIBILITY:QT_LINUX_ACCESSIBILITY_ALWAYS_ON:_JAVA_AWT_WM_NONREPARENTING=1:-GTK_MODULES:-OOO_FORCE_DESKTOP:-GNOME_ACCESSIBILITY:"
   fi
 
   # miral-shell can launch it's own terminal with Ctrl-Alt-T
   MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} exec ${bindir}${miral_server} $*
 else
-  socket=${XDG_RUNTIME_DIR}/miral_socket
-
   if [ "$(lsb_release -c -s)" != "xenial" ]
   then
     qt_qpa=wayland
     gdk_backend=wayland
     sdl_videodriver=wayland
-    enable_mirclient=""
   else
-    qt_qpa=ubuntumirclient
-    gdk_backend=mir
-    sdl_videodriver=mir
-    enable_mirclient="--enable-mirclient"
-    MIR_SOCKET=${socket}
-    if [ -e "${socket}" ]; then echo "Error: session endpoint '${socket}' already exists"; exit 1 ;fi
+    qt_qpa=xcb
+    gdk_backend=x11
+    sdl_videodriver=x11
   fi
 
   port=0
@@ -69,9 +62,9 @@ else
   # miral-kiosk (and mir_demo_server) need a terminal launched
   if [ "${miral_server}" == "mir_demo_server" ]
   then
-    MIR_SERVER_FILE=${socket} MIR_SERVER_ENABLE_X11=1 WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} ${enable_mirclient} $* --x11-displayfd 5 5>${x11_display_file}&
+    MIR_SERVER_ENABLE_X11=1 WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} $* --x11-displayfd 5 5>${x11_display_file}&
   else # miral-kiosk
-    MIR_SERVER_FILE=${socket}                         WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} ${enable_mirclient} $*&
+                            WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} $*&
   fi
 
   while [ ! -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; do echo "waiting for ${wayland_display}"; sleep 1 ;done
