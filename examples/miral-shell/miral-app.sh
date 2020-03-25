@@ -38,46 +38,44 @@ then
   # miral-shell can launch it's own terminal with Ctrl-Alt-T
   MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} exec ${bindir}${miral_server} $*
 else
-  if [ "$(lsb_release -c -s)" != "xenial" ]
-  then
-    qt_qpa=wayland
-    gdk_backend=wayland
-    sdl_videodriver=wayland
-  else
-    qt_qpa=xcb
-    gdk_backend=x11
-    sdl_videodriver=x11
-  fi
-
+  # miral-kiosk (and mir_demo_server) need a terminal launched, so we need to manage the WAYLAND_DISPLAY etc. here.
   port=0
   while [ -e "${XDG_RUNTIME_DIR}/wayland-${port}" ]; do
       let port+=1
   done
   wayland_display=wayland-${port}
+  qt_qpa=wayland
+  gdk_backend=wayland
+  sdl_videodriver=wayland
 
-  if [ -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; then echo "Error: wayland endpoint '${wayland_display}' already exists"; exit 1 ;fi
-
-  # With mir_demo_server we will get the display saved to this file
-  x11_display_file=$(tempfile)
-  # miral-kiosk (and mir_demo_server) need a terminal launched
-  if [ "${miral_server}" == "mir_demo_server" ]
+  if [ "${miral_server}" == "miral-kiosk" ]
   then
+    # Start miral-kiosk server with the chosen WAYLAND_DISPLAY
+    WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} $*&
+    unset DISPLAY
+  elif [ "${miral_server}" == "mir_demo_server" ]
+  then
+    # With mir_demo_server we will get the display saved to this file
+    x11_display_file=$(tempfile)
+
+    # Start mir_demo_server with the chosen WAYLAND_DISPLAY
     MIR_SERVER_ENABLE_X11=1 WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} $* --x11-displayfd 5 5>${x11_display_file}&
-  else # miral-kiosk
-                            WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} $*&
-  fi
 
-  while [ ! -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; do echo "waiting for ${wayland_display}"; sleep 1 ;done
-
-  # With mir_demo_server ${x11_display_file} contains the X11 display
-  if [ -e "${x11_display_file}" ]
-  then
+    # ${x11_display_file} contains the X11 display
     export DISPLAY=:$(cat "${x11_display_file}")
     rm "${x11_display_file}"
-  else
-    unset DISPLAY
+
+    # On Xenial fall back to X11 for all the toolkits
+    if [ "$(lsb_release -c -s)" == "xenial" ]
+    then
+      qt_qpa=xcb
+      gdk_backend=x11
+      sdl_videodriver=x11
+    fi
   fi
 
+  # When the server starts, launch a terminal. When the terminal exits close the server.
+  while [ ! -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; do echo "waiting for ${wayland_display}"; sleep 1 ;done
   XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 ${terminal}
   killall ${bindir}${miral_server} || killall ${bindir}${miral_server}.bin
 fi
