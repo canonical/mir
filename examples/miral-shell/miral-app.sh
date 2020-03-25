@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 miral_server=miral-shell
 bindir=$(dirname $0)
