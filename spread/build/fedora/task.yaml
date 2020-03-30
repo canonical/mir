@@ -39,7 +39,6 @@ execute: |
         python3-dbusmock \
         python3-gobject-base \
         python3-dbus \
-        mesa-libwayland-egl-devel\
         libXcursor-devel \
         yaml-cpp-devel\
         egl-wayland-devel \
