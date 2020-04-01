@@ -25,6 +25,7 @@
 
 int main(int argc, char* argv[])
 {
+    unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing server
     // Override this standard gtest message
     char path[] = __FILE__;
     std::cout << "Running main() from " << basename(path) << std::endl;

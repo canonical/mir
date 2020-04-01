@@ -48,6 +48,7 @@ std::chrono::seconds const timeout{20};
 mtf::AsyncServerRunner::AsyncServerRunner() :
     set_window_management_policy{[](auto&){}}
 {
+    unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing Wayland server
     add_to_environment("MIR_SERVER_ENABLE_MIRCLIENT", "");
     configure_from_commandline(server);
 
