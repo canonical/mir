@@ -68,7 +68,7 @@ TEST_F(ServerStartup, after_server_sigkilled_can_start_new_instance)
         });
 }
 
-TEST(ServerStartupReliability, can_start_with_low_entropy)
+TEST(ServerStartupReliability, DISABLED_can_start_with_low_entropy)
 {   // Regression test for LP: #1536662 and LP: #1541188
     using namespace ::testing;
 
