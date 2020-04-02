@@ -42,6 +42,8 @@ public:
 
     void show(graphics::CursorImage const& image) override;
 
+    void show() override;
+
     void hide() override;
 
     void move_to(geometry::Point position) override;

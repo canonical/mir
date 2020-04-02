@@ -30,6 +30,7 @@ namespace doubles
 
 struct StubCursor : public graphics::Cursor
 {
+    void show() override {}
     void show(graphics::CursorImage const&) override {}
     void hide() override {}
     void move_to(geometry::Point) override {}

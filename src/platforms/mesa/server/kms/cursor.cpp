@@ -275,6 +275,17 @@ void mgm::Cursor::pad_and_write_image_data_locked(
     write_buffer_data_locked(lg, buffer, &padded[0], padded_size);
 }
 
+void mgm::Cursor::show()
+{
+    std::lock_guard<std::mutex> lg(guard);
+
+    if (!visible)
+    {
+        visible = true;
+        place_cursor_at_locked(lg, current_position, ForceState);
+    }
+}
+
 void mgm::Cursor::show(CursorImage const& cursor_image)
 {
     std::lock_guard<std::mutex> lg(guard);
