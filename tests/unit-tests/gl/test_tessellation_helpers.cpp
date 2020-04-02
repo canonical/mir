@@ -16,7 +16,7 @@
  * Authored by: William Wold <william.wold@canonical.com>
  */
 
-#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <mir/gl/tessellation_helpers.h>
 #include <mir/test/doubles/mock_renderable.h>
 
