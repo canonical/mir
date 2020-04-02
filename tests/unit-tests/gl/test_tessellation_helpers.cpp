@@ -67,7 +67,7 @@ public:
             for (int axis = 0; axis < 2; axis++)
             {
                 float const tex_coord = primitive.vertices[i].texcoord[axis];
-                ASSERT_THAT(tex_coord == 0.0 || tex_coord == 1.0, IsTrue());
+                EXPECT_THAT(tex_coord == 0.0 || tex_coord == 1.0, Eq(true));
             }
         }
     }
