@@ -29,6 +29,7 @@ namespace graphics
 class NullCursor : public Cursor
 {
 public:
+    void show() override {}
     void show(CursorImage const&) override {}
     void hide() override {}
     void move_to(geometry::Point) override {}

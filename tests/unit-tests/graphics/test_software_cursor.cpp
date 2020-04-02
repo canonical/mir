@@ -181,7 +181,7 @@ TEST_F(SoftwareCursor, tolerates_being_hidden_while_being_reshown)
     executor.execute();
     cursor.hide();
     executor.execute();
-    cursor.show(stub_cursor_image);
+    cursor.show();
     executor.execute();
 
     Mock::VerifyAndClearExpectations(&mock_input_scene);
