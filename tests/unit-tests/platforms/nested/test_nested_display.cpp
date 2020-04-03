@@ -275,7 +275,6 @@ TEST_F(NestedDisplay, preserves_framebuffers_for_metadata_changes)
     conf->for_each_output(
         [](mg::UserDisplayConfigurationOutput& output)
         {
-            output.scale *= 3.1415f;
             output.form_factor =
                 output.form_factor == mir_form_factor_monitor ?
                     mir_form_factor_phone :
