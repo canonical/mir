@@ -119,7 +119,7 @@ struct DisplayConfigurationOutput
     MirOrientation orientation;
 
     /** Requested scale factor for this output, for HiDPI support */
-    float scale;
+    float scale{1.0f};
     /** Form factor of this output; phone display, tablet, monitor, TV, projector... */
     MirFormFactor form_factor;
 
