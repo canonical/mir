@@ -27,6 +27,34 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mgl = mir::gl;
 
+struct BoundingBox
+{
+    float left, right, top, bottom;
+
+    static auto from(geom::Rectangle const& rect) -> BoundingBox
+    {
+        return BoundingBox{
+            static_cast<float>(rect.left().as_int()),
+            static_cast<float>(rect.right().as_int()),
+            static_cast<float>(rect.top().as_int()),
+            static_cast<float>(rect.bottom().as_int())};
+    }
+
+    auto operator==(BoundingBox const& other) const -> bool
+    {
+        return left == other.left &&
+               right == other.right &&
+               top == other.top &&
+               bottom == other.bottom;
+    }
+};
+
+auto operator<<(std::ostream& os, const BoundingBox& bb) -> std::ostream&
+{
+    os << "{ left=" << bb.left << ", right=" << bb.right << ", top=" << bb.top << ", bottom=" << bb.bottom << " }";
+    return os;
+}
+
 class Tessellation : public testing::Test
 {
 public:
@@ -35,11 +63,6 @@ public:
         ON_CALL(renderable, screen_position())
             .WillByDefault(Return(rect));
     }
-
-    struct BoundingBox
-    {
-        float left, right, top, bottom;
-    };
 
     static auto bounding_box(mgl::Primitive const& primitive) -> BoundingBox
     {
@@ -67,7 +90,7 @@ public:
             for (int axis = 0; axis < 2; axis++)
             {
                 float const tex_coord = primitive.vertices[i].texcoord[axis];
-                EXPECT_THAT(tex_coord == 0.0 || tex_coord == 1.0, Eq(true));
+                EXPECT_THAT(tex_coord, AnyOf(Eq(1.0f), Eq(0.0f))) << "axis=" << axis;
             }
         }
     }
@@ -87,21 +110,16 @@ TEST_F(Tessellation, has_correct_bounding_box)
 {
     mgl::Primitive const primitive = mgl::tessellate_renderable_into_rectangle(renderable, {});
     auto const box = bounding_box(primitive);
-    EXPECT_THAT(box.left, Eq(rect.top_left.x.as_int()));
-    EXPECT_THAT(box.top, Eq(rect.top_left.y.as_int()));
-    EXPECT_THAT(box.right, Eq(rect.right().as_int()));
-    EXPECT_THAT(box.bottom, Eq(rect.bottom().as_int()));
+    EXPECT_THAT(box, Eq(BoundingBox::from(rect)));
 }
 
 TEST_F(Tessellation, bounding_box_gets_offset)
 {
-    int const x{3}, y{8};
-    mgl::Primitive const primitive = mgl::tessellate_renderable_into_rectangle(renderable, {x, y});
+    geom::Displacement const offset{3, 8};
+    mgl::Primitive const primitive = mgl::tessellate_renderable_into_rectangle(renderable, offset);
     auto const box = bounding_box(primitive);
-    EXPECT_THAT(box.left, Eq(rect.top_left.x.as_int() - x));
-    EXPECT_THAT(box.top, Eq(rect.top_left.y.as_int() - y));
-    EXPECT_THAT(box.right, Eq(rect.right().as_int() - x));
-    EXPECT_THAT(box.bottom, Eq(rect.bottom().as_int() - y));
+    geom::Rectangle const expected{rect.top_left - offset, rect.size};
+    EXPECT_THAT(box, Eq(BoundingBox::from(expected)));
 }
 
 TEST_F(Tessellation, vertex_zs_are_1)
@@ -110,7 +128,7 @@ TEST_F(Tessellation, vertex_zs_are_1)
     mgl::Primitive const primitive = mgl::tessellate_renderable_into_rectangle(renderable, {x, y});
     for (int i = 0; i < primitive.nvertices; i++)
     {
-        EXPECT_THAT(primitive.vertices[i].position[2], Eq(0));
+        EXPECT_THAT(primitive.vertices[i].position[2], Eq(0)) << "for i = " << i;
     }
 }
 
