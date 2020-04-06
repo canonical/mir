@@ -54,7 +54,6 @@ set(
   test_persistent_surface_store.cpp
   test_client_extensions.cpp
   test_client_cursor_api.cpp
-  test_client_library_errors.cpp
   test_client_library.cpp
   test_presentation_chain.cpp
   test_render_surface.cpp
@@ -81,10 +80,6 @@ endif()
 # BEGIN "throwbacks"
 # The following tests use still files we have chosen not to support in the public API
 # TODO update these "throwback" tests to rely only on the public APIs
-
-  # uses UsingClientPlatform
-  set_source_files_properties(test_client_library_errors.cpp PROPERTIES COMPILE_FLAGS
-          "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
 
   # uses src/include/common/mir/protobuf/protocol_version.h
   set_source_files_properties(test_client_library.cpp PROPERTIES COMPILE_FLAGS
