@@ -34,6 +34,5 @@ else
   $terminal_server --app-id io.mirserver.Terminal&
   pid=$!
   sleep 0.1
-  $terminal --app-id io.mirserver.Terminal
-  wait $pid
+  exec $terminal --app-id io.mirserver.Terminal "$@"
 fi
