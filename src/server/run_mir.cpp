@@ -102,7 +102,6 @@ void mir::run_mir(
 
     static std::atomic<unsigned int> concurrent_calls{0};
 
-    if (!concurrent_calls)
     {
         // POSIX.1-2001 specifies that if the disposition of SIGCHLD is set to
         // SIG_IGN or the SA_NOCLDWAIT flag is set for SIGCHLD, then children
