@@ -23,7 +23,7 @@ then
   exec $terminal "$@"
 else
   # What we do is launch the gnome-terminal-server with a distinct --app-id and,
-  # in the next few seconds, launch gnome-terminal with the same --app-id.
+  # after waiting for it to start, launch gnome-terminal with the same --app-id.
   #
   # In Ubuntu 16.04 and 18.04 gnome-terminal-server is in /usr/lib/gnome-terminal
   # In Fedora and Ubuntu 20.04 gnome-terminal-server is in /usr/libexec/
@@ -31,8 +31,8 @@ else
   do
     if [ -x "$terminal_server" ];  then break; fi
   done
-  $terminal_server --app-id io.mirserver.Terminal&
-  pid=$!
-  sleep 0.1
+
+  gdbus introspect --session --dest io.mirserver.Terminal --object-path /io/mirserver/Terminal > /dev/null 2>&1 || $terminal_server --app-id io.mirserver.Terminal&
+  gdbus wait       --session io.mirserver.Terminal
   exec $terminal --app-id io.mirserver.Terminal "$@"
 fi
