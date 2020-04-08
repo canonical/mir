@@ -20,6 +20,7 @@
 #include <mir/log.h>
 
 #include <unistd.h>
+#include <signal.h>
 
 #include <stdexcept>
 #include <cstring>
@@ -72,6 +73,18 @@ auto miral::launch_app(
     if (pid == 0)
     {
         strip_mir_env_variables();
+
+        {
+            // POSIX.1-2001 specifies that if the disposition of SIGCHLD is set to
+            // SIG_IGN or the SA_NOCLDWAIT flag is set for SIGCHLD, then children
+            // that terminate do not become zombie.
+            // We don't want any children to become zombies...
+            struct sigaction act;
+            act.sa_handler = SIG_IGN;
+            sigemptyset(&act.sa_mask);
+            act.sa_flags = SA_NOCLDWAIT;
+            sigaction(SIGCHLD, &act, NULL);
+        }
 
         std::string gdk_backend;
         std::string qt_qpa_platform;
