@@ -576,6 +576,7 @@ MirWaitHandle* MirConnection::release_surface(
 
     mp::SurfaceId message;
     message.set_value(surface->id());
+    surface->set_event_handler([](auto, auto, auto){}, nullptr);
 
     raw_wait_handle->expect_result();
     server.release_surface(&message, void_response.get(),

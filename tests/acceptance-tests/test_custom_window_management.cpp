@@ -685,17 +685,20 @@ TEST_F(CustomWindowManagement, when_the_window_manager_places_a_surface_the_noti
     start_server();
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    PlacementCheck placement_check{placement};
-    auto surface_spec = mir_create_normal_window_spec(connection, width, height);
+    MirWindow* window{};
+    {
+        PlacementCheck placement_check{placement};
+        auto surface_spec = mir_create_normal_window_spec(connection, width, height);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_window_spec_set_pixel_format(surface_spec, format);
+        mir_window_spec_set_pixel_format(surface_spec, format);
 #pragma GCC diagnostic pop
-    mir_window_spec_set_event_handler(surface_spec, &window_placement_event_callback, &placement_check);
-    auto window = mir_create_window_sync(surface_spec);
-    mir_window_spec_release(surface_spec);
+        mir_window_spec_set_event_handler(surface_spec, &window_placement_event_callback, &placement_check);
+        window = mir_create_window_sync(surface_spec);
+        mir_window_spec_release(surface_spec);
 
-    scene_surface->placed_relative(placement_);
+        scene_surface->placed_relative(placement_);
+    }
 
     mir_window_release_sync(window);
     mir_connection_release(connection);
