@@ -404,7 +404,7 @@ bool is_unfocus_event(MirEvent const* event)
 }
 }
 
-TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
+TEST_F(ClientSurfaceEvents, focused_window__does_not_receive_unfocus_event_after_release)
 {
     using namespace testing;
     using namespace std::chrono_literals;
@@ -448,7 +448,7 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
 
     mir_window_release_sync(window);
 
-    EXPECT_TRUE(unfocus_received.wait_for(10s));
+    EXPECT_FALSE(unfocus_received.wait_for(10s));
 }
 
 TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_release)

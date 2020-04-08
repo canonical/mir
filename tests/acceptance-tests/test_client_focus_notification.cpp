@@ -122,27 +122,26 @@ struct ClientFocusNotification : mtf::ConnectedClientHeadlessServer
 
 TEST_F(ClientFocusNotification, a_surface_is_notified_of_receiving_focus)
 {
-    std::vector<MirWindowFocusState> const focus_sequence = {mir_window_focus_state_focused, mir_window_focus_state_unfocused};
+    std::vector<MirWindowFocusState> const focus_sequence = {mir_window_focus_state_focused};
     auto window = make_surface();
-    window->release();
     window->expect_focus_event_sequence(focus_sequence);
+    window->release();
 }
 
 TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_focus)
 {
     std::vector<MirWindowFocusState> const initial_focus = {mir_window_focus_state_focused};
     std::vector<MirWindowFocusState> const focus_sequence1 =
-        {mir_window_focus_state_focused, mir_window_focus_state_unfocused, mir_window_focus_state_focused, mir_window_focus_state_unfocused};
-    std::vector<MirWindowFocusState> const focus_sequence2 = {mir_window_focus_state_focused, mir_window_focus_state_unfocused};
+        {mir_window_focus_state_focused, mir_window_focus_state_unfocused, mir_window_focus_state_focused};
+    std::vector<MirWindowFocusState> const focus_sequence2 = {mir_window_focus_state_focused};
 
     auto surface1 = make_surface();
     surface1->expect_focus_event_sequence(initial_focus);
 
     auto surface2 = make_surface();
-
+    surface2->expect_focus_event_sequence(focus_sequence2);
     surface2->release();
-    surface1->release();
 
     surface1->expect_focus_event_sequence(focus_sequence1);
-    surface2->expect_focus_event_sequence(focus_sequence2);
+    surface1->release();
 }

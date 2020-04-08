@@ -102,18 +102,6 @@ void mir::run_mir(
 
     static std::atomic<unsigned int> concurrent_calls{0};
 
-    {
-        // POSIX.1-2001 specifies that if the disposition of SIGCHLD is set to
-        // SIG_IGN or the SA_NOCLDWAIT flag is set for SIGCHLD, then children
-        // that terminate do not become zombie.
-        // We don't want any children to become zombies...
-        struct sigaction act;
-        act.sa_handler = SIG_IGN;
-        sigemptyset(&act.sa_mask);
-        act.sa_flags = SA_NOCLDWAIT;
-        sigaction(SIGCHLD, &act, NULL);
-    }
-
     auto const raii = raii::paired_calls(
         [&]{ if (!concurrent_calls++) for (auto sig : intercepted) old_handler[sig] = signal(sig, fatal_signal_cleanup); },
         [&]{ if (!--concurrent_calls) for (auto sig : intercepted) signal(sig, old_handler[sig]); });
