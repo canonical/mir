@@ -35,6 +35,7 @@ mir (1.7.2) UNRELEASED; urgency=medium
       . [renderer] Flicker and crashes with multiple outputs (#1317, #1332)
       . [graphics] Crash when software cursor changed rapidy (#1347)
       . Fedora support (#1382, #1384)
+      . [mirclient] Do not send events to windows after they are release
 
  -- William Wold <william.wold@canonical.com>  Fri, 03 Apr 2020 13:29:50 -0400
 
