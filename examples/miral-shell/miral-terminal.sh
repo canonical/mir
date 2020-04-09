@@ -32,7 +32,19 @@ else
     if [ -x "$terminal_server" ];  then break; fi
   done
 
-  gdbus introspect --session --dest io.mirserver.Terminal --object-path /io/mirserver/Terminal > /dev/null 2>&1 || $terminal_server --app-id io.mirserver.Terminal&
-  gdbus wait       --session io.mirserver.Terminal
+  if ! gdbus introspect --session --dest io.mirserver.Terminal --object-path /io/mirserver/Terminal > /dev/null 2>&1
+  then
+     $terminal_server --app-id io.mirserver.Terminal&
+
+    if (gdbus help | grep wait > /dev/null)
+    then
+      gdbus wait       --session io.mirserver.Terminal
+    else
+      while ! gdbus introspect --session --dest io.mirserver.Terminal --object-path /io/mirserver/Terminal > /dev/null 2>&1
+      do
+        sleep 0.2
+      done
+    fi
+  fi
   exec $terminal --app-id io.mirserver.Terminal "$@"
 fi
