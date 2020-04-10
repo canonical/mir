@@ -111,6 +111,8 @@ auto TilingWindowManagerPolicy::place_new_window(
 
     if (app_info.application() != spinner->session())
     {
+        parameters.server_side_decorated() = false;
+
         Rectangle const& tile = tile_for(app_info);
 
         if (!parameters.parent().is_set() || !parameters.parent().value().lock())
