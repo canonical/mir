@@ -63,6 +63,7 @@ struct miral::WindowSpecification::Self
     mir::optional_value<MirPlacementGravity> attached_edges;
     mir::optional_value<mir::optional_value<mir::geometry::Rectangle>> exclusive_rect;
     mir::optional_value<std::string> application_id;
+    mir::optional_value<bool> server_side_decorated;
     mir::optional_value<std::shared_ptr<void>> userdata;
 };
 
@@ -97,7 +98,8 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     depth_layer(spec.depth_layer),
     attached_edges(spec.attached_edges),
     exclusive_rect(spec.exclusive_rect),
-    application_id(spec.application_id)
+    application_id(spec.application_id),
+    server_side_decorated() // Not currently on SurfaceSpecification
 {
     if (spec.aux_rect_placement_offset_x.is_set() && spec.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{spec.aux_rect_placement_offset_x.value(), spec.aux_rect_placement_offset_y.value()};
@@ -233,7 +235,8 @@ miral::WindowSpecification::Self::Self(mir::scene::SurfaceCreationParameters con
     depth_layer(params.depth_layer),
     attached_edges(params.attached_edges),
     exclusive_rect(params.exclusive_rect),
-    application_id(params.application_id)
+    application_id(params.application_id),
+    server_side_decorated(params.server_side_decorated)
 {
     if (params.aux_rect_placement_offset_x.is_set() && params.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{params.aux_rect_placement_offset_x.value(), params.aux_rect_placement_offset_y.value()};
@@ -303,6 +306,7 @@ void miral::WindowSpecification::Self::update(mir::scene::SurfaceCreationParamet
     copy_if_set(params.attached_edges, attached_edges);
     copy_if_set(params.exclusive_rect, exclusive_rect.value());
     copy_if_set(params.application_id, application_id);
+    copy_if_set(params.server_side_decorated, server_side_decorated);
 
     if (aux_rect_placement_offset.is_set())
     {
@@ -640,6 +644,16 @@ auto miral::WindowSpecification::application_id() const -> mir::optional_value<s
 auto miral::WindowSpecification::application_id() -> mir::optional_value<std::string>&
 {
     return self->application_id;
+}
+
+auto miral::WindowSpecification::server_side_decorated() const -> mir::optional_value<bool> const&
+{
+    return self->server_side_decorated;
+}
+
+auto miral::WindowSpecification::server_side_decorated() -> mir::optional_value<bool>&
+{
+    return self->server_side_decorated;
 }
 
 auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_ptr<void>>&

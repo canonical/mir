@@ -158,6 +158,10 @@ public:
     auto application_id() -> mir::optional_value<std::string>&;
     ///@}
 
+    /// If this window should have server-side decorations provided by Mir
+    auto server_side_decorated() const -> mir::optional_value<bool> const&;
+    auto server_side_decorated() -> mir::optional_value<bool>&;
+
 private:
     struct Self;
     std::unique_ptr<Self> self;
