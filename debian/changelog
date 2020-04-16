@@ -1,4 +1,45 @@
-mir (1.7.1) UNRELEASED; urgency=medium
+mir (1.8.0) UNRELEASED; urgency=medium
+
+  * New upstream release 1.8.0
+
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 3
+      . mirserver ABI unchanged at 53
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI bumped to 18
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged to 16
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+    - Enhancements:
+      . [Mir-on-X] Allow specifying scale for fake outputs
+      . [MirAL] Implement a "no active window" state
+      . [geometry] Allow division by a scaler
+      . [Mir-on-X] Enable --display-config option
+      . [Mir-on-X] Disable host X11 cursor on Mir window
+      . [Mir-on-Wayland] Correct scaling on HiDPI
+      . [mir-shell] Scale background correctly
+      . [mesa-kms] Support scaled outputs
+      . [Wayland] Support scaled clients
+      . [graphics] Fix side-by-side display config for scaled outputs
+      . [mir-shell] Support launching GNOME Terminal on all platforms
+      . [Mir-on-Wayland] Only connect if `wayland-host` is configured
+    - Bugs fixed:
+      . [mir-shell] First Ctrl-Alt-T for gnome-terminal takes ~30s (#1319)
+      . [mir-shell] GTK apps make at-spi2-registr hog CPU (#1321)
+      . [mir-shell] Hangs on exit when run with multiple X11 windows (#1327)
+      . [X11] Cursor input sometimes "goes through" the top window (#1275)
+      . [renderer] Flicker and crashes with multiple outputs (#1317, #1332)
+      . [graphics] Crash when software cursor changed rapidy (#1347)
+      . Fedora support (#1382, #1384)
+      . [mirclient] Do not send events to windows after they are release
+
+ -- William Wold <william.wold@canonical.com>  Fri, 03 Apr 2020 13:29:50 -0400
+
+mir (1.7.1) focal; urgency=medium
 
   * New upstream release 1.7.1
 
