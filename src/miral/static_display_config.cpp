@@ -41,6 +41,7 @@ char const* const state_disabled = "disabled";
 char const* const position = "position";
 char const* const mode = "mode";
 char const* const orientation = "orientation";
+char const* const scale = "scale";
 char const* const orientation_value[] = { "normal", "left", "inverted", "right" };
 
 auto as_string(MirOrientation orientation) -> char const*
@@ -230,6 +231,11 @@ try
                                                     orientation + ") for port: " + port_name};
                     }
 
+                    if (auto const s = port_config[scale])
+                    {
+                        output_config.scale = s.as<float>();
+                    }
+
                     layout_config[output_id] = output_config;
                 }
             }
@@ -378,7 +384,8 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                            "\n        # position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
                         << "\t# Defaults to [0, 0]"
                            "\n        # orientation: " << as_string(conf_output.orientation)
-                        << "\t# {normal, left, right, inverted}, defaults to normal";
+                        << "\t# {normal, left, right, inverted}, defaults to normal"
+                           "\n        # scale: " << conf_output.scale;
                 }
             }
             else
