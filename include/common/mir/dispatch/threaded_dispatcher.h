@@ -52,8 +52,8 @@ private:
 
     std::string const name_base;
 
-    std::shared_ptr<ThreadShutdownRequestHandler> thread_exiter;
-    std::shared_ptr<MultiplexingDispatchable> dispatcher;
+    std::shared_ptr<ThreadShutdownRequestHandler> const thread_exiter;
+    std::shared_ptr<MultiplexingDispatchable> const dispatcher;
 
     std::mutex thread_pool_mutex;
     std::vector<std::thread> threadpool;
