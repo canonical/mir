@@ -179,10 +179,14 @@ if __name__ == '__main__':
                 ppa = team.getPPAByName(name=snap_map["ppa"])
                 logger.debug("Got ppa: %s", ppa)
 
-                latest_source = ppa.getPublishedSources(
-                    source_name=SOURCE_NAME,
-                    distro_series=series
-                )[0]
+                try:
+                    latest_source = ppa.getPublishedSources(
+                        source_name=SOURCE_NAME,
+                        distro_series=series
+                    )[0]
+                except IndexError:
+                    logger.error("Did not find %s in %s/%s", SOURCE_NAME, TEAM, snap_map["ppa"])
+                    continue
                 logger.debug("Latest source: %s", latest_source.display_name)
 
                 mir_version = (
