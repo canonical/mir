@@ -24,7 +24,6 @@ add_library(mirplatformgraphicseglstreamkmsobjects OBJECT
   kms_display_configuration.cpp
   egl_output.h
   egl_output.cpp
-  software_buffer.cpp
   utils.cpp
   utils.h
   drm_event_handler.h

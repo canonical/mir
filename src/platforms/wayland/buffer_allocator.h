@@ -32,6 +32,11 @@ namespace graphics
 {
 class Display;
 
+namespace common
+{
+class EGLContextExecutor;
+}
+
 namespace wayland
 {
 class BufferAllocator: public GraphicBufferAllocator,
@@ -52,12 +57,18 @@ public:
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 
+    auto buffer_from_shm(
+        wl_resource* buffer,
+        std::shared_ptr<Executor> wayland_executor,
+        std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer> override;
+
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
 private:
     std::shared_ptr<Executor> wayland_executor;
     std::shared_ptr<EGLExtensions> const egl_extensions;
     std::shared_ptr<renderer::gl::Context> const ctx;
+    std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
 };
 }
 }

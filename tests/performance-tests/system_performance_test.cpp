@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -152,14 +152,13 @@ SystemPerformanceTest::SystemPerformanceTest() : bin_dir{mir_bin_dir()}
 
 void SystemPerformanceTest::set_up_with(std::string const server_args)
 {
-    auto const mir_sock = "/tmp/mir_test_socket_"+std::to_string(getpid());
-    auto const server_cmd =
-        bin_dir+"/mir_demo_server -f "+mir_sock+" "+server_args;
+    auto const mir_sock = "mir_test_socket_"+std::to_string(getpid());
+    auto const server_cmd = bin_dir+"/mir_demo_server "+server_args;
+    setenv("WAYLAND_DISPLAY", mir_sock.c_str(), 1);
 
     server_output = popen_with_pid(server_cmd.c_str(), server_pid);
     ASSERT_TRUE(server_output) << server_cmd;
-    ASSERT_TRUE(wait_for_file(mir_sock.c_str(), 5s)) << server_cmd;
-    setenv("MIR_SOCKET", mir_sock.c_str(), 1);
+    ASSERT_TRUE(wait_for_file((getenv("XDG_RUNTIME_DIR") + ("/" + mir_sock)).c_str(), 5s)) << server_cmd;
 }
 
 void SystemPerformanceTest::TearDown()

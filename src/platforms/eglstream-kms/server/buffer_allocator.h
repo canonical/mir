@@ -23,6 +23,7 @@
 #include "mir/graphics/wayland_allocator.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/egl_extensions.h"
+#include "egl_context_executor.h"
 
 #include "wayland-eglstream-controller.h"
 
@@ -73,6 +74,11 @@ public:
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) override;
 
+    auto buffer_from_shm(
+        wl_resource* buffer,
+        std::shared_ptr<Executor> wayland_executor,
+        std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer> override;
+
 private:
     static void create_buffer_eglstream_resource(
         wl_client* client,
@@ -87,7 +93,8 @@ private:
 
     EGLExtensions::WaylandExtensions const extensions;
     EGLExtensions::NVStreamAttribExtensions const nv_extensions;
-    std::shared_ptr<renderer::gl::Context> const ctx;
+    std::shared_ptr<renderer::gl::Context> const wayland_ctx;
+    std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::unique_ptr<gl::Program> shader;
     static struct wl_eglstream_controller_interface const impl;
 };

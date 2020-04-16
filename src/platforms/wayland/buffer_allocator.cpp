@@ -19,6 +19,8 @@
 #include "buffer_allocator.h"
 #include "shm_buffer.h"
 #include "display.h"
+#include "egl_context_executor.h"
+#include "buffer_from_wl_shm.h"
 
 #include <mir/anonymous_shm_file.h>
 #include <mir/fatal.h>
@@ -69,7 +71,8 @@ std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const
 
 mgw::BufferAllocator::BufferAllocator(graphics::Display const& output) :
     egl_extensions(std::make_shared<mg::EGLExtensions>()),
-    ctx{context_for_output(output)}
+    ctx{context_for_output(output)},
+    egl_delegate{std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))}
 {
 }
 
@@ -83,24 +86,6 @@ std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_buffer(
 
 std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_software_buffer(geom::Size size, MirPixelFormat format)
 {
-    class SoftwareBuffer: public common::ShmBuffer
-    {
-    public:
-        SoftwareBuffer(
-            std::unique_ptr<ShmFile> shm_file,
-            geometry::Size const& size,
-            MirPixelFormat const& pixel_format) :
-            ShmBuffer(std::move(shm_file), size, pixel_format)
-        {
-        }
-
-        auto native_buffer_handle() const -> std::shared_ptr<NativeBuffer> override
-        {
-            fatal_error("wayland platform does not support mirclient");
-            return {};
-        }
-    };
-
     if (!mgc::ShmBuffer::supports(format))
     {
         BOOST_THROW_EXCEPTION(
@@ -108,10 +93,7 @@ std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_software_buffer(geom::Si
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    auto const stride = geom::Stride{ MIR_BYTES_PER_PIXEL(format) * size.width.as_uint32_t() };
-    size_t const size_in_bytes = stride.as_int() * size.height.as_int();
-    return std::make_shared<SoftwareBuffer>(
-        std::make_unique<AnonymousShmFile>(size_in_bytes), size, format);
+    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format, egl_delegate);
 }
 
 std::vector<MirPixelFormat> mgw::BufferAllocator::supported_pixel_formats()
@@ -152,4 +134,16 @@ auto mgw::BufferAllocator::buffer_from_resource(
         ctx,
         *egl_extensions,
         wayland_executor);
+}
+
+auto mgw::BufferAllocator::buffer_from_shm(
+    wl_resource* buffer,
+    std::shared_ptr<Executor> wayland_executor,
+    std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer>
+{
+    return mg::wayland::buffer_from_wl_shm(
+        buffer,
+        std::move(wayland_executor),
+        egl_delegate,
+        std::move(on_consumed));
 }

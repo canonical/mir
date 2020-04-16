@@ -29,6 +29,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <mutex>
+#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
@@ -137,20 +138,6 @@ mg::SoftwareCursor::~SoftwareCursor()
     hide();
 }
 
-void mg::SoftwareCursor::show()
-{
-    std::lock_guard<std::mutex> lg{guard};
-
-    if (!visible)
-    {
-        visible = true;
-        scene_executor->spawn([scene = scene, to_add = renderable]()
-            {
-                scene->add_input_visualization(to_add);
-            });
-    }
-}
-
 void mg::SoftwareCursor::show(CursorImage const& cursor_image)
 {
     std::lock_guard<std::mutex> lg{guard};
@@ -180,26 +167,21 @@ void mg::SoftwareCursor::show(CursorImage const& cursor_image)
 std::shared_ptr<mg::detail::CursorRenderable>
 mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom::Point position)
 {
-    size_t const pixels_size =
-        cursor_image.size().width.as_uint32_t() *
-        cursor_image.size().height.as_uint32_t() *
-        MIR_BYTES_PER_PIXEL(format);
-
-    if (pixels_size == 0)
+    if (cursor_image.size().width.as_uint32_t() == 0 || cursor_image.size().height.as_uint32_t() == 0)
         BOOST_THROW_EXCEPTION(std::logic_error("zero sized software cursor image is invalid"));
 
+    auto buffer = mrs::alloc_buffer_with_content(
+        *allocator,
+        static_cast<unsigned char const*>(cursor_image.as_argb_8888()),
+        cursor_image.size(),
+        geom::Stride{
+            cursor_image.size().width.as_uint32_t() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)},
+        mir_pixel_format_argb_8888);
+
     auto new_renderable = std::make_shared<detail::CursorRenderable>(
-        allocator->alloc_software_buffer(cursor_image.size(), format),
+        std::move(buffer),
         position + hotspot - cursor_image.hotspot());
 
-    // TODO: The buffer pixel format may not be argb_8888, leading to
-    // incorrect cursor colors. We need to transform the data to match
-    // the buffer pixel format.
-    auto pixel_source = dynamic_cast<mrs::PixelSource*>(new_renderable->buffer()->native_buffer_base());
-    if (pixel_source)
-        pixel_source->write(static_cast<unsigned char const*>(cursor_image.as_argb_8888()), pixels_size);
-    else
-        BOOST_THROW_EXCEPTION(std::logic_error("could not write to buffer for software cursor"));
     return new_renderable;
 }
 

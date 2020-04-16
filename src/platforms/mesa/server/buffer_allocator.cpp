@@ -23,8 +23,8 @@
 #include "mir/anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "display_helpers.h"
-#include "software_buffer.h"
 #include "gbm_format_conversions.h"
+#include "egl_context_executor.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"
@@ -34,6 +34,7 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/renderer/gl/context_source.h"
 #include "mir/graphics/egl_wayland_allocator.h"
+#include "buffer_from_wl_shm.h"
 #include "mir/executor.h"
 
 #include <boost/throw_exception.hpp>
@@ -248,6 +249,8 @@ mgm::BufferAllocator::BufferAllocator(
     BypassOption bypass_option,
     mgm::BufferImportMethod const buffer_import_method)
     : ctx{context_for_output(output)},
+      egl_delegate{
+          std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))},
       device(device),
       egl_extensions(std::make_shared<mg::EGLExtensions>()),
       bypass_option(buffer_import_method == mgm::BufferImportMethod::dma_buf ?
@@ -322,17 +325,14 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     geom::Size size, MirPixelFormat format)
 {
-    if (!mgc::ShmBuffer::supports(format))
+    if (!mgc::MemoryBackedShmBuffer::supports(format))
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    auto const stride = geom::Stride{MIR_BYTES_PER_PIXEL(format) * size.width.as_uint32_t()};
-    size_t const size_in_bytes = stride.as_int() * size.height.as_int();
-    return std::make_shared<mgm::SoftwareBuffer>(
-        std::make_unique<mir::AnonymousShmFile>(size_in_bytes), size, format);
+    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format, egl_delegate);
 }
 
 std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
@@ -389,4 +389,16 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource(
         ctx,
         *egl_extensions,
         wayland_executor);
+}
+
+auto mgm::BufferAllocator::buffer_from_shm(
+    wl_resource* buffer,
+    std::shared_ptr<Executor> wayland_executor,
+    std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer>
+{
+    return mg::wayland::buffer_from_wl_shm(
+        buffer,
+        std::move(wayland_executor),
+        egl_delegate,
+        std::move(on_consumed));
 }

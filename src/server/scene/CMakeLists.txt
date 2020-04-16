@@ -32,5 +32,5 @@ ADD_LIBRARY(
   timeout_application_not_responding_detector.cpp
   output_properties_cache.cpp
   application_not_responding_detector_wrapper.cpp
-  ${CMAKE_SOURCE_DIR}/include/server/mir/scene/surface_observer.h
+  ${CMAKE_SOURCE_DIR}/src/include/server/mir/scene/surface_observer.h
 )

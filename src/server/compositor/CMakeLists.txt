@@ -21,11 +21,6 @@ set(
   queueing_schedule.cpp
 )
 
-# TODO this is a frig to workaround the lack of a way for the screencast client to ask for software buffers
-if (MIR_EGL_SUPPORTED)
-    set_source_files_properties(compositing_screencast.cpp PROPERTIES COMPILE_DEFINITIONS MIR_EGL_SUPPORTED)
-endif()
-
 ADD_LIBRARY(
   mircompositor OBJECT
 

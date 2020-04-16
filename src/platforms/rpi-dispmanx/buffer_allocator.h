@@ -24,6 +24,8 @@
 #include "mir/graphics/wayland_allocator.h"
 #include "mir/graphics/egl_extensions.h"
 
+#include <interface/vmcs_host/vc_dispmanx_types.h>
+
 namespace mir
 {
 class Executor;
@@ -40,8 +42,21 @@ namespace graphics
 {
 class Display;
 
+namespace common
+{
+class EGLContextExecutor;
+}
+
 namespace rpi
 {
+class DispmanXBuffer
+{
+public:
+    virtual ~DispmanXBuffer() = default;
+
+    virtual explicit operator DISPMANX_RESOURCE_HANDLE_T() const = 0;
+};
+
 class BufferAllocator :
 	public GraphicBufferAllocator,
 	public WaylandAllocator
@@ -60,9 +75,13 @@ public:
 	std::function<void()>&& ,
 	std::function<void()>&&) override;
 
+    std::shared_ptr<Buffer> buffer_from_shm(wl_resource* buffer, std::shared_ptr<mir::Executor> wayland_executor,
+                                            std::function<void()>&& on_consumed) override;
+
 private:
     std::shared_ptr<EGLExtensions> const egl_extensions;
     std::shared_ptr<renderer::gl::Context> const ctx;
+    std::shared_ptr<common::EGLContextExecutor> const egl_executor;
     std::shared_ptr<Executor> wayland_executor;
 };
 }

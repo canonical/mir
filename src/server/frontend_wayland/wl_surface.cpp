@@ -345,7 +345,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
             if (wl_shm_buffer_get(buffer))
             {
-                mir_buffer = WlShmBuffer::mir_buffer_from_wl_buffer(
+                mir_buffer = allocator->buffer_from_shm(
                     buffer,
                     executor,
                     std::move(executor_send_frame_callbacks));

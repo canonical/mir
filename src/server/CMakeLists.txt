@@ -65,9 +65,9 @@ add_library(mirserverobjects OBJECT
   server.cpp
   lockable_callback_wrapper.cpp
   basic_callback.cpp
-  ${PROJECT_SOURCE_DIR}/include/server/mir/time/alarm_factory.h
-  ${PROJECT_SOURCE_DIR}/include/server/mir/time/alarm.h
-  ${PROJECT_SOURCE_DIR}/include/server/mir/observer_registrar.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/time/alarm_factory.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/time/alarm.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/observer_registrar.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/observer_multiplexer.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop_sources.h
@@ -93,7 +93,6 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirreport>
   $<TARGET_OBJECTS:mirlogging>
   $<TARGET_OBJECTS:mirnullreport>
-  $<TARGET_OBJECTS:mirnestedgraphics>
   $<TARGET_OBJECTS:miroffscreengraphics>
   $<TARGET_OBJECTS:mirthread>
   $<TARGET_OBJECTS:mirconsole>

@@ -652,16 +652,21 @@ auto msd::Renderer::make_buffer(
         log_warning("Failed to draw SSD: tried to create zero size buffer");
         return std::experimental::nullopt;
     }
-    std::shared_ptr<graphics::Buffer> const buffer = buffer_allocator->alloc_software_buffer(size, buffer_format);
-    auto const pixel_source = dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base());
-    if (!pixel_source)
+
+    try
+    {
+        return mrs::alloc_buffer_with_content(
+            *buffer_allocator,
+            reinterpret_cast<unsigned char const*>(pixels),
+            size,
+            geom::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(buffer_format)},
+            buffer_format);
+    }
+    catch (std::runtime_error const&)
     {
         log_warning("Failed to draw SSD: software buffer not a pixel source");
         return std::experimental::nullopt;
     }
-    size_t const buf_pixels_size{area(size) * sizeof(Pixel)};
-    pixel_source->write((unsigned char const*)pixels, buf_pixels_size);
-    return buffer;
 }
 
 auto msd::Renderer::alloc_pixels(geometry::Size size) -> std::unique_ptr<uint32_t[]>

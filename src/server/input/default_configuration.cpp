@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2016 Canonical Ltd.
+ * Copyright © 2013-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -32,7 +32,6 @@
 #include "surface_input_dispatcher.h"
 #include "basic_seat.h"
 #include "seat_observer_multiplexer.h"
-#include "../graphics/nested/input_platform.h"
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_probe.h"
@@ -139,8 +138,7 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
 
             auto const options = the_options();
             // lp:1675357: Disable generation of key repeat events on nested servers
-            auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt) &&
-                !options->is_set(options::host_socket_opt);
+            auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
                 the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_authority(),
@@ -222,16 +220,6 @@ mir::DefaultServerConfiguration::the_input_manager()
             if (!input_opt)
             {
                 return std::make_shared<mi::NullInputManager>();
-            }
-            else if (options->is_set(options::host_socket_opt))
-            {
-                auto const device_registry = the_input_device_registry();
-                auto const input_report = the_input_report();
-
-                // TODO: move this into a nested graphics platform
-                auto platform = std::make_shared<mgn::InputPlatform>(the_host_connection(), device_registry, input_report);
-
-                return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), std::move(platform));
             }
             else
             {

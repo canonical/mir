@@ -134,7 +134,7 @@ TEST(MirCookieAuthority, optimal_secret_size_is_larger_than_minimum_size)
         Ge(mir::cookie::Authority::minimum_secret_size));
 }
 
-TEST(MirCookieAuthority, given_low_entropy_does_not_hang_or_crash)
+TEST(MirCookieAuthority, DISABLED_given_low_entropy_does_not_hang_or_crash)
 {   // Regression test for LP: #1536662 and LP: #1541188
     using namespace testing;
 
@@ -149,7 +149,7 @@ TEST(MirCookieAuthority, given_low_entropy_does_not_hang_or_crash)
     EXPECT_THAT(seconds, Lt(15));
 }
 
-TEST(MirCookieAuthority, makes_cookies_quickly)
+TEST(MirCookieAuthority, DISABLED_makes_cookies_quickly)
 {   // Regression test for LP: #1536662 and LP: #1541188
     using namespace testing;
 

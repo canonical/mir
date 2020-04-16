@@ -83,6 +83,7 @@
 #include <unordered_set>
 #include "mir/anonymous_shm_file.h"
 
+
 #if (WAYLAND_VERSION_MAJOR == 1) && (WAYLAND_VERSION_MINOR < 14)
 #define MIR_NO_WAYLAND_FILTER
 #endif
@@ -570,6 +571,18 @@ public:
         std::function<void()>&&) override
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"buffer_from_resource called on invalid allocator."}));
+    }
+
+    auto buffer_from_shm(
+        wl_resource* buffer,
+        std::shared_ptr<mir::Executor> wayland_executor,
+        std::function<void()>&& on_consumed)
+        -> std::shared_ptr<mir::graphics::Buffer> override
+    {
+        return mf::WlShmBuffer::mir_buffer_from_wl_buffer(
+            buffer,
+            std::move(wayland_executor),
+            std::move(on_consumed));
     }
 };
 

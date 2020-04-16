@@ -18,11 +18,13 @@
  */
 
 #include "mir/graphics/gl_format.h"
-#include "mir/shm_file.h"
 #include "shm_buffer.h"
-#include "buffer_texture_binder.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
+#include "egl_context_executor.h"
+
+#define MIR_LOG_COMPONENT "gfx-common"
+#include "mir/log.h"
 
 #include MIR_SERVER_GL_H
 #include MIR_SERVER_GLEXT_H
@@ -93,14 +95,22 @@ bool mgc::ShmBuffer::supports(MirPixelFormat mir_format)
 }
 
 mgc::ShmBuffer::ShmBuffer(
-    std::unique_ptr<ShmFile> shm_file,
     geom::Size const& size,
-    MirPixelFormat const& pixel_format)
-    : shm_file{std::move(shm_file)},
-      size_{size},
-      pixel_format_{pixel_format},
-      stride_{MIR_BYTES_PER_PIXEL(pixel_format_) * size_.width.as_uint32_t()},
-      pixels{this->shm_file->base_ptr()}
+    MirPixelFormat const& format,
+    std::shared_ptr<EGLContextExecutor> egl_delegate)
+    : size_{size},
+      pixel_format_{format},
+      egl_delegate{std::move(egl_delegate)}
+{
+}
+
+mgc::MemoryBackedShmBuffer::MemoryBackedShmBuffer(
+    geom::Size const& size,
+    MirPixelFormat const& pixel_format,
+    std::shared_ptr<EGLContextExecutor> egl_delegate)
+    : ShmBuffer(size, pixel_format, std::move(egl_delegate)),
+      stride_{MIR_BYTES_PER_PIXEL(pixel_format) * size.width.as_uint32_t()},
+      pixels{new unsigned char[stride_.as_int() * size.height.as_int()]}
 {
 }
 
@@ -108,7 +118,11 @@ mgc::ShmBuffer::~ShmBuffer() noexcept
 {
     if (tex_id != 0)
     {
-        glDeleteTextures(1, &tex_id);
+        egl_delegate->spawn(
+            [id = tex_id]()
+            {
+                glDeleteTextures(1, &id);
+            });
     }
 }
 
@@ -117,7 +131,7 @@ geom::Size mgc::ShmBuffer::size() const
     return size_;
 }
 
-geom::Stride mgc::ShmBuffer::stride() const
+geom::Stride mgc::MemoryBackedShmBuffer::stride() const
 {
     return stride_;
 }
@@ -127,53 +141,59 @@ MirPixelFormat mgc::ShmBuffer::pixel_format() const
     return pixel_format_;
 }
 
-void mgc::ShmBuffer::gl_bind_to_texture()
+void mgc::ShmBuffer::upload_to_texture(void const* pixels, geom::Stride const& stride)
 {
     GLenum format, type;
 
     if (mg::get_gl_pixel_format(pixel_format_, format, type))
     {
+        auto const stride_in_px =
+            stride.as_int() / MIR_BYTES_PER_PIXEL(pixel_format());
         /*
-         * All existing Mir logic assumes that strides are whole multiples of
-         * pixels. And OpenGL defaults to expecting strides are multiples of
-         * 4 bytes. These assumptions used to be compatible when we only had
-         * 4-byte pixels but now we support 2/3-byte pixels we need to be more
-         * careful...
+         * We assume (as does Weston, AFAICT) that stride is
+         * a multiple of whole pixels, but it need not be.
+         *
+         * TODO: Handle non-pixel-multiple strides.
+         * This should be possible by calculating GL_UNPACK_ALIGNMENT
+         * to match the size of the partial-pixel-stride().
          */
+
+        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, stride_in_px);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, format,
-                     size_.width.as_int(), size_.height.as_int(),
-                     0, format, type, pixels);
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            format,
+            size().width.as_int(), size().height.as_int(),
+            0,
+            format,
+            type,
+            pixels);
+
+        // Be nice to other users of the GL context by reverting our changes to shared state
+        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);     // 0 is default, meaning “use width”
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          // 4 is default; word alignment.
+    }
+    else
+    {
+        mir::log_error(
+            "Buffer %i has non-GL-compatible pixel format %i; rendering will be incomplete",
+            id().as_value(),
+            pixel_format());
     }
 }
 
-std::shared_ptr<MirBufferPackage> mgc::ShmBuffer::to_mir_buffer_package() const
-{
-    auto native_buffer = std::make_shared<MirNativeBuffer>();
-
-    native_buffer->fd_items = 1;
-    native_buffer->fd[0] = shm_file->fd();
-    native_buffer->stride = stride().as_uint32_t();
-    native_buffer->flags = 0;
-
-    auto const& dim = size();
-    native_buffer->width = dim.width.as_int();
-    native_buffer->height = dim.height.as_int();
-
-    return native_buffer;
-}
-
-void mgc::ShmBuffer::write(unsigned char const* data, size_t data_size)
+void mgc::MemoryBackedShmBuffer::write(unsigned char const* data, size_t data_size)
 {
     if (data_size != stride_.as_uint32_t()*size().height.as_uint32_t())
         BOOST_THROW_EXCEPTION(std::logic_error("Size is not equal to number of pixels in buffer"));
-    memcpy(pixels, data, data_size);
+    memcpy(pixels.get(), data, data_size);
 }
 
-void mgc::ShmBuffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
+void mgc::MemoryBackedShmBuffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
 {
-    do_with_pixels(static_cast<unsigned char const*>(pixels));
+    do_with_pixels(static_cast<unsigned char const*>(pixels.get()));
 }
 
 mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
@@ -181,31 +201,7 @@ mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
     return this;
 }
 
-void mgc::ShmBuffer::upload_to_texture()
-{
-    gl_bind_to_texture();
-}
-
-void mgc::ShmBuffer::secure_for_render()
-{
-}
-
-void mir::graphics::common::ShmBuffer::bind_for_write()
-{
-    gl_bind_to_texture();
-}
-
-void mir::graphics::common::ShmBuffer::commit()
-{
-    GLenum format, type;
-
-    if (mg::get_gl_pixel_format(pixel_format_, format, type))
-    {
-        glReadPixels(0, 0, size_.width.as_int(), size_.height.as_int(), format, type, pixels);
-    }
-}
-
-void mgc::ShmBuffer::tex_bind()
+void mgc::ShmBuffer::bind()
 {
     std::lock_guard<decltype(tex_id_mutex)> lock{tex_id_mutex};
     bool const needs_initialisation = tex_id == 0;
@@ -221,8 +217,23 @@ void mgc::ShmBuffer::tex_bind()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        gl_bind_to_texture();
     }
+}
+
+void mgc::MemoryBackedShmBuffer::bind()
+{
+    mgc::ShmBuffer::bind();
+    std::lock_guard<decltype(uploaded_mutex)> lock{uploaded_mutex};
+    if (!uploaded)
+    {
+        upload_to_texture(pixels.get(), stride_);
+        uploaded = true;
+    }
+}
+
+auto mgc::MemoryBackedShmBuffer::native_buffer_handle() const -> std::shared_ptr<mg::NativeBuffer>
+{
+    BOOST_THROW_EXCEPTION((std::runtime_error{"MemoryBackedShmBuffer does not support mirclient APIs"}));
 }
 
 mg::gl::Program const& mgc::ShmBuffer::shader(mg::gl::ProgramFactory& cache) const

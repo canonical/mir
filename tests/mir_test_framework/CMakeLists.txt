@@ -39,7 +39,6 @@ add_library(mir-public-test-framework OBJECT
   declarative_placement_window_manage_policy.cpp
   executable_path.cpp
   headless_in_process_server.cpp
-  headless_nested_server_runner.cpp
   headless_display_buffer_compositor_factory.cpp
   headless_test.cpp
   interprocess_client_server_test.cpp

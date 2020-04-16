@@ -93,7 +93,7 @@ TEST_F(ExternalClient, default_app_env_is_as_expected)
 
 TEST_F(ExternalClient, default_app_env_x11_is_as_expected)
 {
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
+    if (access("/tmp/.X11-unix/", W_OK) == 0)
         return; // Starting an X server on LP builder doesn't work - skip the test
 
     add_server_init(x11);
@@ -120,7 +120,7 @@ TEST_F(ExternalClient, override_app_env_can_set_gdk_backend)
 
 TEST_F(ExternalClient, override_app_env_x11_can_unset)
 {
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
+    if (access("/tmp/.X11-unix/", W_OK) == 0)
         return; // Starting an X server on LP builder doesn't work - skip the test
 
     add_to_environment(app_x11_env, "-GDK_BACKEND");
@@ -133,7 +133,7 @@ TEST_F(ExternalClient, override_app_env_x11_can_unset)
 
 TEST_F(ExternalClient, override_app_env_x11_can_unset_and_set)
 {
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
+    if (access("/tmp/.X11-unix/", W_OK) == 0)
         return; // Starting an X server on LP builder doesn't work - skip the test
 
     add_to_environment(app_x11_env, "-GDK_BACKEND:QT_QPA_PLATFORM=xcb");
@@ -147,7 +147,7 @@ TEST_F(ExternalClient, override_app_env_x11_can_unset_and_set)
 
 TEST_F(ExternalClient, override_app_env_x11_can_set_and_unset)
 {
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
+    if (access("/tmp/.X11-unix/", W_OK) == 0)
         return; // Starting an X server on LP builder doesn't work - skip the test
 
     add_to_environment(app_x11_env, "QT_QPA_PLATFORM=xcb:-GDK_BACKEND");
@@ -161,7 +161,7 @@ TEST_F(ExternalClient, override_app_env_x11_can_set_and_unset)
 
 TEST_F(ExternalClient, stray_separators_are_ignored)
 {
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
+    if (access("/tmp/.X11-unix/", W_OK) == 0)
         return; // Starting an X server on LP builder doesn't work - skip the test
 
     add_to_environment(app_x11_env, "::QT_QPA_PLATFORM=xcb::-GDK_BACKEND::");
@@ -175,7 +175,7 @@ TEST_F(ExternalClient, stray_separators_are_ignored)
 
 TEST_F(ExternalClient, empty_override_does_nothing)
 {
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
+    if (access("/tmp/.X11-unix/", W_OK) == 0)
         return; // Starting an X server on LP builder doesn't work - skip the test
 
     add_to_environment(app_x11_env, "");
@@ -192,7 +192,7 @@ TEST_F(ExternalClient, empty_override_does_nothing)
 
 TEST_F(ExternalClient, strange_override_does_nothing)
 {
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
+    if (access("/tmp/.X11-unix/", W_OK) == 0)
         return; // Starting an X server on LP builder doesn't work - skip the test
 
     add_to_environment(app_x11_env, "=====");
@@ -209,7 +209,7 @@ TEST_F(ExternalClient, strange_override_does_nothing)
 
 TEST_F(ExternalClient, another_strange_override_does_nothing)
 {
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
+    if (access("/tmp/.X11-unix/", W_OK) == 0)
         return; // Starting an X server on LP builder doesn't work - skip the test
 
     add_to_environment(app_x11_env, ":::");

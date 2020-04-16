@@ -75,7 +75,6 @@ public:
 
     ~Cursor() noexcept;
 
-    void show() override;
     void show(CursorImage const& cursor_image) override;
     void hide() override;
 

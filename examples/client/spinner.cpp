@@ -1,8 +1,8 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 or 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -16,19 +16,29 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test_framework/main.h"
+#include "splash.h"
+#include <wayland-client.h>
+#include <csignal>
 
-#include <libgen.h>
-
-#include <cstring>
-#include <iostream>
-
-int main(int argc, char* argv[])
+static void shutdown(int)
 {
-    unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing server
-    // Override this standard gtest message
-    char path[] = __FILE__;
-    std::cout << "Running main() from " << basename(path) << std::endl;
+    exit(EXIT_SUCCESS);
+}
 
-    return mir_test_framework::main(argc, argv);
+int main()
+{
+    struct sigaction action;
+    action.sa_handler = shutdown;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    sigaction(SIGINT, &action, NULL);
+    sigaction(SIGTERM, &action, NULL);
+
+    SpinnerSplash spinner;
+
+    auto const display = wl_display_connect(nullptr);
+
+    spinner(display);
+
+    wl_display_disconnect(display);
 }

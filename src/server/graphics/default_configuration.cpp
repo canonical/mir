@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -22,10 +22,7 @@
 
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "nested/mir_client_host_connection.h"
-#include "nested/cursor.h"
-#include "nested/display.h"
-#include "nested/platform.h"
+#include "mir/renderer/gl/egl_platform.h"
 #include "null_cursor.h"
 #include "offscreen/display.h"
 #include "software_cursor.h"
@@ -82,20 +79,6 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             std::stringstream error_report;
             try
             {
-                // if a host socket is set we should use the host graphics module to create a "guest" platform
-                if (the_options()->is_set(options::host_socket_opt))
-                {
-                    auto const host_connection = the_host_connection();
-
-                    platform_library = std::make_shared<mir::SharedLibrary>(host_connection->graphics_platform_library());
-                    auto buffer_platform = std::make_shared<mgn::NestedBufferPlatform>(
-                        platform_library, host_connection, the_display_report(), the_options());
-                    return std::make_shared<mgn::Platform>(
-                        buffer_platform,
-                        std::make_unique<mgn::NestedDisplayPlatform>(
-                            buffer_platform, host_connection, the_display_report(), *the_options()));
-                }
-
                 // fallback to standalone if host socket is unset
                 if (the_options()->is_set(options::platform_graphics_lib))
                 {
@@ -238,13 +221,6 @@ mir::DefaultServerConfiguration::the_cursor()
                 mir::log_info("Cursor disabled");
                 primary_cursor = std::make_shared<mg::NullCursor>();
             }
-            else if (the_options()->is_set(options::host_socket_opt))
-            {
-                mir::log_info("Using nested cursor");
-                primary_cursor = std::make_shared<mgn::Cursor>(
-                    the_host_connection(),
-                    the_default_cursor_image());
-            }
             else if (cursor_choice != "software" &&
                      (primary_cursor = the_display()->create_hardware_cursor()))
             {
@@ -268,51 +244,6 @@ std::shared_ptr<mg::Cursor>
 mir::DefaultServerConfiguration::wrap_cursor(std::shared_ptr<mg::Cursor> const& wrapped)
 {
     return wrapped;
-}
-
-auto mir::DefaultServerConfiguration::the_host_connection()
--> std::shared_ptr<graphics::nested::HostConnection>
-{
-    return the_mir_client_host_connection();
-}
-
-auto mir::DefaultServerConfiguration::the_mir_client_host_connection()
--> std::shared_ptr<graphics::nested::MirClientHostConnection>
-{
-    return host_connection(
-        [this]()
-        {
-            auto const options = the_options();
-
-            if (!options->is_set(options::host_socket_opt))
-                BOOST_THROW_EXCEPTION(mir::AbnormalExit(
-                    std::string("Exiting Mir! Reason: Nested Mir needs either $MIR_SOCKET or --") +
-                    options::host_socket_opt));
-
-            auto host_socket = options->get<std::string>(options::host_socket_opt);
-
-            std::string server_socket{"none"};
-
-            if (!the_options()->is_set(options::no_server_socket_opt))
-            {
-                server_socket = the_socket_file();
-
-                if (server_socket == host_socket)
-                    BOOST_THROW_EXCEPTION(mir::AbnormalExit(
-                        "Exiting Mir! Reason: Nested Mir and Host Mir cannot use "
-                        "the same socket file to accept connections!"));
-            }
-
-            auto const my_name = options->is_set(options::name_opt) ?
-                options->get<std::string>(options::name_opt) :
-                "nested-mir@:" + server_socket;
-
-            return std::make_shared<graphics::nested::MirClientHostConnection>(
-                host_socket,
-                my_name,
-                the_host_lifecycle_event_listener()
-                );
-        });
 }
 
 std::shared_ptr<mg::GLConfig>

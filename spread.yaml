@@ -7,7 +7,6 @@ backends:
         systems:
             - ubuntu-16.04
             - ubuntu-18.04
-            - ubuntu-19.04
             - ubuntu-19.10
             - ubuntu-devel:
                image: ubuntu-daily:devel/amd64
@@ -24,8 +23,6 @@ backends:
                 image: ubuntu-os-cloud/ubuntu-1604-lts
             - ubuntu-18.04-64:
                 image: ubuntu-os-cloud/ubuntu-1804-lts
-            - ubuntu-19.04-64:
-                image: ubuntu-os-cloud/ubuntu-1904
             - ubuntu-19.10-64:
                 image: ubuntu-os-cloud/ubuntu-1910
             - ubuntu-devel-64:
@@ -42,11 +39,13 @@ environment:
     ARCH/arm64: arm64
     ARCH/armhf: armhf
     ARCH/i386: i386
+    ARCH/rpi: armhf
     CLANG: 0
     CLANG/clang,asan_clang,tsan_clang,ubsan_clang: 1
     VALGRIND: 0
     VALGRIND/valgrind: 1
     BUILD_TYPE: RelWithDebInfo
+    BUILD_TYPE/rpi: Debug
     BUILD_TYPE/asan,asan_clang: AddressSanitizer
     BUILD_TYPE/tsan,tsan_clang: ThreadSanitizer
     BUILD_TYPE/ubsan,ubsan_clang: UBSanitizer

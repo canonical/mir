@@ -47,6 +47,7 @@
 #include <unistd.h>
 
 namespace mg = mir::graphics;
+namespace mrs = mir::renderer::software;
 
 namespace
 {
@@ -357,33 +358,25 @@ void basic_display_swapping(mg::Display& display)
         });
 }
 
-std::unique_ptr<unsigned char[]> make_pixel_buffer(size_t size, uint32_t value)
-{
-    auto pixels = std::make_unique<unsigned char[]>(size);
-
-    std::fill(
-        reinterpret_cast<uint32_t*>(pixels.get()),
-        reinterpret_cast<uint32_t*>(pixels.get() + size),
-        value);
-
-    return pixels;
-}
-
 std::shared_ptr<mg::Buffer> alloc_and_fill_sw_buffer(
     mg::GraphicBufferAllocator& allocator,
     mir::geometry::Size size,
     MirPixelFormat format,
     uint32_t fill_value)
 {
-    auto const buffer = allocator.alloc_software_buffer(size, format);
-    auto const writable_buffer = std::dynamic_pointer_cast<mir::renderer::software::PixelSource>(buffer);
+    auto const num_px = size.width.as_uint32_t() * size.height.as_uint32_t();
+    auto buffer = std::make_unique<unsigned char[]>(num_px* MIR_BYTES_PER_PIXEL(format));
+    std::fill(
+        reinterpret_cast<uint32_t*>(buffer.get()),
+        reinterpret_cast<uint32_t*>(buffer.get() + num_px),
+        fill_value);
 
-    auto const size_in_bytes = writable_buffer->stride().as_uint32_t() * size.height.as_uint32_t();
-    auto const pixels = make_pixel_buffer(size_in_bytes, fill_value);
-
-    writable_buffer->write(pixels.get(), size_in_bytes);
-
-    return buffer;
+    return mrs::alloc_buffer_with_content(
+        allocator,
+        buffer.get(),
+        size,
+        mir::geometry::Stride(size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(format)),
+        format);
 }
 
 template<typename Period, typename Rep>

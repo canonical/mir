@@ -23,11 +23,11 @@
 #include "buffer_texture_binder.h"
 #include "mir/anonymous_shm_file.h"
 #include "shm_buffer.h"
+#include "buffer_from_wl_shm.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/renderer/gl/context_source.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/display.h"
-#include "software_buffer.h"
 #include "wayland-eglstream-controller.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/texture.h"
@@ -95,7 +95,9 @@ std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const
 }
 
 mge::BufferAllocator::BufferAllocator(mg::Display const& output)
-    : ctx{context_for_output(output)}
+    : wayland_ctx{context_for_output(output)},
+      egl_delegate{
+          std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))}
 {
 }
 
@@ -111,17 +113,14 @@ std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_buffer(
 
 std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_software_buffer(geom::Size size, MirPixelFormat format)
 {
-    if (!mgc::ShmBuffer::supports(format))
+    if (!mgc::MemoryBackedShmBuffer::supports(format))
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
                 "Trying to create SHM buffer with unsupported pixel format"));
     }
 
-    auto const stride = geom::Stride{ MIR_BYTES_PER_PIXEL(format) * size.width.as_uint32_t() };
-    size_t const size_in_bytes = stride.as_int() * size.height.as_int();
-    return std::make_shared<mge::SoftwareBuffer>(
-        std::make_unique<mir::AnonymousShmFile>(size_in_bytes), size, format);
+    return std::make_shared<mgc::MemoryBackedShmBuffer>(size, format, egl_delegate);
 }
 
 std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()
@@ -338,7 +337,7 @@ void mge::BufferAllocator::create_buffer_eglstream_resource(
         EGL_NONE
     };
 
-    allocator->ctx->make_current();
+    allocator->wayland_ctx->make_current();
     auto dpy = eglGetCurrentDisplay();
 
     auto stream = allocator->nv_extensions.eglCreateStreamAttribNV(dpy, attribs);
@@ -348,9 +347,9 @@ void mge::BufferAllocator::create_buffer_eglstream_resource(
         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to create EGLStream from Wayland buffer")));
     }
 
-    BoundEGLStream::associate_stream(buffer, allocator->ctx, stream);
+    BoundEGLStream::associate_stream(buffer, allocator->wayland_ctx, stream);
 
-    allocator->ctx->release_current();
+    allocator->wayland_ctx->release_current();
 }
 
 struct wl_eglstream_controller_interface const mge::BufferAllocator::impl{
@@ -395,8 +394,8 @@ void mir::graphics::eglstream::BufferAllocator::bind_display(
     }
 
     auto context_guard = mir::raii::paired_calls(
-        [this]() { ctx->make_current(); },
-        [this]() { ctx->release_current(); });
+        [this]() { wayland_ctx->make_current(); },
+        [this]() { wayland_ctx->release_current(); });
 
     auto dpy = eglGetCurrentDisplay();
 
@@ -523,8 +522,8 @@ mir::graphics::eglstream::BufferAllocator::buffer_from_resource(
     std::function<void()>&& /*on_release*/)
 {
     auto context_guard = mir::raii::paired_calls(
-        [this]() { ctx->make_current(); },
-        [this]() { ctx->release_current(); });
+        [this]() { wayland_ctx->make_current(); },
+        [this]() { wayland_ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
     EGLint width, height;
@@ -561,4 +560,16 @@ mir::graphics::eglstream::BufferAllocator::buffer_from_resource(
         mir_pixel_format_argb_8888,
         geom::Size{width, height},
         layout);
+}
+
+auto mge::BufferAllocator::buffer_from_shm(
+    wl_resource* buffer,
+    std::shared_ptr<Executor> wayland_executor,
+    std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer>
+{
+    return mg::wayland::buffer_from_wl_shm(
+        buffer,
+        std::move(wayland_executor),
+        egl_delegate,
+        std::move(on_consumed));
 }

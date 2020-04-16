@@ -94,26 +94,6 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
     }
 };
 
-#ifdef MIR_EGL_SUPPORTED
-struct GLMark2Mir : AbstractGLMark2Test
-{
-    char const* command() override
-    {
-        static char const* const command = "glmark2-es2-mir";
-        return command;
-    }
-};
-
-struct GLMark2Xmir : AbstractGLMark2Test
-{
-    char const* command() override
-    {
-        static auto command = mir_test_framework::executable_path() + "/miral-xrun -Xmir glmark2-es2";
-        return command.c_str();
-    }
-};
-#endif
-
 struct GLMark2Xwayland : AbstractGLMark2Test
 {
     char const* command() override
@@ -136,64 +116,6 @@ struct GLMark2Wayland : AbstractGLMark2Test
         return command;
     }
 };
-
-#ifdef MIR_EGL_SUPPORTED
-TEST_F(GLMark2Mir, fullscreen_default)
-{
-    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
-}
-
-TEST_F(GLMark2Mir, windowed_default)
-{
-    EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
-}
-
-TEST_F(GLMark2Mir, fullscreen_interval1)
-{
-    add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "1");
-    // Our devices seem to range 57-67Hz
-    EXPECT_NEAR(60, run_glmark2("--fullscreen"), 10);
-}
-
-TEST_F(GLMark2Mir, windowed_interval1)
-{
-    add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "1");
-    // Our devices seem to range 57-67Hz
-    EXPECT_NEAR(60, run_glmark2(""), 10);
-}
-
-TEST_F(GLMark2Mir, fullscreen_interval0)
-{
-    add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "0");
-    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(100));
-}
-
-TEST_F(GLMark2Mir, windowed_interval0)
-{
-    add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "0");
-    EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
-}
-
-TEST_F(GLMark2Xmir, fullscreen_default)
-{
-    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
-}
-
-TEST_F(GLMark2Xmir, windowed_default)
-{
-    EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
-}
-
-TEST_F(GLMark2Xmir, fullscreen)
-{
-    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(100));
-}
-
-TEST_F(GLMark2Xmir, windowed)
-{
-    EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
-}
-#endif
 
 TEST_F(GLMark2Wayland, fullscreen_default)
 {

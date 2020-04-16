@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2017 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -20,6 +20,7 @@
 #define MIRAL_WINDOW_MANAGER_TOOLS_H
 
 #include "miral/application.h"
+#include <miral/deprecations.h>
 #include "window_info.h"
 
 #include <mir/geometry/displacement.h>
@@ -130,6 +131,7 @@ public:
 
     /// Close the window by force
     /// \note ask_client_to_close() is the polite way
+    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not close windows directly")
     void force_close(Window const& window);
 
     /// retrieve the active window
