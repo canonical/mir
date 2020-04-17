@@ -36,5 +36,12 @@ then
   export MIR_SERVER_ENABLE_MIRCLIENT=
 fi
 
+if which gsettings > /dev/null
+then
+  keymap_index=$(gsettings get org.gnome.desktop.input-sources current | cut -d\  -f 2)
+  keymap=$(gsettings get org.gnome.desktop.input-sources sources | grep -Po "'[[:alpha:]]+'\)" | sed -ne "s/['|)]//g;$(($keymap_index+1))p")
+  export MIR_SERVER_KEYMAP=${keymap}
+fi
+
 # miral-shell can launch it's own terminal with Ctrl-Alt-T
 MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} exec ${bindir}miral-shell $*
