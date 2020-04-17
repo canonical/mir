@@ -117,29 +117,7 @@ auto mg::rpi::BufferAllocator::alloc_software_buffer(
             std::runtime_error{"Trying to create SHM buffer with unsupported pixel format"}));
     }
 
-    class SimpleShmBuffer : public common::ShmBuffer
-    {
-    public:
-        SimpleShmBuffer(
-            geom::Size size,
-            MirPixelFormat const& pixelFormat,
-            std::shared_ptr<common::EGLContextExecutor> egl_executor) :
-            ShmBuffer(
-                size,
-                pixelFormat,
-                std::move(egl_executor))
-        {
-        }
-
-        std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"rpi-dispmanx platform does not support mirclient"}));
-        }
-
-    private:
-    };
-
-    return std::make_shared<SimpleShmBuffer>(size, format, egl_executor);
+    return std::make_shared<common::MemoryBackedShmBuffer>(size, format, egl_executor);
 }
 
 namespace
