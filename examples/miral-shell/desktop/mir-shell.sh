@@ -39,8 +39,14 @@ fi
 if which gsettings > /dev/null
 then
   keymap_index=$(gsettings get org.gnome.desktop.input-sources current | cut -d\  -f 2)
-  keymap=$(gsettings get org.gnome.desktop.input-sources sources | grep -Po "'[[:alpha:]]+'\)" | sed -ne "s/['|)]//g;$(($keymap_index+1))p")
-  export MIR_SERVER_KEYMAP=${keymap}
+  if [ ! -z "$keymap_index" ]
+  then
+    keymap=$(gsettings get org.gnome.desktop.input-sources sources | grep -Po "'[[:alpha:]]+'\)" | sed -ne "s/['|)]//g;$(($keymap_index+1))p")
+    if [ ! -z "$keymap" ]
+    then
+      export MIR_SERVER_KEYMAP=${keymap}
+    fi
+  fi
 fi
 
 # miral-shell can launch it's own terminal with Ctrl-Alt-T
