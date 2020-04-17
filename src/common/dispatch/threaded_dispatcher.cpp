@@ -159,7 +159,7 @@ public:
     }
 
 private:
-    mir::Fd event_semaphore;
+    mir::Fd const event_semaphore;
 
     std::mutex terminating_thread_mutex;
     std::condition_variable thread_terminating;
