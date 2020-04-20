@@ -491,9 +491,17 @@ global:
     miral::WindowSpecification::application_id*;
   };
 } MIRAL_2.7;
+
 MIRAL_2.9 {
 global:
   extern "C++" {
     miral::ExternalClientLauncher::launch_using_x11*;
   };
 } MIRAL_2.8;
+
+MIRAL_2.10 {
+global:
+  extern "C++" {
+    miral::WindowSpecification::server_side_decorated*;
+  };
+} MIRAL_2.9;
