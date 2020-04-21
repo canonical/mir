@@ -199,6 +199,15 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
             rect = rect.intersection_with(surface_rect); // clip to surface
             input_shape_accumulator.push_back(rect);
         }
+
+        // If we have an explicity specified empty input shape all inport should be ignored
+        // however, if we give Mir an empty vector it will use a default input shape
+        // therefore we add a zero size rect to the vector
+        // TODO: sort this whole mess out
+        if (input_shape.value().empty())
+        {
+            input_shape_accumulator.push_back({{}, {}});
+        }
     }
     else
     {
