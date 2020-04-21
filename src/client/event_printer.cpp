@@ -258,6 +258,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowType type)
     PRINT(mir_window_type,inputmethod);
     PRINT(mir_window_type,satellite);
     PRINT(mir_window_type,tip);
+    PRINT(mir_window_type,decoration);
     default:
         return out << static_cast<int>(type) << "<INVALID>";
     }
