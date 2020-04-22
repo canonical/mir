@@ -183,7 +183,12 @@ auto dispmanx_handle_for_renderable(mg::Renderable const& renderable)
         auto const vc_format = mg::rpi::vc_image_type_from_mir_pf(buffer->pixel_format());
         auto const width = buffer->size().width.as_uint32_t();
         auto const height = buffer->size().height.as_uint32_t();
-        auto handle = vc_dispmanx_resource_create(vc_format, width, height, &dummy);
+        auto handle = vc_dispmanx_resource_create(
+            vc_format,
+            width | (pixel_source->stride().as_uint32_t() << 16),
+            height | (height << 16),
+            &dummy);
+
 
         pixel_source->read(
             [handle, vc_format, stride = pixel_source->stride().as_uint32_t(), width, height]
