@@ -208,6 +208,13 @@ auto dispmanx_handle_for_renderable(mg::Renderable const& renderable)
             std::runtime_error{"We accidentally tried to use overlays without checking the buffers are overlay-capable"}));
     }
 }
+
+auto transform_for_renderable(mg::Renderable const& renderable) -> DISPMANX_TRANSFORM_T
+{
+    // TODO: Handle rotations etc
+    return dynamic_cast<mg::rpi::DispmanXBuffer const&>(*renderable.buffer())
+        .resource_transform();
+}
 }
 
 bool mg::rpi::DisplayBuffer::overlay(mg::RenderableList const& renderlist)
@@ -279,6 +286,8 @@ bool mg::rpi::DisplayBuffer::overlay(mg::RenderableList const& renderlist)
             0
         };
 
+        auto const buffer_transform = transform_for_renderable(*renderable);
+
         current_elements.emplace_back(
             vc_dispmanx_element_add(
                 update_handle,
@@ -290,7 +299,7 @@ bool mg::rpi::DisplayBuffer::overlay(mg::RenderableList const& renderlist)
                 DISPMANX_PROTECTION_NONE,
                 &alpha_flags,
                 0,
-                DISPMANX_NO_ROTATE));
+                buffer_transform));
         if (current_elements.back() == DISPMANX_NO_HANDLE)
         {
             // TODO: We should probably back out to GL rendering here

@@ -194,6 +194,11 @@ public:
     {
         return handle;
     }
+
+    auto resource_transform() const -> DISPMANX_TRANSFORM_T override
+    {
+        return DISPMANX_NO_ROTATE;
+    }
 private:
     geom::Stride const stride_;
     DISPMANX_RESOURCE_HANDLE_T const handle;
@@ -366,6 +371,10 @@ public:
         return vc_dispmanx_get_handle_from_wl_buffer(buffer);
     }
 
+    auto resource_transform() const -> DISPMANX_TRANSFORM_T override
+    {
+        return static_cast<DISPMANX_TRANSFORM_T>(DISPMANX_NO_ROTATE | DISPMANX_FLIP_VERT);
+    }
 private:
     wl_resource* buffer;
     mir::geometry::Size const size_;
