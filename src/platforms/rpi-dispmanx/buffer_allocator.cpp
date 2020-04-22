@@ -128,6 +128,11 @@ public:
     {
     }
 
+    ~DispmanxShmBuffer() override
+    {
+        vc_dispmanx_resource_delete(handle);
+    }
+
     auto native_buffer_handle() const -> std::shared_ptr<mg::NativeBuffer> override
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"mirclient not supported"}));
