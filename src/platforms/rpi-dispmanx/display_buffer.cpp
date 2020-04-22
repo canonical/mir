@@ -317,6 +317,7 @@ bool mg::rpi::DisplayBuffer::overlay(mg::RenderableList const& renderlist)
 
     return true;
 }
+
 glm::mat2 mg::rpi::DisplayBuffer::transformation() const
 {
     return glm::mat2(1);
