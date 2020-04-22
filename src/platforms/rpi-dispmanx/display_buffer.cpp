@@ -222,22 +222,23 @@ bool mg::rpi::DisplayBuffer::overlay(mg::RenderableList const& renderlist)
 
     auto update_handle = vc_dispmanx_update_start(0);
 
-    // TODO: Better algorithm than “remove everything from last frame, add everything from this”
+    if (current_elements.empty())
+    {
+        // Change the EGL layer's output layer to empty.
+        VC_RECT_T empty_output;
+        vc_dispmanx_rect_set(&empty_output, 0, 0, 0, 0);
 
-    // Change the EGL layer's output layer to empty.
-    VC_RECT_T empty_output;
-    vc_dispmanx_rect_set(&empty_output, 0, 0, 0, 0);
-
-    vc_dispmanx_element_change_attributes(
-        update_handle,
-        egl_target_element,
-        ELEMENT_CHANGE_DEST_RECT,
-        0,
-        0,
-        &empty_output,
-        nullptr,
-        DISPMANX_NO_HANDLE,
-        DISPMANX_NO_ROTATE);
+        vc_dispmanx_element_change_attributes(
+            update_handle,
+            egl_target_element,
+            ELEMENT_CHANGE_DEST_RECT,
+            0,
+            0,
+            &empty_output,
+            nullptr,
+            DISPMANX_NO_HANDLE,
+            DISPMANX_NO_ROTATE);
+    }
 
     // First, remove everything
     for (auto const& element : current_elements)
@@ -246,12 +247,17 @@ bool mg::rpi::DisplayBuffer::overlay(mg::RenderableList const& renderlist)
     }
     current_elements.clear();
 
-    // Now, add the renderables
-    for (uint32_t layer = 0; layer < renderlist.size(); ++layer)
-    {
-        auto const renderable = renderlist[layer];
-        VC_RECT_T dest_rect, src_rect;
+    // Add an opaque black background.
+    vc_dispmanx_display_set_background(update_handle, display_handle, 0, 0, 0);
 
+    int32_t layer{0};
+
+    // Now, add the renderables
+    for (auto const& renderable : renderlist)
+    {
+        layer++;
+
+        VC_RECT_T dest_rect, src_rect;
         // Destination rect coördinates are in integer pixels…
         vc_dispmanx_rect_set(
             &dest_rect,
@@ -273,13 +279,13 @@ bool mg::rpi::DisplayBuffer::overlay(mg::RenderableList const& renderlist)
             0
         };
 
-        current_elements.push_back(
+        current_elements.emplace_back(
             vc_dispmanx_element_add(
                 update_handle,
                 display_handle,
                 layer,
                 &dest_rect,
-                dispmanx_handle_for_renderable(*renderlist[layer]),
+                dispmanx_handle_for_renderable(*renderable),
                 &src_rect,
                 DISPMANX_PROTECTION_NONE,
                 &alpha_flags,
@@ -287,10 +293,12 @@ bool mg::rpi::DisplayBuffer::overlay(mg::RenderableList const& renderlist)
                 DISPMANX_NO_ROTATE));
         if (current_elements.back() == DISPMANX_NO_HANDLE)
         {
+            // TODO: We should probably back out to GL rendering here
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to add element to DispmanX display list"}));
         }
     }
 
+    // TODO: This doesn't have to be synchronous; we could use the vblank callback.
     vc_dispmanx_update_submit_sync(update_handle);
 
     return true;
