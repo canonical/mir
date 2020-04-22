@@ -18,6 +18,7 @@
 
 #include "display_buffer.h"
 #include "buffer_allocator.h"
+#include "helpers.h"
 
 #include "mir/graphics/egl_error.h"
 #include "mir/renderer/sw/pixel_source.h"
@@ -168,17 +169,6 @@ bool renderable_is_overlay_candidate(std::shared_ptr<mg::Renderable> const& rend
         is_dispmanx_capable_buffer(*renderable->buffer());
 }
 
-auto vc_image_type_from_mir_pf(MirPixelFormat format) -> VC_IMAGE_TYPE_T
-{
-    switch(format)
-    {
-    case mir_pixel_format_xbgr_8888:
-        return VC_IMAGE_XRGB8888;
-    default:
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Unexpected pixel format"}));
-    }
-}
-
 auto dispmanx_handle_for_renderable(mg::Renderable const& renderable)
     -> DISPMANX_RESOURCE_HANDLE_T
 {
@@ -190,7 +180,7 @@ auto dispmanx_handle_for_renderable(mg::Renderable const& renderable)
     else if (auto const pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(buffer))
     {
         uint32_t dummy;
-        auto const vc_format = vc_image_type_from_mir_pf(buffer->pixel_format());
+        auto const vc_format = mg::rpi::vc_image_type_from_mir_pf(buffer->pixel_format());
         auto const width = buffer->size().width.as_uint32_t();
         auto const height = buffer->size().height.as_uint32_t();
         auto handle = vc_dispmanx_resource_create(vc_format, width, height, &dummy);

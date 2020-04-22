@@ -25,6 +25,7 @@
 #include <interface/vmcs_host/vc_vchi_dispmanx.h>
 #undef BUILD_WAYLAND
 
+#include "helpers.h"
 #include "mir/raii.h"
 #include "mir/anonymous_shm_file.h"
 #include "mir/graphics/egl_extensions.h"

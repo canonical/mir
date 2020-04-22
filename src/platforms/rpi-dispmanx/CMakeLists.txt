@@ -12,7 +12,7 @@ add_library(mirplatformgraphicsrpidispmanxobjects OBJECT
   display.h
   display_buffer.cpp
   display_buffer.h
-)
+  helpers.h helpers.cpp)
 
 target_include_directories(
   mirplatformgraphicsrpidispmanxobjects
