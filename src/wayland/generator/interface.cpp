@@ -132,6 +132,7 @@ Emitter Interface::implementation() const
             },
             thunks_impl(),
             constructor_impl(),
+            destructor_impl(),
             event_impls(),
             is_instance_impl(),
             Lines{
@@ -246,7 +247,19 @@ Emitter Interface::constructor_args(std::string const& parent_interface) const
 
 Emitter Interface::destructor_prototype() const
 {
-    return Line{"virtual ~", generated_name, "() = default;"};
+    return Line{"virtual ~", generated_name, "();"};
+}
+
+Emitter Interface::destructor_impl() const
+{
+    return Lines{
+        {nmspace, "~", generated_name, "()"},
+        Block{
+            has_vtable ?
+                "wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);" :
+                Emitter{nullptr}
+        }
+    };
 }
 
 Emitter Interface::virtual_request_prototypes() const
