@@ -124,7 +124,7 @@ public:
         std::shared_ptr<mg::common::EGLContextExecutor> egl_executor)
         : ShmBuffer(size, format, std::move(egl_executor)),
           stride_{stride},
-          handle{mg::rpi::dispmanx_resource_for(size, format)}
+          handle{mg::rpi::dispmanx_resource_for(size, stride_, format)}
     {
     }
 

@@ -47,13 +47,15 @@ auto mg::rpi::vc_image_type_from_mir_pf(MirPixelFormat format) -> VC_IMAGE_TYPE_
 
 auto mg::rpi::dispmanx_resource_for(
     geom::Size const& size,
-    MirPixelFormat format) -> DISPMANX_RESOURCE_HANDLE_T
+    geom::Stride stride,
+    MirPixelFormat format)
+    -> DISPMANX_RESOURCE_HANDLE_T
 {
     uint32_t dummy;
     auto const handle = vc_dispmanx_resource_create(
         vc_image_type_from_mir_pf(format),
-        size.width.as_uint32_t(),
-        size.height.as_uint32_t(),
+        size.width.as_uint32_t() | stride.as_uint32_t() << 16,
+        size.height.as_uint32_t() | size.height.as_uint32_t() << 16,
         &dummy);
     if (handle == DISPMANX_NO_HANDLE)
     {

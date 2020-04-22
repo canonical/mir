@@ -19,8 +19,9 @@
 #ifndef MIR_RPI_DISPMANX_HELPERS_H_
 #define MIR_RPI_DISPMANX_HELPERS_H_
 
-#include "mir_toolkit/common.h"
+#include "mir/geometry/dimensions.h"
 #include "mir/geometry/size.h"
+#include "mir_toolkit/common.h"
 #include "mir/geometry/dimensions.h"
 
 #include "interface/vctypes/vc_image_types.h"
@@ -36,7 +37,9 @@ auto vc_image_type_from_mir_pf(MirPixelFormat format) -> VC_IMAGE_TYPE_T;
 
 auto dispmanx_resource_for(
     geometry::Size const& size,
-    MirPixelFormat format) -> DISPMANX_RESOURCE_HANDLE_T;
+    geometry::Stride stride,
+    MirPixelFormat format)
+    -> DISPMANX_RESOURCE_HANDLE_T;
 
 auto dispmanx_resource_from_pixels(
     void const* pixels,
