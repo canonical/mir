@@ -198,6 +198,18 @@ private:
     geom::Stride const stride_;
     DISPMANX_RESOURCE_HANDLE_T const handle;
 };
+
+auto calculate_stride(geom::Size const& size, MirPixelFormat format) -> geom::Stride
+{
+    auto const minimum_stride = MIR_BYTES_PER_PIXEL(format) * size.width.as_uint32_t();
+    // DispmanX likes the stride to be a multiple of 64 bytes.
+    if (minimum_stride % 64 == 0)
+    {
+        return geom::Stride{minimum_stride};
+    }
+    auto const rounded_stride = minimum_stride + (64 - (minimum_stride % 64));
+    return geom::Stride{rounded_stride};
+}
 }
 auto mg::rpi::BufferAllocator::alloc_software_buffer(
     mir::geometry::Size size, MirPixelFormat format)
@@ -211,7 +223,7 @@ auto mg::rpi::BufferAllocator::alloc_software_buffer(
 
     return std::make_shared<DispmanxShmBuffer>(
         size,
-        geom::Stride{MIR_BYTES_PER_PIXEL(format) * size.width.as_uint32_t()},
+        calculate_stride(size, format),
         format,
         egl_executor);
 }
