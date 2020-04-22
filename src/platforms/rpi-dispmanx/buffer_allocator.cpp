@@ -338,7 +338,6 @@ public:
             glTexImage2D(GL_TEXTURE_2D, 0, gl_format, width, height,
                 0, gl_format, gl_type, bounce_buffer.get());
 
-            on_consumed();
             uploaded = true;
         }
     }
@@ -350,6 +349,8 @@ public:
 
     explicit operator DISPMANX_RESOURCE_HANDLE_T() const override
     {
+        on_consumed();
+        const_cast<WlDispmanxBuffer*>(this)->on_consumed = [](){};
         return vc_dispmanx_get_handle_from_wl_buffer(buffer);
     }
 
