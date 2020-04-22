@@ -31,7 +31,7 @@ public:
     static XdgOutputManagerV1* from(struct wl_resource*);
 
     XdgOutputManagerV1(struct wl_resource* resource, Version<3>);
-    virtual ~XdgOutputManagerV1() = default;
+    virtual ~XdgOutputManagerV1();
 
     void destroy_wayland_object() const;
 
@@ -67,7 +67,7 @@ public:
     static XdgOutputV1* from(struct wl_resource*);
 
     XdgOutputV1(struct wl_resource* resource, Version<3>);
-    virtual ~XdgOutputV1() = default;
+    virtual ~XdgOutputV1();
 
     void send_logical_position_event(int32_t x, int32_t y) const;
     void send_logical_size_event(int32_t width, int32_t height) const;
