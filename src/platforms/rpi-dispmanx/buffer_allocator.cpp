@@ -138,43 +138,17 @@ public:
         auto const vc_format = mg::rpi::vc_image_type_from_mir_pf(pixel_format());
 
         VC_RECT_T rect;
-        if (stride_.as_uint32_t() % 64)
-        {
-            // Surprise! DispmanX seems to require buffers to have a stride divisible by 64.
+        vc_dispmanx_rect_set(
+            &rect,
+            0, 0,
+            size().width.as_uint32_t(), size().height.as_uint32_t());
 
-            // TODO: Having to pad like this means we need to handle opaque buffer formats differently
-/*            size_t const padding_size = 16 - (stride_.as_uint32_t() % 16);
-            auto const padding_bytes = std::make_unique<unsigned char>(padding_size);
-            std::fill(padding_bytes.get(), padding_bytes.get() + padding_size, 0);
-*/
-            for(uint32_t row = 0; row < size().height.as_uint32_t(); ++row)
-            {
-                vc_dispmanx_rect_set(
-                    &rect,
-                    0, row,
-                    size().width.as_uint32_t(), 1);
-                vc_dispmanx_resource_write_data(
-                    handle,
-                    vc_format,
-                    stride().as_uint32_t(),
-                    const_cast<unsigned char*>(pixels + (stride_.as_uint32_t() * row)),
-                    &rect);
-            }
-        }
-        else
-        {
-            vc_dispmanx_rect_set(
-                &rect,
-                0, 0,
-                size().width.as_uint32_t(), size().height.as_uint32_t());
-
-            vc_dispmanx_resource_write_data(
-                handle,
-                vc_format,
-                stride().as_uint32_t(),
-                const_cast<unsigned char*>(pixels),
-                &rect);
-        }
+        vc_dispmanx_resource_write_data(
+            handle,
+            vc_format,
+            stride().as_uint32_t(),
+            const_cast<unsigned char*>(pixels),
+            &rect);
     }
 
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override
