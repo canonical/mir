@@ -367,6 +367,18 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 
     if (auto const scene_surface = weak_scene_surface.lock())
     {
+        if (scene_surface->visible() != static_cast<bool>(surface->buffer_size()))
+        {
+            if (surface->buffer_size() && scene_surface->state() == mir_window_state_hidden)
+            {
+                spec().state = mir_window_state_restored;
+            }
+            else if (!surface->buffer_size() && scene_surface->state() != mir_window_state_hidden)
+            {
+                spec().state = mir_window_state_hidden;
+            }
+        }
+
         if (!committed_size || size != committed_size.value())
         {
             spec().width = size.width;
@@ -405,25 +417,8 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     pending_explicit_height = std::experimental::nullopt;
 }
 
-void mf::WindowWlSurfaceRole::visiblity(bool visible)
+void mf::WindowWlSurfaceRole::visiblity(bool)
 {
-    auto const scene_surface = weak_scene_surface.lock();
-    if (!scene_surface)
-        return;
-
-    if (scene_surface->visible() == visible)
-        return;
-
-    if (visible)
-    {
-        if (scene_surface->state() == mir_window_state_hidden)
-            spec().state = mir_window_state_restored;
-    }
-    else
-    {
-        if (scene_surface->state() != mir_window_state_hidden)
-            spec().state = mir_window_state_hidden;
-    }
 }
 
 mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
