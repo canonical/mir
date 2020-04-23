@@ -58,7 +58,7 @@ int main(int argc, char const* argv[])
 
     ExternalClientLauncher external_client_launcher;
 
-    std::string terminal_cmd{"weston-terminal"};
+    std::string terminal_cmd{"miral-terminal"};
 
     auto const quit_on_ctrl_alt_bksp = [&](MirEvent const* event)
         {
