@@ -167,6 +167,11 @@ mw::XdgWmBase::XdgWmBase(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::XdgWmBase::~XdgWmBase()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 void mw::XdgWmBase::send_ping_event(uint32_t serial) const
 {
     wl_resource_post_event(resource, Opcode::ping, serial);
@@ -190,7 +195,8 @@ mw::XdgWmBase::Global::Global(wl_display* display, Version<1>)
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
-{}
+{
+}
 
 auto mw::XdgWmBase::Global::interface_name() const -> char const*
 {
@@ -343,6 +349,11 @@ mw::XdgPositioner::XdgPositioner(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::XdgPositioner::~XdgPositioner()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 bool mw::XdgPositioner::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &xdg_positioner_interface_data, Thunks::request_vtable);
@@ -489,6 +500,11 @@ mw::XdgSurface::XdgSurface(struct wl_resource* resource, Version<1>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::XdgSurface::~XdgSurface()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::XdgSurface::send_configure_event(uint32_t serial) const
@@ -762,6 +778,11 @@ mw::XdgToplevel::XdgToplevel(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::XdgToplevel::~XdgToplevel()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 void mw::XdgToplevel::send_configure_event(int32_t width, int32_t height, struct wl_array* states) const
 {
     wl_resource_post_event(resource, Opcode::configure, width, height, states);
@@ -898,6 +919,11 @@ mw::XdgPopup::XdgPopup(struct wl_resource* resource, Version<1>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::XdgPopup::~XdgPopup()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::XdgPopup::send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height) const
