@@ -91,9 +91,23 @@ void mf::XWaylandSurfaceRole::commit(WlSurfaceState const& state)
 
     wl_surface->commit(state);
 
-    if (state.surface_data_needs_refresh())
+    auto const surface = this->scene_surface();
+    auto const session = surface ? surface.value()->session().lock() : nullptr;
+    if (surface && session)
     {
-        refresh_surface_data_now();
+        shell::SurfaceSpecification spec;
+
+        if (state.surface_data_needs_refresh())
+        {
+            spec.streams = std::vector<shell::StreamSpecification>();
+            spec.input_shape = std::vector<geom::Rectangle>();
+            wl_surface->populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+        }
+
+        if (!spec.is_empty())
+        {
+            shell->modify_surface(session, surface.value(), spec);
+        }
     }
 }
 
