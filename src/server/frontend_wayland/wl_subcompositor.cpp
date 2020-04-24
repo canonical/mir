@@ -170,6 +170,16 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
     cached_state.value().update_from(state);
 
+    if (cached_state.value().buffer)
+    {
+        auto const currently_mapped = static_cast<bool>(surface->buffer_size());
+        auto const pending_mapped = cached_state.value().buffer.value() != nullptr;
+        if (currently_mapped != pending_mapped)
+        {
+            cached_state.value().invalidate_surface_data();
+        }
+    }
+
     if (synchronized())
     {
         if (cached_state.value().surface_data_needs_refresh() && !*parent_destroyed)
