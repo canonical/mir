@@ -94,7 +94,11 @@ void mf::WlSubsurface::populate_surface_data(std::vector<shell::StreamSpecificat
                                              std::vector<mir::geometry::Rectangle>& input_shape_accumulator,
                                              geometry::Displacement const& parent_offset) const
 {
-    surface->populate_surface_data(buffer_streams, input_shape_accumulator, parent_offset);
+    if (surface->buffer_size())
+    {
+        // surface is mapped
+        surface->populate_surface_data(buffer_streams, input_shape_accumulator, parent_offset);
+    }
 }
 
 bool mf::WlSubsurface::synchronized() const
