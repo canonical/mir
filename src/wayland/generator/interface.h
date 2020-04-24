@@ -58,7 +58,6 @@ private:
     Emitter constructor_args() const;
     Emitter constructor_args(std::string const& parent_interface) const;
     Emitter destructor_prototype() const;
-    Emitter destructor_impl() const;
     Emitter virtual_request_prototypes() const;
     Emitter event_prototypes() const;
     Emitter event_impls() const;
