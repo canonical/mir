@@ -122,11 +122,6 @@ void mf::XWaylandSurfaceRole::commit(WlSurfaceState const& state)
     }
 }
 
-void mf::XWaylandSurfaceRole::visiblity(bool /*visible*/)
-{
-    // TODO?
-}
-
 void mf::XWaylandSurfaceRole::destroy()
 {
     if (auto const wm_surface = weak_wm_surface.lock())

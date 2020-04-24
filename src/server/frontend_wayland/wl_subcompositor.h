@@ -77,7 +77,6 @@ private:
 
     void refresh_surface_data_now() override;
     virtual void commit(WlSurfaceState const& state) override;
-    virtual void visiblity(bool visible) override;
 
     WlSurface* const surface;
     // manages parent/child relationship, but does not manage parent's memory

@@ -263,8 +263,6 @@ void mf::WlSurface::attach(std::experimental::optional<wl_resource*> const& buff
         mir::log_warning("Client requested unimplemented non-zero attach offset. Rendering will be incorrect.");
     }
 
-    role->visiblity(!!buffer);
-
     pending.buffer = buffer.value_or(nullptr);
 }
 
@@ -447,5 +445,4 @@ auto mf::NullWlSurfaceRole::scene_surface() const -> std::experimental::optional
 }
 void mf::NullWlSurfaceRole::refresh_surface_data_now() {}
 void mf::NullWlSurfaceRole::commit(WlSurfaceState const& state) { surface->commit(state); }
-void mf::NullWlSurfaceRole::visiblity(bool /*visible*/) {}
 void mf::NullWlSurfaceRole::destroy() {}

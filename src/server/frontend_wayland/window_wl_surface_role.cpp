@@ -417,10 +417,6 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     pending_explicit_height = std::experimental::nullopt;
 }
 
-void mf::WindowWlSurfaceRole::visiblity(bool)
-{
-}
-
 mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
 {
     if (!pending_changes)

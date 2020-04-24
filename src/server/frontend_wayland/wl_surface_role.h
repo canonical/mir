@@ -45,7 +45,6 @@ public:
     virtual auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> = 0;
     virtual void refresh_surface_data_now() = 0;
     virtual void commit(WlSurfaceState const& state) = 0;
-    virtual void visiblity(bool visible) = 0;
     virtual void destroy() = 0;
     virtual ~WlSurfaceRole() = default;
 };

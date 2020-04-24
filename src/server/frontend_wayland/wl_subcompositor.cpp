@@ -193,9 +193,3 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
         cached_state = std::experimental::nullopt;
     }
 }
-
-void mf::WlSubsurface::visiblity(bool visible)
-{
-    (void)visible;
-    log_warning("TODO: wl_subsurface.visiblity not implemented");
-}
