@@ -167,11 +167,6 @@ mw::XdgShellV6::XdgShellV6(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::XdgShellV6::~XdgShellV6()
-{
-    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
-}
-
 void mw::XdgShellV6::send_ping_event(uint32_t serial) const
 {
     wl_resource_post_event(resource, Opcode::ping, serial);
@@ -348,11 +343,6 @@ mw::XdgPositionerV6::XdgPositionerV6(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::XdgPositionerV6::~XdgPositionerV6()
-{
-    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
-}
-
 bool mw::XdgPositionerV6::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zxdg_positioner_v6_interface_data, Thunks::request_vtable);
@@ -494,11 +484,6 @@ mw::XdgSurfaceV6::XdgSurfaceV6(struct wl_resource* resource, Version<1>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
-}
-
-mw::XdgSurfaceV6::~XdgSurfaceV6()
-{
-    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::XdgSurfaceV6::send_configure_event(uint32_t serial) const
@@ -772,11 +757,6 @@ mw::XdgToplevelV6::XdgToplevelV6(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::XdgToplevelV6::~XdgToplevelV6()
-{
-    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
-}
-
 void mw::XdgToplevelV6::send_configure_event(int32_t width, int32_t height, struct wl_array* states) const
 {
     wl_resource_post_event(resource, Opcode::configure, width, height, states);
@@ -913,11 +893,6 @@ mw::XdgPopupV6::XdgPopupV6(struct wl_resource* resource, Version<1>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
-}
-
-mw::XdgPopupV6::~XdgPopupV6()
-{
-    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::XdgPopupV6::send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height) const
