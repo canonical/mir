@@ -127,6 +127,11 @@ mw::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_resource* resource, Version
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::XdgOutputManagerV1::~XdgOutputManagerV1()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 bool mw::XdgOutputManagerV1::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zxdg_output_manager_v1_interface_data, Thunks::request_vtable);
@@ -209,6 +214,11 @@ mw::XdgOutputV1::XdgOutputV1(struct wl_resource* resource, Version<3>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::XdgOutputV1::~XdgOutputV1()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::XdgOutputV1::send_logical_position_event(int32_t x, int32_t y) const
