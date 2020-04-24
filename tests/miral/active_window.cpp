@@ -233,7 +233,7 @@ TEST_F(ActiveWindow, a_second_window_hiding_makes_first_active)
     assert_active_window_is(test_name);
 }
 
-TEST_F(ActiveWindow, a_second_window_unhiding_leaves_first_active)
+TEST_F(ActiveWindow, a_second_window_of_same_app_becomes_active_when_unhiding)
 {
     char const* const test_name = __PRETTY_FUNCTION__;
     auto const connection = connect_client(test_name);
@@ -243,10 +243,26 @@ TEST_F(ActiveWindow, a_second_window_unhiding_leaves_first_active)
 
     sync1.exec([&]{ mir_window_set_state(window, mir_window_state_hidden); });
 
-    // Expect this to timeout
     sync2.exec([&]{ mir_window_set_state(window, mir_window_state_restored); });
 
-    EXPECT_THAT(sync2.signal_raised(), Eq(false));
+    EXPECT_THAT(sync2.signal_raised(), Eq(true));
+    assert_active_window_is(another_name);
+}
+
+TEST_F(ActiveWindow, a_second_window_of_different_app_leaves_first_active_when_unhiding)
+{
+    char const* const test_name = __PRETTY_FUNCTION__;
+    auto const connection_a = connect_client(test_name);
+    auto const connection_b = connect_client(another_name);
+
+    auto const window_a = create_window(connection_a, test_name, sync1);
+    auto const window_b = create_window(connection_b, another_name, sync2);
+
+    sync1.exec([&]{ mir_window_set_state(window_b, mir_window_state_hidden); });
+
+    // Expect this to timeout
+    sync2.exec([&]{ mir_window_set_state(window_b, mir_window_state_restored); });
+
     assert_active_window_is(test_name);
 }
 
