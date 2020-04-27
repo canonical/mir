@@ -49,7 +49,7 @@ public:
     static Callback* from(struct wl_resource*);
 
     Callback(struct wl_resource* resource, Version<1>);
-    virtual ~Callback() = default;
+    virtual ~Callback();
 
     void send_done_event(uint32_t callback_data) const;
 
@@ -78,7 +78,7 @@ public:
     static Compositor* from(struct wl_resource*);
 
     Compositor(struct wl_resource* resource, Version<4>);
-    virtual ~Compositor() = default;
+    virtual ~Compositor();
 
     void destroy_wayland_object() const;
 
@@ -114,7 +114,7 @@ public:
     static ShmPool* from(struct wl_resource*);
 
     ShmPool(struct wl_resource* resource, Version<1>);
-    virtual ~ShmPool() = default;
+    virtual ~ShmPool();
 
     void destroy_wayland_object() const;
 
@@ -139,7 +139,7 @@ public:
     static Shm* from(struct wl_resource*);
 
     Shm(struct wl_resource* resource, Version<1>);
-    virtual ~Shm() = default;
+    virtual ~Shm();
 
     void send_format_event(uint32_t format) const;
 
@@ -250,7 +250,7 @@ public:
     static Buffer* from(struct wl_resource*);
 
     Buffer(struct wl_resource* resource, Version<1>);
-    virtual ~Buffer() = default;
+    virtual ~Buffer();
 
     void send_release_event() const;
 
@@ -280,7 +280,7 @@ public:
     static DataOffer* from(struct wl_resource*);
 
     DataOffer(DataDevice const& parent);
-    virtual ~DataOffer() = default;
+    virtual ~DataOffer();
 
     void send_offer_event(std::string const& mime_type) const;
     bool version_supports_source_actions();
@@ -328,7 +328,7 @@ public:
     static DataSource* from(struct wl_resource*);
 
     DataSource(struct wl_resource* resource, Version<3>);
-    virtual ~DataSource() = default;
+    virtual ~DataSource();
 
     void send_target_event(std::experimental::optional<std::string> const& mime_type) const;
     void send_send_event(std::string const& mime_type, mir::Fd fd) const;
@@ -379,7 +379,7 @@ public:
     static DataDevice* from(struct wl_resource*);
 
     DataDevice(struct wl_resource* resource, Version<3>);
-    virtual ~DataDevice() = default;
+    virtual ~DataDevice();
 
     void send_data_offer_event(struct wl_resource* id) const;
     void send_enter_event(uint32_t serial, struct wl_resource* surface, double x, double y, std::experimental::optional<struct wl_resource*> const& id) const;
@@ -426,7 +426,7 @@ public:
     static DataDeviceManager* from(struct wl_resource*);
 
     DataDeviceManager(struct wl_resource* resource, Version<3>);
-    virtual ~DataDeviceManager() = default;
+    virtual ~DataDeviceManager();
 
     void destroy_wayland_object() const;
 
@@ -470,7 +470,7 @@ public:
     static Shell* from(struct wl_resource*);
 
     Shell(struct wl_resource* resource, Version<1>);
-    virtual ~Shell() = default;
+    virtual ~Shell();
 
     void destroy_wayland_object() const;
 
@@ -510,7 +510,7 @@ public:
     static ShellSurface* from(struct wl_resource*);
 
     ShellSurface(struct wl_resource* resource, Version<1>);
-    virtual ~ShellSurface() = default;
+    virtual ~ShellSurface();
 
     void send_ping_event(uint32_t serial) const;
     void send_configure_event(uint32_t edges, int32_t width, int32_t height) const;
@@ -579,7 +579,7 @@ public:
     static Surface* from(struct wl_resource*);
 
     Surface(struct wl_resource* resource, Version<4>);
-    virtual ~Surface() = default;
+    virtual ~Surface();
 
     void send_enter_event(struct wl_resource* output) const;
     void send_leave_event(struct wl_resource* output) const;
@@ -626,7 +626,7 @@ public:
     static Seat* from(struct wl_resource*);
 
     Seat(struct wl_resource* resource, Version<6>);
-    virtual ~Seat() = default;
+    virtual ~Seat();
 
     void send_capabilities_event(uint32_t capabilities) const;
     bool version_supports_name();
@@ -681,7 +681,7 @@ public:
     static Pointer* from(struct wl_resource*);
 
     Pointer(struct wl_resource* resource, Version<6>);
-    virtual ~Pointer() = default;
+    virtual ~Pointer();
 
     void send_enter_event(uint32_t serial, struct wl_resource* surface, double surface_x, double surface_y) const;
     void send_leave_event(uint32_t serial, struct wl_resource* surface) const;
@@ -757,7 +757,7 @@ public:
     static Keyboard* from(struct wl_resource*);
 
     Keyboard(struct wl_resource* resource, Version<6>);
-    virtual ~Keyboard() = default;
+    virtual ~Keyboard();
 
     void send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const;
     void send_enter_event(uint32_t serial, struct wl_resource* surface, struct wl_array* keys) const;
@@ -810,7 +810,7 @@ public:
     static Touch* from(struct wl_resource*);
 
     Touch(struct wl_resource* resource, Version<6>);
-    virtual ~Touch() = default;
+    virtual ~Touch();
 
     void send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, double x, double y) const;
     void send_up_event(uint32_t serial, uint32_t time, int32_t id) const;
@@ -854,7 +854,7 @@ public:
     static Output* from(struct wl_resource*);
 
     Output(struct wl_resource* resource, Version<3>);
-    virtual ~Output() = default;
+    virtual ~Output();
 
     void send_geometry_event(int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const;
     void send_mode_event(uint32_t flags, int32_t width, int32_t height, int32_t refresh) const;
@@ -932,7 +932,7 @@ public:
     static Region* from(struct wl_resource*);
 
     Region(struct wl_resource* resource, Version<1>);
-    virtual ~Region() = default;
+    virtual ~Region();
 
     void destroy_wayland_object() const;
 
@@ -957,7 +957,7 @@ public:
     static Subcompositor* from(struct wl_resource*);
 
     Subcompositor(struct wl_resource* resource, Version<1>);
-    virtual ~Subcompositor() = default;
+    virtual ~Subcompositor();
 
     void destroy_wayland_object() const;
 
@@ -998,7 +998,7 @@ public:
     static Subsurface* from(struct wl_resource*);
 
     Subsurface(struct wl_resource* resource, Version<1>);
-    virtual ~Subsurface() = default;
+    virtual ~Subsurface();
 
     void destroy_wayland_object() const;
 

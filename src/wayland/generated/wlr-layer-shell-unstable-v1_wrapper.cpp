@@ -121,6 +121,11 @@ mw::LayerShellV1::LayerShellV1(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::LayerShellV1::~LayerShellV1()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 bool mw::LayerShellV1::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zwlr_layer_shell_v1_interface_data, Thunks::request_vtable);
@@ -139,7 +144,8 @@ mw::LayerShellV1::Global::Global(wl_display* display, Version<1>)
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
-{}
+{
+}
 
 auto mw::LayerShellV1::Global::interface_name() const -> char const*
 {
@@ -296,6 +302,11 @@ mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_resource* resource, Version<1>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::LayerSurfaceV1::~LayerSurfaceV1()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::LayerSurfaceV1::send_configure_event(uint32_t serial, uint32_t width, uint32_t height) const

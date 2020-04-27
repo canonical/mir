@@ -80,6 +80,10 @@ mw::Callback::Callback(struct wl_resource* resource, Version<1>)
     }
 }
 
+mw::Callback::~Callback()
+{
+}
+
 void mw::Callback::send_done_event(uint32_t callback_data) const
 {
     wl_resource_post_event(resource, Opcode::done, callback_data);
@@ -191,6 +195,11 @@ mw::Compositor::Compositor(struct wl_resource* resource, Version<4>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::Compositor::~Compositor()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 bool mw::Compositor::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &wl_compositor_interface_data, Thunks::request_vtable);
@@ -209,7 +218,8 @@ mw::Compositor::Global::Global(wl_display* display, Version<4>)
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
-{}
+{
+}
 
 auto mw::Compositor::Global::interface_name() const -> char const*
 {
@@ -308,6 +318,11 @@ mw::ShmPool::ShmPool(struct wl_resource* resource, Version<1>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::ShmPool::~ShmPool()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 bool mw::ShmPool::is_instance(wl_resource* resource)
@@ -417,6 +432,11 @@ mw::Shm::Shm(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::Shm::~Shm()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 void mw::Shm::send_format_event(uint32_t format) const
 {
     wl_resource_post_event(resource, Opcode::format, format);
@@ -440,7 +460,8 @@ mw::Shm::Global::Global(wl_display* display, Version<1>)
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
-{}
+{
+}
 
 auto mw::Shm::Global::interface_name() const -> char const*
 {
@@ -506,6 +527,11 @@ mw::Buffer::Buffer(struct wl_resource* resource, Version<1>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::Buffer::~Buffer()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::Buffer::send_release_event() const
@@ -637,6 +663,11 @@ mw::DataOffer::DataOffer(DataDevice const& parent)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::DataOffer::~DataOffer()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 void mw::DataOffer::send_offer_event(std::string const& mime_type) const
 {
     const char* mime_type_resolved = mime_type.c_str();
@@ -763,6 +794,11 @@ mw::DataSource::DataSource(struct wl_resource* resource, Version<3>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::DataSource::~DataSource()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::DataSource::send_target_event(std::experimental::optional<std::string> const& mime_type) const
@@ -936,6 +972,11 @@ mw::DataDevice::DataDevice(struct wl_resource* resource, Version<3>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::DataDevice::~DataDevice()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::DataDevice::send_data_offer_event(struct wl_resource* id) const
@@ -1131,6 +1172,11 @@ mw::DataDeviceManager::DataDeviceManager(struct wl_resource* resource, Version<3
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::DataDeviceManager::~DataDeviceManager()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 bool mw::DataDeviceManager::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &wl_data_device_manager_interface_data, Thunks::request_vtable);
@@ -1149,7 +1195,8 @@ mw::DataDeviceManager::Global::Global(wl_display* display, Version<3>)
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
-{}
+{
+}
 
 auto mw::DataDeviceManager::Global::interface_name() const -> char const*
 {
@@ -1248,6 +1295,11 @@ mw::Shell::Shell(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::Shell::~Shell()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 bool mw::Shell::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &wl_shell_interface_data, Thunks::request_vtable);
@@ -1266,7 +1318,8 @@ mw::Shell::Global::Global(wl_display* display, Version<1>)
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
-{}
+{
+}
 
 auto mw::Shell::Global::interface_name() const -> char const*
 {
@@ -1461,6 +1514,11 @@ mw::ShellSurface::ShellSurface(struct wl_resource* resource, Version<1>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::ShellSurface::~ShellSurface()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::ShellSurface::send_ping_event(uint32_t serial) const
@@ -1740,6 +1798,11 @@ mw::Surface::Surface(struct wl_resource* resource, Version<4>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::Surface::~Surface()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 void mw::Surface::send_enter_event(struct wl_resource* output) const
 {
     wl_resource_post_event(resource, Opcode::enter, output);
@@ -1941,6 +2004,11 @@ mw::Seat::Seat(struct wl_resource* resource, Version<6>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::Seat::~Seat()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 void mw::Seat::send_capabilities_event(uint32_t capabilities) const
 {
     wl_resource_post_event(resource, Opcode::capabilities, capabilities);
@@ -1975,7 +2043,8 @@ mw::Seat::Global::Global(wl_display* display, Version<6>)
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
-{}
+{
+}
 
 auto mw::Seat::Global::interface_name() const -> char const*
 {
@@ -2073,6 +2142,11 @@ mw::Pointer::Pointer(struct wl_resource* resource, Version<6>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::Pointer::~Pointer()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::Pointer::send_enter_event(uint32_t serial, struct wl_resource* surface, double surface_x, double surface_y) const
@@ -2239,6 +2313,11 @@ mw::Keyboard::Keyboard(struct wl_resource* resource, Version<6>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::Keyboard::~Keyboard()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 void mw::Keyboard::send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const
 {
     int32_t fd_resolved{fd};
@@ -2354,6 +2433,11 @@ mw::Touch::Touch(struct wl_resource* resource, Version<6>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::Touch::~Touch()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::Touch::send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, double x, double y) const
@@ -2512,6 +2596,11 @@ mw::Output::Output(struct wl_resource* resource, Version<3>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::Output::~Output()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 void mw::Output::send_geometry_event(int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const
 {
     const char* make_resolved = make.c_str();
@@ -2562,7 +2651,8 @@ mw::Output::Global::Global(wl_display* display, Version<3>)
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
-{}
+{
+}
 
 auto mw::Output::Global::interface_name() const -> char const*
 {
@@ -2661,6 +2751,11 @@ mw::Region::Region(struct wl_resource* resource, Version<1>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::Region::~Region()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 bool mw::Region::is_instance(wl_resource* resource)
@@ -2773,6 +2868,11 @@ mw::Subcompositor::Subcompositor(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::Subcompositor::~Subcompositor()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 bool mw::Subcompositor::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &wl_subcompositor_interface_data, Thunks::request_vtable);
@@ -2791,7 +2891,8 @@ mw::Subcompositor::Global::Global(wl_display* display, Version<1>)
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
-{}
+{
+}
 
 auto mw::Subcompositor::Global::interface_name() const -> char const*
 {
@@ -2922,6 +3023,11 @@ mw::Subsurface::Subsurface(struct wl_resource* resource, Version<1>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::Subsurface::~Subsurface()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 bool mw::Subsurface::is_instance(wl_resource* resource)

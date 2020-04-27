@@ -115,6 +115,11 @@ mw::ServerDecorationManager::ServerDecorationManager(struct wl_resource* resourc
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::ServerDecorationManager::~ServerDecorationManager()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
 void mw::ServerDecorationManager::send_default_mode_event(uint32_t mode) const
 {
     wl_resource_post_event(resource, Opcode::default_mode, mode);
@@ -138,7 +143,8 @@ mw::ServerDecorationManager::Global::Global(wl_display* display, Version<1>)
               Thunks::supported_version,
               this,
               &Thunks::bind_thunk)}
-{}
+{
+}
 
 auto mw::ServerDecorationManager::Global::interface_name() const -> char const*
 {
@@ -216,6 +222,11 @@ mw::ServerDecoration::ServerDecoration(struct wl_resource* resource, Version<1>)
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::ServerDecoration::~ServerDecoration()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::ServerDecoration::send_mode_event(uint32_t mode) const

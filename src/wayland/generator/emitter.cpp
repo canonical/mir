@@ -184,10 +184,8 @@ std::shared_ptr<Emitter::Impl const> Emitter::layout(Emitter const& child,
 {
     if (clear_line_before == false && clear_line_after == false && indent == "")
         return child.impl;
-    else if (child.is_valid())
-        return std::make_shared<LayoutEmitter>(child, clear_line_before, clear_line_after, indent);
     else
-        return {};
+        return std::make_shared<LayoutEmitter>(child, clear_line_before, clear_line_after, indent);
 }
 
 Emitter::Emitter(std::string const& text) : impl{string(text)} {}
