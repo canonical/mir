@@ -8,6 +8,7 @@ backends:
             - ubuntu-16.04
             - ubuntu-18.04
             - ubuntu-19.10
+            - ubuntu-20.04
             - ubuntu-devel:
                image: ubuntu-daily:devel/amd64
             - ubuntu-devel-proposed:
