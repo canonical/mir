@@ -44,6 +44,22 @@ namespace mf = mir::frontend;
 namespace md = mir::dispatch;
 using namespace std::chrono_literals;
 
+namespace
+{
+auto make_readable_fd(mir::Fd fd, std::function<void()> const& on_readable)
+-> std::shared_ptr<md::ReadableFd>
+{
+    if (fd != -1)
+    {
+        return std::make_shared<md::ReadableFd>(fd, on_readable);
+    }
+    else
+    {
+        return {};
+    }
+}
+}
+
 mf::XWaylandServer::XWaylandServer(
     std::shared_ptr<mf::WaylandConnector> wayland_connector,
     std::string const& xwayland_path) :
@@ -52,14 +68,19 @@ mf::XWaylandServer::XWaylandServer(
     xserver_thread{std::make_unique<dispatch::ThreadedDispatcher>(
         "Mir/X11 Reader", dispatcher, []() { terminate_with_current_exception(); })},
     sockets{},
-    afd_dispatcher{
-        std::make_shared<md::ReadableFd>(Fd{IntOwnedFd{sockets.abstract_socket_fd}}, [this]{ new_spawn_thread(); })},
-    fd_dispatcher{
-        std::make_shared<md::ReadableFd>(Fd{IntOwnedFd{sockets.socket_fd}}, [this] { new_spawn_thread(); })},
+    afd_dispatcher{make_readable_fd(Fd{IntOwnedFd{sockets.abstract_socket_fd}}, [this]{ new_spawn_thread(); })},
+    fd_dispatcher{make_readable_fd(Fd{IntOwnedFd{sockets.socket_fd}}, [this] { new_spawn_thread(); })},
     xwayland_path{xwayland_path}
 {
-    dispatcher->add_watch(afd_dispatcher);
-    dispatcher->add_watch(fd_dispatcher);
+    if (afd_dispatcher)
+    {
+        dispatcher->add_watch(afd_dispatcher);
+    }
+
+    if (fd_dispatcher)
+    {
+        dispatcher->add_watch(fd_dispatcher);
+    }
 }
 
 mf::XWaylandServer::~XWaylandServer()
@@ -186,18 +207,24 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
     else
         setenv("WAYLAND_SOCKET", std::to_string(wl_client_fd).c_str(), 1);
 
-    set_cloexec(sockets.socket_fd, false);
-    set_cloexec(sockets.abstract_socket_fd, false);
 
-    auto const socket_fd = dup(sockets.socket_fd);
-    if (socket_fd < 0)
-        mir::log_error("Failed to duplicate xwayland FD");
-    auto const socket_fd_str = std::to_string(socket_fd);
+    if (sockets.abstract_socket_fd != -1)
+    {
+        set_cloexec(sockets.abstract_socket_fd, false);
 
-    auto const abstract_socket_fd = dup(sockets.abstract_socket_fd);
-    if (abstract_socket_fd < 0)
-        mir::log_error("Failed to duplicate xwayland abstract FD");
-    auto const abstract_socket_fd_str = std::to_string(abstract_socket_fd);
+        auto const abstract_socket_fd = dup(sockets.abstract_socket_fd);
+        if (abstract_socket_fd < 0)
+            mir::log_error("Failed to duplicate xwayland abstract FD");
+    }
+
+    if (sockets.socket_fd != -1)
+    {
+        set_cloexec(sockets.socket_fd, false);
+
+        auto const socket_fd = dup(sockets.socket_fd);
+        if (socket_fd < 0)
+            mir::log_error("Failed to duplicate xwayland FD");
+    }
 
     auto const wm_fd = dup(wm_client_fd);
     if (wm_fd < 0)
@@ -213,16 +240,33 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
     action.sa_handler = SIG_IGN;
     sigaction(SIGUSR1, &action, nullptr);
 
-    execl(
-        xwayland_path.c_str(),
-        xwayland_path.c_str(),
-        dsp_str.c_str(),
-        "-rootless",
-        "-listen", abstract_socket_fd_str.c_str(),
-        "-listen", socket_fd_str.c_str(),
-        "-wm", wm_fd_str.c_str(),
-        "-terminate",
-        NULL);
+    std::vector<char const*> args =
+        {
+            xwayland_path.c_str(),
+            dsp_str.c_str(),
+            "-rootless",
+            "-wm", wm_fd_str.c_str(),
+            "-terminate",
+        };
+
+    if (sockets.abstract_socket_fd != -1)
+    {
+        args.push_back("-listen");
+        args.push_back(strdup(std::to_string(sockets.abstract_socket_fd).c_str()));
+    }
+
+    if (sockets.socket_fd != -1)
+    {
+        args.push_back("-listen");
+        args.push_back(strdup(std::to_string(sockets.socket_fd).c_str()));
+    }
+
+    args.push_back("-wm");
+    args.push_back(wm_fd_str.c_str());
+    args.push_back("-terminate");
+    args.push_back(NULL);
+
+    execvp(xwayland_path.c_str(), const_cast<char* const*>(args.data()));
 }
 
 namespace
@@ -313,47 +357,48 @@ void mf::XWaylandServer::connect_wm_to_xwayland(
 
 namespace
 {
-int create_socket(struct sockaddr_un *addr, size_t path_size) {
-      int fd;
-      socklen_t size = offsetof(struct sockaddr_un, sun_path) + path_size + 1;
+int create_socket(struct sockaddr_un *addr, size_t path_size)
+{
+    int fd;
+    socklen_t size = offsetof(struct sockaddr_un, sun_path) + path_size + 1;
 
-    	fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    	if (fd < 0) {
-    		mir::fatal_error("Failed to create socket %c%s",
-    			addr->sun_path[0] ? addr->sun_path[0] : '@',
-    			addr->sun_path + 1);
-    		return -1;
-    	}
-    	if (!set_cloexec(fd, true)) {
-    		close(fd);
-    		return -1;
-    	}
-
-    	if (addr->sun_path[0]) {
-    		unlink(addr->sun_path);
-    	}
-    	if (bind(fd, (struct sockaddr*)addr, size) < 0) {
-    		mir::fatal_error("Failed to bind socket %c%s",
-    			addr->sun_path[0] ? addr->sun_path[0] : '@',
-    			addr->sun_path + 1);
-          close(fd);
-          if (addr->sun_path[0])
-            unlink(addr->sun_path);
-          return -1;
-    	}
-    	if (listen(fd, 1) < 0) {
-    		mir::fatal_error("Failed to listen to socket %c%s",
-    			addr->sun_path[0] ? addr->sun_path[0] : '@',
-    			addr->sun_path + 1);
-          close(fd);
-          if (addr->sun_path[0])
-            unlink(addr->sun_path);
-          return -1;
-    	}
-
-    	return fd;
-
+    fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (fd < 0)
+    {
+        mir::log_warning(
+            "Failed to create socket %c%s", addr->sun_path[0] ? addr->sun_path[0] : '@', addr->sun_path + 1);
+        return -1;
     }
+    if (!set_cloexec(fd, true))
+    {
+        close(fd);
+        return -1;
+    }
+
+    if (addr->sun_path[0])
+    {
+        unlink(addr->sun_path);
+    }
+    if (bind(fd, (struct sockaddr*)addr, size) < 0)
+    {
+        mir::log_warning("Failed to bind socket %c%s", addr->sun_path[0] ? addr->sun_path[0] : '@', addr->sun_path + 1);
+        close(fd);
+        if (addr->sun_path[0])
+            unlink(addr->sun_path);
+        return -1;
+    }
+    if (listen(fd, 1) < 0)
+    {
+        mir::log_warning(
+            "Failed to listen to socket %c%s", addr->sun_path[0] ? addr->sun_path[0] : '@', addr->sun_path + 1);
+        close(fd);
+        if (addr->sun_path[0])
+            unlink(addr->sun_path);
+        return -1;
+    }
+
+    return fd;
+}
 
 auto const x11_lock_fmt = "/tmp/.X%d-lock";
 auto const x11_socket_fmt = "/tmp/.X11-unix/X%d";
@@ -411,16 +456,13 @@ mf::XWaylandServer::SocketFd::SocketFd() :
     addr.sun_path[0] = 0;
     path_size = snprintf(addr.sun_path + 1, sizeof(addr.sun_path) - 1, x11_socket_fmt, xdisplay);
     abstract_socket_fd = create_socket(&addr, path_size);
-    if (abstract_socket_fd < 0) {
-      return;
-    }
 
     path_size = snprintf(addr.sun_path, sizeof(addr.sun_path), x11_socket_fmt, xdisplay);
     socket_fd = create_socket(&addr, path_size);
-    if (socket_fd < 0) {
-      close(abstract_socket_fd);
-      abstract_socket_fd = -1;
-      return;
+
+    if (abstract_socket_fd == -1 && socket_fd == -1)
+    {
+        mir::fatal_error("Cannot open any X11 socket (abstract or not)");
     }
 }
 
@@ -431,8 +473,14 @@ mf::XWaylandServer::SocketFd::~SocketFd()
     unlink(path);
     snprintf(path, sizeof path, x11_socket_fmt, xdisplay);
     unlink(path);
-    close(abstract_socket_fd);
-    close(socket_fd);
+    if (abstract_socket_fd >= 0)
+    {
+        close(abstract_socket_fd);
+    }
+    if (socket_fd >= 0)
+    {
+        close(socket_fd);
+    }
 }
 
 void mf::XWaylandServer::new_spawn_thread()
