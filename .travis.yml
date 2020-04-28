@@ -94,6 +94,8 @@ jobs:
   - <<: *ppa-upload
     env: RELEASE=19.10
   - <<: *ppa-upload
+    env: RELEASE=20.04
+  - <<: *ppa-upload
     env: RELEASE=devel
 
   - &sanitize
