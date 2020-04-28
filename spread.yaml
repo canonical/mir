@@ -25,6 +25,8 @@ backends:
                 image: ubuntu-os-cloud/ubuntu-1804-lts
             - ubuntu-19.10-64:
                 image: ubuntu-os-cloud/ubuntu-1910
+            - ubuntu-20.04-64:
+                image: ubuntu-os-cloud/ubuntu-2004-lts
             - ubuntu-devel-64:
                 image: ubuntu-os-cloud-devel/ubuntu-2004-lts
             - ubuntu-devel-proposed-64:
