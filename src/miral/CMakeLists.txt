@@ -35,7 +35,8 @@ set_target_properties(miral-internal
 
 set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 
-# These infos are used in miral-internal, but don't need to be "-fvisibility=hidden"
+# These infos are used in miral-internal, but don't need to be "-fvisibility=hidden".
+# So duplicate them for the miral-internal test binary.
 add_library(miral-infos STATIC
     application_info.cpp                ${miral_include}/miral/application_info.h
     window_info.cpp                     ${miral_include}/miral/window_info.h
@@ -45,6 +46,7 @@ add_library(miral SHARED
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
     application.cpp                     ${miral_include}/miral/application.h
     application_authorizer.cpp          ${miral_include}/miral/application_authorizer.h
+    application_info.cpp                ${miral_include}/miral/application_info.h
     canonical_window_manager.cpp        ${miral_include}/miral/canonical_window_manager.h
     command_line_option.cpp             ${miral_include}/miral/command_line_option.h
     cursor_theme.cpp                    ${miral_include}/miral/cursor_theme.h
@@ -59,6 +61,7 @@ add_library(miral SHARED
     append_event_filter.cpp             ${miral_include}/miral/append_event_filter.h
     wayland_extensions.cpp              ${miral_include}/miral/wayland_extensions.h
     window.cpp                          ${miral_include}/miral/window.h
+    window_info.cpp                     ${miral_include}/miral/window_info.h
     window_management_options.cpp       ${miral_include}/miral/window_management_options.h
     window_specification.cpp            ${miral_include}/miral/window_specification.h
     internal_client.cpp                 ${miral_include}/miral/internal_client.h
@@ -119,7 +122,6 @@ target_link_libraries(miral
         mircommon
     PRIVATE
         miral-internal
-        miral-infos
         mirserver
 )
 
