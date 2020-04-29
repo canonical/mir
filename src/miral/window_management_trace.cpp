@@ -362,8 +362,7 @@ miral::WindowManagementTrace::WindowManagementTrace(
     WindowManagerTools const& wrapped,
     WindowManagementPolicyBuilder const& builder) :
     wrapped{wrapped},
-    policy(builder(WindowManagerTools{this})),
-    policy_application_zone_addendum{WindowManagementPolicy::ApplicationZoneAddendum::from(policy.get())}
+    policy(builder(WindowManagerTools{this}))
 {
 }
 
@@ -901,20 +900,20 @@ MIRAL_TRACE_EXCEPTION
 void miral::WindowManagementTrace::advise_application_zone_create(Zone const& application_zone)
 try {
     mir::log_info("%s application_zone=%s", __func__, dump_of(application_zone).c_str());
-    return policy_application_zone_addendum->advise_application_zone_create(application_zone);
+    return policy->advise_application_zone_create(application_zone);
 }
 MIRAL_TRACE_EXCEPTION
 
 void miral::WindowManagementTrace::advise_application_zone_update(Zone const& updated, Zone const& original)
 try {
     mir::log_info("%s updated=%s, original=%s", __func__, dump_of(updated).c_str(), dump_of(original).c_str());
-    return policy_application_zone_addendum->advise_application_zone_update(updated, original);
+    return policy->advise_application_zone_update(updated, original);
 }
 MIRAL_TRACE_EXCEPTION
 
 void miral::WindowManagementTrace::advise_application_zone_delete(Zone const& application_zone)
 try {
     mir::log_info("%s application_zone=%s", __func__, dump_of(application_zone).c_str());
-    return policy_application_zone_addendum->advise_application_zone_delete(application_zone);
+    return policy->advise_application_zone_delete(application_zone);
 }
 MIRAL_TRACE_EXCEPTION

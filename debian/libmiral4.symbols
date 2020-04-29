@@ -229,11 +229,10 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WindowInfo::width_inc(mir::geometry::detail::IntWrapper<mir::geometry::DeltaXTag>)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::window() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::~WindowInfo()@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_create(miral::Zone const&)@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_delete(miral::Zone const&)@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_update(miral::Zone const&, miral::Zone const&)@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowManagementPolicy::ApplicationZoneAddendum::from(miral::WindowManagementPolicy*)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const&, std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_3.0" 3.0.0
+ (c++)"miral::WindowManagementPolicy::advise_application_zone_create(miral::Zone const&)@MIRAL_3.0" 3.0.0
+ (c++)"miral::WindowManagementPolicy::advise_application_zone_delete(miral::Zone const&)@MIRAL_3.0" 3.0.0
+ (c++)"miral::WindowManagementPolicy::advise_application_zone_update(miral::Zone const&, miral::Zone const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowManagementPolicy::advise_begin()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowManagementPolicy::advise_delete_app(miral::ApplicationInfo const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowManagementPolicy::advise_delete_window(miral::WindowInfo const&)@MIRAL_3.0" 3.0.0
@@ -385,9 +384,7 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"typeinfo for miral::CanonicalWindowManagerPolicy@MIRAL_3.0" 3.0.0
  (c++)"typeinfo for miral::MinimalWindowManager@MIRAL_3.0" 3.0.0
  (c++)"typeinfo for miral::WaylandExtensions::Context@MIRAL_3.0" 3.0.0
- (c++)"typeinfo for miral::WindowManagementPolicy::ApplicationZoneAddendum@MIRAL_3.0" 3.0.0
  (c++)"typeinfo for miral::WindowManagementPolicy@MIRAL_3.0" 3.0.0
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_3.0" 3.0.0
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_3.0" 3.0.0
- (c++)"vtable for miral::WindowManagementPolicy::ApplicationZoneAddendum@MIRAL_3.0" 3.0.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_3.0" 3.0.0
