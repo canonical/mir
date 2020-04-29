@@ -132,6 +132,7 @@ struct MockSurfaceFactory : public ms::SurfaceFactory
 
 struct MockDecorationManager : public msh::decoration::NullManager
 {
+    MOCK_METHOD1(decorate, void(std::shared_ptr<ms::Surface> const&));
 };
 
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
@@ -284,6 +285,59 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
             ms::SurfaceCreationParameters const&,
             std::function<std::shared_ptr<ms::Surface>(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const&)> const& build)
             { return build(session, placed_params); }));
+
+    shell.create_surface(session, params, nullptr);
+}
+
+TEST_F(AbstractShell, create_surface_allows_window_manager_to_enable_ssd)
+{
+    std::shared_ptr<ms::Session> const session =
+        shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    auto params = ms::a_surface()
+        .with_buffer_stream(session->create_buffer_stream(properties));
+
+    EXPECT_CALL(decoration_manager, decorate(_))
+        .Times(1);
+
+    EXPECT_CALL(*wm, add_surface(session, Ref(params), _)).WillOnce(Invoke(
+        [&](std::shared_ptr<ms::Session> const& session,
+            ms::SurfaceCreationParameters const& params,
+            std::function<std::shared_ptr<ms::Surface>(
+                std::shared_ptr<ms::Session> const& session,
+                ms::SurfaceCreationParameters const&)> const& build)
+            {
+                auto modified_params = params;
+                modified_params.server_side_decorated = true;
+                return build(session, modified_params);
+            }));
+
+    shell.create_surface(session, params, nullptr);
+}
+
+TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
+{
+    std::shared_ptr<ms::Session> const session =
+        shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    auto params = ms::a_surface()
+        .with_buffer_stream(session->create_buffer_stream(properties));
+    params.server_side_decorated = true;
+
+    EXPECT_CALL(decoration_manager, decorate(_))
+        .Times(0);
+
+    EXPECT_CALL(*wm, add_surface(session, Ref(params), _)).WillOnce(Invoke(
+        [&](std::shared_ptr<ms::Session> const& session,
+            ms::SurfaceCreationParameters const& params,
+            std::function<std::shared_ptr<ms::Surface>(
+                std::shared_ptr<ms::Session> const& session,
+                ms::SurfaceCreationParameters const&)> const& build)
+            {
+                auto modified_params = params;
+                modified_params.server_side_decorated = false;
+                return build(session, modified_params);
+            }));
 
     shell.create_surface(session, params, nullptr);
 }

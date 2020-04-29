@@ -574,10 +574,18 @@ global:
     miral::WindowSpecification::application_id*;
   };
 } MIRAL_2.7;
+
 MIRAL_2.9 {
+global:
+  extern "C++" {
+    miral::ExternalClientLauncher::launch_using_x11*;
+  };
+} MIRAL_2.8;
+
+MIRAL_2.10 {
 global:'''
 
-END_NEW_STANZA = '''} MIRAL_2.8;'''
+END_NEW_STANZA = '''} MIRAL_2.9;'''
 
 def _print_report():
     print(OLD_STANZAS)
