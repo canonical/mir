@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
- * Copyright (C) 2019 Canonical Ltd.
+ * Copyright (C) 2019-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -44,22 +44,6 @@ namespace mf = mir::frontend;
 namespace md = mir::dispatch;
 using namespace std::chrono_literals;
 
-namespace
-{
-auto make_readable_fd(mir::Fd fd, std::function<void()> const& on_readable)
--> std::shared_ptr<md::ReadableFd>
-{
-    if (fd != -1)
-    {
-        return std::make_shared<md::ReadableFd>(fd, on_readable);
-    }
-    else
-    {
-        return {};
-    }
-}
-}
-
 mf::XWaylandServer::XWaylandServer(
     std::shared_ptr<mf::WaylandConnector> wayland_connector,
     std::string const& xwayland_path) :
@@ -73,7 +57,7 @@ mf::XWaylandServer::XWaylandServer(
 {
     for (auto const& fd : sockets.fd)
     {
-        dispatcher_fd.push_back(make_readable_fd(fd, [this]{ new_spawn_thread(); }));
+        dispatcher_fd.push_back(std::make_shared<md::ReadableFd>(fd, [this]{ new_spawn_thread(); }));
     }
 
     if (dispatcher_fd.empty())
