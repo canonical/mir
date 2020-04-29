@@ -55,6 +55,7 @@ public:
     virtual ~DispmanXBuffer() = default;
 
     virtual explicit operator DISPMANX_RESOURCE_HANDLE_T() const = 0;
+    virtual DISPMANX_TRANSFORM_T resource_transform() const = 0;
 };
 
 class BufferAllocator :

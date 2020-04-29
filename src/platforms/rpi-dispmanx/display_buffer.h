@@ -64,7 +64,10 @@ private:
     geometry::Rectangle const view;
     EGLDisplay const dpy;
     EGLContext const ctx;
+    DISPMANX_DISPLAY_HANDLE_T const display_handle;
+    DISPMANX_ELEMENT_HANDLE_T const egl_target_element;
     EGLSurface const surface;
+    std::vector<DISPMANX_ELEMENT_HANDLE_T> current_elements;
 };
 }
 }
