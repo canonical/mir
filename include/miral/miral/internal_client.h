@@ -19,9 +19,6 @@
 #ifndef MIRAL_INTERNAL_CLIENT_H
 #define MIRAL_INTERNAL_CLIENT_H
 
-#include <miral/deprecations.h>
-#include <mir/client/connection.h>
-
 #include <functional>
 #include <memory>
 #include <string>
@@ -42,12 +39,6 @@ namespace miral
 class StartupInternalClient
 {
 public:
-    MIRAL_FOR_REMOVAL_IN_VERSION_3("mirclient support is deprecated")
-    explicit StartupInternalClient(
-        std::string name,
-        std::function<void(mir::client::Connection connection)> client_code,
-        std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification);
-
     template <typename ClientObject>
     explicit StartupInternalClient(std::string name, ClientObject const& client_object) :
         StartupInternalClient(name, client_object, client_object) {}
@@ -76,20 +67,6 @@ public:
     ~InternalClientLauncher();
 
     void operator()(mir::Server& server);
-
-    void launch(
-        std::string const& name,
-        std::function<void(mir::client::Connection connection)> const& client_code,
-        std::function<void(std::weak_ptr<mir::scene::Session> const session)> const& connect_notification) const;
-
-    template <typename ClientObject>
-    void launch(std::string const& name, ClientObject& client_object) const
-    {
-        launch(
-            name,
-            [&](mir::client::Connection connection) { client_object(connection); },
-            [&](std::weak_ptr<mir::scene::Session> const session) { client_object(session); });
-    }
 
     void launch(
         std::function<void(struct ::wl_display* display)> const& wayland_fd,

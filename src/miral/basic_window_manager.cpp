@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2017 Canonical Ltd.
+ * Copyright © 2015-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -535,14 +535,6 @@ void miral::BasicWindowManager::ask_client_to_close(Window const& window)
 {
     if (auto const mir_surface = std::shared_ptr<scene::Surface>(window))
         mir_surface->request_client_surface_close();
-}
-
-void miral::BasicWindowManager::force_close(Window const& window)
-{
-    auto application = window.application();
-
-    if (application && window)
-        remove_window(application, info_for(window));
 }
 
 auto miral::BasicWindowManager::active_window() const -> Window

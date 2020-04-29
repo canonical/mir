@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Canonical Ltd.
+ * Copyright © 2015-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -161,8 +161,6 @@ public:
     auto info_for(Window const& window) const -> WindowInfo& override;
 
     void ask_client_to_close(Window const& window) override;
-
-    void force_close(Window const& window) override;
 
     auto active_window() const -> Window override;
 

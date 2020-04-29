@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -433,15 +433,6 @@ try {
     mir::log_info("%s -> %s", __func__, dump_of(window).c_str());
     trace_count++;
     wrapped.ask_client_to_close(window);
-}
-MIRAL_TRACE_EXCEPTION
-
-void miral::WindowManagementTrace::force_close(miral::Window const& window)
-try {
-    log_input();
-    mir::log_info("%s -> %s", __func__, dump_of(window).c_str());
-    trace_count++;
-    wrapped.force_close(window);
 }
 MIRAL_TRACE_EXCEPTION
 

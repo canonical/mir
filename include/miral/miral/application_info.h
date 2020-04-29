@@ -20,7 +20,6 @@
 #define MIRAL_APPLICATION_INFO_H
 
 #include "miral/application.h"
-#include <miral/deprecations.h>
 
 #include <string>
 #include <vector>
@@ -41,16 +40,15 @@ struct ApplicationInfo
     auto application()  const -> Application;
     auto windows() const -> std::vector <Window>&;
 
-    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not add or remove application windows")
-    void add_window(Window const& window);
-    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not add or remove application windows")
-    void remove_window(Window const& window);
-
     /// This can be used by client code to store window manager specific information
     auto userdata() const -> std::shared_ptr<void>;
     void userdata(std::shared_ptr<void> userdata);
 
 private:
+    friend class BasicWindowManager;
+    void add_window(Window const& window);
+    void remove_window(Window const& window);
+
     struct Self;
     std::unique_ptr<Self> const self;
 };

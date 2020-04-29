@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 Canonical Ltd.
+ * Copyright © 2017-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -51,8 +51,8 @@ TEST(WindowInfo, negative_window_size_does_not_divide_by_zero)
 
             WindowInfo info(window, params);
 
-            info.min_width(s.width);
-            info.min_height(s.height);
+            params.min_width() = s.width;
+            params.min_height() = s.height;
 
             info.constrain_resize(p, s);
         }, a_successful_exit_function);

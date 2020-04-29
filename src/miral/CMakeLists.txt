@@ -4,7 +4,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
-set(MIRAL_ABI 3)
+set(MIRAL_ABI 4)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
@@ -26,7 +26,7 @@ add_library(miral-internal STATIC
     xcursor_loader.cpp                  xcursor_loader.h
     xcursor.c                           xcursor.h
                                         join_client_threads.h
-    window_info_defaults.cpp            window_info_defaults.h
+                                        window_info_defaults.h
 )
 
 # Already implied by the linker's symbol version script, but can avoid accidents
@@ -35,11 +35,16 @@ set_target_properties(miral-internal
 
 set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 
+# These infos are used in miral-internal, but don't need to be "-fvisibility=hidden"
+add_library(miral-infos STATIC
+    application_info.cpp                ${miral_include}/miral/application_info.h
+    window_info.cpp                     ${miral_include}/miral/window_info.h
+)
+
 add_library(miral SHARED
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
     application.cpp                     ${miral_include}/miral/application.h
     application_authorizer.cpp          ${miral_include}/miral/application_authorizer.h
-    application_info.cpp                ${miral_include}/miral/application_info.h
     canonical_window_manager.cpp        ${miral_include}/miral/canonical_window_manager.h
     command_line_option.cpp             ${miral_include}/miral/command_line_option.h
     cursor_theme.cpp                    ${miral_include}/miral/cursor_theme.h
@@ -54,7 +59,6 @@ add_library(miral SHARED
     append_event_filter.cpp             ${miral_include}/miral/append_event_filter.h
     wayland_extensions.cpp              ${miral_include}/miral/wayland_extensions.h
     window.cpp                          ${miral_include}/miral/window.h
-    window_info.cpp                     ${miral_include}/miral/window_info.h
     window_management_options.cpp       ${miral_include}/miral/window_management_options.h
     window_specification.cpp            ${miral_include}/miral/window_specification.h
     internal_client.cpp                 ${miral_include}/miral/internal_client.h
@@ -99,6 +103,11 @@ target_link_libraries(miral-internal
         ${YAML_LIBRARIES}
 )
 
+target_include_directories(miral-infos
+    PRIVATE "${miral_include}" ${MIRCLIENT_INCLUDE_DIRS}
+    PRIVATE ${MIRSERVER_INCLUDE_DIRS}
+)
+
 target_include_directories(miral
     PUBLIC  "${miral_include}" ${MIRCLIENT_INCLUDE_DIRS}
     PRIVATE ${MIRSERVER_INCLUDE_DIRS}
@@ -110,6 +119,7 @@ target_link_libraries(miral
         mircommon
     PRIVATE
         miral-internal
+        miral-infos
         mirserver
 )
 
