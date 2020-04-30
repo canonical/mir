@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2018 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -31,7 +31,6 @@ namespace miral
 {
 class WindowManagementTrace
     : public WindowManagementPolicy,
-      public WindowManagementPolicy::ApplicationZoneAddendum,
       WindowManagerToolsImplementation
 {
 public:
@@ -52,7 +51,6 @@ private:
     virtual auto info_for(Window const& window) const -> WindowInfo& override;
 
     virtual void ask_client_to_close(Window const& window) override;
-    virtual void force_close(Window const& window) override;
 
     virtual auto active_window() const -> Window override;
     virtual auto select_active_window(Window const& hint) -> Window override;
@@ -171,7 +169,6 @@ public:
 private:
     WindowManagerTools wrapped;
     std::unique_ptr<miral::WindowManagementPolicy> const policy;
-    miral::WindowManagementPolicy::ApplicationZoneAddendum* const policy_application_zone_addendum;
     std::atomic<unsigned> mutable trace_count;
     std::function<void()> log_input;
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2017 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -85,95 +85,6 @@ void join_runners_for(mir::Server* server)
 
 // "Base" is a bit of compile time indirection because StartupInternalClient::Self is inaccessible
 template<typename Base>
-class MirInternalClientRunner : public Base, public virtual InternalClientRunner
-{
-public:
-    MirInternalClientRunner(std::string name,
-        std::function<void(mir::client::Connection connection)> client_code,
-        std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification);
-
-    void run(mir::Server& server) override;
-    void join_client_thread() override;
-
-    ~MirInternalClientRunner() override;
-
-private:
-    std::string const name;
-    std::thread thread;
-    std::mutex mutable mutex;
-    std::condition_variable mutable cv;
-    mir::Fd fd;
-    std::weak_ptr<mir::scene::Session> session;
-    mir::client::Connection connection;
-    std::function<void(mir::client::Connection connection)> const client_code;
-    std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification;
-};
-
-template<typename Base>
-MirInternalClientRunner<Base>::MirInternalClientRunner(
-    std::string const name,
-    std::function<void(mir::client::Connection connection)> client_code,
-    std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification) :
-    name(name),
-    client_code(std::move(client_code)),
-    connect_notification(std::move(connect_notification))
-{
-}
-
-template<typename Base>
-void MirInternalClientRunner<Base>::run(mir::Server& server)
-{
-    fd = server.open_client_socket([this](std::shared_ptr<mir::scene::Session> const& mf_session)
-        {
-            std::lock_guard<decltype(mutex)> lock_guard{mutex};
-            session = mf_session;
-            connect_notification(session);
-            cv.notify_one();
-        });
-
-    char connect_string[64] = {0};
-    sprintf(connect_string, "fd://%d", fd.operator int());
-
-    connection = mir::client::Connection{mir_connect_sync(connect_string, name.c_str())};
-
-    mir_connection_set_lifecycle_event_callback(
-        connection,
-        [](MirConnection*, MirLifecycleState transition, void*)
-        {
-            // The default handler kills the process with SIGHUP - which is unhelpful for internal clients
-            if (transition == mir_lifecycle_connection_lost)
-                mir::log_warning("server disconnected before connection released by client");
-        },
-        this);
-
-    std::unique_lock<decltype(mutex)> lock{mutex};
-    cv.wait(lock, [&] { return !!session.lock(); });
-
-    thread = std::thread{[this]
-        {
-            client_code(connection);
-            connection.reset();
-        }};
-}
-
-template<typename Base>
-MirInternalClientRunner<Base>::~MirInternalClientRunner()
-{
-    join_client_thread();
-}
-
-
-template<typename Base>
-void MirInternalClientRunner<Base>::join_client_thread()
-{
-    if (thread.joinable())
-    {
-        thread.join();
-    }
-}
-
-// "Base" is a bit of compile time indirection because StartupInternalClient::Self is inaccessible
-template<typename Base>
 class WlInternalClientRunner : public Base, public virtual InternalClientRunner
 {
 public:
@@ -245,14 +156,6 @@ void WlInternalClientRunner<Base>::join_client_thread()
 }
 
 miral::StartupInternalClient::StartupInternalClient(
-    std::string name,
-    std::function<void(mir::client::Connection connection)> client_code,
-    std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification) :
-    internal_client(std::make_shared<MirInternalClientRunner<Self>>(std::move(name), std::move(client_code), std::move(connect_notification)))
-{
-}
-
-miral::StartupInternalClient::StartupInternalClient(
     std::function<void(struct ::wl_display* display)> client_code,
     std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification) :
     internal_client(std::make_shared<WlInternalClientRunner<Self>>(std::move(client_code), std::move(connect_notification)))
@@ -283,16 +186,6 @@ struct miral::InternalClientLauncher::Self
 void miral::InternalClientLauncher::operator()(mir::Server& server)
 {
     self->server = &server;
-}
-
-void miral::InternalClientLauncher::launch(
-    std::string const& name,
-    std::function<void(mir::client::Connection connection)> const& client_code,
-    std::function<void(std::weak_ptr<mir::scene::Session> const session)> const& connect_notification) const
-{
-    self->runner = std::make_shared<MirInternalClientRunner<Self>>(name, client_code, connect_notification);
-    self->server->the_main_loop()->enqueue(this, [this] { self->runner->run(*self->server); });
-    register_runner(self->server, self->runner);
 }
 
 void miral::InternalClientLauncher::launch(

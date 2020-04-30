@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Canonical Ltd.
+ * Copyright © 2015-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -162,8 +162,6 @@ public:
 
     void ask_client_to_close(Window const& window) override;
 
-    void force_close(Window const& window) override;
-
     auto active_window() const -> Window override;
 
     auto select_active_window(Window const& hint) -> Window override;
@@ -235,7 +233,6 @@ private:
     std::shared_ptr<DeadWorkspaces> const dead_workspaces{std::make_shared<DeadWorkspaces>()};
 
     std::unique_ptr<WindowManagementPolicy> const policy;
-    WindowManagementPolicy::ApplicationZoneAddendum* const policy_application_zone_addendum;
 
     std::mutex mutex;
     SessionInfoMap app_info;

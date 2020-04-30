@@ -69,25 +69,6 @@ auto miral::ApplicationInfo::windows() const -> std::vector <Window>&
     return self->windows;
 }
 
-void miral::ApplicationInfo::add_window(Window const& window)
-{
-    self->windows.push_back(window);
-}
-
-void miral::ApplicationInfo::remove_window(Window const& window)
-{
-    auto& siblings = self->windows;
-
-    for (auto i = begin(siblings); i != end(siblings); ++i)
-    {
-        if (window == *i)
-        {
-            siblings.erase(i);
-            break;
-        }
-    }
-}
-
 auto miral::ApplicationInfo::userdata() const -> std::shared_ptr<void>
 {
     return self->userdata;

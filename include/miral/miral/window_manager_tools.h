@@ -20,7 +20,6 @@
 #define MIRAL_WINDOW_MANAGER_TOOLS_H
 
 #include "miral/application.h"
-#include <miral/deprecations.h>
 #include "window_info.h"
 
 #include <mir/geometry/displacement.h>
@@ -128,18 +127,6 @@ public:
 
     /// Send close request to the window
     void ask_client_to_close(Window const& window);
-
-    /// Immediately remove all references to the window from the server's
-    /// internal data structures, invalidating any held client or server
-    /// references.
-    /// \warning This method is only safe to use if you can guarantee the
-    ///     Window will not be reused by server or client. Otherwise, it may
-    ///     lead to a use-after-delete. As an alternative, consider using
-    ///     ask_client_to_close(), then terminating the client if that
-    ///     does not work.
-    /// \deprecated WindowManager should not close windows directly.
-    MIRAL_FOR_REMOVAL_IN_VERSION_3("Window Manager should not close windows directly")
-    void force_close(Window const& window);
 
     /// retrieve the active window
     auto active_window() const -> Window;

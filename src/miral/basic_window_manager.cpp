@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2017 Canonical Ltd.
+ * Copyright © 2015-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -74,7 +74,6 @@ miral::BasicWindowManager::BasicWindowManager(
     display_layout(display_layout),
     persistent_surface_store{persistent_surface_store},
     policy(build(WindowManagerTools{this})),
-    policy_application_zone_addendum{WindowManagementPolicy::ApplicationZoneAddendum::from(policy.get())},
     display_config_monitor{std::make_shared<DisplayConfigurationListeners>()}
 {
     display_config_monitor->add_listener(this);
@@ -535,14 +534,6 @@ void miral::BasicWindowManager::ask_client_to_close(Window const& window)
 {
     if (auto const mir_surface = std::shared_ptr<scene::Surface>(window))
         mir_surface->request_client_surface_close();
-}
-
-void miral::BasicWindowManager::force_close(Window const& window)
-{
-    auto application = window.application();
-
-    if (application && window)
-        remove_window(application, info_for(window));
 }
 
 auto miral::BasicWindowManager::active_window() const -> Window
@@ -2487,7 +2478,7 @@ void miral::BasicWindowManager::advise_output_create(miral::Output const& output
 
     update_windows_for_outputs();
     policy->advise_output_create(output);
-    policy_application_zone_addendum->advise_application_zone_create(area->application_zone);
+    policy->advise_application_zone_create(area->application_zone);
 }
 
 void miral::BasicWindowManager::advise_output_update(miral::Output const& updated, miral::Output const& original)
@@ -2543,7 +2534,7 @@ void miral::BasicWindowManager::advise_output_delete(miral::Output const& output
 
     update_windows_for_outputs();
     for (auto& area : removed_areas)
-        policy_application_zone_addendum->advise_application_zone_delete(area->application_zone);
+        policy->advise_application_zone_delete(area->application_zone);
     policy->advise_output_delete(output);
 }
 
@@ -2607,7 +2598,7 @@ void miral::BasicWindowManager::update_windows_for_outputs()
         new_zone.extents(zone_rect);
         if (!(new_zone == area->application_zone))
         {
-            policy_application_zone_addendum->advise_application_zone_update(new_zone, area->application_zone);
+            policy->advise_application_zone_update(new_zone, area->application_zone);
             area->application_zone = new_zone;
         }
     }

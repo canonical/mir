@@ -41,8 +41,7 @@ namespace test
 {
 
 struct MockWindowManagerPolicy
-    : miral::CanonicalWindowManagerPolicy,
-      miral::WindowManagementPolicy::ApplicationZoneAddendum
+    : miral::CanonicalWindowManagerPolicy
 {
     using miral::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy;
 

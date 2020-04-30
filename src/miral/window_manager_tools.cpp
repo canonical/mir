@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -49,9 +49,6 @@ auto miral::WindowManagerTools::info_for(Window const& window) const -> WindowIn
 
 void miral::WindowManagerTools::ask_client_to_close(Window const& window)
 { tools->ask_client_to_close(window); }
-
-void miral::WindowManagerTools::force_close(Window const& window)
-{ tools->force_close(window); }
 
 auto miral::WindowManagerTools::active_window() const -> Window
 { return tools->active_window(); }

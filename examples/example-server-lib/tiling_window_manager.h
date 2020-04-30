@@ -45,8 +45,7 @@ using namespace mir::geometry;
 //  o Maximize/restore current window (to tile width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
 class TilingWindowManagerPolicy
-    : public miral::WindowManagementPolicy,
-      public miral::WindowManagementPolicy::ApplicationZoneAddendum
+    : public miral::WindowManagementPolicy
 {
 public:
     explicit TilingWindowManagerPolicy(miral::WindowManagerTools const& tools, std::shared_ptr<SplashSession> const& spinner,
