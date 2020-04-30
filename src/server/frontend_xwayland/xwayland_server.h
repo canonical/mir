@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
- * Copyright (C) 2019 Canonical Ltd.
+ * Copyright (C) 2019-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -19,10 +19,13 @@
 #ifndef MIR_FRONTEND_XWAYLAND_SERVER_H
 #define MIR_FRONTEND_XWAYLAND_SERVER_H
 
+#include "mir/fd.h"
+
 #include <memory>
 #include <mutex>
 #include <thread>
 #include <string>
+#include <vector>
 
 namespace mir
 {
@@ -57,8 +60,7 @@ private:
     struct SocketFd
     {
         int const xdisplay;
-        int socket_fd;
-        int abstract_socket_fd;
+        std::vector<Fd> fd;
 
         SocketFd();
         ~SocketFd();
@@ -75,8 +77,7 @@ private:
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     std::unique_ptr<dispatch::ThreadedDispatcher> const xserver_thread;
     SocketFd const sockets;
-    std::shared_ptr<dispatch::ReadableFd> const afd_dispatcher;
-    std::shared_ptr<dispatch::ReadableFd> const fd_dispatcher;
+    std::vector<std::shared_ptr<dispatch::ReadableFd>> dispatcher_fd;
     std::string const xwayland_path;
 
     std::mutex mutable spawn_thread_mutex;
