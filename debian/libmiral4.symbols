@@ -335,6 +335,8 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WindowSpecification::placement_hints()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::preferred_orientation() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::preferred_orientation()@MIRAL_3.0" 3.0.0
+ (c++)"miral::WindowSpecification::server_side_decorated() const@MIRAL_3.0" 3.0.0
+ (c++)"miral::WindowSpecification::server_side_decorated()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::shell_chrome() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::shell_chrome()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::size() const@MIRAL_3.0" 3.0.0
