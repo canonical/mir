@@ -16,31 +16,26 @@ add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miral" -DMIRAL_ENABLE_DEPRECATIONS
 
 add_library(miral-internal STATIC
     active_outputs.cpp                  active_outputs.h
+    application_info_internal.cpp       application_info_internal.h
     basic_window_manager.cpp            basic_window_manager.h window_manager_tools_implementation.h
     coordinate_translator.cpp           coordinate_translator.h
     display_configuration_listeners.cpp display_configuration_listeners.h
     launch_app.cpp                      launch_app.h
     mru_window_list.cpp                 mru_window_list.h
     static_display_config.cpp           static_display_config.h
+    window_info_internal.cpp            window_info_internal.h
     window_management_trace.cpp         window_management_trace.h
     xcursor_loader.cpp                  xcursor_loader.h
     xcursor.c                           xcursor.h
                                         join_client_threads.h
                                         window_info_defaults.h
-)
+        application_info_internal.h)
 
 # Already implied by the linker's symbol version script, but can avoid accidents
 set_target_properties(miral-internal
     PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS}  -fvisibility=hidden")
 
 set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
-
-# These infos are used in miral-internal, but don't need to be "-fvisibility=hidden".
-# So duplicate them for the miral-internal test binary.
-add_library(miral-infos STATIC
-    application_info.cpp                ${miral_include}/miral/application_info.h
-    window_info.cpp                     ${miral_include}/miral/window_info.h
-)
 
 add_library(miral SHARED
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
@@ -104,11 +99,6 @@ target_link_libraries(miral-internal
         mirserver
         ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
         ${YAML_LIBRARIES}
-)
-
-target_include_directories(miral-infos
-    PRIVATE "${miral_include}" ${MIRCLIENT_INCLUDE_DIRS}
-    PRIVATE ${MIRSERVER_INCLUDE_DIRS}
 )
 
 target_include_directories(miral

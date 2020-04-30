@@ -171,62 +171,41 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WindowInfo::WindowInfo()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::WindowInfo(miral::Window const&, miral::WindowSpecification const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::WindowInfo(miral::WindowInfo const&)@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::application_id(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::application_id[abi:cxx11]() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::attached_edges() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::attached_edges(MirPlacementGravity)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::can_be_active() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::can_morph_to(MirWindowType) const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::children() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::clip_area() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::clip_area(mir::optional_value<mir::geometry::Rectangle> const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::confine_pointer() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::confine_pointer(MirPointerConfinementState)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::constrain_resize(mir::geometry::Point&, mir::geometry::Size&) const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::depth_layer() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::depth_layer(MirDepthLayer)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::exclusive_rect() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::exclusive_rect(mir::optional_value<mir::geometry::Rectangle> const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::has_output_id() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::height_inc() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::height_inc(mir::geometry::detail::IntWrapper<mir::geometry::DeltaYTag>)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::is_visible() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::max_aspect() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::max_aspect(miral::WindowSpecification::AspectRatio)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::max_height() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::max_height(mir::geometry::detail::IntWrapper<mir::geometry::HeightTag>)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::max_width() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::max_width(mir::geometry::detail::IntWrapper<mir::geometry::WidthTag>)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::min_aspect() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::min_aspect(miral::WindowSpecification::AspectRatio)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::min_height() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::min_height(mir::geometry::detail::IntWrapper<mir::geometry::HeightTag>)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::min_width() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::min_width(mir::geometry::detail::IntWrapper<mir::geometry::WidthTag>)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::must_have_parent() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::must_not_have_parent() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::name(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::name[abi:cxx11]() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::needs_titlebar(MirWindowType)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::operator=(miral::WindowInfo const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::output_id() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::output_id(mir::optional_value<int>)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::parent() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::parent(miral::Window const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::preferred_orientation() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::preferred_orientation(MirOrientationMode)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::restore_rect() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::restore_rect(mir::geometry::Rectangle const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::shell_chrome() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::shell_chrome(MirShellChrome)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::state() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::state(MirWindowState)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::type() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::type(MirWindowType)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::userdata() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::userdata(std::shared_ptr<void>)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::width_inc() const@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowInfo::width_inc(mir::geometry::detail::IntWrapper<mir::geometry::DeltaXTag>)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::window() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowInfo::~WindowInfo()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const&, std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_3.0" 3.0.0

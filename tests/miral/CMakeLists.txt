@@ -59,7 +59,6 @@ target_link_libraries(miral-test-internal
     ${GTEST_BOTH_LIBRARIES}
     ${GMOCK_LIBRARIES}
     miral-internal
-    miral-infos
     mir-test-assist
 )
 
