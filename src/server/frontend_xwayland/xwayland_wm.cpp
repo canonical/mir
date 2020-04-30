@@ -23,6 +23,7 @@
 #include "xwayland_surface.h"
 #include "xwayland_wm_shell.h"
 #include "xwayland_surface_role.h"
+#include "xwayland_cursors.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/readable_fd.h"
@@ -43,7 +44,7 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
       wayland_client{wayland_client},
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
-      cursors{connection}
+      cursors{std::make_unique<XWaylandCursors>(connection)}
 {
     wm_dispatcher =
         std::make_shared<mir::dispatch::ReadableFd>(mir::Fd{mir::IntOwnedFd{fd}}, [this]() { handle_events(); });
@@ -76,6 +77,7 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
         connection->net_active_window,
         static_cast<xcb_window_t>(XCB_WINDOW_NONE));
     wm_selector();
+    cursors->apply_default_to(connection->root_window());
 
     connection->flush();
 

@@ -22,7 +22,6 @@
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "wayland_connector.h"
 #include "xcb_connection.h"
-#include "xwayland_cursors.h"
 
 #include <map>
 #include <thread>
@@ -44,6 +43,7 @@ namespace frontend
 {
 class XWaylandSurface;
 class XWaylandWMShell;
+class XWaylandCursors;
 
 class XWaylandWM
 {
@@ -92,7 +92,7 @@ private:
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     wl_client* const wayland_client;
     std::shared_ptr<XWaylandWMShell> const wm_shell;
-    XWaylandCursors const cursors;
+    std::unique_ptr<XWaylandCursors> const cursors;
 
     xcb_window_t wm_window;
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;

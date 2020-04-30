@@ -25,72 +25,92 @@
 #include <cstring>
 #include <boost/throw_exception.hpp>
 
-namespace
-{
-template<typename T, size_t length>
-constexpr size_t length_of(T(&)[length])
-{
-    return length;
-}
-}
-
-#ifndef ARRAY_LENGTH
-#define ARRAY_LENGTH(a) length_of(a)
-#endif
-
-#define CURSOR_ENTRY(x)        \
-    {                          \
-        (x), ARRAY_LENGTH((x)) \
-    }
-
-static const char *bottom_left_corners[] = {"bottom_left_corner", "sw-resize", "size_bdiag"};
-
-static const char *bottom_right_corners[] = {"bottom_right_corner", "se-resize", "size_fdiag"};
-
-static const char *bottom_sides[] = {"bottom_side", "s-resize", "size_ver"};
-
-static const char *left_ptrs[] = {"left_ptr", "default", "top_left_arrow", "left-arrow"};
-
-static const char *left_sides[] = {"left_side", "w-resize", "size_hor"};
-
-static const char *right_sides[] = {"right_side", "e-resize", "size_hor"};
-
-static const char *top_left_corners[] = {"top_left_corner", "nw-resize", "size_fdiag"};
-
-static const char *top_right_corners[] = {"top_right_corner", "ne-resize", "size_bdiag"};
-
-static const char *top_sides[] = {"top_side", "n-resize", "size_ver"};
-
-struct cursor_alternatives
-{
-    const char **names;
-    size_t count;
-};
-
-static const struct cursor_alternatives cursors[] = {
-    CURSOR_ENTRY(top_sides),           CURSOR_ENTRY(bottom_sides),         CURSOR_ENTRY(left_sides),
-    CURSOR_ENTRY(right_sides),         CURSOR_ENTRY(top_left_corners),     CURSOR_ENTRY(top_right_corners),
-    CURSOR_ENTRY(bottom_left_corners), CURSOR_ENTRY(bottom_right_corners), CURSOR_ENTRY(left_ptrs)};
-
 namespace mf = mir::frontend;
 
+// Cursor names that may be useful in the future:
+// {"bottom_left_corner", "sw-resize", "size_bdiag"};
+// {"bottom_right_corner", "se-resize", "size_fdiag"};
+// {"bottom_side", "s-resize", "size_ver"};
+// {"left_ptr", "default", "top_left_arrow", "left-arrow"};
+// {"left_side", "w-resize", "size_hor"};
+// {"right_side", "e-resize", "size_hor"};
+// {"top_left_corner", "nw-resize", "size_fdiag"};
+// {"top_right_corner", "ne-resize", "size_bdiag"};
+// {"top_side", "n-resize", "size_ver"};
+
+namespace
+{
+std::initializer_list<std::string> const default_cursor_names{
+    "left_ptr", "default", "top_left_arrow", "left-arrow"};
+}
+
 mf::XWaylandCursors::XWaylandCursors(std::shared_ptr<XCBConnection> const& connection)
-    : connection{connection}
+    : loader{connection},
+      default_cursor{loader.load_default()}
+{
+}
+
+void mf::XWaylandCursors::apply_default_to(xcb_window_t window) const
+{
+    if (default_cursor)
+    {
+        default_cursor->apply_to(window);
+    }
+    else
+    {
+        log_error("No default cursor loaded");
+    }
+}
+
+mf::XWaylandCursors::Cursor::Cursor(std::shared_ptr<XCBConnection> const& connection, xcb_cursor_t xcb_cursor)
+    : connection{connection},
+      xcb_cursor{xcb_cursor}
+{
+}
+
+mf::XWaylandCursors::Cursor::~Cursor()
+{
+    xcb_free_cursor(*connection, xcb_cursor);
+}
+
+void mf::XWaylandCursors::Cursor::apply_to(xcb_window_t window) const
+{
+    xcb_change_window_attributes(*connection, window, XCB_CW_CURSOR, &xcb_cursor);
+    connection->flush();
+}
+
+mf::XWaylandCursors::Loader::Loader(std::shared_ptr<XCBConnection> const& connection)
+    : connection{connection},
+      formats{query_formats(connection)},
+      cursor_size{get_xcursor_size()}
+{
+}
+
+auto mf::XWaylandCursors::Loader::query_formats(std::shared_ptr<XCBConnection> const& connection) -> Loader::Formats
 {
     auto const formats_cookie = xcb_render_query_pict_formats(*connection);
     auto const formats_reply = xcb_render_query_pict_formats_reply(*connection, formats_cookie, 0);
+    mf::XWaylandCursors::Loader::Formats result;
     if (formats_reply)
     {
         auto const formats = xcb_render_query_pict_formats_formats(formats_reply);
         for (unsigned i = 0; i < formats_reply->num_formats; i++)
         {
             if (formats[i].direct.red_mask != 0xff && formats[i].direct.red_shift != 16)
+            {
                 continue;
-            if (formats[i].type == XCB_RENDER_PICT_TYPE_DIRECT && formats[i].depth == 24)
-                xcb_format_rgb = formats[i];
+            }
+
+            // if (formats[i].type == XCB_RENDER_PICT_TYPE_DIRECT && formats[i].depth == 24)
+            // {
+            //    result.rgb = formats[i];
+            // }
+
             if (formats[i].type == XCB_RENDER_PICT_TYPE_DIRECT && formats[i].depth == 32 &&
                 formats[i].direct.alpha_mask == 0xff && formats[i].direct.alpha_shift == 24)
-                xcb_format_rgba = formats[i];
+            {
+                result.rgba = formats[i];
+            }
         }
 
         free(formats_reply);
@@ -99,115 +119,74 @@ mf::XWaylandCursors::XWaylandCursors(std::shared_ptr<XCBConnection> const& conne
     {
         log_warning("Could not get color formats from the X server");
     }
-
-    create_wm_cursor();
-    set_cursor(connection->root_window(), CursorLeftPointer);
+    return result;
 }
 
-mf::XWaylandCursors::~XWaylandCursors()
+auto mf::XWaylandCursors::Loader::get_xcursor_size() -> int
 {
-    for (auto xcb_cursor : xcb_cursors)
+    char const* size_env_var_string = getenv("XCURSOR_SIZE");
+    int result = 0;
+    if (size_env_var_string)
     {
-        xcb_free_cursor(*connection, xcb_cursor);
+        result = atoi(size_env_var_string);
     }
-}
-
-void mf::XWaylandCursors::set_cursor(xcb_window_t id, const CursorType &cursor)
-{
-    if (xcb_cursor == cursor)
-        return;
-
-    xcb_cursor = cursor;
-    uint32_t cursor_value_list = xcb_cursors[cursor];
-    xcb_change_window_attributes(*connection, id, XCB_CW_CURSOR, &cursor_value_list);
-    connection->flush();
-}
-
-void mf::XWaylandCursors::create_wm_cursor()
-{
-    const char *name;
-    int count = ARRAY_LENGTH(cursors);
-
-    xcb_cursors.clear();
-    xcb_cursors.reserve(count);
-
-    for (int i = 0; i < count; i++)
+    if (result == 0)
     {
-        for (size_t j = 0; j < cursors[i].count; j++)
-        {
-            name = cursors[i].names[j];
-            xcb_cursors.push_back(xcb_cursor_library_load_cursor(name));
-            if (xcb_cursors[i] != static_cast<xcb_cursor_t>(-1))
-                break;
-        }
+        result = 32;
     }
+    return result;
 }
 
-// Cursor
-xcb_cursor_t mf::XWaylandCursors::xcb_cursor_image_load_cursor(const XcursorImage *img)
+auto mf::XWaylandCursors::Loader::load_cursor(std::string const& name) const -> std::unique_ptr<Cursor>
 {
-    xcb_connection_t *c = *connection;
-    xcb_screen_iterator_t s = xcb_setup_roots_iterator(xcb_get_setup(c));
-    xcb_screen_t *screen = s.data;
-    xcb_gcontext_t gc;
-    xcb_pixmap_t pix;
-    xcb_render_picture_t pic;
-    xcb_cursor_t cursor;
-    int stride = img->width * 4;
+    auto const images = XcursorLibraryLoadImages(name.c_str(), nullptr, cursor_size);
 
-    pix = xcb_generate_id(c);
-    xcb_create_pixmap(c, 32, pix, screen->root, img->width, img->height);
+    if (!images || images->nimage != 1)
+    {
+        return nullptr;
+    }
+    auto const img = images->images[0];
 
-    pic = xcb_generate_id(c);
-    xcb_render_create_picture(c, pic, pix, xcb_format_rgba.id, 0, 0);
+    if (!formats.rgba)
+    {
+        return nullptr;
+    }
+    auto const format = formats.rgba.value();
 
-    gc = xcb_generate_id(c);
-    xcb_create_gc(c, gc, pix, 0, 0);
+    xcb_pixmap_t const pix = xcb_generate_id(*connection);
+    xcb_create_pixmap(*connection, 32, pix, connection->screen()->root, img->width, img->height);
 
-    xcb_put_image(c, XCB_IMAGE_FORMAT_Z_PIXMAP, pix, gc, img->width, img->height, 0, 0, 0, 32, stride * img->height,
+    xcb_render_picture_t const pic = xcb_generate_id(*connection);
+    xcb_render_create_picture(*connection, pic, pix, format.id, 0, 0);
+
+    xcb_gcontext_t const gc = xcb_generate_id(*connection);
+    xcb_create_gc(*connection, gc, pix, 0, 0);
+
+    int const stride = img->width * 4;
+    xcb_put_image(*connection, XCB_IMAGE_FORMAT_Z_PIXMAP, pix, gc, img->width, img->height, 0, 0, 0, 32, stride * img->height,
                   (uint8_t *)img->pixels);
-    xcb_free_gc(c, gc);
+    xcb_free_gc(*connection, gc);
 
-    cursor = xcb_generate_id(c);
-    xcb_render_create_cursor(c, cursor, pic, img->xhot, img->yhot);
+    xcb_cursor_t const cursor = xcb_generate_id(*connection);
+    xcb_render_create_cursor(*connection, cursor, pic, img->xhot, img->yhot);
 
-    xcb_render_free_picture(c, pic);
-    xcb_free_pixmap(c, pix);
+    xcb_render_free_picture(*connection, pic);
+    xcb_free_pixmap(*connection, pix);
 
-    return cursor;
-}
-
-xcb_cursor_t mf::XWaylandCursors::xcb_cursor_images_load_cursor(const XcursorImages *images)
-{
-    if (images->nimage != 1)
-        return -1;
-
-    return xcb_cursor_image_load_cursor(images->images[0]);
-}
-
-xcb_cursor_t mf::XWaylandCursors::xcb_cursor_library_load_cursor(const char *file)
-{
-    xcb_cursor_t cursor;
-    XcursorImages *images;
-    char *v = NULL;
-    int size = 0;
-
-    if (!file)
-        return 0;
-
-    v = getenv("XCURSOR_SIZE");
-    if (v)
-        size = atoi(v);
-
-    if (!size)
-        size = 32;
-
-    images = XcursorLibraryLoadImages(file, NULL, size);
-    if (!images)
-        return -1;
-
-    cursor = xcb_cursor_images_load_cursor(images);
     XcursorImagesDestroy(images);
 
-    return cursor;
+    return std::make_unique<Cursor>(connection, cursor);
+}
+
+auto mf::XWaylandCursors::Loader::load_default() const -> std::unique_ptr<Cursor>
+{
+    for (auto const& name : default_cursor_names)
+    {
+        if (auto cursor = load_cursor(name))
+        {
+            return cursor;
+        }
+    }
+    log_warning("Failed to load any default cursor");
+    return nullptr;
 }
