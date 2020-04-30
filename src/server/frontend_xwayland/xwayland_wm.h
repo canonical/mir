@@ -22,6 +22,7 @@
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "wayland_connector.h"
 #include "xcb_connection.h"
+#include "xwayland_cursors.h"
 
 #include <map>
 #include <thread>
@@ -29,10 +30,6 @@
 #include <mutex>
 
 #include <wayland-server-core.h>
-
-#include <X11/Xcursor/Xcursor.h>
-#include <xcb/composite.h>
-#include <xcb/xcb.h>
 #include <xcb/xfixes.h>
 
 namespace mir
@@ -47,12 +44,6 @@ namespace frontend
 {
 class XWaylandSurface;
 class XWaylandWMShell;
-
-template<typename T, size_t length>
-constexpr size_t length_of(T(&)[length])
-{
-    return length;
-}
 
 class XWaylandWM
 {
@@ -70,25 +61,10 @@ public:
     void run_on_wayland_thread(std::function<void()>&& work);
 
 private:
-    enum CursorType
-    {
-        CursorUnset = -1,
-        CursorTop,
-        CursorBottom,
-        CursorLeft,
-        CursorRight,
-        CursorTopLeft,
-        CursorTopRight,
-        CursorBottomLeft,
-        CursorBottomRight,
-        CursorLeftPointer
-    };
-
     void create_wm_window();
     void wm_selector();
 
     void create_window(xcb_window_t id);
-    void set_cursor(xcb_window_t id, const CursorType &cursor);
     void create_wm_cursor();
     void wm_get_resources();
 
@@ -112,25 +88,18 @@ private:
 
     std::mutex mutex;
 
-    // Cursor
-    xcb_cursor_t xcb_cursor_image_load_cursor(const XcursorImage *img);
-    xcb_cursor_t xcb_cursor_images_load_cursor(const XcursorImages *images);
-    xcb_cursor_t xcb_cursor_library_load_cursor(const char *file);
-
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     wl_client* const wayland_client;
     std::shared_ptr<XWaylandWMShell> const wm_shell;
+    XWaylandCursors const cursors;
 
     xcb_window_t wm_window;
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
     std::experimental::optional<xcb_window_t> focused_window;
     std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;
-    int xcb_cursor;
-    std::vector<xcb_cursor_t> xcb_cursors;
     xcb_window_t xcb_selection_window;
     xcb_selection_request_event_t xcb_selection_request;
-    xcb_render_pictforminfo_t xcb_format_rgb, xcb_format_rgba;
     const xcb_query_extension_reply_t *xfixes;
     std::unique_ptr<dispatch::ThreadedDispatcher> event_thread;
 };

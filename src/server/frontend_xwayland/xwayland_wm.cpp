@@ -35,44 +35,6 @@
 #include <unistd.h>
 #include <boost/throw_exception.hpp>
 
-#ifndef ARRAY_LENGTH
-#define ARRAY_LENGTH(a) mir::frontend::length_of(a)
-#endif
-
-#define CURSOR_ENTRY(x)        \
-    {                          \
-        (x), ARRAY_LENGTH((x)) \
-    }
-
-static const char *bottom_left_corners[] = {"bottom_left_corner", "sw-resize", "size_bdiag"};
-
-static const char *bottom_right_corners[] = {"bottom_right_corner", "se-resize", "size_fdiag"};
-
-static const char *bottom_sides[] = {"bottom_side", "s-resize", "size_ver"};
-
-static const char *left_ptrs[] = {"left_ptr", "default", "top_left_arrow", "left-arrow"};
-
-static const char *left_sides[] = {"left_side", "w-resize", "size_hor"};
-
-static const char *right_sides[] = {"right_side", "e-resize", "size_hor"};
-
-static const char *top_left_corners[] = {"top_left_corner", "nw-resize", "size_fdiag"};
-
-static const char *top_right_corners[] = {"top_right_corner", "ne-resize", "size_bdiag"};
-
-static const char *top_sides[] = {"top_side", "n-resize", "size_ver"};
-
-struct cursor_alternatives
-{
-    const char **names;
-    size_t count;
-};
-
-static const struct cursor_alternatives cursors[] = {
-    CURSOR_ENTRY(top_sides),           CURSOR_ENTRY(bottom_sides),         CURSOR_ENTRY(left_sides),
-    CURSOR_ENTRY(right_sides),         CURSOR_ENTRY(top_left_corners),     CURSOR_ENTRY(top_right_corners),
-    CURSOR_ENTRY(bottom_left_corners), CURSOR_ENTRY(bottom_right_corners), CURSOR_ENTRY(left_ptrs)};
-
 namespace mf = mir::frontend;
 
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
@@ -80,7 +42,8 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       wayland_connector(wayland_connector),
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
       wayland_client{wayland_client},
-      wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))}
+      wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
+      cursors{connection}
 {
     wm_dispatcher =
         std::make_shared<mir::dispatch::ReadableFd>(mir::Fd{mir::IntOwnedFd{fd}}, [this]() { handle_events(); });
@@ -116,9 +79,6 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
 
     connection->flush();
 
-    create_wm_cursor();
-    set_cursor(connection->root_window(), CursorLeftPointer);
-
     create_wm_window();
     connection->flush();
 }
@@ -153,14 +113,6 @@ mf::XWaylandWM::~XWaylandWM()
         dispatcher->remove_watch(wm_dispatcher);
         event_thread.reset();
     }
-
-    // xcb_cursors == 2 when its empty
-    if (xcb_cursors.size() != 2)
-    {
-        mir::log_info("Cleaning cursors");
-        for (auto xcb_cursor : xcb_cursors)
-        xcb_free_cursor(*connection, xcb_cursor);
-    }
 }
 
 void mf::XWaylandWM::wm_selector()
@@ -193,37 +145,6 @@ void mf::XWaylandWM::wm_selector()
         XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_CLIENT_CLOSE;
 
     xcb_xfixes_select_selection_input(*connection, xcb_selection_window, connection->clipboard, mask);
-}
-
-void mf::XWaylandWM::set_cursor(xcb_window_t id, const CursorType &cursor)
-{
-    if (xcb_cursor == cursor)
-        return;
-
-    xcb_cursor = cursor;
-    uint32_t cursor_value_list = xcb_cursors[cursor];
-    xcb_change_window_attributes(*connection, id, XCB_CW_CURSOR, &cursor_value_list);
-    connection->flush();
-}
-
-void mf::XWaylandWM::create_wm_cursor()
-{
-    const char *name;
-    int count = ARRAY_LENGTH(cursors);
-
-    xcb_cursors.clear();
-    xcb_cursors.reserve(count);
-
-    for (int i = 0; i < count; i++)
-    {
-        for (size_t j = 0; j < cursors[i].count; j++)
-        {
-            name = cursors[i].names[j];
-            xcb_cursors.push_back(xcb_cursor_library_load_cursor(name));
-            if (xcb_cursors[i] != static_cast<xcb_cursor_t>(-1))
-                break;
-        }
-    }
 }
 
 void mf::XWaylandWM::create_wm_window()
@@ -771,88 +692,13 @@ void mf::XWaylandWM::handle_focus_in(xcb_focus_in_event_t* event)
     }
 }
 
-// Cursor
-xcb_cursor_t mf::XWaylandWM::xcb_cursor_image_load_cursor(const XcursorImage *img)
-{
-    xcb_connection_t *c = *connection;
-    xcb_screen_iterator_t s = xcb_setup_roots_iterator(xcb_get_setup(c));
-    xcb_screen_t *screen = s.data;
-    xcb_gcontext_t gc;
-    xcb_pixmap_t pix;
-    xcb_render_picture_t pic;
-    xcb_cursor_t cursor;
-    int stride = img->width * 4;
-
-    pix = xcb_generate_id(c);
-    xcb_create_pixmap(c, 32, pix, screen->root, img->width, img->height);
-
-    pic = xcb_generate_id(c);
-    xcb_render_create_picture(c, pic, pix, xcb_format_rgba.id, 0, 0);
-
-    gc = xcb_generate_id(c);
-    xcb_create_gc(c, gc, pix, 0, 0);
-
-    xcb_put_image(c, XCB_IMAGE_FORMAT_Z_PIXMAP, pix, gc, img->width, img->height, 0, 0, 0, 32, stride * img->height,
-                  (uint8_t *)img->pixels);
-    xcb_free_gc(c, gc);
-
-    cursor = xcb_generate_id(c);
-    xcb_render_create_cursor(c, cursor, pic, img->xhot, img->yhot);
-
-    xcb_render_free_picture(c, pic);
-    xcb_free_pixmap(c, pix);
-
-    return cursor;
-}
-
-xcb_cursor_t mf::XWaylandWM::xcb_cursor_images_load_cursor(const XcursorImages *images)
-{
-    if (images->nimage != 1)
-        return -1;
-
-    return xcb_cursor_image_load_cursor(images->images[0]);
-}
-
-xcb_cursor_t mf::XWaylandWM::xcb_cursor_library_load_cursor(const char *file)
-{
-    xcb_cursor_t cursor;
-    XcursorImages *images;
-    char *v = NULL;
-    int size = 0;
-
-    if (!file)
-        return 0;
-
-    v = getenv("XCURSOR_SIZE");
-    if (v)
-        size = atoi(v);
-
-    if (!size)
-        size = 32;
-
-    images = XcursorLibraryLoadImages(file, NULL, size);
-    if (!images)
-        return -1;
-
-    cursor = xcb_cursor_images_load_cursor(images);
-    XcursorImagesDestroy(images);
-
-    return cursor;
-}
-
 void mf::XWaylandWM::wm_get_resources()
 {
     xcb_xfixes_query_version_cookie_t xfixes_cookie;
     xcb_xfixes_query_version_reply_t *xfixes_reply;
-    xcb_render_query_pict_formats_reply_t *formats_reply;
-    xcb_render_query_pict_formats_cookie_t formats_cookie;
-    xcb_render_pictforminfo_t *formats;
-    uint32_t i;
 
     xcb_prefetch_extension_data(*connection, &xcb_xfixes_id);
     xcb_prefetch_extension_data(*connection, &xcb_composite_id);
-
-    formats_cookie = xcb_render_query_pict_formats(*connection);
 
     xfixes = xcb_get_extension_data(*connection, &xcb_xfixes_id);
     if (!xfixes || !xfixes->present)
@@ -865,22 +711,4 @@ void mf::XWaylandWM::wm_get_resources()
         log_debug("xfixes version: %d.%d", xfixes_reply->major_version, xfixes_reply->minor_version);
 
     free(xfixes_reply);
-
-    formats_reply = xcb_render_query_pict_formats_reply(*connection, formats_cookie, 0);
-    if (formats_reply == NULL)
-        return;
-
-    formats = xcb_render_query_pict_formats_formats(formats_reply);
-    for (i = 0; i < formats_reply->num_formats; i++)
-    {
-        if (formats[i].direct.red_mask != 0xff && formats[i].direct.red_shift != 16)
-            continue;
-        if (formats[i].type == XCB_RENDER_PICT_TYPE_DIRECT && formats[i].depth == 24)
-            xcb_format_rgb = formats[i];
-        if (formats[i].type == XCB_RENDER_PICT_TYPE_DIRECT && formats[i].depth == 32 &&
-            formats[i].direct.alpha_mask == 0xff && formats[i].direct.alpha_shift == 24)
-            xcb_format_rgba = formats[i];
-    }
-
-    free(formats_reply);
 }
