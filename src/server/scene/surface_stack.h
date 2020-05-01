@@ -101,6 +101,8 @@ public:
     void add_observer(std::shared_ptr<Observer> const& observer) override;
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
 
+    auto stacking_order_of(SurfaceSet const& surfaces) const -> SurfaceList override;
+
     // Intended for input overlays, as described in mir::input::Scene documentation.
     void add_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) override;
     void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& overlay) override;

@@ -505,7 +505,7 @@ TEST_F(SurfaceStack, remove_scene_observer)
 }
 
 // Many clients of the scene observer wish to install surface observers to monitor surface
-// notifications. We offer them a surface_added event for existing surfaces to give them
+// notifications. We offer them a surface_exists event for existing surfaces to give them
 // a chance to do this.
 TEST_F(SurfaceStack, scene_observer_informed_of_existing_surfaces)
 {
@@ -597,6 +597,20 @@ TEST_F(SurfaceStack, surfaces_reordered)
     stack.add_surface(stub_surface1, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.input_mode);
     stack.raise(stub_surface1);
+}
+
+TEST_F(SurfaceStack, surface_stacking_order)
+{
+    using namespace ::testing;
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface3, default_params.input_mode);
+    stack.raise(stub_surface2);
+
+    EXPECT_THAT(
+        stack.stacking_order_of({stub_surface2, stub_surface3}),
+        ElementsAre(LockedEq(stub_surface3), LockedEq(stub_surface2)));
 }
 
 TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
