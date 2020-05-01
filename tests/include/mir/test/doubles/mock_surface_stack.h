@@ -35,7 +35,7 @@ namespace doubles
 struct MockSurfaceStack : public shell::SurfaceStack
 {
     MOCK_METHOD1(raise, void(std::weak_ptr<scene::Surface> const&));
-    MOCK_METHOD1(raise, void(SurfaceSet const&));
+    MOCK_METHOD1(raise, void(scene::SurfaceSet const&));
 
     MOCK_METHOD2(add_surface, void(std::shared_ptr<scene::Surface> const&, input::InputReceptionMode new_mode));
 

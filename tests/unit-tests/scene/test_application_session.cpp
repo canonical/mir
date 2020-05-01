@@ -114,7 +114,7 @@ struct StubSurfaceStack : public msh::SurfaceStack
     void raise(std::weak_ptr<ms::Surface> const&) override
     {
     }
-    void raise(SurfaceSet const&) override
+    void raise(ms::SurfaceSet const&) override
     {
     }
     void add_surface(std::shared_ptr<ms::Surface> const&, mi::InputReceptionMode) override

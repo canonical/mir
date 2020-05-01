@@ -36,7 +36,7 @@ public:
 
     void raise(std::weak_ptr<scene::Surface> const& surface) override;
 
-    void raise(SurfaceSet const& surfaces) override;
+    void raise(scene::SurfaceSet const& surfaces) override;
 
     void remove_surface(std::weak_ptr<scene::Surface> const& surface) override;
 

@@ -59,7 +59,7 @@ struct TestSurfaceStack : public msh::SurfaceStack
     MOCK_METHOD1(raise, void(
         std::weak_ptr<ms::Surface> const& surface));
 
-    void raise(SurfaceSet const& surfaces) override
+    void raise(ms::SurfaceSet const& surfaces) override
     {
         wrapped->raise(surfaces);
     }

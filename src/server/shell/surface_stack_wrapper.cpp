@@ -40,7 +40,7 @@ void msh::SurfaceStackWrapper::raise(std::weak_ptr<scene::Surface> const& surfac
     wrapped->raise(surface);
 }
 
-void msh::SurfaceStackWrapper::raise(SurfaceSet const& surfaces)
+void msh::SurfaceStackWrapper::raise(scene::SurfaceSet const& surfaces)
 {
     wrapped->raise(surfaces);
 }
