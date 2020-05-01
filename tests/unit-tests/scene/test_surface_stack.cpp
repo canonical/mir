@@ -68,6 +68,11 @@ MATCHER_P(SceneElementForStream, stream, "")
     return arg->renderable()->id() == stream.get();
 }
 
+MATCHER_P(LockedEq, value, "")
+{
+    return arg.lock() == value;
+}
+
 struct MockCallback
 {
     MOCK_METHOD0(call, void());
