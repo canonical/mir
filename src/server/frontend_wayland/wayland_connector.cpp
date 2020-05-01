@@ -625,9 +625,9 @@ auto mf::create_wl_shell(wl_display* display, std::shared_ptr<msh::Shell> const&
     return std::make_shared<mf::WlShell>(display, shell, *seat, output_manager);
 }
 
-void mf::WaylandExtensions::init(wl_display* display, std::shared_ptr<msh::Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)
+void mf::WaylandExtensions::init(Context const& context)
 {
-    custom_extensions(display, shell, seat, output_manager);
+    custom_extensions(context);
 }
 
 void mf::WaylandExtensions::add_extension(std::string const name, std::shared_ptr<void> implementation)
@@ -635,7 +635,7 @@ void mf::WaylandExtensions::add_extension(std::string const name, std::shared_pt
     extension_protocols[std::move(name)] = std::move(implementation);
 }
 
-void mf::WaylandExtensions::custom_extensions(wl_display*, std::shared_ptr<msh::Shell> const&, WlSeat*, OutputManager* const)
+void mf::WaylandExtensions::custom_extensions(Context const&)
 {
 }
 
@@ -718,7 +718,7 @@ mf::WaylandConnector::WaylandConnector(
 
     data_device_manager_global = mf::create_data_device_manager(display.get());
 
-    extensions->init(display.get(), shell, seat_global.get(), output_manager.get());
+    extensions->init(WaylandExtensions::Context{display.get(), shell, seat_global.get(), output_manager.get()});
 
     wl_display_init_shm(display.get());
 

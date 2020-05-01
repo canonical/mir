@@ -79,39 +79,35 @@ auto configure_wayland_extensions(
             extension{extension}, x11_enabled{x11_enabled}, wayland_extension_hooks{wayland_extension_hooks} {}
 
     protected:
-        void custom_extensions(
-            wl_display* display,
-            std::shared_ptr<msh::Shell> const& shell,
-            mf::WlSeat* seat,
-            mf::OutputManager* const output_manager) override
+        void custom_extensions(Context const& context) override
         {
             if (extension.find(mw::Shell::interface_name) != extension.end())
                 add_extension(
                     mw::Shell::interface_name,
-                    mf::create_wl_shell(display, shell, seat, output_manager));
+                    mf::create_wl_shell(context.display, context.shell, context.seat, context.output_manager));
 
             if (extension.find(mw::XdgShellV6::interface_name) != extension.end())
                 add_extension(
                     mw::XdgShellV6::interface_name,
-                    std::make_shared<mf::XdgShellV6>(display, shell, *seat, output_manager));
+                    std::make_shared<mf::XdgShellV6>(context.display, context.shell, *context.seat, context.output_manager));
 
             if (extension.find(mw::XdgWmBase::interface_name) != extension.end())
                 add_extension(
                     mw::XdgWmBase::interface_name,
-                    std::make_shared<mf::XdgShellStable>(display, shell, *seat, output_manager));
+                    std::make_shared<mf::XdgShellStable>(context.display, context.shell, *context.seat, context.output_manager));
 
             if (extension.find(mw::LayerShellV1::interface_name) != extension.end())
                 add_extension(
                     mw::LayerShellV1::interface_name,
-                    std::make_shared<mf::LayerShellV1>(display, shell, *seat, output_manager));
+                    std::make_shared<mf::LayerShellV1>(context.display, context.shell, *context.seat, context.output_manager));
 
             if (extension.find(mw::XdgOutputManagerV1::interface_name) != extension.end())
                 add_extension(
                     mw::XdgOutputManagerV1::interface_name,
-                    create_xdg_output_manager_v1(display, output_manager));
+                    create_xdg_output_manager_v1(context.display, context.output_manager));
 
             if (x11_enabled)
-                add_extension("x11-support", std::make_shared<mf::XWaylandWMShell>(shell, *seat, output_manager));
+                add_extension("x11-support", std::make_shared<mf::XWaylandWMShell>(context.shell, *context.seat, context.output_manager));
         }
 
         void run_builders(
