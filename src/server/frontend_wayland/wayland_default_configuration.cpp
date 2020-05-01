@@ -40,28 +40,6 @@ namespace msh = mir::shell;
 namespace mo = mir::options;
 namespace mw = mir::wayland;
 
-auto mf::get_standard_extensions() -> std::vector<std::string>
-{
-    return std::vector<std::string>{
-        mw::Shell::interface_name,
-        mw::XdgWmBase::interface_name,
-        mw::XdgShellV6::interface_name};
-}
-
-auto mf::get_supported_extensions() -> std::vector<std::string>
-{
-    /**
-     * Extension names here that are not in the standard set should generally be listed in
-     * include/miral/miral/wayland_extensions.h for easy access by shells.
-     */
-    return std::vector<std::string>{
-        mw::Shell::interface_name,
-        mw::XdgWmBase::interface_name,
-        mw::XdgShellV6::interface_name,
-        mw::LayerShellV1::interface_name,
-        mw::XdgOutputManagerV1::interface_name};
-}
-
 namespace
 {
 struct ExtensionBuilder
@@ -71,6 +49,9 @@ struct ExtensionBuilder
 };
 
 std::string const x11_support_extension_name = "x11-support";
+
+/// Extensions that are not in the set returned by mf::get_standard_extensions() should generally be listed in
+/// include/miral/miral/wayland_extensions.h for easy access by shells.
 std::vector<ExtensionBuilder> const internal_builders = {
     {
         mw::Shell::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
@@ -172,6 +153,27 @@ auto configure_wayland_extensions(
 }
 }
 
+auto mf::get_standard_extensions() -> std::vector<std::string>
+{
+    return std::vector<std::string>{
+        mw::Shell::interface_name,
+        mw::XdgWmBase::interface_name,
+        mw::XdgShellV6::interface_name};
+}
+
+auto mf::get_supported_extensions() -> std::vector<std::string>
+{
+    std::vector<std::string> result;
+    for (auto const& builder : internal_builders)
+    {
+        if (builder.name != x11_support_extension_name)
+        {
+            result.push_back(builder.name);
+        }
+    }
+    return result;
+}
+
 std::shared_ptr<mf::Connector>
     mir::DefaultServerConfiguration::the_wayland_connector()
 {
@@ -197,7 +199,10 @@ std::shared_ptr<mf::Connector>
                 the_buffer_allocator(),
                 the_session_authorizer(),
                 arw_socket,
-                configure_wayland_extensions(wayland_extensions, options->is_set(mo::x11_display_opt), wayland_extension_hooks),
+                configure_wayland_extensions(
+                    wayland_extensions,
+                    options->is_set(mo::x11_display_opt),
+                    wayland_extension_hooks),
                 wayland_extension_filter);
         });
 }
