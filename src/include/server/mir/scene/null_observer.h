@@ -33,7 +33,7 @@ public:
 
     void surface_added(std::shared_ptr<Surface> const& surface) override;
     void surface_removed(std::shared_ptr<Surface> const& surface) override;
-    void surfaces_reordered() override;
+    void surfaces_reordered(SurfaceSet const& affected_surfaces) override;
 
     // Used to indicate the scene has changed in some way beyond the present surfaces
     // and will require full recomposition.

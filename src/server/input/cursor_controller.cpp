@@ -142,7 +142,7 @@ struct UpdateCursorOnSceneChanges : ms::Observer
         cursor_controller->update_cursor_image();
     }
 
-    void surfaces_reordered() override
+    void surfaces_reordered(ms::SurfaceSet const&) override
     {
         cursor_controller->update_cursor_image();
     }
