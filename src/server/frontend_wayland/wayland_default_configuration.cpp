@@ -48,11 +48,9 @@ struct ExtensionBuilder
     std::function<std::shared_ptr<void>(mf::WaylandExtensions::Context const& ctx)> build;
 };
 
-std::string const x11_support_extension_name = "x11-support";
-
 /// Extensions that are not in the set returned by mf::get_standard_extensions() should generally be listed in
 /// include/miral/miral/wayland_extensions.h for easy access by shells.
-std::vector<ExtensionBuilder> const internal_builders = {
+std::vector<ExtensionBuilder> const internal_extension_builders = {
     {
         mw::Shell::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
             { return mf::create_wl_shell(ctx.display, ctx.shell, ctx.seat, ctx.output_manager); }
@@ -73,10 +71,11 @@ std::vector<ExtensionBuilder> const internal_builders = {
         mw::XdgOutputManagerV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
             { return create_xdg_output_manager_v1(ctx.display, ctx.output_manager); }
     },
-    {
-        x11_support_extension_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return std::make_shared<mf::XWaylandWMShell>(ctx.shell, *ctx.seat, ctx.output_manager); }
-    },
+};
+
+ExtensionBuilder const xwayland_builder {
+    "x11-support", [](auto const& ctx) -> std::shared_ptr<void>
+        { return std::make_shared<mf::XWaylandWMShell>(ctx.shell, *ctx.seat, ctx.output_manager); }
 };
 
 struct WaylandExtensions : mf::WaylandExtensions
@@ -121,17 +120,17 @@ auto configure_wayland_extensions(
     auto remaining_extension_names = enabled_extension_names;
 
     std::vector<ExtensionBuilder> enabled_internal_builders;
-    for (auto const& builder : internal_builders)
+    for (auto const& builder : internal_extension_builders)
     {
         if (enabled_extension_names.find(builder.name) != enabled_extension_names.end())
         {
             remaining_extension_names.erase(builder.name);
             enabled_internal_builders.push_back(builder);
         }
-        else if (builder.name == x11_support_extension_name && x11_enabled)
-        {
-            enabled_internal_builders.push_back(builder);
-        }
+    }
+    if (x11_enabled)
+    {
+        enabled_internal_builders.push_back(xwayland_builder);
     }
 
     std::vector<mir::WaylandExtensionHook> enabled_external_hooks;
@@ -164,12 +163,9 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
 auto mf::get_supported_extensions() -> std::vector<std::string>
 {
     std::vector<std::string> result;
-    for (auto const& builder : internal_builders)
+    for (auto const& builder : internal_extension_builders)
     {
-        if (builder.name != x11_support_extension_name)
-        {
-            result.push_back(builder.name);
-        }
+        result.push_back(builder.name);
     }
     return result;
 }
