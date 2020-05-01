@@ -79,9 +79,9 @@ MIRAL_VERSION=$(MIRAL_RELEASE).$(DEB_VERSION)
 
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
-	dh_makeshlibs -Nlibmiral3 -V -Nmir-test-tools
-	# libmiral3 *has* a symbols file, so we don't need to -V it!
-	dh_makeshlibs -plibmiral3 -- -v$(MIRAL_RELEASE)
+	dh_makeshlibs -Nlibmiral4 -V -Nmir-test-tools
+	# libmiral4 *has* a symbols file, so we don't need to -V it!
+	dh_makeshlibs -plibmiral4 -- -v$(MIRAL_RELEASE)
 
 override_dh_install:
 # Nothing outside Mir should link to libmirprotobuf directly.
@@ -105,5 +105,5 @@ override_dh_shlibdeps:
 	dh_shlibdeps -Xmir-test-data
 
 override_dh_gencontrol:
-	dh_gencontrol -Nlibmiral3 -Nlibmiral-dev
-	dh_gencontrol -plibmiral3 -plibmiral-dev -- -v$(MIRAL_VERSION) -V'libmiral3:Version=$(MIRAL_VERSION)'
+	dh_gencontrol -Nlibmiral4 -Nlibmiral-dev
+	dh_gencontrol -plibmiral4 -plibmiral-dev -- -v$(MIRAL_VERSION) -V'libmiral4:Version=$(MIRAL_VERSION)'
