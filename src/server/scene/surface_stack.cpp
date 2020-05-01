@@ -356,7 +356,7 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> 
 
 void ms::SurfaceStack::raise(Surface const* surface)
 {
-    bool surfaces_reordered{false};
+    SurfaceSet affected_surfaces;
 
     {
         RecursiveWriteLock ul(guard);
@@ -375,16 +375,21 @@ void ms::SurfaceStack::raise(Surface const* surface)
                 std::shared_ptr<Surface> surface_shared = *p;
                 layer.erase(p);
                 insert_surface_at_top_of_depth_layer(surface_shared);
-                surfaces_reordered = true;
+                affected_surfaces.insert(surface_shared);
                 break;
             }
         }
     }
 
-    if (!surfaces_reordered)
+    if (affected_surfaces.empty())
+    {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
+    else
+    {
+        observers.surfaces_reordered(affected_surfaces);
+    }
 
-    observers.surfaces_reordered();
 }
 
 void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
@@ -424,7 +429,9 @@ void ms::SurfaceStack::raise(SurfaceSet const& ss)
     }
 
     if (surfaces_reordered)
-        observers.surfaces_reordered();
+    {
+        observers.surfaces_reordered(ss);
+    }
 }
 
 void ms::SurfaceStack::create_rendering_tracker_for(std::shared_ptr<Surface> const& surface)
@@ -490,10 +497,10 @@ void ms::Observers::surface_removed(std::shared_ptr<Surface> const& surface)
         { observer->surface_removed(surface); });
 }
 
-void ms::Observers::surfaces_reordered()
+void ms::Observers::surfaces_reordered(SurfaceSet const& affected_surfaces)
 {
     for_each([&](std::shared_ptr<Observer> const& observer)
-        { observer->surfaces_reordered(); });
+        { observer->surfaces_reordered(affected_surfaces); });
 }
 
 void ms::Observers::scene_changed()

@@ -20,22 +20,32 @@
 #define MIR_SCENE_OBSERVER_H_
 
 #include <memory>
+#include <set>
 
 namespace mir
 {
 namespace scene
 {
 class Surface;
+using SurfaceSet = std::set<std::weak_ptr<Surface>, std::owner_less<std::weak_ptr<Surface>>>;
 
 /// An observer for top level notifications of scene changes. In order
 /// to receive more granular change notifications a user may install
-/// mir::scene::SurfaceObserver in surface_added.
+/// mir::scene::SurfaceObserver in surface_added() and surface_exists().
 class Observer
 {
 public:
+    /// A new surface has been added to the scene
+    /// Not called for existing surfaces, see surface_exists()
     virtual void surface_added(std::shared_ptr<Surface> const& surface) = 0;
+
+    /// The surface has been removed from the scene
     virtual void surface_removed(std::shared_ptr<Surface> const& surface) = 0;
-    virtual void surfaces_reordered() = 0;
+
+    /// The stacking order of surfaces has changed
+    /// Affected surfaces may or may not have changed order relative to each other, and they may be at any position
+    /// Non-affected surfaces will not have changed order relative to each other
+    virtual void surfaces_reordered(SurfaceSet const& affected_surfaces) = 0;
 
     /// Used to indicate the scene has changed in some way beyond the present surfaces
     /// and will require full recomposition.

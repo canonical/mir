@@ -82,7 +82,7 @@ struct MockSceneObserver : public ms::Observer
 {
     MOCK_METHOD1(surface_added, void(std::shared_ptr<ms::Surface> const&));
     MOCK_METHOD1(surface_removed, void(std::shared_ptr<ms::Surface> const&));
-    MOCK_METHOD0(surfaces_reordered, void());
+    MOCK_METHOD1(surfaces_reordered, void(ms::SurfaceSet const&));
     MOCK_METHOD0(scene_changed, void());
 
     MOCK_METHOD1(surface_exists, void(std::shared_ptr<ms::Surface> const&));
@@ -367,7 +367,6 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_input_monitor_scene)
 
     stack.add_observer(mt::fake_shared(observer));
 
-
     Sequence seq;
     EXPECT_CALL(observer, surface_added(SurfaceWithInputReceptionMode(mi::InputReceptionMode::receives_all_input)))
         .InSequence(seq);
@@ -590,7 +589,10 @@ TEST_F(SurfaceStack, surfaces_reordered)
     EXPECT_CALL(observer, surface_added(_)).Times(AnyNumber());
     EXPECT_CALL(observer, surface_removed(_)).Times(AnyNumber());
 
-    EXPECT_CALL(observer, surfaces_reordered()).Times(1);
+    EXPECT_CALL(
+        observer,
+        surfaces_reordered(UnorderedElementsAre(LockedEq(stub_surface1))))
+        .Times(1);
 
     stack.add_observer(mt::fake_shared(observer));
 
@@ -1012,7 +1014,10 @@ TEST_F(SurfaceStack, raise_surfaces_to_top)
     NiceMock<MockSceneObserver> observer;
     stack.add_observer(mt::fake_shared(observer));
 
-    EXPECT_CALL(observer, surfaces_reordered()).Times(1);
+    EXPECT_CALL(
+        observer,
+        surfaces_reordered(UnorderedElementsAre(LockedEq(stub_surface1), LockedEq(stub_surface3))))
+        .Times(1);
 
     stack.raise({stub_surface1, stub_surface3});
     EXPECT_THAT(
@@ -1023,7 +1028,10 @@ TEST_F(SurfaceStack, raise_surfaces_to_top)
             SceneElementForStream(stub_buffer_stream3)));
 
     Mock::VerifyAndClearExpectations(&observer);
-    EXPECT_CALL(observer, surfaces_reordered()).Times(1);
+    EXPECT_CALL(
+        observer,
+        surfaces_reordered(UnorderedElementsAre(LockedEq(stub_surface2), LockedEq(stub_surface3))))
+        .Times(1);
 
     stack.raise({stub_surface2, stub_surface3});
     EXPECT_THAT(
@@ -1034,7 +1042,7 @@ TEST_F(SurfaceStack, raise_surfaces_to_top)
             SceneElementForStream(stub_buffer_stream3)));
 
     Mock::VerifyAndClearExpectations(&observer);
-    EXPECT_CALL(observer, surfaces_reordered()).Times(0);
+    EXPECT_CALL(observer, surfaces_reordered(_)).Times(0);
 
     stack.raise({stub_surface2, stub_surface1, stub_surface3});
     EXPECT_THAT(
@@ -1073,7 +1081,7 @@ TEST_F(SurfaceStack, raise_does_not_reorder_surfaces_when_depth_layers_are_diffe
     NiceMock<MockSceneObserver> observer;
     stack.add_observer(mt::fake_shared(observer));
 
-    EXPECT_CALL(observer, surfaces_reordered()).Times(0);
+    EXPECT_CALL(observer, surfaces_reordered(_)).Times(0);
 
     stack.raise({stub_surface1, stub_surface3});
     EXPECT_THAT(
@@ -1089,7 +1097,7 @@ TEST_F(SurfaceStack, changing_depth_layer_causes_reorder)
     NiceMock<MockSceneObserver> observer;
     stack.add_observer(mt::fake_shared(observer));
 
-    EXPECT_CALL(observer, surfaces_reordered()).Times(0);
+    EXPECT_CALL(observer, surfaces_reordered(_)).Times(0);
 
     stack.add_surface(stub_surface1, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.input_mode);
@@ -1101,7 +1109,10 @@ TEST_F(SurfaceStack, changing_depth_layer_causes_reorder)
             SceneElementForStream(stub_buffer_stream2)));
 
     Mock::VerifyAndClearExpectations(&observer);
-    EXPECT_CALL(observer, surfaces_reordered()).Times(1);
+    EXPECT_CALL(
+        observer,
+        surfaces_reordered(UnorderedElementsAre(LockedEq(stub_surface1))))
+        .Times(1);
 
     stub_surface1->set_depth_layer(mir_depth_layer_above);
 
@@ -1152,7 +1163,10 @@ TEST_F(SurfaceStack, raising_surface_set_respects_depth_layers)
     NiceMock<MockSceneObserver> observer;
     stack.add_observer(mt::fake_shared(observer));
 
-    EXPECT_CALL(observer, surfaces_reordered()).Times(1);
+    EXPECT_CALL(
+        observer,
+        surfaces_reordered(UnorderedElementsAre(LockedEq(stub_surface1), LockedEq(stub_surface2))))
+        .Times(1);
 
     stack.raise({stub_surface1, stub_surface2});
 
