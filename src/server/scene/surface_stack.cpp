@@ -461,7 +461,7 @@ void ms::SurfaceStack::insert_surface_at_top_of_depth_layer(std::shared_ptr<Surf
 
 void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observer)
 {
-    observers.add(observer);
+    observers.register_interest(observer);
 
     // Notify observer of existing surfaces
     RecursiveReadLock lk(guard);
@@ -479,10 +479,10 @@ void ms::SurfaceStack::remove_observer(std::weak_ptr<ms::Observer> const& observ
     auto o = observer.lock();
     if (!o)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid observer (destroyed)"));
-    
+
     o->end_observation();
-    
-    observers.remove(o);
+
+    observers.unregister_interest(*o);
 }
 
 auto ms::SurfaceStack::stacking_order_of(SurfaceSet const& surfaces) const -> SurfaceList
@@ -503,38 +503,37 @@ auto ms::SurfaceStack::stacking_order_of(SurfaceSet const& surfaces) const -> Su
     return result;
 }
 
+ms::Observers::Observers()
+    : ObserverMultiplexer{default_executor}
+{
+}
+
 void ms::Observers::surface_added(std::shared_ptr<Surface> const& surface)
 {
-    for_each([&](std::shared_ptr<Observer> const& observer)
-        { observer->surface_added(surface); });
+    for_each_observer(&Observer::surface_added, surface);
 }
 
 void ms::Observers::surface_removed(std::shared_ptr<Surface> const& surface)
 {
-    for_each([&](std::shared_ptr<Observer> const& observer)
-        { observer->surface_removed(surface); });
+    for_each_observer(&Observer::surface_removed, surface);
 }
 
 void ms::Observers::surfaces_reordered(SurfaceSet const& affected_surfaces)
 {
-    for_each([&](std::shared_ptr<Observer> const& observer)
-        { observer->surfaces_reordered(affected_surfaces); });
+    for_each_observer(&Observer::surfaces_reordered, affected_surfaces);
 }
 
 void ms::Observers::scene_changed()
 {
-   for_each([&](std::shared_ptr<Observer> const& observer)
-        { observer->scene_changed(); });
+    for_each_observer(&Observer::scene_changed);
 }
 
 void ms::Observers::surface_exists(std::shared_ptr<Surface> const& surface)
 {
-    for_each([&](std::shared_ptr<Observer> const& observer)
-        { observer->surface_exists(surface); });
+    for_each_observer(&Observer::surface_exists, surface);
 }
 
 void ms::Observers::end_observation()
 {
-    for_each([&](std::shared_ptr<Observer> const& observer)
-        { observer->end_observation(); });
+    for_each_observer(&Observer::end_observation);
 }

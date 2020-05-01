@@ -27,7 +27,7 @@
 #include "mir/input/scene.h"
 #include "mir/recursive_read_write_mutex.h"
 
-#include "mir/basic_observers.h"
+#include "mir/observer_multiplexer.h"
 #include "mir/scene/surface_observer.h"
 
 #include <atomic>
@@ -51,19 +51,28 @@ class BasicSurface;
 class SceneReport;
 class RenderingTracker;
 
-class Observers : public Observer, BasicObservers<Observer>
+class Observers : public ObserverMultiplexer<Observer>
 {
 public:
-   // ms::Observer
-   void surface_added(std::shared_ptr<Surface> const& surface) override;
-   void surface_removed(std::shared_ptr<Surface> const& surface) override;
-   void surfaces_reordered(SurfaceSet const& affected_surfaces) override;
-   void scene_changed() override;
-   void surface_exists(std::shared_ptr<Surface> const& surface) override;
-   void end_observation() override;
+    Observers();
 
-   using BasicObservers<Observer>::add;
-   using BasicObservers<Observer>::remove;
+    // ms::Observer
+    void surface_added(std::shared_ptr<Surface> const& surface) override;
+    void surface_removed(std::shared_ptr<Surface> const& surface) override;
+    void surfaces_reordered(SurfaceSet const& affected_surfaces) override;
+    void scene_changed() override;
+    void surface_exists(std::shared_ptr<Surface> const& surface) override;
+    void end_observation() override;
+
+    // TODO: use the main loop as the default executor?
+    class ImmediateExecutor : public mir::Executor
+    {
+    public:
+        void spawn(std::function<void()>&& work)
+        {
+            work();
+        }
+    } default_executor;
 };
 
 class SurfaceStack :
