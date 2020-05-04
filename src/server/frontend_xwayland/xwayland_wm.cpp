@@ -104,10 +104,11 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       wayland_client{wayland_client},
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
       cursors{std::make_unique<XWaylandCursors>(connection)},
-      wm_window{create_wm_window(*connection)}
+      wm_window{create_wm_window(*connection)},
+      wm_dispatcher{std::make_shared<mir::dispatch::ReadableFd>(
+          mir::Fd{mir::IntOwnedFd{fd}},
+          [this]() { handle_events(); })}
 {
-    wm_dispatcher =
-        std::make_shared<mir::dispatch::ReadableFd>(mir::Fd{mir::IntOwnedFd{fd}}, [this]() { handle_events(); });
     dispatcher->add_watch(wm_dispatcher);
 
     event_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(

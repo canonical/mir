@@ -90,10 +90,10 @@ private:
     std::shared_ptr<XWaylandWMShell> const wm_shell;
     std::unique_ptr<XWaylandCursors> const cursors;
     xcb_window_t const wm_window;
+    std::shared_ptr<dispatch::ReadableFd> const wm_dispatcher;
 
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
     std::experimental::optional<xcb_window_t> focused_window;
-    std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;
     std::unique_ptr<dispatch::ThreadedDispatcher> event_thread;
 };
 } /* frontend */
