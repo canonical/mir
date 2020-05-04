@@ -62,7 +62,6 @@ public:
 
 private:
     void create_window(xcb_window_t id);
-    void create_wm_cursor();
 
     // Event handeling
     void handle_events();
@@ -82,8 +81,6 @@ private:
     void handle_destroy_notify(xcb_destroy_notify_event_t *event);
     void handle_focus_in(xcb_focus_in_event_t* event);
 
-    std::mutex mutex;
-
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     wl_client* const wayland_client;
@@ -93,6 +90,7 @@ private:
     std::shared_ptr<dispatch::ReadableFd> const wm_dispatcher;
     std::unique_ptr<dispatch::ThreadedDispatcher> const event_thread;
 
+    std::mutex mutex;
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
     std::experimental::optional<xcb_window_t> focused_window;
 };
