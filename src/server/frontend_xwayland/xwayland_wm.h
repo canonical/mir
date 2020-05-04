@@ -66,7 +66,6 @@ private:
 
     void create_window(xcb_window_t id);
     void create_wm_cursor();
-    void wm_get_resources();
 
     // Event handeling
     void handle_events();
@@ -100,7 +99,6 @@ private:
     std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;
     xcb_window_t xcb_selection_window;
     xcb_selection_request_event_t xcb_selection_request;
-    const xcb_query_extension_reply_t *xfixes;
     std::unique_ptr<dispatch::ThreadedDispatcher> event_thread;
 };
 } /* frontend */

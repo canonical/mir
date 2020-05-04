@@ -38,6 +38,34 @@
 
 namespace mf = mir::frontend;
 
+namespace
+{
+void check_xfixes(mf::XCBConnection const& connection)
+{
+    xcb_xfixes_query_version_cookie_t xfixes_cookie;
+    xcb_xfixes_query_version_reply_t *xfixes_reply;
+
+    xcb_prefetch_extension_data(connection, &xcb_xfixes_id);
+    xcb_prefetch_extension_data(connection, &xcb_composite_id);
+
+    auto const xfixes = xcb_get_extension_data(connection, &xcb_xfixes_id);
+    if (!xfixes || !xfixes->present)
+    {
+        mir::log_warning("xfixes not available");
+    }
+
+    xfixes_cookie = xcb_xfixes_query_version(connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
+    xfixes_reply = xcb_xfixes_query_version_reply(connection, xfixes_cookie, NULL);
+
+    if (mir::verbose_xwayland_logging_enabled())
+    {
+        mir::log_debug("xfixes version: %d.%d", xfixes_reply->major_version, xfixes_reply->minor_version);
+    }
+
+    free(xfixes_reply);
+}
+}
+
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
     : connection{std::make_shared<XCBConnection>(fd)},
       wayland_connector(wayland_connector),
@@ -53,7 +81,7 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
     event_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
         "Mir/X11 WM Reader", dispatcher, []() { mir::terminate_with_current_exception(); });
 
-    wm_get_resources();
+    check_xfixes(*connection);
 
     uint32_t const attrib_values[]{
         XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_PROPERTY_CHANGE};
@@ -692,25 +720,4 @@ void mf::XWaylandWM::handle_focus_in(xcb_focus_in_event_t* event)
         // We might want to keep X11 focus and Mir focus in sync
         // (either by requesting a focus change in Mir, reverting this X11 focus change or both)
     }
-}
-
-void mf::XWaylandWM::wm_get_resources()
-{
-    xcb_xfixes_query_version_cookie_t xfixes_cookie;
-    xcb_xfixes_query_version_reply_t *xfixes_reply;
-
-    xcb_prefetch_extension_data(*connection, &xcb_xfixes_id);
-    xcb_prefetch_extension_data(*connection, &xcb_composite_id);
-
-    xfixes = xcb_get_extension_data(*connection, &xcb_xfixes_id);
-    if (!xfixes || !xfixes->present)
-        log_warning("xfixes not available");
-
-    xfixes_cookie = xcb_xfixes_query_version(*connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
-    xfixes_reply = xcb_xfixes_query_version_reply(*connection, xfixes_cookie, NULL);
-
-    if (verbose_xwayland_logging_enabled())
-        log_debug("xfixes version: %d.%d", xfixes_reply->major_version, xfixes_reply->minor_version);
-
-    free(xfixes_reply);
 }
