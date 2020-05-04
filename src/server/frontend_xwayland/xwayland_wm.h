@@ -97,7 +97,6 @@ private:
     std::experimental::optional<xcb_window_t> focused_window;
     std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;
     xcb_window_t xcb_selection_window;
-    xcb_selection_request_event_t xcb_selection_request;
     std::unique_ptr<dispatch::ThreadedDispatcher> event_thread;
 };
 } /* frontend */

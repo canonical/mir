@@ -174,8 +174,6 @@ mf::XWaylandWM::~XWaylandWM()
 
 void mf::XWaylandWM::wm_selector()
 {
-    xcb_selection_request.requestor = XCB_NONE;
-
     uint32_t const values[]{
         XCB_EVENT_MASK_PROPERTY_CHANGE};
 
