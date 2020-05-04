@@ -66,7 +66,7 @@ before_install:
 - popd
 
 script:
-- ${SPREAD_PATH}/spread -v ${TASK}
+- travis_wait 30 ${SPREAD_PATH}/spread -v ${TASK}
 
 jobs:
   include:
