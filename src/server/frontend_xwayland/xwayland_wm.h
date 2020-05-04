@@ -61,7 +61,6 @@ public:
     void run_on_wayland_thread(std::function<void()>&& work);
 
 private:
-    void create_wm_window();
     void wm_selector();
 
     void create_window(xcb_window_t id);
@@ -92,8 +91,8 @@ private:
     wl_client* const wayland_client;
     std::shared_ptr<XWaylandWMShell> const wm_shell;
     std::unique_ptr<XWaylandCursors> const cursors;
+    xcb_window_t const wm_window;
 
-    xcb_window_t wm_window;
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
     std::experimental::optional<xcb_window_t> focused_window;
     std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;

@@ -40,6 +40,37 @@ namespace mf = mir::frontend;
 
 namespace
 {
+auto create_wm_window(mf::XCBConnection const& connection) -> xcb_window_t
+{
+    std::string const wm_name{"Mir XWM"};
+
+    xcb_window_t const wm_window = xcb_generate_id(connection);
+    xcb_create_window(
+        connection,
+        XCB_COPY_FROM_PARENT,
+        wm_window,
+        connection.root_window(),
+        0, 0, 10, 10, 0,
+        XCB_WINDOW_CLASS_INPUT_OUTPUT,
+        connection.screen()->root_visual,
+        0, NULL);
+
+    connection.set_property<mf::XCBType::WINDOW>(wm_window, connection.net_supporting_wm_check, wm_window);
+    connection.set_property<mf::XCBType::UTF8_STRING>(wm_window, connection.net_wm_name, wm_name);
+
+    connection.set_property<mf::XCBType::WINDOW>(
+        connection.root_window(),
+        connection.net_supporting_wm_check,
+        wm_window);
+
+    /* Claim the WM_S0 selection even though we don't support
+     * the --replace functionality. */
+    xcb_set_selection_owner(connection, wm_window, connection.wm_s0, XCB_TIME_CURRENT_TIME);
+    xcb_set_selection_owner(connection, wm_window, connection.net_wm_cm_s0, XCB_TIME_CURRENT_TIME);
+
+    return wm_window;
+}
+
 void check_xfixes(mf::XCBConnection const& connection)
 {
     xcb_xfixes_query_version_cookie_t xfixes_cookie;
@@ -72,7 +103,8 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
       wayland_client{wayland_client},
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
-      cursors{std::make_unique<XWaylandCursors>(connection)}
+      cursors{std::make_unique<XWaylandCursors>(connection)},
+      wm_window{create_wm_window(*connection)}
 {
     wm_dispatcher =
         std::make_shared<mir::dispatch::ReadableFd>(mir::Fd{mir::IntOwnedFd{fd}}, [this]() { handle_events(); });
@@ -106,11 +138,6 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
         static_cast<xcb_window_t>(XCB_WINDOW_NONE));
     wm_selector();
     cursors->apply_default_to(connection->root_window());
-
-    connection->flush();
-
-    create_wm_window();
-    connection->flush();
 }
 
 mf::XWaylandWM::~XWaylandWM()
@@ -175,36 +202,6 @@ void mf::XWaylandWM::wm_selector()
         XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_CLIENT_CLOSE;
 
     xcb_xfixes_select_selection_input(*connection, xcb_selection_window, connection->clipboard, mask);
-}
-
-void mf::XWaylandWM::create_wm_window()
-{
-    std::string const wm_name{"Mir XWM"};
-
-    wm_window = xcb_generate_id(*connection);
-    xcb_create_window(
-        *connection,
-        XCB_COPY_FROM_PARENT,
-        wm_window,
-        connection->root_window(),
-        0, 0, 10, 10, 0,
-        XCB_WINDOW_CLASS_INPUT_OUTPUT,
-        connection->screen()->root_visual,
-        0, NULL);
-
-    connection->set_property<XCBType::WINDOW>(wm_window, connection->net_supporting_wm_check, wm_window);
-    connection->set_property<XCBType::UTF8_STRING>(wm_window, connection->net_wm_name, wm_name);
-
-    connection->set_property<XCBType::WINDOW>(
-        connection->root_window(),
-        connection->net_supporting_wm_check,
-        wm_window);
-
-    /* Claim the WM_S0 selection even though we don't support
-     * the --replace functionality. */
-    xcb_set_selection_owner(*connection, wm_window, connection->wm_s0, XCB_TIME_CURRENT_TIME);
-
-    xcb_set_selection_owner(*connection, wm_window, connection->net_wm_cm_s0, XCB_TIME_CURRENT_TIME);
 }
 
 auto mf::XWaylandWM::get_wm_surface(
