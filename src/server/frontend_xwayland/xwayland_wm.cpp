@@ -107,12 +107,11 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       wm_window{create_wm_window(*connection)},
       wm_dispatcher{std::make_shared<mir::dispatch::ReadableFd>(
           mir::Fd{mir::IntOwnedFd{fd}},
-          [this]() { handle_events(); })}
+          [this]() { handle_events(); })},
+      event_thread{std::make_unique<mir::dispatch::ThreadedDispatcher>(
+          "Mir/X11 WM Reader", dispatcher, []() { mir::terminate_with_current_exception(); })}
 {
     dispatcher->add_watch(wm_dispatcher);
-
-    event_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
-        "Mir/X11 WM Reader", dispatcher, []() { mir::terminate_with_current_exception(); });
 
     check_xfixes(*connection);
 
@@ -166,11 +165,7 @@ mf::XWaylandWM::~XWaylandWM()
     if (verbose_xwayland_logging_enabled())
         log_debug("...done closing surfaces");
 
-    if (event_thread)
-    {
-        dispatcher->remove_watch(wm_dispatcher);
-        event_thread.reset();
-    }
+    dispatcher->remove_watch(wm_dispatcher);
 }
 
 auto mf::XWaylandWM::get_wm_surface(
