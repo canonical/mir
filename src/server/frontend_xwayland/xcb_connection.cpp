@@ -69,6 +69,21 @@ auto number_to_readable_name(uint32_t number) -> std::string
     ss << ends[number % length_of(ends)];
     return ss.str();
 }
+
+auto connect_to_fd(int fd) -> xcb_connection_t*
+{
+    xcb_connection_t* connection = xcb_connect_to_fd(fd, nullptr);
+    if (xcb_connection_has_error(connection))
+    {
+        xcb_disconnect(connection);
+        close(fd);
+        BOOST_THROW_EXCEPTION(std::runtime_error("xcb_connect_to_fd() failed"));
+    }
+    else
+    {
+        return connection;
+    }
+}
 }
 
 mf::XCBConnection::Atom::Atom(std::string const& name, XCBConnection* connection)
@@ -102,7 +117,7 @@ mf::XCBConnection::Atom::operator xcb_atom_t() const
 }
 
 mf::XCBConnection::XCBConnection(int fd)
-    : xcb_connection{xcb_connect_to_fd(fd, nullptr)},
+    : xcb_connection{connect_to_fd(fd)},
       xcb_screen{xcb_setup_roots_iterator(xcb_get_setup(xcb_connection)).data},
       atom_name_cache{{XCB_ATOM_NONE, "None/Any"}},
       wm_protocols{"WM_PROTOCOLS", this},

@@ -300,24 +300,33 @@ void mf::XWaylandServer::connect_wm_to_xwayland(
         return;
     }
 
-    XWaylandWM wm{wayland_connector, client, wm_server_fd};
-    mir::log_info("XServer is running");
-    spawn_thread_xserver_status = RUNNING;
-    auto const pid = spawn_thread_pid; // For clarity only as this is only written on this thread
+    try
+    {
+        XWaylandWM wm{wayland_connector, client, wm_server_fd};
+        mir::log_info("XServer is running");
+        spawn_thread_xserver_status = RUNNING;
+        auto const pid = spawn_thread_pid; // For clarity only as this is only written on this thread
 
-    // Unlock access to spawn_thread_* while Xwayland is running
-    spawn_thread_lock.unlock();
-    int status;
-    waitpid(pid, &status, 0);  // Blocking
-    spawn_thread_lock.lock();
+        // Unlock access to spawn_thread_* while Xwayland is running
+        spawn_thread_lock.unlock();
+        int status;
+        waitpid(pid, &status, 0);  // Blocking
+        spawn_thread_lock.lock();
 
-    if (WIFEXITED(status) || spawn_thread_terminate) {
-        mir::log_info("Xserver stopped");
-        spawn_thread_xserver_status = STOPPED;
-    } else {
-        // Failed, crash or killed
-        mir::log_info("Xserver crashed or got killed");
-        spawn_thread_xserver_status = FAILED;
+        if (WIFEXITED(status) || spawn_thread_terminate) {
+            mir::log_info("Xserver stopped");
+            spawn_thread_xserver_status = STOPPED;
+        } else {
+            // Failed, crash or killed
+            mir::log_info("Xserver crashed or got killed");
+            spawn_thread_xserver_status = FAILED;
+        }
+    }
+    catch (std::exception const& e)
+    {
+        mir::log_error("X11 failed: %s", e.what());
+        // don't touch spawn_thread_xserver_status
+        // it should be left in a STARTING state to the caller knows we didn't successfully start'
     }
 }
 

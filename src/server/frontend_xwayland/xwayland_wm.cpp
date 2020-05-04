@@ -83,13 +83,6 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       wayland_client{wayland_client},
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))}
 {
-    if (xcb_connection_has_error(*connection))
-    {
-        mir::log_error("XWAYLAND: xcb_connect_to_fd failed");
-        close(wm_fd);
-        return;
-    }
-
     wm_dispatcher =
         std::make_shared<mir::dispatch::ReadableFd>(mir::Fd{mir::IntOwnedFd{wm_fd}}, [this]() { handle_events(); });
     dispatcher->add_watch(wm_dispatcher);
