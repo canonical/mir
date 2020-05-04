@@ -13,6 +13,7 @@ execute: |
     apt-get install \
       --yes \
       --no-install-recommends \
+      autopkgtest \
       debhelper \
       dh-python \
       sbuild \
