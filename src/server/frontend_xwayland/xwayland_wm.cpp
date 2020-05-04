@@ -136,7 +136,7 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
         connection->root_window(),
         connection->net_active_window,
         static_cast<xcb_window_t>(XCB_WINDOW_NONE));
-    wm_selector();
+
     cursors->apply_default_to(connection->root_window());
 }
 
@@ -170,36 +170,6 @@ mf::XWaylandWM::~XWaylandWM()
         dispatcher->remove_watch(wm_dispatcher);
         event_thread.reset();
     }
-}
-
-void mf::XWaylandWM::wm_selector()
-{
-    uint32_t const values[]{
-        XCB_EVENT_MASK_PROPERTY_CHANGE};
-
-    xcb_selection_window = xcb_generate_id(*connection);
-
-    xcb_create_window(
-        *connection,
-        XCB_COPY_FROM_PARENT,
-        xcb_selection_window,
-        connection->root_window(),
-        0, 0, // position
-        10, 10, // size
-        0, // border width
-        XCB_WINDOW_CLASS_INPUT_OUTPUT,
-        connection->screen()->root_visual,
-        XCB_CW_EVENT_MASK,
-        values);
-
-    xcb_set_selection_owner(*connection, xcb_selection_window, connection->clipboard_manager, XCB_TIME_CURRENT_TIME);
-
-    uint32_t const mask =
-        XCB_XFIXES_SELECTION_EVENT_MASK_SET_SELECTION_OWNER |
-        XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_WINDOW_DESTROY |
-        XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_CLIENT_CLOSE;
-
-    xcb_xfixes_select_selection_input(*connection, xcb_selection_window, connection->clipboard, mask);
 }
 
 auto mf::XWaylandWM::get_wm_surface(

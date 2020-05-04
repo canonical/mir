@@ -61,8 +61,6 @@ public:
     void run_on_wayland_thread(std::function<void()>&& work);
 
 private:
-    void wm_selector();
-
     void create_window(xcb_window_t id);
     void create_wm_cursor();
 
@@ -96,7 +94,6 @@ private:
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
     std::experimental::optional<xcb_window_t> focused_window;
     std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;
-    xcb_window_t xcb_selection_window;
     std::unique_ptr<dispatch::ThreadedDispatcher> event_thread;
 };
 } /* frontend */
