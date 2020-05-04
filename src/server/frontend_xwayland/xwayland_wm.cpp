@@ -98,7 +98,6 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
         "Mir/X11 WM Reader", dispatcher, []() { mir::terminate_with_current_exception(); });
 
     wm_get_resources();
-    setup_visual_and_colormap();
 
     uint32_t const attrib_values[]{
         XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_PROPERTY_CHANGE};
@@ -894,32 +893,4 @@ void mf::XWaylandWM::wm_get_resources()
     }
 
     free(formats_reply);
-}
-
-void mf::XWaylandWM::setup_visual_and_colormap()
-{
-    xcb_depth_iterator_t depthIterator = xcb_screen_allowed_depths_iterator(connection->screen());
-    xcb_visualtype_t *visualType = nullptr;
-    xcb_visualtype_iterator_t visualTypeIterator;
-    while (depthIterator.rem > 0)
-    {
-        if (depthIterator.data->depth == 32)
-        {
-            visualTypeIterator = xcb_depth_visuals_iterator(depthIterator.data);
-            visualType = visualTypeIterator.data;
-            break;
-        }
-
-        xcb_depth_next(&depthIterator);
-    }
-
-    if (!visualType)
-    {
-        mir::log_warning("No 32-bit visualtype");
-        return;
-    }
-
-    xcb_visual_id = visualType->visual_id;
-    xcb_colormap = xcb_generate_id(*connection);
-    xcb_create_colormap(*connection, XCB_COLORMAP_ALLOC_NONE, xcb_colormap, connection->root_window(), xcb_visual_id);
 }
