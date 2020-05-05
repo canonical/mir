@@ -27,6 +27,7 @@
 
 #include <functional>
 #include <chrono>
+#include <set>
 
 struct MirInputEvent;
 typedef unsigned int MirPointerButtons;
@@ -87,6 +88,7 @@ private:
     void release() override;
     ///@}
 
+    std::set<uint32_t> pressed_buttons;
     std::unique_ptr<Cursor> cursor;
 };
 

@@ -21,6 +21,7 @@
 #include "wayland_utils.h"
 #include "wl_surface.h"
 
+#include "mir/log.h"
 #include "mir/executor.h"
 #include "mir/frontend/wayland.h"
 #include "mir/scene/surface.h"
@@ -138,6 +139,29 @@ void mf::WlPointer::leave()
 
 void mf::WlPointer::button(std::chrono::milliseconds const& ms, uint32_t button, bool pressed)
 {
+    if (pressed)
+    {
+        if (!pressed_buttons.insert(button).second)
+        {
+            log_warning(
+                "Got pressed event for wl_pointer@%d button %d when already down",
+                wl_resource_get_id(resource),
+                button);
+            return;
+        }
+    }
+    else
+    {
+        if (!pressed_buttons.erase(button))
+        {
+            log_warning(
+                "Got unpressed event for wl_pointer@%d button %d when already up",
+                wl_resource_get_id(resource),
+                button);
+            return;
+        }
+    }
+
     auto const serial = wl_display_next_serial(display);
     auto const state = pressed ? ButtonState::pressed : ButtonState::released;
 
