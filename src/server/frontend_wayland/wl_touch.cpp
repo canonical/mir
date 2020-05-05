@@ -78,7 +78,7 @@ void mf::WlTouch::motion(
 
     if (final_surface == focused_surface_for_ids.end())
     {
-        log_warning("WlTouch::motion() called with invalid ID");
+        log_warning("WlTouch::motion() called with invalid ID %d", touch_id);
         return;
     }
 
@@ -97,13 +97,18 @@ void mf::WlTouch::up(std::chrono::milliseconds const& ms, int32_t touch_id)
 {
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
 
-    focused_surface_for_ids.erase(touch_id);
-
-    send_up_event(
-        serial,
-        ms.count(),
-        touch_id);
-    can_send_frame = true;
+    if (focused_surface_for_ids.erase(touch_id))
+    {
+        send_up_event(
+            serial,
+            ms.count(),
+            touch_id);
+        can_send_frame = true;
+    }
+    else
+    {
+        log_warning("WlTouch::up() called with invalid ID %d", touch_id);
+    }
 }
 
 void mf::WlTouch::frame()
