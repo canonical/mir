@@ -75,6 +75,8 @@ private:
     bool can_send_frame{false};
     std::experimental::optional<WlSurface*> surface_under_cursor;
 
+    void enter_internal(WlSurface* surface, geometry::Point const& position);
+
     /// Wayland request handlers
     ///@{
     void set_cursor(

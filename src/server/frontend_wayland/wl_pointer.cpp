@@ -119,23 +119,8 @@ mf::WlPointer::~WlPointer()
 
 void mf::WlPointer::enter(WlSurface* parent_surface, geom::Point const& position_on_parent)
 {
-    auto const serial = wl_display_next_serial(display);
-    auto const final = parent_surface->transform_point(position_on_parent);
-
-    cursor->apply_to(final.surface);
-    send_enter_event(
-        serial,
-        final.surface->raw_resource(),
-        final.position.x.as_int(),
-        final.position.y.as_int());
-    can_send_frame = true;
-    final.surface->add_destroy_listener(
-        this,
-        [this]()
-        {
-            leave();
-        });
-    surface_under_cursor = final.surface;
+    auto const target = parent_surface->transform_point(position_on_parent);
+    enter_internal(target.surface, target.position);
 }
 
 void mf::WlPointer::leave()
@@ -178,7 +163,7 @@ void mf::WlPointer::motion(
     else
     {
         leave();
-        enter(final.surface, final.position);
+        enter_internal(final.surface, position_on_parent);
     }
 }
 
@@ -208,6 +193,25 @@ void mf::WlPointer::frame()
     if (can_send_frame && version_supports_frame())
         send_frame_event();
     can_send_frame = false;
+}
+
+void mf::WlPointer::enter_internal(WlSurface* surface, geometry::Point const& position)
+{
+    auto const serial = wl_display_next_serial(display);
+    cursor->apply_to(surface);
+    send_enter_event(
+        serial,
+        surface->raw_resource(),
+        position.x.as_int(),
+        position.y.as_int());
+    can_send_frame = true;
+    surface->add_destroy_listener(
+        this,
+        [this]()
+        {
+            leave();
+        });
+    surface_under_cursor = surface;
 }
 
 namespace
