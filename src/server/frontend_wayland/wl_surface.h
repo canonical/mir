@@ -110,13 +110,6 @@ private:
 class WlSurface : public wayland::Surface
 {
 public:
-    struct Position
-    {
-        mir::geometry::Point position;
-        WlSurface* surface;
-        bool is_in_input_region;
-    };
-
     WlSurface(wl_resource* new_resource,
               std::shared_ptr<mir::Executor> const& executor,
               std::shared_ptr<mir::graphics::WaylandAllocator> const& allocator);
@@ -128,7 +121,7 @@ public:
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
     std::experimental::optional<geometry::Size> buffer_size() const { return buffer_size_; }
     bool synchronized() const;
-    Position transform_point(geometry::Point point);
+    auto subsurface_at(geometry::Point point) -> std::experimental::optional<WlSurface*>;
     wl_resource* raw_resource() const { return resource; }
     auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>;
 

@@ -118,10 +118,13 @@ mf::WlPointer::~WlPointer()
     on_destroy(this);
 }
 
-void mf::WlPointer::enter(WlSurface* parent_surface, geom::Point const& position_on_parent)
+void mf::WlPointer::enter(
+    std::chrono::milliseconds const& ms,
+    WlSurface* root_surface,
+    geom::Point const& root_position)
 {
-    auto const target = parent_surface->transform_point(position_on_parent);
-    enter_internal(target.surface, target.position);
+    auto const target_surface = root_surface->subsurface_at(root_position).value_or(root_surface);
+    send_update(ms, target_surface, root_position);
 }
 
 void mf::WlPointer::leave()
@@ -171,24 +174,17 @@ void mf::WlPointer::button(std::chrono::milliseconds const& ms, uint32_t button,
 
 void mf::WlPointer::motion(
     std::chrono::milliseconds const& ms,
-    WlSurface* parent_surface,
-    geometry::Point const& position_on_parent)
+    WlSurface* root_surface,
+    geometry::Point const& root_position)
 {
-    auto final = parent_surface->transform_point(position_on_parent);
+    WlSurface* target_surface = surface_under_cursor.value_or(nullptr);
+    if (!target_surface || pressed_buttons.empty())
+    {
+        // if pressed_buttons is empty there is no grab, so choose whatever surface we are over
+        target_surface = root_surface->subsurface_at(root_position).value_or(root_surface);
+    }
 
-    if (surface_under_cursor && final.surface == surface_under_cursor.value())
-    {
-        send_motion_event(
-            ms.count(),
-            final.position.x.as_int(),
-            final.position.y.as_int());
-        can_send_frame = true;
-    }
-    else
-    {
-        leave();
-        enter_internal(final.surface, position_on_parent);
-    }
+    send_update(ms, target_surface, root_position);
 }
 
 void mf::WlPointer::axis(std::chrono::milliseconds const& ms, geometry::Displacement const& scroll)
@@ -219,23 +215,41 @@ void mf::WlPointer::frame()
     can_send_frame = false;
 }
 
-void mf::WlPointer::enter_internal(WlSurface* surface, geometry::Point const& position)
+void mf::WlPointer::send_update(
+    std::chrono::milliseconds const& ms,
+    WlSurface* target_surface,
+    geometry::Point const& root_position)
 {
-    auto const serial = wl_display_next_serial(display);
-    cursor->apply_to(surface);
-    send_enter_event(
-        serial,
-        surface->raw_resource(),
-        position.x.as_int(),
-        position.y.as_int());
-    can_send_frame = true;
-    surface->add_destroy_listener(
-        this,
-        [this]()
-        {
-            leave();
-        });
-    surface_under_cursor = surface;
+    auto const position_on_wl_surface = root_position - target_surface->total_offset();
+
+    if (surface_under_cursor && surface_under_cursor.value() == target_surface)
+    {
+        send_motion_event(
+            ms.count(),
+            position_on_wl_surface.x.as_int(),
+            position_on_wl_surface.y.as_int());
+        can_send_frame = true;
+    }
+    else
+    {
+        leave();
+        auto const serial = wl_display_next_serial(display);
+        cursor->apply_to(target_surface);
+        send_enter_event(
+            serial,
+            target_surface->raw_resource(),
+            position_on_wl_surface.x.as_int(),
+            position_on_wl_surface.y.as_int());
+        can_send_frame = true;
+        target_surface->add_destroy_listener(
+            this,
+            [this]()
+            {
+                leave();
+            });
+        surface_under_cursor = target_surface;
+
+    }
 }
 
 namespace

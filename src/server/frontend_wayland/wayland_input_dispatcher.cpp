@@ -139,9 +139,9 @@ void mf::WaylandInputDispatcher::handle_pointer_event(std::chrono::milliseconds 
             geom::Point const position{
                 mir_pointer_event_axis_value(event, mir_pointer_axis_x),
                 mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
-            seat->for_each_listener(client, [wl_surface = wl_surface, &position](WlPointer* pointer)
+            seat->for_each_listener(client, [wl_surface = wl_surface, &position, &ms](WlPointer* pointer)
                 {
-                    pointer->enter(wl_surface, position);
+                    pointer->enter(ms, wl_surface, position);
                     pointer->frame();
                 });
             break;

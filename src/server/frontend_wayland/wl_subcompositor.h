@@ -64,7 +64,7 @@ public:
 
     void parent_has_committed();
 
-    WlSurface::Position transform_point(geometry::Point point);
+    auto subsurface_at(geometry::Point point) -> std::experimental::optional<WlSurface*>;
 
 private:
     void set_position(int32_t x, int32_t y) override;

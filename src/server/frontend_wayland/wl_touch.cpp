@@ -50,46 +50,46 @@ void mf::WlTouch::release()
 void mf::WlTouch::down(
     std::chrono::milliseconds const& ms,
     int32_t touch_id,
-    WlSurface* parent,
-    geometry::Point const& position_on_parent)
+    WlSurface* root_surface,
+    geometry::Point const& root_position)
 {
-    auto const final = parent->transform_point(position_on_parent);
+    auto const target_surface = root_surface->subsurface_at(root_position).value_or(root_surface);
+    auto const position_on_target = root_position - target_surface->total_offset();
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
 
-    focused_surface_for_ids[touch_id] = final.surface;
+    focused_surface_for_ids[touch_id] = target_surface;
 
     send_down_event(
         serial,
         ms.count(),
-        final.surface->raw_resource(),
+        target_surface->raw_resource(),
         touch_id,
-        final.position.x.as_int(),
-        final.position.y.as_int());
+        position_on_target.x.as_int(),
+        position_on_target.y.as_int());
     can_send_frame = true;
 }
 
 void mf::WlTouch::motion(
     std::chrono::milliseconds const& ms,
     int32_t touch_id,
-    WlSurface* /* parent */,
-    geometry::Point const& position_on_parent)
+    WlSurface* /* root_surface */,
+    geometry::Point const& root_position)
 {
-    auto const final_surface = focused_surface_for_ids.find(touch_id);
+    auto const target_surface = focused_surface_for_ids.find(touch_id);
 
-    if (final_surface == focused_surface_for_ids.end())
+    if (target_surface == focused_surface_for_ids.end())
     {
         log_warning("WlTouch::motion() called with invalid ID %d", touch_id);
         return;
     }
 
-    // TODO: do this better, using parent
-    auto const position_on_final = position_on_parent - final_surface->second->total_offset();
+    auto const position_on_target = root_position - target_surface->second->total_offset();
 
     send_motion_event(
         ms.count(),
         touch_id,
-        position_on_final.x.as_int(),
-        position_on_final.y.as_int());
+        position_on_target.x.as_int(),
+        position_on_target.y.as_int());
     can_send_frame = true;
 }
 

@@ -119,28 +119,27 @@ bool mf::WlSurface::synchronized() const
     return role->synchronized();
 }
 
-mf::WlSurface::Position mf::WlSurface::transform_point(geom::Point point)
+auto mf::WlSurface::subsurface_at(geom::Point point) -> std::experimental::optional<WlSurface*>
 {
-    point = point - offset_;
     if (!buffer_size_)
     {
         // surface not mapped
-        return {point, this, false};
+        return std::experimental::nullopt;
     }
+    point = point - offset_;
     // loop backwards so the first subsurface we find that accepts the input is the topmost one
     for (auto child_it = children.rbegin(); child_it != children.rend(); ++child_it)
     {
-        auto result = (*child_it)->transform_point(point);
-        if (result.is_in_input_region)
+        if (auto result = (*child_it)->subsurface_at(point))
             return result;
     }
     geom::Rectangle surface_rect = {geom::Point{}, buffer_size_.value_or(geom::Size{})};
     for (auto& rect : input_shape.value_or(std::vector<geom::Rectangle>{surface_rect}))
     {
         if (rect.intersection_with(surface_rect).contains(point))
-            return {point, this, true};
+            return this;
     }
-    return {point, this, false};
+    return std::experimental::nullopt;
 }
 
 auto mf::WlSurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>

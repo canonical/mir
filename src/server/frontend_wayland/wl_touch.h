@@ -47,13 +47,13 @@ public:
     void down(
         std::chrono::milliseconds const& ms,
         int32_t touch_id,
-        WlSurface* parent,
-        geometry::Point const& position_on_parent);
+        WlSurface* root_surface,
+        geometry::Point const& root_position);
     void motion(
         std::chrono::milliseconds const& ms,
         int32_t touch_id,
-        WlSurface* parent,
-        geometry::Point const& position_on_parent);
+        WlSurface* root_surface,
+        geometry::Point const& root_position);
     void up(std::chrono::milliseconds const& ms, int32_t touch_id);
     void frame();
 

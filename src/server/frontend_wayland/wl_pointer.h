@@ -57,13 +57,16 @@ public:
 
     /// Handles finding the correct subsurface and position on that subsurface if needed
     /// Giving it an already transformed surface and position is also fine
-    void enter(WlSurface* parent_surface, geometry::Point const& position_on_parent);
+    void enter(
+        std::chrono::milliseconds const& ms,
+        WlSurface* root_surface,
+        geometry::Point const& root_position);
     void leave();
     void button(std::chrono::milliseconds const& ms, uint32_t button, bool pressed);
     void motion(
         std::chrono::milliseconds const& ms,
-        WlSurface* parent_surface,
-        geometry::Point const& position_on_parent);
+        WlSurface* root_surface,
+        geometry::Point const& root_position);
     void axis(std::chrono::milliseconds const& ms, geometry::Displacement const& scroll);
     void frame();
 
@@ -76,7 +79,10 @@ private:
     bool can_send_frame{false};
     std::experimental::optional<WlSurface*> surface_under_cursor;
 
-    void enter_internal(WlSurface* surface, geometry::Point const& position);
+    void send_update(
+        std::chrono::milliseconds const& ms,
+        WlSurface* target_surface,
+        geometry::Point const& root_position);
 
     /// Wayland request handlers
     ///@{
