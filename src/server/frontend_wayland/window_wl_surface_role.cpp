@@ -367,16 +367,15 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        if (scene_surface->visible() != static_cast<bool>(surface->buffer_size()))
+        bool const is_mapped = scene_surface->visible();
+        bool const should_be_mapped = static_cast<bool>(surface->buffer_size());
+        if (!is_mapped && should_be_mapped)
         {
-            if (surface->buffer_size() && scene_surface->state() == mir_window_state_hidden)
-            {
-                spec().state = mir_window_state_restored;
-            }
-            else if (!surface->buffer_size() && scene_surface->state() != mir_window_state_hidden)
-            {
-                spec().state = mir_window_state_hidden;
-            }
+            spec().state = mir_window_state_restored;
+        }
+        else if (is_mapped && !should_be_mapped)
+        {
+            spec().state = mir_window_state_hidden;
         }
 
         if (!committed_size || size != committed_size.value())
