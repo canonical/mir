@@ -76,15 +76,14 @@ static const struct cursor_alternatives cursors[] = {
 namespace mf = mir::frontend;
 
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
-    : wm_fd{fd},
-      connection{std::make_shared<XCBConnection>(fd)},
+    : connection{std::make_shared<XCBConnection>(fd)},
       wayland_connector(wayland_connector),
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
       wayland_client{wayland_client},
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))}
 {
     wm_dispatcher =
-        std::make_shared<mir::dispatch::ReadableFd>(mir::Fd{mir::IntOwnedFd{wm_fd}}, [this]() { handle_events(); });
+        std::make_shared<mir::dispatch::ReadableFd>(mir::Fd{mir::IntOwnedFd{fd}}, [this]() { handle_events(); });
     dispatcher->add_watch(wm_dispatcher);
 
     event_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
@@ -162,8 +161,6 @@ mf::XWaylandWM::~XWaylandWM()
         for (auto xcb_cursor : xcb_cursors)
         xcb_free_cursor(*connection, xcb_cursor);
     }
-
-    close(wm_fd);
 }
 
 void mf::XWaylandWM::wm_selector()

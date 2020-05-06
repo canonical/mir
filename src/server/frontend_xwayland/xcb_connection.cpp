@@ -117,7 +117,8 @@ mf::XCBConnection::Atom::operator xcb_atom_t() const
 }
 
 mf::XCBConnection::XCBConnection(int fd)
-    : xcb_connection{connect_to_fd(fd)},
+    : fd{fd},
+      xcb_connection{connect_to_fd(fd)},
       xcb_screen{xcb_setup_roots_iterator(xcb_get_setup(xcb_connection)).data},
       atom_name_cache{{XCB_ATOM_NONE, "None/Any"}},
       wm_protocols{"WM_PROTOCOLS", this},
@@ -167,6 +168,7 @@ mf::XCBConnection::XCBConnection(int fd)
 mf::XCBConnection::~XCBConnection()
 {
     xcb_disconnect(xcb_connection);
+    close(fd);
 }
 
 mf::XCBConnection::operator xcb_connection_t*() const
