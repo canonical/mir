@@ -70,14 +70,32 @@ auto number_to_readable_name(uint32_t number) -> std::string
     return ss.str();
 }
 
+auto xcb_error_to_string(int error) -> std::string
+{
+    // see https://xcb.freedesktop.org/manual/group__XCB__Core__API.html#ga70a6bade94bd2824db552abcf5fbdbe3
+    switch (error)
+    {
+        case 0: return "no error";
+        case XCB_CONN_ERROR: return "XCB_CONN_ERROR";
+        case XCB_CONN_CLOSED_EXT_NOTSUPPORTED: return "XCB_CONN_CLOSED_EXT_NOTSUPPORTED";
+        case XCB_CONN_CLOSED_MEM_INSUFFICIENT: return "XCB_CONN_CLOSED_MEM_INSUFFICIENT";
+        case XCB_CONN_CLOSED_REQ_LEN_EXCEED: return "XCB_CONN_CLOSED_REQ_LEN_EXCEED";
+        case XCB_CONN_CLOSED_PARSE_ERR: return "XCB_CONN_CLOSED_PARSE_ERR";
+        case XCB_CONN_CLOSED_INVALID_SCREEN: return "XCB_CONN_CLOSED_INVALID_SCREEN";
+        case XCB_CONN_CLOSED_FDPASSING_FAILED: return "XCB_CONN_CLOSED_FDPASSING_FAILED";
+        default:;
+    }
+    return "unknwon XCB error " + std::to_string(error);
+}
+
 auto connect_to_fd(int fd) -> xcb_connection_t*
 {
     xcb_connection_t* connection = xcb_connect_to_fd(fd, nullptr);
-    if (xcb_connection_has_error(connection))
+    if (auto const error = xcb_connection_has_error(connection))
     {
         xcb_disconnect(connection);
         close(fd);
-        BOOST_THROW_EXCEPTION(std::runtime_error("xcb_connect_to_fd() failed"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("xcb_connect_to_fd() failed: " + xcb_error_to_string(error)));
     }
     else
     {
