@@ -111,50 +111,50 @@ public:
         xcb_window_t window,
         xcb_atom_t prop,
         std::function<void(xcb_get_property_reply_t*)> action,
-        std::function<void()> on_error) -> std::function<void()>;
+        std::function<void()> on_error) const -> std::function<void()>;
 
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
         std::function<void(std::string const&)> action,
-        std::function<void()> on_error = [](){}) -> std::function<void()>;
+        std::function<void()> on_error = [](){}) const -> std::function<void()>;
 
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
         std::function<void(uint32_t)> action,
-        std::function<void()> on_error = [](){}) -> std::function<void()>;
+        std::function<void()> on_error = [](){}) const -> std::function<void()>;
 
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
         std::function<void(std::vector<uint32_t>)> action,
-        std::function<void()> on_error = [](){}) -> std::function<void()>;
+        std::function<void()> on_error = [](){}) const -> std::function<void()>;
     /// @}
 
     /// Set X11 window properties
     /// Safer and more fun than the C-style function provided by XCB
     /// @{
     template<XCBType type, typename T>
-    inline void set_property(xcb_window_t window, xcb_atom_t property, T data)
+    inline void set_property(xcb_window_t window, xcb_atom_t property, T data) const
     {
         set_property<type>(window, property, 1, &data);
     }
 
     template<XCBType type, typename T, size_t length>
-    inline void set_property(xcb_window_t window, xcb_atom_t property, T(&data)[length])
+    inline void set_property(xcb_window_t window, xcb_atom_t property, T(&data)[length]) const
     {
         set_property<type>(window, property, length, data);
     }
 
     template<XCBType type, typename T>
-    inline void set_property(xcb_window_t window, xcb_atom_t property, std::vector<T> const& data)
+    inline void set_property(xcb_window_t window, xcb_atom_t property, std::vector<T> const& data) const
     {
         set_property<type>(window, property, data.size(), data.data());
     }
 
     template<XCBType type>
-    inline void set_property(xcb_window_t window, xcb_atom_t property, std::string const& data)
+    inline void set_property(xcb_window_t window, xcb_atom_t property, std::string const& data) const
     {
         static_assert(
             type == XCBType::STRING || type == XCBType::UTF8_STRING,
@@ -164,7 +164,7 @@ public:
     /// @}
 
     /// Delete an X11 window property
-    inline void delete_property(xcb_window_t window, xcb_atom_t property)
+    inline void delete_property(xcb_window_t window, xcb_atom_t property) const
     {
         xcb_delete_property(xcb_connection, window, property);
     }
@@ -175,19 +175,19 @@ public:
         std::experimental::optional<geometry::Point> position,
         std::experimental::optional<geometry::Size> size,
         std::experimental::optional<xcb_window_t> sibling,
-        std::experimental::optional<xcb_stack_mode_t> stack_mode);
+        std::experimental::optional<xcb_stack_mode_t> stack_mode) const;
 
     /// Send client message
     /// @{
     template<XCBType type, typename T, size_t length>
-    void send_client_message(xcb_window_t window, uint32_t event_mask, T(&data)[length])
+    void send_client_message(xcb_window_t window, uint32_t event_mask, T(&data)[length]) const
     {
         static_assert(length * sizeof(T) <= sizeof(xcb_client_message_data_t), "Too much data");
         send_client_message<type>(window, event_mask, length, data);
     }
     /// @}
 
-    inline void flush()
+    inline void flush() const
     {
         xcb_flush(xcb_connection);
     }
@@ -271,7 +271,7 @@ private:
         xcb_window_t window,
         xcb_atom_t property,
         size_t length,
-        T const* data)
+        T const* data) const
     {
         validate_xcb_type<type, T>();
         xcb_change_property(
@@ -314,7 +314,7 @@ private:
     }
 
     template<XCBType type, typename T>
-    void send_client_message(xcb_window_t window, uint32_t event_mask, size_t length, T const* data)
+    void send_client_message(xcb_window_t window, uint32_t event_mask, size_t length, T const* data) const
     {
         validate_xcb_type<type, T>();
         xcb_client_message_event_t event;

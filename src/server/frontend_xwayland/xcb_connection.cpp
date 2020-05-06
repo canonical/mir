@@ -231,7 +231,7 @@ auto mf::XCBConnection::read_property(
     xcb_window_t window,
     xcb_atom_t prop,
     std::function<void(xcb_get_property_reply_t*)> action,
-    std::function<void()> on_error) -> std::function<void()>
+    std::function<void()> on_error) const -> std::function<void()>
 {
     xcb_get_property_cookie_t cookie = xcb_get_property(
         xcb_connection,
@@ -283,7 +283,7 @@ auto mf::XCBConnection::read_property(
     xcb_window_t window,
     xcb_atom_t prop,
     std::function<void(std::string const&)> action,
-    std::function<void()> on_error) -> std::function<void()>
+    std::function<void()> on_error) const -> std::function<void()>
 {
     return read_property(
         window,
@@ -299,7 +299,7 @@ auto mf::XCBConnection::read_property(
     xcb_window_t window,
     xcb_atom_t prop,
     std::function<void(uint32_t)> action,
-    std::function<void()> on_error) -> std::function<void()>
+    std::function<void()> on_error) const -> std::function<void()>
 {
     return read_property(
         window,
@@ -337,7 +337,7 @@ auto mf::XCBConnection::read_property(
     xcb_window_t window,
     xcb_atom_t prop,
     std::function<void(std::vector<uint32_t>)> action,
-    std::function<void()> on_error) -> std::function<void()>
+    std::function<void()> on_error) const -> std::function<void()>
 {
     return read_property(
         window,
@@ -369,7 +369,7 @@ void mf::XCBConnection::configure_window(
     std::experimental::optional<geometry::Point> position,
     std::experimental::optional<geometry::Size> size,
     std::experimental::optional<xcb_window_t> sibling,
-    std::experimental::optional<xcb_stack_mode_t> stack_mode)
+    std::experimental::optional<xcb_stack_mode_t> stack_mode) const
 {
     std::vector<uint32_t> values;
     uint32_t mask = 0;

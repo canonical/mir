@@ -91,7 +91,6 @@ private:
     void set_cursor(xcb_window_t id, const CursorType &cursor);
     void create_wm_cursor();
     void wm_get_resources();
-    void setup_visual_and_colormap();
 
     // Event handeling
     void handle_events();
@@ -134,8 +133,6 @@ private:
     xcb_render_pictforminfo_t xcb_format_rgb, xcb_format_rgba;
     const xcb_query_extension_reply_t *xfixes;
     std::unique_ptr<dispatch::ThreadedDispatcher> event_thread;
-    xcb_visualid_t xcb_visual_id;
-    xcb_colormap_t xcb_colormap;
 };
 } /* frontend */
 } /* mir */
