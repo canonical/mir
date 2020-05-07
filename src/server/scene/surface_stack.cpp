@@ -478,6 +478,24 @@ void ms::SurfaceStack::remove_observer(std::weak_ptr<ms::Observer> const& observ
     observers.remove(o);
 }
 
+auto ms::SurfaceStack::stacking_order_of(SurfaceSet const& surfaces) const -> SurfaceList
+{
+    SurfaceList result;
+
+    RecursiveReadLock lk(guard);
+    for (auto const& layer : surface_layers)
+    {
+        for (auto const& surface : layer)
+        {
+            if (surfaces.find(surface) != surfaces.end())
+            {
+                result.push_back(surface);
+            }
+        }
+    }
+    return result;
+}
+
 void ms::Observers::surface_added(std::shared_ptr<Surface> const& surface)
 {
     for_each([&](std::shared_ptr<Observer> const& observer)

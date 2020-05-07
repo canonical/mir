@@ -33,6 +33,7 @@ class Surface;
 struct SurfaceCreationParameters;
 class SurfaceObserver;
 class Session;
+using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
 }
 
 namespace shell
@@ -40,15 +41,13 @@ namespace shell
 class SurfaceStack
 {
 public:
-    using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
-
     virtual void add_surface(
         std::shared_ptr<scene::Surface> const&,
         input::InputReceptionMode new_mode) = 0;
 
     virtual void raise(std::weak_ptr<scene::Surface> const& surface) = 0;
 
-    virtual void raise(SurfaceSet const& surfaces) = 0;
+    virtual void raise(scene::SurfaceSet const& surfaces) = 0;
 
     virtual void remove_surface(std::weak_ptr<scene::Surface> const& surface) = 0;
 
