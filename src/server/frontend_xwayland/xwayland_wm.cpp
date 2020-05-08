@@ -29,6 +29,8 @@
 #include "mir/dispatch/readable_fd.h"
 #include "mir/fd.h"
 #include "mir/terminate_with_current_exception.h"
+#include "mir/scene/null_observer.h"
+#include "mir/frontend/surface_stack.h"
 
 #include <cstring>
 #include <poll.h>
@@ -37,6 +39,7 @@
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 
 namespace
 {
@@ -97,6 +100,23 @@ void check_xfixes(mf::XCBConnection const& connection)
 }
 }
 
+class mf::XWaylandSceneObserver
+    : public ms::NullObserver
+{
+public:
+    XWaylandSceneObserver(mf::XWaylandWM* wm)
+        : wm{wm}
+    {
+    }
+
+    void surfaces_reordered(ms::SurfaceSet const& affected_surfaces) override
+    {
+        wm->surfaces_reordered(affected_surfaces);
+    }
+
+    mf::XWaylandWM* const wm;
+};
+
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
     : connection{std::make_shared<XCBConnection>(fd)},
       wayland_connector(wayland_connector),
@@ -109,7 +129,8 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
           mir::Fd{mir::IntOwnedFd{fd}},
           [this]() { handle_events(); })},
       event_thread{std::make_unique<mir::dispatch::ThreadedDispatcher>(
-          "Mir/X11 WM Reader", dispatcher, []() { mir::terminate_with_current_exception(); })}
+          "Mir/X11 WM Reader", dispatcher, []() { mir::terminate_with_current_exception(); })},
+      scene_observer{std::make_shared<XWaylandSceneObserver>(this)}
 {
     dispatcher->add_watch(wm_dispatcher);
 
@@ -138,10 +159,14 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
         static_cast<xcb_window_t>(XCB_WINDOW_NONE));
 
     cursors->apply_default_to(connection->root_window());
+
+    wm_shell->surface_stack->add_observer(scene_observer);
 }
 
 mf::XWaylandWM::~XWaylandWM()
 {
+    wm_shell->surface_stack->remove_observer(scene_observer);
+
     // clear the surfaces map and then destroy all surfaces
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> local_surfaces;
 
@@ -242,6 +267,11 @@ void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
 void mf::XWaylandWM::run_on_wayland_thread(std::function<void()>&& work)
 {
     wayland_connector->run_on_wayland_display([work = move(work)](auto){ work(); });
+}
+
+void mf::XWaylandWM::surfaces_reordered(scene::SurfaceSet const& affected_surfaces)
+{
+    (void)affected_surfaces;
 }
 
 /* Events */

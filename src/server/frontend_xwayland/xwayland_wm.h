@@ -24,6 +24,7 @@
 #include "xcb_connection.h"
 
 #include <map>
+#include <set>
 #include <thread>
 #include <experimental/optional>
 #include <mutex>
@@ -33,6 +34,10 @@
 
 namespace mir
 {
+namespace scene
+{
+using SurfaceSet = std::set<std::weak_ptr<Surface>, std::owner_less<std::weak_ptr<Surface>>>;
+}
 namespace dispatch
 {
 class ReadableFd;
@@ -44,6 +49,8 @@ namespace frontend
 class XWaylandSurface;
 class XWaylandWMShell;
 class XWaylandCursors;
+
+class XWaylandSceneObserver;
 
 class XWaylandWM
 {
@@ -59,6 +66,8 @@ public:
     auto get_focused_window() -> std::experimental::optional<xcb_window_t>;
     void set_focus(xcb_window_t xcb_window, bool should_be_focused);
     void run_on_wayland_thread(std::function<void()>&& work);
+
+    void surfaces_reordered(scene::SurfaceSet const& affected_surfaces);
 
 private:
     void create_window(xcb_window_t id);
@@ -89,6 +98,7 @@ private:
     xcb_window_t const wm_window;
     std::shared_ptr<dispatch::ReadableFd> const wm_dispatcher;
     std::unique_ptr<dispatch::ThreadedDispatcher> const event_thread;
+    std::shared_ptr<XWaylandSceneObserver> const scene_observer;
 
     std::mutex mutex;
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
