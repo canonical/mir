@@ -75,7 +75,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
 
 ExtensionBuilder const xwayland_builder {
     "x11-support", [](auto const& ctx) -> std::shared_ptr<void>
-        { return std::make_shared<mf::XWaylandWMShell>(ctx.shell, *ctx.seat, ctx.output_manager); }
+        { return std::make_shared<mf::XWaylandWMShell>(ctx.shell, *ctx.seat); }
 };
 
 struct WaylandExtensions : mf::WaylandExtensions

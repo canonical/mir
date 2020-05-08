@@ -39,12 +39,10 @@ class XWaylandWMShell
 public:
     XWaylandWMShell(
         std::shared_ptr<shell::Shell> const& shell,
-        WlSeat& seat,
-        OutputManager* const output_manager);
+        WlSeat& seat);
 
     std::shared_ptr<shell::Shell> const shell;
     WlSeat& seat;
-    OutputManager* const output_manager;
 };
 
 } /* frontend*/

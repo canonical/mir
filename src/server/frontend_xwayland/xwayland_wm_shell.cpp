@@ -30,10 +30,8 @@ namespace msh = mir::shell;
 
 mf::XWaylandWMShell::XWaylandWMShell(
     std::shared_ptr<msh::Shell> const& shell,
-    mf::WlSeat& seat,
-    OutputManager* const output_manager)
+    mf::WlSeat& seat)
     : shell{shell},
-      seat{seat},
-      output_manager{output_manager}
+      seat{seat}
 {
 }
