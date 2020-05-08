@@ -37,6 +37,7 @@ namespace mir
 namespace scene
 {
 using SurfaceSet = std::set<std::weak_ptr<Surface>, std::owner_less<std::weak_ptr<Surface>>>;
+class Surface;
 }
 namespace dispatch
 {
@@ -65,6 +66,8 @@ public:
     auto get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandSurface>>;
     auto get_focused_window() -> std::experimental::optional<xcb_window_t>;
     void set_focus(xcb_window_t xcb_window, bool should_be_focused);
+    void remember_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface, xcb_window_t window);
+    void forget_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface);
     void run_on_wayland_thread(std::function<void()>&& work);
 
     void surfaces_reordered(scene::SurfaceSet const& affected_surfaces);
@@ -102,6 +105,12 @@ private:
 
     std::mutex mutex;
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
+    std::map<std::weak_ptr<
+        scene::Surface>,
+        xcb_window_t,
+        std::owner_less<std::weak_ptr<scene::Surface>>> scene_surfaces;
+    /// Could be regenerated from scene_surfaces at any time, but more efficient to keep this up to date
+    std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>> scene_surface_set;
     std::experimental::optional<xcb_window_t> focused_window;
 };
 } /* frontend */

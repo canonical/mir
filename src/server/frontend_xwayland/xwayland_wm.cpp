@@ -264,6 +264,20 @@ void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
     connection->flush();
 }
 
+void mf::XWaylandWM::remember_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface, xcb_window_t window)
+{
+    std::lock_guard<std::mutex> lock{mutex};
+    scene_surfaces.insert(std::make_pair(scene_surface, window));
+    scene_surface_set.insert(scene_surface);
+}
+
+void mf::XWaylandWM::forget_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface)
+{
+    std::lock_guard<std::mutex> lock{mutex};
+    scene_surfaces.erase(scene_surface);
+    scene_surface_set.erase(scene_surface);
+}
+
 void mf::XWaylandWM::run_on_wayland_thread(std::function<void()>&& work)
 {
     wayland_connector->run_on_wayland_display([work = move(work)](auto){ work(); });

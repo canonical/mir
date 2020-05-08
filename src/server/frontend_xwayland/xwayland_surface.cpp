@@ -254,6 +254,11 @@ void mf::XWaylandSurface::close()
         surface_observer = std::experimental::nullopt;
     }
 
+    if (scene_surface)
+    {
+        xwm->forget_scene_surface(scene_surface);
+    }
+
     connection->delete_property(window, connection->net_wm_desktop);
 
     state.withdrawn = true;
@@ -603,6 +608,8 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         std::lock_guard<std::mutex> lock{mutex};
         weak_scene_surface = surface;
     }
+
+    xwm->remember_scene_surface(surface, window);
 }
 
 void mf::XWaylandSurface::move_resize(uint32_t detail)
