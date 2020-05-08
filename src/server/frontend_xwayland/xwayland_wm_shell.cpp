@@ -18,20 +18,4 @@
 
 #include "xwayland_wm_shell.h"
 
-#include "mir/log.h"
-
-#include "mir/frontend/shell.h"
-#include "wl_seat.h"
-#include "wl_surface.h"
-
 namespace mf = mir::frontend;
-namespace ms = mir::scene;
-namespace msh = mir::shell;
-
-mf::XWaylandWMShell::XWaylandWMShell(
-    std::shared_ptr<msh::Shell> const& shell,
-    mf::WlSeat& seat)
-    : shell{shell},
-      seat{seat}
-{
-}
