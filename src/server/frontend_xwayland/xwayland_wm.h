@@ -73,7 +73,7 @@ public:
     void surfaces_reordered(scene::SurfaceSet const& affected_surfaces);
 
 private:
-    void create_window(xcb_window_t id);
+    void restack_surfaces();
 
     // Event handeling
     void handle_events();
