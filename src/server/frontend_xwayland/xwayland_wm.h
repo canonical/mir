@@ -57,10 +57,10 @@ constexpr size_t length_of(T(&)[length])
 class XWaylandWM
 {
 private:
-    int const wm_fd;
     std::shared_ptr<XCBConnection> const connection;
 
 public:
+    /// Takes ownership of the given FD
     XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd);
     ~XWaylandWM();
 
