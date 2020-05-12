@@ -367,6 +367,17 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 
     if (auto const scene_surface = weak_scene_surface.lock())
     {
+        bool const is_mapped = scene_surface->visible();
+        bool const should_be_mapped = static_cast<bool>(surface->buffer_size());
+        if (!is_mapped && should_be_mapped)
+        {
+            spec().state = mir_window_state_restored;
+        }
+        else if (is_mapped && !should_be_mapped)
+        {
+            spec().state = mir_window_state_hidden;
+        }
+
         if (!committed_size || size != committed_size.value())
         {
             spec().width = size.width;
@@ -403,27 +414,6 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
         committed_height_set_explicitly = true;
     pending_explicit_width = std::experimental::nullopt;
     pending_explicit_height = std::experimental::nullopt;
-}
-
-void mf::WindowWlSurfaceRole::visiblity(bool visible)
-{
-    auto const scene_surface = weak_scene_surface.lock();
-    if (!scene_surface)
-        return;
-
-    if (scene_surface->visible() == visible)
-        return;
-
-    if (visible)
-    {
-        if (scene_surface->state() == mir_window_state_hidden)
-            spec().state = mir_window_state_restored;
-    }
-    else
-    {
-        if (scene_surface->state() != mir_window_state_hidden)
-            spec().state = mir_window_state_hidden;
-    }
 }
 
 mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()

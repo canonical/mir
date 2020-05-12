@@ -94,7 +94,11 @@ void mf::WlSubsurface::populate_surface_data(std::vector<shell::StreamSpecificat
                                              std::vector<mir::geometry::Rectangle>& input_shape_accumulator,
                                              geometry::Displacement const& parent_offset) const
 {
-    surface->populate_surface_data(buffer_streams, input_shape_accumulator, parent_offset);
+    if (surface->buffer_size())
+    {
+        // surface is mapped
+        surface->populate_surface_data(buffer_streams, input_shape_accumulator, parent_offset);
+    }
 }
 
 bool mf::WlSubsurface::synchronized() const
@@ -166,6 +170,16 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
     cached_state.value().update_from(state);
 
+    if (cached_state.value().buffer)
+    {
+        auto const currently_mapped = static_cast<bool>(surface->buffer_size());
+        auto const pending_mapped = cached_state.value().buffer.value() != nullptr;
+        if (currently_mapped != pending_mapped)
+        {
+            cached_state.value().invalidate_surface_data();
+        }
+    }
+
     if (synchronized())
     {
         if (cached_state.value().surface_data_needs_refresh() && !*parent_destroyed)
@@ -178,10 +192,4 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
             refresh_surface_data_now();
         cached_state = std::experimental::nullopt;
     }
-}
-
-void mf::WlSubsurface::visiblity(bool visible)
-{
-    (void)visible;
-    log_warning("TODO: wl_subsurface.visiblity not implemented");
 }

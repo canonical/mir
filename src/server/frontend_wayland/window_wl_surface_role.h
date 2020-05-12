@@ -151,8 +151,6 @@ private:
 
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
 
-    void visiblity(bool visible) override;
-
     shell::SurfaceSpecification& spec();
 };
 
