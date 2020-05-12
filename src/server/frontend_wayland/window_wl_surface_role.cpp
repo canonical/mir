@@ -453,9 +453,12 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     if (params->max_height) committed_max_size.height = params->max_height.value();
 
     // The shell isn't guaranteed to respect the requested size
+    // TODO: make initial updates atomic somehow
     auto const content_size = scene_surface->content_size();
     if (content_size != params->size)
         observer->content_resized_to(scene_surface.get(), content_size);
+    if (is_active())
+        observer->attrib_changed(scene_surface.get(), mir_window_attrib_focus, 1);
 
     // Send wl_surface.enter events for every output
     // TODO: send enter/leave when the surface actually enters and leaves outputs
