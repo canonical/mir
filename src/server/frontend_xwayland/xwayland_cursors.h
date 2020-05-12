@@ -56,7 +56,6 @@ private:
     struct Loader
     {
         struct Formats {
-            // std::experimental::optional<xcb_render_pictforminfo_t> rgb;
             std::experimental::optional<xcb_render_pictforminfo_t> rgba;
         };
 

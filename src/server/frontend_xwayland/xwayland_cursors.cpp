@@ -101,11 +101,6 @@ auto mf::XWaylandCursors::Loader::query_formats(std::shared_ptr<XCBConnection> c
                 continue;
             }
 
-            // if (formats[i].type == XCB_RENDER_PICT_TYPE_DIRECT && formats[i].depth == 24)
-            // {
-            //    result.rgb = formats[i];
-            // }
-
             if (formats[i].type == XCB_RENDER_PICT_TYPE_DIRECT && formats[i].depth == 32 &&
                 formats[i].direct.alpha_mask == 0xff && formats[i].direct.alpha_shift == 24)
             {
