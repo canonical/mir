@@ -70,6 +70,15 @@ class WlSurface;
 class WaylandExtensions
 {
 public:
+    /// The resources needed to init Wayland extensions
+    struct Context
+    {
+        wl_display* display;
+        std::shared_ptr<shell::Shell> shell;
+        WlSeat* seat;
+        OutputManager* output_manager;
+    };
+
     WaylandExtensions() = default;
     virtual ~WaylandExtensions() = default;
     WaylandExtensions(WaylandExtensions const&) = delete;
@@ -77,14 +86,14 @@ public:
 
     virtual void run_builders(wl_display* display, std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop);
 
-    void init(wl_display* display, std::shared_ptr<shell::Shell> const& shell, WlSeat* seat, OutputManager* const output_manager);
+    void init(Context const& context);
 
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
 
 protected:
 
     void add_extension(std::string const name, std::shared_ptr<void> implementation);
-    virtual void custom_extensions(wl_display* display, std::shared_ptr<shell::Shell> const& shell, WlSeat* seat, OutputManager* const output_manager);
+    virtual void custom_extensions(Context const& context);
 
 private:
     std::unordered_map<std::string, std::shared_ptr<void>> extension_protocols;

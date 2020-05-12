@@ -145,7 +145,7 @@ void ms::LegacySceneChangeNotification::surface_removed(std::shared_ptr<ms::Surf
         scene_notify_change();
 }
 
-void ms::LegacySceneChangeNotification::surfaces_reordered()
+void ms::LegacySceneChangeNotification::surfaces_reordered(SurfaceSet const&)
 {
     scene_notify_change();
 }

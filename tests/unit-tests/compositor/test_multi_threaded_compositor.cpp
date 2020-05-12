@@ -122,10 +122,10 @@ public:
     {
         {
             std::lock_guard<std::mutex> lock{observer_mutex};
-            
+
             // Any old event will do.
             if (observer)
-                observer->surfaces_reordered();
+                observer->surfaces_reordered({});
         }
         /* Reduce run-time under valgrind */
         std::this_thread::yield();
