@@ -6,6 +6,7 @@ set(
   xwayland_server.cpp     xwayland_server.h
   xcb_connection.cpp      xcb_connection.h
   xwayland_wm.cpp         xwayland_wm.h
+  xwayland_cursors.cpp    xwayland_cursors.h
   xwayland_surface.cpp    xwayland_surface.h
   xwayland_surface_role.cpp xwayland_surface_role.h
                           xwayland_surface_role_surface.h
