@@ -53,6 +53,40 @@ typedef enum
     mir_event_type_window_placement = mir_event_type_surface_placement,
 } MirEventType;
 #pragma GCC diagnostic pop
+
+typedef enum {
+    mir_input_event_type_key = 0,
+    mir_input_event_type_touch = 1,
+    mir_input_event_type_pointer = 2,
+
+    mir_input_event_types
+} MirInputEventType;
+
+/**
+ * Description of key modifier state.
+ */
+typedef enum {
+    mir_input_event_modifier_none        = 1 << 0,
+    mir_input_event_modifier_alt         = 1 << 1,
+    mir_input_event_modifier_alt_left    = 1 << 2,
+    mir_input_event_modifier_alt_right   = 1 << 3,
+    mir_input_event_modifier_shift       = 1 << 4,
+    mir_input_event_modifier_shift_left  = 1 << 5,
+    mir_input_event_modifier_shift_right = 1 << 6,
+    mir_input_event_modifier_sym         = 1 << 7,
+    mir_input_event_modifier_function    = 1 << 8,
+    mir_input_event_modifier_ctrl        = 1 << 9,
+    mir_input_event_modifier_ctrl_left   = 1 << 10,
+    mir_input_event_modifier_ctrl_right  = 1 << 11,
+    mir_input_event_modifier_meta        = 1 << 12,
+    mir_input_event_modifier_meta_left   = 1 << 13,
+    mir_input_event_modifier_meta_right  = 1 << 14,
+    mir_input_event_modifier_caps_lock   = 1 << 15,
+    mir_input_event_modifier_num_lock    = 1 << 16,
+    mir_input_event_modifier_scroll_lock = 1 << 17
+} MirInputEventModifier;
+typedef unsigned int MirInputEventModifiers;
+
 #ifdef __cplusplus
 }
 /**@}*/
