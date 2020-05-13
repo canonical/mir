@@ -38,22 +38,82 @@
 
 namespace mf = mir::frontend;
 
+namespace
+{
+auto create_wm_window(mf::XCBConnection const& connection) -> xcb_window_t
+{
+    std::string const wm_name{"Mir XWM"};
+
+    xcb_window_t const wm_window = xcb_generate_id(connection);
+    xcb_create_window(
+        connection,
+        XCB_COPY_FROM_PARENT,
+        wm_window,
+        connection.root_window(),
+        0, 0, 10, 10, 0,
+        XCB_WINDOW_CLASS_INPUT_OUTPUT,
+        connection.screen()->root_visual,
+        0, NULL);
+
+    connection.set_property<mf::XCBType::WINDOW>(wm_window, connection.net_supporting_wm_check, wm_window);
+    connection.set_property<mf::XCBType::UTF8_STRING>(wm_window, connection.net_wm_name, wm_name);
+
+    connection.set_property<mf::XCBType::WINDOW>(
+        connection.root_window(),
+        connection.net_supporting_wm_check,
+        wm_window);
+
+    /* Claim the WM_S0 selection even though we don't support
+     * the --replace functionality. */
+    xcb_set_selection_owner(connection, wm_window, connection.wm_s0, XCB_TIME_CURRENT_TIME);
+    xcb_set_selection_owner(connection, wm_window, connection.net_wm_cm_s0, XCB_TIME_CURRENT_TIME);
+
+    return wm_window;
+}
+
+void check_xfixes(mf::XCBConnection const& connection)
+{
+    xcb_xfixes_query_version_cookie_t xfixes_cookie;
+    xcb_xfixes_query_version_reply_t *xfixes_reply;
+
+    xcb_prefetch_extension_data(connection, &xcb_xfixes_id);
+    xcb_prefetch_extension_data(connection, &xcb_composite_id);
+
+    auto const xfixes = xcb_get_extension_data(connection, &xcb_xfixes_id);
+    if (!xfixes || !xfixes->present)
+    {
+        mir::log_warning("xfixes not available");
+    }
+
+    xfixes_cookie = xcb_xfixes_query_version(connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
+    xfixes_reply = xcb_xfixes_query_version_reply(connection, xfixes_cookie, NULL);
+
+    if (mir::verbose_xwayland_logging_enabled())
+    {
+        mir::log_debug("xfixes version: %d.%d", xfixes_reply->major_version, xfixes_reply->minor_version);
+    }
+
+    free(xfixes_reply);
+}
+}
+
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
     : connection{std::make_shared<XCBConnection>(fd)},
       wayland_connector(wayland_connector),
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
       wayland_client{wayland_client},
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
-      cursors{std::make_unique<XWaylandCursors>(connection)}
+      cursors{std::make_unique<XWaylandCursors>(connection)},
+      wm_window{create_wm_window(*connection)},
+      wm_dispatcher{std::make_shared<mir::dispatch::ReadableFd>(
+          mir::Fd{mir::IntOwnedFd{fd}},
+          [this]() { handle_events(); })},
+      event_thread{std::make_unique<mir::dispatch::ThreadedDispatcher>(
+          "Mir/X11 WM Reader", dispatcher, []() { mir::terminate_with_current_exception(); })}
 {
-    wm_dispatcher =
-        std::make_shared<mir::dispatch::ReadableFd>(mir::Fd{mir::IntOwnedFd{fd}}, [this]() { handle_events(); });
     dispatcher->add_watch(wm_dispatcher);
 
-    event_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
-        "Mir/X11 WM Reader", dispatcher, []() { mir::terminate_with_current_exception(); });
-
-    wm_get_resources();
+    check_xfixes(*connection);
 
     uint32_t const attrib_values[]{
         XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_PROPERTY_CHANGE};
@@ -76,13 +136,8 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
         connection->root_window(),
         connection->net_active_window,
         static_cast<xcb_window_t>(XCB_WINDOW_NONE));
-    wm_selector();
+
     cursors->apply_default_to(connection->root_window());
-
-    connection->flush();
-
-    create_wm_window();
-    connection->flush();
 }
 
 mf::XWaylandWM::~XWaylandWM()
@@ -110,73 +165,7 @@ mf::XWaylandWM::~XWaylandWM()
     if (verbose_xwayland_logging_enabled())
         log_debug("...done closing surfaces");
 
-    if (event_thread)
-    {
-        dispatcher->remove_watch(wm_dispatcher);
-        event_thread.reset();
-    }
-}
-
-void mf::XWaylandWM::wm_selector()
-{
-    xcb_selection_request.requestor = XCB_NONE;
-
-    uint32_t const values[]{
-        XCB_EVENT_MASK_PROPERTY_CHANGE};
-
-    xcb_selection_window = xcb_generate_id(*connection);
-
-    xcb_create_window(
-        *connection,
-        XCB_COPY_FROM_PARENT,
-        xcb_selection_window,
-        connection->root_window(),
-        0, 0, // position
-        10, 10, // size
-        0, // border width
-        XCB_WINDOW_CLASS_INPUT_OUTPUT,
-        connection->screen()->root_visual,
-        XCB_CW_EVENT_MASK,
-        values);
-
-    xcb_set_selection_owner(*connection, xcb_selection_window, connection->clipboard_manager, XCB_TIME_CURRENT_TIME);
-
-    uint32_t const mask =
-        XCB_XFIXES_SELECTION_EVENT_MASK_SET_SELECTION_OWNER |
-        XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_WINDOW_DESTROY |
-        XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_CLIENT_CLOSE;
-
-    xcb_xfixes_select_selection_input(*connection, xcb_selection_window, connection->clipboard, mask);
-}
-
-void mf::XWaylandWM::create_wm_window()
-{
-    std::string const wm_name{"Mir XWM"};
-
-    wm_window = xcb_generate_id(*connection);
-    xcb_create_window(
-        *connection,
-        XCB_COPY_FROM_PARENT,
-        wm_window,
-        connection->root_window(),
-        0, 0, 10, 10, 0,
-        XCB_WINDOW_CLASS_INPUT_OUTPUT,
-        connection->screen()->root_visual,
-        0, NULL);
-
-    connection->set_property<XCBType::WINDOW>(wm_window, connection->net_supporting_wm_check, wm_window);
-    connection->set_property<XCBType::UTF8_STRING>(wm_window, connection->net_wm_name, wm_name);
-
-    connection->set_property<XCBType::WINDOW>(
-        connection->root_window(),
-        connection->net_supporting_wm_check,
-        wm_window);
-
-    /* Claim the WM_S0 selection even though we don't support
-     * the --replace functionality. */
-    xcb_set_selection_owner(*connection, wm_window, connection->wm_s0, XCB_TIME_CURRENT_TIME);
-
-    xcb_set_selection_owner(*connection, wm_window, connection->net_wm_cm_s0, XCB_TIME_CURRENT_TIME);
+    dispatcher->remove_watch(wm_dispatcher);
 }
 
 auto mf::XWaylandWM::get_wm_surface(
@@ -692,25 +681,4 @@ void mf::XWaylandWM::handle_focus_in(xcb_focus_in_event_t* event)
         // We might want to keep X11 focus and Mir focus in sync
         // (either by requesting a focus change in Mir, reverting this X11 focus change or both)
     }
-}
-
-void mf::XWaylandWM::wm_get_resources()
-{
-    xcb_xfixes_query_version_cookie_t xfixes_cookie;
-    xcb_xfixes_query_version_reply_t *xfixes_reply;
-
-    xcb_prefetch_extension_data(*connection, &xcb_xfixes_id);
-    xcb_prefetch_extension_data(*connection, &xcb_composite_id);
-
-    xfixes = xcb_get_extension_data(*connection, &xcb_xfixes_id);
-    if (!xfixes || !xfixes->present)
-        log_warning("xfixes not available");
-
-    xfixes_cookie = xcb_xfixes_query_version(*connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
-    xfixes_reply = xcb_xfixes_query_version_reply(*connection, xfixes_cookie, NULL);
-
-    if (verbose_xwayland_logging_enabled())
-        log_debug("xfixes version: %d.%d", xfixes_reply->major_version, xfixes_reply->minor_version);
-
-    free(xfixes_reply);
 }

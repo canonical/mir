@@ -61,12 +61,7 @@ public:
     void run_on_wayland_thread(std::function<void()>&& work);
 
 private:
-    void create_wm_window();
-    void wm_selector();
-
     void create_window(xcb_window_t id);
-    void create_wm_cursor();
-    void wm_get_resources();
 
     // Event handeling
     void handle_events();
@@ -86,22 +81,18 @@ private:
     void handle_destroy_notify(xcb_destroy_notify_event_t *event);
     void handle_focus_in(xcb_focus_in_event_t* event);
 
-    std::mutex mutex;
-
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     wl_client* const wayland_client;
     std::shared_ptr<XWaylandWMShell> const wm_shell;
     std::unique_ptr<XWaylandCursors> const cursors;
+    xcb_window_t const wm_window;
+    std::shared_ptr<dispatch::ReadableFd> const wm_dispatcher;
+    std::unique_ptr<dispatch::ThreadedDispatcher> const event_thread;
 
-    xcb_window_t wm_window;
+    std::mutex mutex;
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
     std::experimental::optional<xcb_window_t> focused_window;
-    std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;
-    xcb_window_t xcb_selection_window;
-    xcb_selection_request_event_t xcb_selection_request;
-    const xcb_query_extension_reply_t *xfixes;
-    std::unique_ptr<dispatch::ThreadedDispatcher> event_thread;
 };
 } /* frontend */
 } /* mir */
