@@ -23,6 +23,8 @@
 
 #include "splash_session.h"
 
+#include <mir_toolkit/event.h> // @arg TODO
+
 #include <chrono>
 #include <map>
 

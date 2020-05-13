@@ -23,6 +23,8 @@
 
 #include <miral/canonical_window_manager.h>
 
+#include <mir_toolkit/event.h> // @arg TODO
+
 using namespace mir::geometry;
 
 class KioskWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy

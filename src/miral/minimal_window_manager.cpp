@@ -17,7 +17,7 @@
  */
 
 #include <miral/minimal_window_manager.h>
-
+#include <mir_toolkit/event.h> // @arg TODO
 #include <linux/input.h>
 #include <gmpxx.h>
 

@@ -21,6 +21,8 @@
 #include <miral/display_configuration_option.h>
 #include <miral/runner.h>
 
+#include <mir_toolkit/event.h> // @arg TODO
+
 #include <linux/input.h>
 
 #include <atomic>
