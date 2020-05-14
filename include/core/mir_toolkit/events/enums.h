@@ -87,6 +87,21 @@ typedef enum {
 } MirInputEventModifier;
 typedef unsigned int MirInputEventModifiers;
 
+/**
+ * Possible actions for changing key state
+ */
+typedef enum {
+    /* A key has come up (released) */
+    mir_keyboard_action_up,
+    /* A key has gone down (pressed) */
+    mir_keyboard_action_down,
+    /* System policy has triggered a key repeat on a key
+       which was already down */
+    mir_keyboard_action_repeat,
+
+    mir_keyboard_actions
+} MirKeyboardAction;
+
 #ifdef __cplusplus
 }
 /**@}*/
