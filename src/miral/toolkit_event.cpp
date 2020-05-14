@@ -154,7 +154,7 @@ bool mir_pointer_event_button_state(MirPointerEvent const* event, MirPointerButt
 
 MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* event)
 {
-    return ::miral::toolkit::mir_pointer_event_buttons(event);
+    return ::mir_pointer_event_buttons(event);
 }
 
 float mir_pointer_event_axis_value(MirPointerEvent const* event, MirPointerAxis axis)
