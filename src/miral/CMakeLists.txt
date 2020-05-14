@@ -109,9 +109,9 @@ target_include_directories(miral
 
 target_link_libraries(miral
     PUBLIC
-        mirclient
         mircommon
     PRIVATE
+        mirclient
         miral-internal
         mirserver
 )
