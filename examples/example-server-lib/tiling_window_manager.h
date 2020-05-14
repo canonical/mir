@@ -28,7 +28,7 @@
 #include <mir/geometry/displacement.h>
 #include <miral/internal_client.h>
 
-#include <mir_toolkit/event.h> // @arg TODO
+#include <mir_toolkit/events/enums.h>
 
 #include <functional>
 #include <vector>

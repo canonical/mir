@@ -23,6 +23,8 @@
 #include <miral/window_manager_tools.h>
 #include <miral/zone.h>
 
+#include <mir_toolkit/event.h> // @arg TODO
+
 #include <linux/input.h>
 #include <algorithm>
 #include <csignal>

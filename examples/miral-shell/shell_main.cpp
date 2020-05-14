@@ -34,6 +34,8 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 
+#include <mir_toolkit/event.h> // @arg TODO
+
 #include <linux/input.h>
 #include <unistd.h>
 #include <boost/filesystem.hpp>

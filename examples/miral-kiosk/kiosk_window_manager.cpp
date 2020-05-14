@@ -22,6 +22,8 @@
 #include <miral/window_info.h>
 #include <miral/window_manager_tools.h>
 
+#include <mir_toolkit/event.h> // @arg TODO
+
 #include <linux/input.h>
 
 namespace ms = mir::scene;
