@@ -20,8 +20,7 @@
 #include <miral/command_line_option.h>
 #include <miral/display_configuration_option.h>
 #include <miral/runner.h>
-
-#include <mir_toolkit/event.h> // @arg TODO
+#include <miral/toolkit_event.h>
 
 #include <linux/input.h>
 
@@ -30,6 +29,7 @@
 int main(int argc, char const* argv[])
 {
     using namespace miral;
+    using namespace miral::toolkit;
 
     MirRunner runner{argc, argv};
 

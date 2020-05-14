@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2018 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -19,15 +19,15 @@
 #include "kiosk_window_manager.h"
 
 #include <miral/application_info.h>
+#include <miral/toolkit_event.h>
 #include <miral/window_info.h>
 #include <miral/window_manager_tools.h>
-
-#include <mir_toolkit/event.h> // @arg TODO
 
 #include <linux/input.h>
 
 namespace ms = mir::scene;
 using namespace miral;
+using namespace miral::toolkit;
 
 KioskWindowManagerPolicy::KioskWindowManagerPolicy(WindowManagerTools const& tools, std::shared_ptr<SplashSession> const& splash) :
     CanonicalWindowManagerPolicy{tools},
