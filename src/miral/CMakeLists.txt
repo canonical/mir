@@ -63,6 +63,7 @@ add_library(miral SHARED
     set_command_line_handler.cpp        ${miral_include}/miral/set_command_line_handler.h
     set_terminator.cpp                  ${miral_include}/miral/set_terminator.h
     set_window_management_policy.cpp    ${miral_include}/miral/set_window_management_policy.h
+    toolkit_event.cpp                   ${miral_include}/miral/toolkit_event.h
     window_management_policy.cpp        ${miral_include}/miral/window_management_policy.h
     window_manager_tools.cpp            ${miral_include}/miral/window_manager_tools.h
                                         ${miral_include}/miral/lambda_as_function.h
@@ -108,9 +109,9 @@ target_include_directories(miral
 
 target_link_libraries(miral
     PUBLIC
-        mirclient
         mircommon
     PRIVATE
+        mirclient
         miral-internal
         mirserver
 )

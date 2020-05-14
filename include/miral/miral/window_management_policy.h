@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2018 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -21,7 +21,12 @@
 
 #include <mir/geometry/displacement.h>
 #include <mir/geometry/rectangles.h>
-#include <mir_toolkit/event.h>
+#include <mir_toolkit/common.h>
+
+struct MirKeyboardEvent;
+struct MirTouchEvent;
+struct MirPointerEvent;
+struct MirInputEvent;
 
 #include <memory>
 

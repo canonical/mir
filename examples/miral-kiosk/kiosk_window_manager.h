@@ -23,6 +23,8 @@
 
 #include <miral/canonical_window_manager.h>
 
+#include <mir_toolkit/events/enums.h>
+
 using namespace mir::geometry;
 
 class KioskWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy

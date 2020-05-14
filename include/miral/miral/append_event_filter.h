@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -19,10 +19,10 @@
 #ifndef MIRAL_APPEND_EVENT_FILTER_H
 #define MIRAL_APPEND_EVENT_FILTER_H
 
-#include <mir_toolkit/event.h>
-
 #include <functional>
 #include <memory>
+
+typedef struct MirEvent MirEvent;
 
 namespace mir { class Server; }
 

@@ -23,6 +23,8 @@
 
 #include "splash_session.h"
 
+#include <mir_toolkit/events/enums.h>
+
 #include <chrono>
 #include <map>
 

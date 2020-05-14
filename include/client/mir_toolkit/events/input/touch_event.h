@@ -40,57 +40,6 @@ typedef struct MirTouchEvent MirTouchEvent;
 typedef int32_t MirTouchId;
 
 /**
- * Possible per touch actions for state changing
- */
-typedef enum {
-    /* This touch point is going up */
-    mir_touch_action_up = 0,
-    /* This touch point is going down */
-    mir_touch_action_down = 1,
-    /* Axis values have changed on this touch point */
-    mir_touch_action_change = 2,
-
-    mir_touch_actions
-} MirTouchAction;
-
-/**
- * Identifiers for touch axis
- */
-typedef enum {
-/* Axis representing the x coordinate for the touch */
-    mir_touch_axis_x = 0,
-/* Axis representing the y coordinate for the touch */
-    mir_touch_axis_y = 1,
-/* Axis representing pressure of the touch */
-    mir_touch_axis_pressure = 2,
-/* Axis representing the length of the major axis of an ellipse
-   centered at the touch point */
-    mir_touch_axis_touch_major = 3,
-/* Axis representing the length of the minor axis of an ellipse
-   centered at the touch point */
-    mir_touch_axis_touch_minor = 4,
-/* Axis representing the diameter of a circle centered on the touch
-   point */
-    mir_touch_axis_size = 5,
-
-    mir_touch_axes
-} MirTouchAxis;
-
-/**
- * Identifiers for per-touch tool types
- */
-typedef enum {
-// Tool type could not be determined
-    mir_touch_tooltype_unknown = 0,
-// Touch is made with a finger
-    mir_touch_tooltype_finger = 1,
-// Touch is made with a stylus
-    mir_touch_tooltype_stylus = 2,
-
-    mir_touch_tooltypes
-} MirTouchTooltype;
-
-/**
  * Retrieve the modifier keys pressed when the touch action occured.
  *
  *   \param [in] event The key event

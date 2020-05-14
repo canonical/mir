@@ -35,59 +35,6 @@ extern "C" {
 typedef struct MirPointerEvent MirPointerEvent;
 
 /**
- * Possible pointer actions
- */
-typedef enum {
-    /* A pointer button has come up */
-    mir_pointer_action_button_up = 0,
-    /* A pointer button has gone down */
-    mir_pointer_action_button_down = 1,
-    /* The pointer has entered the surface to which this event was delivered */
-    mir_pointer_action_enter = 2,
-    /* The pointer has left the surface to which this event was delivered */
-    mir_pointer_action_leave = 3,
-    /* Axis values have changed for the pointer */
-    mir_pointer_action_motion = 4,
-
-    mir_pointer_actions
-} MirPointerAction;
-
-/**
- * Identifiers for pointer axis
- */
-typedef enum {
-/* Absolute axis containing the x coordinate of the pointer */
-    mir_pointer_axis_x = 0,
-/* Absolute axis containing the y coordinate of the pointer */
-    mir_pointer_axis_y = 1,
-/* Relative axis containing ticks reported by the vertical scroll wheel */
-    mir_pointer_axis_vscroll = 2,
-/* Relative axis containing ticks reported by the horizontal scroll wheel */
-    mir_pointer_axis_hscroll = 3,
-/* Relative axis containing the last reported x differential from the pointer */
-    mir_pointer_axis_relative_x = 4,
-/* Relative axis containing the last reported y differential from the pointer */
-    mir_pointer_axis_relative_y = 5,
-
-    mir_pointer_axes
-} MirPointerAxis;
-
-/* 
- * Identifiers for pointer buttons
- */
-typedef enum {
-    mir_pointer_button_primary   = 1 << 0,
-    mir_pointer_button_secondary = 1 << 1,
-    mir_pointer_button_tertiary  = 1 << 2,
-    mir_pointer_button_back      = 1 << 3,
-    mir_pointer_button_forward   = 1 << 4,
-    mir_pointer_button_side      = 1 << 5,
-    mir_pointer_button_extra     = 1 << 6,
-    mir_pointer_button_task      = 1 << 7
-} MirPointerButton;
-typedef unsigned int MirPointerButtons;
-
-/**
  * Retrieve the modifier keys pressed when the pointer action occured.
  *
  *   \param [in] event The pointer event

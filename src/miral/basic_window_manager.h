@@ -122,7 +122,7 @@ public:
         std::shared_ptr<mir::scene::Session> const& session,
         std::shared_ptr<mir::scene::Surface> const& surface,
         uint64_t timestamp,
-        MirResizeEdge edge) override;
+        ::MirResizeEdge edge) override;
 
     int set_surface_attribute(
         std::shared_ptr<mir::scene::Session> const& /*application*/,

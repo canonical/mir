@@ -21,6 +21,7 @@
 
 #include <miral/application_info.h>
 #include <miral/internal_client.h>
+#include <miral/toolkit_event.h>
 #include <miral/window_info.h>
 #include <miral/window_manager_tools.h>
 
@@ -28,6 +29,7 @@
 #include <csignal>
 
 using namespace miral;
+using namespace miral::toolkit;
 
 namespace
 {

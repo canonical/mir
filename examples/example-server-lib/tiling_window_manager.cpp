@@ -19,6 +19,7 @@
 #include "tiling_window_manager.h"
 
 #include <miral/application_info.h>
+#include <miral/toolkit_event.h>
 #include <miral/window_info.h>
 #include <miral/window_manager_tools.h>
 #include <miral/zone.h>
@@ -29,6 +30,7 @@
 
 namespace ms = mir::scene;
 using namespace miral;
+using namespace miral::toolkit;
 
 namespace
 {

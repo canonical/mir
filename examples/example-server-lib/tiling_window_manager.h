@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Canonical Ltd.
+ * Copyright © 2015-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -28,6 +28,7 @@
 #include <mir/geometry/displacement.h>
 #include <miral/internal_client.h>
 
+#include <mir_toolkit/events/enums.h>
 
 #include <functional>
 #include <vector>
