@@ -361,6 +361,34 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::operator==(std::shared_ptr<mir::scene::Surface> const&, miral::Window const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::pid_of(std::shared_ptr<mir::scene::Session> const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::pre_init(miral::CommandLineOption const&)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_event_get_input_event(MirEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_event_get_type(MirEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_input_event_get_event(MirInputEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_input_event_get_event_time(MirInputEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_input_event_get_keyboard_event(MirInputEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_input_event_get_pointer_event(MirInputEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_input_event_get_touch_event(MirInputEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_input_event_get_type(MirInputEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_input_event_has_cookie(MirInputEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_keyboard_event_action(MirKeyboardEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_keyboard_event_input_event(MirKeyboardEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_keyboard_event_key_code(MirKeyboardEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_keyboard_event_key_text(MirKeyboardEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_keyboard_event_modifiers(MirKeyboardEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_keyboard_event_scan_code(MirKeyboardEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_pointer_event_action(MirPointerEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_pointer_event_axis_value(MirPointerEvent const*, MirPointerAxis)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_pointer_event_button_state(MirPointerEvent const*, MirPointerButton)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_pointer_event_buttons(MirPointerEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_pointer_event_input_event(MirPointerEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_pointer_event_modifiers(MirPointerEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_touch_event_action(MirTouchEvent const*, unsigned long)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_touch_event_axis_value(MirTouchEvent const*, unsigned long, MirTouchAxis)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_touch_event_id(MirTouchEvent const*, unsigned long)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_touch_event_input_event(MirTouchEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_touch_event_modifiers(MirTouchEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_touch_event_point_count(MirTouchEvent const*)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_touch_event_tooltype(MirTouchEvent const*, unsigned long)@MIRAL_3.0" 3.0.0
  (c++)"miral::window_for(wl_resource*)@MIRAL_3.0" 3.0.0
  (c++)"typeinfo for miral::CanonicalWindowManagerPolicy@MIRAL_3.0" 3.0.0
  (c++)"typeinfo for miral::MinimalWindowManager@MIRAL_3.0" 3.0.0

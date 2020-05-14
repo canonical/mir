@@ -33,7 +33,6 @@ extern "C" {
  * An event type describing a change in pointer device state.
  */
 typedef struct MirPointerEvent MirPointerEvent;
-typedef unsigned int MirPointerButtons;
 
 /**
  * Retrieve the modifier keys pressed when the pointer action occured.

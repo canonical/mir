@@ -31,10 +31,10 @@
 #include <miral/command_line_option.h>
 #include <miral/cursor_theme.h>
 #include <miral/keymap.h>
+#include <miral/toolkit_event.h>
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 
-#include <mir_toolkit/event.h> // @arg TODO
 
 #include <linux/input.h>
 #include <unistd.h>
@@ -43,6 +43,7 @@
 int main(int argc, char const* argv[])
 {
     using namespace miral;
+    using namespace miral::toolkit;
 
     std::function<void()> shutdown_hook{[]{}};
 

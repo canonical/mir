@@ -205,6 +205,7 @@ typedef enum {
     mir_pointer_button_extra     = 1 << 6,
     mir_pointer_button_task      = 1 << 7
 } MirPointerButton;
+typedef unsigned int MirPointerButtons;
 
 #ifdef __cplusplus
 }

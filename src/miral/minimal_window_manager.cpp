@@ -17,9 +17,11 @@
  */
 
 #include <miral/minimal_window_manager.h>
-#include <mir_toolkit/event.h> // @arg TODO
+#include <miral/toolkit_event.h>
 #include <linux/input.h>
 #include <gmpxx.h>
+
+using namespace miral::toolkit;
 
 namespace
 {
