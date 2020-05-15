@@ -30,6 +30,7 @@ class Shell;
 namespace frontend
 {
 class OutputManager;
+class SurfaceStack;
 class WlSeat;
 class WlSurface;
 class XWaylandSurface;
@@ -40,11 +41,16 @@ public:
     XWaylandWMShell(
         std::shared_ptr<shell::Shell> const& shell,
         WlSeat& seat,
-        OutputManager* const output_manager);
+        std::shared_ptr<SurfaceStack> const& surface_stack)
+        : shell{shell},
+          seat{seat},
+          surface_stack{surface_stack}
+    {
+    }
 
     std::shared_ptr<shell::Shell> const shell;
     WlSeat& seat;
-    OutputManager* const output_manager;
+    std::shared_ptr<SurfaceStack> const surface_stack;
 };
 
 } /* frontend*/

@@ -75,7 +75,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
 
 ExtensionBuilder const xwayland_builder {
     "x11-support", [](auto const& ctx) -> std::shared_ptr<void>
-        { return std::make_shared<mf::XWaylandWMShell>(ctx.shell, *ctx.seat, ctx.output_manager); }
+        { return std::make_shared<mf::XWaylandWMShell>(ctx.shell, *ctx.seat, ctx.surface_stack); }
 };
 
 struct WaylandExtensions : mf::WaylandExtensions
@@ -194,6 +194,7 @@ std::shared_ptr<mf::Connector>
                 the_seat(),
                 the_buffer_allocator(),
                 the_session_authorizer(),
+                the_frontend_surface_stack(),
                 arw_socket,
                 configure_wayland_extensions(
                     wayland_extensions,

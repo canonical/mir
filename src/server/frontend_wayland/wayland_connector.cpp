@@ -659,6 +659,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
+    std::shared_ptr<SurfaceStack> const& surface_stack,
     bool arw_socket,
     std::unique_ptr<WaylandExtensions> extensions_,
     WaylandProtocolExtensionFilter const& extension_filter)
@@ -718,7 +719,12 @@ mf::WaylandConnector::WaylandConnector(
 
     data_device_manager_global = mf::create_data_device_manager(display.get());
 
-    extensions->init(WaylandExtensions::Context{display.get(), shell, seat_global.get(), output_manager.get()});
+    extensions->init(WaylandExtensions::Context{
+        display.get(),
+        shell,
+        seat_global.get(),
+        output_manager.get(),
+        surface_stack});
 
     wl_display_init_shm(display.get());
 

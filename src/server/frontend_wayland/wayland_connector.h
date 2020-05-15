@@ -66,6 +66,7 @@ class MirDisplay;
 class SessionAuthorizer;
 class DataDeviceManager;
 class WlSurface;
+class SurfaceStack;
 
 class WaylandExtensions
 {
@@ -77,6 +78,7 @@ public:
         std::shared_ptr<shell::Shell> shell;
         WlSeat* seat;
         OutputManager* output_manager;
+        std::shared_ptr<SurfaceStack> surface_stack;
     };
 
     WaylandExtensions() = default;
@@ -111,6 +113,7 @@ public:
         std::shared_ptr<input::Seat> const& seat,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
+        std::shared_ptr<SurfaceStack> const& surface_stack,
         bool arw_socket,
         std::unique_ptr<WaylandExtensions> extensions,
         WaylandProtocolExtensionFilter const& extension_filter);

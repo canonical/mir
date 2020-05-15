@@ -24,6 +24,7 @@
 #include "xcb_connection.h"
 
 #include <map>
+#include <set>
 #include <thread>
 #include <experimental/optional>
 #include <mutex>
@@ -33,6 +34,11 @@
 
 namespace mir
 {
+namespace scene
+{
+using SurfaceSet = std::set<std::weak_ptr<Surface>, std::owner_less<std::weak_ptr<Surface>>>;
+class Surface;
+}
 namespace dispatch
 {
 class ReadableFd;
@@ -44,6 +50,8 @@ namespace frontend
 class XWaylandSurface;
 class XWaylandWMShell;
 class XWaylandCursors;
+
+class XWaylandSceneObserver;
 
 class XWaylandWM
 {
@@ -58,10 +66,14 @@ public:
     auto get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandSurface>>;
     auto get_focused_window() -> std::experimental::optional<xcb_window_t>;
     void set_focus(xcb_window_t xcb_window, bool should_be_focused);
+    void remember_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface, xcb_window_t window);
+    void forget_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface);
     void run_on_wayland_thread(std::function<void()>&& work);
 
+    void surfaces_reordered(scene::SurfaceSet const& affected_surfaces);
+
 private:
-    void create_window(xcb_window_t id);
+    void restack_surfaces();
 
     // Event handeling
     void handle_events();
@@ -89,9 +101,16 @@ private:
     xcb_window_t const wm_window;
     std::shared_ptr<dispatch::ReadableFd> const wm_dispatcher;
     std::unique_ptr<dispatch::ThreadedDispatcher> const event_thread;
+    std::shared_ptr<XWaylandSceneObserver> const scene_observer;
 
     std::mutex mutex;
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
+    std::map<std::weak_ptr<
+        scene::Surface>,
+        xcb_window_t,
+        std::owner_less<std::weak_ptr<scene::Surface>>> scene_surfaces;
+    /// Could be regenerated from scene_surfaces at any time, but more efficient to keep this up to date
+    std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>> scene_surface_set;
     std::experimental::optional<xcb_window_t> focused_window;
 };
 } /* frontend */
