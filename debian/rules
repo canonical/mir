@@ -85,9 +85,11 @@ override_dh_makeshlibs:
 
 override_dh_install:
 # Nothing outside Mir should link to libmirprotobuf directly.
-# Delete the symlink so that --fail-missing doesn't think we've missed it
+# Nothing outside Mir should link to libmirclient directly.
+# Delete the symlinks so that --fail-missing doesn't think we've missed it
 # accidentally.
 	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
+	-rm debian/tmp/usr/lib/*/libmirclient.so
 
 ifeq ($(filter xenial yakkety zesty,$(DEB_DISTRIBUTION)),)
 	dh_install
