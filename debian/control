@@ -174,25 +174,6 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to build Mir servers.
 
-Package: mirtest-dev
-Section: libdevel
-Architecture: linux-any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon-dev (= ${binary:Version}),
-         libmirplatform-dev (= ${binary:Version}),
-         libmirserver-dev (= ${binary:Version}),
-         mir-renderer-gl-dev (= ${binary:Version}),
-         libboost-filesystem-dev,
-         libboost-system-dev,
-         ${misc:Depends},
-Description: Display server for Ubuntu - test development headers and library
- Mir is a display server running on linux systems, with a focus on efficiency,
- robust operation and a well-defined driver model.
- .
- Contains header files and static library for testing of server and/or client
- development.
-
 Package: libmirclient9
 Section: libs
 Architecture: linux-any
