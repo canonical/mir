@@ -206,25 +206,6 @@ Description: Display server for Ubuntu - client library
  .
  Contains the shared library needed by client applications for Mir.
 
-Package: libmirclient-dev
-Section: libdevel
-Architecture: linux-any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Breaks: libmirclientcpp-dev
-Replaces: libmirclientcpp-dev
-Provides: libmirclientcpp-dev (=1.5)
-Depends: libmirclient9 (= ${binary:Version}),
-         libmircommon-dev (= ${binary:Version}),
-         libmircookie-dev (= ${binary:Version}),
-         libprotobuf-dev (>= 2.4.1),
-         ${misc:Depends},
-Description: Display server for Ubuntu - development headers
- Mir is a display server running on linux systems, with a focus on efficiency,
- robust operation and a well-defined driver model.
- .
- Contains header files required to develop against Mir.
-
 Package: mir-demos
 Architecture: linux-any
 Breaks: miral-examples
@@ -403,20 +384,6 @@ Description: Display server for Ubuntu - client platform library for Mesa
  Contains the shared libraries required for the Mir clients to interact with
  the underlying hardware platform using the Mesa drivers.
 
-Package: mir-client-platform-mesa-dev
-Section: libdevel
-Architecture: linux-any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirclient-dev (= ${binary:Version}),
-         ${misc:Depends},
-Description: Display server for Ubuntu - client platform library for Mesa development files
- Mir is a display server running on linux systems, with a focus on efficiency,
- robust operation and a well-defined driver model.
- .
- Contains header files required to use the platform specific capabilities of
- the Mir Mesa backend.
-
 Package: mir-graphics-drivers-desktop
 Section: libs
 Architecture: linux-any
@@ -528,7 +495,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: libmiral4 (= ${libmiral4:Version}),
 # ${source:Version} is technically incorrect, but Launchpad doesn't do BinNMUs
 # so it's harmless.
-         libmirclient-dev (= ${source:Version}),
+         libmircommon-dev (= ${source:Version}),
          ${misc:Depends},
 Description: Developer files for the Mir ABI-stable abstraction layer
  MirAL provides an ABI-stable abstraction layer for Mir based shells,
