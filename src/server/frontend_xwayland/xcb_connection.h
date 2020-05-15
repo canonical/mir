@@ -94,9 +94,9 @@ public:
     explicit XCBConnection(Fd const& fd);
     ~XCBConnection();
 
-    operator xcb_connection_t*() const;
-    auto screen() const -> xcb_screen_t*;
-    auto root_window() const -> xcb_window_t;
+    operator xcb_connection_t*() const { return xcb_connection; }
+    auto screen() const -> xcb_screen_t* { return xcb_screen; }
+    auto root_window() const -> xcb_window_t { return xcb_screen->root; }
 
     /// Looks up an atom's name, or requests it from the X server if it is not already cached
     auto query_name(xcb_atom_t atom) const -> std::string;
