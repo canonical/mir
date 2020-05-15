@@ -6,17 +6,6 @@ set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
 
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/mirclient.pc.in
-  ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
-  @ONLY
-)
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mirclientcpp.pc.in
-  ${CMAKE_CURRENT_BINARY_DIR}/mirclientcpp.pc
-  @ONLY
-)
-
-configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
   ${PROJECT_SOURCE_DIR}/include/client/mir_toolkit/version.h
 )
@@ -150,18 +139,6 @@ install(
   TARGETS mirclient
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit
-            ${CMAKE_SOURCE_DIR}/include/client/mir
-  DESTINATION "include/mirclient"
-)
-
-install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
-        ${CMAKE_CURRENT_BINARY_DIR}/mirclientcpp.pc
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
-)
 
 set(MIRCLIENT_DEBUG_EXTENSION_ABI 1)
 set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
