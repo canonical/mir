@@ -187,6 +187,14 @@ mf::XCBConnection::~XCBConnection()
     xcb_disconnect(xcb_connection);
 }
 
+void mf::XCBConnection::verify_not_in_error_state() const
+{
+    if (auto const error = xcb_connection_has_error(xcb_connection))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("XCB connection shut down: " + xcb_error_to_string(error)));
+    }
+}
+
 auto mf::XCBConnection::query_name(xcb_atom_t atom) const -> std::string
 {
     std::lock_guard<std::mutex>{atom_name_cache_mutex};

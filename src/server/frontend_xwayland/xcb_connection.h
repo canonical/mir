@@ -94,6 +94,9 @@ public:
     explicit XCBConnection(Fd const& fd);
     ~XCBConnection();
 
+    /// Throws if the connection has been shut down
+    void verify_not_in_error_state() const;
+
     operator xcb_connection_t*() const { return xcb_connection; }
     auto screen() const -> xcb_screen_t* { return xcb_screen; }
     auto root_window() const -> xcb_window_t { return xcb_screen->root; }
