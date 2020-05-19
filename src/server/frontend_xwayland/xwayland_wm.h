@@ -91,6 +91,7 @@ private:
     void handle_unmap_notify(xcb_unmap_notify_event_t *event);
     void handle_destroy_notify(xcb_destroy_notify_event_t *event);
     void handle_focus_in(xcb_focus_in_event_t* event);
+    void handle_error(xcb_generic_error_t* event);
 
     std::shared_ptr<WaylandConnector> const wayland_connector;
     wl_client* const wayland_client;

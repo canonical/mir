@@ -390,6 +390,9 @@ void mf::XWaylandWM::handle_events()
 
 void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
 {
+    // see https://www.systutorials.com/docs/linux/man/3-xcb-requests/
+    int const xcb_error_type = 0;
+
     int type = event->response_type & ~0x80;
     switch (type)
     {
@@ -453,6 +456,8 @@ void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
         break;
     case XCB_FOCUS_IN:
         handle_focus_in(reinterpret_cast<xcb_focus_in_event_t*>(event));
+    case xcb_error_type:
+        handle_error(reinterpret_cast<xcb_generic_error_t*>(event));
     default:
         break;
     }
@@ -789,5 +794,13 @@ void mf::XWaylandWM::handle_focus_in(xcb_focus_in_event_t* event)
         focused_window = event->event;
         // We might want to keep X11 focus and Mir focus in sync
         // (either by requesting a focus change in Mir, reverting this X11 focus change or both)
+    }
+}
+
+void mf::XWaylandWM::handle_error(xcb_generic_error_t* event)
+{
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_warning("XWayland XCB error: %s", connection->error_debug_string(event).c_str());
     }
 }

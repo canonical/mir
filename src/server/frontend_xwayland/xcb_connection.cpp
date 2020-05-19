@@ -535,6 +535,48 @@ auto mf::XCBConnection::window_debug_string(xcb_window_t window) const -> std::s
         return "window " + number_to_readable_name(window);
 }
 
+auto mf::XCBConnection::error_debug_string(xcb_generic_error_t* error) const -> std::string
+{
+    std::string result;
+
+    switch (error->error_code)
+    {
+    case XCB_REQUEST:
+        result = "not a valid request";
+        break;
+
+    case XCB_VALUE:
+    {
+        auto const value_error{reinterpret_cast<xcb_value_error_t*>(error)};
+        result += std::to_string(value_error->bad_value) + " is an invalid value";
+        break;
+    }
+
+    case XCB_WINDOW:
+    {
+        auto const window_error{reinterpret_cast<xcb_window_error_t*>(error)};
+        result +=
+            window_debug_string(window_error->bad_value) +
+            " (ID " + std::to_string(window_error->bad_value) + ") does not exist";
+        break;
+    }
+    case XCB_ATOM:
+    {
+        auto const atom_error{reinterpret_cast<xcb_atom_error_t*>(error)};
+        result += "atom " + std::to_string(atom_error->bad_value) + " does not exist";
+        break;
+    }
+    default:
+        break;
+    }
+
+    result +=
+        " (error code " + std::to_string(error->error_code) +
+        ", opcode " + std::to_string(error->major_code) + "." + std::to_string(error->minor_code) + ")";
+
+    return result;
+}
+
 auto mf::XCBConnection::xcb_type_atom(XCBType type) const -> xcb_atom_t
 {
     switch (type)
