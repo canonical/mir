@@ -201,6 +201,9 @@ mf::XWaylandWM::~XWaylandWM()
     if (verbose_xwayland_logging_enabled())
         log_debug("...done closing surfaces");
 
+    xcb_destroy_window(*connection, wm_window);
+    connection->flush();
+
     dispatcher->remove_watch(wm_dispatcher);
 }
 
