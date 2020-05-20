@@ -132,7 +132,6 @@ public:
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, Fd const& fd)
     : connection{std::make_shared<XCBConnection>(fd)},
       wayland_connector(wayland_connector),
-      dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
       wayland_client{wayland_client},
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
       cursors{std::make_unique<XWaylandCursors>(connection)},
@@ -140,11 +139,9 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       wm_dispatcher{std::make_shared<mir::dispatch::ReadableFd>(
           fd, [this]() { handle_events(); })},
       event_thread{std::make_unique<mir::dispatch::ThreadedDispatcher>(
-          "Mir/X11 WM Reader", dispatcher, []() { mir::terminate_with_current_exception(); })},
+          "Mir/X11 WM Reader", wm_dispatcher, []() { mir::terminate_with_current_exception(); })},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)}
 {
-    dispatcher->add_watch(wm_dispatcher);
-
     check_xfixes(*connection);
 
     uint32_t const attrib_values[]{
@@ -203,8 +200,6 @@ mf::XWaylandWM::~XWaylandWM()
 
     xcb_destroy_window(*connection, wm_window);
     connection->flush();
-
-    dispatcher->remove_watch(wm_dispatcher);
 }
 
 auto mf::XWaylandWM::get_wm_surface(

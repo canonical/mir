@@ -43,7 +43,6 @@ namespace dispatch
 {
 class ReadableFd;
 class ThreadedDispatcher;
-class MultiplexingDispatchable;
 }
 namespace frontend
 {
@@ -94,7 +93,6 @@ private:
     void handle_focus_in(xcb_focus_in_event_t* event);
 
     std::shared_ptr<WaylandConnector> const wayland_connector;
-    std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     wl_client* const wayland_client;
     std::shared_ptr<XWaylandWMShell> const wm_shell;
     std::unique_ptr<XWaylandCursors> const cursors;
