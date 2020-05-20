@@ -142,21 +142,30 @@ void log_drm_details(std::vector<std::shared_ptr<mgm::helpers::DRMHelper>> const
             version->version_patchlevel,
             version->date);
 
-        mg::kms::DRMModeResources resources{device->fd};
-        for (auto const& connector : resources.connectors())
+        try
         {
-            mir::log_info(
-                "\tOutput: %s (%s)",
-                mg::kms::connector_name(connector).c_str(),
-                describe_connection_status(*connector));
-            for (auto i = 0; i < connector->count_modes; ++i)
+            mg::kms::DRMModeResources resources{device->fd};
+            for (auto const& connector : resources.connectors())
             {
                 mir::log_info(
-                    "\t\tMode: %i×%i@%.2f",
-                    connector->modes[i].hdisplay,
-                    connector->modes[i].vdisplay,
-                    calculate_vrefresh_hz(connector->modes[i]));
+                    "\tOutput: %s (%s)",
+                    mg::kms::connector_name(connector).c_str(),
+                    describe_connection_status(*connector));
+                for (auto i = 0; i < connector->count_modes; ++i)
+                {
+                    mir::log_info(
+                        "\t\tMode: %i×%i@%.2f",
+                        connector->modes[i].hdisplay,
+                        connector->modes[i].vdisplay,
+                        calculate_vrefresh_hz(connector->modes[i]));
+                }
             }
+        }
+        catch (std::exception const& error)
+        {
+            mir::log_info(
+                "\tKMS not supported (%s)",
+                error.what());
         }
     }
 }

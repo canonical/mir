@@ -363,8 +363,8 @@ TEST_F(MesaDisplayTest, create_display_kms_failure)
     Mock::VerifyAndClearExpectations(&mock_drm);
 
     EXPECT_CALL(mock_drm, drmModeGetResources(_))
-        .Times(Exactly(1))
-        .WillOnce(Return(reinterpret_cast<drmModeRes*>(0)));
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(nullptr));
 
     EXPECT_CALL(mock_drm, drmModeFreeResources(_))
         .Times(Exactly(0));
@@ -421,6 +421,53 @@ TEST_F(MesaDisplayTest, ignores_non_modesetting_nodes)
     // …and ensure that if we query the modesetting API, we'll fail.
     ON_CALL(mock_drm, drmModeGetResources(mtd::IsFdOfDevice("/dev/dri/card1")))
         .WillByDefault(SetErrnoAndReturn(EINVAL, nullptr));
+
+    EXPECT_NO_THROW({
+        auto platform = create_platform();
+        auto display = create_display(platform);
+    });
+}
+
+TEST_F(MesaDisplayTest, handles_first_card_not_supporting_modeset)
+{
+    using namespace testing;
+
+    // The platform should open all DRM nodes.
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card0"), _, _)).Times(AtLeast(1));
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card1"), _, _)).Times(AtLeast(1));
+
+    // First device is rendering only…
+    mock_drm.reset("/dev/dri/card0");
+    EXPECT_CALL(mock_drm, drmModeGetResources(mtd::IsFdOfDevice("/dev/dri/card0")))
+        .Times(AtLeast(1))
+        .WillRepeatedly(SetErrnoAndReturn(EOPNOTSUPP, nullptr));
+    EXPECT_CALL(mock_drm, drmModeGetResources(mtd::IsFdOfDevice("/dev/dri/card1")))
+        .Times(AtLeast(1));
+
+    // …and set up some connectors on the second card.
+    std::vector<drmModeModeInfo> modes;
+    modes.push_back(
+        mtd::FakeDRMResources::create_mode(
+            1920, 1080,
+            138500, 2080, 1111,
+            mtd::FakeDRMResources::PreferredMode));
+    uint32_t const encoder_id{33};
+    uint32_t const crtc_id{22};
+    uint32_t const connector_id{1};
+    std::vector<uint32_t> possible_encoder_ids{encoder_id};
+
+    mock_drm.add_crtc("/dev/dri/card1", crtc_id, modes[0]);
+    mock_drm.add_encoder("/dev/dri/card1", encoder_id, crtc_id, 0x1);
+    mock_drm.add_connector(
+        "/dev/dri/card1",
+        connector_id,
+        DRM_MODE_CONNECTOR_HDMIA,
+        DRM_MODE_CONNECTED,
+        encoder_id,
+        modes,
+        possible_encoder_ids,
+        mir::geometry::Size{150, 100});
+    mock_drm.prepare("/dev/dri/card1");
 
     EXPECT_NO_THROW({
         auto platform = create_platform();
