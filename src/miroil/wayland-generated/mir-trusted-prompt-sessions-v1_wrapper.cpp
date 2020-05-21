@@ -18,6 +18,7 @@ namespace mir
 {
 namespace wayland
 {
+extern struct wl_interface const zmir_prompt_session_v1_interface_data;
 extern struct wl_interface const zmir_trusted_prompt_session_v1_interface_data;
 extern struct wl_interface const zmir_trusted_prompt_sessions_manager_v1_interface_data;
 }
@@ -42,7 +43,7 @@ struct mw::ZmirTrustedPromptSessionsManagerV1::Thunks
 {
     static int const supported_version;
 
-    static void create_session_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
+    static void create_prompt_session_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, uint32_t application_pid)
     {
         auto me = static_cast<ZmirTrustedPromptSessionsManagerV1*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
@@ -54,7 +55,7 @@ struct mw::ZmirTrustedPromptSessionsManagerV1::Thunks
         }
         try
         {
-            me->create_session(id_resolved);
+            me->create_prompt_session(id_resolved, application_pid);
         }
         catch(ProtocolError const& err)
         {
@@ -62,7 +63,7 @@ struct mw::ZmirTrustedPromptSessionsManagerV1::Thunks
         }
         catch(...)
         {
-            internal_error_processing_request(client, "ZmirTrustedPromptSessionsManagerV1::create_session()");
+            internal_error_processing_request(client, "ZmirTrustedPromptSessionsManagerV1::create_prompt_session()");
         }
     }
 
@@ -111,7 +112,7 @@ struct mw::ZmirTrustedPromptSessionsManagerV1::Thunks
         }
     }
 
-    static struct wl_interface const* create_session_types[];
+    static struct wl_interface const* create_prompt_session_types[];
     static struct wl_message const request_messages[];
     static void const* request_vtable[];
 };
@@ -160,15 +161,16 @@ auto mw::ZmirTrustedPromptSessionsManagerV1::Global::interface_name() const -> c
     return ZmirTrustedPromptSessionsManagerV1::interface_name;
 }
 
-struct wl_interface const* mw::ZmirTrustedPromptSessionsManagerV1::Thunks::create_session_types[] {
-    &zmir_trusted_prompt_session_v1_interface_data};
+struct wl_interface const* mw::ZmirTrustedPromptSessionsManagerV1::Thunks::create_prompt_session_types[] {
+    &zmir_trusted_prompt_session_v1_interface_data,
+    nullptr};
 
 struct wl_message const mw::ZmirTrustedPromptSessionsManagerV1::Thunks::request_messages[] {
-    {"create_session", "n", create_session_types},
+    {"create_prompt_session", "nu", create_prompt_session_types},
     {"destroy", "", all_null_types}};
 
 void const* mw::ZmirTrustedPromptSessionsManagerV1::Thunks::request_vtable[] {
-    (void*)Thunks::create_session_thunk,
+    (void*)Thunks::create_prompt_session_thunk,
     (void*)Thunks::destroy_thunk};
 
 mw::ZmirTrustedPromptSessionsManagerV1* mw::ZmirTrustedPromptSessionsManagerV1::from(struct wl_resource* resource)
@@ -180,15 +182,32 @@ mw::ZmirTrustedPromptSessionsManagerV1* mw::ZmirTrustedPromptSessionsManagerV1::
     return nullptr;
 }
 
-// ZmirTrustedPromptSessionV1
+// ZmirPromptSessionV1
 
-struct mw::ZmirTrustedPromptSessionV1::Thunks
+struct mw::ZmirPromptSessionV1::Thunks
 {
     static int const supported_version;
 
+    static void new_fds_for_prompt_providers_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t no_of_fds)
+    {
+        auto me = static_cast<ZmirPromptSessionV1*>(wl_resource_get_user_data(resource));
+        try
+        {
+            me->new_fds_for_prompt_providers(no_of_fds);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
+        catch(...)
+        {
+            internal_error_processing_request(client, "ZmirPromptSessionV1::new_fds_for_prompt_providers()");
+        }
+    }
+
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ZmirTrustedPromptSessionV1*>(wl_resource_get_user_data(resource));
+        auto me = static_cast<ZmirPromptSessionV1*>(wl_resource_get_user_data(resource));
         try
         {
             me->destroy();
@@ -199,22 +218,46 @@ struct mw::ZmirTrustedPromptSessionV1::Thunks
         }
         catch(...)
         {
-            internal_error_processing_request(client, "ZmirTrustedPromptSessionV1::destroy()");
+            internal_error_processing_request(client, "ZmirPromptSessionV1::destroy()");
         }
     }
 
     static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<ZmirTrustedPromptSessionV1*>(wl_resource_get_user_data(resource));
+        delete static_cast<ZmirPromptSessionV1*>(wl_resource_get_user_data(resource));
+    }
+
+    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
+    {
+        auto me = static_cast<ZmirPromptSessionV1::Global*>(data);
+        auto resource = wl_resource_create(
+            client,
+            &zmir_prompt_session_v1_interface_data,
+            std::min((int)version, Thunks::supported_version),
+            id);
+        if (resource == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
+        try
+        {
+            me->bind(resource);
+        }
+        catch(...)
+        {
+            internal_error_processing_request(client, "ZmirPromptSessionV1 global bind");
+        }
     }
 
     static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
     static void const* request_vtable[];
 };
 
-int const mw::ZmirTrustedPromptSessionV1::Thunks::supported_version = 1;
+int const mw::ZmirPromptSessionV1::Thunks::supported_version = 1;
 
-mw::ZmirTrustedPromptSessionV1::ZmirTrustedPromptSessionV1(struct wl_resource* resource, Version<1>)
+mw::ZmirPromptSessionV1::ZmirPromptSessionV1(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -225,32 +268,65 @@ mw::ZmirTrustedPromptSessionV1::ZmirTrustedPromptSessionV1(struct wl_resource* r
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::ZmirTrustedPromptSessionV1::~ZmirTrustedPromptSessionV1()
+mw::ZmirPromptSessionV1::~ZmirPromptSessionV1()
 {
     wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
-bool mw::ZmirTrustedPromptSessionV1::is_instance(wl_resource* resource)
+void mw::ZmirPromptSessionV1::send_state_change_event(uint32_t state) const
 {
-    return wl_resource_instance_of(resource, &zmir_trusted_prompt_session_v1_interface_data, Thunks::request_vtable);
+    wl_resource_post_event(resource, Opcode::state_change, state);
 }
 
-void mw::ZmirTrustedPromptSessionV1::destroy_wayland_object() const
+void mw::ZmirPromptSessionV1::send_fd_callback_event(mir::Fd fd) const
+{
+    int32_t fd_resolved{fd};
+    wl_resource_post_event(resource, Opcode::fd_callback, fd_resolved);
+}
+
+bool mw::ZmirPromptSessionV1::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &zmir_prompt_session_v1_interface_data, Thunks::request_vtable);
+}
+
+void mw::ZmirPromptSessionV1::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_message const mw::ZmirTrustedPromptSessionV1::Thunks::request_messages[] {
+mw::ZmirPromptSessionV1::Global::Global(wl_display* display, Version<1>)
+    : wayland::Global{
+          wl_global_create(
+              display,
+              &zmir_prompt_session_v1_interface_data,
+              Thunks::supported_version,
+              this,
+              &Thunks::bind_thunk)}
+{
+}
+
+auto mw::ZmirPromptSessionV1::Global::interface_name() const -> char const*
+{
+    return ZmirPromptSessionV1::interface_name;
+}
+
+struct wl_message const mw::ZmirPromptSessionV1::Thunks::request_messages[] {
+    {"new_fds_for_prompt_providers", "u", all_null_types},
     {"destroy", "", all_null_types}};
 
-void const* mw::ZmirTrustedPromptSessionV1::Thunks::request_vtable[] {
+struct wl_message const mw::ZmirPromptSessionV1::Thunks::event_messages[] {
+    {"state_change", "u", all_null_types},
+    {"fd_callback", "h", all_null_types}};
+
+void const* mw::ZmirPromptSessionV1::Thunks::request_vtable[] {
+    (void*)Thunks::new_fds_for_prompt_providers_thunk,
     (void*)Thunks::destroy_thunk};
 
-mw::ZmirTrustedPromptSessionV1* mw::ZmirTrustedPromptSessionV1::from(struct wl_resource* resource)
+mw::ZmirPromptSessionV1* mw::ZmirPromptSessionV1::from(struct wl_resource* resource)
 {
-    if (wl_resource_instance_of(resource, &zmir_trusted_prompt_session_v1_interface_data, ZmirTrustedPromptSessionV1::Thunks::request_vtable))
+    if (wl_resource_instance_of(resource, &zmir_prompt_session_v1_interface_data, ZmirPromptSessionV1::Thunks::request_vtable))
     {
-        return static_cast<ZmirTrustedPromptSessionV1*>(wl_resource_get_user_data(resource));
+        return static_cast<ZmirPromptSessionV1*>(wl_resource_get_user_data(resource));
     }
     return nullptr;
 }
@@ -266,11 +342,11 @@ struct wl_interface const zmir_trusted_prompt_sessions_manager_v1_interface_data
     2, mw::ZmirTrustedPromptSessionsManagerV1::Thunks::request_messages,
     0, nullptr};
 
-struct wl_interface const zmir_trusted_prompt_session_v1_interface_data {
-    mw::ZmirTrustedPromptSessionV1::interface_name,
-    mw::ZmirTrustedPromptSessionV1::Thunks::supported_version,
-    1, mw::ZmirTrustedPromptSessionV1::Thunks::request_messages,
-    0, nullptr};
+struct wl_interface const zmir_prompt_session_v1_interface_data {
+    mw::ZmirPromptSessionV1::interface_name,
+    mw::ZmirPromptSessionV1::Thunks::supported_version,
+    2, mw::ZmirPromptSessionV1::Thunks::request_messages,
+    2, mw::ZmirPromptSessionV1::Thunks::event_messages};
 
 }
 }
