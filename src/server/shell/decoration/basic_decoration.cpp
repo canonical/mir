@@ -162,22 +162,12 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<input::CursorImages> const& cursor_images,
     std::shared_ptr<ms::Surface> const& window_surface)
-    : threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(this, executor)},
+    : threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
       static_geometry{std::make_shared<StaticGeometry>(default_geometry)},
       shell{shell},
       buffer_allocator{buffer_allocator},
       cursor_images{cursor_images},
-      session{[&]() -> std::shared_ptr<ms::Session>
-          {
-              auto const session = window_surface->session().lock();
-              if (!session)
-              {
-                  // ThreadsafeAccess calls fatal_error() if destroyed without being invalidated first
-                  threadsafe_self->invalidate();
-                  BOOST_THROW_EXCEPTION(std::runtime_error("BasicDecoration's window surface has no session"));
-              }
-              return session;
-          }()},
+      session{window_surface->session().lock()},
       buffer_streams{std::make_unique<BufferStreams>(session)},
       renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry)},
       window_surface{window_surface},
@@ -193,17 +183,16 @@ msd::BasicDecoration::BasicDecoration(
           threadsafe_self)},
       input_state{input_manager->state()}
 {
-    try
+    if (!session)
     {
-        // Trigger a full refresh
-        update(std::experimental::nullopt, std::experimental::nullopt);
+        BOOST_THROW_EXCEPTION(std::runtime_error("BasicDecoration's window surface has no session"));
     }
-    catch (...)
-    {
-        // ThreadsafeAccess calls fatal_error() if destroyed without being invalidated first
-        threadsafe_self->invalidate();
-        throw;
-    }
+
+    // Trigger a full refresh
+    update(std::experimental::nullopt, std::experimental::nullopt);
+
+    // Calls from the executor thread can come in at any point after this
+    threadsafe_self->initialize(this);
 }
 
 msd::BasicDecoration::~BasicDecoration()

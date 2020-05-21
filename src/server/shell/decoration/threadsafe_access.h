@@ -38,10 +38,8 @@ class ThreadsafeAccess
 {
 public:
     ThreadsafeAccess(
-        T* target,
         std::shared_ptr<Executor> const& executor)
-        : target{target},
-          executor{executor}
+        : executor{executor}
     {
     }
 
@@ -49,6 +47,14 @@ public:
     {
         if (target)
             fatal_error("ThreadsafeAccess never invalidated");
+    }
+
+    void initialize(T* t)
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (target)
+            fatal_error("ThreadsafeAccess initialized multiple times");
+        target = t;
     }
 
     void spawn(std::function<void(T*)>&& work)
@@ -69,7 +75,7 @@ public:
 
 private:
     std::mutex mutex;
-    std::experimental::optional<T* const> target;
+    std::experimental::optional<T*> target;
     std::shared_ptr<Executor> executor;
 };
 }
