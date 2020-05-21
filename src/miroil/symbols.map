@@ -10,6 +10,7 @@ global:
     miroil::GLBuffer::?GLBuffer*;
     miroil::GLBuffer::GLBuffer*;
     miroil::GLBuffer::bind*;
+    miroil::GLBuffer::gl_bind_tex*;
     miroil::GLBuffer::has_alpha_channel*;
     miroil::GLBuffer::operator*;
     miroil::GLBuffer::reset*;
