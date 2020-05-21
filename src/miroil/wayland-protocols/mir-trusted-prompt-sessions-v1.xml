@@ -32,11 +32,12 @@
       TODO
     </description>
 
-    <request name="create_session">
+    <request name="create_prompt_session">
       <description summary="create a new trusted prompt session">
         Create a new trusted prompt session.
       </description>
       <arg name="id" type="new_id" interface="zmir_trusted_prompt_session_v1"/>
+      <arg name="application_pid" type="uint" summary="process id of the initiating application"/>
     </request>
 
     <request name="destroy" type="destructor">
@@ -46,12 +47,33 @@
     </request>
   </interface>
 
-  <interface name="zmir_trusted_prompt_session_v1" version="1">
+  <interface name="zmir_prompt_session_v1" version="1">
+
+    <request name="new_fds_for_prompt_providers">
+      <description summary="allocate some FDs for prompt providers to connect on">
+        TODO Need to translate this to something meaningful on Wayland
+      </description>
+      <arg name="no_of_fds" type="uint" summary="number of fds to allocate"/>
+    </request>
 
     <request name="destroy" type="destructor">
       <description summary="destroy the trusted prompt session">
         Destroy the trusted prompt session.
       </description>
     </request>
+
+    <enum name="state">
+      <entry name="stopped" value="0"/>
+      <entry name="started" value="1"/>
+      <entry name="suspended" value="2"/>
+    </enum>
+
+    <event name="state_change">
+      <arg name="state" type="uint" summary="see enum state"/>
+    </event>
+
+    <event name="fd_callback">
+      <arg name="fd" type="fd" summary="allocated FD"/>
+    </event>
   </interface>
 </protocol>

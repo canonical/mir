@@ -21,7 +21,7 @@ namespace wayland
 {
 
 class ZmirTrustedPromptSessionsManagerV1;
-class ZmirTrustedPromptSessionV1;
+class ZmirPromptSessionV1;
 
 class ZmirTrustedPromptSessionsManagerV1 : public Resource
 {
@@ -55,30 +55,59 @@ public:
     };
 
 private:
-    virtual void create_session(struct wl_resource* id) = 0;
+    virtual void create_prompt_session(struct wl_resource* id, uint32_t application_pid) = 0;
     virtual void destroy() = 0;
 };
 
-class ZmirTrustedPromptSessionV1 : public Resource
+class ZmirPromptSessionV1 : public Resource
 {
 public:
-    static char const constexpr* interface_name = "zmir_trusted_prompt_session_v1";
+    static char const constexpr* interface_name = "zmir_prompt_session_v1";
 
-    static ZmirTrustedPromptSessionV1* from(struct wl_resource*);
+    static ZmirPromptSessionV1* from(struct wl_resource*);
 
-    ZmirTrustedPromptSessionV1(struct wl_resource* resource, Version<1>);
-    virtual ~ZmirTrustedPromptSessionV1();
+    ZmirPromptSessionV1(struct wl_resource* resource, Version<1>);
+    virtual ~ZmirPromptSessionV1();
+
+    void send_state_change_event(uint32_t state) const;
+    void send_fd_callback_event(mir::Fd fd) const;
 
     void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
 
+    struct State
+    {
+        static uint32_t const stopped = 0;
+        static uint32_t const started = 1;
+        static uint32_t const suspended = 2;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const state_change = 0;
+        static uint32_t const fd_callback = 1;
+    };
+
     struct Thunks;
 
     static bool is_instance(wl_resource* resource);
 
+    class Global : public wayland::Global
+    {
+    public:
+        Global(wl_display* display, Version<1>);
+
+        auto interface_name() const -> char const* override;
+
+    private:
+        virtual void bind(wl_resource* new_zmir_prompt_session_v1) = 0;
+        friend ZmirPromptSessionV1::Thunks;
+    };
+
 private:
+    virtual void new_fds_for_prompt_providers(uint32_t no_of_fds) = 0;
     virtual void destroy() = 0;
 };
 
