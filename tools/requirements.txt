@@ -1,3 +1,2 @@
 launchpadlib
-httplib2==0.11.3
 requests
