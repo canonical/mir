@@ -88,13 +88,12 @@ auto xcb_error_to_string(int error) -> std::string
     return "unknwon XCB error " + std::to_string(error);
 }
 
-auto connect_to_fd(int fd) -> xcb_connection_t*
+auto connect_to_fd(mir::Fd const& fd) -> xcb_connection_t*
 {
     xcb_connection_t* connection = xcb_connect_to_fd(fd, nullptr);
     if (auto const error = xcb_connection_has_error(connection))
     {
         xcb_disconnect(connection);
-        close(fd);
         BOOST_THROW_EXCEPTION(std::runtime_error("xcb_connect_to_fd() failed: " + xcb_error_to_string(error)));
     }
     else
@@ -134,7 +133,7 @@ mf::XCBConnection::Atom::operator xcb_atom_t() const
     return atom;
 }
 
-mf::XCBConnection::XCBConnection(int fd)
+mf::XCBConnection::XCBConnection(Fd const& fd)
     : fd{fd},
       xcb_connection{connect_to_fd(fd)},
       xcb_screen{xcb_setup_roots_iterator(xcb_get_setup(xcb_connection)).data},
@@ -186,7 +185,6 @@ mf::XCBConnection::XCBConnection(int fd)
 mf::XCBConnection::~XCBConnection()
 {
     xcb_disconnect(xcb_connection);
-    close(fd);
 }
 
 mf::XCBConnection::operator xcb_connection_t*() const

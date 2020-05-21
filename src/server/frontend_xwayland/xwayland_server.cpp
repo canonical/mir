@@ -152,7 +152,7 @@ void mf::XWaylandServer::spawn()
         default:
             close(wl_client_fd[client]);
             close(wm_fd[client]);
-            connect_wm_to_xwayland(wl_client_fd[server], wm_fd[server], lock);
+            connect_wm_to_xwayland(Fd{wl_client_fd[server]}, Fd{wm_fd[server]}, lock);
             if (spawn_thread_xserver_status != STARTING)
             {
                 // Reset the tries since the server started
@@ -251,7 +251,9 @@ bool spin_wait_for(sig_atomic_t& xserver_ready)
 }
 
 void mf::XWaylandServer::connect_wm_to_xwayland(
-    int wl_client_server_fd, int wm_server_fd, std::unique_lock<decltype(spawn_thread_mutex)>& spawn_thread_lock)
+    Fd const& wl_client_server_fd,
+    Fd const& wm_server_fd,
+    std::unique_lock<decltype(spawn_thread_mutex)>& spawn_thread_lock)
 {
     // We need to set up the signal handling before connecting wl_client_server_fd
     static sig_atomic_t xserver_ready{ false };
@@ -296,7 +298,6 @@ void mf::XWaylandServer::connect_wm_to_xwayland(
     if (xwayland_startup_timed_out)
     {
         mir::log_info("Stalled start of Xserver, trying to start again!");
-        close(wm_server_fd);
         return;
     }
 

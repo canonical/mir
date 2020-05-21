@@ -117,7 +117,7 @@ public:
     mf::XWaylandWM* const wm;
 };
 
-mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, int fd)
+mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, Fd const& fd)
     : connection{std::make_shared<XCBConnection>(fd)},
       wayland_connector(wayland_connector),
       dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
@@ -126,8 +126,7 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       cursors{std::make_unique<XWaylandCursors>(connection)},
       wm_window{create_wm_window(*connection)},
       wm_dispatcher{std::make_shared<mir::dispatch::ReadableFd>(
-          mir::Fd{mir::IntOwnedFd{fd}},
-          [this]() { handle_events(); })},
+          fd, [this]() { handle_events(); })},
       event_thread{std::make_unique<mir::dispatch::ThreadedDispatcher>(
           "Mir/X11 WM Reader", dispatcher, []() { mir::terminate_with_current_exception(); })},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)}

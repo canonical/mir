@@ -22,6 +22,7 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
 #include "mir/fatal.h"
+#include "mir/fd.h"
 
 #include <xcb/xcb.h>
 #include <string>
@@ -60,7 +61,7 @@ template<> struct NativeXCBType<XCBType::WM_PROTOCOLS>  { typedef uint32_t type;
 class XCBConnection
 {
 private:
-    int const fd;
+    Fd const fd;
     xcb_connection_t* const xcb_connection;
     xcb_screen_t* const xcb_screen;
 
@@ -90,8 +91,7 @@ public:
         std::atomic<xcb_atom_t> mutable atom{XCB_ATOM_NONE};
     };
 
-    /// Takes ownership of the given FD
-    explicit XCBConnection(int fd);
+    explicit XCBConnection(Fd const& fd);
     ~XCBConnection();
 
     operator xcb_connection_t*() const;

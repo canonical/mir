@@ -54,7 +54,9 @@ private:
     void execl_xwayland(int wl_client_client_fd, int wm_client_fd);
     /// Called after fork() if we should continue on as Mir
     void connect_wm_to_xwayland(
-        int wl_client_server_fd, int wm_server_fd, std::unique_lock<std::mutex>& spawn_thread_lock);
+        Fd const& wl_client_server_fd,
+        Fd const& wm_server_fd,
+        std::unique_lock<std::mutex>& spawn_thread_lock);
     void new_spawn_thread();
 
     struct SocketFd
