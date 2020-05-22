@@ -41,12 +41,23 @@ void mgm::RealKMSOutputContainer::update_from_hardware_state()
 {
     decltype(outputs) new_outputs;
 
+    // TODO: Accumulate errors and present them all.
+    std::exception_ptr last_error;
+
     for (auto drm_fd : drm_fds)
     {
-        kms::DRMModeResources resources{drm_fd};
+        std::unique_ptr<kms::DRMModeResources> resources;
+        try
+        {
+            resources = std::make_unique<kms::DRMModeResources>(drm_fd);
+        }
+        catch (std::exception const&)
+        {
+            last_error = std::current_exception();
+            continue;
+        }
 
-
-        for (auto &&connector : resources.connectors())
+        for (auto &&connector : resources->connectors())
         {
             // Caution: O(n²) here, but n is the number of outputs, so should
             // conservatively be << 100.
@@ -79,5 +90,10 @@ void mgm::RealKMSOutputContainer::update_from_hardware_state()
         }
 
     }
+    if (new_outputs.empty() && last_error)
+    {
+        std::rethrow_exception(last_error);
+    }
+
     outputs = new_outputs;
 }
