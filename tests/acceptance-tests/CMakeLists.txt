@@ -73,10 +73,6 @@ if (MIR_BUILD_INTERPROCESS_TESTS)
   )
 endif()
 
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-  list(APPEND SOURCES test_symbols_required_by_mesa.cpp)
-endif()
-
 # BEGIN "throwbacks"
 # The following tests use still files we have chosen not to support in the public API
 # TODO update these "throwback" tests to rely only on the public APIs
