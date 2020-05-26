@@ -9,27 +9,22 @@ declare -A abi_var_for=(\
     ["mirplatform"]="MIRPLATFORM_ABI" \
     ["mirserver"]="MIRSERVER_ABI" \
     ["mircookie"]="MIRCOOKIE_ABI" \
-    ["mirclientplatformmesa"]="MIR_CLIENT_PLATFORM_ABI" \
     ["mirplatformgraphicsmesakms"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" \
     ["mirplatforminputevdev"]="MIR_SERVER_INPUT_PLATFORM_ABI" )
 
 declare -A libtype=(\
-    ["mirclientplatformmesa"]="plugin-client" \
     ["mirplatformgraphicsmesakms"]="plugin" \
     ["mirplatforminputevdev"]="plugin" )
 
 declare -A package_name=(\
-    ["mirclientplatformmesa"]="mir-client-platform-mesa" \
     ["mirplatformgraphicsmesakms"]="mir-platform-graphics-mesa-kms" \
     ["mirplatforminputevdev"]="mir-platform-input-evdev" )
 
 declare -A libsoname=(\
-    ["mirclientplatformmesa"]="mir/client-platform/mesa" \
     ["mirplatformgraphicsmesakms"]="mir/server-platform/graphics-mesa-kms" \
     ["mirplatforminputevdev"]="mir/server-platform/input-evdev" )
 
 declare -A buildsoname=(\
-    ["mirclientplatformmesa"]="client-modules/mesa" \
     ["mirplatformgraphicsmesakms"]="server-modules/graphics-mesa-kms" \
     ["mirplatforminputevdev"]="server-modules/input-evdev" )
 
