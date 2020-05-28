@@ -187,21 +187,6 @@ mf::XCBConnection::~XCBConnection()
     xcb_disconnect(xcb_connection);
 }
 
-mf::XCBConnection::operator xcb_connection_t*() const
-{
-    return xcb_connection;
-}
-
-auto mf::XCBConnection::screen() const -> xcb_screen_t*
-{
-    return xcb_screen;
-}
-
-auto mf::XCBConnection::root_window() const -> xcb_window_t
-{
-    return xcb_screen->root;
-}
-
 auto mf::XCBConnection::query_name(xcb_atom_t atom) const -> std::string
 {
     std::lock_guard<std::mutex>{atom_name_cache_mutex};
