@@ -41,4 +41,6 @@ int main()
     spinner(display);
 
     wl_display_disconnect(display);
+
+    return EXIT_SUCCESS;
 }
