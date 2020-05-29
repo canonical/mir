@@ -227,9 +227,6 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
         args.push_back(strdup(std::to_string(fd).c_str()));
     }
 
-    args.push_back("-wm");
-    args.push_back(wm_fd_str.c_str());
-    args.push_back("-terminate");
     args.push_back(NULL);
 
     execvp(xwayland_path.c_str(), const_cast<char* const*>(args.data()));
