@@ -119,7 +119,7 @@ jobs:
     before_install: *decrypt-bot-data
     install:
     - pip install -r tools/requirements.txt
-    - if [ ${TRAVIS_EVENT_TYPE} == cron ]; then sudo snap install review-tools; fi
+    - if [ ${TRAVIS_EVENT_TYPE} == cron ]; then sudo apt install snapd; sudo snap install review-tools; fi
     script:
     - tools/process_snaps.py
   allow_failures:
