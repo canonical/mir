@@ -19,6 +19,7 @@
 #include "mir/graphics/display_configuration.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
