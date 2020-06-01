@@ -56,6 +56,7 @@ env:
   - TASK=google:ubuntu-20.04-64:spread/build/ubuntu:clang
   - TASK=google:fedora-30-64:spread/build/fedora:amd64
   - TASK=google:fedora-31-64:spread/build/fedora:amd64
+  - TASK=google:fedora-32-64:spread/build/fedora:amd64
 
 before_install:
 - mkdir -p ${SPREAD_PATH}
@@ -125,5 +126,4 @@ jobs:
   allow_failures:
     - env: TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
     - env: TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
-    - env: TASK=google:fedora-30-64:spread/build/fedora:amd64
   fast_finish: true
