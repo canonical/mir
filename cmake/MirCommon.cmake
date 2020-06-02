@@ -102,6 +102,38 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
   # We need to load liblttng-ust-fork.so to make this work reliably.
   list(APPEND test_env "LD_PRELOAD=liblttng-ust-fork.so")
 
+  # However, we *also* need to respect any existing LD_PRELOADs in the environment,
+  # and only the last LD_PRELOAD set will win. So we need to coalesce the LD_PRELOADs
+  set(env_without_preloads ${test_env})
+  set(env_only_preloads ${test_env})
+
+  # Split the list into the LD_PRELOAD elements, and everything else…
+  list(FILTER env_without_preloads EXCLUDE REGEX "^LD_PRELOAD=.+")
+  list(FILTER env_only_preloads INCLUDE REGEX "^LD_PRELOAD=.+")
+
+  # If there's more than one preload we need to coalesce the values into a single LD_PRELOAD=
+  list(LENGTH env_only_preloads preload_count)
+  if (${preload_count} GREATER "1")
+    # Extract each of the values on the right hand side of LD_PRELOAD=
+    # into the preload_values list
+    foreach(preload_instance ${env_only_preloads})
+      string(FIND ${preload_instance} "=" separator_index)
+      math(EXPR preload_value_start "${separator_index} + 1")
+      string(SUBSTRING ${preload_instance} ${preload_value_start} -1 preload_value)
+      string(STRIP ${preload_value} preload_value_stripped)
+      list(APPEND preload_values ${preload_value_stripped})
+    endforeach()
+
+    # Now construct a single LD_PRELOAD=first:second:…:last string
+    list(JOIN preload_values ":" coalesced_values)
+    set(coalesced_preload "LD_PRELOAD=${coalesced_values}")
+
+    # Add the LD_PRELOAD=… to the end of the non-LD_PRELOAD list…
+    list(APPEND env_without_preloads ${coalesced_preload})
+    # …and now replace the original environment list.
+    set(test_env ${env_without_preloads})
+  endif()
+
   # Final commands
   set(test_cmd "${test_cmd}" "--gtest_filter=-${test_no_memcheck_filter}:${test_exclusion_filter}")
   set(test_cmd_no_memcheck "${test_cmd_no_memcheck}" "--gtest_death_test_style=threadsafe" "--gtest_filter=${test_no_memcheck_filter}:-${test_exclusion_filter}")
