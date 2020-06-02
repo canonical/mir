@@ -125,7 +125,7 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
     endforeach()
 
     # Now construct a single LD_PRELOAD=first:second:…:last string
-    list(JOIN preload_values ":" coalesced_values)
+    string(REPLACE ";" ":" coalesced_values "${preload_values}")
     set(coalesced_preload "LD_PRELOAD=${coalesced_values}")
 
     # Add the LD_PRELOAD=… to the end of the non-LD_PRELOAD list…
