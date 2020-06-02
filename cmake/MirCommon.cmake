@@ -147,15 +147,18 @@ function (mir_discover_external_gtests)
   set(multi_value_args COMMAND EXCLUDE_FILTER)
   cmake_parse_arguments(TEST "" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
+  # The whole command, as we would pass to a shell to execute
   string(REPLACE ";" " " TEST_COMMAND_STRING "${TEST_COMMAND}")
+  # The executable is going to be the first element of the COMMAND list
+  list(GET ${TEST_COMMAND} 0 TEST_EXECUTABLE)
 
-  add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND_STRING})
+  add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND})
   if (TEST_WORKING_DIRECTORY)
     set_tests_properties(${TEST_NAME} PROPERTIES WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY})
   endif()
 
   file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND_STRING}\" -- ${TEST_COMMAND_STRING}\n")
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_EXECUTABLE}\" -- ${TEST_COMMAND_STRING}\n")
 endfunction()
 
 function (mir_add_memcheck_test)
