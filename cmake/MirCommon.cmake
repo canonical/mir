@@ -170,10 +170,6 @@ function (mir_discover_tests_with_fd_leak_detection EXECUTABLE)
   mir_discover_tests_internal(${EXECUTABLE} "" TRUE ${ARGN})
 endfunction()
 
-function (mir_discover_tests_with_fd_leak_detection_and_env EXECUTABLE TEST_ENV_OPTION)
-  mir_discover_tests_internal(${EXECUTABLE} ${TEST_ENV_OPTION} TRUE ${ARGN})
-endfunction()
-
 function (mir_discover_external_gtests)
   set(one_value_args NAME WORKING_DIRECTORY)
   set(multi_value_args COMMAND EXCLUDE_FILTER)
