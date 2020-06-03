@@ -220,6 +220,17 @@ public:
                     << strerror(errno)
                     << "(" << errno << ")" << std::endl;
             }
+            std::cout << "Errors from DBusMock: " << std::endl;
+            while ((bytes_read = ::read(mock_stderr, buffer, sizeof(buffer))) > 0)
+            {
+                [](auto){}(::write(STDOUT_FILENO, buffer, bytes_read));
+            }
+            if (bytes_read < 0)
+            {
+                std::cout << "Failed to read dbusmock error output: "
+                          << strerror(errno)
+                          << "(" << errno << ")" << std::endl;
+            }
         }
     }
 
@@ -494,12 +505,18 @@ public:
             return;
 
         mir::test::Pipe stdout_pipe;
+        mir::test::Pipe stderr_pipe;
         mock_stdout = stdout_pipe.read_fd();
+        mock_stderr = stderr_pipe.read_fd();
 
         dbusmock = mtf::fork_and_run_in_a_different_process(
-            [stdout_fd = stdout_pipe.write_fd()]()
+            [
+                stdout_fd = stdout_pipe.write_fd(),
+                stderr_fd = stderr_pipe.write_fd()
+            ]()
             {
                 ::dup2(stdout_fd, 1);
+                ::dup2(stderr_fd, 2);
 
                 execlp(
                     "python3",
@@ -991,6 +1008,7 @@ private:
     std::shared_ptr<mtf::Process> dbusmock;
     std::unique_ptr<GDBusConnection, decltype(&g_object_unref)> bus_connection;
     mir::Fd mock_stdout;
+    mir::Fd mock_stderr;
 
     std::shared_ptr<mir::GLibMainLoop> const ml;
     mt::AutoUnblockThread ml_thread;
@@ -1175,6 +1193,7 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
     add_take_device_to_session(
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), True)");
+    add_release_device_to_session(session_path.c_str());
 
     mir::LogindConsoleServices services{the_main_loop()};
 
@@ -1227,6 +1246,8 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
     add_take_device_to_session(
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
+    add_release_device_to_session(session_path.c_str());
+    add_pause_device_complete_to_session(session_path.c_str());
 
     mir::LogindConsoleServices services{the_main_loop()};
 
@@ -1266,6 +1287,7 @@ TEST_F(LogindConsoleServices, acks_device_suspend_signal)
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
     add_pause_device_complete_to_session(session_path.c_str());
+    add_release_device_to_session(session_path.c_str());
 
     mir::LogindConsoleServices services{the_main_loop()};
 
@@ -1304,6 +1326,7 @@ TEST_F(LogindConsoleServices, handles_ack_device_suspend_failure)
     add_pause_device_complete_to_session(
         session_path.c_str(),
         "raise dbus.exceptions.DBusException('Device or resource busy (36)', name='System.Error.EBUSY')");
+    add_release_device_to_session(session_path.c_str());
 
     mir::LogindConsoleServices services{the_main_loop()};
 
@@ -1606,6 +1629,7 @@ TEST_F(LogindConsoleServices, can_acquire_device_without_running_main_loop)
     add_take_device_to_session(
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
+    add_release_device_to_session(session_path.c_str());
 
     auto not_running_main_loop =
         std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>());
