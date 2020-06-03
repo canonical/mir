@@ -111,25 +111,17 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
   list(FILTER env_without_preloads EXCLUDE REGEX "^LD_PRELOAD=.+")
   list(FILTER env_only_preloads INCLUDE REGEX "^LD_PRELOAD=.+")
 
-  # If there's more than one preload we need to coalesce the values into a single LD_PRELOAD=
-  list(LENGTH env_only_preloads preload_count)
-  if (${preload_count} GREATER "1")
-    # Extract each of the values on the right hand side of LD_PRELOAD=
-    # into the preload_values list
-    foreach(preload_instance ${env_only_preloads})
-      string(FIND ${preload_instance} "=" separator_index)
-      math(EXPR preload_value_start "${separator_index} + 1")
-      string(SUBSTRING ${preload_instance} ${preload_value_start} -1 preload_value)
-      string(STRIP ${preload_value} preload_value_stripped)
-      list(APPEND preload_values ${preload_value_stripped})
-    endforeach()
+  foreach(preload ${env_only_preloads})
+    # Concatenate all the preloads
+    string(SUBSTRING "${preload}" 11 -1 preload)
+    list(APPEND env_preloads "${preload}")
+  endforeach()
 
-    # Now construct a single LD_PRELOAD=first:second:…:last string
-    string(REPLACE ";" ":" coalesced_values "${preload_values}")
-    set(coalesced_preload "LD_PRELOAD=${coalesced_values}")
-
+  if (env_preloads)
+    # Join the list with colons
+    string(REPLACE ";" ":" env_preloads "${env_preloads}")
     # Add the LD_PRELOAD=… to the end of the non-LD_PRELOAD list…
-    list(APPEND env_without_preloads ${coalesced_preload})
+    list(APPEND env_without_preloads "LD_PRELOAD=${env_preloads}")
     # …and now replace the original environment list.
     set(test_env ${env_without_preloads})
   endif()
