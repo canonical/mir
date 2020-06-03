@@ -18,6 +18,7 @@
  */
 
 #include "mir_test_framework/process.h"
+#include "mir/log.h"
 
 #include <errno.h>
 #include <signal.h>
@@ -95,9 +96,13 @@ mtf::Process::~Process()
             terminate();
             wait_for_termination();
         }
-        catch (std::exception const &)
+        catch (std::exception const&)
         {
-            // Ignore a failure to signal the process.
+            mir::log(
+                mir::logging::Severity::error,
+               "mir_test_framework",
+               std::current_exception(),
+               "Failed to signal process");
         }
     }
 }
