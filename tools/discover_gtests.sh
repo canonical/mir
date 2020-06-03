@@ -23,7 +23,7 @@ print_help_and_exit()
 
 add_env()
 {
-    env="$env \"$1\""
+    env="$env ENVIRONMENT \"$1\""
 }
 
 add_cmd()
@@ -76,5 +76,5 @@ tests=$($test_binary --gtest_list_tests $filter | grep -v '^ ' | cut -d' ' -f1 |
 for t in $tests;
 do
     echo "add_test($testname.$t $cmd \"--gtest_filter=$t\")"
-    echo "set_tests_properties($testname.$t PROPERTIES ENVIRONMENT $env)"
+    echo "set_tests_properties($testname.$t PROPERTIES $env)"
 done

@@ -102,6 +102,30 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
   # We need to load liblttng-ust-fork.so to make this work reliably.
   list(APPEND test_env "LD_PRELOAD=liblttng-ust-fork.so")
 
+  # However, we *also* need to respect any existing LD_PRELOADs in the environment,
+  # and only the last LD_PRELOAD set will win. So we need to coalesce the LD_PRELOADs
+  set(env_without_preloads ${test_env})
+  set(env_only_preloads ${test_env})
+
+  # Split the list into the LD_PRELOAD elements, and everything else…
+  list(FILTER env_without_preloads EXCLUDE REGEX "^LD_PRELOAD=.+")
+  list(FILTER env_only_preloads INCLUDE REGEX "^LD_PRELOAD=.+")
+
+  foreach(preload ${env_only_preloads})
+    # Concatenate all the preloads
+    string(SUBSTRING "${preload}" 11 -1 preload)
+    list(APPEND env_preloads "${preload}")
+  endforeach()
+
+  if (env_preloads)
+    # Join the list with colons
+    string(REPLACE ";" ":" env_preloads "${env_preloads}")
+    # Add the LD_PRELOAD=… to the end of the non-LD_PRELOAD list…
+    list(APPEND env_without_preloads "LD_PRELOAD=${env_preloads}")
+    # …and now replace the original environment list.
+    set(test_env ${env_without_preloads})
+  endif()
+
   # Final commands
   set(test_cmd "${test_cmd}" "--gtest_filter=-${test_no_memcheck_filter}:${test_exclusion_filter}")
   set(test_cmd_no_memcheck "${test_cmd_no_memcheck}" "--gtest_death_test_style=threadsafe" "--gtest_filter=${test_no_memcheck_filter}:-${test_exclusion_filter}")
@@ -136,10 +160,6 @@ endfunction()
 
 function (mir_discover_tests_with_fd_leak_detection EXECUTABLE)
   mir_discover_tests_internal(${EXECUTABLE} "" TRUE ${ARGN})
-endfunction()
-
-function (mir_discover_tests_with_fd_leak_detection_and_env EXECUTABLE TEST_ENV_OPTION)
-  mir_discover_tests_internal(${EXECUTABLE} ${TEST_ENV_OPTION} TRUE ${ARGN})
 endfunction()
 
 function (mir_discover_external_gtests)
