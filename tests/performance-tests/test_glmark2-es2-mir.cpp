@@ -50,10 +50,7 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
     int run_glmark2(char const *args) {
         ResultFileType file_type = raw; // Should this still be selectable?
 
-        auto const cmd = "MIR_SOCKET=" + new_connection() + " "
-                         + command()
-                         + " -b build "
-                         + args;
+        auto const cmd = std::string{} + command() + " -b build " + args;
         mir::test::Popen p(cmd);
 
         const ::testing::TestInfo *const test_info =
