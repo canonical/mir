@@ -60,6 +60,12 @@ PENDING_BUILD = (
     "Uploading build",
 )
 
+
+IGNORED_SOURCES = (
+    "Deleted",
+    "Obsolete",
+)
+
 # See https://regex101.com/r/b8otIx/2
 MIR_VERSION_RE = re.compile(r"^(?P<version>[0-9\.]+)"              # major.minor.patch
                             r"(?:(?P<build>[+~](?:rc|dev)[0-9]+)"  # optional [~+]{rc,dev}* build tag
@@ -177,16 +183,28 @@ if __name__ == '__main__':
 
             if "ppa" in snap_map:
                 ppa = team.getPPAByName(name=snap_map["ppa"])
+                latest_source = None
                 logger.debug("Got ppa: %s", ppa)
 
-                try:
-                    latest_source = ppa.getPublishedSources(
-                        source_name=SOURCE_NAME,
-                        distro_series=series
-                    )[0]
-                except IndexError:
+                sources = ppa.getPublishedSources(
+                    source_name=SOURCE_NAME,
+                    distro_series=series)
+
+                if not sources:
                     logger.error("Did not find %s in %s/%s", SOURCE_NAME, TEAM, snap_map["ppa"])
                     continue
+
+                for source in sources:
+                    if source.status in IGNORED_SOURCES:
+                        logger.debug("Ignoring source: %s (status: %s)", source.display_name, source.status)
+                        continue
+                    latest_source = source
+                    break
+
+                if not latest_source:
+                    logger.error("Did not find a valid source for %s in %s/%s", SOURCE_NAME, TEAM, snap_map["ppa"])
+                    continue
+
                 logger.debug("Latest source: %s", latest_source.display_name)
 
                 mir_version = (
