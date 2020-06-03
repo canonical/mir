@@ -17,6 +17,7 @@
 #include "mir_test_framework/async_server_runner.h"
 #include "mir/test/popen.h"
 #include <mir_test_framework/executable_path.h>
+#include <miral/x11_support.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -96,10 +97,19 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
 
 struct GLMark2Xwayland : AbstractGLMark2Test
 {
+    GLMark2Xwayland()
+    {
+        // This is a slightly awkward method of enabling X11 support,
+        // but refactoring these tests to use MirAL can wait.
+        miral::X11Support{}(server);
+        add_to_environment("MIR_SERVER_ENABLE_X11", "1");
+    }
+
     char const* command() override
     {
-        static auto command = mir_test_framework::executable_path() + "/miral-xrun -Xwayland glmark2-es2";
-        return command.c_str();
+        add_to_environment("DISPLAY", server.x11_display().value().c_str());
+        static char const* const command = "glmark2-es2-wayland";
+        return command;
     }
 };
 
