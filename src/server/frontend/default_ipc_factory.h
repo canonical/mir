@@ -66,7 +66,6 @@ public:
         std::shared_ptr<graphics::PlatformIpcOperations> const& platform_ipc_operations,
         std::shared_ptr<DisplayChanger> const& display_changer,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<Screencast> const& screencast,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<input::CursorImages> const& cursor_images,
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
@@ -91,7 +90,6 @@ public:
         std::shared_ptr<SessionMediatorObserver> const& sm_observer,
         std::shared_ptr<EventSinkFactory> const& sink_factory,
         std::shared_ptr<MessageSender> const& message_sender,
-        std::shared_ptr<Screencast> const& effective_screencast,
         ConnectionContext const& connection_context,
         std::shared_ptr<input::CursorImages> const& cursor_images,
         std::shared_ptr<InputConfigurationChanger> const& input_changer);
@@ -104,7 +102,6 @@ private:
     std::shared_ptr<graphics::PlatformIpcOperations> const platform_ipc_operations;
     std::shared_ptr<DisplayChanger> const display_changer;
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
-    std::shared_ptr<Screencast> const screencast;
     std::shared_ptr<SessionAuthorizer> const session_authorizer;
     std::shared_ptr<input::CursorImages> const cursor_images;
     std::shared_ptr<scene::CoordinateTranslator> const translator;

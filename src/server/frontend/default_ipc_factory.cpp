@@ -227,7 +227,6 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<mg::PlatformIpcOperations> const& platform_ipc_operations,
     std::shared_ptr<DisplayChanger> const& display_changer,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<Screencast> const& screencast,
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<mi::CursorImages> const& cursor_images,
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
@@ -242,7 +241,6 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     platform_ipc_operations(platform_ipc_operations),
     display_changer(display_changer),
     buffer_allocator(buffer_allocator),
-    screencast(screencast),
     session_authorizer(session_authorizer),
     cursor_images(cursor_images),
     translator{translator},
@@ -273,16 +271,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
         display_changer,
         configuration_is_authorized,
         base_configuration_is_authorized);
-    std::shared_ptr<Screencast> effective_screencast;
-
-    if (session_authorizer->screencast_is_allowed(creds))
-    {
-        effective_screencast = screencast;
-    }
-    else
-    {
-        effective_screencast = std::make_shared<UnauthorizedScreencast>();
-    }
 
     auto const allow_prompt_session =
         session_authorizer->prompt_session_is_allowed(creds);
@@ -297,7 +285,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
         sm_observer,
         sink_factory,
         message_sender,
-        effective_screencast,
         connection_context,
         cursor_images,
         input_config_changer);
@@ -316,7 +303,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
     std::shared_ptr<SessionMediatorObserver> const& sm_observer,
     std::shared_ptr<mf::EventSinkFactory> const& sink_factory,
     std::shared_ptr<mf::MessageSender> const& message_sender,
-    std::shared_ptr<Screencast> const& effective_screencast,
     ConnectionContext const& connection_context,
     std::shared_ptr<mi::CursorImages> const& cursor_images,
     std::shared_ptr<InputConfigurationChanger> const& input_changer)
@@ -330,7 +316,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         sink_factory,
         message_sender,
         resource_cache(),
-        effective_screencast,
         connection_context,
         cursor_images,
         translator,

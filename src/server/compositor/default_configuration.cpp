@@ -23,10 +23,8 @@
 #include "default_display_buffer_compositor_factory.h"
 #include "multi_threaded_compositor.h"
 #include "gl/renderer_factory.h"
-#include "compositing_screencast.h"
 #include "mir/main_loop.h"
 
-#include "mir/frontend/screencast.h"
 #include "mir/options/configuration.h"
 
 #include <boost/throw_exception.hpp>
@@ -89,19 +87,5 @@ std::shared_ptr<mir::renderer::RendererFactory> mir::DefaultServerConfiguration:
         []()
         {
             return std::make_shared<mir::renderer::gl::RendererFactory>();
-        });
-}
-
-std::shared_ptr<mf::Screencast> mir::DefaultServerConfiguration::the_screencast()
-{
-    return screencast(
-        [this]()
-        {
-            return std::make_shared<mc::CompositingScreencast>(
-                the_scene(),
-                the_display(),
-                the_buffer_allocator(),
-                the_display_buffer_compositor_factory()
-                );
         });
 }

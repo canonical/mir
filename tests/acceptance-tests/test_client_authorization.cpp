@@ -118,10 +118,6 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
                 .Times(1)
                 .WillOnce(Return(false));
             EXPECT_CALL(mock_authorizer,
-                screencast_is_allowed(Truly(matches_creds)))
-                .Times(1)
-                .WillOnce(Return(false));
-            EXPECT_CALL(mock_authorizer,
                 prompt_session_is_allowed(Truly(matches_creds)))
                 .Times(1)
                 .WillOnce(Return(false));

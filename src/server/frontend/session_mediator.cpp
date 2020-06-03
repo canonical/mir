@@ -106,7 +106,6 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mf::EventSinkFactory> const& sink_factory,
     std::shared_ptr<mf::MessageSender> const& message_sender,
     std::shared_ptr<MessageResourceCache> const& resource_cache,
-    std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
     std::shared_ptr<mi::CursorImages> const& cursor_images,
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
@@ -126,7 +125,6 @@ mf::SessionMediator::SessionMediator(
     event_sink{sink_factory->create_sink(message_sender)},
     message_sender{message_sender},
     resource_cache(resource_cache),
-    screencast(screencast),
     connection_context(connection_context),
     cursor_images(cursor_images),
     translator{translator},
@@ -146,7 +144,6 @@ mf::SessionMediator::~SessionMediator() noexcept
         observer->session_error(mir_client_session->name(), __PRETTY_FUNCTION__, "connection dropped without disconnect");
         shell->close_session(mir_client_session);
     }
-    destroy_screencast_sessions();
 }
 
 void mf::SessionMediator::client_pid(int pid)
@@ -642,7 +639,6 @@ void mf::SessionMediator::disconnect(
         observer->session_disconnect_called(mir_client_session->name());
 
         shell->close_session(mir_client_session);
-        destroy_screencast_sessions();
     }
     weak_mir_client_session.reset();
     weak_scene_session.reset();
@@ -911,89 +907,35 @@ void mf::SessionMediator::cancel_base_display_configuration_preview(
 }
 
 void mf::SessionMediator::create_screencast(
-    const mir::protobuf::ScreencastParameters* parameters,
-    mir::protobuf::Screencast* protobuf_screencast,
-    google::protobuf::Closure* done)
+    const mir::protobuf::ScreencastParameters*,
+    mir::protobuf::Screencast*,
+    google::protobuf::Closure*)
 {
-    auto const msg_type = mg::BufferIpcMsgType::full_msg;
-
-    geom::Rectangle const region{
-        {parameters->region().left(), parameters->region().top()},
-        {parameters->region().width(), parameters->region().height()}
-    };
-    geom::Size const size{parameters->width(), parameters->height()};
-    MirPixelFormat const pixel_format = static_cast<MirPixelFormat>(parameters->pixel_format());
-
-    int nbuffers = 1;
-    if (parameters->has_num_buffers())
-        nbuffers = parameters->num_buffers();
-
-    MirMirrorMode mirror_mode = mir_mirror_mode_none;
-    if (parameters->has_mirror_mode())
-        mirror_mode = static_cast<MirMirrorMode>(parameters->mirror_mode());
-
-    auto screencast_session_id = screencast->create_session(region, size, pixel_format, nbuffers, mirror_mode);
-
-    if (nbuffers > 0)
-    {
-        auto buffer = screencast->capture(screencast_session_id);
-        screencast_buffer_tracker.track_buffer(screencast_session_id, buffer.get());
-        pack_protobuf_buffer(
-            *protobuf_screencast->mutable_buffer_stream()->mutable_buffer(),
-            buffer.get(),
-            msg_type);
-    }
-
-    protobuf_screencast->mutable_screencast_id()->set_value(
-        screencast_session_id.as_value());
-    protobuf_screencast->mutable_buffer_stream()->set_pixel_format(pixel_format);
-    protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
-        screencast_session_id.as_value());
-    protobuf_screencast->mutable_buffer_stream()->set_pixel_format(pixel_format);
-
-    done->Run();
+    BOOST_THROW_EXCEPTION((std::runtime_error{"Screencast unsupported"}));
 }
 
 void mf::SessionMediator::release_screencast(
-    const mir::protobuf::ScreencastId* protobuf_screencast_id,
+    const mir::protobuf::ScreencastId*,
     mir::protobuf::Void*,
-    google::protobuf::Closure* done)
+    google::protobuf::Closure*)
 {
-    ScreencastSessionId const screencast_session_id{
-        protobuf_screencast_id->value()};
-    screencast->destroy_session(screencast_session_id);
-    screencast_buffer_tracker.remove_session(screencast_session_id);
-    done->Run();
+    BOOST_THROW_EXCEPTION((std::runtime_error{"Screencast unsupported"}));
 }
 
 void mf::SessionMediator::screencast_buffer(
-    const mir::protobuf::ScreencastId* protobuf_screencast_id,
-    mir::protobuf::Buffer* protobuf_buffer,
-    google::protobuf::Closure* done)
+    const mir::protobuf::ScreencastId*,
+    mir::protobuf::Buffer*,
+    google::protobuf::Closure*)
 {
-    ScreencastSessionId const screencast_session_id{
-        protobuf_screencast_id->value()};
-
-    auto buffer = screencast->capture(screencast_session_id);
-    bool const already_tracked = screencast_buffer_tracker.track_buffer(screencast_session_id, buffer.get());
-    auto const msg_type = already_tracked ?
-        mg::BufferIpcMsgType::update_msg : mg::BufferIpcMsgType::full_msg;
-    pack_protobuf_buffer(*protobuf_buffer,
-                         buffer.get(),
-                         msg_type);
-
-    done->Run();
+    BOOST_THROW_EXCEPTION((std::runtime_error{"Screencast unsupported"}));
 }
 
 void mf::SessionMediator::screencast_to_buffer(
-    mir::protobuf::ScreencastRequest const* request,
+    mir::protobuf::ScreencastRequest const*,
     mir::protobuf::Void*,
-    google::protobuf::Closure* done)
+    google::protobuf::Closure*)
 {
-    ScreencastSessionId const screencast_session_id{request->id().value()};
-    auto buffer = buffer_cache.at(mg::BufferID{request->buffer_id()});
-    screencast->capture(screencast_session_id, buffer);
-    done->Run();
+    BOOST_THROW_EXCEPTION((std::runtime_error{"Screencast unsupported"}));
 }
 
 void mf::SessionMediator::create_buffer_stream(
@@ -1430,19 +1372,6 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
     });
 
     return config;
-}
-
-void mf::SessionMediator::destroy_screencast_sessions()
-{
-    std::vector<ScreencastSessionId> ids_to_untrack;
-    screencast_buffer_tracker.for_each_session([this, &ids_to_untrack](ScreencastSessionId id)
-    {
-        screencast->destroy_session(id);
-        ids_to_untrack.push_back(id);
-    });
-
-    for (auto const& id : ids_to_untrack)
-        screencast_buffer_tracker.remove_session(id);
 }
 
 auto mf::detail::PromptSessionStore::insert(std::shared_ptr<PromptSession> const& session) -> PromptSessionId
