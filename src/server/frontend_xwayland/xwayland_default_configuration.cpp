@@ -71,9 +71,9 @@ std::shared_ptr<mf::Connector> mir::DefaultServerConfiguration::the_xwayland_con
                     wayland_connector,
                     options->get<std::string>("xwayland-path"));
             }
-            catch (...)
+            catch (std::exception& x)
             {
-                mir::fatal_error("Invalid x11 display value provided, must be number only!");
+                mir::fatal_error("Failed to start XWaylandConnector: %s", x.what());
             }
         }
 
