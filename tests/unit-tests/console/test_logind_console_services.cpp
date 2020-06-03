@@ -1193,6 +1193,7 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
     add_take_device_to_session(
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), True)");
+    add_release_device_to_session(session_path.c_str());
 
     mir::LogindConsoleServices services{the_main_loop()};
 
@@ -1245,6 +1246,8 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
     add_take_device_to_session(
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
+    add_release_device_to_session(session_path.c_str());
+    add_pause_device_complete_to_session(session_path.c_str());
 
     mir::LogindConsoleServices services{the_main_loop()};
 
@@ -1284,6 +1287,7 @@ TEST_F(LogindConsoleServices, acks_device_suspend_signal)
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
     add_pause_device_complete_to_session(session_path.c_str());
+    add_release_device_to_session(session_path.c_str());
 
     mir::LogindConsoleServices services{the_main_loop()};
 
@@ -1322,6 +1326,7 @@ TEST_F(LogindConsoleServices, handles_ack_device_suspend_failure)
     add_pause_device_complete_to_session(
         session_path.c_str(),
         "raise dbus.exceptions.DBusException('Device or resource busy (36)', name='System.Error.EBUSY')");
+    add_release_device_to_session(session_path.c_str());
 
     mir::LogindConsoleServices services{the_main_loop()};
 
@@ -1624,6 +1629,7 @@ TEST_F(LogindConsoleServices, can_acquire_device_without_running_main_loop)
     add_take_device_to_session(
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
+    add_release_device_to_session(session_path.c_str());
 
     auto not_running_main_loop =
         std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>());
