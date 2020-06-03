@@ -28,6 +28,7 @@
 
 namespace mo = mir::options;
 namespace mtf = mir_test_framework;
+using namespace testing;
 
 namespace
 {
@@ -92,6 +93,8 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
 
         return score;
     }
+
+    static const int minimal_framerate = 100;
 };
 
 struct GLMark2Xwayland : AbstractGLMark2Test
@@ -117,43 +120,23 @@ struct GLMark2Wayland : AbstractGLMark2Test
     }
 };
 
-TEST_F(GLMark2Wayland, fullscreen_default)
-{
-    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
-}
-
-TEST_F(GLMark2Wayland, windowed_default)
-{
-    EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
-}
-
 TEST_F(GLMark2Wayland, fullscreen)
 {
-    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(100));
+    EXPECT_THAT(run_glmark2("--fullscreen"), Ge(minimal_framerate));
 }
 
 TEST_F(GLMark2Wayland, windowed)
 {
-    EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
-}
-
-TEST_F(GLMark2Xwayland, fullscreen_default)
-{
-    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
-}
-
-TEST_F(GLMark2Xwayland, windowed_default)
-{
-    EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
+    EXPECT_THAT(run_glmark2(""), Ge(minimal_framerate));
 }
 
 TEST_F(GLMark2Xwayland, fullscreen)
 {
-    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(100));
+    EXPECT_THAT(run_glmark2("--fullscreen"), Ge(minimal_framerate));
 }
 
 TEST_F(GLMark2Xwayland, windowed)
 {
-    EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
+    EXPECT_THAT(run_glmark2(""), Ge(minimal_framerate));
 }
 }
