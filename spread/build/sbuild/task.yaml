@@ -28,4 +28,4 @@ execute: |
     debchange --release "CI release"
 
     # build the packages
-    sbuild -d focal --chroot-mode=autopkgtest --autopkgtest-virt-server=autopkgtest-virt-lxd --autopkgtest-virt-server-opt=ubuntu:20.04 --jobs=$( nproc )
+    sbuild -d focal --chroot-mode=autopkgtest --autopkgtest-virt-server=autopkgtest-virt-lxd --autopkgtest-virt-server-opt=ubuntu-daily:groovy --jobs=$( nproc )
