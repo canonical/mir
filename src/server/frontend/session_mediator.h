@@ -122,7 +122,6 @@ public:
         std::shared_ptr<EventSinkFactory> const& sink_factory,
         std::shared_ptr<MessageSender> const& message_sender,
         std::shared_ptr<MessageResourceCache> const& resource_cache,
-        std::shared_ptr<Screencast> const& screencast,
         ConnectionContext const& connection_context,
         std::shared_ptr<input::CursorImages> const& cursor_images,
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
@@ -283,8 +282,6 @@ private:
     virtual std::function<void(std::shared_ptr<scene::Session> const&)>
     prompt_session_connect_handler(detail::PromptSessionId prompt_session_id) const;
 
-    void destroy_screencast_sessions();
-
     pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::PlatformIpcOperations> const ipc_operations;
@@ -297,7 +294,6 @@ private:
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<MessageSender> const message_sender;
     std::shared_ptr<MessageResourceCache> const resource_cache;
-    std::shared_ptr<Screencast> const screencast;
     ConnectionContext const connection_context;
     std::shared_ptr<input::CursorImages> const cursor_images;
     std::shared_ptr<scene::CoordinateTranslator> const translator;

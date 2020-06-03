@@ -69,7 +69,6 @@ class MessageProcessorReport;
 class SessionAuthorizer;
 class EventSink;
 class DisplayChanger;
-class Screencast;
 class InputConfigurationChanger;
 class SurfaceStack;
 }
@@ -273,7 +272,6 @@ public:
     std::shared_ptr<frontend::Shell>                          the_frontend_shell();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
     virtual std::shared_ptr<frontend::InputConfigurationChanger> the_input_configuration_changer();
-    virtual std::shared_ptr<frontend::Screencast>             the_screencast();
     /** @name frontend configuration - internal dependencies
      * internal dependencies of frontend
      *  @{ */
@@ -428,7 +426,6 @@ protected:
     CachedPtr<frontend::EventSink> global_event_sink;
     CachedPtr<frontend::ConnectionCreator> connection_creator;
     CachedPtr<frontend::ConnectionCreator> prompt_connection_creator;
-    CachedPtr<frontend::Screencast> screencast;
     CachedPtr<frontend::InputConfigurationChanger> input_configuration_changer;
     CachedPtr<renderer::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;

@@ -197,7 +197,6 @@ mir::DefaultServerConfiguration::new_ipc_factory(
                 the_graphics_platform()->make_ipc_operations(),
                 the_frontend_display_changer(),
                 the_buffer_allocator(),
-                the_screencast(),
                 session_authorizer,
                 the_cursor_images(),
                 the_coordinate_translator(),

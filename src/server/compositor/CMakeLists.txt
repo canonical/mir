@@ -13,8 +13,6 @@ set(
   multi_threaded_compositor.cpp
   occlusion.cpp
   default_configuration.cpp
-  screencast_display_buffer.cpp
-  compositing_screencast.cpp
   stream.cpp
   multi_monitor_arbiter.cpp
   dropping_schedule.cpp
