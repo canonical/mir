@@ -165,7 +165,7 @@ private:
             connection, screen_geometry.size.width.as_int(), screen_geometry.size.height.as_int());
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
         mir_window_spec_set_name(spec, "target_window");
-        mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
         mir_window_spec_set_event_handler(spec, &window_event_handler, this);
 #pragma GCC diagnostic pop
 

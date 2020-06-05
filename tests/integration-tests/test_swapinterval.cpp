@@ -109,7 +109,7 @@ struct SwapInterval : mtf::BasicClientServerFixture<ServerConfig>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         stream = mir_connection_create_buffer_stream_sync(
-            connection, 10, 10, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware);
+            connection, 10, 10, mir_pixel_format_abgr_8888, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
     }
 

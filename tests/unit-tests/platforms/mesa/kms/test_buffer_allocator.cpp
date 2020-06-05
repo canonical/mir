@@ -61,8 +61,6 @@ protected:
 
         size = geom::Size{300, 200};
         pf = mir_pixel_format_argb_8888;
-        usage = mg::BufferUsage::hardware;
-        buffer_properties = mg::BufferProperties{size, pf, usage};
 
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
             .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
@@ -99,8 +97,6 @@ protected:
     // Defaults
     geom::Size size;
     MirPixelFormat pf;
-    mg::BufferUsage usage;
-    mg::BufferProperties buffer_properties;
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
@@ -112,182 +108,11 @@ protected:
     mtf::UdevEnvironment fake_devices;
 };
 
-TEST_F(MesaBufferAllocatorTest, allocator_returns_non_null_buffer)
-{
-    using namespace testing;
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    EXPECT_TRUE(allocator->alloc_buffer(buffer_properties).get() != NULL);
-}
-
-TEST_F(MesaBufferAllocatorTest, large_hardware_buffers_bypass)
-{
-    using namespace testing;
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    const mg::BufferProperties properties(geom::Size{1280, 800},
-                                          mir_pixel_format_argb_8888,
-                                          mg::BufferUsage::hardware);
-
-    auto buf = allocator->alloc_buffer(properties);
-    ASSERT_TRUE(buf.get() != NULL);
-    auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(buf->native_buffer_handle());
-    ASSERT_THAT(native, Ne(nullptr));
-    EXPECT_TRUE(native->flags & mir_buffer_flag_can_scanout);
-}
-
-TEST_F(MesaBufferAllocatorTest, small_buffers_dont_bypass)
-{
-    using namespace testing;
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    const mg::BufferProperties properties(geom::Size{100, 100},
-                                          mir_pixel_format_argb_8888,
-                                          mg::BufferUsage::hardware);
-
-    auto buf = allocator->alloc_buffer(properties);
-    ASSERT_TRUE(buf.get() != NULL);
-    auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(buf->native_buffer_handle());
-    ASSERT_THAT(native, Ne(nullptr));
-    EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
-}
-
-TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
-{
-    using namespace testing;
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    const mg::BufferProperties properties(geom::Size{1280, 800},
-                                          mir_pixel_format_argb_8888,
-                                          mg::BufferUsage::hardware);
-
-    mgm::BufferAllocator alloc(
-        *display,
-        platform->gbm->device,
-        mgm::BypassOption::prohibited,
-        mgm::BufferImportMethod::gbm_native_pixmap);
-    auto buf = alloc.alloc_buffer(properties);
-    ASSERT_TRUE(buf.get() != NULL);
-    auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(buf->native_buffer_handle());
-    ASSERT_THAT(native, Ne(nullptr));
-    EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
-}
-
-TEST_F(MesaBufferAllocatorTest, correct_buffer_format_translation_argb_8888)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_FORMAT_ARGB8888,_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    allocator->alloc_buffer(mg::BufferProperties{size, mir_pixel_format_argb_8888, usage});
-}
-
-TEST_F(MesaBufferAllocatorTest, correct_buffer_format_translation_xrgb_8888)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_FORMAT_XRGB8888,_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    allocator->alloc_buffer(mg::BufferProperties{size, mir_pixel_format_xrgb_8888, usage});
-}
-
-MATCHER_P(has_flag_set, flag, "")
-{
-    return arg & flag;
-}
-
-TEST_F(MesaBufferAllocatorTest, uses_gbm_with_proper_pf_and_flags_for_hardware_buffers)
-{
-    using namespace testing;
-    auto flags = GBM_BO_USE_CURSOR;
-    auto pf = GBM_FORMAT_RGBX5551; 
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_, pf, flags));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-    allocator->alloc_buffer( { 1000, 1000}, pf, flags);
-}
-
 TEST_F(MesaBufferAllocatorTest, creates_software_buffer_without_utilizing_gbm)
 {
     using namespace testing;
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_)).Times(0);
     allocator->alloc_software_buffer( { 1000, 1000}, mir_pixel_format_abgr_8888);
-}
-
-TEST_F(MesaBufferAllocatorTest, creates_hardware_rendering_buffer)
-{
-    using namespace testing;
-
-    mg::BufferProperties properties{size, pf, mg::BufferUsage::hardware};
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,has_flag_set(GBM_BO_USE_RENDERING)));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    allocator->alloc_buffer(properties);
-}
-
-TEST_F(MesaBufferAllocatorTest, creates_software_rendering_buffer)
-{
-    using namespace testing;
-
-    mg::BufferProperties properties{size, pf, mg::BufferUsage::software};
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_)).Times(0);
-
-    allocator->alloc_buffer(properties);
-}
-
-TEST_F(MesaBufferAllocatorTest, creates_hardware_rendering_buffer_for_undefined_usage)
-{
-    using namespace testing;
-
-    mg::BufferProperties properties{size, pf, mg::BufferUsage::undefined};
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,has_flag_set(GBM_BO_USE_RENDERING)));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    allocator->alloc_buffer(properties);
-}
-
-TEST_F(MesaBufferAllocatorTest, requests_correct_buffer_dimensions)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,size.width.as_uint32_t(),size.height.as_uint32_t(),_,_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    allocator->alloc_buffer(buffer_properties);
-}
-
-TEST_F(MesaBufferAllocatorTest, correct_buffer_handle_is_destroyed)
-{
-    using namespace testing;
-    gbm_bo* bo{reinterpret_cast<gbm_bo*>(0xabcd)};
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_))
-    .WillOnce(Return(bo));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(bo));
-
-    allocator->alloc_buffer(buffer_properties);
-}
-
-TEST_F(MesaBufferAllocatorTest, throws_on_buffer_creation_failure)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_))
-        .WillOnce(Return(reinterpret_cast<gbm_bo*>(0)));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_))
-        .Times(0);
-
-    EXPECT_THROW({
-        allocator->alloc_buffer(buffer_properties);
-    }, std::runtime_error);
 }
 
 TEST_F(MesaBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
@@ -314,20 +139,3 @@ TEST_F(MesaBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_fir
     EXPECT_EQ(mir_pixel_format_argb_8888, supported_pixel_formats[0]);
 }
 
-TEST_F(MesaBufferAllocatorTest, screencast_can_create_buffer)
-{   // Regression test for LP: #1475571
-    using namespace testing;
-
-    // Not expected to be called any more, but if it is...
-    ON_CALL(mock_gbm, gbm_device_is_format_supported(_,_,GBM_BO_USE_SCANOUT))
-        .WillByDefault(Return(0));
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
-
-    EXPECT_NO_THROW({
-        allocator->alloc_buffer(
-            mg::BufferProperties{{1920,1080},
-                                 mir_pixel_format_abgr_8888,
-                                 mg::BufferUsage::hardware});
-    });
-}

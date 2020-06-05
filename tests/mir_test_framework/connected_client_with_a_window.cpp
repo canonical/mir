@@ -31,7 +31,7 @@ void mtf::ConnectedClientWithAWindow::SetUp()
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_window_spec_set_name(spec, "ConnectedClientWithASurfaceFixtureSurface");
-    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
 
     window = mir_create_window_sync(spec);

@@ -216,7 +216,7 @@ TEST_F(SurfaceSpecification, surface_spec_min_width_is_respected)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_min_width(spec, min_width);
                                         });
@@ -244,7 +244,7 @@ TEST_F(SurfaceSpecification, surface_spec_min_height_is_respected)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_min_height(spec, min_height);
                                         });
@@ -272,7 +272,7 @@ TEST_F(SurfaceSpecification, surface_spec_max_width_is_respected)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_max_width(spec, max_width);
                                         });
@@ -300,7 +300,7 @@ TEST_F(SurfaceSpecification, surface_spec_max_height_is_respected)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_max_height(spec, max_height);
                                         });
@@ -328,7 +328,7 @@ TEST_F(SurfaceSpecification, surface_spec_width_inc_is_respected)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_width_increment(spec, width_inc);
                                         });
@@ -360,7 +360,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_width_and_width_inc_is_respec
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_width_increment(spec, width_inc);
                                             mir_window_spec_set_min_width(spec, min_width);
@@ -392,7 +392,7 @@ TEST_F(SurfaceSpecification, surface_spec_height_inc_is_respected)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_height_increment(spec, height_inc);
                                         });
@@ -424,7 +424,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_height_and_height_inc_is_resp
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_height_increment(spec, height_inc);
                                             mir_window_spec_set_min_height(spec, min_height);
@@ -457,7 +457,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_aspect_ratio_is_respected)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_min_aspect_ratio(spec, aspect_width, aspect_height);
                                         });
@@ -490,7 +490,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_max_aspect_ratio_is_respected)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_max_aspect_ratio(spec, aspect_width, aspect_height);
                                         });
@@ -530,7 +530,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_fixed_aspect_ratio_and_size_range
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
 
                                             mir_window_spec_set_min_aspect_ratio(spec, aspect_width, aspect_height);
@@ -587,7 +587,7 @@ TEST_P(SurfaceWithoutParent, not_setting_parent_succeeds)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                         });
 
@@ -606,7 +606,7 @@ TEST_P(SurfaceWithoutParent, setting_parent_fails)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                            mir_window_spec_set_pixel_format(spec, pixel_format);
-                                           mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                           mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                        });
 
@@ -618,7 +618,7 @@ TEST_P(SurfaceWithoutParent, setting_parent_fails)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_parent(spec, parent);
                                         });
@@ -638,7 +638,7 @@ TEST_P(SurfaceNeedingParent, setting_parent_succeeds)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                            mir_window_spec_set_pixel_format(spec, pixel_format);
-                                           mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                           mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                        });
 
@@ -650,7 +650,7 @@ TEST_P(SurfaceNeedingParent, setting_parent_succeeds)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_parent(spec, parent);
                                         });
@@ -670,7 +670,7 @@ TEST_P(SurfaceNeedingParent, not_setting_parent_fails)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                         });
 
@@ -689,7 +689,7 @@ TEST_P(SurfaceMayHaveParent, setting_parent_succeeds)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                            mir_window_spec_set_pixel_format(spec, pixel_format);
-                                           mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                           mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                        });
 
@@ -701,7 +701,7 @@ TEST_P(SurfaceMayHaveParent, setting_parent_succeeds)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
                                             mir_window_spec_set_parent(spec, parent);
                                         });
@@ -721,7 +721,7 @@ TEST_P(SurfaceMayHaveParent, not_setting_parent_succeeds)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                                             mir_window_spec_set_pixel_format(spec, pixel_format);
-                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+                                            mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
 
                                         });

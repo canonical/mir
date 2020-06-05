@@ -40,14 +40,7 @@ public:
     virtual ~GraphicBufferAllocator() = default;
 
     /**
-     * Allocates a buffer.
-     * \deprecated. use the other alloc_buffer functions
-     * \param [in] buffer_properties the properties the allocated buffer should have
-     */
-    virtual std::shared_ptr<Buffer> alloc_buffer(BufferProperties const& buffer_properties) = 0;
-
-    /**
-     * The supported buffer pixel formats.
+     * The supported CPU-accessible buffer pixel formats.
      * \note: once the above is deprecated, this is really only (marginally) useful 
      *        for the software allocation path.
      *        (and we could probably move software/cpu buffers up to libmirserver)
@@ -55,17 +48,10 @@ public:
     virtual std::vector<MirPixelFormat> supported_pixel_formats() = 0;
 
     /**
-     * allocates a buffer with the native flags and format specified
-     */
-    virtual std::shared_ptr<Buffer> alloc_buffer(
-        geometry::Size size, uint32_t native_format, uint32_t native_flags) = 0;
-
-    /**
      * allocates a 'software' (cpu-accessible) buffer
      * note: mesa and eglstreams use ShmBuffer, android uses ANW with software usage bits.
      */
     virtual std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) = 0;
-
 
 protected:
     GraphicBufferAllocator() = default;

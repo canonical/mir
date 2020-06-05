@@ -181,6 +181,7 @@ struct Client
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+        mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 #pragma GCC diagnostic pop
         mir_window_spec_set_event_handler(spec, handle_event, this);
         mir_window_spec_set_name(spec, name.c_str());
