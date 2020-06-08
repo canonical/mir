@@ -25,6 +25,8 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <algorithm>
+
 #define MIR_LOG_COMPONENT "miral"
 #include <mir/log.h>
 
