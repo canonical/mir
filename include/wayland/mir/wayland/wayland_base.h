@@ -20,6 +20,8 @@
 #define MIR_WAYLAND_OBJECT_H_
 
 #include <memory>
+#include <functional>
+#include <experimental/optional>
 
 struct wl_resource;
 struct wl_global;
@@ -49,6 +51,52 @@ public:
 private:
     std::shared_ptr<bool> mutable destroyed;
 };
+
+/// A weak handle to a Wayland resource
+/// May only be safely used from the Wayland thread
+template<typename T>
+class Handle
+{
+public:
+    Handle(T* resource)
+        : resource{resource},
+          destroyed_flag{resource->destroyed_flag()}
+    {
+    }
+
+    Handle(Handle<T> const&) = default;
+    auto operator=(Handle<T> const&) -> Handle<T>& = default;
+
+    auto operator==(Handle<T> const& other) const -> bool
+    {
+        return resource == other->resource;
+    }
+
+    /// Runs the given function only if the resource still exists
+    void with(std::function<void(T*)> const& f) const
+    {
+        if (!*destroyed_flag)
+        {
+            f(resource);
+        }
+    }
+
+    /// Runs the given function with a resoruce pointer if it exists, or nullopt otherwise
+    void with_opt(std::function<void(std::experimental::optional<T*>)> const& f) const
+    {
+        f(*destroyed_flag ? std::experimental::nullopt : std::experimental::make_optional(resource));
+    }
+
+private:
+    T* resource;
+    std::shared_ptr<bool> destroyed_flag;
+};
+
+template<typename T>
+auto make_handle(T* resource) -> Handle<T>
+{
+    return Handle<T>{resource};
+}
 
 class Global
 {
