@@ -58,8 +58,8 @@ public:
                                std::vector<mir::geometry::Rectangle>& input_shape_accumulator,
                                geometry::Displacement const& parent_offset) const;
 
-    geometry::Displacement total_offset() const override { return parent->total_offset(); }
-    bool synchronized() const override;
+    auto total_offset() const -> geometry::Displacement override;
+    auto synchronized() const -> bool override;
     auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
 
     void parent_has_committed();
@@ -80,8 +80,7 @@ private:
 
     WlSurface* const surface;
     /// This class is responsible for removing itself from the parent's children list when needed
-    WlSurface* const parent;
-    std::shared_ptr<bool> const parent_destroyed;
+    wayland::Handle<WlSurface> const parent;
     bool synchronized_;
     std::experimental::optional<WlSurfaceState> cached_state;
 };

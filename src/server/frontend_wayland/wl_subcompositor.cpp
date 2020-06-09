@@ -75,20 +75,22 @@ mf::WlSubsurface::WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, 
     : wayland::Subsurface(new_subsurface, Version<1>()),
       surface{surface},
       parent{parent_surface},
-      parent_destroyed{parent_surface->destroyed_flag()},
       synchronized_{true}
 {
-    parent->add_subsurface(this);
+    parent.with([this](WlSurface* parent)
+        {
+            parent->add_subsurface(this);
+        });
     surface->set_role(this);
     surface->pending_invalidate_surface_data();
 }
 
 mf::WlSubsurface::~WlSubsurface()
 {
-    if (!*parent_destroyed)
-    {
-        parent->remove_subsurface(this);
-    }
+    parent.with([this](WlSurface* parent)
+        {
+            parent->remove_subsurface(this);
+        });
     surface->clear_role();
     refresh_surface_data_now();
 }
@@ -104,14 +106,34 @@ void mf::WlSubsurface::populate_surface_data(std::vector<shell::StreamSpecificat
     }
 }
 
-bool mf::WlSubsurface::synchronized() const
+auto mf::WlSubsurface::total_offset() const -> geom::Displacement
 {
-    return synchronized_ || parent->synchronized();
+    geom::Displacement offset;
+    parent.with([&](WlSurface* parent)
+        {
+            offset = parent->total_offset();
+        });
+    return offset;
+}
+
+auto mf::WlSubsurface::synchronized() const -> bool
+{
+    bool parent_synchronized{false};
+    parent.with([&](WlSurface* parent)
+        {
+            parent_synchronized = parent->synchronized();
+        });
+    return synchronized_ || parent_synchronized;
 }
 
 auto mf::WlSubsurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
 {
-    return parent->scene_surface();
+    std::experimental::optional<std::shared_ptr<scene::Surface>> result;
+    parent.with([&](WlSurface* parent)
+        {
+            result = parent->scene_surface();
+        });
+    return result;
 }
 
 void mf::WlSubsurface::parent_has_committed()
@@ -162,8 +184,10 @@ void mf::WlSubsurface::destroy()
 
 void mf::WlSubsurface::refresh_surface_data_now()
 {
-    if (!*parent_destroyed)
-        parent->refresh_surface_data_now();
+    parent.with([](WlSurface* parent)
+        {
+            parent->refresh_surface_data_now();
+        });
 }
 
 void mf::WlSubsurface::commit(WlSurfaceState const& state)
@@ -185,8 +209,13 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
     if (synchronized())
     {
-        if (cached_state.value().surface_data_needs_refresh() && !*parent_destroyed)
-            parent->pending_invalidate_surface_data();
+        if (cached_state.value().surface_data_needs_refresh())
+        {
+            parent.with([](WlSurface* parent)
+                {
+                    parent->pending_invalidate_surface_data();
+                });
+        }
     }
     else
     {

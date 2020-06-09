@@ -341,14 +341,15 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         }
         else
         {
-            auto const executor_send_frame_callbacks = [this, executor = executor, destroyed = destroyed_flag()]()
+            auto const executor_send_frame_callbacks = [executor = executor, handle = mw::make_handle(this)]()
                 {
-                    executor->spawn(run_unless(
-                        destroyed,
-                        [this]()
+                    executor->spawn([handle]()
                         {
-                            send_frame_callbacks();
-                        }));
+                            handle.with([](auto self)
+                                {
+                                    self->send_frame_callbacks();
+                                });
+                        });
                 };
 
             std::shared_ptr<graphics::Buffer> mir_buffer;
