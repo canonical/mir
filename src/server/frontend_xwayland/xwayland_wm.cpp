@@ -362,6 +362,8 @@ void mf::XWaylandWM::handle_events()
 {
     bool got_events = false;
 
+    connection->verify_not_in_error_state();
+
     while (xcb_generic_event_t* const event = xcb_poll_for_event(*connection))
     {
         try
