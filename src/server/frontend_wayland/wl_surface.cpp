@@ -164,22 +164,25 @@ void mf::WlSurface::set_pending_offset(std::experimental::optional<geom::Displac
     pending.offset = offset;
 }
 
-std::unique_ptr<mf::WlSurface, std::function<void(mf::WlSurface*)>> mf::WlSurface::add_child(WlSubsurface* child)
+void mf::WlSurface::add_subsurface(WlSubsurface* child)
 {
-    children.push_back(child);
+    if (std::find(children.begin(), children.end(), child) != children.end())
+    {
+        log_warning("Subsurface %p added to surface %p multiple times", child, this);
+        return;
+    }
 
-    return std::unique_ptr<WlSurface, std::function<void(WlSurface*)>>(
-        this,
-        [child=child, destroyed=destroyed](WlSurface* self)
-        {
-            if (*destroyed)
-                return;
-            // remove the child from the vector
-            self->children.erase(std::remove(self->children.begin(),
-                                             self->children.end(),
-                                             child),
-                                 self->children.end());
-        });
+    children.push_back(child);
+}
+
+void mf::WlSurface::remove_subsurface(WlSubsurface* child)
+{
+    children.erase(
+        std::remove(
+            children.begin(),
+            children.end(),
+            child),
+        children.end());
 }
 
 void mf::WlSurface::refresh_surface_data_now()

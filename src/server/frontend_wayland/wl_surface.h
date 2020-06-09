@@ -127,7 +127,8 @@ public:
     void set_role(WlSurfaceRole* role_);
     void clear_role();
     void set_pending_offset(std::experimental::optional<geometry::Displacement> const& offset);
-    std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> add_child(WlSubsurface* child);
+    void add_subsurface(WlSubsurface* child);
+    void remove_subsurface(WlSubsurface* child);
     void refresh_surface_data_now();
     void pending_invalidate_surface_data() { pending.invalidate_surface_data(); }
     void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,

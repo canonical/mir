@@ -79,8 +79,7 @@ private:
     virtual void commit(WlSurfaceState const& state) override;
 
     WlSurface* const surface;
-    // manages parent/child relationship, but does not manage parent's memory
-    // see WlSurface::add_child() for details
+    /// This class is responsible for removing itself from the parent's children list when needed
     std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> const parent;
     std::shared_ptr<bool> const parent_destroyed;
     bool synchronized_;
