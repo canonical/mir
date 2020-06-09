@@ -19,6 +19,8 @@
 #ifndef MIR_WAYLAND_OBJECT_H_
 #define MIR_WAYLAND_OBJECT_H_
 
+#include <boost/throw_exception.hpp>
+
 #include <memory>
 
 struct wl_resource;
@@ -49,6 +51,51 @@ public:
 private:
     std::shared_ptr<bool> mutable destroyed;
 };
+
+/// A weak handle to a Wayland resource
+/// May only be safely used from the Wayland thread
+template<typename T>
+class Weak
+{
+public:
+    Weak(T* resource)
+        : resource{resource},
+          destroyed_flag{resource->destroyed_flag()}
+    {
+    }
+
+    Weak(Weak<T> const&) = default;
+    auto operator=(Weak<T> const&) -> Weak<T>& = default;
+
+    auto operator==(Weak<T> const& other) const -> bool
+    {
+        return resource == other->resource;
+    }
+
+    operator bool() const
+    {
+        return !*destroyed_flag;
+    }
+
+    auto value() const -> T&
+    {
+        if (*destroyed_flag)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted access of destroyed Wayland resource"));
+        }
+        return *resource;
+    }
+
+private:
+    T* resource;
+    std::shared_ptr<bool> destroyed_flag;
+};
+
+template<typename T>
+auto make_weak(T* resource) -> Weak<T>
+{
+    return Weak<T>{resource};
+}
 
 class Global
 {
