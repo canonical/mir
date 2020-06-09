@@ -91,8 +91,7 @@ mf::WlSurface::WlSurface(
         allocator{allocator},
         executor{executor},
         null_role{this},
-        role{&null_role},
-        destroyed{std::make_shared<bool>(false)}
+        role{&null_role}
 {
     // wl_surface is specified to act in mailbox mode
     stream->allow_framedropping(true);
@@ -100,8 +99,6 @@ mf::WlSurface::WlSurface(
 
 mf::WlSurface::~WlSurface()
 {
-    *destroyed = true;
-
     // so that unregister_destroy_listener calls invoked from destroy listeners don't screw up the iterator
     auto listeners = move(destroy_listeners);
     destroy_listeners.clear();
@@ -259,7 +256,6 @@ void mf::WlSurface::send_frame_callbacks()
 
 void mf::WlSurface::destroy()
 {
-    *destroyed = true;
     destroy_wayland_object();
 }
 
@@ -345,7 +341,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         }
         else
         {
-            auto const executor_send_frame_callbacks = [this, executor = executor, destroyed = destroyed]()
+            auto const executor_send_frame_callbacks = [this, executor = executor, destroyed = destroyed_flag()]()
                 {
                     executor->spawn(run_unless(
                         destroyed,

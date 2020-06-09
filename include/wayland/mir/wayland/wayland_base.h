@@ -19,6 +19,8 @@
 #ifndef MIR_WAYLAND_OBJECT_H_
 #define MIR_WAYLAND_OBJECT_H_
 
+#include <memory>
+
 struct wl_resource;
 struct wl_global;
 struct wl_client;
@@ -37,10 +39,15 @@ public:
     };
 
     Resource();
-    virtual ~Resource() = default;
+    ~Resource();
 
     Resource(Resource const&) = delete;
     Resource& operator=(Resource const&) = delete;
+
+    auto destroyed_flag() const -> std::shared_ptr<bool>;
+
+private:
+    std::shared_ptr<bool> mutable destroyed;
 };
 
 class Global
