@@ -74,18 +74,21 @@ void mf::WlSubcompositorInstance::get_subsurface(
 mf::WlSubsurface::WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, WlSurface* parent_surface)
     : wayland::Subsurface(new_subsurface, Version<1>()),
       surface{surface},
-      parent{parent_surface->add_child(this)},
+      parent{parent_surface},
       parent_destroyed{parent_surface->destroyed_flag()},
       synchronized_{true}
 {
+    parent->add_subsurface(this);
     surface->set_role(this);
     surface->pending_invalidate_surface_data();
 }
 
 mf::WlSubsurface::~WlSubsurface()
 {
-    // unique pointer automatically removes `this` from parent child list
-
+    if (!*parent_destroyed)
+    {
+        parent->remove_subsurface(this);
+    }
     surface->clear_role();
     refresh_surface_data_now();
 }
