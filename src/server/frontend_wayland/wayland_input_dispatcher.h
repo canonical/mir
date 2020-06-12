@@ -52,7 +52,7 @@ public:
 
     void set_keymap(input::Keymap const& keymap);
     void set_focus(bool has_focus);
-    void handle_event(MirEvent const* event);
+    void handle_event(MirInputEvent const* event);
 
     auto latest_timestamp() const -> std::chrono::nanoseconds { return timestamp; }
 
@@ -71,7 +71,6 @@ private:
 
     /// Handle user input events
     ///@{
-    void handle_input_event(MirInputEvent const* event);
     void handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event);
     void handle_pointer_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
     void handle_pointer_button_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);

@@ -111,13 +111,17 @@ void mf::XWaylandSurfaceObserver::keymap_changed(
 
 void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, MirEvent const* event)
 {
-    std::shared_ptr<MirEvent> owned_event = mev::clone_event(*event);
+    if (mir_event_get_type(event) == mir_event_type_input)
+    {
+        std::shared_ptr<MirEvent> owned_event = mev::clone_event(*event);
 
-    aquire_input_dispatcher(
-        [owned_event](auto input_dispatcher)
-        {
-            input_dispatcher->handle_event(owned_event.get());
-        });
+        aquire_input_dispatcher(
+            [owned_event](auto input_dispatcher)
+            {
+                auto const input_event = mir_event_get_input_event(owned_event.get());
+                input_dispatcher->handle_event(input_event);
+            });
+    }
 }
 
 auto mf::XWaylandSurfaceObserver::latest_timestamp() const -> std::chrono::nanoseconds

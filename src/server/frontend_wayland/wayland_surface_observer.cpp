@@ -128,13 +128,17 @@ void mf::WaylandSurfaceObserver::placed_relative(ms::Surface const*, geometry::R
 
 void mf::WaylandSurfaceObserver::input_consumed(ms::Surface const*, MirEvent const* event)
 {
-    std::shared_ptr<MirEvent> owned_event = mev::clone_event(*event);
+    if (mir_event_get_type(event) == mir_event_type_input)
+    {
+        std::shared_ptr<MirEvent> owned_event = mev::clone_event(*event);
 
-    run_on_wayland_thread_unless_destroyed(
-        [this, owned_event]()
-        {
-            input_dispatcher->handle_event(owned_event.get());
-        });
+        run_on_wayland_thread_unless_destroyed(
+            [this, owned_event]()
+            {
+                auto const input_event = mir_event_get_input_event(owned_event.get());
+                input_dispatcher->handle_event(input_event);
+            });
+    }
 }
 
 auto mf::WaylandSurfaceObserver::latest_timestamp() const -> std::chrono::nanoseconds
