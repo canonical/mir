@@ -31,7 +31,8 @@ class XWaylandConnector : public Connector
 {
 public:
     XWaylandConnector(
-        std::shared_ptr<WaylandConnector> const& wayland_connector, std::string const& xwayland_path);
+        std::shared_ptr<WaylandConnector> const& wayland_connector,
+        std::string const& xwayland_path);
     ~XWaylandConnector() override;
 
     void start() override;
@@ -44,7 +45,9 @@ public:
     auto socket_name() const -> optional_value<std::string> override;
 
 private:
-    std::function<std::unique_ptr<XWaylandServer>()> const start_xwayland;
+    std::shared_ptr<WaylandConnector> const wayland_connector;
+    std::string const xwayland_path;
+
     std::unique_ptr<XWaylandServer> xwayland_server;
 };
 } /* frontend */

@@ -26,23 +26,29 @@
 namespace mf = mir::frontend;
 
 mf::XWaylandConnector::XWaylandConnector(
-    std::shared_ptr<WaylandConnector> const& wayland_connector, std::string const& xwayland_path) :
-    start_xwayland{wayland_connector->get_extension("x11-support") ?
-        [=]{ return std::make_unique<XWaylandServer>(wayland_connector, xwayland_path); } :
-        decltype(start_xwayland){[]{ return std::unique_ptr<XWaylandServer>{}; }}}
+    std::shared_ptr<WaylandConnector> const& wayland_connector,
+    std::string const& xwayland_path)
+    : wayland_connector{wayland_connector},
+      xwayland_path{xwayland_path}
 {
 }
 
 void mf::XWaylandConnector::start()
 {
-    xwayland_server = start_xwayland();
-    mir::log_info("XWayland loop started");
+    if (wayland_connector->get_extension("x11-support"))
+    {
+        xwayland_server = std::make_unique<XWaylandServer>(wayland_connector, xwayland_path);
+        mir::log_info("XWayland started");
+    }
 }
 
 void mf::XWaylandConnector::stop()
 {
-    xwayland_server.reset();
-    mir::log_info("XWayland loop stopped");
+    if (xwayland_server)
+    {
+        xwayland_server.reset();
+        mir::log_info("XWayland stopped");
+    }
 }
 
 int mf::XWaylandConnector::client_socket_fd() const
