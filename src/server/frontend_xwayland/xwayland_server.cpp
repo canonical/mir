@@ -107,62 +107,45 @@ void mf::XWaylandServer::spawn()
     enum { server, client, size };
     int wl_client_fd[size], wm_fd[size];
 
-    int xserver_spawn_tries = 0;
     std::unique_lock<decltype(spawn_thread_mutex)> lock{spawn_thread_mutex};
 
-    do
+    spawn_thread_xserver_status = STARTING;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wl_client_fd) < 0)
     {
-        // Try 5 times
-        if (xserver_spawn_tries >= 5) {
-          mir::log_error("Xwayland failed to start 5 times in a row, disabling Xserver");
-          return;
-        }
-        spawn_thread_xserver_status = STARTING;
-        xserver_spawn_tries++;
-
-        if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wl_client_fd) < 0)
-        {
-            // "Shouldn't happen" but continuing is weird.
-            mir::fatal_error("wl connection socketpair failed");
-            return; // doesn't reach here
-        }
-
-        if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wm_fd) < 0)
-        {
-            // "Shouldn't happen" but continuing is weird.
-            mir::fatal_error("wm fd socketpair failed");
-            return; // doesn't reach here
-        }
-
-        mir::log_info("Starting Xwayland");
-        spawn_thread_pid = fork();
-
-        switch (spawn_thread_pid)
-        {
-        case -1:
-            mir::fatal_error("Failed to fork");
-            return; // Keep compiler happy (doesn't reach here)
-
-        case 0:
-            close(wl_client_fd[server]);
-            close(wm_fd[server]);
-            execl_xwayland(wl_client_fd[client], wm_fd[client]);
-            return; // Keep compiler happy (doesn't reach here)
-
-        default:
-            close(wl_client_fd[client]);
-            close(wm_fd[client]);
-            connect_wm_to_xwayland(Fd{wl_client_fd[server]}, Fd{wm_fd[server]}, lock);
-            if (spawn_thread_xserver_status != STARTING)
-            {
-                // Reset the tries since the server started
-                xserver_spawn_tries = 0;
-            }
-
-            break;
-        }
+        // "Shouldn't happen" but continuing is weird.
+        mir::fatal_error("wl connection socketpair failed");
+        return; // doesn't reach here
     }
-    while (spawn_thread_xserver_status != STOPPED);
+
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wm_fd) < 0)
+    {
+        // "Shouldn't happen" but continuing is weird.
+        mir::fatal_error("wm fd socketpair failed");
+        return; // doesn't reach here
+    }
+
+    mir::log_info("Starting Xwayland");
+    spawn_thread_pid = fork();
+
+    switch (spawn_thread_pid)
+    {
+    case -1:
+        mir::fatal_error("Failed to fork");
+        return; // Keep compiler happy (doesn't reach here)
+
+    case 0:
+        close(wl_client_fd[server]);
+        close(wm_fd[server]);
+        execl_xwayland(wl_client_fd[client], wm_fd[client]);
+        return; // Keep compiler happy (doesn't reach here)
+
+    default:
+        close(wl_client_fd[client]);
+        close(wm_fd[client]);
+        connect_wm_to_xwayland(Fd{wl_client_fd[server]}, Fd{wm_fd[server]}, lock);
+        break;
+    }
 }
 
 namespace
