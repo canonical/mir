@@ -456,8 +456,10 @@ void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
         break;
     case XCB_FOCUS_IN:
         handle_focus_in(reinterpret_cast<xcb_focus_in_event_t*>(event));
+        break;
     case xcb_error_type:
         handle_error(reinterpret_cast<xcb_generic_error_t*>(event));
+        break;
     default:
         break;
     }
