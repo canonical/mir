@@ -299,18 +299,6 @@ mf::WlShmBuffer::WlShmBuffer(
     on_consumed{std::move(on_consumed)},
     executor{executor}
 {
-    if (stride_.as_int() < size_.width.as_int() * MIR_BYTES_PER_PIXEL(format_)) {
-        wl_resource_post_error(
-            wayland->resource.value(),
-            WL_SHM_ERROR_INVALID_STRIDE,
-            "Stride (%u) is less than width × bytes per pixel (%u×%u). "
-                "Did you accidentally specify stride in pixels?",
-            stride_.as_int(), size_.width.as_int(), MIR_BYTES_PER_PIXEL(format_));
-
-        BOOST_THROW_EXCEPTION((
-                                  std::runtime_error{"Buffer has invalid stride"}));
-    }
-
     wl_shm_buffer_begin_access(wayland->buffer.value());
     std::memcpy(data.get(), wl_shm_buffer_get_data(wayland->buffer.value()), size_.height.as_int() * stride_.as_int());
     wl_shm_buffer_end_access(wayland->buffer.value());
