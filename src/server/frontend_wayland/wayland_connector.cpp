@@ -30,7 +30,6 @@
 #include "null_event_sink.h"
 #include "output_manager.h"
 #include "wayland_executor.h"
-#include "wlshmbuffer.h"
 
 #include "wayland_wrapper.h"
 

@@ -22,7 +22,6 @@
 #include "wl_surface_role.h"
 #include "wl_subcompositor.h"
 #include "wl_region.h"
-#include "wlshmbuffer.h"
 #include "deleted_for_resource.h"
 
 #include "wayland_wrapper.h"
