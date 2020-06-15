@@ -75,19 +75,18 @@ mf::WlSubsurface::WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, 
     : wayland::Subsurface(new_subsurface, Version<1>()),
       surface{surface},
       parent{parent_surface},
-      parent_destroyed{parent_surface->destroyed_flag()},
       synchronized_{true}
 {
-    parent->add_subsurface(this);
+    parent_surface->add_subsurface(this);
     surface->set_role(this);
     surface->pending_invalidate_surface_data();
 }
 
 mf::WlSubsurface::~WlSubsurface()
 {
-    if (!*parent_destroyed)
+    if (parent)
     {
-        parent->remove_subsurface(this);
+        parent.value().remove_subsurface(this);
     }
     surface->clear_role();
     refresh_surface_data_now();
@@ -104,14 +103,24 @@ void mf::WlSubsurface::populate_surface_data(std::vector<shell::StreamSpecificat
     }
 }
 
-bool mf::WlSubsurface::synchronized() const
+auto mf::WlSubsurface::total_offset() const -> geom::Displacement
 {
-    return synchronized_ || parent->synchronized();
+    return parent ?
+        parent.value().offset() :
+        geom::Displacement{};
+}
+
+auto mf::WlSubsurface::synchronized() const -> bool
+{
+    bool const parent_synchronized = parent && parent.value().synchronized();
+    return synchronized_ || parent_synchronized;
 }
 
 auto mf::WlSubsurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
 {
-    return parent->scene_surface();
+    return parent ?
+        parent.value().scene_surface() :
+        std::experimental::nullopt;
 }
 
 void mf::WlSubsurface::parent_has_committed()
@@ -162,8 +171,10 @@ void mf::WlSubsurface::destroy()
 
 void mf::WlSubsurface::refresh_surface_data_now()
 {
-    if (!*parent_destroyed)
-        parent->refresh_surface_data_now();
+    if (parent)
+    {
+        parent.value().refresh_surface_data_now();
+    }
 }
 
 void mf::WlSubsurface::commit(WlSurfaceState const& state)
@@ -185,8 +196,10 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
     if (synchronized())
     {
-        if (cached_state.value().surface_data_needs_refresh() && !*parent_destroyed)
-            parent->pending_invalidate_surface_data();
+        if (cached_state.value().surface_data_needs_refresh() && parent)
+        {
+            parent.value().pending_invalidate_surface_data();
+        }
     }
     else
     {

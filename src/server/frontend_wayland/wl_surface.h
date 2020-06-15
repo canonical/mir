@@ -115,7 +115,6 @@ public:
 
     ~WlSurface();
 
-    std::shared_ptr<bool> destroyed_flag() const { return destroyed; }
     geometry::Displacement offset() const { return offset_; }
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
     std::experimental::optional<geometry::Size> buffer_size() const { return buffer_size_; }
@@ -157,7 +156,6 @@ private:
     std::vector<std::shared_ptr<WlSurfaceState::Callback>> frame_callbacks;
     std::experimental::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::map<void const*, std::function<void()>> destroy_listeners;
-    std::shared_ptr<bool> const destroyed;
 
     void send_frame_callbacks();
 
