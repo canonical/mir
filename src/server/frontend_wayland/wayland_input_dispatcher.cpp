@@ -70,27 +70,13 @@ void mf::WaylandInputDispatcher::set_focus(bool has_focus)
         });
 }
 
-void mf::WaylandInputDispatcher::handle_event(MirEvent const* event)
-{
-    if (*wl_surface_destroyed)
-        return;
-
-    if (mir_event_get_type(event) != mir_event_type_input)
-    {
-        log_warning(
-            "WaylandInputDispatcher::input_consumed() got non-input event type %d",
-            mir_event_get_type(event));
-        return;
-    }
-
-    auto const input_ev = mir_event_get_input_event(event);
-    handle_input_event(input_ev);
-}
-
-void mf::WaylandInputDispatcher::handle_input_event(MirInputEvent const* event)
+void mf::WaylandInputDispatcher::handle_event(MirInputEvent const* event)
 {
     auto const ns = std::chrono::nanoseconds{mir_input_event_get_event_time(event)};
     auto const ms = std::chrono::duration_cast<std::chrono::milliseconds>(ns);
+
+    if (*wl_surface_destroyed)
+        return;
 
     // Remember the timestamp of any events "signed" with a cookie
     if (mir_input_event_has_cookie(event))
