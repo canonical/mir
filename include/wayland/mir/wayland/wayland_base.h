@@ -22,6 +22,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <memory>
+#include <stdexcept>
 
 struct wl_resource;
 struct wl_global;
