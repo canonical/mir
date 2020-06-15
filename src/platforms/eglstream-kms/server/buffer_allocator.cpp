@@ -414,7 +414,7 @@ void mir::graphics::eglstream::BufferAllocator::bind_display(
         BOOST_THROW_EXCEPTION((std::runtime_error{message.str()}));
     }
 
-    mir::log_info("Bound EGLStreams-backed WaylandAllocator display");
+    mir::log_info("Bound EGLStreams-backed Wayland display");
 }
 
 namespace

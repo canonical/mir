@@ -20,7 +20,6 @@
 #define MIR_PLATFORMS_EGLSTREAM_BUFFER_ALLOCATOR_
 
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/wayland_allocator.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/egl_extensions.h"
 #include "egl_context_executor.h"
@@ -52,8 +51,7 @@ namespace eglstream
 {
 
 class BufferAllocator:
-    public graphics::GraphicBufferAllocator,
-    public graphics::WaylandAllocator
+    public graphics::GraphicBufferAllocator
 {
 public:
     BufferAllocator(graphics::Display const& output);

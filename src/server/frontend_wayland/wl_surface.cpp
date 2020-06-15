@@ -34,7 +34,7 @@
 #include "mir/frontend/wayland.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/executor.h"
-#include "mir/graphics/wayland_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
 
@@ -85,7 +85,7 @@ bool mf::WlSurfaceState::surface_data_needs_refresh() const
 mf::WlSurface::WlSurface(
     wl_resource* new_resource,
     std::shared_ptr<Executor> const& executor,
-    std::shared_ptr<graphics::WaylandAllocator> const& allocator)
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator)
     : Surface(new_resource, Version<4>()),
         session{get_session(client)},
         stream{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},

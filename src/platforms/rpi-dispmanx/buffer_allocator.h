@@ -60,7 +60,7 @@ public:
 
 class BufferAllocator :
 	public GraphicBufferAllocator,
-	public WaylandAllocator
+	public GraphicBufferAllocator
 {
 public:
     BufferAllocator(graphics::Display const& output);

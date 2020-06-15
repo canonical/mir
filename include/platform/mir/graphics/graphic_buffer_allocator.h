@@ -23,9 +23,15 @@
 
 #include <vector>
 #include <memory>
+#include <functional>
+
+struct wl_display;
+struct wl_resource;
 
 namespace mir
 {
+class Executor;
+
 namespace graphics
 {
 
@@ -52,6 +58,27 @@ public:
      * note: mesa and eglstreams use ShmBuffer, android uses ANW with software usage bits.
      */
     virtual std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) = 0;
+
+    /**
+     * Initialise the BufferAllocator for this Wayland display
+     *
+     * This should do whatever setup is required for client buffer submission. For example,
+     * calling eglBindWaylandDisplayWL.
+     *
+     * \param display [in]          The Wayland display to initialise on
+     * \param wayland_executor [in] An Executor that spawns tasks on the event loop of display.
+     */
+    virtual void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) = 0;
+
+    virtual std::shared_ptr<Buffer> buffer_from_resource(
+        wl_resource* buffer,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) = 0;
+
+    virtual auto buffer_from_shm(
+        wl_resource* buffer,
+        std::shared_ptr<mir::Executor> wayland_executor,
+        std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer> = 0;
 
 protected:
     GraphicBufferAllocator() = default;

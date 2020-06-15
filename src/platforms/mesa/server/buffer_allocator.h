@@ -22,7 +22,6 @@
 #include "platform_common.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
-#include "mir/graphics/wayland_allocator.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
 #pragma GCC diagnostic push
@@ -64,8 +63,7 @@ enum class BufferImportMethod
 };
 
 class BufferAllocator:
-    public graphics::GraphicBufferAllocator,
-    public graphics::WaylandAllocator
+    public graphics::GraphicBufferAllocator
 {
 public:
     BufferAllocator(

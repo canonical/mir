@@ -404,7 +404,7 @@ void mg::rpi::BufferAllocator::bind_display(wl_display* display, std::shared_ptr
     }
     else
     {
-        mir::log_info("Bound WaylandAllocator display");
+        mir::log_info("Bound Wayland display");
     }
     this->wayland_executor = std::move(wayland_executor);
 }

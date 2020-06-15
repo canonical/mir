@@ -21,7 +21,6 @@
 
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/graphic_buffer_allocator.h>
-#include <mir/graphics/wayland_allocator.h>
 #include <mir/renderer/gl/context.h>
 
 #include <memory>
@@ -39,8 +38,7 @@ class EGLContextExecutor;
 
 namespace wayland
 {
-class BufferAllocator: public GraphicBufferAllocator,
-                       public WaylandAllocator
+class BufferAllocator: public GraphicBufferAllocator
 {
 public:
     BufferAllocator(graphics::Display const& output);

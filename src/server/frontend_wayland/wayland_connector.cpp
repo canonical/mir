@@ -49,7 +49,6 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/wayland_allocator.h"
 
 #include "mir/renderer/gl/texture_target.h"
 #include "mir/frontend/buffer_stream_id.h"
@@ -239,7 +238,7 @@ public:
     WlCompositor(
         struct wl_display* display,
         std::shared_ptr<mir::Executor> const& executor,
-        std::shared_ptr<mg::WaylandAllocator> const& allocator)
+        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
         : Global(display, Version<4>()),
           allocator{allocator},
           executor{executor}
@@ -249,7 +248,7 @@ public:
     void on_surface_created(wl_client* client, uint32_t id, std::function<void(WlSurface*)> const& callback);
 
 private:
-    std::shared_ptr<mg::WaylandAllocator> const allocator;
+    std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
     std::map<std::pair<wl_client*, uint32_t>, std::vector<std::function<void(WlSurface*)>>> surface_callbacks;
 
@@ -558,64 +557,20 @@ void cleanup_display(wl_display *display)
     wl_display_destroy(display);
 }
 
-class ThrowingAllocator : public mg::WaylandAllocator
-{
-public:
-    void bind_display(wl_display*, std::shared_ptr<mir::Executor>) override
-    {
-    }
-
-    std::shared_ptr<mir::graphics::Buffer> buffer_from_resource(
-        wl_resource*,
-        std::function<void()>&&,
-        std::function<void()>&&) override
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"buffer_from_resource called on invalid allocator."}));
-    }
-
-    auto buffer_from_shm(
-        wl_resource* buffer,
-        std::shared_ptr<mir::Executor> wayland_executor,
-        std::function<void()>&& on_consumed)
-        -> std::shared_ptr<mir::graphics::Buffer> override
-    {
-        return mf::WlShmBuffer::mir_buffer_from_wl_buffer(
-            buffer,
-            std::move(wayland_executor),
-            std::move(on_consumed));
-    }
-};
-
-std::shared_ptr<mg::WaylandAllocator> allocator_for_display(
+std::shared_ptr<mg::GraphicBufferAllocator> allocator_for_display(
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     wl_display* display,
     std::shared_ptr<mir::Executor> executor)
 {
-    if (auto allocator = std::dynamic_pointer_cast<mg::WaylandAllocator>(buffer_allocator))
+    try
     {
-        try
-        {
-            allocator->bind_display(display, std::move(executor));
-            return allocator;
-        }
-        catch (...)
-        {
-            mir::log(
-                mir::logging::Severity::warning,
-                "Wayland",
-                std::current_exception(),
-                "Failed to bind Wayland EGL display. Accelerated EGL will be unavailable.");
-        }
+        buffer_allocator->bind_display(display, std::move(executor));
+        return buffer_allocator;
     }
-    /*
-     * If we don't have a WaylandAllocator or it failed to bind to the display then there *should*
-     * be no way for a client to send a non-shm buffer.
-     *
-     * In case a client manages to do something stupid return a valid allocator that will
-     * just throw an exception (and disconnect the client) if something somehow tries to
-     * import a buffer.
-     */
-    return std::make_shared<ThrowingAllocator>();
+    catch (...)
+    {
+        std::throw_with_nested(std::runtime_error{"Failed to bind Wayland EGL display"});
+    }
 }
 }
 
