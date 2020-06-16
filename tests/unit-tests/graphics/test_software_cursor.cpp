@@ -117,9 +117,6 @@ public:
 
     MOCK_METHOD2(alloc_software_buffer, std::shared_ptr<mg::Buffer>(geom::Size, MirPixelFormat));
     MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
-    MOCK_METHOD2(bind_display, void(wl_display*, std::shared_ptr<mir::Executor>));
-    MOCK_METHOD3(buffer_from_resource, std::shared_ptr<mg::Buffer>(wl_resource*, std::function<void()>&&, std::function<void()>&&));
-
 };
 
 class ExplicitExectutor : public mtd::ExplicitExectutor
