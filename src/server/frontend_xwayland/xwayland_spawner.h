@@ -55,7 +55,7 @@ public:
 
     /// Enables or disables the CLOEXEC flag for the given fd
     /// \returns if the operation succeeded
-    static bool set_cloexec(int fd, bool cloexec);
+    static bool set_cloexec(mir::Fd const& fd, bool cloexec);
 
 private:
     int const xdisplay;

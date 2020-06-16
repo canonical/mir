@@ -87,19 +87,21 @@ auto choose_display() -> int
 
 auto create_socket(std::vector<mir::Fd>& fds, struct sockaddr_un *addr, size_t path_size)
 {
-    int fd;
     socklen_t size = offsetof(struct sockaddr_un, sun_path) + path_size + 1;
 
-    fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    mir::Fd const fd{socket(AF_UNIX, SOCK_STREAM, 0)};
+
     if (fd < 0)
     {
         mir::log_warning(
-            "Failed to create socket %c%s", addr->sun_path[0] ? addr->sun_path[0] : '@', addr->sun_path + 1);
+            "Failed to create socket %c%s",
+            addr->sun_path[0] ? addr->sun_path[0] : '@',
+            addr->sun_path + 1);
         return;
     }
+
     if (!mf::XWaylandSpawner::set_cloexec(fd, true))
     {
-        close(fd);
         return;
     }
 
@@ -110,23 +112,31 @@ auto create_socket(std::vector<mir::Fd>& fds, struct sockaddr_un *addr, size_t p
 
     if (bind(fd, (struct sockaddr*)addr, size) < 0)
     {
-        mir::log_warning("Failed to bind socket %c%s", addr->sun_path[0] ? addr->sun_path[0] : '@', addr->sun_path + 1);
-        close(fd);
-        if (addr->sun_path[0])
-            unlink(addr->sun_path);
-        return;
-    }
-    if (listen(fd, 1) < 0)
-    {
         mir::log_warning(
-            "Failed to listen to socket %c%s", addr->sun_path[0] ? addr->sun_path[0] : '@', addr->sun_path + 1);
-        close(fd);
+            "Failed to bind socket %c%s",
+            addr->sun_path[0] ? addr->sun_path[0] : '@',
+            addr->sun_path + 1);
         if (addr->sun_path[0])
+        {
             unlink(addr->sun_path);
+        }
         return;
     }
 
-    fds.push_back(mir::Fd{fd});
+    if (listen(fd, 1) < 0)
+    {
+        mir::log_warning(
+            "Failed to listen to socket %c%s",
+            addr->sun_path[0] ? addr->sun_path[0] : '@',
+            addr->sun_path + 1);
+        if (addr->sun_path[0])
+        {
+            unlink(addr->sun_path);
+        }
+        return;
+    }
+
+    fds.push_back(fd);
 }
 
 auto create_sockets(int xdisplay) -> std::vector<mir::Fd>
@@ -207,7 +217,7 @@ auto mf::XWaylandSpawner::socket_fds() const -> std::vector<Fd> const&
     return fds;
 }
 
-bool mf::XWaylandSpawner::set_cloexec(int fd, bool cloexec)
+bool mf::XWaylandSpawner::set_cloexec(mir::Fd const& fd, bool cloexec)
 {
     int flags = fcntl(fd, F_GETFD);
     if (flags == -1) {
