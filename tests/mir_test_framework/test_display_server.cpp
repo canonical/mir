@@ -28,9 +28,11 @@
 #include <mir_test_framework/headless_display_buffer_compositor_factory.h>
 #include <mir/test/doubles/null_logger.h>
 
+#include <mir/default_configuration.h>
 #include <mir/fd.h>
 #include <mir/main_loop.h>
 #include <mir/server.h>
+#include <mir/options/configuration.h>
 #include <mir/options/option.h>
 
 #include <boost/throw_exception.hpp>
@@ -40,6 +42,7 @@ using namespace std::chrono_literals;
 namespace mtf = mir_test_framework;
 namespace msh = mir::shell;
 namespace ml = mir::logging;
+namespace mo = mir::options;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -88,6 +91,17 @@ void miral::TestDisplayServer::start_server()
                 {
                     server.add_configuration_option(trace_option, "log trace message", mir::OptionType::null);
                     server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
+
+                    // These options are needed to test through the legacy mirclient API
+                    server.add_configuration_option(mo::server_socket_opt,
+                                                    "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]",
+                                                    mir::default_server_socket);
+                    server.add_configuration_option(mo::no_server_socket_opt,
+                                                    "Do not provide a socket filename for client connections", mir::OptionType::null);
+                    server.add_configuration_option(mo::prompt_socket_opt,
+                                                    "Provide a \"..._trusted\" filename for prompt helper connections", mir::OptionType::null);
+                    server.add_configuration_option(mo::enable_mirclient_opt,
+                                                    "Enable deprecated mirclient socket", mir::OptionType::null);
 
                     server.add_init_callback([&]
                         {

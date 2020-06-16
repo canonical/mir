@@ -21,6 +21,8 @@
 
 #include "mir_test_framework/stub_server_platform_factory.h"
 
+#include <mir/default_configuration.h>
+#include <mir/options/configuration.h>
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/canonical_window_manager.h"
@@ -74,6 +76,14 @@ mtf::StubbedServerConfiguration::StubbedServerConfiguration(
           result->add_options()
                   (mtd::logging_opt, po::value<bool>()->default_value(false), mtd::logging_descr)
                   ("tests-use-real-input", po::value<bool>()->default_value(false), "Use real input in tests.");
+
+          // These options are needed to test through the legacy mirclient API
+          result->add_options()
+              (mo::server_socket_opt, po::value<std::string>()->default_value(mir::default_server_socket),
+               "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]")
+              (mo::no_server_socket_opt, "Do not provide a socket filename for client connections")
+              (mo::prompt_socket_opt, "Provide a \"..._trusted\" filename for prompt helper connections")
+              (mo::enable_mirclient_opt, "Enable deprecated mirclient socket (for running old clients)");
 
           return result;
       }()),
