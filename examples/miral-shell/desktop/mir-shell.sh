@@ -30,6 +30,12 @@ if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 
 unset QT_QPA_PLATFORMTHEME
 
+# On Xenial fall back to X11 for all the toolkits
+if [ "$(lsb_release -c -s)" == "xenial" ]
+then
+  export MIR_SERVER_APP_ENV="GDK_BACKEND=x11:QT_QPA_PLATFORM=xcb:SDL_VIDEODRIVER=x11:-QT_QPA_PLATFORMTHEME:NO_AT_BRIDGE=1:QT_ACCESSIBILITY:QT_LINUX_ACCESSIBILITY_ALWAYS_ON:_JAVA_AWT_WM_NONREPARENTING=1:-GTK_MODULES:-OOO_FORCE_DESKTOP:-GNOME_ACCESSIBILITY:"
+fi
+
 if which gsettings > /dev/null
 then
   keymap_index=$(gsettings get org.gnome.desktop.input-sources current | cut -d\  -f 2)
