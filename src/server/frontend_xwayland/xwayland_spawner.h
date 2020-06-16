@@ -36,6 +36,8 @@ class MultiplexingDispatchable;
 namespace frontend
 {
 
+/// Responsible for finding an available X11 display and waiting for connections on it
+/// Calls the spawn callback when a client tries to connect
 class XWaylandSpawner
 {
 public:
@@ -45,10 +47,14 @@ public:
     XWaylandSpawner(XWaylandSpawner const&) = delete;
     XWaylandSpawner& operator=(XWaylandSpawner const&) = delete;
 
+    /// The name of the X11 display (such as ":0")
     auto x11_display() const -> std::string;
+    /// \returns whatever sockets we're waiting on
+    /// (on construction we try to open both an abstract and non-abstrack socket)
     auto socket_fds() const -> std::vector<Fd> const&;
 
-    /// Returns if the operation succeeded
+    /// Enables or disables the CLOEXEC flag for the given fd
+    /// \returns if the operation succeeded
     static bool set_cloexec(int fd, bool cloexec);
 
 private:
