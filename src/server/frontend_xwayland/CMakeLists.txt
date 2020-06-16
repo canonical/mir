@@ -3,6 +3,7 @@ set(
 
   xwayland_default_configuration.cpp
   xwayland_connector.cpp  xwayland_connector.h
+  xwayland_spawner.cpp    xwayland_spawner.h
   xwayland_server.cpp     xwayland_server.h
   xcb_connection.cpp      xcb_connection.h
   xwayland_wm.cpp         xwayland_wm.h
