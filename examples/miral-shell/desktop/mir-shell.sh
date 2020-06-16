@@ -30,12 +30,6 @@ if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 
 unset QT_QPA_PLATFORMTHEME
 
-if [ "$(lsb_release -c -s)" == "xenial" ]
-then
-  export MIR_SERVER_APP_ENV="GDK_BACKEND=x11:QT_QPA_PLATFORM=ubuntumirclient:SDL_VIDEODRIVER=mir:NO_AT_BRIDGE=1"
-  export MIR_SERVER_ENABLE_MIRCLIENT=
-fi
-
 if which gsettings > /dev/null
 then
   keymap_index=$(gsettings get org.gnome.desktop.input-sources current | cut -d\  -f 2)
