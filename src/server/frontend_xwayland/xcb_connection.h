@@ -202,6 +202,7 @@ public:
     auto reply_debug_string(xcb_get_property_reply_t* reply) const -> std::string;
     auto client_message_debug_string(xcb_client_message_event_t* event) const -> std::string;
     auto window_debug_string(xcb_window_t window) const -> std::string;
+    auto error_debug_string(xcb_generic_error_t* error) const -> std::string;
     /// @}
 
     Atom const wm_protocols;
