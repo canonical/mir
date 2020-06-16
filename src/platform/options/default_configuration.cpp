@@ -228,11 +228,8 @@ void mo::DefaultConfiguration::add_platform_options()
 
     try
     {
-        auto env_libname = ::getenv("MIR_SERVER_PLATFORM_GRAPHICS_LIB");
-        auto env_libpath = ::getenv("MIR_SERVER_PLATFORM_PATH");
-
         platform_libraries =
-            [env_libname, env_libpath, &options]()
+            [&options]()
             {
                 if (options.is_set(platform_graphics_lib))
                 {
@@ -240,16 +237,10 @@ void mo::DefaultConfiguration::add_platform_options()
                         std::make_shared<mir::SharedLibrary>(
                             options.get<std::string>(platform_graphics_lib))};
                 }
-                else if (env_libname)
-                {
-                    return std::vector<std::shared_ptr<mir::SharedLibrary>>{
-                        std::make_shared<mir::SharedLibrary>(std::string{env_libname})
-                    };
-                }
                 else
                 {
                     mir::logging::NullSharedLibraryProberReport null_report;
-                    auto const plugin_path = env_libpath ? env_libpath : options.get<std::string>(platform_path);
+                    auto const plugin_path = options.get<std::string>(platform_path);
                     return mir::libraries_for_path(plugin_path, null_report);
                 }
             }();
