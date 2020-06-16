@@ -147,11 +147,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
     namespace po = boost::program_options;
 
     add_options()
-        (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
-            "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]")
-        (no_server_socket_opt, "Do not provide a socket filename for client connections")
         (arw_server_socket_opt, "Make socket filename globally rw (equivalent to chmod a=rw)")
-        (prompt_socket_opt, "Provide a \"..._trusted\" filename for prompt helper connections")
         (platform_graphics_lib, po::value<std::string>(),
             "Library to use for platform graphics support (default: autodetect)")
         (platform_input_lib, po::value<std::string>(),
@@ -202,7 +198,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "in unexpected ways] throw an exception (instead of a core dump)")
         (debug_opt, "Enable extra development debugging. "
             "This is only interesting for people doing Mir server or client development.")
-        (enable_mirclient_opt, "Enable deprecated mirclient socket (for running old clients)")
         (console_provider,
             po::value<std::string>()->default_value("auto"),
             "Console device handling\n"

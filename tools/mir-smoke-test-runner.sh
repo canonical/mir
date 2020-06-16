@@ -27,15 +27,15 @@ echo "I: client_list=" ${client_list}
 # Start with eglinfo for the system
 echo Running eglinfo client
 date --utc --iso-8601=seconds | xargs echo "[timestamp] Start :" ${client}
-echo MIR_SERVER_ENABLE_MIRCLIENT= WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client eglinfo
-MIR_SERVER_ENABLE_MIRCLIENT= WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client eglinfo
+echo WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client eglinfo
+WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client eglinfo
 date --utc --iso-8601=seconds | xargs echo "[timestamp] End :" ${client}
 
 for client in ${client_list}; do
     echo running client ${client}
     date --utc --iso-8601=seconds | xargs echo "[timestamp] Start :" ${client}
-    echo MIR_SERVER_ENABLE_MIRCLIENT= WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client ${root}/${client}
-    if   MIR_SERVER_ENABLE_MIRCLIENT= WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client ${root}/${client}
+    echo WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client ${root}/${client}
+    if   WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client ${root}/${client}
     then
       echo "I: [PASSED]" ${root}/${client}
     else
