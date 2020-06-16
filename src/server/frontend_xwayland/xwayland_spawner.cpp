@@ -145,12 +145,47 @@ auto create_sockets(int xdisplay) -> std::vector<mir::Fd>
 
     return result;
 }
+
+auto create_dispatchers(
+    std::vector<mir::Fd> const& fds,
+    std::function<void()> callback) -> std::vector<std::shared_ptr<md::ReadableFd>>
+{
+    std::vector<std::shared_ptr<md::ReadableFd>> result;
+    for (auto const& fd : fds)
+    {
+        result.push_back(std::make_shared<md::ReadableFd>(fd, [callback]{ callback(); }));
+    }
+    return result;
+}
 }
 
-mf::XWaylandSpawner::XWaylandSpawner()
+mf::XWaylandSpawner::XWaylandSpawner(std::function<void()> spawn)
     : xdisplay{choose_display()},
-      fds{create_sockets(xdisplay)}
+      fds{create_sockets(xdisplay)},
+      dispatcher{std::make_shared<md::MultiplexingDispatchable>()},
+      spawn_thread{std::make_unique<dispatch::ThreadedDispatcher>(
+          "Mir/X11 Spawner",
+          dispatcher,
+          []()
+          {
+              log(
+                logging::Severity::error,
+                MIR_LOG_COMPONENT,
+                std::current_exception(),
+                "Failed to spawn XWayland server.");
+          })},
+      dispatcher_fd{create_dispatchers(fds, spawn)}
 {
+    if (dispatcher_fd.empty())
+    {
+        // To get here, we were configured with "enable-x11". So this is fatal.
+        mir::fatal_error("Cannot open any X11 socket (abstract or not)");
+    }
+
+    for (auto const& fd_dispatcher : dispatcher_fd)
+    {
+        dispatcher->add_watch(fd_dispatcher);
+    }
 }
 
 mf::XWaylandSpawner::~XWaylandSpawner()

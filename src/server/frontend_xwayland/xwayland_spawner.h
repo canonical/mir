@@ -27,13 +27,19 @@
 namespace mir
 {
 class Fd;
+namespace dispatch
+{
+class ReadableFd;
+class ThreadedDispatcher;
+class MultiplexingDispatchable;
+}
 namespace frontend
 {
 
 class XWaylandSpawner
 {
 public:
-    XWaylandSpawner();
+    XWaylandSpawner(std::function<void()> spawn);
     ~XWaylandSpawner();
 
     XWaylandSpawner(XWaylandSpawner const&) = delete;
@@ -48,6 +54,9 @@ public:
 private:
     int const xdisplay;
     std::vector<Fd> const fds;
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
+    std::unique_ptr<dispatch::ThreadedDispatcher> const spawn_thread;
+    std::vector<std::shared_ptr<dispatch::ReadableFd>> const dispatcher_fd;
 };
 
 }

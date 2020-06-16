@@ -68,9 +68,6 @@ private:
     };
 
     std::shared_ptr<WaylandConnector> const wayland_connector;
-    std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
-    std::unique_ptr<dispatch::ThreadedDispatcher> const xserver_thread;
-    std::vector<std::shared_ptr<dispatch::ReadableFd>> dispatcher_fd;
     std::string const xwayland_path;
     std::unique_ptr<XWaylandSpawner> const spawner;
 

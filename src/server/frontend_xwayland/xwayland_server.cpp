@@ -49,28 +49,12 @@ mf::XWaylandServer::XWaylandServer(
     std::shared_ptr<mf::WaylandConnector> wayland_connector,
     std::string const& xwayland_path) :
     wayland_connector{wayland_connector},
-    dispatcher{std::make_shared<md::MultiplexingDispatchable>()},
-    xserver_thread{std::make_unique<dispatch::ThreadedDispatcher>(
-        "Mir/X11 Reader", dispatcher, []() { terminate_with_current_exception(); })},
-    dispatcher_fd{},
     xwayland_path{xwayland_path},
-    spawner{std::make_unique<XWaylandSpawner>()}
+    spawner{std::make_unique<XWaylandSpawner>([this]()
+        {
+            new_spawn_thread();
+        })}
 {
-    for (auto const& fd : spawner->socket_fds())
-    {
-        dispatcher_fd.push_back(std::make_shared<md::ReadableFd>(fd, [this]{ new_spawn_thread(); }));
-    }
-
-    if (dispatcher_fd.empty())
-    {
-        // To get here, we were configured with "enable-x11". So this is fatal.
-        mir::fatal_error("Cannot open any X11 socket (abstract or not)");
-    }
-
-    for (auto const& fd_dispatcher : dispatcher_fd)
-    {
-        dispatcher->add_watch(fd_dispatcher);
-    }
 }
 
 mf::XWaylandServer::~XWaylandServer()
