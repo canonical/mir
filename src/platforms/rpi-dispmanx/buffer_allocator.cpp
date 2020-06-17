@@ -89,23 +89,10 @@ mg::rpi::BufferAllocator::BufferAllocator(mir::graphics::Display const& output)
 {
 }
 
-auto mg::rpi::BufferAllocator::alloc_buffer(mg::BufferProperties const&)
-    -> std::shared_ptr<Buffer>
-{
-    BOOST_THROW_EXCEPTION((std::runtime_error{"Platform does not support deprecated alloc_buffer()"}));
-}
-
 auto mg::rpi::BufferAllocator::supported_pixel_formats()
     -> std::vector<MirPixelFormat>
 {
     return {mir_pixel_format_argb_8888};
-}
-
-auto mg::rpi::BufferAllocator::alloc_buffer(
-    mir::geometry::Size, uint32_t, uint32_t)
-    -> std::shared_ptr<Buffer>
-{
-    BOOST_THROW_EXCEPTION((std::runtime_error{"Platform does not support mirclient"}));
 }
 
 namespace

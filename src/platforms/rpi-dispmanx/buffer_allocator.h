@@ -21,7 +21,6 @@
 #define MIR_GRAPHICS_RPI_VC4_BUFFER_ALLOCATOR_H_
 
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/wayland_allocator.h"
 #include "mir/graphics/egl_extensions.h"
 
 #include <interface/vmcs_host/vc_dispmanx_types.h>
@@ -59,15 +58,12 @@ public:
 };
 
 class BufferAllocator :
-	public GraphicBufferAllocator,
 	public GraphicBufferAllocator
 {
 public:
     BufferAllocator(graphics::Display const& output);
 
-    std::shared_ptr<Buffer> alloc_buffer(BufferProperties const &buffer_properties) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
-    std::shared_ptr<Buffer> alloc_buffer(geometry::Size size, uint32_t native_format, uint32_t native_flags) override;
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat format) override;
 
     void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) override;
