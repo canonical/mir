@@ -39,6 +39,9 @@ public:
     void apply_default_to(xcb_window_t window) const;
 
 private:
+    XWaylandCursors(XWaylandCursors const&) = delete;
+    XWaylandCursors& operator=(XWaylandCursors const&) = delete;
+
     struct Cursor
     {
         Cursor(std::shared_ptr<XCBConnection> const& connection, xcb_cursor_t xcb_cursor);
