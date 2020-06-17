@@ -28,6 +28,7 @@
 #include "mir/terminate_with_current_exception.h"
 #include <mir/thread_name.h>
 
+#include <boost/throw_exception.hpp>
 #include <csignal>
 #include <fcntl.h>
 #include <sys/socket.h>
@@ -109,43 +110,47 @@ mf::XWaylandServer::XWaylandServer(
     : wayland_connector{wayland_connector},
       xwayland_path{xwayland_path}
 {
-    enum { server, client, size };
-    int wl_client_fd[size], wm_fd[size];
+    enum { MIR, XWAYLAND, SIZE };
+    int wayland_fds[SIZE], x11_fds[SIZE];
 
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wl_client_fd) < 0)
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wayland_fds) < 0)
     {
         // "Shouldn't happen" but continuing is weird.
-        mir::fatal_error("wl connection socketpair failed");
-        return; // doesn't reach here
+        BOOST_THROW_EXCEPTION(std::runtime_error("Wayland socketpair failed"));
     }
 
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wm_fd) < 0)
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, x11_fds) < 0)
     {
         // "Shouldn't happen" but continuing is weird.
-        mir::fatal_error("wm fd socketpair failed");
-        return; // doesn't reach here
+        close(wayland_fds[MIR]);
+        close(wayland_fds[XWAYLAND]);
+        BOOST_THROW_EXCEPTION(std::runtime_error("X11 socketpair failed"));
     }
 
-    mir::log_info("Starting Xwayland");
+    mir::log_info("Starting XWayland");
     xwayland_pid = fork();
 
     switch (xwayland_pid)
     {
     case -1:
-        mir::fatal_error("Failed to fork");
+        close(wayland_fds[MIR]);
+        close(wayland_fds[XWAYLAND]);
+        close(x11_fds[MIR]);
+        close(x11_fds[XWAYLAND]);
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to fork XWayland process"));
         return; // Keep compiler happy (doesn't reach here)
 
     case 0:
-        close(wl_client_fd[server]);
-        close(wm_fd[server]);
-        exec_xwayland(spawner, xwayland_path, wl_client_fd[client], wm_fd[client]);
+        close(wayland_fds[MIR]);
+        close(x11_fds[MIR]);
+        exec_xwayland(spawner, xwayland_path, wayland_fds[XWAYLAND], x11_fds[XWAYLAND]);
         return; // Keep compiler happy (doesn't reach here)
 
     default:
-        close(wl_client_fd[client]);
-        close(wm_fd[client]);
-        x11_fd = Fd{wm_fd[server]};
-        wayland_fd = Fd{wl_client_fd[server]};
+        close(wayland_fds[XWAYLAND]);
+        close(x11_fds[XWAYLAND]);
+        x11_fd = Fd{x11_fds[MIR]};
+        wayland_fd = Fd{wayland_fds[MIR]};
         connect_wm_to_xwayland();
         break;
     }
