@@ -41,6 +41,7 @@ namespace frontend
 {
 class WaylandConnector;
 class XWaylandSpawner;
+class XWaylandWM;
 
 class XWaylandServer
 {
@@ -79,6 +80,7 @@ private:
     Fd spawn_thread_wl_client_fd;
     Status spawn_thread_xserver_status{Status::STOPPED};
     bool spawn_thread_terminate{false};
+    std::shared_ptr<XWaylandWM> spawn_thread_wm;
 };
 } /* frontend */
 } /* mir */

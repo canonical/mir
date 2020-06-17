@@ -57,6 +57,8 @@ mf::XWaylandServer::~XWaylandServer()
 {
     mir::log_info("Deiniting xwayland server");
 
+    spawn_thread_wm.reset();
+
     // Terminate any running xservers
     {
         std::lock_guard<decltype(spawn_thread_mutex)> lock(spawn_thread_mutex);
@@ -241,9 +243,13 @@ void mf::XWaylandServer::connect_wm_to_xwayland(std::unique_lock<std::mutex>& sp
 
     try
     {
-        XWaylandWM wm{wayland_connector, spawn_thread_client, spawn_thread_wm_server_fd};
+        spawn_thread_wm = std::make_shared<XWaylandWM>(
+            wayland_connector,
+            spawn_thread_client,
+            spawn_thread_wm_server_fd);
         mir::log_info("XServer is running");
         spawn_thread_xserver_status = RUNNING;
+
         auto const pid = spawn_thread_pid; // For clarity only as this is only written on this thread
 
         // Unlock access to spawn_thread_* while Xwayland is running
@@ -276,6 +282,7 @@ void mf::XWaylandServer::new_spawn_thread(XWaylandSpawner const& spawner)
     // Don't run the server more then once!
     if (spawn_thread_xserver_status > 0) return;
 
+    spawn_thread_wm.reset();
     spawn_thread_xserver_status = STARTING;
 
     if (spawn_thread.joinable()) spawn_thread.join();
