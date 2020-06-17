@@ -201,18 +201,6 @@ struct GBMBODeleter
     }
 };
 
-auto make_texture_binder(
-    mgm::BufferImportMethod const buffer_import_method,
-    std::shared_ptr<gbm_bo> const& bo,
-    std::shared_ptr<mg::EGLExtensions> const& egl_extensions)
--> std::unique_ptr<EGLImageBufferTextureBinder>
-{
-    if (buffer_import_method == mgm::BufferImportMethod::dma_buf)
-        return std::make_unique<DMABufTextureBinder>(bo, egl_extensions);
-    else
-        return std::make_unique<NativePixmapTextureBinder>(bo, egl_extensions);
-}
-
 std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const& output)
 {
     try
@@ -259,68 +247,6 @@ mgm::BufferAllocator::BufferAllocator(
       buffer_import_method(buffer_import_method)
 {
 }
-
-std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
-    BufferProperties const& buffer_properties)
-{
-    std::shared_ptr<mg::Buffer> buffer;
-
-    if (buffer_properties.usage == BufferUsage::software)
-        buffer = alloc_software_buffer(buffer_properties.size, buffer_properties.format);
-    else
-        buffer = alloc_hardware_buffer(buffer_properties);
-
-    return buffer;
-}
-
-std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
-    BufferProperties const& buffer_properties)
-{
-    uint32_t bo_flags{GBM_BO_USE_RENDERING};
-
-    uint32_t const gbm_format = mgm::mir_format_to_gbm_format(buffer_properties.format);
-
-    /*
-     * Bypass is generally only beneficial to hardware buffers where the
-     * blitting happens on the GPU. For software buffers it is slower to blit
-     * individual pixels from CPU to GPU memory, so don't do it.
-     * Also try to avoid allocating scanout buffers for small surfaces that
-     * are unlikely to ever be fullscreen.
-     *
-     * TODO: The client will have to be more intelligent about when to use
-     *       GBM_BO_USE_SCANOUT in conjunction with mir_extension_gbm_buffer.
-     *       That may have to come after buffer reallocation support (surface
-     *       resizing). The client may also want to check for
-     *       mir_surface_state_fullscreen later when it's fully wired up.
-     */
-    if ((bypass_option == mgm::BypassOption::allowed) &&
-         buffer_properties.size.width.as_uint32_t() >= 800 &&
-         buffer_properties.size.height.as_uint32_t() >= 600)
-    {
-        bo_flags |= GBM_BO_USE_SCANOUT;
-    }
-
-    return alloc_buffer(buffer_properties.size, gbm_format, bo_flags);
-}
-
-std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
-    geom::Size size, uint32_t native_format, uint32_t native_flags)
-{
-    gbm_bo *bo_raw = gbm_bo_create(
-        device,
-        size.width.as_uint32_t(),
-        size.height.as_uint32_t(),
-        native_format,
-        native_flags);
-
-    if (!bo_raw)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create GBM buffer object"));
-
-    std::shared_ptr<gbm_bo> bo{bo_raw, GBMBODeleter()};
-
-    return std::make_shared<GBMBuffer>(
-        bo, native_flags, make_texture_binder(buffer_import_method, bo, egl_extensions));
-} 
 
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     geom::Size size, MirPixelFormat format)

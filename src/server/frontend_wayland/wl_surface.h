@@ -36,7 +36,7 @@ class Executor;
 
 namespace graphics
 {
-class WaylandAllocator;
+class GraphicBufferAllocator;
 }
 namespace scene
 {
@@ -111,7 +111,7 @@ class WlSurface : public wayland::Surface
 public:
     WlSurface(wl_resource* new_resource,
               std::shared_ptr<mir::Executor> const& executor,
-              std::shared_ptr<mir::graphics::WaylandAllocator> const& allocator);
+              std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     ~WlSurface();
 
@@ -143,7 +143,7 @@ public:
     static WlSurface* from(wl_resource* resource);
 
 private:
-    std::shared_ptr<mir::graphics::WaylandAllocator> const allocator;
+    std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
 
     NullWlSurfaceRole null_role;

@@ -22,7 +22,6 @@
 #include "wl_surface_role.h"
 #include "wl_subcompositor.h"
 #include "wl_region.h"
-#include "wlshmbuffer.h"
 #include "deleted_for_resource.h"
 
 #include "wayland_wrapper.h"
@@ -34,12 +33,13 @@
 #include "mir/frontend/wayland.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/executor.h"
-#include "mir/graphics/wayland_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
 
 #include <algorithm>
 #include <boost/throw_exception.hpp>
+#include <wayland-server-protocol.h>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -84,7 +84,7 @@ bool mf::WlSurfaceState::surface_data_needs_refresh() const
 mf::WlSurface::WlSurface(
     wl_resource* new_resource,
     std::shared_ptr<Executor> const& executor,
-    std::shared_ptr<graphics::WaylandAllocator> const& allocator)
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator)
     : Surface(new_resource, Version<4>()),
         session{get_session(client)},
         stream{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
@@ -313,6 +313,36 @@ void mf::WlSurface::set_input_region(std::experimental::optional<wl_resource*> c
     }
 }
 
+namespace
+{
+MirPixelFormat wl_format_to_mir_format(uint32_t format)
+{
+    switch (format)
+    {
+        case WL_SHM_FORMAT_ARGB8888:
+            return mir_pixel_format_argb_8888;
+        case WL_SHM_FORMAT_XRGB8888:
+            return mir_pixel_format_xrgb_8888;
+        case WL_SHM_FORMAT_RGBA4444:
+            return mir_pixel_format_rgba_4444;
+        case WL_SHM_FORMAT_RGBA5551:
+            return mir_pixel_format_rgba_5551;
+        case WL_SHM_FORMAT_RGB565:
+            return mir_pixel_format_rgb_565;
+        case WL_SHM_FORMAT_RGB888:
+            return mir_pixel_format_rgb_888;
+        case WL_SHM_FORMAT_BGR888:
+            return mir_pixel_format_bgr_888;
+        case WL_SHM_FORMAT_XBGR8888:
+            return mir_pixel_format_xbgr_8888;
+        case WL_SHM_FORMAT_ABGR8888:
+            return mir_pixel_format_abgr_8888;
+        default:
+            return mir_pixel_format_invalid;
+    }
+}
+}
+
 void mf::WlSurface::commit(WlSurfaceState const& state)
 {
     // We're going to lose the value of state, so copy the frame_callbacks first. We have to maintain a list of
@@ -354,8 +384,22 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
             std::shared_ptr<graphics::Buffer> mir_buffer;
 
-            if (wl_shm_buffer_get(buffer))
+            if (auto const shm_buffer = wl_shm_buffer_get(buffer))
             {
+                auto const stride = wl_shm_buffer_get_stride(shm_buffer);
+                auto const width = wl_shm_buffer_get_width(shm_buffer);
+                auto const format = wl_format_to_mir_format(wl_shm_buffer_get_format(shm_buffer));
+                if (stride < width * MIR_BYTES_PER_PIXEL(format)) {
+                    wl_resource_post_error(
+                        buffer,
+                        WL_SHM_ERROR_INVALID_STRIDE,
+                        "Stride (%u) is less than width × bytes per pixel (%u×%u). "
+                        "Did you accidentally specify stride in pixels?",
+                        stride, width, MIR_BYTES_PER_PIXEL(format));
+
+                    BOOST_THROW_EXCEPTION((
+                                              std::runtime_error{"Buffer has invalid stride"}));
+                }
                 mir_buffer = allocator->buffer_from_shm(
                     buffer,
                     executor,

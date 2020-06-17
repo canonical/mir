@@ -103,14 +103,6 @@ mge::BufferAllocator::BufferAllocator(mg::Display const& output)
 
 mge::BufferAllocator::~BufferAllocator() = default;
 
-std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_buffer(
-    BufferProperties const& buffer_properties)
-{
-    if (buffer_properties.usage == mg::BufferUsage::software)
-        return alloc_software_buffer(buffer_properties.size, buffer_properties.format);
-    BOOST_THROW_EXCEPTION(std::runtime_error("platform incapable of creating hardware buffers"));
-}
-
 std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_software_buffer(geom::Size size, MirPixelFormat format)
 {
     if (!mgc::MemoryBackedShmBuffer::supports(format))
@@ -127,11 +119,6 @@ std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()
 {
     // Lazy
     return {mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888};
-}
-
-std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_buffer(geometry::Size, uint32_t, uint32_t)
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("platform incapable of creating buffers"));
 }
 
 namespace
@@ -427,7 +414,7 @@ void mir::graphics::eglstream::BufferAllocator::bind_display(
         BOOST_THROW_EXCEPTION((std::runtime_error{message.str()}));
     }
 
-    mir::log_info("Bound EGLStreams-backed WaylandAllocator display");
+    mir::log_info("Bound EGLStreams-backed Wayland display");
 }
 
 namespace

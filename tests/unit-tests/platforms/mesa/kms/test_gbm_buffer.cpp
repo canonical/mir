@@ -128,57 +128,6 @@ protected:
     mtf::UdevEnvironment fake_devices;
 };
 
-TEST_F(GBMBufferTest, dimensions_test)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    auto buffer = allocator->alloc_buffer(buffer_properties);
-    ASSERT_EQ(size, buffer->size());
-}
-
-TEST_F(GBMBufferTest, buffer_has_expected_pixel_format)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    auto buffer(allocator->alloc_buffer(buffer_properties));
-    ASSERT_EQ(pf, buffer->pixel_format());
-}
-
-TEST_F(GBMBufferTest, stride_has_sane_value)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    // RGBA 8888 cannot take less than 4 bytes
-    // TODO: is there a *maximum* sane value for stride?
-    geom::Stride minimum(size.width.as_uint32_t() * 4);
-
-    auto buffer(allocator->alloc_buffer(buffer_properties));
-
-    auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer->native_buffer_handle());
-    ASSERT_THAT(native, Ne(nullptr));
-    ASSERT_LE(minimum, geom::Stride{native->stride});
-}
-
-TEST_F(GBMBufferTest, buffer_native_handle_has_correct_size)
-{
-    using namespace testing;
-
-    auto buffer = allocator->alloc_buffer(buffer_properties);
-    auto native_handle = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer->native_buffer_handle());
-    ASSERT_THAT(native_handle, Ne(nullptr));
-    EXPECT_EQ(1, native_handle->fd_items);
-    EXPECT_EQ(0, native_handle->data_items);
-}
-
 MATCHER_P(GEMFlinkHandleIs, value, "")
 {
     auto flink = reinterpret_cast<struct drm_gem_flink*>(arg);

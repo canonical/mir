@@ -58,7 +58,7 @@ TEST_F(GraphicsPlatform, buffer_creation)
     mg::BufferUsage usage{mg::BufferUsage::hardware};
     mg::BufferProperties buffer_properties{size, pf, usage};
 
-    auto buffer = allocator->alloc_buffer(buffer_properties);
+    auto buffer = allocator->alloc_software_buffer(size, pf);
 
     ASSERT_TRUE(buffer.get() != NULL);
 

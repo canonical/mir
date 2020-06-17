@@ -118,7 +118,7 @@ struct BufferCounterConfig : mtf::StubbedServerConfiguration
     class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
     {
      public:
-        std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&) override
+        std::shared_ptr<mg::Buffer> alloc_software_buffer(geom::Size, MirPixelFormat) override
         {
             return std::make_shared<CountingStubBuffer>();
         }

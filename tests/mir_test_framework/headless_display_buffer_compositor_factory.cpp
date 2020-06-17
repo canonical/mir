@@ -21,6 +21,7 @@
 #include "mir/renderer/gl/render_target.h"
 #include "mir/renderer/gl/texture_source.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/texture.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/buffer.h"
@@ -108,6 +109,11 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
                 {
                     // Bind to texture is what drives the Wayland frame event.
                     gl_buf->gl_bind_to_texture();
+                }
+                else if (auto tex = dynamic_cast<mg::gl::Texture*>(buf->native_buffer_base()))
+                {
+                    // And, likewise, bind() drives the Wayland frame event for mg::gl::Texture
+                    tex->bind();
                 }
             }
 

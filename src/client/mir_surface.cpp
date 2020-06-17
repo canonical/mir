@@ -95,7 +95,7 @@ MirSurfaceSpec::MirSurfaceSpec(
       width{width},
       height{height},
       pixel_format{format},
-      buffer_usage{mir_buffer_usage_hardware}
+      buffer_usage{mir_buffer_usage_software}
 {
 }
 

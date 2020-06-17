@@ -22,7 +22,6 @@
 #include "platform_common.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
-#include "mir/graphics/wayland_allocator.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
 #pragma GCC diagnostic push
@@ -64,8 +63,7 @@ enum class BufferImportMethod
 };
 
 class BufferAllocator:
-    public graphics::GraphicBufferAllocator,
-    public graphics::WaylandAllocator
+    public graphics::GraphicBufferAllocator
 {
 public:
     BufferAllocator(
@@ -74,10 +72,7 @@ public:
         BypassOption bypass_option,
         BufferImportMethod const buffer_import_method);
 
-    std::shared_ptr<Buffer> alloc_buffer(
-        geometry::Size size, uint32_t native_format, uint32_t native_flags) override;
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) override;
-    std::shared_ptr<Buffer> alloc_buffer(graphics::BufferProperties const& buffer_properties) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
     void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) override;

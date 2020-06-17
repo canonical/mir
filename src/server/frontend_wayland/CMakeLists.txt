@@ -10,7 +10,6 @@ set(
   mir_display.cpp               mir_display.h
   wayland_default_configuration.cpp
   wayland_connector.cpp         wayland_connector.h
-  wlshmbuffer.cpp               wlshmbuffer.h
   wayland_executor.cpp          wayland_executor.h
   null_event_sink.cpp           null_event_sink.h
   wayland_surface_observer.cpp  wayland_surface_observer.h

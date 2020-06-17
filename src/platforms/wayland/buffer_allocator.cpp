@@ -76,14 +76,6 @@ mgw::BufferAllocator::BufferAllocator(graphics::Display const& output) :
 {
 }
 
-std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_buffer(
-    BufferProperties const& buffer_properties)
-{
-    if (buffer_properties.usage == mg::BufferUsage::software)
-        return alloc_software_buffer(buffer_properties.size, buffer_properties.format);
-    BOOST_THROW_EXCEPTION(std::runtime_error("platform incapable of creating hardware buffers"));
-}
-
 std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_software_buffer(geom::Size size, MirPixelFormat format)
 {
     if (!mgc::ShmBuffer::supports(format))
@@ -99,11 +91,6 @@ std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_software_buffer(geom::Si
 std::vector<MirPixelFormat> mgw::BufferAllocator::supported_pixel_formats()
 {
     return {mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888};
-}
-
-std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_buffer(geometry::Size, uint32_t, uint32_t)
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("platform incapable of creating native buffers"));
 }
 
 void mgw::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor)

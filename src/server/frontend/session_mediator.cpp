@@ -510,10 +510,7 @@ void mf::SessionMediator::allocate_buffers(
 
             if (req.has_flags() && req.has_native_format())
             {
-                buffer = allocator->alloc_buffer(
-                    {req.width(), req.height()},
-                    req.native_format(),
-                    req.flags());
+                BOOST_THROW_EXCEPTION(std::runtime_error("Request for removed HW buffer interface"));
             }
             else
             {
@@ -526,9 +523,7 @@ void mf::SessionMediator::allocate_buffers(
                 }
                 else
                 {
-                    //legacy route, server-selected pf and usage
-                    buffer =
-                        allocator->alloc_buffer(mg::BufferProperties{size, pf, mg::BufferUsage::hardware});
+                    BOOST_THROW_EXCEPTION(std::runtime_error("Request for removed HW buffer interface"));
                 }
             }
 
