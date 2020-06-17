@@ -52,6 +52,9 @@ public:
         std::string const& xwayland_path);
     ~XWaylandServer();
 
+    auto client() const -> wl_client* { return wayland_client; }
+    auto wm_fd() const -> Fd const& { return x11_fd; }
+
 private:
     XWaylandServer(XWaylandServer const&) = delete;
     XWaylandServer& operator=(XWaylandServer const&) = delete;
@@ -68,7 +71,6 @@ private:
     wl_client* wayland_client{nullptr};
     Fd x11_fd;
     Fd wayland_fd;
-    std::shared_ptr<XWaylandWM> wm;
 };
 } /* frontend */
 } /* mir */

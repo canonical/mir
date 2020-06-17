@@ -31,6 +31,7 @@ namespace frontend
 class WaylandConnector;
 class XWaylandServer;
 class XWaylandSpawner;
+class XWaylandWM;
 class XWaylandConnector : public Connector
 {
 public:
@@ -57,6 +58,7 @@ private:
     std::mutex mutable mutex;
     std::unique_ptr<XWaylandSpawner> spawner;
     std::unique_ptr<XWaylandServer> server;
+    std::unique_ptr<XWaylandWM> wm;
 };
 } /* frontend */
 } /* mir */
