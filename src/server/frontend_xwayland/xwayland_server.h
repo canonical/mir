@@ -64,11 +64,11 @@ private:
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::string const xwayland_path;
 
-    pid_t spawn_thread_pid;
-    wl_client* spawn_thread_client{nullptr};
-    Fd spawn_thread_wm_server_fd;
-    Fd spawn_thread_wl_client_fd;
-    std::shared_ptr<XWaylandWM> spawn_thread_wm;
+    pid_t xwayland_pid;
+    wl_client* wayland_client{nullptr};
+    Fd x11_fd;
+    Fd wayland_fd;
+    std::shared_ptr<XWaylandWM> wm;
 };
 } /* frontend */
 } /* mir */

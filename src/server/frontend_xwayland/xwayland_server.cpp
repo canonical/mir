@@ -70,9 +70,9 @@ mf::XWaylandServer::XWaylandServer(
     }
 
     mir::log_info("Starting Xwayland");
-    spawn_thread_pid = fork();
+    xwayland_pid = fork();
 
-    switch (spawn_thread_pid)
+    switch (xwayland_pid)
     {
     case -1:
         mir::fatal_error("Failed to fork");
@@ -87,8 +87,8 @@ mf::XWaylandServer::XWaylandServer(
     default:
         close(wl_client_fd[client]);
         close(wm_fd[client]);
-        spawn_thread_wm_server_fd = Fd{wm_fd[server]};
-        spawn_thread_wl_client_fd = Fd{wl_client_fd[server]};
+        x11_fd = Fd{wm_fd[server]};
+        wayland_fd = Fd{wl_client_fd[server]};
         connect_wm_to_xwayland();
         break;
     }
@@ -98,16 +98,16 @@ mf::XWaylandServer::~XWaylandServer()
 {
     mir::log_info("Deiniting xwayland server");
 
-    spawn_thread_wm.reset();
+    wm.reset();
 
     // Terminate any running xservers
-    if (kill(spawn_thread_pid, SIGTERM) == 0)
+    if (kill(xwayland_pid, SIGTERM) == 0)
     {
         std::this_thread::sleep_for(100ms);// After 100ms...
-        if (kill(spawn_thread_pid, 0) == 0)    // ...if Xwayland is still running...
+        if (kill(xwayland_pid, 0) == 0)    // ...if Xwayland is still running...
         {
             mir::log_info("Xwayland didn't close, killing it");
-            kill(spawn_thread_pid, SIGKILL);     // ...then kill it!
+            kill(xwayland_pid, SIGKILL);     // ...then kill it!
         }
     }
 }
@@ -198,12 +198,12 @@ void mf::XWaylandServer::connect_wm_to_xwayland()
             [this, &client_mutex, &client_ready](wl_display* display)
             {
                 std::lock_guard<std::mutex> lock{client_mutex};
-                spawn_thread_client = wl_client_create(display, spawn_thread_wl_client_fd);
+                wayland_client = wl_client_create(display, wayland_fd);
                 client_ready.notify_all();
             });
 
         std::unique_lock<std::mutex> lock{client_mutex};
-        if (!client_ready.wait_for(lock, 10s, [&]{ return spawn_thread_client; }))
+        if (!client_ready.wait_for(lock, 10s, [&]{ return wayland_client; }))
         {
             // "Shouldn't happen" but this is better than hanging.
             mir::fatal_error("Failed to create wl_client for Xwayland");
@@ -222,10 +222,10 @@ void mf::XWaylandServer::connect_wm_to_xwayland()
 
     try
     {
-        spawn_thread_wm = std::make_shared<XWaylandWM>(
+        wm = std::make_shared<XWaylandWM>(
             wayland_connector,
-            spawn_thread_client,
-            spawn_thread_wm_server_fd);
+            wayland_client,
+            x11_fd);
         mir::log_info("XServer is running");
     }
     catch (std::exception const& e)
