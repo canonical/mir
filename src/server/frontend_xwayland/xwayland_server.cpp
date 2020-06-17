@@ -124,7 +124,9 @@ void mf::XWaylandServer::spawn(XWaylandSpawner const& spawner)
     default:
         close(wl_client_fd[client]);
         close(wm_fd[client]);
-        connect_wm_to_xwayland(Fd{wl_client_fd[server]}, Fd{wm_fd[server]}, lock);
+        spawn_thread_wm_server_fd = Fd{wm_fd[server]};
+        spawn_thread_wl_client_fd = Fd{wl_client_fd[server]};
+        connect_wm_to_xwayland(lock);
         break;
     }
 }
@@ -190,10 +192,7 @@ bool spin_wait_for(sig_atomic_t& xserver_ready)
 }
 }
 
-void mf::XWaylandServer::connect_wm_to_xwayland(
-    Fd const& wl_client_server_fd,
-    Fd const& wm_server_fd,
-    std::unique_lock<decltype(spawn_thread_mutex)>& spawn_thread_lock)
+void mf::XWaylandServer::connect_wm_to_xwayland(std::unique_lock<std::mutex>& spawn_thread_lock)
 {
     // We need to set up the signal handling before connecting wl_client_server_fd
     static sig_atomic_t xserver_ready{ false };
@@ -210,21 +209,20 @@ void mf::XWaylandServer::connect_wm_to_xwayland(
     action.sa_flags = 0;
     sigaction(SIGUSR1, &action, &old_action);
 
-    wl_client* client = nullptr;
     {
         std::mutex client_mutex;
         std::condition_variable client_ready;
 
         wayland_connector->run_on_wayland_display(
-            [wl_client_server_fd, &client, &client_mutex, &client_ready](wl_display* display)
+            [this, &client_mutex, &client_ready](wl_display* display)
             {
                 std::lock_guard<std::mutex> lock{client_mutex};
-                client = wl_client_create(display, wl_client_server_fd);
+                spawn_thread_client = wl_client_create(display, spawn_thread_wl_client_fd);
                 client_ready.notify_all();
             });
 
         std::unique_lock<std::mutex> lock{client_mutex};
-        if (!client_ready.wait_for(lock, 10s, [&]{ return client; }))
+        if (!client_ready.wait_for(lock, 10s, [&]{ return spawn_thread_client; }))
         {
             // "Shouldn't happen" but this is better than hanging.
             mir::fatal_error("Failed to create wl_client for Xwayland");
@@ -243,7 +241,7 @@ void mf::XWaylandServer::connect_wm_to_xwayland(
 
     try
     {
-        XWaylandWM wm{wayland_connector, client, wm_server_fd};
+        XWaylandWM wm{wayland_connector, spawn_thread_client, spawn_thread_wm_server_fd};
         mir::log_info("XServer is running");
         spawn_thread_xserver_status = RUNNING;
         auto const pid = spawn_thread_pid; // For clarity only as this is only written on this thread

@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 
+struct wl_client;
+
 namespace mir
 {
 namespace dispatch
@@ -57,10 +59,7 @@ private:
     /// Called after fork() if we should turn into XWayland
     void execl_xwayland(XWaylandSpawner const& spawner, int wl_client_client_fd, int wm_client_fd);
     /// Called after fork() if we should continue on as Mir
-    void connect_wm_to_xwayland(
-        Fd const& wl_client_server_fd,
-        Fd const& wm_server_fd,
-        std::unique_lock<std::mutex>& spawn_thread_lock);
+    void connect_wm_to_xwayland(std::unique_lock<std::mutex>& spawn_thread_lock);
 
     enum Status {
         STARTING = 1,
@@ -75,6 +74,9 @@ private:
     std::mutex mutable spawn_thread_mutex;
     std::thread spawn_thread;
     pid_t spawn_thread_pid;
+    wl_client* spawn_thread_client{nullptr};
+    Fd spawn_thread_wm_server_fd;
+    Fd spawn_thread_wl_client_fd;
     Status spawn_thread_xserver_status{Status::STOPPED};
     bool spawn_thread_terminate{false};
 };
