@@ -41,7 +41,6 @@ void mf::XWaylandConnector::start()
         std::lock_guard<std::mutex> lock{mutex};
 
         spawner = std::make_unique<XWaylandSpawner>([this]() { spawn(); });
-        server = std::make_unique<XWaylandServer>(wayland_connector, xwayland_path);
         mir::log_info("XWayland started");
     }
 }
@@ -97,15 +96,20 @@ void mf::XWaylandConnector::spawn()
 {
     std::lock_guard<std::mutex> lock{mutex};
 
-    if (!spawner || !server)
+    if (server || !spawner)
     {
-        // We have been stopped and have destroyed our spawner, nothing to do
+        // If we have a server then we've already spawned
+        // If we don't have a spawner then this connector has been stopped or never started (and shouldn't spawn)
+        // Either way, nothing to do
         return;
     }
 
     try
     {
-        server->new_spawn_thread(*spawner);
+        server = std::make_unique<XWaylandServer>(
+            wayland_connector,
+            *spawner,
+            xwayland_path);
         mir::log_info("XWayland is running");
     }
     catch (...)

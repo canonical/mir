@@ -46,46 +46,14 @@ namespace md = mir::dispatch;
 using namespace std::chrono_literals;
 
 mf::XWaylandServer::XWaylandServer(
-    std::shared_ptr<mf::WaylandConnector> wayland_connector,
-    std::string const& xwayland_path) :
-    wayland_connector{wayland_connector},
-    xwayland_path{xwayland_path}
-{
-}
-
-mf::XWaylandServer::~XWaylandServer()
-{
-    mir::log_info("Deiniting xwayland server");
-
-    spawn_thread_wm.reset();
-
-    // Terminate any running xservers
-    {
-        std::lock_guard<decltype(spawn_thread_mutex)> lock(spawn_thread_mutex);
-
-        if (spawn_thread_xserver_status > 0)
-        {
-            spawn_thread_terminate = true;
-
-            if (kill(spawn_thread_pid, SIGTERM) == 0)
-            {
-                std::this_thread::sleep_for(100ms);// After 100ms...
-                if (kill(spawn_thread_pid, 0) == 0)    // ...if Xwayland is still running...
-                {
-                    mir::log_info("Xwayland didn't close, killing it");
-                    kill(spawn_thread_pid, SIGKILL);     // ...then kill it!
-                }
-            }
-        }
-    }
-}
-
-void mf::XWaylandServer::spawn(XWaylandSpawner const& spawner)
+    std::shared_ptr<WaylandConnector> const& wayland_connector,
+    XWaylandSpawner const& spawner,
+    std::string const& xwayland_path)
+    : wayland_connector{wayland_connector},
+      xwayland_path{xwayland_path}
 {
     enum { server, client, size };
     int wl_client_fd[size], wm_fd[size];
-
-    spawn_thread_xserver_status = STARTING;
 
     if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wl_client_fd) < 0)
     {
@@ -123,6 +91,24 @@ void mf::XWaylandServer::spawn(XWaylandSpawner const& spawner)
         spawn_thread_wl_client_fd = Fd{wl_client_fd[server]};
         connect_wm_to_xwayland();
         break;
+    }
+}
+
+mf::XWaylandServer::~XWaylandServer()
+{
+    mir::log_info("Deiniting xwayland server");
+
+    spawn_thread_wm.reset();
+
+    // Terminate any running xservers
+    if (kill(spawn_thread_pid, SIGTERM) == 0)
+    {
+        std::this_thread::sleep_for(100ms);// After 100ms...
+        if (kill(spawn_thread_pid, 0) == 0)    // ...if Xwayland is still running...
+        {
+            mir::log_info("Xwayland didn't close, killing it");
+            kill(spawn_thread_pid, SIGKILL);     // ...then kill it!
+        }
     }
 }
 
@@ -241,7 +227,6 @@ void mf::XWaylandServer::connect_wm_to_xwayland()
             spawn_thread_client,
             spawn_thread_wm_server_fd);
         mir::log_info("XServer is running");
-        spawn_thread_xserver_status = RUNNING;
     }
     catch (std::exception const& e)
     {
@@ -249,17 +234,4 @@ void mf::XWaylandServer::connect_wm_to_xwayland()
         // don't touch spawn_thread_xserver_status
         // it should be left in a STARTING state to the caller knows we didn't successfully start'
     }
-}
-
-void mf::XWaylandServer::new_spawn_thread(XWaylandSpawner const& spawner)
-{
-    std::lock_guard<decltype(spawn_thread_mutex)> lock(spawn_thread_mutex);
-
-    // Don't run the server more then once!
-    if (spawn_thread_xserver_status > 0) return;
-
-    spawn_thread_wm.reset();
-    spawn_thread_xserver_status = STARTING;
-
-    spawn(spawner);
 }
