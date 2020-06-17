@@ -22,6 +22,7 @@
 
 #include "wayland_connector.h"
 #include "xwayland_server.h"
+#include "xwayland_spawner.h"
 
 namespace mf = mir::frontend;
 
@@ -37,6 +38,14 @@ void mf::XWaylandConnector::start()
 {
     if (wayland_connector->get_extension("x11-support"))
     {
+        /// TODO: make threadsafe
+        xwayland_spawner = std::make_unique<XWaylandSpawner>([this]()
+            {
+                if (xwayland_server && xwayland_spawner)
+                {
+                    xwayland_server->new_spawn_thread(*xwayland_spawner);
+                }
+            });
         xwayland_server = std::make_unique<XWaylandServer>(wayland_connector, xwayland_path);
         mir::log_info("XWayland started");
     }
@@ -46,6 +55,7 @@ void mf::XWaylandConnector::stop()
 {
     if (xwayland_server)
     {
+        xwayland_spawner.reset();
         xwayland_server.reset();
         mir::log_info("XWayland stopped");
     }
@@ -64,9 +74,9 @@ int mf::XWaylandConnector::client_socket_fd(
 
 auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
 {
-    if (xwayland_server)
+    if (xwayland_spawner)
     {
-        return xwayland_server->x11_display();
+        return xwayland_spawner->x11_display();
     }
     else
     {

@@ -27,6 +27,7 @@ namespace frontend
 {
 class WaylandConnector;
 class XWaylandServer;
+class XWaylandSpawner;
 class XWaylandConnector : public Connector
 {
 public:
@@ -48,6 +49,7 @@ private:
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::string const xwayland_path;
 
+    std::unique_ptr<XWaylandSpawner> xwayland_spawner;
     std::unique_ptr<XWaylandServer> xwayland_server;
 };
 } /* frontend */

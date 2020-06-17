@@ -49,11 +49,7 @@ mf::XWaylandServer::XWaylandServer(
     std::shared_ptr<mf::WaylandConnector> wayland_connector,
     std::string const& xwayland_path) :
     wayland_connector{wayland_connector},
-    xwayland_path{xwayland_path},
-    spawner{std::make_unique<XWaylandSpawner>([this]()
-        {
-            new_spawn_thread();
-        })}
+    xwayland_path{xwayland_path}
 {
 }
 
@@ -85,7 +81,7 @@ mf::XWaylandServer::~XWaylandServer()
         spawn_thread.join();
 }
 
-void mf::XWaylandServer::spawn()
+void mf::XWaylandServer::spawn(XWaylandSpawner const& spawner)
 {
     set_thread_name("XWaylandServer::spawn");
 
@@ -122,7 +118,7 @@ void mf::XWaylandServer::spawn()
     case 0:
         close(wl_client_fd[server]);
         close(wm_fd[server]);
-        execl_xwayland(wl_client_fd[client], wm_fd[client]);
+        execl_xwayland(spawner, wl_client_fd[client], wm_fd[client]);
         return; // Keep compiler happy (doesn't reach here)
 
     default:
@@ -133,7 +129,7 @@ void mf::XWaylandServer::spawn()
     }
 }
 
-void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_fd)
+void mf::XWaylandServer::execl_xwayland(XWaylandSpawner const& spawner, int wl_client_client_fd, int wm_client_fd)
 {
     setenv("EGL_PLATFORM", "DRM", 1);
 
@@ -148,7 +144,7 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
     mir::log_error("Failed to duplicate xwayland wm FD");
     auto const wm_fd_str = std::to_string(wm_fd);
 
-    auto const dsp_str = spawner->x11_display();
+    auto const dsp_str = spawner.x11_display();
 
     // Propagate SIGUSR1 to parent process
     struct sigaction action;
@@ -166,7 +162,7 @@ void mf::XWaylandServer::execl_xwayland(int wl_client_client_fd, int wm_client_f
             "-terminate",
         };
 
-    for (auto const& fd : spawner->socket_fds())
+    for (auto const& fd : spawner.socket_fds())
     {
         XWaylandSpawner::set_cloexec(fd, false);
         args.push_back("-listen");
@@ -275,7 +271,7 @@ void mf::XWaylandServer::connect_wm_to_xwayland(
     }
 }
 
-void mf::XWaylandServer::new_spawn_thread()
+void mf::XWaylandServer::new_spawn_thread(XWaylandSpawner const& spawner)
 {
     std::lock_guard<decltype(spawn_thread_mutex)> lock(spawn_thread_mutex);
 
@@ -285,10 +281,8 @@ void mf::XWaylandServer::new_spawn_thread()
     spawn_thread_xserver_status = STARTING;
 
     if (spawn_thread.joinable()) spawn_thread.join();
-    spawn_thread = std::thread{&mf::XWaylandServer::spawn, this};
-}
-
-auto mir::frontend::XWaylandServer::x11_display() const -> std::string
-{
-    return spawner->x11_display();
+    spawn_thread = std::thread{[this, &spawner]()
+        {
+            spawn(spawner);
+        }};
 }
