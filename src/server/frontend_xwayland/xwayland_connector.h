@@ -26,6 +26,11 @@
 
 namespace mir
 {
+namespace dispatch
+{
+class ReadableFd;
+class ThreadedDispatcher;
+}
 namespace frontend
 {
 class WaylandConnector;
@@ -59,6 +64,7 @@ private:
     std::unique_ptr<XWaylandSpawner> spawner;
     std::unique_ptr<XWaylandServer> server;
     std::unique_ptr<XWaylandWM> wm;
+    std::unique_ptr<dispatch::ThreadedDispatcher> wm_event_thread;
 };
 } /* frontend */
 } /* mir */

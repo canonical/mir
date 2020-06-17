@@ -18,14 +18,18 @@
 
 #include "xwayland_connector.h"
 
-#include "mir/log.h"
 
 #include "wayland_connector.h"
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
 #include "xwayland_wm.h"
+#include "mir/log.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
+#include "mir/dispatch/readable_fd.h"
+#include "mir/terminate_with_current_exception.h"
 
 namespace mf = mir::frontend;
+namespace md = mir::dispatch;
 
 mf::XWaylandConnector::XWaylandConnector(
     std::shared_ptr<WaylandConnector> const& wayland_connector,
@@ -53,12 +57,14 @@ void mf::XWaylandConnector::stop()
     bool const was_running{server};
 
     auto local_spawner{std::move(spawner)};
+    auto local_wm_event_thread{std::move(wm_event_thread)};
     auto local_wm{std::move(wm)};
     auto local_server{std::move(server)};
 
     lock.unlock();
 
     local_spawner.reset();
+    local_wm_event_thread.reset();
     local_wm.reset();
     local_server.reset();
 
@@ -117,6 +123,18 @@ void mf::XWaylandConnector::spawn()
             wayland_connector,
             server->client(),
             server->wm_fd());
+        auto const wm_dispatcher = std::make_shared<md::ReadableFd>(server->wm_fd(), [this]()
+            {
+                std::lock_guard<std::mutex> lock{mutex};
+                if (wm)
+                {
+                    wm->handle_events();
+                }
+            });
+        wm_event_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>("Mir/X11 WM Reader", wm_dispatcher, []()
+            {
+                mir::terminate_with_current_exception();
+            });
         mir::log_info("XWayland is running");
     }
     catch (...)
