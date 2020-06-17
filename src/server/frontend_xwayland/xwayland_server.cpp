@@ -18,15 +18,8 @@
 
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
-
 #include "wayland_connector.h"
-
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/readable_fd.h"
-#include "mir/fd.h"
 #include "mir/log.h"
-#include "mir/terminate_with_current_exception.h"
-#include <mir/thread_name.h>
 
 #include <boost/throw_exception.hpp>
 #include <csignal>
@@ -39,7 +32,6 @@
 #include <unistd.h>
 
 #include <chrono>
-#include <thread>
 #include <condition_variable>
 
 namespace mf = mir::frontend;

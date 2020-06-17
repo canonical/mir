@@ -22,26 +22,16 @@
 #include "mir/fd.h"
 
 #include <memory>
-#include <mutex>
-#include <thread>
 #include <string>
-#include <vector>
 
 struct wl_client;
 
 namespace mir
 {
-namespace dispatch
-{
-class ReadableFd;
-class ThreadedDispatcher;
-class MultiplexingDispatchable;
-} /*dispatch */
 namespace frontend
 {
 class WaylandConnector;
 class XWaylandSpawner;
-class XWaylandWM;
 
 class XWaylandServer
 {
@@ -69,7 +59,7 @@ private:
     XWaylandProcess const xwayland_process;
     wl_client* const wayland_client{nullptr};
 };
-} /* frontend */
-} /* mir */
+}
+}
 
-#endif /* end of include guard: MIR_FRONTEND_XWAYLAND_SERVER_H */
+#endif // MIR_FRONTEND_XWAYLAND_SERVER_H
