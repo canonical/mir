@@ -46,22 +46,21 @@ public:
     XWaylandServer(std::shared_ptr<WaylandConnector> wayland_connector, std::string const& xwayland_path);
     ~XWaylandServer();
 
-    auto x11_display() const -> std::string;
+    void new_spawn_thread(XWaylandSpawner const& spawner);
 
 private:
     XWaylandServer(XWaylandServer const&) = delete;
     XWaylandServer& operator=(XWaylandServer const&) = delete;
 
     /// Forks off the XWayland process
-    void spawn();
+    void spawn(XWaylandSpawner const& spawner);
     /// Called after fork() if we should turn into XWayland
-    void execl_xwayland(int wl_client_client_fd, int wm_client_fd);
+    void execl_xwayland(XWaylandSpawner const& spawner, int wl_client_client_fd, int wm_client_fd);
     /// Called after fork() if we should continue on as Mir
     void connect_wm_to_xwayland(
         Fd const& wl_client_server_fd,
         Fd const& wm_server_fd,
         std::unique_lock<std::mutex>& spawn_thread_lock);
-    void new_spawn_thread();
 
     enum Status {
         STARTING = 1,
@@ -72,7 +71,6 @@ private:
 
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::string const xwayland_path;
-    std::unique_ptr<XWaylandSpawner> const spawner;
 
     std::mutex mutable spawn_thread_mutex;
     std::thread spawn_thread;

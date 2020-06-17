@@ -22,6 +22,7 @@
 
 #include "wayland_connector.h"
 #include "xwayland_server.h"
+#include "xwayland_spawner.h"
 
 namespace mf = mir::frontend;
 
@@ -39,6 +40,7 @@ void mf::XWaylandConnector::start()
     {
         std::lock_guard<std::mutex> lock{mutex};
 
+        spawner = std::make_unique<XWaylandSpawner>([this]() { spawn(); });
         server = std::make_unique<XWaylandServer>(wayland_connector, xwayland_path);
         mir::log_info("XWayland started");
     }
@@ -50,10 +52,12 @@ void mf::XWaylandConnector::stop()
 
     bool const was_running{server};
 
+    auto local_spawner{std::move(spawner)};
     auto local_server{std::move(server)};
 
     lock.unlock();
 
+    local_spawner.reset();
     local_server.reset();
 
     if (was_running)
@@ -77,9 +81,9 @@ auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
 {
     std::lock_guard<std::mutex> lock{mutex};
 
-    if (server)
+    if (spawner)
     {
-        return server->x11_display();
+        return spawner->x11_display();
     }
     else
     {
@@ -88,3 +92,28 @@ auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
 }
 
 mf::XWaylandConnector::~XWaylandConnector() = default;
+
+void mf::XWaylandConnector::spawn()
+{
+    std::lock_guard<std::mutex> lock{mutex};
+
+    if (!spawner || !server)
+    {
+        // We have been stopped and have destroyed our spawner, nothing to do
+        return;
+    }
+
+    try
+    {
+        server->new_spawn_thread(*spawner);
+        mir::log_info("XWayland is running");
+    }
+    catch (...)
+    {
+        log(
+            logging::Severity::error,
+            MIR_LOG_COMPONENT,
+            std::current_exception(),
+            "Spawning XWayland failed");
+    }
+}
