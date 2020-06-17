@@ -110,20 +110,28 @@ mf::XWaylandServer::~XWaylandServer()
     }
 }
 
-void mf::XWaylandServer::execl_xwayland(XWaylandSpawner const& spawner, int wl_client_client_fd, int wm_client_fd)
+void mf::XWaylandServer::execl_xwayland(XWaylandSpawner const& spawner, int wayland_fd, int x11_fd)
 {
     setenv("EGL_PLATFORM", "DRM", 1);
 
-    auto const wl_client_fd = dup(wl_client_client_fd);
-    if (wl_client_fd < 0)
-        mir::log_error("Failed to duplicate xwayland FD");
+    wayland_fd = dup(wayland_fd);
+    if (wayland_fd < 0)
+    {
+        log_error("Failed to duplicate XWayland Wayland FD");
+        return;
+    }
     else
-        setenv("WAYLAND_SOCKET", std::to_string(wl_client_fd).c_str(), 1);
+    {
+        setenv("WAYLAND_SOCKET", std::to_string(wayland_fd).c_str(), 1);
+    }
 
-    auto const wm_fd = dup(wm_client_fd);
-    if (wm_fd < 0)
-    mir::log_error("Failed to duplicate xwayland wm FD");
-    auto const wm_fd_str = std::to_string(wm_fd);
+    x11_fd = dup(x11_fd);
+    if (x11_fd < 0)
+    {
+        log_error("Failed to duplicate XWayland X11 FD");
+        return;
+    }
+    auto const x11_fd_str = std::to_string(x11_fd);
 
     auto const dsp_str = spawner.x11_display();
 
@@ -139,7 +147,7 @@ void mf::XWaylandServer::execl_xwayland(XWaylandSpawner const& spawner, int wl_c
             xwayland_path.c_str(),
             dsp_str.c_str(),
             "-rootless",
-            "-wm", wm_fd_str.c_str(),
+            "-wm", x11_fd_str.c_str(),
             "-terminate",
         };
 
