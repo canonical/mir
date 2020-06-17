@@ -45,6 +45,63 @@ namespace mf = mir::frontend;
 namespace md = mir::dispatch;
 using namespace std::chrono_literals;
 
+namespace
+{
+void exec_xwayland(mf::XWaylandSpawner const& spawner, std::string const& xwayland_path, int wayland_fd, int x11_fd)
+{
+    setenv("EGL_PLATFORM", "DRM", 1);
+
+    wayland_fd = dup(wayland_fd);
+    if (wayland_fd < 0)
+    {
+        mir::log_error("Failed to duplicate XWayland Wayland FD");
+        return;
+    }
+    else
+    {
+        setenv("WAYLAND_SOCKET", std::to_string(wayland_fd).c_str(), 1);
+    }
+
+    x11_fd = dup(x11_fd);
+    if (x11_fd < 0)
+    {
+        mir::log_error("Failed to duplicate XWayland X11 FD");
+        return;
+    }
+    auto const x11_fd_str = std::to_string(x11_fd);
+
+    auto const dsp_str = spawner.x11_display();
+
+    // Propagate SIGUSR1 to parent process
+    struct sigaction action;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    action.sa_handler = SIG_IGN;
+    sigaction(SIGUSR1, &action, nullptr);
+
+    std::vector<char const*> args =
+        {
+            xwayland_path.c_str(),
+            dsp_str.c_str(),
+            "-rootless",
+            "-wm", x11_fd_str.c_str(),
+            "-terminate",
+        };
+
+    for (auto const& fd : spawner.socket_fds())
+    {
+        mf::XWaylandSpawner::set_cloexec(fd, false);
+        args.push_back("-listen");
+        // strdup() may look like a leak, but execvp() will trash all resource management
+        args.push_back(strdup(std::to_string(fd).c_str()));
+    }
+
+    args.push_back(nullptr);
+
+    execvp(xwayland_path.c_str(), const_cast<char* const*>(args.data()));
+}
+}
+
 mf::XWaylandServer::XWaylandServer(
     std::shared_ptr<WaylandConnector> const& wayland_connector,
     XWaylandSpawner const& spawner,
@@ -81,7 +138,7 @@ mf::XWaylandServer::XWaylandServer(
     case 0:
         close(wl_client_fd[server]);
         close(wm_fd[server]);
-        execl_xwayland(spawner, wl_client_fd[client], wm_fd[client]);
+        exec_xwayland(spawner, xwayland_path, wl_client_fd[client], wm_fd[client]);
         return; // Keep compiler happy (doesn't reach here)
 
     default:
@@ -108,60 +165,6 @@ mf::XWaylandServer::~XWaylandServer()
             kill(xwayland_pid, SIGKILL);     // ...then kill it!
         }
     }
-}
-
-void mf::XWaylandServer::execl_xwayland(XWaylandSpawner const& spawner, int wayland_fd, int x11_fd)
-{
-    setenv("EGL_PLATFORM", "DRM", 1);
-
-    wayland_fd = dup(wayland_fd);
-    if (wayland_fd < 0)
-    {
-        log_error("Failed to duplicate XWayland Wayland FD");
-        return;
-    }
-    else
-    {
-        setenv("WAYLAND_SOCKET", std::to_string(wayland_fd).c_str(), 1);
-    }
-
-    x11_fd = dup(x11_fd);
-    if (x11_fd < 0)
-    {
-        log_error("Failed to duplicate XWayland X11 FD");
-        return;
-    }
-    auto const x11_fd_str = std::to_string(x11_fd);
-
-    auto const dsp_str = spawner.x11_display();
-
-    // Propagate SIGUSR1 to parent process
-    struct sigaction action;
-    sigemptyset(&action.sa_mask);
-    action.sa_flags = 0;
-    action.sa_handler = SIG_IGN;
-    sigaction(SIGUSR1, &action, nullptr);
-
-    std::vector<char const*> args =
-        {
-            xwayland_path.c_str(),
-            dsp_str.c_str(),
-            "-rootless",
-            "-wm", x11_fd_str.c_str(),
-            "-terminate",
-        };
-
-    for (auto const& fd : spawner.socket_fds())
-    {
-        XWaylandSpawner::set_cloexec(fd, false);
-        args.push_back("-listen");
-        // strdup() may look like a leak, but execvp() will trash all resource management
-        args.push_back(strdup(std::to_string(fd).c_str()));
-    }
-
-    args.push_back(NULL);
-
-    execvp(xwayland_path.c_str(), const_cast<char* const*>(args.data()));
 }
 
 namespace

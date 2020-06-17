@@ -59,8 +59,6 @@ private:
     XWaylandServer(XWaylandServer const&) = delete;
     XWaylandServer& operator=(XWaylandServer const&) = delete;
 
-    /// Called after fork() if we should turn into XWayland
-    void execl_xwayland(XWaylandSpawner const& spawner, int wl_client_client_fd, int wm_client_fd);
     /// Called after fork() if we should continue on as Mir
     void connect_wm_to_xwayland();
 
