@@ -60,7 +60,7 @@ private:
     /// Called after fork() if we should turn into XWayland
     void execl_xwayland(XWaylandSpawner const& spawner, int wl_client_client_fd, int wm_client_fd);
     /// Called after fork() if we should continue on as Mir
-    void connect_wm_to_xwayland(std::unique_lock<std::mutex>& spawn_thread_lock);
+    void connect_wm_to_xwayland();
 
     enum Status {
         STARTING = 1,

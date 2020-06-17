@@ -90,7 +90,7 @@ void mf::XWaylandServer::spawn(XWaylandSpawner const& spawner)
     enum { server, client, size };
     int wl_client_fd[size], wm_fd[size];
 
-    std::unique_lock<decltype(spawn_thread_mutex)> lock{spawn_thread_mutex};
+    std::lock_guard<std::mutex> lock{spawn_thread_mutex};
 
     spawn_thread_xserver_status = STARTING;
 
@@ -128,7 +128,7 @@ void mf::XWaylandServer::spawn(XWaylandSpawner const& spawner)
         close(wm_fd[client]);
         spawn_thread_wm_server_fd = Fd{wm_fd[server]};
         spawn_thread_wl_client_fd = Fd{wl_client_fd[server]};
-        connect_wm_to_xwayland(lock);
+        connect_wm_to_xwayland();
         break;
     }
 }
@@ -194,7 +194,7 @@ bool spin_wait_for(sig_atomic_t& xserver_ready)
 }
 }
 
-void mf::XWaylandServer::connect_wm_to_xwayland(std::unique_lock<std::mutex>& spawn_thread_lock)
+void mf::XWaylandServer::connect_wm_to_xwayland()
 {
     // We need to set up the signal handling before connecting wl_client_server_fd
     static sig_atomic_t xserver_ready{ false };
@@ -249,23 +249,6 @@ void mf::XWaylandServer::connect_wm_to_xwayland(std::unique_lock<std::mutex>& sp
             spawn_thread_wm_server_fd);
         mir::log_info("XServer is running");
         spawn_thread_xserver_status = RUNNING;
-
-        auto const pid = spawn_thread_pid; // For clarity only as this is only written on this thread
-
-        // Unlock access to spawn_thread_* while Xwayland is running
-        spawn_thread_lock.unlock();
-        int status;
-        waitpid(pid, &status, 0);  // Blocking
-        spawn_thread_lock.lock();
-
-        if (WIFEXITED(status) || spawn_thread_terminate) {
-            mir::log_info("Xserver stopped");
-            spawn_thread_xserver_status = STOPPED;
-        } else {
-            // Failed, crash or killed
-            mir::log_info("Xserver crashed or got killed");
-            spawn_thread_xserver_status = FAILED;
-        }
     }
     catch (std::exception const& e)
     {
