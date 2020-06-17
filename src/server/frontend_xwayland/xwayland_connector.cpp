@@ -131,9 +131,33 @@ void mf::XWaylandConnector::spawn()
                     wm->handle_events();
                 }
             });
-        wm_event_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>("Mir/X11 WM Reader", wm_dispatcher, []()
+        wm_event_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
+            "Mir/X11 WM Reader",
+            wm_dispatcher,
+            [this]()
             {
-                mir::terminate_with_current_exception();
+                // The window manager threw an exception handling X11 events
+
+                log(
+                    logging::Severity::error,
+                    MIR_LOG_COMPONENT,
+                    std::current_exception(),
+                    "X11 window manager error, killing XWayland");
+
+                std::unique_lock<std::mutex> lock{mutex};
+
+                // NOTE: we do not stop the spawner, so the server/wm will be recreated when new clients connect
+                auto local_wm{std::move(wm)};
+                auto local_server{std::move(server)};
+                auto local_wm_event_thread{std::move(wm_event_thread)};
+
+                lock.unlock();
+
+                local_wm.reset();
+                local_server.reset();
+
+                // We can't destroy a ThreadedDispatcher from inside a call it made, so do it from another thread
+                std::thread{[&](){ local_wm_event_thread.reset(); }}.join();
             });
         mir::log_info("XWayland is running");
     }
