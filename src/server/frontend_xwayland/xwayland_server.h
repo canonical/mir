@@ -73,7 +73,6 @@ private:
     std::string const xwayland_path;
 
     std::mutex mutable spawn_thread_mutex;
-    std::thread spawn_thread;
     pid_t spawn_thread_pid;
     wl_client* spawn_thread_client{nullptr};
     Fd spawn_thread_wm_server_fd;

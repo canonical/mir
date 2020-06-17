@@ -78,19 +78,12 @@ mf::XWaylandServer::~XWaylandServer()
             }
         }
     }
-
-    if (spawn_thread.joinable())
-        spawn_thread.join();
 }
 
 void mf::XWaylandServer::spawn(XWaylandSpawner const& spawner)
 {
-    set_thread_name("XWaylandServer::spawn");
-
     enum { server, client, size };
     int wl_client_fd[size], wm_fd[size];
-
-    std::lock_guard<std::mutex> lock{spawn_thread_mutex};
 
     spawn_thread_xserver_status = STARTING;
 
@@ -268,9 +261,5 @@ void mf::XWaylandServer::new_spawn_thread(XWaylandSpawner const& spawner)
     spawn_thread_wm.reset();
     spawn_thread_xserver_status = STARTING;
 
-    if (spawn_thread.joinable()) spawn_thread.join();
-    spawn_thread = std::thread{[this, &spawner]()
-        {
-            spawn(spawner);
-        }};
+    spawn(spawner);
 }
