@@ -1,8 +1,6 @@
 include_directories(
   ${server_common_include_dirs}
   ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/include/client
-  ../..
 )
 
 include_directories(
@@ -20,6 +18,8 @@ add_library(
   display_configuration.cpp
   display_buffer.cpp
   egl_helper.cpp
+  buffer_allocator.h
+  buffer_allocator.cpp
 )
 
 add_library(

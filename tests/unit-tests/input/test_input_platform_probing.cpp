@@ -34,7 +34,7 @@
 #include "mir/test/doubles/mock_option.h"
 #include "mir/test/doubles/mock_input_device_registry.h"
 #include "src/platforms/evdev/platform.h"
-#include "src/platforms/mesa/server/x11/input/input_platform.h"
+#include "src/platforms/x11/input/input_platform.h"
 #include "mir/test/fake_shared.h"
 
 namespace mt = mir::test;
