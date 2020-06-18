@@ -64,11 +64,6 @@ execute: |
         > /etc/apt/sources.list.d/cross-${DEB_HOST_ARCH}.list
 
         apt-get update
-
-        if [ "$(lsb_release -cs)" == "xenial" ]; then
-          # workaround for 16.04 passing invalid compiler names (LP#1728673)
-          apt-get --yes install debhelper/xenial-backports
-        fi
     fi
 
     cd $SPREAD_PATH

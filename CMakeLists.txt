@@ -300,8 +300,6 @@ include(CheckCXXSymbolExists)
 list(APPEND CMAKE_REQUIRED_INCLUDES ${DRM_INCLUDE_DIRS})
 list(APPEND CMAKE_REQUIRED_LIBRARIES ${DRM_LIBRARIES})
 
-check_cxx_symbol_exists("drmIsMaster" "xf86drm.h" MIR_LIBDRM_HAS_IS_MASTER)
-
 # Add USDT hooks to all LTTNG tracepoints
 #
 # This might be gnarly; this tweaks an LTTNG header to enable its

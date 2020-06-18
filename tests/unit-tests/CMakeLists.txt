@@ -125,11 +125,6 @@ if (NOT HAVE_PTHREAD_GETNAME_NP)
   message(WARNING "pthread_getname_np() not supported: Disabling test_basic_thread_pool.cpp tests that rely on it")
 endif()
 
-if(MIR_LIBDRM_HAS_IS_MASTER)
-  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/console/test_minimal_console_services.cpp
-    PROPERTIES COMPILE_DEFINITIONS MIR_LIBDRM_HAS_IS_MASTER)
-endif()
-
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 mir_add_wrapped_executable(mir_unit_tests NOINSTALL
