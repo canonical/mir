@@ -95,7 +95,7 @@ if(HAS_W_PSABI)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
 endif()
 
-set(MIR_USE_LD gold CACHE STRING "Linker to use")
+set(MIR_USE_LD ld CACHE STRING "Linker to use")
 set_property(CACHE MIR_USE_LD PROPERTY STRINGS "ld;gold;lld")
 if(MIR_USE_LD MATCHES "gold")
   set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold")
