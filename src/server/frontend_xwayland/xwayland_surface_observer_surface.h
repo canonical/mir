@@ -32,6 +32,9 @@ namespace frontend
 class XWaylandSurfaceObserverSurface
 {
 public:
+    XWaylandSurfaceObserverSurface() = default;
+    virtual ~XWaylandSurfaceObserverSurface() = default;
+
     virtual void scene_surface_focus_set(bool has_focus) = 0;
     virtual void scene_surface_state_set(MirWindowState new_state) = 0;
     virtual void scene_surface_resized(geometry::Size const& new_size) = 0;
@@ -39,7 +42,9 @@ public:
     virtual void scene_surface_close_requested() = 0;
     virtual void run_on_wayland_thread(std::function<void()>&& work) = 0;
 
-    virtual ~XWaylandSurfaceObserverSurface() = default;
+private:
+    XWaylandSurfaceObserverSurface(XWaylandSurfaceObserverSurface const&) = delete;
+    XWaylandSurfaceObserverSurface& operator=(XWaylandSurfaceObserverSurface const&) = delete;
 };
 }
 }

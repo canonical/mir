@@ -68,9 +68,6 @@ public:
     void move_resize(uint32_t detail);
 
 private:
-    XWaylandSurface(XWaylandSurface const&) = delete;
-    XWaylandSurface& operator=(XWaylandSurface const&) = delete;
-
     /// contains more information than just a MirWindowState
     /// (for example if a minimized window would otherwise be maximized)
     struct WindowState
