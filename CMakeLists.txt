@@ -15,7 +15,7 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
 cmake_policy(SET CMP0015 NEW)
 cmake_policy(SET CMP0022 NEW)
@@ -299,8 +299,6 @@ include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 include(CheckCXXSymbolExists)
 list(APPEND CMAKE_REQUIRED_INCLUDES ${DRM_INCLUDE_DIRS})
 list(APPEND CMAKE_REQUIRED_LIBRARIES ${DRM_LIBRARIES})
-
-check_cxx_symbol_exists("drmIsMaster" "xf86drm.h" MIR_LIBDRM_HAS_IS_MASTER)
 
 # Add USDT hooks to all LTTNG tracepoints
 #

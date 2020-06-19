@@ -689,12 +689,10 @@ int drmPrimeFDToHandle(int fd, int prime_fd, uint32_t *handle)
     return global_mock->drmPrimeFDToHandle(fd, prime_fd, handle);
 }
 
-#ifdef MIR_LIBDRM_HAS_IS_MASTER
 int drmIsMaster(int fd)
 {
     return global_mock->drmIsMaster(fd);
 }
-#endif
 
 int drmSetMaster(int fd)
 {

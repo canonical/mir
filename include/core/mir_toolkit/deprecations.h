@@ -18,12 +18,7 @@
 #define MIR_DEPRECATIONS_H_
 
 #ifndef MIR_ENABLE_DEPRECATIONS
-    // use __GNUC__ < 6 as a proxy for building on Ubunutu 16.04LTS ("Xenial")
-    #if defined(__clang__) || !defined(__GNUC__) || (__GNUC__ >= 6)
-        #define MIR_ENABLE_DEPRECATIONS 1
-    #else
-        #define MIR_ENABLE_DEPRECATIONS 0
-    #endif
+#define MIR_ENABLE_DEPRECATIONS 1
 #endif
 
 #if MIR_ENABLE_DEPRECATIONS > 0
