@@ -102,6 +102,17 @@ int main(int argc, char const* argv[])
     Keymap config_keymap;
     DebugExtension debug_extensions;
 
+    auto run_startup_apps = [&](std::string const& apps)
+    {
+      for (auto i = begin(apps); i != end(apps); )
+      {
+          auto const j = find(i, end(apps), ':');
+          external_client_launcher.launch(std::vector<std::string>{std::string{i, j}});
+          if ((i = j) != end(apps)) ++i;
+      }
+    };
+
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -115,6 +126,7 @@ int main(int argc, char const* argv[])
             debug_extensions,
             AppendEventFilter{quit_on_ctrl_alt_bksp},
             StartupInternalClient{spinner},
+            CommandLineOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
             pre_init(CommandLineOption{[&](std::string const& typeface) { ::wallpaper::font_file(typeface); },
                                        "shell-wallpaper-font", "font file to use for wallpaper", ::wallpaper::font_file()}),
             CommandLineOption{[&](std::string const& cmd) { terminal_cmd = cmd; },

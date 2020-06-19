@@ -55,115 +55,12 @@ void strip_mir_env_variables()
         unsetenv(var.c_str());
     }
 }
-}
-
-auto miral::launch_app(
-    std::vector<std::string> const& app,
-    mir::optional_value<std::string> const& wayland_display,
-    mir::optional_value<std::string> const& mir_socket,
-    mir::optional_value<std::string> const& x11_display) -> pid_t
-{
-    pid_t pid = fork();
-
-    if (pid < 0)
-    {
-        throw std::runtime_error("Failed to fork process");
-    }
-
-    if (pid == 0)
-    {
-        strip_mir_env_variables();
-
-        {
-            // POSIX.1-2001 specifies that if the disposition of SIGCHLD is set to
-            // SIG_IGN or the SA_NOCLDWAIT flag is set for SIGCHLD, then children
-            // that terminate do not become zombie.
-            // We don't want any children to become zombies...
-            struct sigaction act;
-            act.sa_handler = SIG_IGN;
-            sigemptyset(&act.sa_mask);
-            act.sa_flags = SA_NOCLDWAIT;
-            sigaction(SIGCHLD, &act, NULL);
-        }
-
-        std::string gdk_backend;
-        std::string qt_qpa_platform;
-        std::string sdl_videodriver;
-
-        if (x11_display)
-        {
-            setenv("DISPLAY", x11_display.value().c_str(),  true);   // configure X11 socket
-            gdk_backend = "x11";
-            qt_qpa_platform = "xcb";
-            sdl_videodriver = "x11";
-        }
-        else
-        {
-            unsetenv("DISPLAY");
-        }
-
-        if (mir_socket)
-        {
-            setenv("MIR_SOCKET", mir_socket.value().c_str(),  true);   // configure Mir socket
-            if (gdk_backend.empty())
-            {
-                gdk_backend = "mir";
-            }
-            else
-            {
-                gdk_backend = "mir," + gdk_backend;
-            }
-
-            qt_qpa_platform = "mir";
-        }
-        else
-        {
-            unsetenv("MIR_SOCKET");
-        }
-
-        if (wayland_display)
-        {
-            setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(),  true);   // configure Wayland socket
-            if (gdk_backend.empty())
-            {
-                gdk_backend = "wayland";
-            }
-            else
-            {
-                gdk_backend = "wayland," + gdk_backend;
-            }
-            qt_qpa_platform = "wayland";
-            sdl_videodriver = "wayland";
-        }
-        else
-        {
-            unsetenv("WAYLAND_DISPLAY");
-        }
-
-        setenv("GDK_BACKEND", gdk_backend.c_str(), true);
-        setenv("QT_QPA_PLATFORM", qt_qpa_platform.c_str(), true);
-        setenv("SDL_VIDEODRIVER", sdl_videodriver.c_str(), true);
-        setenv("_JAVA_AWT_WM_NONREPARENTING", "1", true);
-
-        std::vector<char const*> exec_args;
-
-        for (auto const& arg : app)
-            exec_args.push_back(arg.c_str());
-
-        exec_args.push_back(nullptr);
-
-        execvp(exec_args[0], const_cast<char*const*>(exec_args.data()));
-
-        mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
-    return pid;
-}
+}  // namespace
 
 auto miral::launch_app_env(
-    std::vector<std::string> const& app, mir::optional_value<std::string> const& wayland_display,
-    mir::optional_value<std::string> const& mir_socket, mir::optional_value<std::string> const& x11_display,
+    std::vector<std::string> const& app,
+    mir::optional_value<std::string> const& wayland_display,
+    mir::optional_value<std::string> const& x11_display,
     miral::AppEnvironment const& app_env) -> pid_t
 {
     pid_t pid = fork();
@@ -184,15 +81,6 @@ auto miral::launch_app_env(
         else
         {
             unsetenv("DISPLAY");
-        }
-
-        if (mir_socket)
-        {
-            setenv("MIR_SOCKET", mir_socket.value().c_str(),  true);   // configure Mir socket
-        }
-        else
-        {
-            unsetenv("MIR_SOCKET");
         }
 
         if (wayland_display)
