@@ -31,8 +31,8 @@ else
 	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=ON
 endif
 
-# Disable LTO on s390x, due to failing to build
-ifeq ($(DEB_HOST_ARCH),s390x)
+# Disable LTO on s390x, armhf & ppc64el due to failing to build
+ifneq ($(filter amd64 i386 arm64,$(DEB_HOST_ARCH)),)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
 endif
 
