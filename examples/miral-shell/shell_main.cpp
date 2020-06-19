@@ -26,7 +26,6 @@
 #include <miral/runner.h>
 #include <miral/window_management_options.h>
 #include <miral/append_event_filter.h>
-#include <miral/debug_extension.h>
 #include <miral/internal_client.h>
 #include <miral/command_line_option.h>
 #include <miral/cursor_theme.h>
@@ -100,7 +99,6 @@ int main(int argc, char const* argv[])
         };
 
     Keymap config_keymap;
-    DebugExtension debug_extensions;
 
     auto run_startup_apps = [&](std::string const& apps)
     {
@@ -123,7 +121,6 @@ int main(int argc, char const* argv[])
             external_client_launcher,
             launcher,
             config_keymap,
-            debug_extensions,
             AppendEventFilter{quit_on_ctrl_alt_bksp},
             StartupInternalClient{spinner},
             CommandLineOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},

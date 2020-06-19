@@ -48,6 +48,9 @@ public:
     auto x11_display() const -> std::string;
 
 private:
+    XWaylandServer(XWaylandServer const&) = delete;
+    XWaylandServer& operator=(XWaylandServer const&) = delete;
+
     /// Forks off the XWayland process
     void spawn();
     /// Called after fork() if we should turn into XWayland
