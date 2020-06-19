@@ -37,18 +37,20 @@ public:
 
     void operator()(mir::Server& server);
 
-    void launch(std::vector<std::string> const& command_line) const;
+    /// Launch Wayland and X11 support (if enabled).
+    /// \return The pid of the latest process that was launched or -1.
+    /// \note there's no guarantee that the process still exists, or that
+    /// another process has not subsequently been assigned the same id.
+    /// \remark Return type changed from void in MirAL 3.0
+    auto launch(std::vector<std::string> const& command_line) const -> pid_t;
 
     /// Launch using only X11 support (if enabled).
     /// For the occasions it is desired to coerce applications into using X11
-    /// \remark Since MirAL 2.9
-    void launch_using_x11(std::vector<std::string> const& command_line) const;
-
-    /// The pid of the latest process that was launched or -1.
+    /// \return The pid of the latest process that was launched or -1.
     /// \note there's no guarantee that the process still exists, or that
     /// another process has not subsequently been assigned the same id.
-    /// \remark Since MirAL 2.4
-    auto pid() const -> pid_t;
+    /// \remark Return type changed from void in MirAL 3.0
+    auto launch_using_x11(std::vector<std::string> const& command_line) const -> pid_t;
 
 private:
     struct Self;
