@@ -21,6 +21,7 @@
 #include <miral/runner.h>
 #include <miral/application_authorizer.h>
 #include <miral/display_configuration.h>
+#include <miral/external_client.h>
 #include <miral/command_line_option.h>
 #include <miral/keymap.h>
 #include <miral/set_window_management_policy.h>
@@ -92,6 +93,18 @@ int main(int argc, char const* argv[])
         "Only allow applications to connect during startup",
         KioskAuthorizer::startup_only};
 
+    ExternalClientLauncher launcher;
+
+    auto run_startup_apps = [&](std::string const& apps)
+    {
+      for (auto i = begin(apps); i != end(apps); )
+      {
+          auto const j = find(i, end(apps), ':');
+          launcher.launch(std::vector<std::string>{std::string{i, j}});
+          if ((i = j) != end(apps)) ++i;
+      }
+    };
+
     MirRunner runner{argc, argv};
 
     DisplayConfiguration display_config{runner};
@@ -104,6 +117,7 @@ int main(int argc, char const* argv[])
             SetApplicationAuthorizer<KioskAuthorizer>{splash},
             Keymap{},
             startup_only,
+            CommandLineOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
             StartupInternalClient{splash}
         });
 }
