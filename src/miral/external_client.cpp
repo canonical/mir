@@ -104,9 +104,8 @@ void miral::ExternalClientLauncher::launch(std::vector<std::string> const& comma
 
     auto const wayland_display = self->server->wayland_display();
     auto const x11_display = self->server->x11_display();
-    auto const mir_socket = self->server->mir_socket_name();
 
-    self->pid = launch_app_env(command_line, wayland_display, mir_socket, x11_display, self->env);
+    self->pid = launch_app_env(command_line, wayland_display, x11_display, self->env);
 }
 
 miral::ExternalClientLauncher::ExternalClientLauncher() : self{std::make_shared<Self>()} {}
@@ -125,8 +124,7 @@ void miral::ExternalClientLauncher::launch_using_x11(std::vector<std::string> co
     if (auto const x11_display = self->server->x11_display())
     {
         auto const wayland_display = self->server->wayland_display();
-        auto const mir_socket = self->server->mir_socket_name();
-        self->pid = launch_app_env(command_line, wayland_display, mir_socket, x11_display, self->x11_env);
+        self->pid = launch_app_env(command_line, wayland_display, x11_display, self->x11_env);
     }
 }
 

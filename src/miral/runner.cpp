@@ -52,7 +52,6 @@ struct miral::MirRunner::Self
         argc(argc), argv(argv), config_file{config_file}, display_config_file{filename(argv[0])+ ".display"} {}
 
     auto run_with(std::initializer_list<std::function<void(::mir::Server&)>> options) -> int;
-    void launch_startup_applications(::mir::Server& server);
 
     int const argc;
     char const** const argv;
@@ -80,13 +79,6 @@ miral::MirRunner::~MirRunner() = default;
 
 namespace
 {
-auto const startup_apps = "startup-apps";
-
-void enable_startup_applications(::mir::Server& server)
-{
-    server.add_configuration_option(startup_apps, "Colon separated list of startup apps", mir::OptionType::string);
-}
-
 auto const env_hacks = "env-hacks";
 
 void enable_env_hacks(::mir::Server& server)
@@ -120,47 +112,7 @@ void apply_env_hacks(::mir::Server& server)
         }
     }
 }
-}
-
-void miral::MirRunner::Self::launch_startup_applications(::mir::Server& server)
-{
-    if (auto const options = server.get_options())
-    {
-        if (options->is_set(startup_apps))
-        {
-            auto const value = options->get<std::string>(startup_apps);
-
-            std::lock_guard<decltype(mutex)> lock{mutex};
-            auto const updated = [&server, value, start_callback=this->start_callback]
-            {
-                auto const wayland_display = server.wayland_display();
-                auto const mir_socket = server.mir_socket_name();
-
-                for (auto i = begin(value); i != end(value); )
-                {
-                    auto const j = find(i, end(value), ':');
-
-                    std::vector<std::string> app{std::string{i, j}};
-
-                    // gnome-terminal is the (only known) special case
-                    // TODO this hack doesn't work on Fedora
-                    if (app[0] == "gnome-terminal")
-                        app.push_back("--app-id"),app.push_back("com.canonical.miral.Terminal");
-
-                    mir::optional_value<std::string> x11_display = server.x11_display();
-
-                    launch_app(app, wayland_display, mir_socket, x11_display);
-
-                    if ((i = j) != end(value)) ++i;
-                }
-
-                start_callback();
-            };
-
-            start_callback = updated;
-        }
-    }
-}
+}  // namespace
 
 auto miral::MirRunner::Self::run_with(std::initializer_list<std::function<void(::mir::Server&)>> options)
 -> int
@@ -174,7 +126,6 @@ try
         server->set_config_filename(config_file);
         server->set_exception_handler(exception_handler);
 
-        enable_startup_applications(*server);
         enable_env_hacks(*server);
 
         for (auto& option : options)
@@ -189,10 +140,6 @@ try
 
         weak_server = server;
     }
-
-    // Has to be done after apply_settings() parses the command-line and
-    // before run() starts allocates resources and starts threads.
-    launch_startup_applications(*server);
 
     server->add_init_callback([server, this]
     {
