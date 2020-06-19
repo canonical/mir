@@ -109,24 +109,23 @@ unsigned int mir_touch_event_point_count(MirTouchEvent const* event)
     return ::mir_touch_event_point_count(event);
 }
 
-MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index)
+MirTouchId mir_touch_event_id(MirTouchEvent const* event, unsigned int touch_index)
 {
     return ::mir_touch_event_id(event, touch_index);
 }
 
-MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_index)
+MirTouchAction mir_touch_event_action(MirTouchEvent const* event, unsigned int touch_index)
 {
     return ::mir_touch_event_action(event, touch_index);
 }
 
-MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event, size_t touch_index)
+MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event, unsigned int touch_index)
 {
     return ::mir_touch_event_tooltype(event, touch_index);
 }
 
 float mir_touch_event_axis_value(
-    MirTouchEvent const* event,
-    size_t touch_index,
+    MirTouchEvent const* event, unsigned int touch_index,
     MirTouchAxis axis)
 {
     return ::mir_touch_event_axis_value(event, touch_index, axis);
