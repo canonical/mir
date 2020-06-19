@@ -110,5 +110,5 @@ public:
 };
 
 #define MIR_DISABLE_TESTS_ON_X11
-#include "../../test_display.h"
+#include "../test_display.h"
 #undef MIR_DISABLE_TESTS_ON_X11

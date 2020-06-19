@@ -23,9 +23,8 @@ namespace mir
 {
 
 /**
- * Describes a platform module. Mir provides the following graphics platforms:
- * "mir:mesa-kms", "mir:mesa-x11" and "mir:android".
- * Mir provides "mir:evdev-input" input platform.
+ * Describes a platform module. Mir provides graphics platforms named "mir:*"
+ * Mir provides a "mir:evdev-input" input platform.
  *
  * Third party platforms should be named according to the vendor and platform:
  *  "<vendor>:<platform>"

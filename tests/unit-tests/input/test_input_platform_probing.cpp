@@ -79,7 +79,7 @@ struct InputPlatformProbe : ::testing::Test
 
     void disable_x11()
     {
-#ifdef MIR_BUILD_PLATFORM_MESA_X11
+#ifdef MIR_BUILD_PLATFORM_X11
         ON_CALL(mock_x11, XOpenDisplay(_)).WillByDefault(Return(nullptr));
 #endif
     }
@@ -88,7 +88,7 @@ struct InputPlatformProbe : ::testing::Test
     // access on evdev devices, and enable the disabled test case(s) below.
     mtf::UdevEnvironment env;
 
-#ifdef MIR_BUILD_PLATFORM_MESA_X11
+#ifdef MIR_BUILD_PLATFORM_X11
     NiceMock<mtd::MockX11> mock_x11;
 #endif
     NiceMock<mtd::MockLibInput> mock_libinput;
@@ -143,7 +143,7 @@ TEST_F(InputPlatformProbe, stub_platform_not_picked_up_by_default)
     EXPECT_THAT(platform, OfPtrType<mi::evdev::Platform>());
 }
 
-#ifdef MIR_BUILD_PLATFORM_MESA_X11
+#ifdef MIR_BUILD_PLATFORM_X11
 char const vt[] = "vt";
 TEST_F(InputPlatformProbe, x11_platform_found_and_used_when_display_connection_works)
 {
@@ -161,8 +161,8 @@ TEST_F(InputPlatformProbe, x11_platform_found_and_used_when_display_connection_w
 
 TEST_F(InputPlatformProbe, when_multiple_x11_platforms_are_eligible_only_one_is_selected)
 {
-    auto const real_lib = mtf::server_platform_path() + "server-mesa-x11.so." MIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING;
-    auto const fake_lib = mtf::server_platform_path() + "server-mesa-x11.so.0";
+    auto const real_lib = mtf::server_platform_path() + "server-x11.so." MIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING;
+    auto const fake_lib = mtf::server_platform_path() + "server-x11.so.0";
 
     ASSERT_THAT(real_lib, Ne(fake_lib));
     remove(fake_lib.c_str());

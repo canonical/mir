@@ -44,9 +44,9 @@ endif
 $(info COMMON_CONFIGURE_OPTIONS: ${COMMON_CONFIGURE_OPTIONS})
 
 ifneq ($(filter amd64 i386,$(DEB_HOST_ARCH)),)
-  AVAILABLE_PLATFORMS=mesa-kms\;mesa-x11\;wayland\;eglstream-kms
+  AVAILABLE_PLATFORMS=mesa-kms\;x11\;wayland\;eglstream-kms
 else
-	AVAILABLE_PLATFORMS=mesa-kms\;mesa-x11\;wayland
+	AVAILABLE_PLATFORMS=mesa-kms\;x11\;wayland
 endif
 
 override_dh_auto_configure:

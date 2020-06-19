@@ -227,7 +227,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                 auto const device_registry = the_input_device_registry();
                 auto const input_report = the_input_report();
 
-                // Maybe the graphics platform also supplies input (e.g. mesa-x11 or nested)
+                // Maybe the graphics platform also supplies input (e.g. x11 or wayland)
                 // NB this makes the (valid) assumption that graphics initializes before input
                 auto platform = mi::input_platform_from_graphics_module(
                     *the_graphics_platform(),

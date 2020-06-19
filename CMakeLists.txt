@@ -222,18 +222,18 @@ pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream)
 if (WAYLAND_EGLSTREAM_FOUND)
   set(
     MIR_PLATFORM
-    mesa-kms;mesa-x11;eglstream-kms;wayland
+    mesa-kms;x11;eglstream-kms;wayland
     CACHE
     STRING
-    "a list of graphics backends to build (options are 'mesa-kms', 'mesa-x11', 'eglstream-kms', 'wayland', or 'rpi-dispmanx')"
+    "a list of graphics backends to build (options are 'mesa-kms', 'x11', 'eglstream-kms', 'wayland', or 'rpi-dispmanx')"
   )
 else()
   set(
     MIR_PLATFORM
-    mesa-kms;mesa-x11;wayland
+    mesa-kms;x11;wayland
     CACHE
     STRING
-    "a list of graphics backends to build (options are 'mesa-kms', 'mesa-x11', 'eglstream-kms', 'wayland', or 'rpi-dispmanx')"
+    "a list of graphics backends to build (options are 'mesa-kms', 'x11', 'eglstream-kms', 'wayland', or 'rpi-dispmanx')"
   )
 endif()
 
@@ -253,8 +253,8 @@ foreach(platform IN LISTS MIR_PLATFORM)
   if (platform STREQUAL "mesa-kms")
     set(MIR_BUILD_PLATFORM_MESA_KMS TRUE)
   endif()
-  if (platform STREQUAL "mesa-x11")
-     set(MIR_BUILD_PLATFORM_MESA_X11 TRUE)
+  if (platform STREQUAL "x11")
+     set(MIR_BUILD_PLATFORM_X11 TRUE)
   endif()
   if (platform STREQUAL "eglstream-kms")
      if (NOT WAYLAND_EGLSTREAM_FOUND)
@@ -349,7 +349,7 @@ else()
   message(FATAL_ERROR "Invalid MIR_SERVER_LIBGL value ${MIR_SERVER_LIBGL}")
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
+if (MIR_BUILD_PLATFORM_MESA_KMS)
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   if (GBM_VERSION VERSION_LESS 11)
     message(WARNING "Hybrid support requires libgbm from Mesa 11.0 or greater. Hybrid setups will not work")

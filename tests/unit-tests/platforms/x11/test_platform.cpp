@@ -99,7 +99,7 @@ TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_x_cannot_open_dis
     EXPECT_CALL(mock_x11, XOpenDisplay(_))
         .WillRepeatedly(Return(nullptr));
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("server-mesa-x11")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("server-x11")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe(nullptr, options));
 }

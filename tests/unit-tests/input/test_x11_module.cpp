@@ -35,7 +35,7 @@ namespace
 {
 auto get_x11_platform()
 {
-    auto path = mtf::server_platform("server-mesa-x11");
+    auto path = mtf::server_platform("server-x11");
     return std::make_shared<mir::SharedLibrary>(path);
 }
 

@@ -22,12 +22,12 @@ list(APPEND UMOCK_UNIT_TEST_SOURCES
     $<TARGET_OBJECTS:mirplatforminputevdevobjects>
     $<TARGET_OBJECTS:mirevdevutilsobjects>
 )
-if (MIR_BUILD_PLATFORM_MESA_X11)
+if (MIR_BUILD_PLATFORM_X11)
 list(APPEND UMOCK_UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_platform.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_module.cpp
-    $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
-    $<TARGET_OBJECTS:mirplatforminputmesax11objects>
+    $<TARGET_OBJECTS:mirplatformserverx11sharedresources>
+    $<TARGET_OBJECTS:mirplatforminputx11objects>
 )
 endif()
 
