@@ -54,7 +54,6 @@ global:
     miral::ExternalClientLauncher::launch*;
     miral::ExternalClientLauncher::launch_using_x11*;
     miral::ExternalClientLauncher::operator*;
-    miral::ExternalClientLauncher::pid*;
     miral::InternalClientLauncher::?InternalClientLauncher*;
     miral::InternalClientLauncher::InternalClientLauncher*;
     miral::InternalClientLauncher::launch*;
