@@ -118,8 +118,7 @@ auto  miral::ExternalClientLauncher::launch_using_x11(std::vector<std::string> c
     if (auto const x11_display = self->server->x11_display())
     {
         auto const wayland_display = self->server->wayland_display();
-        auto const mir_socket = self->server->mir_socket_name();
-        return launch_app_env(command_line, wayland_display, mir_socket, x11_display, self->x11_env);
+        return launch_app_env(command_line, wayland_display, x11_display, self->x11_env);
     }
 
     return -1;
