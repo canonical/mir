@@ -1,9 +1,5 @@
 include_directories(${DRM_INCLUDE_DIRS})
 
-if(MIR_LIBDRM_HAS_IS_MASTER)
-  add_definitions(-DMIR_LIBDRM_HAS_IS_MASTER)
-endif()
-
 add_library(
   mirconsole OBJECT
 

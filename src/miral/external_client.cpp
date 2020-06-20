@@ -103,9 +103,8 @@ auto miral::ExternalClientLauncher::launch(std::vector<std::string> const& comma
 
     auto const wayland_display = self->server->wayland_display();
     auto const x11_display = self->server->x11_display();
-    auto const mir_socket = self->server->mir_socket_name();
 
-    return launch_app_env(command_line, wayland_display, mir_socket, x11_display, self->env);
+    return launch_app_env(command_line, wayland_display, x11_display, self->env);
 }
 
 miral::ExternalClientLauncher::ExternalClientLauncher() : self{std::make_shared<Self>()} {}

@@ -48,12 +48,6 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::CursorTheme::CursorTheme(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::CursorTheme::operator()(mir::Server&) const@MIRAL_3.0" 3.0.0
  (c++)"miral::CursorTheme::~CursorTheme()@MIRAL_3.0" 3.0.0
- (c++)"miral::DebugExtension::DebugExtension()@MIRAL_3.0" 3.0.0
- (c++)"miral::DebugExtension::DebugExtension(miral::DebugExtension const&)@MIRAL_3.0" 3.0.0
- (c++)"miral::DebugExtension::disable()@MIRAL_3.0" 3.0.0
- (c++)"miral::DebugExtension::enable()@MIRAL_3.0" 3.0.0
- (c++)"miral::DebugExtension::operator()(mir::Server&) const@MIRAL_3.0" 3.0.0
- (c++)"miral::DebugExtension::operator=(miral::DebugExtension const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::DisplayConfiguration::DisplayConfiguration(miral::DisplayConfiguration const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::DisplayConfiguration::DisplayConfiguration(miral::MirRunner const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::DisplayConfiguration::layout_option()@MIRAL_3.0" 3.0.0

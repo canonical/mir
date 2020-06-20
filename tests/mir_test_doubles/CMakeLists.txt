@@ -38,10 +38,6 @@ set(
 )
 
 set(MIR_TEST_DOUBLES_UDEV_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/mock_udev.cpp)
-if(MIR_LIBDRM_HAS_IS_MASTER)
-  set_source_files_properties(mock_drm.cpp PROPERTIES COMPILE_DEFINITIONS MIR_LIBDRM_HAS_IS_MASTER)
-endif()
-
 
 set(
   MIR_TEST_DOUBLES_PLATFORM_SRCS

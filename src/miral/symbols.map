@@ -39,10 +39,6 @@ global:
     miral::CursorTheme::?CursorTheme*;
     miral::CursorTheme::CursorTheme*;
     miral::CursorTheme::operator*;
-    miral::DebugExtension::DebugExtension*;
-    miral::DebugExtension::disable*;
-    miral::DebugExtension::enable*;
-    miral::DebugExtension::operator*;
     miral::DisplayConfiguration::?DisplayConfiguration*;
     miral::DisplayConfiguration::DisplayConfiguration*;
     miral::DisplayConfiguration::layout_option*;
@@ -384,7 +380,6 @@ global:
     typeinfo?for?miral::CanonicalWindowManagerPolicy;
     typeinfo?for?miral::CommandLineOption;
     typeinfo?for?miral::CursorTheme;
-    typeinfo?for?miral::DebugExtension;
     typeinfo?for?miral::DisplayConfiguration;
     typeinfo?for?miral::ExternalClientLauncher;
     typeinfo?for?miral::InternalClientLauncher;
@@ -420,7 +415,6 @@ global:
     vtable?for?miral::CanonicalWindowManagerPolicy;
     vtable?for?miral::CommandLineOption;
     vtable?for?miral::CursorTheme;
-    vtable?for?miral::DebugExtension;
     vtable?for?miral::DisplayConfiguration;
     vtable?for?miral::ExternalClientLauncher;
     vtable?for?miral::InternalClientLauncher;

@@ -78,7 +78,6 @@ public:
 
     private:
         Atom(Atom&) = delete;
-        Atom(Atom&&) = delete;
         Atom& operator=(Atom&) = delete;
 
         XCBConnection* const connection;
@@ -249,7 +248,6 @@ public:
 
 private:
     XCBConnection(XCBConnection&) = delete;
-    XCBConnection(XCBConnection&&) = delete;
     XCBConnection& operator=(XCBConnection&) = delete;
 
     auto xcb_type_atom(XCBType type) const -> xcb_atom_t;
