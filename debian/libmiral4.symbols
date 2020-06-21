@@ -376,13 +376,13 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::toolkit::mir_pointer_event_buttons(MirPointerEvent const*)@MIRAL_3.0" 3.0.0
  (c++)"miral::toolkit::mir_pointer_event_input_event(MirPointerEvent const*)@MIRAL_3.0" 3.0.0
  (c++)"miral::toolkit::mir_pointer_event_modifiers(MirPointerEvent const*)@MIRAL_3.0" 3.0.0
- (c++)"miral::toolkit::mir_touch_event_action(MirTouchEvent const*, unsigned long)@MIRAL_3.0" 3.0.0
- (c++)"miral::toolkit::mir_touch_event_axis_value(MirTouchEvent const*, unsigned long, MirTouchAxis)@MIRAL_3.0" 3.0.0
- (c++)"miral::toolkit::mir_touch_event_id(MirTouchEvent const*, unsigned long)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_touch_event_action(MirTouchEvent const*, unsigned int)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_touch_event_axis_value(MirTouchEvent const*, unsigned int, MirTouchAxis)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_touch_event_id(MirTouchEvent const*, unsigned int)@MIRAL_3.0" 3.0.0
  (c++)"miral::toolkit::mir_touch_event_input_event(MirTouchEvent const*)@MIRAL_3.0" 3.0.0
  (c++)"miral::toolkit::mir_touch_event_modifiers(MirTouchEvent const*)@MIRAL_3.0" 3.0.0
  (c++)"miral::toolkit::mir_touch_event_point_count(MirTouchEvent const*)@MIRAL_3.0" 3.0.0
- (c++)"miral::toolkit::mir_touch_event_tooltype(MirTouchEvent const*, unsigned long)@MIRAL_3.0" 3.0.0
+ (c++)"miral::toolkit::mir_touch_event_tooltype(MirTouchEvent const*, unsigned int)@MIRAL_3.0" 3.0.0
  (c++)"miral::window_for(wl_resource*)@MIRAL_3.0" 3.0.0
  (c++)"typeinfo for miral::CanonicalWindowManagerPolicy@MIRAL_3.0" 3.0.0
  (c++)"typeinfo for miral::MinimalWindowManager@MIRAL_3.0" 3.0.0
