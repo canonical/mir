@@ -19,8 +19,6 @@
 #include "mir/graphics/display_report.h"
 #include "mir/options/option.h"
 #include "platform.h"
-#include "gbm_platform.h"
-#include "platform_common.h"
 #include "../X11_resources.h"
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
@@ -30,7 +28,6 @@
 
 namespace mo = mir::options;
 namespace mg = mir::graphics;
-namespace mgm = mir::graphics::mesa;
 namespace mx = mir::X;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
@@ -79,16 +76,7 @@ mg::PlatformPriority probe_graphics_platform(
     if (dpy)
     {
         XCloseDisplay(dpy);
-
-        auto udev = std::make_shared<mir::udev::Context>();
-
-        mir::udev::Enumerator drm_devices{udev};
-        drm_devices.match_subsystem("drm");
-        drm_devices.match_sysname("renderD[0-9]*");
-        drm_devices.scan_devices();
-
-        if (drm_devices.begin() != drm_devices.end())
-            return mg::PlatformPriority::supported;
+        return mg::PlatformPriority::supported;
     }
     return mg::PlatformPriority::unsupported;
 }
@@ -96,7 +84,7 @@ mg::PlatformPriority probe_graphics_platform(
 namespace
 {
 mir::ModuleProperties const description = {
-    "mir:mesa-x11",
+    "mir:x11",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO,
@@ -128,16 +116,4 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
         mx::X11Resources::instance.get_conn(),
         move(output_sizes),
         report);
-}
-
-mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
-    std::shared_ptr<mir::options::Option> const&,
-    std::shared_ptr<mir::graphics::PlatformAuthentication> const&)
-{
-    mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
-    auto udev = std::make_shared<mir::udev::Context>();
-    return mir::make_module_ptr<mgm::GBMPlatform>(
-        mgm::BypassOption::prohibited, mgm::BufferImportMethod::dma_buf,
-        udev,
-        mgm::helpers::DRMHelper::open_any_render_node(udev));
 }

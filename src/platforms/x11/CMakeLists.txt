@@ -2,7 +2,7 @@ add_subdirectory(graphics/)
 add_subdirectory(input/)
 
 add_library(
-  mirplatformservermesax11sharedresources OBJECT
+  mirplatformserverx11sharedresources OBJECT
   X11_resources.cpp
 )
 
@@ -10,17 +10,17 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
     ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
-add_library(mirplatformservermesax11 MODULE
-  $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
-  $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
-  $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects-symbols>
-  $<TARGET_OBJECTS:mirplatforminputmesax11objects>
-  $<TARGET_OBJECTS:mirplatforminputmesax11objects-symbols>
+add_library(mirplatformserverx11 MODULE
+  $<TARGET_OBJECTS:mirplatformserverx11sharedresources>
+  $<TARGET_OBJECTS:mirplatformgraphicsx11objects>
+  $<TARGET_OBJECTS:mirplatformgraphicsx11objects-symbols>
+  $<TARGET_OBJECTS:mirplatforminputx11objects>
+  $<TARGET_OBJECTS:mirplatforminputx11objects-symbols>
 )
 
 
 target_link_libraries(
-  mirplatformservermesax11
+  mirplatformserverx11
   PRIVATE
   mirplatform
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
@@ -29,13 +29,11 @@ target_link_libraries(
   Xfixes
   mirsharedmesaservercommon-static
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
-  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
 )
 
 set_target_properties(
-  mirplatformservermesax11 PROPERTIES
-  OUTPUT_NAME server-mesa-x11
+  mirplatformserverx11 PROPERTIES
+  OUTPUT_NAME server-x11
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   PREFIX ""
   SUFFIX ".so.${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
@@ -43,4 +41,4 @@ set_target_properties(
   LINK_DEPENDS ${symbol_map}
 )
 
-install(TARGETS mirplatformservermesax11 LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
+install(TARGETS mirplatformserverx11 LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})

@@ -10,8 +10,4 @@ if (MIR_BUILD_PLATFORM_MESA_KMS AND
   add_subdirectory(kms/)
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA_X11)
-  add_subdirectory(x11/)
-endif()
-
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

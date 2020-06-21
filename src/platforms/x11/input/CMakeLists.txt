@@ -4,14 +4,14 @@ include_directories(
 )
 
 add_library(
-  mirplatforminputmesax11objects OBJECT
+  mirplatforminputx11objects OBJECT
 
   input_platform.cpp
   input_device.cpp
 )
 
 add_library(
-  mirplatforminputmesax11objects-symbols OBJECT
+  mirplatforminputx11objects-symbols OBJECT
 
   input.cpp
 )

@@ -20,15 +20,12 @@
 #include <gmock/gmock.h>
 
 #include "mir/options/program_option.h"
-#include "src/platforms/mesa/server/x11/graphics/platform.h"
+#include "src/platforms/x11/graphics/platform.h"
 #include "src/server/report/null/display_report.h"
 
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/shared_library.h"
 #include "mir_test_framework/executable_path.h"
-#include "mir_test_framework/udev_environment.h"
 
 namespace mir
 {
@@ -64,8 +61,6 @@ class X11GraphicsPlatformTest : public ::testing::Test
 public:
     void SetUp()
     {
-        ::testing::Mock::VerifyAndClearExpectations(&mock_drm);
-        ::testing::Mock::VerifyAndClearExpectations(&mock_gbm);
     }
 
     std::shared_ptr<mg::Platform> create_platform()
@@ -81,8 +76,6 @@ public:
             std::make_shared<mir::report::null::DisplayReport>());
     }
 
-    ::testing::NiceMock<mtd::MockDRM> mock_drm;
-    ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mtd::MockX11> mock_x11;
 };
 }
@@ -97,36 +90,6 @@ TEST_F(X11GraphicsPlatformTest, failure_to_open_x11_display_results_in_an_error)
     EXPECT_THROW({ create_platform(); }, std::exception);
 }
 
-TEST_F(X11GraphicsPlatformTest, failure_to_open_drm_results_in_an_error)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(mock_drm, open(_,_,_))
-        .WillRepeatedly(Return(-1));
-
-    EXPECT_THROW({ create_platform(); }, std::exception);
-}
-
-TEST_F(X11GraphicsPlatformTest, failure_to_create_gbm_device_results_in_an_error)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(mock_gbm, gbm_create_device(_))
-        .WillRepeatedly(Return(nullptr));
-
-    EXPECT_THROW({ create_platform(); }, std::exception);
-}
-
-TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_no_drm_udev_devices)
-{
-    mtf::UdevEnvironment udev_environment;
-    mir::options::ProgramOption options;
-
-    mir::SharedLibrary platform_lib{mtf::server_platform("server-mesa-x11")};
-    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(nullptr, options));
-}
-
 TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_x_cannot_open_display)
 {
     using namespace ::testing;
@@ -136,21 +99,9 @@ TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_x_cannot_open_dis
     EXPECT_CALL(mock_x11, XOpenDisplay(_))
         .WillRepeatedly(Return(nullptr));
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("server-mesa-x11")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("server-x11")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe(nullptr, options));
-}
-
-TEST_F(X11GraphicsPlatformTest, probe_returns_supported_when_drm_render_nodes_exist)
-{
-    mtf::UdevEnvironment udev_environment;
-    mir::options::ProgramOption options;
-
-    udev_environment.add_standard_device("standard-drm-render-nodes");
-
-    mir::SharedLibrary platform_lib{mtf::server_platform("server-mesa-x11")};
-    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::supported, probe(nullptr, options));
 }
 
 TEST_F(X11GraphicsPlatformTest, parses_simple_output_size)

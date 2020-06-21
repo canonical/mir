@@ -18,7 +18,7 @@ packages="\
     libmirprotobuf:MIRPROTOBUF_ABI \
     libmirserver:MIRSERVER_ABI \
     libmircookie:MIRCOOKIE_ABI \
-    mir-platform-graphics-mesa-x:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
+    mir-platform-graphics-x:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-graphics-mesa-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-graphics-eglstream-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-input-evdev:MIR_SERVER_INPUT_PLATFORM_ABI\

@@ -19,8 +19,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "src/platforms/mesa/server/x11/graphics/display.h"
-#include "src/platforms/mesa/server/x11/graphics/platform.h"
+#include "src/platforms/x11/graphics/display.h"
+#include "src/platforms/x11/graphics/platform.h"
 #include "src/server/report/null/display_report.h"
 
 #include "mir/graphics/display_configuration.h"

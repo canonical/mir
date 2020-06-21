@@ -27,7 +27,7 @@
 #include "mir/raii.h"
 
 #include "mir/test/doubles/mock_egl.h"
-#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS)
 #include "mir/test/doubles/mock_drm.h"
 #endif
 #ifdef MIR_BUILD_PLATFORM_MESA_KMS
@@ -151,7 +151,7 @@ public:
 
 class ServerPlatformProbeMockDRM : public ::testing::Test
 {
-#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS)
 public:
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
 #endif
