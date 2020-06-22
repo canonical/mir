@@ -266,7 +266,7 @@ Description: Display server for Ubuntu - shared library
  Contains the shared libraries required for the Mir server and client.
 
 # Longer-term these drivers should move out-of-tree
-Package: mir-platform-graphics-mesa-x16
+Package: mir-platform-graphics-mesa-x17
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -280,7 +280,7 @@ Description: Display server for Ubuntu - platform library for X11 Mesa
  Contains the shared libraries required for the Mir server to interact with
  the X11 platform using the Mesa drivers.
 
-Package: mir-platform-graphics-mesa-kms16
+Package: mir-platform-graphics-mesa-kms17
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -294,7 +294,7 @@ Description: Display server for Ubuntu - platform library for KMS Mesa
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Mesa drivers.
 
-Package: mir-platform-graphics-eglstream-kms16
+Package: mir-platform-graphics-eglstream-kms17
 Section: libs
 Architecture: amd64 i386
 Multi-Arch: same
@@ -309,7 +309,7 @@ Description: Display server for Ubuntu - platform library for NVIDIA
  the hardware platform using the EGLStream EGL extensions, such as the
  NVIDIA binary driver.
 
-Package: mir-platform-graphics-wayland16
+Package: mir-platform-graphics-wayland17
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -329,8 +329,8 @@ Architecture: amd64 i386
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-eglstream-kms16,
-         mir-platform-graphics-mesa-x16,
+         mir-platform-graphics-eglstream-kms17,
+         mir-platform-graphics-mesa-x17,
          mir-platform-input-evdev7,
 Description: Display server for Ubuntu - Nvidia driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -358,9 +358,9 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-mesa-kms16,
-         mir-platform-graphics-mesa-x16,
-         mir-platform-graphics-wayland16,
+         mir-platform-graphics-mesa-kms17,
+         mir-platform-graphics-mesa-x17,
+         mir-platform-graphics-wayland17,
          mir-platform-input-evdev7,
 Description: Display server for Ubuntu - desktop driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
