@@ -80,6 +80,9 @@ auto miral::WindowManagerTools::window_at(mir::geometry::Point cursor) const -> 
 auto miral::WindowManagerTools::active_output() -> mir::geometry::Rectangle const
 { return tools->active_output(); }
 
+auto miral::WindowManagerTools::active_zone() -> mir::geometry::Rectangle const
+{ return tools->active_zone(); }
+
 void miral::WindowManagerTools::raise_tree(Window const& root)
 { tools->raise_tree(root); }
 

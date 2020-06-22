@@ -180,13 +180,6 @@ global:
     miral::WindowInfo::width_inc*;
     miral::WindowInfo::window*;
     miral::WindowManagementPolicy::?WindowManagementPolicy*;
-    miral::WindowManagementPolicy::ApplicationZoneAddendum::?ApplicationZoneAddendum*;
-    miral::WindowManagementPolicy::ApplicationZoneAddendum::ApplicationZoneAddendum*;
-    miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_create*;
-    miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_delete*;
-    miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_update*;
-    miral::WindowManagementPolicy::ApplicationZoneAddendum::from*;
-    miral::WindowManagementPolicy::ApplicationZoneAddendum::operator*;
     miral::WindowManagementPolicy::WindowManagementPolicy*;
     miral::WindowManagementPolicy::advise_adding_to_workspace*;
     miral::WindowManagementPolicy::advise_application_zone_create*;
@@ -215,6 +208,7 @@ global:
     miral::WindowManagerTools::WindowManagerTools*;
     miral::WindowManagerTools::active_output*;
     miral::WindowManagerTools::active_window*;
+    miral::WindowManagerTools::active_zone*;
     miral::WindowManagerTools::add_tree_to_workspace*;
     miral::WindowManagerTools::ask_client_to_close*;
     miral::WindowManagerTools::count_applications*;
@@ -348,10 +342,6 @@ global:
     non-virtual?thunk?to?miral::MinimalWindowManager::place_new_window*;
     non-virtual?thunk?to?miral::WaylandExtensions::Context::?Context*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::?WindowManagementPolicy*;
-    non-virtual?thunk?to?miral::WindowManagementPolicy::ApplicationZoneAddendum::?ApplicationZoneAddendum*;
-    non-virtual?thunk?to?miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_create*;
-    non-virtual?thunk?to?miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_delete*;
-    non-virtual?thunk?to?miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_update*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_adding_to_workspace*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_application_zone_create*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_application_zone_delete*;
@@ -399,7 +389,6 @@ global:
     typeinfo?for?miral::Window;
     typeinfo?for?miral::WindowInfo;
     typeinfo?for?miral::WindowManagementPolicy;
-    typeinfo?for?miral::WindowManagementPolicy::ApplicationZoneAddendum;
     typeinfo?for?miral::WindowManagerOption;
     typeinfo?for?miral::WindowManagerOptions;
     typeinfo?for?miral::WindowManagerTools;
@@ -434,7 +423,6 @@ global:
     vtable?for?miral::Window;
     vtable?for?miral::WindowInfo;
     vtable?for?miral::WindowManagementPolicy;
-    vtable?for?miral::WindowManagementPolicy::ApplicationZoneAddendum;
     vtable?for?miral::WindowManagerOption;
     vtable?for?miral::WindowManagerOptions;
     vtable?for?miral::WindowManagerTools;

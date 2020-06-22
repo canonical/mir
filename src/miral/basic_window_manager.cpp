@@ -880,6 +880,11 @@ auto miral::BasicWindowManager::active_output() -> geometry::Rectangle const
     return active_display_area()->area;
 }
 
+auto miral::BasicWindowManager::active_zone() -> mir::geometry::Rectangle
+{
+    return active_display_area()->application_zone.extents();
+}
+
 void miral::BasicWindowManager::raise_tree(Window const& root)
 {
     auto const& info = info_for(root);

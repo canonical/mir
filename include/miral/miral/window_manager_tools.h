@@ -163,6 +163,10 @@ public:
     /// Find the active output area
     auto active_output() -> mir::geometry::Rectangle const;
 
+    /// Find the active zone area
+    /// \remark Since MirAL 3.0
+    auto active_zone() -> mir::geometry::Rectangle const;
+
     /// Raise window and all its children
     void raise_tree(Window const& root);
 

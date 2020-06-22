@@ -479,6 +479,18 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
+mir::geometry::Rectangle miral::WindowManagementTrace::active_zone()
+try {
+    log_input();
+    auto result = wrapped.active_zone();
+    std::stringstream out;
+    out << result;
+    mir::log_info("%s -> ", __func__, out.str().c_str());
+    trace_count++;
+    return result;
+}
+MIRAL_TRACE_EXCEPTION
+
 auto miral::WindowManagementTrace::info_for_window_id(std::string const& id) const -> WindowInfo&
 try {
     log_input();
