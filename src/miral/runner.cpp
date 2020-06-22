@@ -26,6 +26,7 @@
 #include <mir/options/option.h>
 #include <mir/options/configuration.h>
 
+#include <algorithm>
 #include <chrono>
 #include <mutex>
 #include <thread>
