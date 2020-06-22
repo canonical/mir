@@ -24,6 +24,8 @@
 #include <mir/options/option.h>
 #include <mir/server.h>
 
+#include <algorithm>
+
 namespace mg = mir::graphics;
 
 namespace
