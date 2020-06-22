@@ -353,7 +353,7 @@ bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* 
     {
         if (auto active_window = tools.active_window())
         {
-            auto active_output = tools.active_output();
+            auto active_zone = tools.active_zone();
             auto& window_info = tools.info_for(active_window);
             WindowSpecification modifications;
 
@@ -363,8 +363,8 @@ bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* 
                 modifications.state() = mir_window_state_vertmaximized;
                 tools.place_and_size_for_state(modifications, window_info);
                 modifications.top_left() = window_info.needs_titlebar(window_info.type()) ?
-                                           active_output.top_left + title_bar_height :
-                                           active_output.top_left;
+                                               active_zone.top_left + title_bar_height :
+                                               active_zone.top_left;
                 break;
 
             case KEY_RIGHT:
@@ -376,8 +376,8 @@ bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* 
                     (modifications.size().is_set() ? modifications.size().value() : active_window.size()).width;
 
                 modifications.top_left() = window_info.needs_titlebar(window_info.type()) ?
-                                           active_output.top_right() - Displacement{as_delta(new_width), 0} + title_bar_height :
-                                           active_output.top_right() - Displacement{as_delta(new_width), 0};
+                        active_zone.top_right() - Displacement{as_delta(new_width), 0} + title_bar_height :
+                        active_zone.top_right() - Displacement{as_delta(new_width), 0};
                 break;
             }
 
@@ -385,14 +385,15 @@ bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* 
                 modifications.state() = mir_window_state_horizmaximized;
                 tools.place_and_size_for_state(modifications, window_info);
                 modifications.top_left() = window_info.needs_titlebar(window_info.type()) ?
-                                           active_output.top_left + title_bar_height :
-                                           active_output.top_left;
+                                               active_zone.top_left + title_bar_height :
+                                               active_zone.top_left;
                 break;
 
             case KEY_DOWN:
                 modifications.state() = mir_window_state_horizmaximized;
                 tools.place_and_size_for_state(modifications, window_info);
-                modifications.top_left() = active_output.bottom_right() - as_displacement(
+                modifications.top_left() =
+                    active_zone.bottom_right() - as_displacement(
                     modifications.size().is_set() ? modifications.size().value() : active_window.size());
                 break;
 
