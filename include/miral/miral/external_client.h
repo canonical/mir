@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -37,14 +37,15 @@ public:
 
     void operator()(mir::Server& server);
 
-    /// Launch Wayland and X11 support (if enabled).
-    /// \return The pid of the latest process that was launched or -1.
+    /// Launch with client environment configured for Wayland.
+    /// If X11 is enabled, then DISPLAY will also be set accordingly.
+    /// \return The pid of the process that was launched.
     /// \remark Return type changed from void in MirAL 3.0
     auto launch(std::vector<std::string> const& command_line) const -> pid_t;
 
-    /// Launch using only X11 support (if enabled).
+    /// If X11 is enabled, then launch with client environment configured for X11.
     /// For the occasions it is desired to coerce applications into using X11
-    /// \return The pid of the latest process that was launched or -1.
+    /// \return The pid of the process that was launched (or -1 if X11 is not enabled)
     /// \remark Return type changed from void in MirAL 3.0
     auto launch_using_x11(std::vector<std::string> const& command_line) const -> pid_t;
 
