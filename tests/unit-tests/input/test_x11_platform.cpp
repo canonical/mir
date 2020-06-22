@@ -20,8 +20,8 @@
 #include <gmock/gmock.h>
 
 #include "src/server/input/default_event_builder.h"
-#include "src/platforms/mesa/server/x11/input/input_platform.h"
-#include "src/platforms/mesa/server/x11/input/input_device.h"
+#include "src/platforms/x11/input/input_platform.h"
+#include "src/platforms/x11/input/input_device.h"
 
 #include "mir/events/event_private.h"
 #include "mir/dispatch/dispatchable.h"

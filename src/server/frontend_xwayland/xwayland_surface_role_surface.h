@@ -36,10 +36,15 @@ class WlSurface;
 class XWaylandSurfaceRoleSurface
 {
 public:
+    XWaylandSurfaceRoleSurface() = default;
+    virtual ~XWaylandSurfaceRoleSurface() = default;
+
     virtual void wl_surface_destroyed() = 0;
     virtual auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> = 0;
 
-    virtual ~XWaylandSurfaceRoleSurface() = default;
+private:
+    XWaylandSurfaceRoleSurface(XWaylandSurfaceRoleSurface const&) = delete;
+    XWaylandSurfaceRoleSurface& operator=(XWaylandSurfaceRoleSurface const&) = delete;
 };
 }
 }

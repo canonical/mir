@@ -72,6 +72,9 @@ public:
     void surfaces_reordered(scene::SurfaceSet const& affected_surfaces);
 
 private:
+    XWaylandWM(XWaylandWM const&) = delete;
+    XWaylandWM& operator=(XWaylandWM const&) = delete;
+
     void restack_surfaces();
 
     // Event handeling

@@ -21,8 +21,6 @@
 
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/platform.h"
-#include "display_helpers.h"
-#include "drm_native_platform.h"
 #include "mir/geometry/size.h"
 #include "mir/renderer/gl/egl_platform.h"
 
@@ -84,12 +82,8 @@ public:
     EGLNativeDisplayType egl_native_display() const override;
 private:
     std::shared_ptr<::Display> const x11_connection;
-    std::shared_ptr<mir::udev::Context> udev;
-    std::shared_ptr<mesa::helpers::DRMHelper> const drm;
     std::shared_ptr<DisplayReport> const report;
-    mesa::helpers::GBMHelper gbm;
     std::vector<X11OutputConfig> const output_sizes;
-    std::unique_ptr<mesa::DRMNativePlatformAuthFactory> auth_factory;
 };
 
 }

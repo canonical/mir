@@ -215,7 +215,7 @@ unsigned int mir_touch_event_point_count(MirTouchEvent const* event);
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 ID of the touch at index
  */
-MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index);
+MirTouchId mir_touch_event_id(MirTouchEvent const* event, unsigned int touch_index);
 
 /**
  * Retrieve the action which occured for a touch at given index.
@@ -224,7 +224,7 @@ MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index);
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 Action performed for the touch at index.
  */
-MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_index);
+MirTouchAction mir_touch_event_action(MirTouchEvent const* event, unsigned int touch_index);
 
 /**
  * Retrieve the tooltype for touch at given index.
@@ -233,8 +233,7 @@ MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_i
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 Tooltype used for the touch at index
  */
-MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
-    size_t touch_index);
+MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event, unsigned int touch_index);
 
 
 /**
@@ -245,8 +244,7 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
  *  \param [in] axis        The axis to retreive a value from
  *  \return                 The value of the given axis
  */
-float mir_touch_event_axis_value(MirTouchEvent const* event,
-    size_t touch_index, MirTouchAxis axis);
+float mir_touch_event_axis_value(MirTouchEvent const* event, unsigned int touch_index, MirTouchAxis axis);
 
 /**
  * Retrieve the corresponding input event.

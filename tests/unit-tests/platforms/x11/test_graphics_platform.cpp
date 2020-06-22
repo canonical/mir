@@ -27,10 +27,7 @@
 #include "src/server/report/null/display_report.h"
 #include "mir/test/doubles/null_console_services.h"
 #include "mir/options/program_option.h"
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_gbm.h"
-#include "mir_test_framework/udev_environment.h"
-#include "src/platforms/mesa/server/x11/graphics/platform.h"
+#include "src/platforms/x11/graphics/platform.h"
 #include "mir/test/doubles/mock_x11.h"
 
 #include "mir/logging/dumb_console_logger.h"
@@ -38,12 +35,10 @@
 #include <gtest/gtest.h>
 
 namespace mg = mir::graphics;
-namespace mgm = mg::mesa;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mo = mir::options;
-namespace mtf = mir_test_framework;
 
 class GraphicsPlatform : public ::testing::Test
 {
@@ -51,19 +46,6 @@ public:
     GraphicsPlatform() : logger(std::make_shared<ml::DumbConsoleLogger>())
     {
         using namespace testing;
-
-        ON_CALL(mock_gbm, gbm_bo_get_width(_))
-        .WillByDefault(Return(320));
-
-        ON_CALL(mock_gbm, gbm_bo_get_height(_))
-        .WillByDefault(Return(240));
-
-        // FIXME: This format needs to match Mesa's first supported pixel
-        //        format or tests will fail. The coupling is presently loose.
-        ON_CALL(mock_gbm, gbm_bo_get_format(_))
-        .WillByDefault(Return(GBM_FORMAT_ARGB8888));
-
-        fake_devices.add_standard_device("standard-drm-render-nodes");
 
         ON_CALL(mock_x11, XNextEvent(_, _))
             .WillByDefault(
@@ -95,10 +77,7 @@ public:
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL> mock_gl;
-    ::testing::NiceMock<mtd::MockDRM> mock_drm;
-    ::testing::NiceMock<mtd::MockGBM> mock_gbm;
-    mtf::UdevEnvironment fake_devices;
     ::testing::NiceMock<mtd::MockX11> mock_x11;
 };
 
-#include "../../test_graphics_platform.h"
+#include "../test_graphics_platform.h"

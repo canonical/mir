@@ -28,19 +28,14 @@
 #include "mir/test/doubles/null_console_services.h"
 #include "src/server/report/null/display_report.h"
 #include "mir/graphics/default_display_configuration_policy.h"
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_gbm.h"
-#include "mir_test_framework/udev_environment.h"
-#include "src/platforms/mesa/server/x11/graphics/platform.h"
+#include "src/platforms/x11/graphics/platform.h"
 #include "mir/test/doubles/mock_x11.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
-namespace mgm = mg::mesa;
 namespace mtd = mir::test::doubles;
-namespace mtf = mir_test_framework;
 
 class DisplayTestGeneric : public ::testing::Test
 {
@@ -91,8 +86,6 @@ public:
 
         mock_egl.provide_egl_extensions();
         mock_gl.provide_gles_extensions();
-
-        fake_devices.add_standard_device("standard-drm-render-nodes");
     }
 
     std::shared_ptr<mg::Display> create_display()
@@ -113,12 +106,9 @@ public:
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL> mock_gl;
-    ::testing::NiceMock<mtd::MockDRM> mock_drm;
-    ::testing::NiceMock<mtd::MockGBM> mock_gbm;
-    mtf::UdevEnvironment fake_devices;
     ::testing::NiceMock<mtd::MockX11> mock_x11;
 };
 
 #define MIR_DISABLE_TESTS_ON_X11
-#include "../../test_display.h"
+#include "../test_display.h"
 #undef MIR_DISABLE_TESTS_ON_X11

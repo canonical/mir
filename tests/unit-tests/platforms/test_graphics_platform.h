@@ -66,13 +66,4 @@ TEST_F(GraphicsPlatform, buffer_creation)
     EXPECT_EQ(buffer->pixel_format(), pf);
 }
 
-TEST_F(GraphicsPlatform, connection_ipc_package)
-{
-    auto platform = create_platform();
-    auto ipc_ops = platform->make_ipc_operations();
-    auto pkg = ipc_ops->connection_ipc_package();
-
-    ASSERT_TRUE(pkg.get() != NULL);
-}
-
 #endif // TEST_GRAPHICS_PLATFORM_H_
