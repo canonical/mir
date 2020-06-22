@@ -38,6 +38,7 @@ class MultiplexingDispatchable;
 namespace frontend
 {
 class WaylandConnector;
+class XWaylandSpawner;
 
 class XWaylandServer
 {
@@ -62,15 +63,6 @@ private:
         std::unique_lock<std::mutex>& spawn_thread_lock);
     void new_spawn_thread();
 
-    struct SocketFd
-    {
-        int const xdisplay;
-        std::vector<Fd> fd;
-
-        SocketFd();
-        ~SocketFd();
-    };
-
     enum Status {
         STARTING = 1,
         RUNNING = 2,
@@ -79,11 +71,8 @@ private:
     };
 
     std::shared_ptr<WaylandConnector> const wayland_connector;
-    std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
-    std::unique_ptr<dispatch::ThreadedDispatcher> const xserver_thread;
-    SocketFd const sockets;
-    std::vector<std::shared_ptr<dispatch::ReadableFd>> dispatcher_fd;
     std::string const xwayland_path;
+    std::unique_ptr<XWaylandSpawner> const spawner;
 
     std::mutex mutable spawn_thread_mutex;
     std::thread spawn_thread;
