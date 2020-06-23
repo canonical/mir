@@ -25,9 +25,6 @@ set_target_properties(
 
 pkg_get_variable(WLCS_BINARY wlcs test_runner)
 
-set(EXPECTED_FAILURES
-)
-
 mir_discover_external_gtests(
   NAME wlcs
   COMMAND ${WLCS_BINARY}
