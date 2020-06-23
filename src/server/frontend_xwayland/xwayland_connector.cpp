@@ -37,16 +37,16 @@ void mf::XWaylandConnector::start()
 {
     if (wayland_connector->get_extension("x11-support"))
     {
-        xwayland_server = std::make_unique<XWaylandServer>(wayland_connector, xwayland_path);
+        server = std::make_unique<XWaylandServer>(wayland_connector, xwayland_path);
         mir::log_info("XWayland started");
     }
 }
 
 void mf::XWaylandConnector::stop()
 {
-    if (xwayland_server)
+    if (server)
     {
-        xwayland_server.reset();
+        server.reset();
         mir::log_info("XWayland stopped");
     }
 }
@@ -64,9 +64,9 @@ int mf::XWaylandConnector::client_socket_fd(
 
 auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
 {
-    if (xwayland_server)
+    if (server)
     {
-        return xwayland_server->x11_display();
+        return server->x11_display();
     }
     else
     {
