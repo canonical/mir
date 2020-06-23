@@ -178,6 +178,7 @@ mf::XCBConnection::XCBConnection(Fd const& fd)
       clipboard{"CLIPBOARD", this},
       clipboard_manager{"CLIPBOARD_MANAGER", this},
       utf8_string{"UTF8_STRING", this},
+      compound_text{"COMPOUND_TEXT", this},
       wl_surface_id{"WL_SURFACE_ID", this}
 {
 }

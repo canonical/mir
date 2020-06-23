@@ -244,7 +244,7 @@ public:
     Atom const clipboard;
     Atom const clipboard_manager;
     Atom const utf8_string;
-    Atom const compound_text{"COMPOUND_TEXT", this};
+    Atom const compound_text;
     Atom const wl_surface_id;
 
 private:
