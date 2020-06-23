@@ -224,7 +224,7 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WindowManagerOptions::operator()(mir::Server&) const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowManagerTools::WindowManagerTools(miral::WindowManagerTools const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowManagerTools::WindowManagerTools(miral::WindowManagerToolsImplementation*)@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowManagerTools::active_application_zone()@MIRAL_3.0" 3.0.0
+ (c++)"miral::WindowManagerTools::active_application_zone() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowManagerTools::active_output()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowManagerTools::active_window() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowManagerTools::add_tree_to_workspace(miral::Window const&, std::shared_ptr<miral::Workspace> const&)@MIRAL_3.0" 3.0.0
