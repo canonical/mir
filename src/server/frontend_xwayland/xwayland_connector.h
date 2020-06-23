@@ -21,6 +21,9 @@
 
 #include "mir/frontend/connector.h"
 
+#include <memory>
+#include <mutex>
+
 namespace mir
 {
 namespace frontend
@@ -48,6 +51,7 @@ private:
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::string const xwayland_path;
 
+    std::mutex mutable mutex;
     std::unique_ptr<XWaylandServer> server;
 };
 } /* frontend */

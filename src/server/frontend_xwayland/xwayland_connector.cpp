@@ -37,6 +37,8 @@ void mf::XWaylandConnector::start()
 {
     if (wayland_connector->get_extension("x11-support"))
     {
+        std::lock_guard<std::mutex> lock{mutex};
+
         server = std::make_unique<XWaylandServer>(wayland_connector, xwayland_path);
         mir::log_info("XWayland started");
     }
@@ -44,9 +46,18 @@ void mf::XWaylandConnector::start()
 
 void mf::XWaylandConnector::stop()
 {
-    if (server)
+    std::unique_lock<std::mutex> lock{mutex};
+
+    bool const was_running{server};
+
+    auto local_server{std::move(server)};
+
+    lock.unlock();
+
+    local_server.reset();
+
+    if (was_running)
     {
-        server.reset();
         mir::log_info("XWayland stopped");
     }
 }
@@ -64,6 +75,8 @@ int mf::XWaylandConnector::client_socket_fd(
 
 auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
 {
+    std::lock_guard<std::mutex> lock{mutex};
+
     if (server)
     {
         return server->x11_display();
