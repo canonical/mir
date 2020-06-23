@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2019 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -24,6 +24,7 @@
 #include <miral/toolkit_event.h>
 #include <miral/window_info.h>
 #include <miral/window_manager_tools.h>
+#include <miral/zone.h>
 
 #include <linux/input.h>
 #include <csignal>
@@ -353,7 +354,7 @@ bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* 
     {
         if (auto active_window = tools.active_window())
         {
-            auto active_zone = tools.active_zone();
+            auto active_zone = tools.active_application_zone().extents();
             auto& window_info = tools.info_for(active_window);
             WindowSpecification modifications;
 

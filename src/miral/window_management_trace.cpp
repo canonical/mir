@@ -479,12 +479,12 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-mir::geometry::Rectangle miral::WindowManagementTrace::active_zone()
+auto miral::WindowManagementTrace::active_application_zone() -> Zone
 try {
     log_input();
-    auto result = wrapped.active_zone();
+    auto result = wrapped.active_application_zone();
     std::stringstream out;
-    out << result;
+    out << result.extents();
     mir::log_info("%s -> ", __func__, out.str().c_str());
     trace_count++;
     return result;
