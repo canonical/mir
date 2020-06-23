@@ -332,7 +332,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          mir-platform-graphics-eglstream-kms17,
-         mir-platform-graphics-mesa-x17,
+         mir-platform-graphics-x17,
          mir-platform-input-evdev7,
 Description: Display server for Ubuntu - Nvidia driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -361,7 +361,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          mir-platform-graphics-mesa-kms17,
-         mir-platform-graphics-mesa-x17,
+         mir-platform-graphics-x17,
          mir-platform-graphics-wayland17,
          mir-platform-input-evdev7,
 Description: Display server for Ubuntu - desktop driver metapackage

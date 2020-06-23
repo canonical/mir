@@ -42,7 +42,6 @@ char const* const mo::input_report_opt            = "input-report";
 char const* const mo::seat_report_opt            = "seat-report";
 char const* const mo::shared_library_prober_report_opt = "shared-library-prober-report";
 char const* const mo::shell_report_opt            = "shell-report";
-char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt              = "enable-touchspots";
 char const* const mo::cursor_opt                  = "cursor";
@@ -183,8 +182,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "frames from clients before compositing). Higher values result in "
             "lower latency but risk causing frame skipping. "
             "Default: A negative value means decide automatically.")
-        (name_opt, po::value<std::string>(),
-            "When nested, the name Mir uses when registering with the host.")
         (offscreen_opt,
             "Render to offscreen buffers instead of the real outputs.")
         (touchspots_opt,

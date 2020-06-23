@@ -178,6 +178,7 @@ mf::XCBConnection::XCBConnection(Fd const& fd)
       clipboard{"CLIPBOARD", this},
       clipboard_manager{"CLIPBOARD_MANAGER", this},
       utf8_string{"UTF8_STRING", this},
+      compound_text{"COMPOUND_TEXT", this},
       wl_surface_id{"WL_SURFACE_ID", this}
 {
 }
@@ -226,7 +227,7 @@ auto mf::XCBConnection::query_name(xcb_atom_t atom) const -> std::string
 
 auto mf::XCBConnection::reply_contains_string_data(xcb_get_property_reply_t const* reply) const -> bool
 {
-    return reply->type == XCB_ATOM_STRING || reply->type == utf8_string;
+    return reply->type == XCB_ATOM_STRING || reply->type == utf8_string || reply->type == compound_text;
 }
 
 auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) const -> std::string
@@ -234,7 +235,7 @@ auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) const
     if (!reply_contains_string_data(reply))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
-            "Supplied reply is of type " + query_name(reply->type) + " and does not hold string data"));
+            "Supplied reply is of type \"" + query_name(reply->type) + "\" and does not hold string data"));
     }
 
     auto const result = std::string{
@@ -268,7 +269,7 @@ auto mf::XCBConnection::read_property(
         0, // no offset
         2048); // big buffer
 
-    return [xcb_connection = xcb_connection, cookie, action, on_error]()
+    return [xcb_connection = xcb_connection, cookie, action, on_error, prop, this]()
         {
             xcb_get_property_reply_t *reply = xcb_get_property_reply(xcb_connection, cookie, nullptr);
             if (reply && reply->type != XCB_ATOM_NONE)
@@ -283,7 +284,7 @@ auto mf::XCBConnection::read_property(
                         logging::Severity::warning,
                         MIR_LOG_COMPONENT,
                         std::current_exception(),
-                        "Failed to process property reply.");
+                        "Failed to process property reply: " + query_name(prop));
                 }
             }
             else
