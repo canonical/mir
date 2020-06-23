@@ -38,6 +38,7 @@ class Window;
 struct WindowInfo;
 struct ApplicationInfo;
 class WindowSpecification;
+class Zone;
 
 /**
  * Workspace is intentionally opaque in the miral API. Its only purpose is to
@@ -162,6 +163,10 @@ public:
 
     /// Find the active output area
     auto active_output() -> mir::geometry::Rectangle const;
+
+    /// Find the active zone area
+    /// \remark Since MirAL 3.0
+    auto active_application_zone() const -> Zone;
 
     /// Raise window and all its children
     void raise_tree(Window const& root);

@@ -56,6 +56,7 @@ private:
     virtual auto select_active_window(Window const& hint) -> Window override;
     virtual auto window_at(mir::geometry::Point cursor) const -> Window override;
     virtual auto active_output() -> mir::geometry::Rectangle const override;
+    virtual auto active_application_zone() -> Zone override;
     virtual auto info_for_window_id(std::string const& id) const -> WindowInfo& override;
     virtual auto id_for_window(Window const& window) const -> std::string override;
     virtual void place_and_size_for_state(WindowSpecification& modifications, WindowInfo const& window_info) const override;

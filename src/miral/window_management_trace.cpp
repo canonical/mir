@@ -479,6 +479,18 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
+auto miral::WindowManagementTrace::active_application_zone() -> Zone
+try {
+    log_input();
+    auto result = wrapped.active_application_zone();
+    std::stringstream out;
+    out << result.extents();
+    mir::log_info("%s -> ", __func__, out.str().c_str());
+    trace_count++;
+    return result;
+}
+MIRAL_TRACE_EXCEPTION
+
 auto miral::WindowManagementTrace::info_for_window_id(std::string const& id) const -> WindowInfo&
 try {
     log_input();

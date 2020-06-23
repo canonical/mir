@@ -17,6 +17,7 @@
  */
 
 #include "miral/window_manager_tools.h"
+#include "miral/zone.h"
 #include "window_manager_tools_implementation.h"
 
 miral::WindowManagerTools::WindowManagerTools(WindowManagerToolsImplementation* tools) :
@@ -79,6 +80,9 @@ auto miral::WindowManagerTools::window_at(mir::geometry::Point cursor) const -> 
 
 auto miral::WindowManagerTools::active_output() -> mir::geometry::Rectangle const
 { return tools->active_output(); }
+
+auto miral::WindowManagerTools::active_application_zone() const -> Zone
+{ return tools->active_application_zone(); }
 
 void miral::WindowManagerTools::raise_tree(Window const& root)
 { tools->raise_tree(root); }

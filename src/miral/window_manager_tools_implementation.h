@@ -37,6 +37,7 @@ struct WindowInfo;
 struct ApplicationInfo;
 class WindowSpecification;
 class Workspace;
+class Zone;
 
 // The interface through which the policy instructs the controller.
 class WindowManagerToolsImplementation
@@ -66,6 +67,7 @@ public:
     virtual void focus_prev_within_application() = 0;
     virtual auto window_at(mir::geometry::Point cursor) const -> Window = 0;
     virtual auto active_output() -> mir::geometry::Rectangle const = 0;
+    virtual auto active_application_zone() -> Zone = 0;
     virtual void raise_tree(Window const& root) = 0;
     virtual void start_drag_and_drop(WindowInfo& window_info, std::vector<uint8_t> const& handle) = 0;
     virtual void end_drag_and_drop() = 0;

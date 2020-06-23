@@ -179,6 +179,7 @@ public:
     auto window_at(mir::geometry::Point cursor) const -> Window override;
 
     auto active_output() -> mir::geometry::Rectangle const override;
+    auto active_application_zone() -> Zone override;
 
     void raise_tree(Window const& root) override;
     void start_drag_and_drop(WindowInfo& window_info, std::vector<uint8_t> const& handle) override;
