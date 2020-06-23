@@ -204,48 +204,52 @@ public:
     auto error_debug_string(xcb_generic_error_t* error) const -> std::string;
     /// @}
 
-    Atom const wm_protocols{"WM_PROTOCOLS", this};
-    Atom const wm_take_focus{"WM_TAKE_FOCUS", this};
-    Atom const wm_delete_window{"WM_DELETE_WINDOW", this};
-    Atom const wm_state{"WM_STATE", this};
-    Atom const wm_change_state{"WM_CHANGE_STATE", this};
-    Atom const wm_s0{"WM_S0", this};
-    Atom const net_wm_cm_s0{"_NET_WM_CM_S0", this};
-    Atom const net_wm_name{"_NET_WM_NAME", this};
-    Atom const net_wm_pid{"_NET_WM_PID", this};
-    Atom const net_wm_state{"_NET_WM_STATE", this};
-    Atom const net_wm_state_maximized_vert{"_NET_WM_STATE_MAXIMIZED_VERT", this};
-    Atom const net_wm_state_maximized_horz{"_NET_WM_STATE_MAXIMIZED_HORZ", this};
-    Atom const net_wm_state_hidden{"_NET_WM_STATE_HIDDEN", this};
-    Atom const net_wm_state_fullscreen{"_NET_WM_STATE_FULLSCREEN", this};
-    Atom const net_wm_user_time{"_NET_WM_USER_TIME", this};
-    Atom const net_wm_icon_name{"_NET_WM_ICON_NAME", this};
-    Atom const net_wm_desktop{"_NET_WM_DESKTOP", this};
-    Atom const net_wm_window_type{"_NET_WM_WINDOW_TYPE", this};
-    Atom const net_wm_window_type_desktop{"_NET_WM_WINDOW_TYPE_DESKTOP", this};
-    Atom const net_wm_window_type_dock{"_NET_WM_WINDOW_TYPE_DOCK", this};
-    Atom const net_wm_window_type_toolbar{"_NET_WM_WINDOW_TYPE_TOOLBAR", this};
-    Atom const net_wm_window_type_menu{"_NET_WM_WINDOW_TYPE_MENU", this};
-    Atom const net_wm_window_type_utility{"_NET_WM_WINDOW_TYPE_UTILITY", this};
-    Atom const net_wm_window_type_splash{"_NET_WM_WINDOW_TYPE_SPLASH", this};
-    Atom const net_wm_window_type_dialog{"_NET_WM_WINDOW_TYPE_DIALOG", this};
-    Atom const net_wm_window_type_dropdown{"_NET_WM_WINDOW_TYPE_DROPDOWN_MENU", this};
-    Atom const net_wm_window_type_popup{"_NET_WM_WINDOW_TYPE_POPUP_MENU", this};
-    Atom const net_wm_window_type_tooltip{"_NET_WM_WINDOW_TYPE_TOOLTIP", this};
-    Atom const net_wm_window_type_notification{"_NET_WM_WINDOW_TYPE_NOTIFICATION", this};
-    Atom const net_wm_window_type_combo{"_NET_WM_WINDOW_TYPE_COMBO", this};
-    Atom const net_wm_window_type_dnd{"_NET_WM_WINDOW_TYPE_DND", this};
-    Atom const net_wm_window_type_normal{"_NET_WM_WINDOW_TYPE_NORMAL", this};
-    Atom const net_wm_moveresize{"_NET_WM_MOVERESIZE", this};
-    Atom const net_supporting_wm_check{"_NET_SUPPORTING_WM_CHECK", this};
-    Atom const net_supported{"_NET_SUPPORTED", this};
-    Atom const net_active_window{"_NET_ACTIVE_WINDOW", this};
-    Atom const motif_wm_hints{"_MOTIF_WM_HINTS", this};
-    Atom const clipboard{"CLIPBOARD", this};
-    Atom const clipboard_manager{"CLIPBOARD_MANAGER", this};
-    Atom const utf8_string{"UTF8_STRING", this};
-    Atom const compound_text{"COMPOUND_TEXT", this};
-    Atom const wl_surface_id{"WL_SURFACE_ID", this};
+#define DECLARE_ATOM(name) Atom const name{#name, this}
+
+    DECLARE_ATOM(WM_PROTOCOLS);
+    DECLARE_ATOM(WM_TAKE_FOCUS);
+    DECLARE_ATOM(WM_DELETE_WINDOW);
+    DECLARE_ATOM(WM_STATE);
+    DECLARE_ATOM(WM_CHANGE_STATE);
+    DECLARE_ATOM(WM_S0);
+    DECLARE_ATOM(_NET_WM_CM_S0);
+    DECLARE_ATOM(_NET_WM_NAME);
+    DECLARE_ATOM(_NET_WM_PID);
+    DECLARE_ATOM(_NET_WM_STATE);
+    DECLARE_ATOM(_NET_WM_STATE_MAXIMIZED_VERT);
+    DECLARE_ATOM(_NET_WM_STATE_MAXIMIZED_HORZ);
+    DECLARE_ATOM(_NET_WM_STATE_HIDDEN);
+    DECLARE_ATOM(_NET_WM_STATE_FULLSCREEN);
+    DECLARE_ATOM(_NET_WM_USER_TIME);
+    DECLARE_ATOM(_NET_WM_ICON_NAME);
+    DECLARE_ATOM(_NET_WM_DESKTOP);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_DESKTOP);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_DOCK);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_TOOLBAR);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_MENU);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_UTILITY);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_SPLASH);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_DIALOG);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_DROPDOWN_MENU);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_POPUP_MENU);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_TOOLTIP);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_NOTIFICATION);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_COMBO);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_DND);
+    DECLARE_ATOM(_NET_WM_WINDOW_TYPE_NORMAL);
+    DECLARE_ATOM(_NET_WM_MOVERESIZE);
+    DECLARE_ATOM(_NET_SUPPORTING_WM_CHECK);
+    DECLARE_ATOM(_NET_SUPPORTED);
+    DECLARE_ATOM(_NET_ACTIVE_WINDOW);
+    DECLARE_ATOM(_MOTIF_WM_HINTS);
+    DECLARE_ATOM(CLIPBOARD);
+    DECLARE_ATOM(CLIPBOARD_MANAGER);
+    DECLARE_ATOM(UTF8_STRING);
+    DECLARE_ATOM(COMPOUND_TEXT);
+    DECLARE_ATOM(WL_SURFACE_ID);
+
+#undef DECLARE_ATOM
 
 private:
     XCBConnection(XCBConnection&) = delete;
