@@ -177,6 +177,8 @@ Description: Display server for Ubuntu - development headers
 Package: libmirclient9
 Section: libs
 Architecture: linux-any
+Breaks: libmirclient-dev
+Replaces: libmirclient-dev
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
