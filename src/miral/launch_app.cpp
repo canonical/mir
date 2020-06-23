@@ -19,11 +19,14 @@
 #include "launch_app.h"
 #include <mir/log.h>
 
+#include <boost/throw_exception.hpp>
+
 #include <unistd.h>
 #include <signal.h>
 
-#include <stdexcept>
 #include <cstring>
+#include <stdexcept>
+#include <system_error>
 #include <vector>
 
 namespace
@@ -67,7 +70,7 @@ auto miral::launch_app_env(
 
     if (pid < 0)
     {
-        throw std::runtime_error("Failed to fork process");
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to fork process"}));
     }
 
     if (pid == 0)

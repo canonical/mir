@@ -32,7 +32,6 @@ namespace mo = mir::options;
 struct miral::ExternalClientLauncher::Self
 {
     mir::Server* server = nullptr;
-    pid_t pid = -1;
 
     AppEnvironment env;
     AppEnvironment x11_env;
@@ -98,7 +97,7 @@ void miral::ExternalClientLauncher::operator()(mir::Server& server)
          });
 }
 
-void miral::ExternalClientLauncher::launch(std::vector<std::string> const& command_line) const
+auto miral::ExternalClientLauncher::launch(std::vector<std::string> const& command_line) const -> pid_t
 {
     if (!self->server)
         throw std::logic_error("Cannot launch apps when server has not started");
@@ -106,17 +105,12 @@ void miral::ExternalClientLauncher::launch(std::vector<std::string> const& comma
     auto const wayland_display = self->server->wayland_display();
     auto const x11_display = self->server->x11_display();
 
-    self->pid = launch_app_env(command_line, wayland_display, x11_display, self->env);
+    return launch_app_env(command_line, wayland_display, x11_display, self->env);
 }
 
 miral::ExternalClientLauncher::ExternalClientLauncher() : self{std::make_shared<Self>()} {}
 
-auto miral::ExternalClientLauncher::pid() const -> pid_t
-{
-    return self->pid;
-}
-
-void miral::ExternalClientLauncher::launch_using_x11(std::vector<std::string> const& command_line) const
+auto  miral::ExternalClientLauncher::launch_using_x11(std::vector<std::string> const& command_line) const -> pid_t
 {
     if (!self->server)
         throw std::logic_error("Cannot launch apps when server has not started");
@@ -125,8 +119,10 @@ void miral::ExternalClientLauncher::launch_using_x11(std::vector<std::string> co
     if (auto const x11_display = self->server->x11_display())
     {
         auto const wayland_display = self->server->wayland_display();
-        self->pid = launch_app_env(command_line, wayland_display, x11_display, self->x11_env);
+        return launch_app_env(command_line, wayland_display, x11_display, self->x11_env);
     }
+
+    return -1;
 }
 
 miral::ExternalClientLauncher::~ExternalClientLauncher() = default;

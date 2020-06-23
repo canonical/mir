@@ -51,20 +51,20 @@ struct ExternalClient : miral::TestServer
 
     auto client_env_value(std::string const& key) const -> std::string
     {
-        external_client.launch({"bash", "-c", ("echo ${" + key + "} >" + output).c_str()});
-        return get_client_env_value();
+        auto const client_pid = external_client.launch({"bash", "-c", ("echo ${" + key + "} >" + output).c_str()});
+        return get_client_env_value(client_pid);
     }
 
     auto client_env_x11_value(std::string const& key) const -> std::string
     {
-        external_client.launch_using_x11({"bash", "-c", ("echo ${" + key + "} >" + output).c_str()});
-        return get_client_env_value();
+        auto const client_pid = external_client.launch_using_x11({"bash", "-c", ("echo ${" + key + "} >" + output).c_str()});
+        return get_client_env_value(client_pid);
     }
 
-    std::string get_client_env_value() const
+    std::string get_client_env_value(pid_t client_pid) const
     {
         int status;
-        waitpid(external_client.pid(), &status, 0);
+        waitpid(client_pid, &status, 0);
 
         std::ifstream in{output};
         std::string result;
