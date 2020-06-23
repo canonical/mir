@@ -117,7 +117,6 @@ MIRPLATFORM_2.0 {
     mir::options::logind_console;
     mir::options::lttng_opt_value*;
     mir::options::msg_processor_report_opt*;
-    mir::options::name_opt*;
     mir::options::nested_passthrough_opt*;
     mir::options::no_server_socket_opt*;
     mir::options::null_console;
