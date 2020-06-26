@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Canonical Ltd.
+ * Copyright © 2019-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,15 +16,15 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef EGMDE_OPEN_DESKTOP_ENTRY_H
-#define EGMDE_OPEN_DESKTOP_ENTRY_H
+#ifndef MIRAL_OPEN_DESKTOP_ENTRY_H
+#define MIRAL_OPEN_DESKTOP_ENTRY_H
 
 #include <string>
 #include <vector>
 
-namespace egmde
+namespace miral
 {
 void open_desktop_entry(std::string const& desktop_file, std::vector<std::string> const& env);
 }
 
-#endif //EGMDE_OPEN_DESKTOP_ENTRY_H
+#endif //MIRAL_OPEN_DESKTOP_ENTRY_H

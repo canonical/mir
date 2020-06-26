@@ -50,6 +50,7 @@ global:
     miral::ExternalClientLauncher::launch*;
     miral::ExternalClientLauncher::launch_using_x11*;
     miral::ExternalClientLauncher::operator*;
+    miral::ExternalClientLauncher::snapcraft_launch*;
     miral::InternalClientLauncher::?InternalClientLauncher*;
     miral::InternalClientLauncher::InternalClientLauncher*;
     miral::InternalClientLauncher::launch*;

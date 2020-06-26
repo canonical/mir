@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Canonical Ltd.
+ * Copyright © 2019-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -74,7 +74,7 @@ auto extract_id(std::string const& filename) -> std::string
 }
 }
 
-void egmde::open_desktop_entry(std::string const& desktop_file, std::vector<std::string> const& env)
+void miral::open_desktop_entry(std::string const& desktop_file, std::vector<std::string> const& env)
 {
     Connection const connection{g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, nullptr)};
 
