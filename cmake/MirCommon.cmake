@@ -163,22 +163,38 @@ function (mir_discover_tests_with_fd_leak_detection EXECUTABLE)
 endfunction()
 
 function (mir_discover_external_gtests)
-  set(one_value_args NAME WORKING_DIRECTORY)
-  set(multi_value_args COMMAND EXCLUDE_FILTER)
+  set(one_value_args NAME COMMAND WORKING_DIRECTORY)
+  set(multi_value_args EXPECTED_FAILURES ARGS)
   cmake_parse_arguments(TEST "" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
-  # The whole command, as we would pass to a shell to execute
-  string(REPLACE ";" " " TEST_COMMAND_STRING "${TEST_COMMAND}")
-  # The executable is going to be the first element of the COMMAND list
-  list(GET ${TEST_COMMAND} 0 TEST_EXECUTABLE)
+  # The expected failures, in a colon-delimited list for GTest
+  string(REPLACE ";" ":" EXPECTED_FAILURE_STRING "${TEST_EXPECTED_FAILURES}")
+  # The command line arguments, as would be passed to the shell
+  string(REPLACE ";" " " TEST_ARGS_STRING "${TEST_ARGS}")
 
-  add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND})
+  add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND} "--gtest_filter=-${EXPECTED_FAILURE_STRING}" ${TEST_ARGS})
   if (TEST_WORKING_DIRECTORY)
     set_tests_properties(${TEST_NAME} PROPERTIES WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY})
   endif()
 
   file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_EXECUTABLE}\" -- ${TEST_COMMAND_STRING}\n")
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND}\" -- ${TEST_COMMAND} --gtest_filter=-${EXPECTED_FAILURE_STRING} ${TEST_ARGS_STRING}\n")
+
+  foreach (xfail IN LISTS TEST_EXPECTED_FAILURES)
+    # Add a test verifying that the expected failures really do fail
+    add_test(
+      NAME "${TEST_NAME}_${xfail}_fails"
+      COMMAND
+        ${CMAKE_BINARY_DIR}/mir_gtest/xfail_if_gtest_exists.sh ${TEST_COMMAND}
+        ${xfail}
+        ${TEST_ARGS}
+    )
+    if (TEST_WORKING_DIRECTORY)
+      set_tests_properties("${TEST_NAME}_${xfail}_fails" PROPERTIES WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY})
+    endif()
+
+    # Unsupported for ptest, but this should be ok
+  endforeach ()
 endfunction()
 
 function (mir_add_memcheck_test)

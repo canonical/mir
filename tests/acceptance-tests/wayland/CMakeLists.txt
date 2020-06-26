@@ -25,20 +25,20 @@ set_target_properties(
 
 pkg_get_variable(WLCS_BINARY wlcs test_runner)
 
-set(GTEST_FILTER "--gtest_filter=-\
-ClientSurfaceEventsTest.frame_timestamp_increases:\
-ClientSurfaceEventsTest.surface_gets_enter_event:\
-ClientSurfaceEventsTest.surface_gets_leave_event:\
-SubsurfaceTest.place_below_simple:\
-SubsurfaceTest.place_above_simple:\
-XdgSurfaceStableTest.attaching_buffer_to_unconfigured_xdg_surface_is_an_error:\
-XdgSurfaceStableTest.creating_xdg_surface_from_wl_surface_with_committed_buffer_is_an_error:\
-XdgSurfaceStableTest.creating_xdg_surface_from_wl_surface_with_attached_buffer_is_an_error:\
-XdgSurfaceStableTest.creating_xdg_surface_from_wl_surface_with_existing_role_is_an_error")
-
 mir_discover_external_gtests(
   NAME wlcs
-  COMMAND ${WLCS_BINARY} ${GTEST_FILTER} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/miral_wlcs_integration.so
+  COMMAND ${WLCS_BINARY}
+  ARGS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/miral_wlcs_integration.so
+  EXPECTED_FAILURES
+    ClientSurfaceEventsTest.frame_timestamp_increases
+    ClientSurfaceEventsTest.surface_gets_enter_event
+    ClientSurfaceEventsTest.surface_gets_leave_event
+    SubsurfaceTest.place_below_simple
+    SubsurfaceTest.place_above_simple
+    XdgSurfaceStableTest.attaching_buffer_to_unconfigured_xdg_surface_is_an_error
+    XdgSurfaceStableTest.creating_xdg_surface_from_wl_surface_with_committed_buffer_is_an_error
+    XdgSurfaceStableTest.creating_xdg_surface_from_wl_surface_with_attached_buffer_is_an_error
+    XdgSurfaceStableTest.creating_xdg_surface_from_wl_surface_with_existing_role_is_an_error
 )
 
 install(TARGETS miral_wlcs_integration LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir)
