@@ -242,10 +242,7 @@ mg::PlatformPriority probe_graphics_platform(
                         return false;
                     }
 
-                    int const drm_node_attrib[] = {
-                        EGL_DRM_MASTER_FD_EXT, static_cast<int>(drm_fd), EGL_NONE
-                    };
-                    EGLDisplay display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, drm_node_attrib);
+                    EGLDisplay display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
 
                     if (display == EGL_NO_DISPLAY)
                     {
