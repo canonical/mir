@@ -42,7 +42,7 @@ void mf::XWaylandConnector::start()
         std::lock_guard<std::mutex> lock{mutex};
 
         spawner = std::make_unique<XWaylandSpawner>([this]() { spawn(); });
-        mir::log_info("XWayland started");
+        mir::log_info("XWayland started on X11 display %s", spawner->x11_display().c_str());
     }
 }
 
