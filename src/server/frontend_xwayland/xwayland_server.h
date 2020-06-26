@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 
+struct wl_client;
+
 namespace mir
 {
 namespace dispatch
@@ -39,44 +41,34 @@ namespace frontend
 {
 class WaylandConnector;
 class XWaylandSpawner;
+class XWaylandWM;
 
 class XWaylandServer
 {
 public:
-    XWaylandServer(std::shared_ptr<WaylandConnector> wayland_connector, std::string const& xwayland_path);
+    XWaylandServer(
+        std::shared_ptr<WaylandConnector> const& wayland_connector,
+        XWaylandSpawner const& spawner,
+        std::string const& xwayland_path);
     ~XWaylandServer();
-
-    void new_spawn_thread(XWaylandSpawner const& spawner);
 
 private:
     XWaylandServer(XWaylandServer const&) = delete;
     XWaylandServer& operator=(XWaylandServer const&) = delete;
 
-    /// Forks off the XWayland process
-    void spawn(XWaylandSpawner const& spawner);
     /// Called after fork() if we should turn into XWayland
     void execl_xwayland(XWaylandSpawner const& spawner, int wl_client_client_fd, int wm_client_fd);
     /// Called after fork() if we should continue on as Mir
-    void connect_wm_to_xwayland(
-        Fd const& wl_client_server_fd,
-        Fd const& wm_server_fd,
-        std::unique_lock<std::mutex>& spawn_thread_lock);
-
-    enum Status {
-        STARTING = 1,
-        RUNNING = 2,
-        STOPPED = -1,
-        FAILED = -2
-    };
+    void connect_wm_to_xwayland();
 
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::string const xwayland_path;
 
-    std::mutex mutable spawn_thread_mutex;
-    std::thread spawn_thread;
-    pid_t spawn_thread_pid;
-    Status spawn_thread_xserver_status{Status::STOPPED};
-    bool spawn_thread_terminate{false};
+    pid_t xwayland_pid;
+    wl_client* wayland_client{nullptr};
+    Fd x11_fd;
+    Fd wayland_fd;
+    std::shared_ptr<XWaylandWM> wm;
 };
 } /* frontend */
 } /* mir */
