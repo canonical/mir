@@ -51,28 +51,7 @@ public:
     /// Default to enabling the extensions recommended by Mir
     WaylandExtensions();
 
-    /// Initialize "enabled by default" to a custom set of extensions (colon
-    /// separated list).
-    /// \note This can only be a subset of supported_extensions()
-    /// \deprecated A better option is to use the default constructor, enable()
-    /// and disable(). You can call disable() on all recommended() extensions
-    /// if you want complete control over which are enabled
-    explicit WaylandExtensions(std::string const& default_value);
-
     void operator()(mir::Server& server) const;
-
-    /// All Wayland extensions currently supported (colon separated list).
-    /// This includes both the recommended_extensions() and any extensions that
-    /// have been added using add_extension().
-    /// \deprecated This is of no real use to the server, just for documenting
-    /// the configuration option.
-    auto supported_extensions() const -> std::string;
-
-    /// Default for extensions to enabled recommended by Mir (colon separated list)
-    /// \remark Since MirAL 2.5
-    /// \deprecated Instead of overridding the whole extension list in the constructor and using this to get the
-    /// recommended ones, you can now just enable() the extensions you want.
-    static auto recommended_extensions() -> std::string;
 
     ~WaylandExtensions();
     WaylandExtensions(WaylandExtensions const&);

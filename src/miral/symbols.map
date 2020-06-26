@@ -128,10 +128,8 @@ global:
     miral::WaylandExtensions::enable*;
     miral::WaylandExtensions::operator*;
     miral::WaylandExtensions::recommended*;
-    miral::WaylandExtensions::recommended_extensions*;
     miral::WaylandExtensions::set_filter*;
     miral::WaylandExtensions::supported*;
-    miral::WaylandExtensions::supported_extensions*;
     miral::WaylandExtensions::zwlr_layer_shell_v1*;
     miral::WaylandExtensions::zxdg_output_manager_v1*;
     miral::Window::?Window*;

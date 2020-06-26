@@ -275,14 +275,11 @@ TEST_F(WaylandExtensions, client_sees_default_extensions)
 
     run_as_client(enumerator_client);
 
-    auto const available_extensions = miral::WaylandExtensions::recommended_extensions() += ':';
+    auto const available_extensions = miral::WaylandExtensions::recommended();
 
-    for (char const* start = available_extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)
+    for (auto const& extension : available_extensions)
     {
-        if (start != end)
-        {
-            EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(std::string{start, end})));
-        }
+        EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(extension)));
     }
 }
 
@@ -326,30 +323,11 @@ TEST_F(WaylandExtensions, add_extension_adds_protocol_to_supported_enabled_exten
 {
     miral::WaylandExtensions extensions;
 
-    EXPECT_THAT(extensions.supported_extensions(), Not(HasSubstr(mir::examples::server_decoration_extension().name)));
+    EXPECT_THAT(extensions.supported(), Not(Contains(Eq(mir::examples::server_decoration_extension().name))));
 
     extensions.add_extension(mir::examples::server_decoration_extension());
 
-    EXPECT_THAT(extensions.supported_extensions(), HasSubstr(mir::examples::server_decoration_extension().name));
-}
-
-TEST_F(WaylandExtensions, server_can_remove_default_extensions)
-{
-    std::string const extension_to_remove{":zxdg_shell_v6"};
-    auto reduced_default_extensions = miral::WaylandExtensions::recommended_extensions();
-    auto const find = reduced_default_extensions.find(extension_to_remove);
-    ASSERT_THAT(find, Gt(0));
-    reduced_default_extensions.replace(find, extension_to_remove.size(), "");
-
-    miral::WaylandExtensions extensions;
-    ClientGlobalEnumerator enumerator_client;
-
-    add_server_init(extensions);
-    start_server();
-
-    run_as_client(enumerator_client);
-
-    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(extension_to_remove))));
+    EXPECT_THAT(extensions.supported(), Contains(Eq(mir::examples::server_decoration_extension().name)));
 }
 
 TEST_F(WaylandExtensions, add_extension_disabled_by_default_adds_protocol_to_supported_extensions_only)
