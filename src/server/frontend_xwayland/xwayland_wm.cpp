@@ -189,8 +189,7 @@ mf::XWaylandWM::~XWaylandWM()
 
     for (auto const& surface : local_surfaces)
     {
-        if (surface.second)
-            surface.second->close();
+        surface.second->close();
     }
 
     local_surfaces.clear();
@@ -208,7 +207,7 @@ auto mf::XWaylandWM::get_wm_surface(
     std::lock_guard<std::mutex> lock{mutex};
 
     auto const surface = surfaces.find(xcb_window);
-    if (surface == surfaces.end() || !surface->second)
+    if (surface == surfaces.end())
         return std::experimental::nullopt;
     else
         return surface->second;
