@@ -190,6 +190,7 @@ mf::XWaylandWM::~XWaylandWM()
     for (auto const& surface : local_surfaces)
     {
         surface.second->close();
+        xcb_kill_client(*connection, surface.first);
     }
 
     local_surfaces.clear();
