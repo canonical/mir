@@ -29,6 +29,7 @@
 #include "mir/graphics/egl_error.h"
 #include "one_shot_device_observer.h"
 #include "mir/raii.h"
+#include "kms-utils/drm_mode_resources.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/diagnostic_information.hpp>
@@ -227,6 +228,17 @@ mg::PlatformPriority probe_graphics_platform(
                                 strerror(-err),
                                 -err);
                         }
+                        return false;
+                    }
+
+                    mg::kms::DRMModeResources kms_resources{drm_fd};
+                    if (
+                        kms_resources.num_connectors() == 0 ||
+                        kms_resources.num_encoders() == 0 ||
+                        kms_resources.num_crtcs() == 0)
+                    {
+                        mir::log_info("KMS support found, but device has no output hardware.");
+                        mir::log_info("This is probably a render-only hybrid graphics device");
                         return false;
                     }
 
