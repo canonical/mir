@@ -76,7 +76,7 @@ mg::PlatformPriority probe_graphics_platform(
     if (dpy)
     {
         XCloseDisplay(dpy);
-        return mg::PlatformPriority::supported;
+        return mg::PlatformPriority::hosted;
     }
     return mg::PlatformPriority::unsupported;
 }
