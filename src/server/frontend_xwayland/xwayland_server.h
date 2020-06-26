@@ -23,6 +23,8 @@
 
 #include <memory>
 #include <string>
+#include <atomic>
+#include <thread>
 
 struct wl_client;
 
@@ -56,8 +58,13 @@ private:
     XWaylandServer(XWaylandServer const&) = delete;
     XWaylandServer& operator=(XWaylandServer const&) = delete;
 
+    void wait_for_process();
+
     XWaylandProcess const xwayland_process;
     wl_client* const wayland_client{nullptr};
+
+    std::thread process_waiter_thread;
+    std::atomic_bool process_exited{false};
 };
 }
 }

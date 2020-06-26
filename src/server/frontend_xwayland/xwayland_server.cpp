@@ -206,22 +206,41 @@ mf::XWaylandServer::XWaylandServer(
     XWaylandSpawner const& spawner,
     std::string const& xwayland_path)
     : xwayland_process{fork_xwayland_process(spawner, xwayland_path)},
-      wayland_client{connect_xwayland_wl_client(wayland_connector, xwayland_process.wayland_server_fd)}
+      wayland_client{connect_xwayland_wl_client(wayland_connector, xwayland_process.wayland_server_fd)},
+      process_waiter_thread{[this](){ wait_for_process(); }}
 {
 }
 
 mf::XWaylandServer::~XWaylandServer()
 {
-    mir::log_info("Deiniting xwayland server");
-
-    // Terminate any running xservers
-    if (kill(xwayland_process.pid, SIGTERM) == 0)
+    if (!process_exited)
     {
-        std::this_thread::sleep_for(100ms);// After 100ms...
-        if (kill(xwayland_process.pid, 0) == 0)    // ...if Xwayland is still running...
+        if (kill(xwayland_process.pid, SIGTERM) == 0)
         {
-            mir::log_info("Xwayland didn't close, killing it");
-            kill(xwayland_process.pid, SIGKILL);     // ...then kill it!
+            std::this_thread::sleep_for(100ms); // After 100ms...
+            if (!process_exited) // ...if Xwayland is still running...
+            {
+                mir::log_info("Could not terminate XWayland process, killing it");
+                kill(xwayland_process.pid, SIGKILL); // ...then kill it!
+            }
         }
     }
+
+    process_waiter_thread.join();
+}
+
+void mf::XWaylandServer::wait_for_process()
+{
+    int status; // Special waitpid() status, not the process exit status
+    waitpid(xwayland_process.pid, &status, 0);  // Blocking
+    if (WIFEXITED(status))
+    {
+        int const exit_status = WEXITSTATUS(status);
+        if (exit_status != 0)
+        {
+            mir::log_info("XWayland process exited with status %d", exit_status);
+        }
+    }
+    // If WIFEXITED() returns false, that probably means we sent a signal to kill the process (which is fine)
+    process_exited = true;
 }
