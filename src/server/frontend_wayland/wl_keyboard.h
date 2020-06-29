@@ -71,8 +71,7 @@ private:
     std::function<void(WlKeyboard*)> on_destroy;
     std::function<std::vector<uint32_t>()> const acquire_current_keyboard_state;
 
-    std::shared_ptr<bool> focused_surface_destroyed{std::make_shared<bool>(true)};
-    WlSurface* focused_surface{nullptr}; ///< Should only be used if *focused_surface_destroyed == false
+    wayland::Weak<WlSurface> focused_surface{};
 
     uint32_t mods_depressed{0};
     uint32_t mods_latched{0};
