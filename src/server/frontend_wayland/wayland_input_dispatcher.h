@@ -22,6 +22,7 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/events/event.h"
 #include "mir/geometry/point.h"
+#include "mir/wayland/wayland_base.h"
 
 #include <memory>
 #include <chrono>
@@ -62,8 +63,7 @@ private:
 
     WlSeat* const seat;
     wl_client* const client;
-    WlSurface* const wl_surface;
-    std::shared_ptr<bool> const wl_surface_destroyed;
+    wayland::Weak<WlSurface> const wl_surface;
 
     std::chrono::nanoseconds timestamp{0};
     MirPointerButtons last_pointer_buttons{0};

@@ -34,21 +34,23 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mi = mir::input;
+namespace mw = mir::wayland;
 
 mf::WaylandInputDispatcher::WaylandInputDispatcher(
     WlSeat* seat,
     WlSurface* wl_surface)
     : seat{seat},
       client{wl_surface->client},
-      wl_surface{wl_surface},
-      wl_surface_destroyed{wl_surface->destroyed_flag()}
+      wl_surface{mw::make_weak(wl_surface)}
 {
 }
 
 void mf::WaylandInputDispatcher::set_keymap(mi::Keymap const& keymap)
 {
-    if (*wl_surface_destroyed)
+    if (!wl_surface)
+    {
         return;
+    }
 
     seat->for_each_listener(client, [&](WlKeyboard* keyboard)
         {
@@ -58,25 +60,32 @@ void mf::WaylandInputDispatcher::set_keymap(mi::Keymap const& keymap)
 
 void mf::WaylandInputDispatcher::set_focus(bool has_focus)
 {
-    if (*wl_surface_destroyed)
+    if (!wl_surface)
+    {
         return;
+    }
 
     if (has_focus)
         seat->notify_focus(client);
 
     seat->for_each_listener(client, [&](WlKeyboard* keyboard)
         {
-            keyboard->focussed(wl_surface, has_focus);
+            if (wl_surface)
+            {
+                keyboard->focussed(&wl_surface.value(), has_focus);
+            }
         });
 }
 
 void mf::WaylandInputDispatcher::handle_event(MirInputEvent const* event)
 {
+    if (!wl_surface)
+    {
+        return;
+    }
+
     auto const ns = std::chrono::nanoseconds{mir_input_event_get_event_time(event)};
     auto const ms = std::chrono::duration_cast<std::chrono::milliseconds>(ns);
-
-    if (*wl_surface_destroyed)
-        return;
 
     // Remember the timestamp of any events "signed" with a cookie
     if (mir_input_event_has_cookie(event))
@@ -107,7 +116,10 @@ void mf::WaylandInputDispatcher::handle_keyboard_event(std::chrono::milliseconds
         bool const down = action == mir_keyboard_action_down;
         seat->for_each_listener(client, [&](WlKeyboard* keyboard)
             {
-                keyboard->key(ms, wl_surface, scancode, down);
+                if (wl_surface)
+                {
+                    keyboard->key(ms, &wl_surface.value(), scancode, down);
+                }
             });
     }
 }
@@ -127,8 +139,11 @@ void mf::WaylandInputDispatcher::handle_pointer_event(std::chrono::milliseconds 
                 mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
             seat->for_each_listener(client, [&](WlPointer* pointer)
                 {
-                    pointer->enter(ms, wl_surface, position);
-                    pointer->frame();
+                    if (wl_surface)
+                    {
+                        pointer->enter(ms, &wl_surface.value(), position);
+                        pointer->frame();
+                    }
                 });
             break;
         }
@@ -212,10 +227,14 @@ void mf::WaylandInputDispatcher::handle_pointer_motion_event(
             client,
             [&](WlPointer* pointer)
             {
-                if (send_motion)
-                    pointer->motion(ms, wl_surface, position);
+                if (send_motion && wl_surface)
+                {
+                    pointer->motion(ms, &wl_surface.value(), position);
+                }
                 if (send_axis)
+                {
                     pointer->axis(ms, axis_motion);
+                }
                 pointer->frame();
             });
     }
@@ -238,7 +257,10 @@ void mf::WaylandInputDispatcher::handle_touch_event(
         case mir_touch_action_down:
             seat->for_each_listener(client, [&](WlTouch* touch)
                 {
-                    touch->down(ms, touch_id, wl_surface, position);
+                    if (wl_surface)
+                    {
+                        touch->down(ms, touch_id, &wl_surface.value(), position);
+                    }
                 });
             break;
         case mir_touch_action_up:
@@ -250,7 +272,10 @@ void mf::WaylandInputDispatcher::handle_touch_event(
         case mir_touch_action_change:
             seat->for_each_listener(client, [&](WlTouch* touch)
                 {
-                    touch->motion(ms, touch_id, wl_surface, position);
+                    if (wl_surface)
+                    {
+                        touch->motion(ms, touch_id, &wl_surface.value(), position);
+                    }
                 });
             break;
         case mir_touch_actions:;
