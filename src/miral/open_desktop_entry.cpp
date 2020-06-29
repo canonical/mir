@@ -18,6 +18,8 @@
 
 #include "open_desktop_entry.h"
 
+#include <mir/log.h>
+
 #include <gio/gio.h>
 #include <memory>
 
@@ -90,25 +92,26 @@ void miral::open_desktop_entry(std::string const& desktop_file, std::vector<std:
     for (auto const& e : env)
         g_variant_builder_add (builder, "s", e.c_str());
 
-    if (auto const result = g_dbus_connection_call_sync(connection,
-                                                        dest,
-                                                        object_path,
-                                                        interface_name,
-                                                        method_name,
-                                                        g_variant_new("(sas)", id.c_str(), builder),
-                                                        nullptr,
-                                                        G_DBUS_CALL_FLAGS_NONE,
-                                                        G_MAXINT,
-                                                        nullptr,
-                                                        &error))
+    if (auto const result = g_dbus_connection_call_sync(
+            connection,
+            dest,
+            object_path,
+            interface_name,
+            method_name,
+            g_variant_new("(sas)", id.c_str(), builder),
+            nullptr,
+            G_DBUS_CALL_FLAGS_NONE,
+            G_MAXINT,
+            nullptr,
+            &error))
     {
         g_variant_unref(result);
     }
 
     if (error)
     {
-        puts(error->message);
-        printf("dest=%s, object_path=%s, interface_name=%s, method_name=%s, id=%s\n", dest, object_path, interface_name, method_name, id.c_str());
+        mir::log_info("Dbus error=%s, dest=%s, object_path=%s, interface_name=%s, method_name=%s, id=%s",
+                      error->message, dest, object_path, interface_name, method_name, id.c_str());
         g_error_free(error);
     }
 
