@@ -736,7 +736,7 @@ void mf::WaylandConnector::start()
         },
         display.get()};
 
-    executor->spawn([this]{ seat_global->server_restart(); });
+    executor->spawn([this]{ seat_global->resync_keyboard_state(); });
 }
 
 void mf::WaylandConnector::stop()

@@ -81,7 +81,7 @@ public:
     void remove_focus_listener(ListenerTracker* listener);
     void notify_focus(wl_client* focus);
 
-    void server_restart();
+    void resync_keyboard_state();
 
 private:
     wl_client* focused_client{nullptr}; ///< Can be null

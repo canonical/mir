@@ -211,6 +211,8 @@ void mf::WlSeat::notify_focus(wl_client *focus)
         focused_client = focus;
         for (auto const listener : focus_listeners)
             listener->focus_on(focus);
+
+        executor->spawn([this] { resync_keyboard_state(); });
     }
 }
 
@@ -312,7 +314,7 @@ void mf::WlSeat::remove_focus_listener(ListenerTracker* listener)
     focus_listeners.erase(remove(begin(focus_listeners), end(focus_listeners), listener), end(focus_listeners));
 }
 
-void mf::WlSeat::server_restart()
+void mf::WlSeat::resync_keyboard_state()
 {
     if (focus.client)
         for_each_listener(focus.client, [](WlKeyboard* keyboard) { keyboard->resync_keyboard(); });
