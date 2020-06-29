@@ -54,7 +54,7 @@ public:
 
     void send_configure();
 
-    std::experimental::optional<WindowWlSurfaceRole*> const& window_role();
+    wayland::Weak<WindowWlSurfaceRole> const& window_role();
 
     using wayland::XdgSurfaceV6::client;
     using wayland::XdgSurfaceV6::resource;
@@ -62,8 +62,7 @@ public:
 private:
     void set_window_role(WindowWlSurfaceRole* role);
 
-    std::experimental::optional<WindowWlSurfaceRole*> window_role_;
-    std::shared_ptr<bool> window_role_destroyed;
+    wayland::Weak<WindowWlSurfaceRole> window_role_;
     WlSurface* const surface;
 
 public:
@@ -246,11 +245,11 @@ void mf::XdgSurfaceV6::get_popup(wl_resource* new_popup, struct wl_resource* par
 
 void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    if (auto& role = window_role())
+    if (window_role_)
     {
-        role.value()->set_pending_offset(geom::Displacement{-x, -y});
-        role.value()->set_pending_width(geom::Width{width});
-        role.value()->set_pending_height(geom::Height{height});
+        window_role_.value().set_pending_offset(geom::Displacement{-x, -y});
+        window_role_.value().set_pending_width(geom::Width{width});
+        window_role_.value().set_pending_height(geom::Height{height});
     }
 }
 
@@ -266,24 +265,19 @@ void mf::XdgSurfaceV6::send_configure()
     send_configure_event(serial);
 }
 
-std::experimental::optional<mf::WindowWlSurfaceRole*> const& mf::XdgSurfaceV6::window_role()
+mw::Weak<mf::WindowWlSurfaceRole> const& mf::XdgSurfaceV6::window_role()
 {
-    if (window_role_ && *window_role_destroyed)
-    {
-        window_role_ = std::experimental::nullopt;
-        window_role_destroyed = nullptr;
-    }
-
     return window_role_;
 }
 
 void mf::XdgSurfaceV6::set_window_role(WindowWlSurfaceRole* role)
 {
-    if (window_role())
+    if (window_role_)
+    {
         log_warning("XdgSurfaceV6::window_role set multiple times");
+    }
 
-    window_role_ = role;
-    window_role_destroyed = role->destroyed_flag();
+    window_role_ = mw::make_weak(role);
 }
 
 // XdgPopupV6
@@ -308,8 +302,8 @@ mf::XdgPopupV6::XdgPopupV6(
                                     static_cast<wayland::XdgPositionerV6*>(
                                         wl_resource_get_user_data(positioner))));
 
-    auto parent_role = parent_surface->window_role();
-    auto parent_scene_surface = parent_role ? parent_role.value()->scene_surface() : std::experimental::nullopt;
+    auto const& parent_role = parent_surface->window_role();
+    auto parent_scene_surface = parent_role ? parent_role.value().scene_surface() : std::experimental::nullopt;
 
     specification->type = mir_window_type_freestyle;
     specification->placement_hints = mir_placement_hints_slide_any;
@@ -646,9 +640,9 @@ auto mf::XdgShellV6::get_window(wl_resource* surface) -> std::shared_ptr<scene::
     if (mw::XdgSurfaceV6::is_instance(surface))
     {
         auto const v6surface = XdgSurfaceV6::from(surface);
-        if (auto const role = v6surface->window_role())
+        if (auto const& role = v6surface->window_role())
         {
-            if (auto const scene_surface = role.value()->scene_surface())
+            if (auto const scene_surface = role.value().scene_surface())
             {
                 return scene_surface.value();
             }
