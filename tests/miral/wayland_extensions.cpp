@@ -323,11 +323,11 @@ TEST_F(WaylandExtensions, add_extension_adds_protocol_to_supported_enabled_exten
 {
     miral::WaylandExtensions extensions;
 
-    EXPECT_THAT(extensions.supported(), Not(Contains(Eq(mir::examples::server_decoration_extension().name))));
+    EXPECT_THAT(extensions.all_supported(), Not(Contains(Eq(mir::examples::server_decoration_extension().name))));
 
     extensions.add_extension(mir::examples::server_decoration_extension());
 
-    EXPECT_THAT(extensions.supported(), Contains(Eq(mir::examples::server_decoration_extension().name)));
+    EXPECT_THAT(extensions.all_supported(), Contains(Eq(mir::examples::server_decoration_extension().name)));
 }
 
 TEST_F(WaylandExtensions, add_extension_disabled_by_default_adds_protocol_to_supported_extensions_only)

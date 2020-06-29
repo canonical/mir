@@ -154,6 +154,7 @@ struct miral::WaylandExtensions::Self
     {
         wayland_extension_hooks.push_back(builder);
         supported_extensions.insert(builder.name);
+        printf("%s = %s\n", __PRETTY_FUNCTION__, builder.name.c_str());
     }
 
     void enable_extension(std::string name)
@@ -294,6 +295,11 @@ auto miral::WaylandExtensions::disable(std::string name) -> WaylandExtensions&
 {
     self->disable_extension(name);
     return *this;
+}
+
+auto miral::WaylandExtensions::all_supported() const -> std::set<std::string>
+{
+    return self->supported_extensions;
 }
 
 auto miral::application_for(wl_client* client) -> Application

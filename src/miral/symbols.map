@@ -124,6 +124,7 @@ global:
     miral::WaylandExtensions::WaylandExtensions*;
     miral::WaylandExtensions::add_extension*;
     miral::WaylandExtensions::add_extension_disabled_by_default*;
+    miral::WaylandExtensions::all_supported*;
     miral::WaylandExtensions::disable*;
     miral::WaylandExtensions::enable*;
     miral::WaylandExtensions::operator*;

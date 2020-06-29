@@ -57,6 +57,12 @@ public:
     WaylandExtensions(WaylandExtensions const&);
     auto operator=(WaylandExtensions const&) -> WaylandExtensions&;
 
+    /// All Wayland extensions supported.
+    /// This includes both the supported() provided by Mir and any extensions
+    /// that have been added using add_extension().
+    /// \remark Since MirAL 3.0
+    auto all_supported() const -> std::set<std::string>;
+
     /// Context information useful for implementing Wayland extensions
     /// \remark Since MirAL 2.5
     class Context

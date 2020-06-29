@@ -137,6 +137,7 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WaylandExtensions::WaylandExtensions(miral::WaylandExtensions const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::add_extension(miral::WaylandExtensions::Builder const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const&)@MIRAL_3.0" 3.0.0
+ (c++)"miral::WaylandExtensions::all_supported[abi:cxx11]() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::disable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::enable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::operator()(mir::Server&) const@MIRAL_3.0" 3.0.0
