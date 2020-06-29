@@ -98,20 +98,20 @@ auto fork_xwayland_process(
     mf::XWaylandSpawner const& spawner,
     std::string const& xwayland_path) -> mf::XWaylandServer::XWaylandProcess
 {
-    enum { MIR, XWAYLAND, SIZE };
-    int wayland_fds[SIZE], x11_fds[SIZE];
+    enum { mir_side, xwayland_side, pipe_size };
+    int wayland_pipe[pipe_size], x11_pipe[pipe_size];
 
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wayland_fds) < 0)
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wayland_pipe) < 0)
     {
         // "Shouldn't happen" but continuing is weird.
         BOOST_THROW_EXCEPTION(std::runtime_error("Wayland socketpair failed"));
     }
 
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, x11_fds) < 0)
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, x11_pipe) < 0)
     {
         // "Shouldn't happen" but continuing is weird.
-        close(wayland_fds[MIR]);
-        close(wayland_fds[XWAYLAND]);
+        close(wayland_pipe[mir_side]);
+        close(wayland_pipe[xwayland_side]);
         BOOST_THROW_EXCEPTION(std::runtime_error("X11 socketpair failed"));
     }
 
@@ -121,25 +121,25 @@ auto fork_xwayland_process(
     switch (xwayland_pid)
     {
     case -1:
-        close(wayland_fds[MIR]);
-        close(wayland_fds[XWAYLAND]);
-        close(x11_fds[MIR]);
-        close(x11_fds[XWAYLAND]);
+        close(wayland_pipe[mir_side]);
+        close(wayland_pipe[xwayland_side]);
+        close(x11_pipe[mir_side]);
+        close(x11_pipe[xwayland_side]);
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to fork XWayland process"));
 
     case 0:
-        close(wayland_fds[MIR]);
-        close(x11_fds[MIR]);
-        exec_xwayland(spawner, xwayland_path, wayland_fds[XWAYLAND], x11_fds[XWAYLAND]);
+        close(wayland_pipe[mir_side]);
+        close(x11_pipe[mir_side]);
+        exec_xwayland(spawner, xwayland_path, wayland_pipe[xwayland_side], x11_pipe[xwayland_side]);
         BOOST_THROW_EXCEPTION(std::logic_error("Should be unreachable"));
 
     default:
-        close(wayland_fds[XWAYLAND]);
-        close(x11_fds[XWAYLAND]);
+        close(wayland_pipe[xwayland_side]);
+        close(x11_pipe[xwayland_side]);
         return mf::XWaylandServer::XWaylandProcess{
             xwayland_pid,
-            mir::Fd{x11_fds[MIR]},
-            mir::Fd{wayland_fds[MIR]}};
+            mir::Fd{x11_pipe[mir_side]},
+            mir::Fd{wayland_pipe[mir_side]}};
     }
 }
 
