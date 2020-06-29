@@ -50,6 +50,7 @@ global:
     miral::ExternalClientLauncher::launch*;
     miral::ExternalClientLauncher::launch_using_x11*;
     miral::ExternalClientLauncher::operator*;
+    miral::ExternalClientLauncher::snapcraft_launch*;
     miral::InternalClientLauncher::?InternalClientLauncher*;
     miral::InternalClientLauncher::InternalClientLauncher*;
     miral::InternalClientLauncher::launch*;
@@ -124,14 +125,13 @@ global:
     miral::WaylandExtensions::WaylandExtensions*;
     miral::WaylandExtensions::add_extension*;
     miral::WaylandExtensions::add_extension_disabled_by_default*;
+    miral::WaylandExtensions::all_supported*;
     miral::WaylandExtensions::disable*;
     miral::WaylandExtensions::enable*;
     miral::WaylandExtensions::operator*;
     miral::WaylandExtensions::recommended*;
-    miral::WaylandExtensions::recommended_extensions*;
     miral::WaylandExtensions::set_filter*;
     miral::WaylandExtensions::supported*;
-    miral::WaylandExtensions::supported_extensions*;
     miral::WaylandExtensions::zwlr_layer_shell_v1*;
     miral::WaylandExtensions::zxdg_output_manager_v1*;
     miral::Window::?Window*;

@@ -23,6 +23,7 @@
 #include "wayland_connector.h"
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
+#include "xwayland_wm.h"
 
 namespace mf = mir::frontend;
 
@@ -41,7 +42,7 @@ void mf::XWaylandConnector::start()
         std::lock_guard<std::mutex> lock{mutex};
 
         spawner = std::make_unique<XWaylandSpawner>([this]() { spawn(); });
-        mir::log_info("XWayland started");
+        mir::log_info("XWayland started on X11 display %s", spawner->x11_display().c_str());
     }
 }
 
@@ -52,11 +53,13 @@ void mf::XWaylandConnector::stop()
     bool const was_running{server};
 
     auto local_spawner{std::move(spawner)};
+    auto local_wm{std::move(wm)};
     auto local_server{std::move(server)};
 
     lock.unlock();
 
     local_spawner.reset();
+    local_wm.reset();
     local_server.reset();
 
     if (was_running)
@@ -110,6 +113,10 @@ void mf::XWaylandConnector::spawn()
             wayland_connector,
             *spawner,
             xwayland_path);
+        wm = std::make_unique<XWaylandWM>(
+            wayland_connector,
+            server->client(),
+            server->wm_fd());
         mir::log_info("XWayland is running");
     }
     catch (...)

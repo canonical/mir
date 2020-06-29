@@ -49,6 +49,10 @@ public:
     /// \remark Return type changed from void in MirAL 3.0
     auto launch_using_x11(std::vector<std::string> const& command_line) const -> pid_t;
 
+    /// Use the proposed `desktop-entry` snap interface to launch another snap
+    /// \remark Since MirAL 3.0
+    void snapcraft_launch(std::string const& desktop_file) const;
+
 private:
     struct Self;
     std::shared_ptr<Self> self;

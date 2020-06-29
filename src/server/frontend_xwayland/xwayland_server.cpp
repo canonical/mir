@@ -17,7 +17,6 @@
  */
 
 #include "xwayland_server.h"
-#include "xwayland_wm.h"
 #include "xwayland_spawner.h"
 
 #include "wayland_connector.h"
@@ -40,6 +39,7 @@
 
 #include <chrono>
 #include <thread>
+#include <condition_variable>
 
 namespace mf = mir::frontend;
 namespace md = mir::dispatch;
@@ -97,8 +97,6 @@ mf::XWaylandServer::XWaylandServer(
 mf::XWaylandServer::~XWaylandServer()
 {
     mir::log_info("Deiniting xwayland server");
-
-    wm.reset();
 
     // Terminate any running xservers
     if (kill(xwayland_pid, SIGTERM) == 0)
@@ -216,22 +214,6 @@ void mf::XWaylandServer::connect_wm_to_xwayland()
 
     if (xwayland_startup_timed_out)
     {
-        mir::log_info("Stalled start of Xserver, trying to start again!");
-        return;
-    }
-
-    try
-    {
-        wm = std::make_shared<XWaylandWM>(
-            wayland_connector,
-            wayland_client,
-            x11_fd);
-        mir::log_info("XServer is running");
-    }
-    catch (std::exception const& e)
-    {
-        mir::log_error("X11 failed: %s", e.what());
-        // don't touch spawn_thread_xserver_status
-        // it should be left in a STARTING state to the caller knows we didn't successfully start'
+        mir::fatal_error("XWayland failed to start");
     }
 }

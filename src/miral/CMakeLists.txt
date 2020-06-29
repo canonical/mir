@@ -9,6 +9,7 @@ set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
 pkg_check_modules(YAML REQUIRED yaml-cpp)
+pkg_check_modules(GIO REQUIRED gio-2.0 gio-unix-2.0)
 
 add_library(mirclientcpp INTERFACE)
 
@@ -22,6 +23,7 @@ add_library(miral-internal STATIC
     display_configuration_listeners.cpp display_configuration_listeners.h
     launch_app.cpp                      launch_app.h
     mru_window_list.cpp                 mru_window_list.h
+    open_desktop_entry.cpp              open_desktop_entry.h
     static_display_config.cpp           static_display_config.h
     window_info_internal.cpp            window_info_internal.h
     window_management_trace.cpp         window_management_trace.h
@@ -91,7 +93,7 @@ target_include_directories(mirclientcpp
 
 target_include_directories(miral-internal
     PRIVATE "${miral_include}" ${MIRCLIENT_INCLUDE_DIRS}
-    PRIVATE ${MIRSERVER_INCLUDE_DIRS}
+    PRIVATE ${MIRSERVER_INCLUDE_DIRS} ${GIO_INCLUDE_DIRS}
 )
 
 target_link_libraries(miral-internal
@@ -99,6 +101,7 @@ target_link_libraries(miral-internal
         mirserver
         ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
         ${YAML_LIBRARIES}
+        ${GIO_LIBRARIES}
 )
 
 target_include_directories(miral

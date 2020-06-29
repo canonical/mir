@@ -60,6 +60,7 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::ExternalClientLauncher::launch(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) const@MIRAL_3.0" 3.0.0
  (c++)"miral::ExternalClientLauncher::launch_using_x11(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) const@MIRAL_3.0" 3.0.0
  (c++)"miral::ExternalClientLauncher::operator()(mir::Server&)@MIRAL_3.0" 3.0.0
+ (c++)"miral::ExternalClientLauncher::snapcraft_launch(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) const@MIRAL_3.0" 3.0.0
  (c++)"miral::ExternalClientLauncher::~ExternalClientLauncher()@MIRAL_3.0" 3.0.0
  (c++)"miral::InternalClientLauncher::InternalClientLauncher()@MIRAL_3.0" 3.0.0
  (c++)"miral::InternalClientLauncher::launch(std::function<void (wl_display*)> const&, std::function<void (std::weak_ptr<mir::scene::Session>)> const&) const@MIRAL_3.0" 3.0.0
@@ -135,18 +136,16 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::StartupInternalClient::~StartupInternalClient()@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::WaylandExtensions()@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::WaylandExtensions(miral::WaylandExtensions const&)@MIRAL_3.0" 3.0.0
- (c++)"miral::WaylandExtensions::WaylandExtensions(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::add_extension(miral::WaylandExtensions::Builder const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const&)@MIRAL_3.0" 3.0.0
+ (c++)"miral::WaylandExtensions::all_supported[abi:cxx11]() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::disable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::enable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::operator()(mir::Server&) const@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::operator=(miral::WaylandExtensions const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::recommended[abi:cxx11]()@MIRAL_3.0" 3.0.0
- (c++)"miral::WaylandExtensions::recommended_extensions[abi:cxx11]()@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::set_filter(std::function<bool (std::shared_ptr<mir::scene::Session> const&, char const*)> const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::supported[abi:cxx11]()@MIRAL_3.0" 3.0.0
- (c++)"miral::WaylandExtensions::supported_extensions[abi:cxx11]() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::zwlr_layer_shell_v1@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::zxdg_output_manager_v1@MIRAL_3.0" 3.0.0
  (c++)"miral::WaylandExtensions::~WaylandExtensions()@MIRAL_3.0" 3.0.0

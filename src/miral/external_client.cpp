@@ -19,6 +19,7 @@
 #include "miral/external_client.h"
 
 #include "launch_app.h"
+#include "open_desktop_entry.h"
 
 #include <mir/options/option.h>
 #include <mir/server.h>
@@ -100,7 +101,9 @@ void miral::ExternalClientLauncher::operator()(mir::Server& server)
 auto miral::ExternalClientLauncher::launch(std::vector<std::string> const& command_line) const -> pid_t
 {
     if (!self->server)
-        throw std::logic_error("Cannot launch apps when server has not started");
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot launch apps when server has not started"));
+    }
 
     auto const wayland_display = self->server->wayland_display();
     auto const x11_display = self->server->x11_display();
@@ -113,8 +116,9 @@ miral::ExternalClientLauncher::ExternalClientLauncher() : self{std::make_shared<
 auto  miral::ExternalClientLauncher::launch_using_x11(std::vector<std::string> const& command_line) const -> pid_t
 {
     if (!self->server)
-        throw std::logic_error("Cannot launch apps when server has not started");
-
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot launch apps when server has not started"));
+    }
 
     if (auto const x11_display = self->server->x11_display())
     {
@@ -123,6 +127,30 @@ auto  miral::ExternalClientLauncher::launch_using_x11(std::vector<std::string> c
     }
 
     return -1;
+}
+
+void miral::ExternalClientLauncher::snapcraft_launch(const std::string& desktop_file) const
+{
+    if (!self->server)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot launch apps when server has not started"));
+    }
+
+    std::vector<std::string> env{
+        "XDG_SESSION_DESKTOP=mir",
+        "XDG_SESSION_TYPE=wayland"};
+
+    if (auto const& wayland_display = self->server->wayland_display())
+    {
+        env.push_back("WAYLAND_DISPLAY=" + wayland_display.value());
+    }
+
+    if (auto const& x11_display = self->server->x11_display())
+    {
+        env.push_back("DISPLAY=" + x11_display.value());
+    }
+
+    open_desktop_entry(desktop_file, env);
 }
 
 miral::ExternalClientLauncher::~ExternalClientLauncher() = default;
