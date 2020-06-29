@@ -93,6 +93,18 @@ public:
         return *resource;
     }
 
+    auto as_nullable_ptr() const -> T*
+    {
+        if (*this)
+        {
+            return resource;
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
 private:
     T* resource;
     /// Is null if and only if resource is null
