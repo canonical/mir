@@ -38,7 +38,7 @@ public:
     XWaylandConnector(
         std::shared_ptr<WaylandConnector> const& wayland_connector,
         std::string const& xwayland_path);
-    ~XWaylandConnector() override;
+    ~XWaylandConnector();
 
     void start() override;
     void stop() override;

@@ -35,6 +35,20 @@ mf::XWaylandConnector::XWaylandConnector(
 {
 }
 
+mf::XWaylandConnector::~XWaylandConnector()
+{
+    if (spawner || server || wm || wm_event_thread)
+    {
+        fatal_error(
+            "XWaylandConnector was not stopped before being destroyed "
+            "(spawner: %s, server: %s, wm: %s, wm_event_thread: %s)",
+            spawner ? "exists" : "null",
+            wm ? "exists" : "null",
+            spawner ? "exists" : "null",
+            wm_event_thread ? "exists" : "null");
+    }
+}
+
 void mf::XWaylandConnector::start()
 {
     if (wayland_connector->get_extension("x11-support"))
@@ -92,8 +106,6 @@ auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
         return optional_value<std::string>();
     }
 }
-
-mf::XWaylandConnector::~XWaylandConnector() = default;
 
 void mf::XWaylandConnector::spawn()
 {
