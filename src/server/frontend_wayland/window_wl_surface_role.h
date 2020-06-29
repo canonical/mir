@@ -21,7 +21,7 @@
 
 #include "wl_surface_role.h"
 
-#include "mir/frontend/surface_id.h"
+#include "mir/wayland/wayland_base.h"
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
@@ -54,7 +54,9 @@ class OutputManager;
 class WlSurface;
 class WlSeat;
 
-class WindowWlSurfaceRole : public WlSurfaceRole
+class WindowWlSurfaceRole
+    : public WlSurfaceRole,
+      public virtual wayland::LifetimeTracker
 {
 public:
 
@@ -67,7 +69,6 @@ public:
 
     ~WindowWlSurfaceRole() override;
 
-    std::shared_ptr<bool> destroyed_flag() const { return destroyed; }
     auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
 
     void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
@@ -101,8 +102,6 @@ public:
     virtual void handle_close_request() = 0;
 
 protected:
-    std::shared_ptr<bool> const destroyed;
-
     /// The size the window will be after the next commit
     auto pending_size() const -> geometry::Size;
 
