@@ -1,4 +1,4 @@
-MIRWAYLAND_1.2 {
+MIRWAYLAND_1.3 {
 global:
   extern "C++" {
     mir::wayland::Buffer::*;
@@ -282,6 +282,10 @@ global:
     mir::wayland::zxdg_toplevel_v6_interface_data;
     mir::wayland::zxdg_output_v1_interface_data;
     mir::wayland::zxdg_output_manager_v1_interface_data;
+
+    mir::wayland::Destroyable::*;
+    typeinfo?for?mir::wayland::Destroyable;
+    vtable?for?mir::wayland::Destroyable;
 
     mir::wayland::Resource::*;
     typeinfo?for?mir::wayland::Resource;
