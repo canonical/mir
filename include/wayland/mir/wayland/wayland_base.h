@@ -65,7 +65,7 @@ public:
     {
     }
 
-    Weak(T* resource)
+    explicit Weak(T* resource)
         : resource{resource},
           destroyed_flag{resource ? resource->destroyed_flag() : nullptr}
     {
