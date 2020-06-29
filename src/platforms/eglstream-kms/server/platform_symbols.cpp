@@ -298,7 +298,7 @@ mg::PlatformPriority probe_graphics_platform(
                             };
                             ctx = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attr);
                         },
-                        [ctx, display]()
+                        [&ctx, display]()
                         {
                             if (ctx != EGL_NO_CONTEXT)
                             {
