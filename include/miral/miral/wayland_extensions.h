@@ -115,6 +115,12 @@ public:
     /// Allows clients to retrieve additional information about outputs
     /// \remark Since MirAL 2.6
     static char const* const zxdg_output_manager_v1;
+
+    /// Allows a client to get information and gain control over all toplevels of all clients
+    /// Useful for taskbars and app switchers
+    /// Could allow a client to extract information about other programs the user is running
+    /// \remark Since MirAL 2.7
+    static char const* const zwlr_foreign_toplevel_manager_v1;
     /** @} */
 
     /// Add a bespoke Wayland extension both to "supported" and "enabled by default".

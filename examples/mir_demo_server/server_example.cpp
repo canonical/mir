@@ -138,6 +138,7 @@ try
         miral::X11Support{},
         miral::WaylandExtensions{}
             .enable(miral::WaylandExtensions::zwlr_layer_shell_v1)
+            .enable(miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1)
             .enable(miral::WaylandExtensions::zxdg_output_manager_v1),
         miral::set_window_management_policy<miral::MinimalWindowManager>(),
         me::add_input_device_configuration_options_to,

@@ -432,3 +432,10 @@ global:
   };
 local: *;
 };
+
+MIRAL_3.1 {
+global:
+  extern "C++" {
+    miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1*;
+  };
+} MIRAL_3.0;
