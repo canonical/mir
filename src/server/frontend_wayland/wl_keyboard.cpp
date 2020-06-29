@@ -138,7 +138,7 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
         wl_array_release(&key_state);
 
         focused_surface = surface;
-        focused_surface_destroyed = surface->destroyed_flag();
+        focused_surface_destroyed = surface->lifetime_tracker.destroyed_flag();
     }
     else
     {

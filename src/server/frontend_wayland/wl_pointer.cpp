@@ -324,7 +324,7 @@ void mf::WlPointer::release()
 
 WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot)
     : surface{surface},
-      surface_destroyed{surface->destroyed_flag()},
+      surface_destroyed{surface->lifetime_tracker.destroyed_flag()},
       stream{surface->stream},
       surface_role{surface},
       hotspot{hotspot}

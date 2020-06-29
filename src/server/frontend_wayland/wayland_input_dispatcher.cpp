@@ -41,7 +41,7 @@ mf::WaylandInputDispatcher::WaylandInputDispatcher(
     : seat{seat},
       client{wl_surface->client},
       wl_surface{wl_surface},
-      wl_surface_destroyed{wl_surface->destroyed_flag()}
+      wl_surface_destroyed{wl_surface->lifetime_tracker.destroyed_flag()}
 {
 }
 
