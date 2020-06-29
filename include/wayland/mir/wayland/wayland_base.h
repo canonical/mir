@@ -59,9 +59,15 @@ template<typename T>
 class Weak
 {
 public:
+    Weak()
+        : resource{nullptr},
+          destroyed_flag{nullptr}
+    {
+    }
+
     Weak(T* resource)
         : resource{resource},
-          destroyed_flag{resource->destroyed_flag()}
+          destroyed_flag{resource ? resource->destroyed_flag() : nullptr}
     {
     }
 
@@ -75,12 +81,12 @@ public:
 
     operator bool() const
     {
-        return !*destroyed_flag;
+        return resource && !*destroyed_flag;
     }
 
     auto value() const -> T&
     {
-        if (*destroyed_flag)
+        if (!*this)
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("Attempted access of destroyed Wayland resource"));
         }
@@ -89,6 +95,8 @@ public:
 
 private:
     T* resource;
+    /// Is null if and only if resource is null
+    /// If the target bool is true then resrouce has been freed and should not be used
     std::shared_ptr<bool> destroyed_flag;
 };
 
