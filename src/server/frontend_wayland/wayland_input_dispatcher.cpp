@@ -50,7 +50,7 @@ void mf::WaylandInputDispatcher::set_keymap(mi::Keymap const& keymap)
     if (*wl_surface_destroyed)
         return;
 
-    seat->for_each_listener(client, [keymap](WlKeyboard* keyboard)
+    seat->for_each_listener(client, [&](WlKeyboard* keyboard)
         {
             keyboard->set_keymap(keymap);
         });
@@ -64,7 +64,7 @@ void mf::WaylandInputDispatcher::set_focus(bool has_focus)
     if (has_focus)
         seat->notify_focus(client);
 
-    seat->for_each_listener(client, [wl_surface = wl_surface, has_focus = has_focus](WlKeyboard* keyboard)
+    seat->for_each_listener(client, [&](WlKeyboard* keyboard)
         {
             keyboard->focussed(wl_surface, has_focus);
         });
@@ -105,7 +105,7 @@ void mf::WaylandInputDispatcher::handle_keyboard_event(std::chrono::milliseconds
     {
         int const scancode = mir_keyboard_event_scan_code(event);
         bool const down = action == mir_keyboard_action_down;
-        seat->for_each_listener(client, [&ms, wl_surface = wl_surface, scancode, down](WlKeyboard* keyboard)
+        seat->for_each_listener(client, [&](WlKeyboard* keyboard)
             {
                 keyboard->key(ms, wl_surface, scancode, down);
             });
@@ -125,7 +125,7 @@ void mf::WaylandInputDispatcher::handle_pointer_event(std::chrono::milliseconds 
             geom::Point const position{
                 mir_pointer_event_axis_value(event, mir_pointer_axis_x),
                 mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
-            seat->for_each_listener(client, [wl_surface = wl_surface, &position, &ms](WlPointer* pointer)
+            seat->for_each_listener(client, [&](WlPointer* pointer)
                 {
                     pointer->enter(ms, wl_surface, position);
                     pointer->frame();
@@ -175,7 +175,7 @@ void mf::WaylandInputDispatcher::handle_pointer_button_event(
 
     if (!buttons.empty())
     {
-        seat->for_each_listener(client, [&ms, &buttons](WlPointer* pointer)
+        seat->for_each_listener(client, [&](WlPointer* pointer)
             {
                 for (auto& button : buttons)
                 {
@@ -210,7 +210,7 @@ void mf::WaylandInputDispatcher::handle_pointer_motion_event(
     {
         seat->for_each_listener(
             client,
-            [&ms, wl_surface = wl_surface, &send_motion, &position, &send_axis, &axis_motion](WlPointer* pointer)
+            [&](WlPointer* pointer)
             {
                 if (send_motion)
                     pointer->motion(ms, wl_surface, position);
@@ -236,19 +236,19 @@ void mf::WaylandInputDispatcher::handle_touch_event(
         switch (action)
         {
         case mir_touch_action_down:
-            seat->for_each_listener(client, [&ms, touch_id, wl_surface = wl_surface, &position](WlTouch* touch)
+            seat->for_each_listener(client, [&](WlTouch* touch)
                 {
                     touch->down(ms, touch_id, wl_surface, position);
                 });
             break;
         case mir_touch_action_up:
-            seat->for_each_listener(client, [&ms, touch_id](WlTouch* touch)
+            seat->for_each_listener(client, [&](WlTouch* touch)
                 {
                     touch->up(ms, touch_id);
                 });
             break;
         case mir_touch_action_change:
-            seat->for_each_listener(client, [&ms, touch_id, wl_surface = wl_surface, &position](WlTouch* touch)
+            seat->for_each_listener(client, [&](WlTouch* touch)
                 {
                     touch->motion(ms, touch_id, wl_surface, position);
                 });
