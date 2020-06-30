@@ -161,6 +161,7 @@ auto connect_xwayland_wl_client(
     {
         std::mutex mutex;
         wl_client* client{nullptr};
+        bool ready{false};
         std::condition_variable condition_variable;
     };
 
@@ -171,14 +172,20 @@ auto connect_xwayland_wl_client(
         {
             std::lock_guard<std::mutex> lock{ctx->mutex};
             ctx->client = wl_client_create(display, wayland_fd);
+            ctx->ready = true;
             ctx->condition_variable.notify_all();
         });
 
     std::unique_lock<std::mutex> client_lock{ctx->mutex};
-    if (!ctx->condition_variable.wait_for(client_lock, 10s, [ctx]{ return ctx->client; }))
+    if (!ctx->condition_variable.wait_for(client_lock, 10s, [ctx]{ return ctx->ready; }))
     {
         // "Shouldn't happen" but this is better than hanging.
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create wl_client for XWayland"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Creating XWayland wl_client timed out"));
+    }
+
+    if (!ctx->client)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create XWayland wl_client"));
     }
 
     //The client can connect, now wait for it to signal ready (SIGUSR1)
