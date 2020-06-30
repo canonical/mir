@@ -108,7 +108,7 @@ struct GLMark2Xwayland : AbstractGLMark2Test
     char const* command() override
     {
         add_to_environment("DISPLAY", server.x11_display().value().c_str());
-        static char const* const command = "glmark2-es2-wayland";
+        static char const* const command = "glmark2-es2";
         return command;
     }
 };

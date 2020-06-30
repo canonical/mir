@@ -1,5 +1,5 @@
 mir_add_wrapped_executable(mir_performance_tests
-    test_glmark2-es2-mir.cpp
+    test_glmark2-es2.cpp
     test_compositor.cpp
     system_performance_test.cpp
 )
