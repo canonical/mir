@@ -96,7 +96,7 @@ public:
     {
         if (!*this)
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted access of destroyed Wayland resource"));
+            BOOST_THROW_EXCEPTION(std::logic_error("Attempted access of destroyed Wayland resource"));
         }
         return *resource;
     }
