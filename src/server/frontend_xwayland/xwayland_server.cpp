@@ -131,7 +131,8 @@ auto fork_xwayland_process(
         close(wayland_pipe[mir_side]);
         close(x11_pipe[mir_side]);
         exec_xwayland(spawner, xwayland_path, wayland_pipe[xwayland_side], x11_pipe[xwayland_side]);
-        BOOST_THROW_EXCEPTION(std::logic_error("Should be unreachable"));
+        fprintf(stderr, "Failed to start XWayland, should be unreachable");
+        abort();
 
     default:
         close(wayland_pipe[xwayland_side]);
