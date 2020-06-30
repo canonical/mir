@@ -24,7 +24,7 @@
 
 namespace mw = mir::wayland;
 
-mw::Destroyable::~Destroyable()
+mw::DestroyTracker::~DestroyTracker()
 {
     if (destroyed)
     {
@@ -32,7 +32,7 @@ mw::Destroyable::~Destroyable()
     }
 }
 
-auto mw::Destroyable::destroyed_flag() const -> std::shared_ptr<bool>
+auto mw::DestroyTracker::destroyed_flag() const -> std::shared_ptr<bool>
 {
     if (!destroyed)
     {
@@ -42,7 +42,7 @@ auto mw::Destroyable::destroyed_flag() const -> std::shared_ptr<bool>
 }
 
 mw::Resource::Resource()
-    : Destroyable{}
+    : DestroyTracker{}
 {
 }
 

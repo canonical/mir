@@ -35,14 +35,14 @@ namespace wayland
 /// The base class of any object that wants to provide a destroyed flag
 /// The destroyed flag is only created when needed and automatically set to true on destruction
 /// This pattern is only safe in a single-threaded context
-class Destroyable
+class DestroyTracker
 {
 public:
-    Destroyable() = default;
-    Destroyable(Destroyable const&) = delete;
-    Destroyable& operator=(Destroyable const&) = delete;
+    DestroyTracker() = default;
+    DestroyTracker(DestroyTracker const&) = delete;
+    DestroyTracker& operator=(DestroyTracker const&) = delete;
 
-    virtual ~Destroyable();
+    virtual ~DestroyTracker();
     auto destroyed_flag() const -> std::shared_ptr<bool>;
 
 private:
@@ -50,7 +50,7 @@ private:
 };
 
 class Resource
-    : public Destroyable
+    : public DestroyTracker
 {
 public:
     template<int V>
