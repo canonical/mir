@@ -43,13 +43,13 @@ public:
     ~XWaylandServer();
 
     auto client() const -> wl_client* { return wayland_client; }
-    auto wm_fd() const -> Fd const& { return xwayland_process.x11_fd; }
+    auto wm_fd() const -> Fd const& { return xwayland_process.x11_wm_client_fd; }
 
     struct XWaylandProcess
     {
         pid_t pid;
-        Fd x11_fd;
-        Fd wayland_fd;
+        Fd wayland_server_fd;
+        Fd x11_wm_client_fd;
     };
 
 private:

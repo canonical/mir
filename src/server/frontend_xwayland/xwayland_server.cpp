@@ -40,29 +40,36 @@ using namespace std::chrono_literals;
 
 namespace
 {
-void exec_xwayland(mf::XWaylandSpawner const& spawner, std::string const& xwayland_path, int wayland_fd, int x11_fd)
+/// client and server are symetrical, they only differ in how they are used
+struct SocketPair
 {
+    mir::Fd client;
+    mir::Fd server;
+};
+
+auto make_socket_pair() -> SocketPair
+{
+    int pipe[2];
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, pipe) < 0)
+    {
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::generic_category(), "Creating socket pair failed"));
+    }
+    return SocketPair{mir::Fd{pipe[0]}, mir::Fd{pipe[1]}};
+}
+
+void exec_xwayland(
+    mf::XWaylandSpawner const& spawner,
+    std::string const& xwayland_path,
+    mir::Fd wayland_client_fd,
+    mir::Fd x11_wm_server_fd)
+{
+    mf::XWaylandSpawner::set_cloexec(wayland_client_fd, false);
+    mf::XWaylandSpawner::set_cloexec(x11_wm_server_fd, false);
+
     setenv("EGL_PLATFORM", "DRM", 1);
+    setenv("WAYLAND_SOCKET", std::to_string(wayland_client_fd).c_str(), 1);
 
-    wayland_fd = dup(wayland_fd);
-    if (wayland_fd < 0)
-    {
-        mir::log_error("Failed to duplicate XWayland Wayland FD");
-        return;
-    }
-    else
-    {
-        setenv("WAYLAND_SOCKET", std::to_string(wayland_fd).c_str(), 1);
-    }
-
-    x11_fd = dup(x11_fd);
-    if (x11_fd < 0)
-    {
-        mir::log_error("Failed to duplicate XWayland X11 FD");
-        return;
-    }
-    auto const x11_fd_str = std::to_string(x11_fd);
-
+    auto const x11_wm_server = std::to_string(x11_wm_server_fd);
     auto const dsp_str = spawner.x11_display();
 
     // Propagate SIGUSR1 to parent process
@@ -77,7 +84,7 @@ void exec_xwayland(mf::XWaylandSpawner const& spawner, std::string const& xwayla
             xwayland_path.c_str(),
             dsp_str.c_str(),
             "-rootless",
-            "-wm", x11_fd_str.c_str(),
+            "-wm", x11_wm_server.c_str(),
             "-terminate",
         };
 
@@ -98,22 +105,8 @@ auto fork_xwayland_process(
     mf::XWaylandSpawner const& spawner,
     std::string const& xwayland_path) -> mf::XWaylandServer::XWaylandProcess
 {
-    enum { mir_side, xwayland_side, pipe_size };
-    int wayland_pipe[pipe_size], x11_pipe[pipe_size];
-
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wayland_pipe) < 0)
-    {
-        // "Shouldn't happen" but continuing is weird.
-        BOOST_THROW_EXCEPTION(std::runtime_error("Wayland socketpair failed"));
-    }
-
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, x11_pipe) < 0)
-    {
-        // "Shouldn't happen" but continuing is weird.
-        close(wayland_pipe[mir_side]);
-        close(wayland_pipe[xwayland_side]);
-        BOOST_THROW_EXCEPTION(std::runtime_error("X11 socketpair failed"));
-    }
+    auto const wayland_pipe = make_socket_pair();
+    auto const x11_wm_pipe = make_socket_pair();
 
     mir::log_info("Starting XWayland");
     pid_t const xwayland_pid = fork();
@@ -121,26 +114,15 @@ auto fork_xwayland_process(
     switch (xwayland_pid)
     {
     case -1:
-        close(wayland_pipe[mir_side]);
-        close(wayland_pipe[xwayland_side]);
-        close(x11_pipe[mir_side]);
-        close(x11_pipe[xwayland_side]);
         BOOST_THROW_EXCEPTION(std::system_error(errno, std::generic_category(), "Failed to fork XWayland process"));
 
     case 0:
-        close(wayland_pipe[mir_side]);
-        close(x11_pipe[mir_side]);
-        exec_xwayland(spawner, xwayland_path, wayland_pipe[xwayland_side], x11_pipe[xwayland_side]);
+        exec_xwayland(spawner, xwayland_path, wayland_pipe.client, x11_wm_pipe.server);
         fprintf(stderr, "Failed to start XWayland, should be unreachable");
         abort();
 
     default:
-        close(wayland_pipe[xwayland_side]);
-        close(x11_pipe[xwayland_side]);
-        return mf::XWaylandServer::XWaylandProcess{
-            xwayland_pid,
-            mir::Fd{x11_pipe[mir_side]},
-            mir::Fd{wayland_pipe[mir_side]}};
+        return mf::XWaylandServer::XWaylandProcess{xwayland_pid, wayland_pipe.server, x11_wm_pipe.client};
     }
 }
 
@@ -215,7 +197,7 @@ mf::XWaylandServer::XWaylandServer(
     XWaylandSpawner const& spawner,
     std::string const& xwayland_path)
     : xwayland_process{fork_xwayland_process(spawner, xwayland_path)},
-      wayland_client{connect_xwayland_wl_client(wayland_connector, xwayland_process.wayland_fd)}
+      wayland_client{connect_xwayland_wl_client(wayland_connector, xwayland_process.wayland_server_fd)}
 {
 }
 
