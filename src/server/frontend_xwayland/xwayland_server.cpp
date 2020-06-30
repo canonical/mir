@@ -125,7 +125,7 @@ auto fork_xwayland_process(
         close(wayland_pipe[xwayland_side]);
         close(x11_pipe[mir_side]);
         close(x11_pipe[xwayland_side]);
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to fork XWayland process"));
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::generic_category(), "Failed to fork XWayland process"));
 
     case 0:
         close(wayland_pipe[mir_side]);
