@@ -157,26 +157,28 @@ auto connect_xwayland_wl_client(
     action.sa_flags = 0;
     sigaction(SIGUSR1, &action, &old_action);
 
-    wl_client* client{nullptr};
-
+    struct CreateClientContext
     {
-        std::mutex client_mutex;
-        std::condition_variable client_ready;
+        std::mutex mutex;
+        wl_client* client{nullptr};
+        std::condition_variable condition_variable;
+    };
 
-        wayland_connector->run_on_wayland_display(
-            [&](wl_display* display)
-            {
-                std::lock_guard<std::mutex> lock{client_mutex};
-                client = wl_client_create(display, wayland_fd);
-                client_ready.notify_all();
-            });
+    auto const ctx = std::make_shared<CreateClientContext>();
 
-        std::unique_lock<std::mutex> lock{client_mutex};
-        if (!client_ready.wait_for(lock, 10s, [&]{ return client; }))
+    wayland_connector->run_on_wayland_display(
+        [ctx, wayland_fd](wl_display* display)
         {
-            // "Shouldn't happen" but this is better than hanging.
-            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create wl_client for XWayland"));
-        }
+            std::lock_guard<std::mutex> lock{ctx->mutex};
+            ctx->client = wl_client_create(display, wayland_fd);
+            ctx->condition_variable.notify_all();
+        });
+
+    std::unique_lock<std::mutex> client_lock{ctx->mutex};
+    if (!ctx->condition_variable.wait_for(client_lock, 10s, [ctx]{ return ctx->client; }))
+    {
+        // "Shouldn't happen" but this is better than hanging.
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create wl_client for XWayland"));
     }
 
     //The client can connect, now wait for it to signal ready (SIGUSR1)
@@ -188,7 +190,7 @@ auto connect_xwayland_wl_client(
         BOOST_THROW_EXCEPTION(std::runtime_error("XWayland server failed to start"));
     }
 
-    return client;
+    return ctx->client;
 }
 }
 
