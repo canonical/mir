@@ -18,16 +18,10 @@
 
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
-
 #include "wayland_connector.h"
-
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/readable_fd.h"
-#include "mir/fd.h"
 #include "mir/log.h"
-#include "mir/terminate_with_current_exception.h"
-#include <mir/thread_name.h>
 
+#include <boost/throw_exception.hpp>
 #include <csignal>
 #include <fcntl.h>
 #include <sys/socket.h>
@@ -38,93 +32,44 @@
 #include <unistd.h>
 
 #include <chrono>
-#include <thread>
 #include <condition_variable>
 
 namespace mf = mir::frontend;
 namespace md = mir::dispatch;
 using namespace std::chrono_literals;
 
-mf::XWaylandServer::XWaylandServer(
-    std::shared_ptr<WaylandConnector> const& wayland_connector,
-    XWaylandSpawner const& spawner,
-    std::string const& xwayland_path)
-    : wayland_connector{wayland_connector},
-      xwayland_path{xwayland_path}
+namespace
 {
-    enum { server, client, size };
-    int wl_client_fd[size], wm_fd[size];
+/// client and server are symetrical, they only differ in how they are used
+struct SocketPair
+{
+    mir::Fd client;
+    mir::Fd server;
+};
 
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wl_client_fd) < 0)
+auto make_socket_pair() -> SocketPair
+{
+    int pipe[2];
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, pipe) < 0)
     {
-        // "Shouldn't happen" but continuing is weird.
-        mir::fatal_error("wl connection socketpair failed");
-        return; // doesn't reach here
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Creating socket pair failed"));
     }
-
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, wm_fd) < 0)
-    {
-        // "Shouldn't happen" but continuing is weird.
-        mir::fatal_error("wm fd socketpair failed");
-        return; // doesn't reach here
-    }
-
-    mir::log_info("Starting Xwayland");
-    xwayland_pid = fork();
-
-    switch (xwayland_pid)
-    {
-    case -1:
-        mir::fatal_error("Failed to fork");
-        return; // Keep compiler happy (doesn't reach here)
-
-    case 0:
-        close(wl_client_fd[server]);
-        close(wm_fd[server]);
-        execl_xwayland(spawner, wl_client_fd[client], wm_fd[client]);
-        return; // Keep compiler happy (doesn't reach here)
-
-    default:
-        close(wl_client_fd[client]);
-        close(wm_fd[client]);
-        x11_fd = Fd{wm_fd[server]};
-        wayland_fd = Fd{wl_client_fd[server]};
-        connect_wm_to_xwayland();
-        break;
-    }
+    return SocketPair{mir::Fd{pipe[0]}, mir::Fd{pipe[1]}};
 }
 
-mf::XWaylandServer::~XWaylandServer()
+void exec_xwayland(
+    mf::XWaylandSpawner const& spawner,
+    std::string const& xwayland_path,
+    mir::Fd wayland_client_fd,
+    mir::Fd x11_wm_server_fd)
 {
-    mir::log_info("Deiniting xwayland server");
+    mf::XWaylandSpawner::set_cloexec(wayland_client_fd, false);
+    mf::XWaylandSpawner::set_cloexec(x11_wm_server_fd, false);
 
-    // Terminate any running xservers
-    if (kill(xwayland_pid, SIGTERM) == 0)
-    {
-        std::this_thread::sleep_for(100ms);// After 100ms...
-        if (kill(xwayland_pid, 0) == 0)    // ...if Xwayland is still running...
-        {
-            mir::log_info("Xwayland didn't close, killing it");
-            kill(xwayland_pid, SIGKILL);     // ...then kill it!
-        }
-    }
-}
-
-void mf::XWaylandServer::execl_xwayland(XWaylandSpawner const& spawner, int wl_client_client_fd, int wm_client_fd)
-{
     setenv("EGL_PLATFORM", "DRM", 1);
+    setenv("WAYLAND_SOCKET", std::to_string(wayland_client_fd).c_str(), 1);
 
-    auto const wl_client_fd = dup(wl_client_client_fd);
-    if (wl_client_fd < 0)
-        mir::log_error("Failed to duplicate xwayland FD");
-    else
-        setenv("WAYLAND_SOCKET", std::to_string(wl_client_fd).c_str(), 1);
-
-    auto const wm_fd = dup(wm_client_fd);
-    if (wm_fd < 0)
-    mir::log_error("Failed to duplicate xwayland wm FD");
-    auto const wm_fd_str = std::to_string(wm_fd);
-
+    auto const x11_wm_server = std::to_string(x11_wm_server_fd);
     auto const dsp_str = spawner.x11_display();
 
     // Propagate SIGUSR1 to parent process
@@ -139,25 +84,48 @@ void mf::XWaylandServer::execl_xwayland(XWaylandSpawner const& spawner, int wl_c
             xwayland_path.c_str(),
             dsp_str.c_str(),
             "-rootless",
-            "-wm", wm_fd_str.c_str(),
+            "-wm", x11_wm_server.c_str(),
             "-terminate",
         };
 
     for (auto const& fd : spawner.socket_fds())
     {
-        XWaylandSpawner::set_cloexec(fd, false);
+        mf::XWaylandSpawner::set_cloexec(fd, false);
         args.push_back("-listen");
         // strdup() may look like a leak, but execvp() will trash all resource management
         args.push_back(strdup(std::to_string(fd).c_str()));
     }
 
-    args.push_back(NULL);
+    args.push_back(nullptr);
 
     execvp(xwayland_path.c_str(), const_cast<char* const*>(args.data()));
 }
 
-namespace
+auto fork_xwayland_process(
+    mf::XWaylandSpawner const& spawner,
+    std::string const& xwayland_path) -> mf::XWaylandServer::XWaylandProcess
 {
+    auto const wayland_pipe = make_socket_pair();
+    auto const x11_wm_pipe = make_socket_pair();
+
+    mir::log_info("Starting XWayland");
+    pid_t const xwayland_pid = fork();
+
+    switch (xwayland_pid)
+    {
+    case -1:
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to fork XWayland process"));
+
+    case 0:
+        exec_xwayland(spawner, xwayland_path, wayland_pipe.client, x11_wm_pipe.server);
+        perror("Failed to start XWayland, should be unreachable");
+        abort();
+
+    default:
+        return mf::XWaylandServer::XWaylandProcess{xwayland_pid, wayland_pipe.server, x11_wm_pipe.client};
+    }
+}
+
 bool spin_wait_for(sig_atomic_t& xserver_ready)
 {
     auto const end = std::chrono::steady_clock::now() + 5s;
@@ -169,9 +137,10 @@ bool spin_wait_for(sig_atomic_t& xserver_ready)
 
     return xserver_ready;
 }
-}
 
-void mf::XWaylandServer::connect_wm_to_xwayland()
+auto connect_xwayland_wl_client(
+    std::shared_ptr<mf::WaylandConnector> const& wayland_connector,
+    mir::Fd const& wayland_fd) -> wl_client*
 {
     // We need to set up the signal handling before connecting wl_client_server_fd
     static sig_atomic_t xserver_ready{ false };
@@ -188,24 +157,35 @@ void mf::XWaylandServer::connect_wm_to_xwayland()
     action.sa_flags = 0;
     sigaction(SIGUSR1, &action, &old_action);
 
+    struct CreateClientContext
     {
-        std::mutex client_mutex;
-        std::condition_variable client_ready;
+        std::mutex mutex;
+        wl_client* client{nullptr};
+        bool ready{false};
+        std::condition_variable condition_variable;
+    };
 
-        wayland_connector->run_on_wayland_display(
-            [this, &client_mutex, &client_ready](wl_display* display)
-            {
-                std::lock_guard<std::mutex> lock{client_mutex};
-                wayland_client = wl_client_create(display, wayland_fd);
-                client_ready.notify_all();
-            });
+    auto const ctx = std::make_shared<CreateClientContext>();
 
-        std::unique_lock<std::mutex> lock{client_mutex};
-        if (!client_ready.wait_for(lock, 10s, [&]{ return wayland_client; }))
+    wayland_connector->run_on_wayland_display(
+        [ctx, wayland_fd](wl_display* display)
         {
-            // "Shouldn't happen" but this is better than hanging.
-            mir::fatal_error("Failed to create wl_client for Xwayland");
-        }
+            std::lock_guard<std::mutex> lock{ctx->mutex};
+            ctx->client = wl_client_create(display, wayland_fd);
+            ctx->ready = true;
+            ctx->condition_variable.notify_all();
+        });
+
+    std::unique_lock<std::mutex> client_lock{ctx->mutex};
+    if (!ctx->condition_variable.wait_for(client_lock, 10s, [ctx]{ return ctx->ready; }))
+    {
+        // "Shouldn't happen" but this is better than hanging.
+        BOOST_THROW_EXCEPTION(std::runtime_error("Creating XWayland wl_client timed out"));
+    }
+
+    if (!ctx->client)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create XWayland wl_client"));
     }
 
     //The client can connect, now wait for it to signal ready (SIGUSR1)
@@ -214,6 +194,34 @@ void mf::XWaylandServer::connect_wm_to_xwayland()
 
     if (xwayland_startup_timed_out)
     {
-        mir::fatal_error("XWayland failed to start");
+        BOOST_THROW_EXCEPTION(std::runtime_error("XWayland server failed to start"));
+    }
+
+    return ctx->client;
+}
+}
+
+mf::XWaylandServer::XWaylandServer(
+    std::shared_ptr<WaylandConnector> const& wayland_connector,
+    XWaylandSpawner const& spawner,
+    std::string const& xwayland_path)
+    : xwayland_process{fork_xwayland_process(spawner, xwayland_path)},
+      wayland_client{connect_xwayland_wl_client(wayland_connector, xwayland_process.wayland_server_fd)}
+{
+}
+
+mf::XWaylandServer::~XWaylandServer()
+{
+    mir::log_info("Deiniting xwayland server");
+
+    // Terminate any running xservers
+    if (kill(xwayland_process.pid, SIGTERM) == 0)
+    {
+        std::this_thread::sleep_for(100ms);// After 100ms...
+        if (kill(xwayland_process.pid, 0) == 0)    // ...if Xwayland is still running...
+        {
+            mir::log_info("Xwayland didn't close, killing it");
+            kill(xwayland_process.pid, SIGKILL);     // ...then kill it!
+        }
     }
 }

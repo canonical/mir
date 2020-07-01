@@ -22,26 +22,16 @@
 #include "mir/fd.h"
 
 #include <memory>
-#include <mutex>
-#include <thread>
 #include <string>
-#include <vector>
 
 struct wl_client;
 
 namespace mir
 {
-namespace dispatch
-{
-class ReadableFd;
-class ThreadedDispatcher;
-class MultiplexingDispatchable;
-} /*dispatch */
 namespace frontend
 {
 class WaylandConnector;
 class XWaylandSpawner;
-class XWaylandWM;
 
 class XWaylandServer
 {
@@ -53,26 +43,23 @@ public:
     ~XWaylandServer();
 
     auto client() const -> wl_client* { return wayland_client; }
-    auto wm_fd() const -> Fd const& { return x11_fd; }
+    auto wm_fd() const -> Fd const& { return xwayland_process.x11_wm_client_fd; }
+
+    struct XWaylandProcess
+    {
+        pid_t pid;
+        Fd wayland_server_fd;
+        Fd x11_wm_client_fd;
+    };
 
 private:
     XWaylandServer(XWaylandServer const&) = delete;
     XWaylandServer& operator=(XWaylandServer const&) = delete;
 
-    /// Called after fork() if we should turn into XWayland
-    void execl_xwayland(XWaylandSpawner const& spawner, int wl_client_client_fd, int wm_client_fd);
-    /// Called after fork() if we should continue on as Mir
-    void connect_wm_to_xwayland();
-
-    std::shared_ptr<WaylandConnector> const wayland_connector;
-    std::string const xwayland_path;
-
-    pid_t xwayland_pid;
-    wl_client* wayland_client{nullptr};
-    Fd x11_fd;
-    Fd wayland_fd;
+    XWaylandProcess const xwayland_process;
+    wl_client* const wayland_client{nullptr};
 };
-} /* frontend */
-} /* mir */
+}
+}
 
-#endif /* end of include guard: MIR_FRONTEND_XWAYLAND_SERVER_H */
+#endif // MIR_FRONTEND_XWAYLAND_SERVER_H
