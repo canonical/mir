@@ -52,7 +52,7 @@ auto make_socket_pair() -> SocketPair
     int pipe[2];
     if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, pipe) < 0)
     {
-        BOOST_THROW_EXCEPTION(std::system_error(errno, std::generic_category(), "Creating socket pair failed"));
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Creating socket pair failed"));
     }
     return SocketPair{mir::Fd{pipe[0]}, mir::Fd{pipe[1]}};
 }
@@ -114,7 +114,7 @@ auto fork_xwayland_process(
     switch (xwayland_pid)
     {
     case -1:
-        BOOST_THROW_EXCEPTION(std::system_error(errno, std::generic_category(), "Failed to fork XWayland process"));
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to fork XWayland process"));
 
     case 0:
         exec_xwayland(spawner, xwayland_path, wayland_pipe.client, x11_wm_pipe.server);
