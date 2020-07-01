@@ -71,7 +71,6 @@ mir::DefaultServerConfiguration::the_connection_creator()
             return std::make_shared<mf::ProtobufConnectionCreator>(
                 new_ipc_factory(session_authorizer),
                 session_authorizer,
-                the_graphics_platform()->make_ipc_operations(),
                 the_message_processor_report());
         });
 }
@@ -155,7 +154,6 @@ mir::DefaultServerConfiguration::the_prompt_connection_creator()
             return std::make_shared<mf::ProtobufConnectionCreator>(
                 new_ipc_factory(session_authorizer),
                 session_authorizer,
-                the_graphics_platform()->make_ipc_operations(),
                 the_message_processor_report());
         });
 }
@@ -194,7 +192,6 @@ mir::DefaultServerConfiguration::new_ipc_factory(
     return std::make_shared<mf::DefaultIpcFactory>(
                 the_frontend_shell(),
                 the_session_mediator_observer(),
-                the_graphics_platform()->make_ipc_operations(),
                 the_frontend_display_changer(),
                 the_buffer_allocator(),
                 session_authorizer,

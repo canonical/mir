@@ -99,7 +99,6 @@ mg::GammaCurve convert_string_to_gamma_curve(std::string const& str_bytes)
 
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<mf::Shell> const& shell,
-    std::shared_ptr<mg::PlatformIpcOperations> const& ipc_operations,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
     std::vector<MirPixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorObserver> const& observer,
@@ -117,7 +116,6 @@ mf::SessionMediator::SessionMediator(
     mir::Executor& executor) :
     client_pid_(0),
     shell(shell),
-    ipc_operations(ipc_operations),
     surface_pixel_formats(surface_pixel_formats),
     display_changer(display_changer),
     observer(observer),
@@ -151,6 +149,51 @@ void mf::SessionMediator::client_pid(int pid)
     client_pid_ = pid;
 }
 
+namespace
+{
+class StubIpcOps : public mg::PlatformIpcOperations
+{
+public:
+    void pack_buffer(
+        mg::BufferIpcMessage&,
+        mg::Buffer const&,
+        mg::BufferIpcMsgType) const override
+    {
+    }
+
+    void unpack_buffer(
+        mg::BufferIpcMessage&, mg::Buffer const&) const override
+    {
+    }
+
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
+    {
+        /*
+         * The call to describe_graphics_module() is not ambiguous; the only implementation
+         * linked in here is the one from platform_graphics_dummy.cpp
+         *
+         * We call describe_graphics_module() here rather than have our own module description
+         * to ensure that what the client receives in the platform message is guaranteed to match
+         * what describe_graphics_module() returns. Tests fail weirdly when this is not the case :).
+         */
+
+        static mir::ModuleProperties const module = {
+            "mir:stub-graphics",
+            1, 0, 0,
+            "not a filename"
+        };
+        auto package = std::make_shared<mg::PlatformIPCPackage>(&module);
+        return package;
+    }
+
+    mg::PlatformOperationMessage platform_operation(unsigned int const, mg::PlatformOperationMessage const&) override
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Platform operations have been removed"}));
+    }
+};
+
+}
+
 void mf::SessionMediator::connect(
     const ::mir::protobuf::ConnectParameters* request,
     ::mir::protobuf::Connection* response,
@@ -166,7 +209,7 @@ void mf::SessionMediator::connect(
 
     connection_context.handle_client_connect(scene_session);
 
-    auto ipc_package = ipc_operations->connection_ipc_package();
+    auto ipc_package = StubIpcOps{}.connection_ipc_package();
     auto platform = response->mutable_platform();
 
     for (auto& data : ipc_package->ipc_data)
@@ -458,7 +501,7 @@ void mf::SessionMediator::submit_buffer(
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
     auto b = buffer_cache.at(buffer_id);
-    ipc_operations->unpack_buffer(request_msg, *b);
+    StubIpcOps{}.unpack_buffer(request_msg, *b);
 
     stream->submit_buffer(std::make_shared<AutoSendBuffer>(b, executor, event_sink));
 
@@ -1124,7 +1167,7 @@ void mf::SessionMediator::platform_operation(
         platform_request.fds.emplace_back(request_fd);
     }
 
-    auto const& platform_response = ipc_operations->platform_operation(opcode, platform_request);
+    auto const& platform_response = StubIpcOps{}.platform_operation(opcode, platform_request);
 
     response->set_opcode(opcode);
     response->set_data(platform_response.data.data(),
@@ -1211,7 +1254,7 @@ void mf::SessionMediator::pack_protobuf_buffer(
     protobuf_buffer.set_buffer_id(graphics_buffer->id().as_value());
 
     mfd::ProtobufBufferPacker packer{&protobuf_buffer};
-    ipc_operations->pack_buffer(packer, *graphics_buffer, buffer_msg_type);
+    StubIpcOps{}.pack_buffer(packer, *graphics_buffer, buffer_msg_type);
 
     for(auto const& fd : packer.fds())
         resource_cache->save_fd(&protobuf_buffer, fd);

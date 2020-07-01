@@ -63,7 +63,6 @@ public:
     explicit DefaultIpcFactory(
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<SessionMediatorObserver> const& sm_observer,
-        std::shared_ptr<graphics::PlatformIpcOperations> const& platform_ipc_operations,
         std::shared_ptr<DisplayChanger> const& display_changer,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
@@ -84,7 +83,6 @@ public:
 
     virtual std::shared_ptr<detail::DisplayServer> make_mediator(
         std::shared_ptr<Shell> const& shell,
-        std::shared_ptr<graphics::PlatformIpcOperations> const& platform_ipc_operations,
         std::shared_ptr<DisplayChanger> const& changer,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionMediatorObserver> const& sm_observer,
@@ -99,7 +97,6 @@ private:
     std::shared_ptr<Shell> const no_prompt_shell;
     std::shared_ptr<SessionMediatorObserver> const sm_observer;
     std::shared_ptr<ResourceCache> const cache;
-    std::shared_ptr<graphics::PlatformIpcOperations> const platform_ipc_operations;
     std::shared_ptr<DisplayChanger> const display_changer;
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<SessionAuthorizer> const session_authorizer;

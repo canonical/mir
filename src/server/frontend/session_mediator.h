@@ -115,7 +115,6 @@ public:
 
     SessionMediator(
         std::shared_ptr<Shell> const& shell,
-        std::shared_ptr<graphics::PlatformIpcOperations> const& ipc_operations,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
         std::vector<MirPixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorObserver> const& observer,
@@ -284,7 +283,6 @@ private:
 
     pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
-    std::shared_ptr<graphics::PlatformIpcOperations> const ipc_operations;
 
     std::vector<MirPixelFormat> const surface_pixel_formats;
 
