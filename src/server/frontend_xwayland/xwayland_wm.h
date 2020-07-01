@@ -39,11 +39,6 @@ namespace scene
 using SurfaceSet = std::set<std::weak_ptr<Surface>, std::owner_less<std::weak_ptr<Surface>>>;
 class Surface;
 }
-namespace dispatch
-{
-class ReadableFd;
-class ThreadedDispatcher;
-}
 namespace frontend
 {
 class XWaylandSurface;
@@ -62,6 +57,9 @@ public:
     XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, Fd const& fd);
     ~XWaylandWM();
 
+    /// Called by the XWayland connector when there may be new events
+    void handle_events();
+
     auto get_wm_surface(xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandSurface>>;
     auto get_focused_window() -> std::experimental::optional<xcb_window_t>;
     void set_focus(xcb_window_t xcb_window, bool should_be_focused);
@@ -77,11 +75,7 @@ private:
 
     void restack_surfaces();
 
-    // Event handeling
-    void handle_events();
     void handle_event(xcb_generic_event_t* event);
-
-    // Events
     void handle_create_notify(xcb_create_notify_event_t *event);
     void handle_motion_notify(xcb_motion_notify_event_t *event);
     void handle_property_notify(xcb_property_notify_event_t *event);
@@ -101,8 +95,6 @@ private:
     std::shared_ptr<XWaylandWMShell> const wm_shell;
     std::unique_ptr<XWaylandCursors> const cursors;
     xcb_window_t const wm_window;
-    std::shared_ptr<dispatch::ReadableFd> const wm_dispatcher;
-    std::unique_ptr<dispatch::ThreadedDispatcher> const event_thread;
     std::shared_ptr<XWaylandSceneObserver> const scene_observer;
 
     std::mutex mutex;

@@ -25,10 +25,7 @@
 #include "xwayland_surface_role.h"
 #include "xwayland_cursors.h"
 
-#include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/dispatch/readable_fd.h"
 #include "mir/fd.h"
-#include "mir/terminate_with_current_exception.h"
 #include "mir/scene/null_observer.h"
 #include "mir/frontend/surface_stack.h"
 
@@ -136,10 +133,6 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
       cursors{std::make_unique<XWaylandCursors>(connection)},
       wm_window{create_wm_window(*connection)},
-      wm_dispatcher{std::make_shared<mir::dispatch::ReadableFd>(
-          fd, [this]() { handle_events(); })},
-      event_thread{std::make_unique<mir::dispatch::ThreadedDispatcher>(
-          "Mir/X11 WM Reader", wm_dispatcher, []() { mir::terminate_with_current_exception(); })},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)}
 {
     check_xfixes(*connection);
@@ -200,6 +193,37 @@ mf::XWaylandWM::~XWaylandWM()
 
     xcb_destroy_window(*connection, wm_window);
     connection->flush();
+}
+
+
+void mf::XWaylandWM::handle_events()
+{
+    bool got_events = false;
+
+    connection->verify_not_in_error_state();
+
+    while (xcb_generic_event_t* const event = xcb_poll_for_event(*connection))
+    {
+        try
+        {
+            handle_event(event);
+        }
+        catch (...)
+        {
+            log(
+                logging::Severity::warning,
+                MIR_LOG_COMPONENT,
+                std::current_exception(),
+                "Failed to handle xcb event.");
+        }
+        free(event);
+        got_events = true;
+    }
+
+    if (got_events)
+    {
+        connection->flush();
+    }
 }
 
 auto mf::XWaylandWM::get_wm_surface(
@@ -355,37 +379,6 @@ void mf::XWaylandWM::restack_surfaces()
     }
 
     connection->flush();
-}
-
-/* Events */
-void mf::XWaylandWM::handle_events()
-{
-    bool got_events = false;
-
-    connection->verify_not_in_error_state();
-
-    while (xcb_generic_event_t* const event = xcb_poll_for_event(*connection))
-    {
-        try
-        {
-            handle_event(event);
-        }
-        catch (...)
-        {
-            log(
-                logging::Severity::warning,
-                MIR_LOG_COMPONENT,
-                std::current_exception(),
-                "Failed to handle xcb event.");
-        }
-        free(event);
-        got_events = true;
-    }
-
-    if (got_events)
-    {
-        connection->flush();
-    }
 }
 
 void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
