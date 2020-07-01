@@ -52,11 +52,6 @@ class NullPlatform : public graphics::Platform
         return nullptr;
     }
 
-    graphics::NativeRenderingPlatform* native_rendering_platform() override
-    {
-        return nullptr;
-    }
-
     std::vector<ExtensionDescription> extensions() const override
     {
         return {};

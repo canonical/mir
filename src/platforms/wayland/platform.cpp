@@ -74,7 +74,3 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgw::Platform::create_buffer_al
     return mir::make_module_ptr<mgw::BufferAllocator>(output);
 }
 
-mg::NativeRenderingPlatform* mgw::Platform::native_rendering_platform()
-{
-    return this;
-}

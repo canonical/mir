@@ -82,11 +82,6 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GBMPlatform::create_buffer
     return make_module_ptr<mgm::BufferAllocator>(output, gbm->device, bypass_option, import_method);
 }
 
-mg::NativeRenderingPlatform* mgm::GBMPlatform::native_rendering_platform()
-{
-    return this;
-}
-
 MirServerEGLNativeDisplayType mgm::GBMPlatform::egl_native_display() const
 {
     return gbm->device;

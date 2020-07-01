@@ -93,11 +93,6 @@ mg::NativeDisplayPlatform* mgm::Platform::native_display_platform()
     return auth_factory.get();
 }
 
-mg::NativeRenderingPlatform* mgm::Platform::native_rendering_platform()
-{
-    return this;
-}
-
 MirServerEGLNativeDisplayType mgm::Platform::egl_native_display() const
 {
     return gbm->device;

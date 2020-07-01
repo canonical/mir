@@ -124,11 +124,6 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_
     return mir::make_module_ptr<mge::BufferAllocator>(output);
 }
 
-mg::NativeRenderingPlatform* mge::RenderingPlatform::native_rendering_platform()
-{
-    return nullptr;
-}
-
 mge::Platform::Platform(
     std::shared_ptr<RenderingPlatform> const& rendering,
     std::shared_ptr<DisplayPlatform> const& display) :
@@ -141,11 +136,6 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator>
     mge::Platform::create_buffer_allocator(mg::Display const& output)
 {
     return rendering->create_buffer_allocator(output);
-}
-
-mg::NativeRenderingPlatform* mge::Platform::native_rendering_platform()
-{
-    return rendering->native_rendering_platform();
 }
 
 mir::UniqueModulePtr<mg::Display> mge::Platform::create_display(

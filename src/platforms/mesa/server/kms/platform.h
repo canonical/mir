@@ -37,7 +37,6 @@ namespace mesa
 {
 
 class Platform : public graphics::Platform,
-                 public graphics::NativeRenderingPlatform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
@@ -55,7 +54,6 @@ public:
     NativeDisplayPlatform* native_display_platform() override;
     std::vector<ExtensionDescription> extensions() const override;
 
-    NativeRenderingPlatform* native_rendering_platform() override;
     MirServerEGLNativeDisplayType egl_native_display() const override;
 
     std::shared_ptr<mir::udev::Context> udev;

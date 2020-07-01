@@ -32,7 +32,6 @@ namespace graphics
 namespace mesa
 {
 class GBMPlatform : public graphics::RenderingPlatform,
-                    public graphics::NativeRenderingPlatform,
                     public renderer::gl::EGLPlatform
 {
 public:
@@ -48,7 +47,6 @@ public:
 
     UniqueModulePtr<GraphicBufferAllocator>
         create_buffer_allocator(Display const& output) override;
-    NativeRenderingPlatform* native_rendering_platform() override;
     MirServerEGLNativeDisplayType egl_native_display() const override;
 private:
     BypassOption const bypass_option;

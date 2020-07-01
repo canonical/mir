@@ -130,11 +130,6 @@ mg::NativeDisplayPlatform* mgx::Platform::native_display_platform()
     return nullptr;
 }
 
-mg::NativeRenderingPlatform* mgx::Platform::native_rendering_platform()
-{
-    return this;
-}
-
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
     return eglGetDisplay(x11_connection.get());

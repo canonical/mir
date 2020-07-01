@@ -276,11 +276,6 @@ struct GuestPlatformAdapter : mg::Platform
         return adaptee->create_display(initial_conf_policy, gl_config);
     }
 
-    mg::NativeRenderingPlatform* native_rendering_platform() override
-    {
-        return adaptee->native_rendering_platform();
-    }
-
     mg::NativeDisplayPlatform* native_display_platform() override
     {
         return adaptee->native_display_platform();

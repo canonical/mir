@@ -39,7 +39,6 @@ namespace graphics
 namespace wayland
 {
 class Platform : public graphics::Platform,
-                 public graphics::NativeRenderingPlatform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
@@ -54,7 +53,6 @@ public:
     NativeDisplayPlatform* native_display_platform() override;
     std::vector<ExtensionDescription> extensions() const override;
 
-    NativeRenderingPlatform* native_rendering_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 
 private:
