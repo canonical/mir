@@ -78,8 +78,3 @@ mg::NativeRenderingPlatform* mgw::Platform::native_rendering_platform()
 {
     return this;
 }
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mgw::Platform::make_ipc_operations() const
-{
-    fatal_error("wayland platform does not support mirclient");
-    return {};
-}

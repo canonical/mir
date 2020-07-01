@@ -49,7 +49,6 @@ class RenderingPlatform : public graphics::RenderingPlatform
 public:
     UniqueModulePtr<GraphicBufferAllocator>
         create_buffer_allocator(Display const& output) override;
-    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
 };
 
@@ -90,8 +89,6 @@ public:
         std::shared_ptr<GLConfig> const& /*gl_config*/) override;
     NativeDisplayPlatform* native_display_platform() override;
     std::vector<ExtensionDescription> extensions() const override;
-
-    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
     NativeRenderingPlatform* native_rendering_platform() override;
 

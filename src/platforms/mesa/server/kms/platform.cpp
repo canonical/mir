@@ -93,11 +93,6 @@ mg::NativeDisplayPlatform* mgm::Platform::native_display_platform()
     return auth_factory.get();
 }
 
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
-{
-    return make_module_ptr<mgm::IpcOperations>(drm.front());
-}
-
 mg::NativeRenderingPlatform* mgm::Platform::native_rendering_platform()
 {
     return this;

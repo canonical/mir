@@ -232,11 +232,6 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mtf::StubGraphicPlatform::creat
     return mir::make_module_ptr<StubGraphicBufferAllocator>();
 }
 
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mtf::StubGraphicPlatform::make_ipc_operations() const
-{
-    return mir::make_module_ptr<StubIpcOps>();
-}
-
 namespace
 {
 std::shared_ptr<mg::Display> display_preset;
@@ -272,11 +267,6 @@ struct GuestPlatformAdapter : mg::Platform
         mg::Display const& output) override
     {
         return adaptee->create_buffer_allocator(output);
-    }
-
-    mir::UniqueModulePtr<mg::PlatformIpcOperations> make_ipc_operations() const override
-    {
-        return adaptee->make_ipc_operations();
     }
 
     mir::UniqueModulePtr<mg::Display> create_display(

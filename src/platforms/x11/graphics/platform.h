@@ -76,8 +76,6 @@ public:
     std::vector<ExtensionDescription> extensions() const override;
     NativeDisplayPlatform* native_display_platform() override;
 
-    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
-
     NativeRenderingPlatform* native_rendering_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 private:

@@ -48,7 +48,6 @@ public:
 
     UniqueModulePtr<GraphicBufferAllocator>
         create_buffer_allocator(Display const& output) override;
-    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
     MirServerEGLNativeDisplayType egl_native_display() const override;
 private:

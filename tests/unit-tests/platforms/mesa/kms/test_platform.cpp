@@ -104,34 +104,6 @@ public:
 };
 }
 
-TEST_F(MesaGraphicsPlatform, connection_ipc_package)
-{
-    using namespace testing;
-    mir::test::Pipe auth_pipe;
-    int const auth_fd{auth_pipe.read_fd()};
-
-    /* First time for master DRM fd, second for authenticated fd */
-    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card0"),_,_));
-    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card1"),_,_));
-
-    EXPECT_CALL(mock_drm, drmOpen(_,_))
-        .WillOnce(Return(auth_fd));
-
-    /* Expect proper authorization */
-    EXPECT_CALL(mock_drm, drmGetMagic(auth_fd,_));
-    EXPECT_CALL(mock_drm, drmAuthMagic(mtd::IsFdOfDevice("/dev/dri/card0"),_));
-
-    EXPECT_NO_THROW (
-        auto platform = create_platform();
-        auto ipc_ops = platform->make_ipc_operations();
-        auto pkg = ipc_ops->connection_ipc_package();
-
-        ASSERT_TRUE(pkg.get());
-        ASSERT_EQ(std::vector<int32_t>::size_type{1}, pkg->ipc_fds.size());
-        ASSERT_EQ(auth_fd, pkg->ipc_fds[0]);
-    );
-}
-
 TEST_F(MesaGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_error)
 {
     using namespace ::testing;

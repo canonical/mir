@@ -266,28 +266,6 @@ TEST_F(PresentationChain, allocation_calls_callback)
     EXPECT_THAT(context.buffer(), Ne(nullptr));    
 }
 
-TEST_F(PresentationChain, can_access_platform_message_representing_buffer)
-{
-    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo, size, pf);
-
-    MirBufferSync context;
-    mir_connection_allocate_buffer(
-        connection,
-        size.width.as_int(), size.height.as_int(), pf,
-        buffer_callback, &context);
-
-    EXPECT_TRUE(context.wait_for_buffer(10s));
-    auto buffer = context.buffer();
-    EXPECT_THAT(context.buffer(), Ne(nullptr));
-
-    auto message = mir_buffer_get_buffer_package(buffer);
-    ASSERT_THAT(message, Ne(nullptr));
-    EXPECT_THAT(message->data_items, Ge(1));
-    EXPECT_THAT(message->fd_items, Ge(1));
-    EXPECT_THAT(message->width, Eq(size.width.as_int()));
-    EXPECT_THAT(message->height, Eq(size.height.as_int()));
-}
-
 TEST_F(PresentationChain, has_native_fence)
 {
     SurfaceWithChainFromStart window(connection, mir_present_mode_fifo, size, pf);
@@ -308,32 +286,6 @@ TEST_F(PresentationChain, has_native_fence)
 
     //the native type for the stub platform is nullptr
     EXPECT_THAT(ext->get_fence(buffer), Eq(mir::Fd::invalid));
-}
-
-TEST_F(PresentationChain, can_map_for_cpu_render)
-{
-    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo, size, pf);
-
-    MirGraphicsRegion region;
-    MirBufferLayout region_layout = mir_buffer_layout_unknown;
-    MirBufferSync context;
-    mir_connection_allocate_buffer(
-        connection,
-        size.width.as_int(), size.height.as_int(), pf,
-        buffer_callback, &context);
-
-    EXPECT_TRUE(context.wait_for_buffer(10s));
-    auto buffer = context.buffer();
-    EXPECT_THAT(context.buffer(), Ne(nullptr));
-    mir_buffer_map(buffer, &region, &region_layout);
-    //cast to int so gtest doesn't try to print a char* that isn't a string
-    EXPECT_THAT(reinterpret_cast<int*>(region.vaddr), Ne(nullptr));
-    EXPECT_THAT(region.width, Eq(size.width.as_int()));
-    EXPECT_THAT(region.height, Eq(size.height.as_int()));
-    EXPECT_THAT(region.stride, Eq(size.width.as_int() * MIR_BYTES_PER_PIXEL(pf)));
-    EXPECT_THAT(region.pixel_format, Eq(pf));
-    EXPECT_THAT(region_layout, Eq(mir_buffer_layout_linear));
-    mir_buffer_unmap(buffer);
 }
 
 TEST_F(PresentationChain, submission_will_eventually_call_callback)
