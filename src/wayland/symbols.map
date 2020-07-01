@@ -283,9 +283,9 @@ global:
     mir::wayland::zxdg_output_v1_interface_data;
     mir::wayland::zxdg_output_manager_v1_interface_data;
 
-    mir::wayland::DestroyTracker::*;
-    typeinfo?for?mir::wayland::DestroyTracker;
-    vtable?for?mir::wayland::DestroyTracker;
+    mir::wayland::LifetimeTracker::*;
+    typeinfo?for?mir::wayland::LifetimeTracker;
+    vtable?for?mir::wayland::LifetimeTracker;
 
     mir::wayland::Resource::*;
     typeinfo?for?mir::wayland::Resource;
