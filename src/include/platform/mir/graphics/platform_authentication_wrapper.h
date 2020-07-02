@@ -30,8 +30,6 @@ public:
     AuthenticationWrapper(std::shared_ptr<PlatformAuthentication> const& auth);
     mir::optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() override;
     mir::optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() override;
-    PlatformOperationMessage platform_operation(
-        unsigned int op, PlatformOperationMessage const& msg) override;
     mir::optional_value<Fd> drm_fd() override;
 private:
     std::shared_ptr<PlatformAuthentication> const auth;

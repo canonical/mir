@@ -21,7 +21,6 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/platform_authentication.h"
-#include "mir/graphics/platform_operation_message.h"
 #include "mir/options/program_option.h"
 #include "mir/shared_library.h"
 #include "mir/renderer/gl/context_source.h"
@@ -128,11 +127,6 @@ public:
             mir::optional_value<mir::Fd> drm_fd() override
             {
                 return {};
-            }
-            auto platform_operation(unsigned int /*op*/, mir::graphics::PlatformOperationMessage const& /*request*/)
-                -> mg::PlatformOperationMessage override
-            {
-                BOOST_THROW_EXCEPTION((std::runtime_error{"No support for mirclient"}));
             }
         };
 

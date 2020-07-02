@@ -18,7 +18,6 @@
 
 #include "drm_native_platform.h"
 #include "display_helpers.h"
-#include "mir/graphics/platform_operation_message.h"
 #include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
@@ -65,12 +64,6 @@ mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> mgm::DRMNativePlatfo
 mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> mgm::DRMNativePlatform::set_gbm_extension()
 {
     return {};
-}
-
-mg::PlatformOperationMessage mgm::DRMNativePlatform::platform_operation(
-    unsigned int, mg::PlatformOperationMessage const&)
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("platform_operation deprecated"));
 }
 
 mir::optional_value<mir::Fd> mgm::DRMNativePlatform::drm_fd()

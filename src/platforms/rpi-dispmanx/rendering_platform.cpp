@@ -20,7 +20,6 @@
 #include <boost/throw_exception.hpp>
 
 #include "mir/module_deleter.h"
-#include "mir/graphics/platform_operation_message.h"
 
 #include "rendering_platform.h"
 

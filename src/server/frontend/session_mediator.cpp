@@ -39,7 +39,6 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/gamma_curves.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
