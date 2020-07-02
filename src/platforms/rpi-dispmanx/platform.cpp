@@ -36,16 +36,6 @@ auto mg::rpi::Platform::create_buffer_allocator(Display const &output)
     return render_platform->create_buffer_allocator(output);
 }
 
-auto mg::rpi::Platform::make_ipc_operations() const -> UniqueModulePtr<PlatformIpcOperations>
-{
-    return render_platform->make_ipc_operations();
-}
-
-auto mg::rpi::Platform::native_rendering_platform() ->NativeRenderingPlatform *
-{
-    return render_platform->native_rendering_platform();
-}
-
 auto mg::rpi::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const &initial_conf_policy,
     std::shared_ptr<GLConfig> const &gl_config) -> UniqueModulePtr<Display>

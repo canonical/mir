@@ -35,14 +35,3 @@ auto mg::rpi::RenderingPlatform::create_buffer_allocator(Display const &output)
     return mir::make_module_ptr<rpi::BufferAllocator>(output);
 }
 
-auto mir::graphics::rpi::RenderingPlatform::make_ipc_operations() const
-  -> mir::UniqueModulePtr<PlatformIpcOperations>
-{
-    BOOST_THROW_EXCEPTION((std::runtime_error{"rpi-dispmanx platform does not support mirclient"}));
-}
-
-auto mir::graphics::rpi::RenderingPlatform::native_rendering_platform()
-  -> mir::graphics::NativeRenderingPlatform *
-{
-    return nullptr;
-}
