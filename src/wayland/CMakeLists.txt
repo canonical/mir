@@ -1,4 +1,4 @@
-set(MIRWAYLAND_ABI 0)
+set(MIRWAYLAND_ABI 1)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mirwayland")
 
