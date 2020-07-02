@@ -32,7 +32,8 @@ namespace mir
 {
 namespace wayland
 {
-/// The base class of any object that wants to provide a destroyed flag
+/// Provides a destroyed flag for use by Weak
+/// For use by Weak, LifetimeTracker should be a public const class member variable named lifetime_tracker
 /// The destroyed flag is only created when needed and automatically set to true on destruction
 /// This pattern is only safe in a single-threaded context
 class LifetimeTracker
@@ -62,7 +63,7 @@ public:
     LifetimeTracker const lifetime_tracker;
 };
 
-/// A weak handle to a Wayland resource (or any Destroyable)
+/// A weak handle to a Wayland resource (or any object that has a LifetimeTracker member named lifetime_tracker)
 /// May only be safely used from the Wayland thread
 template<typename T>
 class Weak
