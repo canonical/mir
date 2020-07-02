@@ -18,7 +18,6 @@
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/event_handler_register.h"
-#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "src/server/report/null_report_factory.h"

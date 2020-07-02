@@ -20,7 +20,6 @@
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/platform_ipc_operations.h"
 
 namespace mg = mir::graphics;
 

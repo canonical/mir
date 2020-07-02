@@ -27,7 +27,6 @@
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/buffer_stream_id.h"
-#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/protobuf/display_server_debug.h"
 #include "mir_toolkit/common.h"
@@ -271,10 +270,6 @@ public:
         google::protobuf::Closure* done) override;
 
 private:
-    void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
-                              graphics::Buffer* graphics_buffer,
-                              graphics::BufferIpcMsgType msg_type);
-
     std::shared_ptr<graphics::DisplayConfiguration> unpack_and_sanitize_display_configuration(
         protobuf::DisplayConfiguration const*);
 

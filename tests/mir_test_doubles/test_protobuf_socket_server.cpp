@@ -24,7 +24,6 @@
 #include "src/server/frontend/published_socket_connector.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
-#include "mir/test/doubles/null_platform_ipc_operations.h"
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;

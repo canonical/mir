@@ -19,7 +19,6 @@
 #include "gbm_platform.h"
 #include "mir/graphics/platform_authentication.h"
 #include "buffer_allocator.h"
-#include "ipc_operations.h"
 #include "nested_authentication.h"
 #include <boost/throw_exception.hpp>
 

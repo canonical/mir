@@ -20,8 +20,6 @@
 #include "display.h"
 #include "buffer_allocator.h"
 #include "mir/options/option.h"
-#include "mir/graphics/platform_ipc_operations.h"
-#include "mir/graphics/platform_operation_message.h"
 
 
 namespace mo = mir::options;

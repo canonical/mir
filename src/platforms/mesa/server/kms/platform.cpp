@@ -20,8 +20,6 @@
 #include "buffer_allocator.h"
 #include "display.h"
 #include "mir/console_services.h"
-#include "ipc_operations.h"
-#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/native_buffer.h"

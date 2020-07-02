@@ -25,7 +25,6 @@
 
 #include "mir/frontend/connector.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/frontend/protobuf_connection_creator.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/options/configuration.h"
