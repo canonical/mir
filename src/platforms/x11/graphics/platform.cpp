@@ -20,8 +20,6 @@
 #include "display.h"
 #include "buffer_allocator.h"
 #include "mir/options/option.h"
-#include "mir/graphics/platform_ipc_operations.h"
-#include "mir/graphics/platform_operation_message.h"
 
 
 namespace mo = mir::options;
@@ -128,42 +126,6 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
 mg::NativeDisplayPlatform* mgx::Platform::native_display_platform()
 {
     return nullptr;
-}
-
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
-{
-    class NoIPCOperations : public mg::PlatformIpcOperations
-    {
-
-    public:
-        void pack_buffer(BufferIpcMessage&, Buffer const&, BufferIpcMsgType) const override
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"mirclient unsupported by X11 platform"}));
-        }
-
-        void unpack_buffer(BufferIpcMessage& /*message*/, Buffer const& /*buffer*/) const override
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"mirclient unsupported by X11 platform"}));
-        }
-
-        std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"mirclient unsupported by X11 platform"}));
-        }
-
-        PlatformOperationMessage platform_operation(unsigned int const /*opcode*/,
-                                                    PlatformOperationMessage const& /*message*/) override
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"mirclient unsupported by X11 platform"}));
-        }
-    };
-
-    return mir::make_module_ptr<NoIPCOperations>();
-}
-
-mg::NativeRenderingPlatform* mgx::Platform::native_rendering_platform()
-{
-    return this;
 }
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const

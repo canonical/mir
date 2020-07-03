@@ -20,13 +20,22 @@
 #define MIR_FRONTEND_BUFFER_SINK_H_
 
 #include "mir/frontend/buffer_stream_id.h"
-#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/buffer_properties.h"
 #include <string>
 
 namespace mir
 {
-namespace graphics { class Buffer; }
+namespace graphics
+{
+class Buffer;
+
+// Temporary hack while progressively removing mirclient support
+enum class BufferIpcMsgType
+{
+    full_msg, //pack the full ipc representation of the buffer
+    update_msg //assume the client has a full representation, and pack only updates to the buffer
+};
+}
 namespace frontend
 {
 class BufferSink

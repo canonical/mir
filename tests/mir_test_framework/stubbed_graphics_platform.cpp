@@ -125,100 +125,6 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
     }
 };
 
-class StubIpcOps : public mg::PlatformIpcOperations
-{
-    void pack_buffer(
-        mg::BufferIpcMessage& message,
-        mg::Buffer const& buffer,
-        mg::BufferIpcMsgType msg_type) const override
-    {
-        if (msg_type == mg::BufferIpcMsgType::full_msg)
-        {
-            auto native_handle = std::dynamic_pointer_cast<mtf::NativeBuffer>(buffer.native_buffer_handle());
-            if (!native_handle)
-                BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
-            message.pack_data(static_cast<int>(native_handle->properties.usage));
-            message.pack_data(native_handle->data);
-            message.pack_fd(native_handle->fd);
-            message.pack_stride(
-                geom::Stride{buffer.size().width.as_int() * MIR_BYTES_PER_PIXEL(buffer.pixel_format())});
-            message.pack_size(buffer.size());
-        }
-    }
-
-    void unpack_buffer(
-        mg::BufferIpcMessage&, mg::Buffer const&) const override
-    {
-    }
-
-    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
-    {
-        /*
-         * The call to describe_graphics_module() is not ambiguous; the only implementation
-         * linked in here is the one from platform_graphics_dummy.cpp
-         *
-         * We call describe_graphics_module() here rather than have our own module description
-         * to ensure that what the client receives in the platform message is guaranteed to match
-         * what describe_graphics_module() returns. Tests fail weirdly when this is not the case :).
-         */
-        auto package = std::make_shared<mg::PlatformIPCPackage>(describe_graphics_module());
-        mtf::pack_stub_ipc_package(*package);
-        return package;
-    }
-
-    mg::PlatformOperationMessage platform_operation(
-         unsigned int const opcode, mg::PlatformOperationMessage const& message) override
-    {
-        mg::PlatformOperationMessage reply;
-
-        if (opcode == static_cast<unsigned int>(mtf::StubGraphicsPlatformOperation::add))
-        {
-            if (message.data.size() != 2 * sizeof(int))
-            {
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error("Invalid parameters for 'add' platform operation"));
-            }
-
-            auto const int_data = reinterpret_cast<int const*>(message.data.data());
-
-            reply.data.resize(sizeof(int));
-            *(reinterpret_cast<int*>(reply.data.data())) = int_data[0] + int_data[1];
-        }
-        else if (opcode == static_cast<unsigned int>(mtf::StubGraphicsPlatformOperation::echo_fd))
-        {
-            if (message.fds.size() != 1)
-            {
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error("Invalid parameters for 'echo_fd' platform operation"));
-            }
-
-            mir::Fd const request_fd{message.fds[0]};
-            char request_char{0};
-            if (read(request_fd, &request_char, 1) != 1)
-            {
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error("Failed to read character from request fd in 'echo_fd' operation"));
-            }
-
-            mir::test::Pipe pipe;
-
-            if (write(pipe.write_fd(), &request_char, 1) != 1)
-            {
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error("Failed to write to pipe in 'echo_fd' operation"));
-            }
-
-            reply.fds.push_back(pipe.read_fd());
-        }
-        else
-        {
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error("Invalid platform operation"));
-        }
-
-        return reply;
-    }
-};
 }
 
 mtf::StubGraphicPlatform::StubGraphicPlatform(std::vector<geom::Rectangle> const& display_rects)
@@ -230,11 +136,6 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mtf::StubGraphicPlatform::creat
     mg::Display const&)
 {
     return mir::make_module_ptr<StubGraphicBufferAllocator>();
-}
-
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mtf::StubGraphicPlatform::make_ipc_operations() const
-{
-    return mir::make_module_ptr<StubIpcOps>();
 }
 
 namespace
@@ -274,21 +175,11 @@ struct GuestPlatformAdapter : mg::Platform
         return adaptee->create_buffer_allocator(output);
     }
 
-    mir::UniqueModulePtr<mg::PlatformIpcOperations> make_ipc_operations() const override
-    {
-        return adaptee->make_ipc_operations();
-    }
-
     mir::UniqueModulePtr<mg::Display> create_display(
         std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<mg::GLConfig> const& gl_config) override
     {
         return adaptee->create_display(initial_conf_policy, gl_config);
-    }
-
-    mg::NativeRenderingPlatform* native_rendering_platform() override
-    {
-        return adaptee->native_rendering_platform();
     }
 
     mg::NativeDisplayPlatform* native_display_platform() override

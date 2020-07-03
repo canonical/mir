@@ -20,7 +20,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"

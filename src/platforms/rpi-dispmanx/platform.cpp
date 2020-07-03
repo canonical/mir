@@ -20,7 +20,6 @@
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/platform_ipc_operations.h"
 
 namespace mg = mir::graphics;
 
@@ -34,16 +33,6 @@ auto mg::rpi::Platform::create_buffer_allocator(Display const &output)
     -> UniqueModulePtr<GraphicBufferAllocator>
 {
     return render_platform->create_buffer_allocator(output);
-}
-
-auto mg::rpi::Platform::make_ipc_operations() const -> UniqueModulePtr<PlatformIpcOperations>
-{
-    return render_platform->make_ipc_operations();
-}
-
-auto mg::rpi::Platform::native_rendering_platform() ->NativeRenderingPlatform *
-{
-    return render_platform->native_rendering_platform();
 }
 
 auto mg::rpi::Platform::create_display(

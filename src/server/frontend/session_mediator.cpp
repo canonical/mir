@@ -38,9 +38,7 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/pixel_format_utils.h"
-#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/gamma_curves.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
@@ -99,7 +97,6 @@ mg::GammaCurve convert_string_to_gamma_curve(std::string const& str_bytes)
 
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<mf::Shell> const& shell,
-    std::shared_ptr<mg::PlatformIpcOperations> const& ipc_operations,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
     std::vector<MirPixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorObserver> const& observer,
@@ -117,7 +114,6 @@ mf::SessionMediator::SessionMediator(
     mir::Executor& executor) :
     client_pid_(0),
     shell(shell),
-    ipc_operations(ipc_operations),
     surface_pixel_formats(surface_pixel_formats),
     display_changer(display_changer),
     observer(observer),
@@ -166,7 +162,13 @@ void mf::SessionMediator::connect(
 
     connection_context.handle_client_connect(scene_session);
 
-    auto ipc_package = ipc_operations->connection_ipc_package();
+    // Minimal implementation to make the stub client platform load, for tests
+    static mir::ModuleProperties const stub_module_descriptor = {
+        "mir:stub-graphics",
+        1, 0, 0,
+        "not a filename"
+    };
+    auto ipc_package = std::make_shared<mg::PlatformIPCPackage>(&stub_module_descriptor);
     auto platform = response->mutable_platform();
 
     for (auto& data : ipc_package->ipc_data)
@@ -458,7 +460,6 @@ void mf::SessionMediator::submit_buffer(
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
     auto b = buffer_cache.at(buffer_id);
-    ipc_operations->unpack_buffer(request_msg, *b);
 
     stream->submit_buffer(std::make_shared<AutoSendBuffer>(b, executor, event_sink));
 
@@ -1106,36 +1107,16 @@ void mf::SessionMediator::translate_surface_to_screen(
 }
 
 void mf::SessionMediator::platform_operation(
-    mir::protobuf::PlatformOperationMessage const* request,
-    mir::protobuf::PlatformOperationMessage* response,
-    google::protobuf::Closure* done)
+    mir::protobuf::PlatformOperationMessage const*,
+    mir::protobuf::PlatformOperationMessage*,
+    google::protobuf::Closure*)
 {
     auto mir_client_session = weak_mir_client_session.lock();
 
     if (mir_client_session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    mg::PlatformOperationMessage platform_request;
-    unsigned int const opcode = request->opcode();
-    platform_request.data.assign(request->data().begin(),
-                                 request->data().end());
-    for (auto const request_fd : request->fd())
-    {
-        platform_request.fds.emplace_back(request_fd);
-    }
-
-    auto const& platform_response = ipc_operations->platform_operation(opcode, platform_request);
-
-    response->set_opcode(opcode);
-    response->set_data(platform_response.data.data(),
-                       platform_response.data.size());
-    for (auto fd : platform_response.fds)
-    {
-        response->add_fd(fd);
-        resource_cache->save_fd(response, mir::Fd{fd});
-    }
-
-    done->Run();
+    BOOST_THROW_EXCEPTION((std::runtime_error{"Platform operations have been removed"}));
 }
 
 void mf::SessionMediator::start_prompt_session(
@@ -1201,20 +1182,6 @@ void mf::SessionMediator::request_persistent_surface_id(
     *response->mutable_value() = std::string{buffer.begin(), buffer.end()};
 
     done->Run();
-}
-
-void mf::SessionMediator::pack_protobuf_buffer(
-    protobuf::Buffer& protobuf_buffer,
-    graphics::Buffer* graphics_buffer,
-    mg::BufferIpcMsgType buffer_msg_type)
-{
-    protobuf_buffer.set_buffer_id(graphics_buffer->id().as_value());
-
-    mfd::ProtobufBufferPacker packer{&protobuf_buffer};
-    ipc_operations->pack_buffer(packer, *graphics_buffer, buffer_msg_type);
-
-    for(auto const& fd : packer.fds())
-        resource_cache->save_fd(&protobuf_buffer, fd);
 }
 
 void mf::SessionMediator::configure_buffer_stream(

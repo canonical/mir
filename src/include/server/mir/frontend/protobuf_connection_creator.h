@@ -47,7 +47,6 @@ public:
     ProtobufConnectionCreator(
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-        std::shared_ptr<graphics::PlatformIpcOperations> const& operations,
         std::shared_ptr<MessageProcessorReport> const& report);
     ~ProtobufConnectionCreator() noexcept;
 
@@ -65,7 +64,6 @@ private:
 
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     std::shared_ptr<SessionAuthorizer> const session_authorizer;
-    std::shared_ptr<graphics::PlatformIpcOperations> const operations;
     std::shared_ptr<MessageProcessorReport> const report;
     std::atomic<int> next_session_id;
     std::shared_ptr<detail::Connections<detail::SocketConnection>> const connections;

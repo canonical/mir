@@ -17,7 +17,6 @@
  */
 
 #include "mir/graphics/platform_authentication.h"
-#include "mir/graphics/platform_operation_message.h"
 #include "nested_authentication.h"
 
 #include "mir_toolkit/mesa/platform_operation.h"

@@ -22,9 +22,7 @@
 #include "buffer_allocator.h"
 #include "display.h"
 #include "utils.h"
-#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "native_buffer.h"
 
@@ -124,58 +122,6 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_
     return mir::make_module_ptr<mge::BufferAllocator>(output);
 }
 
-mg::NativeRenderingPlatform* mge::RenderingPlatform::native_rendering_platform()
-{
-    return nullptr;
-}
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::RenderingPlatform::make_ipc_operations() const
-{
-    class NoIPCOperations : public mg::PlatformIpcOperations
-    {
-
-    public:
-        void pack_buffer(BufferIpcMessage& packer, Buffer const& buffer, BufferIpcMsgType msg_type) const override
-        {
-            if (msg_type == mg::BufferIpcMsgType::full_msg)
-            {
-                auto native_handle = std::dynamic_pointer_cast<mge::NativeBuffer>(buffer.native_buffer_handle());
-                if (!native_handle)
-                    BOOST_THROW_EXCEPTION(std::invalid_argument{"could not convert NativeBuffer"});
-                for(auto i=0; i<native_handle->data_items; i++)
-                {
-                    packer.pack_data(native_handle->data[i]);
-                }
-                for(auto i=0; i<native_handle->fd_items; i++)
-                {
-                    packer.pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
-                }
-
-                packer.pack_stride(mir::geometry::Stride{native_handle->stride});
-                packer.pack_flags(native_handle->flags);
-                packer.pack_size(buffer.size());
-            }
-        }
-
-        void unpack_buffer(BufferIpcMessage& /*message*/, Buffer const& /*buffer*/) const override
-        {
-
-        }
-
-        std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
-        {
-            return std::make_shared<mg::PlatformIPCPackage>(describe_graphics_module());
-        }
-
-        PlatformOperationMessage platform_operation(unsigned int const /*opcode*/,
-            PlatformOperationMessage const& /*message*/) override
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error{"No platform operations implemented"});
-        }
-    };
-
-    return mir::make_module_ptr<NoIPCOperations>();
-}
-
 mge::Platform::Platform(
     std::shared_ptr<RenderingPlatform> const& rendering,
     std::shared_ptr<DisplayPlatform> const& display) :
@@ -188,16 +134,6 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator>
     mge::Platform::create_buffer_allocator(mg::Display const& output)
 {
     return rendering->create_buffer_allocator(output);
-}
-
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operations() const
-{
-    return rendering->make_ipc_operations();
-}
-
-mg::NativeRenderingPlatform* mge::Platform::native_rendering_platform()
-{
-    return rendering->native_rendering_platform();
 }
 
 mir::UniqueModulePtr<mg::Display> mge::Platform::create_display(

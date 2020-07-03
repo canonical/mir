@@ -43,10 +43,8 @@ namespace mp = mir::protobuf;
 namespace mi = mir::input;
 
 mfd::EventSender::EventSender(
-    std::shared_ptr<MessageSender> const& socket_sender,
-    std::shared_ptr<mg::PlatformIpcOperations> const& buffer_packer) :
-    sender(socket_sender),
-    buffer_packer(buffer_packer)
+    std::shared_ptr<MessageSender> const& socket_sender) :
+    sender(socket_sender)
 {
 }
 
@@ -167,20 +165,21 @@ void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer
     send_buffer(seq, buffer, type);
 }
 
-void mfd::EventSender::send_buffer(mp::EventSequence& seq, graphics::Buffer& buffer, mg::BufferIpcMsgType type)
+void mfd::EventSender::send_buffer(mp::EventSequence& seq, graphics::Buffer& buffer, mg::BufferIpcMsgType msg_type)
 {
     auto request = seq.mutable_buffer_request();
     request->mutable_buffer()->set_buffer_id(buffer.id().as_value());
 
-    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(request->mutable_buffer())};
-    buffer_packer->pack_buffer(request_msg, buffer, type);
-
-    std::vector<mir::Fd> set;
-    for(auto& fd : request->buffer().fd())
-        set.emplace_back(mir::Fd(IntOwnedFd{fd}));
-
-    request->mutable_buffer()->set_fds_on_side_channel(set.size());
-    send_event_sequence(seq, {set});
+    /* XXX
+     * As an intermediate step in removing mirclient support, this is stubbed out with a minimal
+     * implementation required to keep the acceptance tests working
+     */
+    if (msg_type == mg::BufferIpcMsgType::full_msg)
+    {
+        mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(request->mutable_buffer())};
+        request_msg.pack_size(buffer.size());
+    }
+    send_event_sequence(seq, {});
 }
 
 void mfd::EventSender::handle_error(mir::ClientVisibleError const& error)

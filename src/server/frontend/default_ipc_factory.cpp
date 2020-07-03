@@ -224,7 +224,6 @@ mir::Executor& buffer_return_ipc_executor()
 mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<Shell> const& shell,
     std::shared_ptr<SessionMediatorObserver> const& sm_observer,
-    std::shared_ptr<mg::PlatformIpcOperations> const& platform_ipc_operations,
     std::shared_ptr<DisplayChanger> const& display_changer,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
@@ -238,7 +237,6 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     no_prompt_shell(std::make_shared<NoPromptShell>(shell)),
     sm_observer(sm_observer),
     cache(std::make_shared<ResourceCache>()),
-    platform_ipc_operations(platform_ipc_operations),
     display_changer(display_changer),
     buffer_allocator(buffer_allocator),
     session_authorizer(session_authorizer),
@@ -279,7 +277,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
 
     return make_mediator(
         effective_shell,
-        platform_ipc_operations,
         changer,
         buffer_allocator,
         sm_observer,
@@ -297,7 +294,6 @@ std::shared_ptr<mf::ResourceCache> mf::DefaultIpcFactory::resource_cache()
 
 std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
     std::shared_ptr<Shell> const& shell,
-    std::shared_ptr<mg::PlatformIpcOperations> const& platform_ipc_operations,
     std::shared_ptr<DisplayChanger> const& changer,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorObserver> const& sm_observer,
@@ -309,7 +305,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
 {
     return std::make_shared<SessionMediator>(
         shell,
-        platform_ipc_operations,
         changer,
         buffer_allocator->supported_pixel_formats(),
         sm_observer,

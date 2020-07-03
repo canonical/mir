@@ -17,7 +17,6 @@
  */
 
 #include "mir/graphics/platform_authentication_wrapper.h"
-#include "mir/graphics/platform_operation_message.h"
 
 namespace mg = mir::graphics;
 
@@ -34,12 +33,6 @@ mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> mg::AuthenticationWr
 mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> mg::AuthenticationWrapper::set_gbm_extension()
 {
     return auth->set_gbm_extension();
-}
-
-mg::PlatformOperationMessage mg::AuthenticationWrapper::platform_operation(
-    unsigned int op, mg::PlatformOperationMessage const& msg)
-{
-    return auth->platform_operation(op, msg);
 }
 
 mir::optional_value<mir::Fd> mg::AuthenticationWrapper::drm_fd()

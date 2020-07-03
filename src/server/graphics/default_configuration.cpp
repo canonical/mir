@@ -184,8 +184,8 @@ mir::DefaultServerConfiguration::the_display()
         {
             if (the_options()->is_set(options::offscreen_opt))
             {
-                if (auto egl_access = dynamic_cast<mir::renderer::gl::EGLPlatform*>(
-                    the_graphics_platform()->native_rendering_platform()))
+                if (auto egl_access = std::dynamic_pointer_cast<mir::renderer::gl::EGLPlatform>(
+                    the_graphics_platform()))
                 {
                     return std::make_shared<mg::offscreen::Display>(
                         egl_access->egl_native_display(),

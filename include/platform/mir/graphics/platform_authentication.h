@@ -67,9 +67,6 @@ public:
 
     virtual mir::optional_value<mir::Fd> drm_fd() = 0;
 
-    virtual PlatformOperationMessage platform_operation(
-        unsigned int op, PlatformOperationMessage const& request) = 0;
-
 protected:
     PlatformAuthentication() = default;
     PlatformAuthentication(PlatformAuthentication const&) = delete;

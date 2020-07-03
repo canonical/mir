@@ -33,8 +33,6 @@ MIRPLATFORM_2.0 {
     mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
     mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput*;
     mir::graphics::UserDisplayConfigurationOutput::extents*;
-    mir::graphics::WaylandAllocator::?WaylandAllocator*;
-    mir::graphics::WaylandAllocator::WaylandAllocator*;
     mir::graphics::gl::Program::?Program*;
     mir::graphics::gl::ProgramFactory::?ProgramFactory*;
     mir::graphics::gl::ProgramFactory::compile_fragment_shader*;
@@ -60,7 +58,6 @@ MIRPLATFORM_2.0 {
     typeinfo?for?mir::graphics::Buffer;
     typeinfo?for?mir::graphics::BufferBasic;
     typeinfo?for?mir::graphics::DisplayConfiguration;
-    typeinfo?for?mir::graphics::WaylandAllocator;
     typeinfo?for?mir::graphics::gl::Program;
     typeinfo?for?mir::graphics::gl::ProgramFactory;
     typeinfo?for?mir::graphics::gl::Texture;
@@ -72,7 +69,6 @@ MIRPLATFORM_2.0 {
     vtable?for?mir::graphics::Buffer;
     vtable?for?mir::graphics::BufferBasic;
     vtable?for?mir::graphics::DisplayConfiguration;
-    vtable?for?mir::graphics::WaylandAllocator;
     vtable?for?mir::graphics::gl::Program;
     vtable?for?mir::graphics::gl::ProgramFactory;
     vtable?for?mir::graphics::gl::Texture;

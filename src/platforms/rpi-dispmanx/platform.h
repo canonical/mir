@@ -36,8 +36,6 @@ public:
     Platform();
 
     auto create_buffer_allocator(Display const &output) -> UniqueModulePtr<GraphicBufferAllocator> override;
-    auto make_ipc_operations() const -> UniqueModulePtr<PlatformIpcOperations> override;
-    auto native_rendering_platform() ->NativeRenderingPlatform * override;
     auto create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const &initial_conf_policy,
         std::shared_ptr<GLConfig> const &gl_config) -> UniqueModulePtr<Display> override;

@@ -62,7 +62,5 @@ bool is_appropriate_module(mcl::ClientContext* context)
     context->populate_server_package(package);
     MirModuleProperties module_properties;
     context->populate_graphics_module(module_properties);
-    return
-        Matches(mtf::IsStubPlatformPackage())(package) &&
-        (strcmp(module_properties.name, "mir:stub-graphics") == 0);
+    return strcmp(module_properties.name, "mir:stub-graphics") == 0;
 }

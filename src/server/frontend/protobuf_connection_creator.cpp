@@ -36,11 +36,9 @@ namespace ba = boost::asio;
 mf::ProtobufConnectionCreator::ProtobufConnectionCreator(
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-    std::shared_ptr<mir::graphics::PlatformIpcOperations> const& operations,
     std::shared_ptr<MessageProcessorReport> const& report)
 :   ipc_factory(ipc_factory),
     session_authorizer(session_authorizer),
-    operations(operations),
     report(report),
     next_session_id(0),
     connections(std::make_shared<mfd::Connections<mfd::SocketConnection>>())
@@ -62,18 +60,15 @@ namespace
 class ProtobufEventFactory : public mf::EventSinkFactory
 {
 public:
-    ProtobufEventFactory(std::shared_ptr<mir::graphics::PlatformIpcOperations> const& operations)
-        : ops{operations}
+    ProtobufEventFactory()
     {
     }
 
     std::unique_ptr<mf::EventSink>
     create_sink(std::shared_ptr<mf::MessageSender> const& messenger)
     {
-        return std::make_unique<mf::detail::EventSender>(messenger, ops);
+        return std::make_unique<mf::detail::EventSender>(messenger);
     };
-private:
-    std::shared_ptr<mir::graphics::PlatformIpcOperations> const ops;
 };
 }
 
@@ -95,7 +90,7 @@ void mf::ProtobufConnectionCreator::create_connection_for(
             message_sender,
             ipc_factory->make_ipc_server(
                 creds,
-                std::make_shared<ProtobufEventFactory>(operations),
+                std::make_shared<ProtobufEventFactory>(),
                 messenger,
                 connection_context),
             report);

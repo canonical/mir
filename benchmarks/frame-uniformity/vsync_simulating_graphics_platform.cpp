@@ -18,12 +18,10 @@
 
 #include "vsync_simulating_graphics_platform.h"
 
-#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_display.h"
-#include "mir/test/doubles/null_platform_ipc_operations.h"
 
 #include <chrono>
 #include <functional>
@@ -107,9 +105,4 @@ mir::UniqueModulePtr<mg::Display> VsyncSimulatingPlatform::create_display(
      std::shared_ptr<mg::GLConfig> const&)
 {
     return mir::make_module_ptr<StubDisplay>(output_size, vsync_rate_in_hz);
-}
-
-mir::UniqueModulePtr<mg::PlatformIpcOperations> VsyncSimulatingPlatform::make_ipc_operations() const
-{
-    return mir::make_module_ptr<mtd::NullPlatformIpcOperations>();
 }

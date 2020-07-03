@@ -19,7 +19,6 @@
 #include "gbm_platform.h"
 #include "mir/graphics/platform_authentication.h"
 #include "buffer_allocator.h"
-#include "ipc_operations.h"
 #include "nested_authentication.h"
 #include <boost/throw_exception.hpp>
 
@@ -80,16 +79,6 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GBMPlatform::create_buffer
     Display const& output)
 {
     return make_module_ptr<mgm::BufferAllocator>(output, gbm->device, bypass_option, import_method);
-}
-
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::GBMPlatform::make_ipc_operations() const
-{
-    return make_module_ptr<mg::mesa::IpcOperations>(auth);
-}
-
-mg::NativeRenderingPlatform* mgm::GBMPlatform::native_rendering_platform()
-{
-    return this;
 }
 
 MirServerEGLNativeDisplayType mgm::GBMPlatform::egl_native_display() const

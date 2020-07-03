@@ -17,9 +17,7 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
-#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "buffer_allocator.h"
 #include "mir/fatal.h"
@@ -74,12 +72,3 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgw::Platform::create_buffer_al
     return mir::make_module_ptr<mgw::BufferAllocator>(output);
 }
 
-mg::NativeRenderingPlatform* mgw::Platform::native_rendering_platform()
-{
-    return this;
-}
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mgw::Platform::make_ipc_operations() const
-{
-    fatal_error("wayland platform does not support mirclient");
-    return {};
-}

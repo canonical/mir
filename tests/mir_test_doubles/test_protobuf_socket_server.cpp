@@ -24,7 +24,6 @@
 #include "src/server/frontend/published_socket_connector.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
-#include "mir/test/doubles/null_platform_ipc_operations.h"
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -45,7 +44,6 @@ std::shared_ptr<mf::Connector> make_connector(
         std::make_shared<mf::ProtobufConnectionCreator>(
             factory,
             std::make_shared<mtd::StubSessionAuthorizer>(),
-            std::make_shared<mtd::NullPlatformIpcOperations>(),
             mr::null_message_processor_report()),
         null_emergency_cleanup,
         report);

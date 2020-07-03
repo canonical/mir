@@ -20,9 +20,6 @@
 #include "buffer_allocator.h"
 #include "display.h"
 #include "mir/console_services.h"
-#include "ipc_operations.h"
-#include "mir/graphics/platform_ipc_operations.h"
-#include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/native_buffer.h"
 #include "mir/graphics/platform_authentication.h"
@@ -91,16 +88,6 @@ mir::UniqueModulePtr<mg::Display> mgm::Platform::create_display(
 mg::NativeDisplayPlatform* mgm::Platform::native_display_platform()
 {
     return auth_factory.get();
-}
-
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
-{
-    return make_module_ptr<mgm::IpcOperations>(drm.front());
-}
-
-mg::NativeRenderingPlatform* mgm::Platform::native_rendering_platform()
-{
-    return this;
 }
 
 MirServerEGLNativeDisplayType mgm::Platform::egl_native_display() const

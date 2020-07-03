@@ -23,7 +23,6 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/test/doubles/null_display.h"
-#include "mir/test/doubles/null_platform_ipc_operations.h"
 
 namespace mir
 {
@@ -48,16 +47,6 @@ class NullPlatform : public graphics::Platform
     }
 
     graphics::NativeDisplayPlatform* native_display_platform() override
-    {
-        return nullptr;
-    }
-
-    mir::UniqueModulePtr<graphics::PlatformIpcOperations> make_ipc_operations() const override
-    {
-        return mir::make_module_ptr<NullPlatformIpcOperations>();
-    }
-
-    graphics::NativeRenderingPlatform* native_rendering_platform() override
     {
         return nullptr;
     }

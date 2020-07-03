@@ -32,8 +32,6 @@ class RenderingPlatform : public graphics::RenderingPlatform
 {
 public:
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator(Display const &output) override;
-    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
-    NativeRenderingPlatform *native_rendering_platform() override;
 };
 }
 }

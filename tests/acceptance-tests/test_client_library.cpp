@@ -719,22 +719,6 @@ TEST_F(ClientLibrary, highly_threaded_client)
     mir_connection_release(connection);
 }
 
-TEST_F(ClientLibrary, accesses_platform_package)
-{
-    using namespace testing;
-
-    mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
-
-    MirPlatformPackage platform_package;
-    ::memset(&platform_package, -1, sizeof(platform_package));
-
-    mir_connection_get_platform(connection, &platform_package);
-
-    EXPECT_THAT(platform_package, mtf::IsStubPlatformPackage());
-
-    mir_connection_release(connection);
-}
-
 TEST_F(ClientLibrary, accesses_display_info)
 {
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));

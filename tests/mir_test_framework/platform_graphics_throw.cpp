@@ -77,22 +77,6 @@ public:
         return stub_platform->create_display(ptr, shared_ptr);
     }
 
-    mir::UniqueModulePtr<mg::PlatformIpcOperations> make_ipc_operations() const override
-    {
-        if (should_throw.at(ExceptionLocation::at_make_ipc_operations))
-            BOOST_THROW_EXCEPTION(std::runtime_error("Exception during make_ipc_operations"));
-
-        return stub_platform->make_ipc_operations();
-    }
-
-    mg::NativeRenderingPlatform* native_rendering_platform() override
-    {
-        if (should_throw.at(ExceptionLocation::at_native_rendering_platform))
-            BOOST_THROW_EXCEPTION(std::runtime_error("Exception during egl_native_display"));
-
-        return stub_platform->native_rendering_platform();
-    }
-
     mg::NativeDisplayPlatform* native_display_platform() override
     {
         if (should_throw.at(ExceptionLocation::at_native_display_platform))

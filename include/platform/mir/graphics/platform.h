@@ -55,14 +55,6 @@ class GraphicBufferAllocator;
 class GLConfig;
 class PlatformIpcOperations;
 class PlatformAuthentication;
-class NativeRenderingPlatform
-{
-protected:
-    NativeRenderingPlatform() = default;
-    virtual ~NativeRenderingPlatform() = default;
-    NativeRenderingPlatform(NativeRenderingPlatform const&) = delete;
-    NativeRenderingPlatform& operator=(NativeRenderingPlatform const&) = delete;
-};
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -87,18 +79,6 @@ public:
      */
     virtual UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator(
         Display const& output) = 0;
-
-    /**
-     * Creates an object capable of doing platform specific processing of buffers
-     * before they are sent or after they are received across IPC
-     */
-    virtual UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const = 0;
-
-    /**
-     * Access the native resource[s] used to connect to the rendering backend
-     * for this platform
-     */
-    virtual NativeRenderingPlatform* native_rendering_platform() = 0;
 };
 
 class NativeDisplayPlatform

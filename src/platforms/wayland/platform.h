@@ -21,7 +21,6 @@
 #include "mir/options/option.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/fd.h"
 #include "mir/renderer/gl/egl_platform.h"
 
@@ -39,7 +38,6 @@ namespace graphics
 namespace wayland
 {
 class Platform : public graphics::Platform,
-                 public graphics::NativeRenderingPlatform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
@@ -54,9 +52,6 @@ public:
     NativeDisplayPlatform* native_display_platform() override;
     std::vector<ExtensionDescription> extensions() const override;
 
-    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
-
-    NativeRenderingPlatform* native_rendering_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 
 private:
