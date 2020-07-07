@@ -50,7 +50,7 @@ private:
 };
 
 class Resource
-    : public LifetimeTracker
+    : public virtual LifetimeTracker
 {
 public:
     template<int V>
