@@ -39,10 +39,6 @@ namespace miral
 class StartupInternalClient
 {
 public:
-    template <typename ClientObject>
-    explicit StartupInternalClient(std::string name, ClientObject const& client_object) :
-        StartupInternalClient(name, client_object, client_object) {}
-
     explicit StartupInternalClient(
         std::function<void(struct ::wl_display* display)> client_code,
         std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification);
