@@ -466,12 +466,13 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
         PRINT_EVENT(window);
         PRINT_EVENT(resize);
         PRINT_EVENT(orientation);
-        PRINT_EVENT(close_surface);
         PRINT_EVENT(input);
         PRINT_EVENT(input_device_state);
         PRINT_EVENT(keymap);
         PRINT_EVENT(window_placement);
         PRINT_EVENT(window_output);
+    case mir_event_type_close_surface :
+        return out << "close_window_event()";
     case mir_event_type_prompt_session_state_change:
         return out << *mir_event_get_prompt_session_event(&event);
     default:

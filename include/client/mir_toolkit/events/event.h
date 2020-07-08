@@ -34,23 +34,15 @@
 extern "C" {
 #endif
 
-typedef struct MirSurfaceEvent MirSurfaceEvent
-    MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowEvent instead");
 typedef struct MirSurfaceEvent MirWindowEvent;
 typedef struct MirResizeEvent MirResizeEvent;
 typedef struct MirPromptSessionEvent MirPromptSessionEvent;
 typedef struct MirOrientationEvent MirOrientationEvent;
-typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent
-    MIR_FOR_REMOVAL_IN_VERSION_1("use MirCloseWindowEvent instead");
 typedef struct MirCloseSurfaceEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
-typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent
-    MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowOutputEvent instead");
 typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
-typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent
-    MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowPlacementEvent instead");
 typedef struct MirSurfacePlacementEvent MirWindowPlacementEvent;
 
 typedef struct MirCookie MirCookie;
@@ -64,12 +56,10 @@ typedef struct MirEvent MirEvent;
 
 #include "mir_toolkit/events/input/input_event.h"
 #include "mir_toolkit/events/resize_event.h"
-#include "mir_toolkit/events/surface_event.h"
 #include "mir_toolkit/events/window_event.h"
 #include "mir_toolkit/events/orientation_event.h"
 #include "mir_toolkit/events/prompt_session_event.h"
 #include "mir_toolkit/events/keymap_event.h"
-#include "mir_toolkit/events/surface_output_event.h"
 #include "mir_toolkit/events/window_output_event.h"
 #include "mir_toolkit/events/input_device_state_event.h"
 
@@ -141,28 +131,6 @@ MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* 
  */
 MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* event);
 
-// Ignore use of deprecate MirCloseSurfaceEvent typedef in deprecated function (for now)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-/**
- * Retrieve the MirCloseSurfaceEvent associated with a MirEvent of
- * type mir_event_type_close_surface. The event is a request to close
- * the surface it is delivered to and has no accessors.
- *
- * \deprecated Use of this function is pointless as there is no way to use the
- * return value.
- *
- * \todo This should be removed from the public API at the next API break.
- *
- * \param [in] event The event
- * \return           The associated MirCloseSurfaceEvent
- */
-/// @cond
-MIR_FOR_REMOVAL_IN_VERSION_1("Use of this function is pointless as there is no way to use the return value")
-/// @endcond
-MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* event);
-#pragma GCC diagnostic pop
-
 /**
  * Retrieve the MirKeymapEvent associated with a MirEvent of
  * type mir_event_type_keymap. The event signifies that the keymap
@@ -172,22 +140,6 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
  * \return           The associated MirKeymapEvent
  */
 MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
-
-/**
- * Retrieve the MirSurfaceOutputEvent associated with a MirEvent of type
- * mir_event_type_surface_output. The event signifies that the properties
- * of the output the surface is displayed upon have changed.
- *
- * A MirSurfaceOutputEvent is generated either when the properties of the
- * output the surface is primarily on change (for example: by user configuration
- * of resolution) or when the output the surface is primarily on changes
- * (for example: when a user moves the surface from one monitor to another).
- *
- * \param [in] event The event
- * \return           The associated MirSurfaceOutputEvent
- */
-MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* event)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_event_get_window_output_event");
 
 /**
  * Retrieve the MirWindowOutputEvent associated with a MirEvent of type

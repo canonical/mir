@@ -515,8 +515,8 @@ void MirSurface::handle_event(MirEvent& e)
          * mir_window_output_event_get_refresh_rate that tells us the full
          * native speed of the most relevant output...
          */
-        auto soevent = mir_event_get_surface_output_event(&e);
-        auto rate = mir_surface_output_event_get_refresh_rate(soevent);
+        auto soevent = mir_event_get_window_output_event(&e);
+        auto rate = mir_window_output_event_get_refresh_rate(soevent);
         if (rate > 10.0)  // should be >0, but 10 to workaround LP: #1639725
         {
             std::chrono::nanoseconds const ns(

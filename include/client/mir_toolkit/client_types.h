@@ -45,7 +45,6 @@ typedef struct MirScreencast MirScreencast;
 typedef struct MirScreencastSpec MirScreencastSpec;
 typedef struct MirPromptSession MirPromptSession;
 typedef struct MirBufferStream MirBufferStream;
-typedef struct MirPersistentId MirPersistentId MIR_FOR_REMOVAL_IN_VERSION_1("Use MirWindowId instead");
 typedef struct MirPersistentId MirWindowId;
 typedef struct MirBlob MirBlob;
 typedef struct MirDisplayConfig MirDisplayConfig;
@@ -173,32 +172,6 @@ typedef enum MirBufferUsage
     mir_buffer_usage_hardware = 1,
     mir_buffer_usage_software
 } MirBufferUsage MIR_FOR_REMOVAL_IN_VERSION_1("No longer applicable when using MirRenderSurface");
-
-/**
- * MirWindowParameters is the structure of minimum required information that
- * you must provide to Mir in order to create a window.
- */
-typedef struct MirSurfaceParameters
-{
-    char const *name;
-    int width;
-    int height;
-    MirPixelFormat pixel_format;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    MirBufferUsage buffer_usage;
-#pragma GCC diagnostic pop
-
-    /**
-     * The id of the output to place the surface in.
-     *
-     * Use one of the output ids from MirDisplayConfiguration/MirDisplayOutput
-     * to place a surface on that output. Only fullscreen placements are
-     * currently supported. If you don't have special placement requirements,
-     * use the value mir_display_output_id_invalid.
-     */
-    uint32_t output_id;
-} MirSurfaceParameters MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_get apis or listen for attribute events instead");
 
 enum { mir_platform_package_max = 32 };
 

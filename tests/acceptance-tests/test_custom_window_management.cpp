@@ -18,7 +18,6 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/scene/session.h"
-#include "mir_toolkit/events/surface_placement.h"
 #include "mir_toolkit/events/window_placement.h"
 #include "mir/events/event_builders.h"
 #include "mir/scene/surface.h"
