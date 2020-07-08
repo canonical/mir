@@ -163,14 +163,6 @@ void mir_connection_pong(MirConnection *connection, int32_t serial)
         connection->pong(serial);
 }
 
-MirDisplayConfiguration* mir_connection_create_display_config(
-    MirConnection* connection)
-{
-    if (connection)
-        return connection->create_copy_of_display_config();
-    return nullptr;
-}
-
 MirDisplayConfig* mir_connection_create_display_configuration(
     MirConnection* connection)
 {
@@ -191,41 +183,6 @@ void mir_connection_set_display_config_change_callback(
 {
     if (connection)
         connection->register_display_change_callback(callback, context);
-}
-
-void mir_display_config_destroy(MirDisplayConfiguration* configuration)
-{
-    mcl::delete_config_storage(configuration);
-}
-
-MirWaitHandle* mir_connection_apply_display_config(
-    MirConnection* connection,
-    MirDisplayConfiguration* display_configuration)
-{
-    try
-    {
-        return connection ? connection->configure_display(display_configuration) : nullptr;
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
-    }
-}
-
-MirWaitHandle* mir_connection_set_base_display_config(
-    MirConnection* connection,
-    MirDisplayConfiguration const* display_configuration)
-{
-    try
-    {
-        return connection ? connection->set_base_display_configuration(display_configuration) : nullptr;
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
-    }
 }
 
 MirInputConfig* mir_connection_create_input_config(

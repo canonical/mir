@@ -128,19 +128,6 @@ void mir_connection_pong(MirConnection* connection, int32_t serial);
 /**
  * Query the display
  *
- *   \deprecated  Use mir_connection_create_display_configuration() instead.
- *
- *   \warning return value must be destroyed via mir_display_config_destroy()
- *   \warning may return null if connection is invalid
- *   \param [in]  connection        The connection
- *   \return                        structure that describes the display configuration
- */
-MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_connection_create_display_configuration instead");
-
-/**
- * Query the display
- *
  * \pre mir_connection_is_valid(connection) == true
  * \warning return value must be destroyed via mir_display_config_release()
  *
@@ -162,29 +149,6 @@ MirDisplayConfig* mir_connection_create_display_configuration(MirConnection* con
 void mir_connection_set_display_config_change_callback(
     MirConnection* connection,
     MirDisplayConfigCallback callback, void* context);
-
-/**
- * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
- *   \param [in] display_configuration  The display_configuration information resource to be destroyed
- */
-void mir_display_config_destroy(MirDisplayConfiguration* display_configuration)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_display_config_release instead");
-
-/**
- * Apply the display configuration
- *
- * The display configuration is applied to this connection only (per-connection
- * configuration) and is invalidated when a hardware change occurs. Clients should
- * register a callback with mir_connection_set_display_config_change_callback()
- * to get notified about hardware changes, so that the can apply a new configuration.
- *
- *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
- *   \param [in] connection             The connection
- *   \param [in] display_configuration  The display_configuration to apply
- *   \return                            A handle that can be passed to mir_wait_for
- */
-MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_connection_apply_session_display_config instead");
 
 /**
  * Apply the display config for the connection
@@ -209,33 +173,6 @@ void mir_connection_apply_session_display_config(MirConnection* connection, MirD
  *   \param [in] connection             The connection
  */
 void mir_connection_remove_session_display_config(MirConnection* connection);
-
-/**
- * Set the base display configuration
- *
- * The base display configuration is the configuration the server applies when
- * there is no active per-connection configuration.
- *
- * When the wait handle returned by this function becomes ready, clients can use
- * mir_connection_get_error_message() to check if an authorization error occurred.
- * Only authorization errors are guaranteed to return an error message for this
- * operation.
- *
- * A successful result (i.e. no error) does not guarantee that the base display
- * configuration has been changed to the desired value. Clients should register
- * a callback with mir_connection_set_display_config_change_callback() to monitor
- * actual base display configuration changes.
- *
- *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
- *   \param [in] connection             The connection
- *   \param [in] display_configuration  The display_configuration to set as base
- *   \return                            A handle that can be passed to mir_wait_for
- */
-MirWaitHandle* mir_connection_set_base_display_config(
-    MirConnection* connection,
-    MirDisplayConfiguration const* display_configuration)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_connection_preview_base_display_configuration/mir_connection_confirm_base_display_configuration");
-
 
 /**
  * Preview a new base display configuration
