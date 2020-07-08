@@ -327,7 +327,7 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 
     auto window = mtf::make_any_surface(connection);
 
-    auto parent_id = mir_window_request_persistent_id_sync(window);
+    auto parent_id = mir_window_request_window_id_sync(window);
 
     auto im_connection = mir_connect_sync(new_connection().c_str(), "Mock IM connection");
     ASSERT_THAT(im_connection, IsValid());
@@ -338,7 +338,7 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 
     mir_window_spec_attach_to_foreign_parent(spec, parent_id, &client_rect, edge_attachment);
 
-    mir_persistent_id_release(parent_id);
+    mir_window_id_release(parent_id);
 
     auto im = mir_create_window_sync(spec);
     mir_window_spec_release(spec);

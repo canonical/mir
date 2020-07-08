@@ -88,27 +88,6 @@ char const *mir_connection_get_error_message(MirConnection *connection);
 void mir_connection_release(MirConnection *connection);
 
 /**
- * Query platform-specific data and/or file descriptors that are required to
- * initialize GL/EGL features.
- *   \param [in]  connection        The connection
- *   \param [out] platform_package  Structure to be populated
- */
-void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
-MIR_FOR_REMOVAL_IN_VERSION_1("use platform extensions instead");
-
-/**
- * Query graphics platform module.
- *
- * \note The char pointers in MirModuleProperties are owned by the connection and should not be
- * freed. They remain valid until the connection is released.
- *
- *   \param [in]  connection    The connection
- *   \param [out] properties    Structure to be populated
- */
-void mir_connection_get_graphics_module(MirConnection *connection, MirModuleProperties *properties)
-MIR_FOR_REMOVAL_IN_VERSION_1("use graphics module extension instead");
-
-/**
  * Register a callback to be called when a Lifecycle state change occurs.
  *   \param [in] connection     The connection
  *   \param [in] callback       The function to be called when the state change occurs

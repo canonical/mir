@@ -85,20 +85,6 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, geom::Size const
     return make_uptr_event(e);
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value)
-{
-    auto e = new_event<MirSurfaceEvent>();
-
-    e->set_id(surface_id.as_value());
-    e->set_attrib(static_cast<MirWindowAttrib>(attribute));
-    e->set_value(value);
-
-    return make_uptr_event(e);
-}
-#pragma GCC diagnostic pop
-
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirWindowAttrib attribute, int value)
 {
     auto e = new_event<MirWindowEvent>();

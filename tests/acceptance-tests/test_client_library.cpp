@@ -934,11 +934,11 @@ TEST_F(ClientLibrary, can_get_persistent_surface_id)
 
     ASSERT_THAT(window, IsValid());
 
-    auto surface_id = mir_window_request_persistent_id_sync(window);
-    EXPECT_TRUE(mir_persistent_id_is_valid(surface_id));
+    auto surface_id = mir_window_request_window_id_sync(window);
+    EXPECT_TRUE(mir_window_id_is_valid(surface_id));
 
     mir_window_release_sync(window);
-    mir_persistent_id_release(surface_id);
+    mir_window_id_release(surface_id);
     mir_connection_release(connection);
 }
 
@@ -953,11 +953,11 @@ TEST_F(ClientLibrary, input_method_can_specify_foreign_surface_id)
 
     ASSERT_THAT(main_surface, IsValid());
 
-    auto main_surface_id = mir_window_request_persistent_id_sync(main_surface);
-    ASSERT_TRUE(mir_persistent_id_is_valid(main_surface_id));
+    auto main_surface_id = mir_window_request_window_id_sync(main_surface);
+    ASSERT_TRUE(mir_window_id_is_valid(main_surface_id));
 
     // Serialise & deserialise the ID
-    auto im_parent_id = mir_persistent_id_from_string(mir_persistent_id_as_string(main_surface_id));
+    auto im_parent_id = mir_window_id_from_string(mir_window_id_as_string(main_surface_id));
 
     auto im_client = mir_connect_sync(new_connection().c_str(), "IM Client");
     surface_spec = mir_create_input_method_window_spec(im_client, 200, 20);
@@ -977,8 +977,8 @@ TEST_F(ClientLibrary, input_method_can_specify_foreign_surface_id)
     EXPECT_THAT(im_surface, IsValid());
 
     mir_window_spec_release(surface_spec);
-    mir_persistent_id_release(main_surface_id);
-    mir_persistent_id_release(im_parent_id);
+    mir_window_id_release(main_surface_id);
+    mir_window_id_release(im_parent_id);
     mir_window_release_sync(main_surface);
     mir_window_release_sync(im_surface);
     mir_connection_release(first_client);

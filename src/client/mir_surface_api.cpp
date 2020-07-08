@@ -899,16 +899,6 @@ void assign_surface_id_result(MirWindow*, MirWindowId* id, void* context)
 }
 }
 
-MirWindowId* mir_window_request_persistent_id_sync(MirWindow* window)
-{
-    mir::require(mir_window_is_valid(window));
-
-    MirWindowId* result = nullptr;
-    if (auto wh = mir_window_request_persistent_id_helper(window, &assign_surface_id_result, &result))
-        wh->wait_for_all();
-    return result;
-}
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void mir_window_spec_add_render_surface(
@@ -939,26 +929,6 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 #pragma GCC diagnostic pop
-
-bool mir_persistent_id_is_valid(MirWindowId* id)
-{
-    return mir_window_id_is_valid(id);
-}
-
-void mir_persistent_id_release(MirWindowId* id)
-{
-    mir_window_id_release(id);
-}
-
-char const* mir_persistent_id_as_string(MirWindowId *id)
-{
-    return mir_window_id_as_string(id);
-}
-
-MirWindowId* mir_persistent_id_from_string(char const* id_string)
-{
-    return mir_window_id_from_string(id_string);
-}
 
 bool mir_window_id_is_valid(MirWindowId* id)
 {

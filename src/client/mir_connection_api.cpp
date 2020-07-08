@@ -139,26 +139,6 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_connection_get_platform(
-    MirConnection* connection,
-    MirPlatformPackage* platform_package)
-{
-    connection->populate(*platform_package);
-}
-
-void mir_connection_get_graphics_module(MirConnection *connection, MirModuleProperties *properties)
-try
-{
-    mir::require(mir_connection_is_valid(connection));
-    mir::require(properties != nullptr);
-
-    connection->populate_graphics_module(*properties);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-
 void mir_connection_set_lifecycle_event_callback(
     MirConnection* connection,
     MirLifecycleEventCallback callback,

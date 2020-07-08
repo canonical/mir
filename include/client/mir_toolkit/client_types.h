@@ -39,9 +39,7 @@ extern "C" {
 typedef void* MirEGLNativeWindowType;
 typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
-typedef struct MirSurface MirSurface MIR_FOR_REMOVAL_IN_VERSION_1("Use MirWindow instead");
 typedef struct MirSurface MirWindow;
-typedef struct MirSurfaceSpec MirSurfaceSpec MIR_FOR_REMOVAL_IN_VERSION_1("Use MirWindowSpec instead");
 typedef struct MirSurfaceSpec MirWindowSpec;
 typedef struct MirScreencast MirScreencast;
 typedef struct MirScreencastSpec MirScreencastSpec;
@@ -162,7 +160,7 @@ typedef void (*MirClientFdCallback)(
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef void (*MirWindowIdCallback)(
-    MirWindow* window, MirPersistentId* id, void* context);
+    MirWindow* window, MirWindowId* id, void* context);
 #pragma GCC diagnostic pop
 
 /**

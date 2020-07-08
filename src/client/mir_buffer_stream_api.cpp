@@ -49,23 +49,6 @@ void assign_result(void* result, void** context)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
-    int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage buffer_usage,
-    MirBufferStreamCallback callback,
-    void *context)
-try
-{
-    return connection->create_client_buffer_stream(
-        width, height, format, buffer_usage, nullptr, callback, context);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-
 MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
@@ -73,7 +56,7 @@ MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connect
 try
 {
     MirBufferStream *stream = nullptr;
-    mir_connection_create_buffer_stream(connection, width, height, format, buffer_usage,
+    connection->create_client_buffer_stream(width, height, format, buffer_usage, nullptr,
         reinterpret_cast<MirBufferStreamCallback>(assign_result), &stream)->wait_for_all();
     return stream;
 }

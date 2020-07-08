@@ -837,8 +837,6 @@ void mir_window_request_window_id(MirWindow* window, MirWindowIdCallback callbac
  * \return A MirWindowId. This MirWindowId is owned by the calling code, and must
  *         be freed with a call to mir_persistent_id_release()
  */
-MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
-MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_request_window_id_sync");
 MirWindowId* mir_window_request_window_id_sync(MirWindow* window);
 #ifdef __cplusplus
 }
