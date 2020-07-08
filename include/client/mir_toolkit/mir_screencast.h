@@ -148,21 +148,6 @@ bool mir_screencast_is_valid(MirScreencast *screencast);
 char const *mir_screencast_get_error_message(MirScreencast *screencast);
 
 /**
- * Create a screencast on the supplied connection.
- *
- * A screencast allows clients to read the contents of the screen.
- *
- *   \warning This request may be denied.
- *   \param [in] connection  The connection
- *   \param [in] parameters  The screencast parameters
- *   \return                 The resulting screencast
- */
-MirScreencast* mir_connection_create_screencast_sync(
-    MirConnection* connection,
-    MirScreencastParameters* parameters)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_screencast_create_sync instead");
-
-/**
  * Release the specified screencast.
  *   \param [in] screencast  The screencast to be released
  */

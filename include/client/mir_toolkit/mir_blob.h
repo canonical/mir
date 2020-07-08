@@ -30,15 +30,6 @@ extern "C" {
 #endif
 
 /**
- * Create a blob from a display configuration
- *
- * \param [in] configuration  The display configuration
- * \return                 A blob
- */
-MirBlob* mir_blob_from_display_configuration(MirDisplayConfiguration* configuration)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_blob_from_display_config instead");
-
-/**
  * Create a blob from a display config
  *
  * \param [in] config  The display config
@@ -56,17 +47,6 @@ MirBlob* mir_blob_from_display_config(MirDisplayConfig* config);
  * \return                 A blob
  */
 MirBlob* mir_blob_onto_buffer(void const* buffer, size_t buffer_size);
-
-/**
- * Create a blob from a display configuration
- *
- * \warning will abort() if the blob doesn't represent a meaningful display configuration
- *
- * \param [in] blob        The blob
- * \return                 A display configuration
- */
-MirDisplayConfiguration* mir_blob_to_display_configuration(MirBlob* blob)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_blob_to_display_config instead");
 
 /**
  * Create a blob from a display config

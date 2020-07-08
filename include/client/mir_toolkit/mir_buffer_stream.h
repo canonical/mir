@@ -51,39 +51,6 @@ bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream);
 char const *mir_buffer_stream_get_error_message(MirBufferStream *buffer_stream);
 
 /**
- * Create a new buffer stream. 
- *
- * For example, the resulting buffer stream may be used
- * with mir_cursor_configuration_from_buffer_stream, 
- * in order to post images to the system cursor.
- *
- * \deprecated Use mir_render_surface_get_buffer_stream instead
- * \param [in] connection     A valid connection
- * \param [in] width          Requested buffer width
- * \param [in] height         Requested buffer height
- * \param [in] format         Requested pixel format
- * \param [in] buffer_usage   Requested buffer usage, use 
- *                            mir_buffer_usage_software for cursor image streams
- * \param [in] callback       Callback to be invoked when the request completes
- *                            The callback is guaranteed to be called and called with a
- *                            non-null MirBufferStream*, but the stream may be invalid in
- *                            case of an error.
- * \param [in] context        Userdata to pass to callback function
- *
- * \return                    A handle that can be supplied to mir_wait_for
- */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
-    int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage buffer_usage,
-    MirBufferStreamCallback callback,
-    void* context)
-MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_render_surface_get_buffer_stream instead");
-#pragma GCC diagnostic pop
-
-/**
  * Create a new buffer stream unattached to a surface and wait for the result. 
  * The resulting buffer stream may be used with 
  * mir_cursor_configuration_from_buffer_stream in order to post images 
