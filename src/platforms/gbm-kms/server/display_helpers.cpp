@@ -117,7 +117,8 @@ mgmh::DRMHelper::open_all_devices(
             case 0: break;
 
             case ENOSYS:
-                if (getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") == nullptr)
+                if (getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") == nullptr &&
+                    getenv("MIR_GBM_KMS_DISABLE_MODESET_PROBE")  == nullptr)
                 {
                     mir::log_info("Ignoring non-KMS DRM device %s", device.devnode());
                     error = ENOSYS;
