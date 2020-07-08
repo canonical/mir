@@ -31,14 +31,14 @@
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
-#include "src/platforms/mesa/server/kms/platform.h"
+#include "src/platforms/gbm-kms/server/kms/platform.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <fcntl.h>
 
 namespace mg = mir::graphics;
-namespace mgm = mg::mesa;
+namespace mgg = mg::gbm;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -76,11 +76,11 @@ public:
 
     std::shared_ptr<mg::Display> create_display()
     {
-        auto const platform = std::make_shared<mgm::Platform>(
+        auto const platform = std::make_shared<mgg::Platform>(
                 mir::report::null_display_report(),
                 std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
-                mgm::BypassOption::allowed);
+                mgg::BypassOption::allowed);
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLConfig>());

@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 #include <boost/throw_exception.hpp>
-#include "src/platforms/mesa/server/kms/platform.h"
-#include "src/platforms/mesa/server/kms/display.h"
+#include "src/platforms/gbm-kms/server/kms/platform.h"
+#include "src/platforms/gbm-kms/server/kms/display.h"
 #include "mir/console_services.h"
 #include "src/server/report/logging/display_report.h"
 #include "mir/logging/logger.h"
@@ -58,7 +58,7 @@
 #include <fcntl.h>
 
 namespace mg=mir::graphics;
-namespace mgm=mir::graphics::mesa;
+namespace mgg=mir::graphics::gbm;
 namespace ml=mir::logging;
 namespace mrl=mir::report::logging;
 namespace mtd=mir::test::doubles;
@@ -115,19 +115,19 @@ public:
         mock_drm.reset("/dev/dri/card1");
     }
 
-    std::shared_ptr<mgm::Platform> create_platform()
+    std::shared_ptr<mgg::Platform> create_platform()
     {
-        return std::make_shared<mgm::Platform>(
+        return std::make_shared<mgg::Platform>(
                mir::report::null_display_report(),
                std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
-               mgm::BypassOption::allowed);
+               mgg::BypassOption::allowed);
     }
 
-    std::shared_ptr<mgm::Display> create_display(
-        std::shared_ptr<mgm::Platform> const& platform)
+    std::shared_ptr<mgg::Display> create_display(
+        std::shared_ptr<mgg::Platform> const& platform)
     {
-        return std::make_shared<mgm::Display>(
+        return std::make_shared<mgg::Display>(
             platform->drm,
             platform->gbm,
             platform->vt,
@@ -245,13 +245,13 @@ TEST_F(MesaDisplayTest, create_display)
     auto const connector_id = get_connected_connector_id();
     auto const crtc_id = get_connected_crtc_id();
 
-    /* To display a gbm surface, the MesaDisplay should... */
+    /* To display a gbm-kms surface, the MesaDisplay should... */
 
-    /* Create a gbm surface to use as the frame buffer */
+    /* Create a gbm-kms surface to use as the frame buffer */
     EXPECT_CALL(mock_gbm, gbm_surface_create(mock_gbm.fake_gbm.device,_,_,_,_))
         .Times(Exactly(1));
 
-    /* Create an EGL window surface backed by the gbm surface */
+    /* Create an EGL window surface backed by the gbm-kms surface */
     EXPECT_CALL(mock_egl, eglCreatePlatformWindowSurfaceEXT(
         mock_egl.fake_egl_display,
         mock_egl.fake_configs[0],
@@ -371,7 +371,7 @@ TEST_F(MesaDisplayTest, create_display_kms_failure)
 
     EXPECT_THROW({
         auto display = create_display(platform);
-    }, std::runtime_error) << "Expected that c'tor of mgm::Display throws";
+    }, std::runtime_error) << "Expected that c'tor of mgg::Display throws";
 }
 
 TEST_F(MesaDisplayTest, create_display_gbm_failure)
@@ -630,7 +630,7 @@ TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_
         report_egl_configuration(mock_egl.fake_egl_display,mock_egl.fake_configs[0])).Times(Exactly(1));
 
     auto platform = create_platform();
-    auto display = std::make_shared<mgm::Display>(
+    auto display = std::make_shared<mgg::Display>(
                         platform->drm,
                         platform->gbm,
                         platform->vt,
@@ -704,7 +704,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_
     reporter->report_successful_drm_mode_set_crtc_on_construction();
 }
 
-// Disabled until mesa drm platform and mir platform properly shows support for those extensions
+// Disabled until gbm-kms drm platform and mir platform properly shows support for those extensions
 TEST_F(MesaDisplayTest, DISABLED_constructor_throws_if_egl_khr_image_pixmap_not_supported)
 {
     using namespace ::testing;
@@ -841,7 +841,7 @@ TEST_F(MesaDisplayTest, respects_gl_config)
                 Return(EGL_TRUE)));
 
     auto platform = create_platform();
-    mgm::Display display{
+    mgg::Display display{
         platform->drm,
         platform->gbm,
         platform->vt,
@@ -852,7 +852,7 @@ TEST_F(MesaDisplayTest, respects_gl_config)
 }
 
 /*
- * It *would* be nice to support 15bit colour, but the mesa-kms platform
+ * It *would* be nice to support 15bit colour, but the gbm-kms platform
  * has, from the first commit, unconditonally allocated 24-bit framebuffers.
  *
  * It's not clear to me that Mir has ever been successfully tested on a platform
@@ -878,7 +878,7 @@ TEST_F(MesaDisplayTest, DISABLED_supports_as_low_as_15bit_colour)
                         Return(EGL_TRUE)));
 
     auto platform = create_platform();
-    mgm::Display display{
+    mgg::Display display{
         platform->drm,
         platform->gbm,
         platform->vt,

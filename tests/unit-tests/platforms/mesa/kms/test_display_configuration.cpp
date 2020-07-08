@@ -22,8 +22,8 @@
 #include "mir/graphics//default_display_configuration_policy.h"
 #include "mir/time/steady_clock.h"
 #include "mir/glib_main_loop.h"
-#include "src/platforms/mesa/server/kms/platform.h"
-#include "src/platforms/mesa/server/kms/kms_display_configuration.h"
+#include "src/platforms/gbm-kms/server/kms/platform.h"
+#include "src/platforms/gbm-kms/server/kms/kms_display_configuration.h"
 #include "src/server/report/null_report_factory.h"
 
 #include "mir/test/signal.h"
@@ -47,7 +47,7 @@
 #include <fcntl.h>
 
 namespace mg = mir::graphics;
-namespace mgm = mir::graphics::mesa;
+namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 namespace mt  = mir::test;
 namespace mtd = mir::test::doubles;
@@ -126,11 +126,11 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-        return std::make_shared<mgm::Platform>(
+        return std::make_shared<mgg::Platform>(
                mir::report::null_display_report(),
                std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
-               mgm::BypassOption::allowed);
+               mgg::BypassOption::allowed);
     }
 
     std::shared_ptr<mg::Display> create_display(

@@ -21,7 +21,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 
-#include "src/platforms/mesa/server/kms/platform.h"
+#include "src/platforms/gbm-kms/server/kms/platform.h"
 
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
@@ -44,7 +44,7 @@
 #include <fcntl.h>
 
 namespace mg = mir::graphics;
-namespace mgm = mg::mesa;
+namespace mgg = mg::gbm;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
@@ -146,17 +146,17 @@ public:
         mock_drm.reset("/dev/dri/card2");
     }
 
-    std::shared_ptr<mgm::Platform> create_platform()
+    std::shared_ptr<mgg::Platform> create_platform()
     {
-        return std::make_shared<mgm::Platform>(
+        return std::make_shared<mgg::Platform>(
                mir::report::null_display_report(),
                std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
-               mgm::BypassOption::allowed);
+               mgg::BypassOption::allowed);
     }
 
     std::shared_ptr<mg::Display> create_display_cloned(
-        std::shared_ptr<mgm::Platform> const& platform)
+        std::shared_ptr<mgg::Platform> const& platform)
     {
         return platform->create_display(
             std::make_shared<ClonedDisplayConfigurationPolicy>(),

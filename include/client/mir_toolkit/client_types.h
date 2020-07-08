@@ -205,7 +205,7 @@ typedef struct MirPlatformPackage
 /**
  * Retrieved information about a loadable module. This allows clients to
  * identify the underlying platform. E.g. whether the graphics are
- * "mir:android" or "mir:mesa".
+ * "mir:android" or "mir:gbm-kms".
  * Third party graphics platforms do not currently exist but should be
  * named according to the vendor and platform. Vis: "<vendor>:<platform>"
  */

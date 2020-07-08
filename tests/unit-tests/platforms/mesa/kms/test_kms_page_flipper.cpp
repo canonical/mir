@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platforms/mesa/server/kms/kms_page_flipper.h"
+#include "src/platforms/gbm-kms/server/kms/kms_page_flipper.h"
 
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_display_report.h"
@@ -35,7 +35,7 @@
 #include <fcntl.h>
 
 namespace mg  = mir::graphics;
-namespace mgm = mir::graphics::mesa;
+namespace mgg = mir::graphics::gbm;
 namespace mt  = mir::test;
 namespace mtd = mir::test::doubles;
 
@@ -57,7 +57,7 @@ public:
     char const* const drm_device = "/dev/dri/card0";
     int const drm_fd;
 
-    mgm::KMSPageFlipper page_flipper;
+    mgg::KMSPageFlipper page_flipper;
 };
 
 ACTION_P(InvokePageFlipHandler, param)
@@ -230,7 +230,7 @@ namespace
 class PageFlippingFunctor
 {
 public:
-    PageFlippingFunctor(mgm::KMSPageFlipper& page_flipper,
+    PageFlippingFunctor(mgg::KMSPageFlipper& page_flipper,
                         uint32_t crtc_id)
         : page_flipper(page_flipper), crtc_id{crtc_id}, done{false},
           num_page_flips{0}, num_waits{0}
@@ -265,7 +265,7 @@ public:
     }
 
 private:
-    mgm::KMSPageFlipper& page_flipper;
+    mgg::KMSPageFlipper& page_flipper;
     uint32_t const crtc_id;
     std::atomic<bool> done;
     std::atomic<int> num_page_flips;
@@ -507,7 +507,7 @@ ACTION_P(InvokePageFlipHandlerWithPendingData, counter)
     int const drm_fd{arg0};
     char dummy;
 
-    auto user_data = static_cast<mgm::PageFlipEventData*>(counter->get_pending_flip_data());
+    auto user_data = static_cast<mgg::PageFlipEventData*>(counter->get_pending_flip_data());
     uint32_t const crtc_id{user_data->crtc_id};
 
     /* Remove the event from the drm event queue */

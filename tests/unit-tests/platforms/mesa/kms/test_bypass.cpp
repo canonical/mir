@@ -16,7 +16,7 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "src/platforms/mesa/server/kms/bypass.h"
+#include "src/platforms/gbm-kms/server/kms/bypass.h"
 #include "mir/test/doubles/mock_display_buffer.h"
 #include "mir/test/doubles/fake_renderable.h"
 
@@ -25,7 +25,7 @@
 
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
-namespace mgm=mir::graphics::mesa;
+namespace mgg=mir::graphics::gbm;
 namespace mtd=mir::test::doubles;
 
 struct BypassMatchTest : public testing::Test
@@ -37,14 +37,14 @@ struct BypassMatchTest : public testing::Test
 TEST_F(BypassMatchTest, nothing_matches_nothing)
 {
     mg::RenderableList empty_list{};
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
 
     EXPECT_EQ(empty_list.rend(), std::find_if(empty_list.rbegin(), empty_list.rend(), matcher));
 }
 
 TEST_F(BypassMatchTest, small_window_not_bypassed)
 {
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(12, 34, 56, 78)
     };
@@ -55,7 +55,7 @@ TEST_F(BypassMatchTest, small_window_not_bypassed)
 TEST_F(BypassMatchTest, single_fullscreen_window_bypassed)
 {
     auto window = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{window};
 
     auto it = std::find_if(list.rbegin(), list.rend(), matcher);
@@ -65,7 +65,7 @@ TEST_F(BypassMatchTest, single_fullscreen_window_bypassed)
 
 TEST_F(BypassMatchTest, translucent_fullscreen_window_not_bypassed)
 {
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 0}, {1920, 1200}}, 0.5f)
     };
@@ -75,7 +75,7 @@ TEST_F(BypassMatchTest, translucent_fullscreen_window_not_bypassed)
 
 TEST_F(BypassMatchTest, shaped_fullscreen_window_not_bypassed)
 {
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 0}, {1920, 1200}}, 1.0f, false)
@@ -86,7 +86,7 @@ TEST_F(BypassMatchTest, shaped_fullscreen_window_not_bypassed)
 
 TEST_F(BypassMatchTest, offset_fullscreen_window_not_bypassed)
 {
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(10, 50, 1920, 1200)
@@ -97,7 +97,7 @@ TEST_F(BypassMatchTest, offset_fullscreen_window_not_bypassed)
 
 TEST_F(BypassMatchTest, obscured_fullscreen_window_not_bypassed)
 {
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200),
@@ -109,7 +109,7 @@ TEST_F(BypassMatchTest, obscured_fullscreen_window_not_bypassed)
 
 TEST_F(BypassMatchTest, translucently_obscured_fullscreen_window_not_bypassed)
 {   // Regression test for LP: #1266385
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200),
@@ -121,7 +121,7 @@ TEST_F(BypassMatchTest, translucently_obscured_fullscreen_window_not_bypassed)
 
 TEST_F(BypassMatchTest, unobscured_fullscreen_window_bypassed)
 {
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
 
     auto bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     mg::RenderableList list{
@@ -136,7 +136,7 @@ TEST_F(BypassMatchTest, unobscured_fullscreen_window_bypassed)
 
 TEST_F(BypassMatchTest, unobscured_fullscreen_alpha_window_not_bypassed)
 {
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(20, 30, 40, 50),
@@ -148,7 +148,7 @@ TEST_F(BypassMatchTest, unobscured_fullscreen_alpha_window_not_bypassed)
 
 TEST_F(BypassMatchTest, many_fullscreen_windows_only_bypass_top)
 {
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
 
     auto bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     auto fullscreen_not_bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
@@ -169,7 +169,7 @@ TEST_F(BypassMatchTest, many_fullscreen_windows_only_bypass_top)
 
 TEST_F(BypassMatchTest, detects_window_that_intersects_full_screen_window)
 {
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
 
     auto bypassable = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     auto small_intersection_window = std::make_shared<mtd::FakeRenderable>(1910, 600, 20, 20);
@@ -184,7 +184,7 @@ TEST_F(BypassMatchTest, detects_window_that_intersects_full_screen_window)
 
 TEST_F(BypassMatchTest, many_fullscreen_windows_only_bypass_top_rectangular)
 {
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
 
     auto bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     mg::RenderableList list{
@@ -205,7 +205,7 @@ TEST_F(BypassMatchTest, many_fullscreen_windows_only_bypass_top_rectangular)
 
 TEST_F(BypassMatchTest, nonrectangular_not_bypassable)
 {
-    mgm::BypassMatch matcher(primary_monitor);
+    mgg::BypassMatch matcher(primary_monitor);
 
     auto bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     auto fullscreen_not_bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
@@ -219,8 +219,8 @@ TEST_F(BypassMatchTest, nonrectangular_not_bypassable)
 
 TEST_F(BypassMatchTest, multimonitor_one_bypassed)
 {
-    mgm::BypassMatch primary_matcher(primary_monitor);
-    mgm::BypassMatch secondary_matcher(secondary_monitor);
+    mgg::BypassMatch primary_matcher(primary_monitor);
+    mgg::BypassMatch secondary_matcher(secondary_monitor);
 
     auto bypassed = std::make_shared<mtd::FakeRenderable>(1920, 0, 1920, 1200);
     mg::RenderableList list{
@@ -237,8 +237,8 @@ TEST_F(BypassMatchTest, multimonitor_one_bypassed)
 
 TEST_F(BypassMatchTest, dual_bypass)
 {
-    mgm::BypassMatch primary_matcher(primary_monitor);
-    mgm::BypassMatch secondary_matcher(secondary_monitor);
+    mgg::BypassMatch primary_matcher(primary_monitor);
+    mgg::BypassMatch secondary_matcher(secondary_monitor);
 
     auto primary_bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     auto secondary_bypassed = std::make_shared<mtd::FakeRenderable>(1920, 0, 1920, 1200);
@@ -258,8 +258,8 @@ TEST_F(BypassMatchTest, dual_bypass)
 
 TEST_F(BypassMatchTest, multimonitor_oversized_no_bypass)
 {
-    mgm::BypassMatch primary_matcher(primary_monitor);
-    mgm::BypassMatch secondary_matcher(secondary_monitor);
+    mgg::BypassMatch primary_matcher(primary_monitor);
+    mgg::BypassMatch secondary_matcher(secondary_monitor);
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 3840, 1200)

@@ -29,14 +29,14 @@
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
-#include "src/platforms/mesa/server/kms/platform.h"
+#include "src/platforms/gbm-kms/server/kms/platform.h"
 
 #include "mir/logging/dumb_console_logger.h"
 
 #include <gtest/gtest.h>
 
 namespace mg = mir::graphics;
-namespace mgm = mg::mesa;
+namespace mgg = mg::gbm;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -81,11 +81,11 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-      return std::make_shared<mgm::Platform>(
+      return std::make_shared<mgg::Platform>(
               mir::report::null_display_report(),
               std::make_shared<mtd::StubConsoleServices>(),
               *std::make_shared<mtd::NullEmergencyCleanup>(),
-              mgm::BypassOption::allowed);
+              mgg::BypassOption::allowed);
     }
 
     std::shared_ptr<ml::Logger> logger;

@@ -18,7 +18,7 @@
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/event_handler_register.h"
-#include "src/platforms/mesa/server/kms/platform.h"
+#include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/shared_library.h"
 #include "mir/options/program_option.h"
@@ -51,7 +51,7 @@
 #include <chrono>
 
 namespace mg = mir::graphics;
-namespace mgm = mir::graphics::mesa;
+namespace mgg = mir::graphics::gbm;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -84,13 +84,13 @@ public:
         fake_devices.add_standard_device("standard-drm-devices");
     }
 
-    std::shared_ptr<mgm::Platform> create_platform()
+    std::shared_ptr<mgg::Platform> create_platform()
     {
-        return std::make_shared<mgm::Platform>(
+        return std::make_shared<mgg::Platform>(
                 mir::report::null_display_report(),
                 std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
-                mgm::BypassOption::allowed);
+                mgg::BypassOption::allowed);
     }
 
     EGLDisplay fake_display{reinterpret_cast<EGLDisplay>(0xabcd)};
@@ -132,7 +132,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_no_drm_udev_devices)
     mir::options::ProgramOption options;
     auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe(stub_vt, options));
 }
@@ -146,7 +146,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_best_when_master)
 
     udev_environment.add_standard_device("standard-drm-devices");
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::best, probe(stub_vt, options));
 }
@@ -165,7 +165,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_supported_on_llvmpipe)
             testing::Return(
                 reinterpret_cast<GLubyte const*>("llvmpipe (you know, some version)")));
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::supported, probe(stub_vt, options));
 }
@@ -184,7 +184,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_egl_client_extension
     ON_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, _))
         .WillByDefault(Return(nullptr));
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe(stub_vt, options));
 }
@@ -203,7 +203,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_old_egl_mesa_gbm_platf
     ON_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
         .WillByDefault(Return("EGL_KHR_not_really_an_extension EGL_MESA_platform_gbm EGL_EXT_master_of_the_house EGL_EXT_platform_base"));
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::best, probe(stub_vt, options));
 }
@@ -222,7 +222,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_gbm_platform_not_sup
     ON_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
         .WillByDefault(Return("EGL_KHR_not_really_an_extension EGL_EXT_platform_base"));
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe(stub_vt, options));
 }
@@ -237,7 +237,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_modesetting_is_not_s
 
     ON_CALL(mock_drm, drmCheckModesettingSupported(_)).WillByDefault(Return(-ENOSYS));
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe(stub_vt, options));
 }
@@ -252,7 +252,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_cannot_determine_kms_s
 
     ON_CALL(mock_drm, drmCheckModesettingSupported(_)).WillByDefault(Return(-EINVAL));
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::supported, probe(stub_vt, options));
 
@@ -268,7 +268,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_unexpected_error_retur
 
     ON_CALL(mock_drm, drmCheckModesettingSupported(_)).WillByDefault(Return(-ENOBUFS));
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::supported, probe(stub_vt, options));
 
@@ -284,7 +284,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_cannot_determine_busid
 
     ON_CALL(mock_drm, drmGetBusid(_)).WillByDefault(Return(nullptr));
 
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::supported, probe(stub_vt, options));
 

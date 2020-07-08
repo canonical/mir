@@ -27,9 +27,9 @@ extern "C" {
 
 struct gbm_device;
 
-//Set the gbm device used by the client
+//Set the gbm-kms device used by the client
 //  \param [in] device    The gbm_device.
-//  \param [in] context   The context to set the gbm device.
+//  \param [in] context   The context to set the gbm-kms device.
 typedef void (*MirSetGbmDevice)(struct gbm_device*, void* const context);
 typedef struct MirExtensionSetGbmDeviceV1
 {

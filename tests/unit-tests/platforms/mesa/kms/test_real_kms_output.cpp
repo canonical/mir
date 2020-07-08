@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platforms/mesa/server/kms/real_kms_output.h"
-#include "src/platforms/mesa/server/kms/page_flipper.h"
+#include "src/platforms/gbm-kms/server/kms/real_kms_output.h"
+#include "src/platforms/gbm-kms/server/kms/page_flipper.h"
 #include "mir/fatal.h"
 
 #include "mir/test/fake_shared.h"
@@ -32,7 +32,7 @@
 #include <fcntl.h>
 
 namespace mg = mir::graphics;
-namespace mgm = mir::graphics::mesa;
+namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -42,14 +42,14 @@ using namespace ::testing;
 namespace
 {
 
-class NullPageFlipper : public mgm::PageFlipper
+class NullPageFlipper : public mgg::PageFlipper
 {
 public:
     bool schedule_flip(uint32_t,uint32_t,uint32_t) override { return true; }
     mg::Frame wait_for_flip(uint32_t) override { return {}; }
 };
 
-class MockPageFlipper : public mgm::PageFlipper
+class MockPageFlipper : public mgg::PageFlipper
 {
 public:
     MOCK_METHOD3(schedule_flip, bool(uint32_t,uint32_t,uint32_t));
@@ -206,7 +206,7 @@ TEST_F(RealKMSOutputTest, operations_use_existing_crtc)
             .Times(1);
     }
 
-    mgm::RealKMSOutput output{
+    mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
@@ -248,7 +248,7 @@ TEST_F(RealKMSOutputTest, operations_use_possible_crtc)
 
     append_fb_id(fb_id);
 
-    mgm::RealKMSOutput output{
+    mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
@@ -288,7 +288,7 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
 
     append_fb_id(fb_id);
 
-    mgm::RealKMSOutput output{
+    mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
@@ -311,7 +311,7 @@ TEST_F(RealKMSOutputTest, clear_crtc_gets_crtc_if_none_is_current)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{
+    mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
@@ -348,7 +348,7 @@ TEST_F(RealKMSOutputTest, clear_crtc_does_not_throw_if_no_crtc_is_found)
 
     mock_drm.prepare(drm_device);
 
-    mgm::RealKMSOutput output{
+    mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
@@ -369,7 +369,7 @@ TEST_F(RealKMSOutputTest, cursor_move_permission_failure_is_non_fatal)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{
+    mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
@@ -397,7 +397,7 @@ TEST_F(RealKMSOutputTest, cursor_set_permission_failure_is_non_fatal)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{
+    mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
@@ -426,7 +426,7 @@ TEST_F(RealKMSOutputTest, has_no_cursor_if_no_hardware_support)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{
+    mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
@@ -447,7 +447,7 @@ TEST_F(RealKMSOutputTest, clear_crtc_is_non_fatal_on_permission_error)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{
+    mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
@@ -473,7 +473,7 @@ TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails_for_non_permission
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{
+    mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
@@ -495,7 +495,7 @@ TEST_F(RealKMSOutputTest, drm_set_gamma)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{
+    mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
@@ -526,7 +526,7 @@ TEST_F(RealKMSOutputTest, drm_set_gamma_failure_does_not_throw)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{
+    mgg::RealKMSOutput output{
         drm_fd,
         mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};

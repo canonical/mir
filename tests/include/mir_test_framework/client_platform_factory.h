@@ -51,7 +51,7 @@ std::shared_ptr<mir::client::ClientPlatform> create_mesa_client_platform(
     mir::client::ClientContext* client_context)
 {
     using namespace testing;
-    platform_library = std::make_shared<mir::SharedLibrary>(client_platform("mesa"));
+    platform_library = std::make_shared<mir::SharedLibrary>(client_platform("gbm-kms"));
     auto platform_factory = platform_library->load_function<mir::client::CreateClientPlatform>("create_client_platform");
 
     return wrap_in_platform_library_cleanup(platform_factory(client_context, nullptr));

@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platforms/mesa/server/display_helpers.h"
+#include "src/platforms/gbm-kms/server/display_helpers.h"
 #include "mir/udev/wrapper.h"
 
 #include "mir_test_framework/udev_environment.h"
@@ -28,7 +28,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mgm = mir::graphics::mesa;
+namespace mgg = mir::graphics::gbm;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
                           
@@ -57,7 +57,7 @@ TEST_F(DRMHelperTest, closes_drm_fd_on_exec)
 
     EXPECT_CALL(mock_drm, open(_, FlagSet(O_CLOEXEC), _));
 
-    auto helper = mgm::helpers::DRMHelper::open_any_render_node(
+    auto helper = mgg::helpers::DRMHelper::open_any_render_node(
         std::make_shared<mir::udev::Context>());
 }   
 
@@ -79,7 +79,7 @@ TEST_F(DRMHelperTest, throws_if_drm_auth_magic_fails)
 
     mtd::StubConsoleServices console;
 
-    auto helpers = mgm::helpers::DRMHelper::open_all_devices(
+    auto helpers = mgg::helpers::DRMHelper::open_all_devices(
         std::make_shared<mir::udev::Context>(),
         console);
 

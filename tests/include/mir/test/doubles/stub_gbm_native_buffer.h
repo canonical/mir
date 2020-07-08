@@ -19,8 +19,8 @@
 #ifndef MIR_TEST_DOUBLES_STUB_GBM_NATIVE_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_GBM_NATIVE_BUFFER_H_
 
-#include "src/platforms/mesa/server/gbm_buffer.h"
-#include "src/platforms/mesa/include/native_buffer.h"
+#include "src/platforms/gbm-kms/server/gbm_buffer.h"
+#include "src/platforms/gbm-kms/include/native_buffer.h"
 #include "mir/geometry/size.h"
 #include <unistd.h>
 #include <fcntl.h>
@@ -33,7 +33,7 @@ namespace test
 namespace doubles
 {
 
-struct StubGBMNativeBuffer : public graphics::mesa::NativeBuffer
+struct StubGBMNativeBuffer : public graphics::gbm::NativeBuffer
 {
     StubGBMNativeBuffer(geometry::Size const& size, bool bypassable = true)
     {

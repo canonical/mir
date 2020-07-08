@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platforms/mesa/server/kms/cursor.h"
-#include "src/platforms/mesa/server/kms/kms_output.h"
-#include "src/platforms/mesa/server/kms/kms_output_container.h"
-#include "src/platforms/mesa/server/kms/kms_display_configuration.h"
+#include "src/platforms/gbm-kms/server/kms/cursor.h"
+#include "src/platforms/gbm-kms/server/kms/kms_output.h"
+#include "src/platforms/gbm-kms/server/kms/kms_output_container.h"
+#include "src/platforms/gbm-kms/server/kms/kms_display_configuration.h"
 
 #include "mir/graphics/cursor_image.h"
 
@@ -41,7 +41,7 @@
 #include <string.h>
 
 namespace mg = mir::graphics;
-namespace mgm = mir::graphics::mesa;
+namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
@@ -51,7 +51,7 @@ using namespace ::testing;
 namespace
 {
 
-struct StubKMSOutputContainer : public mgm::KMSOutputContainer
+struct StubKMSOutputContainer : public mgg::KMSOutputContainer
 {
     StubKMSOutputContainer()
     {
@@ -73,7 +73,7 @@ struct StubKMSOutputContainer : public mgm::KMSOutputContainer
             .WillByDefault(Return(true));
     }
 
-    void for_each_output(std::function<void(std::shared_ptr<mgm::KMSOutput> const&)> functor) const
+    void for_each_output(std::function<void(std::shared_ptr<mgg::KMSOutput> const&)> functor) const
     {
         for (auto const& output : outputs)
             functor(output);
@@ -92,10 +92,10 @@ struct StubKMSOutputContainer : public mgm::KMSOutputContainer
     std::vector<std::shared_ptr<testing::NiceMock<MockKMSOutput>>> outputs;
 };
 
-struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
+struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
 {
     StubKMSDisplayConfiguration(StubKMSOutputContainer& container)
-        : mgm::KMSDisplayConfiguration(),
+        : mgg::KMSDisplayConfiguration(),
           container{container},
           stub_config{
             {{
@@ -213,7 +213,7 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
         return stub_config.valid();
     }
 
-    std::shared_ptr<mgm::KMSOutput> get_output_for(mg::DisplayConfigurationOutputId id) const override
+    std::shared_ptr<mgg::KMSOutput> get_output_for(mg::DisplayConfigurationOutputId id) const override
     {
         return outputs[id.as_value()];
     }
@@ -239,10 +239,10 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
 
     StubKMSOutputContainer& container;
     mtd::StubDisplayConfig stub_config;
-    std::vector<std::shared_ptr<mgm::KMSOutput>> outputs;
+    std::vector<std::shared_ptr<mgg::KMSOutput>> outputs;
 };
 
-struct StubCurrentConfiguration : public mgm::CurrentConfiguration
+struct StubCurrentConfiguration : public mgg::CurrentConfiguration
 {
     StubCurrentConfiguration(StubKMSOutputContainer& container)
         : conf(container)
@@ -250,7 +250,7 @@ struct StubCurrentConfiguration : public mgm::CurrentConfiguration
     }
 
     void with_current_configuration_do(
-        std::function<void(mgm::KMSDisplayConfiguration const&)> const& exec)
+        std::function<void(mgg::KMSDisplayConfiguration const&)> const& exec)
     {
         exec(conf);
     }
@@ -328,7 +328,7 @@ struct MesaCursorTest : ::testing::Test
     StubCursorImage stub_image;
     StubKMSOutputContainer output_container;
     StubCurrentConfiguration current_configuration{output_container};
-    mgm::Cursor cursor;
+    mgg::Cursor cursor;
 };
 
 struct SinglePixelCursorImage : public StubCursorImage
@@ -356,7 +356,7 @@ TEST_F(MesaCursorTest, creates_cursor_bo_image)
                                         GBM_FORMAT_ARGB8888,
                                         GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE));
 
-    mgm::Cursor cursor_tmp{output_container,
+    mgg::Cursor cursor_tmp{output_container,
         std::make_shared<StubCurrentConfiguration>(output_container)};
 }
 
@@ -368,7 +368,7 @@ TEST_F(MesaCursorTest, queries_received_cursor_size)
     EXPECT_CALL(mock_gbm, gbm_bo_get_width(_)).Times(2);
     EXPECT_CALL(mock_gbm, gbm_bo_get_height(_)).Times(2);
 
-    mgm::Cursor cursor_tmp{output_container,
+    mgg::Cursor cursor_tmp{output_container,
         std::make_shared<StubCurrentConfiguration>(output_container)};
 }
 
@@ -383,7 +383,7 @@ TEST_F(MesaCursorTest, respects_drm_cap_cursor)
 
     EXPECT_CALL(mock_gbm, gbm_bo_create(_, drm_buffer_size, drm_buffer_size, _, _));
 
-    mgm::Cursor cursor_tmp{output_container,
+    mgg::Cursor cursor_tmp{output_container,
                            std::make_shared<StubCurrentConfiguration>(output_container)};
 }
 
@@ -400,7 +400,7 @@ TEST_F(MesaCursorTest, can_force_64x64_cursor)
 
     EXPECT_CALL(mock_gbm, gbm_bo_create(_, 64, 64, _, _));
 
-    mgm::Cursor cursor_tmp{output_container,
+    mgg::Cursor cursor_tmp{output_container,
                            std::make_shared<StubCurrentConfiguration>(output_container)};
 }
 
@@ -464,7 +464,7 @@ TEST_F(MesaCursorTest, pads_missing_data_when_buffer_size_differs)
 
     EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, ContainsASingleWhitePixel(width*height), buffer_size_bytes));
 
-    mgm::Cursor cursor_tmp{output_container,
+    mgg::Cursor cursor_tmp{output_container,
         std::make_shared<StubCurrentConfiguration>(output_container)};
     cursor_tmp.show(SinglePixelCursorImage());
 }
@@ -499,7 +499,7 @@ TEST_F(MesaCursorTest, clears_cursor_state_on_construction)
     EXPECT_CALL(*output_container.outputs[1], has_cursor()).Times(0);
     EXPECT_CALL(*output_container.outputs[2], has_cursor()).Times(0);
 
-    mgm::Cursor cursor_tmp{output_container,
+    mgg::Cursor cursor_tmp{output_container,
        std::make_shared<StubCurrentConfiguration>(output_container)};
 
     output_container.verify_and_clear_expectations();
@@ -517,7 +517,7 @@ TEST_F(MesaCursorTest, construction_fails_if_initial_set_fails)
         .WillByDefault(Return(false));
 
     EXPECT_THROW(
-        mgm::Cursor cursor_tmp(output_container,
+        mgg::Cursor cursor_tmp(output_container,
            std::make_shared<StubCurrentConfiguration>(output_container));
     , std::runtime_error);
 }

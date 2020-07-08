@@ -1,6 +1,6 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platforms/mesa
-  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
+        ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server
 )
 
 add_subdirectory(kms-utils/)

@@ -51,7 +51,7 @@ std::vector<std::shared_ptr<mir::SharedLibrary>> available_platforms()
     std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
 
 #ifdef MIR_BUILD_PLATFORM_MESA_KMS
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-mesa-kms")));
+    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-gbm-kms")));
 #endif
     return modules;
 }
@@ -186,7 +186,7 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
     auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
-    EXPECT_THAT(description->name, HasSubstr("mesa-kms"));
+    EXPECT_THAT(description->name, HasSubstr("gbm-kms"));
 }
 
 //LP: #1526225, LP: #1526505, LP: #1515558, LP: #1526209
@@ -216,7 +216,7 @@ TEST_F(ServerPlatformProbeMockDRM, returns_kms_platform_when_nested)
     auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
-    EXPECT_THAT(description->name, HasSubstr("mesa-kms"));
+    EXPECT_THAT(description->name, HasSubstr("gbm-kms"));
 }
 #endif
 

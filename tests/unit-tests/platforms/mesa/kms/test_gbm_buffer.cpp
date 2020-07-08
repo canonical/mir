@@ -25,10 +25,10 @@
 
 #include "mir_test_framework/udev_environment.h"
 
-#include "src/platforms/mesa/server/kms/platform.h"
-#include "src/platforms/mesa/server/gbm_buffer.h"
-#include "src/platforms/mesa/include/native_buffer.h"
-#include "src/platforms/mesa/server/buffer_allocator.h"
+#include "src/platforms/gbm/server/kms/platform.h"
+#include "src/platforms/gbm/server/gbm_buffer.h"
+#include "src/platforms/gbm/include/native_buffer.h"
+#include "src/platforms/gbm/server/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
@@ -45,7 +45,7 @@
 #include <stdexcept>
 
 namespace mg=mir::graphics;
-namespace mgm=mir::graphics::mesa;
+namespace mgg=mir::graphics::mesa;
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
 namespace mtf=mir_test_framework;
@@ -91,19 +91,19 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
         .WillByDefault(Return(stride.as_uint32_t()));
 
-        platform = std::make_shared<mgm::Platform>(
+        platform = std::make_shared<mgg::Platform>(
                 mir::report::null_display_report(),
                 std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
-                mgm::BypassOption::allowed);
+                mgg::BypassOption::allowed);
         auto const display = platform->create_display(
             std::make_shared<mtd::NullDisplayConfigurationPolicy>(),
             std::make_shared<mtd::NullGLConfig>());
-        allocator.reset(new mgm::BufferAllocator(
+        allocator.reset(new mgg::BufferAllocator(
             *display,
             platform->gbm->device,
-            mgm::BypassOption::allowed,
-            mgm::BufferImportMethod::gbm_native_pixmap));
+            mgg::BypassOption::allowed,
+            mgg::BufferImportMethod::gbm_native_pixmap));
     }
 
     mir::renderer::gl::TextureSource* as_texture_source(std::shared_ptr<mg::Buffer> const& buffer)
@@ -115,8 +115,8 @@ protected:
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL>  mock_gl;
-    std::shared_ptr<mgm::Platform> platform;
-    std::unique_ptr<mgm::BufferAllocator> allocator;
+    std::shared_ptr<mgg::Platform> platform;
+    std::unique_ptr<mgg::BufferAllocator> allocator;
 
     // Defaults
     MirPixelFormat pf;
@@ -157,7 +157,7 @@ TEST_F(GBMBufferTest, buffer_native_handle_contains_correct_data)
             .WillOnce(DoAll(SetArgPointee<3>(prime_fd), Return(0)));
 
     auto buffer = allocator->alloc_buffer(buffer_properties);
-    auto handle = std::dynamic_pointer_cast<mgm::NativeBuffer>(buffer->native_buffer_handle());
+    auto handle = std::dynamic_pointer_cast<mgg::NativeBuffer>(buffer->native_buffer_handle());
     ASSERT_THAT(handle, Ne(nullptr));
     EXPECT_EQ(prime_fd, static_cast<unsigned int>(handle->fd[0]));
     EXPECT_EQ(stride.as_uint32_t(), static_cast<unsigned int>(handle->stride));

@@ -19,10 +19,10 @@
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/stub_console_services.h"
-#include "src/platforms/mesa/server/kms/platform.h"
-#include "src/platforms/mesa/include/native_buffer.h"
+#include "src/platforms/gbm-kms/server/kms/platform.h"
+#include "src/platforms/gbm-kms/include/native_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "src/platforms/mesa/server/buffer_allocator.h"
+#include "src/platforms/gbm-kms/server/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/display.h"
 
@@ -45,7 +45,7 @@
 #include <gbm.h>
 
 namespace mg = mir::graphics;
-namespace mgm = mir::graphics::mesa;
+namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
@@ -79,19 +79,19 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_handle(_))
         .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
 
-        platform = std::make_shared<mgm::Platform>(
+        platform = std::make_shared<mgg::Platform>(
                 mir::report::null_display_report(),
                 std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
-                mgm::BypassOption::allowed);
+                mgg::BypassOption::allowed);
         display = platform->create_display(
             std::make_shared<mtd::NullDisplayConfigurationPolicy>(),
             std::make_shared<mtd::NullGLConfig>());
-        allocator.reset(new mgm::BufferAllocator(
+        allocator.reset(new mgg::BufferAllocator(
             *display,
             platform->gbm->device,
-            mgm::BypassOption::allowed,
-            mgm::BufferImportMethod::gbm_native_pixmap));
+            mgg::BypassOption::allowed,
+            mgg::BufferImportMethod::gbm_native_pixmap));
     }
 
     // Defaults
@@ -102,9 +102,9 @@ protected:
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL> mock_gl;
-    std::shared_ptr<mgm::Platform> platform;
+    std::shared_ptr<mgg::Platform> platform;
     std::unique_ptr<mg::Display> display;
-    std::unique_ptr<mgm::BufferAllocator> allocator;
+    std::unique_ptr<mgg::BufferAllocator> allocator;
     mtf::UdevEnvironment fake_devices;
 };
 
