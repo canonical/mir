@@ -72,9 +72,9 @@ target_link_libraries(
   ${MIR_SERVER_REFERENCES}
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
+if (MIR_TEST_PLATFORM STREQUAL "gbm-kms")
 target_link_libraries(mir_integration_tests
-  mirsharedmesaservercommon-static
+  mirsharedgbmservercommon-static
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )

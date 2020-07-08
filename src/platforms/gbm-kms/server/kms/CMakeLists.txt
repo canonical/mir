@@ -20,11 +20,11 @@ string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 add_definitions(
   -D__GBM__
-  -DMIR_LOG_COMPONENT_FALLBACK="mesa-kms"
+  -DMIR_LOG_COMPONENT_FALLBACK="gbm-kms"
 )
 
 add_library(
-  mirplatformgraphicsmesakmsobjects OBJECT
+  mirplatformgraphicsgbmkmsobjects OBJECT
 
   bypass.cpp
   cursor.cpp
@@ -50,16 +50,16 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
     )
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
-add_library(mirplatformgraphicsmesakms MODULE
+add_library(mirplatformgraphicsgbmkms MODULE
   platform_symbols.cpp
-  $<TARGET_OBJECTS:mirplatformgraphicsmesakmsobjects>
+  $<TARGET_OBJECTS:mirplatformgraphicsgbmkmsobjects>
 )
 
 target_link_libraries(
-  mirplatformgraphicsmesakms
+  mirplatformgraphicsgbmkms
   PRIVATE
   mirplatform
-  mirsharedmesaservercommon-static
+  mirsharedgbmservercommon-static
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${Boost_IOSTREAMS_LIBRARY}
   ${Boost_THREAD_LIBRARY}
@@ -71,8 +71,8 @@ target_link_libraries(
 )
 
 set_target_properties(
-  mirplatformgraphicsmesakms PROPERTIES
-  OUTPUT_NAME graphics-mesa-kms
+  mirplatformgraphicsgbmkms PROPERTIES
+  OUTPUT_NAME graphics-gbm-kms
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   PREFIX ""
   SUFFIX ".so.${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
@@ -80,4 +80,4 @@ set_target_properties(
   LINK_DEPENDS ${symbol_map}
 )
 
-install(TARGETS mirplatformgraphicsmesakms LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
+install(TARGETS mirplatformgraphicsgbmkms LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})

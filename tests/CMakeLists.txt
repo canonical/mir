@@ -119,8 +119,8 @@ if (NOT HAVE_INSTANTIATE_TEST_SUITE_P)
   add_definitions(-DINSTANTIATE_TEST_SUITE_P=INSTANTIATE_TEST_CASE_P)
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
-  add_definitions(-DMIR_BUILD_PLATFORM_MESA_KMS)
+if (MIR_BUILD_PLATFORM_GBM_KMS)
+  add_definitions(-DMIR_BUILD_PLATFORM_GBM_KMS)
 endif()
 
 # public headers (only public headers should be accessed by acceptance tests)

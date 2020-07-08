@@ -1,6 +1,4 @@
-if (MIR_BUILD_PLATFORM_MESA_KMS)
-  add_subdirectory(kms/)
-endif()
+add_subdirectory(kms/)
 
 include_directories(
     ${server_common_include_dirs}
@@ -9,7 +7,7 @@ include_directories(
 )
 
 add_library(
-  mirsharedmesaservercommon-static STATIC
+  mirsharedgbmservercommon-static STATIC
 
   buffer_allocator.cpp
   display_helpers.cpp
@@ -20,8 +18,8 @@ add_library(
 )
 
 target_link_libraries(
-  mirsharedmesaservercommon-static
-  mirsharedmesa-static
+  mirsharedgbmservercommon-static
+  mirsharedgbm-static
 
   server_platform_common
   kms_utils

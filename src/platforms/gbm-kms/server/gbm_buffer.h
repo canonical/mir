@@ -111,7 +111,6 @@ protected:
 
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
-    uint32_t bo_flags;
     std::unique_ptr<common::BufferTextureBinder> const texture_binder;
     int prime_fd;
 
