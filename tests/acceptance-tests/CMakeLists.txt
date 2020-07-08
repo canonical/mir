@@ -39,7 +39,6 @@ set(
   test_client_with_custom_display_config_deadlock.cpp
   test_server_without_active_outputs.cpp
   test_input_device_hub.cpp
-  test_render_override.cpp
   test_surface_modifications.cpp
   test_surface_placement.cpp
   test_surface_morphing.cpp

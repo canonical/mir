@@ -416,23 +416,6 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
     return secured_region;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-/* mcl::EGLNativeSurface interface for EGLNativeWindow integration */
-MirWindowParameters mcl::BufferStream::get_parameters() const
-{
-    auto size = buffer_depository->size();
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    return MirWindowParameters{
-        "",
-        size.width.as_int(),
-        size.height.as_int(),
-        static_cast<MirPixelFormat>(protobuf_bs->pixel_format()),
-        static_cast<MirBufferUsage>(protobuf_bs->buffer_usage()),
-        mir_display_output_id_invalid};
-}
-#pragma GCC diagnostic pop
-
 std::chrono::microseconds mcl::BufferStream::microseconds_till_vblank() const
 {
     std::chrono::microseconds ret(0);

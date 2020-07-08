@@ -88,38 +88,6 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
 }
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-TEST_F(ClientSurfaces, are_created_with_correct_size)
-{
-    int width_1 = 640, height_1 = 480, width_2 = 1600, height_2 = 1200;
-    
-    auto spec = mir_create_normal_window_spec(connection, width_1, height_1);
-    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-    window[0] = mir_create_window_sync(spec);
-
-    mir_window_spec_set_width(spec, width_2);
-    mir_window_spec_set_height(spec, height_2);
-
-    window[1] = mir_create_window_sync(spec);
-    
-    mir_window_spec_release(spec);
-
-    MirWindowParameters response_params;
-    mir_window_get_parameters(window[0], &response_params);
-    EXPECT_EQ(640, response_params.width);
-    EXPECT_EQ(480, response_params.height);
-    EXPECT_EQ(mir_pixel_format_abgr_8888, response_params.pixel_format);
-    EXPECT_EQ(mir_buffer_usage_software, response_params.buffer_usage);
-
-    mir_window_get_parameters(window[1], &response_params);
-    EXPECT_EQ(1600, response_params.width);
-    EXPECT_EQ(1200, response_params.height);
-    EXPECT_EQ(mir_pixel_format_abgr_8888, response_params.pixel_format);
-    EXPECT_EQ(mir_buffer_usage_software, response_params.buffer_usage);
-
-    mir_window_release_sync(window[1]);
-    mir_window_release_sync(window[0]);
-}
-
 struct WithOrientation : ClientSurfaces, ::testing::WithParamInterface<MirOrientationMode> {};
 
 TEST_P(WithOrientation, have_requested_preferred_orientation)

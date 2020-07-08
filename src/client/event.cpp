@@ -108,11 +108,6 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) MIR_HANDLE_EV
     return ev->to_input();
 })
 
-MirWindowEvent const* mir_event_get_surface_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    return mir_event_get_window_event(ev);
-})
-
 MirWindowEvent const* mir_event_get_window_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_window);
@@ -154,16 +149,6 @@ MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev) MIR_HANDLE_
 
     return ev->to_keymap();
 })
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    expect_event_type(ev, mir_event_type_input_configuration);
-
-    return ev->to_input_configuration();
-})
-#pragma GCC diagnostic pop
 
 MirWindowOutputEvent const* mir_event_get_surface_output_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
@@ -263,28 +248,6 @@ MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev) MIR_HA
 
     return ev->device_id();
 })
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-/* Input configuration event accessors */
-MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputConfigurationEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    expect_event_type(ev, mir_event_type_input_configuration);
-    return ev->action();
-})
-
-int64_t mir_input_configuration_event_get_time(MirInputConfigurationEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    expect_event_type(ev, mir_event_type_input_configuration);
-    return ev->when().count();
-})
-
-MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurationEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    expect_event_type(ev, mir_event_type_input_configuration);
-    return ev->id();
-})
-#pragma GCC diagnostic pop
 
 /* Surface output event accessors */
 
@@ -408,11 +371,6 @@ MirPointerButtons mir_input_device_state_event_device_pointer_buttons(MirInputDe
     expect_event_type(ev, mir_event_type_input_device_state);
     expect_index_in_range(ev->device_count(), index);
     return ev->device_pointer_buttons(index);
-})
-
-MirWindowPlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    return mir_event_get_window_placement_event(event);
 })
 
 MirRectangle mir_surface_placement_get_relative_position(MirWindowPlacementEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(

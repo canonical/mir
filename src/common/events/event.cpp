@@ -21,7 +21,6 @@
 #include "mir/log.h"
 #include "mir/events/event.h"
 #include "mir/events/close_surface_event.h"
-#include "mir/events/input_configuration_event.h"
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
 #include "mir/events/keymap_event.h"
@@ -119,19 +118,6 @@ MirInputEvent const* MirEvent::to_input() const
 {
     return static_cast<MirInputEvent const*>(this);
 }
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-MirInputConfigurationEvent* MirEvent::to_input_configuration()
-{
-    return static_cast<MirInputConfigurationEvent*>(this);
-}
-
-MirInputConfigurationEvent const* MirEvent::to_input_configuration() const
-{
-    return static_cast<MirInputConfigurationEvent const*>(this);
-}
-#pragma GCC diagnostic pop
 
 MirWindowEvent* MirEvent::to_surface()
 {

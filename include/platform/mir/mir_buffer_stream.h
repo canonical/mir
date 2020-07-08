@@ -78,11 +78,6 @@ struct MirBufferStream
 public:
     virtual ~MirBufferStream() = default;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    virtual MirWindowParameters get_parameters() const = 0;
-#pragma GCC diagnostic pop
-
     virtual std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() = 0;
     virtual uint32_t get_current_buffer_id() = 0;
     virtual EGLNativeWindowType egl_native_window() = 0;

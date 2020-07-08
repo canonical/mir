@@ -19,7 +19,6 @@
 #define MIR_CLIENT_LIBRARY_H
 
 #include <mir_toolkit/mir_connection.h>
-#include <mir_toolkit/mir_surface.h>
 #include <mir_toolkit/mir_window.h>
 #include <mir_toolkit/mir_wait.h>
 #include <mir_toolkit/mir_presentation_chain.h>

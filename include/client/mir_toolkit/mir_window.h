@@ -708,20 +708,6 @@ MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_add_render_surface during wind
 char const* mir_window_get_error_message(MirWindow* window);
 
 /**
- * Get a window's parameters.
- *  \deprecated Use mir_window getters or listen for state change events instead
- *  \pre                     The window is valid
- *  \param [in]  window      The window
- *  \param [out] parameters  Structure to be populated
- */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-void mir_window_get_parameters(MirWindow* window, MirWindowParameters* parameters)
-MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_get_xxx apis or listen to state/attribute change events instead");
-#pragma GCC diagnostic pop
-
-
-/**
  * Get the orientation of a window.
  *   \param [in] window  The window to query
  *   \return              The orientation of the window

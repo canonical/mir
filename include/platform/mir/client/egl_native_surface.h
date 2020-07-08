@@ -31,10 +31,6 @@ class ClientBuffer;
 class EGLNativeSurface
 {
   public:
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    virtual MirWindowParameters get_parameters() const = 0;
-#pragma GCC diagnostic pop
     virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
     virtual void swap_buffers_sync() = 0;
     virtual void request_and_wait_for_configure(MirWindowAttrib a, int value) = 0;

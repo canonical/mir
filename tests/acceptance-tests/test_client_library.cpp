@@ -234,21 +234,6 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
     {
         return surfaces.size();
     }
-
-    static void nosey_thread(MirWindow *surf)
-    {
-        for (int i = 0; i < 10; i++)
-        {
-            mir_wait_for_one(mir_surface_set_state(surf,
-                                            mir_surface_state_maximized));
-            mir_wait_for_one(mir_surface_set_state(surf,
-                                            mir_surface_state_restored));
-            mir_wait_for_one(mir_surface_set_state(surf,
-                                            mir_surface_state_fullscreen));
-            mir_wait_for_one(mir_surface_set_state(surf,
-                                            mir_surface_state_minimized));
-        }
-    }
 };
 
 auto const* const protocol_version_override = "MIR_CLIENT_TEST_OVERRRIDE_PROTOCOL_VERSION";
@@ -344,35 +329,6 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_much_too_new)
     mir_connection_release(connection);
 }
 
-TEST_F(ClientLibrary, creates_surface)
-{
-    mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
-
-    int request_width = 640, request_height = 480;
-    MirPixelFormat request_format = mir_pixel_format_abgr_8888;
-    MirBufferUsage request_buffer_usage = mir_buffer_usage_software;
-
-    auto spec = mir_create_normal_window_spec(connection, request_width, request_height);
-    mir_window_spec_set_pixel_format(spec, request_format);
-    mir_window_spec_set_buffer_usage(spec, request_buffer_usage);
-    window = mir_create_window_sync(spec);
-    mir_window_spec_release(spec);
-
-    ASSERT_THAT(window, NotNull());
-    EXPECT_TRUE(mir_window_is_valid(window));
-    EXPECT_THAT(mir_window_get_error_message(window), StrEq(""));
-
-    MirWindowParameters response_params;
-    mir_window_get_parameters(window, &response_params);
-    EXPECT_EQ(request_width, response_params.width);
-    EXPECT_EQ(request_height, response_params.height);
-    EXPECT_EQ(request_format, response_params.pixel_format);
-    EXPECT_EQ(request_buffer_usage, response_params.buffer_usage);
-
-    mir_window_release_sync(window);
-    mir_connection_release(connection);
-}
-
 TEST_F(ClientLibrary, shutdown_race_is_resolved_safely)
 {   // An attempt at a regression test for race LP: #1653658
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -384,45 +340,6 @@ TEST_F(ClientLibrary, shutdown_race_is_resolved_safely)
     EXPECT_THAT(window, IsValid());
 
     mir_window_release(window, [](MirWindow*, void*){ sleep(1); }, NULL);
-    mir_connection_release(connection);
-}
-
-TEST_F(ClientLibrary, can_set_surface_state)
-{
-    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    auto const spec =
-        mir_create_normal_window_spec(connection, 640, 480);
-    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-
-    window = mir_create_window_sync(spec);
-
-    mir_window_spec_release(spec);
-
-    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_restored));
-
-    mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
-    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
-
-    mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(999)));
-    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
-
-    mir_wait_for(mir_surface_set_state(window, mir_surface_state_horizmaximized));
-    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_horizmaximized));
-
-    mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(888)));
-    EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_horizmaximized));
-
-    // Stress-test synchronization logic with some flooding
-    for (int i = 0; i < 100; i++)
-    {
-        mir_window_set_state(window, mir_window_state_maximized);
-        mir_window_set_state(window, mir_window_state_restored);
-        mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
-        ASSERT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
-    }
-
-    mir_window_release_sync(window);
     mir_connection_release(connection);
 }
 
@@ -693,29 +610,6 @@ TEST_F(ClientLibrary, fully_synchronous_client)
 
     EXPECT_TRUE(mir_connection_is_valid(connection));
     EXPECT_STREQ("", mir_connection_get_error_message(connection));
-    mir_connection_release(connection);
-}
-
-TEST_F(ClientLibrary, highly_threaded_client)
-{
-    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    window = mtf::make_any_surface(connection);
-
-    std::thread a(nosey_thread, window);
-    std::thread b(nosey_thread, window);
-    std::thread c(nosey_thread, window);
-
-    a.join();
-    b.join();
-    c.join();
-
-    EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_minimized));
-
-    mir_window_release_sync(window);
-
-    EXPECT_TRUE(mir_connection_is_valid(connection));
-    EXPECT_THAT(mir_connection_get_error_message(connection), StrEq(""));
     mir_connection_release(connection);
 }
 

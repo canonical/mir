@@ -45,8 +45,6 @@ typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent
 typedef struct MirCloseSurfaceEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
-typedef struct MirInputConfigurationEvent MirInputConfigurationEvent 
-    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirInputDeviceStateEvent and the MirInputConfig callback instead");
 typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent
     MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowOutputEvent instead");
 typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
@@ -71,7 +69,6 @@ typedef struct MirEvent MirEvent;
 #include "mir_toolkit/events/orientation_event.h"
 #include "mir_toolkit/events/prompt_session_event.h"
 #include "mir_toolkit/events/keymap_event.h"
-#include "mir_toolkit/events/input_configuration_event.h"
 #include "mir_toolkit/events/surface_output_event.h"
 #include "mir_toolkit/events/window_output_event.h"
 #include "mir_toolkit/events/input_device_state_event.h"
@@ -103,17 +100,6 @@ MirEventType mir_event_get_type(MirEvent const* event);
  * \return           The associated MirInputEvent
  */
 MirInputEvent const* mir_event_get_input_event(MirEvent const* event);
-
-/**
- * Retrieve the MirSurfaceEvent associated with a MirEvent of
- * type mir_event_type_surface. See <mir_toolkit/events/surface_event.h>
- * for accessors.
- *
- * \param [in] event The event
- * \return           The associated MirSurfaceEvent
- */
-MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* event)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_event_get_window_event instead");
 
 /**
  * Retrieve the MirWindowEvent associated with a MirEvent of
@@ -187,24 +173,6 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
  */
 MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-/**
- * Retrieve the MirInputConfig associated with a MirEvent of
- * type mir_event_type_input_configuration. The event signifies that the
- * input device configuration has changed.
- *
- * \deprecated Input devices and changes to the input devices are indicated
- * via the MirInputConfigCallback
- * \param [in] event The event
- * \return           The associated MirInputConfigurationEvent
- */
-/// @cond
-MIR_FOR_REMOVAL_IN_VERSION_1("Input devices and changes to the input devices are indicated via the MirInputConfigCallback")
-/// @endcond
-MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* event);
-#pragma GCC diagnostic pop
-
 /**
  * Retrieve the MirSurfaceOutputEvent associated with a MirEvent of type
  * mir_event_type_surface_output. The event signifies that the properties
@@ -246,17 +214,6 @@ MirWindowOutputEvent const* mir_event_get_window_output_event(MirEvent const* ev
  * \return           The associated MirInputConfigurationEvent
  */
 MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* event);
-
-/**
- * Retrieve the MirSurfacePlacementEvent associated with a MirEvent of
- * type mir_event_type_surface_placement. The event signifies that the
- * the server has fulfilled a request for relative surface placement.
- *
- * \param [in] event The event
- * \return           The associated MirSurfacePlacementEvent
- */
-MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_event_get_window_placement_event");
 
 /**
  * Retrieve the MirWindowPlacementEvent associated with a MirEvent of
