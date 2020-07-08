@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_NESTED_AUTHENTICATION_H_
-#define MIR_GRAPHICS_MESA_NESTED_AUTHENTICATION_H_
+#ifndef MIR_GRAPHICS_GBM_NESTED_AUTHENTICATION_H_
+#define MIR_GRAPHICS_GBM_NESTED_AUTHENTICATION_H_
 
 #include "drm_authentication.h"
 
@@ -43,4 +43,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_MESA_NESTED_AUTHENTICATION_H_ */
+#endif /* MIR_GRAPHICS_GBM_NESTED_AUTHENTICATION_H_ */

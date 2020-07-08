@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_DISPLAY_HELPERS_H_
-#define MIR_GRAPHICS_MESA_DISPLAY_HELPERS_H_
+#ifndef MIR_GRAPHICS_GBM_DISPLAY_HELPERS_H_
+#define MIR_GRAPHICS_GBM_DISPLAY_HELPERS_H_
 
 #include "drm_authentication.h"
 #include "mir/udev/wrapper.h"
@@ -101,4 +101,4 @@ public:
 }
 }
 }
-#endif /* MIR_GRAPHICS_MESA_DISPLAY_HELPERS_H_ */
+#endif /* MIR_GRAPHICS_GBM_DISPLAY_HELPERS_H_ */

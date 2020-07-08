@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_
-#define MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_
+#ifndef MIR_GRAPHICS_GBM_PAGE_FLIPPER_H_
+#define MIR_GRAPHICS_GBM_PAGE_FLIPPER_H_
 
 #include "mir/graphics/frame.h"
 #include <cstdint>
@@ -47,4 +47,4 @@ protected:
 }
 }
 
-#endif /* MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_ */
+#endif /* MIR_GRAPHICS_GBM_PAGE_FLIPPER_H_ */

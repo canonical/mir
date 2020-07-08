@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
-#define MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
+#ifndef MIR_GRAPHICS_GBM_NATIVE_BUFFER_H_
+#define MIR_GRAPHICS_GBM_NATIVE_BUFFER_H_
 
 #include <mir_toolkit/mir_native_buffer.h>
 #include "mir/graphics/native_buffer.h"
@@ -42,4 +42,4 @@ struct NativeBuffer : graphics::NativeBuffer, MirBufferPackage
 }
 }
 
-#endif /* MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_ */
+#endif /* MIR_GRAPHICS_GBM_NATIVE_BUFFER_H_ */

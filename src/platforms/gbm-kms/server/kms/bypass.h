@@ -16,8 +16,8 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_BYPASS_H_
-#define MIR_GRAPHICS_MESA_BYPASS_H_
+#ifndef MIR_GRAPHICS_GBM_BYPASS_H_
+#define MIR_GRAPHICS_GBM_BYPASS_H_
 
 #include "mir/graphics/renderable.h"
 
@@ -43,4 +43,4 @@ private:
 } // namespace graphics
 } // namespace mir
 
-#endif // MIR_GRAPHICS_MESA_BYPASS_H_
+#endif // MIR_GRAPHICS_GBM_BYPASS_H_

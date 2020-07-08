@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_BUFFER_ALLOCATOR_H_
-#define MIR_GRAPHICS_MESA_BUFFER_ALLOCATOR_H_
+#ifndef MIR_GRAPHICS_GBM_BUFFER_ALLOCATOR_H_
+#define MIR_GRAPHICS_GBM_BUFFER_ALLOCATOR_H_
 
 #include "platform_common.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -102,4 +102,4 @@ private:
 }
 }
 
-#endif // MIR_GRAPHICS_MESA_BUFFER_ALLOCATOR_H_
+#endif // MIR_GRAPHICS_GBM_BUFFER_ALLOCATOR_H_

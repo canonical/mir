@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_DRM_AUTHENTICATION_H_
-#define MIR_GRAPHICS_MESA_DRM_AUTHENTICATION_H_
+#ifndef MIR_GRAPHICS_GBM_DRM_AUTHENTICATION_H_
+#define MIR_GRAPHICS_GBM_DRM_AUTHENTICATION_H_
 
 #include <xf86drm.h>
 #include "mir/fd.h"
@@ -43,4 +43,4 @@ public:
 }
 }
 
-#endif /* MIR_GRAPHICS_MESA_DRM_AUTHENTICATION_H_ */
+#endif /* MIR_GRAPHICS_GBM_DRM_AUTHENTICATION_H_ */

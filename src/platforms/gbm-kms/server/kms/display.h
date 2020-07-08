@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_DISPLAY_H_
-#define MIR_GRAPHICS_MESA_DISPLAY_H_
+#ifndef MIR_GRAPHICS_GBM_DISPLAY_H_
+#define MIR_GRAPHICS_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
 #include "mir/renderer/gl/context_source.h"
@@ -130,4 +130,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_MESA_DISPLAY_H_ */
+#endif /* MIR_GRAPHICS_GBM_DISPLAY_H_ */

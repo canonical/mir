@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_LINUX_VIRTUAL_TERMINAL_H_
-#define MIR_GRAPHICS_MESA_LINUX_VIRTUAL_TERMINAL_H_
+#ifndef MIR_GRAPHICS_GBM_LINUX_VIRTUAL_TERMINAL_H_
+#define MIR_GRAPHICS_GBM_LINUX_VIRTUAL_TERMINAL_H_
 
 #include "mir/console_services.h"
 
@@ -120,4 +120,4 @@ private:
 
 }
 
-#endif /* MIR_GRAPHICS_MESA_LINUX_VIRTUAL_TERMINAL_H_ */
+#endif /* MIR_GRAPHICS_GBM_LINUX_VIRTUAL_TERMINAL_H_ */

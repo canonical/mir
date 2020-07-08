@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef MIR_GRAPHICS_MESA_EXTENSIONS_H_
-#define MIR_GRAPHICS_MESA_EXTENSIONS_H_
+#ifndef MIR_GRAPHICS_GBM_EXTENSIONS_H_
+#define MIR_GRAPHICS_GBM_EXTENSIONS_H_
 #include "mir/extension_description.h"
 #include <vector>
 
@@ -42,4 +42,4 @@ inline std::vector<ExtensionDescription> mesa_extensions()
 }
 }
 }
-#endif /* MIR_GRAPHICS_MESA_EXTENSIONS_H_ */
+#endif /* MIR_GRAPHICS_GBM_EXTENSIONS_H_ */

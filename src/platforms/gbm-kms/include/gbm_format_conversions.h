@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef MIR_GRAPHICS_MESA_GBM_FORMAT_CONVERSIONS_H_
-#define MIR_GRAPHICS_MESA_GBM_FORMAT_CONVERSIONS_H_
+#ifndef MIR_GRAPHICS_GBM_GBM_FORMAT_CONVERSIONS_H_
+#define MIR_GRAPHICS_GBM_GBM_FORMAT_CONVERSIONS_H_
 
 #include <mir_toolkit/common.h>
 #include <stdint.h>
@@ -36,4 +36,4 @@ uint32_t mir_format_to_gbm_format(MirPixelFormat format);
 }
 }
 }
-#endif /* MIR_GRAPHICS_MESA_GBM_FORMAT_CONVERSIONS_H_ */
+#endif /* MIR_GRAPHICS_GBM_GBM_FORMAT_CONVERSIONS_H_ */

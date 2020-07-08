@@ -16,8 +16,8 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_PLATFORM_COMMON_H_
-#define MIR_GRAPHICS_MESA_PLATFORM_COMMON_H_
+#ifndef MIR_GRAPHICS_GBM_PLATFORM_COMMON_H_
+#define MIR_GRAPHICS_GBM_PLATFORM_COMMON_H_
 
 namespace mir
 {
@@ -35,4 +35,4 @@ enum class BypassOption
 }
 }
 }
-#endif /* MIR_GRAPHICS_MESA_PLATFORM_COMMON_H_ */
+#endif /* MIR_GRAPHICS_GBM_PLATFORM_COMMON_H_ */
