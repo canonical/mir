@@ -19,8 +19,6 @@
 #include "mir/graphics/platform_authentication.h"
 #include "nested_authentication.h"
 
-#include "mir_toolkit/mesa/platform_operation.h"
-
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
