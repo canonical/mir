@@ -281,11 +281,6 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_input_config_destroy(MirInputConfig const* config)
-{
-    mir_input_config_release(config);
-}
-
 void mir_input_config_release(MirInputConfig const* config)
 {
     delete config;
@@ -345,12 +340,6 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(
     return connection->egl_native_display();
 }
 
-MirPixelFormat mir_connection_get_egl_pixel_format(MirConnection* connection,
-    EGLDisplay disp, EGLConfig conf)
-{
-    return connection->egl_pixel_format(disp, conf);
-}
-
 void mir_connection_get_available_surface_formats(
     MirConnection* connection,
     MirPixelFormat* formats,
@@ -359,22 +348,6 @@ void mir_connection_get_available_surface_formats(
 {
     if ((connection) && (formats) && (num_valid_formats))
         connection->available_surface_formats(formats, format_size, *num_valid_formats);
-}
-
-MirWaitHandle* mir_connection_platform_operation(
-    MirConnection* connection,
-    MirPlatformMessage const* request,
-    MirPlatformOperationCallback callback, void* context)
-{
-    try
-    {
-        return connection->platform_operation(request, callback, context);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
-    }
 }
 
 void mir_connection_set_error_callback(

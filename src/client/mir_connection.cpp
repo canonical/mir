@@ -23,7 +23,6 @@
 #include "mir_toolkit/extensions/graphics_module.h"
 #include "mir_protobuf.pb.h"
 #include "make_protobuf_object.h"
-#include "mir_toolkit/mir_platform_message.h"
 #include "mir/client/client_platform.h"
 #include "mir/client/client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"

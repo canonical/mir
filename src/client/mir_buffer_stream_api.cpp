@@ -158,17 +158,6 @@ catch (std::exception const& ex)
     return MirEGLNativeWindowType();
 }
 
-MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream* buffer_stream)
-try
-{
-    return buffer_stream->platform_type();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return MirPlatformType();
-}
-
 bool mir_buffer_stream_is_valid(MirBufferStream* opaque_stream)
 {
     return opaque_stream->valid();
@@ -186,16 +175,6 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
-}
-
-void mir_buffer_stream_set_scale_sync(MirBufferStream* opaque_stream, float scale)
-{
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    auto wh = mir_buffer_stream_set_scale(opaque_stream, scale);
-#pragma GCC diagnostic pop
-    if (wh)
-        wh->wait_for_all();
 }
 
 char const* mir_buffer_stream_get_error_message(MirBufferStream* buffer_stream)

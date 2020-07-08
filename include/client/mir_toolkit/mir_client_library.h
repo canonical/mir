@@ -26,7 +26,6 @@
 #include <mir_toolkit/mir_buffer.h>
 #include <mir_toolkit/mir_buffer_stream.h>
 #include <mir_toolkit/version.h>
-#include <mir_toolkit/mir_platform_message.h>
 #include <mir_toolkit/cursors.h>
 #include <mir_toolkit/mir_cookie.h>
 #include <mir_toolkit/mir_display_configuration.h>

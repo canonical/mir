@@ -52,53 +52,6 @@ using namespace testing;
 
 namespace
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-// Assert our MirSurfaceAttrib is 1to1 to MirWindowAttrib
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_type) ==
-    static_cast<int32_t>(mir_window_attrib_type),
-    "mir_surface_attrib_type != mir_window_attrib_type");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_state) ==
-    static_cast<int32_t>(mir_window_attrib_state),
-    "mir_surface_attrib_state != mir_window_attrib_state");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_swapinterval) ==
-    static_cast<int32_t>(mir_window_attrib_swapinterval),
-    "mir_surface_attrib_swapinterval != mir_window_attrib_swapinterval");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_focus) ==
-    static_cast<int32_t>(mir_window_attrib_focus),
-    "mir_surface_attrib_focus != mir_window_attrib_focus");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_dpi) ==
-    static_cast<int32_t>(mir_window_attrib_dpi),
-    "mir_surface_attrib_dpi != mir_window_attrib_dpi");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_visibility) ==
-    static_cast<int32_t>(mir_window_attrib_visibility),
-    "mir_surface_attrib_visibility != mir_window_attrib_visibility");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_preferred_orientation) ==
-    static_cast<int32_t>(mir_window_attrib_preferred_orientation),
-    "mir_surface_attrib_preferred_orientation != mir_window_attrib_preferred_orientation");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attribs) ==
-    static_cast<int32_t>(mir_window_attribs),
-    "mir_surface_attribs != mir_window_attribs");
-
-static_assert(sizeof(MirSurfaceAttrib) == sizeof(MirWindowAttrib),
-    "sizeof(MirSurfaceAttrib) != sizeof(MirWindowAttrib)");
-#pragma GCC diagnostic pop
-
 struct ClientSurfaceEvents : mtf::ConnectedClientWithAWindow
 {
     MirWindow* other_surface;

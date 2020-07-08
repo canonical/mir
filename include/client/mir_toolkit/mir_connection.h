@@ -316,19 +316,6 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
 MIR_FOR_REMOVAL_IN_VERSION_1("Use MirConnection * as the native display instead");
 
 /**
- * Get the exact MirPixelFormat to use in creating a surface for a chosen
- * EGLConfig.
- *   \deprecated Use EGL directly, the EGL implementation will now set correct pixel format"
- *   \param [in] connection  The connection
- *   \param [in] egldisplay  The EGLDisplay for the given config
- *   \param [in] eglconfig   The EGLConfig you have chosen to use
- *   \return                 The MirPixelFormat to use in surface creation
- */
-MirPixelFormat mir_connection_get_egl_pixel_format(
-    MirConnection *connection, void *egldisplay, void *eglconfig)
-MIR_FOR_REMOVAL_IN_VERSION_1("Use EGL directly, the EGL implementation will now set correct pixel format");
-
-/**
  * Get the list of possible formats that a surface can be created with.
  *   \param [in] connection         The connection
  *   \param [out] formats           List of valid formats to create surfaces with
@@ -346,24 +333,6 @@ MIR_FOR_REMOVAL_IN_VERSION_1("Use EGL directly, the EGL implementation will now 
 void mir_connection_get_available_surface_formats(
     MirConnection* connection, MirPixelFormat* formats,
     unsigned const int formats_size, unsigned int *num_valid_formats);
-
-/**
- * Perform a platform specific operation.
- *
- * The MirPlatformMessage used for the request needs to remain valid
- * until this operation finishes.
- *
- * \param [in] connection  The connection
- * \param [in] request     The message used for this operation
- * \param [in] callback    The callback to call when the operation finishes
- * \param [in,out] context User data passed to the callback function
- * \return                 A handle that can be passed to mir_wait_for
- */
-MirWaitHandle* mir_connection_platform_operation(
-    MirConnection* connection,
-    MirPlatformMessage const* request,
-    MirPlatformOperationCallback callback, void* context)
-MIR_FOR_REMOVAL_IN_VERSION_1("use platform specific extensions instead");
 
 /**
  * Create a snapshot of the attached input devices and device configurations.
@@ -411,17 +380,6 @@ void mir_connection_apply_session_input_config(
  */
 void mir_connection_set_base_input_config(
     MirConnection* connection, MirInputConfig const* config);
-
-/**
- * \deprecated  Use mir_input_config_release() instead.
- *
- * Release this snapshot of the input configuration.
- * This invalidates any pointers retrieved from this structure.
- *
- * \param [in] config  The input configuration
- */
-void mir_input_config_destroy(MirInputConfig const* config)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_input_config_release instead");
 
 /**
  * Release this snapshot of the input configuration.

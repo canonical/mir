@@ -885,11 +885,6 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window)
     return mode;
 }
 
-void mir_window_request_persistent_id(MirWindow* window, MirWindowIdCallback callback, void* context)
-{
-    mir_window_request_persistent_id_helper(window, callback, context);
-}
-
 namespace
 {
 void assign_surface_id_result(MirWindow*, MirWindowId* id, void* context)

@@ -34,20 +34,10 @@ std::ostream& operator<<(std::ostream& out, MirPointerAction action);
 std::ostream& operator<<(std::ostream& out, MirPromptSessionState state);
 std::ostream& operator<<(std::ostream& out, MirOrientation orientation);
 
-std::ostream& operator<<(std::ostream& out, MirSurfaceAttrib attribute)
-MIR_FOR_REMOVAL_IN_VERSION_1("use << with MirWindowAttrib instead");
 std::ostream& operator<<(std::ostream& out, MirWindowAttrib attribute);
-std::ostream& operator<<(std::ostream& out, MirSurfaceFocusState state)
-MIR_FOR_REMOVAL_IN_VERSION_1("use << with MirWindowFocusState instead");
 std::ostream& operator<<(std::ostream& out, MirWindowFocusState state);
-std::ostream& operator<<(std::ostream& out, MirSurfaceVisibility state)
-MIR_FOR_REMOVAL_IN_VERSION_1("use << with MirWindowVisibility instead");
 std::ostream& operator<<(std::ostream& out, MirWindowVisibility state);
-std::ostream& operator<<(std::ostream& out, MirSurfaceType type)
-MIR_FOR_REMOVAL_IN_VERSION_1("use << with MirWindowType instead");
 std::ostream& operator<<(std::ostream& out, MirWindowType type);
-std::ostream& operator<<(std::ostream& out, MirSurfaceState state)
-MIR_FOR_REMOVAL_IN_VERSION_1("use << with MirWindowState instead");
 std::ostream& operator<<(std::ostream& out, MirWindowState state);
 
 std::ostream& operator<<(std::ostream& out, MirPromptSessionEvent const& event);

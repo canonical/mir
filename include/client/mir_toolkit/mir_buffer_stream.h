@@ -138,28 +138,6 @@ void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
 MIR_FOR_REMOVAL_IN_VERSION_1("A stream obtained through mir_render_surface_get_buffer_stream() does not need to be released.");
 
 /**
- * Get the underlying platform type so the buffer obtained in "raw"
- * representation in mir_buffer_stream_get_current_buffer() 
- * may be understood
- *
- * \deprecated Use of this function is inherently non-portable in the presence
- * of plug-in platform modules as these need not correspond to the available
- * types. To identify the graphics platform use
- * mir_connection_get_graphics_module(). To safely interpret the
- * buffer contents use mir_buffer_stream_get_graphics_region().
- *
- * \todo This should be removed from the public API at the next API break.
- *
- *   \pre                     The stream is valid
- *   \param [in] stream      The stream
- *   \return                  One of mir_platform_type_android or 
- *                            mir_platform_type_gbm
- */
-MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream)
-MIR_FOR_REMOVAL_IN_VERSION_1("To identify the graphics platform use mir_connection_get_graphics_module(). \n"
-                             "To safely interpret the buffer contents use mir_buffer_stream_get_graphics_region()");
-
-/**
  * Retrieve the current buffer in "raw" representation.
  *   \deprecated Use platform specific platform extensions instead
  *   \pre                         The buffer stream is valid
@@ -228,15 +206,6 @@ MIR_FOR_REMOVAL_IN_VERSION_1("Use MirRenderSurface *as the window type");
  * \return                  A handle that can be passed to mir_wait_for
  */
 MirWaitHandle *mir_buffer_stream_set_scale(MirBufferStream* buffer_stream, float scale)
-MIR_FOR_REMOVAL_IN_VERSION_1("Functionality replaced by the introduction of MirRenderSurface");
-
-/**
- * Set the scale as in mir_buffer_stream_set_scale(), but also wait for the
- * operation to complete.
- * \param [in] buffer_stream The buffer stream
- * \param [in] scale         The scale
- */
-void mir_buffer_stream_set_scale_sync(MirBufferStream* buffer_stream, float scale)
 MIR_FOR_REMOVAL_IN_VERSION_1("Functionality replaced by the introduction of MirRenderSurface");
 
 /**

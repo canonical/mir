@@ -24,9 +24,3 @@ void mir_wait_for(MirWaitHandle* wait_handle)
     if (wait_handle)
         wait_handle->wait_for_all();
 }
-
-void mir_wait_for_one(MirWaitHandle* wait_handle)
-{
-    if (wait_handle)
-        wait_handle->wait_for_one();
-}

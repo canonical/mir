@@ -827,8 +827,6 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window);
  * \param [in]     callback  Callback to invoke when the request completes.
  * \param [in,out] context   User data passed to completion callback.
  */
-void mir_window_request_persistent_id(MirWindow* window, MirWindowIdCallback callback, void* context)
-MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_request_window_id() instead");
 void mir_window_request_window_id(MirWindow* window, MirWindowIdCallback callback, void* context);
 
 /**
