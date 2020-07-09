@@ -24,7 +24,6 @@ set(EVENT_SOURCES
   surface_event.cpp
   input_event.cpp
   input_device_state_event.cpp
-  input_configuration_event.cpp
   keymap_event.cpp
   orientation_event.cpp
   resize_event.cpp

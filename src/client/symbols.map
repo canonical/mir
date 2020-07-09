@@ -1,4 +1,4 @@
-MIR_CLIENT_9 {
+MIR_CLIENT_2.0 {
  global:
     mir_arrow_cursor_name;
     mir_buffer_stream_get_current_buffer;
@@ -158,11 +158,7 @@ MIR_CLIENT_9 {
     mir_vsplit_resize_cursor_name;
     mir_wait_for;
     mir_wait_for_one;
- local: *;
-};
 
-MIR_CLIENT_9.1 {  # New functions in Mir 0.15
-  global:
     mir_connection_pong;
     mir_connection_set_ping_event_callback;
     mir_crosshair_cursor_name;
@@ -174,14 +170,9 @@ MIR_CLIENT_9.1 {  # New functions in Mir 0.15
     mir_surface_spec_attach_to_foreign_parent;
     mir_surface_spec_set_input_shape;
     mir_connection_get_egl_pixel_format;
-} MIR_CLIENT_9;
 
-MIR_CLIENT_9.2 {  # New functions in Mir 0.16
-  global:
     mir_surface_spec_set_event_handler;
-} MIR_CLIENT_9.1;
 
-MIR_CLIENT_9v17 {
     mir_blob_from_display_configuration;
     mir_blob_size;
     mir_blob_data;
@@ -195,17 +186,11 @@ MIR_CLIENT_9v17 {
     mir_surface_output_event_get_dpi;
     mir_surface_output_event_get_form_factor;
     mir_surface_output_event_get_scale;
-} MIR_CLIENT_9.2;
 
-MIR_CLIENT_9v18 {
-  global:
     mir_buffer_stream_get_error_message;
     mir_surface_output_event_get_output_id;
     mir_connection_set_base_display_config;
-} MIR_CLIENT_9v17;
 
-MIR_CLIENT_9v19 {
-  global:
     mir_connection_get_graphics_module;
     mir_surface_raise;
     mir_input_event_has_cookie;
@@ -217,10 +202,7 @@ MIR_CLIENT_9v19 {
     mir_keymap_event_get_keymap_buffer;
     mir_keymap_event_get_device_id;
     mir_surface_spec_set_shell_chrome;
-} MIR_CLIENT_9v18;
 
-MIR_CLIENT_0.21 {
-  global:
     mir_connection_apply_display_configuration;
     mir_connection_create_display_configuration;
     mir_connection_create_input_config;
@@ -261,10 +243,7 @@ MIR_CLIENT_0.21 {
     mir_output_mode_get_height;
     mir_output_mode_get_refresh_rate;
     mir_output_mode_get_width;
-} MIR_CLIENT_9v19;
 
-MIR_CLIENT_0.22 {  # New functions in Mir 0.22
-  global:
     mir_connection_confirm_base_display_configuration;
     mir_connection_preview_base_display_configuration;
     mir_connection_set_error_callback;
@@ -289,108 +268,20 @@ MIR_CLIENT_0.22 {  # New functions in Mir 0.22
     mir_screencast_spec_set_number_of_buffers;
     mir_screencast_spec_set_pixel_format;
     mir_screencast_spec_set_width;
-} MIR_CLIENT_0.21;
 
-MIR_CLIENT_DETAIL_9 {
-  global:
-    extern "C++" { 
-      mir::events::make_event*;
-      mir::events::add_touch*;
-      mir::client::DefaultConnectionConfiguration::DefaultConnectionConfiguration*;
-      mir::client::DefaultConnectionConfiguration::the_surface_map*;
-      mir::client::DefaultConnectionConfiguration::the_rpc_channel*;
-      mir::client::DefaultConnectionConfiguration::the_logger*;
-      mir::client::DefaultConnectionConfiguration::the_input_platform*;
-      mir::client::DefaultConnectionConfiguration::the_display_configuration*;
-      mir::client::DefaultConnectionConfiguration::the_lifecycle_control*;
-      mir::client::DefaultConnectionConfiguration::the_ping_handler*;
-      mir::client::DefaultConnectionConfiguration::the_event_sink*;
-      mir::client::DefaultConnectionConfiguration::the_event_handler_register*;
-      mir::client::DefaultConnectionConfiguration::the_socket_file*;
-      mir::client::DefaultConnectionConfiguration::the_rpc_report*;
-      mir::client::DefaultConnectionConfiguration::the_input_receiver_report*;
-      typeinfo?for?mir::client::DefaultConnectionConfiguration;
-      vtable?for?mir::client::DefaultConnectionConfiguration;
-      mir::operator???std::ostream???Mir*
-    };
-};
-
-MIR_CLIENT_DETAIL_9v18 {
-  global:
-    extern "C++" { 
-      mir::client::DefaultConnectionConfiguration::the_input_devices*;
-      mir::events::set_modifier*;
-      mir::events::set_cursor_position*;
-      mir::events::set_button_state*;
-    };
-} MIR_CLIENT_DETAIL_9;
-
-MIR_CLIENT_DETAIL_0.21 {
-  global:
-    extern "C++" { 
-      mir::client::DefaultConnectionConfiguration::the_buffer_factory*;
-    };
-} MIR_CLIENT_DETAIL_9v18;
-
-MIR_CLIENT_DETAIL_private_buffer_semantics {
-  global:
-    # These functions will be republished under a different
-    # name as a result of the MirRenderSurface-->MirSurface
-    # renaming transition.
-    mir_connection_create_render_surface;
-    mir_connection_create_render_surface_sync;
-    mir_render_surface_get_buffer_stream;
-    mir_render_surface_get_presentation_chain;
-    mir_render_surface_is_valid;
-    mir_render_surface_get_error_message;
-    mir_render_surface_get_size;
-    mir_render_surface_set_size;
-    mir_render_surface_release;
-    mir_connection_present_mode_supported;
-    mir_presentation_chain_set_mode;
-    mir_window_spec_add_render_surface;
-    mir_window_spec_set_cursor_render_surface;
-    mir_cursor_configuration_from_render_surface;
-
-    #private functions needed temporarily by nested passthrough
-    #should not be published along with the rest of the NBS symbols
-    mir_buffer_get_egl_image_parameters;
-    mir_presentation_chain_set_queueing_mode;
-    mir_presentation_chain_set_dropping_mode;
-} MIR_CLIENT_DETAIL_9v18;
-
-MIR_CLIENT_DETAIL_0.24 {
-  global:
-    extern "C++" { 
-      mir::input::receiver::XKBMapper::XKBMapper*;
-      mir::input::receiver::XKBMapper::?XKBMapper*;
-      mir::input::receiver::XKBMapper::set_key_state*;
-      mir::input::receiver::XKBMapper::set_keymap*;
-      mir::input::receiver::XKBMapper::reset_keymap*;
-      mir::input::receiver::XKBMapper::map_event*;
-    };
-} MIR_CLIENT_DETAIL_0.21;
-
-MIR_CLIENT_0.24 {  # New functions in Mir 0.24
-  global:
     mir_event_get_input_device_state_event;
     mir_input_device_state_event_device_count;
     mir_input_device_state_event_device_id;
     mir_input_device_state_event_device_pointer_buttons;
     mir_input_device_state_event_device_pointer_buttons;
     mir_input_device_state_event_device_pressed_keys_count;
-    # We're being naughty deleting this function without bumping soname, but we won't get caught.
-    # mir_input_device_state_event_device_pressed_keys;
     mir_input_device_state_event_modifiers;
     mir_input_device_state_event_pointer_axis;
     mir_input_device_state_event_pointer_buttons;
     mir_input_device_state_event_time;
     mir_input_device_state_event_device_pointer_buttons;
     mir_surface_spec_set_pointer_confinement;
-} MIR_CLIENT_0.22;
 
-MIR_CLIENT_0.25 {  # New functions in Mir 0.25
-  global:
     mir_connection_create_spec_for_tip;
     mir_event_get_surface_placement_event;
     mir_output_get_current_mode_index;
@@ -410,33 +301,7 @@ MIR_CLIENT_0.25 {  # New functions in Mir 0.25
     mir_buffer_stream_get_swapinterval;
     mir_buffer_stream_set_size;
     mir_buffer_stream_get_size;
-} MIR_CLIENT_0.24;
 
-MIR_CLIENT_DETAIL_0.25 {
-  global:
-    extern "C++" {
-      mir::client::DefaultConnectionConfiguration::the_error_handler*;
-      mir::events::clone_event*;
-      mir::events::transform_positions*;
-    };
-} MIR_CLIENT_DETAIL_0.24;
-
-MIR_CLIENT_DETAIL_0.26 {
-  global:
-    extern "C++" {
-        mir::client::to_client_context*;
-    };
-} MIR_CLIENT_DETAIL_0.25;
-
-MIR_CLIENT_DETAIL_0.26.1 {
-  global:
-    extern "C++" {
-        mir::client::render_surface_lookup*;
-    };
-} MIR_CLIENT_DETAIL_0.26;
-
-MIR_CLIENT_0.26 {  # New functions in Mir 0.26
-  global:
     mir_input_config_release;
     mir_input_device_get_mutable_pointer_config;
     mir_input_device_get_mutable_touchpad_config;
@@ -543,10 +408,7 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_get_preferred_orientation;
     mir_window_request_persistent_id;
     mir_window_request_persistent_id_sync;
-} MIR_CLIENT_0.25;
 
-MIR_CLIENT_0.26.1 { # New functions in Mir 0.26.1
-  global:
     mir_buffer_map;
     mir_buffer_unmap;
     mir_buffer_release;
@@ -568,19 +430,7 @@ MIR_CLIENT_0.26.1 { # New functions in Mir 0.26.1
     mir_window_id_from_string;
     mir_window_request_window_id;
     mir_window_request_window_id_sync;
-} MIR_CLIENT_0.26;
 
-MIR_CLIENT_DETAIL_0.27 {  # New functions in Mir 0.27
-  global:
-    extern "C++" {
-      mir::events::set_window_id*;
-      mir::events::make_start_drag_and_drop_event*;
-      mir::events::set_drag_and_drop_handle*;
-    };
-} MIR_CLIENT_DETAIL_0.26.1;
-
-MIR_CLIENT_0.27 {  # New functions in Mir 0.27
-  global:
     mir_buffer_stream_get_microseconds_till_vblank;
     mir_connection_apply_session_input_config;
     mir_connection_enumerate_extensions;
@@ -617,7 +467,85 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27
     mir_touchscreen_config_get_output_id;
     mir_touchscreen_config_set_mapping_mode;
     mir_touchscreen_config_set_output_id;
-} MIR_CLIENT_0.26.1;
+ local: *;
+};
+
+
+MIR_CLIENT_DETAIL_2.0 {
+  global:
+    # These functions will be republished under a different
+    # name as a result of the MirRenderSurface-->MirSurface
+    # renaming transition.
+    mir_connection_create_render_surface;
+    mir_connection_create_render_surface_sync;
+    mir_render_surface_get_buffer_stream;
+    mir_render_surface_get_presentation_chain;
+    mir_render_surface_is_valid;
+    mir_render_surface_get_error_message;
+    mir_render_surface_get_size;
+    mir_render_surface_set_size;
+    mir_render_surface_release;
+    mir_connection_present_mode_supported;
+    mir_presentation_chain_set_mode;
+    mir_window_spec_add_render_surface;
+    mir_window_spec_set_cursor_render_surface;
+    mir_cursor_configuration_from_render_surface;
+
+    #private functions needed temporarily by nested passthrough
+    #should not be published along with the rest of the NBS symbols
+    mir_buffer_get_egl_image_parameters;
+    mir_presentation_chain_set_queueing_mode;
+    mir_presentation_chain_set_dropping_mode;
+
+    extern "C++" {
+      mir::events::make_event*;
+      mir::events::add_touch*;
+      mir::client::DefaultConnectionConfiguration::DefaultConnectionConfiguration*;
+      mir::client::DefaultConnectionConfiguration::the_surface_map*;
+      mir::client::DefaultConnectionConfiguration::the_rpc_channel*;
+      mir::client::DefaultConnectionConfiguration::the_logger*;
+      mir::client::DefaultConnectionConfiguration::the_input_platform*;
+      mir::client::DefaultConnectionConfiguration::the_display_configuration*;
+      mir::client::DefaultConnectionConfiguration::the_lifecycle_control*;
+      mir::client::DefaultConnectionConfiguration::the_ping_handler*;
+      mir::client::DefaultConnectionConfiguration::the_event_sink*;
+      mir::client::DefaultConnectionConfiguration::the_event_handler_register*;
+      mir::client::DefaultConnectionConfiguration::the_socket_file*;
+      mir::client::DefaultConnectionConfiguration::the_rpc_report*;
+      mir::client::DefaultConnectionConfiguration::the_input_receiver_report*;
+      typeinfo?for?mir::client::DefaultConnectionConfiguration;
+      vtable?for?mir::client::DefaultConnectionConfiguration;
+      mir::operator???std::ostream???Mir*;
+
+      mir::client::DefaultConnectionConfiguration::the_input_devices*;
+      mir::events::set_modifier*;
+      mir::events::set_cursor_position*;
+      mir::events::set_button_state*;
+
+      mir::client::DefaultConnectionConfiguration::the_buffer_factory*;
+
+      mir::input::receiver::XKBMapper::XKBMapper*;
+      mir::input::receiver::XKBMapper::?XKBMapper*;
+      mir::input::receiver::XKBMapper::set_key_state*;
+      mir::input::receiver::XKBMapper::set_keymap*;
+      mir::input::receiver::XKBMapper::reset_keymap*;
+      mir::input::receiver::XKBMapper::map_event*;
+
+      mir::client::DefaultConnectionConfiguration::the_error_handler*;
+      mir::events::clone_event*;
+      mir::events::transform_positions*;
+
+      mir::client::to_client_context*;
+
+      mir::client::render_surface_lookup*;
+
+      mir::events::set_window_id*;
+      mir::events::make_start_drag_and_drop_event*;
+      mir::events::set_drag_and_drop_handle*;
+
+      vtable?for?mir::input::receiver::XKBMapper;
+    };
+} MIR_CLIENT_2.0;
 
 # When building with CMAKE_BUILD_TYPE=UBSanitize these are needed
 MIR_CLIENT_UBSAN {
@@ -625,11 +553,4 @@ MIR_CLIENT_UBSAN {
   extern "C++" {
       typeinfo?for?mir::input::receiver::XKBMapper;
   };
-} MIR_CLIENT_0.26.1;
-
-MIR_CLIENT_DETAIL_1.6 { # New functions in Mir 1.6 (used by mir_umock_unit_tests)
- global:
-  extern "C++" {
-      vtable?for?mir::input::receiver::XKBMapper;
-  };
-} MIR_CLIENT_DETAIL_0.26.1;
+} MIR_CLIENT_2.0;

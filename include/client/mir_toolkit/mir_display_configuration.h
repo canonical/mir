@@ -48,22 +48,6 @@ typedef struct MirOutputMode MirOutputMode;
 void mir_display_config_release(MirDisplayConfig* config);
 
 /**
- * Get the maximum possible number of simultaneously active outputs this system
- * supports.
- *
- * \note There may be restrictions on the configuration required to achieve this
- * many active outputs. Typically the achievable number of simultaneously active
- * outputs is lower than this number.
- *
- * \param [in]  config    The configuration to query
- * \returns      The maximum number of simultaneously active outputs
- *               supportable at this time.
- */
-int mir_display_config_get_max_simultaneous_outputs(
-    MirDisplayConfig const* config)
-    MIR_FOR_REMOVAL_IN_VERSION_1("Not accurate in Mir 0.26 and later. May be removed in future.");
-
-/**
  * Get the number of outputs available in this display configuration.
  *
  * This returns the total number of outputs the system has. This includes both
@@ -261,15 +245,6 @@ int mir_output_get_id(MirOutput const* output);
  *              if it cannot be determined.
  */
 MirOutputType mir_output_get_type(MirOutput const* output);
-
-/**
- * Get the textual name of an output type.
- *
- * \param [in]  type  The MirDisplayOutputType to describe.
- * \returns           The name of the output type.
- */
-char const* mir_display_output_type_name(MirDisplayOutputType type)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_output_type_name instead");
 
 /**
  * Get the textual name of an output type.

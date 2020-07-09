@@ -131,82 +131,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirOrientation orientation)
     }
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-std::ostream& mir::operator<<(std::ostream& out, MirSurfaceAttrib attribute)
-{
-    switch (attribute)
-    {
-    PRINT(mir_surface_attrib,type);
-    PRINT(mir_surface_attrib,dpi);
-    PRINT(mir_surface_attrib,focus);
-    PRINT(mir_surface_attrib,state);
-    PRINT(mir_surface_attrib,visibility);
-    PRINT(mir_surface_attrib,swapinterval);
-    PRINT(mir_surface_attrib,preferred_orientation);
-    default:
-        return out << static_cast<int>(attribute) << "<INVALID>";
-    }
-}
-
-std::ostream& mir::operator<<(std::ostream& out, MirSurfaceFocusState state)
-{
-    switch (state)
-    {
-    PRINT(mir_surface,focused);
-    PRINT(mir_surface,unfocused);
-    default:
-        return out << static_cast<int>(state) << "<INVALID>";
-    }
-}
-
-std::ostream& mir::operator<<(std::ostream& out, MirSurfaceVisibility state)
-{
-    switch (state)
-    {
-    PRINT(mir_surface_visibility,exposed);
-    PRINT(mir_surface_visibility,occluded);
-    default:
-        return out << static_cast<int>(state) << "<INVALID>";
-    }
-}
-
-std::ostream& mir::operator<<(std::ostream& out, MirSurfaceType type)
-{
-    switch (type)
-    {
-    PRINT(mir_surface_type,normal);
-    PRINT(mir_surface_type,utility);
-    PRINT(mir_surface_type,dialog);
-    PRINT(mir_surface_type,gloss);
-    PRINT(mir_surface_type,freestyle);
-    PRINT(mir_surface_type,menu);
-    PRINT(mir_surface_type,inputmethod);
-    PRINT(mir_surface_type,satellite);
-    PRINT(mir_surface_type,tip);
-    default:
-        return out << static_cast<int>(type) << "<INVALID>";
-    }
-}
-
-std::ostream& mir::operator<<(std::ostream& out, MirSurfaceState state)
-{
-    switch (state)
-    {
-    PRINT(mir_surface_state,unknown);
-    PRINT(mir_surface_state,restored);
-    PRINT(mir_surface_state,minimized);
-    PRINT(mir_surface_state,maximized);
-    PRINT(mir_surface_state,vertmaximized);
-    PRINT(mir_surface_state,fullscreen);
-    PRINT(mir_surface_state,horizmaximized);
-    PRINT(mir_surface_state,hidden);
-    default:
-        return out << static_cast<int>(state) << "<INVALID>";
-    }
-}
-#pragma GCC diagnostic pop
-
 std::ostream& mir::operator<<(std::ostream& out, MirWindowAttrib attribute)
 {
     switch (attribute)
@@ -466,12 +390,13 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
         PRINT_EVENT(window);
         PRINT_EVENT(resize);
         PRINT_EVENT(orientation);
-        PRINT_EVENT(close_surface);
         PRINT_EVENT(input);
         PRINT_EVENT(input_device_state);
         PRINT_EVENT(keymap);
         PRINT_EVENT(window_placement);
         PRINT_EVENT(window_output);
+    case mir_event_type_close_surface :
+        return out << "close_window_event()";
     case mir_event_type_prompt_session_state_change:
         return out << *mir_event_get_prompt_session_event(&event);
     default:

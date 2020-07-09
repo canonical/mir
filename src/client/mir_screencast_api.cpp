@@ -107,16 +107,6 @@ char const *mir_screencast_get_error_message(MirScreencast *screencast)
     return screencast->get_error_message();
 }
 
-
-MirScreencast* mir_connection_create_screencast_sync(
-    MirConnection* connection,
-    MirScreencastParameters* parameters)
-{
-    mir::require(mir_connection_is_valid(connection));
-    MirScreencastSpec spec{connection, *parameters};
-    return mir_screencast_create_sync(&spec);
-}
-
 void mir_screencast_release_sync(MirScreencast* screencast)
 {
     screencast->release(null_callback, nullptr)->wait_for_all();

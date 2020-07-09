@@ -30,7 +30,6 @@ set(
   test_custom_input_dispatcher.cpp
   test_client_focus_notification.cpp
   test_mirblob.cpp
-  test_display_configuration.cpp
   test_surfaces_with_output_id.cpp
   test_prompt_session_client_api.cpp
   test_client_scaling.cpp
@@ -39,7 +38,6 @@ set(
   test_client_with_custom_display_config_deadlock.cpp
   test_server_without_active_outputs.cpp
   test_input_device_hub.cpp
-  test_render_override.cpp
   test_surface_modifications.cpp
   test_surface_placement.cpp
   test_surface_morphing.cpp

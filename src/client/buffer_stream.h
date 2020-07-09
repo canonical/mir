@@ -110,10 +110,6 @@ public:
     std::shared_ptr<MemoryRegion> secure_for_cpu_write() override;
 
     // mcl::EGLNativeSurface interface
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    MirWindowParameters get_parameters() const override;
-#pragma GCC diagnostic pop
     void swap_buffers_sync() override;
 
     void request_and_wait_for_configure(MirWindowAttrib attrib, int) override;

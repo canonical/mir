@@ -20,7 +20,7 @@ include_directories(
   ${DRM_INCLUDE_DIRS}
 )
 
-set(MIRCLIENT_ABI 9)
+set(MIRCLIENT_ABI 10)
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/client/symbols.map)
 
 add_definitions(-DMIR_CLIENT_PLATFORM_PATH="${MIR_CLIENT_PLATFORM_PATH}/")
@@ -65,7 +65,6 @@ add_library(mirclientobjects OBJECT
   mir_event_distributor.cpp
   probing_client_platform_factory.cpp
   periodic_perf_report.cpp
-  mir_platform_message_api.cpp
   buffer_stream.cpp
   screencast_stream.cpp
   buffer_vault.cpp
@@ -88,7 +87,6 @@ add_library(mirclientobjects OBJECT
   buffer_stream_configuration.cpp
   error_handler.h
   ${MIR_CLIENT_SOURCES}
-  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_display_configuration.h
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_error.h
   mir_extension_core.cpp

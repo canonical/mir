@@ -34,19 +34,6 @@ extern "C" {
 /**
  * Retrieve the new keymap reported by this MirKeymapEvent
  *
- * \deprecated keymap credentials are no longer available use
- * mir_keymap_event_get_keymap_buffer instead.
- *
- * \param[in] ev The keymap event
- * \param[out] rules XKB rules describing the new keymap.
- */
-void mir_keymap_event_get_rules(MirKeymapEvent const* ev,
-                                struct xkb_rule_names* rules)
-MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_keymap_event_get_keymap_buffer() instead");
-
-/**
- * Retrieve the new keymap reported by this MirKeymapEvent
- *
  * The keymap buffer is only valid while the MirKeymapEvent is valid.
  * The buffer can be used via xkb_keymap_new_from_buffer
  * \param[in] ev The keymap event

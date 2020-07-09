@@ -708,20 +708,6 @@ MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_add_render_surface during wind
 char const* mir_window_get_error_message(MirWindow* window);
 
 /**
- * Get a window's parameters.
- *  \deprecated Use mir_window getters or listen for state change events instead
- *  \pre                     The window is valid
- *  \param [in]  window      The window
- *  \param [out] parameters  Structure to be populated
- */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-void mir_window_get_parameters(MirWindow* window, MirWindowParameters* parameters)
-MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_get_xxx apis or listen to state/attribute change events instead");
-#pragma GCC diagnostic pop
-
-
-/**
  * Get the orientation of a window.
  *   \param [in] window  The window to query
  *   \return              The orientation of the window
@@ -841,8 +827,6 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window);
  * \param [in]     callback  Callback to invoke when the request completes.
  * \param [in,out] context   User data passed to completion callback.
  */
-void mir_window_request_persistent_id(MirWindow* window, MirWindowIdCallback callback, void* context)
-MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_request_window_id() instead");
 void mir_window_request_window_id(MirWindow* window, MirWindowIdCallback callback, void* context);
 
 /**
@@ -851,8 +835,6 @@ void mir_window_request_window_id(MirWindow* window, MirWindowIdCallback callbac
  * \return A MirWindowId. This MirWindowId is owned by the calling code, and must
  *         be freed with a call to mir_persistent_id_release()
  */
-MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
-MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_request_window_id_sync");
 MirWindowId* mir_window_request_window_id_sync(MirWindow* window);
 #ifdef __cplusplus
 }

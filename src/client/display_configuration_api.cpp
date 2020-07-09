@@ -118,11 +118,6 @@ char const* mir_output_get_model(MirOutput const* output)
     return nullptr;
 }
 
-int mir_display_config_get_max_simultaneous_outputs(MirDisplayConfig const* config)
-{
-    return mir_display_config_get_num_outputs(config);
-}
-
 int mir_output_get_id(MirOutput const* output)
 {
     return output_to_protobuf(output)->output_id();
@@ -131,11 +126,6 @@ int mir_output_get_id(MirOutput const* output)
 MirOutputType mir_output_get_type(MirOutput const* output)
 {
     return static_cast<MirOutputType>(output_to_protobuf(output)->type());
-}
-
-char const* mir_display_output_type_name(MirDisplayOutputType type)
-{
-    return mir::output_type_name(type);
 }
 
 char const* mir_output_type_name(MirOutputType type)

@@ -51,39 +51,6 @@ bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream);
 char const *mir_buffer_stream_get_error_message(MirBufferStream *buffer_stream);
 
 /**
- * Create a new buffer stream. 
- *
- * For example, the resulting buffer stream may be used
- * with mir_cursor_configuration_from_buffer_stream, 
- * in order to post images to the system cursor.
- *
- * \deprecated Use mir_render_surface_get_buffer_stream instead
- * \param [in] connection     A valid connection
- * \param [in] width          Requested buffer width
- * \param [in] height         Requested buffer height
- * \param [in] format         Requested pixel format
- * \param [in] buffer_usage   Requested buffer usage, use 
- *                            mir_buffer_usage_software for cursor image streams
- * \param [in] callback       Callback to be invoked when the request completes
- *                            The callback is guaranteed to be called and called with a
- *                            non-null MirBufferStream*, but the stream may be invalid in
- *                            case of an error.
- * \param [in] context        Userdata to pass to callback function
- *
- * \return                    A handle that can be supplied to mir_wait_for
- */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
-    int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage buffer_usage,
-    MirBufferStreamCallback callback,
-    void* context)
-MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_render_surface_get_buffer_stream instead");
-#pragma GCC diagnostic pop
-
-/**
  * Create a new buffer stream unattached to a surface and wait for the result. 
  * The resulting buffer stream may be used with 
  * mir_cursor_configuration_from_buffer_stream in order to post images 
@@ -136,28 +103,6 @@ MIR_FOR_REMOVAL_IN_VERSION_1("A stream obtained through mir_render_surface_get_b
  */
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
 MIR_FOR_REMOVAL_IN_VERSION_1("A stream obtained through mir_render_surface_get_buffer_stream() does not need to be released.");
-
-/**
- * Get the underlying platform type so the buffer obtained in "raw"
- * representation in mir_buffer_stream_get_current_buffer() 
- * may be understood
- *
- * \deprecated Use of this function is inherently non-portable in the presence
- * of plug-in platform modules as these need not correspond to the available
- * types. To identify the graphics platform use
- * mir_connection_get_graphics_module(). To safely interpret the
- * buffer contents use mir_buffer_stream_get_graphics_region().
- *
- * \todo This should be removed from the public API at the next API break.
- *
- *   \pre                     The stream is valid
- *   \param [in] stream      The stream
- *   \return                  One of mir_platform_type_android or 
- *                            mir_platform_type_gbm
- */
-MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream)
-MIR_FOR_REMOVAL_IN_VERSION_1("To identify the graphics platform use mir_connection_get_graphics_module(). \n"
-                             "To safely interpret the buffer contents use mir_buffer_stream_get_graphics_region()");
 
 /**
  * Retrieve the current buffer in "raw" representation.
@@ -228,15 +173,6 @@ MIR_FOR_REMOVAL_IN_VERSION_1("Use MirRenderSurface *as the window type");
  * \return                  A handle that can be passed to mir_wait_for
  */
 MirWaitHandle *mir_buffer_stream_set_scale(MirBufferStream* buffer_stream, float scale)
-MIR_FOR_REMOVAL_IN_VERSION_1("Functionality replaced by the introduction of MirRenderSurface");
-
-/**
- * Set the scale as in mir_buffer_stream_set_scale(), but also wait for the
- * operation to complete.
- * \param [in] buffer_stream The buffer stream
- * \param [in] scale         The scale
- */
-void mir_buffer_stream_set_scale_sync(MirBufferStream* buffer_stream, float scale)
 MIR_FOR_REMOVAL_IN_VERSION_1("Functionality replaced by the introduction of MirRenderSurface");
 
 /**

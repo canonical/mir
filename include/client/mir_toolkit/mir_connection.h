@@ -88,27 +88,6 @@ char const *mir_connection_get_error_message(MirConnection *connection);
 void mir_connection_release(MirConnection *connection);
 
 /**
- * Query platform-specific data and/or file descriptors that are required to
- * initialize GL/EGL features.
- *   \param [in]  connection        The connection
- *   \param [out] platform_package  Structure to be populated
- */
-void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
-MIR_FOR_REMOVAL_IN_VERSION_1("use platform extensions instead");
-
-/**
- * Query graphics platform module.
- *
- * \note The char pointers in MirModuleProperties are owned by the connection and should not be
- * freed. They remain valid until the connection is released.
- *
- *   \param [in]  connection    The connection
- *   \param [out] properties    Structure to be populated
- */
-void mir_connection_get_graphics_module(MirConnection *connection, MirModuleProperties *properties)
-MIR_FOR_REMOVAL_IN_VERSION_1("use graphics module extension instead");
-
-/**
  * Register a callback to be called when a Lifecycle state change occurs.
  *   \param [in] connection     The connection
  *   \param [in] callback       The function to be called when the state change occurs
@@ -149,19 +128,6 @@ void mir_connection_pong(MirConnection* connection, int32_t serial);
 /**
  * Query the display
  *
- *   \deprecated  Use mir_connection_create_display_configuration() instead.
- *
- *   \warning return value must be destroyed via mir_display_config_destroy()
- *   \warning may return null if connection is invalid
- *   \param [in]  connection        The connection
- *   \return                        structure that describes the display configuration
- */
-MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_connection_create_display_configuration instead");
-
-/**
- * Query the display
- *
  * \pre mir_connection_is_valid(connection) == true
  * \warning return value must be destroyed via mir_display_config_release()
  *
@@ -183,29 +149,6 @@ MirDisplayConfig* mir_connection_create_display_configuration(MirConnection* con
 void mir_connection_set_display_config_change_callback(
     MirConnection* connection,
     MirDisplayConfigCallback callback, void* context);
-
-/**
- * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
- *   \param [in] display_configuration  The display_configuration information resource to be destroyed
- */
-void mir_display_config_destroy(MirDisplayConfiguration* display_configuration)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_display_config_release instead");
-
-/**
- * Apply the display configuration
- *
- * The display configuration is applied to this connection only (per-connection
- * configuration) and is invalidated when a hardware change occurs. Clients should
- * register a callback with mir_connection_set_display_config_change_callback()
- * to get notified about hardware changes, so that the can apply a new configuration.
- *
- *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
- *   \param [in] connection             The connection
- *   \param [in] display_configuration  The display_configuration to apply
- *   \return                            A handle that can be passed to mir_wait_for
- */
-MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_connection_apply_session_display_config instead");
 
 /**
  * Apply the display config for the connection
@@ -230,33 +173,6 @@ void mir_connection_apply_session_display_config(MirConnection* connection, MirD
  *   \param [in] connection             The connection
  */
 void mir_connection_remove_session_display_config(MirConnection* connection);
-
-/**
- * Set the base display configuration
- *
- * The base display configuration is the configuration the server applies when
- * there is no active per-connection configuration.
- *
- * When the wait handle returned by this function becomes ready, clients can use
- * mir_connection_get_error_message() to check if an authorization error occurred.
- * Only authorization errors are guaranteed to return an error message for this
- * operation.
- *
- * A successful result (i.e. no error) does not guarantee that the base display
- * configuration has been changed to the desired value. Clients should register
- * a callback with mir_connection_set_display_config_change_callback() to monitor
- * actual base display configuration changes.
- *
- *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
- *   \param [in] connection             The connection
- *   \param [in] display_configuration  The display_configuration to set as base
- *   \return                            A handle that can be passed to mir_wait_for
- */
-MirWaitHandle* mir_connection_set_base_display_config(
-    MirConnection* connection,
-    MirDisplayConfiguration const* display_configuration)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_connection_preview_base_display_configuration/mir_connection_confirm_base_display_configuration");
-
 
 /**
  * Preview a new base display configuration
@@ -337,19 +253,6 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
 MIR_FOR_REMOVAL_IN_VERSION_1("Use MirConnection * as the native display instead");
 
 /**
- * Get the exact MirPixelFormat to use in creating a surface for a chosen
- * EGLConfig.
- *   \deprecated Use EGL directly, the EGL implementation will now set correct pixel format"
- *   \param [in] connection  The connection
- *   \param [in] egldisplay  The EGLDisplay for the given config
- *   \param [in] eglconfig   The EGLConfig you have chosen to use
- *   \return                 The MirPixelFormat to use in surface creation
- */
-MirPixelFormat mir_connection_get_egl_pixel_format(
-    MirConnection *connection, void *egldisplay, void *eglconfig)
-MIR_FOR_REMOVAL_IN_VERSION_1("Use EGL directly, the EGL implementation will now set correct pixel format");
-
-/**
  * Get the list of possible formats that a surface can be created with.
  *   \param [in] connection         The connection
  *   \param [out] formats           List of valid formats to create surfaces with
@@ -367,24 +270,6 @@ MIR_FOR_REMOVAL_IN_VERSION_1("Use EGL directly, the EGL implementation will now 
 void mir_connection_get_available_surface_formats(
     MirConnection* connection, MirPixelFormat* formats,
     unsigned const int formats_size, unsigned int *num_valid_formats);
-
-/**
- * Perform a platform specific operation.
- *
- * The MirPlatformMessage used for the request needs to remain valid
- * until this operation finishes.
- *
- * \param [in] connection  The connection
- * \param [in] request     The message used for this operation
- * \param [in] callback    The callback to call when the operation finishes
- * \param [in,out] context User data passed to the callback function
- * \return                 A handle that can be passed to mir_wait_for
- */
-MirWaitHandle* mir_connection_platform_operation(
-    MirConnection* connection,
-    MirPlatformMessage const* request,
-    MirPlatformOperationCallback callback, void* context)
-MIR_FOR_REMOVAL_IN_VERSION_1("use platform specific extensions instead");
 
 /**
  * Create a snapshot of the attached input devices and device configurations.
@@ -432,17 +317,6 @@ void mir_connection_apply_session_input_config(
  */
 void mir_connection_set_base_input_config(
     MirConnection* connection, MirInputConfig const* config);
-
-/**
- * \deprecated  Use mir_input_config_release() instead.
- *
- * Release this snapshot of the input configuration.
- * This invalidates any pointers retrieved from this structure.
- *
- * \param [in] config  The input configuration
- */
-void mir_input_config_destroy(MirInputConfig const* config)
-MIR_FOR_REMOVAL_IN_VERSION_1("use mir_input_config_release instead");
 
 /**
  * Release this snapshot of the input configuration.

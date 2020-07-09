@@ -52,53 +52,6 @@ using namespace testing;
 
 namespace
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-// Assert our MirSurfaceAttrib is 1to1 to MirWindowAttrib
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_type) ==
-    static_cast<int32_t>(mir_window_attrib_type),
-    "mir_surface_attrib_type != mir_window_attrib_type");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_state) ==
-    static_cast<int32_t>(mir_window_attrib_state),
-    "mir_surface_attrib_state != mir_window_attrib_state");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_swapinterval) ==
-    static_cast<int32_t>(mir_window_attrib_swapinterval),
-    "mir_surface_attrib_swapinterval != mir_window_attrib_swapinterval");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_focus) ==
-    static_cast<int32_t>(mir_window_attrib_focus),
-    "mir_surface_attrib_focus != mir_window_attrib_focus");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_dpi) ==
-    static_cast<int32_t>(mir_window_attrib_dpi),
-    "mir_surface_attrib_dpi != mir_window_attrib_dpi");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_visibility) ==
-    static_cast<int32_t>(mir_window_attrib_visibility),
-    "mir_surface_attrib_visibility != mir_window_attrib_visibility");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attrib_preferred_orientation) ==
-    static_cast<int32_t>(mir_window_attrib_preferred_orientation),
-    "mir_surface_attrib_preferred_orientation != mir_window_attrib_preferred_orientation");
-
-static_assert(
-    static_cast<int32_t>(mir_surface_attribs) ==
-    static_cast<int32_t>(mir_window_attribs),
-    "mir_surface_attribs != mir_window_attribs");
-
-static_assert(sizeof(MirSurfaceAttrib) == sizeof(MirWindowAttrib),
-    "sizeof(MirSurfaceAttrib) != sizeof(MirWindowAttrib)");
-#pragma GCC diagnostic pop
-
 struct ClientSurfaceEvents : mtf::ConnectedClientWithAWindow
 {
     MirWindow* other_surface;
@@ -198,58 +151,6 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithAWindow
 };
 }
 
-TEST_F(ClientSurfaceEvents, window_receives_state_events)
-{
-    {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
-        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_vertmaximized));
-#pragma GCC diagnostic pop
-
-        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
-
-        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_window_state_fullscreen));
-    }
-
-    {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(999)));
-#pragma GCC diagnostic pop
-
-        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
-        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_window_state_fullscreen));
-    }
-
-    reset_last_event();
-
-    {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_wait_for(mir_surface_set_state(window, mir_surface_state_vertmaximized));
-#pragma GCC diagnostic pop
-
-        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
-
-        EXPECT_THAT(last_event, mt::WindowEvent(mir_window_attrib_state, mir_window_state_vertmaximized));
-    }
-
-    reset_last_event();
-
-    {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_wait_for(mir_surface_set_state(window, static_cast<MirSurfaceState>(777)));
-        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_maximized));
-#pragma GCC diagnostic pop
-
-        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
-
-        EXPECT_EQ(nullptr, last_event);
-    }
-}
-
 struct OrientationEvents : ClientSurfaceEvents, ::testing::WithParamInterface<MirOrientation> {};
 
 TEST_P(OrientationEvents, surface_receives_orientation_events)
@@ -302,25 +203,6 @@ TEST_F(ClientSurfaceEvents, surface_receives_close_event)
 
     EXPECT_THAT(last_event_surface, Eq(window));
     EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_close_window));
-}
-
-TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
-{
-
-    for (auto const mode:
-        {mir_orientation_mode_portrait, mir_orientation_mode_portrait_inverted,
-         mir_orientation_mode_landscape, mir_orientation_mode_landscape_inverted,
-         mir_orientation_mode_portrait_any, mir_orientation_mode_landscape_any,
-         mir_orientation_mode_any})
-    {
-        reset_last_event();
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_wait_for(mir_surface_set_preferred_orientation(window, mode));
-#pragma GCC diagnostic pop
-        EXPECT_THAT(mir_window_get_preferred_orientation(window), Eq(mode));
-    }
 }
 
 TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_changes)
@@ -541,10 +423,6 @@ void raise_signal_on_close_event(MirWindow*, MirEvent const* ev, void* ctx)
 {
     if (mir_event_get_type(ev) == mir_event_type_close_window)
     {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_event_get_close_surface_event(ev);
-#pragma GCC diagnostic pop
         auto signal = reinterpret_cast<mt::Signal*>(ctx);
         signal->raise();
     }

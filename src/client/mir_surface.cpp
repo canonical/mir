@@ -99,21 +99,6 @@ MirSurfaceSpec::MirSurfaceSpec(
 {
 }
 
-MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirWindowParameters const& params)
-    : connection{connection},
-      width{params.width},
-      height{params.height},
-      pixel_format{params.pixel_format},
-      buffer_usage{params.buffer_usage}
-{
-    type = mir_window_type_normal;
-    if (params.output_id != mir_display_output_id_invalid)
-    {
-        output_id = params.output_id;
-        state = mir_window_state_fullscreen;
-    }
-}
-
 MirSurfaceSpec::MirSurfaceSpec() = default;
 
 MirSurface::MirSurface(
@@ -236,13 +221,6 @@ void MirSurface::configure_frame_clock()
      *       However even while it's suboptimal it's dramatically lower latency
      *       than the old approach and still totally eliminates nesting lag.
      */
-}
-
-MirWindowParameters MirSurface::get_parameters() const
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return {name.c_str(), size.width.as_int(), size.height.as_int(), format, usage, output_id};
 }
 
 char const * MirSurface::get_error_message()
@@ -537,8 +515,8 @@ void MirSurface::handle_event(MirEvent& e)
          * mir_window_output_event_get_refresh_rate that tells us the full
          * native speed of the most relevant output...
          */
-        auto soevent = mir_event_get_surface_output_event(&e);
-        auto rate = mir_surface_output_event_get_refresh_rate(soevent);
+        auto soevent = mir_event_get_window_output_event(&e);
+        auto rate = mir_window_output_event_get_refresh_rate(soevent);
         if (rate > 10.0)  // should be >0, but 10 to workaround LP: #1639725
         {
             std::chrono::nanoseconds const ns(
