@@ -1,7 +1,7 @@
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
 
 include_directories(
-  ${CMAKE_SOURCE_DIR}/include/platforms/mesa
+  ${CMAKE_SOURCE_DIR}/include/platforms/gbm
         ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/include/
 )
 

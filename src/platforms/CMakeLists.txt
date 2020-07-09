@@ -64,7 +64,7 @@ set(client_common_include_dirs
 
 add_subdirectory(common/)
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
+if (MIR_BUILD_PLATFORM_GBM_KMS)
     add_subdirectory(gbm-kms/)
 endif()
 

@@ -9,23 +9,23 @@ declare -A abi_var_for=(\
     ["mirplatform"]="MIRPLATFORM_ABI" \
     ["mirserver"]="MIRSERVER_ABI" \
     ["mircookie"]="MIRCOOKIE_ABI" \
-    ["mirplatformgraphicsmesakms"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" \
+    ["mirplatformgraphicsgbmkms"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" \
     ["mirplatforminputevdev"]="MIR_SERVER_INPUT_PLATFORM_ABI" )
 
 declare -A libtype=(\
-    ["mirplatformgraphicsmesakms"]="plugin" \
+    ["mirplatformgraphicsgbmkms"]="plugin" \
     ["mirplatforminputevdev"]="plugin" )
 
 declare -A package_name=(\
-    ["mirplatformgraphicsmesakms"]="mir-platform-graphics-mesa-kms" \
+    ["mirplatformgraphicsgbmkms"]="mir-platform-graphics-gbm-kms" \
     ["mirplatforminputevdev"]="mir-platform-input-evdev" )
 
 declare -A libsoname=(\
-    ["mirplatformgraphicsmesakms"]="mir/server-platform/graphics-mesa-kms" \
+    ["mirplatformgraphicsgbmkms"]="mir/server-platform/graphics-gbm-kms" \
     ["mirplatforminputevdev"]="mir/server-platform/input-evdev" )
 
 declare -A buildsoname=(\
-    ["mirplatformgraphicsmesakms"]="server-modules/graphics-mesa-kms" \
+    ["mirplatformgraphicsgbmkms"]="server-modules/graphics-gbm-kms" \
     ["mirplatforminputevdev"]="server-modules/input-evdev" )
 
 function print_help_and_exit()

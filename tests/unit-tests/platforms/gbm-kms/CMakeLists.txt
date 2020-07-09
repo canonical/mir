@@ -1,11 +1,11 @@
 include_directories(
-  ${PROJECT_SOURCE_DIR}/include/platforms/mesa
+  ${PROJECT_SOURCE_DIR}/include/platforms/gbm
         ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server
 )
 
 add_subdirectory(kms-utils/)
 
-if (MIR_BUILD_PLATFORM_MESA_KMS AND
+if (MIR_BUILD_PLATFORM_GBM_KMS AND
     (GBM_VERSION VERSION_GREATER 11.0.0))
   add_subdirectory(kms/)
 endif()

@@ -57,7 +57,7 @@ if (MIR_BUILD_PLATFORM_X11)
   )
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
+if (MIR_BUILD_PLATFORM_GBM_KMS)
   include_directories(
           ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server
     ${GBM_INCLUDE_DIRS}

@@ -214,7 +214,7 @@ add_definitions(
 endif(MIR_DISABLE_EPOLL_REACTOR)
 
 add_definitions(-DEGL_NO_X11)
-add_definitions(-DMESA_EGL_NO_X11_HEADERS) # Can be removed when all platforms support EGL_NO_X11
+add_definitions(-DGBM_EGL_NO_X11_HEADERS) # Can be removed when all platforms support EGL_NO_X11
 
 pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream)
 
@@ -222,18 +222,18 @@ pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream)
 if (WAYLAND_EGLSTREAM_FOUND)
   set(
     MIR_PLATFORM
-    mesa-kms;x11;eglstream-kms;wayland
+    gbm-kms;x11;eglstream-kms;wayland
     CACHE
     STRING
-    "a list of graphics backends to build (options are 'mesa-kms', 'x11', 'eglstream-kms', 'wayland', or 'rpi-dispmanx')"
+    "a list of graphics backends to build (options are 'gbm-kms', 'x11', 'eglstream-kms', 'wayland', or 'rpi-dispmanx')"
   )
 else()
   set(
     MIR_PLATFORM
-    mesa-kms;x11;wayland
+    gbm-kms;x11;wayland
     CACHE
     STRING
-    "a list of graphics backends to build (options are 'mesa-kms', 'x11', 'eglstream-kms', 'wayland', or 'rpi-dispmanx')"
+    "a list of graphics backends to build (options are 'gbm-kms', 'x11', 'eglstream-kms', 'wayland', or 'rpi-dispmanx')"
   )
 endif()
 
@@ -250,8 +250,8 @@ if (MIR_ENABLE_WLCS_TESTS)
 endif()
 
 foreach(platform IN LISTS MIR_PLATFORM)
-  if (platform STREQUAL "mesa-kms")
-    set(MIR_BUILD_PLATFORM_MESA_KMS TRUE)
+  if (platform STREQUAL "gbm-kms")
+    set(MIR_BUILD_PLATFORM_GBM_KMS TRUE)
   endif()
   if (platform STREQUAL "x11")
      set(MIR_BUILD_PLATFORM_X11 TRUE)
@@ -347,10 +347,10 @@ else()
   message(FATAL_ERROR "Invalid MIR_SERVER_LIBGL value ${MIR_SERVER_LIBGL}")
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
+if (MIR_BUILD_PLATFORM_GBM_KMS)
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   if (GBM_VERSION VERSION_LESS 11)
-    message(WARNING "Hybrid support requires libgbm from Mesa 11.0 or greater. Hybrid setups will not work")
+    message(WARNING "Hybrid support requires libgbm from GBM 11.0 or greater. Hybrid setups will not work")
     add_definitions(-DMIR_NO_HYBRID_SUPPORT)
   endif()
   if (DRM_VERSION VERSION_GREATER 2.4.84)

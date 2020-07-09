@@ -27,7 +27,7 @@ target_link_libraries(
   ${GL_LDFLAGS} ${GL_LIBRARIES}
   X11
   Xfixes
-  mirsharedmesaservercommon-static
+  mirsharedgbmservercommon-static
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
 )
 

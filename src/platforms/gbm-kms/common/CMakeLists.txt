@@ -5,6 +5,6 @@ include_directories(
 )
 
 add_library(
-  mirsharedmesa-static STATIC
+  mirsharedgbm-static STATIC
   gbm_format_conversions.cpp
 )

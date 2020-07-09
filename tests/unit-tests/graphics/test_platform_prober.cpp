@@ -27,10 +27,10 @@
 #include "mir/raii.h"
 
 #include "mir/test/doubles/mock_egl.h"
-#if defined(MIR_BUILD_PLATFORM_MESA_KMS)
+#if defined(MIR_BUILD_PLATFORM_GBM_KMS)
 #include "mir/test/doubles/mock_drm.h"
 #endif
-#ifdef MIR_BUILD_PLATFORM_MESA_KMS
+#ifdef MIR_BUILD_PLATFORM_GBM_KMS
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_gl.h"
 #endif
@@ -50,7 +50,7 @@ std::vector<std::shared_ptr<mir::SharedLibrary>> available_platforms()
 {
     std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
 
-#ifdef MIR_BUILD_PLATFORM_MESA_KMS
+#ifdef MIR_BUILD_PLATFORM_GBM_KMS
     modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-gbm-kms")));
 #endif
     return modules;
@@ -72,12 +72,12 @@ std::shared_ptr<void> ensure_mesa_probing_succeeds()
     struct MockEnvironment {
         mtf::UdevEnvironment udev;
         testing::NiceMock<mtd::MockEGL> egl;
-#ifdef MIR_BUILD_PLATFORM_MESA_KMS
+#ifdef MIR_BUILD_PLATFORM_GBM_KMS
         testing::NiceMock<mtd::MockGBM> gbm;
         testing::NiceMock<mtd::MockGL> gl;
 #endif
     };
-#ifdef MIR_BUILD_PLATFORM_MESA_KMS
+#ifdef MIR_BUILD_PLATFORM_GBM_KMS
     static auto const fake_gbm_device = reinterpret_cast<gbm_device*>(0xa1b2c3d4);
 #endif
     static auto const fake_egl_display = reinterpret_cast<EGLDisplay>(0xeda);
@@ -86,7 +86,7 @@ std::shared_ptr<void> ensure_mesa_probing_succeeds()
     env->udev.add_standard_device("standard-drm-devices");
     ON_CALL(env->egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
         .WillByDefault(Return("EGL_MESA_platform_gbm EGL_EXT_platform_base"));
-#ifdef MIR_BUILD_PLATFORM_MESA_KMS
+#ifdef MIR_BUILD_PLATFORM_GBM_KMS
     ON_CALL(env->gbm, gbm_create_device(_))
         .WillByDefault(Return(fake_gbm_device));
     ON_CALL(env->egl, eglGetDisplay(fake_gbm_device))
@@ -98,7 +98,7 @@ std::shared_ptr<void> ensure_mesa_probing_succeeds()
                 SetArgPointee<1>(1),
                 SetArgPointee<2>(4),
                 Return(EGL_TRUE)));
-#ifdef MIR_BUILD_PLATFORM_MESA_KMS
+#ifdef MIR_BUILD_PLATFORM_GBM_KMS
     ON_CALL(env->egl, eglGetConfigAttrib(_, env->egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
             .WillByDefault(
                 DoAll(
@@ -151,7 +151,7 @@ public:
 
 class ServerPlatformProbeMockDRM : public ::testing::Test
 {
-#if defined(MIR_BUILD_PLATFORM_MESA_KMS)
+#if defined(MIR_BUILD_PLATFORM_GBM_KMS)
 public:
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
 #endif
@@ -168,7 +168,7 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
                  std::runtime_error);
 }
 
-#ifdef MIR_BUILD_PLATFORM_MESA_KMS
+#ifdef MIR_BUILD_PLATFORM_GBM_KMS
 TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 {
     using namespace testing;
