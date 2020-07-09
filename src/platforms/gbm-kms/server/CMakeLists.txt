@@ -1,6 +1,4 @@
-if (MIR_BUILD_PLATFORM_GBM_KMS)
-  add_subdirectory(kms/)
-endif()
+add_subdirectory(kms/)
 
 include_directories(
     ${server_common_include_dirs}

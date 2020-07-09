@@ -20,7 +20,6 @@
 
 #include "gbm_buffer.h"
 #include "buffer_texture_binder.h"
-#include "native_buffer.h"
 #include "gbm_format_conversions.h"
 
 #include "mir/graphics/program.h"
@@ -52,10 +51,9 @@ void mgg::BindResolverTexTarget::bind()
 }
 
 mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
-                          uint32_t bo_flags,
+                          uint32_t /*bo_flags*/,
                           std::unique_ptr<mgc::BufferTextureBinder> texture_binder)
     : gbm_handle{handle},
-      bo_flags{bo_flags},
       texture_binder{std::move(texture_binder)},
       prime_fd{-1}
 {
@@ -100,19 +98,7 @@ void mgg::GBMBuffer::gl_bind_to_texture()
 
 std::shared_ptr<mg::NativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
 {
-    auto temp = std::make_shared<NativeBuffer>();
-
-    temp->fd_items = 1;
-    temp->fd[0] = prime_fd;
-    temp->stride = stride().as_uint32_t();
-    temp->flags = (bo_flags & GBM_BO_USE_SCANOUT) ? mir_buffer_flag_can_scanout : 0;
-    temp->bo = gbm_handle.get();
-
-    auto const& dim = size();
-    temp->width = dim.width.as_int();
-    temp->height = dim.height.as_int();
-
-    return temp;
+    BOOST_THROW_EXCEPTION((std::runtime_error{"Native buffer interface removed"}));
 }
 
 mg::NativeBufferBase* mgg::GBMBuffer::native_buffer_base()
