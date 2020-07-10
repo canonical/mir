@@ -182,7 +182,7 @@ MirNativeBuffer* mtf::StubClientPlatform::convert_native_buffer(mir::graphics::N
     native_buffer.fd[0] = buf->fd;
     native_buffer.width = buf->properties.size.width.as_int();
     native_buffer.height = buf->properties.size.height.as_int();
-    //bit of mesa specific leakage into the client api here.
+    //bit of gbm-kms specific leakage into the client api here.
     if (native_buffer.width >= 800 && native_buffer.height >= 600 &&
         buf->properties.usage == mir::graphics::BufferUsage::hardware)
     {

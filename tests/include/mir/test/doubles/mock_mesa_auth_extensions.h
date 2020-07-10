@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_TEST_DOUBLES_MOCK_MESA_AUTH_EXTENSIONS_H_
-#define MIR_TEST_DOUBLES_MOCK_MESA_AUTH_EXTENSIONS_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_GBM_AUTH_EXTENSIONS_H_
+#define MIR_TEST_DOUBLES_MOCK_GBM_AUTH_EXTENSIONS_H_
 
 #include "mir/graphics/platform_authentication.h"
 
@@ -36,4 +36,4 @@ struct MockMesaExt : graphics::MesaAuthExtension
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_MESA_AUTH_EXTENSIONS_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_GBM_AUTH_EXTENSIONS_H_ */

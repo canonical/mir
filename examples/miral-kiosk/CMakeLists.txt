@@ -9,3 +9,11 @@ target_link_libraries(miral-kiosk example-shell-lib)
 if(DEFINED MIR_CHROOT)
     target_link_libraries(miral-kiosk EGL ${GLESv2_LIBRARIES})
 endif()
+
+add_custom_target(fake-mir-kiosk ALL
+    cp ${CMAKE_CURRENT_SOURCE_DIR}/fake-mir-kiosk.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/fake-mir-kiosk
+)
+
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/fake-mir-kiosk
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+)

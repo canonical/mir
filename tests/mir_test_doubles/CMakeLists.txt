@@ -50,16 +50,16 @@ set(
 
 if (MIR_BUILD_PLATFORM_X11)
   include_directories(
-    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
+          ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server
   )
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_x11.cpp
   )
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
+if (MIR_BUILD_PLATFORM_GBM_KMS)
   include_directories(
-    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
+          ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server
     ${GBM_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
   )

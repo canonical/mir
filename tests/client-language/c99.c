@@ -25,7 +25,6 @@
 #include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_toolkit/extensions/gbm_buffer.h"
 #include "mir_toolkit/extensions/graphics_module.h"
-#include "mir_toolkit/extensions/mesa_drm_auth.h"
 #include "mir_toolkit/extensions/set_gbm_device.h"
 #include "mir_toolkit/extensions/window_coordinate_translation.h"
 

@@ -56,7 +56,7 @@ set(client_common_include_dirs
 )
 
 # TODO client platform implementations shouldn't depend on private APIs
-# - only needed for Hardware Buffer Stream in mesa client
+# - only needed for Hardware Buffer Stream in gbm-kms client
 set(client_common_include_dirs
   ${client_common_include_dirs}
   ${PROJECT_SOURCE_DIR}/src/include/client
@@ -64,8 +64,8 @@ set(client_common_include_dirs
 
 add_subdirectory(common/)
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
-    add_subdirectory(mesa/)
+if (MIR_BUILD_PLATFORM_GBM_KMS)
+    add_subdirectory(gbm-kms/)
 endif()
 
 if (MIR_BUILD_PLATFORM_X11)

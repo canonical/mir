@@ -580,7 +580,7 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
 
 /* TODO: Our stub platform support is a bit terrible.
  *
- * These acceptance tests accidentally work on mesa because the mesa client
+ * These acceptance tests accidentally work on gbm-kms because the gbm-kms client
  * platform doesn't validate any of its input and we don't touch anything that requires
  * syscalls.
  *
@@ -717,7 +717,7 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
  * We don't (yet) use a stub client platform, so can't rely on its behaviour
  * in these tests.
  *
- * At the moment, enabling them will either spuriously pass (hardware buffer, mesa)
+ * At the moment, enabling them will either spuriously pass (hardware buffer, gbm-kms)
  * or crash (everything else).
  */
 TEST_F(ClientLibrary, DISABLED_can_create_buffer_usage_hardware_surface)

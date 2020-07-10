@@ -8,8 +8,8 @@ add_definitions(
   -DMIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
 )
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
-  add_definitions(-DMIR_BUILD_PLATFORM_MESA_KMS)
+if (MIR_BUILD_PLATFORM_GBM_KMS)
+  add_definitions(-DMIR_BUILD_PLATFORM_GBM_KMS)
 endif()
 
 if (MIR_BUILD_PLATFORM_X11)
@@ -170,13 +170,13 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+if (MIR_BUILD_PLATFORM_GBM_KMS OR MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
   target_link_libraries(
     mir_unit_tests
 
-    mirsharedmesa-static
+    mirsharedgbm-static
   )
-endif (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+endif (MIR_BUILD_PLATFORM_GBM_KMS OR MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
 
 mir_add_wrapped_executable(mir_umock_unit_tests NOINSTALL
   ${UMOCK_UNIT_TEST_SOURCES}

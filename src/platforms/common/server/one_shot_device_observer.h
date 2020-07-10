@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_MESA_KMS_ONE_SHOT_DEVICE_OBSERVER_H_
-#define MIR_PLATFORM_MESA_KMS_ONE_SHOT_DEVICE_OBSERVER_H_
+#ifndef MIR_PLATFORM_GBM_KMS_ONE_SHOT_DEVICE_OBSERVER_H_
+#define MIR_PLATFORM_GBM_KMS_ONE_SHOT_DEVICE_OBSERVER_H_
 
 #include "mir/console_services.h"
 
@@ -49,4 +49,4 @@ private:
 }
 
 
-#endif //MIR_PLATFORM_MESA_KMS_ONE_SHOT_DEVICE_OBSERVER_H_
+#endif //MIR_PLATFORM_GBM_KMS_ONE_SHOT_DEVICE_OBSERVER_H_

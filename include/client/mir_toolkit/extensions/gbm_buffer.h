@@ -27,7 +27,7 @@
 extern "C" {
 #endif
 
-/** Allocate a MirBuffer via gbm
+/** Allocate a MirBuffer via gbm-kms
  *
  *  available in V1 and V2.
  *
@@ -76,7 +76,7 @@ static inline MirExtensionGbmBufferV1 const* mir_extension_gbm_buffer_v1(
         connection, "mir_extension_gbm_buffer", 1);
 }
 
-/** Allocate a MirBuffer via gbm and wait for the allocation.
+/** Allocate a MirBuffer via gbm-kms and wait for the allocation.
  *  available in V2.
  *  The buffer can be destroyed via mir_buffer_release().
  *
@@ -100,7 +100,7 @@ typedef MirBuffer* (*MirConnectionAllocateBufferGbmSync)(
  */
 typedef bool (*MirBufferIsGbmImportable)(MirBuffer const* buffer);
 
-/** Access the fd a MirBuffer suitable for gbm import
+/** Access the fd a MirBuffer suitable for gbm-kms import
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \warning           The fd is owned by the buffer. Do not close() it.
  *   \param [in] buffer The buffer

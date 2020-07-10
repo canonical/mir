@@ -38,7 +38,7 @@ public:
     virtual void report_egl_configuration(EGLDisplay disp, EGLConfig cfg) = 0;
     virtual void report_vsync(unsigned int output_id, Frame const& f) = 0;
 
-    /* gbm specific */
+    /* gbm-kms specific */
     virtual void report_successful_drm_mode_set_crtc_on_construction() = 0;
     virtual void report_drm_master_failure(int error) = 0;
     virtual void report_vt_switch_away_failure() = 0;
