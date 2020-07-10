@@ -27,37 +27,6 @@
 
 namespace mi = mir::input;
 
-MirInputEventModifiers mi::to_modifiers(int32_t scan_code)
-{
-    switch(scan_code)
-    {
-    case KEY_LEFTALT:
-        return mir_input_event_modifier_alt_left;
-    case KEY_RIGHTALT:
-        return mir_input_event_modifier_alt_right;
-    case KEY_RIGHTCTRL:
-        return mir_input_event_modifier_ctrl_right;
-    case KEY_LEFTCTRL:
-        return mir_input_event_modifier_ctrl_left;
-    case KEY_CAPSLOCK:
-        return mir_input_event_modifier_caps_lock;
-    case KEY_LEFTMETA:
-        return mir_input_event_modifier_meta_left;
-    case KEY_RIGHTMETA:
-        return mir_input_event_modifier_meta_right;
-    case KEY_SCROLLLOCK:
-        return mir_input_event_modifier_scroll_lock;
-    case KEY_NUMLOCK:
-        return mir_input_event_modifier_num_lock;
-    case KEY_LEFTSHIFT:
-        return mir_input_event_modifier_shift_left;
-    case KEY_RIGHTSHIFT:
-        return mir_input_event_modifier_shift_right;
-    default:
-        return MirInputEventModifiers{0};
-    }
-}
-
 MirInputEventModifiers mi::expand_modifiers(MirInputEventModifiers modifiers)
 {
     if (modifiers == 0)

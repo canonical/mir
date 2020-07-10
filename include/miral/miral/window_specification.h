@@ -43,15 +43,6 @@ typedef mir::IntWrapper<detail::SessionsBufferStreamIdTag> BufferStreamId;
 class WindowSpecification
 {
 public:
-    enum class BufferUsage
-    {
-        undefined,
-        /** rendering using GL */
-            hardware,
-        /** rendering using direct pixel access */
-            software
-    };
-
     enum class InputReceptionMode
     {
         normal,
