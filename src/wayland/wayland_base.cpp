@@ -41,6 +41,14 @@ auto mw::LifetimeTracker::destroyed_flag() const -> std::shared_ptr<bool>
     return destroyed;
 }
 
+void mw::LifetimeTracker::mark_destroyed() const
+{
+    if (destroyed)
+    {
+        *destroyed = true;
+    }
+}
+
 mw::Resource::Resource()
 {
 }
