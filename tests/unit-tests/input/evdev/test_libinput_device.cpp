@@ -107,10 +107,6 @@ struct MockEventBuilder : mi::EventBuilder
     MOCK_METHOD9(
         pointer_event,
         mir::EventUPtr(Timestamp, MirPointerAction, MirPointerButtons, float, float, float, float, float, float));
-    mir::EventUPtr device_state_event(float, float) override
-    {
-        return {nullptr,[](MirEvent*){}};
-    }
 };
 
 struct LibInputDevice : public ::testing::Test
