@@ -24,12 +24,7 @@
 
 namespace mw = mir::wayland;
 
-mw::Resource::Resource()
-    : destroyed{nullptr}
-{
-}
-
-mw::Resource::~Resource()
+mw::LifetimeTracker::~LifetimeTracker()
 {
     if (destroyed)
     {
@@ -37,13 +32,17 @@ mw::Resource::~Resource()
     }
 }
 
-auto mw::Resource::destroyed_flag() const -> std::shared_ptr<bool>
+auto mw::LifetimeTracker::destroyed_flag() const -> std::shared_ptr<bool>
 {
     if (!destroyed)
     {
         destroyed = std::make_shared<bool>(false);
     }
     return destroyed;
+}
+
+mw::Resource::Resource()
+{
 }
 
 mw::Global::Global(wl_global* global)

@@ -32,8 +32,25 @@ namespace mir
 {
 namespace wayland
 {
+/// The base class of any object that wants to provide a destroyed flag
+/// The destroyed flag is only created when needed and automatically set to true on destruction
+/// This pattern is only safe in a single-threaded context
+class LifetimeTracker
+{
+public:
+    LifetimeTracker() = default;
+    LifetimeTracker(LifetimeTracker const&) = delete;
+    LifetimeTracker& operator=(LifetimeTracker const&) = delete;
+
+    virtual ~LifetimeTracker();
+    auto destroyed_flag() const -> std::shared_ptr<bool>;
+
+private:
+    std::shared_ptr<bool> mutable destroyed{nullptr};
+};
 
 class Resource
+    : public virtual LifetimeTracker
 {
 public:
     template<int V>
@@ -42,18 +59,9 @@ public:
     };
 
     Resource();
-    virtual ~Resource();
-
-    Resource(Resource const&) = delete;
-    Resource& operator=(Resource const&) = delete;
-
-    auto destroyed_flag() const -> std::shared_ptr<bool>;
-
-private:
-    std::shared_ptr<bool> mutable destroyed;
 };
 
-/// A weak handle to a Wayland resource
+/// A weak handle to a Wayland resource (or any Destroyable)
 /// May only be safely used from the Wayland thread
 template<typename T>
 class Weak

@@ -1,4 +1,4 @@
-MIRWAYLAND_1.2 {
+MIRWAYLAND_2.0 {
 global:
   extern "C++" {
     mir::wayland::Buffer::*;
@@ -283,6 +283,10 @@ global:
     mir::wayland::zxdg_output_v1_interface_data;
     mir::wayland::zxdg_output_manager_v1_interface_data;
 
+    mir::wayland::LifetimeTracker::*;
+    typeinfo?for?mir::wayland::LifetimeTracker;
+    vtable?for?mir::wayland::LifetimeTracker;
+
     mir::wayland::Resource::*;
     typeinfo?for?mir::wayland::Resource;
     vtable?for?mir::wayland::Resource;
@@ -292,6 +296,38 @@ global:
     vtable?for?mir::wayland::Global;
 
     mir::wayland::internal_error_processing_request*;
+
+    # Thunks needed in clang builds
+    virtual?thunk?to?mir::wayland::Callback::?Callback*;
+    virtual?thunk?to?mir::wayland::Compositor::?Compositor*;
+    virtual?thunk?to?mir::wayland::DataDevice::?DataDevice*;
+    virtual?thunk?to?mir::wayland::DataDeviceManager::?DataDeviceManager*;
+    virtual?thunk?to?mir::wayland::DataOffer::?DataOffer*;
+    virtual?thunk?to?mir::wayland::DataSource::?DataSource*;
+    virtual?thunk?to?mir::wayland::Keyboard::?Keyboard*;
+    virtual?thunk?to?mir::wayland::LayerShellV1::?LayerShellV1*;
+    virtual?thunk?to?mir::wayland::LayerSurfaceV1::?LayerSurfaceV1*;
+    virtual?thunk?to?mir::wayland::Pointer::?Pointer*;
+    virtual?thunk?to?mir::wayland::Region::?Region*;
+    virtual?thunk?to?mir::wayland::Seat::?Seat*;
+    virtual?thunk?to?mir::wayland::Shell::?Shell*;
+    virtual?thunk?to?mir::wayland::ShellSurface::?ShellSurface*;
+    virtual?thunk?to?mir::wayland::Subcompositor::?Subcompositor*;
+    virtual?thunk?to?mir::wayland::Subsurface::?Subsurface*;
+    virtual?thunk?to?mir::wayland::Surface::?Surface*;
+    virtual?thunk?to?mir::wayland::Touch::?Touch*;
+    virtual?thunk?to?mir::wayland::XdgOutputManagerV1::?XdgOutputManagerV1*;
+    virtual?thunk?to?mir::wayland::XdgOutputV1::?XdgOutputV1*;
+    virtual?thunk?to?mir::wayland::XdgPopupV6::?XdgPopupV6*;
+    virtual?thunk?to?mir::wayland::XdgPopup::?XdgPopup*;
+    virtual?thunk?to?mir::wayland::XdgPositionerV6::?XdgPositionerV6*;
+    virtual?thunk?to?mir::wayland::XdgPositioner::?XdgPositioner*;
+    virtual?thunk?to?mir::wayland::XdgShellV6::?XdgShellV6*;
+    virtual?thunk?to?mir::wayland::XdgSurfaceV6::?XdgSurfaceV6*;
+    virtual?thunk?to?mir::wayland::XdgSurface::?XdgSurface*;
+    virtual?thunk?to?mir::wayland::XdgToplevelV6::?XdgToplevelV6*;
+    virtual?thunk?to?mir::wayland::XdgToplevel::?XdgToplevel*;
+    virtual?thunk?to?mir::wayland::XdgWmBase::?XdgWmBase*;
   };
   local: *;
 };
