@@ -857,15 +857,28 @@ TEST_F(TestClientInputKeyRepeat, keys_are_repeated_to_clients)
     Client first_client(new_connection(), first);
 
     InSequence seq;
-    EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_R))));
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_a))));
     EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyRepeatEvent(),
-        mt::KeyOfSymbol(XKB_KEY_Shift_R)))).WillOnce(mt::WakeUp(&first_client.all_events_received));
+        mt::KeyOfSymbol(XKB_KEY_a)))).WillOnce(mt::WakeUp(&first_client.all_events_received));
     // Extra repeats before we shut down.
     EXPECT_CALL(first_client, handle_input(mt::KeyRepeatEvent())).Times(AnyNumber());
 
-    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_A));
 
     first_client.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInputKeyRepeat, meta_keys_are_not_repeated_to_clients)
+{
+    Client first_client(new_connection(), first);
+
+    InSequence seq;
+    EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_R))));
+    EXPECT_CALL(first_client, handle_input(mt::KeyRepeatEvent())).Times(0);
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
+
+    first_client.all_events_received.wait_for(1s);
 }
 
 TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client)
