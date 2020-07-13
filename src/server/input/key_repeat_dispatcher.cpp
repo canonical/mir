@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -24,6 +24,8 @@
 #include "mir/time/alarm.h"
 #include "mir/events/event_builders.h"
 #include "mir/cookie/authority.h"
+
+#include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -65,6 +67,11 @@ struct DeviceRemovalFilter : mi::InputDeviceObserver
     mi::KeyRepeatDispatcher* dispatcher;
 };
 
+auto is_meta_key(MirKeyboardEvent const* event) -> bool
+{
+    auto const key_code = mir_keyboard_event_key_code(event);
+    return (XKB_KEY_Shift_L <= key_code) && (key_code <= XKB_KEY_Hyper_R);
+}
 }
 
 mi::KeyRepeatDispatcher::KeyRepeatDispatcher(
@@ -137,6 +144,12 @@ bool mi::KeyRepeatDispatcher::dispatch(std::shared_ptr<MirEvent const> const& ev
 // Returns true if the original event has been handled, that is ::dispatch should not pass it on.
 bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* kev)
 {
+    // We don't want to track and auto-repeat individual meta key presses
+    // That leads, for example, to alternating Ctrl and Alt repeats when
+    // both keys are pressed.
+    if (is_meta_key(kev))
+        return false;
+
     std::lock_guard<std::mutex> lg(repeat_state_mutex);
     auto& device_state = ensure_state_for_device_locked(lg, id);
 
