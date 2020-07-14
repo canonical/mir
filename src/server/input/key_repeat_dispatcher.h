@@ -76,7 +76,7 @@ private:
 
     struct KeyboardState
     {
-        std::unordered_map<int, std::shared_ptr<mir::time::Alarm>> repeat_alarms_by_scancode;
+        std::shared_ptr<mir::time::Alarm> repeat_alarm;
     };
     std::unordered_map<MirInputDeviceId, KeyboardState> repeat_state_by_device;
     KeyboardState& ensure_state_for_device_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id);
