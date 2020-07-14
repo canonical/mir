@@ -21,6 +21,7 @@
 
 #include "mir/scene/null_surface_observer.h"
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <chrono>
@@ -84,6 +85,9 @@ private:
 
     XWaylandSurfaceObserverSurface* const wm_surface;
     std::shared_ptr<ThreadsafeInputDispatcher> const input_dispatcher;
+
+    std::atomic<bool> has_focus{false};
+    void focussed(bool has_focus);
 
     /// Runs work on the Wayland thread if the input dispatcher still exists
     /// Does nothing if the input dispatcher has already been destroyed

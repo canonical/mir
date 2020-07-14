@@ -56,14 +56,7 @@ void mf::XWaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAt
     switch (attrib)
     {
     case mir_window_attrib_focus:
-    {
-        auto has_focus = static_cast<bool>(value);
-        wm_surface->scene_surface_focus_set(has_focus);
-        aquire_input_dispatcher(
-            [has_focus](auto input_dispatcher)
-            {
-                input_dispatcher->set_focus(has_focus);
-            });
+    {        focussed(value);
     }   break;
 
     case mir_window_attrib_state:
@@ -73,6 +66,20 @@ void mf::XWaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAt
     }   break;
 
     default:;
+    }
+}
+
+void mf::XWaylandSurfaceObserver::focussed(bool has_focus)
+{
+    if (this->has_focus.exchange(has_focus) != has_focus)
+    {
+        wm_surface->scene_surface_focus_set(has_focus);
+
+        aquire_input_dispatcher(
+            [=](auto input_dispatcher)
+            {
+              input_dispatcher->set_focus(has_focus);
+            });
     }
 }
 
@@ -113,6 +120,22 @@ void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, MirEvent co
 {
     if (mir_event_get_type(event) == mir_event_type_input)
     {
+        auto const input_event = mir_event_get_input_event(event);
+        if (mir_input_event_get_type(input_event) == mir_input_event_type_key)
+        {
+            // Ignore key repeat events
+            if (mir_keyboard_event_action(mir_input_event_get_keyboard_event(input_event)) ==
+                mir_keyboard_action_repeat)
+                return;
+
+            if (!has_focus)
+            {
+                log_warning("**** Sending key to surface even though it was not explicitly given keyboard focus");
+            }
+            // If we're sending keys we implicitly have input focus
+            focussed(true);
+        }
+
         std::shared_ptr<MirEvent> owned_event = mev::clone_event(*event);
 
         aquire_input_dispatcher(
