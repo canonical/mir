@@ -39,7 +39,7 @@ namespace mir
 namespace frontend
 {
 
-class XdgSurfaceStable : wayland::XdgSurface
+class XdgSurfaceStable : mw::XdgSurface
 {
 public:
     static XdgSurfaceStable* from(wl_resource* surface);
@@ -58,22 +58,22 @@ public:
 
     void send_configure();
 
-    wayland::Weak<WindowWlSurfaceRole> const& window_role();
+    mw::Weak<WindowWlSurfaceRole> const& window_role();
 
-    using wayland::XdgSurface::client;
-    using wayland::XdgSurface::resource;
+    using mw::XdgSurface::client;
+    using mw::XdgSurface::resource;
 
 private:
     void set_window_role(WindowWlSurfaceRole* role);
 
-    wayland::Weak<WindowWlSurfaceRole> window_role_;
+    mw::Weak<WindowWlSurfaceRole> window_role_;
     WlSurface* const surface;
 
 public:
     XdgShellStable const& xdg_shell;
 };
 
-class XdgToplevelStable : wayland::XdgToplevel, public WindowWlSurfaceRole
+class XdgToplevelStable : mw::XdgToplevel, public WindowWlSurfaceRole
 {
 public:
     XdgToplevelStable(
@@ -110,7 +110,7 @@ private:
     XdgSurfaceStable* const xdg_surface;
 };
 
-class XdgPositionerStable : public wayland::XdgPositioner, public shell::SurfaceSpecification
+class XdgPositionerStable : public mw::XdgPositioner, public shell::SurfaceSpecification
 {
 public:
     XdgPositionerStable(wl_resource* new_resource);
@@ -129,7 +129,7 @@ private:
 }
 namespace mf = mir::frontend;  // Keep CLion's parsing happy
 
-class mf::XdgShellStable::Instance : public wayland::XdgWmBase
+class mf::XdgShellStable::Instance : public mw::XdgWmBase
 {
 public:
     Instance(wl_resource* new_resource, mf::XdgShellStable* shell);
@@ -194,7 +194,7 @@ void mf::XdgShellStable::Instance::pong(uint32_t serial)
 mf::XdgSurfaceStable* mf::XdgSurfaceStable::from(wl_resource* surface)
 {
     auto* tmp = wl_resource_get_user_data(surface);
-    return static_cast<XdgSurfaceStable*>(static_cast<wayland::XdgSurface*>(tmp));
+    return static_cast<XdgSurfaceStable*>(static_cast<mw::XdgSurface*>(tmp));
 }
 
 mf::XdgSurfaceStable::XdgSurfaceStable(wl_resource* new_resource, WlSurface* surface, XdgShellStable const& xdg_shell)
@@ -257,7 +257,7 @@ void mf::XdgSurfaceStable::ack_configure(uint32_t serial)
 
 void mf::XdgSurfaceStable::send_configure()
 {
-    auto const serial = wl_display_next_serial(wl_client_get_display(wayland::XdgSurface::client));
+    auto const serial = wl_display_next_serial(wl_client_get_display(mw::XdgSurface::client));
     send_configure_event(serial);
 }
 
@@ -284,7 +284,7 @@ mf::XdgPopupStable::XdgPopupStable(
     std::experimental::optional<WlSurfaceRole*> parent_role,
     struct wl_resource* positioner,
     WlSurface* surface)
-    : wayland::XdgPopup(new_resource, Version<1>()),
+    : mw::XdgPopup(new_resource, Version<1>()),
       WindowWlSurfaceRole(
           &xdg_surface->xdg_shell.seat,
           mw::XdgPopup::client,
@@ -295,7 +295,7 @@ mf::XdgPopupStable::XdgPopupStable(
 {
     auto specification = static_cast<mir::shell::SurfaceSpecification*>(
                                 static_cast<XdgPositionerStable*>(
-                                    static_cast<wayland::XdgPositioner*>(
+                                    static_cast<mw::XdgPositioner*>(
                                         wl_resource_get_user_data(positioner))));
 
     specification->type = mir_window_type_freestyle;
@@ -349,7 +349,7 @@ void mf::XdgPopupStable::handle_close_request()
 
 auto mf::XdgPopupStable::from(wl_resource* resource) -> XdgPopupStable*
 {
-    auto popup = dynamic_cast<XdgPopupStable*>(wayland::XdgPopup::from(resource));
+    auto popup = dynamic_cast<XdgPopupStable*>(mw::XdgPopup::from(resource));
     if (!popup)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid resource given to XdgPopupStable::from()"));
     return popup;
@@ -361,7 +361,7 @@ mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceSt
     : mw::XdgToplevel(new_resource, Version<1>()),
       WindowWlSurfaceRole(
           &xdg_surface->xdg_shell.seat,
-          wayland::XdgToplevel::client,
+          mw::XdgToplevel::client,
           surface,
           xdg_surface->xdg_shell.shell,
           xdg_surface->xdg_shell.output_manager),
@@ -558,7 +558,7 @@ void mf::XdgToplevelStable::send_toplevel_configure()
 mf::XdgToplevelStable* mf::XdgToplevelStable::from(wl_resource* surface)
 {
     auto* tmp = wl_resource_get_user_data(surface);
-    return static_cast<XdgToplevelStable*>(static_cast<wayland::XdgToplevel*>(tmp));
+    return static_cast<XdgToplevelStable*>(static_cast<mw::XdgToplevel*>(tmp));
 }
 
 // XdgPositionerStable

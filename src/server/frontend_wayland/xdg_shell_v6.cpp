@@ -38,7 +38,7 @@ namespace mir
 namespace frontend
 {
 
-class XdgSurfaceV6 : wayland::XdgSurfaceV6
+class XdgSurfaceV6 : mw::XdgSurfaceV6
 {
 public:
     static XdgSurfaceV6* from(wl_resource* surface);
@@ -54,22 +54,22 @@ public:
 
     void send_configure();
 
-    wayland::Weak<WindowWlSurfaceRole> const& window_role();
+    mw::Weak<WindowWlSurfaceRole> const& window_role();
 
-    using wayland::XdgSurfaceV6::client;
-    using wayland::XdgSurfaceV6::resource;
+    using mw::XdgSurfaceV6::client;
+    using mw::XdgSurfaceV6::resource;
 
 private:
     void set_window_role(WindowWlSurfaceRole* role);
 
-    wayland::Weak<WindowWlSurfaceRole> window_role_;
+    mw::Weak<WindowWlSurfaceRole> window_role_;
     WlSurface* const surface;
 
 public:
     XdgShellV6 const& xdg_shell;
 };
 
-class XdgPopupV6 : wayland::XdgPopupV6, public WindowWlSurfaceRole
+class XdgPopupV6 : mw::XdgPopupV6, public WindowWlSurfaceRole
 {
 public:
     XdgPopupV6(
@@ -97,7 +97,7 @@ private:
     XdgSurfaceV6* const xdg_surface;
 };
 
-class XdgToplevelV6 : wayland::XdgToplevelV6, public WindowWlSurfaceRole
+class XdgToplevelV6 : mw::XdgToplevelV6, public WindowWlSurfaceRole
 {
 public:
     XdgToplevelV6(wl_resource* new_resource, XdgSurfaceV6* xdg_surface, WlSurface* surface);
@@ -131,7 +131,7 @@ private:
     XdgSurfaceV6* const xdg_surface;
 };
 
-class XdgPositionerV6 : public wayland::XdgPositionerV6, public shell::SurfaceSpecification
+class XdgPositionerV6 : public mw::XdgPositionerV6, public shell::SurfaceSpecification
 {
 public:
     XdgPositionerV6(wl_resource* new_resource);
@@ -150,7 +150,7 @@ private:
 }
 namespace mf = mir::frontend;  // Keep CLion's parsing happy
 
-class mf::XdgShellV6::Instance : public wayland::XdgShellV6
+class mf::XdgShellV6::Instance : public mw::XdgShellV6
 {
 public:
     Instance(wl_resource* new_resource, mf::XdgShellV6* shell);
@@ -215,7 +215,7 @@ void mf::XdgShellV6::bind(wl_resource* new_resource)
 mf::XdgSurfaceV6* mf::XdgSurfaceV6::from(wl_resource* surface)
 {
     auto* tmp = wl_resource_get_user_data(surface);
-    return static_cast<XdgSurfaceV6*>(static_cast<wayland::XdgSurfaceV6*>(tmp));
+    return static_cast<XdgSurfaceV6*>(static_cast<mw::XdgSurfaceV6*>(tmp));
 }
 
 mf::XdgSurfaceV6::XdgSurfaceV6(wl_resource* new_resource, WlSurface* surface,
@@ -261,7 +261,7 @@ void mf::XdgSurfaceV6::ack_configure(uint32_t serial)
 
 void mf::XdgSurfaceV6::send_configure()
 {
-    auto const serial = wl_display_next_serial(wl_client_get_display(wayland::XdgSurfaceV6::client));
+    auto const serial = wl_display_next_serial(wl_client_get_display(mw::XdgSurfaceV6::client));
     send_configure_event(serial);
 }
 
@@ -291,7 +291,7 @@ mf::XdgPopupV6::XdgPopupV6(
     : mw::XdgPopupV6(new_resource, Version<1>()),
       WindowWlSurfaceRole(
           &xdg_surface->xdg_shell.seat,
-          wayland::XdgPopupV6::client,
+          mw::XdgPopupV6::client,
           surface,
           xdg_surface->xdg_shell.shell,
           xdg_surface->xdg_shell.output_manager),
@@ -299,7 +299,7 @@ mf::XdgPopupV6::XdgPopupV6(
 {
     auto specification = static_cast<mir::shell::SurfaceSpecification*>(
                                 static_cast<XdgPositionerV6*>(
-                                    static_cast<wayland::XdgPositionerV6*>(
+                                    static_cast<mw::XdgPositionerV6*>(
                                         wl_resource_get_user_data(positioner))));
 
     auto const& parent_role = parent_surface->window_role();
@@ -357,7 +357,7 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_resource* new_resource, XdgSurfaceV6*
     : mw::XdgToplevelV6(new_resource, Version<1>()),
       WindowWlSurfaceRole(
           &xdg_surface->xdg_shell.seat,
-          wayland::XdgToplevelV6::client,
+          mw::XdgToplevelV6::client,
           surface,
           xdg_surface->xdg_shell.shell,
           xdg_surface->xdg_shell.output_manager),
@@ -554,7 +554,7 @@ void mf::XdgToplevelV6::send_toplevel_configure()
 mf::XdgToplevelV6* mf::XdgToplevelV6::from(wl_resource* surface)
 {
     auto* tmp = wl_resource_get_user_data(surface);
-    return static_cast<XdgToplevelV6*>(static_cast<wayland::XdgToplevelV6*>(tmp));
+    return static_cast<XdgToplevelV6*>(static_cast<mw::XdgToplevelV6*>(tmp));
 }
 
 // XdgPositionerV6
