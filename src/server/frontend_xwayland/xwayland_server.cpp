@@ -117,7 +117,7 @@ auto fork_xwayland_process(
 
     case 0:
         exec_xwayland(spawner, xwayland_path, wayland_pipe.client, x11_wm_pipe.server);
-        perror("Failed to start XWayland, should be unreachable");
+        mir::log_error("Cannot execute Xwayland: --xwayland-path %s", xwayland_path.c_str());
         abort();
 
     default:
