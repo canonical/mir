@@ -68,8 +68,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     WlSurface* surface,
     std::shared_ptr<msh::Shell> const& shell,
     OutputManager* output_manager)
-    : destroyed{std::make_shared<bool>(false)},
-      surface{surface},
+    : surface{surface},
       client{client},
       shell{shell},
       session{get_session(client)},
@@ -85,9 +84,9 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
 
 mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
 {
+    mark_destroyed();
     surface->clear_role();
     observer->disconnect();
-    *destroyed = true;
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         shell->destroy_surface(session, scene_surface);

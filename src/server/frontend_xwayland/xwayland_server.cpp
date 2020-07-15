@@ -66,7 +66,6 @@ void exec_xwayland(
     mf::XWaylandSpawner::set_cloexec(wayland_client_fd, false);
     mf::XWaylandSpawner::set_cloexec(x11_wm_server_fd, false);
 
-    setenv("EGL_PLATFORM", "DRM", 1);
     setenv("WAYLAND_SOCKET", std::to_string(wayland_client_fd).c_str(), 1);
 
     auto const x11_wm_server = std::to_string(x11_wm_server_fd);

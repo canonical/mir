@@ -44,6 +44,7 @@ public:
 
     virtual ~LifetimeTracker();
     auto destroyed_flag() const -> std::shared_ptr<bool>;
+    void mark_destroyed() const;
 
 private:
     std::shared_ptr<bool> mutable destroyed{nullptr};
@@ -96,7 +97,7 @@ public:
     {
         if (!*this)
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted access of destroyed Wayland resource"));
+            BOOST_THROW_EXCEPTION(std::logic_error("Attempted access of destroyed Wayland resource"));
         }
         return *resource;
     }
