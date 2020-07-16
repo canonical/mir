@@ -70,10 +70,7 @@ void mf::WaylandInputDispatcher::set_focus(bool has_focus)
 
     seat->for_each_listener(client, [&](WlKeyboard* keyboard)
         {
-            if (wl_surface)
-            {
-                keyboard->focussed(&wl_surface.value(), has_focus);
-            }
+            keyboard->focussed(&wl_surface.value(), has_focus);
         });
 }
 
@@ -109,6 +106,11 @@ void mf::WaylandInputDispatcher::handle_event(MirInputEvent const* event)
 
 void mf::WaylandInputDispatcher::handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event)
 {
+    if (!wl_surface)
+    {
+        fatal_error("wl_surface should have already been checked");
+    }
+
     MirKeyboardAction const action = mir_keyboard_event_action(event);
     if (action == mir_keyboard_action_down || action == mir_keyboard_action_up)
     {
@@ -116,16 +118,18 @@ void mf::WaylandInputDispatcher::handle_keyboard_event(std::chrono::milliseconds
         bool const down = action == mir_keyboard_action_down;
         seat->for_each_listener(client, [&](WlKeyboard* keyboard)
             {
-                if (wl_surface)
-                {
-                    keyboard->key(ms, &wl_surface.value(), scancode, down);
-                }
+                keyboard->key(ms, &wl_surface.value(), scancode, down);
             });
     }
 }
 
 void mf::WaylandInputDispatcher::handle_pointer_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event)
 {
+    if (!wl_surface)
+    {
+        fatal_error("wl_surface should have already been checked");
+    }
+
     switch(mir_pointer_event_action(event))
     {
         case mir_pointer_action_button_down:
@@ -139,11 +143,8 @@ void mf::WaylandInputDispatcher::handle_pointer_event(std::chrono::milliseconds 
                 mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
             seat->for_each_listener(client, [&](WlPointer* pointer)
                 {
-                    if (wl_surface)
-                    {
-                        pointer->enter(ms, &wl_surface.value(), position);
-                        pointer->frame();
-                    }
+                    pointer->enter(ms, &wl_surface.value(), position);
+                    pointer->frame();
                 });
             break;
         }
@@ -207,6 +208,11 @@ void mf::WaylandInputDispatcher::handle_pointer_motion_event(
     std::chrono::milliseconds const& ms,
     MirPointerEvent const* event)
 {
+    if (!wl_surface)
+    {
+        fatal_error("wl_surface should have already been checked");
+    }
+
     // TODO: send axis_source, axis_stop and axis_discrete events where appropriate
     // (may require significant eworking of the input system)
 
@@ -227,7 +233,7 @@ void mf::WaylandInputDispatcher::handle_pointer_motion_event(
             client,
             [&](WlPointer* pointer)
             {
-                if (send_motion && wl_surface)
+                if (send_motion)
                 {
                     pointer->motion(ms, &wl_surface.value(), position);
                 }
@@ -244,6 +250,11 @@ void mf::WaylandInputDispatcher::handle_touch_event(
     std::chrono::milliseconds const& ms,
     MirTouchEvent const* event)
 {
+    if (!wl_surface)
+    {
+        fatal_error("wl_surface should have already been checked");
+    }
+
     for (auto i = 0u; i < mir_touch_event_point_count(event); ++i)
     {
         geometry::Point const position{
@@ -257,10 +268,7 @@ void mf::WaylandInputDispatcher::handle_touch_event(
         case mir_touch_action_down:
             seat->for_each_listener(client, [&](WlTouch* touch)
                 {
-                    if (wl_surface)
-                    {
-                        touch->down(ms, touch_id, &wl_surface.value(), position);
-                    }
+                    touch->down(ms, touch_id, &wl_surface.value(), position);
                 });
             break;
         case mir_touch_action_up:
@@ -272,10 +280,7 @@ void mf::WaylandInputDispatcher::handle_touch_event(
         case mir_touch_action_change:
             seat->for_each_listener(client, [&](WlTouch* touch)
                 {
-                    if (wl_surface)
-                    {
-                        touch->motion(ms, touch_id, &wl_surface.value(), position);
-                    }
+                    touch->motion(ms, touch_id, &wl_surface.value(), position);
                 });
             break;
         case mir_touch_actions:;
