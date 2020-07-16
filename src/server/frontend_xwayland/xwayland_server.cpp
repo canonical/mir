@@ -217,10 +217,15 @@ mf::XWaylandServer::~XWaylandServer()
     if (kill(xwayland_process.pid, SIGTERM) == 0)
     {
         std::this_thread::sleep_for(100ms);// After 100ms...
-        if (kill(xwayland_process.pid, 0) == 0)    // ...if Xwayland is still running...
+        if (is_running())
         {
             mir::log_info("Xwayland didn't close, killing it");
             kill(xwayland_process.pid, SIGKILL);     // ...then kill it!
         }
     }
+}
+
+auto mf::XWaylandServer::is_running() const -> bool
+{
+    return kill(xwayland_process.pid, 0) == 0;
 }

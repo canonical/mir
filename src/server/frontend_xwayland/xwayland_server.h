@@ -44,12 +44,14 @@ public:
 
     auto client() const -> wl_client* { return wayland_client; }
     auto wm_fd() const -> Fd const& { return xwayland_process.x11_wm_client_fd; }
+    auto is_running() const -> bool;
 
     struct XWaylandProcess
     {
         pid_t pid;
         Fd wayland_server_fd;
         Fd x11_wm_client_fd;
+
     };
 
 private:
