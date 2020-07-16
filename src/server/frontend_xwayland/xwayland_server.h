@@ -53,8 +53,13 @@ public:
     static auto make_socket_pair() -> std::pair<mir::Fd, mir::Fd>;
 
 private:
+    class StartupSignalHandler;
+
     XWaylandServer(XWaylandServer const&) = delete;
     XWaylandServer& operator=(XWaylandServer const&) = delete;
+
+    /// Created at the beginning of the constructor and destroyed at the end
+    std::unique_ptr<StartupSignalHandler> startup_signal_handler;
 
     pid_t const xwayland_pid;
     mir::Fd const wayland_server_fd;

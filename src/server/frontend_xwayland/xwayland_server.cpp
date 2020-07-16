@@ -111,37 +111,10 @@ auto fork_xwayland_process(
     }
 }
 
-bool spin_wait_for(sig_atomic_t& xserver_ready)
-{
-    auto const end = std::chrono::steady_clock::now() + 5s;
-
-    while (std::chrono::steady_clock::now() < end && !xserver_ready)
-    {
-        std::this_thread::sleep_for(100ms);
-    }
-
-    return xserver_ready;
-}
-
 auto connect_xwayland_wl_client(
     std::shared_ptr<mf::WaylandConnector> const& wayland_connector,
     mir::Fd const& wayland_fd) -> wl_client*
 {
-    // We need to set up the signal handling before connecting wl_client_server_fd
-    static sig_atomic_t xserver_ready{ false };
-
-    // In practice, there ought to be no contention on xserver_ready, but let's be certain
-    static std::mutex xserver_ready_mutex;
-    std::lock_guard<decltype(xserver_ready_mutex)> lock{xserver_ready_mutex};
-    xserver_ready = false;
-
-    struct sigaction action;
-    struct sigaction old_action;
-    action.sa_handler = [](int) { xserver_ready = true; };
-    sigemptyset(&action.sa_mask);
-    action.sa_flags = 0;
-    sigaction(SIGUSR1, &action, &old_action);
-
     struct CreateClientContext
     {
         std::mutex mutex;
@@ -156,6 +129,7 @@ auto connect_xwayland_wl_client(
         [ctx, wayland_fd](wl_display* display)
         {
             std::lock_guard<std::mutex> lock{ctx->mutex};
+            // This doesn't require XWayland to be started in order to succeed
             ctx->client = wl_client_create(display, wayland_fd);
             ctx->ready = true;
             ctx->condition_variable.notify_all();
@@ -164,7 +138,6 @@ auto connect_xwayland_wl_client(
     std::unique_lock<std::mutex> client_lock{ctx->mutex};
     if (!ctx->condition_variable.wait_for(client_lock, 10s, [ctx]{ return ctx->ready; }))
     {
-        // "Shouldn't happen" but this is better than hanging.
         BOOST_THROW_EXCEPTION(std::runtime_error("Creating XWayland wl_client timed out"));
     }
 
@@ -173,18 +146,54 @@ auto connect_xwayland_wl_client(
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create XWayland wl_client"));
     }
 
-    //The client can connect, now wait for it to signal ready (SIGUSR1)
-    auto const xwayland_startup_timed_out = !spin_wait_for(xserver_ready);
-    sigaction(SIGUSR1, &old_action, nullptr);
-
-    if (xwayland_startup_timed_out)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("XWayland server failed to start"));
-    }
-
     return ctx->client;
 }
 }
+
+class mf::XWaylandServer::StartupSignalHandler
+{
+public:
+    /// Connects to the SIGUSR1, the signal XWayland will use to indicate it's ready
+    StartupSignalHandler()
+        : lock{mutex}
+    {
+        xserver_ready = false;
+        action.sa_handler = [](int) { xserver_ready = true; };
+        sigemptyset(&action.sa_mask);
+        action.sa_flags = 0;
+        sigaction(SIGUSR1, &action, &old_action);
+    }
+
+    ~StartupSignalHandler()
+    {
+        sigaction(SIGUSR1, &old_action, nullptr);
+    }
+
+    /// Waits for either SIGUSR1, the XWayland process to die or the timeout to be reached
+    /// Returns true the XWayland process started successfully
+    static bool wait(std::chrono::milliseconds timeout)
+    {
+        // Wait for XWayland to signal that it's ready (SIGUSR1)
+        auto const end = std::chrono::steady_clock::now() + timeout;
+        while (std::chrono::steady_clock::now() < end && !xserver_ready)
+        {
+            std::this_thread::sleep_for(100ms);
+        }
+
+        return xserver_ready;
+    }
+
+private:
+    std::lock_guard<std::mutex> const lock; ///< The mutex is locked for the duration of this class's existence
+    struct sigaction old_action;
+    struct sigaction action;
+
+    static std::mutex mutex; ///< prevents multiple instances of this class from existing simultaneously
+    static sig_atomic_t xserver_ready;
+};
+
+std::mutex mf::XWaylandServer::StartupSignalHandler::mutex;
+sig_atomic_t mf::XWaylandServer::StartupSignalHandler::xserver_ready{false};
 
 mf::XWaylandServer::XWaylandServer(
     std::shared_ptr<WaylandConnector> const& wayland_connector,
@@ -192,11 +201,17 @@ mf::XWaylandServer::XWaylandServer(
     std::string const& xwayland_path,
     std::pair<mir::Fd, mir::Fd> const& wayland_socket_pair,
     mir::Fd const& x11_server_fd)
-    : xwayland_pid{fork_xwayland_process(spawner, xwayland_path, wayland_socket_pair.first, x11_server_fd)},
+    : startup_signal_handler{std::make_unique<StartupSignalHandler>()},
+      xwayland_pid{fork_xwayland_process(spawner, xwayland_path, wayland_socket_pair.first, x11_server_fd)},
       wayland_server_fd{wayland_socket_pair.second},
       wayland_client{connect_xwayland_wl_client(wayland_connector, wayland_server_fd)},
       running{true}
 {
+    if (!startup_signal_handler->wait(5s))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("XWayland server failed to start"));
+    }
+    startup_signal_handler.reset();
 }
 
 mf::XWaylandServer::~XWaylandServer()
