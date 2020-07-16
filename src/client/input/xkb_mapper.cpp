@@ -23,8 +23,11 @@
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
 
-#include <sstream>
 #include <boost/throw_exception.hpp>
+
+#include <linux/input-event-codes.h>
+
+#include <sstream>
 #include <unordered_set>
 
 namespace mi = mir::input;
@@ -46,21 +49,27 @@ char const* get_locale_from_environment()
     return loc;
 }
 
-MirInputEventModifiers xkb_key_code_to_modifier(xkb_keysym_t key)
+uint32_t constexpr to_xkb_scan_code(uint32_t evdev_scan_code)
+{
+    // xkb scancodes are offset by 8 from evdev scancodes for compatibility with X protocol.
+    return evdev_scan_code + 8;
+}
+
+MirInputEventModifiers modifier_from_xkb_scan_code(uint32_t key)
 {
     switch(key)
     {
-    case XKB_KEY_Shift_R: return mir_input_event_modifier_shift_right;
-    case XKB_KEY_Shift_L: return mir_input_event_modifier_shift_left;
-    case XKB_KEY_Alt_R: return mir_input_event_modifier_alt_right;
-    case XKB_KEY_Alt_L: return mir_input_event_modifier_alt_left;
-    case XKB_KEY_Control_R: return mir_input_event_modifier_ctrl_right;
-    case XKB_KEY_Control_L: return mir_input_event_modifier_ctrl_left;
-    case XKB_KEY_Super_L: return mir_input_event_modifier_meta_left;
-    case XKB_KEY_Super_R: return mir_input_event_modifier_meta_right;
-    case XKB_KEY_Caps_Lock: return mir_input_event_modifier_caps_lock;
-    case XKB_KEY_Scroll_Lock: return mir_input_event_modifier_scroll_lock;
-    case XKB_KEY_Num_Lock: return mir_input_event_modifier_num_lock;
+    case to_xkb_scan_code(KEY_RIGHTSHIFT): return mir_input_event_modifier_shift_right;
+    case to_xkb_scan_code(KEY_LEFTSHIFT): return mir_input_event_modifier_shift_left;
+    case to_xkb_scan_code(KEY_RIGHTALT): return mir_input_event_modifier_alt_right;
+    case to_xkb_scan_code(KEY_LEFTALT): return mir_input_event_modifier_alt_left;
+    case to_xkb_scan_code(KEY_RIGHTCTRL): return mir_input_event_modifier_ctrl_right;
+    case to_xkb_scan_code(KEY_LEFTCTRL): return mir_input_event_modifier_ctrl_left;
+    case to_xkb_scan_code(KEY_LEFTMETA): return mir_input_event_modifier_meta_left;
+    case to_xkb_scan_code(KEY_RIGHTMETA): return mir_input_event_modifier_meta_right;
+    case to_xkb_scan_code(KEY_CAPSLOCK): return mir_input_event_modifier_caps_lock;
+    case to_xkb_scan_code(KEY_SCREENLOCK): return mir_input_event_modifier_scroll_lock;
+    case to_xkb_scan_code(KEY_NUMLOCK): return mir_input_event_modifier_num_lock;
     default: return MirInputEventModifiers{0};
     }
 }
@@ -91,14 +100,6 @@ MirInputEventModifiers expand_modifiers(MirInputEventModifiers modifiers)
 
     return modifiers;
 }
-
-
-uint32_t to_xkb_scan_code(uint32_t evdev_scan_code)
-{
-    // xkb scancodes are offset by 8 from evdev scancodes for compatibility with X protocol.
-    return evdev_scan_code + 8;
-}
-
 
 mi::XKBComposeStatePtr make_unique_compose_state(mi::XKBComposeTablePtr const& table)
 {
@@ -351,7 +352,13 @@ bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event, mircv::X
 xkb_keysym_t mircv::XKBMapper::XkbMappingState::update_state(uint32_t scan_code, MirKeyboardAction action, mircv::XKBMapper::ComposeState* compose_state, std::string& text)
 {
     auto key_sym = xkb_state_key_get_one_sym(state.get(), scan_code);
-    auto mod_change = xkb_key_code_to_modifier(key_sym);
+    auto const mod_change = modifier_from_xkb_scan_code(scan_code);
+
+    // Occasionally, we see XKB_KEY_Meta_L where XKB_KEY_Alt_L is correct
+    if (mod_change == mir_input_event_modifier_alt_left)
+    {
+        key_sym = XKB_KEY_Alt_L;
+    }
 
     if(action == mir_keyboard_action_down || action == mir_keyboard_action_repeat)
     {
