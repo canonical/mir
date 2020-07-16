@@ -205,7 +205,8 @@ mf::XWaylandServer::XWaylandServer(
     XWaylandSpawner const& spawner,
     std::string const& xwayland_path)
     : xwayland_process{fork_xwayland_process(spawner, xwayland_path)},
-      wayland_client{connect_xwayland_wl_client(wayland_connector, xwayland_process.wayland_server_fd)}
+      wayland_client{connect_xwayland_wl_client(wayland_connector, xwayland_process.wayland_server_fd)},
+      running{true}
 {
 }
 
@@ -227,5 +228,20 @@ mf::XWaylandServer::~XWaylandServer()
 
 auto mf::XWaylandServer::is_running() const -> bool
 {
-    return kill(xwayland_process.pid, 0) == 0;
+    std::lock_guard<std::mutex> lock{mutex};
+
+    if (running)
+    {
+        int status; // Special waitpid() status, not the process exit status
+        if (waitpid(xwayland_process.pid, &status, WNOHANG) != 0)
+        {
+            running = false;
+            if (WIFEXITED(status))
+            {
+                exit_code = WEXITSTATUS(status);
+            }
+        }
+    }
+
+    return running;
 }

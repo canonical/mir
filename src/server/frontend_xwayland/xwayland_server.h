@@ -23,6 +23,8 @@
 
 #include <memory>
 #include <string>
+#include <mutex>
+#include <experimental/optional>
 
 struct wl_client;
 
@@ -51,7 +53,6 @@ public:
         pid_t pid;
         Fd wayland_server_fd;
         Fd x11_wm_client_fd;
-
     };
 
 private:
@@ -60,6 +61,10 @@ private:
 
     XWaylandProcess const xwayland_process;
     wl_client* const wayland_client{nullptr};
+
+    mutable std::mutex mutex;
+    mutable bool running;
+    mutable std::experimental::optional<int> exit_code;
 };
 }
 }
