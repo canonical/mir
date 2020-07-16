@@ -171,11 +171,14 @@ public:
 
     /// Waits for either SIGUSR1, the XWayland process to die or the timeout to be reached
     /// Returns true the XWayland process started successfully
-    static bool wait(std::chrono::milliseconds timeout)
+    static bool wait(XWaylandServer* server, std::chrono::milliseconds timeout)
     {
         // Wait for XWayland to signal that it's ready (SIGUSR1)
         auto const end = std::chrono::steady_clock::now() + timeout;
-        while (std::chrono::steady_clock::now() < end && !xserver_ready)
+        while (
+            !xserver_ready &&
+            std::chrono::steady_clock::now() < end &&
+            server->is_running())
         {
             std::this_thread::sleep_for(100ms);
         }
@@ -207,7 +210,7 @@ mf::XWaylandServer::XWaylandServer(
       wayland_client{connect_xwayland_wl_client(wayland_connector, wayland_server_fd)},
       running{true}
 {
-    if (!startup_signal_handler->wait(5s))
+    if (!startup_signal_handler->wait(this, 5s))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("XWayland server failed to start"));
     }
