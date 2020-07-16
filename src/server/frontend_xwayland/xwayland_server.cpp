@@ -224,6 +224,12 @@ mf::XWaylandServer::~XWaylandServer()
             kill(xwayland_process.pid, SIGKILL);     // ...then kill it!
         }
     }
+
+    // Calling is_running() one more time will ensure the process is reaped
+    if (is_running())
+    {
+        log_warning("Failed to kill Xwayland process with PID %d", xwayland_process.pid);
+    }
 }
 
 auto mf::XWaylandServer::is_running() const -> bool
