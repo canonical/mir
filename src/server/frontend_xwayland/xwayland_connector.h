@@ -26,6 +26,7 @@
 
 namespace mir
 {
+class Executor;
 namespace dispatch
 {
 class ReadableFd;
@@ -41,6 +42,7 @@ class XWaylandConnector : public Connector
 {
 public:
     XWaylandConnector(
+        std::shared_ptr<Executor> const& main_loop,
         std::shared_ptr<WaylandConnector> const& wayland_connector,
         std::string const& xwayland_path);
     ~XWaylandConnector();
@@ -55,6 +57,7 @@ public:
     auto socket_name() const -> optional_value<std::string> override;
 
 private:
+    std::shared_ptr<Executor> const main_loop;
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::string const xwayland_path;
 

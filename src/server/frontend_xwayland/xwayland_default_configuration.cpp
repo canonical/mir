@@ -17,6 +17,7 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/log.h"
+#include "mir/main_loop.h"
 #include "wayland_connector.h"
 #include "xwayland_connector.h"
 
@@ -68,6 +69,7 @@ std::shared_ptr<mf::Connector> mir::DefaultServerConfiguration::the_xwayland_con
             {
                 auto wayland_connector = std::static_pointer_cast<mf::WaylandConnector>(the_wayland_connector());
                 return std::make_shared<mf::XWaylandConnector>(
+                    the_main_loop(),
                     wayland_connector,
                     options->get<std::string>("xwayland-path"));
             }
