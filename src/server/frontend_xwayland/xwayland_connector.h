@@ -61,6 +61,8 @@ private:
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::string const xwayland_path;
 
+    void create_spawner(std::unique_lock<std::mutex>& lock);
+    void tear_down(std::unique_lock<std::mutex>& lock);
     void spawn();
 
     std::mutex mutable mutex;

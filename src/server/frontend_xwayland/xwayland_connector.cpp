@@ -64,40 +64,16 @@ void mf::XWaylandConnector::start()
 {
     if (wayland_connector->get_extension("x11-support"))
     {
-        std::lock_guard<std::mutex> lock{mutex};
-
-        if (spawner)
-        {
-            return;
-        }
-
-        spawner = std::make_unique<XWaylandSpawner>([this]() { spawn(); });
-        mir::log_info("XWayland started on X11 display %s", spawner->x11_display().c_str());
+        std::unique_lock<std::mutex> lock{mutex};
+        create_spawner(lock);
+        mir::log_info("Listening for X11 connections on DISPLAY %s", spawner->x11_display().c_str());
     }
 }
 
 void mf::XWaylandConnector::stop()
 {
     std::unique_lock<std::mutex> lock{mutex};
-
-    bool const was_running{server};
-
-    auto local_spawner{std::move(spawner)};
-    auto local_wm_event_thread{std::move(wm_event_thread)};
-    auto local_wm{std::move(wm)};
-    auto local_server{std::move(server)};
-
-    lock.unlock();
-
-    local_spawner.reset();
-    local_wm_event_thread.reset();
-    local_wm.reset();
-    local_server.reset();
-
-    if (was_running)
-    {
-        mir::log_info("XWayland stopped");
-    }
+    tear_down(lock);
 }
 
 int mf::XWaylandConnector::client_socket_fd() const
@@ -122,6 +98,48 @@ auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
     else
     {
         return optional_value<std::string>();
+    }
+}
+
+void mf::XWaylandConnector::create_spawner(std::unique_lock<std::mutex>& lock)
+{
+    if (!lock)
+    {
+        lock.lock();
+    }
+
+    if (spawner)
+    {
+        return;
+    }
+
+    spawner = std::make_unique<XWaylandSpawner>([this]() { spawn(); });
+}
+
+void mf::XWaylandConnector::tear_down(std::unique_lock<std::mutex>& lock)
+{
+    if (!lock)
+    {
+        lock.lock();
+    }
+
+    bool const was_running{server};
+
+    auto local_spawner{std::move(spawner)};
+    auto local_wm_event_thread{std::move(wm_event_thread)};
+    auto local_wm{std::move(wm)};
+    auto local_server{std::move(server)};
+
+    lock.unlock();
+
+    local_spawner.reset();
+    local_wm_event_thread.reset();
+    local_wm.reset();
+    local_server.reset();
+
+    if (was_running)
+    {
+        mir::log_info("XWayland stopped");
     }
 }
 
