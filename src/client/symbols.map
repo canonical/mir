@@ -126,7 +126,6 @@ MIR_CLIENT_2.0 {
     mir_surface_set_preferred_orientation;
     mir_surface_set_state;
     mir_surface_set_swapinterval;
-    mir_surface_spec_release;
     mir_surface_spec_set_buffer_usage;
     mir_surface_spec_set_fullscreen_on_output;
     mir_surface_spec_set_height;
