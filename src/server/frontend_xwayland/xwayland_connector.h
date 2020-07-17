@@ -65,7 +65,13 @@ private:
     void tear_down(std::unique_lock<std::mutex>& lock);
     void spawn();
 
+    /// sets restart_in_progress to true and puts a restart operation onto the main loop
+    void restart(std::lock_guard<std::mutex> const&);
+
     std::mutex mutable mutex;
+    /// If a restart has been queued or is currently in progress
+    /// Setting to false will abort the restart
+    bool restart_in_progress{false};
     std::unique_ptr<XWaylandSpawner> spawner;
     std::unique_ptr<XWaylandServer> server;
     std::unique_ptr<XWaylandWM> wm;

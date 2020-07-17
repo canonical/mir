@@ -73,6 +73,7 @@ void mf::XWaylandConnector::start()
 void mf::XWaylandConnector::stop()
 {
     std::unique_lock<std::mutex> lock{mutex};
+    restart_in_progress = false;
     tear_down(lock);
 }
 
@@ -147,11 +148,12 @@ void mf::XWaylandConnector::spawn()
 {
     std::lock_guard<std::mutex> lock{mutex};
 
-    if (server || !spawner)
+    if (server || !spawner || restart_in_progress)
     {
         // If we have a server then we've already spawned
         // If we don't have a spawner then this connector has been stopped or never started (and shouldn't spawn)
-        // Either way, nothing to do
+        // If a restart is in progress than we shouldn't spawn
+        // In any case, nothing to do
         return;
     }
 
@@ -180,20 +182,8 @@ void mf::XWaylandConnector::spawn()
                     std::current_exception(),
                     "X11 window manager error, killing XWayland");
 
-                std::unique_lock<std::mutex> lock{mutex};
-
-                // NOTE: we do not stop the spawner, so the server/wm will be recreated when new clients connect
-                auto local_wm{std::move(wm)};
-                auto local_server{std::move(server)};
-                auto local_wm_event_thread{std::move(wm_event_thread)};
-
-                lock.unlock();
-
-                local_wm.reset();
-                local_server.reset();
-
-                // We can't destroy a ThreadedDispatcher from inside a call it made, so do it from another thread
-                std::thread{[&](){ local_wm_event_thread.reset(); }}.join();
+                std::lock_guard<std::mutex> lock{mutex};
+                restart(lock);
             });
         server = std::make_unique<XWaylandServer>(
             wayland_connector,
@@ -214,5 +204,36 @@ void mf::XWaylandConnector::spawn()
             MIR_LOG_COMPONENT,
             std::current_exception(),
             "Spawning XWayland failed");
+
+        restart(lock);
     }
+}
+
+void mf::XWaylandConnector::restart(std::lock_guard<std::mutex> const&)
+{
+    restart_in_progress = true;
+
+    // We can't destroy our components from inside a call from those same components,
+    // so we call tear_down() on the main loop instead
+    main_loop->spawn([this]()
+        {
+            std::unique_lock<std::mutex> lock{mutex};
+
+            if (!restart_in_progress)
+            {
+                return;
+            }
+            tear_down(lock);
+
+            if (!lock)
+            {
+                lock.lock();
+            }
+            if (!restart_in_progress)
+            {
+                return;
+            }
+            restart_in_progress = false;
+            create_spawner(lock);
+        });
 }
