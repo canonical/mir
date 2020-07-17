@@ -113,12 +113,6 @@ void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, MirEvent co
 {
     if (mir_event_get_type(event) == mir_event_type_input)
     {
-        // Ignore key repeat events
-        auto const input_event = mir_event_get_input_event(event);
-        if ((mir_input_event_get_type(input_event) == mir_input_event_type_key) &&
-            (mir_keyboard_event_action(mir_input_event_get_keyboard_event(input_event)) == mir_keyboard_action_repeat))
-                return;
-
         std::shared_ptr<MirEvent> owned_event = mev::clone_event(*event);
 
         aquire_input_dispatcher(
