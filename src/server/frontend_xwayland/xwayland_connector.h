@@ -47,6 +47,7 @@ public:
     /// or even per-toolkit basis. GDK_SCALE is used by default for XWayland scale because many apps respect it, so it's
     /// generally as correct as anything.
     XWaylandConnector(
+        std::shared_ptr<Executor> const& main_loop,
         std::shared_ptr<WaylandConnector> const& wayland_connector,
         std::string const& xwayland_path,
         float scale);
@@ -62,6 +63,7 @@ public:
     auto socket_name() const -> optional_value<std::string> override;
 
 private:
+    std::shared_ptr<Executor> const main_loop;
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::string const xwayland_path;
     float const scale;

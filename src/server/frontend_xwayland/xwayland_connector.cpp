@@ -18,7 +18,6 @@
 
 #include "xwayland_connector.h"
 
-
 #include "wayland_connector.h"
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
@@ -26,7 +25,7 @@
 #include "mir/log.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/readable_fd.h"
-#include "mir/terminate_with_current_exception.h"
+#include "mir/executor.h"
 
 #include <unistd.h>
 
@@ -34,10 +33,12 @@ namespace mf = mir::frontend;
 namespace md = mir::dispatch;
 
 mf::XWaylandConnector::XWaylandConnector(
+    std::shared_ptr<Executor> const& main_loop,
     std::shared_ptr<WaylandConnector> const& wayland_connector,
     std::string const& xwayland_path,
     float scale)
-    : wayland_connector{wayland_connector},
+    : main_loop{main_loop},
+      wayland_connector{wayland_connector},
       xwayland_path{xwayland_path},
       scale{scale}
 {
