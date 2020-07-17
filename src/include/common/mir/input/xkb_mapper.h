@@ -79,7 +79,6 @@ private:
     struct ComposeState
     {
         ComposeState(XKBComposeTablePtr const& table);
-        void update_and_map(MirEvent& event);
         xkb_keysym_t update_state(xkb_keysym_t mapped_key, MirKeyboardAction action, std::string& text);
     private:
         XKBComposeStatePtr state;

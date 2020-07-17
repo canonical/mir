@@ -216,7 +216,6 @@ private:
 
 // Provide a deleted overload to avoid double release "accidents".
 void mir_window_spec_release(WindowSpec const& spec) = delete;
-void mir_surface_spec_release(WindowSpec const& spec) = delete;
 }
 }
 

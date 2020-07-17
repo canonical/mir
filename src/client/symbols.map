@@ -120,14 +120,12 @@ MIR_CLIENT_2.0 {
     mir_surface_get_visibility;
     mir_surface_is_valid;
     mir_surface_release;
-    mir_surface_release_sync;
     mir_surface_request_persistent_id;
     mir_surface_request_persistent_id_sync;
     mir_surface_set_event_handler;
     mir_surface_set_preferred_orientation;
     mir_surface_set_state;
     mir_surface_set_swapinterval;
-    mir_surface_spec_release;
     mir_surface_spec_set_buffer_usage;
     mir_surface_spec_set_fullscreen_on_output;
     mir_surface_spec_set_height;

@@ -35,9 +35,6 @@ public:
 
     virtual void populate_server_package(MirPlatformPackage& platform_package) = 0;
     virtual void populate_graphics_module(MirModuleProperties& graphics_module) = 0;
-    virtual MirWaitHandle* platform_operation(
-        MirPlatformMessage const* request,
-        MirPlatformOperationCallback callback, void* context) = 0;
     virtual void allocate_buffer(
         mir::geometry::Size size, MirPixelFormat format,
         MirBufferCallback callback, void* context) = 0;

@@ -50,7 +50,6 @@
 #include "mir/input/mir_input_config_serialization.h"
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
-#include "mir/platform_message.h"
 #include "mir_error.h"
 
 #include <algorithm>
@@ -714,54 +713,6 @@ MirWaitHandle* MirConnection::disconnect()
 
     return &disconnect_wait_handle;
 }
-
-void MirConnection::done_platform_operation(
-    MirPlatformOperationCallback callback, void* context)
-{
-    auto reply = new MirPlatformMessage(platform_operation_reply->opcode());
-
-    set_error_message(platform_operation_reply->error());
-
-    auto const char_data = static_cast<char const*>(platform_operation_reply->data().data());
-    reply->data.assign(char_data, char_data + platform_operation_reply->data().size());
-    reply->fds.assign(
-        platform_operation_reply->fd().data(),
-        platform_operation_reply->fd().data() + platform_operation_reply->fd().size());
-
-    callback(this, reply, context);
-
-    platform_operation_wait_handle.result_received();
-}
-
-MirWaitHandle* MirConnection::platform_operation(
-    MirPlatformMessage const* request,
-    MirPlatformOperationCallback callback, void* context)
-{
-    auto const client_response = platform->platform_operation(request);
-    if (client_response)
-    {
-        set_error_message("");
-        callback(this, client_response, context);
-        return nullptr;
-    }
-
-    mp::PlatformOperationMessage protobuf_request;
-
-    protobuf_request.set_opcode(request->opcode);
-    protobuf_request.set_data(request->data.data(), request->data.size());
-    for (size_t i = 0; i != request->fds.size(); ++i)
-        protobuf_request.add_fd(request->fds[i]);
-
-    platform_operation_wait_handle.expect_result();
-    server.platform_operation(
-        &protobuf_request,
-        platform_operation_reply.get(),
-        google::protobuf::NewCallback(this, &MirConnection::done_platform_operation,
-                                      callback, context));
-
-    return &platform_operation_wait_handle;
-}
-
 
 bool MirConnection::is_valid(MirConnection *connection)
 {

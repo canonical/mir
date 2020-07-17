@@ -120,10 +120,6 @@ public:
 
     MirWaitHandle* disconnect();
 
-    MirWaitHandle* platform_operation(
-        MirPlatformMessage const* request,
-        MirPlatformOperationCallback callback, void* context) override;
-
     void register_lifecycle_event_callback(MirLifecycleEventCallback callback, void* context);
 
     void register_ping_event_callback(MirPingEventCallback callback, void* context);
@@ -376,7 +372,6 @@ private:
     void connected(MirConnectedCallback callback, void * context);
     void released(SurfaceRelease);
     void released(StreamRelease);
-    void done_platform_operation(MirPlatformOperationCallback, void* context);
     bool validate_user_display_config(MirDisplayConfiguration const* config);
 
     int const nbuffers;

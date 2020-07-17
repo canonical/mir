@@ -420,17 +420,6 @@ mircv::XKBMapper::ComposeState::ComposeState(XKBComposeTablePtr const& table) :
 {
 }
 
-void mircv::XKBMapper::ComposeState::update_and_map(MirEvent& event)
-{
-    auto& key_ev = *event.to_input()->to_keyboard();
-
-    auto const key_sym = key_ev.key_code();
-    auto const action = key_ev.action();
-    std::string text;
-    key_ev.set_key_code(update_state(key_sym, action, text));
-    key_ev.set_text(text.c_str());
-}
-
 xkb_keysym_t mircv::XKBMapper::ComposeState::update_state(xkb_keysym_t mapped_key, MirKeyboardAction action, std::string& mapped_text)
 {
     // the state machine only cares about downs
