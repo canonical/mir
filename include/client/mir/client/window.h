@@ -46,7 +46,6 @@ private:
 
 // Provide a deleted overload to avoid double release "accidents".
 void mir_window_release_sync(Window const& window) = delete;
-void mir_surface_release_sync(Window const& window) = delete;
 }
 }
 
