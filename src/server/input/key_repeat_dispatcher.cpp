@@ -70,7 +70,21 @@ struct DeviceRemovalFilter : mi::InputDeviceObserver
 auto is_meta_key(MirKeyboardEvent const* event) -> bool
 {
     auto const key_code = mir_keyboard_event_key_code(event);
-    return (XKB_KEY_Shift_L <= key_code) && (key_code <= XKB_KEY_Hyper_R);
+    switch(key_code)
+    {
+    case XKB_KEY_Shift_R:
+    case XKB_KEY_Shift_L:
+    case XKB_KEY_Alt_R:
+    case XKB_KEY_Alt_L:
+    case XKB_KEY_Control_R:
+    case XKB_KEY_Control_L:
+    case XKB_KEY_Super_L:
+    case XKB_KEY_Super_R:
+    case XKB_KEY_Caps_Lock:
+    case XKB_KEY_Scroll_Lock:
+    case XKB_KEY_Num_Lock: return true;
+    default: return ((XKB_KEY_Shift_L <= key_code) && (key_code <= XKB_KEY_Hyper_R));
+    }
 }
 }
 
@@ -144,12 +158,6 @@ bool mi::KeyRepeatDispatcher::dispatch(std::shared_ptr<MirEvent const> const& ev
 // Returns true if the original event has been handled, that is ::dispatch should not pass it on.
 bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* kev)
 {
-    // We don't want to track and auto-repeat individual meta key presses
-    // That leads, for example, to alternating Ctrl and Alt repeats when
-    // both keys are pressed.
-    if (is_meta_key(kev))
-        return false;
-
     std::lock_guard<std::mutex> lg(repeat_state_mutex);
     auto& device_state = ensure_state_for_device_locked(lg, id);
 
@@ -159,16 +167,22 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
     {
     case mir_keyboard_action_up:
     {
-        auto it = device_state.repeat_alarms_by_scancode.find(scan_code);
-        if (it == device_state.repeat_alarms_by_scancode.end())
-        {
-            return false;
-        }
-        device_state.repeat_alarms_by_scancode.erase(it);
+        device_state.repeat_alarm.reset();
         break;
     }
     case mir_keyboard_action_down:
     {
+        // We don't want to track and auto-repeat individual meta key presses
+        // That leads, for example, to alternating Ctrl and Alt repeats when
+        // both keys are pressed.
+        if (is_meta_key(kev))
+        {
+            // Further, we don't want to repeat with the old modifier state.
+            // So just cancel any existing repeats and carry on.
+            device_state.repeat_alarm.reset();
+            return false;
+        }
+
         auto clone_event = [scan_code, id, this,
              key_code = mir_keyboard_event_key_code(kev),
              modifiers = mir_keyboard_event_modifiers(kev)]()
@@ -186,23 +200,19 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
                  next_dispatcher->dispatch(std::move(new_event));
              };
 
-        auto it = device_state.repeat_alarms_by_scancode.find(scan_code);
-        if (it != device_state.repeat_alarms_by_scancode.end())
-        {
-            // When we receive a duplicated down we just replace the action
-            clone_event();
-            return true;
-        }
-        auto& capture_alarm = device_state.repeat_alarms_by_scancode[scan_code];
         std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm(
-            [repeat_delay=repeat_delay, clone_event, &capture_alarm]()
+            [this, clone_event, &device_state]()
             {
                 clone_event();
 
-                capture_alarm->reschedule_in(repeat_delay);
+                std::lock_guard<std::mutex> lg(repeat_state_mutex);
+                // As we're executing, then repeat_alarm ought to be ours; but it
+                // could have just been replaced, in which case a reschedule is benign
+                if (device_state.repeat_alarm)
+                    device_state.repeat_alarm->reschedule_in(repeat_delay);
             });
         alarm->reschedule_in(repeat_timeout);
-        device_state.repeat_alarms_by_scancode[scan_code] = {alarm};
+        device_state.repeat_alarm = alarm;
     }
     case mir_keyboard_action_repeat:
         // Should we consume existing repeats?
