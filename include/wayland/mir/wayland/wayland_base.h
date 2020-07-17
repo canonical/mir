@@ -109,6 +109,12 @@ public:
         }
     }
 
+    template<typename U>
+    auto operator!=(U const& other) const -> bool
+    {
+        return !(*this == other);
+    }
+
     operator bool() const
     {
         return resource && !*destroyed_flag;
