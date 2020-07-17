@@ -216,7 +216,7 @@ void mf::XWaylandWM::handle_events()
                 logging::Severity::warning,
                 MIR_LOG_COMPONENT,
                 std::current_exception(),
-                "Failed to handle xcb event.");
+                "Error processing XCB event");
         }
         free(event);
         got_events = true;
