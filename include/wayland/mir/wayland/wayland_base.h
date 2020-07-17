@@ -85,7 +85,14 @@ public:
 
     auto operator==(Weak<T> const& other) const -> bool
     {
-        return resource == other->resource;
+        if (*this && other)
+        {
+            return resource == other.resource;
+        }
+        else
+        {
+            return (!*this && !other);
+        }
     }
 
     operator bool() const
