@@ -268,9 +268,7 @@ struct WlSurfaceCursor : mf::WlPointer::Cursor
 private:
     void apply_latest_buffer();
 
-    mf::WlSurface* const surface;
-    // If surface_destroyed is true, surface should not be used
-    std::shared_ptr<bool> surface_destroyed;
+    mw::Weak<mf::WlSurface> const surface;
     std::shared_ptr<mc::BufferStream> const stream;
     mf::NullWlSurfaceRole surface_role; // Used only to assert unique ownership
 
@@ -324,7 +322,6 @@ void mf::WlPointer::release()
 
 WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot)
     : surface{surface},
-      surface_destroyed{surface->destroyed_flag()},
       stream{surface->stream},
       surface_role{surface},
       hotspot{hotspot}
@@ -340,8 +337,10 @@ WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hots
 
 WlSurfaceCursor::~WlSurfaceCursor()
 {
-    if (!*surface_destroyed)
-        surface->clear_role();
+    if (surface)
+    {
+        surface.value().clear_role();
+    }
     stream->set_frame_posted_callback([](auto){});
 }
 
@@ -368,10 +367,14 @@ void WlSurfaceCursor::set_hotspot(geom::Displacement const& new_hotspot)
 
 auto WlSurfaceCursor::cursor_surface() const -> std::experimental::optional<mf::WlSurface*>
 {
-    if (!*surface_destroyed)
-        return surface;
+    if (surface)
+    {
+        return &surface.value();
+    }
     else
+    {
         return {};
+    }
 }
 
 void WlSurfaceCursor::apply_latest_buffer()

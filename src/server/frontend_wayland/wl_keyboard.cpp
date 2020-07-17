@@ -71,7 +71,7 @@ mf::WlKeyboard::~WlKeyboard()
 
 void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, WlSurface* surface, int scancode, bool down)
 {
-    if (*focused_surface_destroyed || focused_surface != surface)
+    if (!focused_surface || &focused_surface.value() != surface)
     {
         log_warning(
             "Sending key to wl_surface@%u even though it was not explicitly given keyboard focus",
@@ -94,15 +94,15 @@ void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, WlSurface* surface
 
 void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
 {
-    bool const is_currently_focused = (*focused_surface_destroyed == false && focused_surface == surface);
+    bool const is_currently_focused = (focused_surface && &focused_surface.value() == surface);
 
     if (should_be_focused == is_currently_focused)
         return;
 
-    if (*focused_surface_destroyed == false)
+    if (focused_surface)
     {
         auto const serial = wl_display_next_serial(wl_client_get_display(client));
-        send_leave_event(serial, focused_surface->raw_resource());
+        send_leave_event(serial, focused_surface.value().raw_resource());
     }
 
     if (should_be_focused)
@@ -137,13 +137,11 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
         send_enter_event(serial, surface->raw_resource(), &key_state);
         wl_array_release(&key_state);
 
-        focused_surface = surface;
-        focused_surface_destroyed = surface->destroyed_flag();
+        focused_surface = mw::make_weak(surface);
     }
     else
     {
-        focused_surface = nullptr;
-        focused_surface_destroyed = std::make_shared<bool>(true);
+        focused_surface = {};
     }
 }
 
