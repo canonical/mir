@@ -8,7 +8,6 @@ include_directories(
 )
 
 add_library(server_platform_common STATIC
-  platform_authentication_wrapper.cpp
   shm_buffer.cpp
   one_shot_device_observer.h
   one_shot_device_observer.cpp
