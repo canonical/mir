@@ -83,7 +83,6 @@ private:
     void send_display_config(graphics::DisplayConfiguration const& info);
 
     auto checked_find(frontend::SurfaceId id) const -> Surfaces::const_iterator;
-    auto checked_find(std::shared_ptr<scene::Surface> const& surface) const -> Surfaces::const_iterator; ///< O(n)
     auto checked_find(frontend::BufferStreamId id) const -> Streams::const_iterator;
 };
 }

@@ -246,19 +246,6 @@ auto mf::BasicMirClientSession::checked_find(frontend::SurfaceId id) const -> Su
         return iter;
 }
 
-auto mf::BasicMirClientSession::checked_find(
-    std::shared_ptr<scene::Surface> const& surface) const -> Surfaces::const_iterator
-{
-    auto iter = std::find_if(surfaces.begin(), surfaces.end(), [&](auto i)
-        {
-            return i.second.lock() == surface;
-        });
-    if (iter == surfaces.end())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid Surface"));
-    else
-        return iter;
-}
-
 auto mf::BasicMirClientSession::checked_find(frontend::BufferStreamId id) const -> Streams::const_iterator
 {
     auto iter = streams.find(id);
