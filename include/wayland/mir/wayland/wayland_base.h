@@ -95,6 +95,18 @@ public:
         }
     }
 
+    auto operator==(T const& other) const -> bool
+    {
+        if (*this)
+        {
+            return resource == &other;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     operator bool() const
     {
         return resource && !*destroyed_flag;
