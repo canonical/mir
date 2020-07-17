@@ -227,17 +227,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::release_surface, invocation);
         }
-        else if ("platform_operation" == invocation.method_name())
-        {
-            auto request = parse_parameter<mir::protobuf::PlatformOperationMessage>(invocation);
-
-            request.clear_fd();
-            for (auto& fd : side_channel_fds)
-                request.add_fd(fd);
-
-            invoke(shared_from_this(), display_server.get(), &DisplayServer::platform_operation,
-                   invocation.id(), &request);
-        }
         else if ("configure_display" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::configure_display, invocation);
