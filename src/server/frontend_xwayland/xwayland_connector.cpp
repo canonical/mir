@@ -213,27 +213,35 @@ void mf::XWaylandConnector::restart(std::lock_guard<std::mutex> const&)
 {
     restart_in_progress = true;
 
+    std::weak_ptr<XWaylandConnector> weak{shared_from_this()};
+
     // We can't destroy our components from inside a call from those same components,
     // so we call tear_down() on the main loop instead
-    main_loop->spawn([this]()
+    main_loop->spawn([weak]()
         {
-            std::unique_lock<std::mutex> lock{mutex};
-
-            if (!restart_in_progress)
+            auto self = weak.lock();
+            if (!self)
             {
                 return;
             }
-            tear_down(lock);
+
+            std::unique_lock<std::mutex> lock{self->mutex};
+
+            if (!self->restart_in_progress)
+            {
+                return;
+            }
+            self->tear_down(lock);
 
             if (!lock)
             {
                 lock.lock();
             }
-            if (!restart_in_progress)
+            if (!self->restart_in_progress)
             {
                 return;
             }
-            restart_in_progress = false;
-            create_spawner(lock);
+            self->restart_in_progress = false;
+            self->create_spawner(lock);
         });
 }

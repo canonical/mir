@@ -38,7 +38,9 @@ class WaylandConnector;
 class XWaylandServer;
 class XWaylandSpawner;
 class XWaylandWM;
-class XWaylandConnector : public Connector
+class XWaylandConnector
+    : public Connector,
+      public std::enable_shared_from_this<XWaylandConnector>
 {
 public:
     XWaylandConnector(
