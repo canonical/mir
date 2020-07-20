@@ -53,7 +53,7 @@ public:
 TEST_F(WaylandWeakTest, returns_resource)
 {
     mw::Weak<MockResource> const weak{&resource.value()};
-    ASSERT_THAT(&weak.value(), Eq(&resource.value()));
+    EXPECT_THAT(&weak.value(), Eq(&resource.value()));
 }
 
 TEST_F(WaylandWeakTest, false_after_resource_destroyed)
@@ -61,13 +61,13 @@ TEST_F(WaylandWeakTest, false_after_resource_destroyed)
     mw::Weak<MockResource> const weak{&resource.value()};
     ASSERT_THAT(weak, Eq(true));
     resource = std::experimental::nullopt;
-    ASSERT_THAT(weak, Eq(false));
+    EXPECT_THAT(weak, Eq(false));
 }
 
 TEST_F(WaylandWeakTest, can_be_created_with_nullptr)
 {
     mw::Weak<MockResource> const weak{nullptr};
-    ASSERT_THAT(weak, Eq(false));
+    EXPECT_THAT(weak, Eq(false));
 }
 
 TEST_F(WaylandWeakTest, throws_logic_error_on_access_after_resource_destroyed)
@@ -191,12 +191,12 @@ TEST_F(WaylandWeakTest, weak_cleared_when_resource_marked_as_destroyed)
 TEST_F(WaylandWeakTest, as_nullable_ptr_returns_valid_pointer)
 {
     mw::Weak<MockResource> const weak{&resource.value()};
-    ASSERT_THAT(mw::as_nullable_ptr(weak), Eq(&resource.value()));
+    EXPECT_THAT(mw::as_nullable_ptr(weak), Eq(&resource.value()));
 }
 
 TEST_F(WaylandWeakTest, as_nullable_ptr_returns_nullptr_if_resource_destroyed)
 {
     mw::Weak<MockResource> const weak{&resource.value()};
     resource = std::experimental::nullopt;
-    ASSERT_THAT(mw::as_nullable_ptr(weak), Eq(nullptr));
+    EXPECT_THAT(mw::as_nullable_ptr(weak), Eq(nullptr));
 }
