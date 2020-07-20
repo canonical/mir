@@ -44,6 +44,8 @@ public:
 
     virtual ~LifetimeTracker();
     auto destroyed_flag() const -> std::shared_ptr<bool>;
+
+protected:
     void mark_destroyed() const;
 
 private:
@@ -85,7 +87,32 @@ public:
 
     auto operator==(Weak<T> const& other) const -> bool
     {
-        return resource == other->resource;
+        if (*this && other)
+        {
+            return resource == other.resource;
+        }
+        else
+        {
+            return (!*this && !other);
+        }
+    }
+
+    auto operator==(T const& other) const -> bool
+    {
+        if (*this)
+        {
+            return resource == &other;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    template<typename U>
+    auto operator!=(U const& other) const -> bool
+    {
+        return !(*this == other);
     }
 
     operator bool() const
@@ -102,18 +129,6 @@ public:
         return *resource;
     }
 
-    auto as_nullable_ptr() const -> T*
-    {
-        if (*this)
-        {
-            return resource;
-        }
-        else
-        {
-            return nullptr;
-        }
-    }
-
 private:
     T* resource;
     /// Is null if and only if resource is null
@@ -125,6 +140,12 @@ template<typename T>
 auto make_weak(T* resource) -> Weak<T>
 {
     return Weak<T>{resource};
+}
+
+template<typename T>
+auto as_nullable_ptr(Weak<T> const& weak) -> T*
+{
+    return weak ? &weak.value() : nullptr;
 }
 
 class Global
