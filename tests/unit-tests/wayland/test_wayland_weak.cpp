@@ -50,6 +50,20 @@ public:
     std::experimental::optional<MockResource> resource_b{{}};
 };
 
+template<typename T>
+void check_equality_impl(T const& a, T const& b)
+{
+    EXPECT_THAT(a == b, Eq(b == a)) << "== not symmetric";
+    EXPECT_THAT(a != b, Eq(b != a)) << "!= not symmetric";
+    EXPECT_THAT(a != b, Eq(!(a == b))) << "!= not the inverse of ==";
+}
+
+MATCHER_P(FullyCheckedEq, a, std::string(negation ? "isn't" : "is") + " equal to " + PrintToString(a))
+{
+    check_equality_impl(arg, a);
+    return arg == a;
+}
+
 TEST_F(WaylandWeakTest, returns_resource)
 {
     mw::Weak<MockResource> const weak{&resource.value()};
@@ -87,8 +101,7 @@ TEST_F(WaylandWeakTest, copies_are_equal)
 {
     mw::Weak<MockResource> const weak_a{&resource.value()};
     mw::Weak<MockResource> const weak_b{weak_a};
-    EXPECT_THAT(weak_a, Eq(weak_b));
-    EXPECT_THAT(weak_b, Eq(weak_a));
+    EXPECT_THAT(weak_a, FullyCheckedEq(weak_b));
 }
 
 TEST_F(WaylandWeakTest, equal_after_assignment)
@@ -96,40 +109,35 @@ TEST_F(WaylandWeakTest, equal_after_assignment)
     mw::Weak<MockResource> const weak_a{&resource.value()};
     mw::Weak<MockResource> weak_b{nullptr};
     weak_b = weak_a;
-    EXPECT_THAT(weak_a, Eq(weak_b));
-    EXPECT_THAT(weak_b, Eq(weak_a));
+    EXPECT_THAT(weak_a, FullyCheckedEq(weak_b));
 }
 
 TEST_F(WaylandWeakTest, weaks_made_from_the_same_resource_are_equal)
 {
     mw::Weak<MockResource> const weak_a{&resource.value()};
     mw::Weak<MockResource> const weak_b{&resource.value()};
-    EXPECT_THAT(weak_a, Eq(weak_b));
-    EXPECT_THAT(weak_b, Eq(weak_a));
+    EXPECT_THAT(weak_a, FullyCheckedEq(weak_b));
 }
 
 TEST_F(WaylandWeakTest, default_constructed_weak_equal_to_nullptr_constructed_weak)
 {
     mw::Weak<MockResource> const weak_a{};
     mw::Weak<MockResource> const weak_b{nullptr};
-    EXPECT_THAT(weak_a, Eq(weak_b));
-    EXPECT_THAT(weak_b, Eq(weak_a));
+    EXPECT_THAT(weak_a, FullyCheckedEq(weak_b));
 }
 
 TEST_F(WaylandWeakTest, weaks_made_from_different_resources_not_equal)
 {
     mw::Weak<MockResource> const weak_a{&resource_a.value()};
     mw::Weak<MockResource> const weak_b{&resource_b.value()};
-    EXPECT_THAT(weak_a, Ne(weak_b));
-    EXPECT_THAT(weak_b, Ne(weak_a));
+    EXPECT_THAT(weak_a, Not(FullyCheckedEq(weak_b)));
 }
 
 TEST_F(WaylandWeakTest, nullptr_weak_not_equal_to_valid_weak)
 {
     mw::Weak<MockResource> const weak_a{&resource.value()};
     mw::Weak<MockResource> const weak_b{nullptr};
-    EXPECT_THAT(weak_a, Ne(weak_b));
-    EXPECT_THAT(weak_b, Ne(weak_a));
+    EXPECT_THAT(weak_a, Not(FullyCheckedEq(weak_b)));
 }
 
 TEST_F(WaylandWeakTest, weaks_made_from_the_same_resource_are_equal_after_resource_destroyed)
@@ -137,8 +145,7 @@ TEST_F(WaylandWeakTest, weaks_made_from_the_same_resource_are_equal_after_resour
     mw::Weak<MockResource> const weak_a{&resource.value()};
     mw::Weak<MockResource> const weak_b{&resource.value()};
     resource = std::experimental::nullopt;
-    EXPECT_THAT(weak_a, Eq(weak_b));
-    EXPECT_THAT(weak_b, Eq(weak_a));
+    EXPECT_THAT(weak_a, FullyCheckedEq(weak_b));
 }
 
 TEST_F(WaylandWeakTest, weaks_made_from_different_resources_are_equal_after_both_destroyed)
@@ -147,8 +154,7 @@ TEST_F(WaylandWeakTest, weaks_made_from_different_resources_are_equal_after_both
     mw::Weak<MockResource> const weak_b{&resource_b.value()};
     resource_a = std::experimental::nullopt;
     resource_b = std::experimental::nullopt;
-    EXPECT_THAT(weak_a, Eq(weak_b));
-    EXPECT_THAT(weak_b, Eq(weak_a));
+    EXPECT_THAT(weak_a, FullyCheckedEq(weak_b));
 }
 
 TEST_F(WaylandWeakTest, weak_not_equal_to_weak_of_new_resource_with_same_address)
@@ -160,8 +166,7 @@ TEST_F(WaylandWeakTest, weak_not_equal_to_weak_of_new_resource_with_same_address
     auto* const new_resource_ptr = &resource.value();
     mw::Weak<MockResource> const weak_b{&resource.value()};
     ASSERT_THAT(old_resource_ptr, Eq(new_resource_ptr));
-    EXPECT_THAT(weak_a, Ne(weak_b));
-    EXPECT_THAT(weak_b, Ne(weak_a));
+    EXPECT_THAT(weak_a, Not(FullyCheckedEq(weak_b)));
 }
 
 TEST_F(WaylandWeakTest, is_equal_to_raw_resource)
