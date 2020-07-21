@@ -69,7 +69,7 @@ private:
     std::shared_ptr<time::AlarmFactory> const alarm_factory;
     std::shared_ptr<cookie::Authority> const cookie_authority;
     bool const repeat_enabled;
-    std::chrono::milliseconds repeat_timeout;
+    std::chrono::milliseconds const repeat_timeout;
     std::chrono::milliseconds const repeat_delay;
     bool const disable_repeat_on_touchscreen;
     optional_value<MirInputDeviceId> touch_button_device;
