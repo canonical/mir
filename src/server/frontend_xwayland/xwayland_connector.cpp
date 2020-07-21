@@ -28,6 +28,8 @@
 #include "mir/dispatch/readable_fd.h"
 #include "mir/terminate_with_current_exception.h"
 
+#include <unistd.h>
+
 namespace mf = mir::frontend;
 namespace md = mir::dispatch;
 
@@ -37,6 +39,10 @@ mf::XWaylandConnector::XWaylandConnector(
     : wayland_connector{wayland_connector},
       xwayland_path{xwayland_path}
 {
+    if (access(xwayland_path.c_str(), F_OK | X_OK) != 0)
+    {
+        fatal_error("Cannot execute Xwayland: --xwayland-path %s", xwayland_path.c_str());
+    }
 }
 
 mf::XWaylandConnector::~XWaylandConnector()
