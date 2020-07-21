@@ -98,6 +98,7 @@ void exec_xwayland(
     args.push_back(nullptr);
 
     execvp(xwayland_path.c_str(), const_cast<char* const*>(args.data()));
+    perror(("Failed to execute Xwayland binary: xwayland_path='" + xwayland_path + "'").c_str());
 }
 
 auto fork_xwayland_process(
@@ -117,7 +118,7 @@ auto fork_xwayland_process(
 
     case 0:
         exec_xwayland(spawner, xwayland_path, wayland_pipe.client, x11_wm_pipe.server);
-        mir::log_error("Cannot execute Xwayland: --xwayland-path %s", xwayland_path.c_str());
+        // Only reached if Xwayland was not executed
         abort();
 
     default:
