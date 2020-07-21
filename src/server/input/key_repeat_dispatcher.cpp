@@ -158,16 +158,19 @@ bool mi::KeyRepeatDispatcher::dispatch(std::shared_ptr<MirEvent const> const& ev
 // Returns true if the original event has been handled, that is ::dispatch should not pass it on.
 bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* kev)
 {
-    std::lock_guard<std::mutex> lg(repeat_state_mutex);
-    auto& device_state = ensure_state_for_device_locked(lg, id);
-
     auto scan_code = mir_keyboard_event_scan_code(kev);
 
     switch (mir_keyboard_event_action(kev))
     {
     case mir_keyboard_action_up:
     {
-        device_state.repeat_alarm.reset();
+        std::shared_ptr<time::Alarm> alarm;
+        {
+            std::lock_guard<std::mutex> lg(repeat_state_mutex);
+            auto& device_state = ensure_state_for_device_locked(lg, id);
+            alarm = std::move(device_state.repeat_alarm);
+        }
+        alarm.reset();
         break;
     }
     case mir_keyboard_action_down:
@@ -179,11 +182,19 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
         {
             // Further, we don't want to repeat with the old modifier state.
             // So just cancel any existing repeats and carry on.
-            device_state.repeat_alarm.reset();
+            std::shared_ptr<time::Alarm> alarm;
+            {
+                std::lock_guard<std::mutex> lg(repeat_state_mutex);
+                auto& device_state = ensure_state_for_device_locked(lg, id);
+                alarm = std::move(device_state.repeat_alarm);
+            }
+            alarm.reset();
             return false;
         }
 
-        auto clone_event = [scan_code, id, this,
+        auto clone_event = [scan_code, id,
+             cookie_authority=cookie_authority,
+             next_dispatcher=next_dispatcher,
              key_code = mir_keyboard_event_key_code(kev),
              modifiers = mir_keyboard_event_modifiers(kev)]()
              {
@@ -216,7 +227,12 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
         // Fulfill the placeholder before scheduling the alarm.
         *shared_weak_alarm = alarm;
         alarm->reschedule_in(repeat_timeout);
-        device_state.repeat_alarm = alarm;
+
+        {
+            std::lock_guard<std::mutex> lg(repeat_state_mutex);
+            auto& device_state = ensure_state_for_device_locked(lg, id);
+            device_state.repeat_alarm = alarm;
+        }
     }
     case mir_keyboard_action_repeat:
         // Should we consume existing repeats?
