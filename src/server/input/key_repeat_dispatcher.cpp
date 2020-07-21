@@ -200,17 +200,21 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
                  next_dispatcher->dispatch(std::move(new_event));
              };
 
+        // We need to provide the alarm lambda with the alarm (which doesn't exist yet) so
+        // that it can reschedule. This is a placeholder while we create the lambda & alarm.
+        auto const shared_weak_alarm = std::make_shared<std::weak_ptr<time::Alarm>>();
+
         std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm(
-            [this, clone_event, &device_state]()
+            [clone_event, shared_weak_alarm, repeat_delay=repeat_delay]()
             {
                 clone_event();
 
-                std::lock_guard<std::mutex> lg(repeat_state_mutex);
-                // As we're executing, then repeat_alarm ought to be ours; but it
-                // could have just been replaced, in which case a reschedule is benign
-                if (device_state.repeat_alarm)
-                    device_state.repeat_alarm->reschedule_in(repeat_delay);
+                if (auto const& repeat_alarm = shared_weak_alarm->lock())
+                    repeat_alarm->reschedule_in(repeat_delay);
             });
+
+        // Fulfill the placeholder before scheduling the alarm.
+        *shared_weak_alarm = alarm;
         alarm->reschedule_in(repeat_timeout);
         device_state.repeat_alarm = alarm;
     }
