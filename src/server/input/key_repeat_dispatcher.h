@@ -79,7 +79,8 @@ private:
         std::shared_ptr<mir::time::Alarm> repeat_alarm;
     };
     std::unordered_map<MirInputDeviceId, KeyboardState> repeat_state_by_device;
-    KeyboardState& ensure_state_for_device_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id);
+    /// repeat_state_mutex must NOT be locked when calling
+    void set_alarm_for_device(MirInputDeviceId id, std::shared_ptr<mir::time::Alarm> repeat_alarm);
 
     bool handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* ev);
 };
