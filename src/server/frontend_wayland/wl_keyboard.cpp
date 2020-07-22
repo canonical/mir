@@ -75,15 +75,7 @@ void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, WlSurface* surface
     auto const wayland_state = down ? KeyState::pressed : KeyState::released;
     send_key_event(serial, ms.count(), scancode, wayland_state);
 
-    if (!focused_surface || &focused_surface.value() != surface)
-    {
-        log_warning(
-            "Sending key 0x%2.2x %s to wl_surface@%u even though it was not explicitly given keyboard focus",
-            scancode, down ? "press" : "release", wl_resource_get_id(surface->resource));
-
-        focussed(surface, true);
-    }
-    else
+    if (as_nullable_ptr(focused_surface) == surface)
     {
         /*
          * HACK! Maintain our own XKB state, so we can serialise it for
@@ -93,6 +85,14 @@ void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, WlSurface* surface
         xkb_state_update_key(state.get(), scancode + 8, xkb_state);
 
         update_modifier_state();
+    }
+    else
+    {
+        log_warning(
+            "Sending key 0x%2.2x %s to wl_surface@%u even though it was not explicitly given keyboard focus",
+            scancode, down ? "press" : "release", wl_resource_get_id(surface->resource));
+
+        focussed(surface, true);
     }
 }
 
