@@ -37,6 +37,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <xkbcommon/xkbcommon-keysyms.h>
 
 namespace mi = mir::input;
 namespace mev = mir::events;
@@ -132,6 +133,13 @@ struct KeyRepeatDispatcher : public testing::Test
         return mev::make_event(test_device, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_down, 0, 0, mir_input_event_modifier_alt);
     }
 
+    mir::EventUPtr a_meta_key_down_event()
+    {
+        return mev::make_event(
+            test_device, std::chrono::nanoseconds(0), std::vector<uint8_t>{},
+            mir_keyboard_action_down, XKB_KEY_Shift_R, 0, mir_input_event_modifier_alt);
+    }
+
     mir::EventUPtr a_key_up_event()
     {
         return mev::make_event(test_device, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_up, 0, 0, mir_input_event_modifier_alt);
@@ -193,7 +201,7 @@ TEST_F(KeyRepeatDispatcher, schedules_alarm_to_repeat_key_down)
 
 TEST_F(KeyRepeatDispatcher, stops_repeat_on_device_removal)
 {
-    MockAlarm *mock_alarm = new MockAlarm;
+    MockAlarm *mock_alarm = new MockAlarm; // deleted by AlarmFactory
     std::function<void()> alarm_function;
     bool alarm_canceled = false;
 
@@ -228,7 +236,7 @@ TEST_F(KeyRepeatDispatcherOnArale, no_repeat_alarm_on_mtk_tpd)
 
 TEST_F(KeyRepeatDispatcherOnArale, repeat_for_regular_keys)
 {
-    MockAlarm *mock_alarm = new MockAlarm;
+    MockAlarm *mock_alarm = new MockAlarm; // deleted by AlarmFactory
     std::function<void()> alarm_function;
 
     EXPECT_CALL(*mock_alarm_factory, create_alarm_adapter(_)).Times(1).
@@ -242,4 +250,15 @@ TEST_F(KeyRepeatDispatcherOnArale, repeat_for_regular_keys)
     add_mtk_tpd();
     dispatcher.dispatch(a_key_down_event());
     alarm_function();
+}
+
+TEST_F(KeyRepeatDispatcherOnArale, no_repeat_for_meta_keys)
+{
+    ON_CALL(*mock_alarm_factory, create_alarm_adapter(_))
+        .WillByDefault(Throw(std::logic_error{"Alarm should not be created"}));
+    EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyDownEvent())).Times(1);
+    EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyRepeatEvent())).Times(0);
+
+    add_mtk_tpd();
+    dispatcher.dispatch(a_meta_key_down_event());
 }
