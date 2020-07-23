@@ -19,8 +19,6 @@
 #include "stubbed_graphics_platform.h"
 #include "mir_test_framework/stub_graphics_platform_operation.h"
 
-#include "mir/graphics/buffer_ipc_message.h"
-
 #include "mir_test_framework/stub_platform_helpers.h"
 #include "mir_test_framework/stub_platform_native_buffer.h"
 
