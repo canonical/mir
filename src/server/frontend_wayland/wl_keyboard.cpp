@@ -71,25 +71,29 @@ mf::WlKeyboard::~WlKeyboard()
 
 void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, WlSurface* surface, int scancode, bool down)
 {
-    if (!focused_surface || &focused_surface.value() != surface)
+    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+    auto const wayland_state = down ? KeyState::pressed : KeyState::released;
+    send_key_event(serial, ms.count(), scancode, wayland_state);
+
+    if (as_nullable_ptr(focused_surface) == surface)
+    {
+        /*
+         * HACK! Maintain our own XKB state, so we can serialise it for
+         * wl_keyboard_send_modifiers
+         */
+        xkb_key_direction const xkb_state = down ? XKB_KEY_DOWN : XKB_KEY_UP;
+        xkb_state_update_key(state.get(), scancode + 8, xkb_state);
+
+        update_modifier_state();
+    }
+    else
     {
         log_warning(
-            "Sending key to wl_surface@%u even though it was not explicitly given keyboard focus",
-            wl_resource_get_id(surface->resource));
+            "Sending key 0x%2.2x %s to wl_surface@%u even though it was not explicitly given keyboard focus",
+            scancode, down ? "press" : "release", wl_resource_get_id(surface->resource));
+
         focussed(surface, true);
     }
-
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
-    /*
-     * HACK! Maintain our own XKB state, so we can serialise it for
-     * wl_keyboard_send_modifiers
-     */
-    xkb_key_direction const xkb_state = down ? XKB_KEY_DOWN : XKB_KEY_UP;
-    auto const wayland_state = down ? KeyState::pressed : KeyState::released;
-
-    xkb_state_update_key(state.get(), scancode + 8, xkb_state);
-    send_key_event(serial, ms.count(), scancode, wayland_state);
-    update_modifier_state();
 }
 
 void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
