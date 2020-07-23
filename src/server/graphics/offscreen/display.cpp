@@ -63,8 +63,17 @@ void mgo::detail::EGLDisplayHandle::initialize()
     if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialize EGL"));
 
-    if ((major != 1) || (minor != 4))
-        BOOST_THROW_EXCEPTION(std::runtime_error("EGL version 1.4 needed"));
+    if (major > 1)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{"EGL version 1.x required, found: " +
+            std::to_string(major) + "." + std::to_string(minor)}));
+    }
+    if (minor < 4)
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error(
+                std::string{"EGL version ≥ 1.4 needed, found "} +
+                std::to_string(major) + "." + std::to_string(minor)));
 }
 
 mgo::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
