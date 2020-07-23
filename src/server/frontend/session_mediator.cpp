@@ -38,7 +38,6 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/pixel_format_utils.h"
-#include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/gamma_curves.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
@@ -168,25 +167,14 @@ void mf::SessionMediator::connect(
         1, 0, 0,
         "not a filename"
     };
-    auto ipc_package = std::make_shared<mg::PlatformIPCPackage>(&stub_module_descriptor);
     auto platform = response->mutable_platform();
+    auto const module = platform->mutable_graphics_module();
 
-    for (auto& data : ipc_package->ipc_data)
-        platform->add_data(data);
-
-    for (auto& ipc_fds : ipc_package->ipc_fds)
-        platform->add_fd(ipc_fds);
-
-    if (auto const graphics_module = ipc_package->graphics_module)
-    {
-        auto const module = platform->mutable_graphics_module();
-
-        module->set_name(graphics_module->name);
-        module->set_major_version(graphics_module->major_version);
-        module->set_minor_version(graphics_module->minor_version);
-        module->set_micro_version(graphics_module->micro_version);
-        module->set_file(graphics_module->file);
-    }
+    module->set_name(stub_module_descriptor.name);
+    module->set_major_version(stub_module_descriptor.major_version);
+    module->set_minor_version(stub_module_descriptor.minor_version);
+    module->set_micro_version(stub_module_descriptor.micro_version);
+    module->set_file(stub_module_descriptor.file);
 
     auto display_config = display_changer->base_configuration();
     auto protobuf_config = response->mutable_display_configuration();
@@ -196,8 +184,6 @@ void mf::SessionMediator::connect(
 
     for (auto pf : surface_pixel_formats)
         response->add_surface_pixel_format(static_cast<::google::protobuf::uint32>(pf));
-
-    resource_cache->save_resource(response, ipc_package);
 
     for ( auto const& ext : extensions )
     {
