@@ -22,9 +22,6 @@
 #include "buffer_allocator.h"
 #include "display.h"
 #include "utils.h"
-#include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/buffer_ipc_message.h"
-#include "native_buffer.h"
 
 #include "mir/graphics/egl_error.h"
 

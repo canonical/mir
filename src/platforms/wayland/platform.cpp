@@ -17,8 +17,6 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
-#include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/buffer_ipc_message.h"
 #include "buffer_allocator.h"
 #include "mir/fatal.h"
 

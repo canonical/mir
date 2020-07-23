@@ -16,7 +16,6 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/event_handler_register.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/server/report/null_report_factory.h"
@@ -24,7 +23,6 @@
 #include "mir/options/program_option.h"
 
 #include "mir/test/doubles/mock_buffer.h"
-#include "mir/test/doubles/mock_buffer_ipc_message.h"
 #include "mir/test/doubles/mock_console_services.h"
 #include "mir/test/doubles/null_console_services.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"

@@ -18,8 +18,6 @@
 
 #include "vsync_simulating_graphics_platform.h"
 
-#include "mir/graphics/platform_ipc_package.h"
-
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_display.h"
 

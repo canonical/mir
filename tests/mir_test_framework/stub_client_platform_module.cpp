@@ -20,7 +20,6 @@
 #include "mir/client/client_context.h"
 
 #include "mir_test_framework/stub_client_platform_factory.h"
-#include "mir_test_framework/stub_platform_helpers.h"
 #include "mir_test_framework/stub_client_platform_options.h"
 #include "mir/assert_module_entry_point.h"
 

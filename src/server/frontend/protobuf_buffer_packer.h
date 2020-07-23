@@ -19,8 +19,11 @@
 #ifndef MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
 #define MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
 
-#include "mir/graphics/buffer_ipc_message.h"
+#include "mir/fd.h"
+#include "mir/geometry/dimensions.h"
+#include "mir/geometry/size.h"
 #include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -43,7 +46,7 @@ namespace detail
 void pack_protobuf_display_configuration(protobuf::DisplayConfiguration& protobuf_config,
                                          graphics::DisplayConfiguration const& display_config);
 
-class ProtobufBufferPacker : public graphics::BufferIpcMessage
+class ProtobufBufferPacker
 {
 public:
     ProtobufBufferPacker(protobuf::Buffer*);
