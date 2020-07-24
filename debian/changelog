@@ -1,3 +1,64 @@
+mir (2.0.0) UNRELEASED; urgency=medium
+
+  * New upstream release 2.0.0
+
+    - ABI summary:
+      . mirclient ABI bumped to 10
+      . miral ABI bumped to 4
+      . mirserver ABI bumped to 54
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI bumped to 19
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 17
+      . mirclientplatform dropped
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+    - Enhancements:
+      . Drop legacy packages: libmirclient-dev, mir-client-platform*, mir-utils,
+        libmirserver-dev and mirtest-dev
+      . Drop legacy config options: "host-socket", "nested-passthrough" & "name"
+      . [mirclient] Drop obsolete stuff we don't use
+      . [graphics] Reworked graphics platform API
+      . [graphics] Improved probing of egmstreams-kms platform
+      . [graphics] Improved probing of gbm-kms platform
+      . [graphics] gbm-kms (formerly mesa-kms) platform is independent of mesa
+      . [graphics] gbm-x11 (formerly mesa-x11) platform is independent of mesa
+      . [graphics] rpi-dispmanx New DispmanX platform
+      . [miral] Remove dependency on mirclient; drop deprecated APIs and tidy up
+      . [miral] Allow shells to enable/disable SSD
+      . [miral] Add scale support to DisplayConfiguration. (Fixes: #1423)
+      . [mir-demos] miral-shell uses a better default terminal emulator
+      . [mir-demos] mir-shell gets the user keymap from gsetting
+      . [mir-demos] Add a "fake-mir-kiosk" script to assist snap development
+      . [Wayland] Clean up code
+      . [X11] Clean up code
+      . [performance tests] Remove mirclient legacy, add X11 based tests
+      . Improve WLCS integration: change `mir_discover_external_gtests` to take
+         an explicit list of expected failures.
+       . [Tests] mir-smoke-test-runner: Start with Mir's eglinfo
+    - Bugs fixed:
+      . [input] Use xkb scan code to identify modifier keys. (Instead of
+        unreliable key_sym). (Fixes: #1515)
+      . [input] Don't auto repeat modifier keys. (Fixes: #1598)
+      . [X11] Do not force XWayland EGL to use DRM
+      . [X11] Treat COMPOUND_TEXT as a string type. (Fixes: #1552)
+      . [X11] Initialize BasicDecoration in a threadsafe way. (Fixes #1479)
+      . [X11] Stack X11 surfaces correctly on the XWayland server
+      . [X11] Handle failure to open both abstract and ordinary X11 sockets.
+        (Fixes: #1449)
+      . [graphics] Add a `PlatformPriority::hosted` probe value. We now select
+        a hardware-accelerated X11 platform over a software-rasterised mesa-kms
+        platform. (Fixes: #1543)
+      . [miral] Add WindowManagerTools::active_application_zone() (Fixes: #1530)
+      . [miral] Drop the --startup-apps configuration option from MirRunner.
+        (Fixes: #1531)
+      . [Wayland] WaylandInputDispatcher only takes input events (fixes #1047)
+      . [Tests] Make LTTNG fork()-safe. (Fixes #1405)
+
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Fri, 17 Jul 2020 16:31:07 +0100
+
 mir (1.8.0) UNRELEASED; urgency=medium
 
   * New upstream release 1.8.0
@@ -1265,7 +1326,7 @@ mir (0.24.1+16.10.20160928-0ubuntu1) yakkety; urgency=medium
       . All ABI numbers remain unchanged.
       . mircommon ABI at 6, but now including a symbol misplaced in 0.24.0
     - Bugs fixed:
-      . mirserver ignored further keymap configuration changes after a keyboard 
+      . mirserver ignored further keymap configuration changes after a keyboard
         is configured (LP: #1626435)
       . fix for libmircommon.so.6 ABI break: version stanza of
         mir::dispatch::ReadableFd* moved to newer version (LP: #1617865)
@@ -1366,9 +1427,9 @@ mir (0.24.0+16.10.20160815.3-0ubuntu1) yakkety; urgency=medium
       . ftbfs in linking libmir-test-assist.a in xenial+overlay and
         yakkety+overlay (LP: #1601810)
       . [testsfail] failure in NestedInput.on_input_device_state_nested_*
-        (LP: #1602646)  
+        (LP: #1602646)
       . mirtest-dev provides an incorrect .pc file (LP: #1603080)
-      . mir_test_framework::server_platform_path(), 
+      . mir_test_framework::server_platform_path(),
         mir_test_framework::server_platform() don't support use in a downstream
         test built against mir-test-assist (LP: #1603091)
       . Servers based on Mir need a hook to execute code when the server is
@@ -1379,7 +1440,7 @@ mir (0.24.0+16.10.20160815.3-0ubuntu1) yakkety; urgency=medium
         count, fixing dpi to 25.4 (LP: #1596051)
       . Mir build and test failures with gcc-6 and LTO (LP: #1610215)
       . [regression] Trust prompt not shown when starting camera (LP: #1612256)
- 
+
  -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 15 Aug 2016 16:29:03 +0000
 
 mir (0.23.5+16.10.20160729-0ubuntu2) yakkety; urgency=medium
@@ -1444,7 +1505,7 @@ mir (0.23.1+16.10.20160610.1-0ubuntu1) yakkety; urgency=medium
       . No ABI changes in any libraries. Bugfix release only.
     - Bugs fixed:
       . Turn off NBS as workaround to LP: #1590765
- 
+
   [ Daniel van Vugt, Kevin DuBois ]
   * Mir 0.23.1 bugfix release. Fix flickering issue seen with onscreen
     keyboard (LP: 1590765)
@@ -1466,7 +1527,7 @@ mir (0.23.0+16.10.20160602.1-0ubuntu1) yakkety; urgency=medium
       . mirinputplatform ABI unchanged at 5
     - Enhancements:
       . Enable internal usage of more flexible graphics buffer submission,
-        precursing client API additions. 
+        precursing client API additions.
     - Bug fixes:
       . Potential NBS performance loss after resize (LP: #1579076)
       . Performance loss with NBS and overlays on (LP: #1578159)
@@ -1481,7 +1542,7 @@ mir (0.23.0+16.10.20160602.1-0ubuntu1) yakkety; urgency=medium
       . Virtual display output configuration is set to LVDS (LP: #1573782)
       . Mir-on-X11 doesn't pass Alt+primary button drag to Mir (LP: #1575765)
       . Mir-on-X11 breaks mir_proving_server resize logic (LP: #1575192)
-      . Resizing can crash mir_demo_server (LP: #1575211) 
+      . Resizing can crash mir_demo_server (LP: #1575211)
       . [regression] Cursor stops at phantom edge on M10 and N7 (LP: #1580774)
       . [regression] MIR_CLIENT_PERF_REPORT is showing bogus render times and
         buffer lag (LP: #1581368)
@@ -1533,31 +1594,31 @@ mir (0.22.0+16.04.20160422.2-0ubuntu1) xenial; urgency=medium
         upgrade to ld-2.23 (LP: #1560415)
       . [regression] failure in CI on ThreadedDispatcherSignalTest.keeps_
         dispatching_after_signal_interruption under Valgrind (LP: #1499229)
-      . [regression] Cursor mostly does not move at all in response to slow 
+      . [regression] Cursor mostly does not move at all in response to slow
         mouse movement, but then sometimes jumps (LP: #1528109)
       . Sometimes devices don't suspend - display turns back on immediately
         (LP: #1549701)
       . CI failure in NestedServer.display_orientation_changes_are_forwarded_to_
         host (LP: #1555074)
-      . NBS fullscreen overlay benchmark performance is much lower than 
+      . NBS fullscreen overlay benchmark performance is much lower than
         BufferQueue (LP: #1557962)
       . server crashes when shutting down in smoke tests (LP: #1560900)
       . [regression] [OTA-10] Spread animation stutters badly with only a few
         apps opened (LP: #1563287)
       . nested mir_demo_server crashes on startup (LP: #1570362)
-      . mir_acceptance_tests & mir_unit_tests dump core files (even when 
+      . mir_acceptance_tests & mir_unit_tests dump core files (even when
         everything passes) (LP: #1342092)
       . [regression] Tests fail with: std::exception::what: Failed to read from
         device: /dev/random after: 30 seconds (LP: #1541188)
       . [testsfail] ClientLatency.throttled_input_rate_yields_lower_latency
         (LP: #1554572)
-      . NBS causes sudden loss of performance after un-fullscreening a swap 
+      . NBS causes sudden loss of performance after un-fullscreening a swap
         interval zero client (LP: #1557442)
       . surface creation with non-default buffer streams is ignored by server
         (LP: #1563278)
       . [regression] mir_integration_tests take significantly longer (27x
         longer) when running with ctest (LP: #1568966)
-      . CI failure in TestClientInput.receives_one_touch_event_per_frame 
+      . CI failure in TestClientInput.receives_one_touch_event_per_frame
         (LP: #1570698)
       . Racy shutdown in mir_demo_client_scroll causes SEGFAULT (LP: #1560943)
       . mir_demo_client_target does not quit after SIGTERM/SIGINT (LP: #1562340)
@@ -1775,7 +1836,7 @@ mir (0.19.2+16.04.20160210-0ubuntu1) xenial; urgency=medium
     - Bugs fixed:
       . Lock ordering issues causing deadlocks between input and display
         configuration (LP: #1538632, LP: #1543594, LP: #1532607)
-      . Workaound for a g++ 4.9 bug where std::uncaught_exception() 
+      . Workaound for a g++ 4.9 bug where std::uncaught_exception()
         unexpectedly returns true
 
   [ CI Train Bot ]
@@ -1892,7 +1953,7 @@ mir (0.18.1+16.04.20160115-0ubuntu1) xenial; urgency=medium
     - No ABI changes. Bug fix release only.
     - Bug fixed:
       . [regression] pinch to zoom not working reliably (LP: #1531517)
-    
+
 
   [ CI Train Bot ]
   * No-change rebuild.
@@ -2177,7 +2238,7 @@ mir (0.16.0+15.10.20150921.1-0ubuntu1) wily; urgency=medium
         (LP: #1488500)
       . CI test failure in ClientLatency.triple_buffered_client_uses_all_buffers
         (LP: #1491876)
-      . Intermittent CI failure in 
+      . Intermittent CI failure in
         DisplayConfigurationTest.changing_focus_from_client_with_config_to_client_without_config_configures_display
         (LP: #1494663)
       . acceptance test ClientLatency.double_buffered_client_uses_all_buffers
@@ -2186,10 +2247,10 @@ mir (0.16.0+15.10.20150921.1-0ubuntu1) wily; urgency=medium
       . make ptest returns 0 when tests fail (LP: #1454250)
       . [regression] Mir is holding buffers much longer than it used to
         (LP: #1480164)
-      . Acceptance test fails under debuild: 
+      . Acceptance test fails under debuild:
         ClientCredsTestFixture.session_authorizer_receives_pid_of_connecting_clients
         (LP: #1483097)
-      . dpkg-shlibdeps: warning: 
+      . dpkg-shlibdeps: warning:
         debian/mir-platform-graphics-mesa-x4/usr/lib/x86_64-linux-gnu/mir/server-platform/server-mesa-x11.so.4
         contains an unresolvable reference to symbol
         _ZN3mir6events10make_eventElNSt6chrono8durationIlSt5ratioILl1ELl1000000000EEEE17MirKeyboardActionjij:
@@ -2278,12 +2339,12 @@ mir (0.15.0+15.10.20150818-0ubuntu1) wily; urgency=medium
       . Fix focus issues breaking autopilot tests entering text (LP: #1468029)
       . Fix mir tests failure on armhf with GCC5 (LP: #1478213)
       . mir_buffer_stream_swap_buffers_sync can hang constraints (LP: #1479899)
-      . Loading libmirclient.so twice leads to a segfault in libmirprotobuf.so 
+      . Loading libmirclient.so twice leads to a segfault in libmirprotobuf.so
         (LP: #1391976)
       . Visible corruption in SDL apps (LP: #1460149)
       . MultiThreadedCompositor::destroy_compositing_threads hangs/deadlocks on
         shutdown or display reconfiguration  (LP: #1471909)
-      . ctest/"make test" reports 100% tests pass even when some fail. 
+      . ctest/"make test" reports 100% tests pass even when some fail.
         (LP: #1472911)
       . Mir server crashed - GLib-CRITICAL **: g_source_get_context: assertion
        'source->context != NULL || !SOURCE_DESTROYED (source)' failed
@@ -2292,7 +2353,7 @@ mir (0.15.0+15.10.20150818-0ubuntu1) wily; urgency=medium
         hwc prepare()] (LP: #1474891)
       . [regression] Input focus delay after switching app back into focus
         (LP: #1480654)
-      . GLibMainLoopTest.propagates_exception_from_server_action fails with 
+      . GLibMainLoopTest.propagates_exception_from_server_action fails with
         GCC 5 in armhf (LP: #1482274)
       . [enhancement] Mir lacks relative mouse support (LP: #1276322)
       . ShmBuffer ignores pixel_format (LP: #1424909)
@@ -2302,7 +2363,7 @@ mir (0.15.0+15.10.20150818-0ubuntu1) wily; urgency=medium
         (LP: #1439078)
       . [regression] The software cursor has a rectangular shadow around it
         in mir_proving_server (LP: #1447911)
-      . TestClientCursorAPI.cursor_passed_through_nested_server fails 
+      . TestClientCursorAPI.cursor_passed_through_nested_server fails
         intermittently (LP: #1462088)
       . [enhancement] Add support for high colour (15/16-bit colour) clients
         (LP: #1469673)
@@ -2346,7 +2407,7 @@ mir (0.14.0+15.10.20150715-0ubuntu1) wily; urgency=medium
       . Mircommon ABI bumped to 5
       . Mirplatform ABI bumped to 8
     - Enhancements:
-      . mir_demo_server: tweaks, features and improvements 
+      . mir_demo_server: tweaks, features and improvements
       . More MirEvent-2.0 related changes and unifications
       . New SurfaceInputDispatcher to replace the android InputDispatcher
       . New Threaded dispatcher for Dispatchable added
@@ -2367,12 +2428,12 @@ mir (0.14.0+15.10.20150715-0ubuntu1) wily; urgency=medium
         server start-up has finished  (LP: #1451844)
       . build-dependency on g++-4.9 dropped (LP: #1452320)
     - Bug fixes:
-      . Crash because uncaught exception in mir::events::add_touch 
+      . Crash because uncaught exception in mir::events::add_touch
         (LP: #1437357)
       . [vegetahd] android buffer allocator does consider hwc alignment
         constraints  (LP: #1461314)
       . [regression] Touch input does not work at all any more  (LP: #1464174)
-      . Mir emits a mir_motion_action_hover_exit event before of a 
+      . Mir emits a mir_motion_action_hover_exit event before of a
         mir_motion_action_pointer_down  (LP: #1419048)
       . [testsfail] NestedInput.nested_event_filter_receives_keyboard_from_host
         failure in CI  (LP: #1462033)
@@ -2650,8 +2711,8 @@ mir (0.12.0+15.04.20150228-0ubuntu1) vivid; urgency=medium
   [ Alberto Aguirre ]
   * New upstream release 0.12.0 (https://launchpad.net/mir/+milestone/0.12.0)
     - Packaging changes:
-      . Client platform packages now include the Mir client platform ABI 
-        number. Thusly, mir-client-platform-(mesa|android) is replaced by 
+      . Client platform packages now include the Mir client platform ABI
+        number. Thusly, mir-client-platform-(mesa|android) is replaced by
         mir-client-platform-(mesa|android)2
       . Server graphics platform packages now include the Mir graphics
         platform ABI number. Thusly, mir-platform-graphics-(mesa|android)
@@ -2665,7 +2726,7 @@ mir (0.12.0+15.04.20150228-0ubuntu1) vivid; urgency=medium
       . [regression] Platform libraries and packages are not versioned thus
         are not installable in parallel (LP: #1423591)
       . [regression] Deadlock in TimeoutFrameDroppingPolicy logic (LP: #1421255)
- 
+
   [ CI Train Bot ]
   * New rebuild forced.
 
@@ -2766,7 +2827,7 @@ mir (0.10.0+15.04.20150107.2-0ubuntu1) vivid; urgency=medium
     - ABI summary: Servers need rebuilding, but clients do not;
       . Mirclient ABI unchanged at 8
       . Mircommon ABI unchanged at 3
-      . Mirplatform ABI bumped to 5 
+      . Mirplatform ABI bumped to 5
       . Mirserver ABI bumped to 28
     - Bug fixes:
       . [regression] Mir servers (since 0.9) randomly crash in malloc due to
@@ -2857,7 +2918,7 @@ mir (0.9.0+15.04.20141125-0ubuntu1) vivid; urgency=medium
     - Bug fixes:
       . Add a debug interface to translate from surface to screen coordinates
         (LP: #1346633)
-      . Ensure a buffer requested by a surface is not delivered 
+      . Ensure a buffer requested by a surface is not delivered
         after the surface is deleted (LP: #1376324)
       . Overlays are not displayed onscreen in some positions (LP: #1378326)
       . Server aborts when an exception is thrown from the main thread
@@ -2871,14 +2932,14 @@ mir (0.9.0+15.04.20141125-0ubuntu1) vivid; urgency=medium
        (LP: #1303817)
       . A prompt session with an invalid application pid should be an error
         (LP: #1377968)
-      . When XDG_RUNTIME_DIR is defined but pointing to a non-existing 
+      . When XDG_RUNTIME_DIR is defined but pointing to a non-existing
         directory use "/tmp" (LP: #1304873)
-      . [regression] demo-shell bypass is not used on fullscreen surfaces if 
+      . [regression] demo-shell bypass is not used on fullscreen surfaces if
         there are windowed surfaces behind (LP: #1378706)
       . Mir upgrade through dist-upgrade installs incorrect platform
         (LP: #1378995)
       . Fix Mir progressbar example using internal glibc defines(LP: #239272)
-      . Stop the default_lifecycle_event_handler raising SIGHUP while 
+      . Stop the default_lifecycle_event_handler raising SIGHUP while
         disconnecting (LP: #1386185)
       . [regression] Mir fails to build with MIR_ENABLE_TESTS=OFF (LP: #1388539)
       . [regression] mir_demo_server_basic does not start (LP: #1391923)
@@ -2996,7 +3057,7 @@ mir (0.7.3+14.10.20140918.1-0ubuntu1) utopic; urgency=medium
   * New upstream release 0.7.3 (https://launchpad.net/mir/+milestone/0.7.3)
     - Bug fixes
       . Fix constructor syntax errors (LP: #1369389)
-      . server: Workaround for unresponsive clients causing the server to hang 
+      . server: Workaround for unresponsive clients causing the server to hang
         (LP: #1350207)
       . Relax strict dependencies of graphics drivers on an exact version
         of the libmirplatform2 package. It's blocking CI. (LP: #1370866)
@@ -3021,7 +3082,7 @@ mir (0.7.1+14.10.20140909.1-0ubuntu1) utopic; urgency=medium
   [ Alberto Aguirre ]
   * New upstream release 0.7.1 (https://launchpad.net/mir/+milestone/0.7.1)
     - Bug fixes
-      . Recycle compositor threads by using a thread pool (LP: #1362841) 
+      . Recycle compositor threads by using a thread pool (LP: #1362841)
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 09 Sep 2014 18:28:01 +0000
 
@@ -3070,7 +3131,7 @@ mir (0.7.0+14.10.20140829-0ubuntu1) utopic; urgency=medium
         drawn (LP: #1348330)
       . Client: Fix SIGTERM dispatch in our default lifecycle event handler
         (LP: #1353867)
-      . DemoRenderer: Don't try to create a texture of width zero. 
+      . DemoRenderer: Don't try to create a texture of width zero.
         (LP: #1358210)
       . Fix CI failures (LP: #1358698)
       . Fix build failure: "variable ‘rc’ set but not used" which happens in
@@ -3248,7 +3309,7 @@ mir (0.5.0+14.10.20140717-0ubuntu1) utopic; urgency=medium
     - Bugs fixed:
       . Nexus 10 leaks during overlay operations (LP: #1331769)
       . MultiThreadedCompositor deadlocks (LP: #1335311)
-      . Intermittent test failure in ClientSurfaceEvents can client query 
+      . Intermittent test failure in ClientSurfaceEvents can client query
         orientation (LP: #1335741)
       . Intermittent test failure in ClientSurfaceEvents/OrientationEvents
         (LP: #1335752)
@@ -3389,7 +3450,7 @@ mir (0.2.0+14.10.20140605-0ubuntu1) utopic; urgency=medium
         where id is an opaque compositor ID of your choosing.
       . Scene::set_change_callback() replaced by the more generic:
         add_observer() and remove_observer() functions.
-      . Added default implementation for SceneObserver.  
+      . Added default implementation for SceneObserver.
       . SessionCreator renamed to ConnectionCreator.
       . ConnectedSessions renamed to Connections.
       . ProtobufSessionCreator renamed to ProtobufConnectionCreator.
@@ -3419,9 +3480,9 @@ mir (0.2.0+14.10.20140605-0ubuntu1) utopic; urgency=medium
         the mouse pointer is on.
       . New shell controls documented.
     - A new testing category, performance test, was introduced. It currently
-      runs glmark2-es2 and compares the result to a minimum threshold. 
+      runs glmark2-es2 and compares the result to a minimum threshold.
     - MIR_VERSION_MINOR is tied to MIRSERVER_ABI in the sense that a change
-      in the former now requires dependent projects that a rebuild is 
+      in the former now requires dependent projects that a rebuild is
       necessary.
     - SwitchingBundle was replaced by BufferQueue.
     - Expand credentials to include uid/gid for session authorizer.
@@ -3447,7 +3508,7 @@ mir (0.2.0+14.10.20140605-0ubuntu1) utopic; urgency=medium
       . [regression] unity8 fails to load libmirplatformgraphics
         (undefined symbol: _ZN3mir8graphics9GLProgramD1Ev). (LP: #1317200)
       . [regression] unity8 rendering artifacts. (LP: #1317260)
-      . [regression] [BufferQueue] 
+      . [regression] [BufferQueue]
         BufferQueueTest.compositor_never_owns_client_buffers occasionally
         crashes with: what(): unexpected release: buffer was not given to
         compositor. (LP: #1317801)
@@ -3459,16 +3520,16 @@ mir (0.2.0+14.10.20140605-0ubuntu1) utopic; urgency=medium
         and toolkit/apps are laggy/throttled. (LP: #1321886)
       . [regression] [BufferQueue] current_buffer_users vector memory usage
         grows unbounded. (LP: #1317808)
-      . Intermittent test failures in 
+      . Intermittent test failures in
         CustomInputDispatcherFixture.custom_input_dispatcher_receives_input.
         (LP: #1318587)
-      . [regression] [BufferQueue] Race condition in 
+      . [regression] [BufferQueue] Race condition in
         BufferQueue::compositor_acquire could underflow shared_ptr refcount and
         delete prematurely, crash. (LP: #1318632)
-      . Overflow in 
+      . Overflow in
         mir::client::rpc::MirSocketRpcChannel::receive_file_descriptors as
         reported by address sanitizer. (LP: #1320821)
-      . [regression] [input] Scroll events are now always zero: 
+      . [regression] [input] Scroll events are now always zero:
         event.motion.pointer_coordinates[0].vscroll. (LP: #1321077)
       . CI failures in CustomInputDispatcherFixture
         .custom_input_dispatcher_gets_started_and_stopped. (LP: #1321215)
@@ -3488,7 +3549,7 @@ mir (0.2.0+14.10.20140605-0ubuntu1) utopic; urgency=medium
         client connects to Mir. (LP: #1314574)
       . [regression] Clients can't acquire multiple buffers any more.
         (LP: #1315302)
-      . [regression] Enabling SwitchingBundleTest 
+      . [regression] Enabling SwitchingBundleTest
         DISABLED_synchronous_clients_only_get_two_real_buffers now crashes with
         no usable stack trace. It used to only fail. (LP: #1315312)
       . [regression] [BufferQueue] double-buffered client freezes as no buffer
@@ -3521,29 +3582,29 @@ mir (0.1.9+14.10.20140430.1-0ubuntu1) utopic; urgency=medium
     - Bugs fixed:
       . Stale socket issue. (LP: #1285215)
       . Qt render gets blocked on EGLSwapBuffers. (LP: #1292306)
-      . Lock order violated found in helgrind (potential deadlock). 
+      . Lock order violated found in helgrind (potential deadlock).
         (LP: #1296544)
-      . [regression] SwitchingBundle in framedropping mode can hang. 
+      . [regression] SwitchingBundle in framedropping mode can hang.
         (LP: #1306464)
       . [DPMS] Display backlight turns back on almost immediately after
         being turned off. (LP: #1231857)
       . Wrong frame is seen on wake up/resume/unlock. (LP: #1233564)
       . Nested platform is not testable (LP: #1299101)
-      . [regression] mir_demo_server_shell crashes on display resume. 
+      . [regression] mir_demo_server_shell crashes on display resume.
         (LP: #1308941)
       . Multi-threaded composition is actually mostly serialized by
         SurfaceStack::guard. (LP: #1234018)
-      . Mirscreencast slows down compositing and makes it very jerky. 
+      . Mirscreencast slows down compositing and makes it very jerky.
         (LP: #1280938)
       . Mirscreencast can cause clients to render faster than the screen
         refresh rate. (LP: #1294361)
       . Screen turns on when a new session/surface appears. (LP: #1297876)
-      . mir-doc package is >56MB in size, expands to >100MB of files. 
+      . mir-doc package is >56MB in size, expands to >100MB of files.
         (LP: #1304998)
       . [regression] Clang: 'mir::test::doubles::MockSurface::visible'
-        hides overloaded virtual function [-Woverloaded-virtual]. 
+        hides overloaded virtual function [-Woverloaded-virtual].
         (LP: #1301135)
-      . [regression] GLRenderer* unit tests have recently become noisy. 
+      . [regression] GLRenderer* unit tests have recently become noisy.
         (LP: #1308905)
       . FocusController::set_focus_to() no longer seems to raise a session
         to the top. (LP: #1302689)
@@ -3717,7 +3778,7 @@ mir (0.1.6+14.04.20140310-0ubuntu1) trusty; urgency=medium
     - tools: Add new libmirclientplatform.so to install_on_android.sh.
     - Add "mir_demo_standalone_render_overlays", which is a free-standing
       example of overlay support.
-    - Proper DisplayConfiguration for the AndroidDisplay to be better 
+    - Proper DisplayConfiguration for the AndroidDisplay to be better
       prepared for multi-monitor Android.
     - Commenced/continued simplifying the surface class hierarchy: BasicSurface
       has now absorbed SurfaceData.
@@ -3731,10 +3792,10 @@ mir (0.1.6+14.04.20140310-0ubuntu1) trusty; urgency=medium
       . examples: correct "fullscreen-surfaces" option. (LP: #1284554)
       . Fix mutex data race reported by helgrind in integration test:
         SwapperSwappingStress (LP: #1282886)
-      . scene: Return null snapshots for sessions without surfaces 
+      . scene: Return null snapshots for sessions without surfaces
         (LP: #1281728)
       . tests: Address some raciness in
-        MesaDisplayTest.drm_device_change_event_triggers_handler. 
+        MesaDisplayTest.drm_device_change_event_triggers_handler.
         (LP: #1283085)
       . tests: Suppress spurious memory errors occuring when running the
         unit tests on armhf with valgrind. (LP: #1279438)
@@ -3745,8 +3806,8 @@ mir (0.1.6+14.04.20140310-0ubuntu1) trusty; urgency=medium
       . Set field "current_format" when sending a display config to the
         server. (LP: #1277343)
       . Fix crash in android devices by working around a subtle threading
-        bug, use a dummy thead_local array to push the gl/egl context TLS 
-        into a region where the future wait code does not overwrite it. 
+        bug, use a dummy thead_local array to push the gl/egl context TLS
+        into a region where the future wait code does not overwrite it.
         (LP: #1280086)
       . compositor: calling SwitchingBundle::force_requests_to_complete()
         can be a no-op when there are no requests. (LP: #1281145)
@@ -3860,7 +3921,7 @@ mir (0.1.4+14.04.20140204-0ubuntu1) trusty; urgency=medium
     - compositor: ignore double requests to start or stop the
       MultiThreadedCompositor.
     - Add DisplayBuffer::orientation(), to tell the Renderer if we need it
-      to do screen rotation in GL (for platforms which don't implement 
+      to do screen rotation in GL (for platforms which don't implement
       rotation natively) Fixes: https://bugs.launchpad.net/bugs/1203215.
     - graphics: add an post_update function that takes a list of renderables
       to the display buffer. This will let the display buffer take advantage
@@ -3903,7 +3964,7 @@ mir (0.1.4+14.04.20140204-0ubuntu1) trusty; urgency=medium
         background (LP: #1256702)
       . Compiling without tests fails (-DMIR_ENABLE_TESTS=NO) (LP: #1263724)
       . examples, doc: Make it clear and consistent how to use
-        a non-root client with a root compositor endpoint. 
+        a non-root client with a root compositor endpoint.
         (LP: #1272143)
       . Avoid linking to umockdev on platforms (android) which don't yet
         use it. This allows mir_unit_tests to run on touch images again
@@ -3929,7 +3990,7 @@ mir (0.1.4+14.04.20140204-0ubuntu1) trusty; urgency=medium
         set. Otherwise SwitchingBundle::compositor_acquire could follow a bogus
         code path. (LP:#1270964)
       . tests: Override configuration to avoid creating an (unused)
-        filesystem endpoint for connections when using InProcessServer. 
+        filesystem endpoint for connections when using InProcessServer.
         (LP: #1271604)
       . frontend: ensure that BasicConnector threads don't exit
         immediately. (LP: #1271655)
@@ -4083,7 +4144,7 @@ mir (0.1.1+14.04.20131120-0ubuntu1) trusty; urgency=low
       MIR_SERVER_NAME=.
     - graphics,gbm: Inform the EGL platform about the used gbm device when
       using the native GBM platform
-    - examples: Restore GL state after initializing buffers, fixing crashes 
+    - examples: Restore GL state after initializing buffers, fixing crashes
       observed in render_surfaces (LP: #1234563)
     - Continue refactoring the mir android display classes.
     - shell: Hoist focus control functions needed by unity-mir into
