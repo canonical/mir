@@ -35,7 +35,7 @@
 #include <miral/wayland_extensions.h>
 
 
-#include <linux/input.h>
+#include <xkbcommon/xkbcommon-keysyms.h>
 #include <unistd.h>
 #include <boost/filesystem.hpp>
 
@@ -79,17 +79,19 @@ int main(int argc, char const* argv[])
             if (!(mods & mir_input_event_modifier_alt) || !(mods & mir_input_event_modifier_ctrl))
                 return false;
 
-            switch (mir_keyboard_event_scan_code(kev))
+            switch (mir_keyboard_event_key_code(kev))
             {
-            case KEY_BACKSPACE:
+            case XKB_KEY_BackSpace:
                 runner.stop();
                 return true;
 
-            case KEY_T:
+            case XKB_KEY_t:
+            case XKB_KEY_T:
                 external_client_launcher.launch({terminal_cmd});
                 return false;
 
-            case KEY_X:
+            case XKB_KEY_x:
+            case XKB_KEY_X:
                 external_client_launcher.launch_using_x11({"xterm"});
                 return false;
 
