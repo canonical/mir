@@ -34,8 +34,6 @@ stages:
       AND ( branch = master
             OR branch =~ ^release/[\d\.]+$
             OR tag =~ ^v[\d\.]+$ )
-- name: process snaps
-  if: repo = MirServer/mir
 
 env:
   global:
@@ -116,7 +114,7 @@ jobs:
     before_install: *decrypt-bot-data
     install:
     - pip install -r tools/requirements.txt
-    - if [ ${TRAVIS_EVENT_TYPE} == cron ]; then sudo apt install snapd; sudo snap install review-tools; fi
+    - if [ ${TRAVIS_EVENT_TYPE} == cron ]; then sudo apt update; sudo apt install snapd; sudo snap install snapd review-tools; fi
     script:
     - tools/process_snaps.py
   allow_failures:
