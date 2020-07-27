@@ -222,7 +222,6 @@ Recommends: mir-demos,
             xmir,
             xwayland,
             glmark2-es2,
-            glmark2-es2-mir,
             glmark2-es2-wayland,
             mesa-utils-extra,
 Description: Display Server for Ubuntu - stress tests and other test tools
