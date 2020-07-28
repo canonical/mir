@@ -34,6 +34,7 @@ class LogindConsoleServices : public ConsoleServices
 {
 public:
     LogindConsoleServices(std::shared_ptr<GLibMainLoop> const& ml);
+    ~LogindConsoleServices();
 
     void register_switch_handlers(
         graphics::EventHandlerRegister& handlers,

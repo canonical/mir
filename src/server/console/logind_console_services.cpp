@@ -883,3 +883,8 @@ std::unique_ptr<mir::VTSwitcher> mir::LogindConsoleServices::create_vt_switcher(
             &g_object_unref},
         ml);
 }
+
+mir::LogindConsoleServices::~LogindConsoleServices()
+{
+    restore();
+}
