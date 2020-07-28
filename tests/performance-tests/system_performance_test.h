@@ -39,6 +39,7 @@ protected:
 private:
     std::string const bin_dir;
     pid_t server_pid = 0;
+    std::vector<pid_t> client_pids;
 };
 
 } } // namespace mir::test
