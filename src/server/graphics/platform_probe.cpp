@@ -27,57 +27,16 @@ auto mir::graphics::probe_module(
     mir::options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console) -> mir::graphics::PlatformPriority
 {
-    auto probe =
-        [&module]() -> std::function<std::remove_pointer<PlatformProbe>::type>
-        {
-          try
-          {
-              return module.load_function<PlatformProbe>(
-                  "probe_graphics_platform",
-                  MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-          }
-          catch (std::runtime_error const&)
-          {
-              // Maybe we can load an earlier version?
-              auto obsolete_probe = module.load_function<obsolete_0_27::PlatformProbe>(
-                  "probe_graphics_platform",
-                  obsolete_0_27::symbol_version);
-
-              return [obsolete_probe](auto, auto const& options)
-              {
-                auto const priority = static_cast<unsigned int>(obsolete_probe(options));
-
-                /*
-                 * Cap obsolete modules to just less than PlatformPriority::supported.
-                 * If *any* current module that will work, we want that instead.
-                 */
-                return priority >= PlatformPriority::supported ?
-                       static_cast<PlatformPriority>(PlatformPriority::supported - 1) :
-                       static_cast<PlatformPriority>(priority);
-              };
-          }
-        }();
+    auto probe = module.load_function<PlatformProbe>(
+        "probe_graphics_platform",
+        MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
     auto module_priority = probe(console, options);
 
-    auto describe =
-        [&module]()
-        {
-          try
-          {
-              return module.load_function<DescribeModule>(
-                  "describe_graphics_module",
-                  MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+    auto describe = module.load_function<DescribeModule>(
+        "describe_graphics_module",
+        MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
-          }
-          catch (std::runtime_error const&)
-          {
-              return module.load_function<DescribeModule>(
-                  "describe_graphics_module",
-                  obsolete_0_27::symbol_version);
-
-          }
-        }() ;
     auto desc = describe();
     mir::log_info("Found graphics driver: %s (version %d.%d.%d) Support priority: %d",
                   desc->name,

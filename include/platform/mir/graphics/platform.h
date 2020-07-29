@@ -181,26 +181,6 @@ typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatf
 typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderingPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
-
-/** Signatures from the obsolete 0.27 ABI */
-namespace obsolete_0_27
-{
-constexpr char const* symbol_version = "MIR_GRAPHICS_PLATFORM_0.27";
-
-typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
-    std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const& logger);
-
-typedef mir::graphics::PlatformPriority(*PlatformProbe)(mir::options::ProgramOption const& options);
-
-typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatform)(
-    std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const& logger);
-}
 }
 }
 
