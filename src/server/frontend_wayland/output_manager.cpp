@@ -23,6 +23,7 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+using namespace mir::geometry;
 
 mf::Output::Output(wl_display* display, mg::DisplayConfigurationOutput const& initial_configuration) :
     output{make_output(display)},
@@ -104,6 +105,22 @@ auto as_subpixel_arrangement(MirSubpixelArrangement arrangement) -> wl_output_su
         return WL_OUTPUT_SUBPIXEL_NONE;
     }
 }
+
+auto transform_size(Size const& size, MirOrientation orientation) -> Size
+{
+    switch (orientation)
+    {
+    case mir_orientation_normal:
+    case mir_orientation_inverted:
+        return size;
+
+    case mir_orientation_left:
+    case mir_orientation_right:
+        return {size.height.as_uint32_t(), size.width.as_uint32_t()};
+    }
+
+    return size;
+}
 }
 
 void mf::Output::send_initial_config(wl_resource* client_resource, mg::DisplayConfigurationOutput const& config)
@@ -123,12 +140,16 @@ void mf::Output::send_initial_config(wl_resource* client_resource, mg::DisplayCo
     for (size_t i = 0; i < config.modes.size(); ++i)
     {
         auto const& mode = config.modes[i];
+
+        // As we are not sending the display orientation as a transform (see above),
+        // we doctor the size of each mode to match the extents
+        auto const size = transform_size(mode.size, config.orientation);
         wl_output_send_mode(
             client_resource,
             ((i == config.preferred_mode_index ? WL_OUTPUT_MODE_PREFERRED : 0) |
              (i == config.current_mode_index ? WL_OUTPUT_MODE_CURRENT : 0)),
-            mode.size.width.as_int(),
-            mode.size.height.as_int(),
+             size.width.as_int(),
+             size.height.as_int(),
             mode.vrefresh_hz * 1000);
     }
 
