@@ -133,7 +133,7 @@ void mgw::DisplayClient::Output::geometry(
     int32_t subpixel,
     const char */*make*/,
     const char */*model*/,
-    int32_t /*transform*/)
+    int32_t transform)
 {
     auto output = static_cast<Output*>(data);
 
@@ -171,8 +171,26 @@ void mgw::DisplayClient::Output::geometry(
         dcout.subpixel_arrangement = MirSubpixelArrangement::mir_subpixel_arrangement_unknown;
         break;
     }
-}
 
+    switch (transform)
+    {
+    case WL_OUTPUT_TRANSFORM_NORMAL:
+        dcout.orientation = mir_orientation_normal;
+        break;
+
+    case WL_OUTPUT_TRANSFORM_90:
+        dcout.orientation = mir_orientation_left;
+        break;
+
+    case WL_OUTPUT_TRANSFORM_180:
+        dcout.orientation = mir_orientation_inverted;
+        break;
+
+    case WL_OUTPUT_TRANSFORM_270:
+        dcout.orientation = mir_orientation_right;
+        break;
+    }
+}
 
 void mgw::DisplayClient::Output::mode(
     void *data,
