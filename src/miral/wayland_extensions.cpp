@@ -267,7 +267,11 @@ void miral::WaylandExtensions::add_extension(Builder const& builder)
 
 void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const& extension_filter)
 {
-    self->extensions_filter = extension_filter;
+    self->extensions_filter = [&supported = self->supported_extensions, extension_filter]
+        (Application const& app, char const* protocol)
+        {
+            return supported.count(protocol) == 0 || extension_filter(app, protocol);
+        };
 }
 
 void miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const& builder)
