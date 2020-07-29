@@ -110,7 +110,7 @@ FILE* popen_with_pid(char const* cmd, pid_t& pid)
     return fdopen(pipe_out, "r");
 }
 
-bool spawn_and_forget(char const* cmd)
+pid_t spawn(char const* cmd)
 {
     int pid = fork();
     if (pid == 0)
@@ -121,12 +121,12 @@ bool spawn_and_forget(char const* cmd)
         exec_cmd(cmd);
         exit(errno);
     }
-    return (pid > 0);
+    return pid;
 }
 
-bool spawn_and_forget(std::string const& cmd)
+pid_t spawn(std::string const& cmd)
 {
-    return spawn_and_forget(cmd.c_str());
+    return spawn(cmd.c_str());
 }
 
 bool wait_for_file(char const* path, std::chrono::seconds timeout)
@@ -163,6 +163,9 @@ void SystemPerformanceTest::set_up_with(std::string const server_args)
 
 void SystemPerformanceTest::TearDown()
 {
+    for (auto const client_pid: client_pids)
+        kill_nicely(client_pid);
+
     kill_nicely(server_pid);
     fclose(server_output);
 }
@@ -171,7 +174,7 @@ void SystemPerformanceTest::spawn_clients(std::initializer_list<std::string> cli
 {
     for (auto& client : clients)
     {
-        spawn_and_forget(bin_dir+"/"+client);
+        client_pids.push_back(spawn(bin_dir + "/" + client));
         std::this_thread::sleep_for(100ms);
     }
 }
