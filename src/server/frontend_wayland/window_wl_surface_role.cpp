@@ -294,6 +294,18 @@ void mf::WindowWlSurfaceRole::set_server_side_decorated(bool server_side_decorat
     }
 }
 
+void mir::frontend::WindowWlSurfaceRole::set_type(MirWindowType type)
+{
+    if (weak_scene_surface.lock())
+    {
+        spec().type = type;
+    }
+    else
+    {
+        params->type = type;
+    }
+}
+
 void mf::WindowWlSurfaceRole::set_state_now(MirWindowState state)
 {
     if (auto const scene_surface = weak_scene_surface.lock())
@@ -463,4 +475,3 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
             }
         });
 }
-
