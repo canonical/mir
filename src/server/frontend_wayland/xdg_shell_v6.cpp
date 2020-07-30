@@ -305,7 +305,7 @@ mf::XdgPopupV6::XdgPopupV6(
     auto const& parent_role = parent_surface->window_role();
     auto parent_scene_surface = parent_role ? parent_role.value().scene_surface() : std::experimental::nullopt;
 
-    specification->type = mir_window_type_freestyle;
+    specification->type = mir_window_type_gloss;
     specification->placement_hints = mir_placement_hints_slide_any;
     if (parent_scene_surface)
         specification->parent = parent_scene_surface.value();
@@ -318,7 +318,7 @@ mf::XdgPopupV6::XdgPopupV6(
 void mf::XdgPopupV6::grab(struct wl_resource* seat, uint32_t serial)
 {
     (void)seat, (void)serial;
-    // TODO
+    set_type(mir_window_type_menu);
 }
 
 void mf::XdgPopupV6::destroy()
