@@ -149,7 +149,15 @@ mgek::EGLOutput::EGLOutput(
       port{connector},
       connector{mgk::get_connector(drm_fd, kms_id_from_port(dpy, port))}
 {
-
+    saved_crtc.crtc_id = 0;
+    if (auto encoder_id = this->connector->encoder_id)
+    {
+        auto encoder = mgk::get_encoder(drm_fd, encoder_id);
+        if (auto crtc_id = encoder->crtc_id)
+        {
+            saved_crtc = *mgk::get_crtc(drm_fd, crtc_id);
+        }
+    }
 }
 
 mgek::EGLOutput::~EGLOutput()
@@ -344,7 +352,7 @@ void mgek::EGLOutput::clear_crtc()
 
 void mgek::EGLOutput::restore_saved_crtc()
 {
-    if (!using_saved_crtc)
+    if (!using_saved_crtc && saved_crtc.crtc_id)
     {
         auto result = drmModeSetCrtc(
             drm_fd,
