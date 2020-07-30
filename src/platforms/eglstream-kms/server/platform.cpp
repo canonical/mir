@@ -119,12 +119,23 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_
     return mir::make_module_ptr<mge::BufferAllocator>(output);
 }
 
+namespace
+{
+const auto mir_xwayland_option = "MIR_XWAYLAND_OPTION";
+}
+
 mge::Platform::Platform(
     std::shared_ptr<RenderingPlatform> const& rendering,
     std::shared_ptr<DisplayPlatform> const& display) :
     rendering(rendering),
     display(display)
 {
+    setenv(mir_xwayland_option, "-eglstream", 1);
+}
+
+mir::graphics::eglstream::Platform::~Platform()
+{
+    unsetenv(mir_xwayland_option);
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator>
