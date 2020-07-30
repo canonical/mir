@@ -267,10 +267,13 @@ void miral::WaylandExtensions::add_extension(Builder const& builder)
 
 void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const& extension_filter)
 {
-    self->extensions_filter = [&supported = self->supported_extensions, extension_filter]
+    // Wayland calls the filter for all protocols (not just the optional extensions).
+    // To avoid accidents (like denying base protocols) we only defer to the provided
+    // extension_filter for supported_extensions.
+    self->extensions_filter = [&optional = self->supported_extensions, extension_filter]
         (Application const& app, char const* protocol)
         {
-            return supported.count(protocol) == 0 || extension_filter(app, protocol);
+            return optional.count(protocol) == 0 || extension_filter(app, protocol);
         };
 }
 
