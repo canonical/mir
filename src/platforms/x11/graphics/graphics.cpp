@@ -98,22 +98,3 @@ mir::ModuleProperties const* describe_graphics_module()
     return &description;
 }
 
-mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
-    std::shared_ptr<mo::Option> const& options,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
-    std::shared_ptr<mir::ConsoleServices> const&,
-    std::shared_ptr<mg::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const&)
-{
-    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-
-    if (!mx::X11Resources::instance.get_conn())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 output"));
-
-    auto output_sizes = mgx::Platform::parse_output_sizes(options->get<std::string>(x11_displays_option_name));
-
-    return mir::make_module_ptr<mgx::Platform>(
-        mx::X11Resources::instance.get_conn(),
-        move(output_sizes),
-        report);
-}

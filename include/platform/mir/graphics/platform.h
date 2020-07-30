@@ -153,8 +153,6 @@ enum PlatformPriority : uint32_t
                          */
 };
 
-//The host/guest platform concept is soon to be removed. Use CreateRenderingPlatform and
-//CreateDisplayPlatform instead
 typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
@@ -170,17 +168,6 @@ typedef mir::graphics::PlatformPriority(*PlatformProbe)(
         mir::options::ProgramOption const& options);
 
 typedef mir::ModuleProperties const*(*DescribeModule)();
-
-typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatform)(
-    std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const& logger);
-
-typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderingPlatform)(
-    std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
 }
 }
 
@@ -234,17 +221,6 @@ mir::graphics::PlatformPriority probe_graphics_platform(
     mir::options::ProgramOption const& options);
 
 mir::ModuleProperties const* describe_graphics_module();
-
-mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
-    std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const& logger);
-
-mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
-    std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
 
 #if defined(__clang__)
 #pragma clang diagnostic pop

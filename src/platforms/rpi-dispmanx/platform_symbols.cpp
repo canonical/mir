@@ -119,37 +119,3 @@ mir::ModuleProperties const* describe_graphics_module()
     return &description;
 }
 
-mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
-    std::shared_ptr<mo::Option> const&,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
-    std::shared_ptr<mir::ConsoleServices> const&,
-    std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mir::logging::Logger> const&)
-{
-    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-
-    {
-        // bcm_host_init() spawns threads, which must not receive signals
-        mir::SignalBlocker blocker;
-        // bcm_host_init() must be called before any other call which touches the GPU
-        // Conveniently, however, it is idempotent.
-        bcm_host_init();
-    }
-    return mir::make_module_ptr<mg::rpi::DisplayPlatform>();
-}
-
-mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
-    std::shared_ptr<mir::options::Option> const&,
-    std::shared_ptr<mir::graphics::PlatformAuthentication> const&)
-{
-    mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
-
-    {
-        // bcm_host_init() spawns threads, which must not receive signals
-        mir::SignalBlocker blocker;
-        // bcm_host_init() must be called before any other call which touches the GPU
-        // Conveniently, however, it is idempotent.
-        bcm_host_init();
-    }
-    return mir::make_module_ptr<mg::rpi::RenderingPlatform>();
-}
