@@ -95,25 +95,6 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
         std::make_shared<mge::DisplayPlatform>(*console, find_device(), display_report));
 }
 
-mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
-    std::shared_ptr<mo::Option> const&, 
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
-    std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mg::DisplayReport> const& display_report,
-    std::shared_ptr<mir::logging::Logger> const&) 
-{
-    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-    return mir::make_module_ptr<mge::DisplayPlatform>(*console, find_device(), display_report);
-}
-
-mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
-    std::shared_ptr<mir::options::Option> const&,
-    std::shared_ptr<mg::PlatformAuthentication> const&)
-{
-    mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
-    return mir::make_module_ptr<mge::RenderingPlatform>();
-}
-
 void add_graphics_platform_options(boost::program_options::options_description& /*config*/)
 {
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);

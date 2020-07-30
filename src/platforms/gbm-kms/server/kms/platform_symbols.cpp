@@ -285,34 +285,3 @@ mir::ModuleProperties const* describe_graphics_module()
     mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
 }
-
-mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
-    std::shared_ptr<mo::Option> const& options,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mg::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const&)
-{
-    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-    // ensure gbm-kms finds the gbm-kms mir-platform symbols
-
-    auto bypass_option = mgg::BypassOption::allowed;
-    if (!options->get<bool>(bypass_option_name))
-        bypass_option = mgg::BypassOption::prohibited;
-
-    return mir::make_module_ptr<mgg::Platform>(
-        report, console, *emergency_cleanup_registry, bypass_option);
-}
-
-mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
-    std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication)
-{
-    mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
-
-    auto bypass_option = mgg::BypassOption::allowed;
-    if (options->is_set(bypass_option_name) && !options->get<bool>(bypass_option_name))
-        bypass_option = mgg::BypassOption::prohibited;
-    return mir::make_module_ptr<mgg::GBMPlatform>(
-        bypass_option, mgg::BufferImportMethod::gbm_native_pixmap, platform_authentication);
-}
