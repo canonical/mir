@@ -87,6 +87,7 @@ public:
     void set_min_size(int32_t width, int32_t height);
     void set_fullscreen(std::experimental::optional<wl_resource*> const& output);
     void set_server_side_decorated(bool server_side_decorated);
+    void set_type(MirWindowType type);
 
     void set_state_now(MirWindowState state);
     void create_scene_surface();

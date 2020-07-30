@@ -298,7 +298,7 @@ mf::XdgPopupStable::XdgPopupStable(
                                     static_cast<mw::XdgPositioner*>(
                                         wl_resource_get_user_data(positioner))));
 
-    specification->type = mir_window_type_freestyle;
+    specification->type = mir_window_type_gloss;
     specification->placement_hints = mir_placement_hints_slide_any;
     if (parent_role)
     {
@@ -314,7 +314,7 @@ mf::XdgPopupStable::XdgPopupStable(
 void mf::XdgPopupStable::grab(struct wl_resource* seat, uint32_t serial)
 {
     (void)seat, (void)serial;
-    // TODO
+    set_type(mir_window_type_menu);
 }
 
 void mf::XdgPopupStable::destroy()
