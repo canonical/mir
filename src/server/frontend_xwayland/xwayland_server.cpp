@@ -95,6 +95,9 @@ void exec_xwayland(
         args.push_back(strdup(std::to_string(fd).c_str()));
     }
 
+    if (auto const xwayland_option = getenv("MIR_XWAYLAND_OPTION"))
+        args.push_back(xwayland_option);
+
     args.push_back(nullptr);
 
     execvp(xwayland_path.c_str(), const_cast<char* const*>(args.data()));

@@ -77,7 +77,7 @@ public:
     Platform(
         std::shared_ptr<RenderingPlatform> const&,
         std::shared_ptr<DisplayPlatform> const&);
-    ~Platform() = default;
+    ~Platform();
 
     UniqueModulePtr<GraphicBufferAllocator>
         create_buffer_allocator(Display const& output) override;
