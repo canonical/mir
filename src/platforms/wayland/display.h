@@ -52,8 +52,9 @@ namespace graphics
 {
 namespace wayland
 {
-class Display : public mir::graphics::Display, public mir::graphics::NativeDisplay,
-                public mir::renderer::gl::ContextSource, DisplayClient
+class Display : public mir::graphics::Display,
+                public mir::graphics::NativeDisplay,
+                DisplayClient
 {
 public:
     Display(

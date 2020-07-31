@@ -61,8 +61,7 @@ class KMSOutput;
 class Cursor;
 
 class Display : public graphics::Display,
-                public graphics::NativeDisplay,
-                public renderer::gl::ContextSource
+                public graphics::NativeDisplay
 {
 public:
     Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,

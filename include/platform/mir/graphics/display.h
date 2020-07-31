@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_DISPLAY_H_
 
 #include "mir/graphics/frame.h"
+#include "mir/renderer/gl/context_source.h"
 #include <memory>
 #include <functional>
 #include <chrono>
@@ -96,7 +97,7 @@ protected:
 /**
  * Interface to the display subsystem.
  */
-class Display
+class Display : public renderer::gl::ContextSource
 {
 public:
     /**

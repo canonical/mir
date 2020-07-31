@@ -34,8 +34,7 @@ namespace doubles
 {
 
 class NullDisplay : public graphics::Display,
-                    public graphics::NativeDisplay,
-                    public renderer::gl::ContextSource
+                    public graphics::NativeDisplay
 {
  public:
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override

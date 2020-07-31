@@ -67,8 +67,7 @@ private:
 };
 
 class Display : public graphics::Display,
-                public graphics::NativeDisplay,
-                public renderer::gl::ContextSource
+                public graphics::NativeDisplay
 {
 public:
     explicit Display(::Display* x_dpy,

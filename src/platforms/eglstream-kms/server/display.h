@@ -39,8 +39,7 @@ namespace eglstream
 class DRMEventHandler;
 
 class Display : public mir::graphics::Display,
-                public mir::graphics::NativeDisplay,
-                public mir::renderer::gl::ContextSource
+                public mir::graphics::NativeDisplay
 {
 public:
     Display(

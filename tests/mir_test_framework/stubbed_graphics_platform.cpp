@@ -108,6 +108,10 @@ struct WrappingDisplay : mg::Display
     {
         return display->last_frame_on(output_id);
     }
+    auto create_gl_context() const -> std::unique_ptr<mir::renderer::gl::Context> override
+    {
+        return display->create_gl_context();
+    }
     std::shared_ptr<Display> const display;
 };
 
