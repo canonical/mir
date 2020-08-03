@@ -29,6 +29,12 @@
 namespace geom = mir::geometry;
 namespace mtf = mir_test_framework;
 
+namespace
+{
+// This avoids an intermittent shutdown crash deleting a stub-graphics buffer (LP: #1728931)
+std::shared_ptr<void> delay_unloading_graphics_platform;
+}
+
 mtf::HeadlessTest::HeadlessTest()
 {
     add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
@@ -39,9 +45,15 @@ mtf::HeadlessTest::HeadlessTest()
     {
         return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>();
     });
+
+    server.add_init_callback([server = &server]
+        {delay_unloading_graphics_platform = server->the_graphics_platform(); });
 }
 
-mtf::HeadlessTest::~HeadlessTest() noexcept = default;
+mtf::HeadlessTest::~HeadlessTest() noexcept
+{
+    delay_unloading_graphics_platform.reset();
+}
 
 void mtf::HeadlessTest::preset_display(std::shared_ptr<mir::graphics::Display> const& display)
 {
