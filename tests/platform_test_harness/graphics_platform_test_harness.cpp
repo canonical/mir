@@ -234,7 +234,7 @@ auto test_display_construction(mir::graphics::DisplayPlatform& platform, Minimal
 
 auto test_display_supports_gl(mg::Display& display) -> bool
 {
-    if (dynamic_cast<mir::renderer::gl::ContextSource*>(display.native_display()))
+    if (dynamic_cast<mir::renderer::gl::ContextSource*>(&display))
     {
         std::cout << "Display supports GL context creation" << std::endl;
         return true;

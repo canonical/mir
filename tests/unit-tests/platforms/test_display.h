@@ -28,7 +28,7 @@ namespace
 {
 auto as_context_source(mg::Display* display)
 {
-    auto const ctx = dynamic_cast<mir::renderer::gl::ContextSource*>(display->native_display());
+    auto const ctx = dynamic_cast<mir::renderer::gl::ContextSource*>(display);
     if (!ctx)
         BOOST_THROW_EXCEPTION(std::logic_error("Display does not support GL rendering"));
     return ctx;

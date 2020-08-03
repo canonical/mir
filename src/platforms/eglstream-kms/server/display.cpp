@@ -446,11 +446,6 @@ std::unique_ptr<mg::VirtualOutput> mge::Display::create_virtual_output(int /*wid
     return nullptr;
 }
 
-mg::NativeDisplay* mge::Display::native_display()
-{
-    return this;
-}
-
 std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context() const
 {
     class GLContext : public renderer::gl::Context

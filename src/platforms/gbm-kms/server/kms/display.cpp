@@ -387,11 +387,6 @@ std::unique_ptr<mg::VirtualOutput> mgg::Display::create_virtual_output(int /*wid
     return nullptr;
 }
 
-mg::NativeDisplay* mgg::Display::native_display()
-{
-    return this;
-}
-
 std::unique_ptr<mir::renderer::gl::Context> mgg::Display::create_gl_context() const
 {
     return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context());

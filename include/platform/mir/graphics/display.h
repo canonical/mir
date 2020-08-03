@@ -41,15 +41,6 @@ typedef std::function<bool()> DisplayPauseHandler;
 typedef std::function<bool()> DisplayResumeHandler;
 typedef std::function<void()> DisplayConfigurationChangeHandler;
 
-class NativeDisplay
-{
-protected:
-    NativeDisplay() = default;
-    virtual ~NativeDisplay() = default;
-    NativeDisplay(NativeDisplay const&) = delete;
-    NativeDisplay operator=(NativeDisplay const&) = delete;
-};
-
 /**
  * DisplaySyncGroup represents a group of displays that need to be output
  * in unison as a single post() call.
@@ -180,14 +171,6 @@ public:
      *  \returns null if the implementation does not support virtual outputs
      */
     virtual std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) = 0;
-
-    /** Returns a pointer to the native display object backing this
-     *  display.
-     *
-     *  The pointer to the native display remains valid as long as the
-     *  display object is valid.
-     */
-    virtual NativeDisplay* native_display() = 0;
 
     /**
      * Returns timing information for the last frame displayed on a given
