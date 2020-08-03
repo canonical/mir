@@ -45,7 +45,7 @@ else
   done
   wayland_display=wayland-${port}
   qt_qpa=wayland
-  gdk_backend=wayland
+  gdk_backend=wayland,x11
   sdl_videodriver=wayland
 
   if [ "${miral_server}" == "miral-kiosk" ]
