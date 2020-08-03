@@ -48,73 +48,6 @@ namespace
 {
 
 bool flavor_enabled = true;
-struct WrappingDisplay : mg::Display
-{
-    WrappingDisplay(std::shared_ptr<mg::Display> const& display) : display{display} {}
-
-    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
-    {
-        display->for_each_display_sync_group(f);
-    }
-    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
-    {
-        return display->configuration();
-    }
-    bool apply_if_configuration_preserves_display_buffers(mg::DisplayConfiguration const& /*conf*/) override
-    {
-        return false;
-    }
-    void configure(mg::DisplayConfiguration const& conf) override
-    {
-        display->configure(conf);
-    }
-    void register_configuration_change_handler(
-        mg::EventHandlerRegister& handlers,
-        mg::DisplayConfigurationChangeHandler const& conf_change_handler) override
-    {
-        display->register_configuration_change_handler(handlers, conf_change_handler);
-    }
-
-    void register_pause_resume_handlers(
-        mg::EventHandlerRegister& handlers,
-        mg::DisplayPauseHandler const& pause_handler,
-        mg::DisplayResumeHandler const& resume_handler) override
-    {
-        display->register_pause_resume_handlers(handlers, pause_handler, resume_handler);
-    }
-
-    void pause() override
-    {
-        display->pause();
-    }
-
-    void resume( )override
-    {
-        display->resume();
-    }
-    std::shared_ptr<mg::Cursor> create_hardware_cursor() override
-    {
-        return display->create_hardware_cursor();
-    }
-    std::unique_ptr<mg::VirtualOutput> create_virtual_output(int width, int height) override
-    {
-        return display->create_virtual_output(width, height);
-    }
-    mg::NativeDisplay* native_display() override
-    {
-        return display->native_display();
-    }
-    mg::Frame last_frame_on(unsigned output_id) const override
-    {
-        return display->last_frame_on(output_id);
-    }
-    auto create_gl_context() const -> std::unique_ptr<mir::renderer::gl::Context> override
-    {
-        return display->create_gl_context();
-    }
-    std::shared_ptr<Display> const display;
-};
-
 class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 {
  public:
@@ -152,9 +85,15 @@ mir::UniqueModulePtr<mg::Display> mtf::StubGraphicPlatform::create_display(
 {
     if (display_preset)
     {
-        decltype(display_preset) temp;
-        swap(temp, display_preset);
-        return mir::make_module_ptr<WrappingDisplay>(temp);
+        struct Deleter : mir::ModuleDeleter<mg::Display>
+        {
+            Deleter()
+                : ModuleDeleter<mg::Display>(reinterpret_cast<void*>(&set_next_display_rects))
+            {
+            }
+        };
+
+        return mir::UniqueModulePtr<mg::Display>{display_preset.release(), Deleter{}};
     }
 
     return mir::make_module_ptr<mtd::FakeDisplay>(display_rects);
