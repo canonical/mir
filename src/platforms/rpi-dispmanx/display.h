@@ -37,8 +37,7 @@ namespace rpi
 class DisplayBuffer;
 
 class Display
-    : public graphics::Display,
-      public renderer::gl::ContextSource
+    : public graphics::Display
 {
 public:
     Display(EGLDisplay dpy, GLConfig const& gl_config, uint32_t device);
