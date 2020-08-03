@@ -90,7 +90,7 @@ TEST_F(ExternalClient, default_app_env_is_as_expected)
 
     start_server();
 
-    EXPECT_THAT(client_env_value("GDK_BACKEND"), StrEq("wayland"));
+    EXPECT_THAT(client_env_value("GDK_BACKEND"), StrEq("wayland,x11"));
     EXPECT_THAT(client_env_value("QT_QPA_PLATFORM"), StrEq("wayland"));
     EXPECT_THAT(client_env_value("SDL_VIDEODRIVER"), StrEq("wayland"));
     EXPECT_THAT(client_env_value("NO_AT_BRIDGE"), StrEq("1"));
