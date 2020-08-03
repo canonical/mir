@@ -16,6 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir/graphics/display.h"
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include <mir/shell/canonical_window_manager.h>

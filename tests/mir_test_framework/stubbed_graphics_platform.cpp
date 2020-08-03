@@ -139,9 +139,11 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mtf::StubGraphicPlatform::creat
     return mir::make_module_ptr<StubGraphicBufferAllocator>();
 }
 
+extern "C" void set_next_display_rects(std::unique_ptr<std::vector<geom::Rectangle>>&& display_rects);
+
 namespace
 {
-std::shared_ptr<mg::Display> display_preset;
+std::unique_ptr<mg::Display> display_preset;
 }
 
 mir::UniqueModulePtr<mg::Display> mtf::StubGraphicPlatform::create_display(
@@ -295,9 +297,9 @@ extern "C" void set_next_display_rects(
     chosen_display_rects = std::move(display_rects);
 }
 
-extern "C" void set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display)
+extern "C" void set_next_preset_display(std::unique_ptr<mir::graphics::Display> display)
 {
-    display_preset = display;
+    display_preset = std::move(display);
 }
 
 extern "C" void disable_flavors()

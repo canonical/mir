@@ -43,7 +43,7 @@ public:
     ~HeadlessTest() noexcept;
 
 
-    void preset_display(std::shared_ptr<mir::graphics::Display> const& display);
+    void preset_display(std::unique_ptr<mir::graphics::Display> display);
 
     /// Override initial display layout
     void initial_display_layout(std::vector<mir::geometry::Rectangle> const& display_rects);

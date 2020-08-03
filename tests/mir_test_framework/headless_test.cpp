@@ -22,6 +22,7 @@
 
 #include "mir/shared_library.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/display.h"
 #include "mir_test_framework/executable_path.h"
 
 #include <boost/throw_exception.hpp>
@@ -43,9 +44,9 @@ mtf::HeadlessTest::HeadlessTest()
 
 mtf::HeadlessTest::~HeadlessTest() noexcept = default;
 
-void mtf::HeadlessTest::preset_display(std::shared_ptr<mir::graphics::Display> const& display)
+void mtf::HeadlessTest::preset_display(std::unique_ptr<mir::graphics::Display> display)
 {
-    mtf::set_next_preset_display(display);
+    mtf::set_next_preset_display(std::move(display));
 }
 
 void mtf::HeadlessTest::initial_display_layout(std::vector<geom::Rectangle> const& display_rects)

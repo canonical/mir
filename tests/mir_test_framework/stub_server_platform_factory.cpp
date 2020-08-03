@@ -20,6 +20,7 @@
 #include "mir/shared_library.h"
 
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/display.h"
 
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
@@ -68,13 +69,13 @@ void mtf::set_next_display_rects(std::unique_ptr<std::vector<geom::Rectangle>>&&
     rect_setter(std::move(display_rects));
 }
 
-void mtf::set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display)
+void mtf::set_next_preset_display(std::unique_ptr<mir::graphics::Display> display)
 {
     ensure_platform_library();
 
-    auto display_setter = platform_graphics_lib->load_function<void(*)(std::shared_ptr<mir::graphics::Display> const&)>("set_next_preset_display");
+    auto display_setter = platform_graphics_lib->load_function<void(*)(std::unique_ptr<mir::graphics::Display>)>("set_next_preset_display");
 
-    display_setter(display);
+    display_setter(std::move(display));
 }
 
 void mtf::disable_flavors()
