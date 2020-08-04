@@ -43,7 +43,7 @@ std::shared_ptr<mir::graphics::Platform> make_stubbed_server_graphics_platform(s
 
 void set_next_display_rects(std::unique_ptr<std::vector<mir::geometry::Rectangle>>&& display_rects);
 
-void set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display);
+void set_next_preset_display(std::unique_ptr<mir::graphics::Display> display);
 
 mir::UniqueModulePtr<FakeInputDevice> add_fake_input_device(mir::input::InputDeviceInfo const& info);
 

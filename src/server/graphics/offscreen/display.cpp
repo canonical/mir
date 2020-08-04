@@ -202,11 +202,6 @@ std::unique_ptr<mir::renderer::gl::Context> mgo::Display::create_gl_context() co
     return std::make_unique<SurfacelessEGLContext>(egl_display, egl_context_shared);
 }
 
-mg::NativeDisplay* mgo::Display::native_display()
-{
-    return this;
-}
-
 mg::Frame mgo::Display::last_frame_on(unsigned) const
 {
     return {};

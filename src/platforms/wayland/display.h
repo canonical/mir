@@ -52,8 +52,8 @@ namespace graphics
 {
 namespace wayland
 {
-class Display : public mir::graphics::Display, public mir::graphics::NativeDisplay,
-                public mir::renderer::gl::ContextSource, DisplayClient
+class Display : public mir::graphics::Display,
+                DisplayClient
 {
 public:
     Display(
@@ -90,8 +90,6 @@ public:
     auto create_hardware_cursor() -> std::shared_ptr<Cursor>override;
 
     auto create_virtual_output(int width, int height) -> std::unique_ptr<VirtualOutput> override;
-
-    NativeDisplay* native_display() override;
 
     auto last_frame_on(unsigned output_id) const -> Frame override;
 

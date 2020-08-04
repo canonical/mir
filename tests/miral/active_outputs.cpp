@@ -66,7 +66,11 @@ struct ActiveOutputs : mtf::HeadlessTest
     void SetUp() override
     {
         mtf::HeadlessTest::SetUp();
-        preset_display(mt::fake_shared(display));
+
+        auto fake_display = std::make_unique<mtd::FakeDisplay>(output_rects);
+        display = fake_display.get();
+        preset_display(std::move(fake_display));
+
         active_outputs_monitor(server);
         active_outputs_monitor.add_listener(&active_outputs_listener);
     }
@@ -77,7 +81,7 @@ struct ActiveOutputs : mtf::HeadlessTest
         mtf::HeadlessTest::TearDown();
     }
 
-    mtd::FakeDisplay display{output_rects};
+    mtd::FakeDisplay* display;
     ActiveOutputsMonitor active_outputs_monitor;
     NiceMock<MockActiveOutputsListener> active_outputs_listener;
 
@@ -87,7 +91,7 @@ struct ActiveOutputs : mtf::HeadlessTest
         EXPECT_CALL(active_outputs_listener, advise_output_end()).WillOnce(Invoke([&]{signal.raise(); }));
 
         mtd::StubDisplayConfig changed_stub_display_config{displays};
-        display.emit_configuration_change_event(mt::fake_shared(changed_stub_display_config));
+        display->emit_configuration_change_event(mt::fake_shared(changed_stub_display_config));
 
         signal.wait_for(std::chrono::seconds(10));
         ASSERT_TRUE(signal.raised());

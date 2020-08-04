@@ -38,9 +38,7 @@ namespace eglstream
 {
 class DRMEventHandler;
 
-class Display : public mir::graphics::Display,
-                public mir::graphics::NativeDisplay,
-                public mir::renderer::gl::ContextSource
+class Display : public mir::graphics::Display
 {
 public:
     Display(
@@ -71,8 +69,6 @@ public:
     std::shared_ptr<Cursor> create_hardware_cursor() override;
 
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
-
-    NativeDisplay* native_display() override;
 
     std::unique_ptr<renderer::gl::Context> create_gl_context() const override;
     Frame last_frame_on(unsigned output_id) const override;

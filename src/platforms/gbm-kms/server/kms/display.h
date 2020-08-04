@@ -60,9 +60,7 @@ class DisplayBuffer;
 class KMSOutput;
 class Cursor;
 
-class Display : public graphics::Display,
-                public graphics::NativeDisplay,
-                public renderer::gl::ContextSource
+class Display : public graphics::Display
 {
 public:
     Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,
@@ -96,7 +94,6 @@ public:
 
     std::shared_ptr<graphics::Cursor> create_hardware_cursor() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
-    NativeDisplay* native_display() override;
 
     std::unique_ptr<renderer::gl::Context> create_gl_context() const override;
 

@@ -66,9 +66,7 @@ private:
     unsigned long r_mask;
 };
 
-class Display : public graphics::Display,
-                public graphics::NativeDisplay,
-                public renderer::gl::ContextSource
+class Display : public graphics::Display
 {
 public:
     explicit Display(::Display* x_dpy,
@@ -100,8 +98,6 @@ public:
 
     std::shared_ptr<Cursor> create_hardware_cursor() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
-
-    NativeDisplay* native_display() override;
 
     std::unique_ptr<renderer::gl::Context> create_gl_context() const override;
 

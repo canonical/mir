@@ -141,11 +141,6 @@ auto mgw::Display::create_virtual_output(int /*width*/, int /*height*/) -> std::
     return {};
 }
 
-auto mgw::Display::native_display() -> NativeDisplay*
-{
-    return this;
-}
-
 bool mgw::Display::apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& /*conf*/)
 {
     return false;

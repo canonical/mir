@@ -33,9 +33,7 @@ namespace test
 namespace doubles
 {
 
-class NullDisplay : public graphics::Display,
-                    public graphics::NativeDisplay,
-                    public renderer::gl::ContextSource
+class NullDisplay : public graphics::Display
 {
  public:
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override
@@ -73,10 +71,6 @@ class NullDisplay : public graphics::Display,
     std::unique_ptr<graphics::VirtualOutput> create_virtual_output(int /*width*/, int /*height*/) override
     {
         return nullptr;
-    }
-    graphics::NativeDisplay* native_display() override
-    {
-        return this;
     }
     std::unique_ptr<renderer::gl::Context> create_gl_context() const override
     {

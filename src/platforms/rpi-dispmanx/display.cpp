@@ -283,11 +283,6 @@ auto mg::rpi::Display::create_virtual_output(int /*width*/, int /*height*/) -> s
     return {nullptr};
 }
 
-auto mg::rpi::Display::native_display() -> NativeDisplay*
-{
-    return this;
-}
-
 auto mg::rpi::Display::last_frame_on(unsigned /*output_id*/) const -> Frame
 {
     return {};
