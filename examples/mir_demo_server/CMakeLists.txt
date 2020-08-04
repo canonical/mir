@@ -4,8 +4,6 @@ add_library(exampleserverconfig STATIC
   server_example_log_options.cpp
   server_example_input_filter.cpp
   server_example_host_lifecycle_event.cpp
-  server_example_custom_compositor.cpp
-  server_example_adorning_compositor.cpp
 )
 
 target_link_libraries(exampleserverconfig

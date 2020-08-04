@@ -20,7 +20,6 @@
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
 #include "server_example_host_lifecycle_event_listener.h"
-#include "server_example_custom_compositor.h"
 #include "server_example_test_client.h"
 #include "server_example_input_device_config.h"
 
@@ -141,7 +140,6 @@ try
             .enable(miral::WaylandExtensions::zwlr_layer_shell_v1)
             .enable(miral::WaylandExtensions::zxdg_output_manager_v1),
         miral::set_window_management_policy<miral::MinimalWindowManager>(),
-        me::add_custom_compositor_option_to,
         me::add_input_device_configuration_options_to,
         add_timeout_option_to,
         miral::CursorTheme{"default:DMZ-White"},
