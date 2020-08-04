@@ -359,7 +359,7 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
       texture_cache(mgl::DefaultProgramFactory().create_texture_cache()),
       display_transform(1)
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp != EGL_NO_DISPLAY)
     {

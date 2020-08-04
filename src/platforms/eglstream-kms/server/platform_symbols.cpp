@@ -254,7 +254,7 @@ mg::PlatformPriority probe_graphics_platform(
                         return false;
                     }
 
-                    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+                    eglBindAPI(EGL_OPENGL_ES_API);
                     EGLint const config_attribs[] = {
                         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
                         EGL_SURFACE_TYPE, EGL_STREAM_BIT_KHR,

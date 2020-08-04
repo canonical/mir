@@ -180,7 +180,7 @@ mg::SurfacelessEGLContext::~SurfacelessEGLContext() noexcept
 
 void mg::SurfacelessEGLContext::make_current() const
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
     if (eglGetCurrentContext() == egl_context)
         return;
 
@@ -194,7 +194,7 @@ void mg::SurfacelessEGLContext::make_current() const
 
 void mg::SurfacelessEGLContext::release_current() const
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
     if (egl_context != EGL_NO_CONTEXT && eglGetCurrentContext() == egl_context)
         eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }

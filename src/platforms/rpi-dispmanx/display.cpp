@@ -172,7 +172,7 @@ EGLint const client_version_2_if_gles_attr[] = {
 
 EGLContext create_context(EGLDisplay display, EGLConfig config)
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
     EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, client_version_2_if_gles_attr);
     if (context == EGL_NO_CONTEXT)
@@ -185,7 +185,7 @@ EGLContext create_context(EGLDisplay display, EGLConfig config)
 
 EGLContext create_context(EGLDisplay display, EGLConfig config, EGLContext shared_context)
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
     EGLContext context = eglCreateContext(display, config, shared_context, client_version_2_if_gles_attr);
     if (context == EGL_NO_CONTEXT)

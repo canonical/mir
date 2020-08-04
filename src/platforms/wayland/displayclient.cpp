@@ -397,7 +397,7 @@ mgw::DisplayClient::DisplayClient(
             EGL_NONE
         };
 
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
     egldisplay = eglGetDisplay((EGLNativeDisplayType)(display));
     if (egldisplay == EGL_NO_DISPLAY)

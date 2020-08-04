@@ -38,7 +38,7 @@ mgxh::EGLHelper::EGLHelper(GLConfig const& gl_config)
 
 void mgxh::EGLHelper::setup(::Display* const x_dpy)
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
     static const EGLint context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -54,7 +54,7 @@ void mgxh::EGLHelper::setup(::Display* const x_dpy)
 
 void mgxh::EGLHelper::setup(::Display* const x_dpy, EGLContext shared_context)
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
     static const EGLint context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -71,7 +71,7 @@ void mgxh::EGLHelper::setup(::Display* const x_dpy, EGLContext shared_context)
 void mgxh::EGLHelper::setup(::Display* const x_dpy, Window win,
                             EGLContext shared_context)
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
     static const EGLint context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -94,7 +94,7 @@ mgxh::EGLHelper::~EGLHelper() noexcept
     if (egl_display != EGL_NO_DISPLAY) {
         if (egl_context != EGL_NO_CONTEXT)
         {
-            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+            eglBindAPI(EGL_OPENGL_ES_API);
             if (eglGetCurrentContext() == egl_context)
                 eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
             eglDestroyContext(egl_display, egl_context);
@@ -115,7 +115,7 @@ bool mgxh::EGLHelper::swap_buffers()
 bool mgxh::EGLHelper::make_current() const
 {
     auto ret = eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
     return (ret == EGL_TRUE);
 }
 

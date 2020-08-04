@@ -159,7 +159,7 @@ void mgo::Display::configure(mg::DisplayConfiguration const& conf)
         {
             if (output.connected && output.preferred_mode_index < output.modes.size())
             {
-                eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+                eglBindAPI(EGL_OPENGL_ES_API);
                 auto raw_db = new mgo::DisplayBuffer{
                     SurfacelessEGLContext{egl_display, egl_context_shared},
                     output.extents()};
@@ -198,7 +198,7 @@ std::shared_ptr<mg::Cursor> mgo::Display::create_hardware_cursor()
 
 std::unique_ptr<mir::renderer::gl::Context> mgo::Display::create_gl_context() const
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
     return std::make_unique<SurfacelessEGLContext>(egl_display, egl_context_shared);
 }
 

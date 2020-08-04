@@ -314,7 +314,6 @@ pkg_check_modules(GL REQUIRED glesv2)
 add_definitions(
   -DMIR_SERVER_GL_H=<GLES2/gl2.h>
   -DMIR_SERVER_GLEXT_H=<GLES2/gl2ext.h>
-  -DMIR_SERVER_EGL_OPENGL_API=EGL_OPENGL_ES_API
 )
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)

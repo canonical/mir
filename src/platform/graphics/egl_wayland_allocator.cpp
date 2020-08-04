@@ -128,7 +128,7 @@ public:
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"YUV textures unimplemented"}));
         }
-        eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+        eglBindAPI(EGL_OPENGL_ES_API);
 
         const EGLint image_attrs[] =
             {

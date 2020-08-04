@@ -90,7 +90,7 @@ EGLConfig choose_config(EGLDisplay display, mg::GLConfig const& requested_config
 
 EGLContext create_context(EGLDisplay display, EGLConfig config)
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
     EGLint const context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -108,7 +108,7 @@ EGLContext create_context(EGLDisplay display, EGLConfig config)
 
 EGLContext create_context(EGLDisplay display, EGLConfig config, EGLContext shared_context)
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
     EGLint const context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -472,7 +472,7 @@ std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context() co
     private:
         static EGLContext make_context(EGLDisplay dpy, EGLContext shared_context)
         {
-            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+            eglBindAPI(EGL_OPENGL_ES_API);
 
             static const EGLint context_attr[] = {
                 EGL_CONTEXT_CLIENT_VERSION, 2,

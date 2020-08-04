@@ -113,7 +113,7 @@ private:
     {
         if (egl_image == EGL_NO_IMAGE_KHR)
         {
-            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+            eglBindAPI(EGL_OPENGL_ES_API);
             egl_display = eglGetCurrentDisplay();
             gbm_bo* bo_raw{bo.get()};
 
@@ -148,7 +148,7 @@ private:
     {
         if (egl_image == EGL_NO_IMAGE_KHR)
         {
-            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+            eglBindAPI(EGL_OPENGL_ES_API);
             egl_display = eglGetCurrentDisplay();
             gbm_bo* bo_raw{bo.get()};
 
