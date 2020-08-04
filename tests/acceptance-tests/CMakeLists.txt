@@ -47,7 +47,6 @@ set(
   test_client_cookie.cpp
   test_new_display_configuration.cpp
   test_persistent_surface_store.cpp
-  test_client_extensions.cpp
   test_client_cursor_api.cpp
   test_client_library.cpp
   test_render_surface.cpp
