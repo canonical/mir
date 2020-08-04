@@ -53,10 +53,18 @@ ifneq ($(filter armhf,$(DEB_HOST_ARCH)),)
 	  -DMIR_PLATFORM=$(AVAILABLE_PLATFORMS) \
 	  $(OVERRIDE_CONFIGURE_OPTIONS)
 else
+ifneq ($(filter arm64,$(DEB_HOST_ARCH)),)
+	dh_auto_configure -- \
+	  $(COMMON_CONFIGURE_OPTIONS) \
+	  -DMIR_RUN_ACCEPTANCE_TESTS=OFF \
+	  -DMIR_PLATFORM=$(AVAILABLE_PLATFORMS) \
+	  $(OVERRIDE_CONFIGURE_OPTIONS)
+else
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
 	  -DMIR_PLATFORM=$(AVAILABLE_PLATFORMS) \
 	  $(OVERRIDE_CONFIGURE_OPTIONS)
+endif
 endif
 	# Run cmake again to pick up wlcs tests, because reasons?
 	cmake build-$(DEB_HOST_ARCH)
