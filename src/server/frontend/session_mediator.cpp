@@ -108,7 +108,6 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     std::shared_ptr<mf::InputConfigurationChanger> const& input_changer,
-    std::vector<mir::ExtensionDescription> const& extensions,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     mir::Executor& executor) :
     client_pid_(0),
@@ -126,7 +125,6 @@ mf::SessionMediator::SessionMediator(
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
     input_changer(input_changer),
-    extensions(extensions),
     allocator{allocator},
     executor{executor}
 {
@@ -184,16 +182,6 @@ void mf::SessionMediator::connect(
 
     for (auto pf : surface_pixel_formats)
         response->add_surface_pixel_format(static_cast<::google::protobuf::uint32>(pf));
-
-    for ( auto const& ext : extensions )
-    {
-        if (ext.version.empty()) //malformed plugin, ignore
-            continue;
-        auto e = response->add_extension();
-        e->set_name(ext.name);
-        for(auto const& v : ext.version)
-            e->add_version(v);
-    }
 
     done->Run();
 }

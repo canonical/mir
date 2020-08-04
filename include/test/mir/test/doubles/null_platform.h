@@ -49,11 +49,6 @@ class NullPlatform : public graphics::Platform
     {
         return nullptr;
     }
-
-    std::vector<ExtensionDescription> extensions() const override
-    {
-        return {};
-    }
 };
 }
 }

@@ -25,7 +25,6 @@
 #include "mir/graphics/platform_authentication.h"
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/udev/wrapper.h"
-#include "mesa_extensions.h"
 #include "mir/renderer/gl/texture_target.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/egl_error.h"
@@ -98,9 +97,4 @@ MirServerEGLNativeDisplayType mgg::Platform::egl_native_display() const
 mgg::BypassOption mgg::Platform::bypass_option() const
 {
     return bypass_option_;
-}
-
-std::vector<mir::ExtensionDescription> mgg::Platform::extensions() const
-{
-    return mgg::mesa_extensions();
 }

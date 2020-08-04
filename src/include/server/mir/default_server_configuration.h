@@ -19,7 +19,6 @@
 #define MIR_DEFAULT_SERVER_CONFIGURATION_H_
 
 #include "mir/cached_ptr.h"
-#include "mir/extension_description.h"
 #include "mir/server_configuration.h"
 #include "mir/shell/window_manager_builder.h"
 
@@ -488,7 +487,6 @@ private:
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
 
     CachedPtr<shell::detail::FrontendShell> frontend_shell;
-    std::vector<mir::ExtensionDescription> the_extensions();
     std::vector<WaylandExtensionHook> wayland_extension_hooks;
     WaylandProtocolExtensionFilter wayland_extension_filter =
         [](std::shared_ptr<scene::Session> const&, char const*) { return true; };

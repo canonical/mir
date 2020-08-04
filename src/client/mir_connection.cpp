@@ -603,15 +603,6 @@ void MirConnection::connected(MirConnectedCallback callback, void * context)
         translation_ext = MirExtensionWindowCoordinateTranslationV1{ translate_coordinates };
         graphics_module_extension = MirExtensionGraphicsModuleV1 { get_graphics_module };
 
-        for ( auto i = 0; i < connect_result->extension().size(); i++)
-        {
-            auto& ex = connect_result->extension(i);
-            std::vector<int> versions;
-            for ( auto j = 0; j < connect_result->extension(i).version().size(); j++ )
-                versions.push_back(connect_result->extension(i).version(j));
-            extensions.push_back({ex.name(), versions});
-        }
-
         /*
          * We need to create the client platform after the connection has been
          * established, to ensure that the client platform has access to all
@@ -1403,28 +1394,12 @@ auto MirConnection::create_render_surface_with_content(
 }
 #pragma GCC diagnostic pop
 
-void* MirConnection::request_interface(char const* name, int version)
+void* MirConnection::request_interface(char const* /*name*/, int /*version*/)
 {
     if (!platform)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot query extensions before connecting to server"));
 
-    auto supported = std::find_if(extensions.begin(), extensions.end(),
-        [&](auto& e) {
-            return e.name == std::string{name} &&
-                std::find(e.version.begin(), e.version.end(), version) != e.version.end();
-        });
-    if (supported == extensions.end())
-        return nullptr;
-
-    if (!strcmp(name, "mir_extension_window_coordinate_translation") && (version == 1) && translation_ext.is_set())
-        return &translation_ext.value();
-    if (!strcmp(name, "mir_drag_and_drop") && (version == 1))
-        return const_cast<MirDragAndDropV1*>(mir::drag_and_drop::v1);
-
-    //this extension should move to the platform plugin.
-    if (!strcmp(name, "mir_extension_graphics_module") && (version == 1))
-        return &graphics_module_extension.value();
-    return platform->request_interface(name, version);
+    return nullptr;
 }
 
 void MirConnection::apply_input_configuration(MirInputConfig const* config)
@@ -1452,14 +1427,7 @@ void MirConnection::set_base_input_configuration(MirInputConfig const* config)
 }
 
 void MirConnection::enumerate_extensions(
-    void* context,
-    void (*enumerator)(void* context, char const* extension, int version))
+    void* /*context*/,
+    void (*/*enumerator*/)(void* context, char const* extension, int version))
 {
-    for(auto const& extension : extensions)
-    {
-        for(auto const version : extension.version)
-        {
-            enumerator(context, extension.name.c_str(), version);
-        }
-    }
 }

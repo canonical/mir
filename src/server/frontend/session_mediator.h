@@ -23,7 +23,6 @@
 #include "screencast_buffer_tracker.h"
 #include "protobuf_ipc_factory.h"
 
-#include "mir/extension_description.h"
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/buffer_stream_id.h"
@@ -126,7 +125,6 @@ public:
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<cookie::Authority> const& cookie_authority,
         std::shared_ptr<InputConfigurationChanger> const& input_changer,
-        std::vector<mir::ExtensionDescription> const& extensions,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         mir::Executor& executor);
 
@@ -293,7 +291,6 @@ private:
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<InputConfigurationChanger> const input_changer;
-    std::vector<mir::ExtensionDescription> const extensions;
     std::unordered_map<graphics::BufferID, std::shared_ptr<graphics::Buffer>> buffer_cache;
     std::unordered_multimap<BufferStreamId, graphics::BufferID> stream_associated_buffers;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;

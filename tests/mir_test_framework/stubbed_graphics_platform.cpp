@@ -47,7 +47,6 @@ namespace mtf = mir_test_framework;
 namespace
 {
 
-bool flavor_enabled = true;
 class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 {
  public:
@@ -127,22 +126,6 @@ struct GuestPlatformAdapter : mg::Platform
     mg::NativeDisplayPlatform* native_display_platform() override
     {
         return adaptee->native_display_platform();
-    }
-
-    std::vector<mir::ExtensionDescription> extensions() const override
-    {
-        std::vector<mir::ExtensionDescription> ext
-        {
-            { "mir_extension_gbm_buffer", { 1, 2 } },
-            { "mir_extension_fenced_buffers", { 1 } },
-            { "mir_extension_hardware_buffer_stream", { 1 } },
-            { "mir_extension_graphics_module", { 1 } },
-            { "mir_extension_animal_names", {1} }
-        };
-        if (flavor_enabled)
-            ext.push_back({ std::string{"mir_extension_favorite_flavor"}, {1, 9} });
-
-        return ext;
     }
 
     std::shared_ptr<mg::PlatformAuthentication> const context;
@@ -239,9 +222,4 @@ extern "C" void set_next_display_rects(
 extern "C" void set_next_preset_display(std::unique_ptr<mir::graphics::Display> display)
 {
     display_preset = std::move(display);
-}
-
-extern "C" void disable_flavors()
-{
-    flavor_enabled = false;
 }

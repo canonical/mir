@@ -46,8 +46,5 @@ void set_next_display_rects(std::unique_ptr<std::vector<mir::geometry::Rectangle
 void set_next_preset_display(std::unique_ptr<mir::graphics::Display> display);
 
 mir::UniqueModulePtr<FakeInputDevice> add_fake_input_device(mir::input::InputDeviceInfo const& info);
-
-void disable_flavors();
-
 }
 #endif /* MIR_TEST_FRAMEWORK_STUB_SERVER_PLATFORM_FACTORY_ */

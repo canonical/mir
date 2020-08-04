@@ -58,13 +58,6 @@ EGLNativeDisplayType mgw::Platform::egl_native_display() const
     return eglGetDisplay(wl_display);
 }
 
-
-std::vector<mir::ExtensionDescription> mgw::Platform::extensions() const
-{
-    fatal_error("wayland platform does not support mirclient");
-    return {};
-}
-
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgw::Platform::create_buffer_allocator(mg::Display const& output)
 {
     return mir::make_module_ptr<mgw::BufferAllocator>(output);
