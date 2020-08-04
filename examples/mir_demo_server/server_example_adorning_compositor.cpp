@@ -29,7 +29,7 @@
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 
-#include MIR_SERVER_GL_H
+#include <GLES2/gl2.h>
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;

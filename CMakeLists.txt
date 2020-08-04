@@ -311,10 +311,6 @@ add_definitions(  # Drop in favour of add_compile_definitions when we drop 16.04
 )
 
 pkg_check_modules(GL REQUIRED glesv2)
-add_definitions(
-  -DMIR_SERVER_GL_H=<GLES2/gl2.h>
-  -DMIR_SERVER_GLEXT_H=<GLES2/gl2ext.h>
-)
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)

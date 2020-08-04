@@ -35,7 +35,7 @@
 #include "mir/graphics/gl_config.h"
 
 #include <EGL/egl.h>
-#include MIR_SERVER_GL_H
+#include <GLES2/gl2.h>
 #include "egl_helper.h"
 #include <fcntl.h>
 #include <sys/ioctl.h>

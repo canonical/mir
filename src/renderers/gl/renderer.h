@@ -28,7 +28,7 @@
 #include <mir/gl/primitive.h>
 #include "mir/renderer/gl/render_target.h"
 
-#include MIR_SERVER_GL_H
+#include <GLES2/gl2.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>

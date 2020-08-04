@@ -24,7 +24,7 @@
 #include <memory>
 #include <vector>
 
-#include MIR_SERVER_GL_H
+#include <GLES2/gl2.h>
 
 namespace mir
 {
