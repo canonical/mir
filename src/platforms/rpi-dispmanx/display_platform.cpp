@@ -59,8 +59,3 @@ mir::graphics::NativeDisplayPlatform* mir::graphics::rpi::DisplayPlatform::nativ
 {
     return nullptr;
 }
-
-auto mir::graphics::rpi::DisplayPlatform::extensions() const -> std::vector<ExtensionDescription>
-{
-    BOOST_THROW_EXCEPTION((std::runtime_error{"rpi-dispmanx platform does not support mirclient"}));
-}
