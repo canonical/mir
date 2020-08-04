@@ -50,7 +50,6 @@ set(
   test_client_extensions.cpp
   test_client_cursor_api.cpp
   test_client_library.cpp
-  test_presentation_chain.cpp
   test_render_surface.cpp
   test_buffer_stream_arrangement1.cpp
   test_seat_report.cpp
