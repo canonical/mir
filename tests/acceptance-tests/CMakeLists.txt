@@ -8,7 +8,6 @@ set(
   SOURCES
 
   client_mediated_user_gestures.cpp
-  drag_and_drop.cpp
 
   # Catch double-free bugs by wrapping close() and abort()ing on EBADF
   strict_close.cpp
@@ -48,10 +47,8 @@ set(
   test_client_cookie.cpp
   test_new_display_configuration.cpp
   test_persistent_surface_store.cpp
-  test_client_extensions.cpp
   test_client_cursor_api.cpp
   test_client_library.cpp
-  test_presentation_chain.cpp
   test_render_surface.cpp
   test_buffer_stream_arrangement1.cpp
   test_seat_report.cpp

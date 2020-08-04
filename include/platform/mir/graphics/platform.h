@@ -22,7 +22,6 @@
 
 #include <boost/program_options/options_description.hpp>
 
-#include "mir/extension_description.h"
 #include "mir/module_properties.h"
 #include "mir/module_deleter.h"
 
@@ -110,11 +109,6 @@ public:
      * Access the platform-specific resource[s] from the display.
      */
     virtual NativeDisplayPlatform* native_display_platform() = 0;
-
-    /**
-     * Get the extensions for the platform.
-     */
-    virtual std::vector<ExtensionDescription> extensions() const = 0;
 };
 
 class Platform : public DisplayPlatform,

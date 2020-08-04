@@ -46,9 +46,3 @@ auto mg::rpi::Platform::native_display_platform() -> NativeDisplayPlatform *
 {
     return display_platform->native_display_platform();
 }
-
-auto mg::rpi::Platform::extensions() const -> std::vector<ExtensionDescription>
-{
-    return display_platform->extensions();
-}
-

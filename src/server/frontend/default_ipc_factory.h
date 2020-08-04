@@ -19,7 +19,6 @@
 #ifndef MIR_FRONTEND_DEFAULT_IPC_FACTORY_H_
 #define MIR_FRONTEND_DEFAULT_IPC_FACTORY_H_
 
-#include "mir/extension_description.h"
 #include "protobuf_ipc_factory.h"
 
 namespace mir
@@ -70,8 +69,7 @@ public:
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<cookie::Authority> const& cookie_authority,
-        std::shared_ptr<InputConfigurationChanger> const& input_Changer,
-        std::vector<mir::ExtensionDescription> const& extensions);
+        std::shared_ptr<InputConfigurationChanger> const& input_Changer);
 
     std::shared_ptr<detail::DisplayServer> make_ipc_server(
         SessionCredentials const &creds,
@@ -105,7 +103,6 @@ private:
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<InputConfigurationChanger> const input_changer;
-    std::vector<mir::ExtensionDescription> const extensions;
     std::shared_ptr<mir::Executor> const execution_queue;
 };
 }

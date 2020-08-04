@@ -132,8 +132,3 @@ EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
     return eglGetDisplay(x11_connection.get());
 }
-
-std::vector<mir::ExtensionDescription> mgx::Platform::extensions() const
-{
-    return {};
-}
