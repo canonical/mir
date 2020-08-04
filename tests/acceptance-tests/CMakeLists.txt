@@ -8,7 +8,6 @@ set(
   SOURCES
 
   client_mediated_user_gestures.cpp
-  drag_and_drop.cpp
 
   # Catch double-free bugs by wrapping close() and abort()ing on EBADF
   strict_close.cpp

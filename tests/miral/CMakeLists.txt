@@ -73,7 +73,6 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     active_window.cpp
     wayland_extensions.cpp
     workspaces.cpp
-    drag_and_drop.cpp
     zone.cpp
     server_example_decoration.cpp server_example_decoration.h
     org_kde_kwin_server_decoration.c org_kde_kwin_server_decoration.h
