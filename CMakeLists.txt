@@ -310,42 +310,13 @@ add_definitions(  # Drop in favour of add_compile_definitions when we drop 16.04
   -DLTTNG_UST_HAVE_SDT_INTEGRATION
 )
 
-#
-# Full OpenGL support is possibly complete but not yet perfect. So is
-# presently disabled by default due to:
-#   1. Black windows bug: https://bugs.freedesktop.org/show_bug.cgi?id=92265
-#   2. Use of glEGLImageTargetTexture2DOES in:
-#        src/platform/graphics/egl_extensions.cpp
-#      possibly shouldn't work even though it does. Or should it?
-#
-#if (TARGET_ARCH STREQUAL "x86_64-linux-gnu" OR
-#    TARGET_ARCH STREQUAL "i386-linux-gnu")
-#  set(DEFAULT_LIBGL "libGL")
-#else()
-  set(DEFAULT_LIBGL "libGLESv2")
-#endif()
-set(MIR_SERVER_LIBGL ${DEFAULT_LIBGL} CACHE STRING "OpenGL library to use in Mir servers {libGL,libGLESv2}")
-
-if (MIR_SERVER_LIBGL STREQUAL "libGL")
-  pkg_check_modules(GL REQUIRED gl)
-  add_definitions(
-    -DGL_GLEXT_PROTOTYPES
-    -DMIR_SERVER_GL_H=<GL/gl.h>
-    -DMIR_SERVER_GLEXT_H=<GL/glext.h>
-    -DMIR_SERVER_EGL_OPENGL_BIT=EGL_OPENGL_BIT
-    -DMIR_SERVER_EGL_OPENGL_API=EGL_OPENGL_API
-  )
-elseif (MIR_SERVER_LIBGL STREQUAL "libGLESv2")
-  pkg_check_modules(GL REQUIRED glesv2)
-  add_definitions(
-    -DMIR_SERVER_GL_H=<GLES2/gl2.h>
-    -DMIR_SERVER_GLEXT_H=<GLES2/gl2ext.h>
-    -DMIR_SERVER_EGL_OPENGL_BIT=EGL_OPENGL_ES2_BIT
-    -DMIR_SERVER_EGL_OPENGL_API=EGL_OPENGL_ES_API
-  )
-else()
-  message(FATAL_ERROR "Invalid MIR_SERVER_LIBGL value ${MIR_SERVER_LIBGL}")
-endif()
+pkg_check_modules(GL REQUIRED glesv2)
+add_definitions(
+  -DMIR_SERVER_GL_H=<GLES2/gl2.h>
+  -DMIR_SERVER_GLEXT_H=<GLES2/gl2ext.h>
+  -DMIR_SERVER_EGL_OPENGL_BIT=EGL_OPENGL_ES2_BIT
+  -DMIR_SERVER_EGL_OPENGL_API=EGL_OPENGL_ES_API
+)
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
