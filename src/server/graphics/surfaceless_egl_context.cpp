@@ -120,9 +120,7 @@ EGLSurface create_surface(EGLDisplay egl_display, EGLConfig egl_config)
 
 EGLint const default_egl_context_attr[] =
 {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
     EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
     EGL_NONE
 };
 
@@ -133,7 +131,7 @@ EGLint const default_attr[] =
     EGL_GREEN_SIZE, 8,
     EGL_BLUE_SIZE, 8,
     EGL_ALPHA_SIZE, 0,
-    EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
     EGL_NONE
 };
 

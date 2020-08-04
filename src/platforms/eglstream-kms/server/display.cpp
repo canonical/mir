@@ -70,7 +70,7 @@ EGLConfig choose_config(EGLDisplay display, mg::GLConfig const& requested_config
         EGL_ALPHA_SIZE, 0,
         EGL_DEPTH_SIZE, requested_config.depth_buffer_bits(),
         EGL_STENCIL_SIZE, requested_config.stencil_buffer_bits(),
-        EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };
 
@@ -93,9 +93,7 @@ EGLContext create_context(EGLDisplay display, EGLConfig config)
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
     EGLint const context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
         EGL_NONE
     };
 
@@ -113,9 +111,7 @@ EGLContext create_context(EGLDisplay display, EGLConfig config, EGLContext share
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
     EGLint const context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
         EGL_NONE
     };
 
@@ -479,9 +475,7 @@ std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context() co
             eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
             static const EGLint context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
                 EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
                 EGL_NONE
             };
 
@@ -493,7 +487,7 @@ std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context() co
                 EGL_ALPHA_SIZE, 0,
                 EGL_DEPTH_SIZE, 0,
                 EGL_STENCIL_SIZE, 0,
-                EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
+                EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
                 EGL_NONE
             };
 

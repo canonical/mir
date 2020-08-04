@@ -144,7 +144,7 @@ EGLConfig choose_config(EGLDisplay display, mg::GLConfig const& requested_config
         EGL_ALPHA_SIZE,         0,
         EGL_DEPTH_SIZE,         requested_config.depth_buffer_bits(),
         EGL_STENCIL_SIZE,       requested_config.stencil_buffer_bits(),
-        EGL_RENDERABLE_TYPE,    MIR_SERVER_EGL_OPENGL_BIT,
+        EGL_RENDERABLE_TYPE,    EGL_OPENGL_ES2_BIT,
         EGL_NONE};
 
     EGLint num_egl_configs;
@@ -164,10 +164,8 @@ EGLConfig choose_config(EGLDisplay display, mg::GLConfig const& requested_config
 namespace
 {
 EGLint const client_version_2_if_gles_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
     EGL_CONTEXT_CLIENT_VERSION,
     2,
-#endif
     EGL_NONE
 };
 }

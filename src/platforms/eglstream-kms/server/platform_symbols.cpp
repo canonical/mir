@@ -256,7 +256,7 @@ mg::PlatformPriority probe_graphics_platform(
 
                     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
                     EGLint const config_attribs[] = {
-                        EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
+                        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
                         EGL_SURFACE_TYPE, EGL_STREAM_BIT_KHR,
                         EGL_NONE
                     };
@@ -272,9 +272,7 @@ mg::PlatformPriority probe_graphics_platform(
                         [&ctx, display, config]()
                         {
                             EGLint const context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
                                 EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
                                 EGL_NONE
                             };
                             ctx = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attr);

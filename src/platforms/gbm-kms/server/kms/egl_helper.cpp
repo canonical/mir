@@ -68,9 +68,7 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm)
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
     static const EGLint context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
         EGL_NONE
     };
 
@@ -87,9 +85,7 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
     static const EGLint context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
         EGL_NONE
     };
 
@@ -110,9 +106,7 @@ void mgmh::EGLHelper::setup(
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
     static const EGLint context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
         EGL_NONE
     };
 
@@ -204,7 +198,7 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize, EGLi
         EGL_ALPHA_SIZE, 0,
         EGL_DEPTH_SIZE, depth_buffer_bits,
         EGL_STENCIL_SIZE, stencil_buffer_bits,
-        EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };
 
