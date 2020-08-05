@@ -116,9 +116,7 @@ namespace
 {
 static EGLint const ctxattribs[] =
     {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
         EGL_NONE
     };
 }
@@ -395,11 +393,11 @@ mgw::DisplayClient::DisplayClient(
             EGL_ALPHA_SIZE, alpha_channel_depth(format),
             EGL_DEPTH_SIZE, gl_config->depth_buffer_bits(),
             EGL_STENCIL_SIZE, gl_config->stencil_buffer_bits(),
-            EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
             EGL_NONE
         };
 
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
     egldisplay = eglGetDisplay((EGLNativeDisplayType)(display));
     if (egldisplay == EGL_NO_DISPLAY)

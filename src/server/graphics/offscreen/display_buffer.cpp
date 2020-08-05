@@ -23,8 +23,8 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-#include MIR_SERVER_GL_H
-#include MIR_SERVER_GLEXT_H
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 namespace mg = mir::graphics;
 namespace mgo = mg::offscreen;

@@ -28,8 +28,8 @@
 #include <fcntl.h>
 #include <xf86drm.h>
 
-#include MIR_SERVER_GL_H
-#include MIR_SERVER_GLEXT_H
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 #include <boost/throw_exception.hpp>
 

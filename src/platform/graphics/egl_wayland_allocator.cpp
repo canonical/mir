@@ -33,7 +33,7 @@
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
 
-#include MIR_SERVER_GL_H
+#include <GLES2/gl2.h>
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -128,7 +128,7 @@ public:
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"YUV textures unimplemented"}));
         }
-        eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+        eglBindAPI(EGL_OPENGL_ES_API);
 
         const EGLint image_attrs[] =
             {
