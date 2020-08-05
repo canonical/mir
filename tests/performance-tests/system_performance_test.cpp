@@ -96,6 +96,18 @@ FILE* popen_with_pid(char const* cmd, pid_t& pid)
     }
     else if (pid == 0)
     {
+        /* Do the minimum necessary to make this work under normal circumstances.
+         *
+         * The performance tests will often be run with MIR_SERVER_LOGGING enabled,
+         * as *most* of them use our regular test infrastructure, which inhibits
+         * logging output unless MIR_SERVER_LOGGING is set.
+         *
+         * Unfortunately, this particular test does *not* use that infrastructure,
+         * and instead spawns mir_demo_server. Which does not understand the
+         * MIR_SERVER_LOGGING option, and so fails to start (as it should, when
+         * passed an unknown option).
+         */
+        unsetenv("MIR_SERVER_LOGGING");
         close(pipe_out);
         dup2(pipe_in, 1);  // Child stdout goes into pipe_in
         close(pipe_in);
