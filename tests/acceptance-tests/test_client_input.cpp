@@ -196,7 +196,7 @@ struct Client
         mir_buffer_stream_swap_buffers_sync(
             mir_window_get_buffer_stream(window));
 #pragma GCC diagnostic pop
-        ready_to_accept_events.wait_for(4s);
+        ready_to_accept_events.wait_for(10s);
         if (!ready_to_accept_events.raised())
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
     }
