@@ -90,7 +90,7 @@ private:
     std::unordered_map<dev_t, std::unique_ptr<mir::Device>> device_watchers;
 
     std::vector<std::shared_ptr<LibInputDevice>> devices;
-    auto find_device(libinput_device_group const* group) -> decltype(devices)::iterator;
+    auto find_device(libinput_device* dev) -> decltype(devices)::iterator;
 };
 }
 }

@@ -395,8 +395,7 @@ void mie::Platform::process_input_events()
         }
         else
         {
-            auto dev = find_device(
-                libinput_device_get_device_group(device));
+            auto dev = find_device(device);
             if (dev != end(devices))
                 (*dev)->process_event(ev.get());
         }
@@ -417,7 +416,7 @@ void mie::Platform::device_added(libinput_device* dev)
 
     log_info("Added %s", describe(dev).c_str());
 
-    auto device_it = find_device(libinput_device_get_device_group(device_ptr.get()));
+    auto device_it = find_device(device_ptr.get());
     if (end(devices) != device_it)
     {
         (*device_it)->add_device_of_group(move(device_ptr));
@@ -441,7 +440,7 @@ void mie::Platform::device_added(libinput_device* dev)
 
 void mie::Platform::device_removed(libinput_device* dev)
 {
-    auto known_device_pos = find_device(libinput_device_get_device_group(dev));
+    auto known_device_pos = find_device(dev);
 
     if (known_device_pos == end(devices))
         return;
@@ -452,16 +451,14 @@ void mie::Platform::device_removed(libinput_device* dev)
     log_info("Removed %s", describe(dev).c_str());
 }
 
-auto mie::Platform::find_device(libinput_device_group const* devgroup) -> decltype(devices)::iterator
+auto mie::Platform::find_device(libinput_device* dev) -> decltype(devices)::iterator
 {
-    if (devgroup == nullptr)
-        return end(devices);
     return std::find_if(
         begin(devices),
         end(devices),
-        [devgroup](auto const& item)
+        [dev](auto const& item)
         {
-            return devgroup == item->group();
+            return dev == item->device();
         });
 }
 
