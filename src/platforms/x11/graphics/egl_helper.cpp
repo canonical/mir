@@ -38,12 +38,10 @@ mgxh::EGLHelper::EGLHelper(GLConfig const& gl_config)
 
 void mgxh::EGLHelper::setup(::Display* const x_dpy)
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
     static const EGLint context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
         EGL_NONE
     };
 
@@ -56,12 +54,10 @@ void mgxh::EGLHelper::setup(::Display* const x_dpy)
 
 void mgxh::EGLHelper::setup(::Display* const x_dpy, EGLContext shared_context)
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
     static const EGLint context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
         EGL_NONE
     };
 
@@ -75,12 +71,10 @@ void mgxh::EGLHelper::setup(::Display* const x_dpy, EGLContext shared_context)
 void mgxh::EGLHelper::setup(::Display* const x_dpy, Window win,
                             EGLContext shared_context)
 {
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
     static const EGLint context_attr[] = {
-#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
         EGL_NONE
     };
 
@@ -100,7 +94,7 @@ mgxh::EGLHelper::~EGLHelper() noexcept
     if (egl_display != EGL_NO_DISPLAY) {
         if (egl_context != EGL_NO_CONTEXT)
         {
-            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+            eglBindAPI(EGL_OPENGL_ES_API);
             if (eglGetCurrentContext() == egl_context)
                 eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
             eglDestroyContext(egl_display, egl_context);
@@ -121,7 +115,7 @@ bool mgxh::EGLHelper::swap_buffers()
 bool mgxh::EGLHelper::make_current() const
 {
     auto ret = eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+    eglBindAPI(EGL_OPENGL_ES_API);
     return (ret == EGL_TRUE);
 }
 
@@ -141,7 +135,7 @@ void mgxh::EGLHelper::setup_internal(::Display* const x_dpy, bool initialize)
         EGL_ALPHA_SIZE, 8,
         EGL_DEPTH_SIZE, depth_buffer_bits,
         EGL_STENCIL_SIZE, stencil_buffer_bits,
-        EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };
 

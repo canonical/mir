@@ -19,7 +19,7 @@
 #ifndef MIR_RENDERER_GL_PROGRAM_FAMILY_H_
 #define MIR_RENDERER_GL_PROGRAM_FAMILY_H_
 
-#include MIR_SERVER_GL_H
+#include <GLES2/gl2.h>
 #include <utility>
 #include <map>
 #include <unordered_map>

@@ -41,8 +41,8 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include MIR_SERVER_GL_H
-#include MIR_SERVER_GLEXT_H
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 #include <algorithm>
 #include <stdexcept>
@@ -113,7 +113,7 @@ private:
     {
         if (egl_image == EGL_NO_IMAGE_KHR)
         {
-            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+            eglBindAPI(EGL_OPENGL_ES_API);
             egl_display = eglGetCurrentDisplay();
             gbm_bo* bo_raw{bo.get()};
 
@@ -148,7 +148,7 @@ private:
     {
         if (egl_image == EGL_NO_IMAGE_KHR)
         {
-            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+            eglBindAPI(EGL_OPENGL_ES_API);
             egl_display = eglGetCurrentDisplay();
             gbm_bo* bo_raw{bo.get()};
 
