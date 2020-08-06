@@ -234,6 +234,7 @@ void mi::CursorController::set_cursor_image_locked(std::unique_lock<std::mutex>&
     }
 
     current_cursor = image;
+    auto const usable = this->usable;
 
     lock.unlock();
 
@@ -241,8 +242,6 @@ void mi::CursorController::set_cursor_image_locked(std::unique_lock<std::mutex>&
     {
         if (usable)
             cursor->show(*image);
-        else
-            pending_image = image;
     }
     else
         cursor->hide();

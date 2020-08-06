@@ -67,8 +67,6 @@ private:
     std::mutex cursor_state_guard;
     geometry::Point cursor_location;
     std::shared_ptr<graphics::CursorImage> current_cursor;
-    std::shared_ptr<graphics::CursorImage> pending_image;
-
 
     std::weak_ptr<scene::Observer> observer;
     bool usable = false;
