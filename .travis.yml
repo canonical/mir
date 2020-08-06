@@ -46,6 +46,7 @@ env:
   - TASK=google:ubuntu-devel-64:spread/build/ubuntu:amd64
   - TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
   - TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
+  - TASK=google:debian-sid:spread/build/debian:amd64
   - TASK=google:ubuntu-18.04-64:spread/build/ubuntu:amd64
   - TASK=google:ubuntu-18.04-64:spread/build/ubuntu:arm64
   - TASK=google:ubuntu-18.04-64:spread/build/ubuntu:rpi
