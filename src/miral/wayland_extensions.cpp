@@ -273,7 +273,7 @@ void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const
     self->extensions_filter = [&optional = self->supported_extensions, extension_filter]
         (Application const& app, char const* protocol)
         {
-            return optional.count(protocol) == 0 || extension_filter(app, protocol);
+            return (optional.count(protocol) == 0) || extension_filter(app, protocol);
         };
 }
 
