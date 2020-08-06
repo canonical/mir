@@ -13,6 +13,7 @@ backends:
                image: ubuntu-daily:devel/amd64
             - fedora-31
             - fedora-32
+            - debian-sid
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
         plan: n1-highcpu-8
@@ -29,6 +30,8 @@ backends:
             - fedora-31-64
             - fedora-32-64
             - fedora-rawhide-64
+            - debian-sid:
+                image: debian-cloud-testing/debian-sid
 
 environment:
     ARCH: amd64
