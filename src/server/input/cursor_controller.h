@@ -63,13 +63,15 @@ private:
     std::shared_ptr<Scene> const input_targets;
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<graphics::CursorImage> const default_cursor_image;
+    std::weak_ptr<scene::Observer> observer;    // Not mutated after construction
 
     std::mutex cursor_state_guard;
     geometry::Point cursor_location;
     std::shared_ptr<graphics::CursorImage> current_cursor;
-
-    std::weak_ptr<scene::Observer> observer;
     bool usable = false;
+
+    // Used only to serialize calls to pointer_usable()/pointer_unusable()
+    std::mutex serialize_pointer_usable_unusable;
 
     void update_cursor_image_locked(std::unique_lock<std::mutex>&);
     void set_cursor_image_locked(std::unique_lock<std::mutex>&, std::shared_ptr<graphics::CursorImage> const& image);
