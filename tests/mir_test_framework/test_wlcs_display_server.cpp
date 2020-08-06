@@ -854,6 +854,9 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
                             wrapped->cursor_moved_to(abs_x, abs_y);
                         }
 
+                        void pointer_usable() override { wrapped->pointer_usable(); }
+                        void pointer_unusable() override { wrapped->pointer_unusable(); }
+
                     private:
                         TestWlcsDisplayServer* const runner;
                         std::shared_ptr<mir::input::CursorListener> const wrapped;

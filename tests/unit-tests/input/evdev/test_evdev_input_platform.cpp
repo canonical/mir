@@ -251,11 +251,11 @@ TEST_F(EvdevInputPlatform, register_ungrouped_devices)
     run_dispatchable(*platform);
 }
 
-TEST_F(EvdevInputPlatform, ignore_devices_from_same_group)
+TEST_F(EvdevInputPlatform, devices_from_same_group)
 {
     auto platform = create_input_platform();
 
-    EXPECT_CALL(mock_registry, add_device(_)).Times(1);
+    EXPECT_CALL(mock_registry, add_device(_)).Times(2);
 
     ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
         .WillByDefault(

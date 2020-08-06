@@ -365,6 +365,22 @@ void mi::SeatInputDeviceTracker::set_cursor_position(float x, float y)
     observer->seat_set_cursor_position(x, y);
 }
 
+void mir::input::SeatInputDeviceTracker::add_pointing_device()
+{
+    if (!num_pointing_devices++)
+    {
+        cursor_listener->pointer_usable();
+    }
+}
+
+void mir::input::SeatInputDeviceTracker::remove_pointing_device()
+{
+    if (!--num_pointing_devices)
+    {
+        cursor_listener->pointer_unusable();
+    }
+}
+
 bool mi::SeatInputDeviceTracker::DeviceData::allowed_scan_code_action(MirKeyboardEvent const* event) const
 {
     auto const action = mir_keyboard_event_action(event);

@@ -52,6 +52,9 @@ struct MyCursorListener : mi::CursorListener
 
     MOCK_METHOD2(cursor_moved_to, void(float abs_x, float abs_y));
 
+    void pointer_usable() { wrapped->pointer_usable(); }
+    void pointer_unusable() { wrapped->pointer_unusable(); }
+
     std::shared_ptr<mi::CursorListener> const wrapped;
 };
 

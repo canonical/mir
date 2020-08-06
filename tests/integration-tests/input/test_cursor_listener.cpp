@@ -54,6 +54,9 @@ struct MockCursorListener : public mi::CursorListener
     MOCK_METHOD2(cursor_moved_to, void(float, float));
 
     ~MockCursorListener() noexcept {}
+
+    void pointer_usable() {}
+    void pointer_unusable() {}
 };
 
 struct CursorListenerIntegrationTest : testing::Test, mtf::FakeInputServerConfiguration
