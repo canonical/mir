@@ -48,11 +48,6 @@ mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
   return mir::make_module_ptr<mgw::Display>(wl_display, gl_config, report);
 }
 
-mg::NativeDisplayPlatform* mgw::Platform::native_display_platform()
-{
-    return nullptr;
-}
-
 EGLNativeDisplayType mgw::Platform::egl_native_display() const
 {
     return eglGetDisplay(wl_display);

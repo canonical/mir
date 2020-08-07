@@ -100,11 +100,6 @@ mir::UniqueModulePtr<mg::Display> mge::DisplayPlatform::create_display(
     return retval;
 }
 
-mg::NativeDisplayPlatform* mge::DisplayPlatform::native_display_platform()
-{
-    return nullptr;
-}
-
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_buffer_allocator(
     mg::Display const& output)
 {
@@ -143,7 +138,3 @@ mir::UniqueModulePtr<mg::Display> mge::Platform::create_display(
     return display->create_display(policy, config);
 }
 
-mg::NativeDisplayPlatform* mge::Platform::native_display_platform()
-{
-    return display->native_display_platform();
-}

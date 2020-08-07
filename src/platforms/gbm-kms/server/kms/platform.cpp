@@ -84,11 +84,6 @@ mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
         listener);
 }
 
-mg::NativeDisplayPlatform* mgg::Platform::native_display_platform()
-{
-    return auth_factory.get();
-}
-
 MirServerEGLNativeDisplayType mgg::Platform::egl_native_display() const
 {
     return gbm->device;
