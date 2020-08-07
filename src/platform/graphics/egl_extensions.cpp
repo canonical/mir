@@ -52,6 +52,7 @@ std::experimental::optional<mg::EGLExtensions::PlatformBaseEXT> maybe_platform_b
         return {};
     }
 }
+
 }
 
 mg::EGLExtensions::EGLExtensions() :
@@ -123,5 +124,58 @@ mg::EGLExtensions::PlatformBaseEXT::PlatformBaseEXT()
         !eglCreatePlatformWindowSurface)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation doesn't support EGL_EXT_platform_base"}));
+    }
+}
+
+mg::EGLExtensions::DebugKHR::DebugKHR()
+    : eglDebugMessageControlKHR{
+        reinterpret_cast<PFNEGLDEBUGMESSAGECONTROLKHRPROC>(eglGetProcAddress("eglDebugMessageControlKHR"))
+    },
+      eglLabelObjectKHR{
+        reinterpret_cast<PFNEGLLABELOBJECTKHRPROC>(eglGetProcAddress("eglLabelObjectKHR"))
+    },
+      eglQueryDebugKHR{
+        reinterpret_cast<PFNEGLQUERYDEBUGKHRPROC>(eglGetProcAddress("eglQueryDebugKHR"))
+    }
+{
+    auto const* client_extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
+    if (!client_extensions ||
+        !strstr(client_extensions, "EGL_KHR_debug") ||
+        !eglDebugMessageControlKHR ||
+        !eglLabelObjectKHR ||
+        !eglQueryDebugKHR)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation doesn't support EGL_KHR_debug"}));
+    }
+}
+
+mg::EGLExtensions::DebugKHR::DebugKHR(
+    PFNEGLDEBUGMESSAGECONTROLKHRPROC control,
+    PFNEGLLABELOBJECTKHRPROC label,
+    PFNEGLQUERYDEBUGKHRPROC query)
+    : eglDebugMessageControlKHR{control},
+      eglLabelObjectKHR{label},
+      eglQueryDebugKHR{query}
+{
+}
+
+auto mg::EGLExtensions::DebugKHR::extension_or_null_object() -> DebugKHR
+{
+    return DebugKHR{
+        [](EGLDEBUGPROCKHR, EGLAttrib const*) -> EGLint { return EGL_SUCCESS; },
+        [](EGLDisplay, EGLenum, EGLObjectKHR, EGLLabelKHR) -> EGLint { return EGL_SUCCESS; },
+        [](EGLint, EGLAttrib*) -> EGLBoolean { return EGL_TRUE; }
+    };
+}
+
+auto mg::EGLExtensions::DebugKHR::maybe_debug_khr() -> std::experimental::optional<DebugKHR>
+{
+    try
+    {
+        return mg::EGLExtensions::DebugKHR{};
+    }
+    catch (std::runtime_error const&)
+    {
+        return {};
     }
 }

@@ -122,6 +122,26 @@ struct EGLExtensions
         PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC const eglCreatePlatformWindowSurface;
     };
     std::experimental::optional<PlatformBaseEXT> const platform_base;
+
+    class DebugKHR
+    {
+    public:
+        DebugKHR();
+
+        static DebugKHR extension_or_null_object();
+        static std::experimental::optional<DebugKHR> maybe_debug_khr();
+
+        PFNEGLDEBUGMESSAGECONTROLKHRPROC const eglDebugMessageControlKHR;
+        PFNEGLLABELOBJECTKHRPROC const eglLabelObjectKHR;
+        PFNEGLQUERYDEBUGKHRPROC const eglQueryDebugKHR;
+
+    private:
+        // Private helper for null object constructor.
+        DebugKHR(
+            PFNEGLDEBUGMESSAGECONTROLKHRPROC control,
+            PFNEGLLABELOBJECTKHRPROC label,
+            PFNEGLQUERYDEBUGKHRPROC query);
+    };
 };
 
 }
