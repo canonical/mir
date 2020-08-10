@@ -56,6 +56,7 @@ public:
         xcb_create_notify_event_t *event);
     ~XWaylandSurface();
 
+    void set_type(MirWindowType type);
     void map();
     void close(); ///< Idempotent
     void take_focus();
@@ -94,8 +95,6 @@ private:
         auto mir_window_state() const -> MirWindowState;
         auto updated_from(MirWindowState state) const -> WindowState; ///< Does not change original
     };
-
-    struct InitialWlSurfaceData;
 
     /// Overrides from XWaylandSurfaceObserverSurface
     /// @{

@@ -182,6 +182,27 @@ mf::XWaylandSurface::XWaylandSurface(
               {
                   is_transient_for(XCB_WINDOW_NONE);
               }),
+          property_handler<xcb_atom_t>(
+              connection,
+              window,
+              connection->net_wm_window_type,
+              [this](xcb_atom_t wm_type)
+              {
+                if (this->connection->net_wm_window_type_popup == wm_type)
+                {
+                    set_type(mir_window_type_gloss);
+                    puts("**************** popup!!");
+                }
+                else if (this->connection->net_wm_window_type_menu == wm_type)
+                {
+                    set_type(mir_window_type_menu);
+                    puts("**************** menu!!");
+                }
+              },
+              [this]()
+              {
+                is_transient_for(XCB_WINDOW_NONE);
+              }),
           property_handler<std::vector<xcb_atom_t> const&>(
               connection,
               window,
@@ -1046,4 +1067,10 @@ auto mf::XWaylandSurface::latest_input_timestamp(std::lock_guard<std::mutex> con
         log_warning("Can not get timestamp because surface_observer is null");
         return {};
     }
+}
+
+void mf::XWaylandSurface::set_type(MirWindowType type)
+{
+    std::lock_guard<std::mutex> lock{this->mutex};
+    pending_spec(lock).type = type;
 }
