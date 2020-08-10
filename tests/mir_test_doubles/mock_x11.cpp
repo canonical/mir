@@ -34,6 +34,7 @@ mtd::FakeX11Resources::FakeX11Resources()
       window{reinterpret_cast<Window>((long unsigned int)9876543210)}
 {
     std::memset(&keypress_event_return, 0, sizeof(XEvent));
+    std::memset(&key_release_event_return, 0, sizeof(XEvent));
     std::memset(&button_release_event_return, 0, sizeof(XEvent));
     std::memset(&expose_event_return, 0, sizeof(XEvent));
     std::memset(&focus_in_event_return, 0, sizeof(XEvent));
@@ -46,6 +47,7 @@ mtd::FakeX11Resources::FakeX11Resources()
     std::memset(&screen, 0, sizeof screen);
     visual_info.red_mask = 0xFF0000;
     keypress_event_return.type = KeyPress;
+    key_release_event_return.type = KeyRelease;
     button_release_event_return.type = ButtonRelease;
     button_release_event_return.xbutton.button = 0;
     expose_event_return.type = Expose;

@@ -42,6 +42,7 @@ public:
     Screen screen;
     XVisualInfo visual_info;
     XEvent keypress_event_return = { 0 };
+    XEvent key_release_event_return = { 0 };
     XEvent button_release_event_return = { 0 };
     XEvent expose_event_return = { 0 };
     XEvent focus_in_event_return = { 0 };
