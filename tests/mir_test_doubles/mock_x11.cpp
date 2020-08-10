@@ -92,6 +92,12 @@ mtd::MockX11::MockX11()
                                          return fake_x11.pending_events;
                                      }));
 
+    ON_CALL(*this, XEventsQueued(_,_))
+    .WillByDefault(InvokeWithoutArgs([this]()
+                                     {
+                                         return fake_x11.pending_events;
+                                     }));
+
     ON_CALL(*this, XGetGeometry(fake_x11.display,_,_,_,_,_,_,_,_))
     .WillByDefault(DoAll(SetArgPointee<5>(fake_x11.screen.width),
                          SetArgPointee<6>(fake_x11.screen.height),
@@ -163,6 +169,16 @@ int XNextEvent(Display* display, XEvent* event_return)
     auto const result = global_mock->XNextEvent(display, event_return);
     if (result) --global_mock->fake_x11.pending_events;
     return result;
+}
+
+int XPeekEvent(Display* display, XEvent* event_return)
+{
+    return global_mock->XPeekEvent(display, event_return);
+}
+
+int XEventsQueued(Display* display, int mode)
+{
+    return global_mock->XEventsQueued(display, mode);
 }
 
 int XLookupString(XKeyEvent* event_struct, char* buffer_return, int bytes_buffer, KeySym* keysym_return, XComposeStatus* status_in_out)
