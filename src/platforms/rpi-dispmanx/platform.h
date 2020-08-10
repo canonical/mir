@@ -39,7 +39,6 @@ public:
     auto create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const &initial_conf_policy,
         std::shared_ptr<GLConfig> const &gl_config) -> UniqueModulePtr<Display> override;
-    auto native_display_platform() -> NativeDisplayPlatform *override;
 
 private:
     std::unique_ptr<DisplayPlatform> const display_platform;
