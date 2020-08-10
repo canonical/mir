@@ -123,11 +123,6 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     return make_module_ptr<mgx::Display>(x11_connection.get(), output_sizes, initial_conf_policy, gl_config, report);
 }
 
-mg::NativeDisplayPlatform* mgx::Platform::native_display_platform()
-{
-    return nullptr;
-}
-
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
     return eglGetDisplay(x11_connection.get());

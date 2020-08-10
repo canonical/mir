@@ -33,8 +33,7 @@ namespace helpers
 class DRMHelper;
 }
 
-class DRMNativePlatformAuthFactory : public graphics::NativeDisplayPlatform,
-                                     public graphics::PlatformAuthenticationFactory
+class DRMNativePlatformAuthFactory : public graphics::PlatformAuthenticationFactory
 {
 public:
     DRMNativePlatformAuthFactory(helpers::DRMHelper&);

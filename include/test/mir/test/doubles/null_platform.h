@@ -44,11 +44,6 @@ class NullPlatform : public graphics::Platform
     {
         return mir::make_module_ptr<NullDisplay>();
     }
-
-    graphics::NativeDisplayPlatform* native_display_platform() override
-    {
-        return nullptr;
-    }
 };
 }
 }

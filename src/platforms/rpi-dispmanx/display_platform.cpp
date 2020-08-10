@@ -55,7 +55,3 @@ auto mir::graphics::rpi::DisplayPlatform::create_display(
     return mir::make_module_ptr<rpi::Display>(dpy, *gl_config, 0);
 }
 
-mir::graphics::NativeDisplayPlatform* mir::graphics::rpi::DisplayPlatform::native_display_platform()
-{
-    return nullptr;
-}

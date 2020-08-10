@@ -38,7 +38,6 @@ public:
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config)
         ->UniqueModulePtr<graphics::Display> override;
-    NativeDisplayPlatform* native_display_platform() override;
 
 private:
     EGLDisplay dpy;

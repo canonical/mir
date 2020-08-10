@@ -41,8 +41,3 @@ auto mg::rpi::Platform::create_display(
 {
     return display_platform->create_display(initial_conf_policy, gl_config);
 }
-
-auto mg::rpi::Platform::native_display_platform() -> NativeDisplayPlatform *
-{
-    return display_platform->native_display_platform();
-}
