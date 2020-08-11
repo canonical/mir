@@ -218,6 +218,24 @@ void mf::XWaylandSurface::map()
         state = cached.state;
     }
 
+    // _NET_WM_STATE is not in property_handlers because we only read it on window creation
+    // We, the server (not the client) are responsible for updating it after the window has been mapped
+    // The client should use a client message to change state later
+    auto const cookie = connection->read_property(
+        window,
+        connection->net_wm_state,
+        [&](std::vector<xcb_atom_t> net_wm_states)
+        {
+            for (auto const& net_wm_state : net_wm_states)
+            {
+                state.apply_change(connection, NetWmStateAction::ADD, net_wm_state);
+            }
+        },
+        [](){});
+
+    // If we had more properties to read we would queue them all up before completing the first one
+    cookie();
+
     uint32_t const workspace = 1;
     connection->set_property<XCBType::CARDINAL32>(
         window,
