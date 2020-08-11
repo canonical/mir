@@ -89,6 +89,9 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
             glmark2_output << json;
         }
 
+        // Use GTest's structured annotation support to expose the score
+        // to the test runner.
+        RecordProperty("score", score);
         return score;
     }
 
