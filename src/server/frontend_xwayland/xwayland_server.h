@@ -64,7 +64,6 @@ private:
 
     mutable std::mutex mutex;
     mutable bool running;
-    mutable std::experimental::optional<int> exit_code;
 };
 }
 }

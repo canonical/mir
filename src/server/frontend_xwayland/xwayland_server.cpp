@@ -242,10 +242,6 @@ auto mf::XWaylandServer::is_running() const -> bool
         if (waitpid(xwayland_process.pid, &status, WNOHANG) != 0)
         {
             running = false;
-            if (WIFEXITED(status))
-            {
-                exit_code = WEXITSTATUS(status);
-            }
         }
     }
 
