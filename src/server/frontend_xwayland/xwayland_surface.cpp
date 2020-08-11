@@ -549,7 +549,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         std::lock_guard<std::mutex> lock{mutex};
 
         if (surface_observer || weak_session.lock() || weak_scene_surface.lock())
-            BOOST_THROW_EXCEPTION(std::runtime_error("XWaylandSurface::set_wl_surface() called multiple times"));
+            BOOST_THROW_EXCEPTION(std::runtime_error("XWaylandSurface::attach_wl_surface() called multiple times"));
 
         session = get_session(wl_surface->resource);
 
