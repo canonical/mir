@@ -68,6 +68,14 @@ public:
     void move_resize(uint32_t detail);
 
 private:
+    // See https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#idm45805407959456
+    enum class NetWmStateAction: uint32_t
+    {
+        REMOVE = 0,
+        ADD = 1,
+        TOGGLE = 2,
+    };
+
     /// contains more information than just a MirWindowState
     /// (for example if a minimized window would otherwise be maximized)
     struct WindowState
@@ -76,6 +84,11 @@ private:
         bool minimized{false};
         bool maximized{false};
         bool fullscreen{false};
+
+        void apply_change(
+            std::shared_ptr<XCBConnection> const& connection,
+            NetWmStateAction action,
+            xcb_atom_t net_wm_state);
 
         auto operator==(WindowState const& that) const -> bool;
         auto mir_window_state() const -> MirWindowState;

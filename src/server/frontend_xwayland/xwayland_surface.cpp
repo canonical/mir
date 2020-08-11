@@ -406,17 +406,10 @@ void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
 void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
 {
     // The client is requesting a change in state
-    // see https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#idm45390969565536
-
-    enum class Action: uint32_t
-    {
-        REMOVE = 0,
-        ADD = 1,
-        TOGGLE = 2,
-    };
+    // See https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#idm45805407959456
 
     auto const* pdata = data;
-    auto const action = static_cast<Action>(*pdata++);
+    auto const action = static_cast<NetWmStateAction>(*pdata++);
     xcb_atom_t const properties[2] = { static_cast<xcb_atom_t>(*pdata++),  static_cast<xcb_atom_t>(*pdata++) };
     auto const source_indication = static_cast<SourceIndication>(*pdata++);
 
@@ -433,21 +426,7 @@ void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
         {
             if (property) // if there is only one property, the 2nd is 0
             {
-                bool nil{false}, *prop_ptr = &nil;
-
-                if (property == connection->net_wm_state_hidden)
-                    prop_ptr = &new_window_state.minimized;
-                else if (property == connection->net_wm_state_maximized_horz) // assume vert is also set
-                    prop_ptr = &new_window_state.maximized;
-                else if (property == connection->net_wm_state_fullscreen)
-                    prop_ptr = &new_window_state.fullscreen;
-
-                switch (action)
-                {
-                case Action::REMOVE: *prop_ptr = false; break;
-                case Action::ADD: *prop_ptr = true; break;
-                case Action::TOGGLE: *prop_ptr = !*prop_ptr; break;
-                }
+                new_window_state.apply_change(connection, action, property);
             }
         }
     }
@@ -640,6 +619,28 @@ void mf::XWaylandSurface::move_resize(uint32_t detail)
     else
     {
         mir::log_warning("XWaylandSurface::move_resize() called with unknown detail %d", detail);
+    }
+}
+
+void mf::XWaylandSurface::WindowState::apply_change(
+    std::shared_ptr<XCBConnection> const& connection,
+    NetWmStateAction action,
+    xcb_atom_t net_wm_state)
+{
+    bool nil{false}, *prop_ptr = &nil;
+
+    if (net_wm_state == connection->net_wm_state_hidden)
+        prop_ptr = &minimized;
+    else if (net_wm_state == connection->net_wm_state_maximized_horz) // assume vert is also set
+        prop_ptr = &maximized;
+    else if (net_wm_state == connection->net_wm_state_fullscreen)
+        prop_ptr = &fullscreen;
+
+    switch (action)
+    {
+    case NetWmStateAction::REMOVE:  *prop_ptr = false;      break;
+    case NetWmStateAction::ADD:     *prop_ptr = true;       break;
+    case NetWmStateAction::TOGGLE:  *prop_ptr = !*prop_ptr; break;
     }
 }
 
