@@ -61,6 +61,7 @@ TEST_F(CompositorPerformance, regression_test_1563287)
     run_server_for(10s);
 
     read_compositor_report();
+    RecordProperty("framerate", std::to_string(compositor_fps));
     EXPECT_GE(compositor_fps, 58.0f);
     EXPECT_LT(compositor_render_time, 17.0f);
 }
