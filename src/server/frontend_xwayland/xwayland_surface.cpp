@@ -218,6 +218,24 @@ void mf::XWaylandSurface::map()
         state = cached.state;
     }
 
+    // _NET_WM_STATE is not in property_handlers because we only read it on window creation
+    // We, the server (not the client) are responsible for updating it after the window has been mapped
+    // The client should use a client message to change state later
+    auto const cookie = connection->read_property(
+        window,
+        connection->net_wm_state,
+        [&](std::vector<xcb_atom_t> net_wm_states)
+        {
+            for (auto const& net_wm_state : net_wm_states)
+            {
+                state.apply_change(connection, NetWmStateAction::ADD, net_wm_state);
+            }
+        },
+        [](){});
+
+    // If we had more properties to read we would queue them all up before completing the first one
+    cookie();
+
     uint32_t const workspace = 1;
     connection->set_property<XCBType::CARDINAL32>(
         window,
@@ -406,17 +424,10 @@ void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
 void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
 {
     // The client is requesting a change in state
-    // see https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#idm45390969565536
-
-    enum class Action: uint32_t
-    {
-        REMOVE = 0,
-        ADD = 1,
-        TOGGLE = 2,
-    };
+    // See https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#idm45805407959456
 
     auto const* pdata = data;
-    auto const action = static_cast<Action>(*pdata++);
+    auto const action = static_cast<NetWmStateAction>(*pdata++);
     xcb_atom_t const properties[2] = { static_cast<xcb_atom_t>(*pdata++),  static_cast<xcb_atom_t>(*pdata++) };
     auto const source_indication = static_cast<SourceIndication>(*pdata++);
 
@@ -433,21 +444,7 @@ void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
         {
             if (property) // if there is only one property, the 2nd is 0
             {
-                bool nil{false}, *prop_ptr = &nil;
-
-                if (property == connection->net_wm_state_hidden)
-                    prop_ptr = &new_window_state.minimized;
-                else if (property == connection->net_wm_state_maximized_horz) // assume vert is also set
-                    prop_ptr = &new_window_state.maximized;
-                else if (property == connection->net_wm_state_fullscreen)
-                    prop_ptr = &new_window_state.fullscreen;
-
-                switch (action)
-                {
-                case Action::REMOVE: *prop_ptr = false; break;
-                case Action::ADD: *prop_ptr = true; break;
-                case Action::TOGGLE: *prop_ptr = !*prop_ptr; break;
-                }
+                new_window_state.apply_change(connection, action, property);
             }
         }
     }
@@ -549,7 +546,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         std::lock_guard<std::mutex> lock{mutex};
 
         if (surface_observer || weak_session.lock() || weak_scene_surface.lock())
-            BOOST_THROW_EXCEPTION(std::runtime_error("XWaylandSurface::set_wl_surface() called multiple times"));
+            BOOST_THROW_EXCEPTION(std::runtime_error("XWaylandSurface::attach_wl_surface() called multiple times"));
 
         session = get_session(wl_surface->resource);
 
@@ -640,6 +637,28 @@ void mf::XWaylandSurface::move_resize(uint32_t detail)
     else
     {
         mir::log_warning("XWaylandSurface::move_resize() called with unknown detail %d", detail);
+    }
+}
+
+void mf::XWaylandSurface::WindowState::apply_change(
+    std::shared_ptr<XCBConnection> const& connection,
+    NetWmStateAction action,
+    xcb_atom_t net_wm_state)
+{
+    bool nil{false}, *prop_ptr = &nil;
+
+    if (net_wm_state == connection->net_wm_state_hidden)
+        prop_ptr = &minimized;
+    else if (net_wm_state == connection->net_wm_state_maximized_horz) // assume vert is also set
+        prop_ptr = &maximized;
+    else if (net_wm_state == connection->net_wm_state_fullscreen)
+        prop_ptr = &fullscreen;
+
+    switch (action)
+    {
+    case NetWmStateAction::REMOVE:  *prop_ptr = false;      break;
+    case NetWmStateAction::ADD:     *prop_ptr = true;       break;
+    case NetWmStateAction::TOGGLE:  *prop_ptr = !*prop_ptr; break;
     }
 }
 
