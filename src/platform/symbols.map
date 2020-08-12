@@ -200,5 +200,6 @@ MIR_PLATFORM_2.2 {
     mir::graphics::EGLExtensions::DebugKHR::DebugKHR*;
     mir::graphics::EGLExtensions::DebugKHR::extension_or_null_object*;
     mir::graphics::EGLExtensions::DebugKHR::maybe_debug_khr*;
+    mir::graphics::initialise_egl_logger*;
   };
 } MIRPLATFORM_2.1;
