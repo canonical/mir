@@ -129,12 +129,6 @@ auto property_handler(
             return connection->read_property(window, property, handler, on_error);
         });
 }
-
-// We don't use all the Mir types and we do try to parent menus
-bool needs_parent(MirWindowType mir_window_type)
-{
-    return mir_window_type == mir_window_type_gloss || mir_window_type == mir_window_type_menu;
-}
 }
 
 mf::XWaylandSurface::XWaylandSurface(
@@ -1069,6 +1063,15 @@ void mf::XWaylandSurface::set_parent(xcb_window_t xcb_window, std::lock_guard<st
                       connection->window_debug_string(xcb_window).c_str());
         }
     }
+}
+
+namespace
+{
+auto needs_parent(MirWindowType mir_window_type)
+{
+    // We don't use all the Mir types, but for these we should find a parent
+    return mir_window_type == mir_window_type_gloss || mir_window_type == mir_window_type_menu;
+}
 }
 
 // Workaround: Sometimes Mir expects a parent when the client has not set XCB_ATOM_WM_TRANSIENT_FOR.
