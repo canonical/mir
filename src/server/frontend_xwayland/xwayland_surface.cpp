@@ -1032,17 +1032,26 @@ void mf::XWaylandSurface::window_type(xcb_atom_t wm_type)
     }
 }
 
-void mf::XWaylandSurface::set_parent(xcb_window_t xcb_window, std::lock_guard<std::mutex> const&)
+void mf::XWaylandSurface::set_parent(xcb_window_t xcb_window, std::lock_guard<std::mutex> const& lock)
 {
     if (auto const xwayland_surface = xwm->get_wm_surface(xcb_window))
     {
-        std::lock_guard<std::mutex> lock{xwayland_surface.value()->mutex};
-        auto const scene_surface = xwayland_surface.value()->weak_scene_surface.lock();
-
-        if (scene_surface)
+        if (auto const optional_scene_surface = xwayland_surface.value()->scene_surface())
         {
-            pending_spec(lock).parent = scene_surface;
-            set_position(scene_surface, cached.top_left, pending_spec(lock));
+            if (auto const scene_surface = optional_scene_surface.value())
+            {
+                pending_spec(lock).parent = scene_surface;
+                set_position(scene_surface, cached.top_left, pending_spec(lock));
+            }
+            else
+            {
+                if (verbose_xwayland_logging_enabled())
+                {
+                    log_debug("%s can not be transient for %s as the latter has a null scene surface",
+                              connection->window_debug_string(window).c_str(),
+                              connection->window_debug_string(xcb_window).c_str());
+                }
+            }
         }
         else
         {
