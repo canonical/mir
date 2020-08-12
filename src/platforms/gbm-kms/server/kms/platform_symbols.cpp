@@ -24,6 +24,7 @@
 #include "display_helpers.h"
 #include "mir/options/program_option.h"
 #include "mir/options/option.h"
+#include "mir/options/configuration.h"
 #include "mir/udev/wrapper.h"
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
@@ -50,6 +51,52 @@ namespace
 char const* bypass_option_name{"bypass"};
 char const* host_socket{"host-socket"};
 
+std::shared_ptr<mir::logging::Logger> egl_logger;
+void egl_debug_logger(
+    EGLenum error,
+    char const* command,
+    EGLint message_type,
+    EGLLabelKHR thread_label,
+    EGLLabelKHR object_label,
+    char const* message)
+{
+    char const* const thread_id = thread_label ? static_cast<char const*>(thread_label) : "Unlabelled thread";
+    char const* const object_id = object_label ? static_cast<char const*>(object_label) : "Unlabelled object";
+
+    auto const severity =
+        [](EGLint egl_severity)
+        {
+            switch (egl_severity)
+            {
+            case EGL_DEBUG_MSG_INFO_KHR:
+                return mir::logging::Severity::debug;
+            case EGL_DEBUG_MSG_WARN_KHR:
+                return mir::logging::Severity::warning;
+            case EGL_DEBUG_MSG_ERROR_KHR:
+                return mir::logging::Severity::error;
+            case EGL_DEBUG_MSG_CRITICAL_KHR:
+                return mir::logging::Severity::critical;
+            default:
+                egl_logger->log(
+                    "EGL",
+                    mir::logging::Severity::error,
+                    "Unexpected EGL log level encountered: %i. This is a Mir programming error.",
+                    egl_severity);
+                // Shrug. Let's pick error?
+                return mir::logging::Severity::error;
+            }
+        }(message_type);
+
+    egl_logger->log(
+        "EGL",
+        severity,
+        "[%s] on [%s]: %s (%s): %s",
+        thread_id,
+        object_id,
+        command,
+        mg::egl_category().message(error).c_str(),
+        message);
+}
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
@@ -57,10 +104,37 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mg::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const& /*logger*/)
+    std::shared_ptr<mir::logging::Logger> const& logger)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     // ensure gbm-kms finds the gbm-kms mir-platform symbols
+
+    if (options->is_set(mir::options::debug_opt))
+    {
+        egl_logger = logger;
+        if (auto debug_khr = mg::EGLExtensions::DebugKHR::maybe_debug_khr())
+        {
+            EGLAttrib enable_all_logging[] = {
+                EGL_DEBUG_MSG_CRITICAL_KHR, EGL_TRUE,
+                EGL_DEBUG_MSG_ERROR_KHR, EGL_TRUE,
+                EGL_DEBUG_MSG_WARN_KHR, EGL_TRUE,
+                EGL_DEBUG_MSG_INFO_KHR, EGL_TRUE,
+                EGL_NONE
+            };
+            debug_khr->eglDebugMessageControlKHR(&egl_debug_logger, enable_all_logging);
+            logger->log(
+                "gbm-kms",
+                mir::logging::Severity::informational,
+                "EGL_KHR_debug logging enabled at maximum verbosity");
+        }
+        else
+        {
+            logger->log(
+                "gbm-kms",
+                mir::logging::Severity::informational,
+                "No EGL_KHR_debug support detected");
+        }
+    }
 
     auto bypass_option = mgg::BypassOption::allowed;
     if (!options->get<bool>(bypass_option_name))
