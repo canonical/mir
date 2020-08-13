@@ -149,6 +149,74 @@ TEST_F(X11PlatformTest, dispatches_input_events_to_sink)
     process_input_event();
 }
 
+TEST_F(X11PlatformTest, processes_multiple_key_presses)
+{
+    XEvent events[] =
+        {
+            mock_x11.fake_x11.keypress_event_return,
+            mock_x11.fake_x11.keypress_event_return,
+            mock_x11.fake_x11.keypress_event_return,
+        };
+
+    mock_x11.fake_x11.pending_events = std::distance(std::begin(events), std::end(events));
+    prepare_event_processing();
+
+    auto const* next_event = std::begin(events);
+
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(Invoke([&next_event](Display*, XEvent* xev)
+        {
+            *xev = *next_event++;
+            return 1;
+        }));
+
+    ON_CALL(mock_x11, XPeekEvent(_,_))
+        .WillByDefault(Invoke([&next_event](Display*, XEvent* xev)
+        {
+            *xev = *next_event;
+            return 1;
+        }));
+
+    EXPECT_CALL(mock_keyboard_sink, handle_input(_))
+        .Times(3);
+
+    process_input_event();
+}
+
+TEST_F(X11PlatformTest, ignores_key_repeats)
+{
+    XEvent events[] =
+        {
+            mock_x11.fake_x11.keypress_event_return,
+            mock_x11.fake_x11.key_release_event_return,
+            mock_x11.fake_x11.keypress_event_return,
+        };
+
+    mock_x11.fake_x11.pending_events = std::distance(std::begin(events), std::end(events));
+    prepare_event_processing();
+
+    auto const* next_event = std::begin(events);
+
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(Invoke([&next_event](Display*, XEvent* xev)
+        {
+            *xev = *next_event++;
+            return 1;
+        }));
+
+    ON_CALL(mock_x11, XPeekEvent(_,_))
+        .WillByDefault(Invoke([&next_event](Display*, XEvent* xev)
+        {
+            *xev = *next_event;
+            return 1;
+        }));
+
+    EXPECT_CALL(mock_keyboard_sink, handle_input(_))
+        .Times(1);
+
+    process_input_event();
+}
+
 TEST_F(X11PlatformTest, button_release_has_no_buttons_pressed)
 {
     prepare_event_processing();

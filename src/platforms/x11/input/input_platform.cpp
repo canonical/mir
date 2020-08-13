@@ -180,6 +180,22 @@ void mix::XInputPlatform::process_input_event()
                     char str[STRMAX];
                     KeySym keysym;
 
+                    // Ignore key repeats
+                    if (XEventsQueued(x11_connection.get(), QueuedAfterReading))
+                    {
+                        XEvent next_ev;
+                        XPeekEvent(x11_connection.get(), &next_ev);
+                        if (xev.type == KeyRelease &&
+                            next_ev.type == KeyPress &&
+                            xkev.time == next_ev.xkey.time &&
+                            xkev.keycode == next_ev.xkey.keycode)
+                        {
+                            // Looks like a key repeat, ignore
+                            XNextEvent(x11_connection.get(), &next_ev);
+                            break;
+                        }
+                    }
+
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                     mir::log_info("X11 key event :"
                                   " type=%s, serial=%u, send_event=%d, display=%p, window=%p,"

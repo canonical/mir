@@ -42,6 +42,7 @@ public:
     Screen screen;
     XVisualInfo visual_info;
     XEvent keypress_event_return = { 0 };
+    XEvent key_release_event_return = { 0 };
     XEvent button_release_event_return = { 0 };
     XEvent expose_event_return = { 0 };
     XEvent focus_in_event_return = { 0 };
@@ -75,6 +76,8 @@ public:
     MOCK_METHOD2(XDestroyWindow, int(Display*, Window));
     MOCK_METHOD1(XConnectionNumber, int(Display*));
     MOCK_METHOD2(XNextEvent, int(Display*, XEvent*));
+    MOCK_METHOD2(XPeekEvent, int(Display*, XEvent*));
+    MOCK_METHOD2(XEventsQueued, int(Display*, int));
     MOCK_METHOD5(XLookupString, int(XKeyEvent*, char*, int, KeySym*, XComposeStatus*));
     MOCK_METHOD1(XRefreshKeyboardMapping, int(XMappingEvent*));
     MOCK_METHOD1(XDefaultRootWindow, Window(Display*));

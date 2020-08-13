@@ -34,6 +34,7 @@ mtd::FakeX11Resources::FakeX11Resources()
       window{reinterpret_cast<Window>((long unsigned int)9876543210)}
 {
     std::memset(&keypress_event_return, 0, sizeof(XEvent));
+    std::memset(&key_release_event_return, 0, sizeof(XEvent));
     std::memset(&button_release_event_return, 0, sizeof(XEvent));
     std::memset(&expose_event_return, 0, sizeof(XEvent));
     std::memset(&focus_in_event_return, 0, sizeof(XEvent));
@@ -46,6 +47,7 @@ mtd::FakeX11Resources::FakeX11Resources()
     std::memset(&screen, 0, sizeof screen);
     visual_info.red_mask = 0xFF0000;
     keypress_event_return.type = KeyPress;
+    key_release_event_return.type = KeyRelease;
     button_release_event_return.type = ButtonRelease;
     button_release_event_return.xbutton.button = 0;
     expose_event_return.type = Expose;
@@ -87,6 +89,12 @@ mtd::MockX11::MockX11()
     .WillByDefault(Return(1));
 
     ON_CALL(*this, XPending(_))
+    .WillByDefault(InvokeWithoutArgs([this]()
+                                     {
+                                         return fake_x11.pending_events;
+                                     }));
+
+    ON_CALL(*this, XEventsQueued(_,_))
     .WillByDefault(InvokeWithoutArgs([this]()
                                      {
                                          return fake_x11.pending_events;
@@ -163,6 +171,16 @@ int XNextEvent(Display* display, XEvent* event_return)
     auto const result = global_mock->XNextEvent(display, event_return);
     if (result) --global_mock->fake_x11.pending_events;
     return result;
+}
+
+int XPeekEvent(Display* display, XEvent* event_return)
+{
+    return global_mock->XPeekEvent(display, event_return);
+}
+
+int XEventsQueued(Display* display, int mode)
+{
+    return global_mock->XEventsQueued(display, mode);
 }
 
 int XLookupString(XKeyEvent* event_struct, char* buffer_return, int bytes_buffer, KeySym* keysym_return, XComposeStatus* status_in_out)
