@@ -18,11 +18,16 @@
 
 #include "mir/graphics/display_report.h"
 #include "mir/options/option.h"
+#include "mir/options/configuration.h"
 #include "platform.h"
 #include "../X11_resources.h"
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
+#include "mir/log.h"
+#include "mir/graphics/egl_error.h"
+#include "mir/graphics/egl_extensions.h"
+#include "mir/graphics/egl_logger.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -42,11 +47,16 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mg::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const& /*logger*/)
+    std::shared_ptr<mir::logging::Logger> const& logger)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     if (!mx::X11Resources::instance.get_conn())
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 output"));
+
+    if (options->is_set(mir::options::debug_opt))
+    {
+        mg::initialise_egl_logger(logger);
+    }
 
     auto output_sizes = mgx::Platform::parse_output_sizes(options->get<std::string>(x11_displays_option_name));
 

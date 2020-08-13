@@ -193,3 +193,13 @@ MIRPLATFORM_2.1 {
     mir::renderer::software::alloc_buffer_with_content*;
  };
 } MIRPLATFORM_2.0;
+
+MIR_PLATFORM_2.2 {
+ global:
+  extern "C++" {
+    mir::graphics::EGLExtensions::DebugKHR::DebugKHR*;
+    mir::graphics::EGLExtensions::DebugKHR::extension_or_null_object*;
+    mir::graphics::EGLExtensions::DebugKHR::maybe_debug_khr*;
+    mir::graphics::initialise_egl_logger*;
+  };
+} MIRPLATFORM_2.1;

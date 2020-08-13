@@ -22,6 +22,7 @@
 #include "utils.h"
 #include "mir/graphics/platform.h"
 #include "mir/options/option.h"
+#include "mir/options/configuration.h"
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
@@ -30,6 +31,7 @@
 #include "one_shot_device_observer.h"
 #include "mir/raii.h"
 #include "kms-utils/drm_mode_resources.h"
+#include "mir/graphics/egl_logger.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/diagnostic_information.hpp>
@@ -83,13 +85,19 @@ EGLDeviceEXT find_device()
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
-    std::shared_ptr<mo::Option> const&,
+    std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mg::DisplayReport> const& display_report,
-    std::shared_ptr<mir::logging::Logger> const&)
+    std::shared_ptr<mir::logging::Logger> const& logger)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
+
+    if (options->is_set(mo::debug_opt))
+    {
+        mg::initialise_egl_logger(logger);
+    }
+
     return mir::make_module_ptr<mge::Platform>(
         std::make_shared<mge::RenderingPlatform>(),
         std::make_shared<mge::DisplayPlatform>(*console, find_device(), display_report));

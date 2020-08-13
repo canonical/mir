@@ -24,6 +24,7 @@
 #include "display_helpers.h"
 #include "mir/options/program_option.h"
 #include "mir/options/option.h"
+#include "mir/options/configuration.h"
 #include "mir/udev/wrapper.h"
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
@@ -33,6 +34,7 @@
 #include "mir/raii.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/gl_config.h"
+#include "mir/graphics/egl_logger.h"
 
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
@@ -57,10 +59,15 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mg::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const& /*logger*/)
+    std::shared_ptr<mir::logging::Logger> const& logger)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     // ensure gbm-kms finds the gbm-kms mir-platform symbols
+
+    if (options->is_set(mir::options::debug_opt))
+    {
+        mg::initialise_egl_logger(logger);
+    }
 
     auto bypass_option = mgg::BypassOption::allowed;
     if (!options->get<bool>(bypass_option_name))

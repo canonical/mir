@@ -23,6 +23,8 @@ set(
   egl_wayland_allocator.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/renderer/sw/pixel_source.h
   cpu_buffers.cpp
+  egl_logger.cpp
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/egl_logger.h
 )
 
 add_library(mirplatformgraphicscommon OBJECT
