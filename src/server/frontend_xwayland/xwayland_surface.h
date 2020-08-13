@@ -95,8 +95,6 @@ private:
         auto updated_from(MirWindowState state) const -> WindowState; ///< Does not change original
     };
 
-    struct InitialWlSurfaceData;
-
     /// Overrides from XWaylandSurfaceObserverSurface
     /// @{
     void scene_surface_focus_set(bool has_focus) override;
@@ -135,6 +133,13 @@ private:
     void request_scene_surface_state(MirWindowState new_state);
 
     auto latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds;
+
+    /// Appplies any mods in nullable_pending_spec to the scene_surface (if any)
+    void apply_any_mods_to_scene_surface();
+
+    void window_type(xcb_atom_t wm_type);
+    void set_parent(xcb_window_t xcb_window, std::lock_guard<std::mutex> const&);
+    void fix_parent_if_necessary(const std::lock_guard<std::mutex>& lock);
 
     XWaylandWM* const xwm;
     std::shared_ptr<XCBConnection> const connection;

@@ -426,6 +426,13 @@ void msh::AbstractShell::notify_focus_locked(
             if (find(begin(new_focus_tree), end(new_focus_tree), item) == end(new_focus_tree))
             {
                 item->set_focus_state(mir_window_focus_state_unfocused);
+
+                // When a menu loses focus we should close and unmap it
+                if (item->type() == mir_window_type_menu)
+                {
+                    item->request_client_surface_close();
+                    item->hide();
+                }
             }
         }
 
