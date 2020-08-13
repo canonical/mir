@@ -23,6 +23,8 @@
 
 #include <memory>
 #include <string>
+#include <mutex>
+#include <experimental/optional>
 
 struct wl_client;
 
@@ -44,6 +46,7 @@ public:
 
     auto client() const -> wl_client* { return wayland_client; }
     auto wm_fd() const -> Fd const& { return xwayland_process.x11_wm_client_fd; }
+    auto is_running() const -> bool;
 
     struct XWaylandProcess
     {
@@ -58,6 +61,9 @@ private:
 
     XWaylandProcess const xwayland_process;
     wl_client* const wayland_client{nullptr};
+
+    mutable std::mutex mutex;
+    mutable bool running;
 };
 }
 }

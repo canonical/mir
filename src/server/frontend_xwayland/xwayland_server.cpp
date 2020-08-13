@@ -209,7 +209,8 @@ mf::XWaylandServer::XWaylandServer(
     XWaylandSpawner const& spawner,
     std::string const& xwayland_path)
     : xwayland_process{fork_xwayland_process(spawner, xwayland_path)},
-      wayland_client{connect_xwayland_wl_client(wayland_connector, xwayland_process.wayland_server_fd)}
+      wayland_client{connect_xwayland_wl_client(wayland_connector, xwayland_process.wayland_server_fd)},
+      running{true}
 {
 }
 
@@ -221,10 +222,32 @@ mf::XWaylandServer::~XWaylandServer()
     if (kill(xwayland_process.pid, SIGTERM) == 0)
     {
         std::this_thread::sleep_for(100ms);// After 100ms...
-        if (kill(xwayland_process.pid, 0) == 0)    // ...if Xwayland is still running...
+        if (is_running())
         {
             mir::log_info("Xwayland didn't close, killing it");
             kill(xwayland_process.pid, SIGKILL);     // ...then kill it!
         }
     }
+
+    // Calling is_running() one more time will ensure the process is reaped
+    if (is_running())
+    {
+        log_warning("Failed to kill Xwayland process with PID %d", xwayland_process.pid);
+    }
+}
+
+auto mf::XWaylandServer::is_running() const -> bool
+{
+    std::lock_guard<std::mutex> lock{mutex};
+
+    if (running)
+    {
+        int status; // Special waitpid() status, not the process exit status
+        if (waitpid(xwayland_process.pid, &status, WNOHANG) != 0)
+        {
+            running = false;
+        }
+    }
+
+    return running;
 }
