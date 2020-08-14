@@ -223,11 +223,22 @@ Depends: ${misc:Depends},
          glmark2-es2-wayland,
          mesa-utils-extra,
          dmz-cursor-theme,
-Description: Display Server for Ubuntu - stress tests and other test tools
+Description: Display Server for Ubuntu - test tools
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
- Contains a tool for stress testing the Mir display server
+ Contains tools for smoke and performance testing the Mir display server
+
+Package: mir-wlcs-integration
+Architecture: linux-any
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display Server for Ubuntu - wlcs integration
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains libraries for integration with the wlcs test suite
 
 Package: libmircore1
 Section: libs
