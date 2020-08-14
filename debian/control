@@ -218,12 +218,10 @@ Architecture: linux-any
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-Recommends: mir-demos,
-            xmir,
-            xwayland,
-            glmark2-es2,
-            glmark2-es2-wayland,
-            mesa-utils-extra,
+         xwayland,
+         glmark2-es2,
+         glmark2-es2-wayland,
+         mesa-utils-extra,
 Description: Display Server for Ubuntu - stress tests and other test tools
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
