@@ -1,11 +1,6 @@
-MIRPLATFORM_2.0 {
+MIRPLATFORM_2.1 {
  global:
   extern "C++" {
-# The following symbols come from running a script over the generated docs. Vis:
-# ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirplatform public" | sed "s/mirplatform public: /    /" | sort  
-#
-# The above is not *quite* true, as we've changed the way we generate the docs, but is worth preserving
-# as you can *almost* re-create it with some tweaks to the doc generation.
     mir::graphics::AtomicFrame::increment*;
     mir::graphics::AtomicFrame::load*;
     mir::graphics::AtomicFrame::store*;
@@ -20,9 +15,21 @@ MIRPLATFORM_2.0 {
     mir::graphics::DisplayConfigurationPolicy::DisplayConfigurationPolicy*;
     mir::graphics::DisplayConfigurationPolicy::apply_to*;
     mir::graphics::DisplayConfigurationPolicy::operator*;
+    mir::graphics::EGLContextStore::?EGLContextStore*;
+    mir::graphics::EGLContextStore::EGLContextStore*;
+    mir::graphics::EGLContextStore::EGLContextStore*;
+    mir::graphics::EGLContextStore::operator*;
+    mir::graphics::EGLExtensions::DebugKHR::DebugKHR*;
+    mir::graphics::EGLExtensions::DebugKHR::extension_or_null_object*;
+    mir::graphics::EGLExtensions::DebugKHR::maybe_debug_khr*;
+    mir::graphics::EGLExtensions::EGLExtensions*;
     mir::graphics::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions*;
     mir::graphics::EGLExtensions::PlatformBaseEXT*;
     mir::graphics::EGLExtensions::WaylandExtensions::WaylandExtensions*;
+    mir::graphics::EGLSurfaceStore::?EGLSurfaceStore*;
+    mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
+    mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
+    mir::graphics::EGLSurfaceStore::operator*;
     mir::graphics::EventHandlerRegister::?EventHandlerRegister*;
     mir::graphics::EventHandlerRegister::EventHandlerRegister*;
     mir::graphics::EventHandlerRegister::operator*;
@@ -31,53 +38,30 @@ MIRPLATFORM_2.0 {
     mir::graphics::EventHandlerRegister::unregister_fd_handler*;
     mir::graphics::GammaCurves::GammaCurves*;
     mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
+    mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
+    mir::graphics::OverlappingOutputGroup::for_each_output*;
+    mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;
+    mir::graphics::OverlappingOutputGrouping::for_each_group*;
     mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput*;
     mir::graphics::UserDisplayConfigurationOutput::extents*;
+    mir::graphics::alpha_channel_depth*;
+    mir::graphics::blue_channel_depth*;
+    mir::graphics::contains_alpha*;
+    mir::graphics::egl_category*;
     mir::graphics::gl::Program::?Program*;
     mir::graphics::gl::ProgramFactory::?ProgramFactory*;
     mir::graphics::gl::ProgramFactory::compile_fragment_shader*;
-    mir::graphics::gl::Texture::Texture*;
     mir::graphics::gl::Texture::?Texture*;
+    mir::graphics::gl::Texture::Texture*;
     mir::graphics::gl_category*;
     mir::graphics::gl_error*;
+    mir::graphics::green_channel_depth*;
+    mir::graphics::initialise_egl_logger*;
     mir::graphics::operator*;
+    mir::graphics::red_channel_depth*;
+    mir::graphics::tessellate_renderable_into_rectangle*;
     mir::graphics::wayland::bind_display*;
     mir::graphics::wayland::buffer_from_resource*;
-    mir::options::Option::?Option*;
-    mir::options::Option::Option*;
-    mir::options::Option::is_set*;
-    mir::options::Option::operator*;
-    mir::options::ProgramOption::ProgramOption*;
-    mir::options::ProgramOption::get*;
-    mir::options::ProgramOption::is_set*;
-    mir::options::ProgramOption::parse_arguments*;
-    mir::options::ProgramOption::parse_environment*;
-    mir::options::ProgramOption::parse_file*;
-    mir::options::ProgramOption::unparsed_command_line*;
-    typeinfo?for?mir::AbnormalExit;
-    typeinfo?for?mir::graphics::Buffer;
-    typeinfo?for?mir::graphics::BufferBasic;
-    typeinfo?for?mir::graphics::DisplayConfiguration;
-    typeinfo?for?mir::graphics::gl::Program;
-    typeinfo?for?mir::graphics::gl::ProgramFactory;
-    typeinfo?for?mir::graphics::gl::Texture;
-    typeinfo?for?mir::options::Configuration;
-    typeinfo?for?mir::options::DefaultConfiguration;
-    typeinfo?for?mir::options::Option;
-    typeinfo?for?mir::options::ProgramOption;
-    vtable?for?mir::AbnormalExit;
-    vtable?for?mir::graphics::Buffer;
-    vtable?for?mir::graphics::BufferBasic;
-    vtable?for?mir::graphics::DisplayConfiguration;
-    vtable?for?mir::graphics::gl::Program;
-    vtable?for?mir::graphics::gl::ProgramFactory;
-    vtable?for?mir::graphics::gl::Texture;
-    vtable?for?mir::options::Configuration;
-    vtable?for?mir::options::DefaultConfiguration;
-    vtable?for?mir::options::Option;
-    vtable?for?mir::options::ProgramOption;
-
-# Why are server-only options here in libmirplatform?...
     mir::options::Configuration::?Configuration*;
     mir::options::Configuration::Configuration*;
     mir::options::Configuration::operator*;
@@ -89,7 +73,18 @@ MIRPLATFORM_2.0 {
     mir::options::DefaultConfiguration::parse_config_file*;
     mir::options::DefaultConfiguration::parse_environment*;
     mir::options::DefaultConfiguration::the_options*;
+    mir::options::Option::?Option*;
+    mir::options::Option::Option*;
     mir::options::Option::get*;
+    mir::options::Option::is_set*;
+    mir::options::Option::operator*;
+    mir::options::ProgramOption::ProgramOption*;
+    mir::options::ProgramOption::get*;
+    mir::options::ProgramOption::is_set*;
+    mir::options::ProgramOption::parse_arguments*;
+    mir::options::ProgramOption::parse_environment*;
+    mir::options::ProgramOption::parse_file*;
+    mir::options::ProgramOption::unparsed_command_line*;
     mir::options::arw_server_socket_opt*;
     mir::options::auto_console;
     mir::options::composite_delay_opt*;
@@ -134,30 +129,8 @@ MIRPLATFORM_2.0 {
     mir::options::wayland_extensions_opt;
     mir::options::wayland_extensions_value;
     mir::options::x11_display_opt;
-    
-    # These are "private" (declared in src/include) but are used by libmirserver.
-    # They are also likely to be needed by any 3rd party "graphics platform" 
-    # implementation. They should probably become public at some stage.
-    mir::graphics::EGLContextStore::?EGLContextStore*;
-    mir::graphics::EGLContextStore::EGLContextStore*;
-    mir::graphics::EGLContextStore::EGLContextStore*;
-    mir::graphics::EGLContextStore::operator*;
-    mir::graphics::EGLExtensions::EGLExtensions*;
-    mir::graphics::EGLSurfaceStore::?EGLSurfaceStore*;
-    mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
-    mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
-    mir::graphics::EGLSurfaceStore::operator*;
-    mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
-    mir::graphics::OverlappingOutputGroup::for_each_output*;
-    mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;
-    mir::graphics::OverlappingOutputGrouping::for_each_group*;
-    mir::graphics::alpha_channel_depth*;
-    mir::graphics::blue_channel_depth*;
-    mir::graphics::contains_alpha*;
-    mir::graphics::egl_category*;
-    mir::graphics::green_channel_depth*;
-    mir::graphics::red_channel_depth*;
-    mir::graphics::tessellate_renderable_into_rectangle*;
+    mir::renderer::software::alloc_buffer_with_content*;
+    mir::renderer::software::as_read_mappable_buffer*;
     mir::udev::Context::?Context*;
     mir::udev::Context::Context*;
     mir::udev::Context::ctx*;
@@ -182,24 +155,28 @@ MIRPLATFORM_2.0 {
     mir::udev::Monitor::process_event*;
     mir::udev::Monitor::process_events*;
     mir::udev::operator*;
+    typeinfo?for?mir::AbnormalExit;
+    typeinfo?for?mir::graphics::Buffer;
+    typeinfo?for?mir::graphics::BufferBasic;
+    typeinfo?for?mir::graphics::DisplayConfiguration;
+    typeinfo?for?mir::graphics::gl::Program;
+    typeinfo?for?mir::graphics::gl::ProgramFactory;
+    typeinfo?for?mir::graphics::gl::Texture;
+    typeinfo?for?mir::options::Configuration;
+    typeinfo?for?mir::options::DefaultConfiguration;
+    typeinfo?for?mir::options::Option;
+    typeinfo?for?mir::options::ProgramOption;
+    vtable?for?mir::AbnormalExit;
+    vtable?for?mir::graphics::Buffer;
+    vtable?for?mir::graphics::BufferBasic;
+    vtable?for?mir::graphics::DisplayConfiguration;
+    vtable?for?mir::graphics::gl::Program;
+    vtable?for?mir::graphics::gl::ProgramFactory;
+    vtable?for?mir::graphics::gl::Texture;
+    vtable?for?mir::options::Configuration;
+    vtable?for?mir::options::DefaultConfiguration;
+    vtable?for?mir::options::Option;
+    vtable?for?mir::options::ProgramOption;
  };
  local: *;
 };
-
-MIRPLATFORM_2.1 {
- global:
-  extern "C++" {
-    mir::renderer::software::as_read_mappable_buffer*;
-    mir::renderer::software::alloc_buffer_with_content*;
- };
-} MIRPLATFORM_2.0;
-
-MIR_PLATFORM_2.2 {
- global:
-  extern "C++" {
-    mir::graphics::EGLExtensions::DebugKHR::DebugKHR*;
-    mir::graphics::EGLExtensions::DebugKHR::extension_or_null_object*;
-    mir::graphics::EGLExtensions::DebugKHR::maybe_debug_khr*;
-    mir::graphics::initialise_egl_logger*;
-  };
-} MIRPLATFORM_2.1;
