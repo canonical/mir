@@ -17,6 +17,18 @@
 #ifndef MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H
 #define MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H
 
-#include "relative-pointer-unstable-v1_wrapper.h"
+#include <memory>
+
+struct wl_display;
+
+namespace mir
+{
+namespace shell { class Shell; }
+
+namespace frontend
+{
+auto create_relative_pointer_unstable_v1(wl_display* display, std::shared_ptr<shell::Shell> shell) -> std::shared_ptr<void>;
+}
+}
 
 #endif  // MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H

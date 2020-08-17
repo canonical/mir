@@ -373,16 +373,26 @@ global:
     non-virtual?thunk?to?mir::wayland::ConfinedPointerV1::*;
     typeinfo?for?mir::wayland::ConfinedPointerV1;
     vtable?for?mir::wayland::ConfinedPointerV1;
-    typeinfo?for?mir::wayland::ConfinedPointerV1::Global;
-    vtable?for?mir::wayland::ConfinedPointerV1::Global;
     virtual?thunk?to?mir::wayland::ConfinedPointerV1::?ConfinedPointerV1*;
 
     mir::wayland::LockedPointerV1::*;
     non-virtual?thunk?to?mir::wayland::LockedPointerV1::*;
     typeinfo?for?mir::wayland::LockedPointerV1;
     vtable?for?mir::wayland::LockedPointerV1;
-    typeinfo?for?mir::wayland::LockedPointerV1::Global;
-    vtable?for?mir::wayland::LockedPointerV1::Global;
     virtual?thunk?to?mir::wayland::LockedPointerV1::?LockedPointerV1*;
+
+    mir::wayland::RelativePointerManagerV1::*;
+    non-virtual?thunk?to?mir::wayland::RelativePointerManagerV1::*;
+    typeinfo?for?mir::wayland::RelativePointerManagerV1;
+    vtable?for?mir::wayland::RelativePointerManagerV1;
+    typeinfo?for?mir::wayland::RelativePointerManagerV1::Global;
+    vtable?for?mir::wayland::RelativePointerManagerV1::Global;
+    virtual?thunk?to?mir::wayland::RelativePointerManagerV1::?RelativePointerManagerV1*;  
+
+    mir::wayland::RelativePointerV1::*;
+    non-virtual?thunk?to?mir::wayland::RelativePointerV1::*;
+    typeinfo?for?mir::wayland::RelativePointerV1;
+    vtable?for?mir::wayland::RelativePointerV1;
+    virtual?thunk?to?mir::wayland::RelativePointerV1::?RelativePointerV1*;
   };
 } MIRWAYLAND_2.0;

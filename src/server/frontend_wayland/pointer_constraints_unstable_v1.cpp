@@ -101,7 +101,7 @@ mir::frontend::PointerConstraintsV1::Global::Global(wl_display* display, std::sh
 void mir::frontend::PointerConstraintsV1::Global::bind(wl_resource* new_zwp_pointer_constraints_v1)
 {
     puts(__PRETTY_FUNCTION__ );
-    new PointerConstraintsV1{new_zwp_pointer_constraints_v1, std::move(shell)};
+    new PointerConstraintsV1{new_zwp_pointer_constraints_v1, shell};
 }
 
 mir::frontend::PointerConstraintsV1::PointerConstraintsV1(struct wl_resource* resource, std::shared_ptr<shell::Shell> shell) :
