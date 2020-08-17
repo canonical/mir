@@ -231,15 +231,20 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
         }
     }
 
-    if (modifications.confine_pointer.is_set() && focused_surface() == surface)
+    if (modifications.confine_pointer.is_set())
     {
-        if (surface->confine_pointer_state() == mir_pointer_confined_to_window)
+        surface->set_confine_pointer_state(modifications.confine_pointer.value());
+
+        if (focused_surface() == surface)
         {
-            seat->set_confinement_regions({surface->input_bounds()});
-        }
-        else
-        {
-            seat->reset_confinement_regions();
+            if (surface->confine_pointer_state() == mir_pointer_confined_to_window)
+            {
+                seat->set_confinement_regions({surface->input_bounds()});
+            }
+            else
+            {
+                seat->reset_confinement_regions();
+            }
         }
     }
 }
