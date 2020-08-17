@@ -30,6 +30,8 @@
 #include "xdg-output-unstable-v1_wrapper.h"
 #include "foreign_toplevel_manager_v1.h"
 #include "wlr-foreign-toplevel-management-unstable-v1_wrapper.h"
+#include "pointer-constraints-unstable-v1_wrapper.h"
+#include "pointer_constraints_unstable_v1.h"
 
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
@@ -82,6 +84,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                     ctx.wayland_executor,
                     ctx.surface_stack);
             }
+    },
+    {
+        mw::PointerConstraintsV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
+            { return mf::create_pointer_constraints_unstable_v1(ctx.display, ctx.shell); }
     },
 };
 
@@ -169,7 +175,8 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
     return std::vector<std::string>{
         mw::Shell::interface_name,
         mw::XdgWmBase::interface_name,
-        mw::XdgShellV6::interface_name};
+        mw::XdgShellV6::interface_name,
+        mw::PointerConstraintsV1::interface_name};
 }
 
 auto mf::get_supported_extensions() -> std::vector<std::string>
