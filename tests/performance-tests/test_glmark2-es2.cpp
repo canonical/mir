@@ -94,8 +94,6 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
         RecordProperty("score", score);
         return score;
     }
-
-    static const int minimal_framerate = 100;
 };
 
 struct GLMark2Xwayland : AbstractGLMark2Test
@@ -132,21 +130,21 @@ struct GLMark2Wayland : AbstractGLMark2Test
 
 TEST_F(GLMark2Wayland, fullscreen)
 {
-    EXPECT_THAT(run_glmark2("--fullscreen"), Ge(minimal_framerate));
+    EXPECT_GT(run_glmark2("--fullscreen"), 0);
 }
 
 TEST_F(GLMark2Wayland, windowed)
 {
-    EXPECT_THAT(run_glmark2(""), Ge(minimal_framerate));
+    EXPECT_GT(run_glmark2(""), 0);
 }
 
 TEST_F(GLMark2Xwayland, fullscreen)
 {
-    EXPECT_THAT(run_glmark2("--fullscreen"), Ge(minimal_framerate));
+    EXPECT_GT(run_glmark2("--fullscreen"), 0);
 }
 
 TEST_F(GLMark2Xwayland, windowed)
 {
-    EXPECT_THAT(run_glmark2(""), Ge(minimal_framerate));
+    EXPECT_GT(run_glmark2(""), 0);
 }
 }
