@@ -53,8 +53,6 @@ public:
 
     ~WlPointer();
 
-    void handle_event(MirPointerEvent const* event, WlSurface* surface);
-
     /// Handles finding the correct subsurface and position on that subsurface if needed
     /// Giving it an already transformed surface and position is also fine
     void enter(
