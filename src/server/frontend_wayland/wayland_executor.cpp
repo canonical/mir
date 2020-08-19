@@ -125,7 +125,7 @@ public:
 
         on_wayland_thread = false;
         state = ExecutionState::Stopped;
-        workqueue.empty();
+        workqueue.clear();
 
         return lock;
     }
