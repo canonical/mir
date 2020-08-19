@@ -1077,7 +1077,7 @@ TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)
 
     //Make sure another thread can also change state
     auto const async_state_changer = [&]{
-        std::async(std::launch::async, state_changer);
+        std::async(std::launch::async, state_changer).wait();
     };
 
     EXPECT_CALL(mock_callback, call()).Times(3)

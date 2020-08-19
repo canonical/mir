@@ -93,7 +93,7 @@ public:
 
         if (ioctl(drm_fd, DRM_IOCTL_MODE_DESTROY_DUMB, &params) != 0)
         {
-            if (!std::uncaught_exception())
+            if (!std::uncaught_exceptions())
             {
                 BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to destroy dumb buffer"}));
             }

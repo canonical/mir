@@ -47,7 +47,7 @@ public:
 
     ~RevertIfUnwinding()
     {
-        if (std::uncaught_exception())
+        if (std::uncaught_exceptions())
             unwind();
     }
 
