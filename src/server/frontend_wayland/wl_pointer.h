@@ -36,6 +36,7 @@ struct MirPointerEvent;
 
 namespace mir
 {
+namespace wayland { class RelativePointerV1; }
 
 class Executor;
 
@@ -53,6 +54,8 @@ public:
 
     ~WlPointer();
 
+    void set_relative_pointer(wayland::RelativePointerV1* relative_ptr);
+
     /// Handles finding the correct subsurface and position on that subsurface if needed
     /// Giving it an already transformed surface and position is also fine
     void enter(
@@ -61,11 +64,12 @@ public:
         std::pair<float, float> const& root_position);
     void leave();
     void button(std::chrono::milliseconds const& ms, uint32_t button, bool pressed);
-    void motion(
+    void position(
         std::chrono::milliseconds const& ms,
         WlSurface* root_surface,
         std::pair<float, float> const& root_position);
     void axis(std::chrono::milliseconds const& ms, std::pair<float, float> const& scroll);
+    void motion(const std::chrono::milliseconds& ms, const mir::geometry::Displacement& movement);
     void frame();
 
     struct Cursor;
@@ -94,6 +98,7 @@ private:
 
     std::set<uint32_t> pressed_buttons;
     std::unique_ptr<Cursor> cursor;
+    wayland::Weak<wayland::RelativePointerV1> relative_pointer;
 };
 
 }

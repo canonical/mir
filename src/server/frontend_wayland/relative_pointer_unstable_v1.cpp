@@ -16,8 +16,8 @@
 
 #include "relative_pointer_unstable_v1.h"
 #include "relative-pointer-unstable-v1_wrapper.h"
+#include "wl_pointer.h"
 
-#include "wl_surface.h"
 #include <mir/scene/surface.h>
 #include <mir/shell/shell.h>
 #include <mir/shell/surface_specification.h>
@@ -52,9 +52,10 @@ private:
 class RelativePointerV1 : public wayland::RelativePointerV1
 {
 public:
-    RelativePointerV1(wl_resource* id, wl_resource* pointer);
+    RelativePointerV1(wl_resource* id, WlPointer* pointer);
 
 private:
+    wayland::Weak<WlPointer> const pointer;
     void destroy() override;
 };
 }
@@ -95,13 +96,15 @@ void mir::frontend::RelativePointerManagerV1::destroy()
 void mir::frontend::RelativePointerManagerV1::get_relative_pointer(wl_resource* id, wl_resource* pointer)
 {
     puts(__PRETTY_FUNCTION__ );
-    new RelativePointerV1{id, pointer};
+    new RelativePointerV1{id, dynamic_cast<WlPointer*>(wayland::Pointer::from(pointer))};
 }
 
-mir::frontend::RelativePointerV1::RelativePointerV1(wl_resource* id, wl_resource* /*pointer*/) :
-    wayland::RelativePointerV1{id, Version<1>{}}
+mir::frontend::RelativePointerV1::RelativePointerV1(wl_resource* id, WlPointer* pointer) :
+    wayland::RelativePointerV1{id, Version<1>{}},
+    pointer{pointer}
 {
     puts(__PRETTY_FUNCTION__ );
+    pointer->set_relative_pointer(this);
 }
 
 
