@@ -29,12 +29,13 @@ namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace mgmh = mir::graphics::gbm::helpers;
 
-mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config)
+mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config, std::shared_ptr<EGLExtensions::DebugKHR> debug)
     : depth_buffer_bits{gl_config.depth_buffer_bits()},
       stencil_buffer_bits{gl_config.stencil_buffer_bits()},
       egl_display{EGL_NO_DISPLAY}, egl_config{0},
       egl_context{EGL_NO_CONTEXT}, egl_surface{EGL_NO_SURFACE},
-      should_terminate_egl{false}
+      should_terminate_egl{false},
+      debug{std::move(debug)}
 {
 }
 
@@ -42,8 +43,9 @@ mgmh::EGLHelper::EGLHelper(
     GLConfig const& gl_config,
     GBMHelper const& gbm,
     gbm_surface* surface,
-    EGLContext shared_context)
-    : EGLHelper(gl_config)
+    EGLContext shared_context,
+    std::shared_ptr<EGLExtensions::DebugKHR> debug)
+    : EGLHelper(gl_config, std::move(debug))
 {
     setup(gbm, surface, shared_context, false);
 }
@@ -55,7 +57,8 @@ mgmh::EGLHelper::EGLHelper(EGLHelper&& from)
       egl_config{from.egl_config},
       egl_context{from.egl_context},
       egl_surface{from.egl_surface},
-      should_terminate_egl{from.should_terminate_egl}
+      should_terminate_egl{from.should_terminate_egl},
+      debug{from.debug}
 {
     from.should_terminate_egl = false;
     from.egl_display = EGL_NO_DISPLAY;
@@ -67,8 +70,9 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 {
     eglBindAPI(EGL_OPENGL_ES_API);
 
-    static const EGLint context_attr[] = {
+    const EGLint context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_CONTEXT_OPENGL_DEBUG, static_cast<bool>(debug) ? EGL_TRUE : EGL_FALSE,
         EGL_NONE
     };
 
@@ -86,6 +90,7 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
 
     static const EGLint context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_CONTEXT_OPENGL_DEBUG, static_cast<bool>(debug) ? EGL_TRUE : EGL_FALSE,
         EGL_NONE
     };
 
@@ -107,6 +112,7 @@ void mgmh::EGLHelper::setup(
 
     static const EGLint context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_CONTEXT_OPENGL_DEBUG, static_cast<bool>(debug) ? EGL_TRUE : EGL_FALSE,
         EGL_NONE
     };
 
@@ -160,6 +166,38 @@ bool mgmh::EGLHelper::release_current() const
 {
     auto ret = eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     return (ret == EGL_TRUE);
+}
+
+void mgmh::EGLHelper::set_debug_label(char const* label)
+{
+    auto const label_khr = static_cast<EGLLabelKHR>(const_cast<char*>(label));
+    if (debug)
+    {
+        if (egl_display != EGL_NO_DISPLAY)
+        {
+            debug->eglLabelObjectKHR(
+                egl_display,
+                EGL_OBJECT_DISPLAY_KHR,
+                egl_display,
+                label_khr);
+        }
+        if (egl_context != EGL_NO_CONTEXT)
+        {
+            debug->eglLabelObjectKHR(
+                egl_display,
+                EGL_OBJECT_CONTEXT_KHR,
+                egl_context,
+                label_khr);
+        }
+        if (egl_surface != EGL_NO_SURFACE)
+        {
+            debug->eglLabelObjectKHR(
+                egl_display,
+                EGL_OBJECT_SURFACE_KHR,
+                egl_surface,
+                label_khr);
+        }
+    }
 }
 
 namespace

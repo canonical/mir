@@ -121,7 +121,8 @@ public:
                mir::report::null_display_report(),
                std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
-               mgg::BypassOption::allowed);
+               mgg::BypassOption::allowed,
+               std::shared_ptr<mg::EGLExtensions::DebugKHR>{});
     }
 
     std::shared_ptr<mgg::Display> create_display(
@@ -133,6 +134,7 @@ public:
             platform->vt,
             platform->bypass_option(),
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+            std::shared_ptr<mg::EGLExtensions::DebugKHR>{},
             std::make_shared<mtd::StubGLConfig>(),
             null_report);
     }
@@ -636,6 +638,7 @@ TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_
                         platform->vt,
                         platform->bypass_option(),
                         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+                        std::shared_ptr<mg::EGLExtensions::DebugKHR>{},
                         std::make_shared<mtd::StubGLConfig>(),
                         mock_report);
 }
@@ -847,6 +850,7 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         platform->vt,
         platform->bypass_option(),
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+        std::shared_ptr<mg::EGLExtensions::DebugKHR>{},
         mir::test::fake_shared(mock_gl_config),
         null_report};
 }
@@ -884,6 +888,7 @@ TEST_F(MesaDisplayTest, DISABLED_supports_as_low_as_15bit_colour)
         platform->vt,
         platform->bypass_option(),
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+        {},
         mir::test::fake_shared(stub_gl_config),
         null_report};
 }
