@@ -380,7 +380,7 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     {
         bool const is_mapped = scene_surface->visible();
         bool const should_be_mapped = static_cast<bool>(surface->buffer_size());
-        if (!is_mapped && should_be_mapped)
+        if (!is_mapped && should_be_mapped && scene_surface->state() == mir_window_state_hidden)
         {
             spec().state = mir_window_state_restored;
         }
