@@ -232,8 +232,8 @@ Description: Display Server for Ubuntu - test tools
 Package: mir-wlcs-integration
 Architecture: linux-any
 Pre-Depends: ${misc:Pre-Depends}
-Breaks: mir-test-tools (<< 2.1)
-Replaces: mir-test-tools (<< 2.1)
+Breaks: mir-test-tools (<< 2.0.0.0+dev148~)
+Replaces: mir-test-tools (<< 2.0.0.0+dev148~)
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: Display Server for Ubuntu - wlcs integration
