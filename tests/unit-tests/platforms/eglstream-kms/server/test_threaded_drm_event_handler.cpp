@@ -36,11 +36,11 @@ class ThreadedDRMEventHandlerTest : public testing::Test
 private:
     struct EventDetails
     {
-        unsigned int frame_no;
-        unsigned int tv_sec;
-        unsigned int tv_usec;
-        uint32_t crtc_id;
-        void const* userdata;
+        unsigned int frame_no = {};
+        unsigned int tv_sec = {};
+        unsigned int tv_usec = {};
+        uint32_t crtc_id = {};
+        void const* userdata = {};
     };
 
 public:

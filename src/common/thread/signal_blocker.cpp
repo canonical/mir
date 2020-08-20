@@ -38,7 +38,7 @@ mir::SignalBlocker::~SignalBlocker() noexcept(false)
 {
     if (auto error = pthread_sigmask(SIG_SETMASK, &previous_set, nullptr))
     {
-        if (!std::uncaught_exception())
+        if (!std::uncaught_exceptions())
         {
             BOOST_THROW_EXCEPTION((std::system_error{error,
                                                      std::system_category(),

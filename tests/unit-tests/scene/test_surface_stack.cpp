@@ -553,7 +553,7 @@ TEST_F(SurfaceStack, scene_observer_can_async_query_scene_within_surface_exists_
     };
 
     auto const async_scene_query = [&]{
-        std::async(std::launch::async, scene_query);
+        std::async(std::launch::async, scene_query).wait();
     };
 
     EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1)
@@ -815,7 +815,7 @@ TEST_F(SurfaceStack, observer_can_trigger_state_change_within_notification)
 
     //Make sure another thread can also change state
     auto const async_state_changer = [&]{
-        std::async(std::launch::async, state_changer);
+        std::async(std::launch::async, state_changer).wait();
     };
 
     EXPECT_CALL(observer, surface_added(stub_surface1)).Times(3)
