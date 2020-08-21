@@ -331,13 +331,11 @@ void mf::WlPointer::release()
 
 void mir::frontend::WlPointer::set_relative_pointer(mir::wayland::RelativePointerV1* relative_ptr)
 {
-    puts(__PRETTY_FUNCTION__);
     relative_pointer = make_weak(relative_ptr);
 }
 
 void mir::frontend::WlPointer::motion(const std::chrono::milliseconds& ms, const mir::geometry::Displacement& movement)
 {
-    puts(__PRETTY_FUNCTION__);
     if (relative_pointer)
     {
         relative_pointer.value().send_relative_motion_event(ms.count(), ms.count(),

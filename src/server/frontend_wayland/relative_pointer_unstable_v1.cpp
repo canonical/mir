@@ -71,12 +71,10 @@ mir::frontend::RelativePointerManagerV1::Global::Global(wl_display* display, std
     wayland::RelativePointerManagerV1::Global::Global{display, Version<1>{}},
     shell{std::move(shell)}
 {
-    puts(__PRETTY_FUNCTION__ );
 }
 
 void mir::frontend::RelativePointerManagerV1::Global::bind(wl_resource* new_zwp_relative_pointer_manager_v1)
 {
-    puts(__PRETTY_FUNCTION__ );
     new RelativePointerManagerV1{new_zwp_relative_pointer_manager_v1, shell};
 }
 
@@ -84,18 +82,15 @@ mir::frontend::RelativePointerManagerV1::RelativePointerManagerV1(wl_resource* r
     wayland::RelativePointerManagerV1{resource, Version<1>{}},
     shell{std::move(shell)}
 {
-    puts(__PRETTY_FUNCTION__ );
 }
 
 void mir::frontend::RelativePointerManagerV1::destroy()
 {
-    puts(__PRETTY_FUNCTION__ );
     destroy_wayland_object();
 }
 
 void mir::frontend::RelativePointerManagerV1::get_relative_pointer(wl_resource* id, wl_resource* pointer)
 {
-    puts(__PRETTY_FUNCTION__ );
     new RelativePointerV1{id, dynamic_cast<WlPointer*>(wayland::Pointer::from(pointer))};
 }
 
@@ -103,13 +98,11 @@ mir::frontend::RelativePointerV1::RelativePointerV1(wl_resource* id, WlPointer* 
     wayland::RelativePointerV1{id, Version<1>{}},
     pointer{pointer}
 {
-    puts(__PRETTY_FUNCTION__ );
     pointer->set_relative_pointer(this);
 }
 
 
 void mir::frontend::RelativePointerV1::destroy()
 {
-    puts(__PRETTY_FUNCTION__ );
     destroy_wayland_object();
 }
