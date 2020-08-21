@@ -173,7 +173,7 @@ mir::frontend::LockedPointerV1::LockedPointerV1(
     puts(__PRETTY_FUNCTION__);
 
     shell::SurfaceSpecification mods;
-    mods.confine_pointer = MirPointerConfinementState::mir_pointer_confined_to_window;
+    mods.confine_pointer = MirPointerConfinementState::mir_pointer_locked;
 
     if (region)
     {

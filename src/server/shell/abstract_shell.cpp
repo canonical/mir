@@ -237,13 +237,23 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 
         if (focused_surface() == surface)
         {
-            if (surface->confine_pointer_state() == mir_pointer_confined_to_window)
+            switch (surface->confine_pointer_state())
             {
-                seat->set_confinement_regions({surface->input_bounds()});
+            case mir_pointer_locked:
+            {
+                auto rectangle = surface->input_bounds();
+                rectangle.top_left = rectangle.top_left + as_displacement(0.5*rectangle.size);
+                rectangle.size = {1,1};
+                seat->set_confinement_regions({rectangle});
+                break;
             }
-            else
-            {
+            case mir_pointer_confined_to_window:
+                seat->set_confinement_regions({surface->input_bounds()});
+                break;
+
+            case mir_pointer_unconfined:
                 seat->reset_confinement_regions();
+                break;
             }
         }
     }
