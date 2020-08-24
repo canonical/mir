@@ -342,7 +342,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
 {
     bool should_have_handle = true;
 
-    auto const surface = this->weak_surface.lock();
+    auto const surface = weak_surface.lock();
     if (surface)
     {
         switch(surface->state())
