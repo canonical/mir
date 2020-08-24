@@ -119,7 +119,7 @@ public:
     /// Allows a client to get information and gain control over all toplevels of all clients
     /// Useful for taskbars and app switchers
     /// Could allow a client to extract information about other programs the user is running
-    /// \remark Since MirAL 2.7
+    /// \remark Since MirAL 3.1
     static char const* const zwlr_foreign_toplevel_manager_v1;
     /** @} */
 

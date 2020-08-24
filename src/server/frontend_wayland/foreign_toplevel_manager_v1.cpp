@@ -53,7 +53,6 @@ class ForeignSceneObserver
 public:
     ForeignSceneObserver(std::shared_ptr<Executor> const& wayland_executor, ForeignToplevelManagerV1* manager);
     ~ForeignSceneObserver();
-    ForeignSceneObserver(Observer const&) = delete;
 
 private:
     /// Shell observer
@@ -76,6 +75,7 @@ private:
         std::owner_less<std::weak_ptr<scene::Surface>>> surface_observers;
 };
 
+/// Bound by a client in order to get notified of toplevels from other clients via ForeignToplevelHandleV1
 class ForeignSurfaceObserver
     : public scene::NullSurfaceObserver
 {
@@ -85,7 +85,6 @@ public:
         wayland::Weak<ForeignToplevelManagerV1> manager,
         std::shared_ptr<scene::Surface> const& surface);
     ~ForeignSurfaceObserver();
-    ForeignSurfaceObserver(ForeignSurfaceObserver const&) = delete;
 
     void cease_and_desist(); ///< Must NOT be called under lock
 
@@ -107,11 +106,10 @@ private:
     std::mutex mutex;
     std::weak_ptr<scene::Surface> weak_surface;
     /// If nullptr, the surface is not supposed to have a handle (such as when it does not have a toplevel type)
-    /// If it points to an wmpty Weak, the handle is being created or was destroyed by the client
+    /// If it points to an empty Weak, the handle is being created or was destroyed by the client
     std::shared_ptr<wayland::Weak<ForeignToplevelHandleV1>> handle;
 };
 
-/// An instance of the ForeignToplevelManagerV1 global, bound to a specific client
 class ForeignToplevelManagerV1
     : public wayland::ForeignToplevelManagerV1
 {
@@ -132,7 +130,6 @@ private:
 };
 
 /// Used by a client to aquire information about or control a specific toplevel
-/// Instances of this class are created and managed by ForeignToplevelManagerV1::ObserverOwner::Observer
 class ForeignToplevelHandleV1
     : public wayland::ForeignToplevelHandleV1
 {
