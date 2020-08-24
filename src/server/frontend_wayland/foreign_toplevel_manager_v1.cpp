@@ -18,6 +18,7 @@
 
 #include "foreign_toplevel_manager_v1.h"
 
+#include "wlr-foreign-toplevel-management-unstable-v1_wrapper.h"
 #include "wayland_utils.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/shell/shell.h"
@@ -46,6 +47,27 @@ class ForeignSceneObserver;
 class ForeignSurfaceObserver;
 class ForeignToplevelManagerV1;
 class ForeignToplevelHandleV1;
+
+/// Informs a client about toplevels from itself and other clients
+/// The Wayland objects it creates for each toplevel can be used to aquire information and control that toplevel
+/// Useful for task bars and app switchers
+class ForeignToplevelManagerV1Global
+    : public wayland::ForeignToplevelManagerV1::Global
+{
+public:
+    ForeignToplevelManagerV1Global(
+        wl_display* display,
+        std::shared_ptr<shell::Shell> const& shell,
+        std::shared_ptr<Executor> const& wayland_executor,
+        std::shared_ptr<SurfaceStack> const& surface_stack);
+
+    std::shared_ptr<shell::Shell> const shell;
+    std::shared_ptr<Executor> const wayland_executor;
+    std::shared_ptr<SurfaceStack> const surface_stack;
+
+private:
+    void bind(wl_resource* new_resource) override;
+};
 
 class ForeignSceneObserver
     : public ms::NullObserver
@@ -180,11 +202,20 @@ private:
 }
 }
 
+auto mf::create_foreign_toplevel_manager_v1(
+    wl_display* display,
+    std::shared_ptr<shell::Shell> const& shell,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<SurfaceStack> const& surface_stack) -> std::shared_ptr<ForeignToplevelManagerV1Global>
+{
+    return std::make_shared<ForeignToplevelManagerV1Global>(display, shell, wayland_executor, surface_stack);
+}
+
 // ForeignToplevelManagerV1Global
 
 mf::ForeignToplevelManagerV1Global::ForeignToplevelManagerV1Global(
     wl_display* display,
-    std::shared_ptr<shell::Shell> shell,
+    std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<SurfaceStack> const& surface_stack)
     : Global{display, Version<2>()},

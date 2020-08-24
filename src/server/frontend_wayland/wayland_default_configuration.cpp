@@ -22,14 +22,14 @@
 #include "wayland_connector.h"
 #include "xdg_shell_v6.h"
 #include "xdg_shell_stable.h"
-#include "xdg_output_v1.h"
 #include "layer_shell_v1.h"
-#include "foreign_toplevel_manager_v1.h"
 #include "xwayland_wm_shell.h"
 #include "mir_display.h"
 #include "wl_seat.h"
-#include "foreign_toplevel_manager_v1.h"
+#include "xdg_output_v1.h"
 #include "xdg-output-unstable-v1_wrapper.h"
+#include "foreign_toplevel_manager_v1.h"
+#include "wlr-foreign-toplevel-management-unstable-v1_wrapper.h"
 
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
@@ -76,7 +76,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     {
         mw::ForeignToplevelManagerV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
             {
-                return std::make_shared<mf::ForeignToplevelManagerV1Global>(
+                return create_foreign_toplevel_manager_v1(
                     ctx.display,
                     ctx.shell,
                     ctx.wayland_executor,
