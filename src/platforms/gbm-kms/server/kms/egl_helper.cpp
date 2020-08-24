@@ -66,20 +66,68 @@ mgmh::EGLHelper::EGLHelper(EGLHelper&& from)
     from.egl_surface = EGL_NO_SURFACE;
 }
 
+namespace
+{
+std::array<EGLint, 5> create_context_attr(EGLDisplay dpy, bool debug)
+{
+    std::array<EGLint, 5> context_array;
+    context_array[0] = EGL_CONTEXT_CLIENT_VERSION;
+    context_array[1] = 2;
+
+    if (debug)
+    {
+        int egl_major, egl_minor;
+        auto const egl_version_str = eglQueryString(dpy, EGL_VERSION);
+        auto const matches = ::sscanf(egl_version_str, "%d.%d", &egl_major, &egl_minor);
+        if (matches != 2)
+        {
+            // This is not technically fatal, but something's seriously messed up if we get here
+            BOOST_THROW_EXCEPTION((
+                                      std::runtime_error{
+                                          std::string{"Failed to parse EGL version string: "} + egl_version_str}));
+        }
+
+        if (egl_major == 1 && egl_minor < 5)
+        {
+            // We need EGL_KHR_create_context to get a debug context on EGL 1.4
+            auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+            if (strstr(egl_extensions, "EGL_KHR_create_context"))
+            {
+                context_array[2] = EGL_CONTEXT_FLAGS_KHR;
+                context_array[3] = EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
+            }
+            else
+            {
+                mir::log_warning("Debug EGL context requested, but implementation does not support debug contexts");
+            }
+        }
+        else
+        {
+            // EGL 1.5 includes EGL_CONTEXT_OPENGL_DEBUG attribute in core
+            context_array[2] = EGL_CONTEXT_OPENGL_DEBUG;
+            context_array[3] = EGL_TRUE;
+        }
+    }
+    else
+    {
+        context_array[2] = EGL_NONE;
+    }
+
+    context_array[4] = EGL_NONE;
+    return context_array;
+}
+}
+
 void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 {
     eglBindAPI(EGL_OPENGL_ES_API);
 
-    const EGLint context_attr[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_CONTEXT_OPENGL_DEBUG, static_cast<bool>(debug) ? EGL_TRUE : EGL_FALSE,
-        EGL_NONE
-    };
+    auto const context_attr = create_context_attr(egl_display, static_cast<bool>(debug));
 
     // TODO: Take the required format as a parameter, so we can select the framebuffer format.
     setup_internal(gbm, true, GBM_FORMAT_XRGB8888);
 
-    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr);
+    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr.data());
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 }
@@ -88,16 +136,12 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
 {
     eglBindAPI(EGL_OPENGL_ES_API);
 
-    static const EGLint context_attr[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_CONTEXT_OPENGL_DEBUG, static_cast<bool>(debug) ? EGL_TRUE : EGL_FALSE,
-        EGL_NONE
-    };
+    auto const context_attr = create_context_attr(egl_display, static_cast<bool>(debug));
 
     // TODO: Take the required format as a parameter, so we can select the framebuffer format.
     setup_internal(gbm, false, GBM_FORMAT_XRGB8888);
 
-    egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr);
+    egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr.data());
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 }
@@ -110,11 +154,7 @@ void mgmh::EGLHelper::setup(
 {
     eglBindAPI(EGL_OPENGL_ES_API);
 
-    static const EGLint context_attr[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_CONTEXT_OPENGL_DEBUG, static_cast<bool>(debug) ? EGL_TRUE : EGL_FALSE,
-        EGL_NONE
-    };
+    auto const context_attr = create_context_attr(egl_display, static_cast<bool>(debug));
 
     // TODO: Take the required format as a parameter, so we can select the framebuffer format.
     setup_internal(gbm, owns_egl, GBM_FORMAT_XRGB8888);
@@ -127,7 +167,7 @@ void mgmh::EGLHelper::setup(
     if(egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL window surface"));
 
-    egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr);
+    egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr.data());
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 }
