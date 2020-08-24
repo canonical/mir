@@ -253,6 +253,9 @@ public:
     {
         egl.setup(device, surface.get(), EGL_NO_CONTEXT, true);
 
+        egl.make_current();
+        egl.set_debug_label("EGLBufferCopier");
+
         require_gl_extensions({
             "GL_OES_EGL_image"
         });
@@ -263,9 +266,6 @@ public:
                 "EGL_KHR_image_base",
                 "EGL_EXT_image_dma_buf_import"
         });
-
-        egl.make_current();
-        egl.set_debug_label("EGLBufferCopier");
 
         auto vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vshader, nullptr);

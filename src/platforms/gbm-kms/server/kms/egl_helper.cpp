@@ -16,6 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include <epoxy/gl.h>
+#include <epoxy/egl.h>
+
 #include "egl_helper.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
@@ -76,22 +79,9 @@ std::array<EGLint, 5> create_context_attr(EGLDisplay dpy, bool debug)
 
     if (debug)
     {
-        int egl_major, egl_minor;
-        auto const egl_version_str = eglQueryString(dpy, EGL_VERSION);
-        auto const matches = ::sscanf(egl_version_str, "%d.%d", &egl_major, &egl_minor);
-        if (matches != 2)
+        if (epoxy_egl_version(dpy) < 15)
         {
-            // This is not technically fatal, but something's seriously messed up if we get here
-            BOOST_THROW_EXCEPTION((
-                                      std::runtime_error{
-                                          std::string{"Failed to parse EGL version string: "} + egl_version_str}));
-        }
-
-        if (egl_major == 1 && egl_minor < 5)
-        {
-            // We need EGL_KHR_create_context to get a debug context on EGL 1.4
-            auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
-            if (strstr(egl_extensions, "EGL_KHR_create_context"))
+            if  (epoxy_has_egl_extension(dpy, "EGL_KHR_create_context"))
             {
                 context_array[2] = EGL_CONTEXT_FLAGS_KHR;
                 context_array[3] = EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
@@ -116,6 +106,93 @@ std::array<EGLint, 5> create_context_attr(EGLDisplay dpy, bool debug)
     context_array[4] = EGL_NONE;
     return context_array;
 }
+
+void gl_logger(
+    GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei /*length*/,
+    GLchar const* message,
+    void const* /*userParam*/)
+{
+    auto const log_severity =
+        [](GLenum severity)
+        {
+            switch(severity)
+            {
+            case GL_DEBUG_SEVERITY_HIGH:
+                return mir::logging::Severity::error;
+            case GL_DEBUG_SEVERITY_MEDIUM:
+                return mir::logging::Severity::warning;
+            case GL_DEBUG_SEVERITY_LOW:
+                return mir::logging::Severity::informational;
+            case GL_DEBUG_SEVERITY_NOTIFICATION:
+                return mir::logging::Severity::debug;
+            default:
+                mir::log_error("Unknown GL severity %d. This is a Mir programming error.", severity);
+                return mir::logging::Severity::error;
+            }
+        }(severity);
+    auto const log_source =
+        [](GLenum source)
+        {
+            switch(source)
+            {
+            case GL_DEBUG_SOURCE_API:
+                return "GL";
+            case GL_DEBUG_SOURCE_APPLICATION:
+                return "Application";
+            case GL_DEBUG_SOURCE_OTHER:
+                return "Other";
+            case GL_DEBUG_SOURCE_SHADER_COMPILER:
+                return "Shader";
+            case GL_DEBUG_SOURCE_THIRD_PARTY:
+                return "Third Party";
+            case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+                return "EGL";
+            default:
+                return "UNKNOWN";
+            }
+        }(source);
+
+    auto const log_type =
+        [](GLenum type)
+        {
+            switch(type)
+            {
+            case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+                return "deprecated behaviour";
+            case GL_DEBUG_TYPE_ERROR:
+                return "error";
+            case GL_DEBUG_TYPE_MARKER:
+                return "marker";
+            case GL_DEBUG_TYPE_OTHER:
+                return "other";
+            case GL_DEBUG_TYPE_PERFORMANCE:
+                return "performance";
+            case GL_DEBUG_TYPE_POP_GROUP:
+                return "pop";
+            case GL_DEBUG_TYPE_PORTABILITY:
+                return "portability";
+            case GL_DEBUG_TYPE_PUSH_GROUP:
+                return "push";
+            case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+                return "undefined behaviour";
+            default:
+                return "UNKNOWN";
+            }
+        }(type);
+
+    mir::log(
+        log_severity,
+        "GL",
+        "%s: %s (id: 0x%X): %s",
+        log_type,
+        log_source,
+        id,
+        message);
+}
 }
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm)
@@ -130,6 +207,15 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm)
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr.data());
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
+
+    make_current();
+    if (epoxy_has_gl_extension("GL_KHR_debug"))
+    {
+        glDebugMessageCallbackKHR(&gl_logger, nullptr);
+        // Enable absolutely everything
+        glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    }
+    release_current();
 }
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
@@ -144,6 +230,15 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
     egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr.data());
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
+
+    make_current();
+    if (epoxy_has_gl_extension("GL_KHR_debug"))
+    {
+        glDebugMessageCallbackKHR(&gl_logger, nullptr);
+        // Enable absolutely everything
+        glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    }
+    release_current();
 }
 
 void mgmh::EGLHelper::setup(
@@ -170,6 +265,14 @@ void mgmh::EGLHelper::setup(
     egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr.data());
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
+    make_current();
+    if (epoxy_has_gl_extension("GL_KHR_debug"))
+    {
+        glDebugMessageCallbackKHR(&gl_logger, nullptr);
+        // Enable absolutely everything
+        glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    }
+    release_current();
 }
 
 mgmh::EGLHelper::~EGLHelper() noexcept
