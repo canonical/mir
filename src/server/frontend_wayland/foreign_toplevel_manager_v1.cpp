@@ -165,13 +165,6 @@ public:
     void should_close();
 
 private:
-    /// Calls the given function if possible, silently fails if not
-    void attempt_operation(
-        std::function<void(
-            std::shared_ptr<shell::Shell> const&,
-            std::shared_ptr<scene::Session> const&,
-            std::shared_ptr<scene::Surface> const&)>&& operation);
-
     /// Modifies the surface if possible, silently fails if not
     void attempt_modify_surface(shell::SurfaceSpecification const& spec);
 
@@ -595,34 +588,15 @@ void mf::ForeignToplevelHandleV1::should_close()
     weak_surface.reset();
 }
 
-void mf::ForeignToplevelHandleV1::attempt_operation(
-        std::function<void(
-            std::shared_ptr<msh::Shell> const&,
-            std::shared_ptr<ms::Session> const&,
-            std::shared_ptr<ms::Surface> const&)>&& operation)
+void mf::ForeignToplevelHandleV1::attempt_modify_surface(shell::SurfaceSpecification const& spec)
 {
     auto const shell = weak_shell.lock();
     auto const surface = weak_surface.lock();
     auto const session = surface ? surface->session().lock() : nullptr;
     if (shell && session && surface)
     {
-        try
-        {
-            operation(shell, session, surface);
-        }
-        catch (std::out_of_range const&)
-        {
-            log_warning("Attempted operation on invalid surface");
-        }
+        shell->modify_surface(session, surface, spec);
     }
-}
-
-void mf::ForeignToplevelHandleV1::attempt_modify_surface(shell::SurfaceSpecification const& spec)
-{
-    attempt_operation([&spec](auto shell, auto session, auto surface)
-        {
-            shell->modify_surface(session, surface, spec);
-        });
 }
 
 void mf::ForeignToplevelHandleV1::set_maximized()
@@ -671,18 +645,24 @@ void mf::ForeignToplevelHandleV1::unset_minimized()
 void mf::ForeignToplevelHandleV1::activate(struct wl_resource* /*seat*/)
 {
     auto timestamp = std::numeric_limits<uint64_t>::max(); // TODO: make this correct
-    attempt_operation([timestamp](auto shell, auto session, auto surface)
-        {
-            shell->raise_surface(session, surface, timestamp);
-        });
+    auto const shell = weak_shell.lock();
+    auto const surface = weak_surface.lock();
+    auto const session = surface ? surface->session().lock() : nullptr;
+    if (shell && session && surface)
+    {
+        shell->raise_surface(session, surface, timestamp);
+    }
 }
 
 void mf::ForeignToplevelHandleV1::close()
 {
-    attempt_operation([](auto, auto, auto surface)
-        {
-            surface->request_client_surface_close();
-        });
+    auto const shell = weak_shell.lock();
+    auto const surface = weak_surface.lock();
+    auto const session = surface ? surface->session().lock() : nullptr;
+    if (shell && session && surface)
+    {
+        surface->request_client_surface_close();
+    }
 }
 
 void mf::ForeignToplevelHandleV1::set_rectangle(
