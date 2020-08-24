@@ -174,7 +174,8 @@ void mgmh::EGLHelper::setup(
 
 mgmh::EGLHelper::~EGLHelper() noexcept
 {
-    if (egl_display != EGL_NO_DISPLAY) {
+    if (egl_display != EGL_NO_DISPLAY)
+    {
         if (egl_context != EGL_NO_CONTEXT)
         {
             eglBindAPI(EGL_OPENGL_ES_API);
