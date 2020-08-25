@@ -161,7 +161,7 @@ public:
     /// Sends the required .state event
     void send_state(MirWindowFocusState focused, MirWindowState state);
 
-    /// Sends the .closed event and makes this surface innert
+    /// Sends the .closed event and makes this surface inert
     void should_close();
 
 private:
@@ -249,7 +249,7 @@ void mf::ForeignSceneObserver::surface_removed(std::shared_ptr<scene::Surface> c
     auto const iter = surface_observers.find(surface);
     if (iter == surface_observers.end())
     {
-        log_error("Can not remove ForeignSurfaceObserver: surface %p not in observers map");
+        log_error("Can not remove ForeignSurfaceObserver: surface %p not in observers map", surface.get());
     }
     else
     {
