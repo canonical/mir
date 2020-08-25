@@ -30,7 +30,7 @@ public:
 
     static LayerShellV1* from(struct wl_resource*);
 
-    LayerShellV1(struct wl_resource* resource, Version<1>);
+    LayerShellV1(struct wl_resource* resource, Version<3>);
     virtual ~LayerShellV1();
 
     void destroy_wayland_object() const;
@@ -60,7 +60,7 @@ public:
     class Global : public wayland::Global
     {
     public:
-        Global(wl_display* display, Version<1>);
+        Global(wl_display* display, Version<3>);
 
         auto interface_name() const -> char const* override;
 
@@ -71,6 +71,7 @@ public:
 
 private:
     virtual void get_layer_surface(struct wl_resource* id, struct wl_resource* surface, std::experimental::optional<struct wl_resource*> const& output, uint32_t layer, std::string const& namespace_) = 0;
+    virtual void destroy() = 0;
 };
 
 class LayerSurfaceV1 : public Resource
@@ -80,7 +81,7 @@ public:
 
     static LayerSurfaceV1* from(struct wl_resource*);
 
-    LayerSurfaceV1(struct wl_resource* resource, Version<1>);
+    LayerSurfaceV1(struct wl_resource* resource, Version<3>);
     virtual ~LayerSurfaceV1();
 
     void send_configure_event(uint32_t serial, uint32_t width, uint32_t height) const;
@@ -125,6 +126,7 @@ private:
     virtual void get_popup(struct wl_resource* popup) = 0;
     virtual void ack_configure(uint32_t serial) = 0;
     virtual void destroy() = 0;
+    virtual void set_layer(uint32_t layer) = 0;
 };
 
 }
