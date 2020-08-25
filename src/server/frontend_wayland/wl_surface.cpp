@@ -165,7 +165,7 @@ void mf::WlSurface::add_subsurface(WlSubsurface* child)
 {
     if (std::find(children.begin(), children.end(), child) != children.end())
     {
-        log_warning("Subsurface %p added to surface %p multiple times", child, this);
+        log_warning("Subsurface %p added to surface %p multiple times", static_cast<void*>(child), static_cast<void*>(this));
         return;
     }
 

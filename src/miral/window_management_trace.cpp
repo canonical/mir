@@ -473,7 +473,7 @@ try {
     auto result = wrapped.active_output();
     std::stringstream out;
     out << result;
-    mir::log_info("%s -> ", __func__, out.str().c_str());
+    mir::log_info("%s -> %s", __func__, out.str().c_str());
     trace_count++;
     return result;
 }
@@ -485,7 +485,7 @@ try {
     auto result = wrapped.active_application_zone();
     std::stringstream out;
     out << result.extents();
-    mir::log_info("%s -> ", __func__, out.str().c_str());
+    mir::log_info("%s -> %s", __func__, out.str().c_str());
     trace_count++;
     return result;
 }
@@ -599,7 +599,7 @@ MIRAL_TRACE_EXCEPTION
 void miral::WindowManagementTrace::end_drag_and_drop()
 try {
     log_input();
-    mir::log_info("%s window_info=%s", __func__);
+    mir::log_info("%s", __func__);
     trace_count++;
     wrapped.end_drag_and_drop();
 }
@@ -633,7 +633,7 @@ MIRAL_TRACE_EXCEPTION
 void miral::WindowManagementTrace::add_tree_to_workspace(
     miral::Window const& window, std::shared_ptr<miral::Workspace> const& workspace)
 try {
-    mir::log_info("%s window=%s, workspace =%p", __func__, dump_of(window).c_str(), workspace.get());
+    mir::log_info("%s window=%s, workspace =%p", __func__, dump_of(window).c_str(), static_cast<void*>(workspace.get()));
     wrapped.add_tree_to_workspace(window, workspace);
 }
 MIRAL_TRACE_EXCEPTION
@@ -641,7 +641,7 @@ MIRAL_TRACE_EXCEPTION
 void miral::WindowManagementTrace::remove_tree_from_workspace(
     miral::Window const& window, std::shared_ptr<miral::Workspace> const& workspace)
 try {
-    mir::log_info("%s window=%s, workspace =%p", __func__, dump_of(window).c_str(), workspace.get());
+    mir::log_info("%s window=%s, workspace =%p", __func__, dump_of(window).c_str(), static_cast<void*>(workspace.get()));
     wrapped.remove_tree_from_workspace(window, workspace);
 }
 MIRAL_TRACE_EXCEPTION
@@ -649,7 +649,7 @@ MIRAL_TRACE_EXCEPTION
 void miral::WindowManagementTrace::move_workspace_content_to_workspace(
     std::shared_ptr<Workspace> const& to_workspace, std::shared_ptr<Workspace> const& from_workspace)
 try {
-    mir::log_info("%s to_workspace=%p, from_workspace=%p", __func__, to_workspace.get(), from_workspace.get());
+    mir::log_info("%s to_workspace=%p, from_workspace=%p", __func__, static_cast<void*>(to_workspace.get()), static_cast<void*>(from_workspace.get()));
     wrapped.move_workspace_content_to_workspace(to_workspace, from_workspace);
 }
 MIRAL_TRACE_EXCEPTION
@@ -665,7 +665,7 @@ MIRAL_TRACE_EXCEPTION
 void miral::WindowManagementTrace::for_each_window_in_workspace(
     std::shared_ptr<miral::Workspace> const& workspace, std::function<void(miral::Window const&)> const& callback)
 try {
-    mir::log_info("%s workspace =%p", __func__, workspace.get());
+    mir::log_info("%s workspace =%p", __func__, static_cast<void*>(workspace.get()));
     wrapped.for_each_window_in_workspace(workspace, callback);
 }
 MIRAL_TRACE_EXCEPTION
@@ -862,7 +862,7 @@ MIRAL_TRACE_EXCEPTION
 void miral::WindowManagementTrace::advise_adding_to_workspace(
     std::shared_ptr<miral::Workspace> const& workspace, std::vector<miral::Window> const& windows)
 try {
-    mir::log_info("%s workspace=%p, windows=%s", __func__, workspace.get(), dump_of(windows).c_str());
+    mir::log_info("%s workspace=%p, windows=%s", __func__, static_cast<void*>(workspace.get()), dump_of(windows).c_str());
     policy->advise_adding_to_workspace(workspace, windows);
 }
 MIRAL_TRACE_EXCEPTION
@@ -870,7 +870,7 @@ MIRAL_TRACE_EXCEPTION
 void miral::WindowManagementTrace::advise_removing_from_workspace(
     std::shared_ptr<miral::Workspace> const& workspace, std::vector<miral::Window> const& windows)
 try {
-    mir::log_info("%s workspace=%p, windows=%s", __func__, workspace.get(), dump_of(windows).c_str());
+    mir::log_info("%s workspace=%p, windows=%s", __func__, static_cast<void*>(workspace.get()), dump_of(windows).c_str());
     policy->advise_removing_from_workspace(workspace, windows);
 }
 MIRAL_TRACE_EXCEPTION
