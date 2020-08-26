@@ -182,11 +182,11 @@ mf::XWaylandSurface::XWaylandSurface(
               {
                   is_transient_for(XCB_WINDOW_NONE);
               }),
-          property_handler<xcb_atom_t>(
+          property_handler<std::vector<xcb_atom_t>>(
               connection,
               window,
               connection->_NET_WM_WINDOW_TYPE,
-              [this](xcb_atom_t wm_type) { window_type(wm_type); },
+              [this](std::vector<xcb_atom_t> wm_types) { window_type(wm_types); },
               []{}),
           property_handler<std::vector<xcb_atom_t> const&>(
               connection,
@@ -997,7 +997,7 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
     }
 }
 
-void mf::XWaylandSurface::window_type(xcb_atom_t wm_type)
+void mf::XWaylandSurface::window_type(std::vector<xcb_atom_t> wm_types)
 {
     auto set_type = [this](MirWindowType type)
         {
@@ -1005,29 +1005,32 @@ void mf::XWaylandSurface::window_type(xcb_atom_t wm_type)
             pending_spec(lock).type = type;
         };
 
-    if (connection->_NET_WM_WINDOW_TYPE_NORMAL == wm_type)
+    for (auto const& wm_type : wm_types)
     {
-        set_type(mir_window_type_freestyle);
-    }
-    else if (connection->_NET_WM_WINDOW_TYPE_POPUP_MENU == wm_type)
-    {
-        set_type(mir_window_type_gloss);
-    }
-    else if (connection->_NET_WM_WINDOW_TYPE_MENU == wm_type)
-    {
-        set_type(mir_window_type_menu);
-    }
-    else
-    {
-        set_type(mir_window_type_freestyle);
-
-        if (verbose_xwayland_logging_enabled())
+        if (connection->_NET_WM_WINDOW_TYPE_NORMAL == wm_type)
+        {
+            set_type(mir_window_type_freestyle);
+            return;
+        }
+        else if (connection->_NET_WM_WINDOW_TYPE_POPUP_MENU == wm_type)
+        {
+            set_type(mir_window_type_gloss);
+            return;
+        }
+        else if (connection->_NET_WM_WINDOW_TYPE_MENU == wm_type)
+        {
+            set_type(mir_window_type_menu);
+            return;
+        }
+        else if (verbose_xwayland_logging_enabled())
         {
             log_debug("Ignoring type (%s) of %s",
-                      connection->query_name(wm_type).c_str(),
-                      connection->window_debug_string(window).c_str());
+                        connection->query_name(wm_type).c_str(),
+                        connection->window_debug_string(window).c_str());
         }
     }
+
+    set_type(mir_window_type_freestyle);
 }
 
 void mf::XWaylandSurface::set_parent(xcb_window_t xcb_window, std::lock_guard<std::mutex> const& lock)

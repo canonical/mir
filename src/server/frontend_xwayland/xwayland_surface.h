@@ -137,7 +137,7 @@ private:
     /// Appplies any mods in nullable_pending_spec to the scene_surface (if any)
     void apply_any_mods_to_scene_surface();
 
-    void window_type(xcb_atom_t wm_type);
+    void window_type(std::vector<xcb_atom_t> wm_types);
     void set_parent(xcb_window_t xcb_window, std::lock_guard<std::mutex> const&);
     void fix_parent_if_necessary(const std::lock_guard<std::mutex>& lock);
 
