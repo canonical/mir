@@ -67,7 +67,7 @@ class LayerShellV1::Instance : wayland::LayerShellV1
 {
 public:
     Instance(wl_resource* new_resource, mf::LayerShellV1* shell)
-        : LayerShellV1{new_resource, Version<1>()},
+        : LayerShellV1{new_resource, Version<3>()},
           shell{shell}
     {
     }
@@ -79,6 +79,7 @@ private:
         std::experimental::optional<wl_resource*> const& output,
         uint32_t layer,
         std::string const& namespace_) override;
+    void destroy() override;
 
     mf::LayerShellV1* const shell;
 };
@@ -126,6 +127,7 @@ private:
     void get_popup(wl_resource* popup) override;
     void ack_configure(uint32_t serial) override;
     void destroy() override;
+    void set_layer(uint32_t layer) override;
 
     // from WindowWlSurfaceRole
     void handle_commit() override;
@@ -159,7 +161,7 @@ mf::LayerShellV1::LayerShellV1(
     std::shared_ptr<msh::Shell> shell,
     WlSeat& seat,
     OutputManager* output_manager)
-    : Global(display, Version<1>()),
+    : Global(display, Version<3>()),
       shell{shell},
       seat{seat},
       output_manager{output_manager}
@@ -212,6 +214,11 @@ void mf::LayerShellV1::Instance::get_layer_surface(
         layer_shell_layer_to_mir_depth_layer(layer));
 }
 
+void mf::LayerShellV1::Instance::destroy()
+{
+    destroy_wayland_object();
+}
+
 // LayerSurfaceV1
 
 mf::LayerSurfaceV1::LayerSurfaceV1(
@@ -220,7 +227,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     std::experimental::optional<graphics::DisplayConfigurationOutputId> output_id,
     LayerShellV1 const& layer_shell,
     MirDepthLayer layer)
-    : mw::LayerSurfaceV1(new_resource, Version<1>()),
+    : mw::LayerSurfaceV1(new_resource, Version<3>()),
       WindowWlSurfaceRole(
           &layer_shell.seat,
           wayland::LayerSurfaceV1::client,
@@ -431,6 +438,13 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
 void mf::LayerSurfaceV1::destroy()
 {
     destroy_wayland_object();
+}
+
+void mf::LayerSurfaceV1::set_layer(uint32_t layer)
+{
+    shell::SurfaceSpecification spec;
+    spec.depth_layer = layer_shell_layer_to_mir_depth_layer(layer);
+    apply_spec(spec);
 }
 
 void mf::LayerSurfaceV1::handle_commit()

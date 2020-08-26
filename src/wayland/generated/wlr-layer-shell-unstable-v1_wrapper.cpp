@@ -75,6 +75,19 @@ struct mw::LayerShellV1::Thunks
         }
     }
 
+    static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
+    {
+        auto me = static_cast<LayerShellV1*>(wl_resource_get_user_data(resource));
+        try
+        {
+            me->destroy();
+        }
+        catch(...)
+        {
+            internal_error_processing_request(client, "LayerShellV1::destroy()");
+        }
+    }
+
     static void resource_destroyed_thunk(wl_resource* resource)
     {
         delete static_cast<LayerShellV1*>(wl_resource_get_user_data(resource));
@@ -108,9 +121,9 @@ struct mw::LayerShellV1::Thunks
     static void const* request_vtable[];
 };
 
-int const mw::LayerShellV1::Thunks::supported_version = 1;
+int const mw::LayerShellV1::Thunks::supported_version = 3;
 
-mw::LayerShellV1::LayerShellV1(struct wl_resource* resource, Version<1>)
+mw::LayerShellV1::LayerShellV1(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -136,7 +149,7 @@ void mw::LayerShellV1::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::LayerShellV1::Global::Global(wl_display* display, Version<1>)
+mw::LayerShellV1::Global::Global(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
               display,
@@ -160,10 +173,12 @@ struct wl_interface const* mw::LayerShellV1::Thunks::get_layer_surface_types[] {
     nullptr};
 
 struct wl_message const mw::LayerShellV1::Thunks::request_messages[] {
-    {"get_layer_surface", "no?ous", get_layer_surface_types}};
+    {"get_layer_surface", "no?ous", get_layer_surface_types},
+    {"destroy", "3", all_null_types}};
 
 void const* mw::LayerShellV1::Thunks::request_vtable[] {
-    (void*)Thunks::get_layer_surface_thunk};
+    (void*)Thunks::get_layer_surface_thunk,
+    (void*)Thunks::destroy_thunk};
 
 // LayerSurfaceV1
 
@@ -280,6 +295,19 @@ struct mw::LayerSurfaceV1::Thunks
         }
     }
 
+    static void set_layer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t layer)
+    {
+        auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
+        try
+        {
+            me->set_layer(layer);
+        }
+        catch(...)
+        {
+            internal_error_processing_request(client, "LayerSurfaceV1::set_layer()");
+        }
+    }
+
     static void resource_destroyed_thunk(wl_resource* resource)
     {
         delete static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
@@ -291,9 +319,9 @@ struct mw::LayerSurfaceV1::Thunks
     static void const* request_vtable[];
 };
 
-int const mw::LayerSurfaceV1::Thunks::supported_version = 1;
+int const mw::LayerSurfaceV1::Thunks::supported_version = 3;
 
-mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_resource* resource, Version<1>)
+mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -340,7 +368,8 @@ struct wl_message const mw::LayerSurfaceV1::Thunks::request_messages[] {
     {"set_keyboard_interactivity", "u", all_null_types},
     {"get_popup", "o", get_popup_types},
     {"ack_configure", "u", all_null_types},
-    {"destroy", "", all_null_types}};
+    {"destroy", "", all_null_types},
+    {"set_layer", "2u", all_null_types}};
 
 struct wl_message const mw::LayerSurfaceV1::Thunks::event_messages[] {
     {"configure", "uuu", all_null_types},
@@ -354,7 +383,8 @@ void const* mw::LayerSurfaceV1::Thunks::request_vtable[] {
     (void*)Thunks::set_keyboard_interactivity_thunk,
     (void*)Thunks::get_popup_thunk,
     (void*)Thunks::ack_configure_thunk,
-    (void*)Thunks::destroy_thunk};
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::set_layer_thunk};
 
 namespace mir
 {
@@ -364,13 +394,13 @@ namespace wayland
 struct wl_interface const zwlr_layer_shell_v1_interface_data {
     mw::LayerShellV1::interface_name,
     mw::LayerShellV1::Thunks::supported_version,
-    1, mw::LayerShellV1::Thunks::request_messages,
+    2, mw::LayerShellV1::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const zwlr_layer_surface_v1_interface_data {
     mw::LayerSurfaceV1::interface_name,
     mw::LayerSurfaceV1::Thunks::supported_version,
-    8, mw::LayerSurfaceV1::Thunks::request_messages,
+    9, mw::LayerSurfaceV1::Thunks::request_messages,
     2, mw::LayerSurfaceV1::Thunks::event_messages};
 
 }
