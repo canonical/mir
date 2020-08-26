@@ -278,7 +278,9 @@ void mf::ForeignSceneObserver::create_surface_observer(std::shared_ptr<scene::Su
     auto insert_result = surface_observers.insert(std::make_pair(surface, observer));
     if (!insert_result.second)
     {
-        log_error("Can not add ForeignSurfaceObserver: surface %p already in the observers map");
+        log_error(
+            "Can not add ForeignSurfaceObserver: surface %p already in the observers map",
+            static_cast<void*>(surface.get()));
         observer->cease_and_desist();
     }
 }
