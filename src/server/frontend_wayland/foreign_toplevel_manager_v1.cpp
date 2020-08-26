@@ -249,7 +249,9 @@ void mf::ForeignSceneObserver::surface_removed(std::shared_ptr<scene::Surface> c
     auto const iter = surface_observers.find(surface);
     if (iter == surface_observers.end())
     {
-        log_error("Can not remove ForeignSurfaceObserver: surface %p not in observers map", surface.get());
+        log_error(
+            "Can not remove ForeignSurfaceObserver: surface %p not in observers map",
+            static_cast<void*>(surface.get()));
     }
     else
     {
