@@ -178,7 +178,7 @@ mf::XWaylandWM::~XWaylandWM()
     }
 
     if (verbose_xwayland_logging_enabled())
-        log_debug("Closing %lu XWayland surface(s)...", local_surfaces.size());
+        log_debug("Closing %zu XWayland surface(s)...", local_surfaces.size());
 
     for (auto const& surface : local_surfaces)
     {
