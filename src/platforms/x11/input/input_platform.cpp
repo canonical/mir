@@ -61,7 +61,7 @@ geom::Point get_pos_on_output(Window x11_window, int x, int y)
     }
     else
     {
-        mir::log_warning("X11 window %d does not map to any known output, not applying input transformation", x11_window);
+        mir::log_warning("X11 window %lu does not map to any known output, not applying input transformation", x11_window);
         return geom::Point{x, y};
     }
 }

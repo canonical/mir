@@ -137,12 +137,12 @@ mgx::X11Window::X11Window(::Display* x_dpy,
 
     mir::log_info("%d visual(s) found", num_visuals);
     mir::log_info("Using the first one :");
-    mir::log_info("ID\t\t:\t%d", visInfo->visualid);
+    mir::log_info("ID\t\t:\t%lu", visInfo->visualid);
     mir::log_info("screen\t:\t%d", visInfo->screen);
     mir::log_info("depth\t\t:\t%d", visInfo->depth);
-    mir::log_info("red_mask\t:\t0x%0X", visInfo->red_mask);
-    mir::log_info("green_mask\t:\t0x%0X", visInfo->green_mask);
-    mir::log_info("blue_mask\t:\t0x%0X", visInfo->blue_mask);
+    mir::log_info("red_mask\t:\t0x%0lX", visInfo->red_mask);
+    mir::log_info("green_mask\t:\t0x%0lX", visInfo->green_mask);
+    mir::log_info("blue_mask\t:\t0x%0lX", visInfo->blue_mask);
     mir::log_info("colormap_size\t:\t%d", visInfo->colormap_size);
     mir::log_info("bits_per_rgb\t:\t%d", visInfo->bits_per_rgb);
 

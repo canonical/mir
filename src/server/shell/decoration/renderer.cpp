@@ -234,7 +234,7 @@ auto msd::Renderer::Text::instance() -> std::shared_ptr<Text>
         }
         catch (std::runtime_error const& error)
         {
-            log_warning(error.what());
+            log_warning("%s", error.what());
             shared = std::make_shared<Null>();
         }
         singleton = shared;
@@ -296,7 +296,7 @@ void msd::Renderer::Text::Impl::render(
     }
     catch (std::runtime_error const& error)
     {
-        log_warning(error.what());
+        log_warning("%s", error.what());
         return;
     }
 
@@ -321,7 +321,7 @@ void msd::Renderer::Text::Impl::render(
         }
         catch (std::runtime_error const& error)
         {
-            log_warning(error.what());
+            log_warning("%s", error.what());
         }
     }
 }
@@ -589,7 +589,7 @@ auto msd::Renderer::render_titlebar() -> std::experimental::optional<std::shared
             }
             else
             {
-                log_warning("Could not render decoration button with unknown function %d\n", button.function);
+                log_warning("Could not render decoration button with unknown function %d\n", static_cast<int>(button.function));
             }
         }
     }
