@@ -321,7 +321,7 @@ auto mf::XCBConnection::read_property(
 auto mf::XCBConnection::read_property(
     xcb_window_t window,
     xcb_atom_t prop,
-    std::function<void(std::vector<uint32_t>)> action,
+    std::function<void(std::vector<uint32_t> const&)> action,
     std::function<void()> on_error) const -> std::function<void()>
 {
     return read_property(

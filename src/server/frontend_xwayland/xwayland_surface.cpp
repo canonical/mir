@@ -182,11 +182,11 @@ mf::XWaylandSurface::XWaylandSurface(
               {
                   is_transient_for(XCB_WINDOW_NONE);
               }),
-          property_handler<std::vector<xcb_atom_t>>(
+          property_handler<std::vector<xcb_atom_t> const&>(
               connection,
               window,
               connection->_NET_WM_WINDOW_TYPE,
-              [this](std::vector<xcb_atom_t> wm_types) { window_type(wm_types); },
+              [this](std::vector<xcb_atom_t> const& wm_types) { window_type(wm_types); },
               []{}),
           property_handler<std::vector<xcb_atom_t> const&>(
               connection,
@@ -230,7 +230,7 @@ void mf::XWaylandSurface::map()
     auto const cookie = connection->read_property(
         window,
         connection->_NET_WM_STATE,
-        [&](std::vector<xcb_atom_t> net_wm_states)
+        [&](std::vector<xcb_atom_t> const& net_wm_states)
         {
             for (auto const& net_wm_state : net_wm_states)
             {
@@ -997,7 +997,7 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
     }
 }
 
-void mf::XWaylandSurface::window_type(std::vector<xcb_atom_t> wm_types)
+void mf::XWaylandSurface::window_type(std::vector<xcb_atom_t> const& wm_types)
 {
     auto set_type = [this](MirWindowType type)
         {
