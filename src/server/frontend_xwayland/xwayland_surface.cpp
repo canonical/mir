@@ -1024,9 +1024,10 @@ void mf::XWaylandSurface::window_type(std::vector<xcb_atom_t> wm_types)
         }
         else if (verbose_xwayland_logging_enabled())
         {
-            log_debug("Ignoring type (%s) of %s",
-                        connection->query_name(wm_type).c_str(),
-                        connection->window_debug_string(window).c_str());
+            log_debug(
+                "Ignoring type (%s) of %s",
+                connection->query_name(wm_type).c_str(),
+                connection->window_debug_string(window).c_str());
         }
     }
 
