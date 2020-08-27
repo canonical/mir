@@ -59,7 +59,7 @@ public:
 
 private:
     std::function<void(WlTouch*)> on_destroy;
-    std::unordered_map<int32_t, WlSurface*> focused_surface_for_ids;
+    std::unordered_map<int32_t, wayland::Weak<WlSurface>> touches; ///< Maps touch IDs to the surfaces the touch is on
     bool can_send_frame{false};
 
     void release() override;

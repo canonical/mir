@@ -57,7 +57,7 @@ void mf::WlTouch::down(
     auto const position_on_target = root_position - target_surface->total_offset();
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
 
-    focused_surface_for_ids[touch_id] = target_surface;
+    touches[touch_id] = mw::make_weak(target_surface);
 
     send_down_event(
         serial,
@@ -75,15 +75,20 @@ void mf::WlTouch::motion(
     WlSurface* /* root_surface */,
     geometry::Point const& root_position)
 {
-    auto const target_surface = focused_surface_for_ids.find(touch_id);
+    auto const target_surface = touches.find(touch_id);
 
-    if (target_surface == focused_surface_for_ids.end())
+    if (target_surface == touches.end())
     {
-        log_warning("WlTouch::motion() called with invalid ID %d", touch_id);
+        log_warning("WlTouch::motion(): invalid ID %d", touch_id);
+        return;
+    }
+    else if (!target_surface->second)
+    {
+        log_warning("WlTouch::motion(): ID %d maps to destroyed surface", touch_id);
         return;
     }
 
-    auto const position_on_target = root_position - target_surface->second->total_offset();
+    auto const position_on_target = root_position - target_surface->second.value().total_offset();
 
     send_motion_event(
         ms.count(),
@@ -97,7 +102,7 @@ void mf::WlTouch::up(std::chrono::milliseconds const& ms, int32_t touch_id)
 {
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
 
-    if (focused_surface_for_ids.erase(touch_id))
+    if (touches.erase(touch_id))
     {
         send_up_event(
             serial,
