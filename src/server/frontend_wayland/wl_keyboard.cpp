@@ -25,6 +25,7 @@
 #include "mir/anonymous_shm_file.h"
 #include "mir/input/keymap.h"
 #include "mir/log.h"
+#include "mir/fatal.h"
 
 #include <xkbcommon/xkbcommon.h>
 #include <boost/throw_exception.hpp>
@@ -98,6 +99,11 @@ void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, WlSurface* surface
 
 void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
 {
+    if (client != surface->client)
+    {
+        fatal_error("WlKeyboard::focussed() called with a surface of the wrong client");
+    }
+
     bool const is_currently_focused = (focused_surface && &focused_surface.value() == surface);
 
     if (should_be_focused == is_currently_focused)
