@@ -180,20 +180,23 @@ mir::frontend::LockedPointerV1::LockedPointerV1(
     }
 
     this->shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
-    send_locked_event();
+
+    if (scene_surface->focus_state() == mir_window_focus_state_focused)
+        send_locked_event();
 }
 
 void mir::frontend::LockedPointerV1::destroy()
 {
-    send_unlocked_event();
-    destroy_wayland_object();
-
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         shell::SurfaceSpecification mods;
         mods.confine_pointer = MirPointerConfinementState::mir_pointer_unconfined;
         shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
+
+        if (scene_surface->focus_state() == mir_window_focus_state_focused)
+            send_unlocked_event();
     }
+    destroy_wayland_object();
 }
 
 void mir::frontend::LockedPointerV1::set_cursor_position_hint(double /*surface_x*/, double /*surface_y*/)
