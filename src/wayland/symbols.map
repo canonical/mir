@@ -331,3 +331,24 @@ global:
   };
   local: *;
 };
+
+MIRWAYLAND_2.1 {
+global:
+  extern "C++" {
+    mir::wayland::ForeignToplevelManagerV1::*;
+    non-virtual?thunk?to?mir::wayland::ForeignToplevelManagerV1::*;
+    virtual?thunk?to?mir::wayland::ForeignToplevelManagerV1::?ForeignToplevelManagerV1*;
+    typeinfo?for?mir::wayland::ForeignToplevelManagerV1;
+    vtable?for?mir::wayland::ForeignToplevelManagerV1;
+    typeinfo?for?mir::wayland::ForeignToplevelManagerV1::Global;
+    vtable?for?mir::wayland::ForeignToplevelManagerV1::Global;
+    mir::wayland::zwlr_foreign_toplevel_handle_v1_interface_data;
+
+    mir::wayland::ForeignToplevelHandleV1::*;
+    non-virtual?thunk?to?mir::wayland::ForeignToplevelHandleV1::*;
+    virtual?thunk?to?mir::wayland::ForeignToplevelHandleV1::?ForeignToplevelHandleV1*;
+    typeinfo?for?mir::wayland::ForeignToplevelHandleV1;
+    vtable?for?mir::wayland::ForeignToplevelHandleV1;
+    mir::wayland::zwlr_foreign_toplevel_manager_v1_interface_data;
+  };
+} MIRWAYLAND_2.0;

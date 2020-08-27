@@ -675,6 +675,7 @@ mf::WaylandConnector::WaylandConnector(
 
     extensions->init(WaylandExtensions::Context{
         display.get(),
+        executor,
         shell,
         seat_global.get(),
         output_manager.get(),

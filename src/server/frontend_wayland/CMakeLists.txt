@@ -30,6 +30,7 @@ set(
   layer_shell_v1.cpp            layer_shell_v1.h
   deleted_for_resource.cpp      deleted_for_resource.h
   wl_region.cpp                 wl_region.h
+  foreign_toplevel_manager_v1.cpp foreign_toplevel_manager_v1.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/wayland.h
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h

@@ -74,6 +74,7 @@ public:
     struct Context
     {
         wl_display* display;
+        std::shared_ptr<Executor> wayland_executor;
         std::shared_ptr<shell::Shell> shell;
         WlSeat* seat;
         OutputManager* output_manager;
