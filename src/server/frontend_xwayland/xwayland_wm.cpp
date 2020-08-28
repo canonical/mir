@@ -55,18 +55,18 @@ auto create_wm_window(mf::XCBConnection const& connection) -> xcb_window_t
         connection.screen()->root_visual,
         0, NULL);
 
-    connection.set_property<mf::XCBType::WINDOW>(wm_window, connection.net_supporting_wm_check, wm_window);
-    connection.set_property<mf::XCBType::UTF8_STRING>(wm_window, connection.net_wm_name, wm_name);
+    connection.set_property<mf::XCBType::WINDOW>(wm_window, connection._NET_SUPPORTING_WM_CHECK, wm_window);
+    connection.set_property<mf::XCBType::UTF8_STRING>(wm_window, connection._NET_WM_NAME, wm_name);
 
     connection.set_property<mf::XCBType::WINDOW>(
         connection.root_window(),
-        connection.net_supporting_wm_check,
+        connection._NET_SUPPORTING_WM_CHECK,
         wm_window);
 
     /* Claim the WM_S0 selection even though we don't support
      * the --replace functionality. */
-    xcb_set_selection_owner(connection, wm_window, connection.wm_s0, XCB_TIME_CURRENT_TIME);
-    xcb_set_selection_owner(connection, wm_window, connection.net_wm_cm_s0, XCB_TIME_CURRENT_TIME);
+    xcb_set_selection_owner(connection, wm_window, connection.WM_S0, XCB_TIME_CURRENT_TIME);
+    xcb_set_selection_owner(connection, wm_window, connection._NET_WM_CM_S0, XCB_TIME_CURRENT_TIME);
 
     return wm_window;
 }
@@ -145,18 +145,18 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
     xcb_composite_redirect_subwindows(*connection, connection->root_window(), XCB_COMPOSITE_REDIRECT_MANUAL);
 
     xcb_atom_t const supported[]{
-        connection->net_wm_moveresize,
-        connection->net_wm_state,
-        connection->net_wm_state_fullscreen,
-        connection->net_wm_state_maximized_vert,
-        connection->net_wm_state_maximized_horz,
-        connection->net_active_window};
+        connection->_NET_WM_MOVERESIZE,
+        connection->_NET_WM_STATE,
+        connection->_NET_WM_STATE_FULLSCREEN,
+        connection->_NET_WM_STATE_MAXIMIZED_VERT,
+        connection->_NET_WM_STATE_MAXIMIZED_HORZ,
+        connection->_NET_ACTIVE_WINDOW};
 
-    connection->set_property<XCBType::ATOM>(connection->root_window(), connection->net_supported, supported);
+    connection->set_property<XCBType::ATOM>(connection->root_window(), connection->_NET_SUPPORTED, supported);
 
     connection->set_property<XCBType::WINDOW>(
         connection->root_window(),
-        connection->net_active_window,
+        connection->_NET_ACTIVE_WINDOW,
         static_cast<xcb_window_t>(XCB_WINDOW_NONE));
 
     cursors->apply_default_to(connection->root_window());
@@ -272,7 +272,7 @@ void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
     {
         connection->set_property<XCBType::WINDOW>(
             connection->root_window(),
-            connection->net_active_window,
+            connection->_NET_ACTIVE_WINDOW,
             xcb_window);
 
         if (auto const surface = get_wm_surface(xcb_window))
@@ -284,7 +284,7 @@ void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
     {
         connection->set_property<XCBType::WINDOW>(
             connection->root_window(),
-            connection->net_active_window,
+            connection->_NET_ACTIVE_WINDOW,
             static_cast<xcb_window_t>(XCB_WINDOW_NONE));
 
         xcb_set_input_focus_checked(
@@ -674,13 +674,13 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
     if (auto const surface = get_wm_surface(event->window))
     {
         // TODO: net_active_window?
-        if (event->type == connection->net_wm_moveresize)
+        if (event->type == connection->_NET_WM_MOVERESIZE)
             handle_move_resize(surface.value(), event);
-        else if (event->type == connection->net_wm_state)
+        else if (event->type == connection->_NET_WM_STATE)
             surface.value()->net_wm_state_client_message(event->data.data32);
-        else if (event->type == connection->wm_change_state)
+        else if (event->type == connection->WM_CHANGE_STATE)
             surface.value()->wm_change_state_client_message(event->data.data32);
-        else if (event->type == connection->wl_surface_id)
+        else if (event->type == connection->WL_SURFACE_ID)
             handle_surface_id(surface.value(), event);
     }
 }

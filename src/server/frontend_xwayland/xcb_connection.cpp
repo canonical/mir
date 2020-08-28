@@ -185,7 +185,7 @@ auto mf::XCBConnection::query_name(xcb_atom_t atom) const -> std::string
 
 auto mf::XCBConnection::reply_contains_string_data(xcb_get_property_reply_t const* reply) const -> bool
 {
-    return reply->type == XCB_ATOM_STRING || reply->type == utf8_string || reply->type == compound_text;
+    return reply->type == XCB_ATOM_STRING || reply->type == UTF8_STRING || reply->type == COMPOUND_TEXT;
 }
 
 auto mf::XCBConnection::string_from(xcb_get_property_reply_t const* reply) const -> std::string
@@ -544,9 +544,9 @@ auto mf::XCBConnection::xcb_type_atom(XCBType type) const -> xcb_atom_t
         case XCBType::WINDOW:       return XCB_ATOM_WINDOW;
         case XCBType::CARDINAL32:   return XCB_ATOM_CARDINAL;
         case XCBType::STRING:       return XCB_ATOM_STRING;
-        case XCBType::UTF8_STRING:  return utf8_string;
-        case XCBType::WM_STATE:     return wm_state;
-        case XCBType::WM_PROTOCOLS: return wm_protocols;
+        case XCBType::UTF8_STRING:  return UTF8_STRING;
+        case XCBType::WM_STATE:     return WM_STATE;
+        case XCBType::WM_PROTOCOLS: return WM_PROTOCOLS;
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error(
