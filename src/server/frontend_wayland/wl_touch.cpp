@@ -25,6 +25,8 @@
 #include "mir/client/event.h"
 #include "mir/log.h"
 
+#include <chrono>
+
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace geom = mir::geometry;
@@ -39,6 +41,13 @@ mf::WlTouch::WlTouch(
 
 mf::WlTouch::~WlTouch()
 {
+    for (auto const& touch : touches)
+    {
+        if (touch.second)
+        {
+            touch.second.value().remove_destroy_listener(this + touch.first);
+        }
+    }
     on_destroy(this);
 }
 
@@ -57,6 +66,18 @@ void mf::WlTouch::down(
     auto const position_on_target = root_position - target_surface->total_offset();
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
 
+    // We wont have a "real" timestamp from libinput, so we have to make our own based on the time offset
+    auto const time_offset = ms - std::chrono::steady_clock::now().time_since_epoch();
+    // Since a single surface can have multiple touches at the same time, use this + touch_id to get a unique ID
+    target_surface->add_destroy_listener(
+        this + touch_id,
+        [this, touch_id, time_offset]()
+        {
+            auto const timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                time_offset + std::chrono::steady_clock::now().time_since_epoch());
+            up(timestamp, touch_id);
+            frame();
+        });
     touches[touch_id] = mw::make_weak(target_surface);
 
     send_down_event(
@@ -102,8 +123,14 @@ void mf::WlTouch::up(std::chrono::milliseconds const& ms, int32_t touch_id)
 {
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
 
-    if (touches.erase(touch_id))
+    auto const touch = touches.find(touch_id);
+    if (touch != touches.end())
     {
+        if (touch->second)
+        {
+            touch->second.value().remove_destroy_listener(this + touch->first);
+        }
+        touches.erase(touch);
         send_up_event(
             serial,
             ms.count(),
