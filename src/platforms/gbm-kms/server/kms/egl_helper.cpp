@@ -199,10 +199,10 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 {
     eglBindAPI(EGL_OPENGL_ES_API);
 
-    auto const context_attr = create_context_attr(egl_display, static_cast<bool>(debug));
-
     // TODO: Take the required format as a parameter, so we can select the framebuffer format.
     setup_internal(gbm, true, GBM_FORMAT_XRGB8888);
+
+    auto const context_attr = create_context_attr(egl_display, static_cast<bool>(debug));
 
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr.data());
     if (egl_context == EGL_NO_CONTEXT)
@@ -222,10 +222,10 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
 {
     eglBindAPI(EGL_OPENGL_ES_API);
 
-    auto const context_attr = create_context_attr(egl_display, static_cast<bool>(debug));
-
     // TODO: Take the required format as a parameter, so we can select the framebuffer format.
     setup_internal(gbm, false, GBM_FORMAT_XRGB8888);
+
+    auto const context_attr = create_context_attr(egl_display, static_cast<bool>(debug));
 
     egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr.data());
     if (egl_context == EGL_NO_CONTEXT)
@@ -249,8 +249,6 @@ void mgmh::EGLHelper::setup(
 {
     eglBindAPI(EGL_OPENGL_ES_API);
 
-    auto const context_attr = create_context_attr(egl_display, static_cast<bool>(debug));
-
     // TODO: Take the required format as a parameter, so we can select the framebuffer format.
     setup_internal(gbm, owns_egl, GBM_FORMAT_XRGB8888);
 
@@ -261,6 +259,8 @@ void mgmh::EGLHelper::setup(
         nullptr);
     if(egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL window surface"));
+
+    auto const context_attr = create_context_attr(egl_display, static_cast<bool>(debug));
 
     egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr.data());
     if (egl_context == EGL_NO_CONTEXT)
