@@ -20,6 +20,7 @@
 #include "mir/glib_main_loop_sources.h"
 #include "mir/lockable_callback.h"
 #include "mir/raii.h"
+#include <mir/log.h>
 
 #include <algorithm>
 #include <atomic>
@@ -27,6 +28,7 @@
 #include <sstream>
 
 #include <csignal>
+#include <cstring>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -66,7 +68,6 @@ void destroy_idler(gpointer user_data)
     g_source_unref(gsource);
 }
 #endif
-
 }
 
 /*****************
@@ -482,15 +483,17 @@ public:
         remove_write_fd();
     }
 
-    static void notify_sources_of_signal(int sig)
+    static void notify_sources_of_signal(int sig, siginfo_t* info, void*)
     {
+        SignalPid const sigpid{sig, info->si_pid};
+
         for (auto const& write_fd : write_fds)
         {
             // There is a benign race here: write_fd may have changed
             // between checking and using it. This doesn't matter
             // since in the worst case we will call write() with an invalid
             // fd (-1) which is harmless.
-            if (write_fd >= 0 && write(write_fd, &sig, sizeof(sig))) {}
+            if (write_fd >= 0 && write(write_fd, &sigpid, sizeof(sigpid))) {}
         }
     }
 
@@ -573,13 +576,16 @@ md::SignalSources::~SignalSources()
 void md::SignalSources::dispatch_pending_signal()
 {
     auto const sig = read_pending_signal();
-    if (sig != -1)
-        dispatch_signal(sig);
+    if (sig.sig != -1)
+    {
+        mir::log_debug("Handling %s from pid=%d", strsignal(sig.sig), sig.pid);
+        dispatch_signal(sig.sig);
+    }
 }
 
-int md::SignalSources::read_pending_signal()
+auto md::SignalSources::read_pending_signal() -> SignalPid
 {
-    int sig = -1;
+    SignalPid sig{-1, 0};
     size_t total = 0;
 
     do
@@ -592,7 +598,7 @@ int md::SignalSources::read_pending_signal()
         if (nread < 0)
         {
             if (errno != EINTR)
-                return -1;
+                return SignalPid{-1, 0};
         }
         else
         {
@@ -619,13 +625,12 @@ void md::SignalSources::ensure_signal_is_handled(int sig)
     if (handled_signals.find(sig) != handled_signals.end())
         return;
 
-    static int const no_flags{0};
     struct sigaction old_action;
     struct sigaction new_action;
 
-    new_action.sa_handler = SourceRegistration::notify_sources_of_signal;
+    new_action.sa_sigaction = SourceRegistration::notify_sources_of_signal;
     sigfillset(&new_action.sa_mask);
-    new_action.sa_flags = no_flags;
+    new_action.sa_flags = SA_SIGINFO;
 
     if (sigaction(sig, &new_action, &old_action) == -1)
     {

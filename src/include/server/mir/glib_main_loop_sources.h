@@ -114,10 +114,11 @@ private:
         std::vector<int> sigs;
         std::function<void(int)> handler;
     };
+    struct SignalPid { int sig; pid_t pid; };
 
     void dispatch_pending_signal();
     void ensure_signal_is_handled(int sig);
-    int read_pending_signal();
+    SignalPid read_pending_signal();
     void dispatch_signal(int sig);
 
     FdSources& fd_sources;

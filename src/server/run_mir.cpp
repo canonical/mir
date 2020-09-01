@@ -20,7 +20,6 @@
 #include "mir/terminate_with_current_exception.h"
 #include "mir/display_server.h"
 #include "mir/fatal.h"
-#include "mir/log.h"
 #include "mir/main_loop.h"
 #include "mir/server_configuration.h"
 #include "mir/frontend/connector.h"
@@ -62,29 +61,6 @@ extern "C" void fatal_signal_cleanup(int sig)
     signal(sig, old_handler[sig]);
     raise(sig);
 }
-
-struct IgnoreSIGHUP
-{
-    IgnoreSIGHUP()
-    {
-        struct sigaction action;
-        sigemptyset(&action.sa_mask);
-        action.sa_flags = SA_SIGINFO;
-        action.sa_sigaction = [](int, siginfo_t* info, void*)
-            { mir::log_debug("Ignoring SUGHUP from pid=%d", info->si_pid); };
-        sigaction(SIGHUP, &action, &old_sighup_action);
-    }
-
-    ~IgnoreSIGHUP()
-    {
-        sigaction(SIGHUP, &old_sighup_action, nullptr);
-    }
-
-    struct sigaction old_sighup_action;
-
-    IgnoreSIGHUP(IgnoreSIGHUP const&) = delete;
-    IgnoreSIGHUP& operator=(IgnoreSIGHUP const&) = delete;
-};
 }
 
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
@@ -100,18 +76,16 @@ void mir::run_mir(
     DisplayServer* server_ptr{nullptr};
     clear_termination_exception();
 
-    IgnoreSIGHUP const ignore_sighup;
-
     auto const main_loop = config.the_main_loop();
 
     if (terminator)
     {
-        main_loop->register_signal_handler({SIGINT, SIGTERM}, terminator);
+        main_loop->register_signal_handler({SIGINT, SIGHUP, SIGTERM}, terminator);
     }
     else
     {
         main_loop->register_signal_handler(
-            {SIGINT, SIGTERM},
+            {SIGINT, SIGHUP, SIGTERM},
             [&server_ptr](int)
             {
                 assert(server_ptr);
