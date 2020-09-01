@@ -80,12 +80,12 @@ void mir::run_mir(
 
     if (terminator)
     {
-        main_loop->register_signal_handler({SIGINT, SIGTERM}, terminator);
+        main_loop->register_signal_handler({SIGINT, SIGHUP, SIGTERM}, terminator);
     }
     else
     {
         main_loop->register_signal_handler(
-            {SIGINT, SIGTERM},
+            {SIGINT, SIGHUP, SIGTERM},
             [&server_ptr](int)
             {
                 assert(server_ptr);
