@@ -41,11 +41,11 @@ mf::WlTouch::WlTouch(
 
 mf::WlTouch::~WlTouch()
 {
-    for (auto const& touch : touches)
+    for (auto const& touch : touch_id_to_surface)
     {
         if (touch.second)
         {
-            touch.second.value().remove_destroy_listener(this + touch.first);
+            touch.second.value().remove_destroy_listener(unique_key_for(touch.first));
         }
     }
     on_destroy(this);
@@ -68,9 +68,9 @@ void mf::WlTouch::down(
 
     // We wont have a "real" timestamp from libinput, so we have to make our own based on the time offset
     auto const time_offset = ms - std::chrono::steady_clock::now().time_since_epoch();
-    // Since a single surface can have multiple touches at the same time, use this + touch_id to get a unique ID
+    // Since a single surface can have multiple touches at the same time, use unique_key_for() to get a unique ID
     target_surface->add_destroy_listener(
-        this + touch_id,
+        unique_key_for(touch_id),
         [this, touch_id, time_offset]()
         {
             auto const timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -78,7 +78,7 @@ void mf::WlTouch::down(
             up(timestamp, touch_id);
             frame();
         });
-    touches[touch_id] = mw::make_weak(target_surface);
+    touch_id_to_surface[touch_id] = mw::make_weak(target_surface);
 
     send_down_event(
         serial,
@@ -96,20 +96,20 @@ void mf::WlTouch::motion(
     WlSurface* /* root_surface */,
     geometry::Point const& root_position)
 {
-    auto const target_surface = touches.find(touch_id);
+    auto const touch = touch_id_to_surface.find(touch_id);
 
-    if (target_surface == touches.end())
+    if (touch == touch_id_to_surface.end())
     {
         log_warning("WlTouch::motion(): invalid ID %d", touch_id);
         return;
     }
-    else if (!target_surface->second)
+    else if (!touch->second)
     {
         log_warning("WlTouch::motion(): ID %d maps to destroyed surface", touch_id);
         return;
     }
 
-    auto const position_on_target = root_position - target_surface->second.value().total_offset();
+    auto const position_on_target = root_position - touch->second.value().total_offset();
 
     send_motion_event(
         ms.count(),
@@ -123,14 +123,14 @@ void mf::WlTouch::up(std::chrono::milliseconds const& ms, int32_t touch_id)
 {
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
 
-    auto const touch = touches.find(touch_id);
-    if (touch != touches.end())
+    auto const touch = touch_id_to_surface.find(touch_id);
+    if (touch != touch_id_to_surface.end())
     {
         if (touch->second)
         {
-            touch->second.value().remove_destroy_listener(this + touch->first);
+            touch->second.value().remove_destroy_listener(unique_key_for(touch->first));
         }
-        touches.erase(touch);
+        touch_id_to_surface.erase(touch);
         send_up_event(
             serial,
             ms.count(),
@@ -148,4 +148,9 @@ void mf::WlTouch::frame()
     if (can_send_frame)
         send_frame_event();
     can_send_frame = false;
+}
+
+void const* mf::WlTouch::unique_key_for(int32_t touch_id) const
+{
+    return this + touch_id;
 }
