@@ -358,6 +358,11 @@ void mgw::DisplayClient::Output::release_current()
 
 void mgw::DisplayClient::Output::swap_buffers()
 {
+    // Avoid throttling compositing by blocking in eglSwapBuffers().
+    // NB We can likely do even better by adding a frame callback
+    // and using that to schedule composition
+    eglSwapInterval(owner->egldisplay, 0);
+
     if (eglSwapBuffers(owner->egldisplay, eglsurface) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(egl_error("Failed to perform buffer swap"));
 }
