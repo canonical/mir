@@ -25,6 +25,7 @@
 #include "mir/anonymous_shm_file.h"
 #include "mir/input/keymap.h"
 #include "mir/log.h"
+#include "mir/fatal.h"
 
 #include <xkbcommon/xkbcommon.h>
 #include <boost/throw_exception.hpp>
@@ -66,6 +67,10 @@ mf::WlKeyboard::WlKeyboard(
 
 mf::WlKeyboard::~WlKeyboard()
 {
+    if (focused_surface)
+    {
+        focused_surface.value().remove_destroy_listener(this);
+    }
     on_destroy(this);
 }
 
@@ -98,6 +103,11 @@ void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, WlSurface* surface
 
 void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
 {
+    if (client != surface->client)
+    {
+        fatal_error("WlKeyboard::focussed() called with a surface of the wrong client");
+    }
+
     bool const is_currently_focused = (focused_surface && &focused_surface.value() == surface);
 
     if (should_be_focused == is_currently_focused)
@@ -105,6 +115,7 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
 
     if (focused_surface)
     {
+        focused_surface.value().remove_destroy_listener(this);
         auto const serial = wl_display_next_serial(wl_client_get_display(client));
         send_leave_event(serial, focused_surface.value().raw_resource());
     }
@@ -136,6 +147,13 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
                 keyboard_state.data(),
                 keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
         }
+
+        surface->add_destroy_listener(
+            this,
+            [this, surface]()
+            {
+                focussed(surface, false);
+            });
 
         auto const serial = wl_display_next_serial(wl_client_get_display(client));
         send_enter_event(serial, surface->raw_resource(), &key_state);
