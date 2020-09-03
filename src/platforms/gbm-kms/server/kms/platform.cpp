@@ -50,7 +50,8 @@ namespace mgmh = mgg::helpers;
 mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         std::shared_ptr<ConsoleServices> const& vt,
                         EmergencyCleanupRegistry&,
-                        BypassOption bypass_option)
+                        BypassOption bypass_option,
+                        std::shared_ptr<EGLExtensions::DebugKHR> debug)
     : udev{std::make_shared<mir::udev::Context>()},
       drm{helpers::DRMHelper::open_all_devices(udev, *vt)},
       // We assume the first DRM device is the boot GPU, and arbitrarily pick it as our
@@ -60,7 +61,8 @@ mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
       gbm{std::make_shared<mgmh::GBMHelper>(drm.front()->fd)},
       listener{listener},
       vt{vt},
-      bypass_option_{bypass_option}
+      bypass_option_{bypass_option},
+      debug{std::move(debug)}
 {
     auth_factory = std::make_unique<DRMNativePlatformAuthFactory>(*drm.front());
 }
@@ -80,6 +82,7 @@ mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
         vt,
         bypass_option_,
         initial_conf_policy,
+        debug,
         gl_config,
         listener);
 }

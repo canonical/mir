@@ -20,6 +20,7 @@
 #include "kms_output.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/transformation.h"
+#include "mir/graphics/egl_extensions.h"
 #include "bypass.h"
 #include "gbm_buffer.h"
 #include "mir/fatal.h"
@@ -236,7 +237,8 @@ public:
         mir::Fd const& drm_fd,
         uint32_t width,
         uint32_t height,
-        uint32_t /*format*/)
+        uint32_t /*format*/,
+        std::shared_ptr<mg::EGLExtensions::DebugKHR> debug)
         : eglCreateImageKHR{
               reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"))},
           eglDestroyImageKHR{
@@ -247,9 +249,12 @@ public:
           width{width},
           height{height},
           surface{device.create_scanout_surface(width, height, false)},
-          egl{NoAuxGlConfig{}}
+          egl{NoAuxGlConfig{}, debug}
     {
         egl.setup(device, surface.get(), EGL_NO_CONTEXT, true);
+
+        egl.make_current();
+        egl.set_debug_label("EGLBufferCopier");
 
         require_gl_extensions({
             "GL_OES_EGL_image"
@@ -261,8 +266,6 @@ public:
                 "EGL_KHR_image_base",
                 "EGL_EXT_image_dma_buf_import"
         });
-
-        egl.make_current();
 
         auto vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vshader, nullptr);
@@ -431,7 +434,8 @@ mgg::DisplayBuffer::DisplayBuffer(
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     GBMOutputSurface&& surface_gbm,
     geom::Rectangle const& area,
-    glm::mat2 const& transformation)
+    glm::mat2 const& transformation,
+    std::shared_ptr<EGLExtensions::DebugKHR> debug)
     : listener(listener),
       bypass_option(option),
       outputs(outputs),
@@ -439,11 +443,13 @@ mgg::DisplayBuffer::DisplayBuffer(
       area(area),
       transform{transformation},
       needs_set_crtc{false},
-      page_flips_pending{false}
+      page_flips_pending{false},
+      debug{std::move(debug)}
 {
     listener->report_successful_setup_of_native_resources();
 
     make_current();
+    surface.set_debug_label("DisplayBuffer");
 
     listener->report_successful_egl_make_current_on_construction();
 
@@ -466,7 +472,8 @@ mgg::DisplayBuffer::DisplayBuffer(
                 mir::Fd{mir::IntOwnedFd{outputs.front()->drm_fd()}},
                 surface.size().width.as_int(),
                 surface.size().height.as_int(),
-                GBM_FORMAT_XRGB8888),
+                GBM_FORMAT_XRGB8888,
+                debug),
             std::placeholders::_1);
     }
     else
@@ -795,6 +802,11 @@ void mgg::GBMOutputSurface::swap_buffers()
 void mgg::GBMOutputSurface::bind()
 {
 
+}
+
+void mgg::GBMOutputSurface::set_debug_label(const char* label)
+{
+    egl.set_debug_label(label);
 }
 
 auto mgg::GBMOutputSurface::lock_front() -> FrontBuffer

@@ -64,9 +64,17 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     // ensure gbm-kms finds the gbm-kms mir-platform symbols
 
+    std::shared_ptr<mg::EGLExtensions::DebugKHR> debug_ext{};
     if (options->is_set(mir::options::debug_opt))
     {
         mg::initialise_egl_logger(logger);
+        try
+        {
+            debug_ext = std::make_shared<mg::EGLExtensions::DebugKHR>();
+        }
+        catch (std::exception const&)
+        {
+        }
     }
 
     auto bypass_option = mgg::BypassOption::allowed;
@@ -74,7 +82,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
         bypass_option = mgg::BypassOption::prohibited;
 
     return mir::make_module_ptr<mgg::Platform>(
-        report, console, *emergency_cleanup_registry, bypass_option);
+        report, console, *emergency_cleanup_registry, bypass_option, std::move(debug_ext));
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
@@ -144,6 +152,9 @@ mg::PlatformPriority probe_graphics_platform(
             return mg::PlatformPriority::unsupported;
         }
     }
+
+    auto const debug_extensions = mg::EGLExtensions::DebugKHR::extension_or_null_object();
+    auto debug = std::make_shared<mg::EGLExtensions::DebugKHR>(debug_extensions);
 
     // Check for suitability
     mir::Fd tmp_fd;
@@ -233,7 +244,7 @@ mg::PlatformPriority probe_graphics_platform(
                 }
 
                 mgg::helpers::GBMHelper gbm_device{tmp_fd};
-                mgg::helpers::EGLHelper egl{MinimalGLConfig()};
+                mgg::helpers::EGLHelper egl{MinimalGLConfig(), debug};
 
                 egl.setup(gbm_device);
 

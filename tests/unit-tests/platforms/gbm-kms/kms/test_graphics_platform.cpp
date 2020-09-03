@@ -85,7 +85,8 @@ public:
               mir::report::null_display_report(),
               std::make_shared<mtd::StubConsoleServices>(),
               *std::make_shared<mtd::NullEmergencyCleanup>(),
-              mgg::BypassOption::allowed);
+              mgg::BypassOption::allowed,
+              std::shared_ptr<mg::EGLExtensions::DebugKHR>{});
     }
 
     std::shared_ptr<ml::Logger> logger;

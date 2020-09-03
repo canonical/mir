@@ -35,12 +35,13 @@ namespace helpers
 class EGLHelper
 {
 public:
-    EGLHelper(GLConfig const& gl_config);
+    EGLHelper(GLConfig const& gl_config, std::shared_ptr<EGLExtensions::DebugKHR> debug);
     EGLHelper(
         GLConfig const& gl_config,
         GBMHelper const& gbm,
         gbm_surface* surface,
-        EGLContext shared_context);
+        EGLContext shared_context,
+        std::shared_ptr<EGLExtensions::DebugKHR> debug);
     ~EGLHelper() noexcept;
     EGLHelper(EGLHelper&& from);
 
@@ -54,6 +55,15 @@ public:
     bool swap_buffers();
     bool make_current() const;
     bool release_current() const;
+
+    /**
+     * Set the EGL_KHR_debug label for the objects owned by this EGLHelper
+     *
+     * \param label [in] The label to use.
+     * \note The label MUST be a pointer to a null-terminated string in static storage.
+     *       There is no mechanism for freeing this label.
+     */
+    void set_debug_label(char const* label);
 
     EGLContext context() const { return egl_context; }
 
@@ -69,6 +79,7 @@ private:
     EGLSurface egl_surface;
     bool should_terminate_egl;
     EGLExtensions::PlatformBaseEXT platform_base;
+    std::shared_ptr<EGLExtensions::DebugKHR> const debug;
 };
 }
 }
