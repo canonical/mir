@@ -208,14 +208,17 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm)
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 
-    make_current();
-    if (epoxy_has_gl_extension("GL_KHR_debug"))
+    if (debug)
     {
-        glDebugMessageCallbackKHR(&gl_logger, nullptr);
-        // Enable absolutely everything
-        glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+        make_current();
+        if (epoxy_has_gl_extension("GL_KHR_debug"))
+        {
+            glDebugMessageCallbackKHR(&gl_logger, nullptr);
+            // Enable absolutely everything
+            glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+        }
+        release_current();
     }
-    release_current();
 }
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
@@ -231,14 +234,17 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 
-    make_current();
-    if (epoxy_has_gl_extension("GL_KHR_debug"))
+    if (debug)
     {
-        glDebugMessageCallbackKHR(&gl_logger, nullptr);
-        // Enable absolutely everything
-        glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+        make_current();
+        if (epoxy_has_gl_extension("GL_KHR_debug"))
+        {
+            glDebugMessageCallbackKHR(&gl_logger, nullptr);
+            // Enable absolutely everything
+            glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+        }
+        release_current();
     }
-    release_current();
 }
 
 void mgmh::EGLHelper::setup(
@@ -265,14 +271,18 @@ void mgmh::EGLHelper::setup(
     egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr.data());
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
-    make_current();
-    if (epoxy_has_gl_extension("GL_KHR_debug"))
+
+    if (debug)
     {
-        glDebugMessageCallbackKHR(&gl_logger, nullptr);
-        // Enable absolutely everything
-        glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+        make_current();
+        if (epoxy_has_gl_extension("GL_KHR_debug"))
+        {
+            glDebugMessageCallbackKHR(&gl_logger, nullptr);
+            // Enable absolutely everything
+            glDebugMessageControlKHR(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+        }
+        release_current();
     }
-    release_current();
 }
 
 mgmh::EGLHelper::~EGLHelper() noexcept
