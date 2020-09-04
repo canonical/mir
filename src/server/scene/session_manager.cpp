@@ -143,14 +143,14 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
 {
     std::shared_ptr<Session> new_session = std::make_shared<ApplicationSession>(
         surface_stack,
-            surface_factory,
-            buffer_stream_factory,
-            client_pid,
-            name,
-            snapshot_strategy,
-            observers,
-            sender,
-            allocator);
+        surface_factory,
+        buffer_stream_factory,
+        client_pid,
+        name,
+        snapshot_strategy,
+        observers,
+        sender,
+        allocator);
 
     app_container->insert_session(new_session);
 
