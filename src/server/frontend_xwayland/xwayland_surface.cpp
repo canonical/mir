@@ -19,6 +19,7 @@
 #include "xwayland_surface.h"
 #include "xwayland_log.h"
 #include "xwayland_surface_observer.h"
+#include "xwayland_client_manager.h"
 
 #include "mir/frontend/wayland.h"
 #include "mir/scene/surface_creation_parameters.h"
@@ -136,11 +137,13 @@ mf::XWaylandSurface::XWaylandSurface(
     std::shared_ptr<XCBConnection> const& connection,
     WlSeat& seat,
     std::shared_ptr<shell::Shell> const& shell,
+    std::shared_ptr<XWaylandClientManager> const& client_manager,
     xcb_create_notify_event_t *event)
     : xwm(wm),
       connection{connection},
       seat(seat),
       shell{shell},
+      client_manager{client_manager},
       window(event->window),
       property_handlers{
           property_handler<std::string const&>(
@@ -299,6 +302,8 @@ void mf::XWaylandSurface::close()
         shell->destroy_surface(scene_surface->session().lock(), scene_surface);
         scene_surface.reset();
         // Someone may still be holding on to the surface somewhere, and that's fine
+
+        client_manager->release(this);
     }
 
     if (observer)
@@ -552,10 +557,28 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         reply_functions.push_back(handler.second());
     }
 
+    std::shared_ptr<ms::Session> session;
+    reply_functions.push_back(connection->read_property(
+        window, connection->_NET_WM_PID,
+        [&](uint32_t pid)
+        {
+            session = client_manager->get_session_for_client(this, pid);
+        },
+        [&]()
+        {
+            log_warning("X11 app did not set _NET_WM_PID, grouping it under the default XWayland application");
+            session = get_session(wl_surface->resource);
+        }));
+
     // Wait for and process all the XCB replies
     for (auto const& reply_function : reply_functions)
     {
         reply_function();
+    }
+
+    if (!session)
+    {
+        fatal_error("Property handlers did not set a valid session");
     }
 
     // property_handlers will have updated the pending spec. Use it.
@@ -570,7 +593,6 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         }
     }
 
-    auto const session = get_session(wl_surface->resource);
     auto const surface = shell->create_surface(session, params, observer);
     inform_client_of_window_state(state);
     connection->configure_window(

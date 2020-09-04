@@ -42,6 +42,7 @@ namespace frontend
 class WlSeat;
 class XWaylandWM;
 class XWaylandSurfaceObserver;
+class XWaylandClientManager;
 
 class XWaylandSurface
     : public XWaylandSurfaceRoleSurface,
@@ -53,6 +54,7 @@ public:
         std::shared_ptr<XCBConnection> const& connection,
         WlSeat& seat,
         std::shared_ptr<shell::Shell> const& shell,
+        std::shared_ptr<XWaylandClientManager> const& client_manager,
         xcb_create_notify_event_t *event);
     ~XWaylandSurface();
 
@@ -145,6 +147,7 @@ private:
     std::shared_ptr<XCBConnection> const connection;
     WlSeat& seat;
     std::shared_ptr<shell::Shell> const shell;
+    std::shared_ptr<XWaylandClientManager> const client_manager;
     xcb_window_t const window;
     std::map<xcb_window_t, std::function<std::function<void()>()>> const property_handlers;
 

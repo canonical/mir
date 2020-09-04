@@ -44,6 +44,7 @@ namespace frontend
 class XWaylandSurface;
 class XWaylandWMShell;
 class XWaylandCursors;
+class XWaylandClientManager;
 
 class XWaylandSceneObserver;
 
@@ -96,6 +97,7 @@ private:
     std::unique_ptr<XWaylandCursors> const cursors;
     xcb_window_t const wm_window;
     std::shared_ptr<XWaylandSceneObserver> const scene_observer;
+    std::shared_ptr<XWaylandClientManager> const client_manager;
 
     std::mutex mutex;
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;

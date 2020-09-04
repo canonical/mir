@@ -24,6 +24,7 @@
 #include "xwayland_wm_shell.h"
 #include "xwayland_surface_role.h"
 #include "xwayland_cursors.h"
+#include "xwayland_client_manager.h"
 
 #include "mir/fd.h"
 #include "mir/scene/null_observer.h"
@@ -133,7 +134,8 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
       cursors{std::make_unique<XWaylandCursors>(connection)},
       wm_window{create_wm_window(*connection)},
-      scene_observer{std::make_shared<XWaylandSceneObserver>(this)}
+      scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
+      client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)}
 {
     check_xfixes(*connection);
 
@@ -568,6 +570,7 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
             connection,
             wm_shell->seat,
             wm_shell->shell,
+            client_manager,
             event);
 
         {
