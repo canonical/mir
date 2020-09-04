@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="mir_window_management_unstable_v1">
+
+  <copyright>
+    Copyright © 2020 William Wold
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice (including the next
+    paragraph) shall be included in all copies or substantial portions of the
+    Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+  </copyright>
+
+  <interface name="zmir_wm_base_v1" version="1">
+    <description summary="use enhanced Mir window management features">
+      The mir_wm_base interface is exposed as a global object enabling clients
+      to fine tune the behavior of windows created with other protocols.
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy xdg_wm_base">
+        Destroy this mir_wm_base object. Objects created with this object are
+        unaffected
+      </description>
+    </request>
+
+    <request name="get_shell_surface">
+      <description summary="create a mir_shell_surface object for an existing surface">
+          This creates a new mir_shell_surface object that can be used to set Mir
+          window management hints on an existing shell surface.
+
+          The hints will only have an effect once the surface is mapped with
+          a shell surface role from another protocol (such as xdg_surface)
+      </description>
+      <arg name="id" type="new_id" interface="zmir_shell_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+    </request>
+  </interface>
+
+  <interface name="zmir_shell_surface_v1" version="1">
+    <description summary="allows specializing a shell surface">
+      A mir_shell_surface allows setting Mir-specific properties for an exisitng
+      shell surface (such as surface type). This is NOT a surface role. The
+      surface should have a shell surface roll from another protocol (such as
+      xdg_surface).
+    </description>
+
+    <enum name="error">
+      <entry name="invalid_window_type" value="0"
+        summary="given window type is not valid for window"/>
+    </enum>
+
+    <enum name="window_type">
+      <entry name="default" value="0" summary="the role's default type'"/>
+      <entry name="satellite" value="1"
+        summary="an accessory window such as a toolbox'"/>
+    </enum>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the mir_shell_surface object">
+        Notify the compositor that the zmir_shell_surface_v1 will no longer be used.
+      </description>
+    </request>
+
+    <request name="set_window_type">
+      <description summary="set the surface's window type">
+        The window type affects various aspects of the surface's behavior. This
+        state is double-buffered and will be applied next wl_surface.commit.
+      </description>
+      <arg name="type" type="uint" enum="window_type" summary="window type"/>
+    </request>
+  </interface>
+</protocol>
