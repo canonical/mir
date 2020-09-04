@@ -116,9 +116,10 @@ struct GLMark2Xwayland : AbstractGLMark2Test
 
 struct GLMark2Wayland : AbstractGLMark2Test
 {
-    GLMark2Wayland()
+    void SetUp() override
     {
-        add_to_environment("WAYLAND_DISPLAY",                "GLMark2Wayland");
+        add_to_environment("WAYLAND_DISPLAY", "GLMark2Wayland");
+        AbstractGLMark2Test::SetUp();
     }
 
     char const* command() override
@@ -127,6 +128,34 @@ struct GLMark2Wayland : AbstractGLMark2Test
         return command;
     }
 };
+
+struct HostedGLMark2Wayland : GLMark2Wayland
+{
+    mtf::AsyncServerRunner host;
+    static char const* const host_socket;
+
+    HostedGLMark2Wayland()
+    {
+        // We don't need two (or even one) servers offering mirclient
+        add_to_environment("MIR_SERVER_ENABLE_MIRCLIENT", nullptr);
+
+        host.add_to_environment("WAYLAND_DISPLAY", host_socket);
+        host.start_server();
+    }
+
+    void SetUp() override
+    {
+        add_to_environment("MIR_SERVER_WAYLAND_HOST", host_socket);
+        GLMark2Wayland::SetUp();
+    }
+
+    ~HostedGLMark2Wayland()
+    {
+        host.stop_server();
+    }
+};
+
+char const* const HostedGLMark2Wayland::host_socket = "GLMark2WaylandHost";
 
 TEST_F(GLMark2Wayland, fullscreen)
 {
@@ -144,6 +173,16 @@ TEST_F(GLMark2Xwayland, fullscreen)
 }
 
 TEST_F(GLMark2Xwayland, windowed)
+{
+    EXPECT_GT(run_glmark2(""), 0);
+}
+
+TEST_F(HostedGLMark2Wayland, fullscreen)
+{
+    EXPECT_GT(run_glmark2("--fullscreen"), 0);
+}
+
+TEST_F(HostedGLMark2Wayland, windowed)
 {
     EXPECT_GT(run_glmark2(""), 0);
 }
