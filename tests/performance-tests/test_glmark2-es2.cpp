@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2017 Canonical Ltd.
+ * Copyright © 2014-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -16,11 +16,13 @@
 
 #include "mir_test_framework/async_server_runner.h"
 #include "mir/test/popen.h"
+#include "mir/test/spin_wait.h"
 #include <mir_test_framework/executable_path.h>
 #include <miral/x11_support.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
 
 #include <cstdlib>
 #include <cstdio>
@@ -29,7 +31,9 @@
 
 namespace mo = mir::options;
 namespace mtf = mir_test_framework;
+using namespace std::literals::chrono_literals;
 using namespace testing;
+using mir::test::spin_wait_for_condition_or_timeout;
 
 namespace
 {
@@ -131,27 +135,48 @@ struct GLMark2Wayland : AbstractGLMark2Test
 
 struct HostedGLMark2Wayland : GLMark2Wayland
 {
-    mtf::AsyncServerRunner host;
     static char const* const host_socket;
+    pid_t pid = 0;
 
     HostedGLMark2Wayland()
     {
         // We don't need two (or even one) servers offering mirclient
         add_to_environment("MIR_SERVER_ENABLE_MIRCLIENT", nullptr);
 
-        host.add_to_environment("WAYLAND_DISPLAY", host_socket);
-        host.start_server();
+        if ((pid = fork()))
+        {
+            EXPECT_THAT(pid, Gt(0));
+
+            auto const socket = getenv("XDG_RUNTIME_DIR") + std::string("/") + host_socket;
+            auto wait_for_host = [host = socket.c_str()] { return access(host, R_OK | W_OK) == 0; };
+
+            EXPECT_TRUE(spin_wait_for_condition_or_timeout(wait_for_host, 10s));
+        }
+        else
+        {
+            add_to_environment("WAYLAND_DISPLAY", host_socket);
+            start_server();
+            wait_for_server_exit();
+            exit(0);
+        }
+    }
+
+    ~HostedGLMark2Wayland()
+    {
+        if (pid > 0)
+        {
+            kill(pid, SIGTERM);
+            waitpid(pid, nullptr, 0);
+        }
     }
 
     void SetUp() override
     {
         add_to_environment("MIR_SERVER_WAYLAND_HOST", host_socket);
-        GLMark2Wayland::SetUp();
-    }
 
-    ~HostedGLMark2Wayland()
-    {
-        host.stop_server();
+        static char const* argv[] = { __PRETTY_FUNCTION__, nullptr };
+        server.set_command_line(1, argv);
+        GLMark2Wayland::SetUp();
     }
 };
 
