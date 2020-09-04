@@ -168,7 +168,6 @@ private:
 
     /// Set in set_wl_surface and cleared when a scene surface is created from it
     std::experimental::optional<std::shared_ptr<XWaylandSurfaceObserver>> surface_observer;
-    std::weak_ptr<scene::Session> weak_session;
     std::unique_ptr<shell::SurfaceSpecification> nullable_pending_spec;
     std::weak_ptr<scene::Surface> weak_scene_surface;
 };

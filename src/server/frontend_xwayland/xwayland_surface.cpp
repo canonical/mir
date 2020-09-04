@@ -269,8 +269,6 @@ void mf::XWaylandSurface::close()
         scene_surface = weak_scene_surface.lock();
         weak_scene_surface.reset();
 
-        weak_session.reset();
-
         if (surface_observer)
         {
             observer = surface_observer.value();
@@ -518,7 +516,6 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     }
 
     WindowState state;
-    std::shared_ptr<scene::Session> session;
     scene::SurfaceCreationParameters params;
 
     auto const observer = std::make_shared<XWaylandSurfaceObserver>(seat, wl_surface, this);
@@ -526,13 +523,10 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        if (surface_observer || weak_session.lock() || weak_scene_surface.lock())
+        if (surface_observer || weak_scene_surface.lock())
             BOOST_THROW_EXCEPTION(std::runtime_error("XWaylandSurface::attach_wl_surface() called multiple times"));
 
-        session = get_session(wl_surface->resource);
-
         surface_observer = observer;
-        weak_session = session;
 
         state = cached.state;
         state.withdrawn = false;
@@ -576,6 +570,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         }
     }
 
+    auto const session = get_session(wl_surface->resource);
     auto const surface = shell->create_surface(session, params, observer);
     inform_client_of_window_state(state);
     connection->configure_window(
