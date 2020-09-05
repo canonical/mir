@@ -17,6 +17,7 @@
  */
 
 #include "xwayland_client_manager.h"
+#include "xwayland_log.h"
 #include "null_event_sink.h"
 #include "mir/shell/shell.h"
 #include "mir/scene/session.h"
@@ -82,11 +83,22 @@ auto mf::XWaylandClientManager::get_session_for_client(
         // The info struct will be deleted in release() when the owner count hits 0 again
         info = new SessionInfo{session, client_pid, 0};
         sessions_by_pid.insert(std::make_pair(client_pid, info));
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_info("Created new XWayland session for PID %d", client_pid);
+        }
     }
     else
     {
         // We already have an active session for the given PID, use it
         info = iter->second;
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_info(
+                "Returning existing XWayland session for PID %d (ref count %d)",
+                client_pid,
+                info->owner_count + 1);
+        }
     }
 
     info->owner_count++; // Changes the owner count from 0 to 1 the first time
@@ -114,9 +126,17 @@ void mf::XWaylandClientManager::release(void* owner_key)
     if (info->owner_count <= 0)
     {
         // When a session has no owners, close it and delete the info struct
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_info("Closing XWayland session for PID %d", info->pid);
+        }
         session_to_close = std::move(info->session);
         sessions_by_pid.erase(info->pid);
         delete info;
+    }
+    else if (verbose_xwayland_logging_enabled())
+    {
+        log_info("Dereferencing XWayland session for PID %d (ref count %d)", info->pid, info->owner_count);
     }
 
     // Don't run close_session() under lock because there's no reason to
