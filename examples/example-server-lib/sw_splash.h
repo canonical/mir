@@ -28,6 +28,7 @@ public:
     SwSplash();
     ~SwSplash();
 
+    void operator()(bool splash_opt);
     void operator()(struct wl_display* display);
     void operator()(std::weak_ptr<mir::scene::Session> const& session);
 

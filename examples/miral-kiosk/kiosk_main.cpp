@@ -79,6 +79,7 @@ struct KioskAuthorizer : miral::ApplicationAuthorizer
 };
 
 std::atomic<bool> KioskAuthorizer::startup_only{false};
+
 }
 
 int main(int argc, char const* argv[])
@@ -108,6 +109,12 @@ int main(int argc, char const* argv[])
     MirRunner runner{argc, argv};
 
     DisplayConfiguration display_config{runner};
+ 
+    CommandLineOption show_splash{
+        [&](bool show_splash) {splash(show_splash); },
+        "splash",
+        "Control display splash on startup",
+        true};
 
     return runner.run_with(
         {
@@ -116,6 +123,7 @@ int main(int argc, char const* argv[])
             set_window_management_policy<KioskWindowManagerPolicy>(splash),
             SetApplicationAuthorizer<KioskAuthorizer>{splash},
             Keymap{},
+            show_splash,
             startup_only,
             CommandLineOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
             StartupInternalClient{splash}
