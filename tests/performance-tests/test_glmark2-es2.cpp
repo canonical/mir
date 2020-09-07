@@ -137,7 +137,7 @@ struct HostedGLMark2Wayland : GLMark2Wayland
     HostedGLMark2Wayland()
     {
         // We don't need two (or even one) servers offering mirclient
-        add_to_environment("MIR_SERVER_ENABLE_MIRCLIENT", nullptr);
+        host.add_to_environment("MIR_SERVER_ENABLE_MIRCLIENT", nullptr);
 
         host.add_to_environment("WAYLAND_DISPLAY", host_socket);
         host.start_server();
