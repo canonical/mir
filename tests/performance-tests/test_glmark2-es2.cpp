@@ -18,18 +18,19 @@
 #include "mir/test/popen.h"
 #include "mir/test/spin_wait.h"
 #include <mir_test_framework/executable_path.h>
+#include <mir_test_framework/main.h>
 #include <miral/x11_support.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <string>
 
 namespace mo = mir::options;
+namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 using namespace std::literals::chrono_literals;
 using namespace testing;
@@ -141,23 +142,23 @@ struct HostedGLMark2Wayland : GLMark2Wayland
     HostedGLMark2Wayland()
     {
         // We don't need two (or even one) servers offering mirclient
-        add_to_environment("MIR_SERVER_ENABLE_MIRCLIENT", nullptr);
+        // As AsyncServerRunner already sets this using add_to_environment
+        // we can't do it that way as we'll end up "restoring" the wrong state
+        unsetenv("MIR_SERVER_ENABLE_MIRCLIENT");
 
         if ((pid = fork()))
         {
             EXPECT_THAT(pid, Gt(0));
-
-            auto const socket = getenv("XDG_RUNTIME_DIR") + std::string("/") + host_socket;
-            auto wait_for_host = [host = socket.c_str()] { return access(host, R_OK | W_OK) == 0; };
-
-            EXPECT_TRUE(spin_wait_for_condition_or_timeout(wait_for_host, 10s));
         }
         else
         {
+            auto args = get_host_args();
+
             add_to_environment("WAYLAND_DISPLAY", host_socket);
-            start_server();
-            wait_for_server_exit();
-            exit(0);
+            std::string const server_path{mtf::executable_path() + "/mir_demo_server"};
+            args[0] = server_path.c_str();
+
+            execv(server_path.c_str(), const_cast<char* const*>(args.data()));
         }
     }
 
@@ -165,22 +166,89 @@ struct HostedGLMark2Wayland : GLMark2Wayland
     {
         if (pid > 0)
         {
-            kill(pid, SIGTERM);
             waitpid(pid, nullptr, 0);
         }
     }
 
     void SetUp() override
     {
+        auto const socket = getenv("XDG_RUNTIME_DIR") + std::string("/") + host_socket;
+        auto wait_for_host = [host = socket.c_str()] { return access(host, R_OK | W_OK) == 0; };
+        EXPECT_TRUE(spin_wait_for_condition_or_timeout(wait_for_host, 10s));
+
         add_to_environment("MIR_SERVER_WAYLAND_HOST", host_socket);
 
-        static char const* argv[] = { __PRETTY_FUNCTION__, nullptr };
-        server.set_command_line(1, argv);
+        auto args = get_nested_args();
+        server.set_command_line(1, args.data());
         GLMark2Wayland::SetUp();
     }
+
+    void TearDown() override
+    {
+        GLMark2Wayland::TearDown();
+        if (pid > 0)
+        {
+            kill(pid, SIGTERM);
+        }
+    }
+
+    std::vector<char const*> get_host_args() const;
+    std::vector<char const*> get_nested_args() const;
 };
 
 char const* const HostedGLMark2Wayland::host_socket = "GLMark2WaylandHost";
+
+std::vector<char const*> HostedGLMark2Wayland::get_host_args() const
+{
+    int argc;
+    char const* const* argv;
+    mtf::get_commandline(&argc, &argv);
+
+    std::vector<char const*> args;
+
+    for (auto arg = argv; arg != argv+argc; ++arg)
+    {
+        if (std::string("--logging") == *arg)
+        {
+            if (++arg == argv+argc)
+                break;  // Lousy args, these will break anyway
+        }
+        else
+        {
+            args.push_back(*arg);
+        }
+    }
+
+    args.push_back(nullptr);
+    return args;
+}
+
+std::vector<char const*> HostedGLMark2Wayland::get_nested_args() const
+{
+    int argc;
+    char const* const* argv;
+    mtf::get_commandline(&argc, &argv);
+
+    std::vector<char const*> args;
+
+    auto arg = argv;
+
+    args.push_back(*arg++);
+
+    for (; arg != argv+argc; ++arg)
+    {
+        if (std::string("--logging") == *arg)
+        {
+            args.push_back(*arg);
+            if (++arg == argv+argc)
+                break;  // Lousy args, these will break anyway
+            args.push_back(*arg);
+        }
+    }
+
+    args.push_back(nullptr);
+    return args;
+}
 
 TEST_F(GLMark2Wayland, fullscreen)
 {

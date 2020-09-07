@@ -59,3 +59,8 @@ int mir_test_framework::main(int argc, char* argv[])
     return RUN_ALL_TESTS();
 }
 
+void mir_test_framework::get_commandline(int* argc, char const* const** argv)
+{
+    *argc = ::argc;
+    *argv = ::argv;
+}

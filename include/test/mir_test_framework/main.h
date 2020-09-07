@@ -38,6 +38,11 @@ int main(int argc, char* argv[]);
  * referenced by argv must remain valid during the tests.
  */
 void set_commandline(int argc, char* argv[]);
+
+/**
+ * Access commandline for use in the mir test framework
+ */
+void get_commandline(int* argc, char const* const** argv);
 }
 
 #endif //MIR_TEST_FRAMEWORK_MAIN_H
