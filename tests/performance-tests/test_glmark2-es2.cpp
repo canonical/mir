@@ -158,6 +158,18 @@ struct HostedGLMark2Wayland : GLMark2Wayland
             std::string const server_path{mtf::executable_path() + "/mir_demo_server"};
             args[0] = server_path.c_str();
 
+            const ::testing::TestInfo *const test_info =
+                ::testing::UnitTest::GetInstance()->current_test_info();
+
+            char output_filename[256];
+            snprintf(output_filename, sizeof(output_filename) - 1,
+                     "/tmp/%s_%s_host.log",
+                     test_info->test_case_name(), test_info->name());
+
+            printf("Saving host output to: %s\n", output_filename);
+            freopen(output_filename, "a", stdout);
+            freopen(output_filename, "a", stderr);
+
             execv(server_path.c_str(), const_cast<char* const*>(args.data()));
         }
     }
@@ -179,7 +191,7 @@ struct HostedGLMark2Wayland : GLMark2Wayland
         add_to_environment("MIR_SERVER_WAYLAND_HOST", host_socket);
 
         auto args = get_nested_args();
-        server.set_command_line(1, args.data());
+        server.set_command_line(args.size(), args.data());
         GLMark2Wayland::SetUp();
     }
 
@@ -246,7 +258,6 @@ std::vector<char const*> HostedGLMark2Wayland::get_nested_args() const
         }
     }
 
-    args.push_back(nullptr);
     return args;
 }
 
