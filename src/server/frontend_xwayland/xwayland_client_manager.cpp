@@ -41,7 +41,7 @@ mf::XWaylandClientManager::~XWaylandClientManager()
     {
         log_warning(
             "XWaylandClientManager destroyed without all sessions being released "
-            "(sessions_by_pid: %lu, sessions_by_owner: %lu)",
+            "(sessions_by_pid: %zu, sessions_by_owner: %zu)",
             sessions_by_pid.size(),
             sessions_by_owner.size());
 
