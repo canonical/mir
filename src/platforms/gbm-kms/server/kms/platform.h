@@ -21,7 +21,6 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_authentication.h"
-#include "mir/graphics/egl_extensions.h"
 #include "drm_native_platform.h"
 #include "mir/renderer/gl/egl_platform.h"
 #include "platform_common.h"
@@ -44,8 +43,7 @@ public:
     explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
                       std::shared_ptr<ConsoleServices> const& vt,
                       EmergencyCleanupRegistry& emergency_cleanup_registry,
-                      BypassOption bypass_option,
-                      std::shared_ptr<EGLExtensions::DebugKHR> debug);
+                      BypassOption bypass_option);
 
     /* From Platform */
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator(
@@ -67,7 +65,6 @@ public:
 private:
     BypassOption const bypass_option_;
     std::unique_ptr<DRMNativePlatformAuthFactory> auth_factory;
-    std::shared_ptr<EGLExtensions::DebugKHR> const debug;
 };
 
 }

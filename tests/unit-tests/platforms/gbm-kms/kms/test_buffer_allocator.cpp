@@ -83,8 +83,7 @@ protected:
                 mir::report::null_display_report(),
                 std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
-                mgg::BypassOption::allowed,
-                std::shared_ptr<mg::EGLExtensions::DebugKHR>{});
+                mgg::BypassOption::allowed);
         display = platform->create_display(
             std::make_shared<mtd::NullDisplayConfigurationPolicy>(),
             std::make_shared<mtd::NullGLConfig>());

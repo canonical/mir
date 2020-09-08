@@ -116,7 +116,7 @@ public:
 protected:
     GBMOutputSurface make_output_surface()
     {
-        helpers::EGLHelper egl{gl_config, {}};
+        helpers::EGLHelper egl{gl_config};
         return GBMOutputSurface{
             mir::Fd{} ,
             GBMSurfaceUPtr{nullptr},
@@ -156,8 +156,7 @@ TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     EXPECT_EQ(display_area, db.view_area());
 }
@@ -170,8 +169,7 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_is_held_for_full_frame)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     auto original_count = mock_bypassable_buffer.use_count();
 
@@ -195,8 +193,7 @@ TEST_F(MesaDisplayBufferTest, predictive_bypass_is_throttled)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     for (int frame = 0; frame < 5; ++frame)
     {
@@ -222,8 +219,7 @@ TEST_F(MesaDisplayBufferTest, frames_requiring_gl_are_not_throttled)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     for (int frame = 0; frame < 5; ++frame)
     {
@@ -243,8 +239,7 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_only_referenced_once_by_db)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     auto original_count = mock_bypassable_buffer.use_count();
 
@@ -265,8 +260,7 @@ TEST_F(MesaDisplayBufferTest, untransformed_with_bypassable_list_can_bypass)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     EXPECT_TRUE(db.overlay(bypassable_list));
 }
@@ -284,8 +278,7 @@ TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     EXPECT_FALSE(db.overlay(bypassable_list));
     // And then we recover. DRM finds enough resources to AddFB ...
@@ -310,8 +303,7 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     EXPECT_FALSE(db.overlay(list));
 }
@@ -324,8 +316,7 @@ TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        transformation(mir_orientation_right),
-        {});
+        transformation(mir_orientation_right));
 
     EXPECT_FALSE(db.overlay(bypassable_list));
 }
@@ -343,8 +334,7 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_cannot_bypass)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     EXPECT_FALSE(db.overlay(list));
 }
@@ -362,8 +352,7 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     // If you find yourself using gbm_ functions on a Shm buffer then you're
     // asking for a crash (LP: #1493721) ...
@@ -381,8 +370,7 @@ TEST_F(MesaDisplayBufferTest, transformation_not_implemented_internally)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        rotate_left,
-        {});
+        rotate_left);
 
     EXPECT_EQ(rotate_left, db.transformation());
 }
@@ -402,8 +390,7 @@ TEST_F(MesaDisplayBufferTest, clone_mode_first_flip_flips_but_no_wait)
         {mock_kms_output, mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     db.swap_buffers();
     db.post();
@@ -422,8 +409,7 @@ TEST_F(MesaDisplayBufferTest, single_mode_first_post_flips_with_wait)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     db.swap_buffers();
     db.post();
@@ -450,8 +436,7 @@ TEST_F(MesaDisplayBufferTest, clone_mode_waits_for_page_flip_on_second_flip)
         {mock_kms_output, mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     db.swap_buffers();
     db.post();
@@ -473,8 +458,7 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_list)
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     EXPECT_FALSE(db.overlay(list));
 }
@@ -499,8 +483,7 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     EXPECT_FALSE(db.overlay(list));
 }
@@ -516,8 +499,7 @@ TEST_F(MesaDisplayBufferTest, buffer_requiring_migration_is_ineligable_for_bypas
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        identity,
-        {});
+        identity);
 
     EXPECT_FALSE(db.overlay(bypassable_list));
 }

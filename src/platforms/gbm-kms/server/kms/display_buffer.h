@@ -83,15 +83,6 @@ public:
     void swap_buffers() override;
     void bind() override;
 
-    /**
-     * Set the EGL_KHR_debug label for the objects owned by this GBMOutputSurface
-     *
-     * \param label [in] The label to use.
-     * \note The label MUST be a pointer to a null-terminated string in static storage.
-     *       There is no mechanism for freeing this label.
-     */
-    void set_debug_label(char const* label);
-
     FrontBuffer lock_front();
     void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> const& to);
     geometry::Size size() const { return {width, height}; }
@@ -113,8 +104,7 @@ public:
                   std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                   GBMOutputSurface&& surface_gbm,
                   geometry::Rectangle const& area,
-                  glm::mat2 const& transformation,
-                  std::shared_ptr<EGLExtensions::DebugKHR> debug);
+                  glm::mat2 const& transformation);
     ~DisplayBuffer();
 
     geometry::Rectangle view_area() const override;
@@ -165,7 +155,6 @@ private:
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
     bool page_flips_pending;
-    std::shared_ptr<EGLExtensions::DebugKHR> const debug;
 };
 
 }
