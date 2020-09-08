@@ -59,9 +59,8 @@ class GBMGLContext : public mir::renderer::gl::Context
 public:
     GBMGLContext(mgg::helpers::GBMHelper const& gbm,
                  mg::GLConfig const& gl_config,
-                 EGLContext shared_context,
-                 std::shared_ptr<mg::EGLExtensions::DebugKHR> debug)
-        : egl{gl_config, std::move(debug)}
+                 EGLContext shared_context)
+        : egl{gl_config}
     {
         egl.setup(gbm, shared_context);
     }
@@ -178,16 +177,14 @@ mgg::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& dr
                       std::shared_ptr<ConsoleServices> const& vt,
                       mgg::BypassOption bypass_option,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-                      std::shared_ptr<EGLExtensions::DebugKHR> debug,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& listener)
     : drm{drm},
       gbm(gbm),
       vt(vt),
-      debug{std::move(debug)},
       listener(listener),
       monitor(mir::udev::Context()),
-      shared_egl{*gl_config, this->debug},
+      shared_egl{*gl_config},
       output_container{
           std::make_shared<RealKMSOutputContainer>(
               drm_fds_from_drm_helpers(drm),
@@ -392,7 +389,7 @@ std::unique_ptr<mg::VirtualOutput> mgg::Display::create_virtual_output(int /*wid
 
 std::unique_ptr<mir::renderer::gl::Context> mgg::Display::create_gl_context() const
 {
-    return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context(), debug);
+    return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context());
 }
 
 bool mgg::Display::apply_if_configuration_preserves_display_buffers(
@@ -555,13 +552,11 @@ void mgg::Display::configure_locked(
                                 *gl_config,
                                 *gbm,
                                 raw_surface,
-                                shared_egl.context(),
-                                debug
+                                shared_egl.context()
                             }
                         },
                         bounding_rect,
-                        transformation,
-                        debug);
+                        transformation);
 
                     display_buffers_new.push_back(std::move(db));
                 }

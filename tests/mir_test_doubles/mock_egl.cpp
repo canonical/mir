@@ -22,7 +22,6 @@
 
 #include "mir/test/doubles/mock_egl.h"
 #include <gtest/gtest.h>
-#include <dlfcn.h>
 
 namespace mtd = mir::test::doubles;
 
@@ -72,30 +71,6 @@ EGLSurface extension_eglCreatePlatformWindowSurfaceEXT(
     void *native_window,
     const EGLint *attrib_list);
 
-/*
- * libepoxy will dlopen libEGL itself. This is obviously not great if we want
- * to mock out EGL functions!
- *
- * Interpose a dlopen that will return a handle to us, instead of libEGL, when
- * asked.
- */
-void* dlopen(char const* filename, int flags)
-{
-    void * (*real_dlopen)(const char *filename, int flag);
-    real_dlopen = reinterpret_cast<decltype(real_dlopen)>(dlsym(RTLD_NEXT, "dlopen"));
-    assert(real_dlopen);
-
-    if (filename)
-    {
-        if (!strcmp(filename, "libEGL.so.1"))
-        {
-            return real_dlopen(nullptr, flags);
-        }
-    }
-
-    return real_dlopen(filename, flags);
-}
-
 /* EGL{Surface,Display,Config,Context} are all opaque types, so we can put whatever
    we want in them for testing */
 mtd::MockEGL::MockEGL()
@@ -112,8 +87,6 @@ mtd::MockEGL::MockEGL()
 
     global_mock_egl = this;
 
-    ON_CALL(*this, eglQueryString(_, EGL_VERSION))
-        .WillByDefault(Return("1.4 Stub Mir EGL"));
     ON_CALL(*this, eglGetDisplay(_))
     .WillByDefault(Return(fake_egl_display));
     ON_CALL(*this, eglGetPlatformDisplayEXT(_,_,_))

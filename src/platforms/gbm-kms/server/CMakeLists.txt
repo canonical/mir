@@ -23,6 +23,5 @@ target_link_libraries(
 
   server_platform_common
   kms_utils
-  PkgConfig::EPOXY
   ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
 )
