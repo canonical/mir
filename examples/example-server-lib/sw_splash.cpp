@@ -142,7 +142,7 @@ struct SwSplash::Self : SplashSession
 
     Globals globals;
 
-    bool splash;
+    bool show_splash=true;
 
     DrawContext ctx;
 
@@ -162,8 +162,8 @@ SwSplash::SwSplash() : self{std::make_shared<Self>()} {}
 
 SwSplash::~SwSplash() = default;
 
-void SwSplash::operator()(bool splash_opt){
-    self->splash = splash_opt;
+void SwSplash::enable (bool show_splash_opt){
+    self->show_splash = show_splash_opt;
 }
 
 void SwSplash::operator()(std::weak_ptr<mir::scene::Session> const& session)
@@ -179,7 +179,7 @@ SwSplash::operator std::shared_ptr<SplashSession>() const
 
 void SwSplash::Self::operator()(struct wl_display* display)
 {
-    if (!splash)
+    if (!show_splash)
         return;
     globals.init(display);
 

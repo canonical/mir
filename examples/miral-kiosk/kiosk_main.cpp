@@ -79,7 +79,6 @@ struct KioskAuthorizer : miral::ApplicationAuthorizer
 };
 
 std::atomic<bool> KioskAuthorizer::startup_only{false};
-
 }
 
 int main(int argc, char const* argv[])
@@ -111,9 +110,9 @@ int main(int argc, char const* argv[])
     DisplayConfiguration display_config{runner};
  
     CommandLineOption show_splash{
-        [&](bool show_splash) {splash(show_splash); },
-        "splash",
-        "Control display splash on startup",
+        [&](bool show_splash) {splash.enable(show_splash); },
+        "show-splash",
+        "Set to false to suppress display of splash on startup",
         true};
 
     return runner.run_with(
