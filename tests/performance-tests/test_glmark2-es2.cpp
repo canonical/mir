@@ -167,8 +167,8 @@ struct HostedGLMark2Wayland : GLMark2Wayland
                      test_info->test_case_name(), test_info->name());
 
             printf("Saving host output to: %s\n", output_filename);
-            (void)freopen(output_filename, "a", stdout);
-            (void)freopen(output_filename, "a", stderr);
+            if (freopen(output_filename, "a", stdout)) { /* (void)freopen(...); doesn't work */ };
+            if (freopen(output_filename, "a", stderr)) { /* (void)freopen(...); doesn't work */ };
 
             execv(server_path.c_str(), const_cast<char* const*>(args.data()));
         }
