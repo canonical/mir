@@ -1,3 +1,9 @@
+
+string(REPLACE "-flto" "" NO_LTO_FLAGS ${CMAKE_C_FLAGS})
+set(CMAKE_C_FLAGS ${NO_LTO_FLAGS})
+string(REPLACE "-flto" "" NO_LTO_FLAGS ${CMAKE_CXX_FLAGS})
+set(CMAKE_CXX_FLAGS ${NO_LTO_FLAGS})
+
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/common
   ${PROJECT_SOURCE_DIR}/include/platform
