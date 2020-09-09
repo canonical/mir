@@ -361,7 +361,8 @@ void mgw::DisplayClient::Output::swap_buffers()
 {
     struct FrameSync
     {
-        explicit FrameSync(wl_surface* surface)
+        explicit FrameSync(wl_surface* surface) :
+            callback{wl_surface_frame(surface)}
         {
             static struct wl_callback_listener const frame_listener =
                 {
@@ -369,14 +370,16 @@ void mgw::DisplayClient::Output::swap_buffers()
                         { static_cast<FrameSync*>(data)->frame_done(args...); },
                 };
 
-            struct wl_callback *callback = wl_surface_frame(surface);
             wl_callback_add_listener(callback, &frame_listener, this);
         }
 
-        void frame_done(struct wl_callback* callback, uint32_t /*time*/)
+        ~FrameSync()
         {
             wl_callback_destroy(callback);
+        }
 
+        void frame_done(wl_callback*, uint32_t)
+        {
             std::lock_guard<decltype(mutex)> lock{mutex};
             posted = true;
             cv.notify_all();
@@ -391,6 +394,8 @@ void mgw::DisplayClient::Output::swap_buffers()
         std::mutex mutex;
         bool posted = false;
         std::condition_variable cv;
+
+        wl_callback* const callback;
     } frame_sync{surface};
 
     // Avoid throttling compositing by blocking in eglSwapBuffers().
