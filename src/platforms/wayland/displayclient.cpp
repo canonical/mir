@@ -330,8 +330,6 @@ void mgw::DisplayClient::Output::frame_done(struct wl_callback* callback, uint32
 
 void mgw::DisplayClient::Output::post()
 {
-    std::unique_lock<decltype(frame_mutex)> lock{frame_mutex};
-    frame_cv.wait(lock, [this]{ return frame_posted; });
 }
 
 auto mgw::DisplayClient::Output::recommended_sleep() const -> std::chrono::milliseconds
@@ -376,6 +374,7 @@ void mgw::DisplayClient::Output::release_current()
 void mgw::DisplayClient::Output::swap_buffers()
 {
     // Avoid throttling compositing by blocking in eglSwapBuffers().
+    // Instead we use the frame "done" notification.
     eglSwapInterval(owner->egldisplay, 0);
 
     static struct wl_callback_listener const frame_listener =
@@ -387,13 +386,13 @@ void mgw::DisplayClient::Output::swap_buffers()
     struct wl_callback *callback = wl_surface_frame(surface);
     wl_callback_add_listener(callback, &frame_listener, this);
 
-    {
-        std::lock_guard<decltype(frame_mutex)> lock{frame_mutex};
-        frame_posted = false;
-    }
+    std::unique_lock<decltype(frame_mutex)> lock{frame_mutex};
+    frame_posted = false;
 
     if (eglSwapBuffers(owner->egldisplay, eglsurface) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(egl_error("Failed to perform buffer swap"));
+
+    frame_cv.wait(lock, [this]{ return frame_posted; });
 }
 
 void mgw::DisplayClient::Output::bind()
