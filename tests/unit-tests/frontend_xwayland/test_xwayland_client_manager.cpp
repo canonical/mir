@@ -73,7 +73,7 @@ TEST_F(XWaylandClientManagerTest, get_session_initially_creates_session)
         .Times(1)
         .WillOnce(Return(mt::fake_shared(session_1)));
 
-    EXPECT_THAT(manager.get_session_for_client(&owner_a, 1).get(), Eq(&session_1));
+    EXPECT_THAT(manager.register_owner_for_client(&owner_a, 1).get(), Eq(&session_1));
 }
 
 TEST_F(XWaylandClientManagerTest, repeated_get_session_with_same_pid_returns_same_session)
@@ -84,9 +84,9 @@ TEST_F(XWaylandClientManagerTest, repeated_get_session_with_same_pid_returns_sam
         .Times(1)
         .WillOnce(Return(mt::fake_shared(session_1)));
 
-    EXPECT_THAT(manager.get_session_for_client(&owner_a, 1).get(), Eq(&session_1));
-    EXPECT_THAT(manager.get_session_for_client(&owner_b, 1).get(), Eq(&session_1));
-    EXPECT_THAT(manager.get_session_for_client(&owner_c, 1).get(), Eq(&session_1));
+    EXPECT_THAT(manager.register_owner_for_client(&owner_a, 1).get(), Eq(&session_1));
+    EXPECT_THAT(manager.register_owner_for_client(&owner_b, 1).get(), Eq(&session_1));
+    EXPECT_THAT(manager.register_owner_for_client(&owner_c, 1).get(), Eq(&session_1));
 }
 
 TEST_F(XWaylandClientManagerTest, repeated_get_session_with_different_pids_creates_new_sessions)
@@ -99,9 +99,9 @@ TEST_F(XWaylandClientManagerTest, repeated_get_session_with_different_pids_creat
         .WillOnce(Return(mt::fake_shared(session_2)))
         .WillOnce(Return(mt::fake_shared(session_3)));
 
-    EXPECT_THAT(manager.get_session_for_client(&owner_a, 1).get(), Eq(&session_1));
-    EXPECT_THAT(manager.get_session_for_client(&owner_b, 2).get(), Eq(&session_2));
-    EXPECT_THAT(manager.get_session_for_client(&owner_c, 3).get(), Eq(&session_3));
+    EXPECT_THAT(manager.register_owner_for_client(&owner_a, 1).get(), Eq(&session_1));
+    EXPECT_THAT(manager.register_owner_for_client(&owner_b, 2).get(), Eq(&session_2));
+    EXPECT_THAT(manager.register_owner_for_client(&owner_c, 3).get(), Eq(&session_3));
 }
 
 TEST_F(XWaylandClientManagerTest, release_closes_session_if_only_one_owner)
@@ -114,7 +114,7 @@ TEST_F(XWaylandClientManagerTest, release_closes_session_if_only_one_owner)
     EXPECT_CALL(shell, close_session(Eq(mt::fake_shared(session_1))))
         .Times(1);
 
-    manager.get_session_for_client(&owner_a, 1);
+    manager.register_owner_for_client(&owner_a, 1);
     manager.release(&owner_a);
 }
 
@@ -128,8 +128,8 @@ TEST_F(XWaylandClientManagerTest, release_does_not_close_session_if_multiple_own
     EXPECT_CALL(shell, close_session(Eq(mt::fake_shared(session_1))))
         .Times(0);
 
-    manager.get_session_for_client(&owner_a, 1);
-    manager.get_session_for_client(&owner_b, 1);
+    manager.register_owner_for_client(&owner_a, 1);
+    manager.register_owner_for_client(&owner_b, 1);
     manager.release(&owner_a);
 
     Mock::VerifyAndClearExpectations(&shell);
@@ -148,9 +148,9 @@ TEST_F(XWaylandClientManagerTest, closes_all_active_sessions_on_destroy)
 
     {
         mf::XWaylandClientManager manager{mt::fake_shared(shell)};
-        manager.get_session_for_client(&owner_a, 1);
-        manager.get_session_for_client(&owner_b, 1);
-        manager.get_session_for_client(&owner_c, 2);
+        manager.register_owner_for_client(&owner_a, 1);
+        manager.register_owner_for_client(&owner_b, 1);
+        manager.register_owner_for_client(&owner_c, 2);
     }
 }
 
@@ -164,9 +164,9 @@ TEST_F(XWaylandClientManagerTest, session_closed_when_all_owners_release)
     EXPECT_CALL(shell, close_session(Eq(mt::fake_shared(session_1))))
         .Times(1);
 
-    manager.get_session_for_client(&owner_a, 1);
-    manager.get_session_for_client(&owner_b, 1);
-    manager.get_session_for_client(&owner_c, 1);
+    manager.register_owner_for_client(&owner_a, 1);
+    manager.register_owner_for_client(&owner_b, 1);
+    manager.register_owner_for_client(&owner_c, 1);
     manager.release(&owner_a);
     manager.release(&owner_b);
     manager.release(&owner_c);
@@ -175,25 +175,25 @@ TEST_F(XWaylandClientManagerTest, session_closed_when_all_owners_release)
 TEST_F(XWaylandClientManagerTest, new_session_created_after_old_session_for_same_pid_closed)
 {
     mf::XWaylandClientManager manager{mt::fake_shared(shell)};
-    manager.get_session_for_client(&owner_a, 1);
+    manager.register_owner_for_client(&owner_a, 1);
     manager.release(&owner_a);
 
     EXPECT_CALL(shell, open_session(_, _, _))
         .Times(1)
         .WillRepeatedly(Return(mt::fake_shared(session_2)));
-    EXPECT_THAT(manager.get_session_for_client(&owner_a, 1).get(), Eq(&session_2));
+    EXPECT_THAT(manager.register_owner_for_client(&owner_a, 1).get(), Eq(&session_2));
 }
 
 TEST_F(XWaylandClientManagerTest, get_session_with_active_owner_and_same_pid_throws)
 {
     mf::XWaylandClientManager manager{mt::fake_shared(shell)};
-    manager.get_session_for_client(&owner_a, 1);
-    EXPECT_THROW(manager.get_session_for_client(&owner_a, 1), std::logic_error);
+    manager.register_owner_for_client(&owner_a, 1);
+    EXPECT_THROW(manager.register_owner_for_client(&owner_a, 1), std::logic_error);
 }
 
 TEST_F(XWaylandClientManagerTest, get_session_with_active_owner_and_different_pid_throws)
 {
     mf::XWaylandClientManager manager{mt::fake_shared(shell)};
-    manager.get_session_for_client(&owner_a, 1);
-    EXPECT_THROW(manager.get_session_for_client(&owner_a, 2), std::logic_error);
+    manager.register_owner_for_client(&owner_a, 1);
+    EXPECT_THROW(manager.register_owner_for_client(&owner_a, 2), std::logic_error);
 }

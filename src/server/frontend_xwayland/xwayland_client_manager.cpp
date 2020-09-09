@@ -60,7 +60,7 @@ mf::XWaylandClientManager::~XWaylandClientManager()
     }
 }
 
-auto mf::XWaylandClientManager::get_session_for_client(
+auto mf::XWaylandClientManager::register_owner_for_client(
     void* owner_key, pid_t client_pid) -> std::shared_ptr<ms::Session>
 {
     std::lock_guard<std::mutex> lock{mutex};

@@ -44,7 +44,7 @@ public:
 
     /// Returns the session associated with the given client_pid, or creates a new one if needed
     /// Stores a strong reference to the session associated with the given owner_key
-    auto get_session_for_client(void* owner_key, pid_t client_pid) -> std::shared_ptr<scene::Session>;
+    auto register_owner_for_client(void* owner_key, pid_t client_pid) -> std::shared_ptr<scene::Session>;
 
     /// Unassociates the session from owner_key
     /// Closes the session if it is not associated with any other owners

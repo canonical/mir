@@ -562,7 +562,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         window, connection->_NET_WM_PID,
         [&](uint32_t pid)
         {
-            session = client_manager->get_session_for_client(this, pid);
+            session = client_manager->register_owner_for_client(this, pid);
         },
         [&]()
         {
