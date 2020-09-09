@@ -95,12 +95,6 @@ public:
 
     std::function<void(Output const&)> on_done;
 
-    std::mutex frame_mutex;
-    bool frame_posted = false;
-    std::condition_variable frame_cv;
-
-    void frame_done(struct wl_callback* callback, uint32_t time);
-
     // DisplaySyncGroup implementation
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& /*f*/) override;
     void post() override;
@@ -320,14 +314,6 @@ void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(Disp
     f(*this);
 }
 
-void mgw::DisplayClient::Output::frame_done(struct wl_callback* callback, uint32_t /*time*/) {
-    wl_callback_destroy(callback);
-
-    std::lock_guard<decltype(frame_mutex)> lock{frame_mutex};
-    frame_posted = true;
-    frame_cv.notify_all();
-}
-
 void mgw::DisplayClient::Output::post()
 {
 }
@@ -373,26 +359,48 @@ void mgw::DisplayClient::Output::release_current()
 
 void mgw::DisplayClient::Output::swap_buffers()
 {
+    struct FrameSync
+    {
+        explicit FrameSync(wl_surface* surface)
+        {
+            static struct wl_callback_listener const frame_listener =
+                {
+                    [](void* data, auto... args)
+                        { static_cast<FrameSync*>(data)->frame_done(args...); },
+                };
+
+            struct wl_callback *callback = wl_surface_frame(surface);
+            wl_callback_add_listener(callback, &frame_listener, this);
+        }
+
+        void frame_done(struct wl_callback* callback, uint32_t /*time*/)
+        {
+            wl_callback_destroy(callback);
+
+            std::lock_guard<decltype(mutex)> lock{mutex};
+            posted = true;
+            cv.notify_all();
+        }
+
+        void wait_for_done()
+        {
+            std::unique_lock<decltype(mutex)> lock{mutex};
+            cv.wait(lock, [this]{ return posted; });
+        }
+
+        std::mutex mutex;
+        bool posted = false;
+        std::condition_variable cv;
+    } frame_sync{surface};
+
     // Avoid throttling compositing by blocking in eglSwapBuffers().
     // Instead we use the frame "done" notification.
     eglSwapInterval(owner->egldisplay, 0);
 
-    static struct wl_callback_listener const frame_listener =
-        {
-            [](void* data, auto... args)
-                { static_cast<mgw::DisplayClient::Output*>(data)->frame_done(args...); },
-        };
-
-    struct wl_callback *callback = wl_surface_frame(surface);
-    wl_callback_add_listener(callback, &frame_listener, this);
-
-    std::unique_lock<decltype(frame_mutex)> lock{frame_mutex};
-    frame_posted = false;
-
     if (eglSwapBuffers(owner->egldisplay, eglsurface) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(egl_error("Failed to perform buffer swap"));
 
-    frame_cv.wait(lock, [this]{ return frame_posted; });
+    frame_sync.wait_for_done();
 }
 
 void mgw::DisplayClient::Output::bind()
