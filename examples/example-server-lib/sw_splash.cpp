@@ -18,7 +18,6 @@
 
 #include "sw_splash.h"
 #include "wayland_helpers.h"
-
 #include <wayland-client.h>
 
 #include <sys/types.h>
@@ -143,6 +142,8 @@ struct SwSplash::Self : SplashSession
 
     Globals globals;
 
+    bool show_splash=true;
+
     DrawContext ctx;
 
     std::mutex mutable mutex;
@@ -161,6 +162,10 @@ SwSplash::SwSplash() : self{std::make_shared<Self>()} {}
 
 SwSplash::~SwSplash() = default;
 
+void SwSplash::enable (bool show_splash_opt){
+    self->show_splash = show_splash_opt;
+}
+
 void SwSplash::operator()(std::weak_ptr<mir::scene::Session> const& session)
 {
     std::lock_guard<decltype(self->mutex)> lock{self->mutex};
@@ -174,6 +179,8 @@ SwSplash::operator std::shared_ptr<SplashSession>() const
 
 void SwSplash::Self::operator()(struct wl_display* display)
 {
+    if (!show_splash)
+        return;
     globals.init(display);
 
     ctx.display = display;
@@ -222,6 +229,7 @@ void SwSplash::Self::operator()(struct wl_display* display)
 
     auto const time_limit = std::chrono::steady_clock::now() + std::chrono::seconds(2);
 
+    //this is the splash screen
     do
     {
         wl_display_dispatch(display);

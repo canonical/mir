@@ -30,7 +30,7 @@ public:
 
     void operator()(struct wl_display* display);
     void operator()(std::weak_ptr<mir::scene::Session> const& session);
-
+    void enable (bool show_splash_opt);
     operator std::shared_ptr<SplashSession>() const;
 
 private:
