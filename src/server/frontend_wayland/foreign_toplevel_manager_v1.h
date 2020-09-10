@@ -42,4 +42,4 @@ auto create_foreign_toplevel_manager_v1(
 }
 }
 
-#endif // MIR_FRONTEND_LAYER_SHELL_V1_H
+#endif // MIR_FRONTEND_FOREIGN_TOPLEVEL_MANAGER_V1_H

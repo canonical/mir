@@ -170,16 +170,16 @@ private:
 
     /// Wayland requests
     ///@{
-    void set_maximized();
-    void unset_maximized();
-    void set_minimized();
-    void unset_minimized();
-    void activate(struct wl_resource* seat);
-    void close();
-    void set_rectangle(struct wl_resource* surface, int32_t x, int32_t y, int32_t width, int32_t height);
-    void destroy();
-    void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output);
-    void unset_fullscreen();
+    void set_maximized() override;
+    void unset_maximized() override;
+    void set_minimized() override;
+    void unset_minimized() override;
+    void activate(struct wl_resource* seat) override;
+    void close() override;
+    void set_rectangle(struct wl_resource* surface, int32_t x, int32_t y, int32_t width, int32_t height) override;
+    void destroy() override;
+    void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output) override;
+    void unset_fullscreen() override;
     ///@}
 
     std::weak_ptr<shell::Shell> const weak_shell;
