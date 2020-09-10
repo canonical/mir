@@ -70,7 +70,7 @@ TEST_F(XWaylandClientManagerTest, get_session_initially_creates_session)
         .Times(1)
         .WillOnce(Return(mt::fake_shared(session_1)));
 
-    auto const client_session_1 = manager.get_session_for_client(1);
+    auto const client_session_1 = manager.session_for_client(1);
     EXPECT_THAT(client_session_1->session().get(), Eq(&session_1));
 }
 
@@ -82,9 +82,9 @@ TEST_F(XWaylandClientManagerTest, repeated_get_session_with_same_pid_returns_sam
         .Times(1)
         .WillOnce(Return(mt::fake_shared(session_1)));
 
-    auto const client_session_1 = manager.get_session_for_client(1);
-    auto const client_session_2 = manager.get_session_for_client(1);
-    auto const client_session_3 = manager.get_session_for_client(1);
+    auto const client_session_1 = manager.session_for_client(1);
+    auto const client_session_2 = manager.session_for_client(1);
+    auto const client_session_3 = manager.session_for_client(1);
     EXPECT_THAT(client_session_1.get(), Eq(client_session_2.get()));
     EXPECT_THAT(client_session_1.get(), Eq(client_session_3.get()));
 }
@@ -99,9 +99,9 @@ TEST_F(XWaylandClientManagerTest, repeated_get_session_with_different_pids_creat
         .WillOnce(Return(mt::fake_shared(session_2)))
         .WillOnce(Return(mt::fake_shared(session_3)));
 
-    auto const client_session_1 = manager.get_session_for_client(1);
-    auto const client_session_2 = manager.get_session_for_client(2);
-    auto const client_session_3 = manager.get_session_for_client(3);
+    auto const client_session_1 = manager.session_for_client(1);
+    auto const client_session_2 = manager.session_for_client(2);
+    auto const client_session_3 = manager.session_for_client(3);
 
     EXPECT_THAT(client_session_1->session().get(), Eq(&session_1));
     EXPECT_THAT(client_session_2->session().get(), Eq(&session_2));
@@ -117,7 +117,7 @@ TEST_F(XWaylandClientManagerTest, resetting_client_session_closes_session)
         .WillOnce(Return(mt::fake_shared(session_1)));
     EXPECT_CALL(shell, close_session(_))
         .Times(0);
-    auto client_session_1 = manager.get_session_for_client(1);
+    auto client_session_1 = manager.session_for_client(1);
     Mock::VerifyAndClearExpectations(&shell);
 
     EXPECT_CALL(shell, close_session(Eq(mt::fake_shared(session_1))))
@@ -136,8 +136,8 @@ TEST_F(XWaylandClientManagerTest, reset_does_not_close_session_if_multiple_owner
     EXPECT_CALL(shell, close_session(Eq(mt::fake_shared(session_1))))
         .Times(0);
 
-    auto client_session_1 = manager.get_session_for_client(1);
-    auto client_session_2 = manager.get_session_for_client(1);
+    auto client_session_1 = manager.session_for_client(1);
+    auto client_session_2 = manager.session_for_client(1);
     client_session_1.reset();
 
     Mock::VerifyAndClearExpectations(&shell);
@@ -153,9 +153,9 @@ TEST_F(XWaylandClientManagerTest, session_closed_when_all_client_sessions_reset)
     EXPECT_CALL(shell, close_session(Eq(mt::fake_shared(session_1))))
         .Times(1);
 
-    auto client_session_1 = manager.get_session_for_client(1);
-    auto client_session_2 = manager.get_session_for_client(1);
-    auto client_session_3 = manager.get_session_for_client(1);
+    auto client_session_1 = manager.session_for_client(1);
+    auto client_session_2 = manager.session_for_client(1);
+    auto client_session_3 = manager.session_for_client(1);
 
     client_session_1.reset();
     client_session_2.reset();
@@ -165,12 +165,12 @@ TEST_F(XWaylandClientManagerTest, session_closed_when_all_client_sessions_reset)
 TEST_F(XWaylandClientManagerTest, new_session_created_after_old_session_for_same_pid_closed)
 {
     mf::XWaylandClientManager manager{mt::fake_shared(shell)};
-    auto client_session_1 = manager.get_session_for_client(1);
+    auto client_session_1 = manager.session_for_client(1);
     client_session_1.reset();
 
     EXPECT_CALL(shell, open_session(_, _, _))
         .Times(1)
         .WillRepeatedly(Return(mt::fake_shared(session_2)));
-    auto const client_session_2 = manager.get_session_for_client(1);
+    auto const client_session_2 = manager.session_for_client(1);
     EXPECT_THAT(client_session_2->session().get(), Eq(&session_2));
 }

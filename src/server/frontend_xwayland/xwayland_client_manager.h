@@ -40,12 +40,11 @@ class XWaylandClientManager
 {
 public:
     /// Creates, owns and destroyes a scene::Session
-    /// Can NOT outlive the XWaylandClientManager that created it
+    /// Should not outlive the XWaylandClientManager that created it
     class Session
     {
     public:
         Session(XWaylandClientManager* manager, pid_t client_pid);
-        Session(Session const&) = delete;
         ~Session();
 
         auto session() const -> std::shared_ptr<scene::Session>;
@@ -59,7 +58,7 @@ public:
     XWaylandClientManager(std::shared_ptr<shell::Shell> const& shell);
     ~XWaylandClientManager();
 
-    auto get_session_for_client(pid_t client_pid) -> std::shared_ptr<Session>;
+    auto session_for_client(pid_t client_pid) -> std::shared_ptr<Session>;
 
 private:
     void drop_expired(pid_t client_pid);
