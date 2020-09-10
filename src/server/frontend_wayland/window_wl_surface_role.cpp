@@ -23,6 +23,7 @@
 #include "wl_surface.h"
 #include "wayland_surface_observer.h"
 #include "wl_seat.h"
+#include "mir_window_management_v1.h"
 
 #include "mir/shell/surface_specification.h"
 #include "mir/shell/shell.h"
@@ -444,6 +445,12 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     params->streams = std::vector<shell::StreamSpecification>{};
     params->input_shape = std::vector<geom::Rectangle>{};
     surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
+
+    auto const mir_wm_v1_shell_surface = MirShellSurfaceV1::from(surface);
+    if (mir_wm_v1_shell_surface)
+    {
+        mir_wm_v1_shell_surface.value().prepare_for_surface_creation(*params);
+    }
 
     auto const scene_surface = shell->create_surface(session, *params, observer);
     weak_scene_surface = scene_surface;
