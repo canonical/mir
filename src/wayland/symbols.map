@@ -350,5 +350,21 @@ global:
     typeinfo?for?mir::wayland::ForeignToplevelHandleV1;
     vtable?for?mir::wayland::ForeignToplevelHandleV1;
     mir::wayland::zwlr_foreign_toplevel_manager_v1_interface_data;
+
+    mir::wayland::MirWmBaseV1::*;
+    non-virtual?thunk?to?mir::wayland::MirWmBaseV1::*;
+    virtual?thunk?to?mir::wayland::MirWmBaseV1::?MirWmBaseV1*;
+    typeinfo?for?mir::wayland::MirWmBaseV1;
+    vtable?for?mir::wayland::MirWmBaseV1;
+    typeinfo?for?mir::wayland::MirWmBaseV1::Global;
+    vtable?for?mir::wayland::MirWmBaseV1::Global;
+    mir::wayland::zmir_wm_base_v1_interface_data;
+
+    mir::wayland::MirShellSurfaceV1::*;
+    non-virtual?thunk?to?mir::wayland::MirShellSurfaceV1::*;
+    virtual?thunk?to?mir::wayland::MirShellSurfaceV1::?MirShellSurfaceV1*;
+    typeinfo?for?mir::wayland::MirShellSurfaceV1;
+    vtable?for?mir::wayland::MirShellSurfaceV1;
+    mir::wayland::zmir_shell_surface_v1_interface_data;
   };
 } MIRWAYLAND_2.0;
