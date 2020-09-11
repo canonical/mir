@@ -265,186 +265,336 @@ mtd::MockEGL::~MockEGL()
         return;                             \
     }
 
+#undef eglGetError
+extern "C"
+{
+EGLint eglGetError (void);
+}
 EGLint eglGetError (void)
 {
     CHECK_GLOBAL_MOCK(EGLint)
-    return global_mock_egl->eglGetError();
+    return global_mock_egl->epoxy_eglGetError();
 }
 
+#undef eglGetDisplay
+extern "C"
+{
+EGLDisplay eglGetDisplay (NativeDisplayType display);
+}
 EGLDisplay eglGetDisplay (NativeDisplayType display)
 {
     CHECK_GLOBAL_MOCK(EGLDisplay);
-    return global_mock_egl->eglGetDisplay(reinterpret_cast<mtd::MockEGL::AnyNativeType>(display));
+    return global_mock_egl->epoxy_eglGetDisplay(reinterpret_cast<mtd::MockEGL::AnyNativeType>(display));
 }
 
+#undef eglInitialize
+extern "C"
+{
+EGLBoolean eglInitialize (EGLDisplay dpy, EGLint *major, EGLint *minor);
+}
 EGLBoolean eglInitialize (EGLDisplay dpy, EGLint *major, EGLint *minor)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglInitialize(dpy, major, minor);
+    return global_mock_egl->epoxy_eglInitialize(dpy, major, minor);
 }
 
+#undef eglTerminate
+extern "C"
+{
+EGLBoolean eglTerminate (EGLDisplay dpy);
+}
 EGLBoolean eglTerminate (EGLDisplay dpy)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglTerminate(dpy);
+    return global_mock_egl->epoxy_eglTerminate(dpy);
 }
 
+#undef eglQueryString
+extern "C"
+{
+const char * eglQueryString (EGLDisplay dpy, EGLint name);
+}
 const char * eglQueryString (EGLDisplay dpy, EGLint name)
 {
     CHECK_GLOBAL_MOCK(const char *)
-    return global_mock_egl->eglQueryString(dpy, name);
+    return global_mock_egl->epoxy_eglQueryString(dpy, name);
 }
 
+#undef eglBindAPI
+extern "C"
+{
+EGLBoolean eglBindAPI (EGLenum api);
+}
 EGLBoolean eglBindAPI (EGLenum api)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
     return global_mock_egl->eglBindApi(api);
 }
 
+#undef eglGetProcAddress
+extern "C"
+{
+mtd::MockEGL::generic_function_pointer_t eglGetProcAddress (const char *name);
+}
 mtd::MockEGL::generic_function_pointer_t eglGetProcAddress (const char *name)
 {
     CHECK_GLOBAL_MOCK(mtd::MockEGL::generic_function_pointer_t)
-    return global_mock_egl->eglGetProcAddress(name);
+    return global_mock_egl->epoxy_eglGetProcAddress(name);
 }
 
+#undef eglGetConfigs
+extern "C"
+{
+EGLBoolean eglGetConfigs (EGLDisplay dpy, EGLConfig *configs, EGLint config_size, EGLint *num_config);
+}
 EGLBoolean eglGetConfigs (EGLDisplay dpy, EGLConfig *configs, EGLint config_size, EGLint *num_config)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglGetConfigs(dpy, configs, config_size, num_config);
+    return global_mock_egl->epoxy_eglGetConfigs(dpy, configs, config_size, num_config);
 }
 
+#undef eglChooseConfig
+extern "C"
+{
+EGLBoolean eglChooseConfig (EGLDisplay dpy, const EGLint *attrib_list, EGLConfig *configs, EGLint config_size, EGLint *num_config);
+}
 EGLBoolean eglChooseConfig (EGLDisplay dpy, const EGLint *attrib_list, EGLConfig *configs, EGLint config_size, EGLint *num_config)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglChooseConfig(dpy, attrib_list, configs, config_size, num_config);
+    return global_mock_egl->epoxy_eglChooseConfig(dpy, attrib_list, configs, config_size, num_config);
 }
 
+#undef eglGetConfigAttrib
+extern "C"
+{
+EGLBoolean eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribute, EGLint *value);
+}
 EGLBoolean eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribute, EGLint *value)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglGetConfigAttrib(dpy, config, attribute, value);
+    return global_mock_egl->epoxy_eglGetConfigAttrib(dpy, config, attribute, value);
 }
 
+#undef eglCreateWindowSurface
+extern "C"
+{
+EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindowType window, const EGLint *attrib_list);
+}
 EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindowType window, const EGLint *attrib_list)
 {
     CHECK_GLOBAL_MOCK(EGLSurface)
-    return global_mock_egl->eglCreateWindowSurface(dpy, config, reinterpret_cast<mtd::MockEGL::AnyNativeType>(window), attrib_list);
+    return global_mock_egl->epoxy_eglCreateWindowSurface(dpy, config, reinterpret_cast<mtd::MockEGL::AnyNativeType>(window), attrib_list);
 }
 
+#undef eglCreatePixmapSurface
+extern "C"
+{
+EGLSurface eglCreatePixmapSurface (EGLDisplay dpy, EGLConfig config, NativePixmapType pixmap, const EGLint *attrib_list);
+}
 EGLSurface eglCreatePixmapSurface (EGLDisplay dpy, EGLConfig config, NativePixmapType pixmap, const EGLint *attrib_list)
 {
     CHECK_GLOBAL_MOCK(EGLSurface)
-    return global_mock_egl->eglCreatePixmapSurface(dpy, config, reinterpret_cast<mtd::MockEGL::AnyNativeType>(pixmap), attrib_list);
+    return global_mock_egl->epoxy_eglCreatePixmapSurface(dpy, config, reinterpret_cast<mtd::MockEGL::AnyNativeType>(pixmap), attrib_list);
 }
 
+#undef eglCreatePbufferSurface
+extern "C"
+{
+EGLSurface eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config, const EGLint *attrib_list);
+}
 EGLSurface eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config, const EGLint *attrib_list)
 {
     CHECK_GLOBAL_MOCK(EGLSurface)
-    return global_mock_egl->eglCreatePbufferSurface(dpy, config, attrib_list);
+    return global_mock_egl->epoxy_eglCreatePbufferSurface(dpy, config, attrib_list);
 }
 
+#undef eglDestroySurface
+extern "C"
+{
+EGLBoolean eglDestroySurface (EGLDisplay dpy, EGLSurface surface);
+}
 EGLBoolean eglDestroySurface (EGLDisplay dpy, EGLSurface surface)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglDestroySurface(dpy, surface);
+    return global_mock_egl->epoxy_eglDestroySurface(dpy, surface);
 }
 
+#undef eglQuerySurface
+extern "C"
+{
+EGLBoolean eglQuerySurface (EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint *value);
+}
 EGLBoolean eglQuerySurface (EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint *value)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglQuerySurface(dpy, surface, attribute, value);
+    return global_mock_egl->epoxy_eglQuerySurface(dpy, surface, attribute, value);
 }
 
 /* EGL 1.1 render-to-texture APIs */
+#undef eglSurfaceAttrib
+extern "C"
+{
+EGLBoolean eglSurfaceAttrib (EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint value);
+}
 EGLBoolean eglSurfaceAttrib (EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint value)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglSurfaceAttrib(dpy, surface, attribute, value);
+    return global_mock_egl->epoxy_eglSurfaceAttrib(dpy, surface, attribute, value);
 }
 
+#undef eglBindTexImage
+extern "C"
+{
+EGLBoolean eglBindTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer);
+}
 EGLBoolean eglBindTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglBindTexImage(dpy, surface, buffer);
+    return global_mock_egl->epoxy_eglBindTexImage(dpy, surface, buffer);
 }
 
+#undef eglReleaseTexImage
+extern "C"
+{
+EGLBoolean eglReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer);
+}
 EGLBoolean eglReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglReleaseTexImage(dpy, surface, buffer);
+    return global_mock_egl->epoxy_eglReleaseTexImage(dpy, surface, buffer);
 }
 
 /* EGL 1.1 swap control API */
+#undef eglSwapInterval
+extern "C"
+{
+EGLBoolean eglSwapInterval(EGLDisplay dpy, EGLint interval);
+}
 EGLBoolean eglSwapInterval(EGLDisplay dpy, EGLint interval)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglSwapInterval(dpy, interval);
+    return global_mock_egl->epoxy_eglSwapInterval(dpy, interval);
 }
 
+#undef eglCreateContext
+extern "C"
+{
+EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_list, const EGLint *attrib_list);
+}
 EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_list, const EGLint *attrib_list)
 {
     CHECK_GLOBAL_MOCK(EGLContext)
-    return global_mock_egl->eglCreateContext(dpy, config, share_list, attrib_list);
+    return global_mock_egl->epoxy_eglCreateContext(dpy, config, share_list, attrib_list);
 }
 
+#undef eglDestroyContext
+extern "C"
+{
+EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx);
+}
 EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglDestroyContext(dpy, ctx);
+    return global_mock_egl->epoxy_eglDestroyContext(dpy, ctx);
 }
 
+#undef eglMakeCurrent
+extern "C"
+{
+EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx);
+}
 EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglMakeCurrent(dpy, draw, read, ctx);
+    return global_mock_egl->epoxy_eglMakeCurrent(dpy, draw, read, ctx);
 }
 
+#undef eglGetCurrentContext
+extern "C"
+{
+EGLContext eglGetCurrentContext (void);
+}
 EGLContext eglGetCurrentContext (void)
 {
     CHECK_GLOBAL_MOCK(EGLContext)
-    return global_mock_egl->eglGetCurrentContext();
+    return global_mock_egl->epoxy_eglGetCurrentContext();
 }
 
+#undef eglGetCurrentSurface
+extern "C"
+{
+EGLSurface eglGetCurrentSurface (EGLint readdraw);
+}
 EGLSurface eglGetCurrentSurface (EGLint readdraw)
 {
     CHECK_GLOBAL_MOCK(EGLSurface)
-    return global_mock_egl->eglGetCurrentSurface(readdraw);
+    return global_mock_egl->epoxy_eglGetCurrentSurface(readdraw);
 }
 
+#undef eglGetCurrentDisplay
+extern "C"
+{
+EGLDisplay eglGetCurrentDisplay (void);
+}
 EGLDisplay eglGetCurrentDisplay (void)
 {
     CHECK_GLOBAL_MOCK(EGLDisplay)
-    return global_mock_egl->eglGetCurrentDisplay();
+    return global_mock_egl->epoxy_eglGetCurrentDisplay();
 }
 
+#undef eglQueryContext
+extern "C"
+{
+EGLBoolean eglQueryContext (EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGLint *value);
+}
 EGLBoolean eglQueryContext (EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGLint *value)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglQueryContext(dpy, ctx, attribute, value);
+    return global_mock_egl->epoxy_eglQueryContext(dpy, ctx, attribute, value);
 }
 
+#undef eglWaitGL
+extern "C"
+{
+EGLBoolean eglWaitGL (void);
+}
 EGLBoolean eglWaitGL (void)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglWaitGL();
+    return global_mock_egl->epoxy_eglWaitGL();
 }
 
+#undef eglWaitNative
+extern "C"
+{
+EGLBoolean eglWaitNative (EGLint engine);
+}
 EGLBoolean eglWaitNative (EGLint engine)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglWaitNative(engine);
+    return global_mock_egl->epoxy_eglWaitNative(engine);
 }
 
+#undef eglSwapBuffers
+extern "C"
+{
+EGLBoolean eglSwapBuffers (EGLDisplay dpy, EGLSurface draw);
+}
 EGLBoolean eglSwapBuffers (EGLDisplay dpy, EGLSurface draw)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglSwapBuffers(dpy, draw);
+    return global_mock_egl->epoxy_eglSwapBuffers(dpy, draw);
 }
 
+#undef eglCopyBuffers
+extern "C"
+{
+EGLBoolean eglCopyBuffers (EGLDisplay dpy, EGLSurface surface, NativePixmapType target);
+}
 EGLBoolean eglCopyBuffers (EGLDisplay dpy, EGLSurface surface, NativePixmapType target)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglCopyBuffers(dpy, surface, reinterpret_cast<mtd::MockEGL::AnyNativeType>(target));
+    return global_mock_egl->epoxy_eglCopyBuffers(dpy, surface, reinterpret_cast<mtd::MockEGL::AnyNativeType>(target));
 }
 
 /* extensions */

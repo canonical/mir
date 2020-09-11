@@ -93,107 +93,201 @@ mtd::MockGL::~MockGL()
         return type;                        \
     }
 
+#undef glGetError
+extern "C"
+{
+GLenum glGetError();
+};
 GLenum glGetError()
 {
     CHECK_GLOBAL_MOCK(GLenum);
-    return global_mock_gl->glGetError();
+    return global_mock_gl->epoxy_glGetError();
 }
 
+#undef glGetString
+extern "C"
+{
+const GLubyte* glGetString(GLenum name);
+}
 const GLubyte* glGetString(GLenum name)
 {
     if (!global_mock_gl)
         return nullptr;
-    return global_mock_gl->glGetString(name);
+    return global_mock_gl->epoxy_glGetString(name);
 }
 
+#undef glUseProgram
+extern "C"
+{
+void glUseProgram(GLuint program);
+}
 void glUseProgram(GLuint program)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glUseProgram (program);
+    global_mock_gl->epoxy_glUseProgram (program);
 }
 
+#undef glClear
+extern "C"
+{
+void glClear (GLbitfield mask);
+}
 void glClear (GLbitfield mask)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glClear(mask);
+    global_mock_gl->epoxy_glClear(mask);
 }
 
+#undef glClearColor
+extern "C"
+{
+void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+}
 void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glClearColor(red, green, blue, alpha);
+    global_mock_gl->epoxy_glClearColor(red, green, blue, alpha);
 }
 
+#undef glColorMask
+extern "C"
+{
+void glColorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a);
+}
 void glColorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glColorMask(r, g, b, a);
+    global_mock_gl->epoxy_glColorMask(r, g, b, a);
 }
 
+#undef glEnable
+extern "C"
+{
+void glEnable(GLenum func);
+}
 void glEnable(GLenum func)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glEnable (func);
+    global_mock_gl->epoxy_glEnable (func);
 }
 
+#undef glDisable
+extern "C"
+{
+void glDisable(GLenum func);
+}
 void glDisable(GLenum func)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glDisable(func);
+    global_mock_gl->epoxy_glDisable(func);
 }
 
+#undef glBlendColor
+extern "C"
+{
+void glBlendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+}
 void glBlendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glBlendColor(red, green, blue, alpha);
+    global_mock_gl->epoxy_glBlendColor(red, green, blue, alpha);
 }
 
+#undef glBlendFunc
+extern "C"
+{
+void glBlendFunc(GLenum src, GLenum dst);
+}
 void glBlendFunc(GLenum src, GLenum dst)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glBlendFunc (src, dst);
+    global_mock_gl->epoxy_glBlendFunc (src, dst);
 }
 
+#undef glBlendFuncSeparate
+extern "C"
+{
+void glBlendFuncSeparate(GLenum src_rgb, GLenum dst_rgb,
+                         GLenum src_alpha, GLenum dst_alpha);
+}
 void glBlendFuncSeparate(GLenum src_rgb, GLenum dst_rgb,
                          GLenum src_alpha, GLenum dst_alpha)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glBlendFuncSeparate(src_rgb, dst_rgb, src_alpha, dst_alpha);
+    global_mock_gl->epoxy_glBlendFuncSeparate(src_rgb, dst_rgb, src_alpha, dst_alpha);
 }
 
+#undef glActiveTexture
+extern "C"
+{
+void glActiveTexture(GLenum unit);
+}
 void glActiveTexture(GLenum unit)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glActiveTexture (unit);
+    global_mock_gl->epoxy_glActiveTexture (unit);
 }
 
+#undef glUniformMatrix4fv
+extern "C"
+{
+void glUniformMatrix4fv(GLint location,
+                        GLsizei count,
+                        GLboolean transpose,
+                        const GLfloat* value);
+}
 void glUniformMatrix4fv(GLint location,
                         GLsizei count,
                         GLboolean transpose,
                         const GLfloat* value)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glUniformMatrix4fv(location, count, transpose, value);
+    global_mock_gl->epoxy_glUniformMatrix4fv(location, count, transpose, value);
 }
 
+#undef glUniform1f
+extern "C"
+{
+void glUniform1f(GLint location, GLfloat x);
+}
 void glUniform1f(GLint location, GLfloat x)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glUniform1f(location, x);
+    global_mock_gl->epoxy_glUniform1f(location, x);
 }
 
+#undef glUniform2f
+extern "C"
+{
+void glUniform2f(GLint location, GLfloat x, GLfloat y);
+}
 void glUniform2f(GLint location, GLfloat x, GLfloat y)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glUniform2f(location, x, y);
+    global_mock_gl->epoxy_glUniform2f(location, x, y);
 }
 
+#undef glBindBuffer
+extern "C"
+{
+void glBindBuffer(GLenum buffer, GLuint name);
+}
 void glBindBuffer(GLenum buffer, GLuint name)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glBindBuffer(buffer, name);
+    global_mock_gl->epoxy_glBindBuffer(buffer, name);
 }
 
+#undef glVertexAttribPointer
+extern "C"
+{
+void glVertexAttribPointer(GLuint indx,
+                           GLint size,
+                           GLenum type,
+                           GLboolean normalized,
+                           GLsizei stride,
+                           const GLvoid* ptr);
+}
 void glVertexAttribPointer(GLuint indx,
                            GLint size,
                            GLenum type,
@@ -202,287 +296,505 @@ void glVertexAttribPointer(GLuint indx,
                            const GLvoid* ptr)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glVertexAttribPointer(indx, size, type, normalized, stride, ptr);
+    global_mock_gl->epoxy_glVertexAttribPointer(indx, size, type, normalized, stride, ptr);
 }
 
+#undef glBindTexture
+extern "C"
+{
+void glBindTexture(GLenum target, GLuint texture);
+}
 void glBindTexture(GLenum target, GLuint texture)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glBindTexture(target, texture);
+    global_mock_gl->epoxy_glBindTexture(target, texture);
 }
 
+#undef glEnableVertexAttribArray
+extern "C"
+{
+void glEnableVertexAttribArray(GLuint index);
+}
 void glEnableVertexAttribArray(GLuint index)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glEnableVertexAttribArray(index);
+    global_mock_gl->epoxy_glEnableVertexAttribArray(index);
 }
 
+#undef glDisableVertexAttribArray
+extern "C"
+{
+void glDisableVertexAttribArray(GLuint index);
+}
 void glDisableVertexAttribArray(GLuint index)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glDisableVertexAttribArray(index);
+    global_mock_gl->epoxy_glDisableVertexAttribArray(index);
 }
 
+#undef glDrawArrays
+extern "C"
+{
+void glDrawArrays(GLenum mode, GLint first, GLsizei count);
+}
 void glDrawArrays(GLenum mode, GLint first, GLsizei count)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glDrawArrays(mode, first, count);
+    global_mock_gl->epoxy_glDrawArrays(mode, first, count);
 }
 
+#undef glCreateShader
+extern "C"
+{
+GLuint glCreateShader(GLenum type);
+}
 GLuint glCreateShader(GLenum type)
 {
     CHECK_GLOBAL_MOCK(GLuint);
-    return global_mock_gl->glCreateShader(type);
+    return global_mock_gl->epoxy_glCreateShader(type);
 }
 
+#undef glDeleteShader
+extern "C"
+{
+void glDeleteShader(GLuint shader);
+}
 void glDeleteShader(GLuint shader)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    return global_mock_gl->glDeleteShader(shader);
+    return global_mock_gl->epoxy_glDeleteShader(shader);
 }
 
-/* This is the version of glShaderSource in Mesa < 9.0.1 */
-void glShaderSource(GLuint shader, GLsizei count, const GLchar **string, const GLint *length)
+#undef glShaderSource
+extern "C"
 {
-    CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glShaderSource (shader, count, string, length);
+void glShaderSource(GLuint shader, GLsizei count, const GLchar* const* string, const GLint *length);
 }
-
-/* This is the version of glShaderSource in Mesa >= 9.0.1 */
 void glShaderSource(GLuint shader, GLsizei count, const GLchar* const* string, const GLint *length)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glShaderSource (shader, count, string, length);
+    global_mock_gl->epoxy_glShaderSource (shader, count, string, length);
 }
 
+#undef glCompileShader
+extern "C"
+{
+void glCompileShader(GLuint shader);
+}
 void glCompileShader(GLuint shader)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glCompileShader(shader);
+    global_mock_gl->epoxy_glCompileShader(shader);
 }
 
+#undef glGetShaderiv
+extern "C"
+{
+void glGetShaderiv(GLuint shader, GLenum pname, GLint *params);
+}
 void glGetShaderiv(GLuint shader, GLenum pname, GLint *params)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glGetShaderiv(shader, pname, params);
+    global_mock_gl->epoxy_glGetShaderiv(shader, pname, params);
 }
 
+#undef glGetShaderInfoLog
+extern "C"
+{
+void glGetShaderInfoLog(GLuint shader, GLsizei bufsize, GLsizei *length, GLchar *infolog);
+}
 void glGetShaderInfoLog(GLuint shader, GLsizei bufsize, GLsizei *length, GLchar *infolog)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glGetShaderInfoLog(shader, bufsize, length, infolog);
+    global_mock_gl->epoxy_glGetShaderInfoLog(shader, bufsize, length, infolog);
 }
 
+#undef glCreateProgram
+extern "C"
+{
+GLuint glCreateProgram();
+}
 GLuint glCreateProgram()
 {
     CHECK_GLOBAL_MOCK(GLuint);
-    return global_mock_gl->glCreateProgram();
+    return global_mock_gl->epoxy_glCreateProgram();
 }
 
+#undef glDeleteProgram
+extern "C"
+{
+void glDeleteProgram(GLuint program);
+}
 void glDeleteProgram(GLuint program)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    return global_mock_gl->glDeleteProgram(program);
+    return global_mock_gl->epoxy_glDeleteProgram(program);
 }
 
+#undef glAttachShader
+extern "C"
+{
+void glAttachShader(GLuint program, GLuint shader);
+}
 void glAttachShader(GLuint program, GLuint shader)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glAttachShader(program, shader);
+    global_mock_gl->epoxy_glAttachShader(program, shader);
 }
 
+#undef glLinkProgram
+extern "C"
+{
+void glLinkProgram(GLuint program);
+}
 void glLinkProgram(GLuint program)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glLinkProgram(program);
+    global_mock_gl->epoxy_glLinkProgram(program);
 }
 
+#undef glGetUniformLocation
+extern "C"
+{
+GLint glGetUniformLocation(GLuint program, const GLchar *name);
+}
 GLint glGetUniformLocation(GLuint program, const GLchar *name)
 {
     CHECK_GLOBAL_MOCK(GLint);
-    return global_mock_gl->glGetUniformLocation(program, name);
+    return global_mock_gl->epoxy_glGetUniformLocation(program, name);
 }
 
+#undef glGetAttribLocation
+extern "C"
+{
+GLint glGetAttribLocation(GLuint program, const GLchar *name);
+}
 GLint glGetAttribLocation(GLuint program, const GLchar *name)
 {
     CHECK_GLOBAL_MOCK(GLint);
-    return global_mock_gl->glGetAttribLocation(program, name);
+    return global_mock_gl->epoxy_glGetAttribLocation(program, name);
 }
 
+#undef glTexParameteri
+extern "C"
+{
+void glTexParameteri(GLenum target, GLenum pname, GLint param);
+}
 void glTexParameteri(GLenum target, GLenum pname, GLint param)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glTexParameteri(target, pname, param);
+    global_mock_gl->epoxy_glTexParameteri(target, pname, param);
 }
 
+#undef glGenTextures
+extern "C"
+{
+void glGenTextures(GLsizei n, GLuint *textures);
+}
 void glGenTextures(GLsizei n, GLuint *textures)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glGenTextures(n, textures);
+    global_mock_gl->epoxy_glGenTextures(n, textures);
 }
 
+#undef glDeleteTextures
+extern "C"
+{
+void glDeleteTextures(GLsizei n, const GLuint *textures);
+}
 void glDeleteTextures(GLsizei n, const GLuint *textures)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glDeleteTextures(n, textures);
+    global_mock_gl->epoxy_glDeleteTextures(n, textures);
 }
 
+#undef glUniform1i
+extern "C"
+{
+void glUniform1i(GLint location, GLint x);
+}
 void glUniform1i(GLint location, GLint x)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glUniform1i(location, x);
+    global_mock_gl->epoxy_glUniform1i(location, x);
 }
 
+#undef glGenBuffers
+extern "C"
+{
+void glGenBuffers(GLsizei n, GLuint *buffers);
+}
 void glGenBuffers(GLsizei n, GLuint *buffers)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glGenBuffers(n, buffers);
+    global_mock_gl->epoxy_glGenBuffers(n, buffers);
 }
 
+#undef glDeleteBuffers
+extern "C"
+{
+void glDeleteBuffers(GLsizei n, const GLuint *buffers);
+}
 void glDeleteBuffers(GLsizei n, const GLuint *buffers)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glDeleteBuffers(n, buffers);
+    global_mock_gl->epoxy_glDeleteBuffers(n, buffers);
 }
 
+#undef glBufferData
+extern "C"
+{
+void glBufferData(GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
+}
 void glBufferData(GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glBufferData(target, size, data, usage);
+    global_mock_gl->epoxy_glBufferData(target, size, data, usage);
 }
 
+#undef glGetProgramiv
+extern "C"
+{
+void glGetProgramiv(GLuint program, GLenum pname, GLint *params);
+}
 void glGetProgramiv(GLuint program, GLenum pname, GLint *params)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glGetProgramiv(program, pname, params);
+    global_mock_gl->epoxy_glGetProgramiv(program, pname, params);
 }
 
+#undef glGetProgramInfoLog
+extern "C"
+{
+void glGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei *length, GLchar *infolog);
+}
 void glGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei *length, GLchar *infolog)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glGetProgramInfoLog(program, bufsize, length, infolog);
+    global_mock_gl->epoxy_glGetProgramInfoLog(program, bufsize, length, infolog);
 }
 
+#undef glTexImage2D
+extern "C"
+{
+void glTexImage2D(GLenum target, GLint level, GLint internalformat,
+                  GLsizei width, GLsizei height, GLint border,
+                  GLenum format, GLenum type, const GLvoid* pixels);
+}
 void glTexImage2D(GLenum target, GLint level, GLint internalformat,
                   GLsizei width, GLsizei height, GLint border,
                   GLenum format, GLenum type, const GLvoid* pixels)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+    global_mock_gl->epoxy_glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 }
 
+#undef glGenFramebuffers
+extern "C"
+{
+void glGenFramebuffers(GLsizei n, GLuint *framebuffers);
+}
 void glGenFramebuffers(GLsizei n, GLuint *framebuffers)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glGenFramebuffers(n, framebuffers);
+    global_mock_gl->epoxy_glGenFramebuffers(n, framebuffers);
 }
 
+#undef glDeleteFramebuffers
+extern "C"
+{
+void glDeleteFramebuffers(GLsizei n, const GLuint * framebuffers);
+}
 void glDeleteFramebuffers(GLsizei n, const GLuint * framebuffers)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glDeleteFramebuffers(n, framebuffers);
+    global_mock_gl->epoxy_glDeleteFramebuffers(n, framebuffers);
 }
 
+#undef glBindFramebuffer
+extern "C"
+{
+void glBindFramebuffer(GLenum target, GLuint framebuffer);
+}
 void glBindFramebuffer(GLenum target, GLuint framebuffer)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glBindFramebuffer(target, framebuffer);
+    global_mock_gl->epoxy_glBindFramebuffer(target, framebuffer);
 }
 
+#undef glFramebufferTexture2D
+extern "C"
+{
+void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
+                            GLuint texture, GLint level);
+}
 void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
                             GLuint texture, GLint level)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glFramebufferTexture2D(target, attachment, textarget,
+    global_mock_gl->epoxy_glFramebufferTexture2D(target, attachment, textarget,
                                            texture, level);
 
 }
 
+#undef glCheckFramebufferStatus
+extern "C"
+{
+GLenum glCheckFramebufferStatus(GLenum target);
+}
 GLenum glCheckFramebufferStatus(GLenum target)
 {
     CHECK_GLOBAL_MOCK(GLenum);
-    return global_mock_gl->glCheckFramebufferStatus(target);
+    return global_mock_gl->epoxy_glCheckFramebufferStatus(target);
 }
 
+#undef glReadPixels
+extern "C"
+{
+void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                  GLenum format, GLenum type, GLvoid* pixels);
+}
 void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                   GLenum format, GLenum type, GLvoid* pixels)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glReadPixels(x, y, width, height, format, type, pixels);
+    global_mock_gl->epoxy_glReadPixels(x, y, width, height, format, type, pixels);
 }
 
+#undef glGetIntegerv
+extern "C"
+{
+void glGetIntegerv(GLenum target, GLint* params);
+}
 void glGetIntegerv(GLenum target, GLint* params)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glGetIntegerv(target, params);
+    global_mock_gl->epoxy_glGetIntegerv(target, params);
 }
 
+#undef glBindRenderbuffer
+extern "C"
+{
+void glBindRenderbuffer(GLenum target, GLuint renderbuffer);
+}
 void glBindRenderbuffer(GLenum target, GLuint renderbuffer)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glBindRenderbuffer(target, renderbuffer);
+    global_mock_gl->epoxy_glBindRenderbuffer(target, renderbuffer);
 }
 
+#undef glFramebufferRenderbuffer
+extern "C"
+{
+void glFramebufferRenderbuffer(GLenum target, GLenum attachment,
+                               GLenum renderbuffertarget, GLuint renderbuffer);
+}
 void glFramebufferRenderbuffer(GLenum target, GLenum attachment,
                                GLenum renderbuffertarget, GLuint renderbuffer)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glFramebufferRenderbuffer(target, attachment,
+    global_mock_gl->epoxy_glFramebufferRenderbuffer(target, attachment,
                                               renderbuffertarget, renderbuffer);
 }
 
+#undef glGenRenderbuffers
+extern "C"
+{
+void glGenRenderbuffers(GLsizei n, GLuint *renderbuffers);
+}
 void glGenRenderbuffers(GLsizei n, GLuint *renderbuffers)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glGenRenderbuffers(n, renderbuffers);
+    global_mock_gl->epoxy_glGenRenderbuffers(n, renderbuffers);
 }
 
+#undef glDeleteRenderbuffers
+extern "C"
+{
+void glDeleteRenderbuffers(GLsizei n, const GLuint *renderbuffers);
+}
 void glDeleteRenderbuffers(GLsizei n, const GLuint *renderbuffers)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glDeleteRenderbuffers(n, renderbuffers);
+    global_mock_gl->epoxy_glDeleteRenderbuffers(n, renderbuffers);
 }
 
+#undef glRenderbufferStorage
+extern "C"
+{
+void glRenderbufferStorage(GLenum target, GLenum internalformat,
+                           GLsizei width, GLsizei height);
+}
 void glRenderbufferStorage(GLenum target, GLenum internalformat,
                            GLsizei width, GLsizei height)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glRenderbufferStorage(target, internalformat,
+    global_mock_gl->epoxy_glRenderbufferStorage(target, internalformat,
                                           width, height);
 }
 
+#undef glViewport
+extern "C"
+{
+void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+}
 void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glViewport(x, y, width, height);
+    global_mock_gl->epoxy_glViewport(x, y, width, height);
 }
 
+#undef glFinish
+extern "C"
+{
+void glFinish();
+}
 void glFinish()
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glFinish();
+    global_mock_gl->epoxy_glFinish();
 }
 
+#undef glGenerateMipmap
+extern "C"
+{
+void glGenerateMipmap(GLenum target);
+}
 void glGenerateMipmap(GLenum target)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glGenerateMipmap(target);
+    global_mock_gl->epoxy_glGenerateMipmap(target);
 }
 
+#undef glPixelStorei
+extern "C"
+{
+void glPixelStorei(GLenum pname, GLint param);
+}
 void glPixelStorei(GLenum pname, GLint param)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glPixelStorei(pname, param);
+    global_mock_gl->epoxy_glPixelStorei(pname, param);
 }
 
+#undef glDrawElements
+extern "C"
+{
+void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indicies);
+}
 void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indicies)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glDrawElements(mode, count, type, indicies);
+    global_mock_gl->epoxy_glDrawElements(mode, count, type, indicies);
 }
 
+#undef glScissor
+extern "C"
+{
+void glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
+}
 void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glScissor(x, y, width, height);
+    global_mock_gl->epoxy_glScissor(x, y, width, height);
 }
