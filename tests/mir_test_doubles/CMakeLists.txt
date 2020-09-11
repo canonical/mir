@@ -73,7 +73,6 @@ string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 add_library(mir-public-test-doubles OBJECT
-  nested_mock_egl.cpp
   null_logger.cpp
   stub_display_configuration.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/stub_display_configuration.h
   fake_display.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/fake_display.h
