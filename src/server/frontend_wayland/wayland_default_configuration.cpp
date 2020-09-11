@@ -73,12 +73,12 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     },
     {
         mw::XdgOutputManagerV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return create_xdg_output_manager_v1(ctx.display, ctx.output_manager); }
+            { return mf::create_xdg_output_manager_v1(ctx.display, ctx.output_manager); }
     },
     {
         mw::ForeignToplevelManagerV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
             {
-                return create_foreign_toplevel_manager_v1(
+                return mf::create_foreign_toplevel_manager_v1(
                     ctx.display,
                     ctx.shell,
                     ctx.wayland_executor,
