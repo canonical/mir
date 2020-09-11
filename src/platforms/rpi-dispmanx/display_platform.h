@@ -21,7 +21,7 @@
 
 #include "mir/graphics/platform.h"
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 
 namespace mir
 {

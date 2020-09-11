@@ -122,7 +122,7 @@ public:
                std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
                mgg::BypassOption::allowed,
-               std::shared_ptr<mg::EGLExtensions::DebugKHR>{});
+               false);
     }
 
     std::shared_ptr<mgg::Display> create_display(
@@ -134,7 +134,7 @@ public:
             platform->vt,
             platform->bypass_option(),
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-            std::shared_ptr<mg::EGLExtensions::DebugKHR>{},
+            false,
             std::make_shared<mtd::StubGLConfig>(),
             null_report);
     }
@@ -638,7 +638,7 @@ TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_
                         platform->vt,
                         platform->bypass_option(),
                         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-                        std::shared_ptr<mg::EGLExtensions::DebugKHR>{},
+                        false,
                         std::make_shared<mtd::StubGLConfig>(),
                         mock_report);
 }
@@ -850,7 +850,7 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         platform->vt,
         platform->bypass_option(),
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-        std::shared_ptr<mg::EGLExtensions::DebugKHR>{},
+        false,
         mir::test::fake_shared(mock_gl_config),
         null_report};
 }

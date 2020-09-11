@@ -69,7 +69,7 @@ public:
             std::shared_ptr<ConsoleServices> const& vt,
             BypassOption bypass_option,
             std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-            std::shared_ptr<EGLExtensions::DebugKHR> debug,
+            bool debug,
             std::shared_ptr<GLConfig> const& gl_config,
             std::shared_ptr<DisplayReport> const& listener);
     ~Display();
@@ -108,7 +108,7 @@ private:
     std::vector<std::shared_ptr<helpers::DRMHelper>> const drm;
     std::shared_ptr<helpers::GBMHelper> const gbm;
     std::shared_ptr<ConsoleServices> const vt;
-    std::shared_ptr<EGLExtensions::DebugKHR> const debug;
+    bool const debug;
     std::shared_ptr<DisplayReport> const listener;
     mir::udev::Monitor monitor;
     helpers::EGLHelper shared_egl;

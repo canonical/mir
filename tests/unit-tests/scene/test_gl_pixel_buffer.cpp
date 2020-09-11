@@ -21,11 +21,10 @@
 
 #include "mir/test/doubles/mock_gl_buffer.h"
 #include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/mock_egl.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
-#include <GLES2/gl2ext.h>
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -68,6 +67,7 @@ public:
             .WillByDefault(Return(geom::Size{51, 71}));
     }
 
+    testing::NiceMock<mtd::MockEGL> mock_egl;
     testing::NiceMock<mtd::MockGL> mock_gl;
     testing::NiceMock<mtd::MockGLBuffer> mock_buffer;
     MockGLContext mock_context;

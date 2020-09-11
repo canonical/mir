@@ -22,7 +22,7 @@
 #include "mir/graphics/egl_resources.h"
 #include "mir/renderer/gl/context.h"
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 
 namespace mir
 {

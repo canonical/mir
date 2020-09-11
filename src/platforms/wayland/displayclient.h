@@ -26,7 +26,7 @@
 #include <mir/graphics/gl_config.h>
 
 #include <wayland-client.h>
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 
 #include <functional>
 #include <unordered_map>

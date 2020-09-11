@@ -17,7 +17,7 @@
 #ifndef UNITYSYSTEMCOMPOSITOR_MIREGL_H
 #define UNITYSYSTEMCOMPOSITOR_MIREGL_H
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 
 #include <memory>
 #include <vector>

@@ -26,7 +26,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/renderer/gl/render_target.h"
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 
 namespace mir
 {

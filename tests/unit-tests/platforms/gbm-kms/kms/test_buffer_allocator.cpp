@@ -84,7 +84,7 @@ protected:
                 std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgg::BypassOption::allowed,
-                std::shared_ptr<mg::EGLExtensions::DebugKHR>{});
+                false);
         display = platform->create_display(
             std::make_shared<mtd::NullDisplayConfigurationPolicy>(),
             std::make_shared<mtd::NullGLConfig>());

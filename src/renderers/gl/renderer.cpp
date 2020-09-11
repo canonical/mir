@@ -37,7 +37,7 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -125,7 +125,7 @@ const GLchar* const mrg::Renderer::default_fshader =
 
 namespace
 {
-template<void (* deleter)(GLuint)>
+template<void (** deleter)(GLuint)>
 class GLHandle
 {
 public:
@@ -137,7 +137,7 @@ public:
     ~GLHandle()
     {
         if (id)
-            (*deleter)(id);
+            (**deleter)(id);
     }
 
     GLHandle(GLHandle const&) = delete;

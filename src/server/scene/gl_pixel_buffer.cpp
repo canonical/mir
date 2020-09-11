@@ -23,7 +23,7 @@
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 #include <GLES2/gl2ext.h>
 
 namespace mg = mir::graphics;

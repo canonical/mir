@@ -28,7 +28,7 @@
 #include <fcntl.h>
 #include <xf86drm.h>
 
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 #include <GLES2/gl2ext.h>
 
 #include <boost/throw_exception.hpp>

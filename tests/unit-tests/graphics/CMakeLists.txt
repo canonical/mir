@@ -1,6 +1,5 @@
 list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_display_configuration.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_egl_extensions.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_egl_error.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_default_display_configuration_policy.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_gamma_curves.cpp

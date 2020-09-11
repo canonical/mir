@@ -41,11 +41,12 @@ class Platform : public graphics::Platform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
-    explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
-                      std::shared_ptr<ConsoleServices> const& vt,
-                      EmergencyCleanupRegistry& emergency_cleanup_registry,
-                      BypassOption bypass_option,
-                      std::shared_ptr<EGLExtensions::DebugKHR> debug);
+    Platform(
+        std::shared_ptr<DisplayReport> const& reporter,
+        std::shared_ptr<ConsoleServices> const& vt,
+        EmergencyCleanupRegistry& emergency_cleanup_registry,
+        BypassOption bypass_option,
+        bool debug);
 
     /* From Platform */
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator(
@@ -67,7 +68,7 @@ public:
 private:
     BypassOption const bypass_option_;
     std::unique_ptr<DRMNativePlatformAuthFactory> auth_factory;
-    std::shared_ptr<EGLExtensions::DebugKHR> const debug;
+    bool const debug;
 };
 
 }

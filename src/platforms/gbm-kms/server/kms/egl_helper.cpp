@@ -32,13 +32,27 @@ namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace mgmh = mir::graphics::gbm::helpers;
 
-mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config, std::shared_ptr<EGLExtensions::DebugKHR> debug)
+namespace
+{
+bool ensure_debug_extension_or_log_failure()
+{
+    if (!epoxy_has_egl_extension(EGL_NO_DISPLAY, "EGL_KHR_debug"))
+    {
+        mir::log_warning("Debug EGL context requested, but no EGL_KHR_debug support");
+        return false;
+    }
+    return true;
+}
+}
+
+mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config, bool debug)
     : depth_buffer_bits{gl_config.depth_buffer_bits()},
       stencil_buffer_bits{gl_config.stencil_buffer_bits()},
       egl_display{EGL_NO_DISPLAY}, egl_config{0},
       egl_context{EGL_NO_CONTEXT}, egl_surface{EGL_NO_SURFACE},
       should_terminate_egl{false},
-      debug{std::move(debug)}
+      debug{
+          debug ? ensure_debug_extension_or_log_failure() : false}
 {
 }
 
@@ -47,8 +61,8 @@ mgmh::EGLHelper::EGLHelper(
     GBMHelper const& gbm,
     gbm_surface* surface,
     EGLContext shared_context,
-    std::shared_ptr<EGLExtensions::DebugKHR> debug)
-    : EGLHelper(gl_config, std::move(debug))
+    bool debug)
+    : EGLHelper(gl_config, debug)
 {
     setup(gbm, surface, shared_context, false);
 }
@@ -258,11 +272,25 @@ void mgmh::EGLHelper::setup(
     // TODO: Take the required format as a parameter, so we can select the framebuffer format.
     setup_internal(gbm, owns_egl, GBM_FORMAT_XRGB8888);
 
-    egl_surface = platform_base.eglCreatePlatformWindowSurface(
-        egl_display,
-        egl_config,
-        surface_gbm,
-        nullptr);
+    // Once we get here we've *definitely* got the necessary extensions...
+    if (epoxy_egl_version(egl_display) >= 15)
+    {
+        // ...so use the core EGL ones if we're new enough...
+        egl_surface = eglCreatePlatformWindowSurface(
+            egl_display,
+            egl_config,
+            surface_gbm,
+            nullptr);
+    }
+    else
+    {
+        // ...or the EXT extension if not.
+        egl_surface = eglCreatePlatformWindowSurfaceEXT(
+            egl_display,
+            egl_config,
+            surface_gbm,
+            nullptr);
+    }
     if(egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL window surface"));
 
@@ -329,7 +357,7 @@ void mgmh::EGLHelper::set_debug_label(char const* label)
     {
         if (egl_display != EGL_NO_DISPLAY)
         {
-            debug->eglLabelObjectKHR(
+            eglLabelObjectKHR(
                 egl_display,
                 EGL_OBJECT_DISPLAY_KHR,
                 egl_display,
@@ -337,7 +365,7 @@ void mgmh::EGLHelper::set_debug_label(char const* label)
         }
         if (egl_context != EGL_NO_CONTEXT)
         {
-            debug->eglLabelObjectKHR(
+            eglLabelObjectKHR(
                 egl_display,
                 EGL_OBJECT_CONTEXT_KHR,
                 egl_context,
@@ -345,7 +373,7 @@ void mgmh::EGLHelper::set_debug_label(char const* label)
         }
         if (egl_surface != EGL_NO_SURFACE)
         {
-            debug->eglLabelObjectKHR(
+            eglLabelObjectKHR(
                 egl_display,
                 EGL_OBJECT_SURFACE_KHR,
                 egl_surface,
@@ -397,10 +425,30 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize, EGLi
     static const EGLint required_egl_version_major = 1;
     static const EGLint required_egl_version_minor = 4;
 
-    egl_display = platform_base.eglGetPlatformDisplay(
-        EGL_PLATFORM_GBM_KHR,      // EGL_PLATFORM_GBM_MESA has the same value.
-        static_cast<EGLNativeDisplayType>(gbm.device),
-        nullptr);
+    if (epoxy_has_egl_extension(EGL_NO_DISPLAY, "EGL_KHR_platform_gbm"))
+    {
+        // EGL_KHR_platform_gbm is written against EGL 1.5, so we can use the EGL 1.5 entrypoint
+        egl_display = eglGetPlatformDisplay(
+            EGL_PLATFORM_GBM_KHR,
+            static_cast<EGLNativeDisplayType>(gbm.device),
+            nullptr);
+    }
+    else if (epoxy_has_egl_extension(EGL_NO_DISPLAY, "EGL_MESA_platform_gbm"))
+    {
+        // EGL_MESA_platform_gbm is written against EGL 1.4, but requires EGL_EXT_platform_base
+        egl_display = eglGetPlatformDisplayEXT(
+            EGL_PLATFORM_GBM_MESA,
+            static_cast<EGLNativeDisplayType>(gbm.device),
+            nullptr);
+    }
+    else
+    {
+        /* Platform probe should *normally* prevent us getting here, but if the user has overriden platform
+         * selection we may get here anyway. No matter how much they might want it, this isn't going to work.
+         */
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{"Missing required EGL_KHR_platform_gbm or EGL_MESA_platform_gbm extension"}));
+    }
     if (egl_display == EGL_NO_DISPLAY)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get EGL display"));
 

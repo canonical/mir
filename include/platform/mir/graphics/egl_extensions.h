@@ -46,11 +46,8 @@
 
 #include <experimental/optional>
 
-#define EGL_EGLEXT_PROTOTYPES
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include <epoxy/egl.h>
+#include <epoxy/gl.h>
 
 // For Wayland extensions
 #include <EGL/eglmesaext.h>
@@ -68,40 +65,6 @@ typedef void* EGLStreamKHR;
 #define EGLAttribPolyfil
 typedef intptr_t EGLAttrib;
 #endif
-#endif
-
-#ifndef EGL_EXT_platform_base
-#define EGL_EXT_platform_base 1
-typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYEXTPROC) (EGLenum platform, void *native_display, const EGLint *attrib_list);
-typedef EGLSurface (EGLAPIENTRYP PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC) (EGLDisplay dpy, EGLConfig config, void *native_window, const EGLint *attrib_list);
-typedef EGLSurface (EGLAPIENTRYP PFNEGLCREATEPLATFORMPIXMAPSURFACEEXTPROC) (EGLDisplay dpy, EGLConfig config, void *native_pixmap, const EGLint *attrib_list);
-#ifdef EGL_EGLEXT_PROTOTYPES
-EGLAPI EGLDisplay EGLAPIENTRY eglGetPlatformDisplayEXT (EGLenum platform, void *native_display, const EGLint *attrib_list);
-EGLAPI EGLSurface EGLAPIENTRY eglCreatePlatformWindowSurfaceEXT (EGLDisplay dpy, EGLConfig config, void *native_window, const EGLint *attrib_list);
-EGLAPI EGLSurface EGLAPIENTRY eglCreatePlatformPixmapSurfaceEXT (EGLDisplay dpy, EGLConfig config, void *native_pixmap, const EGLint *attrib_list);
-#endif
-#endif /* EGL_EXT_platform_base */
-
-#ifndef EGL_KHR_debug
-#define EGL_KHR_debug 1
-typedef void *EGLLabelKHR;
-typedef void *EGLObjectKHR;
-typedef void (EGLAPIENTRY  *EGLDEBUGPROCKHR)(EGLenum error,const char *command,EGLint messageType,EGLLabelKHR threadLabel,EGLLabelKHR objectLabel,const char* message);
-#define EGL_OBJECT_THREAD_KHR             0x33B0
-#define EGL_OBJECT_DISPLAY_KHR            0x33B1
-#define EGL_OBJECT_CONTEXT_KHR            0x33B2
-#define EGL_OBJECT_SURFACE_KHR            0x33B3
-#define EGL_OBJECT_IMAGE_KHR              0x33B4
-#define EGL_OBJECT_SYNC_KHR               0x33B5
-#define EGL_OBJECT_STREAM_KHR             0x33B6
-#define EGL_DEBUG_MSG_CRITICAL_KHR        0x33B9
-#define EGL_DEBUG_MSG_ERROR_KHR           0x33BA
-#define EGL_DEBUG_MSG_WARN_KHR            0x33BB
-#define EGL_DEBUG_MSG_INFO_KHR            0x33BC
-#define EGL_DEBUG_CALLBACK_KHR            0x33B8
-typedef EGLint (EGLAPIENTRYP PFNEGLDEBUGMESSAGECONTROLKHRPROC) (EGLDEBUGPROCKHR callback, const EGLAttrib *attrib_list);
-typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYDEBUGKHRPROC) (EGLint attribute, EGLAttrib *value);
-typedef EGLint (EGLAPIENTRYP PFNEGLLABELOBJECTKHRPROC) (EGLDisplay display, EGLenum objectType, EGLObjectKHR object, EGLLabelKHR label);
 #endif
 
 /*
@@ -138,59 +101,24 @@ namespace mir
 {
 namespace graphics
 {
-struct EGLExtensions
+namespace egl
 {
-    EGLExtensions();
-    PFNEGLCREATEIMAGEKHRPROC const eglCreateImageKHR;
-    PFNEGLDESTROYIMAGEKHRPROC const eglDestroyImageKHR;
-    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const glEGLImageTargetTexture2DOES;
+struct WaylandExtensions
+{
+    WaylandExtensions();
 
-    struct WaylandExtensions
-    {
-        WaylandExtensions();
-
-        PFNEGLBINDWAYLANDDISPLAYWL const eglBindWaylandDisplayWL;
-        PFNEGLQUERYWAYLANDBUFFERWL const eglQueryWaylandBufferWL;
-    };
-    std::experimental::optional<WaylandExtensions> const wayland;
-
-    struct NVStreamAttribExtensions
-    {
-        NVStreamAttribExtensions();
-
-        PFNEGLCREATESTREAMATTRIBNVPROC const eglCreateStreamAttribNV;
-        PFNEGLSTREAMCONSUMERACQUIREATTRIBNVPROC const eglStreamConsumerAcquireAttribNV;
-    };
-    struct PlatformBaseEXT
-    {
-        PlatformBaseEXT();
-
-        PFNEGLGETPLATFORMDISPLAYEXTPROC const eglGetPlatformDisplay;
-        PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC const eglCreatePlatformWindowSurface;
-    };
-    std::experimental::optional<PlatformBaseEXT> const platform_base;
-
-    class DebugKHR
-    {
-    public:
-        DebugKHR();
-
-        static DebugKHR extension_or_null_object();
-        static std::experimental::optional<DebugKHR> maybe_debug_khr();
-
-        PFNEGLDEBUGMESSAGECONTROLKHRPROC const eglDebugMessageControlKHR;
-        PFNEGLLABELOBJECTKHRPROC const eglLabelObjectKHR;
-        PFNEGLQUERYDEBUGKHRPROC const eglQueryDebugKHR;
-
-    private:
-        // Private helper for null object constructor.
-        DebugKHR(
-            PFNEGLDEBUGMESSAGECONTROLKHRPROC control,
-            PFNEGLLABELOBJECTKHRPROC label,
-            PFNEGLQUERYDEBUGKHRPROC query);
-    };
+    PFNEGLBINDWAYLANDDISPLAYWL const eglBindWaylandDisplayWL;
+    PFNEGLQUERYWAYLANDBUFFERWL const eglQueryWaylandBufferWL;
 };
 
+struct NVStreamAttribExtensions
+{
+    NVStreamAttribExtensions();
+
+    PFNEGLCREATESTREAMATTRIBNVPROC const eglCreateStreamAttribNV;
+    PFNEGLSTREAMCONSUMERACQUIREATTRIBNVPROC const eglStreamConsumerAcquireAttribNV;
+};
+}
 }
 }
 

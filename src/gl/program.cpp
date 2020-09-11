@@ -19,7 +19,7 @@
 #include "mir/gl/program.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 #include <GLES2/gl2ext.h>
 
 namespace mgl = mir::gl;

@@ -60,6 +60,12 @@ mtd::MockGL::MockGL()
             {
                 std::memset(textures, 0, n * sizeof(*textures));
             }));
+    // Epoxy wants to know the GL version, which it parses from the version string.
+    ON_CALL(*this, glGetString(GL_VERSION))
+        .WillByDefault(Return(reinterpret_cast<GLubyte const*>("2.0 Mir Stub GLESv2")));
+    // Epoxy will check GL extensions; we should always return *something*, even if empty
+    ON_CALL(*this, glGetString(GL_EXTENSIONS))
+        .WillByDefault(Return(reinterpret_cast<GLubyte const*>("")));
 }
 
 void mtd::MockGL::provide_gles_extensions()

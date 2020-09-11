@@ -27,7 +27,7 @@
 
 #include "mir_toolkit/client_types.h"
 
-#include <EGL/eglplatform.h>
+#include <epoxy/egl.h>
 
 #include <queue>
 #include <memory>

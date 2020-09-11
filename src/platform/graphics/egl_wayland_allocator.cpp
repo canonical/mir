@@ -33,7 +33,8 @@
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
 
-#include <GLES2/gl2.h>
+#include <epoxy/egl.h>
+#include <epoxy/gl.h>
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -47,7 +48,7 @@ GLuint get_tex_id()
     return tex;
 }
 
-geom::Size get_wl_buffer_size(wl_resource* buffer, mg::EGLExtensions::WaylandExtensions const& ext)
+geom::Size get_wl_buffer_size(wl_resource* buffer, mg::egl::WaylandExtensions const& ext)
 {
     EGLint width, height;
 
@@ -66,7 +67,7 @@ geom::Size get_wl_buffer_size(wl_resource* buffer, mg::EGLExtensions::WaylandExt
 
 mg::gl::Texture::Layout get_texture_layout(
     wl_resource* resource,
-    mg::EGLExtensions::WaylandExtensions const& ext)
+    mg::egl::WaylandExtensions const& ext)
 {
     EGLint inverted;
     auto dpy = eglGetCurrentDisplay();
@@ -89,7 +90,7 @@ mg::gl::Texture::Layout get_texture_layout(
     }
 }
 
-EGLint get_wl_egl_format(wl_resource* resource, mg::EGLExtensions::WaylandExtensions const& ext)
+EGLint get_wl_egl_format(wl_resource* resource, mg::egl::WaylandExtensions const& ext)
 {
     EGLint format;
     auto dpy = eglGetCurrentDisplay();
@@ -111,7 +112,7 @@ public:
     WaylandTexBuffer(
         wl_resource* buffer,
         std::shared_ptr<mir::renderer::gl::Context> ctx,
-        mg::EGLExtensions const& extensions,
+        mg::egl::WaylandExtensions const& extensions,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release,
         std::shared_ptr<mir::Executor> wayland_executor)
@@ -119,9 +120,9 @@ public:
           tex{get_tex_id()},
           on_consumed{std::move(on_consumed)},
           on_release{std::move(on_release)},
-          size_{get_wl_buffer_size(buffer, *extensions.wayland)},
-          layout_{get_texture_layout(buffer, *extensions.wayland)},
-          egl_format{get_wl_egl_format(buffer, *extensions.wayland)},
+          size_{get_wl_buffer_size(buffer, extensions)},
+          layout_{get_texture_layout(buffer, extensions)},
+          egl_format{get_wl_egl_format(buffer, extensions)},
           wayland_executor{std::move(wayland_executor)}
     {
         if (egl_format != EGL_TEXTURE_RGB && egl_format != EGL_TEXTURE_RGBA)
@@ -137,7 +138,7 @@ public:
                 EGL_NONE
             };
 
-        auto egl_image = extensions.eglCreateImageKHR(
+        auto egl_image = eglCreateImageKHR(
             eglGetCurrentDisplay(),
             EGL_NO_CONTEXT,
             EGL_WAYLAND_BUFFER_WL,
@@ -148,7 +149,7 @@ public:
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
 
         glBindTexture(GL_TEXTURE_2D, tex);
-        extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
+        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -156,7 +157,7 @@ public:
 
         // tex is now an EGLImage sibling, so we can free the EGLImage without
         // freeing the backing data.
-        extensions.eglDestroyImageKHR(eglGetCurrentDisplay(), egl_image);
+        eglDestroyImageKHR(eglGetCurrentDisplay(), egl_image);
     }
 
     ~WaylandTexBuffer()
@@ -265,14 +266,9 @@ private:
 
 
 
-void mg::wayland::bind_display(EGLDisplay egl_dpy, wl_display* wayland_dpy, EGLExtensions const& extensions)
+void mg::wayland::bind_display(EGLDisplay egl_dpy, wl_display* wayland_dpy, egl::WaylandExtensions const& extensions)
 {
-    if (!extensions.wayland)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"No EGL_WL_bind_wayland_display support"}));
-    }
-
-    if (extensions.wayland->eglBindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
+    if (extensions.eglBindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to bind Wayland EGL display"));
     }
@@ -283,7 +279,7 @@ auto mg::wayland::buffer_from_resource(
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release,
     std::shared_ptr<mir::renderer::gl::Context> ctx,
-    mg::EGLExtensions const& extensions,
+    egl::WaylandExtensions const& extensions,
     std::shared_ptr<mir::Executor> wayland_executor) -> std::unique_ptr<mg::Buffer>
 {
     return std::make_unique<WaylandTexBuffer>(

@@ -39,10 +39,8 @@
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include <epoxy/egl.h>
+#include <epoxy/gl.h>
 
 #include <algorithm>
 #include <stdexcept>
@@ -68,10 +66,8 @@ namespace
 class EGLImageBufferTextureBinder : public mgc::BufferTextureBinder
 {
 public:
-    EGLImageBufferTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
-                                std::shared_ptr<mg::EGLExtensions> const& egl_extensions)
+    EGLImageBufferTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo)
         : bo{gbm_bo},
-          egl_extensions{egl_extensions},
           egl_image{EGL_NO_IMAGE_KHR}
     {
     }
@@ -79,7 +75,7 @@ public:
     ~EGLImageBufferTextureBinder()
     {
         if (egl_image != EGL_NO_IMAGE_KHR)
-            egl_extensions->eglDestroyImageKHR(egl_display, egl_image);
+            eglDestroyImageKHR(egl_display, egl_image);
     }
 
 
@@ -87,14 +83,13 @@ public:
     {
         ensure_egl_image();
 
-        egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
+        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
     }
 
 protected:
     virtual void ensure_egl_image() = 0;
 
     std::shared_ptr<gbm_bo> const bo;
-    std::shared_ptr<mg::EGLExtensions> const egl_extensions;
     EGLDisplay egl_display;
     EGLImageKHR egl_image;
 };
@@ -102,9 +97,8 @@ protected:
 class NativePixmapTextureBinder : public EGLImageBufferTextureBinder
 {
 public:
-    NativePixmapTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
-                              std::shared_ptr<mg::EGLExtensions> const& egl_extensions)
-        : EGLImageBufferTextureBinder(gbm_bo, egl_extensions)
+    NativePixmapTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo)
+        : EGLImageBufferTextureBinder(gbm_bo)
     {
     }
 
@@ -123,11 +117,12 @@ private:
                 EGL_NONE
             };
 
-            egl_image = egl_extensions->eglCreateImageKHR(egl_display,
-                                                          EGL_NO_CONTEXT,
-                                                          EGL_NATIVE_PIXMAP_KHR,
-                                                          reinterpret_cast<void*>(bo_raw),
-                                                          image_attrs);
+            egl_image = eglCreateImageKHR(
+                egl_display,
+                EGL_NO_CONTEXT,
+                EGL_NATIVE_PIXMAP_KHR,
+                reinterpret_cast<void*>(bo_raw),
+                image_attrs);
             if (egl_image == EGL_NO_IMAGE_KHR)
                 BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
         }
@@ -137,9 +132,8 @@ private:
 class DMABufTextureBinder : public EGLImageBufferTextureBinder
 {
 public:
-    DMABufTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
-                        std::shared_ptr<mg::EGLExtensions> const& egl_extensions)
-        : EGLImageBufferTextureBinder(gbm_bo, egl_extensions)
+    DMABufTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo)
+        : EGLImageBufferTextureBinder(gbm_bo)
     {
     }
 
@@ -178,11 +172,12 @@ private:
                 EGL_NONE
             };
 
-            egl_image = egl_extensions->eglCreateImageKHR(egl_display,
-                                                          EGL_NO_CONTEXT,
-                                                          EGL_LINUX_DMA_BUF_EXT,
-                                                          static_cast<EGLClientBuffer>(nullptr),
-                                                          image_attrs_X);
+            egl_image = eglCreateImageKHR(
+                egl_display,
+                EGL_NO_CONTEXT,
+                EGL_LINUX_DMA_BUF_EXT,
+                static_cast<EGLClientBuffer>(nullptr),
+                image_attrs_X);
             if (egl_image == EGL_NO_IMAGE_KHR)
                 BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
         }
@@ -239,12 +234,23 @@ mgg::BufferAllocator::BufferAllocator(
       egl_delegate{
           std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))},
       device(device),
-      egl_extensions(std::make_shared<mg::EGLExtensions>()),
       bypass_option(buffer_import_method == mgg::BufferImportMethod::dma_buf ?
                         mgg::BypassOption::prohibited :
                         bypass_option),
       buffer_import_method(buffer_import_method)
 {
+    ctx->make_current();
+    if (!epoxy_has_egl_extension(eglGetCurrentDisplay(), "EGL_KHR_image_base"))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{"EGL implementation missing required EGL_KHR_image_base extension"}));
+    }
+    if (!epoxy_has_gl_extension("GL_OES_EGL_image"))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{"GL implementation missing required GL_OES_EGL_image extension"}));
+    }
+    ctx->release_current();
 }
 
 std::shared_ptr<mg::Buffer> mgg::BufferAllocator::alloc_software_buffer(
@@ -293,7 +299,7 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
         [this]() { ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
-    mg::wayland::bind_display(dpy, display, *egl_extensions);
+    mg::wayland::bind_display(dpy, display, egl_extensions);
 
     this->wayland_executor = std::move(wayland_executor);
 }
@@ -312,7 +318,7 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::buffer_from_resource(
         std::move(on_consumed),
         std::move(on_release),
         ctx,
-        *egl_extensions,
+        egl_extensions,
         wayland_executor);
 }
 

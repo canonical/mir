@@ -67,7 +67,7 @@ public:
         Mock::VerifyAndClearExpectations(&mock_drm);
         Mock::VerifyAndClearExpectations(&mock_gbm);
         ON_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
-            .WillByDefault(Return("EGL_AN_extension_string EGL_EXT_platform_base EGL_KHR_platform_gbm"));
+            .WillByDefault(Return("EGL_AN_extension_string EGL_EXT_platform_base EGL_MESA_platform_gbm"));
         ON_CALL(mock_egl, eglGetDisplay(_))
             .WillByDefault(Return(fake_display));
         ON_CALL(mock_gl, glGetString(GL_RENDERER))
@@ -89,7 +89,7 @@ public:
                 std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgg::BypassOption::allowed,
-                std::shared_ptr<mg::EGLExtensions::DebugKHR>{});
+                false);
     }
 
     EGLDisplay fake_display{reinterpret_cast<EGLDisplay>(0xabcd)};

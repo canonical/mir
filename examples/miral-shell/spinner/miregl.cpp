@@ -19,7 +19,7 @@
 
 #include <cstring>
 
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 
 #include <wayland-egl.h>
 

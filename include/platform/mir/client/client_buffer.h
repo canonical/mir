@@ -29,7 +29,7 @@
 #include <memory>
 #include <chrono>
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 #include <EGL/eglext.h>
 /**
  * \addtogroup mir_toolkit

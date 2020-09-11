@@ -26,7 +26,7 @@
 #include "mir/renderer/gl/render_target.h"
 #include "egl_helper.h"
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 #include <memory>
 
 namespace mir

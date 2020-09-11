@@ -34,8 +34,8 @@
 #include "mir/default_server_configuration.h"
 #include "mir/emergency_cleanup.h"
 
-#include <EGL/egl.h>
-#include <GLES2/gl2.h>
+#include <epoxy/egl.h>
+#include <epoxy/gl.h>
 #include <boost/exception/diagnostic_information.hpp>
 #include <chrono>
 #include <iostream>

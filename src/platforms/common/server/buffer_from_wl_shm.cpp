@@ -31,7 +31,7 @@
 #include <mutex>
 #include <atomic>
 
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 #include <GLES2/gl2ext.h>
 
 #include <wayland-server-core.h>

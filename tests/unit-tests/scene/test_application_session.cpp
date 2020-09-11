@@ -40,6 +40,7 @@
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_observer_registrar.h"
+#include "mir/test/doubles/mock_egl.h"
 #include "mir/graphics/display_configuration_observer.h"
 
 #include <gmock/gmock.h>
@@ -249,6 +250,7 @@ struct ApplicationSession : public testing::Test
     mg::BufferProperties properties { geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware };
     std::shared_ptr<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>> const display_config_registrar =
         std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>();
+    mtd::MockEGL mock_egl;
 };
 
 struct MockSurfaceFactory : ms::SurfaceFactory

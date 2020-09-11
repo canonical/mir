@@ -28,7 +28,7 @@
 #include <assert.h>
 #include <glib.h>
 #include <string.h>
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 #include <sys/stat.h>
 #include <signal.h>
 #include <atomic>

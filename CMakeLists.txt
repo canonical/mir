@@ -291,6 +291,7 @@ pkg_check_modules(XCB_XFIXES REQUIRED xcb-xfixes)
 pkg_check_modules(XCB_RENDER REQUIRED xcb-render)
 pkg_check_modules(X11_XCURSOR REQUIRED xcursor)
 pkg_check_modules(DRM REQUIRED libdrm)
+pkg_check_modules(EPOXY IMPORTED_TARGET REQUIRED epoxy)
 
 include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
 include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
@@ -321,14 +322,6 @@ if (MIR_BUILD_PLATFORM_GBM_KMS)
   if (DRM_VERSION VERSION_GREATER 2.4.84)
     add_definitions(-DMIR_DRMMODEADDFB_HAS_CONST_SIGNATURE)
   endif()
-endif()
-
-if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS OR MIR_BUILD_PLATFORM_GBM_KMS)
-  pkg_check_modules(EPOXY IMPORTED_TARGET REQUIRED epoxy)
-endif()
-
-if (MIR_BUILD_PLATFORM_WAYLAND)
-  pkg_check_modules(EPOXY REQUIRED epoxy)
 endif()
 
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)

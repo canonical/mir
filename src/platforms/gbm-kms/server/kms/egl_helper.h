@@ -20,8 +20,7 @@
 #define MIR_GRAPHICS_GBM_EGL_HELPER_H_
 
 #include "display_helpers.h"
-#include "mir/graphics/egl_extensions.h"
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 
 namespace mir
 {
@@ -35,13 +34,13 @@ namespace helpers
 class EGLHelper
 {
 public:
-    EGLHelper(GLConfig const& gl_config, std::shared_ptr<EGLExtensions::DebugKHR> debug);
+    EGLHelper(GLConfig const& gl_config, bool debug);
     EGLHelper(
         GLConfig const& gl_config,
         GBMHelper const& gbm,
         gbm_surface* surface,
         EGLContext shared_context,
-        std::shared_ptr<EGLExtensions::DebugKHR> debug);
+        bool debug);
     ~EGLHelper() noexcept;
     EGLHelper(EGLHelper&& from);
 
@@ -78,8 +77,7 @@ private:
     EGLContext egl_context;
     EGLSurface egl_surface;
     bool should_terminate_egl;
-    EGLExtensions::PlatformBaseEXT platform_base;
-    std::shared_ptr<EGLExtensions::DebugKHR> const debug;
+    bool const debug;
 };
 }
 }

@@ -26,9 +26,9 @@
 #include "mir/geometry/rectangle.h"
 #include "mir_protobuf.pb.h"
 
-#include <EGL/eglplatform.h>
-
 #include <memory>
+#include <epoxy/egl.h>
+
 
 namespace mir
 {

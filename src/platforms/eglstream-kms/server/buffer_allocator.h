@@ -84,8 +84,8 @@ private:
         uint32_t version,
         uint32_t id);
 
-    EGLExtensions::WaylandExtensions const extensions;
-    EGLExtensions::NVStreamAttribExtensions const nv_extensions;
+    egl::WaylandExtensions const extensions;
+    egl::NVStreamAttribExtensions const nv_extensions;
     std::shared_ptr<renderer::gl::Context> const wayland_ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::unique_ptr<gl::Program> shader;

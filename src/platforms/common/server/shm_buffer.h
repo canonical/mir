@@ -29,7 +29,7 @@
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/graphics/texture.h"
 
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 
 #include <mutex>
 

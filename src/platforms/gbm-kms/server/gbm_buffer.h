@@ -26,7 +26,7 @@
 #include "mir/graphics/texture.h"
 
 #include <gbm.h>
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 
 #include <memory>
 #include <mutex>

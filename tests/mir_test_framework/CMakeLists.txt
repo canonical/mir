@@ -70,6 +70,8 @@ add_library(mir-public-test-framework OBJECT
   test_server.cpp  ${PROJECT_SOURCE_DIR}/include/test/miral/test_server.h
   test_display_server.cpp  ${PROJECT_SOURCE_DIR}/include/test/miral/test_display_server.h
   ${MIR_WLCS_TEST_FRAMEWORK}
+  dlopen_interceptor.cpp 
+  ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/dlopen_interceptor.h
 )
 
 set_property(

@@ -21,7 +21,7 @@
 #ifndef MIR_CLIENT_WEAK_EGL_H_
 #define MIR_CLIENT_WEAK_EGL_H_
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 #include <dlfcn.h>
 
 namespace mir { namespace client {

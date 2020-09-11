@@ -20,8 +20,8 @@
 #define MIR_GRAPHICS_EGL_ERROR_H_
 
 #include <system_error>
-#include <EGL/egl.h>
-#include <GLES2/gl2.h>
+#include <epoxy/egl.h>
+#include <epoxy/gl.h>
 
 namespace mir
 {

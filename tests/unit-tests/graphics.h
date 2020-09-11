@@ -18,7 +18,7 @@
 #ifndef MIR_DRAW_GRAPHICS
 #define MIR_DRAW_GRAPHICS
 
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 
 namespace mir
 {

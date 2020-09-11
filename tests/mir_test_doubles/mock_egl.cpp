@@ -43,9 +43,9 @@ auto filter_egl(decltype(&dlopen) real_dlopen, char const* filename, int flags) 
 
 
 EGLConfig configs[] =
-{
-    (void*)3,
-    (void*)4,
+    {
+        (void*)3,
+        (void*)4,
     (void*)8,
     (void*)14
 };
@@ -169,6 +169,17 @@ mtd::MockEGL::MockEGL()
             return current_contexts[std::this_thread::get_id()];
         }));
 
+    ON_CALL(*this, eglQueryContext(_,_,EGL_CONTEXT_CLIENT_TYPE,_))
+        .WillByDefault(
+            DoAll(
+                SetArgPointee<3>(EGL_OPENGL_ES_API),
+                Return(EGL_TRUE)));
+    ON_CALL(*this, eglQueryContext(_,_,EGL_CONTEXT_CLIENT_VERSION,_))
+        .WillByDefault(
+            DoAll(
+                SetArgPointee<3>(2),
+                Return(EGL_TRUE)));
+
     ON_CALL(*this, eglSwapBuffers(_,_))
         .WillByDefault(Return(EGL_TRUE));                              
 
@@ -217,7 +228,8 @@ void mtd::MockEGL::provide_egl_extensions()
         "EGL_KHR_image_pixmap "
         "EGL_EXT_image_dma_buf_import "
         "EGL_WL_bind_wayland_display "
-        "EGL_EXT_platform_base";
+        "EGL_EXT_platform_base "
+        "EGL_MESA_platform_gbm";
     ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
         .WillByDefault(Return(egl_exts));
 }

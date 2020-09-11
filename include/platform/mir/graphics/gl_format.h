@@ -17,7 +17,7 @@
 
 #ifndef MIR_GRAPHICS_COMMON_GL_FORMAT_H_
 #define MIR_GRAPHICS_COMMON_GL_FORMAT_H_
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 #include "mir_toolkit/common.h"
 
 namespace mir

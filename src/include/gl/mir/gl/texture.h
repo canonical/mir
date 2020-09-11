@@ -19,7 +19,7 @@
 #ifndef MIR_GL_TEXTURE_H_
 #define MIR_GL_TEXTURE_H_
 
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 
 namespace mir
 {

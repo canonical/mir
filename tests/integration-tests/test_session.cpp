@@ -30,6 +30,8 @@
 #include "mir/renderer/renderer_factory.h"
 #include "mir/frontend/connector.h"
 
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_gl_buffer.h"
 #include "mir/test/doubles/stub_buffer_stream_factory.h"
@@ -48,9 +50,6 @@
 namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
 namespace ms = mir::scene;
-namespace msh = mir::shell;
-namespace mi = mir::input;
-namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
@@ -91,6 +90,10 @@ struct StubGLBufferStreamFactory : public mtd::StubBufferStreamFactory
 
 TEST(ApplicationSession, stress_test_take_snapshot)
 {
+    // Test makes GL & EGL calls; provide a minimal working stub
+    mtd::MockEGL mock_egl;
+    mtd::MockGL mock_gl;
+
     TestServerConfiguration conf;
     // Otherwise the input registrar won't function
     auto dispatcher = conf.the_input_dispatcher();

@@ -18,8 +18,7 @@
  */
 
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
+#include <epoxy/egl.h>
 
 #include "mir/graphics/egl_logger.h"
 
@@ -83,9 +82,9 @@ void egl_debug_logger(
 
 void mg::initialise_egl_logger(std::shared_ptr<mir::logging::Logger> logger)
 {
-    egl_logger = std::move(logger);
-    if (auto debug_khr = mg::EGLExtensions::DebugKHR::maybe_debug_khr())
+    if (epoxy_has_egl_extension(EGL_NO_DISPLAY, "EGL_KHR_debug"))
     {
+        egl_logger = std::move(logger);
         EGLAttrib enable_all_logging[] = {
             EGL_DEBUG_MSG_CRITICAL_KHR, EGL_TRUE,
             EGL_DEBUG_MSG_ERROR_KHR, EGL_TRUE,
@@ -93,7 +92,7 @@ void mg::initialise_egl_logger(std::shared_ptr<mir::logging::Logger> logger)
             EGL_DEBUG_MSG_INFO_KHR, EGL_TRUE,
             EGL_NONE
         };
-        debug_khr->eglDebugMessageControlKHR(&egl_debug_logger, enable_all_logging);
+        eglDebugMessageControlKHR(&egl_debug_logger, enable_all_logging);
         egl_logger->log(
             "EGL",
             mir::logging::Severity::informational,
@@ -101,7 +100,7 @@ void mg::initialise_egl_logger(std::shared_ptr<mir::logging::Logger> logger)
     }
     else
     {
-        egl_logger->log(
+        logger->log(
             "EGL",
             mir::logging::Severity::informational,
             "No EGL_KHR_debug support detected");

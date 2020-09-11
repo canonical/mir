@@ -87,6 +87,7 @@ add_dependencies(mir_acceptance_tests GMock)
 target_link_libraries(mir_acceptance_tests
   mir-test-assist
   mir-test-doubles-platform-static
+  mir-test-framework-static
 
   mirclient
   mirserver

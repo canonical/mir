@@ -17,7 +17,7 @@
  */
 
 #include "program_family.h"
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 #include <GLES2/gl2ext.h>
 #include <mutex>
 

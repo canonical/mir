@@ -27,7 +27,7 @@
 #include <mutex>
 #include <vector>
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 
 namespace mir
 {

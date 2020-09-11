@@ -22,8 +22,9 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "mir/graphics/egl_extensions.h"
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 #include <wayland-server-core.h>
 
 #include <memory>
@@ -41,7 +42,6 @@ class Context;
 namespace graphics
 {
 class Display;
-struct EGLExtensions;
 
 namespace common
 {
@@ -73,7 +73,7 @@ private:
     std::shared_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<Executor> wayland_executor;
-    std::shared_ptr<EGLExtensions> const egl_extensions;
+    egl::WaylandExtensions egl_extensions;
 };
 
 }

@@ -87,6 +87,7 @@ MATCHER_P2(EGLConfigContainsAttrib, attrib, value, "")
     return false;
 }
 
+
 class MockEGL
 {
 public:

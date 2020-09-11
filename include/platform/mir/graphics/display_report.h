@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_DISPLAY_REPORT_H_
 #define MIR_GRAPHICS_DISPLAY_REPORT_H_
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 
 namespace mir
 {

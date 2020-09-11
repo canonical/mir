@@ -130,7 +130,7 @@ TEST_F(SurfacelessEGLContextTest, UsesPBufferContainingAttribsListByDefault)
 {
     using namespace testing;
 
-    ON_CALL(mock_egl, eglQueryString(_,_))
+    ON_CALL(mock_egl, eglQueryString(_,Ne(EGL_VERSION)))
         .WillByDefault(Return(""));
 
     EXPECT_CALL(mock_egl, eglChooseConfig(_, ConfigAttribContainsPBufferFlag(), _,_,_))

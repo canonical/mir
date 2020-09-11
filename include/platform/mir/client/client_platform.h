@@ -23,8 +23,7 @@
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
-#include <EGL/eglplatform.h>
-#include <EGL/egl.h>  // for EGLConfig
+#include <epoxy/egl.h>  // for EGLConfig
 #include <memory>
 
 namespace mir

@@ -19,6 +19,7 @@ set(MIR_PLATFORM_OBJECTS
 set(MIR_PLATFORM_REFERENCES
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GL_LDFLAGS} ${GL_LIBRARIES}
+  PkgConfig::EPOXY
 )
 
 add_subdirectory(graphics/)

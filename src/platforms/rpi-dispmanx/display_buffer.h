@@ -23,7 +23,7 @@
 #include "mir/renderer/gl/render_target.h"
 #include "mir/graphics/display.h"
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 #include <bcm_host.h>
 
 namespace mir

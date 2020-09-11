@@ -22,7 +22,7 @@
 
 #include <memory>
 #include <functional>
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 
 struct wl_resource;
 struct wl_display;
@@ -42,18 +42,22 @@ class Context;
 namespace graphics
 {
 class Buffer;
-class EGLExtensions;
+
+namespace egl
+{
+struct WaylandExtensions;
+}
 
 namespace wayland
 {
-void bind_display(EGLDisplay egl_dpy, wl_display* wl_dpy, EGLExtensions const& extensions);
+void bind_display(EGLDisplay egl_dpy, wl_display* wl_dpy, egl::WaylandExtensions const& extensions);
 
 auto buffer_from_resource(
     wl_resource* buffer,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release,
     std::shared_ptr<renderer::gl::Context> ctx,
-    EGLExtensions const& extensions,
+    egl::WaylandExtensions const& extensions,
     std::shared_ptr<Executor> wayland_executor) -> std::unique_ptr<Buffer>;
 
 }

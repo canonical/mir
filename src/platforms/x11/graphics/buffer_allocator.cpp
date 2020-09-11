@@ -20,7 +20,6 @@
 #include "buffer_allocator.h"
 #include "egl_context_executor.h"
 #include "shm_buffer.h"
-#include "mir/graphics/egl_extensions.h"
 #include "mir/raii.h"
 #include "mir/graphics/display.h"
 #include "mir/renderer/gl/context.h"
@@ -32,10 +31,8 @@
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include <epoxy/egl.h>
+#include <epoxy/gl.h>
 
 #include <algorithm>
 #include <stdexcept>
@@ -88,8 +85,7 @@ std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const
 mgx::BufferAllocator::BufferAllocator(mg::Display const& output)
     : ctx{context_for_output(output)},
       egl_delegate{
-          std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))},
-      egl_extensions(std::make_shared<mg::EGLExtensions>())
+          std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))}
 {
 }
 
@@ -139,7 +135,7 @@ void mgx::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
         [this]() { ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
-    mg::wayland::bind_display(dpy, display, *egl_extensions);
+    mg::wayland::bind_display(dpy, display, egl_extensions);
 
     this->wayland_executor = std::move(wayland_executor);
 }
@@ -158,7 +154,7 @@ std::shared_ptr<mg::Buffer> mgx::BufferAllocator::buffer_from_resource(
         std::move(on_consumed),
         std::move(on_release),
         ctx,
-        *egl_extensions,
+        egl_extensions,
         wayland_executor);
 }
 

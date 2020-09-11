@@ -153,7 +153,7 @@ public:
                std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
                mgg::BypassOption::allowed,
-               std::shared_ptr<mg::EGLExtensions::DebugKHR>{});
+               false);
     }
 
     std::shared_ptr<mg::Display> create_display_cloned(

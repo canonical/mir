@@ -18,6 +18,7 @@
  */
 
 #include "mir/test/doubles/mock_egl.h"
+#include <EGL/egl.h>
 #include "gtest/gtest.h"
 
 namespace mtd = mir::test::doubles;

@@ -31,6 +31,7 @@
 #include <mir/test/doubles/mock_buffer_stream.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/test/doubles/mock_gl.h>
+#include "mir/test/doubles/mock_egl.h"
 
 using testing::SetArgPointee;
 using testing::InSequence;
@@ -107,6 +108,7 @@ class ProgramFactory : public testing::Test
 {
 public:
     testing::NiceMock<mtd::MockGL> mock_gl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
     mir::gl::DefaultProgramFactory factory;
 };
 

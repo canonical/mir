@@ -30,7 +30,7 @@
 
 #include "mir_toolkit/client_types.h"
 
-#include <EGL/eglplatform.h>
+#include <epoxy/egl.h>
 
 #include <unordered_set>
 #include <queue>

@@ -23,7 +23,7 @@
 #include "mir/renderer/gl/context_source.h"
 #include "mir/geometry/size.h"
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 
 #include <bcm_host.h>
 #include <mir/graphics/gl_config.h>

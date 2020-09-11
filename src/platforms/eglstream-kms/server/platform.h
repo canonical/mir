@@ -26,8 +26,7 @@
 #include "mir/fd.h"
 #include "mir/renderer/gl/egl_platform.h"
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
+#include <epoxy/egl.h>
 
 /* XXX khronos eglext.h does not yet have EGL_DRM_MASTER_FD_EXT */
 #if !defined(EGL_DRM_MASTER_FD_EXT)

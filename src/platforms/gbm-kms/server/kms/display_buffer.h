@@ -114,7 +114,7 @@ public:
                   GBMOutputSurface&& surface_gbm,
                   geometry::Rectangle const& area,
                   glm::mat2 const& transformation,
-                  std::shared_ptr<EGLExtensions::DebugKHR> debug);
+                  bool debug);
     ~DisplayBuffer();
 
     geometry::Rectangle view_area() const override;
@@ -165,7 +165,6 @@ private:
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
     bool page_flips_pending;
-    std::shared_ptr<EGLExtensions::DebugKHR> const debug;
 };
 
 }

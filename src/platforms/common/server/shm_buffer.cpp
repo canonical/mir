@@ -26,7 +26,7 @@
 #define MIR_LOG_COMPONENT "gfx-common"
 #include "mir/log.h"
 
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 #include <GLES2/gl2ext.h>
 
 #include <boost/throw_exception.hpp>

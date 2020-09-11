@@ -18,7 +18,7 @@
 #ifndef MIR_TOOLKIT_MIR_BUFFER_PRIVATE_H_
 #define MIR_TOOLKIT_MIR_BUFFER_PRIVATE_H_
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 #include <EGL/eglext.h>
 
 #ifdef __cplusplus

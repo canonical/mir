@@ -296,7 +296,7 @@ private:
     mir::Fd const drm_node;
     std::shared_ptr<mge::DRMEventHandler> const event_handler;
     std::future<void> pending_flip;
-    mg::EGLExtensions::NVStreamAttribExtensions nv_stream;
+    mg::egl::NVStreamAttribExtensions nv_stream;
     std::shared_ptr<mg::DisplayReport> const display_report;
 };
 

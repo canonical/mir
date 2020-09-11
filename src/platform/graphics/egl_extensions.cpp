@@ -27,59 +27,7 @@
 
 namespace mg=mir::graphics;
 
-namespace
-{
-std::experimental::optional<mg::EGLExtensions::WaylandExtensions> maybe_wayland_ext()
-{
-    try
-    {
-        return mg::EGLExtensions::WaylandExtensions{};
-    }
-    catch (std::runtime_error const&)
-    {
-        return {};
-    }
-}
-
-std::experimental::optional<mg::EGLExtensions::PlatformBaseEXT> maybe_platform_base_ext()
-{
-    try
-    {
-        return mg::EGLExtensions::PlatformBaseEXT{};
-    }
-    catch (std::runtime_error const&)
-    {
-        return {};
-    }
-}
-
-}
-
-mg::EGLExtensions::EGLExtensions() :
-    eglCreateImageKHR{
-        reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"))},
-    eglDestroyImageKHR{
-        reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"))},
-
-    /*
-     * TODO: Find a non-ES GL equivalent for glEGLImageTargetTexture2DOES
-     * It's the LAST remaining ES-specific function. Although Mesa lets you use
-     * it in full GL, it theoretically should not work. Mesa just lets you
-     * mix ES and GL code. But other drivers won't be so lenient.
-     */
-    glEGLImageTargetTexture2DOES{
-        reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))},
-    wayland{maybe_wayland_ext()},
-    platform_base{maybe_platform_base_ext()}
-{
-    if (!eglCreateImageKHR || !eglDestroyImageKHR)
-        BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGLImage"));
-
-    if (!glEGLImageTargetTexture2DOES)
-        BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage"));
-}
-
-mg::EGLExtensions::WaylandExtensions::WaylandExtensions() :
+mg::egl::WaylandExtensions::WaylandExtensions() :
     eglBindWaylandDisplayWL{
         reinterpret_cast<PFNEGLBINDWAYLANDDISPLAYWL>(eglGetProcAddress("eglBindWaylandDisplayWL"))
     },
@@ -93,7 +41,7 @@ mg::EGLExtensions::WaylandExtensions::WaylandExtensions() :
     }
 }
 
-mg::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions() :
+mg::egl::NVStreamAttribExtensions::NVStreamAttribExtensions() :
     eglCreateStreamAttribNV{
         reinterpret_cast<PFNEGLCREATESTREAMATTRIBNVPROC>(eglGetProcAddress("eglCreateStreamAttribNV"))
     },
@@ -108,74 +56,3 @@ mg::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions() :
     }
 }
 
-mg::EGLExtensions::PlatformBaseEXT::PlatformBaseEXT()
-    : eglGetPlatformDisplay{
-        reinterpret_cast<PFNEGLGETPLATFORMDISPLAYEXTPROC>(eglGetProcAddress("eglGetPlatformDisplayEXT"))
-    },
-    eglCreatePlatformWindowSurface{
-          reinterpret_cast<PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC>(
-              eglGetProcAddress("eglCreatePlatformWindowSurfaceEXT"))
-    }
-{
-    auto const* client_extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
-    if (!client_extensions ||
-        !strstr(client_extensions, "EGL_EXT_platform_base") ||
-        !eglGetPlatformDisplay ||
-        !eglCreatePlatformWindowSurface)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation doesn't support EGL_EXT_platform_base"}));
-    }
-}
-
-mg::EGLExtensions::DebugKHR::DebugKHR()
-    : eglDebugMessageControlKHR{
-        reinterpret_cast<PFNEGLDEBUGMESSAGECONTROLKHRPROC>(eglGetProcAddress("eglDebugMessageControlKHR"))
-    },
-      eglLabelObjectKHR{
-        reinterpret_cast<PFNEGLLABELOBJECTKHRPROC>(eglGetProcAddress("eglLabelObjectKHR"))
-    },
-      eglQueryDebugKHR{
-        reinterpret_cast<PFNEGLQUERYDEBUGKHRPROC>(eglGetProcAddress("eglQueryDebugKHR"))
-    }
-{
-    auto const* client_extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
-    if (!client_extensions ||
-        !strstr(client_extensions, "EGL_KHR_debug") ||
-        !eglDebugMessageControlKHR ||
-        !eglLabelObjectKHR ||
-        !eglQueryDebugKHR)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation doesn't support EGL_KHR_debug"}));
-    }
-}
-
-mg::EGLExtensions::DebugKHR::DebugKHR(
-    PFNEGLDEBUGMESSAGECONTROLKHRPROC control,
-    PFNEGLLABELOBJECTKHRPROC label,
-    PFNEGLQUERYDEBUGKHRPROC query)
-    : eglDebugMessageControlKHR{control},
-      eglLabelObjectKHR{label},
-      eglQueryDebugKHR{query}
-{
-}
-
-auto mg::EGLExtensions::DebugKHR::extension_or_null_object() -> DebugKHR
-{
-    return DebugKHR{
-        [](EGLDEBUGPROCKHR, EGLAttrib const*) -> EGLint { return EGL_SUCCESS; },
-        [](EGLDisplay, EGLenum, EGLObjectKHR, EGLLabelKHR) -> EGLint { return EGL_SUCCESS; },
-        [](EGLint, EGLAttrib*) -> EGLBoolean { return EGL_TRUE; }
-    };
-}
-
-auto mg::EGLExtensions::DebugKHR::maybe_debug_khr() -> std::experimental::optional<DebugKHR>
-{
-    try
-    {
-        return mg::EGLExtensions::DebugKHR{};
-    }
-    catch (std::runtime_error const&)
-    {
-        return {};
-    }
-}

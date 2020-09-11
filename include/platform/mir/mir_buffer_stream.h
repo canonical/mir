@@ -31,7 +31,7 @@
 #include <chrono>
 #include <memory>
 #include <functional>
-#include <EGL/eglplatform.h>
+#include <epoxy/egl.h>
 
 /*
  * MirBufferStream::egl_native_window() returns EGLNativeWindowType.

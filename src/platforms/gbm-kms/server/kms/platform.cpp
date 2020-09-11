@@ -29,9 +29,9 @@
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/egl_error.h"
 
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 #include <EGL/eglext.h>
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
 #include <GLES2/gl2ext.h>
 
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
@@ -47,11 +47,12 @@ namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 namespace mgmh = mgg::helpers;
 
-mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
-                        std::shared_ptr<ConsoleServices> const& vt,
-                        EmergencyCleanupRegistry&,
-                        BypassOption bypass_option,
-                        std::shared_ptr<EGLExtensions::DebugKHR> debug)
+mgg::Platform::Platform(
+    std::shared_ptr<DisplayReport> const& listener,
+    std::shared_ptr<ConsoleServices> const& vt,
+    EmergencyCleanupRegistry&,
+    BypassOption bypass_option,
+    bool debug)
     : udev{std::make_shared<mir::udev::Context>()},
       drm{helpers::DRMHelper::open_all_devices(udev, *vt)},
       // We assume the first DRM device is the boot GPU, and arbitrarily pick it as our
@@ -62,7 +63,7 @@ mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
       listener{listener},
       vt{vt},
       bypass_option_{bypass_option},
-      debug{std::move(debug)}
+      debug{debug}
 {
     auth_factory = std::make_unique<DRMNativePlatformAuthFactory>(*drm.front());
 }

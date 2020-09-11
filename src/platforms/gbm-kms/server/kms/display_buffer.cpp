@@ -32,10 +32,8 @@
 #include "mir/graphics/gl_config.h"
 
 #include <boost/throw_exception.hpp>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include <epoxy/egl.h>
+#include <epoxy/gl.h>
 #include <drm_fourcc.h>
 
 #include <sstream>
@@ -114,17 +112,15 @@ mgg::GBMOutputSurface::FrontBuffer::operator bool() const
 
 namespace
 {
-void require_extensions(
-    std::initializer_list<char const*> extensions,
-    std::function<std::string()> const& extension_getter)
+void require_egl_extensions(
+    EGLDisplay dpy,
+    std::initializer_list<char const*> extensions)
 {
     std::stringstream missing_extensions;
 
-    std::string const ext_string = extension_getter();
-
     for (auto extension : extensions)
     {
-        if (ext_string.find(extension) == std::string::npos)
+        if (!epoxy_has_egl_extension(dpy, extension))
         {
             missing_extensions << "Missing " << extension << std::endl;
         }
@@ -135,33 +131,6 @@ void require_extensions(
         BOOST_THROW_EXCEPTION(std::runtime_error(
             std::string("Missing required extensions:\n") + missing_extensions.str()));
     }
-}
-
-void require_egl_extensions(EGLDisplay dpy, std::initializer_list<char const*> extensions)
-{
-    require_extensions(
-        extensions,
-        [dpy]() -> std::string
-        {
-            char const* maybe_exts = eglQueryString(dpy, EGL_EXTENSIONS);
-            if (maybe_exts)
-                return maybe_exts;
-            return {};
-        });
-}
-
-void require_gl_extensions(std::initializer_list<char const*> extensions)
-{
-    require_extensions(
-        extensions,
-        []() -> std::string
-        {
-            char const *maybe_exts =
-                reinterpret_cast<char const*>(glGetString(GL_EXTENSIONS));
-            if (maybe_exts)
-                return maybe_exts;
-            return {};
-        });
 }
 
 bool needs_bounce_buffer(mgg::KMSOutput const& destination, gbm_bo* source)
@@ -238,14 +207,8 @@ public:
         uint32_t width,
         uint32_t height,
         uint32_t /*format*/,
-        std::shared_ptr<mg::EGLExtensions::DebugKHR> debug)
-        : eglCreateImageKHR{
-              reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"))},
-          eglDestroyImageKHR{
-              reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"))},
-          glEGLImageTargetTexture2DOES{
-              reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))},
-          device{drm_fd},
+        bool debug)
+        : device{drm_fd},
           width{width},
           height{height},
           surface{device.create_scanout_surface(width, height, false)},
@@ -255,10 +218,6 @@ public:
 
         egl.make_current();
         egl.set_debug_label("EGLBufferCopier");
-
-        require_gl_extensions({
-            "GL_OES_EGL_image"
-        });
 
         require_egl_extensions(
             eglGetCurrentDisplay(),
@@ -410,10 +369,6 @@ public:
 
     private:
 
-    PFNEGLCREATEIMAGEKHRPROC const eglCreateImageKHR;
-    PFNEGLDESTROYIMAGEKHRPROC const eglDestroyImageKHR;
-    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const glEGLImageTargetTexture2DOES;
-
     mgmh::GBMHelper const device;
     uint32_t const width;
     uint32_t const height;
@@ -435,7 +390,7 @@ mgg::DisplayBuffer::DisplayBuffer(
     GBMOutputSurface&& surface_gbm,
     geom::Rectangle const& area,
     glm::mat2 const& transformation,
-    std::shared_ptr<EGLExtensions::DebugKHR> debug)
+    bool debug)
     : listener(listener),
       bypass_option(option),
       outputs(outputs),
@@ -443,8 +398,7 @@ mgg::DisplayBuffer::DisplayBuffer(
       area(area),
       transform{transformation},
       needs_set_crtc{false},
-      page_flips_pending{false},
-      debug{std::move(debug)}
+      page_flips_pending{false}
 {
     listener->report_successful_setup_of_native_resources();
 

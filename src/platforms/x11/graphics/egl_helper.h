@@ -23,7 +23,7 @@
 #include <functional>
 
 #include <X11/Xlib.h>
-#include <EGL/egl.h>
+#include <epoxy/egl.h>
 
 namespace mir
 {

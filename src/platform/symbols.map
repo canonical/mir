@@ -19,13 +19,8 @@ MIRPLATFORM_2.1 {
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::operator*;
-    mir::graphics::EGLExtensions::DebugKHR::DebugKHR*;
-    mir::graphics::EGLExtensions::DebugKHR::extension_or_null_object*;
-    mir::graphics::EGLExtensions::DebugKHR::maybe_debug_khr*;
-    mir::graphics::EGLExtensions::EGLExtensions*;
-    mir::graphics::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions*;
-    mir::graphics::EGLExtensions::PlatformBaseEXT*;
-    mir::graphics::EGLExtensions::WaylandExtensions::WaylandExtensions*;
+    mir::graphics::egl::NVStreamAttribExtensions::NVStreamAttribExtensions*;
+    mir::graphics::egl::WaylandExtensions::WaylandExtensions*;
     mir::graphics::EGLSurfaceStore::?EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;

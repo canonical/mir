@@ -26,8 +26,7 @@
 
 #include "displayclient.h"
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
+#include <epoxy/egl.h>
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
