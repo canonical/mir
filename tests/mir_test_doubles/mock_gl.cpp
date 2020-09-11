@@ -20,18 +20,28 @@
 #include "mir/test/doubles/mock_gl.h"
 #include <gtest/gtest.h>
 
-#include <GLES2/gl2.h>
-
 #include <cstring>
 
 namespace mtd = mir::test::doubles;
+namespace mtf = mir_test_framework;
 
 namespace
 {
 mtd::MockGL* global_mock_gl = NULL;
+
+auto filter_gles(decltype(&dlopen) real_dlopen, char const* filename, int flags) -> std::optional<void*>
+{
+    if (strcmp(filename, "libGLESv2.so.2") == 0)
+    {
+        return {real_dlopen(nullptr, flags)};
+    }
+    return std::optional<void*>{};
+}
 }
 
 mtd::MockGL::MockGL()
+    : libgl_interposer{
+    mtf::add_dlopen_filter(&filter_gles)}
 {
     using namespace testing;
     assert(global_mock_gl == NULL && "Only one mock object per process is allowed");

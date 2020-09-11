@@ -20,7 +20,9 @@
 #define MIR_TEST_DOUBLES_MOCK_GL_H_
 
 #include <gmock/gmock.h>
-#include <GLES2/gl2.h>
+#include <epoxy/gl.h>
+
+#include "mir_test_framework/dlopen_interceptor.h"
 
 namespace mir
 {
@@ -112,6 +114,9 @@ public:
     MOCK_METHOD1(glGenerateMipmap, void(GLenum target));
     MOCK_METHOD4(glDrawElements, void(GLenum, GLsizei, GLenum, const GLvoid*));
     MOCK_METHOD4(glScissor, void(GLint, GLint, GLsizei, GLsizei));
+
+private:
+    mir_test_framework::DlopenInterposerHandle const libgl_interposer;
 };
 
 }

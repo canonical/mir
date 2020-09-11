@@ -18,17 +18,27 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/test/doubles/mock_egl.h"
 #include "mir/client/egl_native_surface.h"
 
-#include "mir/test/doubles/mock_egl.h"
 #include <gtest/gtest.h>
 #include <dlfcn.h>
 
 namespace mtd = mir::test::doubles;
+namespace mtf = mir_test_framework;
 
 namespace
 {
 mtd::MockEGL* global_mock_egl = NULL;
+auto filter_egl(decltype(&dlopen) real_dlopen, char const* filename, int flags) -> std::optional<void*>
+{
+    if (strcmp(filename, "libEGL.so.1") == 0)
+    {
+        // We want to pull symbols out of our binary, not the real libEGL
+        return {real_dlopen(nullptr, flags)};
+    }
+    return {};
+}
 }
 
 
@@ -72,29 +82,6 @@ EGLSurface extension_eglCreatePlatformWindowSurfaceEXT(
     void *native_window,
     const EGLint *attrib_list);
 
-/*
- * libepoxy will dlopen libEGL itself. This is obviously not great if we want
- * to mock out EGL functions!
- *
- * Interpose a dlopen that will return a handle to us, instead of libEGL, when
- * asked.
- */
-void* dlopen(char const* filename, int flags)
-{
-    void * (*real_dlopen)(const char *filename, int flag);
-    real_dlopen = reinterpret_cast<decltype(real_dlopen)>(dlsym(RTLD_NEXT, "dlopen"));
-    assert(real_dlopen);
-
-    if (filename)
-    {
-        if (!strcmp(filename, "libEGL.so.1"))
-        {
-            return real_dlopen(nullptr, flags);
-        }
-    }
-
-    return real_dlopen(filename, flags);
-}
 
 /* EGL{Surface,Display,Config,Context} are all opaque types, so we can put whatever
    we want in them for testing */
@@ -105,7 +92,8 @@ mtd::MockEGL::MockEGL()
       fake_egl_surface((EGLSurface) 0xa034),
       fake_egl_context((EGLContext) 0xbeef),
       fake_egl_image((EGLImageKHR) 0x1234),
-      fake_visual_id(1)
+      fake_visual_id(1),
+      libegl_interposer{mtf::add_dlopen_filter(&filter_egl)}
 {
     using namespace testing;
     assert(global_mock_egl == NULL && "Only one mock object per process is allowed");

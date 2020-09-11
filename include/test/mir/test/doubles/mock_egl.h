@@ -25,15 +25,10 @@
 #include <thread>
 #include <unordered_map>
 
-#ifndef GL_GLEXT_PROTOTYPES
-#define GL_GLEXT_PROTOTYPES
-#endif
-#define EGL_EGLEXT_PROTOTYPES
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-//for GL extensions
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include <epoxy/egl.h>
+
+#include "mir_test_framework/dlopen_interceptor.h"
+
 
 struct wl_display;
 struct wl_resource;
@@ -183,6 +178,9 @@ public:
     int const fake_visual_id;
     std::mutex mutable current_contexts_mutex;
     std::unordered_map<std::thread::id,EGLContext> current_contexts;
+
+private:
+    mir_test_framework::DlopenInterposerHandle const libegl_interposer;
 };
 
 }
