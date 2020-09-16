@@ -19,6 +19,7 @@
 #include "xwayland_surface.h"
 #include "xwayland_log.h"
 #include "xwayland_surface_observer.h"
+#include "xwayland_client_manager.h"
 
 #include "mir/frontend/wayland.h"
 #include "mir/scene/surface_creation_parameters.h"
@@ -136,11 +137,13 @@ mf::XWaylandSurface::XWaylandSurface(
     std::shared_ptr<XCBConnection> const& connection,
     WlSeat& seat,
     std::shared_ptr<shell::Shell> const& shell,
+    std::shared_ptr<XWaylandClientManager> const& client_manager,
     xcb_create_notify_event_t *event)
     : xwm(wm),
       connection{connection},
       seat(seat),
       shell{shell},
+      client_manager{client_manager},
       window(event->window),
       property_handlers{
           property_handler<std::string const&>(
@@ -258,6 +261,7 @@ void mf::XWaylandSurface::map()
 void mf::XWaylandSurface::close()
 {
     WindowState state;
+    std::shared_ptr<XWaylandClientManager::Session> local_client_session;
     std::shared_ptr<scene::Surface> scene_surface;
     std::shared_ptr<XWaylandSurfaceObserver> observer;
 
@@ -266,10 +270,10 @@ void mf::XWaylandSurface::close()
 
         state = cached.state;
 
+        local_client_session = std::move(client_session);
+
         scene_surface = weak_scene_surface.lock();
         weak_scene_surface.reset();
-
-        weak_session.reset();
 
         if (surface_observer)
         {
@@ -302,6 +306,8 @@ void mf::XWaylandSurface::close()
         scene_surface.reset();
         // Someone may still be holding on to the surface somewhere, and that's fine
     }
+
+    local_client_session.reset();
 
     if (observer)
     {
@@ -518,7 +524,6 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     }
 
     WindowState state;
-    std::shared_ptr<scene::Session> session;
     scene::SurfaceCreationParameters params;
 
     auto const observer = std::make_shared<XWaylandSurfaceObserver>(seat, wl_surface, this);
@@ -526,13 +531,10 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        if (surface_observer || weak_session.lock() || weak_scene_surface.lock())
+        if (surface_observer || weak_scene_surface.lock())
             BOOST_THROW_EXCEPTION(std::runtime_error("XWaylandSurface::attach_wl_surface() called multiple times"));
 
-        session = get_session(wl_surface->resource);
-
         surface_observer = observer;
-        weak_session = session;
 
         state = cached.state;
         state.withdrawn = false;
@@ -558,10 +560,30 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         reply_functions.push_back(handler.second());
     }
 
+    std::shared_ptr<XWaylandClientManager::Session> local_client_session;
+    std::shared_ptr<ms::Session> session;
+    reply_functions.push_back(connection->read_property(
+        window, connection->_NET_WM_PID,
+        [&](uint32_t pid)
+        {
+            local_client_session = client_manager->session_for_client(pid);
+            session = local_client_session->session();
+        },
+        [&]()
+        {
+            log_warning("X11 app did not set _NET_WM_PID, grouping it under the default XWayland application");
+            session = get_session(wl_surface->resource);
+        }));
+
     // Wait for and process all the XCB replies
     for (auto const& reply_function : reply_functions)
     {
         reply_function();
+    }
+
+    if (!session)
+    {
+        fatal_error("Property handlers did not set a valid session");
     }
 
     // property_handlers will have updated the pending spec. Use it.
@@ -587,6 +609,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
     {
         std::lock_guard<std::mutex> lock{mutex};
+        client_session = local_client_session;
         weak_scene_surface = surface;
     }
 

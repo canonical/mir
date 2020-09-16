@@ -21,6 +21,7 @@
 
 #include "wl_surface.h"
 #include "xwayland_wm.h"
+#include "xwayland_client_manager.h"
 #include "xwayland_surface_role_surface.h"
 #include "xwayland_surface_observer_surface.h"
 
@@ -53,6 +54,7 @@ public:
         std::shared_ptr<XCBConnection> const& connection,
         WlSeat& seat,
         std::shared_ptr<shell::Shell> const& shell,
+        std::shared_ptr<XWaylandClientManager> const& client_manager,
         xcb_create_notify_event_t *event);
     ~XWaylandSurface();
 
@@ -145,6 +147,7 @@ private:
     std::shared_ptr<XCBConnection> const connection;
     WlSeat& seat;
     std::shared_ptr<shell::Shell> const shell;
+    std::shared_ptr<XWaylandClientManager> const client_manager;
     xcb_window_t const window;
     std::map<xcb_window_t, std::function<std::function<void()>()>> const property_handlers;
 
@@ -168,8 +171,8 @@ private:
 
     /// Set in set_wl_surface and cleared when a scene surface is created from it
     std::experimental::optional<std::shared_ptr<XWaylandSurfaceObserver>> surface_observer;
-    std::weak_ptr<scene::Session> weak_session;
     std::unique_ptr<shell::SurfaceSpecification> nullable_pending_spec;
+    std::shared_ptr<XWaylandClientManager::Session> client_session;
     std::weak_ptr<scene::Surface> weak_scene_surface;
 };
 } /* frontend */

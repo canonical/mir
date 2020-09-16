@@ -95,6 +95,7 @@ CMAKE_DEPENDENT_OPTION(
 add_subdirectory(compositor/)
 add_subdirectory(console/)
 add_subdirectory(dispatch/)
+add_subdirectory(frontend_xwayland/)
 add_subdirectory(geometry/)
 add_subdirectory(gl/)
 add_subdirectory(graphics/)
