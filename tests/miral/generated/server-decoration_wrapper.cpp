@@ -62,6 +62,10 @@ struct mw::ServerDecorationManager::Thunks
         {
             me->create(id_resolved, surface);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ServerDecorationManager::create()");
@@ -182,6 +186,10 @@ struct mw::ServerDecoration::Thunks
         {
             me->release();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ServerDecoration::release()");
@@ -194,6 +202,10 @@ struct mw::ServerDecoration::Thunks
         try
         {
             me->request_mode(mode);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {

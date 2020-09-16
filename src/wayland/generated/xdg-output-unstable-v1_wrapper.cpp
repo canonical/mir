@@ -55,6 +55,10 @@ struct mw::XdgOutputManagerV1::Thunks
         {
             me->destroy();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "XdgOutputManagerV1::destroy()");
@@ -74,6 +78,10 @@ struct mw::XdgOutputManagerV1::Thunks
         try
         {
             me->get_xdg_output(id_resolved, output);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -187,6 +195,10 @@ struct mw::XdgOutputV1::Thunks
         try
         {
             me->destroy();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {

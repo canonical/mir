@@ -57,6 +57,10 @@ struct mw::ForeignToplevelManagerV1::Thunks
         {
             me->stop();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ForeignToplevelManagerV1::stop()");
@@ -182,6 +186,10 @@ struct mw::ForeignToplevelHandleV1::Thunks
         {
             me->set_maximized();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ForeignToplevelHandleV1::set_maximized()");
@@ -194,6 +202,10 @@ struct mw::ForeignToplevelHandleV1::Thunks
         try
         {
             me->unset_maximized();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -208,6 +220,10 @@ struct mw::ForeignToplevelHandleV1::Thunks
         {
             me->set_minimized();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ForeignToplevelHandleV1::set_minimized()");
@@ -220,6 +236,10 @@ struct mw::ForeignToplevelHandleV1::Thunks
         try
         {
             me->unset_minimized();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -234,6 +254,10 @@ struct mw::ForeignToplevelHandleV1::Thunks
         {
             me->activate(seat);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ForeignToplevelHandleV1::activate()");
@@ -246,6 +270,10 @@ struct mw::ForeignToplevelHandleV1::Thunks
         try
         {
             me->close();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -260,6 +288,10 @@ struct mw::ForeignToplevelHandleV1::Thunks
         {
             me->set_rectangle(surface, x, y, width, height);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ForeignToplevelHandleV1::set_rectangle()");
@@ -272,6 +304,10 @@ struct mw::ForeignToplevelHandleV1::Thunks
         try
         {
             me->destroy();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -291,6 +327,10 @@ struct mw::ForeignToplevelHandleV1::Thunks
         {
             me->set_fullscreen(output_resolved);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ForeignToplevelHandleV1::set_fullscreen()");
@@ -303,6 +343,10 @@ struct mw::ForeignToplevelHandleV1::Thunks
         try
         {
             me->unset_fullscreen();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
