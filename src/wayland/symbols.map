@@ -350,5 +350,14 @@ global:
     typeinfo?for?mir::wayland::ForeignToplevelHandleV1;
     vtable?for?mir::wayland::ForeignToplevelHandleV1;
     mir::wayland::zwlr_foreign_toplevel_manager_v1_interface_data;
+
+    mir::wayland::ProtocolError::*;
+    non-virtual?thunk?to?mir::wayland::ProtocolError::*;
+    virtual?thunk?to?mir::wayland::ProtocolError::?ProtocolError*;
+    mir::wayland::ProtocolError::message*;
+    mir::wayland::ProtocolError::code*;
+    mir::wayland::ProtocolError::resource*;
+    typeinfo?for?mir::wayland::ProtocolError;
+    vtable?for?mir::wayland::ProtocolError;
   };
 } MIRWAYLAND_2.0;

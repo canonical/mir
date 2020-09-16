@@ -122,6 +122,10 @@ struct mw::Compositor::Thunks
         {
             me->create_surface(id_resolved);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Compositor::create_surface()");
@@ -141,6 +145,10 @@ struct mw::Compositor::Thunks
         try
         {
             me->create_region(id_resolved);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -265,6 +273,10 @@ struct mw::ShmPool::Thunks
         {
             me->create_buffer(id_resolved, offset, width, height, stride, format);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ShmPool::create_buffer()");
@@ -278,6 +290,10 @@ struct mw::ShmPool::Thunks
         {
             me->destroy();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ShmPool::destroy()");
@@ -290,6 +306,10 @@ struct mw::ShmPool::Thunks
         try
         {
             me->resize(size);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -378,6 +398,10 @@ struct mw::Shm::Thunks
         try
         {
             me->create_pool(id_resolved, fd_resolved, size);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -500,6 +524,10 @@ struct mw::Buffer::Thunks
         {
             me->destroy();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Buffer::destroy()");
@@ -581,6 +609,10 @@ struct mw::DataOffer::Thunks
         {
             me->accept(serial, mime_type_resolved);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "DataOffer::accept()");
@@ -595,6 +627,10 @@ struct mw::DataOffer::Thunks
         {
             me->receive(mime_type, fd_resolved);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "DataOffer::receive()");
@@ -607,6 +643,10 @@ struct mw::DataOffer::Thunks
         try
         {
             me->destroy();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -621,6 +661,10 @@ struct mw::DataOffer::Thunks
         {
             me->finish();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "DataOffer::finish()");
@@ -633,6 +677,10 @@ struct mw::DataOffer::Thunks
         try
         {
             me->set_actions(dnd_actions, preferred_action);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -741,6 +789,10 @@ struct mw::DataSource::Thunks
         {
             me->offer(mime_type);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "DataSource::offer()");
@@ -754,6 +806,10 @@ struct mw::DataSource::Thunks
         {
             me->destroy();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "DataSource::destroy()");
@@ -766,6 +822,10 @@ struct mw::DataSource::Thunks
         try
         {
             me->set_actions(dnd_actions);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -909,6 +969,10 @@ struct mw::DataDevice::Thunks
         {
             me->start_drag(source_resolved, origin, icon_resolved, serial);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "DataDevice::start_drag()");
@@ -927,6 +991,10 @@ struct mw::DataDevice::Thunks
         {
             me->set_selection(source_resolved, serial);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "DataDevice::set_selection()");
@@ -939,6 +1007,10 @@ struct mw::DataDevice::Thunks
         try
         {
             me->release();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -1099,6 +1171,10 @@ struct mw::DataDeviceManager::Thunks
         {
             me->create_data_source(id_resolved);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "DataDeviceManager::create_data_source()");
@@ -1118,6 +1194,10 @@ struct mw::DataDeviceManager::Thunks
         try
         {
             me->get_data_device(id_resolved, seat);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -1243,6 +1323,10 @@ struct mw::Shell::Thunks
         {
             me->get_shell_surface(id_resolved, surface);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Shell::get_shell_surface()");
@@ -1354,6 +1438,10 @@ struct mw::ShellSurface::Thunks
         {
             me->pong(serial);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ShellSurface::pong()");
@@ -1366,6 +1454,10 @@ struct mw::ShellSurface::Thunks
         try
         {
             me->move(seat, serial);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -1380,6 +1472,10 @@ struct mw::ShellSurface::Thunks
         {
             me->resize(seat, serial, edges);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ShellSurface::resize()");
@@ -1393,6 +1489,10 @@ struct mw::ShellSurface::Thunks
         {
             me->set_toplevel();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ShellSurface::set_toplevel()");
@@ -1405,6 +1505,10 @@ struct mw::ShellSurface::Thunks
         try
         {
             me->set_transient(parent, x, y, flags);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -1424,6 +1528,10 @@ struct mw::ShellSurface::Thunks
         {
             me->set_fullscreen(method, framerate, output_resolved);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ShellSurface::set_fullscreen()");
@@ -1436,6 +1544,10 @@ struct mw::ShellSurface::Thunks
         try
         {
             me->set_popup(seat, serial, parent, x, y, flags);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -1455,6 +1567,10 @@ struct mw::ShellSurface::Thunks
         {
             me->set_maximized(output_resolved);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ShellSurface::set_maximized()");
@@ -1468,6 +1584,10 @@ struct mw::ShellSurface::Thunks
         {
             me->set_title(title);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "ShellSurface::set_title()");
@@ -1480,6 +1600,10 @@ struct mw::ShellSurface::Thunks
         try
         {
             me->set_class(class_);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -1624,6 +1748,10 @@ struct mw::Surface::Thunks
         {
             me->destroy();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Surface::destroy()");
@@ -1642,6 +1770,10 @@ struct mw::Surface::Thunks
         {
             me->attach(buffer_resolved, x, y);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Surface::attach()");
@@ -1654,6 +1786,10 @@ struct mw::Surface::Thunks
         try
         {
             me->damage(x, y, width, height);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -1675,6 +1811,10 @@ struct mw::Surface::Thunks
         {
             me->frame(callback_resolved);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Surface::frame()");
@@ -1692,6 +1832,10 @@ struct mw::Surface::Thunks
         try
         {
             me->set_opaque_region(region_resolved);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -1711,6 +1855,10 @@ struct mw::Surface::Thunks
         {
             me->set_input_region(region_resolved);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Surface::set_input_region()");
@@ -1723,6 +1871,10 @@ struct mw::Surface::Thunks
         try
         {
             me->commit();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -1737,6 +1889,10 @@ struct mw::Surface::Thunks
         {
             me->set_buffer_transform(transform);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Surface::set_buffer_transform()");
@@ -1750,6 +1906,10 @@ struct mw::Surface::Thunks
         {
             me->set_buffer_scale(scale);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Surface::set_buffer_scale()");
@@ -1762,6 +1922,10 @@ struct mw::Surface::Thunks
         try
         {
             me->damage_buffer(x, y, width, height);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -1896,6 +2060,10 @@ struct mw::Seat::Thunks
         {
             me->get_pointer(id_resolved);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Seat::get_pointer()");
@@ -1915,6 +2083,10 @@ struct mw::Seat::Thunks
         try
         {
             me->get_keyboard(id_resolved);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -1936,6 +2108,10 @@ struct mw::Seat::Thunks
         {
             me->get_touch(id_resolved);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Seat::get_touch()");
@@ -1948,6 +2124,10 @@ struct mw::Seat::Thunks
         try
         {
             me->release();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -2099,6 +2279,10 @@ struct mw::Pointer::Thunks
         {
             me->set_cursor(serial, surface_resolved, hotspot_x, hotspot_y);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Pointer::set_cursor()");
@@ -2111,6 +2295,10 @@ struct mw::Pointer::Thunks
         try
         {
             me->release();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -2282,6 +2470,10 @@ struct mw::Keyboard::Thunks
         {
             me->release();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Keyboard::release()");
@@ -2404,6 +2596,10 @@ struct mw::Touch::Thunks
         try
         {
             me->release();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -2542,6 +2738,10 @@ struct mw::Output::Thunks
         try
         {
             me->release();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -2699,6 +2899,10 @@ struct mw::Region::Thunks
         {
             me->destroy();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Region::destroy()");
@@ -2712,6 +2916,10 @@ struct mw::Region::Thunks
         {
             me->add(x, y, width, height);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Region::add()");
@@ -2724,6 +2932,10 @@ struct mw::Region::Thunks
         try
         {
             me->subtract(x, y, width, height);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -2796,6 +3008,10 @@ struct mw::Subcompositor::Thunks
         {
             me->destroy();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Subcompositor::destroy()");
@@ -2815,6 +3031,10 @@ struct mw::Subcompositor::Thunks
         try
         {
             me->get_subsurface(id_resolved, surface, parent);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -2930,6 +3150,10 @@ struct mw::Subsurface::Thunks
         {
             me->destroy();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Subsurface::destroy()");
@@ -2942,6 +3166,10 @@ struct mw::Subsurface::Thunks
         try
         {
             me->set_position(x, y);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -2956,6 +3184,10 @@ struct mw::Subsurface::Thunks
         {
             me->place_above(sibling);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Subsurface::place_above()");
@@ -2968,6 +3200,10 @@ struct mw::Subsurface::Thunks
         try
         {
             me->place_below(sibling);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -2982,6 +3218,10 @@ struct mw::Subsurface::Thunks
         {
             me->set_sync();
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "Subsurface::set_sync()");
@@ -2994,6 +3234,10 @@ struct mw::Subsurface::Thunks
         try
         {
             me->set_desync();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
