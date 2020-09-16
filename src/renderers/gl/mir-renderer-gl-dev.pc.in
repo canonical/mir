@@ -1,4 +1,5 @@
-includedir=@INCLUDEDIR@/mirrenderer
+prefix=@CMAKE_INSTALL_PREFIX@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@/mirrenderer
 
 Name: mir-renderer-gl-dev
 Description: Mir GL renderer development files

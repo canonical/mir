@@ -1,10 +1,5 @@
 find_package(XKBCOMMON REQUIRED)
 
-set(PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
-
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
   ${PROJECT_SOURCE_DIR}/include/client/mir_toolkit/version.h

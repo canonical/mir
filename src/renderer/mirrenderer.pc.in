@@ -1,10 +1,8 @@
-prefix=@PREFIX@
-exec_prefix=@EXEC_PREFIX@
-libdir=@LIBDIR@
-includedir=@INCLUDEDIR@
+prefix=@CMAKE_INSTALL_PREFIX@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 
 Name: mirrenderer
 Description: Mir renderer
 Version: @MIR_VERSION@
-Cflags: -I@INCLUDEDIR@ -I@PLATFORM_INCLUDEDIR@ -I@COMMON_INCLUDEDIR@
+Cflags: -I{includedir}/mirrenderer -I{includedir}/mirplatform -I{includedir}/mircommon
 

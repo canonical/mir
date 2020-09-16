@@ -35,8 +35,6 @@ set_target_properties(mirwayland
     LINK_DEPENDS ${symbol_map}
 )
 
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirwayland")
-
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mirwayland.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/mirwayland.pc
     @ONLY

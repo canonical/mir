@@ -1,5 +1,3 @@
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
-
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mir-renderer-gl-dev.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mir-renderer-gl-dev.pc

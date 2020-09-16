@@ -1,10 +1,5 @@
 pkg_check_modules(NETTLE REQUIRED nettle)
 
-set(PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
-
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mircookie.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mircookie.pc

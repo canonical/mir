@@ -1,6 +1,6 @@
-prefix=@PREFIX@
-libdir=@LIBDIR@
-includedir=@INCLUDEDIR@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@/mirwayland
 
 Name: mirwayland
 Description: Mir Wayland library
