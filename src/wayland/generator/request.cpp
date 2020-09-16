@@ -40,6 +40,10 @@ Emitter Request::thunk_impl() const
             Block{
                 {"me->", name, "(", mir_call_args(), ");"}
             },
+            "catch(ProtocolError const& err)",
+            Block{
+                {"wl_resource_post_error(err.resource(), err.code(), \"%s\", err.message());"},
+            },
             "catch(...)",
             Block{
                 {"internal_error_processing_request(client, \"", class_name, "::", name, "()\");"},
