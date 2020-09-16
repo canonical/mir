@@ -24,6 +24,40 @@
 
 namespace mw = mir::wayland;
 
+mw::ProtocolError::ProtocolError(
+    wl_resource* source,
+    uint32_t code,
+    char const* fmt, ...) :
+        std::runtime_error{"Client protocol error"},
+        source{source},
+        error_code{code}
+{
+    va_list va;
+    char message[1024];
+
+    va_start(va, fmt);
+    auto const max = sizeof(message) - 1;
+    auto const len = vsnprintf(message, max, fmt, va);
+    va_end(va);
+
+    error_message = std::string(std::begin(message), std::begin(message) + len);
+}
+
+auto mw::ProtocolError::message() const -> char const*
+{
+    return error_message.c_str();
+}
+
+auto mw::ProtocolError::resource() const -> wl_resource*
+{
+    return source;
+}
+
+auto mw::ProtocolError::code() const -> uint32_t
+{
+    return error_code;
+}
+
 mw::LifetimeTracker::~LifetimeTracker()
 {
     if (destroyed)

@@ -32,6 +32,28 @@ namespace mir
 {
 namespace wayland
 {
+/**
+ * An exception type representing a Wayland protocol error
+ *
+ * Throwing one of these from a request handler will result in the client
+ * being sent a \a code error on \a source, with the printf-style \a fmt string
+ * populated as the message.:
+ */
+class ProtocolError : public std::runtime_error
+{
+public:
+    [[gnu::format (printf, 4, 5)]]  // Format attribute counts the hidden this parameter
+    ProtocolError(wl_resource* source, uint32_t code, char const* fmt, ...);
+
+    auto message() const -> char const*;
+    auto resource() const -> wl_resource*;
+    auto code() const -> uint32_t;
+private:
+    std::string error_message;
+    wl_resource* const source;
+    uint32_t const error_code;
+};
+
 /// The base class of any object that wants to provide a destroyed flag
 /// The destroyed flag is only created when needed and automatically set to true on destruction
 /// This pattern is only safe in a single-threaded context
