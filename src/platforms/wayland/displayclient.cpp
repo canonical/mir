@@ -28,10 +28,11 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <algorithm>
+#include <condition_variable>
 #include <cstring>
 #include <stdlib.h>
 #include <system_error>
-#include <algorithm>
 
 namespace mgw = mir::graphics::wayland;
 
@@ -358,8 +359,53 @@ void mgw::DisplayClient::Output::release_current()
 
 void mgw::DisplayClient::Output::swap_buffers()
 {
+    struct FrameSync
+    {
+        explicit FrameSync(wl_surface* surface) :
+            callback{wl_surface_frame(surface)}
+        {
+            static struct wl_callback_listener const frame_listener =
+                {
+                    [](void* data, auto... args)
+                        { static_cast<FrameSync*>(data)->frame_done(args...); },
+                };
+
+            wl_callback_add_listener(callback, &frame_listener, this);
+        }
+
+        ~FrameSync()
+        {
+            wl_callback_destroy(callback);
+        }
+
+        void frame_done(wl_callback*, uint32_t)
+        {
+            std::lock_guard<decltype(mutex)> lock{mutex};
+            posted = true;
+            cv.notify_all();
+        }
+
+        void wait_for_done()
+        {
+            std::unique_lock<decltype(mutex)> lock{mutex};
+            cv.wait(lock, [this]{ return posted; });
+        }
+
+        std::mutex mutex;
+        bool posted = false;
+        std::condition_variable cv;
+
+        wl_callback* const callback;
+    } frame_sync{surface};
+
+    // Avoid throttling compositing by blocking in eglSwapBuffers().
+    // Instead we use the frame "done" notification.
+    eglSwapInterval(owner->egldisplay, 0);
+
     if (eglSwapBuffers(owner->egldisplay, eglsurface) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(egl_error("Failed to perform buffer swap"));
+
+    frame_sync.wait_for_done();
 }
 
 void mgw::DisplayClient::Output::bind()
