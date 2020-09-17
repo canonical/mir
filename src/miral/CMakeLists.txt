@@ -141,7 +141,8 @@ if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols
     endif()
 endif()
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/miral.pc.in
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/miral.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/miral.pc
     @ONLY
 )

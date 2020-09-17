@@ -41,6 +41,7 @@ add_subdirectory(console/)
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirserver.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
+  @ONLY
 )
 
 configure_file(

@@ -6,6 +6,7 @@ install(
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirrenderer.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirrenderer.pc
+  @ONLY
 )
 
 install(

@@ -56,6 +56,7 @@ install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirplatform.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirplatform.pc
+  @ONLY
 )
 
 install(
