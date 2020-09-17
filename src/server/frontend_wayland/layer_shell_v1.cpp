@@ -139,10 +139,13 @@ private:
     void handle_close_request() override;
 
     uint32_t exclusive_zone{0};
-    bool anchored_left{false};
-    bool anchored_right{false};
-    bool anchored_top{false};
-    bool anchored_bottom{false};
+    struct anchor
+    {
+        bool left{false};
+        bool right{false};
+        bool top{false};
+        bool bottom{false};
+    } anchored;
     std::experimental::optional<OptionalSize> pending_opt_size;
     OptionalSize committed_opt_size;
     bool configure_on_next_commit{true}; ///< If to send a .configure event at the end of the next or current commit
@@ -260,16 +263,16 @@ auto mf::LayerSurfaceV1::get_placement_gravity() const -> MirPlacementGravity
 {
     MirPlacementGravity edges = mir_placement_gravity_center;
 
-    if (anchored_left)
+    if (anchored.left)
         edges = MirPlacementGravity(edges | mir_placement_gravity_west);
 
-    if (anchored_right)
+    if (anchored.right)
         edges = MirPlacementGravity(edges | mir_placement_gravity_east);
 
-    if (anchored_top)
+    if (anchored.top)
         edges = MirPlacementGravity(edges | mir_placement_gravity_north);
 
-    if (anchored_bottom)
+    if (anchored.bottom)
         edges = MirPlacementGravity(edges | mir_placement_gravity_south);
 
     return edges;
@@ -280,17 +283,17 @@ auto mf::LayerSurfaceV1::get_anchored_edge() const -> MirPlacementGravity
     MirPlacementGravity h_edge = mir_placement_gravity_center;
     MirPlacementGravity v_edge = mir_placement_gravity_center;
 
-    if (anchored_left != anchored_right)
+    if (anchored.left != anchored.right)
     {
-        if (anchored_left)
+        if (anchored.left)
             h_edge = mir_placement_gravity_west;
         else
             h_edge = mir_placement_gravity_east;
     }
 
-    if (anchored_top != anchored_bottom)
+    if (anchored.top != anchored.bottom)
     {
-        if (anchored_top)
+        if (anchored.top)
             v_edge = mir_placement_gravity_north;
         else
             v_edge = mir_placement_gravity_south;
@@ -346,9 +349,9 @@ void mf::LayerSurfaceV1::configure()
     OptionalSize configure_size{std::experimental::nullopt, std::experimental::nullopt};
     auto requested = requested_window_size().value_or(current_size());
 
-    if (anchored_left && anchored_right)
+    if (anchored.left && anchored.right)
         configure_size.width = requested.width;
-    if (anchored_bottom && anchored_top)
+    if (anchored.bottom && anchored.top)
         configure_size.height = requested.height;
 
     if (committed_opt_size.width)
@@ -379,10 +382,10 @@ void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 
 void mf::LayerSurfaceV1::set_anchor(uint32_t anchor)
 {
-    anchored_left = anchor & Anchor::left;
-    anchored_right = anchor & Anchor::right;
-    anchored_top = anchor & Anchor::top;
-    anchored_bottom = anchor & Anchor::bottom;
+    anchored.left = anchor & Anchor::left;
+    anchored.right = anchor & Anchor::right;
+    anchored.top = anchor & Anchor::top;
+    anchored.bottom = anchor & Anchor::bottom;
     surface_data_dirty = true;
 }
 
