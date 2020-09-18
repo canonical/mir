@@ -590,6 +590,25 @@ void mf::LayerSurfaceV1::handle_commit()
     margin.commit();
     opt_size.commit();
 
+    // wlr-layer-shell-unstable-v1.xml:
+    // "You must set your anchor to opposite edges in the dimensions you omit; not doing so is a protocol error."
+    bool const horiz_stretched = anchors.committed().left && anchors.committed().right;
+    bool const vert_stretched = anchors.committed().top && anchors.committed().bottom;
+    if (!horiz_stretched && !opt_size.committed().width)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_size,
+            "Width may be unspecified only when surface is anchored to left and right edges"));
+    }
+    if (!vert_stretched && !opt_size.committed().height)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_size,
+            "Height may be unspecified only when surface is anchored to top and bottom edges"));
+    }
+
     if (configure_on_next_commit)
     {
         configure();
