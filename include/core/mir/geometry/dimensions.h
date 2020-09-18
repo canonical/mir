@@ -118,6 +118,8 @@ inline constexpr DeltaX operator+(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as
 inline constexpr DeltaY operator+(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_int() + rhs.as_int()); }
 inline constexpr DeltaX operator-(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
 inline constexpr DeltaY operator-(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
+inline constexpr DeltaX operator-(DeltaX rhs) { return DeltaX(-rhs.as_int()); }
+inline constexpr DeltaY operator-(DeltaY rhs) { return DeltaY(-rhs.as_int()); }
 inline DeltaX& operator+=(DeltaX& lhs, DeltaX rhs) { return lhs = lhs + rhs; }
 inline DeltaY& operator+=(DeltaY& lhs, DeltaY rhs) { return lhs = lhs + rhs; }
 inline DeltaX& operator-=(DeltaX& lhs, DeltaX rhs) { return lhs = lhs - rhs; }

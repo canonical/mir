@@ -71,6 +71,11 @@ inline constexpr Displacement operator-(Displacement const& lhs, Displacement co
     return Displacement{lhs.dx - rhs.dx, lhs.dy - rhs.dy};
 }
 
+inline constexpr Displacement operator-(Displacement const& rhs)
+{
+    return Displacement{-rhs.dx, -rhs.dy};
+}
+
 inline constexpr Point operator+(Point const& lhs, Displacement const& rhs)
 {
     return Point{lhs.x + rhs.dx, lhs.y + rhs.dy};
