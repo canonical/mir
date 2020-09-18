@@ -4,5 +4,5 @@ includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 Name: mirrenderer
 Description: Mir renderer
 Version: @MIR_VERSION@
-Cflags: -I{includedir}/mirrenderer -I{includedir}/mirplatform -I{includedir}/mircommon
+Cflags: -I${includedir}/mirrenderer -I${includedir}/mirplatform -I${includedir}/mircommon
 
