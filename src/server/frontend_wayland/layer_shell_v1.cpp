@@ -165,9 +165,6 @@ private:
     /// Returns the size requested from the window manager minus the margin (which the raw requested size includes)
     auto unpadded_requested_size() const -> geom::Size;
 
-    /// Returns the pending window size
-    auto unpadded_pending_size() const -> geom::Size;
-
     /// Sets pending state on the WindowWlSurfaceRole
     auto inform_window_role_of_pending_placement();
 
@@ -410,14 +407,6 @@ auto mf::LayerSurfaceV1::unpadded_requested_size() const -> geom::Size
     auto size = requested_window_size().value_or(current_size());
     size.width -= horiz_padding(anchors.committed(), margin.committed());
     size.height -= vert_padding(anchors.committed(), margin.committed());
-    return size;
-}
-
-auto mf::LayerSurfaceV1::unpadded_pending_size() const -> geom::Size
-{
-    auto size = pending_size();
-    size.width -= horiz_padding(anchors.pending(), margin.pending());
-    size.height -= vert_padding(anchors.pending(), margin.pending());
     return size;
 }
 
