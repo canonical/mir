@@ -28,6 +28,8 @@
 #include "mir/log.h"
 #include <boost/throw_exception.hpp>
 #include <deque>
+#include <vector>
+#include <algorithm>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -196,8 +198,10 @@ private:
     DoubleBuffered<Anchors> anchors;
     DoubleBuffered<Margin> margin;
     DoubleBuffered<OptionalSize> opt_size;
+    DoubleBuffered<geometry::Displacement> offset;
     bool configure_on_next_commit{true}; ///< If to send a .configure event at the end of the next or current commit
     std::deque<std::pair<uint32_t, OptionalSize>> inflight_configures;
+    std::vector<wayland::Weak<XdgPopupStable>> popups; ///< We have to keep track of popups to adjust their offset
 };
 
 }
@@ -433,19 +437,11 @@ auto mf::LayerSurfaceV1::inform_window_role_of_pending_placement()
         set_pending_height(height);
     }
 
-    geom::Displacement offset;
+    offset.set_pending({
+        anchors.pending().left ? margin.pending().left : geom::DeltaX{},
+        anchors.pending().top ? margin.pending().top : geom::DeltaY{}});
 
-    if (anchors.pending().left)
-    {
-        offset.dx += margin.pending().left;
-    }
-
-    if (anchors.pending().top)
-    {
-        offset.dy += margin.pending().top;
-    }
-
-    set_pending_offset(offset);
+    set_pending_offset(offset.pending());
 
     shell::SurfaceSpecification spec;
 
@@ -539,15 +535,30 @@ void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactiv
 
 void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
 {
+    auto const scene_surface_ = scene_surface();
+    if (!scene_surface_)
+    {
+        log_warning("Layer surface can not be a popup parent because it does not have a Mir surface");
+        return;
+    }
+
     auto* const popup_window_role = XdgPopupStable::from(popup);
 
-    mir::shell::SurfaceSpecification specification;
-    if (auto scene_surface_ = scene_surface())
-        specification.parent = scene_surface_.value();
-    else
-        log_warning("Layer surface can not be a popup parent because it does not have a Mir surface");
+    popup_window_role->set_aux_rect_offset_now(offset.pending());
 
-    popup_window_role->apply_spec(specification);
+    mir::shell::SurfaceSpecification spec;
+    spec.parent = scene_surface_.value();
+    popup_window_role->apply_spec(spec);
+
+    // Ideally we'd do this in a callback when popups are destroyed, but in practice waiting until a new popup is
+    // created to clear out the destroyed ones is fine
+    popups.erase(
+        std::remove_if(
+            popups.begin(),
+            popups.end(),
+            [](auto popup) { return !popup; }),
+        popups.end());
+    popups.push_back(mw::make_weak(popup_window_role));
 }
 
 void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
@@ -589,6 +600,19 @@ void mf::LayerSurfaceV1::handle_commit()
     anchors.commit();
     margin.commit();
     opt_size.commit();
+
+    if (offset.pending() != offset.committed())
+    {
+        // When offset changes, every popup's aux rect needs to be shifted
+        for (auto const& popup : popups)
+        {
+            if (popup)
+            {
+                popup.value().set_aux_rect_offset_now(offset.pending());
+            }
+        }
+    }
+    offset.commit();
 
     // wlr-layer-shell-unstable-v1.xml:
     // "You must set your anchor to opposite edges in the dimensions you omit; not doing so is a protocol error."
