@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_XWAYLAND_WM_H
 
 #include "mir/dispatch/threaded_dispatcher.h"
+#include "mir/geometry/rectangle.h"
 #include "wayland_connector.h"
 #include "xcb_connection.h"
 
@@ -75,6 +76,10 @@ private:
     XWaylandWM& operator=(XWaylandWM const&) = delete;
 
     void restack_surfaces();
+
+    /// Called for all windows at startup and whenever a window is created
+    /// May occasionally be called multiple times for the same window
+    void manage_window(xcb_window_t window, geometry::Rectangle const& geometry, bool override_redirect);
 
     void handle_event(xcb_generic_event_t* event);
     void handle_create_notify(xcb_create_notify_event_t *event);
