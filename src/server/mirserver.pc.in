@@ -1,12 +1,11 @@
-prefix=@PREFIX@
-exec_prefix=@EXEC_PREFIX@
-libdir=@LIBDIR@
-includedir=@INCLUDEDIR@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@/mirserver
 
 Name: mirserver
 Description: Mir server library
 Version: @MIR_VERSION@
 Requires.private: mircommon
 Requires: mirplatform uuid mircore
-Libs: -L@LIBDIR@ -lmirserver
-Cflags: -I@INCLUDEDIR@
+Libs: -L${libdir} -lmirserver
+Cflags: -I${includedir}

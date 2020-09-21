@@ -53,13 +53,10 @@ set_target_properties(
 
 install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirplatform")
-set(COMMON_INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mircommon")
-set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
-
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirplatform.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirplatform.pc
+  @ONLY
 )
 
 install(

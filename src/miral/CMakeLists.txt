@@ -141,10 +141,8 @@ if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols
     endif()
 endif()
 
-set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/miral.pc.in
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/miral.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/miral.pc
     @ONLY
 )
@@ -161,5 +159,5 @@ if(TARGET doc)
 endif()
 
 install(TARGETS     miral                           LIBRARY DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}")
-install(DIRECTORY   ${CMAKE_SOURCE_DIR}/include/miral       DESTINATION "${INCLUDEDIR}")
+install(DIRECTORY   ${CMAKE_SOURCE_DIR}/include/miral       DESTINATION "${CMAKE_INSTALL_PREFIX}/include")
 install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/miral.pc    DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig")

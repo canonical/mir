@@ -1,5 +1,6 @@
-libdir=@LIBDIR@
-includedir=@INCLUDEDIR@/mircommon
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@/mircommon
 
 Name: mircommon
 Description: Mir server library

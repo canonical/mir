@@ -1,11 +1,10 @@
-prefix=@PREFIX@
-exec_prefix=@EXEC_PREFIX@
-libdir=@LIBDIR@
-includedir=@INCLUDEDIR@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 
 Name: mirplatform
 Description: Mir platform library
 Version: @MIR_VERSION@
 Requires: mircommon, mircore
-Libs: -L@LIBDIR@ -lmirplatform
-Cflags: -I@INCLUDEDIR@ -I@COMMON_INCLUDEDIR@
+Libs: -L${libdir} -lmirplatform
+Cflags: -I${includedir}/platform -I${includedir}/common
