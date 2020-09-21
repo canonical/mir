@@ -129,33 +129,26 @@ auto fork_xwayland_process(
     }
 }
 
-bool spin_wait_for(sig_atomic_t& xserver_ready)
-{
-    auto const end = std::chrono::steady_clock::now() + 5s;
-
-    while (std::chrono::steady_clock::now() < end && !xserver_ready)
-    {
-        std::this_thread::sleep_for(100ms);
-    }
-
-    return xserver_ready;
-}
-
 auto connect_xwayland_wl_client(
     std::shared_ptr<mf::WaylandConnector> const& wayland_connector,
     mir::Fd const& wayland_fd) -> wl_client*
 {
     // We need to set up the signal handling before connecting wl_client_server_fd
-    static sig_atomic_t xserver_ready{ false };
+    static bool xserver_ready{ false };
+    static std::condition_variable cv;
 
     // In practice, there ought to be no contention on xserver_ready, but let's be certain
     static std::mutex xserver_ready_mutex;
-    std::lock_guard<decltype(xserver_ready_mutex)> lock{xserver_ready_mutex};
+    std::unique_lock<decltype(xserver_ready_mutex)> lock{xserver_ready_mutex};
     xserver_ready = false;
 
     struct sigaction action;
     struct sigaction old_action;
-    action.sa_handler = [](int) { xserver_ready = true; };
+    action.sa_handler = [](int) {
+        std::lock_guard<decltype(xserver_ready_mutex)> lock{xserver_ready_mutex};
+        xserver_ready = true;
+        cv.notify_all();
+    };
     sigemptyset(&action.sa_mask);
     action.sa_flags = 0;
     sigaction(SIGUSR1, &action, &old_action);
@@ -192,7 +185,7 @@ auto connect_xwayland_wl_client(
     }
 
     //The client can connect, now wait for it to signal ready (SIGUSR1)
-    auto const xwayland_startup_timed_out = !spin_wait_for(xserver_ready);
+    auto const xwayland_startup_timed_out = !cv.wait_for(lock, 5s, [] { return xserver_ready; });
     sigaction(SIGUSR1, &old_action, nullptr);
 
     if (xwayland_startup_timed_out)
