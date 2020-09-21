@@ -55,7 +55,9 @@ public:
         WlSeat& seat,
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<XWaylandClientManager> const& client_manager,
-        xcb_create_notify_event_t *event);
+        xcb_window_t window,
+        geometry::Rectangle const& geometry,
+        bool override_redirect);
     ~XWaylandSurface();
 
     void map();

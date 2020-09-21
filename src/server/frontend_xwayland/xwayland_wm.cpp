@@ -29,6 +29,7 @@
 #include "mir/fd.h"
 #include "mir/scene/null_observer.h"
 #include "mir/frontend/surface_stack.h"
+#include "mir/geometry/rectangle.h"
 
 #include <cstring>
 #include <poll.h>
@@ -38,6 +39,7 @@
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -571,7 +573,9 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
             wm_shell->seat,
             wm_shell->shell,
             client_manager,
-            event);
+            event->window,
+            geom::Rectangle{{event->x, event->y}, {event->width, event->height}},
+            event->override_redirect);
 
         {
             std::lock_guard<std::mutex> lock{mutex};
