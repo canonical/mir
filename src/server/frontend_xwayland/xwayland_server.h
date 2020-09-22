@@ -41,25 +41,23 @@ public:
     XWaylandServer(
         std::shared_ptr<WaylandConnector> const& wayland_connector,
         XWaylandSpawner const& spawner,
-        std::string const& xwayland_path);
+        std::string const& xwayland_path,
+        std::pair<mir::Fd, mir::Fd> const& wayland_socket_pair,
+        mir::Fd const& x11_server_fd);
     ~XWaylandServer();
 
     auto client() const -> wl_client* { return wayland_client; }
-    auto wm_fd() const -> Fd const& { return xwayland_process.x11_wm_client_fd; }
     auto is_running() const -> bool;
 
-    struct XWaylandProcess
-    {
-        pid_t pid;
-        Fd wayland_server_fd;
-        Fd x11_wm_client_fd;
-    };
+    // Returns a symmetrical pair of connected sockets
+    static auto make_socket_pair() -> std::pair<mir::Fd, mir::Fd>;
 
 private:
     XWaylandServer(XWaylandServer const&) = delete;
     XWaylandServer& operator=(XWaylandServer const&) = delete;
 
-    XWaylandProcess const xwayland_process;
+    pid_t const xwayland_pid;
+    mir::Fd const wayland_server_fd;
     wl_client* const wayland_client{nullptr};
 
     mutable std::mutex mutex;
