@@ -90,6 +90,21 @@ public:
         std::atomic<xcb_atom_t> mutable atom{XCB_ATOM_NONE};
     };
 
+    struct ErrorPtr
+    {
+        ~ErrorPtr()
+        {
+            if (error)
+            {
+                free(error);
+            }
+        }
+
+        operator xcb_generic_error_t**() { return &error; }
+
+        xcb_generic_error_t* error;
+    };
+
     explicit XCBConnection(Fd const& fd);
     ~XCBConnection();
 
