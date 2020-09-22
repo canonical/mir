@@ -138,13 +138,15 @@ mf::XWaylandSurface::XWaylandSurface(
     WlSeat& seat,
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<XWaylandClientManager> const& client_manager,
-    xcb_create_notify_event_t *event)
+    xcb_window_t window,
+    geometry::Rectangle const& geometry,
+    bool override_redirect)
     : xwm(wm),
       connection{connection},
       seat(seat),
       shell{shell},
       client_manager{client_manager},
-      window(event->window),
+      window(window),
       property_handlers{
           property_handler<std::string const&>(
               connection,
@@ -206,9 +208,9 @@ mf::XWaylandSurface::XWaylandSurface(
                   this->cached.supported_wm_protocols.clear();
               })}
 {
-    cached.override_redirect = event->override_redirect;
-    cached.size = {event->width, event->height};
-    cached.top_left = {event->x, event->y};
+    cached.top_left = geometry.top_left;
+    cached.size = geometry.size;
+    cached.override_redirect = override_redirect;
 
     uint32_t const value = XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE;
     xcb_change_window_attributes(*connection, window, XCB_CW_EVENT_MASK, &value);
