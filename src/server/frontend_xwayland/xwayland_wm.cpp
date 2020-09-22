@@ -467,14 +467,16 @@ void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& g
                 functions.push_back(connection->read_property(
                     window,
                     atom,
-                    [this, log_prop](xcb_get_property_reply_t* reply)
                     {
-                        auto const reply_str = connection->reply_debug_string(reply);
-                        log_prop(reply_str);
-                    },
-                    [log_prop]()
-                    {
-                        log_prop("Error getting value");
+                        [this, log_prop](xcb_get_property_reply_t* reply)
+                        {
+                            auto const reply_str = connection->reply_debug_string(reply);
+                            log_prop(reply_str);
+                        },
+                        [log_prop](std::string const& message)
+                        {
+                            log_prop("error getting value: " + message);
+                        }
                     }));
             }
             free(props_reply);
@@ -611,14 +613,16 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
             auto const reply_function = connection->read_property(
                 event->window,
                 event->atom,
-                [this, log_prop](xcb_get_property_reply_t* reply)
                 {
-                    auto const reply_str = connection->reply_debug_string(reply);
-                    log_prop(reply_str);
-                },
-                [log_prop]()
-                {
-                    log_prop("Error getting value");
+                    [this, log_prop](xcb_get_property_reply_t* reply)
+                    {
+                        auto const reply_str = connection->reply_debug_string(reply);
+                        log_prop(reply_str);
+                    },
+                    [log_prop](std::string const& message)
+                    {
+                        log_prop("error getting value: " + message);
+                    }
                 });
 
             reply_function();

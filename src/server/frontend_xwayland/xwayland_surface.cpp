@@ -120,15 +120,24 @@ auto property_handler(
     std::shared_ptr<mf::XCBConnection> const& connection,
     xcb_window_t window,
     xcb_atom_t property,
-    std::function<void(T)>&& handler,
-    std::function<void()>&& on_error = [](){}) -> std::pair<xcb_atom_t, std::function<std::function<void()>()>>
+    mf::XCBConnection::Handler<T>&& handler) -> std::pair<xcb_atom_t, std::function<std::function<void()>()>>
 {
     return std::make_pair(
         property,
-        [connection, window, property, handler = move(handler), on_error = move(on_error)]()
+        [connection, window, property, handler = std::move(handler)]()
         {
-            return connection->read_property(window, property, handler, on_error);
+            return connection->read_property(window, property, std::move(handler));
         });
+}
+
+template<typename T>
+auto property_handler(
+    std::shared_ptr<mf::XCBConnection> const& connection,
+    xcb_window_t window,
+    xcb_atom_t property,
+    std::function<void(T const&)> handler) -> std::pair<xcb_atom_t, std::function<std::function<void()>()>>
+{
+    return property_handler<T>(connection, window, property, {handler});
 }
 }
 
@@ -148,7 +157,7 @@ mf::XWaylandSurface::XWaylandSurface(
       client_manager{client_manager},
       window(window),
       property_handlers{
-          property_handler<std::string const&>(
+          property_handler<std::string>(
               connection,
               window,
               XCB_ATOM_WM_CLASS,
@@ -157,7 +166,7 @@ mf::XWaylandSurface::XWaylandSurface(
                   std::lock_guard<std::mutex> lock{mutex};
                   this->pending_spec(lock).application_id = value;
               }),
-          property_handler<std::string const&>(
+          property_handler<std::string>(
               connection,
               window,
               XCB_ATOM_WM_NAME,
@@ -166,7 +175,7 @@ mf::XWaylandSurface::XWaylandSurface(
                   std::lock_guard<std::mutex> lock{mutex};
                   this->pending_spec(lock).name = value;
               }),
-          property_handler<std::string const&>(
+          property_handler<std::string>(
               connection,
               window,
               connection->_NET_WM_NAME,
@@ -179,33 +188,39 @@ mf::XWaylandSurface::XWaylandSurface(
               connection,
               window,
               XCB_ATOM_WM_TRANSIENT_FOR,
-              [this](xcb_window_t value)
               {
-                  is_transient_for(value);
-              },
-              [this]()
-              {
-                  is_transient_for(XCB_WINDOW_NONE);
+                  [this](xcb_window_t const& value)
+                  {
+                      is_transient_for(value);
+                  },
+                  [this](auto)
+                  {
+                    is_transient_for(XCB_WINDOW_NONE);
+                  }
               }),
-          property_handler<std::vector<xcb_atom_t> const&>(
+          property_handler<std::vector<xcb_atom_t>>(
               connection,
               window,
               connection->_NET_WM_WINDOW_TYPE,
-              [this](std::vector<xcb_atom_t> const& wm_types) { window_type(wm_types); },
-              []{}),
-          property_handler<std::vector<xcb_atom_t> const&>(
+              [this](auto wm_types)
+              {
+                  window_type(wm_types);
+              }),
+          property_handler<std::vector<xcb_atom_t>>(
               connection,
               window,
               connection->WM_PROTOCOLS,
-              [this](std::vector<xcb_atom_t> const& value)
               {
-                  std::lock_guard<std::mutex> lock{mutex};
-                  this->cached.supported_wm_protocols = std::set<xcb_atom_t>{value.begin(), value.end()};
-              },
-              [this]()
-              {
-                  std::lock_guard<std::mutex> lock{mutex};
-                  this->cached.supported_wm_protocols.clear();
+                  [this](auto value)
+                  {
+                      std::lock_guard<std::mutex> lock{mutex};
+                      this->cached.supported_wm_protocols = std::set<xcb_atom_t>{value.begin(), value.end()};
+                  },
+                  [this](auto)
+                  {
+                      std::lock_guard<std::mutex> lock{mutex};
+                      this->cached.supported_wm_protocols.clear();
+                  }
               })}
 {
     cached.top_left = geometry.top_left;
@@ -235,14 +250,15 @@ void mf::XWaylandSurface::map()
     auto const cookie = connection->read_property(
         window,
         connection->_NET_WM_STATE,
-        [&](std::vector<xcb_atom_t> const& net_wm_states)
         {
-            for (auto const& net_wm_state : net_wm_states)
+            [&](std::vector<xcb_atom_t> const& net_wm_states)
             {
-                state.apply_change(connection, NetWmStateAction::ADD, net_wm_state);
+                for (auto const& net_wm_state : net_wm_states)
+                {
+                    state.apply_change(connection, NetWmStateAction::ADD, net_wm_state);
+                }
             }
-        },
-        [](){});
+        });
 
     // If we had more properties to read we would queue them all up before completing the first one
     cookie();
@@ -566,15 +582,17 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     std::shared_ptr<ms::Session> session;
     reply_functions.push_back(connection->read_property(
         window, connection->_NET_WM_PID,
-        [&](uint32_t pid)
         {
-            local_client_session = client_manager->session_for_client(pid);
-            session = local_client_session->session();
-        },
-        [&]()
-        {
-            log_warning("X11 app did not set _NET_WM_PID, grouping it under the default XWayland application");
-            session = get_session(wl_surface->resource);
+            [&](uint32_t pid)
+            {
+                local_client_session = client_manager->session_for_client(pid);
+                session = local_client_session->session();
+            },
+            [&](std::string const&)
+            {
+                log_warning("X11 app did not set _NET_WM_PID, grouping it under the default XWayland application");
+                session = get_session(wl_surface->resource);
+            }
         }));
 
     // Wait for and process all the XCB replies
