@@ -124,12 +124,6 @@ Emitter Interface::implementation() const
         {"// ", generated_name},
         empty_line,
         EmptyLineList{
-            Lines{
-                {"mw::", generated_name, "* ", nmspace, "from(struct wl_resource* resource)"},
-                Block{
-                    {"return static_cast<", generated_name, "*>(wl_resource_get_user_data(resource));"}
-                }
-            },
             thunks_impl(),
             constructor_impl(),
             destructor_impl(),
@@ -143,7 +137,23 @@ Emitter Interface::implementation() const
             },
             (global ? global.value().implementation() : nullptr),
             types_init(),
-        }
+            Lines{
+                {"mw::", generated_name, "* ", nmspace, "from(struct wl_resource* resource)"},
+                Block{
+                    (has_vtable ?
+                        Lines{
+                            {"if (wl_resource_instance_of(resource, &", wl_name, "_interface_data, ", generated_name, "::Thunks::request_vtable))"},
+                            Block{
+                                {"return static_cast<", generated_name, "*>(wl_resource_get_user_data(resource));"}
+                            },
+                            {"return nullptr;"}}
+                        : Lines{
+                            {"// WARNING: This is potentially unsafe; there is no guarantee that resource is a ", generated_name},
+                            {"return static_cast<", generated_name, "*>(wl_resource_get_user_data(resource));"}
+                        }),
+                    }
+                }
+            },
     };
 }
 
