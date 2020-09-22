@@ -170,13 +170,14 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
 
     // Detect and manage any windows that already exist
     auto const query_tree_cookie = xcb_query_tree(*connection, connection->root_window());
-    auto const query_tree_reply = xcb_query_tree_reply(*connection, query_tree_cookie, nullptr);
+    std::unique_ptr<xcb_query_tree_reply_t> query_tree_reply{
+        xcb_query_tree_reply(*connection, query_tree_cookie, nullptr)};
     if (query_tree_reply)
     {
         std::vector<std::function<void()>> window_setup_funcs;
-        for (int i = 0; i < xcb_query_tree_children_length(query_tree_reply); ++i)
+        for (int i = 0; i < xcb_query_tree_children_length(query_tree_reply.get()); ++i)
         {
-            xcb_window_t const window = xcb_query_tree_children(query_tree_reply)[i];
+            xcb_window_t const window = xcb_query_tree_children(query_tree_reply.get())[i];
             if (!connection->is_ours(window))
             {
                 if (verbose_xwayland_logging_enabled())
@@ -188,8 +189,10 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
                 auto const attrs_cookie = xcb_get_window_attributes(*connection, window);
                 window_setup_funcs.push_back([this, window, geometry_cookie, attrs_cookie]()
                     {
-                        auto const geometry_reply = xcb_get_geometry_reply(*connection, geometry_cookie, nullptr);
-                        auto const attrs_reply = xcb_get_window_attributes_reply(*connection, attrs_cookie, nullptr);
+                        std::unique_ptr<xcb_get_geometry_reply_t> geometry_reply{
+                            xcb_get_geometry_reply(*connection, geometry_cookie, nullptr)};
+                        std::unique_ptr<xcb_get_window_attributes_reply_t> attrs_reply{
+                            xcb_get_window_attributes_reply(*connection, attrs_cookie, nullptr)};
 
                         if (geometry_reply && attrs_reply)
                         {
@@ -206,9 +209,6 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
                                 "Faild to load geometry and attributes for %s",
                                 connection->window_debug_string(window).c_str());
                         }
-
-                        free(geometry_reply);
-                        free(attrs_reply);
                     });
             }
         }
@@ -222,7 +222,6 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
     {
         log_warning("Failed to query initial windows");
     }
-    free(query_tree_reply);
 }
 
 mf::XWaylandWM::~XWaylandWM()
