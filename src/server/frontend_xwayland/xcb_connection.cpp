@@ -227,40 +227,28 @@ auto mf::XCBConnection::read_property(
         0, // no offset
         2048); // big buffer
 
-    return [xcb_connection = xcb_connection, cookie, action, on_error, prop, this]()
+    return [this, cookie, action, on_error, window, prop]()
         {
-            xcb_get_property_reply_t *reply = xcb_get_property_reply(xcb_connection, cookie, nullptr);
-            if (reply && reply->type != XCB_ATOM_NONE)
+            try
             {
-                try
+                std::unique_ptr<xcb_get_property_reply_t> reply{xcb_get_property_reply(xcb_connection, cookie, nullptr)};
+                if (reply && reply->type != XCB_ATOM_NONE)
                 {
-                    action(reply);
+                    action(reply.get());
                 }
-                catch (...)
-                {
-                    log(
-                        logging::Severity::warning,
-                        MIR_LOG_COMPONENT,
-                        std::current_exception(),
-                        "Failed to process property reply: " + query_name(prop));
-                }
-            }
-            else
-            {
-                try
+                else
                 {
                     on_error();
                 }
-                catch (...)
-                {
-                    log(
-                        logging::Severity::warning,
-                        MIR_LOG_COMPONENT,
-                        std::current_exception(),
-                        "Failed to run property error callback.");
-                }
             }
-            free(reply);
+            catch (...)
+            {
+                log(
+                    logging::Severity::warning,
+                    MIR_LOG_COMPONENT,
+                    "Exception thrown processing reply for property " +
+                    window_debug_string(window) + "." + query_name(prop));
+            }
         };
 }
 
