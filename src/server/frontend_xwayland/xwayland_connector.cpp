@@ -135,16 +135,6 @@ void mf::XWaylandConnector::spawn()
     {
         auto const wayland_socket_pair = XWaylandServer::make_socket_pair();
         auto const x11_socket_pair = XWaylandServer::make_socket_pair();
-        server = std::make_unique<XWaylandServer>(
-            wayland_connector,
-            *spawner,
-            xwayland_path,
-            wayland_socket_pair,
-            x11_socket_pair.second);
-        wm = std::make_unique<XWaylandWM>(
-            wayland_connector,
-            server->client(),
-            x11_socket_pair.first);
         auto const wm_dispatcher = std::make_shared<md::ReadableFd>(x11_socket_pair.first, [this]()
             {
                 std::lock_guard<std::mutex> lock{mutex};
@@ -181,6 +171,16 @@ void mf::XWaylandConnector::spawn()
                 // We can't destroy a ThreadedDispatcher from inside a call it made, so do it from another thread
                 std::thread{[&](){ local_wm_event_thread.reset(); }}.join();
             });
+        server = std::make_unique<XWaylandServer>(
+            wayland_connector,
+            *spawner,
+            xwayland_path,
+            wayland_socket_pair,
+            x11_socket_pair.second);
+        wm = std::make_unique<XWaylandWM>(
+            wayland_connector,
+            server->client(),
+            x11_socket_pair.first);
         mir::log_info("XWayland is running");
     }
     catch (...)
