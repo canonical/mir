@@ -228,6 +228,27 @@ public:
     }
     /// @}
 
+    template<typename COOKIE, typename REPLY>
+    auto async_call(
+        COOKIE cookie,
+        REPLY* (* get_reply)(xcb_connection_t*, COOKIE, xcb_generic_error_t**),
+        Handler<REPLY*>&& handler) const -> std::function<void()>
+    {
+        return [this, cookie, get_reply, handler=std::move(handler)]()
+            {
+                ErrorPtr error;
+                std::unique_ptr<REPLY> reply{get_reply(xcb_connection, cookie, error)};
+                if (reply)
+                {
+                    handler.on_success(reply.get());
+                }
+                else
+                {
+                    handler.on_error(error_debug_string(error.error));
+                }
+            };
+    }
+
     inline void flush() const
     {
         xcb_flush(xcb_connection);
