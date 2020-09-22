@@ -41,11 +41,6 @@ struct wl_interface const* all_null_types [] {
 
 // ForeignToplevelManagerV1
 
-mw::ForeignToplevelManagerV1* mw::ForeignToplevelManagerV1::from(struct wl_resource* resource)
-{
-    return static_cast<ForeignToplevelManagerV1*>(wl_resource_get_user_data(resource));
-}
-
 struct mw::ForeignToplevelManagerV1::Thunks
 {
     static int const supported_version;
@@ -168,12 +163,16 @@ struct wl_message const mw::ForeignToplevelManagerV1::Thunks::event_messages[] {
 void const* mw::ForeignToplevelManagerV1::Thunks::request_vtable[] {
     (void*)Thunks::stop_thunk};
 
-// ForeignToplevelHandleV1
-
-mw::ForeignToplevelHandleV1* mw::ForeignToplevelHandleV1::from(struct wl_resource* resource)
+mw::ForeignToplevelManagerV1* mw::ForeignToplevelManagerV1::from(struct wl_resource* resource)
 {
-    return static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &zwlr_foreign_toplevel_manager_v1_interface_data, ForeignToplevelManagerV1::Thunks::request_vtable))
+    {
+        return static_cast<ForeignToplevelManagerV1*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
+
+// ForeignToplevelHandleV1
 
 struct mw::ForeignToplevelHandleV1::Thunks
 {
@@ -485,6 +484,15 @@ void const* mw::ForeignToplevelHandleV1::Thunks::request_vtable[] {
     (void*)Thunks::destroy_thunk,
     (void*)Thunks::set_fullscreen_thunk,
     (void*)Thunks::unset_fullscreen_thunk};
+
+mw::ForeignToplevelHandleV1* mw::ForeignToplevelHandleV1::from(struct wl_resource* resource)
+{
+    if (wl_resource_instance_of(resource, &zwlr_foreign_toplevel_handle_v1_interface_data, ForeignToplevelHandleV1::Thunks::request_vtable))
+    {
+        return static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
+}
 
 namespace mir
 {

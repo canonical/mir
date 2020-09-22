@@ -41,11 +41,6 @@ struct wl_interface const* all_null_types [] {
 
 // LayerShellV1
 
-mw::LayerShellV1* mw::LayerShellV1::from(struct wl_resource* resource)
-{
-    return static_cast<LayerShellV1*>(wl_resource_get_user_data(resource));
-}
-
 struct mw::LayerShellV1::Thunks
 {
     static int const supported_version;
@@ -188,12 +183,16 @@ void const* mw::LayerShellV1::Thunks::request_vtable[] {
     (void*)Thunks::get_layer_surface_thunk,
     (void*)Thunks::destroy_thunk};
 
-// LayerSurfaceV1
-
-mw::LayerSurfaceV1* mw::LayerSurfaceV1::from(struct wl_resource* resource)
+mw::LayerShellV1* mw::LayerShellV1::from(struct wl_resource* resource)
 {
-    return static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &zwlr_layer_shell_v1_interface_data, LayerShellV1::Thunks::request_vtable))
+    {
+        return static_cast<LayerShellV1*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
+
+// LayerSurfaceV1
 
 struct mw::LayerSurfaceV1::Thunks
 {
@@ -429,6 +428,15 @@ void const* mw::LayerSurfaceV1::Thunks::request_vtable[] {
     (void*)Thunks::ack_configure_thunk,
     (void*)Thunks::destroy_thunk,
     (void*)Thunks::set_layer_thunk};
+
+mw::LayerSurfaceV1* mw::LayerSurfaceV1::from(struct wl_resource* resource)
+{
+    if (wl_resource_instance_of(resource, &zwlr_layer_surface_v1_interface_data, LayerSurfaceV1::Thunks::request_vtable))
+    {
+        return static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
+}
 
 namespace mir
 {
