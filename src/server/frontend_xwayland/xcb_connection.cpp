@@ -498,39 +498,48 @@ auto mf::XCBConnection::error_debug_string(xcb_generic_error_t* error) const -> 
 {
     std::string result;
 
+    if (!error)
+    {
+        return "(given XCB error is null)";
+    }
+
     switch (error->error_code)
     {
     case XCB_REQUEST:
-        result = "not a valid request";
+    {
+        result = "not a valid request ";
         break;
+    }
 
     case XCB_VALUE:
     {
         auto const value_error{reinterpret_cast<xcb_value_error_t*>(error)};
-        result += std::to_string(value_error->bad_value) + " is an invalid value";
+        result = std::to_string(value_error->bad_value) + " is an invalid value ";
         break;
     }
 
     case XCB_WINDOW:
     {
         auto const window_error{reinterpret_cast<xcb_window_error_t*>(error)};
-        result +=
+        result =
             window_debug_string(window_error->bad_value) +
-            " (ID " + std::to_string(window_error->bad_value) + ") does not exist";
+            " (ID " + std::to_string(window_error->bad_value) + ") does not exist ";
         break;
     }
+
     case XCB_ATOM:
     {
         auto const atom_error{reinterpret_cast<xcb_atom_error_t*>(error)};
-        result += "atom " + std::to_string(atom_error->bad_value) + " does not exist";
+        result = "atom " + std::to_string(atom_error->bad_value) + " does not exist ";
         break;
     }
+
     default:
         break;
     }
 
     result +=
-        " (error code " + std::to_string(error->error_code) +
+        "(error code " + std::to_string(error->error_code) +
         ", opcode " + std::to_string(error->major_code) + "." + std::to_string(error->minor_code) + ")";
 
     return result;
