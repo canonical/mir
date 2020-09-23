@@ -39,11 +39,6 @@ struct wl_interface const* all_null_types [] {
 
 // XdgOutputManagerV1
 
-mw::XdgOutputManagerV1* mw::XdgOutputManagerV1::from(struct wl_resource* resource)
-{
-    return static_cast<XdgOutputManagerV1*>(wl_resource_get_user_data(resource));
-}
-
 struct mw::XdgOutputManagerV1::Thunks
 {
     static int const supported_version;
@@ -178,12 +173,16 @@ void const* mw::XdgOutputManagerV1::Thunks::request_vtable[] {
     (void*)Thunks::destroy_thunk,
     (void*)Thunks::get_xdg_output_thunk};
 
-// XdgOutputV1
-
-mw::XdgOutputV1* mw::XdgOutputV1::from(struct wl_resource* resource)
+mw::XdgOutputManagerV1* mw::XdgOutputManagerV1::from(struct wl_resource* resource)
 {
-    return static_cast<XdgOutputV1*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &zxdg_output_manager_v1_interface_data, XdgOutputManagerV1::Thunks::request_vtable))
+    {
+        return static_cast<XdgOutputManagerV1*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
+
+// XdgOutputV1
 
 struct mw::XdgOutputV1::Thunks
 {
@@ -293,6 +292,15 @@ struct wl_message const mw::XdgOutputV1::Thunks::event_messages[] {
 
 void const* mw::XdgOutputV1::Thunks::request_vtable[] {
     (void*)Thunks::destroy_thunk};
+
+mw::XdgOutputV1* mw::XdgOutputV1::from(struct wl_resource* resource)
+{
+    if (wl_resource_instance_of(resource, &zxdg_output_v1_interface_data, XdgOutputV1::Thunks::request_vtable))
+    {
+        return static_cast<XdgOutputV1*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
+}
 
 namespace mir
 {
