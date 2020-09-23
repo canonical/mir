@@ -45,6 +45,12 @@ add_library(
   mutex.h
 )
 
+target_link_libraries(
+  mirplatformgraphicsgbmkmsobjects
+  PUBLIC
+    mirsharedgbmservercommon-static
+)
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
     ${CMAKE_CURRENT_BINARY_DIR}/symbols.map
     )

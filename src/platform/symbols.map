@@ -26,6 +26,7 @@ MIRPLATFORM_2.1 {
     mir::graphics::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions*;
     mir::graphics::EGLExtensions::PlatformBaseEXT*;
     mir::graphics::EGLExtensions::WaylandExtensions::WaylandExtensions*;
+    mir::graphics::EGLExtensions::EXTImageDmaBufImportModifiers::EXTImageDmaBufImportModifiers*;
     mir::graphics::EGLSurfaceStore::?EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;

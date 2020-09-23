@@ -189,6 +189,14 @@ struct EGLExtensions
             PFNEGLLABELOBJECTKHRPROC label,
             PFNEGLQUERYDEBUGKHRPROC query);
     };
+
+    struct EXTImageDmaBufImportModifiers
+    {
+        EXTImageDmaBufImportModifiers(EGLDisplay dpy);
+
+        PFNEGLQUERYDMABUFFORMATSEXTPROC const eglQueryDmaBufFormatsExt;
+        PFNEGLQUERYDMABUFMODIFIERSEXTPROC const eglQueryDmaBufModifiersExt;
+    };
 };
 
 }
