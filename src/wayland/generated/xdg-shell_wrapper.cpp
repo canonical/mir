@@ -44,11 +44,6 @@ struct wl_interface const* all_null_types [] {
 
 // XdgWmBase
 
-mw::XdgWmBase* mw::XdgWmBase::from(struct wl_resource* resource)
-{
-    return static_cast<XdgWmBase*>(wl_resource_get_user_data(resource));
-}
-
 struct mw::XdgWmBase::Thunks
 {
     static int const supported_version;
@@ -241,12 +236,16 @@ void const* mw::XdgWmBase::Thunks::request_vtable[] {
     (void*)Thunks::get_xdg_surface_thunk,
     (void*)Thunks::pong_thunk};
 
-// XdgPositioner
-
-mw::XdgPositioner* mw::XdgPositioner::from(struct wl_resource* resource)
+mw::XdgWmBase* mw::XdgWmBase::from(struct wl_resource* resource)
 {
-    return static_cast<XdgPositioner*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &xdg_wm_base_interface_data, XdgWmBase::Thunks::request_vtable))
+    {
+        return static_cast<XdgWmBase*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
+
+// XdgPositioner
 
 struct mw::XdgPositioner::Thunks
 {
@@ -426,12 +425,16 @@ void const* mw::XdgPositioner::Thunks::request_vtable[] {
     (void*)Thunks::set_constraint_adjustment_thunk,
     (void*)Thunks::set_offset_thunk};
 
-// XdgSurface
-
-mw::XdgSurface* mw::XdgSurface::from(struct wl_resource* resource)
+mw::XdgPositioner* mw::XdgPositioner::from(struct wl_resource* resource)
 {
-    return static_cast<XdgSurface*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &xdg_positioner_interface_data, XdgPositioner::Thunks::request_vtable))
+    {
+        return static_cast<XdgPositioner*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
+
+// XdgSurface
 
 struct mw::XdgSurface::Thunks
 {
@@ -611,12 +614,16 @@ void const* mw::XdgSurface::Thunks::request_vtable[] {
     (void*)Thunks::set_window_geometry_thunk,
     (void*)Thunks::ack_configure_thunk};
 
-// XdgToplevel
-
-mw::XdgToplevel* mw::XdgToplevel::from(struct wl_resource* resource)
+mw::XdgSurface* mw::XdgSurface::from(struct wl_resource* resource)
 {
-    return static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &xdg_surface_interface_data, XdgSurface::Thunks::request_vtable))
+    {
+        return static_cast<XdgSurface*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
+
+// XdgToplevel
 
 struct mw::XdgToplevel::Thunks
 {
@@ -980,12 +987,16 @@ void const* mw::XdgToplevel::Thunks::request_vtable[] {
     (void*)Thunks::unset_fullscreen_thunk,
     (void*)Thunks::set_minimized_thunk};
 
-// XdgPopup
-
-mw::XdgPopup* mw::XdgPopup::from(struct wl_resource* resource)
+mw::XdgToplevel* mw::XdgToplevel::from(struct wl_resource* resource)
 {
-    return static_cast<XdgPopup*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &xdg_toplevel_interface_data, XdgToplevel::Thunks::request_vtable))
+    {
+        return static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
+
+// XdgPopup
 
 struct mw::XdgPopup::Thunks
 {
@@ -1089,6 +1100,15 @@ struct wl_message const mw::XdgPopup::Thunks::event_messages[] {
 void const* mw::XdgPopup::Thunks::request_vtable[] {
     (void*)Thunks::destroy_thunk,
     (void*)Thunks::grab_thunk};
+
+mw::XdgPopup* mw::XdgPopup::from(struct wl_resource* resource)
+{
+    if (wl_resource_instance_of(resource, &xdg_popup_interface_data, XdgPopup::Thunks::request_vtable))
+    {
+        return static_cast<XdgPopup*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
+}
 
 namespace mir
 {
