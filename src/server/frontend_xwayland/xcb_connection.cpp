@@ -19,6 +19,7 @@
 #include "xcb_connection.h"
 
 #include "mir/log.h"
+#include "mir/c_memory.h"
 
 #include "boost/throw_exception.hpp"
 #include <sstream>
@@ -119,7 +120,7 @@ mf::XCBConnection::Atom::operator xcb_atom_t() const
         // The initial atomic check is faster, but we need to check again once we've got the lock
         if (atom == XCB_ATOM_NONE)
         {
-            std::unique_ptr<xcb_intern_atom_reply_t> const reply{xcb_intern_atom_reply(*connection, cookie, nullptr)};
+            auto const reply = make_unique_cptr(xcb_intern_atom_reply(*connection, cookie, nullptr));
             if (!reply)
                 BOOST_THROW_EXCEPTION(std::runtime_error("Failed to look up atom " + name_));
             atom = reply->atom;
@@ -161,7 +162,7 @@ auto mf::XCBConnection::query_name(xcb_atom_t atom) const -> std::string
     if (iter == atom_name_cache.end())
     {
         xcb_get_atom_name_cookie_t const cookie = xcb_get_atom_name(xcb_connection, atom);
-        std::unique_ptr<xcb_get_atom_name_reply_t> const reply{xcb_get_atom_name_reply(xcb_connection, cookie, nullptr)};
+        auto const reply = make_unique_cptr(xcb_get_atom_name_reply(xcb_connection, cookie, nullptr));
 
         std::string name;
 
@@ -234,7 +235,7 @@ auto mf::XCBConnection::read_property(
         {
             try
             {
-                std::unique_ptr<xcb_get_property_reply_t> reply{xcb_get_property_reply(xcb_connection, cookie, nullptr)};
+                auto const reply = make_unique_cptr(xcb_get_property_reply(xcb_connection, cookie, nullptr));
                 if (reply && reply->type != XCB_ATOM_NONE)
                 {
                     action(reply.get());
