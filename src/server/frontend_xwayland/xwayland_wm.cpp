@@ -26,9 +26,10 @@
 #include "xwayland_cursors.h"
 #include "xwayland_client_manager.h"
 
+#include "mir/c_memory.h"
 #include "mir/fd.h"
-#include "mir/scene/null_observer.h"
 #include "mir/frontend/surface_stack.h"
+#include "mir/scene/null_observer.h"
 
 #include <cstring>
 #include <poll.h>
@@ -170,8 +171,7 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
 
     // Detect and manage any windows that already exist
     auto const query_tree_cookie = xcb_query_tree(*connection, connection->root_window());
-    std::unique_ptr<xcb_query_tree_reply_t> query_tree_reply{
-        xcb_query_tree_reply(*connection, query_tree_cookie, nullptr)};
+    auto const query_tree_reply = make_unique_cptr(xcb_query_tree_reply(*connection, query_tree_cookie, nullptr));
     if (query_tree_reply)
     {
         std::vector<std::function<void()>> window_setup_funcs;
@@ -189,10 +189,8 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
                 auto const attrs_cookie = xcb_get_window_attributes(*connection, window);
                 window_setup_funcs.push_back([this, window, geometry_cookie, attrs_cookie]()
                     {
-                        std::unique_ptr<xcb_get_geometry_reply_t> geometry_reply{
-                            xcb_get_geometry_reply(*connection, geometry_cookie, nullptr)};
-                        std::unique_ptr<xcb_get_window_attributes_reply_t> attrs_reply{
-                            xcb_get_window_attributes_reply(*connection, attrs_cookie, nullptr)};
+                        auto const geometry_reply = make_unique_cptr(xcb_get_geometry_reply(*connection, geometry_cookie, nullptr));
+                        auto const attrs_reply = make_unique_cptr(xcb_get_window_attributes_reply(*connection, attrs_cookie, nullptr));
 
                         if (geometry_reply && attrs_reply)
                         {
