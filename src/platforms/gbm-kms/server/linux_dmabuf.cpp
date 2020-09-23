@@ -193,7 +193,6 @@ private:
     std::shared_ptr<mg::EGLExtensions> const egl_extensions;
     int32_t const width, height;
     uint32_t const format_;
-    [[maybe_unused]]
     uint32_t const flags;
     std::optional<uint64_t> const modifier;
     std::vector<PlaneInfo> planes;
