@@ -26,10 +26,10 @@
 #include "xwayland_cursors.h"
 #include "xwayland_client_manager.h"
 
+#include "mir/c_memory.h"
 #include "mir/fd.h"
-#include "mir/scene/null_observer.h"
 #include "mir/frontend/surface_stack.h"
-#include "mir/geometry/rectangle.h"
+#include "mir/scene/null_observer.h"
 
 #include <cstring>
 #include <poll.h>
@@ -163,9 +163,63 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
         connection->_NET_ACTIVE_WINDOW,
         static_cast<xcb_window_t>(XCB_WINDOW_NONE));
 
+    connection->flush();
+
     cursors->apply_default_to(connection->root_window());
 
     wm_shell->surface_stack->add_observer(scene_observer);
+
+    // Detect and manage any windows that already exist
+    auto const query_tree_cookie = xcb_query_tree(*connection, connection->root_window());
+    auto const query_tree_reply = make_unique_cptr(xcb_query_tree_reply(*connection, query_tree_cookie, nullptr));
+    if (query_tree_reply)
+    {
+        std::vector<std::function<void()>> window_setup_funcs;
+        for (int i = 0; i < xcb_query_tree_children_length(query_tree_reply.get()); ++i)
+        {
+            xcb_window_t const window = xcb_query_tree_children(query_tree_reply.get())[i];
+            if (!connection->is_ours(window))
+            {
+                if (verbose_xwayland_logging_enabled())
+                {
+                    log_debug("Window %s already exists", connection->window_debug_string(window).c_str());
+                }
+
+                auto const geometry_cookie = xcb_get_geometry(*connection, window);
+                auto const attrs_cookie = xcb_get_window_attributes(*connection, window);
+                window_setup_funcs.push_back([this, window, geometry_cookie, attrs_cookie]()
+                    {
+                        auto const geometry_reply = make_unique_cptr(xcb_get_geometry_reply(*connection, geometry_cookie, nullptr));
+                        auto const attrs_reply = make_unique_cptr(xcb_get_window_attributes_reply(*connection, attrs_cookie, nullptr));
+
+                        if (geometry_reply && attrs_reply)
+                        {
+                            manage_window(
+                                window,
+                                geom::Rectangle{
+                                    {geometry_reply->x, geometry_reply->y},
+                                    {geometry_reply->width, geometry_reply->height}},
+                                attrs_reply->override_redirect);
+                        }
+                        else
+                        {
+                            log_warning(
+                                "Faild to load geometry and attributes for %s",
+                                connection->window_debug_string(window).c_str());
+                        }
+                    });
+            }
+        }
+
+        for (auto const& f : window_setup_funcs)
+        {
+            f();
+        }
+    }
+    else
+    {
+        log_warning("Failed to query initial windows");
+    }
 }
 
 mf::XWaylandWM::~XWaylandWM()
@@ -385,6 +439,73 @@ void mf::XWaylandWM::restack_surfaces()
     connection->flush();
 }
 
+void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& geometry, bool override_redirect)
+{
+    if (verbose_xwayland_logging_enabled())
+    {
+        auto const props_cookie = xcb_list_properties(*connection, window);
+        auto const props_reply = xcb_list_properties_reply(*connection, props_cookie, nullptr);
+        if (props_reply)
+        {
+            std::vector<std::function<void()>> functions;
+            int const prop_count = xcb_list_properties_atoms_length(props_reply);
+            for (int i = 0; i < prop_count; i++)
+            {
+                auto const atom = xcb_list_properties_atoms(props_reply)[i];
+
+                auto const log_prop = [this, atom](std::string const& value)
+                    {
+                        auto const prop_name = connection->query_name(atom);
+                        log_debug(
+                            "  | %s: %s",
+                            prop_name.c_str(),
+                            value.c_str());
+                    };
+
+                functions.push_back(connection->read_property(
+                    window,
+                    atom,
+                    [this, log_prop](xcb_get_property_reply_t* reply)
+                    {
+                        auto const reply_str = connection->reply_debug_string(reply);
+                        log_prop(reply_str);
+                    },
+                    [log_prop]()
+                    {
+                        log_prop("Error getting value");
+                    }));
+            }
+            free(props_reply);
+
+            log_debug("%s has %d initial propertie(s):", connection->window_debug_string(window).c_str(), prop_count);
+            for (auto const& f : functions)
+                f();
+        }
+        else
+        {
+            log_debug("%s's initial properties failed to load", connection->window_debug_string(window).c_str());
+        }
+    }
+
+    std::lock_guard<std::mutex> lock{mutex};
+
+    if (surfaces.find(window) != surfaces.end())
+    {
+        // If a window is created during startup, we may be double-notified of it
+        return;
+    }
+
+    surfaces[window] = std::make_shared<XWaylandSurface>(
+        this,
+        connection,
+        wm_shell->seat,
+        wm_shell->shell,
+        client_manager,
+        window,
+        geometry,
+        override_redirect);
+}
+
 void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
 {
     // see https://www.systutorials.com/docs/linux/man/3-xcb-requests/
@@ -520,72 +641,14 @@ void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)
 
         if (event->border_width)
             log_warning("border width unsupported (border width %d)", event->border_width);
-
-        auto const props_cookie = xcb_list_properties(*connection, event->window);
-        auto const props_reply = xcb_list_properties_reply(*connection, props_cookie, nullptr);
-        if (props_reply)
-        {
-            std::vector<std::function<void()>> functions;
-            int const prop_count = xcb_list_properties_atoms_length(props_reply);
-            for (int i = 0; i < prop_count; i++)
-            {
-                auto const atom = xcb_list_properties_atoms(props_reply)[i];
-
-                auto const log_prop = [this, atom](std::string const& value)
-                    {
-                        auto const prop_name = connection->query_name(atom);
-                        log_debug(
-                            "                  | %s: %s",
-                            prop_name.c_str(),
-                            value.c_str());
-                    };
-
-                functions.push_back(connection->read_property(
-                    event->window,
-                    atom,
-                    [this, log_prop](xcb_get_property_reply_t* reply)
-                    {
-                        auto const reply_str = connection->reply_debug_string(reply);
-                        log_prop(reply_str);
-                    },
-                    [log_prop]()
-                    {
-                        log_prop("Error getting value");
-                    }));
-            }
-            free(props_reply);
-
-            log_debug("                  initial properties: %d", prop_count);
-            for (auto const& f : functions)
-                f();
-        }
-        else
-        {
-            log_debug("                  initial properties: failed to load");
-        }
     }
 
     if (!connection->is_ours(event->window))
     {
-        auto const surface = std::make_shared<XWaylandSurface>(
-            this,
-            connection,
-            wm_shell->seat,
-            wm_shell->shell,
-            client_manager,
+        manage_window(
             event->window,
             geom::Rectangle{{event->x, event->y}, {event->width, event->height}},
             event->override_redirect);
-
-        {
-            std::lock_guard<std::mutex> lock{mutex};
-
-            if (surfaces.find(event->window) != surfaces.end())
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error("X11 window " + std::to_string(event->window) + " created, but already known"));
-
-            surfaces[event->window] = surface;
-        }
     }
 }
 
