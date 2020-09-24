@@ -64,6 +64,7 @@ execute: |
         > /etc/apt/sources.list.d/cross-${DEB_HOST_ARCH}.list
 
         apt-get update
+        apt-get --yes install qemu-user-static binfmt-support
     fi
 
     cd $SPREAD_PATH

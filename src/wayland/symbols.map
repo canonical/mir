@@ -3,6 +3,7 @@ global:
   extern "C++" {
     mir::wayland::Buffer::*;
     non-virtual?thunk?to?mir::wayland::Buffer::*;
+    virtual?thunk?to?mir::wayland::Buffer::*;
     typeinfo?for?mir::wayland::Buffer;
     vtable?for?mir::wayland::Buffer;
     typeinfo?for?mir::wayland::Buffer::Global;

@@ -179,3 +179,20 @@ auto mg::EGLExtensions::DebugKHR::maybe_debug_khr() -> std::experimental::option
         return {};
     }
 }
+
+mg::EGLExtensions::EXTImageDmaBufImportModifiers::EXTImageDmaBufImportModifiers(EGLDisplay dpy)
+    : eglQueryDmaBufFormatsExt{
+        reinterpret_cast<PFNEGLQUERYDMABUFFORMATSEXTPROC>(
+            eglGetProcAddress("eglQueryDmaBufFormatsEXT"))},
+      eglQueryDmaBufModifiersExt{
+        reinterpret_cast<PFNEGLQUERYDMABUFMODIFIERSEXTPROC>(
+            eglGetProcAddress("eglQueryDmaBufModifiersEXT"))}
+{
+    auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+    if (!egl_extensions ||
+        !strstr(egl_extensions, "EGL_EXT_image_dma_buf_import_modifiers"))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{"EGL_EXT_image_dma_buf_import_modifiers not supported"}));
+    }
+}

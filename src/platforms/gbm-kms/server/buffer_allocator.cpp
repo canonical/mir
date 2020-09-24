@@ -19,6 +19,7 @@
 
 #include "buffer_allocator.h"
 #include "gbm_buffer.h"
+#include "linux_dmabuf.h"
 #include "buffer_texture_binder.h"
 #include "mir/anonymous_shm_file.h"
 #include "shm_buffer.h"
@@ -295,6 +296,22 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
 
     mg::wayland::bind_display(dpy, display, *egl_extensions);
 
+    try
+    {
+        mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
+        dmabuf_extension = std::make_unique<LinuxDmaBufUnstable>(
+            display,
+            dpy,
+            egl_extensions,
+            modifier_ext);
+        mir::log_info("Enabled linux-dmabuf import support");
+    }
+    catch (std::runtime_error const&)
+    {
+        mir::log_info(
+            "No EGL_EXT_image_dma_buf_import_modifiers support, disabling linux-dmabuf import");
+    }
+
     this->wayland_executor = std::move(wayland_executor);
 }
 
@@ -307,6 +324,15 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::buffer_from_resource(
         [this]() { ctx->make_current(); },
         [this]() { ctx->release_current(); });
 
+    if (auto dmabuf = dmabuf_extension->buffer_from_resource(
+        buffer,
+        ctx,
+        std::move(on_consumed),
+        std::move(on_release),
+        wayland_executor))
+    {
+        return dmabuf;
+    }
     return mg::wayland::buffer_from_resource(
         buffer,
         std::move(on_consumed),

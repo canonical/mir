@@ -23,6 +23,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "linux_dmabuf.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic warning "-Wall"
@@ -91,6 +92,7 @@ private:
     std::shared_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<Executor> wayland_executor;
+    std::unique_ptr<LinuxDmaBufUnstable> dmabuf_extension;
     gbm_device* const device;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 
