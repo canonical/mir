@@ -103,7 +103,7 @@ public:
 
         operator xcb_generic_error_t**() { return &error; }
 
-        xcb_generic_error_t* error;
+        xcb_generic_error_t* error{nullptr};
     };
 
     template<typename T>
