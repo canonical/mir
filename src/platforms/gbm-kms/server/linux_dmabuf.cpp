@@ -362,7 +362,7 @@ private:
                     Error::incomplete,
                     "No dmabuf has been added to the params"}));
         }
-        for (auto i = 0u; i < plane_count; ++i)
+        for (auto i = 0; i != plane_count; ++i)
         {
             if (planes[i].fd == mir::Fd::invalid)
             {
