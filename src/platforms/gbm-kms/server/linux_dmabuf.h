@@ -44,6 +44,8 @@ namespace graphics
 
 namespace gbm
 {
+class DmaBufFormatDescriptors;
+
 class LinuxDmaBufUnstable : public wayland::LinuxDmabufV1::Global
 {
 public:
@@ -51,7 +53,7 @@ public:
         wl_display* display,
         EGLDisplay dpy,
         std::shared_ptr<EGLExtensions> egl_extensions,
-        EGLExtensions::EXTImageDmaBufImportModifiers dmabuf_ext);
+        EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext);
 
     std::shared_ptr<Buffer> buffer_from_resource(
         wl_resource* buffer,
@@ -66,7 +68,7 @@ private:
 
     EGLDisplay const dpy;
     std::shared_ptr<EGLExtensions> const egl_extensions;
-    EGLExtensions::EXTImageDmaBufImportModifiers const dmabuf_ext;
+    std::shared_ptr<DmaBufFormatDescriptors> const formats;
 };
 
 }

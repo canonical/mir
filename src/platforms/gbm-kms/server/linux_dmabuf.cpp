@@ -683,17 +683,12 @@ bool format_is_simple_enough_for_us(uint32_t format)
     }
 }
 
-class mgg::LinuxDmaBufUnstable::Instance : public mir::wayland::LinuxDmabufV1
+class mgg::DmaBufFormatDescriptors
 {
 public:
-    Instance(
-        wl_resource* new_resource,
+    DmaBufFormatDescriptors(
         EGLDisplay dpy,
-        std::shared_ptr<EGLExtensions> egl_extensions,
-        EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext)
-        : mir::wayland::LinuxDmabufV1(new_resource, Version<3>{}),
-          dpy{dpy},
-          egl_extensions{std::move(egl_extensions)}
+        mg::EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext)
     {
         EGLint num_formats;
         if (dmabuf_ext.eglQueryDmaBufFormatsExt(dpy, 0, nullptr, &num_formats) != EGL_TRUE)
@@ -704,26 +699,27 @@ public:
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"No dma-buf formats supported"}));
         }
-        DmaBufFormatDescriptors format_descriptors;
+        resize(num_formats);
+
         EGLint returned_formats;
-        format_descriptors.format.resize(num_formats);
-        format_descriptors.modifiers.resize(num_formats);
-        format_descriptors.external_only.resize(num_formats);
         if (dmabuf_ext.eglQueryDmaBufFormatsExt(
-                dpy, num_formats, format_descriptors.format.data(), &returned_formats) != EGL_TRUE)
+            dpy, num_formats, formats.data(), &returned_formats) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION((mg::egl_error("Failed to list dma-buf formats")));
         }
         // Paranoia: what if the EGL returns a different number of formats in the second call?
-        format_descriptors.format.resize(returned_formats);
-        format_descriptors.modifiers.resize(returned_formats);
-        format_descriptors.external_only.resize(returned_formats);
-
-        for (auto i = 0u; i < format_descriptors.format.size(); ++i)
+        if (returned_formats != num_formats)
         {
-            auto const& format = format_descriptors.format[i];
-            auto& modifiers = format_descriptors.modifiers[i];
-            auto& external_only = format_descriptors.external_only[i];
+            mir::log_warning(
+                "eglQueryDmaBufFormats returned unexpected number of formats (got %i, expected %i)",
+                returned_formats,
+                num_formats);
+            resize(returned_formats);
+        }
+
+        for (auto i = 0u; i < formats.size(); ++i)
+        {
+            auto [format, modifiers, external_only] = (*this)[i];
 
             EGLint num_modifiers;
             if (
@@ -752,15 +748,91 @@ public:
             {
                 BOOST_THROW_EXCEPTION((mg::egl_error("Failed to list modifiers")));
             }
-            modifiers.resize(returned_modifiers);
-            external_only.resize(returned_modifiers);
+            if (returned_modifiers != num_modifiers)
+            {
+                mir::log_warning(
+                    "eglQueryDmaBufModifiers return unexpected number of modifiers for format 0x%ux"
+                    " (expected %i, got %i)",
+                    format,
+                    returned_modifiers,
+                    num_modifiers);
+                modifiers.resize(returned_modifiers);
+                external_only.resize(returned_modifiers);
+            }
+        }
+    }
+
+    struct FormatDescriptor
+    {
+        EGLint format;
+        std::vector<EGLuint64KHR> const& modifiers;
+        std::vector<EGLBoolean> const& external_only;
+    };
+
+    auto num_formats() const -> size_t
+    {
+        return formats.size();
+    }
+
+    auto operator[](size_t idx) const -> FormatDescriptor
+    {
+        if (idx >= formats.size())
+        {
+            BOOST_THROW_EXCEPTION((std::out_of_range{
+                std::string("Index ") + std::to_string(idx) + " out of bounds (num formats: " +
+                std::to_string(formats.size()) + ")"}));
         }
 
-        for (auto i = 0u; i < format_descriptors.format.size(); ++i)
+        return FormatDescriptor{
+            formats[idx],
+            modifiers_for_format[idx],
+            external_only_for_format[idx]};
+    }
+
+
+private:
+    void resize(size_t size)
+    {
+        formats.resize(size);
+        modifiers_for_format.resize(size);
+        external_only_for_format.resize(size);
+    }
+
+    auto operator[](size_t idx)
+        -> std::tuple<EGLint, std::vector<EGLuint64KHR>&, std::vector<EGLBoolean>&>
+    {
+        if (idx >= formats.size())
         {
-            auto const& format = format_descriptors.format[i];
-            auto const& modifiers = format_descriptors.modifiers[i];
-            auto const& external_onlys = format_descriptors.external_only[i];
+            BOOST_THROW_EXCEPTION((std::out_of_range{
+                std::string("Index ") + std::to_string(idx) + " out of bounds (num formats: " +
+                std::to_string(formats.size()) + ")"}));
+        }
+        return std::make_tuple(
+            formats[idx],
+            std::ref(modifiers_for_format[idx]),
+            std::ref(external_only_for_format[idx]));
+    }
+
+    std::vector<EGLint> formats;
+    std::vector<std::vector<EGLuint64KHR>> modifiers_for_format;
+    std::vector<std::vector<EGLBoolean>> external_only_for_format;
+};
+
+class mgg::LinuxDmaBufUnstable::Instance : public mir::wayland::LinuxDmabufV1
+{
+public:
+    Instance(
+        wl_resource* new_resource,
+        EGLDisplay dpy,
+        std::shared_ptr<EGLExtensions> egl_extensions,
+        DmaBufFormatDescriptors const& formats)
+        : mir::wayland::LinuxDmabufV1(new_resource, Version<3>{}),
+          dpy{dpy},
+          egl_extensions{std::move(egl_extensions)}
+    {
+        for (auto i = 0u; i < formats.num_formats(); ++i)
+        {
+            auto [format, modifiers, external_only] = formats[i];
 
             if (format_is_simple_enough_for_us(format))
             {
@@ -770,8 +842,8 @@ public:
                     for (auto j = 0u; j < modifiers.size(); ++j)
                     {
                         auto const& modifier = modifiers[i];
-                        auto const& external_only = external_onlys[i];
-                        if (external_only == EGL_FALSE)
+                        auto const& external = external_only[i];
+                        if (external == EGL_FALSE)
                         {
                             // We can't (currently) handle external images
                             send_modifier_event(
@@ -795,13 +867,6 @@ private:
         new LinuxDmaBufParams{params_id, dpy, egl_extensions};
     }
 
-    struct DmaBufFormatDescriptors
-    {
-        std::vector<EGLint> format;
-        std::vector<std::vector<EGLuint64KHR>> modifiers;
-        std::vector<std::vector<EGLBoolean>> external_only;
-    };
-
     EGLDisplay const dpy;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 };
@@ -810,11 +875,11 @@ mgg::LinuxDmaBufUnstable::LinuxDmaBufUnstable(
     wl_display* display,
     EGLDisplay dpy,
     std::shared_ptr<EGLExtensions> egl_extensions,
-    EGLExtensions::EXTImageDmaBufImportModifiers dmabuf_ext)
+    EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext)
     : mir::wayland::LinuxDmabufV1::Global(display, Version<3>{}),
       dpy{dpy},
       egl_extensions{std::move(egl_extensions)},
-      dmabuf_ext{std::move(dmabuf_ext)}
+      formats{std::make_shared<DmaBufFormatDescriptors>(dpy, dmabuf_ext)}
 {
 }
 
@@ -841,5 +906,5 @@ auto mgg::LinuxDmaBufUnstable::buffer_from_resource(
 
 void mgg::LinuxDmaBufUnstable::bind(wl_resource* new_resource)
 {
-    new LinuxDmaBufUnstable::Instance{new_resource, dpy, egl_extensions, dmabuf_ext};
+    new LinuxDmaBufUnstable::Instance{new_resource, dpy, egl_extensions, *formats};
 }
