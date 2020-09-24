@@ -110,11 +110,11 @@ protected:
     auto current_size() const -> geometry::Size;
 
     /// Window size requested by Mir
-    std::experimental::optional<geometry::Size> requested_window_size();
+    auto requested_window_size() const -> std::experimental::optional<geometry::Size>;
 
-    auto window_state() -> MirWindowState;
-    auto is_active() -> bool;
-    auto latest_timestamp() -> std::chrono::nanoseconds;
+    auto window_state() const -> MirWindowState;
+    auto is_active() const -> bool;
+    auto latest_timestamp() const -> std::chrono::nanoseconds;
 
     void commit(WlSurfaceState const& state) override;
 

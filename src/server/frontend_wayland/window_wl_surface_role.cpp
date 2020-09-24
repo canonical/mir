@@ -344,17 +344,17 @@ auto mf::WindowWlSurfaceRole::current_size() const -> geom::Size
     return size;
 }
 
-std::experimental::optional<geom::Size> mf::WindowWlSurfaceRole::requested_window_size()
+auto mf::WindowWlSurfaceRole::requested_window_size() const -> std::experimental::optional<geom::Size>
 {
     return observer->requested_window_size();
 }
 
-auto mf::WindowWlSurfaceRole::window_state() -> MirWindowState
+auto mf::WindowWlSurfaceRole::window_state() const -> MirWindowState
 {
     return observer->state();
 }
 
-auto mf::WindowWlSurfaceRole::is_active() -> bool
+auto mf::WindowWlSurfaceRole::is_active() const -> bool
 {
     if (auto const scene_surface = weak_scene_surface.lock())
         return scene_surface->focus_state() == mir_window_focus_state_focused;
@@ -362,7 +362,7 @@ auto mf::WindowWlSurfaceRole::is_active() -> bool
         return false;
 }
 
-std::chrono::nanoseconds mf::WindowWlSurfaceRole::latest_timestamp()
+auto mf::WindowWlSurfaceRole::latest_timestamp() const -> std::chrono::nanoseconds
 {
     return observer->latest_timestamp();
 }

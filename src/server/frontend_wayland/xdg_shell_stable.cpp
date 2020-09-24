@@ -24,6 +24,8 @@
 #include "mir/frontend/mir_client_session.h"
 #include "mir/frontend/wayland.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/shell/shell.h"
+#include "mir/scene/surface.h"
 #include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
@@ -291,12 +293,18 @@ mf::XdgPopupStable::XdgPopupStable(
           surface,
           xdg_surface->xdg_shell.shell,
           xdg_surface->xdg_shell.output_manager),
+      shell{xdg_surface->xdg_shell.shell},
       xdg_surface{xdg_surface}
 {
     auto specification = static_cast<mir::shell::SurfaceSpecification*>(
                                 static_cast<XdgPositionerStable*>(
                                     static_cast<mw::XdgPositioner*>(
                                         wl_resource_get_user_data(positioner))));
+
+    if (specification->aux_rect)
+    {
+        aux_rect = specification->aux_rect.value();
+    }
 
     specification->type = mir_window_type_gloss;
     specification->placement_hints = mir_placement_hints_slide_any;
@@ -311,6 +319,33 @@ mf::XdgPopupStable::XdgPopupStable(
     apply_spec(*specification);
 }
 
+void mf::XdgPopupStable::set_aux_rect_offset_now(geom::Displacement const& new_aux_rect_offset)
+{
+    if (aux_rect_offset == new_aux_rect_offset)
+    {
+        return;
+    }
+
+    aux_rect_offset = new_aux_rect_offset;
+
+    shell::SurfaceSpecification spec;
+    spec.aux_rect = aux_rect;
+    spec.aux_rect.value().top_left += aux_rect_offset;
+
+    auto const scene_surface_{scene_surface()};
+    if (scene_surface_)
+    {
+        shell->modify_surface(
+            scene_surface_.value()->session().lock(),
+            scene_surface_.value(),
+            spec);
+    }
+    else
+    {
+        apply_spec(spec);
+    }
+}
+
 void mf::XdgPopupStable::grab(struct wl_resource* seat, uint32_t serial)
 {
     (void)seat, (void)serial;
@@ -322,9 +357,15 @@ void mf::XdgPopupStable::destroy()
     destroy_wayland_object();
 }
 
-void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometry::Point>& new_top_left,
+void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometry::Point>& new_top_left_,
                                        const geometry::Size& new_size)
 {
+    auto new_top_left{new_top_left_};
+    if (new_top_left)
+    {
+        new_top_left.value() -= aux_rect_offset;
+    }
+
     bool const needs_configure = (new_top_left != cached_top_left) || (new_size != cached_size);
 
     if (new_top_left)

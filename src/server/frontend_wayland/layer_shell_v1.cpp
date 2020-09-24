@@ -28,7 +28,8 @@
 #include "mir/log.h"
 #include <boost/throw_exception.hpp>
 #include <deque>
-#include <mutex>
+#include <vector>
+#include <algorithm>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -99,10 +100,53 @@ public:
     static auto from(wl_resource* surface) -> std::experimental::optional<LayerSurfaceV1*>;
 
 private:
+    template<typename T>
+    class DoubleBuffered
+    {
+    public:
+        DoubleBuffered() = default;
+        DoubleBuffered(T const& initial) : _committed{initial} {}
+        DoubleBuffered(DoubleBuffered const&) = delete;
+        auto operator=(DoubleBuffered const&) const -> bool = delete;
+
+        auto pending() const -> T const& { return _pending ? _pending.value() : _committed; }
+        auto is_pending() const -> bool { return _pending; }
+        void set_pending(T const& value) { _pending = value; }
+        auto committed() const -> T const& { return _committed; }
+        void commit()
+        {
+            if (_pending)
+            {
+                _committed = _pending.value();
+            }
+            _pending = std::experimental::nullopt;
+        }
+
+    private:
+        std::experimental::optional<T> _pending;
+        T _committed;
+    };
+
     struct OptionalSize
     {
         std::experimental::optional<geom::Width> width;
         std::experimental::optional<geom::Height> height;
+    };
+
+    struct Margin
+    {
+        geom::DeltaX left{0};
+        geom::DeltaX right{0};
+        geom::DeltaY top{0};
+        geom::DeltaY bottom{0};
+    };
+
+    struct Anchors
+    {
+        bool left{false};
+        bool right{false};
+        bool top{false};
+        bool bottom{false};
     };
 
     /// Returns all anchored edges ored together
@@ -114,6 +158,15 @@ private:
 
     /// Returns the rectangele in surface coords that this surface is exclusive for (if any)
     auto get_exclusive_rect() const -> std::experimental::optional<geom::Rectangle>;
+
+    static auto horiz_padding(Anchors const& anchors, Margin const& margin) -> geom::DeltaX;
+    static auto vert_padding(Anchors const& anchors, Margin const& margin) -> geom::DeltaY;
+
+    /// Returns the size requested from the window manager minus the margin (which the raw requested size includes)
+    auto unpadded_requested_size() const -> geom::Size;
+
+    /// Sets pending state on the WindowWlSurfaceRole
+    auto inform_window_role_of_pending_placement();
 
     /// Sends a configure event if needed
     void configure();
@@ -138,17 +191,14 @@ private:
         geometry::Size const& /*new_size*/) override;
     void handle_close_request() override;
 
-    uint32_t exclusive_zone{0};
-    bool anchored_left{false};
-    bool anchored_right{false};
-    bool anchored_top{false};
-    bool anchored_bottom{false};
-    std::experimental::optional<OptionalSize> pending_opt_size;
-    OptionalSize committed_opt_size;
+    DoubleBuffered<uint32_t> exclusive_zone{0};
+    DoubleBuffered<Anchors> anchors;
+    DoubleBuffered<Margin> margin;
+    DoubleBuffered<OptionalSize> opt_size;
+    DoubleBuffered<geometry::Displacement> offset;
     bool configure_on_next_commit{true}; ///< If to send a .configure event at the end of the next or current commit
-    std::mutex commit_mutex; ///< NOT used for thready saftey. Used to check if we are currently committing
     std::deque<std::pair<uint32_t, OptionalSize>> inflight_configures;
-    bool surface_data_dirty{false};
+    std::vector<wayland::Weak<XdgPopupStable>> popups; ///< We have to keep track of popups to adjust their offset
 };
 
 }
@@ -200,7 +250,7 @@ void mf::LayerShellV1::Instance::get_layer_surface(
     uint32_t layer,
     std::string const& namespace_)
 {
-    (void)namespace_; // TODO
+    (void)namespace_; // Can be ignored if no special behavior is required
 
     auto const output_id = output ?
         shell->output_manager->output_id_for(client, output.value()) :
@@ -260,16 +310,16 @@ auto mf::LayerSurfaceV1::get_placement_gravity() const -> MirPlacementGravity
 {
     MirPlacementGravity edges = mir_placement_gravity_center;
 
-    if (anchored_left)
+    if (anchors.pending().left)
         edges = MirPlacementGravity(edges | mir_placement_gravity_west);
 
-    if (anchored_right)
+    if (anchors.pending().right)
         edges = MirPlacementGravity(edges | mir_placement_gravity_east);
 
-    if (anchored_top)
+    if (anchors.pending().top)
         edges = MirPlacementGravity(edges | mir_placement_gravity_north);
 
-    if (anchored_bottom)
+    if (anchors.pending().bottom)
         edges = MirPlacementGravity(edges | mir_placement_gravity_south);
 
     return edges;
@@ -280,17 +330,17 @@ auto mf::LayerSurfaceV1::get_anchored_edge() const -> MirPlacementGravity
     MirPlacementGravity h_edge = mir_placement_gravity_center;
     MirPlacementGravity v_edge = mir_placement_gravity_center;
 
-    if (anchored_left != anchored_right)
+    if (anchors.pending().left != anchors.pending().right)
     {
-        if (anchored_left)
+        if (anchors.pending().left)
             h_edge = mir_placement_gravity_west;
         else
             h_edge = mir_placement_gravity_east;
     }
 
-    if (anchored_top != anchored_bottom)
+    if (anchors.pending().top != anchors.pending().bottom)
     {
-        if (anchored_top)
+        if (anchors.pending().top)
             v_edge = mir_placement_gravity_north;
         else
             v_edge = mir_placement_gravity_south;
@@ -306,37 +356,92 @@ auto mf::LayerSurfaceV1::get_anchored_edge() const -> MirPlacementGravity
 
 auto mf::LayerSurfaceV1::get_exclusive_rect() const -> std::experimental::optional<geom::Rectangle>
 {
-    if (exclusive_zone <= 0)
+    auto zone = exclusive_zone.pending();
+    if (zone <= 0)
         return std::experimental::nullopt;
 
     auto edge = get_anchored_edge();
-    auto size = pending_size();
+    auto size = pending_size(); // includes margin padding
 
     switch (edge)
     {
     case mir_placement_gravity_west:
         return geom::Rectangle{
             {0, 0},
-            {exclusive_zone, size.height}};
+            {geom::Width{zone} + margin.pending().left, size.height}};
 
     case mir_placement_gravity_east:
         return geom::Rectangle{
-            {geom::as_x(size.width) - geom::DeltaX{exclusive_zone}, 0},
-            {exclusive_zone, size.height}};
+            {geom::as_x(size.width) - geom::DeltaX{zone} - margin.pending().right, 0},
+            {geom::Width{zone} + margin.pending().right, size.height}};
 
     case mir_placement_gravity_north:
         return geom::Rectangle{
             {0, 0},
-            {size.width, exclusive_zone}};
+            {size.width, geom::Height{zone} + margin.pending().top}};
 
     case mir_placement_gravity_south:
         return geom::Rectangle{
-            {0, geom::as_y(size.height) - geom::DeltaY{exclusive_zone}},
-            {size.width, exclusive_zone}};
+            {0, geom::as_y(size.height) - geom::DeltaY{zone} - margin.pending().bottom},
+            {size.width, geom::Height{zone} + margin.pending().bottom}};
 
     default:
         return std::experimental::nullopt;
     }
+}
+
+auto mf::LayerSurfaceV1::horiz_padding(Anchors const& anchors, Margin const& margin) -> geom::DeltaX
+{
+    return (anchors.left ? margin.left : geom::DeltaX{}) +
+        (anchors.right ? margin.right : geom::DeltaX{});
+}
+
+auto mf::LayerSurfaceV1::vert_padding(Anchors const& anchors, Margin const& margin) -> geom::DeltaY
+{
+    return (anchors.top ? margin.top : geom::DeltaY{}) +
+        (anchors.bottom ? margin.bottom : geom::DeltaY{});
+}
+
+auto mf::LayerSurfaceV1::unpadded_requested_size() const -> geom::Size
+{
+    auto size = requested_window_size().value_or(current_size());
+    size.width -= horiz_padding(anchors.committed(), margin.committed());
+    size.height -= vert_padding(anchors.committed(), margin.committed());
+    return size;
+}
+
+auto mf::LayerSurfaceV1::inform_window_role_of_pending_placement()
+{
+    if (opt_size.pending().width)
+    {
+        auto width = opt_size.pending().width.value();
+        width += horiz_padding(anchors.pending(), margin.pending());
+        set_pending_width(width);
+    }
+
+    if (opt_size.pending().height)
+    {
+        auto height = opt_size.pending().height.value();
+        height += vert_padding(anchors.pending(), margin.pending());
+        set_pending_height(height);
+    }
+
+    offset.set_pending({
+        anchors.pending().left ? margin.pending().left : geom::DeltaX{},
+        anchors.pending().top ? margin.pending().top : geom::DeltaY{}});
+
+    set_pending_offset(offset.pending());
+
+    shell::SurfaceSpecification spec;
+
+    spec.attached_edges = get_placement_gravity();
+
+    auto const exclusive_rect = get_exclusive_rect();
+    spec.exclusive_rect = exclusive_rect ?
+        mir::optional_value<geom::Rectangle>(exclusive_rect.value()) :
+        mir::optional_value<geom::Rectangle>();
+
+    apply_spec(spec);
 }
 
 void mf::LayerSurfaceV1::configure()
@@ -344,17 +449,27 @@ void mf::LayerSurfaceV1::configure()
     // TODO: Error if told to configure on an axis the window is not streatched along
 
     OptionalSize configure_size{std::experimental::nullopt, std::experimental::nullopt};
-    auto requested = requested_window_size().value_or(current_size());
+    auto requested = unpadded_requested_size();
 
-    if (anchored_left && anchored_right)
+    if (anchors.committed().left && anchors.committed().right)
+    {
         configure_size.width = requested.width;
-    if (anchored_bottom && anchored_top)
-        configure_size.height = requested.height;
+    }
 
-    if (committed_opt_size.width)
-        configure_size.width = committed_opt_size.width.value();
-    if (committed_opt_size.height)
-        configure_size.height = committed_opt_size.height.value();
+    if (anchors.committed().bottom && anchors.committed().top)
+    {
+        configure_size.height = requested.height;
+    }
+
+    if (opt_size.committed().width)
+    {
+        configure_size.width = opt_size.committed().width.value();
+    }
+
+    if (opt_size.committed().height)
+    {
+        configure_size.height = opt_size.committed().height.value();
+    }
 
     auto const serial = wl_display_next_serial(wl_client_get_display(wayland::LayerSurfaceV1::client));
     if (!inflight_configures.empty() && serial <= inflight_configures.back().first)
@@ -369,35 +484,37 @@ void mf::LayerSurfaceV1::configure()
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 {
-    pending_opt_size = OptionalSize{std::experimental::nullopt, std::experimental::nullopt};
-    if (width > 0)
-        pending_opt_size.value().width = geom::Width{width};
-    if (height > 0)
-        pending_opt_size.value().height = geom::Height{height};
+    opt_size.set_pending(OptionalSize{
+        width  > 0 ? std::experimental::make_optional(geom::Width {width }) : std::experimental::nullopt,
+        height > 0 ? std::experimental::make_optional(geom::Height{height}) : std::experimental::nullopt});
+    inform_window_role_of_pending_placement();
     configure_on_next_commit = true;
 }
 
 void mf::LayerSurfaceV1::set_anchor(uint32_t anchor)
 {
-    anchored_left = anchor & Anchor::left;
-    anchored_right = anchor & Anchor::right;
-    anchored_top = anchor & Anchor::top;
-    anchored_bottom = anchor & Anchor::bottom;
-    surface_data_dirty = true;
+    anchors.set_pending(Anchors{
+        static_cast<bool>(anchor & Anchor::left),
+        static_cast<bool>(anchor & Anchor::right),
+        static_cast<bool>(anchor & Anchor::top),
+        static_cast<bool>(anchor & Anchor::bottom)});
+    inform_window_role_of_pending_placement();
 }
 
 void mf::LayerSurfaceV1::set_exclusive_zone(int32_t zone)
 {
-    exclusive_zone = zone;
-    surface_data_dirty = true;
+    exclusive_zone.set_pending(zone);
+    inform_window_role_of_pending_placement();
 }
 
 void mf::LayerSurfaceV1::set_margin(int32_t top, int32_t right, int32_t bottom, int32_t left)
 {
-    (void)top;
-    (void)right;
-    (void)bottom;
-    (void)left;
+    margin.set_pending(Margin{
+        geom::DeltaX{left},
+        geom::DeltaX{right},
+        geom::DeltaY{top},
+        geom::DeltaY{bottom}});
+    inform_window_role_of_pending_placement();
 }
 
 void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactivity)
@@ -407,15 +524,30 @@ void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactiv
 
 void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
 {
+    auto const scene_surface_ = scene_surface();
+    if (!scene_surface_)
+    {
+        log_warning("Layer surface can not be a popup parent because it does not have a Mir surface");
+        return;
+    }
+
     auto* const popup_window_role = XdgPopupStable::from(popup);
 
-    mir::shell::SurfaceSpecification specification;
-    if (auto scene_surface_ = scene_surface())
-        specification.parent = scene_surface_.value();
-    else
-        log_warning("Layer surface can not be a popup parent because it does not have a Mir surface");
+    popup_window_role->set_aux_rect_offset_now(offset.pending());
 
-    popup_window_role->apply_spec(specification);
+    mir::shell::SurfaceSpecification spec;
+    spec.parent = scene_surface_.value();
+    popup_window_role->apply_spec(spec);
+
+    // Ideally we'd do this in a callback when popups are destroyed, but in practice waiting until a new popup is
+    // created to clear out the destroyed ones is fine
+    popups.erase(
+        std::remove_if(
+            popups.begin(),
+            popups.end(),
+            [](auto popup) { return !popup; }),
+        popups.end());
+    popups.push_back(mw::make_weak(popup_window_role));
 }
 
 void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
@@ -431,8 +563,11 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
             "Could not find acked configure with serial " + std::to_string(serial)));
     }
 
-    pending_opt_size = inflight_configures.front().second;
+    opt_size.set_pending(inflight_configures.front().second);
     inflight_configures.pop_front();
+
+    // Do NOT set configure_on_next_commit (as we do in the other case when opt_size is set)
+    // We don't want to make the client acking one configure result in us sending another
 }
 
 void mf::LayerSurfaceV1::destroy()
@@ -445,35 +580,46 @@ void mf::LayerSurfaceV1::set_layer(uint32_t layer)
     shell::SurfaceSpecification spec;
     spec.depth_layer = layer_shell_layer_to_mir_depth_layer(layer);
     apply_spec(spec);
+    // Don't use inform_window_role_of_pending_placement() because the layer doesn't interfere with any other properties
 }
 
 void mf::LayerSurfaceV1::handle_commit()
 {
-    std::lock_guard<std::mutex> comitting{commit_mutex};
+    exclusive_zone.commit();
+    anchors.commit();
+    margin.commit();
+    opt_size.commit();
 
-    if (pending_opt_size)
+    if (offset.pending() != offset.committed())
     {
-        if (pending_opt_size.value().width)
-            set_pending_width(pending_opt_size.value().width.value());
-        if (pending_opt_size.value().height)
-            set_pending_height(pending_opt_size.value().height.value());
-        committed_opt_size = pending_opt_size.value();
-        pending_opt_size = std::experimental::nullopt;
-        surface_data_dirty = true;
+        // When offset changes, every popup's aux rect needs to be shifted
+        for (auto const& popup : popups)
+        {
+            if (popup)
+            {
+                popup.value().set_aux_rect_offset_now(offset.pending());
+            }
+        }
     }
+    offset.commit();
 
-    if (surface_data_dirty)
+    // wlr-layer-shell-unstable-v1.xml:
+    // "You must set your anchor to opposite edges in the dimensions you omit; not doing so is a protocol error."
+    bool const horiz_stretched = anchors.committed().left && anchors.committed().right;
+    bool const vert_stretched = anchors.committed().top && anchors.committed().bottom;
+    if (!horiz_stretched && !opt_size.committed().width)
     {
-        std::experimental::optional<geom::Rectangle> exclusive_rect_std = get_exclusive_rect();
-        mir::optional_value<geom::Rectangle> exclusive_rect_mir;
-        if (exclusive_rect_std)
-            exclusive_rect_mir = exclusive_rect_std.value();
-
-        shell::SurfaceSpecification spec;
-        spec.attached_edges = get_placement_gravity();
-        spec.exclusive_rect = exclusive_rect_mir;
-        apply_spec(spec);
-        surface_data_dirty = false;
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_size,
+            "Width may be unspecified only when surface is anchored to left and right edges"));
+    }
+    if (!vert_stretched && !opt_size.committed().height)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_size,
+            "Height may be unspecified only when surface is anchored to top and bottom edges"));
     }
 
     if (configure_on_next_commit)

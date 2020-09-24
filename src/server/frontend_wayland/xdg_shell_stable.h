@@ -65,6 +65,10 @@ public:
         wl_resource* positioner,
         WlSurface* surface);
 
+    /// Used when the aux rect needs to be adjusted due to the parent logical Wayland surface not lining up with the
+    /// parent scene surface (as is the case for layer shell surfaces with a margin)
+    void set_aux_rect_offset_now(geometry::Displacement const& new_aux_rect_offset);
+
     void grab(struct wl_resource* seat, uint32_t serial) override;
     void destroy() override;
 
@@ -82,7 +86,10 @@ private:
     std::experimental::optional<geometry::Point> cached_top_left;
     std::experimental::optional<geometry::Size> cached_size;
 
+    std::shared_ptr<shell::Shell> const shell;
     XdgSurfaceStable* const xdg_surface;
+    geometry::Rectangle aux_rect;
+    geometry::Displacement aux_rect_offset;
 };
 
 }
