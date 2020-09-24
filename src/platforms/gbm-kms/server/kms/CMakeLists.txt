@@ -12,6 +12,8 @@ include_directories(
     ${WAYLAND_SERVER_INCLUDE_DIRS}
     ${UDEV_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include/client
+    ${CMAKE_CURRENT_BINARY_DIR}/../
+    ${PROJECT_SOURCE_DIR}/include/wayland
 )
 
 # gbm-kms.h and drm.h have trailing commas at the end of enum definitions
@@ -45,11 +47,7 @@ add_library(
   mutex.h
 )
 
-target_link_libraries(
-  mirplatformgraphicsgbmkmsobjects
-  PUBLIC
-    mirsharedgbmservercommon-static
-)
+add_dependencies(mirplatformgraphicsgbmkmsobjects mirsharedgbmservercommon-static)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
     ${CMAKE_CURRENT_BINARY_DIR}/symbols.map
