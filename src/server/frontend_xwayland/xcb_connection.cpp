@@ -235,7 +235,7 @@ auto mf::XCBConnection::read_property(
             try
             {
                 ErrorPtr error;
-                auto const reply = make_unique_cptr(xcb_get_property_reply(xcb_connection, cookie, nullptr));
+                auto const reply = make_unique_cptr(xcb_get_property_reply(xcb_connection, cookie, error));
                 if (reply && reply->type != XCB_ATOM_NONE)
                 {
                     handler.on_success(reply.get());
