@@ -5,16 +5,69 @@ mir (2.1.0) UNRELEASED; urgency=medium
     - ABI summary:
       . mirclient ABI unchanged at 10
       . miral ABI bumped to 4
-      . mirserver ABI bumped to 54
+      . mirserver ABI unchanged at 54
       . mircommon ABI unchanged at 7
-      . mirplatform ABI bumped to 19
+      . mirplatform ABI bumped to 20
       . mirprotobuf ABI unchanged at 3
-      . mirplatformgraphics ABI bumped to 17
+      . mirplatformgraphics ABI bumped to 18
       . mirinputplatform ABI unchanged at 7
       . mircore ABI unchanged at 1
       . mircookie ABI unchanged at 2
     - Enhancements:
+      . Minimize locking in KeyRepeatDispatcher
+      . Unbreak offscreen renderer for EGL versions 1.5+
+      . gbm-kms: Support zwp_linux_dmabuf_unstable_v1
+        (Closes: #1663)
+      . performance: do not fail performance tests unless there is no result
+      . performance: Add HostedGLMark2Wayland performance tests
+      . New mir-wlcs-integration package
+      . [Wayland] Report rotated output sizes (a workaround until we correctly
+        support transforms for outputs and surfaces)
+      . [Wayland] Implement zwlr_layer_shell_v1 version 3
+      . [Wayland] Implement wlr_foreign_toplevel_management_unstable_v1
+      . Log SIGHUP and other signals
+      . [X11] Create event dispatcher before running server.
+        (Related to #1722 and #1723)
+      . [X11] Manage X11 windows that existed before window manager started.
+        (Related to #1722 and #1723)
     - Bugs fixed:
+      . Add --show-splash command line option. (Fixes: #830)
+      . Track whether there's a usable pointing device and hide/show cursor
+        accordingly. (Fixes #594, fixes #1660)
+      . Allow GDK to try x11 if wayland fails. (Fixes: #1621)
+      . Keep the touchpad FD during suspend/resume. (Fixes: #1612)
+      . [input] Don't lock the repeat dispatcher while repeating events.
+        (Fixes: #1617, #1607)
+      . [wayland] don't send/apply input events after rebuilding state.
+        (Fixes: #1607)
+      . [miral-shell] Use key codes, not scan codes to identify keys.
+        (Fixes: #1627)
+      . [mir_performance_tests] Kill clients started in regression_test_1563287.
+        (Fixes: #1637)
+      . LogindConsoleServices should release control on destruction.
+        (Fixes: #1635 Also fixes at least part of #1631 and #1632)
+      . eglstream-kms: Actually save CRTC on startup
+        (Fixes: #1466)
+      . [MirAL] Don't give the supplied Wayland extension filter the choice of
+        supporting extensions that are not optionally supported.
+        (Fixes: #1558)
+      . [Wayland] Fix focus issues with popups. (Fixes: #1625)
+      . [Wayland] Send wl_touch.up() and wl_keyboard.leave() events when surface
+        destroyed. (Fixes: #1236)
+      . [Wayland-platform] Compositing shouldn't block in eglSwapBuffers().
+        (Fixes: #1100)
+      . [X11] Provide a way for platforms to tweak the Xwayland options and use
+        it for eglstream-kms. (Fixes: #1634)
+      . [X11] Better diagnostics when Xwayland can't be found/executed.
+        (Fixes: #1604)
+      . [X11] Respect initial window state. (Fixes #1669)
+      . [X11] input platform: ignore key repeats. (Fixes #917)
+      . [X11] Process some of the X11 window types and rework the logic to
+        identify parents. (Fixes: #1665)
+      . [X11] Handle windows that specify multiple window types.
+        (Fixes: #1250)
+      . [X11] Give each XWayland app it's own session. (Fixes: #479)
+      . [X11] Don't wait for Xwayland to init before starting WM. (Fixes: #1722)
 
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Fri, 25 Sep 2020 14:26:13 +0100
