@@ -91,21 +91,20 @@ public:
         std::atomic<xcb_atom_t> mutable atom{XCB_ATOM_NONE};
     };
 
-    struct ErrorPtr
+    struct Error
     {
-        ErrorPtr(ErrorPtr const&) = delete;
-        auto operator=(ErrorPtr const&) -> ErrorPtr const& = delete;
-        ~ErrorPtr()
+        Error() = default;
+        Error(Error const&) = delete;
+        auto operator=(Error const&) -> Error const& = delete;
+        ~Error()
         {
-            if (error)
+            if (ptr)
             {
-                free(error);
+                free(ptr);
             }
         }
 
-        operator xcb_generic_error_t**() { return &error; }
-
-        xcb_generic_error_t* error{nullptr};
+        xcb_generic_error_t* ptr{nullptr};
     };
 
     template<typename T>
