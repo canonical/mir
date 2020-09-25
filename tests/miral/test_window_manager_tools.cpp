@@ -316,6 +316,7 @@ auto mt::TestWindowManagerTools::create_fake_display_configuration(std::vector<m
         config_outputs.push_back(mir::graphics::DisplayConfigurationOutput{
             mir::graphics::DisplayConfigurationOutputId{(int)(i + 1)}, // id
             mir::graphics::DisplayConfigurationCardId{1}, // card_id
+            mir::graphics::DisplayConfigurationLogicalGroupId{1}, // logical_group_id
             mir::graphics::DisplayConfigurationOutputType::unknown, // type
             {mir_pixel_format_abgr_8888}, // pixel_formats
             {{rect.size, 60}}, // modes

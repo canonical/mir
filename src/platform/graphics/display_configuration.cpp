@@ -93,7 +93,7 @@ char const* as_string(MirFormFactor form_factor)
 
 std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput const& val)
 {
-    out << "{\n\tid: " << val.id << "\n\tcard_id: " << val.card_id
+    out << "{\n\tid: " << val.id << "\n\tcard_id: " << val.card_id << "\n\tlogical_group_id: " << val.logical_group_id
         << "\n\ttype: " << mir::output_type_name(static_cast<unsigned>(val.type))
         << "\n\tmodes: [ ";
 
@@ -177,6 +177,7 @@ bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
 {
     bool equal{(val1.id == val2.id) &&
                (val1.card_id == val2.card_id) &&
+               (val1.logical_group_id == val2.logical_group_id) &&
                (val1.type == val2.type) &&
                (val1.physical_size_mm == val2.physical_size_mm) &&
                (val1.preferred_mode_index == val2.preferred_mode_index) &&
@@ -311,6 +312,7 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
     DisplayConfigurationOutput& master) :
         id(master.id),
         card_id(master.card_id),
+        logical_group_id{master.logical_group_id},
         type(master.type),
         pixel_formats(master.pixel_formats),
         modes(master.modes),

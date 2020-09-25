@@ -288,6 +288,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
         {
             mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::hdmia,
             {},
             conf_modes0,
@@ -311,6 +312,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
         {
             mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::unknown,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
@@ -334,6 +336,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
         {
             mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::edp,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
@@ -568,6 +571,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::composite,
             {},
             conf_modes0,
@@ -591,6 +595,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::vga,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
@@ -618,6 +623,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::composite,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
@@ -641,6 +647,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::vga,
             {},
             conf_modes0,
@@ -791,6 +798,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
         {
             mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::composite,
             {},
             conf_modes0,
@@ -818,6 +826,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
         {
             mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::composite,
             {},
             conf_modes1,

@@ -48,7 +48,10 @@ public:
 DisplayConfigurationOutput default_output(DisplayConfigurationOutputId id)
 {
     // We name the return value just to work around an apparent clang bug/quirk
-    DisplayConfigurationOutput ret{ id, DisplayConfigurationCardId{1},
+    DisplayConfigurationOutput ret{
+        id,
+        DisplayConfigurationCardId{1},
+        DisplayConfigurationLogicalGroupId{0},
         DisplayConfigurationOutputType::vga,
         {mir_pixel_format_abgr_8888},
         { {Size{523, 555}, 60.0} },
