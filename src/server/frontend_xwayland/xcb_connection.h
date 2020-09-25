@@ -93,6 +93,8 @@ public:
 
     struct ErrorPtr
     {
+        ErrorPtr(ErrorPtr const&) = delete;
+        auto operator=(ErrorPtr const&) -> ErrorPtr const& = delete;
         ~ErrorPtr()
         {
             if (error)
