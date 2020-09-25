@@ -299,11 +299,32 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
     try
     {
         mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
-        dmabuf_extension = std::make_unique<LinuxDmaBufUnstable>(
-            display,
-            dpy,
-            egl_extensions,
-            modifier_ext);
+        dmabuf_extension =
+            std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>>(
+                new LinuxDmaBufUnstable{
+                    display,
+                    dpy,
+                    egl_extensions,
+                    modifier_ext,
+                },
+                [wayland_executor](LinuxDmaBufUnstable* global)
+                {
+                    // The global must be destroyed on the Wayland thread
+                    wayland_executor->spawn(
+                        [global]()
+                        {
+                            /* This is safe against double-frees, as the WaylandExecutor
+                             * guarantees that work scheduled will only run while the Wayland
+                             * event loop is running, and the main loop is stopped before
+                             * wl_display_destroy() frees any globals
+                             *
+                             * This will, however, leak the global if the main loop is destroyed
+                             * before the buffer allocator. Fixing that requires work in the
+                             * wrapper generator.
+                             */
+                            delete global;
+                        });
+                });
         mir::log_info("Enabled linux-dmabuf import support");
     }
     catch (std::runtime_error const&)
