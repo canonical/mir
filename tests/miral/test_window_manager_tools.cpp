@@ -306,17 +306,29 @@ auto mt::TestWindowManagerTools::create_surface(
     return session->create_surface(nullptr, params, observer);
 }
 
-auto mt::TestWindowManagerTools::create_fake_display_configuration(std::vector<miral::Rectangle> outputs)
+auto mt::TestWindowManagerTools::create_fake_display_configuration(std::vector<miral::Rectangle> const& outputs)
+    -> std::shared_ptr<graphics::DisplayConfiguration const>
+{
+    std::vector<std::pair<graphics::DisplayConfigurationLogicalGroupId, miral::Rectangle>> outputs_with_ids;
+    for (auto const& output : outputs)
+    {
+        outputs_with_ids.push_back(std::make_pair(graphics::DisplayConfigurationLogicalGroupId{0}, output));
+    }
+    return create_fake_display_configuration(outputs_with_ids);
+}
+
+auto mt::TestWindowManagerTools::create_fake_display_configuration(
+    std::vector<std::pair<graphics::DisplayConfigurationLogicalGroupId, miral::Rectangle>> const& outputs)
     -> std::shared_ptr<graphics::DisplayConfiguration const>
 {
     std::vector<mir::graphics::DisplayConfigurationOutput> config_outputs;
     for (auto i = 0u; i < outputs.size(); i++)
     {
-        auto const& rect = outputs[i];
+        auto const& rect = outputs[i].second;
         config_outputs.push_back(mir::graphics::DisplayConfigurationOutput{
             mir::graphics::DisplayConfigurationOutputId{(int)(i + 1)}, // id
             mir::graphics::DisplayConfigurationCardId{1}, // card_id
-            mir::graphics::DisplayConfigurationLogicalGroupId{1}, // logical_group_id
+            outputs[i].first, // logical_group_id
             mir::graphics::DisplayConfigurationOutputType::unknown, // type
             {mir_pixel_format_abgr_8888}, // pixel_formats
             {{rect.size, 60}}, // modes
@@ -338,7 +350,7 @@ auto mt::TestWindowManagerTools::create_fake_display_configuration(std::vector<m
             {}, // custom_logical_size
         });
     }
-    return std::make_shared<const FakeDisplayConfiguration>(config_outputs);
+    return std::make_shared<FakeDisplayConfiguration const>(config_outputs);
 }
 
 void mt::TestWindowManagerTools::notify_configuration_applied(
