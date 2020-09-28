@@ -203,7 +203,7 @@ void mgw::DisplayClient::Output::mode(
     auto& dcout = output->dcout;
     auto& modes = dcout.modes;
 
-    auto const mode = DisplayConfigurationMode{{width, height}, refresh/100000.0};
+    auto const mode = DisplayConfigurationMode{{width, height}, refresh/1000.0};
     bool const is_current   = flags & WL_OUTPUT_MODE_CURRENT;
     bool const is_preferred = flags & WL_OUTPUT_MODE_PREFERRED;
 
