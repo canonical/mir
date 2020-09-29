@@ -137,7 +137,7 @@ auto property_handler(
     xcb_atom_t property,
     std::function<void(T const&)> handler) -> std::pair<xcb_atom_t, std::function<std::function<void()>()>>
 {
-    return property_handler<T>(connection, window, property, {handler});
+    return property_handler<T>(connection, window, property, mf::XCBConnection::Handler<T>{std::move(handler)});
 }
 }
 
