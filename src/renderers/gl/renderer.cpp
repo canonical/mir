@@ -290,9 +290,8 @@ private:
         glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
         if (!ok)
         {
-            GLchar log[1024];
-            glGetShaderInfoLog(id, sizeof log - 1, NULL, log);
-            log[sizeof log - 1] = '\0';
+            GLchar log[1024] = "(No log info)";
+            glGetShaderInfoLog(id, sizeof log, NULL, log);
             glDeleteShader(id);
             BOOST_THROW_EXCEPTION(
                 std::runtime_error(
