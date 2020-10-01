@@ -24,6 +24,7 @@
 using namespace miral;
 using namespace testing;
 namespace mt = mir::test;
+namespace mg = mir::graphics;
 
 namespace
 {
@@ -229,4 +230,84 @@ TEST_F(OutputUpdates, maximized_window_moved_when_its_output_disconnected)
 
     ASSERT_THAT(window.top_left(), Eq(display_area_a.top_left));
     ASSERT_THAT(window.size(), Eq(display_area_a.size));
+}
+
+TEST_F(OutputUpdates, maximized_window_moved_with_its_logical_output_group)
+{
+    Rectangle display_area_other{{0, 400}, {600, 400}};
+    auto display_config_a = create_fake_display_configuration({
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area_a),
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area_other)});
+    auto display_config_b = create_fake_display_configuration({
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area_b),
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area_other)});
+    Rectangle logical_area_a{Rectangles{{display_area_a, display_area_other}}.bounding_rectangle()};
+    Rectangle logical_area_b{Rectangles{{display_area_b, display_area_other}}.bounding_rectangle()};
+
+    notify_configuration_applied(display_config_a);
+
+    mir::scene::SurfaceCreationParameters creation_parameters;
+    creation_parameters.type = mir_window_type_normal;
+    creation_parameters.state = mir_window_state_maximized;
+
+    Window window = create_window(creation_parameters);
+
+    ASSERT_THAT(window.top_left(), Eq(logical_area_a.top_left));
+    ASSERT_THAT(window.size(), Eq(logical_area_a.size));
+
+    EXPECT_CALL(*window_manager_policy, advise_move_to(_, _))
+        .WillOnce(Invoke([&](miral::WindowInfo const& window_info, mir::geometry::Point top_left)
+            {
+                EXPECT_THAT(window_info.window(), Eq(window));
+                EXPECT_THAT(top_left, Eq(logical_area_b.top_left));
+            }));
+    EXPECT_CALL(*window_manager_policy, advise_resize(_, _))
+        .WillOnce(Invoke([&](miral::WindowInfo const& window_info, mir::geometry::Size size)
+            {
+                EXPECT_THAT(window_info.window(), Eq(window));
+                EXPECT_THAT(size, Eq(logical_area_b.size));
+            }));
+
+    notify_configuration_applied(display_config_b);
+    Mock::VerifyAndClearExpectations(window_manager_policy);
+
+    ASSERT_THAT(window.top_left(), Eq(logical_area_b.top_left));
+    ASSERT_THAT(window.size(), Eq(logical_area_b.size));
+}
+
+TEST_F(OutputUpdates, maximized_window_moved_when_outputs_become_logical_group)
+{
+    Rectangle display_area_other{{0, 400}, {600, 400}};
+    auto display_config_a = create_fake_display_configuration({display_area_a, display_area_other});
+    auto display_config_b = create_fake_display_configuration({
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area_b),
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area_other)});
+    Rectangle logical_area_b{Rectangles{{display_area_b, display_area_other}}.bounding_rectangle()};
+
+    notify_configuration_applied(display_config_a);
+
+    mir::scene::SurfaceCreationParameters creation_parameters;
+    creation_parameters.type = mir_window_type_normal;
+    creation_parameters.state = mir_window_state_maximized;
+
+    Window window = create_window(creation_parameters);
+
+    EXPECT_CALL(*window_manager_policy, advise_move_to(_, _))
+        .WillOnce(Invoke([&](miral::WindowInfo const& window_info, mir::geometry::Point top_left)
+            {
+                EXPECT_THAT(window_info.window(), Eq(window));
+                EXPECT_THAT(top_left, Eq(logical_area_b.top_left));
+            }));
+    EXPECT_CALL(*window_manager_policy, advise_resize(_, _))
+        .WillOnce(Invoke([&](miral::WindowInfo const& window_info, mir::geometry::Size size)
+            {
+                EXPECT_THAT(window_info.window(), Eq(window));
+                EXPECT_THAT(size, Eq(logical_area_b.size));
+            }));
+
+    notify_configuration_applied(display_config_b);
+    Mock::VerifyAndClearExpectations(window_manager_policy);
+
+    ASSERT_THAT(window.top_left(), Eq(logical_area_b.top_left));
+    ASSERT_THAT(window.size(), Eq(logical_area_b.size));
 }
