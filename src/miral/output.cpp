@@ -123,5 +123,6 @@ auto miral::equivalent_display_area(Output const& lhs, Output const& rhs) -> boo
            lhs.pixel_format() == rhs.pixel_format() &&
         lhs.physical_size_mm() == rhs.physical_size_mm() &&
            lhs.scale() == rhs.scale() &&
+           lhs.logical_group_id() == rhs.logical_group_id() &&
            lhs.type() == rhs.type();
 }
