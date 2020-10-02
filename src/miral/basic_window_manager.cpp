@@ -2517,21 +2517,21 @@ void miral::BasicWindowManager::advise_output_delete(miral::Output const& output
 {
     Locker lock{this};
 
-    std::vector<std::shared_ptr<DisplayArea>> removed_areas;
-    for (auto const& area : display_areas)
-    {
-        if (area->output && area->output.value().is_same_output(output))
-            removed_areas.push_back(area);
-    }
+    // Move all areas that do not have this output to before the split and areas that do after
+    auto split = std::stable_partition(
+        display_areas.begin(),
+        display_areas.end(),
+        [&](std::shared_ptr<DisplayArea> const& area)
+        {
+            return !(area->output && area->output.value().is_same_output(output));
+        });
 
-    display_areas.erase(
-        std::remove_if(
-            display_areas.begin(),
-            display_areas.end(),
-            [&](auto area){
-                return area->output && area->output.value().is_same_output(output);
-            }),
-        display_areas.end());
+    // Move areas after the split into a new vector
+    std::vector<std::shared_ptr<DisplayArea>> removed_areas;
+    std::move(split, display_areas.end(), std::back_inserter(removed_areas));
+
+    // Clean up empty slots left behind
+    display_areas.erase(split, display_areas.end());
 
     outputs.remove(output.extents());
 
