@@ -262,6 +262,8 @@ private:
     /// Generally maps 1:1 with outputs, but this should not be assumed
     /// For example, if multiple outputs are part of a logical output group they will have one big display area
     std::vector<std::shared_ptr<DisplayArea>> display_areas;
+    /// If output configuration has changed and application zones need to be updated
+    bool application_zones_need_update{false};
 
     friend class Workspace;
     using wwbimap_t = boost::bimap<
@@ -321,6 +323,7 @@ private:
     void advise_output_create(Output const& output) override;
     void advise_output_update(Output const& updated, Output const& original) override;
     void advise_output_delete(Output const& output) override;
+    void advise_output_end() override;
     /// Updates the application zones of all display areas and moves attached windows as needed
     void update_application_zones_and_attached_windows();
 };

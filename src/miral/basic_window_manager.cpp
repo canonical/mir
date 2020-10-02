@@ -2565,7 +2565,7 @@ void miral::BasicWindowManager::advise_output_create(miral::Output const& output
     outputs.add(output.extents());
 
     add_output_to_display_areas(lock, output);
-    update_application_zones_and_attached_windows();
+    application_zones_need_update = true;
     policy->advise_output_create(output);
 }
 
@@ -2601,7 +2601,7 @@ void miral::BasicWindowManager::advise_output_update(miral::Output const& update
         add_output_to_display_areas(lock, updated);
     }
 
-    update_application_zones_and_attached_windows();
+    application_zones_need_update = true;
     policy->advise_output_update(updated, original);
 }
 
@@ -2612,8 +2612,19 @@ void miral::BasicWindowManager::advise_output_delete(miral::Output const& output
     outputs.remove(output.extents());
 
     remove_output_from_display_areas(lock, output);
-    update_application_zones_and_attached_windows();
+    application_zones_need_update = true;
     policy->advise_output_delete(output);
+}
+
+void miral::BasicWindowManager::advise_output_end()
+{
+    Locker lock{this};
+
+    if (application_zones_need_update)
+    {
+        update_application_zones_and_attached_windows();
+        application_zones_need_update = false;
+    }
 }
 
 void miral::BasicWindowManager::update_application_zones_and_attached_windows()
