@@ -2497,52 +2497,48 @@ auto miral::BasicWindowManager::apply_exclusive_rect_to_application_zone(
     return zone;
 }
 
-void miral::BasicWindowManager::advise_output_create(miral::Output const& output)
+auto miral::BasicWindowManager::add_output_to_display_areas(
+    Locker const&,
+    Output const& output) -> std::shared_ptr<DisplayArea>
 {
-    Locker lock{this};
+    std::shared_ptr<DisplayArea> existing_area;
 
-    outputs.add(output.extents());
-
-    auto area = std::make_shared<DisplayArea>(output);
-    display_areas.push_back(area);
-
-    update_windows_for_outputs();
-    policy->advise_output_create(output);
-    policy->advise_application_zone_create(area->application_zone);
-}
-
-void miral::BasicWindowManager::advise_output_update(miral::Output const& updated, miral::Output const& original)
-{
-    Locker lock{this};
-
-    outputs.remove(original.extents());
-    outputs.add(updated.extents());
-
-    for (auto& area : display_areas)
+    if (output.logical_group_id())
     {
-        bool update_extents{false};
-        for (auto& output : area->contained_outputs)
-        {
-            if (output.is_same_output(original))
+        auto const area_iter = std::find_if(display_areas.begin(), display_areas.end(), [&](auto const& area)
             {
-                output = updated;
-                update_extents = true;
-            }
-        }
-        if (update_extents)
+                return (
+                    area->logical_output_group_id &&
+                    area->logical_output_group_id.value() == output.logical_group_id());
+            });
+        if (area_iter != display_areas.end())
         {
-            area->area = area->bounding_rectangle_of_contained_outputs();
+            existing_area = *area_iter;
         }
     }
 
-    update_windows_for_outputs();
-    policy->advise_output_update(updated, original);
+    if (existing_area)
+    {
+        existing_area->contained_outputs.push_back(output);
+        existing_area->area = existing_area->bounding_rectangle_of_contained_outputs();
+        return {};
+    }
+    else
+    {
+        auto const new_area = std::make_shared<DisplayArea>(output);
+        if (output.logical_group_id())
+        {
+            new_area->logical_output_group_id = output.logical_group_id();
+        }
+        display_areas.push_back(new_area);
+        return new_area;
+    }
 }
 
-void miral::BasicWindowManager::advise_output_delete(miral::Output const& output)
+auto miral::BasicWindowManager::remove_output_from_display_areas(
+    Locker const&,
+    Output const& output)-> std::vector<std::shared_ptr<DisplayArea>>
 {
-    Locker lock{this};
-
     // Move all areas that do not have this output to before the split and areas that do after
     auto split = std::stable_partition(
         display_areas.begin(),
@@ -2559,8 +2555,26 @@ void miral::BasicWindowManager::advise_output_delete(miral::Output const& output
     // Clean up empty slots left behind
     display_areas.erase(split, display_areas.end());
 
-    outputs.remove(output.extents());
+    // Remove the output from any remaining areas that still contain it
+    for (auto const& area : display_areas)
+    {
+        auto const removed = std::remove_if(
+            area->contained_outputs.begin(),
+            area->contained_outputs.end(),
+            [&](Output const& area_output)
+            {
+                return area_output.is_same_output(output);
+            });
+        bool const output_removed{removed != area->contained_outputs.end()};
+        area->contained_outputs.erase(removed, area->contained_outputs.end());
 
+        if (output_removed)
+        {
+            area->area = area->bounding_rectangle_of_contained_outputs();
+        }
+    }
+
+    // Move windows that were attached to the removed areas
     for (auto const& area : removed_areas)
     {
         for (auto const& window : area->attached_windows)
@@ -2569,6 +2583,83 @@ void miral::BasicWindowManager::advise_output_delete(miral::Output const& output
             update_attached_and_fullscreen_sets(info, info.state());
         }
     }
+
+    return removed_areas;
+}
+
+void miral::BasicWindowManager::advise_output_create(miral::Output const& output)
+{
+    Locker lock{this};
+
+    outputs.add(output.extents());
+
+    auto const created_area = add_output_to_display_areas(lock, output);
+
+    update_windows_for_outputs();
+    policy->advise_output_create(output);
+
+    if (created_area)
+    {
+        policy->advise_application_zone_create(created_area->application_zone);
+    }
+}
+
+void miral::BasicWindowManager::advise_output_update(miral::Output const& updated, miral::Output const& original)
+{
+    Locker lock{this};
+
+    outputs.remove(original.extents());
+    outputs.add(updated.extents());
+
+    std::shared_ptr<DisplayArea> created_area;
+    std::vector<std::shared_ptr<DisplayArea>> removed_areas;
+
+    if (original.logical_group_id() == updated.logical_group_id())
+    {
+        for (auto& area : display_areas)
+        {
+            bool update_extents{false};
+            for (auto& output : area->contained_outputs)
+            {
+                if (output.is_same_output(original))
+                {
+                    output = updated;
+                    update_extents = true;
+                }
+            }
+            if (update_extents)
+            {
+                area->area = area->bounding_rectangle_of_contained_outputs();
+            }
+        }
+    }
+    else
+    {
+        removed_areas = remove_output_from_display_areas(lock, original);
+        created_area = add_output_to_display_areas(lock, updated);
+    }
+
+    update_windows_for_outputs();
+    policy->advise_output_update(updated, original);
+
+    for (auto const& removed : removed_areas)
+    {
+        policy->advise_application_zone_delete(removed->application_zone);
+    }
+
+    if (created_area)
+    {
+        policy->advise_application_zone_create(created_area->application_zone);
+    }
+}
+
+void miral::BasicWindowManager::advise_output_delete(miral::Output const& output)
+{
+    Locker lock{this};
+
+    auto const removed_areas = remove_output_from_display_areas(lock, output);
+
+    outputs.remove(output.extents());
 
     update_windows_for_outputs();
     for (auto& area : removed_areas)

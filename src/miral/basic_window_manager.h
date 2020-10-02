@@ -219,6 +219,8 @@ private:
         /// Often a single output
         /// can be empty or (in the case of logical output groups) contain multiple outputs
         std::vector<Output> contained_outputs;
+        /// Only set if this display area represents a logical group of multiple outputs
+        std::experimental::optional<int> logical_output_group_id;
         std::set<Window> attached_windows; ///< Maximized/anchored/etc windows attached to this area
     };
 
@@ -305,6 +307,10 @@ private:
         mir::geometry::Rectangle const& exclusive_rect_global_coords,
         MirPlacementGravity attached_edges) -> mir::geometry::Rectangle;
 
+    /// Returns the new display area (or null if none was created)
+    auto add_output_to_display_areas(Locker const&, Output const& output) -> std::shared_ptr<DisplayArea>;
+    /// Returns any old display areas that have been removed
+    auto remove_output_from_display_areas(Locker const&, Output const& output) -> std::vector<std::shared_ptr<DisplayArea>>;
     void advise_output_create(Output const& output) override;
     void advise_output_update(Output const& updated, Output const& original) override;
     void advise_output_delete(Output const& output) override;
