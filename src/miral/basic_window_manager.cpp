@@ -36,6 +36,16 @@
 using namespace mir;
 using namespace mir::geometry;
 
+auto miral::BasicWindowManager::DisplayArea::bounding_rectangle_of_contained_outputs() const -> Rectangle
+{
+    Rectangles box;
+    for (auto const& output : contained_outputs)
+    {
+        box.add(output.extents());
+    }
+    return box.bounding_rectangle();
+}
+
 struct miral::BasicWindowManager::Locker
 {
     explicit Locker(miral::BasicWindowManager* self);
@@ -691,18 +701,31 @@ auto miral::BasicWindowManager::active_display_area() const -> std::shared_ptr<D
     return std::make_shared<DisplayArea>(Rectangle{{0, 0}, {100, 100}});
 }
 
+auto miral::BasicWindowManager::display_area_for_output_id(int output_id) const -> std::shared_ptr<DisplayArea>
+{
+    for (auto const& area : display_areas)
+    {
+        for (auto const& output : area->contained_outputs)
+        {
+            if (output.id() == output_id)
+            {
+                return area;
+            }
+        }
+    }
+
+    return {};
+}
+
 auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -> std::shared_ptr<DisplayArea>
 {
     auto const window = info.window();
 
     if (info.has_output_id())
     {
-        for (auto const& area : display_areas)
+        if (auto const area = display_area_for_output_id(info.output_id()))
         {
-            if (area->output && area->output->id() == info.output_id())
-            {
-                return area;
-            }
+            return area;
         }
     }
 
@@ -1737,17 +1760,12 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     std::shared_ptr<DisplayArea> display_area;
     if (parameters.output_id().is_set())
     {
-        for (auto const& area : display_areas)
-        {
-            if (area->output && area->output->id() == parameters.output_id())
-            {
-                display_area = area;
-                break;
-            }
-        }
+        display_area = display_area_for_output_id(parameters.output_id().value());
     }
     if (!display_area)
+    {
         display_area = active_display_area();
+    }
 
     auto const application_zone = display_area->application_zone.extents();;
     auto const height = parameters.size().value().height.as_int();
@@ -2502,10 +2520,18 @@ void miral::BasicWindowManager::advise_output_update(miral::Output const& update
 
     for (auto& area : display_areas)
     {
-        if (area->output && area->output.value().is_same_output(original))
+        bool update_extents{false};
+        for (auto& output : area->contained_outputs)
         {
-            area->output = updated;
-            area->area = updated.extents();
+            if (output.is_same_output(original))
+            {
+                output = updated;
+                update_extents = true;
+            }
+        }
+        if (update_extents)
+        {
+            area->area = area->bounding_rectangle_of_contained_outputs();
         }
     }
 
@@ -2523,7 +2549,7 @@ void miral::BasicWindowManager::advise_output_delete(miral::Output const& output
         display_areas.end(),
         [&](std::shared_ptr<DisplayArea> const& area)
         {
-            return !(area->output && area->output.value().is_same_output(output));
+            return !(area->contained_outputs.size() == 1 && area->contained_outputs[0].is_same_output(output));
         });
 
     // Move areas after the split into a new vector

@@ -201,7 +201,7 @@ private:
         DisplayArea(Output const& output)
             : area{output.extents()},
               application_zone{Zone{output.extents()}},
-              output{output}
+              contained_outputs{{output}}
         {
         }
 
@@ -211,9 +211,14 @@ private:
         {
         }
 
-        Rectangle area; ///< The full area. If there is an output this is the same as the output's extents
+        /// Returns the bounding rectangle of the extents of all contained outputs
+        auto bounding_rectangle_of_contained_outputs() const -> Rectangle;
+
+        Rectangle area; ///< The full area. If there is a single output, this is the same as the output's extents
         Zone application_zone;
-        std::experimental::optional<Output> output;
+        /// Often a single output
+        /// can be empty or (in the case of logical output groups) contain multiple outputs
+        std::vector<Output> contained_outputs;
         std::set<Window> attached_windows; ///< Maximized/anchored/etc windows attached to this area
     };
 
@@ -245,7 +250,9 @@ private:
     miral::MRUWindowList mru_active_windows;
     bool allow_active_window = true;
     std::set<Window> fullscreen_surfaces;
-    std::vector<std::shared_ptr<DisplayArea>> display_areas; ///< For now these will map 1:1 to outputs, but this should not be assumed
+    /// Generally maps 1:1 with outputs, but this should not be assumed
+    /// For example, if multiple outputs are part of a logical output group they will have one big display area
+    std::vector<std::shared_ptr<DisplayArea>> display_areas;
 
     friend class Workspace;
     using wwbimap_t = boost::bimap<
@@ -290,6 +297,7 @@ private:
                  std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window);
     auto workspaces_containing(Window const& window) const -> std::vector<std::shared_ptr<Workspace>>;
     auto active_display_area() const -> std::shared_ptr<DisplayArea>;
+    auto display_area_for_output_id(int output_id) const -> std::shared_ptr<DisplayArea>; ///< returns null if not found
     auto display_area_for(WindowInfo const& info) const -> std::shared_ptr<DisplayArea>;
     /// Returns the application zone area after shrinking it for the exclusive zone if needed
     static auto apply_exclusive_rect_to_application_zone(
