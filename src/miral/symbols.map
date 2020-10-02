@@ -439,3 +439,10 @@ global:
     miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1*;
   };
 } MIRAL_3.0;
+
+MIRAL_3.2 {
+global:
+  extern "C++" {
+    miral::Output::logical_group_id*;
+  };
+} MIRAL_3.1;
