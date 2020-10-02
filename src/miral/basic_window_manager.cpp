@@ -46,6 +46,11 @@ auto miral::BasicWindowManager::DisplayArea::bounding_rectangle_of_contained_out
     return box.bounding_rectangle();
 }
 
+auto miral::BasicWindowManager::DisplayArea::is_alive() const -> bool
+{
+    return !contained_outputs.empty();
+}
+
 struct miral::BasicWindowManager::Locker
 {
     explicit Locker(miral::BasicWindowManager* self);
@@ -162,7 +167,7 @@ auto miral::BasicWindowManager::add_surface(
     update_attached_and_fullscreen_sets(window_info, window_info.state());
 
     if (window_info.state() == mir_window_state_attached)
-        update_windows_for_outputs();
+        update_application_zones_and_attached_windows();
 
     policy->advise_new_window(window_info);
 
@@ -253,7 +258,7 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
     if (info.state() == mir_window_state_attached &&
         info.exclusive_rect().is_set())
     {
-        update_windows_for_outputs();
+        update_application_zones_and_attached_windows();
     }
 
     application->destroy_surface(info.window());
@@ -1172,7 +1177,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
     if (application_zones_need_update)
     {
-        update_windows_for_outputs();
+        update_application_zones_and_attached_windows();
     }
 
     if (modifications.confine_pointer().is_set())
@@ -2497,9 +2502,7 @@ auto miral::BasicWindowManager::apply_exclusive_rect_to_application_zone(
     return zone;
 }
 
-auto miral::BasicWindowManager::add_output_to_display_areas(
-    Locker const&,
-    Output const& output) -> std::shared_ptr<DisplayArea>
+auto miral::BasicWindowManager::add_output_to_display_areas(Locker const&, Output const& output)
 {
     std::shared_ptr<DisplayArea> existing_area;
 
@@ -2521,7 +2524,6 @@ auto miral::BasicWindowManager::add_output_to_display_areas(
     {
         existing_area->contained_outputs.push_back(output);
         existing_area->area = existing_area->bounding_rectangle_of_contained_outputs();
-        return {};
     }
     else
     {
@@ -2531,31 +2533,12 @@ auto miral::BasicWindowManager::add_output_to_display_areas(
             new_area->logical_output_group_id = output.logical_group_id();
         }
         display_areas.push_back(new_area);
-        return new_area;
     }
 }
 
-auto miral::BasicWindowManager::remove_output_from_display_areas(
-    Locker const&,
-    Output const& output)-> std::vector<std::shared_ptr<DisplayArea>>
+auto miral::BasicWindowManager::remove_output_from_display_areas(Locker const&, Output const& output)
 {
-    // Move all areas that do not have this output to before the split and areas that do after
-    auto split = std::stable_partition(
-        display_areas.begin(),
-        display_areas.end(),
-        [&](std::shared_ptr<DisplayArea> const& area)
-        {
-            return !(area->contained_outputs.size() == 1 && area->contained_outputs[0].is_same_output(output));
-        });
-
-    // Move areas after the split into a new vector
-    std::vector<std::shared_ptr<DisplayArea>> removed_areas;
-    std::move(split, display_areas.end(), std::back_inserter(removed_areas));
-
-    // Clean up empty slots left behind
-    display_areas.erase(split, display_areas.end());
-
-    // Remove the output from any remaining areas that still contain it
+    // Remove the output from all areas that contain it
     for (auto const& area : display_areas)
     {
         auto const removed = std::remove_if(
@@ -2573,18 +2556,6 @@ auto miral::BasicWindowManager::remove_output_from_display_areas(
             area->area = area->bounding_rectangle_of_contained_outputs();
         }
     }
-
-    // Move windows that were attached to the removed areas
-    for (auto const& area : removed_areas)
-    {
-        for (auto const& window : area->attached_windows)
-        {
-            auto info{info_for(window)};
-            update_attached_and_fullscreen_sets(info, info.state());
-        }
-    }
-
-    return removed_areas;
 }
 
 void miral::BasicWindowManager::advise_output_create(miral::Output const& output)
@@ -2593,15 +2564,9 @@ void miral::BasicWindowManager::advise_output_create(miral::Output const& output
 
     outputs.add(output.extents());
 
-    auto const created_area = add_output_to_display_areas(lock, output);
-
-    update_windows_for_outputs();
+    add_output_to_display_areas(lock, output);
+    update_application_zones_and_attached_windows();
     policy->advise_output_create(output);
-
-    if (created_area)
-    {
-        policy->advise_application_zone_create(created_area->application_zone);
-    }
 }
 
 void miral::BasicWindowManager::advise_output_update(miral::Output const& updated, miral::Output const& original)
@@ -2610,9 +2575,6 @@ void miral::BasicWindowManager::advise_output_update(miral::Output const& update
 
     outputs.remove(original.extents());
     outputs.add(updated.extents());
-
-    std::shared_ptr<DisplayArea> created_area;
-    std::vector<std::shared_ptr<DisplayArea>> removed_areas;
 
     if (original.logical_group_id() == updated.logical_group_id())
     {
@@ -2635,40 +2597,60 @@ void miral::BasicWindowManager::advise_output_update(miral::Output const& update
     }
     else
     {
-        removed_areas = remove_output_from_display_areas(lock, original);
-        created_area = add_output_to_display_areas(lock, updated);
+        remove_output_from_display_areas(lock, original);
+        add_output_to_display_areas(lock, updated);
     }
 
-    update_windows_for_outputs();
+    update_application_zones_and_attached_windows();
     policy->advise_output_update(updated, original);
-
-    for (auto const& removed : removed_areas)
-    {
-        policy->advise_application_zone_delete(removed->application_zone);
-    }
-
-    if (created_area)
-    {
-        policy->advise_application_zone_create(created_area->application_zone);
-    }
 }
 
 void miral::BasicWindowManager::advise_output_delete(miral::Output const& output)
 {
     Locker lock{this};
 
-    auto const removed_areas = remove_output_from_display_areas(lock, output);
-
     outputs.remove(output.extents());
 
-    update_windows_for_outputs();
-    for (auto& area : removed_areas)
-        policy->advise_application_zone_delete(area->application_zone);
+    remove_output_from_display_areas(lock, output);
+    update_application_zones_and_attached_windows();
     policy->advise_output_delete(output);
 }
 
-void miral::BasicWindowManager::update_windows_for_outputs()
+void miral::BasicWindowManager::update_application_zones_and_attached_windows()
 {
+    // Move all live areas to before the split and areas that should be removed to after
+    auto split = std::stable_partition(
+        display_areas.begin(),
+        display_areas.end(),
+        [&](std::shared_ptr<DisplayArea> const& area)
+        {
+            return area->is_alive();
+        });
+
+    // Move areas after the split into a new vector
+    std::vector<std::shared_ptr<DisplayArea>> removed_areas;
+    std::move(split, display_areas.end(), std::back_inserter(removed_areas));
+
+    // Clean up empty slots left behind
+    display_areas.erase(split, display_areas.end());
+
+    for (auto const& area : removed_areas)
+    {
+        // Move windows that were attached to the removed areas
+        for (auto const& window : area->attached_windows)
+        {
+            auto info{info_for(window)};
+            update_attached_and_fullscreen_sets(info, info.state());
+        }
+
+        // Tell the policy about removed application zones
+        if (area->zone_policy_knows_about)
+        {
+            policy->advise_application_zone_delete(area->zone_policy_knows_about.value());
+        }
+    }
+
+    // Fullscreen surface should fill the whole area (does not depend on what the zones end up being)
     for (auto const& window : fullscreen_surfaces)
     {
         if (window)
@@ -2723,12 +2705,15 @@ void miral::BasicWindowManager::update_windows_for_outputs()
             place_attached_to_zone(*info_ptr, zone_rect, area->area);
         }
 
-        Zone new_zone{area->application_zone};
-        new_zone.extents(zone_rect);
-        if (!(new_zone == area->application_zone))
+        area->application_zone.extents(zone_rect);
+        if (!area->zone_policy_knows_about)
         {
-            policy->advise_application_zone_update(new_zone, area->application_zone);
-            area->application_zone = new_zone;
+            policy->advise_application_zone_create(area->application_zone);
         }
+        if (area->zone_policy_knows_about && !(area->application_zone == area->zone_policy_knows_about.value()))
+        {
+            policy->advise_application_zone_update(area->application_zone, area->zone_policy_knows_about.value());
+        }
+        area->zone_policy_knows_about = area->application_zone;
     }
 }

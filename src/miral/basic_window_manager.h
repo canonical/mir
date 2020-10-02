@@ -200,24 +200,31 @@ private:
     {
         DisplayArea(Output const& output)
             : area{output.extents()},
-              application_zone{Zone{output.extents()}},
+              application_zone{area},
               contained_outputs{{output}}
         {
         }
 
         DisplayArea(Rectangle const& area)
             : area{area},
-              application_zone{Zone{area}}
+              application_zone{area}
         {
         }
 
         /// Returns the bounding rectangle of the extents of all contained outputs
         auto bounding_rectangle_of_contained_outputs() const -> Rectangle;
 
+        /// Returns if this area is currently being used (update_application_zones() will remove it otherwise)
+        auto is_alive() const -> bool;
+
         Rectangle area; ///< The full area. If there is a single output, this is the same as the output's extents
+        /// The subset of the area where normal applications are generally placed (excludes, for example, panels)
         Zone application_zone;
+        /// The last zone given to the policy, or nullopt if the policy hasn't been notified of this area's creation yet
+        std::experimental::optional<Zone> zone_policy_knows_about;
         /// Often a single output
         /// can be empty or (in the case of logical output groups) contain multiple outputs
+        /// if all outputs are removed the next call to update_application_zones() will drop this DisplayArea
         std::vector<Output> contained_outputs;
         /// Only set if this display area represents a logical group of multiple outputs
         std::experimental::optional<int> logical_output_group_id;
@@ -308,13 +315,14 @@ private:
         MirPlacementGravity attached_edges) -> mir::geometry::Rectangle;
 
     /// Returns the new display area (or null if none was created)
-    auto add_output_to_display_areas(Locker const&, Output const& output) -> std::shared_ptr<DisplayArea>;
+    auto add_output_to_display_areas(Locker const&, Output const& output);
     /// Returns any old display areas that have been removed
-    auto remove_output_from_display_areas(Locker const&, Output const& output) -> std::vector<std::shared_ptr<DisplayArea>>;
+    auto remove_output_from_display_areas(Locker const&, Output const& output);
     void advise_output_create(Output const& output) override;
     void advise_output_update(Output const& updated, Output const& original) override;
     void advise_output_delete(Output const& output) override;
-    void update_windows_for_outputs();
+    /// Updates the application zones of all display areas and moves attached windows as needed
+    void update_application_zones_and_attached_windows();
 };
 }
 
