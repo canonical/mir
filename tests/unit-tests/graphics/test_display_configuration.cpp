@@ -32,6 +32,7 @@ mg::DisplayConfigurationOutput const tmpl_output
 {
     mg::DisplayConfigurationOutputId{3},
     mg::DisplayConfigurationCardId{2},
+    mg::DisplayConfigurationLogicalGroupId{4},
     mg::DisplayConfigurationOutputType::dvid,
     {
         mir_pixel_format_abgr_8888
@@ -140,9 +141,11 @@ TEST(DisplayConfiguration, outputs_with_different_ids_compare_unequal)
     mg::DisplayConfigurationOutput const output1 = tmpl_output;
     mg::DisplayConfigurationOutput output2 = tmpl_output;
     mg::DisplayConfigurationOutput output3 = tmpl_output;
+    mg::DisplayConfigurationOutput output4 = tmpl_output;
 
     output2.id = mg::DisplayConfigurationOutputId{15};
     output3.card_id = mg::DisplayConfigurationCardId{12};
+    output4.logical_group_id = mg::DisplayConfigurationLogicalGroupId{9};
 
     EXPECT_THAT(output1, Ne(output2));
     EXPECT_THAT(output2, Ne(output1));
@@ -150,6 +153,8 @@ TEST(DisplayConfiguration, outputs_with_different_ids_compare_unequal)
     EXPECT_THAT(output3, Ne(output2));
     EXPECT_THAT(output1, Ne(output3));
     EXPECT_THAT(output3, Ne(output1));
+    EXPECT_THAT(output1, Ne(output4));
+    EXPECT_THAT(output4, Ne(output1));
 }
 
 TEST(DisplayConfiguration, outputs_with_different_modes_compare_unequal)

@@ -83,6 +83,7 @@ public:
             {
                 mg::DisplayConfigurationOutputId(i),
                 mg::DisplayConfigurationCardId{1},
+                mg::DisplayConfigurationLogicalGroupId{0},
                 mg::DisplayConfigurationOutputType::svideo,
                 {},
                 modes,

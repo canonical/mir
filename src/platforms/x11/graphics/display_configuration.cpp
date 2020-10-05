@@ -39,6 +39,7 @@ std::shared_ptr<mg::DisplayConfigurationOutput> mgx::DisplayConfiguration::build
         new DisplayConfigurationOutput{
             mg::DisplayConfigurationOutputId{last_output_id},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationLogicalGroupId{0},
             mg::DisplayConfigurationOutputType::unknown,
             {pf},
             //TODO: query fps

@@ -67,6 +67,7 @@ public:
             {
                 mg::DisplayConfigurationOutputId(protobuf_output.output_id()),
                 mg::DisplayConfigurationCardId(0), // Not supported
+                mg::DisplayConfigurationLogicalGroupId(0), // Not supported
                 static_cast<mg::DisplayConfigurationOutputType>(protobuf_output.type()),
                 {},
                 {},
@@ -127,6 +128,7 @@ public:
             {
                 mg::DisplayConfigurationOutputId(client_output.output_id),
                 mg::DisplayConfigurationCardId(0), // Not supported
+                mg::DisplayConfigurationLogicalGroupId(0), // Not supported
                 static_cast<mg::DisplayConfigurationOutputType>(client_output.type),
                 {},
                 {},
@@ -197,6 +199,7 @@ public:
                 {
                     mg::DisplayConfigurationOutputId(mir_output_get_id(client_output)),
                     mg::DisplayConfigurationCardId(0), // Not supported
+                    mg::DisplayConfigurationLogicalGroupId(0), // Not supported
                     static_cast<mg::DisplayConfigurationOutputType>(mir_output_get_type(client_output)),
                     {},
                     {},
