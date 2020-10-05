@@ -9,11 +9,6 @@ add_compile_options(
   -Wno-error=unused-parameter
 )
 
-# Using LTO on the lttng DSO causes a gcc ICE.
-# Since LTO is reasonably uninteresting for the lttng tracer, disable it.
-string(REPLACE "-flto" "" NO_LTO_FLAGS ${CMAKE_C_FLAGS})
-set(CMAKE_C_FLAGS ${NO_LTO_FLAGS})
-
 if (LTTNG_UST_VERSION VERSION_GREATER 2.9)
     add_definitions(-DMIR_LTTNG_HAS_VOID_TRACEPOINTS)
 endif()
