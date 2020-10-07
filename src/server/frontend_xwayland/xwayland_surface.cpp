@@ -582,7 +582,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     std::shared_ptr<ms::Session> session;
     reply_functions.push_back(connection->read_property(
         window, connection->_NET_WM_PID,
-        {
+        XCBConnection::Handler<uint32_t>{
             [&](uint32_t pid)
             {
                 local_client_session = client_manager->session_for_client(pid);

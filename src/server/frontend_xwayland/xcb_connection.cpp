@@ -356,7 +356,23 @@ auto mf::XCBConnection::read_property(
 auto mf::XCBConnection::read_property(
     xcb_window_t window,
     xcb_atom_t prop,
+    Handler<int32_t> handler) const -> std::function<void()>
+{
+    return read_property(window, prop, value_handler(this, prop, handler));
+}
+
+auto mf::XCBConnection::read_property(
+    xcb_window_t window,
+    xcb_atom_t prop,
     Handler<std::vector<uint32_t>> handler) const -> std::function<void()>
+{
+    return read_property(window, prop, vector_handler(this, prop, handler));
+}
+
+auto mf::XCBConnection::read_property(
+    xcb_window_t window,
+    xcb_atom_t prop,
+    Handler<std::vector<int32_t>> handler) const -> std::function<void()>
 {
     return read_property(window, prop, vector_handler(this, prop, handler));
 }

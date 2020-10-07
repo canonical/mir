@@ -171,7 +171,17 @@ public:
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
+        Handler<int32_t> handler) const -> std::function<void()>;
+
+    auto read_property(
+        xcb_window_t window,
+        xcb_atom_t prop,
         Handler<std::vector<uint32_t>> handler) const -> std::function<void()>;
+
+    auto read_property(
+        xcb_window_t window,
+        xcb_atom_t prop,
+        Handler<std::vector<int32_t>> handler) const -> std::function<void()>;
     /// @}
 
     /// Set X11 window properties
