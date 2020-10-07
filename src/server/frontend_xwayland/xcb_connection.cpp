@@ -102,6 +102,74 @@ auto connect_to_fd(mir::Fd const& fd) -> xcb_connection_t*
         return connection;
     }
 }
+
+template<typename T>
+auto value_handler(
+    mf::XCBConnection const* connection,
+    xcb_atom_t prop,
+    mf::XCBConnection::Handler<T> handler) -> mf::XCBConnection::Handler<xcb_get_property_reply_t*>
+{
+    return {
+        [connection, prop, on_success=move(handler.on_success)](xcb_get_property_reply_t const* reply)
+        {
+            uint8_t const expected_format = 32;
+            if (reply->format != expected_format)
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error(
+                    "Failed to read " + connection->query_name(prop) + " window property." +
+                    " Reply of type " + connection->query_name(reply->type) +
+                    " has a format " + std::to_string(reply->format) +
+                    " instead of expected " + std::to_string(expected_format)));
+            }
+
+            // The length returned by xcb_get_property_value_length() is in bytes for some reason
+            size_t const byte_len = xcb_get_property_value_length(reply);
+
+            if (byte_len != sizeof(uint32_t))
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error(
+                    "Failed to read " + connection->query_name(prop) + " window property." +
+                    " Reply of type " + connection->query_name(reply->type) +
+                    " has a byte length " + std::to_string(byte_len) +
+                    " instead of expected " + std::to_string(sizeof(uint32_t))));
+            }
+
+            on_success(*static_cast<uint32_t const*>(xcb_get_property_value(reply)));
+        },
+        move(handler.on_error)
+    };
+}
+
+template<typename T>
+auto vector_handler(
+    mf::XCBConnection const* connection,
+    xcb_atom_t prop,
+    mf::XCBConnection::Handler<std::vector<T>> handler) -> mf::XCBConnection::Handler<xcb_get_property_reply_t*>
+{
+    return {
+        [connection, prop, on_success=handler.on_success](xcb_get_property_reply_t const* reply)
+        {
+            uint8_t const expected_format = 32;
+            if (reply->format != expected_format)
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error(
+                    "Failed to read " + connection->query_name(prop) + " window property." +
+                    " Reply of type " + connection->query_name(reply->type) +
+                    " has a format " + std::to_string(reply->format) +
+                    " instead of expected " + std::to_string(expected_format)));
+            }
+
+            auto const start = static_cast<uint32_t const*>(xcb_get_property_value(reply));
+            // The length returned by xcb_get_property_value_length() is in bytes for some reason
+            size_t const len = xcb_get_property_value_length(reply) / sizeof(uint32_t);
+            auto const end = start + len;
+            std::vector<uint32_t> const values{start, end};
+
+            on_success(values);
+        },
+        move(handler.on_error)
+    };
+}
 }
 
 mf::XCBConnection::Atom::Atom(std::string const& name, XCBConnection* connection)
@@ -282,38 +350,7 @@ auto mf::XCBConnection::read_property(
     xcb_atom_t prop,
     Handler<uint32_t> handler) const -> std::function<void()>
 {
-    return read_property(
-        window,
-        prop,
-        {
-            [this, prop, on_success=move(handler.on_success)](xcb_get_property_reply_t const* reply)
-            {
-                uint8_t const expected_format = 32;
-                if (reply->format != expected_format)
-                {
-                    BOOST_THROW_EXCEPTION(std::runtime_error(
-                        "Failed to read " + query_name(prop) + " window property." +
-                        " Reply of type " + query_name(reply->type) +
-                        " has a format " + std::to_string(reply->format) +
-                        " instead of expected " + std::to_string(expected_format)));
-                }
-
-                // The length returned by xcb_get_property_value_length() is in bytes for some reason
-                size_t const len = xcb_get_property_value_length(reply) / sizeof(uint32_t);
-
-                if (len != 1)
-                {
-                    BOOST_THROW_EXCEPTION(std::runtime_error(
-                        "Failed to read " + query_name(prop) + " window property." +
-                        " Reply of type " + query_name(reply->type) +
-                        " has a value length " + std::to_string(len) +
-                        " instead of expected 1"));
-                }
-
-                on_success(*static_cast<uint32_t const*>(xcb_get_property_value(reply)));
-            },
-            move(handler.on_error)
-        });
+    return read_property(window, prop, value_handler(this, prop, handler));
 }
 
 auto mf::XCBConnection::read_property(
@@ -321,31 +358,7 @@ auto mf::XCBConnection::read_property(
     xcb_atom_t prop,
     Handler<std::vector<uint32_t>> handler) const -> std::function<void()>
 {
-    return read_property(
-        window,
-        prop,
-        {
-            [this, on_success=handler.on_success](xcb_get_property_reply_t const* reply)
-            {
-                uint8_t const expected_format = 32;
-                if (reply->format != expected_format)
-                {
-                    BOOST_THROW_EXCEPTION(std::runtime_error(
-                        "Reply of type " + query_name(reply->type) +
-                        " has a format " + std::to_string(reply->format) +
-                        " instead of expected " + std::to_string(expected_format)));
-                }
-
-                auto const start = static_cast<uint32_t const*>(xcb_get_property_value(reply));
-                // The length returned by xcb_get_property_value_length() is in bytes for some reason
-                size_t const len = xcb_get_property_value_length(reply) / sizeof(uint32_t);
-                auto const end = start + len;
-                std::vector<uint32_t> const values{start, end};
-
-                on_success(values);
-            },
-            move(handler.on_error)
-        });
+    return read_property(window, prop, vector_handler(this, prop, handler));
 }
 
 void mf::XCBConnection::configure_window(
