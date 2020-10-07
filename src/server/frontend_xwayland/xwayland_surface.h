@@ -144,6 +144,7 @@ private:
     void window_type(std::vector<xcb_atom_t> const& wm_types);
     void set_parent(xcb_window_t xcb_window, std::lock_guard<std::mutex> const&);
     void fix_parent_if_necessary(const std::lock_guard<std::mutex>& lock);
+    void wm_size_hints(std::vector<int32_t> const& hints);
 
     XWaylandWM* const xwm;
     std::shared_ptr<XCBConnection> const connection;

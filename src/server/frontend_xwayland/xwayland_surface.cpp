@@ -47,6 +47,26 @@ enum class WmState: uint32_t
     ICONIC = 3,
 };
 
+/// See ICCCM 4.1.2.3 (https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.2.3)
+enum class WmSizeHintsFlags: uint32_t
+{
+    POSITION_FROM_USER = 1, // User-specified x, y
+    SIZE_FROM_USER = 2, // User-specified width, height
+    POSITION_FROM_CLEINT = 4, // Program-specified position
+    SIZE_FROM_CLIENT = 8, // Program-specified size
+    MIN_SIZE = 16, // Program-specified minimum size
+    MAX_SIZE = 32, // Program-specified maximum size
+    RESIZE_INC = 64, // Program-specified resize increments
+    ASPECT = 128, // Program-specified min and max aspect ratios
+    BASE_SIZE = 256, // Program-specified base size
+    GRAVITY = 512, // Program-specified window gravity
+};
+
+auto operator &(uint32_t lhs, WmSizeHintsFlags rhs) -> uint32_t
+{
+    return lhs & static_cast<uint32_t>(rhs);
+}
+
 /// See https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#sourceindication
 enum class SourceIndication: uint32_t
 {
@@ -205,6 +225,14 @@ mf::XWaylandSurface::XWaylandSurface(
               [this](auto wm_types)
               {
                   window_type(wm_types);
+              }),
+          property_handler<std::vector<int32_t>>(
+              connection,
+              window,
+              connection->WM_NORMAL_HINTS,
+              [this](auto hints)
+              {
+                  wm_size_hints(hints);
               }),
           property_handler<std::vector<xcb_atom_t>>(
               connection,
@@ -1149,6 +1177,37 @@ void mf::XWaylandSurface::fix_parent_if_necessary(const std::lock_guard<std::mut
                           connection->window_debug_string(focused_window.value()).c_str());
             }
             set_parent(focused_window.value(), lock);
+        }
+    }
+}
+
+void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
+{
+    // See ICCCM 4.1.2.3 (https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.2.3)
+    // except actually I'm pretty sure that mistakenly drops min size so actually see anything that implements it
+    std::lock_guard<std::mutex> lock{mutex};
+    if (hints.size() < 9)
+    {
+        log_error("WM_NORMAL_HINTS only has %lu element(s)", hints.size());
+        return;
+    }
+    auto const flags = static_cast<uint32_t>(hints[0]);
+    if (flags & WmSizeHintsFlags::MIN_SIZE)
+    {
+        pending_spec(lock).min_width = geom::Width{hints[5]};
+        pending_spec(lock).min_height = geom::Height{hints[6]};
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug("%s min size set to %dx%d", connection->window_debug_string(window).c_str(), hints[5], hints[6]);
+        }
+    }
+    if (flags & WmSizeHintsFlags::MAX_SIZE)
+    {
+        pending_spec(lock).max_width = geom::Width{hints[7]};
+        pending_spec(lock).max_height = geom::Height{hints[8]};
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug("%s max size set to %dx%d", connection->window_debug_string(window).c_str(), hints[7], hints[8]);
         }
     }
 }
