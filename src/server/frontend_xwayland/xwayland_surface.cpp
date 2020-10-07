@@ -47,6 +47,26 @@ enum class WmState: uint32_t
     ICONIC = 3,
 };
 
+// See ICCCM 4.1.2.3 (https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.2.3)
+// except actually I'm pretty sure that mistakenly drops min size/aspect so actually see anything that implements it
+// such as https://stackoverflow.com/a/59762666
+namespace WmSizeHintsIndices
+{
+enum WmSizeHintsIndices: unsigned
+{
+    FLAGS = 0,
+    X, Y,
+    WIDTH, HEIGHT,
+    MIN_WIDTH, MIN_HEIGHT,
+    MAX_WIDTH, MAX_HEIGHT,
+    WIDTH_INC, HEIGHT_INC,
+    MIN_ASPECT_NUM, MIN_ASPECT_DEN,
+    MAX_ASPECT_NUM, MAX_ASPECT_DEN,
+    BASE_WIDTH, BASE_HEIGHT,
+    WIN_GRAVITY,
+};
+}
+
 /// See ICCCM 4.1.2.3 (https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.2.3)
 namespace WmSizeHintsFlags
 {
@@ -1189,23 +1209,31 @@ void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
         log_error("WM_NORMAL_HINTS only has %lu element(s)", hints.size());
         return;
     }
-    auto const flags = static_cast<uint32_t>(hints[0]);
+    auto const flags = static_cast<uint32_t>(hints[WmSizeHintsIndices::FLAGS]);
     if (flags & WmSizeHintsFlags::MIN_SIZE)
     {
-        pending_spec(lock).min_width = geom::Width{hints[5]};
-        pending_spec(lock).min_height = geom::Height{hints[6]};
+        pending_spec(lock).min_width = geom::Width{hints[WmSizeHintsIndices::MIN_WIDTH]};
+        pending_spec(lock).min_height = geom::Height{hints[WmSizeHintsIndices::MIN_HEIGHT]};
         if (verbose_xwayland_logging_enabled())
         {
-            log_debug("%s min size set to %dx%d", connection->window_debug_string(window).c_str(), hints[5], hints[6]);
+            log_debug(
+                "%s min size set to %dx%d",
+                connection->window_debug_string(window).c_str(),
+                hints[WmSizeHintsIndices::MIN_WIDTH],
+                hints[WmSizeHintsIndices::MIN_HEIGHT]);
         }
     }
     if (flags & WmSizeHintsFlags::MAX_SIZE)
     {
-        pending_spec(lock).max_width = geom::Width{hints[7]};
-        pending_spec(lock).max_height = geom::Height{hints[8]};
+        pending_spec(lock).max_width = geom::Width{hints[WmSizeHintsIndices::MAX_WIDTH]};
+        pending_spec(lock).max_height = geom::Height{hints[WmSizeHintsIndices::MAX_HEIGHT]};
         if (verbose_xwayland_logging_enabled())
         {
-            log_debug("%s max size set to %dx%d", connection->window_debug_string(window).c_str(), hints[7], hints[8]);
+            log_debug(
+                "%s max size set to %dx%d",
+                connection->window_debug_string(window).c_str(),
+                hints[WmSizeHintsIndices::MAX_WIDTH],
+                hints[WmSizeHintsIndices::MAX_HEIGHT]);
         }
     }
 }
