@@ -48,7 +48,9 @@ enum class WmState: uint32_t
 };
 
 /// See ICCCM 4.1.2.3 (https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.2.3)
-enum class WmSizeHintsFlags: uint32_t
+namespace WmSizeHintsFlags
+{
+enum WmSizeHintsFlags: uint32_t
 {
     POSITION_FROM_USER = 1, // User-specified x, y
     SIZE_FROM_USER = 2, // User-specified width, height
@@ -61,10 +63,6 @@ enum class WmSizeHintsFlags: uint32_t
     BASE_SIZE = 256, // Program-specified base size
     GRAVITY = 512, // Program-specified window gravity
 };
-
-auto operator &(uint32_t lhs, WmSizeHintsFlags rhs) -> uint32_t
-{
-    return lhs & static_cast<uint32_t>(rhs);
 }
 
 /// See https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#sourceindication
