@@ -112,7 +112,7 @@ auto value_handler(
     return {
         [connection, prop, on_success=move(handler.on_success)](xcb_get_property_reply_t const* reply)
         {
-            uint8_t const expected_format = 32;
+            uint8_t const expected_format = sizeof(T) * 8;
             if (reply->format != expected_format)
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error(
@@ -125,16 +125,16 @@ auto value_handler(
             // The length returned by xcb_get_property_value_length() is in bytes for some reason
             size_t const byte_len = xcb_get_property_value_length(reply);
 
-            if (byte_len != sizeof(uint32_t))
+            if (byte_len != sizeof(T))
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error(
                     "Failed to read " + connection->query_name(prop) + " window property." +
                     " Reply of type " + connection->query_name(reply->type) +
                     " has a byte length " + std::to_string(byte_len) +
-                    " instead of expected " + std::to_string(sizeof(uint32_t))));
+                    " instead of expected " + std::to_string(sizeof(T))));
             }
 
-            on_success(*static_cast<uint32_t const*>(xcb_get_property_value(reply)));
+            on_success(*static_cast<T const*>(xcb_get_property_value(reply)));
         },
         move(handler.on_error)
     };
@@ -149,7 +149,7 @@ auto vector_handler(
     return {
         [connection, prop, on_success=handler.on_success](xcb_get_property_reply_t const* reply)
         {
-            uint8_t const expected_format = 32;
+            uint8_t const expected_format = sizeof(T) * 8;
             if (reply->format != expected_format)
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error(
@@ -159,11 +159,11 @@ auto vector_handler(
                     " instead of expected " + std::to_string(expected_format)));
             }
 
-            auto const start = static_cast<uint32_t const*>(xcb_get_property_value(reply));
+            auto const start = static_cast<T const*>(xcb_get_property_value(reply));
             // The length returned by xcb_get_property_value_length() is in bytes for some reason
-            size_t const len = xcb_get_property_value_length(reply) / sizeof(uint32_t);
+            size_t const len = xcb_get_property_value_length(reply) / sizeof(T);
             auto const end = start + len;
-            std::vector<uint32_t> const values{start, end};
+            std::vector<T> const values{start, end};
 
             on_success(values);
         },
