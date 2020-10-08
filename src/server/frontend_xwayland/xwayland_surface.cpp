@@ -1193,7 +1193,7 @@ void mf::XWaylandSurface::motif_wm_hints(std::vector<uint32_t> const& hints)
     std::lock_guard<std::mutex> lock{mutex};
     if (hints.size() != MotifWmHintsIndices::END)
     {
-        log_error("_MOTIF_WM_HINTS value has incorrect size %lu", hints.size());
+        log_error("_MOTIF_WM_HINTS value has incorrect size %zu", hints.size());
         return;
     }
     if (MotifWmHintsFlags::DECORATIONS & hints[MotifWmHintsIndices::FLAGS])
