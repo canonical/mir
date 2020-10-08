@@ -1241,7 +1241,7 @@ void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
     std::lock_guard<std::mutex> lock{mutex};
     if (hints.size() < 9)
     {
-        log_error("WM_NORMAL_HINTS only has %lu element(s)", hints.size());
+        log_error("WM_NORMAL_HINTS only has %zu element(s)", hints.size());
         return;
     }
     auto const flags = static_cast<uint32_t>(hints[WmSizeHintsIndices::FLAGS]);
