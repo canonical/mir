@@ -145,6 +145,7 @@ private:
     void set_parent(xcb_window_t xcb_window, std::lock_guard<std::mutex> const&);
     void fix_parent_if_necessary(const std::lock_guard<std::mutex>& lock);
     void wm_size_hints(std::vector<int32_t> const& hints);
+    void motif_wm_hints(std::vector<uint32_t> const& hints);
 
     XWaylandWM* const xwm;
     std::shared_ptr<XCBConnection> const connection;
@@ -170,6 +171,9 @@ private:
 
         /// The contents of the _NET_SUPPORTED property set by the client
         std::set<xcb_atom_t> supported_wm_protocols;
+
+        /// True if server-side decorations have been explicitly disabled with motif hints
+        bool motif_decorations_disabled{false};
     } cached;
 
     /// Set in set_wl_surface and cleared when a scene surface is created from it

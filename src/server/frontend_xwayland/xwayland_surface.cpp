@@ -110,6 +110,32 @@ enum class NetWmMoveresize: uint32_t
     CANCEL = 11,        /* cancel operation */
 };
 
+// Any standard for the motif hints seems to be lost to time, but Weston has a reasonable definition:
+// https://github.com/wayland-project/weston/blob/f7f8f5f1a87dd697ad6de74a885493bcca920cde/xwayland/window-manager.c#L78
+namespace MotifWmHintsIndices
+{
+enum MotifWmHintsIndices: unsigned
+{
+    FLAGS,
+    FUNCTIONS,
+    DECORATIONS,
+    INPUT_MODE,
+    STATUS,
+    END,
+};
+}
+
+namespace MotifWmHintsFlags
+{
+enum MotifWmHintsFlags: uint32_t
+{
+    FUNCTIONS = (1L << 0),
+    DECORATIONS = (1L << 1),
+    INPUT_MODE = (1L << 2),
+    STATUS = (1L << 3),
+};
+}
+
 auto wm_resize_edge_to_mir_resize_edge(NetWmMoveresize wm_resize_edge) -> std::experimental::optional<MirResizeEdge>
 {
     switch (wm_resize_edge)
@@ -267,6 +293,14 @@ mf::XWaylandSurface::XWaylandSurface(
                       std::lock_guard<std::mutex> lock{mutex};
                       this->cached.supported_wm_protocols.clear();
                   }
+              }),
+          property_handler<std::vector<uint32_t>>(
+              connection,
+              window,
+              connection->_MOTIF_WM_HINTS,
+              [this](auto hints)
+              {
+                  motif_wm_hints(hints);
               })}
 {
     cached.top_left = geometry.top_left;
@@ -613,7 +647,6 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         params.top_left = cached.top_left;
         params.type = mir_window_type_freestyle;
         params.state = state.mir_window_state();
-        params.server_side_decorated = !cached.override_redirect;
     }
 
     std::vector<std::function<void()>> reply_functions;
@@ -662,6 +695,8 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         {
             params.update_from(*spec.value());
         }
+
+        params.server_side_decorated = !cached.override_redirect && !cached.motif_decorations_disabled;
     }
 
     auto const surface = shell->create_surface(session, params, observer);
@@ -1235,5 +1270,20 @@ void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
                 hints[WmSizeHintsIndices::MAX_WIDTH],
                 hints[WmSizeHintsIndices::MAX_HEIGHT]);
         }
+    }
+}
+
+void mf::XWaylandSurface::motif_wm_hints(std::vector<uint32_t> const& hints)
+{
+    std::lock_guard<std::mutex> lock{mutex};
+    if (hints.size() != MotifWmHintsIndices::END)
+    {
+        log_error("_MOTIF_WM_HINTS value has incorrect size %zu", hints.size());
+        return;
+    }
+    if (MotifWmHintsFlags::DECORATIONS & hints[MotifWmHintsIndices::FLAGS])
+    {
+        // Disable decorations only if all flags are off
+        cached.motif_decorations_disabled = (hints[MotifWmHintsIndices::DECORATIONS] == 0);
     }
 }

@@ -18,6 +18,7 @@
 
 #include "xcb_connection.h"
 
+#include "xwayland_log.h"
 #include "mir/log.h"
 #include "mir/c_memory.h"
 
@@ -310,11 +311,21 @@ auto mf::XCBConnection::read_property(
                 }
                 else if (reply)
                 {
-                    handler.on_error("no reply data");
+                    std::string message = "no reply data";
+                    if (verbose_xwayland_logging_enabled())
+                    {
+                        message +=  " for " + window_debug_string(window) + "." + query_name(prop);
+                    }
+                    handler.on_error("no reply data" + message);
                 }
                 else
                 {
-                    handler.on_error(error_debug_string(error.ptr));
+                    std::string message = "error reading property: ";
+                    if (verbose_xwayland_logging_enabled())
+                    {
+                        message = "error reading " + window_debug_string(window) + "." + query_name(prop) + ": ";
+                    }
+                    handler.on_error(message + error_debug_string(error.ptr));
                 }
             }
             catch (...)
