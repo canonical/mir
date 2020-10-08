@@ -64,6 +64,7 @@ enum WmSizeHintsIndices: unsigned
     MAX_ASPECT_NUM, MAX_ASPECT_DEN,
     BASE_WIDTH, BASE_HEIGHT,
     WIN_GRAVITY,
+    END,
 };
 }
 
@@ -1239,7 +1240,7 @@ void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
     // See ICCCM 4.1.2.3 (https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.2.3)
     // except actually I'm pretty sure that mistakenly drops min size so actually see anything that implements it
     std::lock_guard<std::mutex> lock{mutex};
-    if (hints.size() < 9)
+    if (hints.size() != WmSizeHintsIndices::END)
     {
         log_error("WM_NORMAL_HINTS only has %zu element(s)", hints.size());
         return;
