@@ -119,9 +119,9 @@ global:
     miral::StartupInternalClient::StartupInternalClient*;
     miral::StartupInternalClient::operator*;
     miral::WaylandExtensions::?WaylandExtensions*;
-    miral::WaylandExtensions::Context::?Context*;
-    miral::WaylandExtensions::Context::Context*;
-    miral::WaylandExtensions::Context::operator*;
+#    miral::WaylandExtensions::Context::?Context*;
+#    miral::WaylandExtensions::Context::Context*;
+#    miral::WaylandExtensions::Context::operator*;
     miral::WaylandExtensions::WaylandExtensions*;
     miral::WaylandExtensions::add_extension*;
     miral::WaylandExtensions::add_extension_disabled_by_default*;
@@ -339,7 +339,7 @@ global:
     non-virtual?thunk?to?miral::MinimalWindowManager::handle_touch_event*;
     non-virtual?thunk?to?miral::MinimalWindowManager::handle_window_ready*;
     non-virtual?thunk?to?miral::MinimalWindowManager::place_new_window*;
-    non-virtual?thunk?to?miral::WaylandExtensions::Context::?Context*;
+#    non-virtual?thunk?to?miral::WaylandExtensions::Context::?Context*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::?WindowManagementPolicy*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_adding_to_workspace*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_application_zone_create*;
@@ -418,7 +418,7 @@ global:
     vtable?for?miral::StartupInternalClient;
     vtable?for?miral::WaylandExtensions;
     vtable?for?miral::WaylandExtensions::Builder;
-    vtable?for?miral::WaylandExtensions::Context;
+#    vtable?for?miral::WaylandExtensions::Context;
     vtable?for?miral::Window;
     vtable?for?miral::WindowInfo;
     vtable?for?miral::WindowManagementPolicy;
