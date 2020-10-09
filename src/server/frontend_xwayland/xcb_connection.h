@@ -171,7 +171,17 @@ public:
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
+        Handler<int32_t> handler) const -> std::function<void()>;
+
+    auto read_property(
+        xcb_window_t window,
+        xcb_atom_t prop,
         Handler<std::vector<uint32_t>> handler) const -> std::function<void()>;
+
+    auto read_property(
+        xcb_window_t window,
+        xcb_atom_t prop,
+        Handler<std::vector<int32_t>> handler) const -> std::function<void()>;
     /// @}
 
     /// Set X11 window properties
@@ -249,6 +259,7 @@ public:
     DECLARE_ATOM(WM_DELETE_WINDOW);
     DECLARE_ATOM(WM_STATE);
     DECLARE_ATOM(WM_CHANGE_STATE);
+    DECLARE_ATOM(WM_NORMAL_HINTS);
     DECLARE_ATOM(WM_S0);
     DECLARE_ATOM(_NET_WM_CM_S0);
     DECLARE_ATOM(_NET_WM_NAME);
