@@ -682,6 +682,100 @@ TEST_P(WindowPlacementAttached, window_placed_correctly_when_output_id_changes)
     EXPECT_THAT(window.size(), Eq(placement.size));
 }
 
+TEST_P(WindowPlacementAttached, window_is_placed_correctly_for_logical_output_groups)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{70, 90};
+    Rectangle second_display_area{{1400, 70}, {640, 480}};
+    Rectangle composit_display_area{Rectangles{display_area, second_display_area}.bounding_rectangle()};
+
+    notify_configuration_applied(create_fake_display_configuration({
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area),
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, second_display_area)}));
+
+    Window window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        window = create_window(params);
+    }
+    auto const& info = basic_window_manager.info_for(window);
+
+    Rectangle placement{placement_for_attachement(composit_display_area, window_size, edges)};
+    AttachedEdges actual_edges = info.attached_edges();
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_attached));
+    EXPECT_THAT(actual_edges, Eq(edges));
+    EXPECT_THAT(window.top_left(), Eq(placement.top_left));
+    EXPECT_THAT(window.size(), Eq(placement.size));
+}
+
+TEST_P(WindowPlacementAttached, window_is_placed_correctly_when_logical_output_groups_change)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{70, 90};
+    Rectangle second_display_area{{1400, 70}, {640, 480}};
+    Rectangle composit_display_area{Rectangles{display_area, second_display_area}.bounding_rectangle()};
+
+    notify_configuration_applied(create_fake_display_configuration({display_area, second_display_area}));
+
+    Window window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        window = create_window(params);
+    }
+    auto const& info = basic_window_manager.info_for(window);
+
+    notify_configuration_applied(create_fake_display_configuration({
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area),
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, second_display_area)}));
+
+    Rectangle placement{placement_for_attachement(composit_display_area, window_size, edges)};
+    AttachedEdges actual_edges = info.attached_edges();
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_attached));
+    EXPECT_THAT(actual_edges, Eq(edges));
+    EXPECT_THAT(window.top_left(), Eq(placement.top_left));
+    EXPECT_THAT(window.size(), Eq(placement.size));
+}
+
+TEST_P(WindowPlacementAttached, attaching_to_any_output_in_logical_group_attaches_to_logical_group)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{70, 90};
+    Rectangle second_display_area{{1400, 70}, {640, 480}};
+    Rectangle composit_display_area{Rectangles{display_area, second_display_area}.bounding_rectangle()};
+    mg::DisplayConfigurationOutputId output_id{2};
+
+    notify_configuration_applied(create_fake_display_configuration({
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area),
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, second_display_area)}));
+
+    Window window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        params.output_id = output_id;
+        window = create_window(params);
+    }
+    auto const& info = basic_window_manager.info_for(window);
+
+    Rectangle placement{placement_for_attachement(composit_display_area, window_size, edges)};
+    AttachedEdges actual_edges = info.attached_edges();
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_attached));
+    EXPECT_THAT(actual_edges, Eq(edges));
+    EXPECT_THAT(window.top_left(), Eq(placement.top_left));
+    EXPECT_THAT(window.size(), Eq(placement.size));
+}
+
 INSTANTIATE_TEST_SUITE_P(WindowPlacementAttached, WindowPlacementAttached, ::testing::Values(
     mir_placement_gravity_center,
     mir_placement_gravity_west,

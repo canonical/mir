@@ -178,3 +178,100 @@ TEST_F(WindowPlacementFullscreen, window_placed_correctly_when_output_id_changes
     EXPECT_THAT(window.top_left(), Eq(display_area.top_left));
     EXPECT_THAT(window.size(), Eq(display_area.size));
 }
+
+TEST_F(WindowPlacementFullscreen, fullscreen_window_is_placed_correctly_on_a_logical_output_group)
+{
+    Rectangle second_display_area{{1400, 70}, {640, 480}};
+    Rectangle composit_display_area{Rectangles{display_area, second_display_area}.bounding_rectangle()};
+
+    notify_configuration_applied(create_fake_display_configuration({
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area),
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, second_display_area)}));
+
+    Window window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_fullscreen;
+        window = create_window(params);
+    }
+    auto const& info = basic_window_manager.info_for(window);
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_fullscreen));
+    EXPECT_THAT(window.top_left(), Eq(composit_display_area.top_left));
+    EXPECT_THAT(window.size(), Eq(composit_display_area.size));
+}
+
+TEST_F(WindowPlacementFullscreen, fullscreen_window_is_placed_correctly_when_logical_output_groups_change)
+{
+    Rectangle second_display_area{{1400, 70}, {640, 480}};
+    Rectangle composit_display_area{Rectangles{display_area, second_display_area}.bounding_rectangle()};
+
+    notify_configuration_applied(create_fake_display_configuration({display_area, second_display_area}));
+
+    Window window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_fullscreen;
+        window = create_window(params);
+    }
+    auto const& info = basic_window_manager.info_for(window);
+
+    notify_configuration_applied(create_fake_display_configuration({
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area),
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, second_display_area)}));
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_fullscreen));
+    EXPECT_THAT(window.top_left(), Eq(composit_display_area.top_left));
+    EXPECT_THAT(window.size(), Eq(composit_display_area.size));
+}
+
+TEST_F(WindowPlacementFullscreen, fullscreen_window_with_output_id_is_placed_correctly_on_logical_output_group)
+{
+    Rectangle second_display_area{{1400, 70}, {640, 480}};
+    Rectangle composit_display_area{Rectangles{display_area, second_display_area}.bounding_rectangle()};
+    mg::DisplayConfigurationOutputId output_id{2};
+
+    notify_configuration_applied(create_fake_display_configuration({
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area),
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, second_display_area),
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{2}, Rectangle{{0, 1024}, {640, 480}}),
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{2}, Rectangle{{1400, 900}, {640, 480}})}));
+
+    Window window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_fullscreen;
+        params.output_id = output_id;
+        window = create_window(params);
+    }
+    auto const& info = basic_window_manager.info_for(window);
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_fullscreen));
+    EXPECT_THAT(window.top_left(), Eq(composit_display_area.top_left));
+    EXPECT_THAT(window.size(), Eq(composit_display_area.size));
+}
+
+TEST_F(WindowPlacementFullscreen, fullscreen_window_with_output_id_is_placed_correctly_when_logical_output_group_is_split_up)
+{
+    Rectangle second_display_area{{1400, 70}, {640, 480}};
+    mg::DisplayConfigurationOutputId output_id{1};
+
+    notify_configuration_applied(create_fake_display_configuration({
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area),
+        std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, second_display_area)}));
+
+    Window window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_fullscreen;
+        params.output_id = output_id;
+        window = create_window(params);
+    }
+    auto const& info = basic_window_manager.info_for(window);
+
+    notify_configuration_applied(create_fake_display_configuration({display_area, second_display_area}));
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_fullscreen));
+    EXPECT_THAT(window.top_left(), Eq(display_area.top_left));
+    EXPECT_THAT(window.size(), Eq(display_area.size));
+}
