@@ -6,6 +6,8 @@ systems: [debian-*]
 summary: Build Debian packages
 
 execute: |
+    echo 'APT::Immediate-Configure "false";' > /etc/apt/apt.conf.d/99_disable-immediate-configure
+
     apt-get update
     apt-get --yes full-upgrade
 

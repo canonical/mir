@@ -23,6 +23,8 @@ execute: |
         add-apt-repository --yes --update ${repo} || add-apt-repository --yes --remove ${repo}
     done
 
+    echo 'APT::Immediate-Configure "false";' > /etc/apt/apt.conf.d/99_disable-immediate-configure
+
     apt-get update
 
     # to get dpkg-architecture and mk-build-deps
