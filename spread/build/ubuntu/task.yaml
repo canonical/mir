@@ -17,12 +17,6 @@ execute: |
         fi
     fi
 
-    # Get any out-of-archive dependencies
-    # (Currently just libnvidia-egl-wayland-dev)
-    for repo in ppa:mir-team/{release,dev}; do
-        add-apt-repository --yes --update ${repo} || add-apt-repository --yes --remove ${repo}
-    done
-
     apt-get update
 
     # to get dpkg-architecture and mk-build-deps
@@ -67,6 +61,14 @@ execute: |
         apt-get --yes install qemu-user-static binfmt-support
     fi
 
+    # Get any out-of-archive dependencies
+    # (Currently just libnvidia-egl-wayland-dev)
+    # Do this after setting up cross-building, so that we get the right
+    # architecture set.
+    for repo in ppa:mir-team/{release,dev}; do
+        add-apt-repository --yes --update ${repo} || add-apt-repository --yes --remove ${repo}
+    done
+
     cd $SPREAD_PATH
 
     # Mark the "release" in the changelog
@@ -75,7 +77,7 @@ execute: |
     # install dependencies
     mk-build-deps \
       --install \
-      --tool "apt-get --yes -o Debug::pkgProblemResolver=yes"
+      --tool "apt-get --yes -o Debug::pkgProblemResolver=yes -o APT::Immediate-Configure=0"
 
     # build for Raspberry Pi
     if [ "${SPREAD_VARIANT}" == "rpi" ]; then
