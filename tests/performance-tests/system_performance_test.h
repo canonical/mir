@@ -19,6 +19,8 @@
 #ifndef MIR_TEST_SYSTEM_PERFORMANCE_TEST_H_
 #define MIR_TEST_SYSTEM_PERFORMANCE_TEST_H_
 
+#include "mir_test_framework/temporary_environment_value.h"
+
 #include <gtest/gtest.h>
 #include <string>
 #include <chrono>
@@ -38,6 +40,8 @@ protected:
     FILE* server_output;
 private:
     std::string const bin_dir;
+    std::string const mir_sock;
+    mir_test_framework::TemporaryEnvironmentValue wayland_display;
     pid_t server_pid = 0;
     std::vector<pid_t> client_pids;
 };

@@ -158,15 +158,16 @@ bool wait_for_file(char const* path, std::chrono::seconds timeout)
 
 namespace mir { namespace test {
 
-SystemPerformanceTest::SystemPerformanceTest() : bin_dir{mir_bin_dir()}
+SystemPerformanceTest::SystemPerformanceTest() :
+    bin_dir{mir_bin_dir()},
+    mir_sock{"mir_test_socket_" + std::to_string(getpid())},
+    wayland_display{"WAYLAND_DISPLAY", mir_sock.c_str()}
 {
 }
 
 void SystemPerformanceTest::set_up_with(std::string const server_args)
 {
-    auto const mir_sock = "mir_test_socket_"+std::to_string(getpid());
     auto const server_cmd = bin_dir+"/mir_demo_server "+server_args;
-    setenv("WAYLAND_DISPLAY", mir_sock.c_str(), 1);
 
     server_output = popen_with_pid(server_cmd.c_str(), server_pid);
     ASSERT_TRUE(server_output) << server_cmd;
