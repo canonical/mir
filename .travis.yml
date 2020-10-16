@@ -95,17 +95,17 @@ jobs:
 
   - &sanitize
     stage: sanitize
-    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:asan
+    env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:asan
   - <<: *sanitize
-    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:tsan
+    env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:tsan
   - <<: *sanitize
-    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:ubsan
+    env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:ubsan
   - <<: *sanitize
-    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:asan_clang
+    env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:asan_clang
   - <<: *sanitize
-    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:tsan_clang
+    env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:tsan_clang
   - <<: *sanitize
-    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:ubsan_clang
+    env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:ubsan_clang
 
   - stage: process snaps
     env: ~
