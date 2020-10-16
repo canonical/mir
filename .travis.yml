@@ -43,17 +43,17 @@ env:
   - DEBEMAIL="mir-ci-bot@canonical.com"
   - SPREAD_PATH=/tmp/spread
   jobs:
-  - TASK=google:ubuntu-devel-64:spread/build/ubuntu:amd64
-  - TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
-  - TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
-  - TASK=google:debian-sid:spread/build/debian:amd64
-  - TASK=google:ubuntu-18.04-64:spread/build/ubuntu:amd64
-  - TASK=google:ubuntu-20.04-64:spread/build/ubuntu:amd64
-  - TASK=google:ubuntu-20.04-64:spread/build/ubuntu-sbuild:arm64
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:debian_sid
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_bionic
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64
   - TASK=google:ubuntu-20.04-64:spread/build/ubuntu:rpi
   - TASK=google:ubuntu-20.04-64:spread/build/ubuntu:clang
   - TASK=google:fedora-31-64:spread/build/fedora:amd64
   - TASK=google:fedora-32-64:spread/build/fedora:amd64
+  - TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
 
 before_install:
 - mkdir -p ${SPREAD_PATH}

@@ -58,7 +58,7 @@ Build-Depends: cmake,
                libyaml-cpp-dev,
                libwayland-dev,
                libnvidia-egl-wayland-dev,
-               eglexternalplatform-dev:all,
+               eglexternalplatform-dev,
                systemtap-sdt-dev,
                wlcs
 Standards-Version: 3.9.4

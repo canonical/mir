@@ -5,41 +5,33 @@ kill-timeout: 45m
 backends:
     lxd:
         systems:
-            - ubuntu-18.04
             - ubuntu-20.04
-            - ubuntu-devel:
-               image: ubuntu-daily:devel/amd64
-            - ubuntu-devel-proposed:
-               image: ubuntu-daily:devel/amd64
             - fedora-31
             - fedora-32
-            - debian-sid
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
         plan: n1-highcpu-8
         location: computeengine/us-east1-b
         systems:
-            - ubuntu-18.04-64:
-                image: ubuntu-os-cloud/ubuntu-1804-lts
-            - ubuntu-20.04-64:
-                image: ubuntu-os-cloud/ubuntu-2004-lts
-            - ubuntu-devel-64:
-                image: ubuntu-os-cloud-devel/ubuntu-2004-lts
-            - ubuntu-devel-proposed-64:
-                image: ubuntu-os-cloud-devel/ubuntu-2004-lts
+            - ubuntu-20.04-64
             - fedora-31-64
             - fedora-32-64
             - fedora-rawhide-64
-            - debian-sid:
-                image: debian-cloud-testing/debian-sid
 
 environment:
     ARCH: amd64
-    ARCH/amd64: amd64
-    ARCH/arm64: arm64
-    ARCH/armhf: armhf
-    ARCH/i386: i386
+    ARCH/ubuntu_arm64: arm64
+    ARCH/ubuntu_armhf: armhf
     ARCH/rpi: armhf
+    RELEASE: focal
+    RELEASE/ubuntu: focal
+    RELEASE/ubuntu_devel: groovy
+    RELEASE/ubuntu_bionic: bionic
+    RELEASE/debian_sid: sid
+    MIR_PPA: false
+    MIR_PPA/ubuntu_bionic: true
+    PROPOSED: false
+    PROPOSED/ubuntu_proposed: true
     CLANG: 0
     CLANG/clang,asan_clang,tsan_clang,ubsan_clang: 1
     VALGRIND: 0

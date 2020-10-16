@@ -3,19 +3,14 @@ environment:
     NO_PKG_MANGLE: 1
 
 systems: [ubuntu-*]
+variants:
+- -ubuntu*
+- -debian*
 
 summary: Build Ubuntu packages
 
 execute: |
-    if [[ "$SPREAD_SYSTEM" == *-proposed-* ]]; then
-        if [[ "amd64 i386" == *$( dpkg-architecture --query DEB_HOST_ARCH )* ]]; then
-            add-apt-repository --yes --no-update \
-              "deb http://archive.ubuntu.com/ubuntu/ $( lsb_release --short --codename )-proposed restricted main multiverse universe"
-        else
-            add-apt-repository --yes --no-update \
-              "deb http://ports.ubuntu.com/ubuntu-ports/ $( lsb_release --short --codename )-proposed restricted main multiverse universe"
-        fi
-    fi
+    cd $SPREAD_PATH
 
     apt-get update
 
@@ -59,17 +54,10 @@ execute: |
 
         apt-get update
         apt-get --yes install qemu-user-static binfmt-support
+
+        # Quirk for the eglexternalplatform-dev build dependency
+        sed -i 's/\(eglexternalplatform-dev\)/\1:all/' debian/control
     fi
-
-    # Get any out-of-archive dependencies
-    # (Currently just libnvidia-egl-wayland-dev)
-    # Do this after setting up cross-building, so that we get the right
-    # architecture set.
-    for repo in ppa:mir-team/{release,dev}; do
-        add-apt-repository --yes --update ${repo} || add-apt-repository --yes --remove ${repo}
-    done
-
-    cd $SPREAD_PATH
 
     # Mark the "release" in the changelog
     debchange --release "CI release"
