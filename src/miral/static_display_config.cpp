@@ -42,6 +42,7 @@ char const* const position = "position";
 char const* const mode = "mode";
 char const* const orientation = "orientation";
 char const* const scale = "scale";
+char const* const group = "group";
 char const* const orientation_value[] = { "normal", "left", "inverted", "right" };
 
 auto as_string(MirOrientation orientation) -> char const*
@@ -186,6 +187,11 @@ try
                     if (auto const pos = port_config[position])
                     {
                         output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
+                    }
+
+                    if (auto const group_id = port_config[group])
+                    {
+                        output_config.group_id = group_id.as<int>();
                     }
 
                     if (auto const m = port_config[mode])
@@ -348,6 +354,15 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 {
                     conf_output.orientation = conf.orientation.value();
                 }
+
+                if (conf.group_id.is_set())
+                {
+                    conf_output.logical_group_id = mg::DisplayConfigurationLogicalGroupId{conf.group_id.value()};
+                }
+                else
+                {
+                    conf_output.logical_group_id = mg::DisplayConfigurationLogicalGroupId{};
+                }
             }
             else
             {
@@ -385,7 +400,9 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                         << "\t# Defaults to [0, 0]"
                            "\n        # orientation: " << as_string(conf_output.orientation)
                         << "\t# {normal, left, right, inverted}, defaults to normal"
-                           "\n        # scale: " << conf_output.scale;
+                           "\n        # scale: " << conf_output.scale
+                        << "\n        # group: " << conf_output.logical_group_id.as_value()
+                        << "\t# Outputs with the same non-zero value are treated as a single display";
                 }
             }
             else
