@@ -394,3 +394,18 @@ TEST_F(StaticDisplayConfig, ill_formed_status_causes_AbnormalExit)
 
     EXPECT_THROW((sdc.load_config(ill_formed, "")), mir::AbnormalExit);
 }
+
+TEST_F(StaticDisplayConfig, group_can_be_set)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"
+        "        group: 2\n"};
+
+    sdc.load_config(stream, "");
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.logical_group_id, Eq(mg::DisplayConfigurationLogicalGroupId{2}));
+}
