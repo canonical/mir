@@ -40,7 +40,7 @@ Build-Depends: cmake,
                libevdev-dev,
                libinput-dev (>= 0.21),
                uuid-dev,
-               python3:any,
+               python3:native,
                dh-python,
                nettle-dev,
                libcapnp-dev,
@@ -57,8 +57,8 @@ Build-Depends: cmake,
                libxcursor-dev,
                libyaml-cpp-dev,
                libwayland-dev,
-               libnvidia-egl-wayland-dev [amd64 i386],
-               eglexternalplatform-dev [amd64 i386],
+               libnvidia-egl-wayland-dev,
+               eglexternalplatform-dev,
                systemtap-sdt-dev,
                wlcs
 Standards-Version: 3.9.4
@@ -299,7 +299,7 @@ Description: Display server for Ubuntu - platform library for GBM KMS
 
 Package: mir-platform-graphics-eglstream-kms18
 Section: libs
-Architecture: amd64 i386
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -328,7 +328,7 @@ Description: Display server for Ubuntu - platform library for Wayland
 
 Package: mir-graphics-drivers-nvidia
 Section: libs
-Architecture: amd64 i386
+Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
