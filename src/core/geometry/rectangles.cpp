@@ -19,6 +19,7 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/geometry/displacement.h"
 #include <algorithm>
+#include <limits>
 
 namespace geom = mir::geometry;
 
