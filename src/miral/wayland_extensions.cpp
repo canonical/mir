@@ -147,7 +147,11 @@ struct miral::WaylandExtensions::Self
 
         if (!errors.empty())
         {
-            throw mir::AbnormalExit{"Unsupported wayland extensions: " + serialize_colon_list(errors)};
+            throw mir::AbnormalExit{
+                "Unsupported wayland extensions: " +
+                serialize_colon_list(errors) +
+                ". Supported extensions are: " +
+                serialize_colon_list({begin(supported_extensions), end(supported_extensions)})};
         }
     }
 
