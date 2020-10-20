@@ -124,6 +124,7 @@ int main(int argc, char const* argv[])
             Keymap{},
             show_splash,
             startup_only,
+            launcher,
             CommandLineOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
             StartupInternalClient{splash}
         });
