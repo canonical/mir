@@ -58,6 +58,7 @@ private:
         mir::optional_value<double> refresh;
         mir::optional_value<float>  scale;
         mir::optional_value<MirOrientation>  orientation;
+        mir::optional_value<int> group_id;
     };
 
     using Id2Config = std::map<Id, Config>;
