@@ -51,6 +51,8 @@ char const* const mo::composite_delay_opt         = "composite-delay";
 char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
 char const* const mo::x11_display_opt             = "enable-x11";
 char const* const mo::wayland_extensions_opt      = "wayland-extensions";
+char const* const mo::add_extensions_opt          = "add-extensions";
+char const* const mo::drop_extensions_opt         = "drop-extensions";
 char const* const mo::enable_mirclient_opt        = "enable-mirclient";
 
 char const* const mo::off_opt_value = "off";

@@ -38,9 +38,8 @@ class Window;
 
 /// Enable configuration of the Wayland extensions enabled at runtime.
 ///
-/// This adds the command line option '--wayland-extensions' the corresponding
-/// MIR_SERVER_WAYLAND_EXTENSIONS environment variable, and the wayland-extensions
-/// config line.
+/// This adds the command line options '--wayland-extensions', '--add-wayland-extensions', '--drop-wayland-extensions'
+/// and the corresponding MIR_SERVER_* environment variables and config file options.
 ///   * The server can add support for additional extensions
 ///   * The server can specify the configuration defaults
 ///   * Mir's option handling allows the defaults to be overridden
