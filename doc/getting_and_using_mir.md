@@ -78,25 +78,22 @@ started as usual:
     neverputt
     gedit
 
-From outside the Mir-on-X11 session applications can be run using the
-`miral-run` script:
-
-    miral-run kate
-    miral-run neverputt
-
 ### Options when running the Mir example shell
 
 #### Script Options
 
 The `miral-app` script provides options for using an alternative shell
-(`miral-kiosk` as used by the mir-kiosk snap) and an alternative launcher.
+(e.g `miral-kiosk` as used by the mir-kiosk snap) and an alternative terminal.
 
-    -kiosk               use miral-kiosk instead of miral-shell
-    -launcher <launcher> use <launcher> instead of qterminal
+    -kiosk                      use miral-kiosk instead of miral-shell
+    -terminal <terminal>        use <terminal> instead of '/usr/bin/miral-terminal'
+
+The default for `-terminal` is a script that tries to identify the system terminal
+emulator and launch that. But another terminal, or indeed any application, can be used.  
 
 For  example:
 
-    miral-app -kiosk -launcher 'glmark2-es2-wayland --fullscreen'
+    miral-app -kiosk -terminal 'glmark2-es2-wayland --fullscreen'
 
 There are some additional options (listed with "-h") but those are the important
 ones.
