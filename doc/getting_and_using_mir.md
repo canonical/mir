@@ -93,7 +93,7 @@ emulator and launch that. But another terminal, or indeed any application, can b
 
 For  example:
 
-    miral-app -kiosk -terminal 'glmark2-es2-wayland --fullscreen'
+    miral-app -kiosk -terminal supertuxkart
 
 There are some additional options (listed with "-h") but those are the important
 ones.
