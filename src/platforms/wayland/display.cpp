@@ -137,7 +137,7 @@ void mgw::Display::resume()
 
 auto mgw::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
-    cursor = std::make_shared<platform::wayland::Cursor>(display, compositor, shm, [this]{ flush(); });
+    cursor = std::make_shared<platform::wayland::Cursor>(display, compositor, shm, [this]{ flush_wl(); });
     return cursor;
 }
 
@@ -290,14 +290,14 @@ catch (std::exception const& e)
     fatal_error("Critical error in Wayland platform: %s\n", boost::diagnostic_information(e).c_str());
 }
 
-void mir::graphics::wayland::Display::flush() const
+void mir::graphics::wayland::Display::flush_wl() const
 {
     eventfd_write(flush_signal, 1);
 }
 
 void mir::graphics::wayland::Display::stop()
 {
-    flush();
+    flush_wl();
     if (eventfd_write(shutdown_signal, 1) == -1)
     {
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to shutdown"}));
