@@ -66,10 +66,9 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
 }
 }
 
-mpw::Cursor::Cursor(wl_display* display, wl_compositor* compositor, wl_shm* shm, std::function<void()> roundtrip) :
+mpw::Cursor::Cursor(wl_display* display, wl_compositor* compositor, wl_shm* shm, std::function<void()> flush) :
     display{display},
-    shm{shm},
-    roundtrip{std::move(roundtrip)},
+    shm{shm}, flush{std::move(flush)},
     surface{wl_compositor_create_surface(compositor)}
 {
 }
@@ -105,7 +104,7 @@ void mpw::Cursor::show(graphics::CursorImage const& cursor_image)
         wl_shm_pool_destroy(shm_pool);
         if (pointer) wl_pointer_set_cursor(pointer, 0, surface, hotspot_x, hotspot_y);
     }
-    roundtrip();
+    flush();
 }
 
 void mpw::Cursor::hide()

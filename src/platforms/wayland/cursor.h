@@ -37,7 +37,7 @@ namespace wayland
 class Cursor : public graphics::Cursor
 {
 public:
-    Cursor(wl_display* display, wl_compositor* compositor, wl_shm* shm, std::function<void()> roundtrip);
+    Cursor(wl_display* display, wl_compositor* compositor, wl_shm* shm, std::function<void()> flush);
 
     ~Cursor();
 
@@ -53,7 +53,7 @@ public:
 private:
     wl_display* const display;
     wl_shm* const shm;
-    std::function<void()> const roundtrip;
+    std::function<void()> const flush;
     wl_surface* surface;
 
     std::mutex mutable mutex;
