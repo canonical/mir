@@ -51,8 +51,8 @@ extern char const* const composite_delay_opt;
 extern char const* const enable_key_repeat_opt;
 extern char const* const x11_display_opt;
 extern char const* const wayland_extensions_opt;
-extern char const* const add_extensions_opt;
-extern char const* const drop_extensions_opt;
+extern char const* const add_wayland_extensions_opt;
+extern char const* const drop_wayland_extensions_opt;
 extern char const* const enable_mirclient_opt;
 
 extern char const* const offscreen_opt;

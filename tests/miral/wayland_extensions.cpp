@@ -496,7 +496,7 @@ TEST_F(WaylandExtensions, add_extensions_option_adds_extensions)
     miral::WaylandExtensions extensions;
     ClientGlobalEnumerator enumerator_client;
 
-    add_to_environment("MIR_SERVER_ADD_EXTENSIONS", "xdg_wm_base:zwlr_layer_shell_v1");
+    add_to_environment("MIR_SERVER_ADD_WAYLAND_EXTENSIONS", "xdg_wm_base:zwlr_layer_shell_v1");
 
     add_server_init(extensions);
     start_server();
@@ -513,7 +513,7 @@ TEST_F(WaylandExtensions, drop_extensions_option_removes_extensions)
     miral::WaylandExtensions extensions;
     ClientGlobalEnumerator enumerator_client;
 
-    add_to_environment("MIR_SERVER_DROP_EXTENSIONS", "xdg_wm_base:zwlr_layer_shell_v1");
+    add_to_environment("MIR_SERVER_DROP_WAYLAND_EXTENSIONS", "xdg_wm_base:zwlr_layer_shell_v1");
 
     add_server_init(extensions);
     start_server();

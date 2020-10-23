@@ -219,12 +219,12 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
         mir::OptionType::string);
 
     server.add_configuration_option(
-        mo::add_extensions_opt,
+        mo::add_wayland_extensions_opt,
         ("Additional Wayland extensions to enable. [" + Self::serialize_colon_list(non_default_extensions) + "]"),
         mir::OptionType::string);
 
     server.add_configuration_option(
-        mo::drop_extensions_opt,
+        mo::drop_wayland_extensions_opt,
         ("Wayland extensions to disable. [" + Self::serialize_colon_list(default_extensions) + "]"),
         mir::OptionType::string);
 
@@ -272,20 +272,20 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                 selected_extensions = self->default_extensions;
             }
 
-            if (server.get_options()->is_set(mo::add_extensions_opt))
+            if (server.get_options()->is_set(mo::add_wayland_extensions_opt))
             {
                 auto const added = Self::parse_extensions_option(
-                    server.get_options()->get<std::string>(mo::add_extensions_opt));
+                    server.get_options()->get<std::string>(mo::add_wayland_extensions_opt));
                 for (auto const& extension : added)
                 {
                     selected_extensions.insert(extension);
                 }
             }
 
-            if (server.get_options()->is_set(mo::drop_extensions_opt))
+            if (server.get_options()->is_set(mo::drop_wayland_extensions_opt))
             {
                 auto const dropped = Self::parse_extensions_option(
-                    server.get_options()->get<std::string>(mo::drop_extensions_opt));
+                    server.get_options()->get<std::string>(mo::drop_wayland_extensions_opt));
                 for (auto const& extension : dropped)
                 {
                     selected_extensions.erase(extension);

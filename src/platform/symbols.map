@@ -185,7 +185,7 @@ MIRPLATFORM_2.1 {
 MIRPLATFORM_2.2 {
  global:
   extern "C++" {
-    mir::options::add_extensions_opt;
-    mir::options::drop_extensions_opt;
+    mir::options::add_wayland_extensions_opt;
+    mir::options::drop_wayland_extensions_opt;
  };
 } MIRPLATFORM_2.1;
