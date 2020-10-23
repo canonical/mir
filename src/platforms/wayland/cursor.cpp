@@ -68,7 +68,8 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
 
 mpw::Cursor::Cursor(wl_display* display, wl_compositor* compositor, wl_shm* shm, std::function<void()> flush_wl) :
     display{display},
-    shm{shm}, flush_wl{std::move(flush_wl)},
+    shm{shm},
+    flush_wl{std::move(flush_wl)},
     surface{wl_compositor_create_surface(compositor)}
 {
 }

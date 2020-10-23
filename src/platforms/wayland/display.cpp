@@ -88,7 +88,7 @@ mgw::Display::Display(
     DisplayClient{wl_display, gl_config},
     report{report},
     shutdown_signal{::eventfd(0, EFD_CLOEXEC)},
-      flush_signal{::eventfd(0, EFD_SEMAPHORE)},
+    flush_signal{::eventfd(0, EFD_SEMAPHORE)},
     keyboard_sink{std::make_shared<NullKeyboardInput>()},
     pointer_sink{std::make_shared<NullPointerInput>()},
     touch_sink{std::make_shared<NullTouchInput>()}
