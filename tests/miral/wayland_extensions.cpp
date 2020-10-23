@@ -473,3 +473,54 @@ TEST_F(WaylandExtensions, disable_can_disable_bespoke_extension)
 
     EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(mir::examples::server_decoration_extension().name))));
 }
+
+TEST_F(WaylandExtensions, wayland_extensions_option_sets_extensions)
+{
+    miral::WaylandExtensions extensions;
+    ClientGlobalEnumerator enumerator_client;
+
+    add_to_environment("MIR_SERVER_WAYLAND_EXTENSIONS", "xdg_wm_base:zwlr_layer_shell_v1");
+
+    add_server_init(extensions);
+    start_server();
+
+    run_as_client(enumerator_client);
+
+    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("xdg_wm_base")));
+    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("zwlr_layer_shell_v1")));
+    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq("wl_shell"))));
+}
+
+TEST_F(WaylandExtensions, add_extensions_option_adds_extensions)
+{
+    miral::WaylandExtensions extensions;
+    ClientGlobalEnumerator enumerator_client;
+
+    add_to_environment("MIR_SERVER_ADD_WAYLAND_EXTENSIONS", "xdg_wm_base:zwlr_layer_shell_v1");
+
+    add_server_init(extensions);
+    start_server();
+
+    run_as_client(enumerator_client);
+
+    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("wl_shell")));
+    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("xdg_wm_base")));
+    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("zwlr_layer_shell_v1")));
+}
+
+TEST_F(WaylandExtensions, drop_extensions_option_removes_extensions)
+{
+    miral::WaylandExtensions extensions;
+    ClientGlobalEnumerator enumerator_client;
+
+    add_to_environment("MIR_SERVER_DROP_WAYLAND_EXTENSIONS", "xdg_wm_base:zwlr_layer_shell_v1");
+
+    add_server_init(extensions);
+    start_server();
+
+    run_as_client(enumerator_client);
+
+    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("wl_shell")));
+    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq("xdg_wm_base"))));
+    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq("zwlr_layer_shell_v1"))));
+}
