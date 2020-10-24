@@ -137,7 +137,7 @@ void mgw::Display::resume()
 
 auto mgw::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
-    cursor = std::make_shared<platform::wayland::Cursor>(display, compositor, shm, [this]{ flush_wl(); });
+    cursor = std::make_shared<platform::wayland::Cursor>(compositor, shm, [this]{ flush_wl(); });
     return cursor;
 }
 
