@@ -88,14 +88,19 @@ mgw::Display::Display(
     DisplayClient{wl_display, gl_config},
     report{report},
     shutdown_signal{::eventfd(0, EFD_CLOEXEC)},
+    flush_signal{::eventfd(0, EFD_SEMAPHORE)},
     keyboard_sink{std::make_shared<NullKeyboardInput>()},
     pointer_sink{std::make_shared<NullPointerInput>()},
     touch_sink{std::make_shared<NullTouchInput>()}
 {
     runner = std::thread{[this] { run(); }};
 
-    std::lock_guard<decltype(the_display_mtx)> lock{the_display_mtx};
-    the_display = this;
+    {
+        std::lock_guard<decltype(the_display_mtx)> lock{the_display_mtx};
+        the_display = this;
+    }
+
+    wl_display_roundtrip(display);
 }
 
 auto mgw::Display::configuration() const -> std::unique_ptr<DisplayConfiguration>
@@ -132,7 +137,7 @@ void mgw::Display::resume()
 
 auto mgw::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
-    cursor = std::make_shared<platform::wayland::Cursor>(display, compositor, shm);
+    cursor = std::make_shared<platform::wayland::Cursor>(compositor, shm, [this]{ flush_wl(); });
     return cursor;
 }
 
@@ -232,6 +237,7 @@ try
 {
     enum FdIndices {
         display_fd = 0,
+        flush,
         shutdown,
         indices
     };
@@ -239,6 +245,7 @@ try
     pollfd fds[indices] =
         {
             fds[display_fd] = {wl_display_get_fd(display), POLLIN, 0},
+            {flush_signal, POLLIN, 0},
             {shutdown_signal, POLLIN, 0},
         };
 
@@ -269,6 +276,13 @@ try
         {
             wl_display_cancel_read(display);
         }
+
+        if (fds[flush].revents & (POLLIN | POLLERR))
+        {
+            eventfd_t foo;
+            eventfd_read(flush_signal, &foo);
+            wl_display_flush(display);
+        }
     }
 }
 catch (std::exception const& e)
@@ -276,8 +290,14 @@ catch (std::exception const& e)
     fatal_error("Critical error in Wayland platform: %s\n", boost::diagnostic_information(e).c_str());
 }
 
+void mir::graphics::wayland::Display::flush_wl() const
+{
+    eventfd_write(flush_signal, 1);
+}
+
 void mir::graphics::wayland::Display::stop()
 {
+    flush_wl();
     if (eventfd_write(shutdown_signal, 1) == -1)
     {
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to shutdown"}));
