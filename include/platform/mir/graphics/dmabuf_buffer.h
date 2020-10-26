@@ -32,7 +32,7 @@ namespace graphics
 /**
  * A logical buffer backed by one-or-more dmabuf buffers
  */
-class DMABufBuffer
+class DMABufBuffer : public NativeBufferBase
 {
 public:
     struct PlaneDescriptor

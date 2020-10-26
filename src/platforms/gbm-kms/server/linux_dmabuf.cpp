@@ -518,7 +518,6 @@ bool drm_format_has_alpha(uint32_t format)
 
 class WaylandDmabufTexBuffer :
     public mg::BufferBasic,
-    public mg::NativeBufferBase,
     public mg::gl::Texture,
     public mg::DMABufBuffer
 {
