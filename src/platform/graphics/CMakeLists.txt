@@ -25,6 +25,7 @@ set(
   cpu_buffers.cpp
   egl_logger.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/egl_logger.h
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/dmabuf_buffer.h
 )
 
 add_library(mirplatformgraphicscommon OBJECT
