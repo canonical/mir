@@ -21,6 +21,7 @@
 #include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/platforms/gbm-kms/server/kms/display_buffer.h"
 #include "src/platforms/gbm-kms/include/native_buffer.h"
+#include "mir/graphics/dmabuf_buffer.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
@@ -48,6 +49,18 @@ using namespace mir::graphics;
 using namespace mir::graphics::gbm;
 using mir::report::null_display_report;
 
+namespace
+{
+class MockDMABufBuffer : public DMABufBuffer
+{
+public:
+    MOCK_METHOD(uint32_t, drm_fourcc, (), (const override));
+    MOCK_METHOD(uint64_t, modifier, (), (const override));
+    MOCK_METHOD(std::vector<PlaneDescriptor> const&, planes, (), (const override));
+    MOCK_METHOD(geometry::Size, size, (), (const override));
+};
+}
+
 class MesaDisplayBufferTest : public Test
 {
 public:
@@ -61,10 +74,6 @@ public:
              std::make_shared<FakeRenderable>(display_area)}
         , fake_software_renderable{
              std::make_shared<FakeRenderable>(display_area)}
-        , stub_gbm_native_buffer{
-             std::make_shared<StubGBMNativeBuffer>(display_area.size)}
-        , stub_shm_native_buffer{
-             std::make_shared<mir::graphics::gbm::NativeBuffer>()}
         , bypassable_list{fake_bypassable_renderable}
     {
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
@@ -98,21 +107,25 @@ public:
                 std::shared_ptr<FBHandle const>{
                     reinterpret_cast<FBHandle const*>(0x12ad),
                     [](auto) {}}));
+        ON_CALL(*mock_kms_output, fb_for(A<DMABufBuffer const&>()))
+            .WillByDefault(Return(
+                std::shared_ptr<FBHandle const>{
+                    reinterpret_cast<FBHandle const*>(0xe0e0),
+                    [](auto) {}}));
         ON_CALL(*mock_kms_output, buffer_requires_migration(_))
             .WillByDefault(Return(false));
 
         ON_CALL(*mock_bypassable_buffer, size())
             .WillByDefault(Return(display_area.size));
-        ON_CALL(*mock_bypassable_buffer, native_buffer_handle())
-            .WillByDefault(Return(stub_gbm_native_buffer));
+        ON_CALL(*mock_bypassable_buffer, native_buffer_base())
+            .WillByDefault(Return(&mock_dmabuf_buffer));
         fake_bypassable_renderable->set_buffer(mock_bypassable_buffer);
 
-        stub_shm_native_buffer->flags = 0;  // Is not a hardware/GBM buffer
+        ON_CALL(mock_drm, drmModeAddFB2WithModifiers)
+            .WillByDefault(Return(0));
 
         ON_CALL(*mock_software_buffer, size())
             .WillByDefault(Return(display_area.size));
-        ON_CALL(*mock_software_buffer, native_buffer_handle())
-            .WillByDefault(Return(stub_shm_native_buffer));
         fake_software_renderable->set_buffer(mock_software_buffer);
     }
 
@@ -138,11 +151,10 @@ protected:
     NiceMock<MockGL>  mock_gl;
     NiceMock<MockDRM> mock_drm; 
     std::shared_ptr<MockBuffer> mock_bypassable_buffer;
+    NiceMock<MockDMABufBuffer> mock_dmabuf_buffer;
     std::shared_ptr<MockBuffer> mock_software_buffer;
     std::shared_ptr<FakeRenderable> fake_bypassable_renderable;
     std::shared_ptr<FakeRenderable> fake_software_renderable;
-    std::shared_ptr<mir::graphics::gbm::NativeBuffer> stub_gbm_native_buffer;
-    std::shared_ptr<mir::graphics::gbm::NativeBuffer> stub_shm_native_buffer;
     gbm_bo*           fake_bo;
     gbm_bo_handle     fake_handle;
     UdevEnvironment   fake_devices;
@@ -280,7 +292,8 @@ auto fake_shared_ptr(intptr_t value) -> std::shared_ptr<T>
 TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
 {  // Regression test for LP: #1398296
     EXPECT_CALL(*mock_kms_output, fb_for(A<gbm_bo*>()))
-        .WillOnce(Return(fake_shared_ptr<FBHandle>(0xaabb)))  // During the DisplayBuffer constructor
+        .WillOnce(Return(fake_shared_ptr<FBHandle>(0xaabb)));  // During the DisplayBuffer constructor
+    EXPECT_CALL(*mock_kms_output, fb_for(A<DMABufBuffer const&>()))
         .WillOnce(Return(nullptr)) // Fail first bypass attempt
         .WillOnce(Return(fake_shared_ptr<FBHandle>(0xbbcc))); // Succeed second bypass attempt
 
@@ -301,8 +314,8 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
 {  // Another regression test for LP: #1398296
     auto fullscreen = std::make_shared<FakeRenderable>(display_area);
     auto nonbypassable = std::make_shared<testing::NiceMock<MockBuffer>>();
-    ON_CALL(*nonbypassable, native_buffer_handle())
-        .WillByDefault(Return(stub_gbm_native_buffer));
+    ON_CALL(*nonbypassable, native_buffer_base())
+        .WillByDefault(Return(&mock_dmabuf_buffer));
     ON_CALL(*nonbypassable, size())
         .WillByDefault(Return(mir::geometry::Size{12,34}));
 
@@ -498,20 +511,4 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
         identity);
 
     EXPECT_FALSE(db.overlay(list));
-}
-
-TEST_F(MesaDisplayBufferTest, buffer_requiring_migration_is_ineligable_for_bypass)
-{
-    ON_CALL(*mock_kms_output, buffer_requires_migration(Eq(stub_gbm_native_buffer->bo)))
-        .WillByDefault(Return(true));
-
-    graphics::gbm::DisplayBuffer db(
-        graphics::gbm::BypassOption::allowed,
-        null_display_report(),
-        {mock_kms_output},
-        make_output_surface(),
-        display_area,
-        identity);
-
-    EXPECT_FALSE(db.overlay(bypassable_list));
 }
