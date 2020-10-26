@@ -651,6 +651,22 @@ int drmModeAddFB2(int fd, uint32_t width, uint32_t height,
                                       buf_id, flags);
 }
 
+int drmModeAddFB2WithModifiers(
+    int fd,
+    uint32_t width,
+    uint32_t height,
+    uint32_t fourcc,
+    uint32_t const handles[4],
+    uint32_t const pitches[4],
+    uint32_t const offsets[4],
+    uint64_t const modifiers[4],
+    uint32_t *buf_id,
+    uint32_t flags)
+{
+    return global_mock->drmModeAddFB2WithModifiers(
+        fd, width, height, fourcc, handles, pitches, offsets, modifiers, buf_id, flags);
+}
+
 int drmModeRmFB(int fd, uint32_t bufferId)
 {
     return global_mock->drmModeRmFB(fd, bufferId);
