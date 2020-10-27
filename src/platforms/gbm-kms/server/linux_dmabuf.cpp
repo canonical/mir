@@ -27,6 +27,7 @@
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_basic.h"
+#include "mir/graphics/dmabuf_buffer.h"
 #include "mir/executor.h"
 
 #define MIR_LOG_COMPONENT "linux-dmabuf-import"
@@ -36,7 +37,6 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-#include <boost/range/combine.hpp>
 #include <mutex>
 #include <vector>
 #include <drm_fourcc.h>
@@ -49,22 +49,17 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct PlaneInfo
-{
-    mir::Fd fd;
-    uint32_t offset;
-    uint32_t stride;
-};
+using PlaneInfo = mg::DMABufBuffer::PlaneDescriptor;
 
 /**
  * Holds on to all imported dmabuf buffers, and allows looking up by wl_buffer
  *
  * \note This is not threadsafe, and should only be accessed on the Wayland thread
  */
-class DmaBufBuffer : public mir::wayland::Buffer
+class WlDmaBufBuffer : public mir::wayland::Buffer
 {
 public:
-    DmaBufBuffer(
+    WlDmaBufBuffer(
         EGLDisplay dpy,
         std::shared_ptr<mg::EGLExtensions> egl_extensions,
         wl_resource* wl_buffer,
@@ -81,14 +76,14 @@ public:
               height{height},
               format_{format},
               flags{flags},
-              modifier{modifier},
-              planes{std::move(plane_params)},
+              modifier_{modifier},
+              planes_{std::move(plane_params)},
               image{EGL_NO_IMAGE_KHR}
     {
         reimport_egl_image();
     }
 
-    ~DmaBufBuffer()
+    ~WlDmaBufBuffer()
     {
         if (image != EGL_NO_IMAGE_KHR)
         {
@@ -96,9 +91,9 @@ public:
         }
     }
 
-    static auto maybe_dmabuf_from_wl_buffer(wl_resource* buffer) -> DmaBufBuffer*
+    static auto maybe_dmabuf_from_wl_buffer(wl_resource* buffer) -> WlDmaBufBuffer*
     {
-        return dynamic_cast<DmaBufBuffer*>(Buffer::from(buffer));
+        return dynamic_cast<WlDmaBufBuffer*>(Buffer::from(buffer));
     }
 
     auto size() -> geom::Size
@@ -142,23 +137,23 @@ public:
         attributes.push_back(EGL_LINUX_DRM_FOURCC_EXT);
         attributes.push_back(format());
 
-        for(auto i = 0u; i < planes.size(); ++i)
+        for(auto i = 0u; i < planes_.size(); ++i)
         {
             auto const& attrib_names = egl_attribs[i];
-            auto const& plane = planes[i];
+            auto const& plane = planes()[i];
 
             attributes.push_back(attrib_names.fd);
-            attributes.push_back(static_cast<int>(plane.fd));
+            attributes.push_back(static_cast<int>(plane.dma_buf));
             attributes.push_back(attrib_names.offset);
             attributes.push_back(plane.offset);
             attributes.push_back(attrib_names.pitch);
             attributes.push_back(plane.stride);
-            if (modifier != DRM_FORMAT_MOD_INVALID)
+            if (modifier() != DRM_FORMAT_MOD_INVALID)
             {
                 attributes.push_back(attrib_names.modifier_lo);
-                attributes.push_back(modifier & 0xFFFFFFFF);
+                attributes.push_back(modifier() & 0xFFFFFFFF);
                 attributes.push_back(attrib_names.modifier_hi);
-                attributes.push_back(modifier >> 32);
+                attributes.push_back(modifier() >> 32);
             }
         }
         attributes.push_back(EGL_NONE);
@@ -175,7 +170,7 @@ public:
 
         if (image == EGL_NO_IMAGE_KHR)
         {
-            auto const msg = planes.size() > 1 ?
+            auto const msg = planes_.size() > 1 ?
                 "Failed to import supplied dmabufs" :
                 "Failed to import supplied dmabuf";
             BOOST_THROW_EXCEPTION((mg::egl_error(msg)));
@@ -184,6 +179,15 @@ public:
         return image;
     }
 
+    auto modifier() -> uint64_t
+    {
+        return modifier_;
+    }
+
+    auto planes() -> std::vector<PlaneInfo> const&
+    {
+        return planes_;
+    }
 private:
     void destroy() override
     {
@@ -195,8 +199,8 @@ private:
     int32_t const width, height;
     uint32_t const format_;
     uint32_t const flags;
-    uint64_t const modifier;
-    std::vector<PlaneInfo> const planes;
+    uint64_t const modifier_;
+    std::vector<PlaneInfo> const planes_;
     EGLImageKHR image;
 
     struct EGLPlaneAttribs
@@ -293,7 +297,7 @@ private:
                     "Plane index %u higher than maximum number of planes, %zu", plane_idx, planes.size()}));
         }
 
-        if (planes[plane_idx].fd != mir::Fd::invalid)
+        if (planes[plane_idx].dma_buf != mir::Fd::invalid)
         {
             BOOST_THROW_EXCEPTION((
                 mw::ProtocolError{
@@ -302,7 +306,7 @@ private:
                     "Plane %u already has a dmabuf", plane_idx}));
         }
 
-        planes[plane_idx].fd = std::move(fd);
+        planes[plane_idx].dma_buf = std::move(fd);
         planes[plane_idx].offset = offset;
         planes[plane_idx].stride = stride;
 
@@ -354,7 +358,7 @@ private:
             std::count_if(
                 planes.begin(),
                 planes.end(),
-                [](auto const& plane) { return plane.fd != mir::Fd::invalid; });
+                [](auto const& plane) { return plane.dma_buf != mir::Fd::invalid; });
         if (plane_count == 0)
         {
             BOOST_THROW_EXCEPTION((
@@ -365,7 +369,7 @@ private:
         }
         for (auto i = 0; i != plane_count; ++i)
         {
-            if (planes[i].fd == mir::Fd::invalid)
+            if (planes[i].dma_buf == mir::Fd::invalid)
             {
                 BOOST_THROW_EXCEPTION((
                     mw::ProtocolError{
@@ -406,7 +410,7 @@ private:
                 wl_client_post_no_memory(client);
                 return;
             }
-            new DmaBufBuffer{
+            new WlDmaBufBuffer{
                 dpy,
                 egl_extensions,
                 buffer_resource,
@@ -445,7 +449,7 @@ private:
 
         try
         {
-            new DmaBufBuffer{
+            new WlDmaBufBuffer{
                 dpy,
                 egl_extensions,
                 buffer_id,
@@ -515,12 +519,13 @@ bool drm_format_has_alpha(uint32_t format)
 class WaylandDmabufTexBuffer :
     public mg::BufferBasic,
     public mg::NativeBufferBase,
-    public mg::gl::Texture
+    public mg::gl::Texture,
+    public mg::DMABufBuffer
 {
 public:
     // Note: Must be called with a current EGL context
     WaylandDmabufTexBuffer(
-        DmaBufBuffer& source,
+        WlDmaBufBuffer& source,
         mg::EGLExtensions const& extensions,
         std::shared_ptr<mir::renderer::gl::Context> ctx,
         std::function<void()>&& on_consumed,
@@ -533,6 +538,9 @@ public:
           size_{source.size()},
           layout_{source.layout()},
           has_alpha{drm_format_has_alpha(source.format())},
+          planes_{source.planes()},
+          modifier_{source.modifier()},
+          fourcc{source.format()},
           wayland_executor{std::move(wayland_executor)}
     {
         eglBindAPI(EGL_OPENGL_ES_API);
@@ -621,6 +629,22 @@ public:
     void add_syncpoint() override
     {
     }
+
+    auto drm_fourcc() const -> uint32_t override
+    {
+        return fourcc;
+    }
+
+    auto modifier() const -> std::optional<uint64_t> override
+    {
+        return modifier_;
+    }
+
+    auto planes() const -> std::vector<PlaneDescriptor> const& override
+    {
+        return planes_;
+    }
+
 private:
     std::shared_ptr<mir::renderer::gl::Context> const ctx;
     GLuint const tex;
@@ -632,6 +656,10 @@ private:
     geom::Size const size_;
     Layout const layout_;
     bool const has_alpha;
+
+    std::vector<mg::DMABufBuffer::PlaneDescriptor> const planes_;
+    std::optional<uint64_t> const modifier_;
+    uint32_t const fourcc;
 
     std::shared_ptr<mir::Executor> const wayland_executor;
 };
@@ -901,7 +929,7 @@ auto mgg::LinuxDmaBufUnstable::buffer_from_resource(
     std::shared_ptr<Executor> wayland_executor)
     -> std::shared_ptr<Buffer>
 {
-    if (auto dmabuf = DmaBufBuffer::maybe_dmabuf_from_wl_buffer(buffer))
+    if (auto dmabuf = WlDmaBufBuffer::maybe_dmabuf_from_wl_buffer(buffer))
     {
         return std::make_shared<WaylandDmabufTexBuffer>(
             *dmabuf,

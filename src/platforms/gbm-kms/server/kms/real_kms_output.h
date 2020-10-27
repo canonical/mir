@@ -69,16 +69,33 @@ public:
     void refresh_hardware_state() override;
     void update_from_hardware_state(DisplayConfigurationOutput& output) const override;
 
-    FBHandle* fb_for(gbm_bo* bo) const override;
+    auto fb_for(gbm_bo* bo) const -> std::shared_ptr<FBHandle const> override;
+    auto fb_for(DMABufBuffer const& image) const -> std::shared_ptr<FBHandle const> override;
 
     bool buffer_requires_migration(gbm_bo* bo) const override;
     int drm_fd() const override;
+
 private:
     bool ensure_crtc();
     void restore_saved_crtc();
 
     int const drm_fd_;
     std::shared_ptr<PageFlipper> const page_flipper;
+
+    /* TODO: This should really be owned by a DRM-device-level object,
+     * not per-output. We don't have one of those at the moment, so here'll do.
+     */
+    class FBRegistry
+    {
+    public:
+        auto lookup_or_create(int const drm_fd, gbm_bo* bo) -> std::shared_ptr<FBHandle const>;
+        auto lookup_or_create(int const drm_fd, DMABufBuffer const& image) -> std::shared_ptr<FBHandle const>;
+
+        struct DMABufFB;
+    private:
+        std::vector<std::shared_ptr<DMABufFB>> dmabuf_fbs;
+    };
+    FBRegistry mutable framebuffers;
 
     kms::DRMModeConnectorUPtr connector;
     size_t mode_index;
