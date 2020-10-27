@@ -184,7 +184,7 @@ public:
         return image;
     }
 
-    private:
+private:
     void destroy() override
     {
         destroy_wayland_object();
