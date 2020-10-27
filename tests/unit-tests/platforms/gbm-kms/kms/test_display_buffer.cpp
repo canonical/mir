@@ -93,8 +93,11 @@ public:
             .WillByDefault(Return(true));
         ON_CALL(*mock_kms_output, max_refresh_rate())
             .WillByDefault(Return(mock_refresh_rate));
-        ON_CALL(*mock_kms_output, fb_for(_))
-            .WillByDefault(Return(reinterpret_cast<FBHandle*>(0x12ad)));
+        ON_CALL(*mock_kms_output, fb_for(A<gbm_bo*>()))
+            .WillByDefault(Return(
+                std::shared_ptr<FBHandle const>{
+                    reinterpret_cast<FBHandle const*>(0x12ad),
+                    [](auto) {}}));
         ON_CALL(*mock_kms_output, buffer_requires_migration(_))
             .WillByDefault(Return(false));
 
@@ -265,12 +268,21 @@ TEST_F(MesaDisplayBufferTest, untransformed_with_bypassable_list_can_bypass)
     EXPECT_TRUE(db.overlay(bypassable_list));
 }
 
+namespace
+{
+template<typename T>
+auto fake_shared_ptr(intptr_t value) -> std::shared_ptr<T>
+{
+    return std::shared_ptr<T>{reinterpret_cast<T*>(value), [](auto) {}};
+}
+}
+
 TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
 {  // Regression test for LP: #1398296
-    EXPECT_CALL(*mock_kms_output, fb_for(_))
-        .WillOnce(Return(reinterpret_cast<FBHandle*>(0xaabb)))  // During the DisplayBuffer constructor
+    EXPECT_CALL(*mock_kms_output, fb_for(A<gbm_bo*>()))
+        .WillOnce(Return(fake_shared_ptr<FBHandle>(0xaabb)))  // During the DisplayBuffer constructor
         .WillOnce(Return(nullptr)) // Fail first bypass attempt
-        .WillOnce(Return(reinterpret_cast<FBHandle*>(0xbbcc))); // Succeed second bypass attempt
+        .WillOnce(Return(fake_shared_ptr<FBHandle>(0xbbcc))); // Succeed second bypass attempt
 
     graphics::gbm::DisplayBuffer db(
         graphics::gbm::BypassOption::allowed,

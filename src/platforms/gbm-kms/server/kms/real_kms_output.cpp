@@ -28,6 +28,7 @@
 #include <boost/throw_exception.hpp>
 #include <system_error>
 #include <xf86drm.h>
+#include <drm_fourcc.h>
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
@@ -37,39 +38,27 @@ namespace geom = mir::geometry;
 class mgg::FBHandle
 {
 public:
-    FBHandle(gbm_bo* bo, uint32_t drm_fb_id)
-        : bo{bo}, drm_fb_id{drm_fb_id}
+    FBHandle(int drm_fd, uint32_t fb_id)
+        : drm_fd{drm_fd},
+          fb_id{fb_id}
     {
     }
 
     ~FBHandle()
     {
-        if (drm_fb_id)
-        {
-            int drm_fd = gbm_device_get_fd(gbm_bo_get_device(bo));
-            drmModeRmFB(drm_fd, drm_fb_id);
-        }
+        // TODO: Some sort of logging on failure?
+        drmModeRmFB(drm_fd, fb_id);
     }
 
-    uint32_t get_drm_fb_id() const
+    auto get_drm_fb_id() const -> uint32_t
     {
-        return drm_fb_id;
+        return fb_id;
     }
-
 private:
-    gbm_bo *bo;
-    uint32_t drm_fb_id;
+    int const drm_fd;
+    uint32_t const fb_id;
 };
 
-namespace
-{
-void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
-{
-    auto bufobj = static_cast<mgg::FBHandle*>(data);
-    delete bufobj;
-}
-
-}
 
 mgg::RealKMSOutput::RealKMSOutput(
     int drm_fd,
@@ -625,7 +614,17 @@ void mgg::RealKMSOutput::update_from_hardware_state(
     output.edid = edid;
 }
 
-mgg::FBHandle* mgg::RealKMSOutput::fb_for(gbm_bo* bo) const
+namespace
+{
+void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
+{
+    auto bufobj = static_cast<std::shared_ptr<mgg::FBHandle const>*>(data);
+    delete bufobj;
+}
+}
+
+auto mgg::RealKMSOutput::FBRegistry::lookup_or_create(int const drm_fd, gbm_bo* bo)
+    -> std::shared_ptr<FBHandle const>
 {
     if (!bo)
         return nullptr;
@@ -634,9 +633,11 @@ mgg::FBHandle* mgg::RealKMSOutput::fb_for(gbm_bo* bo) const
      * Check if we have already set up this gbm_bo (the gbm-kms implementation is
      * free to reuse gbm_bos). If so, return the associated FBHandle.
      */
-    auto bufobj = static_cast<FBHandle*>(gbm_bo_get_user_data(bo));
+    auto bufobj = static_cast<std::shared_ptr<FBHandle const>*>(gbm_bo_get_user_data(bo));
     if (bufobj)
-        return bufobj;
+    {
+        return *bufobj;
+    }
 
     uint32_t fb_id{0};
     uint32_t handles[4] = {gbm_bo_get_handle(bo).u32, 0, 0, 0};
@@ -657,16 +658,168 @@ mgg::FBHandle* mgg::RealKMSOutput::fb_for(gbm_bo* bo) const
     auto const height = gbm_bo_get_height(bo);
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB2(drm_fd_, width, height, format,
+    auto ret = drmModeAddFB2(drm_fd, width, height, format,
                              handles, strides, offsets, &fb_id, 0);
     if (ret)
         return nullptr;
 
     /* Create a FBHandle and associate it with the gbm_bo */
-    bufobj = new FBHandle{bo, fb_id};
+
+    bufobj = new std::shared_ptr<FBHandle const>(new FBHandle{drm_fd, fb_id});
     gbm_bo_set_user_data(bo, bufobj, bo_user_data_destroy);
 
-    return bufobj;
+    return *bufobj;
+}
+
+auto mgg::RealKMSOutput::fb_for(gbm_bo* bo) const -> std::shared_ptr<FBHandle const>
+{
+    return framebuffers.lookup_or_create(drm_fd(), bo);
+}
+
+struct mgg::RealKMSOutput::FBRegistry::DMABufFB
+{
+    std::array<Fd, 4> const fds;
+    std::array<uint32_t, 4> const bo_handles;
+    std::weak_ptr<FBHandle const> handle;
+
+    DMABufFB(
+        std::array<Fd, 4> fds,
+        std::array<uint32_t, 4> bo_handles,
+        std::weak_ptr<FBHandle const> handle)
+        : fds{std::move(fds)},
+          bo_handles{bo_handles},
+          handle{std::move(handle)}
+    {
+    }
+};
+
+auto mgg::RealKMSOutput::FBRegistry::lookup_or_create(
+    const int drm_fd,
+    const DMABufBuffer& image) -> std::shared_ptr<FBHandle const>
+{
+    // The DRM API expects a bunch of 4-element arrays, with unused elements set to 0
+    std::array<uint32_t, 4> handles = {0, 0, 0, 0};
+    std::array<uint32_t, 4> strides = {0, 0, 0, 0};
+    std::array<uint32_t, 4> offsets = {0, 0, 0, 0};
+    std::array<uint64_t, 4> modifiers = {0, 0, 0, 0};
+
+    std::array<Fd, 4> dma_bufs;
+
+    auto const& planes = image.planes();
+    for (auto i = 0u; i < planes.size() ; ++i)
+    {
+        strides[i] = planes[i].stride;
+        offsets[i] = planes[i].offset;
+        dma_bufs[i] = planes[i].dma_buf;
+    }
+
+    // If we've got this FB already imported, we can just return that…
+    auto const existing_fb = std::find_if(
+        dmabuf_fbs.begin(),
+        dmabuf_fbs.end(),
+        [&dma_bufs](auto const& candidate)
+        {
+            for (auto i = 0u; i < dma_bufs.size(); ++i)
+            {
+                /* We can do a numerical compare here because the DMAbufFB structs keep a
+                 * reference to their fds open, so any newly imported buffer will have
+                 * a different integer fd handle; they can't accidentally alias.
+                 *
+                 * And the Wayland protocol only imports the FDs once, and then the client
+                 * references the wl_buffer, so we can expect the FDs of a particular buffer
+                 * to be numerically stable.
+                 */
+                if (static_cast<int>(dma_bufs[i]) != static_cast<int>(candidate->fds[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+    uint32_t const* imported_handles;
+    if (existing_fb != dmabuf_fbs.end())
+    {
+        if (auto const handle = (*existing_fb)->handle.lock())
+        {
+            /* We have already imported the DMA-bufs *and* have a current FB for them.
+             * We can just return that.
+             */
+            return handle;
+        }
+        /* We've imported the DMA-bufs, but have already deleted the FB associated with
+         * them. Grab the previously-imported handles, then re-create a FB.
+         */
+        imported_handles = (*existing_fb)->bo_handles.data();
+    }
+    else
+    {
+        // Otherwise, we need to import the DMA-bufs
+        for (auto i = 0u; i < planes.size(); ++i)
+        {
+            if (auto const error = drmPrimeFDToHandle(drm_fd, dma_bufs[i], &handles[i]))
+            {
+                BOOST_THROW_EXCEPTION((
+                                          std::system_error{
+                                              error,
+                                              std::system_category(),
+                                              "Failed to acquire GEM handle for DMA-BUF"}));
+            }
+        }
+        imported_handles = handles.data();
+    }
+
+
+    // If there's a modifier set, propagate it to all components.
+    if (image.modifier() != DRM_FORMAT_MOD_INVALID)
+    {
+        for (auto i = 0u; i < planes.size(); ++i)
+        {
+            modifiers[i] = image.modifier();
+        }
+    }
+
+    uint32_t drm_fb_id;
+    auto const ret = drmModeAddFB2WithModifiers(
+        drm_fd,
+        image.size().width.as_uint32_t(),
+        image.size().height.as_uint32_t(),
+        image.drm_fourcc(),
+        imported_handles,
+        strides.data(),
+        offsets.data(),
+        image.modifier() != DRM_FORMAT_MOD_INVALID
+            ? modifiers.data() : nullptr,
+        &drm_fb_id,
+        image.modifier() != DRM_FORMAT_MOD_INVALID
+            ? DRM_MODE_FB_MODIFIERS : 0);
+
+    if (ret)
+    {
+        mir::log_debug(
+            "Failed to import dmabuf-based image as FB: %s",
+            std::system_category().message(ret).c_str());
+        return nullptr;
+    }
+
+    auto fb_handle = std::make_shared<FBHandle>(drm_fd, drm_fb_id);
+
+    if (existing_fb != dmabuf_fbs.end())
+    {
+        // We already have the buffer data; we just need to re-create a handle
+        (*existing_fb)->handle = fb_handle;
+    }
+    else
+    {
+        dmabuf_fbs.push_back(std::make_shared<DMABufFB>(std::move(dma_bufs), handles, fb_handle));
+    }
+
+    return fb_handle;
+}
+
+auto mgg::RealKMSOutput::fb_for(mg::DMABufBuffer const& image) const -> std::shared_ptr<FBHandle const>
+{
+    return framebuffers.lookup_or_create(drm_fd(), image);
 }
 
 bool mgg::RealKMSOutput::buffer_requires_migration(gbm_bo* bo) const
