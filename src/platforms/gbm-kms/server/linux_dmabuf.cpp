@@ -72,7 +72,7 @@ public:
         int32_t height,
         uint32_t format,
         uint32_t flags,
-        std::optional<uint64_t> modifier,
+        uint64_t modifier,
         std::vector<PlaneInfo> plane_params)
             : Buffer(wl_buffer, Version<1>{}),
               dpy{dpy},
@@ -153,12 +153,12 @@ public:
             attributes.push_back(plane.offset);
             attributes.push_back(attrib_names.pitch);
             attributes.push_back(plane.stride);
-            if (modifier.value_or(DRM_FORMAT_MOD_INVALID) != DRM_FORMAT_MOD_INVALID)
+            if (modifier != DRM_FORMAT_MOD_INVALID)
             {
                 attributes.push_back(attrib_names.modifier_lo);
-                attributes.push_back(*modifier & 0xFFFFFFFF);
+                attributes.push_back(modifier & 0xFFFFFFFF);
                 attributes.push_back(attrib_names.modifier_hi);
-                attributes.push_back(*modifier >> 32);
+                attributes.push_back(modifier >> 32);
             }
         }
         attributes.push_back(EGL_NONE);
@@ -183,6 +183,7 @@ public:
 
         return image;
     }
+
 private:
     void destroy() override
     {
@@ -194,8 +195,8 @@ private:
     int32_t const width, height;
     uint32_t const format_;
     uint32_t const flags;
-    std::optional<uint64_t> const modifier;
-    std::vector<PlaneInfo> planes;
+    uint64_t const modifier;
+    std::vector<PlaneInfo> const planes;
     EGLImageKHR image;
 
     struct EGLPlaneAttribs
@@ -413,7 +414,7 @@ private:
                 height,
                 format,
                 flags,
-                modifier,
+                modifier.value_or(DRM_FORMAT_MOD_INVALID),
                 {planes.cbegin(), validate_and_count_planes()}};
             send_created_event(buffer_resource);
         }
@@ -452,7 +453,7 @@ private:
                 height,
                 format,
                 flags,
-                modifier,
+                modifier.value_or(DRM_FORMAT_MOD_INVALID),
                 {planes.cbegin(), validate_and_count_planes()}};
         }
         catch (std::system_error const& err)
@@ -703,7 +704,7 @@ public:
 
         EGLint returned_formats;
         if (dmabuf_ext.eglQueryDmaBufFormatsExt(
-            dpy, num_formats, formats.data(), &returned_formats) != EGL_TRUE)
+            dpy, formats.size(), formats.data(), &returned_formats) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION((mg::egl_error("Failed to list dma-buf formats")));
         }
@@ -758,6 +759,15 @@ public:
                     num_modifiers);
                 modifiers.resize(returned_modifiers);
                 external_only.resize(returned_modifiers);
+            }
+
+            if (num_modifiers == 0)
+            {
+                /* Special case: num_modifiers == 0 means that the driver doesn't support modifiers;
+                 * instead, it will do the right thing if you publish DRM_FORMAT_MOD_INVALID.
+                 */
+                modifiers.push_back(DRM_FORMAT_MOD_INVALID);
+                external_only.push_back(false);
             }
         }
     }
