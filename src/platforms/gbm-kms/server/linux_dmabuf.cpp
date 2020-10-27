@@ -760,6 +760,15 @@ public:
                 modifiers.resize(returned_modifiers);
                 external_only.resize(returned_modifiers);
             }
+
+            if (num_modifiers == 0)
+            {
+                /* Special case: num_modifiers == 0 means that the driver doesn't support modifiers;
+                 * instead, it will do the right thing if you publish DRM_FORMAT_MOD_INVALID.
+                 */
+                modifiers.push_back(DRM_FORMAT_MOD_INVALID);
+                external_only.push_back(false);
+            }
         }
     }
 
