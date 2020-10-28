@@ -54,10 +54,10 @@ namespace
 class MockDMABufBuffer : public DMABufBuffer
 {
 public:
-    MOCK_METHOD(uint32_t, drm_fourcc, (), (const override));
-    MOCK_METHOD(std::optional<uint64_t>, modifier, (), (const override));
-    MOCK_METHOD(std::vector<PlaneDescriptor> const&, planes, (), (const override));
-    MOCK_METHOD(geometry::Size, size, (), (const override));
+    MOCK_CONST_METHOD0(drm_fourcc, uint32_t());
+    MOCK_CONST_METHOD0(modifier, std::optional<uint64_t>());
+    MOCK_CONST_METHOD0(planes, std::vector<PlaneDescriptor> const&());
+    MOCK_CONST_METHOD0(size, geometry::Size());
 };
 }
 
@@ -121,7 +121,7 @@ public:
             .WillByDefault(Return(&mock_dmabuf_buffer));
         fake_bypassable_renderable->set_buffer(mock_bypassable_buffer);
 
-        ON_CALL(mock_drm, drmModeAddFB2WithModifiers)
+        ON_CALL(mock_drm, drmModeAddFB2WithModifiers(_,_,_,_,_,_,_,_,_,_))
             .WillByDefault(Return(0));
 
         ON_CALL(*mock_software_buffer, size())
