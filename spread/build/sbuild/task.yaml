@@ -57,13 +57,6 @@ execute: |
       sed -i 's/\(eglexternalplatform-dev\)/\1:all/' debian/control
     fi
 
-    # Extra dependencies
-    [ "${MIR_PPA}" == "true" ] && SBUILD_OPTS+=(
-      "--extra-repository=deb http://ppa.launchpad.net/mir-team/release/ubuntu ${RELEASE} main"
-      "--extra-repository=deb http://ppa.launchpad.net/mir-team/dev/ubuntu ${RELEASE} main"
-      "--extra-repository-key=${SPREAD_PATH}/spread/build/sbuild/mir-team.asc"
-    )
-
     sg sbuild -c "${MKSBUILD_OPTS[*]}"
 
     echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk

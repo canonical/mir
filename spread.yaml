@@ -28,7 +28,6 @@ environment:
     RELEASE/ubuntu_devel: hirsute
     RELEASE/ubuntu_groovy: groovy
     RELEASE/debian_sid: sid
-    MIR_PPA: false
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
     CLANG: 0
