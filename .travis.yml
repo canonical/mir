@@ -119,6 +119,7 @@ jobs:
     script:
     - tools/process_snaps.py
   allow_failures:
-    - env: TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
+    - env: TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel
+    - env: TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed
     - env: TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
   fast_finish: true
