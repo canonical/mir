@@ -45,7 +45,7 @@ env:
   jobs:
   - TASK=google:ubuntu-20.04-64:spread/build/sbuild:debian_sid
   - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel
-  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_bionic
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_groovy
   - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu
   - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed
   - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64
@@ -69,7 +69,7 @@ jobs:
   include:
   - &ppa-upload
     stage: upload to ppa:mir-team
-    env: RELEASE=18.04
+    env: RELEASE=20.04
     git:
       depth: false
     before_install: &decrypt-bot-data
@@ -89,7 +89,7 @@ jobs:
         - python-launchpadlib
         - python-paramiko
   - <<: *ppa-upload
-    env: RELEASE=20.04
+    env: RELEASE=20.10
   - <<: *ppa-upload
     env: RELEASE=devel
 
@@ -119,6 +119,7 @@ jobs:
     script:
     - tools/process_snaps.py
   allow_failures:
-    - env: TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
+    - env: TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel
+    - env: TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed
     - env: TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
   fast_finish: true

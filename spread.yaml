@@ -25,11 +25,9 @@ environment:
     ARCH/rpi: armhf
     RELEASE: focal
     RELEASE/ubuntu: focal
-    RELEASE/ubuntu_devel: groovy
-    RELEASE/ubuntu_bionic: bionic
+    RELEASE/ubuntu_devel: hirsute
+    RELEASE/ubuntu_groovy: groovy
     RELEASE/debian_sid: sid
-    MIR_PPA: false
-    MIR_PPA/ubuntu_bionic: true
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
     CLANG: 0
