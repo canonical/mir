@@ -89,7 +89,7 @@ jobs:
         - python-launchpadlib
         - python-paramiko
   - <<: *ppa-upload
-    env: RELEASE=20.04
+    env: RELEASE=20.10
   - <<: *ppa-upload
     env: RELEASE=devel
 
