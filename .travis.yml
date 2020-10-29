@@ -45,7 +45,7 @@ env:
   jobs:
   - TASK=google:ubuntu-20.04-64:spread/build/sbuild:debian_sid
   - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel
-  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_bionic
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_groovy
   - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu
   - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed
   - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64
@@ -69,7 +69,7 @@ jobs:
   include:
   - &ppa-upload
     stage: upload to ppa:mir-team
-    env: RELEASE=18.04
+    env: RELEASE=20.04
     git:
       depth: false
     before_install: &decrypt-bot-data

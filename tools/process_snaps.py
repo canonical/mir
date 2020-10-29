@@ -25,7 +25,7 @@ logger.setLevel(logging.INFO)
 
 APPLICATION = "mir-ci"
 LAUNCHPAD = "production"
-RELEASE = "bionic"
+RELEASE = "focal"
 TEAM = "mir-team"
 SOURCE_NAME = "mir"
 SNAPS = {
