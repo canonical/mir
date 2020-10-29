@@ -851,8 +851,8 @@ public:
                 {
                     for (auto j = 0u; j < modifiers.size(); ++j)
                     {
-                        auto const& modifier = modifiers[i];
-                        auto const& external = external_only[i];
+                        auto const modifier = modifiers[j];
+                        auto const external = external_only[j];
                         if (external == EGL_FALSE)
                         {
                             // We can't (currently) handle external images
