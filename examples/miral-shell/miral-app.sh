@@ -61,6 +61,7 @@ else
     # Start mir_demo_server with the chosen WAYLAND_DISPLAY
     MIR_SERVER_ENABLE_X11=1 WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} $* --x11-displayfd 5 5>${x11_display_file}&
 
+    inotifywait --event close_write "${x11_display_file}"
     # ${x11_display_file} contains the X11 display
     export DISPLAY=:$(cat "${x11_display_file}")
     rm "${x11_display_file}"
