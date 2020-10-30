@@ -2,31 +2,31 @@
 
 miral_server=miral-shell
 bindir=$(dirname $0)
+if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 
-terminal=${bindir}/miral-terminal
+terminal=${bindir}miral-terminal
 
 while [ $# -gt 0 ]
 do
   if [ "$1" == "--help" -o "$1" == "-h" ]
   then
-    echo "$(basename $0) - Handy launch script for a hosted miral \"desktop session\""
-    echo "Usage: $(basename $0) [options] [shell options]"
-    echo "Options are:"
-    echo "    -kiosk                      use miral-kiosk instead of ${miral_server}"
-    echo "    -terminal <terminal>        use <terminal> instead of '${terminal}'"
-    echo "    -bindir <bindir>            path to the miral executable [${bindir}]"
-    # omit    -demo-server as mir_demo_server is in the mir-test-tools package
+    echo   "$(basename $0) - Handy launch script for a hosted miral \"desktop session\""
+    echo   "Usage: $(basename $0) [options] [shell options]"
+    echo   "Options are:"
+    echo   "    -kiosk                      use miral-kiosk instead of ${miral_server}"
+    if [ -x "$(which "${bindir}mir_demo_server")" ]
+    then
+      echo "    -demo-server                use mir_demo_server instead of ${miral_server}"
+    fi
+    echo   "    -terminal <terminal>        use <terminal> instead of '${terminal}'"
     exit 0
   elif [ "$1" == "-kiosk" ];            then miral_server=miral-kiosk
   elif [ "$1" == "-terminal" ];         then shift; terminal=$1
-  elif [ "$1" == "-bindir" ];           then shift; bindir=$1
   elif [ "$1" == "-demo-server" ];      then miral_server=mir_demo_server
   elif [ "${1:0:2}" == "--" ];          then break
   fi
   shift
 done
-
-if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 
 if [ "${miral_server}" == "miral-shell" ]
 then
