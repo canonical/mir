@@ -25,8 +25,7 @@ stages:
              OR ( head_branch =~ ^release/[\d\.]+$ ))
       AND tag IS blank
 - name: sanitize
-  if: type = cron
-      AND repo = MirServer/mir
+  if: repo = MirServer/mir
       AND branch = master
 - name: upload to ppa:mir-team
   if: type = push
@@ -115,7 +114,9 @@ jobs:
     before_install: *decrypt-bot-data
     install:
     - pip install -r tools/requirements.txt
-    - if [ ${TRAVIS_EVENT_TYPE} == cron ]; then sudo apt update; sudo apt install snapd; sudo snap install snapd review-tools; fi
+    - sudo apt-get --yes install snapd
+    - sudo snap install snapd
+    - sudo snap install review-tools --edge
     script:
     - tools/process_snaps.py
   allow_failures:
