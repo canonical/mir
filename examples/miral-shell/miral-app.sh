@@ -30,11 +30,6 @@ if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 
 if [ "${miral_server}" == "miral-shell" ]
 then
-  if [ "$(lsb_release -c -s)" == "xenial" ]
-  then
-    export MIR_SERVER_APP_ENV="GDK_BACKEND=x11:QT_QPA_PLATFORM=xcb:SDL_VIDEODRIVER=x11:-QT_QPA_PLATFORMTHEME:NO_AT_BRIDGE=1:QT_ACCESSIBILITY:QT_LINUX_ACCESSIBILITY_ALWAYS_ON:_JAVA_AWT_WM_NONREPARENTING=1:-GTK_MODULES:-OOO_FORCE_DESKTOP:-GNOME_ACCESSIBILITY:"
-  fi
-
   # miral-shell can launch it's own terminal with Ctrl-Alt-T
   MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} exec ${bindir}${miral_server} $*
 else
@@ -44,9 +39,6 @@ else
       let port+=1
   done
   wayland_display=wayland-${port}
-  qt_qpa=wayland
-  gdk_backend=wayland,x11
-  sdl_videodriver=wayland
 
   if [ "${miral_server}" == "miral-kiosk" ]
   then
@@ -65,18 +57,10 @@ else
     # ${x11_display_file} contains the X11 display
     export DISPLAY=:$(cat "${x11_display_file}")
     rm "${x11_display_file}"
-
-    # On Xenial fall back to X11 for all the toolkits
-    if [ "$(lsb_release -c -s)" == "xenial" ]
-    then
-      qt_qpa=xcb
-      gdk_backend=x11
-      sdl_videodriver=x11
-    fi
   fi
 
   # When the server starts, launch a terminal. When the terminal exits close the server.
   while [ ! -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; do echo "waiting for ${wayland_display}"; sleep 1 ;done
-  XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 ${terminal}
+  XDG_SESSION_TYPE=mir GDK_BACKEND=wayland,x11 QT_QPA_PLATFORM=wayland SDL_VIDEODRIVER=wayland WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 ${terminal}
   killall ${bindir}${miral_server} || killall ${bindir}${miral_server}.bin
 fi
