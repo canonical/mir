@@ -44,6 +44,7 @@ else
   then
     # Start miral-kiosk server with the chosen WAYLAND_DISPLAY
     WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} $*&
+    miral_server_pid=$!
     unset DISPLAY
   elif [ "${miral_server}" == "mir_demo_server" ]
   then
@@ -52,15 +53,32 @@ else
 
     # Start mir_demo_server with the chosen WAYLAND_DISPLAY
     MIR_SERVER_ENABLE_X11=1 WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} $* --x11-displayfd 5 5>${x11_display_file}&
+    miral_server_pid=$!
 
-    inotifywait --event close_write "${x11_display_file}"
-    # ${x11_display_file} contains the X11 display
-    export DISPLAY=:$(cat "${x11_display_file}")
-    rm "${x11_display_file}"
+    if inotifywait -qq --timeout 5 --event close_write "${x11_display_file}" && [ -s "${x11_display_file}" ]
+    then
+      # ${x11_display_file} contains the X11 display
+      export DISPLAY=:$(cat "${x11_display_file}")
+      rm "${x11_display_file}"
+    else
+      echo "ERROR: Failed to get X11 display from ${miral_server}"
+      rm "${x11_display_file}"
+      kill ${miral_server_pid}
+      exit 1
+    fi
   fi
 
   # When the server starts, launch a terminal. When the terminal exits close the server.
-  while [ ! -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; do echo "waiting for ${wayland_display}"; sleep 1 ;done
+  until [ -O "${XDG_RUNTIME_DIR}/${wayland_display}" ]
+  do
+    if ! kill -0 ${miral_server_pid} &> /dev/null
+    then
+      echo "ERROR: ${miral_server} [pid=${miral_server_pid}] is not running"
+      exit 1
+    fi
+    inotifywait -qq --timeout 5 --event create $(dirname "${XDG_RUNTIME_DIR}/${wayland_display}")
+  done
+
   XDG_SESSION_TYPE=mir GDK_BACKEND=wayland,x11 QT_QPA_PLATFORM=wayland SDL_VIDEODRIVER=wayland WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 ${terminal}
-  killall ${bindir}${miral_server} || killall ${bindir}${miral_server}.bin
+  kill ${miral_server_pid}
 fi
