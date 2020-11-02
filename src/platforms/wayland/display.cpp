@@ -99,8 +99,6 @@ mgw::Display::Display(
         std::lock_guard<decltype(the_display_mtx)> lock{the_display_mtx};
         the_display = this;
     }
-
-    wl_display_roundtrip(display);
 }
 
 auto mgw::Display::configuration() const -> std::unique_ptr<DisplayConfiguration>
