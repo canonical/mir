@@ -467,6 +467,8 @@ mgw::DisplayClient::DisplayClient(
     eglctx = eglCreateContext(egldisplay, eglconfig, EGL_NO_CONTEXT, ctxattribs);
     if (eglctx == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(egl_error("eglCreateContext failed"));
+
+    wl_display_roundtrip(display);
 }
 
 void mgw::DisplayClient::on_output_changed(Output const* /*output*/)
