@@ -196,6 +196,7 @@ Replaces: miral-examples
 Provides: miral-examples (=1.5)
 Depends: ${misc:Depends},
          ${shlibs:Depends},
+         inotify-tools,
 Recommends: dmz-cursor-theme,
             fonts-liberation,
             qtwayland5,
