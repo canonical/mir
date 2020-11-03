@@ -42,6 +42,12 @@ public:
         std::shared_ptr<shell::Shell> const shell;
     };
 
+    enum class Lifetime : uint32_t
+    {
+        oneshot = wayland::PointerConstraintsV1::Lifetime::oneshot,
+        persistent = wayland::PointerConstraintsV1::Lifetime::persistent,
+    };
+
 private:
     std::shared_ptr<shell::Shell> const shell;
 
@@ -67,7 +73,8 @@ public:
         wl_resource* id,
         std::shared_ptr<shell::Shell> shell,
         std::shared_ptr<scene::Surface> const& scene_surface,
-        std::experimental::optional<wl_resource*> const& region);
+        std::experimental::optional<wl_resource*> const& region,
+        PointerConstraintsV1::Lifetime lifetime);
 
 private:
     std::shared_ptr<shell::Shell> const shell;
@@ -85,11 +92,13 @@ public:
         wl_resource* id,
         std::shared_ptr<shell::Shell> shell,
         std::shared_ptr<scene::Surface> const& scene_surface,
-        std::experimental::optional<wl_resource*> const& region);
+        std::experimental::optional<wl_resource*> const& region,
+        PointerConstraintsV1::Lifetime lifetime);
 
 private:
     std::shared_ptr<shell::Shell> const shell;
     std::weak_ptr<scene::Surface> const weak_scene_surface;
+
     void destroy() override;
     void set_region(const std::experimental::optional<wl_resource*>& /*region*/) override;
 };
@@ -128,13 +137,14 @@ void mir::frontend::PointerConstraintsV1::lock_pointer(wl_resource* id,
                                                        wl_resource* surface,
                                                        wl_resource* /*pointer*/,
                                                        std::experimental::optional<wl_resource*> const& region,
-                                                       uint32_t /*lifetime*/)
+                                                       uint32_t lifetime)
 {
     if (auto const s = WlSurface::from(surface)->scene_surface())
     {
         if (auto const ss = s.value())
         {
-            new LockedPointerV1{id, shell, ss, region};
+            // TODO we need to be able to report "already constrained"
+            new LockedPointerV1{id, shell, ss, region, Lifetime{lifetime}};
         }
     }
 }
@@ -143,13 +153,14 @@ void mir::frontend::PointerConstraintsV1::confine_pointer(wl_resource* id,
                                                           wl_resource* surface,
                                                           wl_resource* /*pointer*/,
                                                           std::experimental::optional<wl_resource*> const& region,
-                                                          uint32_t /*lifetime*/)
+                                                          uint32_t lifetime)
 {
     if (auto const s = WlSurface::from(surface)->scene_surface())
     {
         if (auto const ss = s.value())
         {
-            new ConfinedPointerV1{id, shell, ss, region};
+            // TODO we need to be able to report "already constrained"
+            new ConfinedPointerV1{id, shell, ss, region, Lifetime{lifetime}};
         }
     }
 }
@@ -158,13 +169,24 @@ mir::frontend::LockedPointerV1::LockedPointerV1(
     wl_resource* id,
     std::shared_ptr<shell::Shell> shell,
     std::shared_ptr<scene::Surface> const& scene_surface,
-    std::experimental::optional<wl_resource*> const& region) :
-      wayland::LockedPointerV1{id, Version<1>{}},
-      shell{std::move(shell)},
-      weak_scene_surface{scene_surface}
+    std::experimental::optional<wl_resource*> const& region,
+    PointerConstraintsV1::Lifetime lifetime) :
+    wayland::LockedPointerV1{id, Version<1>{}},
+    shell{std::move(shell)},
+    weak_scene_surface{scene_surface}
 {
     shell::SurfaceSpecification mods;
-    mods.confine_pointer = MirPointerConfinementState::mir_pointer_locked;
+
+    switch (lifetime)
+    {
+    case PointerConstraintsV1::Lifetime::oneshot:
+        mods.confine_pointer = MirPointerConfinementState::mir_pointer_locked_oneshot;
+        break;
+
+    case PointerConstraintsV1::Lifetime::persistent:
+        mods.confine_pointer = MirPointerConfinementState::mir_pointer_locked_persistent;
+        break;
+    }
 
     if (region)
     {
@@ -179,6 +201,7 @@ mir::frontend::LockedPointerV1::LockedPointerV1(
         }
     }
 
+    // TODO we need to be able to report "already constrained"
     this->shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
 
     if (scene_surface->focus_state() == mir_window_focus_state_focused)
@@ -211,13 +234,24 @@ mir::frontend::ConfinedPointerV1::ConfinedPointerV1(
     wl_resource* id,
     std::shared_ptr<shell::Shell> shell,
     std::shared_ptr<scene::Surface> const& scene_surface,
-    std::experimental::optional<wl_resource*> const& region) :
+    std::experimental::optional<wl_resource*> const& region,
+    PointerConstraintsV1::Lifetime lifetime) :
     wayland::ConfinedPointerV1{id, Version<1>{}},
     shell{std::move(shell)},
     weak_scene_surface(scene_surface)
 {
     shell::SurfaceSpecification mods;
-    mods.confine_pointer = MirPointerConfinementState::mir_pointer_confined_to_window;
+
+    switch (lifetime)
+    {
+    case PointerConstraintsV1::Lifetime::oneshot:
+        mods.confine_pointer = MirPointerConfinementState::mir_pointer_confined_to_window_oneshot;
+        break;
+
+    case PointerConstraintsV1::Lifetime::persistent:
+        mods.confine_pointer = MirPointerConfinementState::mir_pointer_confined_to_window_persistent;
+        break;
+    }
 
     if (region)
     {

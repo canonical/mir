@@ -254,7 +254,7 @@ TEST_F(SystemCompositorWindowManager, surface_gets_confine_pointer_set)
     auto window = client.create_surface(1);
 
     MirWindowSpec* spec = mir_create_window_spec(client.connection());
-    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window_persistent);
 
     mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
