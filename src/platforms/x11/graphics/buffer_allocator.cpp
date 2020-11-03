@@ -26,6 +26,7 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/renderer/gl/context_source.h"
 #include "mir/graphics/egl_wayland_allocator.h"
+#include "mir/graphics/linux_dmabuf.h"
 #include "buffer_from_wl_shm.h"
 #include "mir/executor.h"
 
@@ -141,6 +142,42 @@ void mgx::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
 
     mg::wayland::bind_display(dpy, display, *egl_extensions);
 
+    try
+    {
+        mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
+        dmabuf_extension =
+            std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>>(
+                new LinuxDmaBufUnstable{
+                    display,
+                    dpy,
+                    egl_extensions,
+                    modifier_ext,
+                },
+                [wayland_executor](LinuxDmaBufUnstable* global)
+                {
+                    // The global must be destroyed on the Wayland thread
+                    wayland_executor->spawn(
+                        [global]()
+                        {
+                            /* This is safe against double-frees, as the WaylandExecutor
+                             * guarantees that work scheduled will only run while the Wayland
+                             * event loop is running, and the main loop is stopped before
+                             * wl_display_destroy() frees any globals
+                             *
+                             * This will, however, leak the global if the main loop is destroyed
+                             * before the buffer allocator. Fixing that requires work in the
+                             * wrapper generator.
+                             */
+                            delete global;
+                        });
+                });
+        mir::log_info("Enabled linux-dmabuf import support");
+    }
+    catch (std::runtime_error const&)
+    {
+        mir::log_info(
+            "No EGL_EXT_image_dma_buf_import_modifiers support, disabling linux-dmabuf import");
+    }
     this->wayland_executor = std::move(wayland_executor);
 }
 
@@ -153,6 +190,15 @@ std::shared_ptr<mg::Buffer> mgx::BufferAllocator::buffer_from_resource(
         [this]() { ctx->make_current(); },
         [this]() { ctx->release_current(); });
 
+    if (auto dmabuf = dmabuf_extension->buffer_from_resource(
+        buffer,
+        ctx,
+        std::move(on_consumed),
+        std::move(on_release),
+        wayland_executor))
+    {
+        return dmabuf;
+    }
     return mg::wayland::buffer_from_resource(
         buffer,
         std::move(on_consumed),
