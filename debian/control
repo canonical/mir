@@ -332,14 +332,13 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-eglstream-kms18,
-         mir-platform-graphics-x18,
-         mir-platform-input-evdev7,
+         mir-platform-graphics-eglstream-kms,
+         mir-platform-graphics-x,
 Description: Display server for Ubuntu - Nvidia driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
- This package depends on a full set of graphics drivers for Nvidia systems.
+ This package depends on a full set of graphics and input drivers for Nvidia systems.
 
 Package: mir-platform-input-evdev7
 Section: libs
@@ -361,15 +360,72 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-gbm-kms18,
-         mir-platform-graphics-x18,
-         mir-platform-graphics-wayland18,
-         mir-platform-input-evdev7,
+         mir-platform-graphics-gbm-kms,
+         mir-platform-graphics-x,
+         mir-platform-graphics-wayland,
 Description: Display server for Ubuntu - desktop driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
- This package depends on a full set of graphics drivers for traditional desktop
+ This package depends on a full set of graphics and input drivers for traditional desktop
+ systems.
+
+Package: mir-platform-graphics-gbm-kms
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         mir-platform-graphics-gbm-kms18,
+         mir-platform-input-evdev7,
+Description: Display server for Ubuntu - gbm-kms driver metapackage
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package depends on a full set of graphics and input drivers for gbm-kms
+ systems.
+ 
+Package: mir-platform-graphics-eglstream-kms
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         mir-platform-graphics-eglstream-kms18,
+         mir-platform-input-evdev7,
+Description: Display server for Ubuntu - eglstream-kms driver metapackage
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package depends on a full set of graphics and input drivers for eglstream-kms
+ systems.
+
+Package: mir-platform-graphics-wayland
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         mir-platform-graphics-wayland18,
+Description: Display server for Ubuntu - wayland driver metapackage
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package depends on a full set of graphics and input drivers for wayland
+ systems.
+
+Package: mir-platform-graphics-x
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         mir-platform-graphics-x18,
+Description: Display server for Ubuntu - x driver metapackage
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package depends on a full set of graphics and input drivers for X
  systems.
 
 Package: libmircookie2
