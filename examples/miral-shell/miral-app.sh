@@ -2,39 +2,39 @@
 
 miral_server=miral-shell
 bindir=$(dirname $0)
+if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 
-terminal=${bindir}/miral-terminal
+terminal=${bindir}miral-terminal
 
 while [ $# -gt 0 ]
 do
   if [ "$1" == "--help" -o "$1" == "-h" ]
   then
-    echo "$(basename $0) - Handy launch script for a hosted miral \"desktop session\""
-    echo "Usage: $(basename $0) [options] [shell options]"
-    echo "Options are:"
-    echo "    -kiosk                      use miral-kiosk instead of ${miral_server}"
-    echo "    -terminal <terminal>        use <terminal> instead of '${terminal}'"
-    echo "    -bindir <bindir>            path to the miral executable [${bindir}]"
-    # omit    -demo-server as mir_demo_server is in the mir-test-tools package
+    echo   "$(basename $0) - Handy launch script for a hosted miral \"desktop session\""
+    echo   "Usage: $(basename $0) [options] [shell options]"
+    echo   "Options are:"
+    echo   "    -kiosk                      use miral-kiosk instead of ${miral_server}"
+    if [ -x "$(which "${bindir}mir_demo_server")" ]
+    then
+      echo "    -demo-server                use mir_demo_server instead of ${miral_server}"
+    fi
+    echo   "    -terminal <terminal>        use <terminal> instead of '${terminal}'"
     exit 0
   elif [ "$1" == "-kiosk" ];            then miral_server=miral-kiosk
   elif [ "$1" == "-terminal" ];         then shift; terminal=$1
-  elif [ "$1" == "-bindir" ];           then shift; bindir=$1
   elif [ "$1" == "-demo-server" ];      then miral_server=mir_demo_server
   elif [ "${1:0:2}" == "--" ];          then break
   fi
   shift
 done
 
-if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
-
 if [ "${miral_server}" == "miral-shell" ]
 then
-  if [ "$(lsb_release -c -s)" == "xenial" ]
+  # If there's already a compositor for WAYLAND_DISPLAY let Mir choose another
+  if [ -O "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}" ]
   then
-    export MIR_SERVER_APP_ENV="GDK_BACKEND=x11:QT_QPA_PLATFORM=xcb:SDL_VIDEODRIVER=x11:-QT_QPA_PLATFORMTHEME:NO_AT_BRIDGE=1:QT_ACCESSIBILITY:QT_LINUX_ACCESSIBILITY_ALWAYS_ON:_JAVA_AWT_WM_NONREPARENTING=1:-GTK_MODULES:-OOO_FORCE_DESKTOP:-GNOME_ACCESSIBILITY:"
+    unset WAYLAND_DISPLAY
   fi
-
   # miral-shell can launch it's own terminal with Ctrl-Alt-T
   MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} exec ${bindir}${miral_server} $*
 else
@@ -44,14 +44,12 @@ else
       let port+=1
   done
   wayland_display=wayland-${port}
-  qt_qpa=wayland
-  gdk_backend=wayland,x11
-  sdl_videodriver=wayland
 
   if [ "${miral_server}" == "miral-kiosk" ]
   then
     # Start miral-kiosk server with the chosen WAYLAND_DISPLAY
     WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} $*&
+    miral_server_pid=$!
     unset DISPLAY
   elif [ "${miral_server}" == "mir_demo_server" ]
   then
@@ -60,22 +58,32 @@ else
 
     # Start mir_demo_server with the chosen WAYLAND_DISPLAY
     MIR_SERVER_ENABLE_X11=1 WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} $* --x11-displayfd 5 5>${x11_display_file}&
+    miral_server_pid=$!
 
-    # ${x11_display_file} contains the X11 display
-    export DISPLAY=:$(cat "${x11_display_file}")
-    rm "${x11_display_file}"
-
-    # On Xenial fall back to X11 for all the toolkits
-    if [ "$(lsb_release -c -s)" == "xenial" ]
+    if inotifywait -qq --timeout 5 --event close_write "${x11_display_file}" && [ -s "${x11_display_file}" ]
     then
-      qt_qpa=xcb
-      gdk_backend=x11
-      sdl_videodriver=x11
+      # ${x11_display_file} contains the X11 display
+      export DISPLAY=:$(cat "${x11_display_file}")
+      rm "${x11_display_file}"
+    else
+      echo "ERROR: Failed to get X11 display from ${miral_server}"
+      rm "${x11_display_file}"
+      kill ${miral_server_pid}
+      exit 1
     fi
   fi
 
   # When the server starts, launch a terminal. When the terminal exits close the server.
-  while [ ! -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; do echo "waiting for ${wayland_display}"; sleep 1 ;done
-  XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 ${terminal}
-  killall ${bindir}${miral_server} || killall ${bindir}${miral_server}.bin
+  until [ -O "${XDG_RUNTIME_DIR}/${wayland_display}" ]
+  do
+    if ! kill -0 ${miral_server_pid} &> /dev/null
+    then
+      echo "ERROR: ${miral_server} [pid=${miral_server_pid}] is not running"
+      exit 1
+    fi
+    inotifywait -qq --timeout 5 --event create $(dirname "${XDG_RUNTIME_DIR}/${wayland_display}")
+  done
+
+  XDG_SESSION_TYPE=mir GDK_BACKEND=wayland,x11 QT_QPA_PLATFORM=wayland SDL_VIDEODRIVER=wayland WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 ${terminal}
+  kill ${miral_server_pid}
 fi
