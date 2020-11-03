@@ -187,5 +187,8 @@ MIRPLATFORM_2.2 {
   extern "C++" {
     mir::options::add_wayland_extensions_opt;
     mir::options::drop_wayland_extensions_opt;
- };
+    mir::graphics::LinuxDmaBufUnstable::LinuxDmaBufUnstable*;
+    mir::graphics::LinuxDmaBufUnstable::?LinuxDmaBufUnstable*;
+    mir::graphics::LinuxDmaBufUnstable::buffer_from_resource*;
+  };
 } MIRPLATFORM_2.1;
