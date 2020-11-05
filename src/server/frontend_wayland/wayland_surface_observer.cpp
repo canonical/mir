@@ -18,7 +18,6 @@
  */
 
 #include "wayland_surface_observer.h"
-#include "wl_seat.h"
 #include "wayland_utils.h"
 #include "window_wl_surface_role.h"
 #include "wayland_input_dispatcher.h"
@@ -38,17 +37,15 @@ mf::WaylandSurfaceObserver::WaylandSurfaceObserver(
     WlSeat* seat,
     WlSurface* surface,
     WindowWlSurfaceRole* window)
-    : seat{seat},
+    : BasicWaylandSurfaceObserver{seat},
       window{window},
       input_dispatcher{std::make_unique<WaylandInputDispatcher>(seat, surface)},
-      window_size{geometry::Size{0,0}},
-      destroyed{std::make_shared<bool>(false)}
+      window_size{geometry::Size{0,0}}
 {
 }
 
 mf::WaylandSurfaceObserver::~WaylandSurfaceObserver()
 {
-    *destroyed = true;
 }
 
 void mf::WaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAttrib attrib, int value)
@@ -144,9 +141,4 @@ void mf::WaylandSurfaceObserver::input_consumed(ms::Surface const*, MirEvent con
 auto mf::WaylandSurfaceObserver::latest_timestamp() const -> std::chrono::nanoseconds
 {
     return input_dispatcher->latest_timestamp();
-}
-
-void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_destroyed(std::function<void()>&& work)
-{
-    seat->spawn(run_unless(destroyed, work));
 }
