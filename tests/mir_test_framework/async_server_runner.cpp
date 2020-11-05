@@ -26,6 +26,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
+#include <mir/report_exception.h>
 #include <mir/thread_name.h>
 #include "mir/test/doubles/null_logger.h"
 #include <miral/set_window_management_policy.h>
@@ -125,7 +126,9 @@ void mtf::AsyncServerRunner::start_server()
             }
             catch (std::exception const& e)
             {
-                FAIL() << e.what();
+                std::ostringstream error;
+                mir::report_exception(error);
+                FAIL() << error.str();
             }
             std::lock_guard<std::mutex> lock(mutex);
             server_running = false;
