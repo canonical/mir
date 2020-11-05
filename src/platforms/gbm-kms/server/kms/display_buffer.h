@@ -132,7 +132,7 @@ private:
 
     std::shared_ptr<graphics::Buffer> visible_bypass_frame, scheduled_bypass_frame;
     std::shared_ptr<Buffer> bypass_buf{nullptr};
-    FBHandle* bypass_bufobj{nullptr};
+    std::shared_ptr<FBHandle const> bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;
     BypassOption bypass_option;
 
@@ -149,6 +149,9 @@ private:
 
     GBMOutputSurface::FrontBuffer visible_composite_frame;
     GBMOutputSurface::FrontBuffer scheduled_composite_frame;
+
+    std::shared_ptr<FBHandle const> scheduled_fb{nullptr};
+    std::shared_ptr<FBHandle const> visible_fb{nullptr};
 
     geometry::Rectangle area;
     glm::mat2 transform;
