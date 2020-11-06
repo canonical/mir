@@ -14,27 +14,21 @@ mir (2.2.0) UNRELEASED; urgency=medium
       . mircore ABI unchanged at 1
       . mircookie ABI unchanged at 2
     - Enhancements:
-      . Better diagnostic when glGetShaderInfoLog() fails
       . Add logical output group (aka "display wall") support
-      . [X11] Include property name in error messages if verbose debugging
       . [X11] Pick up min/max size
-      . [spread] use sbuild everywhere
-      . CompositorPerformance test: use the test framework to avoid trampling on WAYLAND_DISPLAY
-      . [mir-kiosk] `run_with` the `ExternalClientLauncher`
       . [wayland] Allow adding and dropping Wayland extensions
       . [performance-tests] Use a EGL visual with no alpha channel
       . [wayland] More correct handling of DRM_FORMAT_MOD_INVALID
-      . [wayland] linux-dmabuf: Fix sending invalid modifiers
       . [debian] Add metapackages for each of the graphics platforms
       . [miral-app] more robust launcher script
-      . [debian] Add dependency on inotify-tools as that's used by the miral-app script
       . [gbm-kms] Implement composite-bypass for Wayland clients
-      . [tests] Extract more information from exceptions thrown by the server
     - Bugs fixed:
+      . [mir-kiosk] Fix `--startup-apps` option
+      . [wayland] linux-dmabuf: Fix sending invalid modifiers
       . [wayland-platform] Report host refresh rate correctly. (Fixes: 1741)
+      . [wayland-platform] Flush Wayland messages on the correct thread. (Fixes: #1775)
       . [X11] Support undecorated windows. (Fixes: #1758)
       . Fix Rawhide FTBFS. (Fixes: #1743, #1746)
-      . [wayland-platform] Flush Wayland messages on the correct thread. (Fixes: #1775)
 
 
  -- William Wold <william.wold@canonical.com>  Thu, 05 Nov 2020 13:10:00 -0800
