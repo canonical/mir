@@ -70,6 +70,8 @@ public:
      */
     virtual void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) = 0;
 
+    virtual void unbind_display(wl_display* /*display*/) {}
+
     virtual std::shared_ptr<Buffer> buffer_from_resource(
         wl_resource* buffer,
         std::function<void()>&& on_consumed,

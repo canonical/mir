@@ -144,6 +144,24 @@ void mgx::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
     this->wayland_executor = std::move(wayland_executor);
 }
 
+void mgx::BufferAllocator::unbind_display(wl_display* display)
+{
+    printf("\nUnbinding display...\n\n");
+    auto context_guard = mir::raii::paired_calls(
+        [this]() { ctx->make_current(); },
+        [this]() { ctx->release_current(); });
+    auto dpy = eglGetCurrentDisplay();
+
+    try
+    {
+        mg::wayland::unbind_display(dpy, display, *egl_extensions);
+    }
+    catch (std::exception const& ex)
+    {
+        log_error("Could not unbind EGL display: %s", ex.what());
+    }
+}
+
 std::shared_ptr<mg::Buffer> mgx::BufferAllocator::buffer_from_resource(
     wl_resource* buffer,
     std::function<void()>&& on_consumed,

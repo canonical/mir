@@ -720,6 +720,7 @@ mf::WaylandConnector::WaylandConnector(
 
 mf::WaylandConnector::~WaylandConnector()
 {
+    allocator->unbind_display(display.get());
     if (dispatch_thread.joinable())
     {
         stop();
