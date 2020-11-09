@@ -93,7 +93,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     },
     {
         mw::PointerConstraintsV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return mf::create_pointer_constraints_unstable_v1(ctx.display, ctx.shell); }
+            { return mf::create_pointer_constraints_unstable_v1(ctx.display, ctx.seat, ctx.shell); }
     },
 };
 

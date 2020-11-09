@@ -27,7 +27,9 @@ namespace shell { class Shell; }
 
 namespace frontend
 {
-auto create_pointer_constraints_unstable_v1(wl_display* display, std::shared_ptr<shell::Shell> shell) -> std::shared_ptr<void>;
+class WlSeat;
+
+auto create_pointer_constraints_unstable_v1(wl_display* display, WlSeat* seat, std::shared_ptr<shell::Shell> shell) -> std::shared_ptr<void>;
 
 }
 }
