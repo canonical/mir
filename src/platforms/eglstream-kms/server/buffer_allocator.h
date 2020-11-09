@@ -27,6 +27,7 @@
 #include "wayland-eglstream-controller.h"
 
 #include <memory>
+#include <experimental/optional>
 
 namespace mir
 {
@@ -85,10 +86,10 @@ private:
         uint32_t version,
         uint32_t id);
 
-    EGLExtensions::WaylandExtensions const extensions;
     EGLExtensions::NVStreamAttribExtensions const nv_extensions;
     std::shared_ptr<renderer::gl::Context> const wayland_ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
+    std::experimental::optional<EGLExtensions::WaylandExtensions> wayland_egl_extensions;
     std::unique_ptr<gl::Program> shader;
     static struct wl_eglstream_controller_interface const impl;
 };

@@ -112,6 +112,7 @@ public:
         wl_resource* buffer,
         std::shared_ptr<mir::renderer::gl::Context> ctx,
         mg::EGLExtensions const& extensions,
+        mg::EGLExtensions::WaylandExtensions const& wayland_extensions,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release,
         std::shared_ptr<mir::Executor> wayland_executor)
@@ -119,9 +120,9 @@ public:
           tex{get_tex_id()},
           on_consumed{std::move(on_consumed)},
           on_release{std::move(on_release)},
-          size_{get_wl_buffer_size(buffer, *extensions.wayland)},
-          layout_{get_texture_layout(buffer, *extensions.wayland)},
-          egl_format{get_wl_egl_format(buffer, *extensions.wayland)},
+          size_{get_wl_buffer_size(buffer, wayland_extensions)},
+          layout_{get_texture_layout(buffer, wayland_extensions)},
+          egl_format{get_wl_egl_format(buffer, wayland_extensions)},
           wayland_executor{std::move(wayland_executor)}
     {
         if (egl_format != EGL_TEXTURE_RGB && egl_format != EGL_TEXTURE_RGBA)
@@ -263,29 +264,23 @@ private:
 };
 }
 
-
-
-void mg::wayland::bind_display(EGLDisplay egl_dpy, wl_display* wayland_dpy, EGLExtensions const& extensions)
+void mg::wayland::bind_display(
+    EGLDisplay egl_dpy,
+    wl_display* wayland_dpy,
+    EGLExtensions::WaylandExtensions const& wayland_extensions)
 {
-    if (!extensions.wayland)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"No EGL_WL_bind_wayland_display support"}));
-    }
-
-    if (extensions.wayland->eglBindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
+    if (wayland_extensions.eglBindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to bind Wayland EGL display"));
     }
 }
 
-void mg::wayland::unbind_display(EGLDisplay egl_dpy, wl_display* wayland_dpy, EGLExtensions const& extensions)
+void mg::wayland::unbind_display(
+    EGLDisplay egl_dpy,
+    wl_display* wayland_dpy,
+    EGLExtensions::WaylandExtensions const& wayland_extensions)
 {
-    if (!extensions.wayland)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"No EGL_WL_bind_wayland_display support"}));
-    }
-
-    if (extensions.wayland->eglUnbindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
+    if (wayland_extensions.eglUnbindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to unbind Wayland EGL display"));
     }
@@ -297,12 +292,14 @@ auto mg::wayland::buffer_from_resource(
     std::function<void()>&& on_release,
     std::shared_ptr<mir::renderer::gl::Context> ctx,
     mg::EGLExtensions const& extensions,
+    EGLExtensions::WaylandExtensions const& wayland_extensions,
     std::shared_ptr<mir::Executor> wayland_executor) -> std::unique_ptr<mg::Buffer>
 {
     return std::make_unique<WaylandTexBuffer>(
         buffer,
         ctx,
         extensions,
+        wayland_extensions,
         std::move(on_consumed),
         std::move(on_release),
         wayland_executor);

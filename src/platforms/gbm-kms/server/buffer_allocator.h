@@ -92,13 +92,15 @@ private:
 
     std::shared_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
-    std::shared_ptr<Executor> wayland_executor;
     std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>> dmabuf_extension;
     gbm_device* const device;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 
     BypassOption const bypass_option;
     BufferImportMethod const buffer_import_method;
+
+    std::shared_ptr<Executor> wayland_executor;
+    std::experimental::optional<EGLExtensions::WaylandExtensions> wayland_egl_extensions;
 };
 
 }

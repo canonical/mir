@@ -62,6 +62,7 @@ public:
 
 private:
     std::shared_ptr<Executor> wayland_executor;
+    std::experimental::optional<EGLExtensions::WaylandExtensions> wayland_egl_extensions;
     std::shared_ptr<EGLExtensions> const egl_extensions;
     std::shared_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;

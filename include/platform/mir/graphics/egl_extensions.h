@@ -223,13 +223,12 @@ struct EGLExtensions
 
     struct WaylandExtensions
     {
-        WaylandExtensions();
+        WaylandExtensions(EGLDisplay dpy);
 
         PFNEGLBINDWAYLANDDISPLAYWL const eglBindWaylandDisplayWL;
         PFNEGLUNBINDWAYLANDDISPLAYWL const eglUnbindWaylandDisplayWL;
         PFNEGLQUERYWAYLANDBUFFERWL const eglQueryWaylandBufferWL;
     };
-    std::experimental::optional<WaylandExtensions> const wayland;
 
     struct NVStreamAttribExtensions
     {

@@ -100,7 +100,8 @@ void mgw::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
         [this]() { ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
-    mg::wayland::bind_display(dpy, display, *egl_extensions);
+    wayland_egl_extensions.emplace(dpy);
+    mg::wayland::bind_display(dpy, display, wayland_egl_extensions.value());
 
     this->wayland_executor = std::move(wayland_executor);
 }
@@ -112,7 +113,12 @@ void mgw::BufferAllocator::unbind_display(wl_display* display)
         [this]() { ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
-    mg::wayland::unbind_display(dpy, display, *egl_extensions);
+    if (!wayland_egl_extensions)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error{"wayland_egl_extensions not set"});
+    }
+
+    mg::wayland::unbind_display(dpy, display, wayland_egl_extensions.value());
 }
 
 auto mgw::BufferAllocator::buffer_from_resource(
@@ -124,12 +130,18 @@ auto mgw::BufferAllocator::buffer_from_resource(
         [this]() { ctx->make_current(); },
         [this]() { ctx->release_current(); });
 
+    if (!wayland_egl_extensions)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error{"wayland_egl_extensions not set"});
+    }
+
     return mg::wayland::buffer_from_resource(
         buffer,
         std::move(on_consumed),
         std::move(on_release),
         ctx,
         *egl_extensions,
+        wayland_egl_extensions.value(),
         wayland_executor);
 }
 

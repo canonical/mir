@@ -21,6 +21,7 @@
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/graphics/egl_extensions.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
 #include <EGL/egl.h>
@@ -73,8 +74,10 @@ public:
 private:
     std::shared_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
-    std::shared_ptr<Executor> wayland_executor;
     std::shared_ptr<EGLExtensions> const egl_extensions;
+
+    std::shared_ptr<Executor> wayland_executor;
+    std::experimental::optional<EGLExtensions::WaylandExtensions> wayland_egl_extensions;
 };
 
 }

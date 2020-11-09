@@ -20,6 +20,8 @@
 #ifndef MIR_PLATFORM_EGL_WAYLAND_ALLOCATOR_H_
 #define MIR_PLATFORM_EGL_WAYLAND_ALLOCATOR_H_
 
+#include "mir/graphics/egl_extensions.h"
+
 #include <memory>
 #include <functional>
 #include <EGL/egl.h>
@@ -42,12 +44,11 @@ class Context;
 namespace graphics
 {
 class Buffer;
-class EGLExtensions;
 
 namespace wayland
 {
-void bind_display(EGLDisplay egl_dpy, wl_display* wl_dpy, EGLExtensions const& extensions);
-void unbind_display(EGLDisplay egl_dpy, wl_display* wl_dpy, EGLExtensions const& extensions);
+void bind_display(EGLDisplay egl_dpy, wl_display* wl_dpy, EGLExtensions::WaylandExtensions const& wayland_extensions);
+void unbind_display(EGLDisplay egl_dpy, wl_display* wl_dpy, EGLExtensions::WaylandExtensions const& wayland_extensions);
 
 auto buffer_from_resource(
     wl_resource* buffer,
@@ -55,6 +56,7 @@ auto buffer_from_resource(
     std::function<void()>&& on_release,
     std::shared_ptr<renderer::gl::Context> ctx,
     EGLExtensions const& extensions,
+    EGLExtensions::WaylandExtensions const& wayland_extensions,
     std::shared_ptr<Executor> wayland_executor) -> std::unique_ptr<Buffer>;
 
 }

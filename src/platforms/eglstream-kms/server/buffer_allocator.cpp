@@ -386,7 +386,9 @@ void mir::graphics::eglstream::BufferAllocator::bind_display(
 
     auto dpy = eglGetCurrentDisplay();
 
-    if (extensions.eglBindWaylandDisplayWL(dpy, display) != EGL_TRUE)
+    wayland_egl_extensions.emplace(dpy);
+
+    if (wayland_egl_extensions.value().eglBindWaylandDisplayWL(dpy, display) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION((mg::egl_error("Failed to bind Wayland EGL display")));
     }
@@ -424,9 +426,14 @@ void mir::graphics::eglstream::BufferAllocator::unbind_display(wl_display* displ
         [this]() { wayland_ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
-    if (extensions.eglUnbindWaylandDisplayWL(dpy, display) != EGL_TRUE)
+    if (!wayland_egl_extensions)
     {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to unbind Wayland EGL display")));
+        BOOST_THROW_EXCEPTION(std::logic_error("wayland_egl_extensions not set"));
+    }
+
+    if (wayland_egl_extensions.value().eglUnbindWaylandDisplayWL(dpy, display) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to unbind Wayland EGL display"));
     }
 }
 
@@ -526,12 +533,17 @@ mir::graphics::eglstream::BufferAllocator::buffer_from_resource(
         [this]() { wayland_ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
+    if (!wayland_egl_extensions)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("wayland_egl_extensions not set"));
+    }
+
     EGLint width, height;
-    if (extensions.eglQueryWaylandBufferWL(dpy, buffer, EGL_WIDTH, &width) != EGL_TRUE)
+    if (wayland_egl_extensions.value().eglQueryWaylandBufferWL(dpy, buffer, EGL_WIDTH, &width) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query Wayland buffer width"));
     }
-    if (extensions.eglQueryWaylandBufferWL(dpy, buffer, EGL_HEIGHT, &height) != EGL_TRUE)
+    if (wayland_egl_extensions.value().eglQueryWaylandBufferWL(dpy, buffer, EGL_HEIGHT, &height) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query Wayland buffer height"));
     }
@@ -539,7 +551,12 @@ mir::graphics::eglstream::BufferAllocator::buffer_from_resource(
         [&]()
         {
             EGLint y_inverted;
-            if (extensions.eglQueryWaylandBufferWL(dpy, buffer, EGL_WAYLAND_Y_INVERTED_WL, &y_inverted) != EGL_TRUE)
+            auto const query_result = wayland_egl_extensions.value().eglQueryWaylandBufferWL(
+                dpy,
+                buffer,
+                EGL_WAYLAND_Y_INVERTED_WL,
+                &y_inverted);
+            if (query_result != EGL_TRUE)
             {
                 // If querying Y_INVERTED fails, we must have the default, GL, layout
                 return mg::gl::Texture::Layout::GL;

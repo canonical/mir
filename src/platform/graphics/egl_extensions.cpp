@@ -29,17 +29,6 @@ namespace mg=mir::graphics;
 
 namespace
 {
-std::experimental::optional<mg::EGLExtensions::WaylandExtensions> maybe_wayland_ext()
-{
-    try
-    {
-        return mg::EGLExtensions::WaylandExtensions{};
-    }
-    catch (std::runtime_error const&)
-    {
-        return {};
-    }
-}
 
 std::experimental::optional<mg::EGLExtensions::PlatformBaseEXT> maybe_platform_base_ext()
 {
@@ -69,7 +58,6 @@ mg::EGLExtensions::EGLExtensions() :
      */
     glEGLImageTargetTexture2DOES{
         reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))},
-    wayland{maybe_wayland_ext()},
     platform_base{maybe_platform_base_ext()}
 {
     if (!eglCreateImageKHR || !eglDestroyImageKHR)
@@ -79,7 +67,7 @@ mg::EGLExtensions::EGLExtensions() :
         BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage"));
 }
 
-mg::EGLExtensions::WaylandExtensions::WaylandExtensions() :
+mg::EGLExtensions::WaylandExtensions::WaylandExtensions(EGLDisplay dpy) :
     eglBindWaylandDisplayWL{
         reinterpret_cast<PFNEGLBINDWAYLANDDISPLAYWL>(eglGetProcAddress("eglBindWaylandDisplayWL"))
     },
@@ -90,9 +78,15 @@ mg::EGLExtensions::WaylandExtensions::WaylandExtensions() :
         reinterpret_cast<PFNEGLQUERYWAYLANDBUFFERWL>(eglGetProcAddress("eglQueryWaylandBufferWL"))
     }
 {
+    auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+    if (!egl_extensions || !strstr(egl_extensions, "EGL_WL_bind_wayland_display"))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("EGL display doesn't support EGL_WL_bind_wayland_display"));
+    }
+
     if (!eglBindWaylandDisplayWL || !eglUnbindWaylandDisplayWL || !eglQueryWaylandBufferWL)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGL_WL_bind_wayland_display"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("EGL_WL_bind_wayland_display functions are null"));
     }
 }
 
