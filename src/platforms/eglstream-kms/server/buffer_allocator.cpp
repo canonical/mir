@@ -417,6 +417,19 @@ void mir::graphics::eglstream::BufferAllocator::bind_display(
     mir::log_info("Bound EGLStreams-backed Wayland display");
 }
 
+void mir::graphics::eglstream::BufferAllocator::unbind_display(wl_display* display)
+{
+    auto context_guard = mir::raii::paired_calls(
+        [this]() { wayland_ctx->make_current(); },
+        [this]() { wayland_ctx->release_current(); });
+    auto dpy = eglGetCurrentDisplay();
+
+    if (extensions.eglUnbindWaylandDisplayWL(dpy, display) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to unbind Wayland EGL display")));
+    }
+}
+
 namespace
 {
 class EGLStreamBuffer :

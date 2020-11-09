@@ -720,7 +720,19 @@ mf::WaylandConnector::WaylandConnector(
 
 mf::WaylandConnector::~WaylandConnector()
 {
-    allocator->unbind_display(display.get());
+    try
+    {
+        allocator->unbind_display(display.get());
+    }
+    catch (...)
+    {
+        log(
+            logging::Severity::warning,
+            MIR_LOG_COMPONENT,
+            std::current_exception(),
+            "Failed to unbind EGL display");
+    }
+
     if (dispatch_thread.joinable())
     {
         stop();
