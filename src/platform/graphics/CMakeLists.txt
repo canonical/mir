@@ -73,6 +73,7 @@ target_link_libraries(
 
   PUBLIC
     mirwayland
+    ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   PRIVATE
     mircommon
 )
