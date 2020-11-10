@@ -278,6 +278,19 @@ void mg::wayland::bind_display(EGLDisplay egl_dpy, wl_display* wayland_dpy, EGLE
     }
 }
 
+void mg::wayland::unbind_display(EGLDisplay egl_dpy, wl_display* wayland_dpy, EGLExtensions const& extensions)
+{
+    if (!extensions.wayland)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"No EGL_WL_bind_wayland_display support"}));
+    }
+
+    if (extensions.wayland->eglUnbindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to unbind Wayland EGL display"));
+    }
+}
+
 auto mg::wayland::buffer_from_resource(
     wl_resource* buffer,
     std::function<void()>&& on_consumed,

@@ -396,6 +396,28 @@ void mg::rpi::BufferAllocator::bind_display(wl_display* display, std::shared_ptr
     this->wayland_executor = std::move(wayland_executor);
 }
 
+void mg::rpi::BufferAllocator::unbind_display(wl_display* display)
+{
+    auto context_guard = mir::raii::paired_calls(
+        [this]() { ctx->make_current(); },
+        [this]() { ctx->release_current(); });
+    auto dpy = eglGetCurrentDisplay();
+
+    if (!egl_extensions->wayland)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"No EGL_WL_bind_wayland_display support"}));
+    }
+
+    if (egl_extensions->wayland->eglUnbindWaylandDisplayWL(dpy, display) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to unbind Wayland EGL display"));
+    }
+    else
+    {
+        mir::log_info("Unbound Wayland display");
+    }
+}
+
 std::shared_ptr<mg::Buffer> mg::rpi::BufferAllocator::buffer_from_resource(
     wl_resource* buffer,
     std::function<void()>&& on_consumed,

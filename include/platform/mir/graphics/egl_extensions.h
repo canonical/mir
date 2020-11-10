@@ -226,6 +226,7 @@ struct EGLExtensions
         WaylandExtensions();
 
         PFNEGLBINDWAYLANDDISPLAYWL const eglBindWaylandDisplayWL;
+        PFNEGLUNBINDWAYLANDDISPLAYWL const eglUnbindWaylandDisplayWL;
         PFNEGLQUERYWAYLANDBUFFERWL const eglQueryWaylandBufferWL;
     };
     std::experimental::optional<WaylandExtensions> const wayland;

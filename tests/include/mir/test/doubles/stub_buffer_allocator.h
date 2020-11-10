@@ -69,6 +69,10 @@ struct StubBufferAllocator : public graphics::GraphicBufferAllocator
     {
     }
 
+    void unbind_display(wl_display*) override
+    {
+    }
+
     auto buffer_from_resource(wl_resource*, std::function<void()>&&, std::function<void()>&&)
         -> std::shared_ptr<graphics::Buffer> override
     {
