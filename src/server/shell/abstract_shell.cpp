@@ -252,26 +252,7 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 
         if (focused_surface() == surface)
         {
-            switch (surface->confine_pointer_state())
-            {
-            case mir_pointer_locked_oneshot:
-            case mir_pointer_locked_persistent:
-            {
-                auto rectangle = surface->input_bounds();
-                rectangle.top_left = rectangle.top_left + as_displacement(0.5*rectangle.size);
-                rectangle.size = {1,1};
-                seat->set_confinement_regions({rectangle});
-                break;
-            }
-            case mir_pointer_confined_to_window_oneshot:
-            case mir_pointer_confined_to_window_persistent:
-                seat->set_confinement_regions({surface->input_bounds()});
-                break;
-
-            case mir_pointer_unconfined:
-                seat->reset_confinement_regions();
-                break;
-            }
+            update_confinement_for(surface);
         }
     }
 }
@@ -487,26 +468,7 @@ void msh::AbstractShell::notify_focus_locked(
 
         if (surface)
         {
-            switch (surface->confine_pointer_state())
-            {
-            case mir_pointer_locked_oneshot:
-            case mir_pointer_locked_persistent:
-            {
-                auto rectangle = surface->input_bounds();
-                rectangle.top_left = rectangle.top_left + as_displacement(0.5*rectangle.size);
-                rectangle.size = {1,1};
-                seat->set_confinement_regions({rectangle});
-                break;
-            }
-            case mir_pointer_confined_to_window_oneshot:
-            case mir_pointer_confined_to_window_persistent:
-                seat->set_confinement_regions({surface->input_bounds()});
-                break;
-
-            case mir_pointer_unconfined:
-                seat->reset_confinement_regions();
-                break;
-            }
+            update_confinement_for(surface);
 
             // Ensure the surface has really taken the focus before notifying it that it is focused
             input_targeter->set_focus(surface);
@@ -525,6 +487,30 @@ void msh::AbstractShell::notify_focus_locked(
         {
             input_targeter->clear_focus();
         }
+    }
+}
+
+void msh::AbstractShell::update_confinement_for(std::shared_ptr<ms::Surface> const& surface) const
+{
+    switch (surface->confine_pointer_state())
+    {
+    case mir_pointer_locked_oneshot:
+    case mir_pointer_locked_persistent:
+    {
+        auto rectangle = surface->input_bounds();
+        rectangle.top_left = rectangle.top_left + as_displacement(0.5*rectangle.size);
+        rectangle.size = {1,1};
+        this->seat->set_confinement_regions({rectangle});
+        break;
+    }
+    case mir_pointer_confined_to_window_oneshot:
+    case mir_pointer_confined_to_window_persistent:
+        this->seat->set_confinement_regions({surface->input_bounds()});
+        break;
+
+    case mir_pointer_unconfined:
+        this->seat->reset_confinement_regions();
+        break;
     }
 }
 
