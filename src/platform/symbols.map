@@ -1,4 +1,4 @@
-MIRPLATFORM_2.1 {
+MIRPLATFORM_2.2 {
  global:
   extern "C++" {
     mir::graphics::AtomicFrame::increment*;
@@ -178,14 +178,9 @@ MIRPLATFORM_2.1 {
     vtable?for?mir::options::DefaultConfiguration;
     vtable?for?mir::options::Option;
     vtable?for?mir::options::ProgramOption;
+    mir::options::add_wayland_extensions_opt;
+    mir::options::drop_wayland_extensions_opt;
+    mir::graphics::wayland::unbind_display*;
  };
  local: *;
 };
-
-MIRPLATFORM_2.2 {
- global:
-  extern "C++" {
-    mir::options::add_wayland_extensions_opt;
-    mir::options::drop_wayland_extensions_opt;
- };
-} MIRPLATFORM_2.1;

@@ -83,11 +83,14 @@ mg::EGLExtensions::WaylandExtensions::WaylandExtensions() :
     eglBindWaylandDisplayWL{
         reinterpret_cast<PFNEGLBINDWAYLANDDISPLAYWL>(eglGetProcAddress("eglBindWaylandDisplayWL"))
     },
+    eglUnbindWaylandDisplayWL{
+        reinterpret_cast<PFNEGLBINDWAYLANDDISPLAYWL>(eglGetProcAddress("eglUnbindWaylandDisplayWL"))
+    },
     eglQueryWaylandBufferWL{
         reinterpret_cast<PFNEGLQUERYWAYLANDBUFFERWL>(eglGetProcAddress("eglQueryWaylandBufferWL"))
     }
 {
-    if (!eglBindWaylandDisplayWL || !eglQueryWaylandBufferWL)
+    if (!eglBindWaylandDisplayWL || !eglUnbindWaylandDisplayWL || !eglQueryWaylandBufferWL)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGL_WL_bind_wayland_display"));
     }
