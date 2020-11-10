@@ -7,9 +7,9 @@ mir (2.2.0) UNRELEASED; urgency=medium
       . miral ABI unchanged at 4
       . mirserver ABI unchanged at 54
       . mircommon ABI unchanged at 7
-      . mirplatform ABI unchanged at 20
+      . mirplatform ABI bumped to 21
       . mirprotobuf ABI unchanged at 3
-      . mirplatformgraphics ABI unchanged at 18
+      . mirplatformgraphics ABI bumped to 19
       . mirinputplatform ABI unchanged at 7
       . mircore ABI unchanged at 1
       . mircookie ABI unchanged at 2
