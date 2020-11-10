@@ -128,7 +128,7 @@ void LockedPointerV1::MyWaylandSurfaceObserver::attrib_changed(
 {
     if (attrib == mir_window_attrib_focus)
     {
-        switch (auto const state = surf->confine_pointer_state())
+        switch (surf->confine_pointer_state())
         {
         case mir_pointer_locked_persistent:
         case mir_pointer_locked_oneshot:
@@ -139,15 +139,8 @@ void LockedPointerV1::MyWaylandSurfaceObserver::attrib_changed(
             }
             else
             {
-                run_on_wayland_thread_unless_destroyed([self=self, state]()
-                    {
-                        self->send_unlocked_event();
-
-                        if (state == mir_pointer_locked_oneshot)
-                        {
-                            self->destroy();
-                        }
-                    });
+                run_on_wayland_thread_unless_destroyed([self=self]()
+                    { self->send_unlocked_event(); });
             }
 
             break;

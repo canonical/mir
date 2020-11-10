@@ -475,13 +475,9 @@ void msh::AbstractShell::notify_focus_locked(
             switch (current_focus->confine_pointer_state())
             {
             case mir_pointer_confined_to_window_oneshot:
-                seat->reset_confinement_regions();
-                // TODO need to notify "unconfined"
-                break;
-
             case mir_pointer_locked_oneshot:
                 seat->reset_confinement_regions();
-                // TODO need to notify "unlocked"
+                current_focus->set_confine_pointer_state(mir_pointer_unconfined);
                 break;
 
             default:
@@ -493,18 +489,22 @@ void msh::AbstractShell::notify_focus_locked(
         {
             switch (surface->confine_pointer_state())
             {
+            case mir_pointer_locked_oneshot:
+            case mir_pointer_locked_persistent:
+            {
+                auto rectangle = surface->input_bounds();
+                rectangle.top_left = rectangle.top_left + as_displacement(0.5*rectangle.size);
+                rectangle.size = {1,1};
+                seat->set_confinement_regions({rectangle});
+                break;
+            }
             case mir_pointer_confined_to_window_oneshot:
             case mir_pointer_confined_to_window_persistent:
                 seat->set_confinement_regions({surface->input_bounds()});
-                // TODO need to notify "confined"
                 break;
 
-            case mir_pointer_locked_oneshot:
-            case mir_pointer_locked_persistent:
-                // TODO need to notify "locked"
-                break;
-
-            default:
+            case mir_pointer_unconfined:
+                seat->reset_confinement_regions();
                 break;
             }
 
