@@ -232,11 +232,12 @@ struct EGLExtensions
 
     struct NVStreamAttribExtensions
     {
-        NVStreamAttribExtensions();
+        NVStreamAttribExtensions(EGLDisplay dpy);
 
         PFNEGLCREATESTREAMATTRIBNVPROC const eglCreateStreamAttribNV;
         PFNEGLSTREAMCONSUMERACQUIREATTRIBNVPROC const eglStreamConsumerAcquireAttribNV;
     };
+
     struct PlatformBaseEXT
     {
         PlatformBaseEXT();

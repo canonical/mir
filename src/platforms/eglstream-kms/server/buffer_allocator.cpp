@@ -327,7 +327,12 @@ void mge::BufferAllocator::create_buffer_eglstream_resource(
     allocator->wayland_ctx->make_current();
     auto dpy = eglGetCurrentDisplay();
 
-    auto stream = allocator->nv_extensions.eglCreateStreamAttribNV(dpy, attribs);
+    if (!allocator->nv_egl_extensions)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("nv_egl_extensions not set"));
+    }
+
+    auto stream = allocator->nv_egl_extensions.value().eglCreateStreamAttribNV(dpy, attribs);
 
     if (stream == EGL_NO_STREAM_KHR)
     {
@@ -386,6 +391,7 @@ void mir::graphics::eglstream::BufferAllocator::bind_display(
 
     auto dpy = eglGetCurrentDisplay();
 
+    nv_egl_extensions.emplace(dpy);
     wayland_egl_extensions.emplace(dpy);
 
     if (wayland_egl_extensions.value().eglBindWaylandDisplayWL(dpy, display) != EGL_TRUE)

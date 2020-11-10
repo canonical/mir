@@ -90,7 +90,7 @@ mg::EGLExtensions::WaylandExtensions::WaylandExtensions(EGLDisplay dpy) :
     }
 }
 
-mg::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions() :
+mg::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions(EGLDisplay dpy) :
     eglCreateStreamAttribNV{
         reinterpret_cast<PFNEGLCREATESTREAMATTRIBNVPROC>(eglGetProcAddress("eglCreateStreamAttribNV"))
     },
@@ -99,9 +99,15 @@ mg::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions() :
             eglGetProcAddress("eglStreamConsumerAcquireAttribNV"))
     }
 {
+    auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+    if (!egl_extensions || !strstr(egl_extensions, "EGL_NV_stream_attrib"))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("EGL display doesn't support EGL_NV_stream_attrib"));
+    }
+
     if (!eglCreateStreamAttribNV || !eglStreamConsumerAcquireAttribNV)
     {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation doesn't support EGL_NV_stream_attrib"}));
+        BOOST_THROW_EXCEPTION((std::runtime_error{"EGL_NV_stream_attrib functions are null"}));
     }
 }
 

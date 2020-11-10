@@ -147,6 +147,7 @@ public:
           transform{output.transformation()},
           drm_node{std::move(drm_node)},
           event_handler{std::move(event_handler)},
+          nv_stream{dpy},
           display_report{std::move(display_report)}
     {
         EGLint const stream_attribs[] = {
