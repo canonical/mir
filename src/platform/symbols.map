@@ -19,6 +19,7 @@ MIRPLATFORM_2.2 {
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::operator*;
+    mir::graphics::EGLExtensions::BaseExtensions::BaseExtensions*;
     mir::graphics::EGLExtensions::DebugKHR::DebugKHR*;
     mir::graphics::EGLExtensions::DebugKHR::extension_or_null_object*;
     mir::graphics::EGLExtensions::DebugKHR::maybe_debug_khr*;
