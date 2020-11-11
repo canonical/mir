@@ -30,7 +30,7 @@ namespace mg=mir::graphics;
 namespace
 {
 
-std::experimental::optional<mg::EGLExtensions::PlatformBaseEXT> maybe_platform_base_ext()
+auto maybe_platform_base_ext() -> std::optional<mg::EGLExtensions::PlatformBaseEXT>
 {
     try
     {
@@ -179,7 +179,7 @@ auto mg::EGLExtensions::DebugKHR::extension_or_null_object() -> DebugKHR
     };
 }
 
-auto mg::EGLExtensions::DebugKHR::maybe_debug_khr() -> std::experimental::optional<DebugKHR>
+auto mg::EGLExtensions::DebugKHR::maybe_debug_khr() -> std::optional<DebugKHR>
 {
     try
     {

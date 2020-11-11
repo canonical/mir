@@ -44,7 +44,7 @@
 #ifndef MIR_GRAPHICS_EGL_EXTENSIONS_H_
 #define MIR_GRAPHICS_EGL_EXTENSIONS_H_
 
-#include <experimental/optional>
+#include <optional>
 
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
@@ -223,7 +223,7 @@ struct EGLExtensions
         {
             if (cached_display && cached_display.value() != dpy)
             {
-                cached_ext = std::experimental::nullopt;
+                cached_ext = std::nullopt;
             }
 
             if (!cached_ext)
@@ -236,8 +236,8 @@ struct EGLExtensions
         }
 
     private:
-        std::experimental::optional<EGLDisplay> mutable cached_display;
-        std::experimental::optional<Ext> mutable cached_ext;
+        std::optional<EGLDisplay> mutable cached_display;
+        std::optional<Ext> mutable cached_ext;
     };
 
     EGLExtensions();
@@ -277,7 +277,7 @@ struct EGLExtensions
         PFNEGLGETPLATFORMDISPLAYEXTPROC const eglGetPlatformDisplay;
         PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC const eglCreatePlatformWindowSurface;
     };
-    std::experimental::optional<PlatformBaseEXT> const platform_base;
+    std::optional<PlatformBaseEXT> const platform_base;
 
     class DebugKHR
     {
@@ -285,7 +285,7 @@ struct EGLExtensions
         DebugKHR();
 
         static DebugKHR extension_or_null_object();
-        static std::experimental::optional<DebugKHR> maybe_debug_khr();
+        static std::optional<DebugKHR> maybe_debug_khr();
 
         PFNEGLDEBUGMESSAGECONTROLKHRPROC const eglDebugMessageControlKHR;
         PFNEGLLABELOBJECTKHRPROC const eglLabelObjectKHR;
