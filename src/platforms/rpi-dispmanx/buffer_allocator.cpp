@@ -398,12 +398,7 @@ void mg::rpi::BufferAllocator::unbind_display(wl_display* display)
         [this]() { ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
-    if (!egl_extensions->wayland)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"No EGL_WL_bind_wayland_display support"}));
-    }
-
-    if (egl_extensions->wayland->eglUnbindWaylandDisplayWL(dpy, display) == EGL_FALSE)
+    if (egl_extensions->wayland(dpy).eglUnbindWaylandDisplayWL(dpy, display) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to unbind Wayland EGL display"));
     }
