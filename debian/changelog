@@ -29,6 +29,7 @@ mir (2.2.0) UNRELEASED; urgency=medium
       . [wayland-platform] Flush Wayland messages on the correct thread. (Fixes: #1775)
       . [X11] Support undecorated windows. (Fixes: #1758)
       . Fix Rawhide FTBFS. (Fixes: #1743, #1746)
+      . Support software buffers on X11, Wayland and GBM/KMS. (Fixes: #914)
 
 
  -- William Wold <william.wold@canonical.com>  Thu, 05 Nov 2020 13:10:00 -0800
