@@ -216,28 +216,60 @@ namespace graphics
 {
 struct EGLExtensions
 {
+    template<typename Ext>
+    struct LazyDisplayExtensions
+    {
+        auto operator()(EGLDisplay dpy) const -> Ext const&
+        {
+            if (cached_display && cached_display.value() != dpy)
+            {
+                cached_ext = std::experimental::nullopt;
+            }
+
+            if (!cached_ext)
+            {
+                cached_display = dpy;
+                cached_ext.emplace(dpy);
+            }
+
+            return cached_ext.value();
+        }
+
+    private:
+        std::experimental::optional<EGLDisplay> mutable cached_display;
+        std::experimental::optional<Ext> mutable cached_ext;
+    };
+
     EGLExtensions();
-    PFNEGLCREATEIMAGEKHRPROC const eglCreateImageKHR;
-    PFNEGLDESTROYIMAGEKHRPROC const eglDestroyImageKHR;
-    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const glEGLImageTargetTexture2DOES;
+
+    struct BaseExtensions
+    {
+        BaseExtensions(EGLDisplay dpy);
+
+        PFNEGLCREATEIMAGEKHRPROC const eglCreateImageKHR;
+        PFNEGLDESTROYIMAGEKHRPROC const eglDestroyImageKHR;
+        PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const glEGLImageTargetTexture2DOES;
+    };
+    LazyDisplayExtensions<BaseExtensions> const base;
 
     struct WaylandExtensions
     {
-        WaylandExtensions();
+        WaylandExtensions(EGLDisplay dpy);
 
         PFNEGLBINDWAYLANDDISPLAYWL const eglBindWaylandDisplayWL;
         PFNEGLUNBINDWAYLANDDISPLAYWL const eglUnbindWaylandDisplayWL;
         PFNEGLQUERYWAYLANDBUFFERWL const eglQueryWaylandBufferWL;
     };
-    std::experimental::optional<WaylandExtensions> const wayland;
+    LazyDisplayExtensions<WaylandExtensions> const wayland;
 
     struct NVStreamAttribExtensions
     {
-        NVStreamAttribExtensions();
+        NVStreamAttribExtensions(EGLDisplay dpy);
 
         PFNEGLCREATESTREAMATTRIBNVPROC const eglCreateStreamAttribNV;
         PFNEGLSTREAMCONSUMERACQUIREATTRIBNVPROC const eglStreamConsumerAcquireAttribNV;
     };
+
     struct PlatformBaseEXT
     {
         PlatformBaseEXT();

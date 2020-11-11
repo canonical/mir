@@ -64,7 +64,8 @@ TEST_F(EGLExtensions, constructor_throws_if_gl_oes_egl_image_not_supported)
 TEST_F(EGLExtensions, success_has_sane_function_hooks)
 {
     mg::EGLExtensions extensions;
-    EXPECT_NE(nullptr, extensions.eglCreateImageKHR);
-    EXPECT_NE(nullptr, extensions.eglDestroyImageKHR);
-    EXPECT_NE(nullptr, extensions.glEGLImageTargetTexture2DOES);
+    EGLDisplay dpy = eglGetDisplay(nullptr);
+    EXPECT_NE(nullptr, extensions.base(dpy).eglCreateImageKHR);
+    EXPECT_NE(nullptr, extensions.base(dpy).eglDestroyImageKHR);
+    EXPECT_NE(nullptr, extensions.base(dpy).glEGLImageTargetTexture2DOES);
 }

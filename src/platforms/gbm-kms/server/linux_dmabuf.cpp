@@ -87,7 +87,7 @@ public:
     {
         if (image != EGL_NO_IMAGE_KHR)
         {
-            egl_extensions->eglDestroyImageKHR(dpy, image);
+            egl_extensions->base(dpy).eglDestroyImageKHR(dpy, image);
         }
     }
 
@@ -159,9 +159,9 @@ public:
         attributes.push_back(EGL_NONE);
         if (image != EGL_NO_IMAGE_KHR)
         {
-            egl_extensions->eglDestroyImageKHR(dpy, image);
+            egl_extensions->base(dpy).eglDestroyImageKHR(dpy, image);
         }
-        image = egl_extensions->eglCreateImageKHR(
+        image = egl_extensions->base(dpy).eglCreateImageKHR(
             dpy,
             EGL_NO_CONTEXT,
             EGL_LINUX_DMA_BUF_EXT,
@@ -527,6 +527,7 @@ public:
         WlDmaBufBuffer& source,
         mg::EGLExtensions const& extensions,
         std::shared_ptr<mir::renderer::gl::Context> ctx,
+        EGLDisplay dpy,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release,
         std::shared_ptr<mir::Executor> wayland_executor)
@@ -545,7 +546,7 @@ public:
         eglBindAPI(EGL_OPENGL_ES_API);
 
         glBindTexture(GL_TEXTURE_2D, tex);
-        extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, source.reimport_egl_image());
+        extensions.base(dpy).glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, source.reimport_egl_image());
         // tex is now an EGLImage sibling, so we can free the EGLImage without
         // freeing the backing data.
 
@@ -934,6 +935,7 @@ auto mgg::LinuxDmaBufUnstable::buffer_from_resource(
             *dmabuf,
             *egl_extensions,
             std::move(ctx),
+            dpy,
             std::move(on_consumed),
             std::move(on_release),
             std::move(wayland_executor));
