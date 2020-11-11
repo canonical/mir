@@ -69,7 +69,7 @@ mg::EGLExtensions::BaseExtensions::BaseExtensions(EGLDisplay dpy) :
         BOOST_THROW_EXCEPTION(std::runtime_error("EGL display doesn't support EGL_KHR_image_base"));
     }
 
-    if (!egl_extensions || !strstr(egl_extensions, "GL_OES_EGL_image") || !glEGLImageTargetTexture2DOES)
+    if (!glEGLImageTargetTexture2DOES)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage"));
     }
