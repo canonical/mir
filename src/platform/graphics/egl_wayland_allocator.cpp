@@ -47,16 +47,16 @@ GLuint get_tex_id()
     return tex;
 }
 
-geom::Size get_wl_buffer_size(wl_resource* buffer, mg::EGLExtensions::WaylandExtensions const& ext)
+geom::Size get_wl_buffer_size(wl_resource* buffer, mg::EGLExtensions const& ext)
 {
     EGLint width, height;
 
     auto dpy = eglGetCurrentDisplay();
-    if (ext.eglQueryWaylandBufferWL(dpy, buffer, EGL_WIDTH, &width) == EGL_FALSE)
+    if (ext.wayland(dpy).eglQueryWaylandBufferWL(dpy, buffer, EGL_WIDTH, &width) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WaylandAllocator buffer width"));
     }
-    if (ext.eglQueryWaylandBufferWL(dpy, buffer, EGL_HEIGHT, &height) == EGL_FALSE)
+    if (ext.wayland(dpy).eglQueryWaylandBufferWL(dpy, buffer, EGL_HEIGHT, &height) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WaylandAllocator buffer height"));
     }
@@ -66,12 +66,12 @@ geom::Size get_wl_buffer_size(wl_resource* buffer, mg::EGLExtensions::WaylandExt
 
 mg::gl::Texture::Layout get_texture_layout(
     wl_resource* resource,
-    mg::EGLExtensions::WaylandExtensions const& ext)
+    mg::EGLExtensions const& ext)
 {
     EGLint inverted;
     auto dpy = eglGetCurrentDisplay();
 
-    if (ext.eglQueryWaylandBufferWL(dpy, resource, EGL_WAYLAND_Y_INVERTED_WL, &inverted) == EGL_FALSE)
+    if (ext.wayland(dpy).eglQueryWaylandBufferWL(dpy, resource, EGL_WAYLAND_Y_INVERTED_WL, &inverted) == EGL_FALSE)
     {
         // EGL_WAYLAND_Y_INVERTED_WL is unsupported; the default is that the texture is in standard
         // GL texture layout
@@ -89,12 +89,12 @@ mg::gl::Texture::Layout get_texture_layout(
     }
 }
 
-EGLint get_wl_egl_format(wl_resource* resource, mg::EGLExtensions::WaylandExtensions const& ext)
+EGLint get_wl_egl_format(wl_resource* resource, mg::EGLExtensions const& ext)
 {
     EGLint format;
     auto dpy = eglGetCurrentDisplay();
 
-    if (ext.eglQueryWaylandBufferWL(dpy, resource, EGL_TEXTURE_FORMAT, &format) == EGL_FALSE)
+    if (ext.wayland(dpy).eglQueryWaylandBufferWL(dpy, resource, EGL_TEXTURE_FORMAT, &format) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query Wayland buffer format"));
     }
@@ -119,9 +119,9 @@ public:
           tex{get_tex_id()},
           on_consumed{std::move(on_consumed)},
           on_release{std::move(on_release)},
-          size_{get_wl_buffer_size(buffer, *extensions.wayland)},
-          layout_{get_texture_layout(buffer, *extensions.wayland)},
-          egl_format{get_wl_egl_format(buffer, *extensions.wayland)},
+          size_{get_wl_buffer_size(buffer, extensions)},
+          layout_{get_texture_layout(buffer, extensions)},
+          egl_format{get_wl_egl_format(buffer, extensions)},
           wayland_executor{std::move(wayland_executor)}
     {
         if (egl_format != EGL_TEXTURE_RGB && egl_format != EGL_TEXTURE_RGBA)
@@ -137,7 +137,9 @@ public:
                 EGL_NONE
             };
 
-        auto egl_image = extensions.eglCreateImageKHR(
+        auto const dpy = eglGetCurrentDisplay();
+
+        auto egl_image = extensions.base(dpy).eglCreateImageKHR(
             eglGetCurrentDisplay(),
             EGL_NO_CONTEXT,
             EGL_WAYLAND_BUFFER_WL,
@@ -148,7 +150,7 @@ public:
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
 
         glBindTexture(GL_TEXTURE_2D, tex);
-        extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
+        extensions.base(dpy).glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -156,7 +158,7 @@ public:
 
         // tex is now an EGLImage sibling, so we can free the EGLImage without
         // freeing the backing data.
-        extensions.eglDestroyImageKHR(eglGetCurrentDisplay(), egl_image);
+        extensions.base(dpy).eglDestroyImageKHR(eglGetCurrentDisplay(), egl_image);
     }
 
     ~WaylandTexBuffer()
@@ -267,12 +269,7 @@ private:
 
 void mg::wayland::bind_display(EGLDisplay egl_dpy, wl_display* wayland_dpy, EGLExtensions const& extensions)
 {
-    if (!extensions.wayland)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"No EGL_WL_bind_wayland_display support"}));
-    }
-
-    if (extensions.wayland->eglBindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
+    if (extensions.wayland(egl_dpy).eglBindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to bind Wayland EGL display"));
     }
@@ -280,12 +277,7 @@ void mg::wayland::bind_display(EGLDisplay egl_dpy, wl_display* wayland_dpy, EGLE
 
 void mg::wayland::unbind_display(EGLDisplay egl_dpy, wl_display* wayland_dpy, EGLExtensions const& extensions)
 {
-    if (!extensions.wayland)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"No EGL_WL_bind_wayland_display support"}));
-    }
-
-    if (extensions.wayland->eglUnbindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
+    if (extensions.wayland(egl_dpy).eglUnbindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to unbind Wayland EGL display"));
     }
