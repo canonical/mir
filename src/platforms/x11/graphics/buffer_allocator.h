@@ -75,6 +75,7 @@ private:
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<Executor> wayland_executor;
     std::shared_ptr<EGLExtensions> const egl_extensions;
+    bool egl_display_bound{false};
 };
 
 }

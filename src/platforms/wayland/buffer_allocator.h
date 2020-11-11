@@ -65,6 +65,7 @@ private:
     std::shared_ptr<EGLExtensions> const egl_extensions;
     std::shared_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
+    bool egl_display_bound{false};
 };
 }
 }
