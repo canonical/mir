@@ -294,7 +294,19 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
         [this]() { ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
-    mg::wayland::bind_display(dpy, display, *egl_extensions);
+    try
+    {
+        mg::wayland::bind_display(dpy, display, *egl_extensions);
+        egl_display_bound = true;
+    }
+    catch (...)
+    {
+        log(
+            logging::Severity::warning,
+            MIR_LOG_COMPONENT,
+            std::current_exception(),
+            "Failed to bind EGL Display to Wayland display, falling back to software buffers");
+    }
 
     try
     {
@@ -338,12 +350,15 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
 
 void mgg::BufferAllocator::unbind_display(wl_display* display)
 {
-    auto context_guard = mir::raii::paired_calls(
-        [this]() { ctx->make_current(); },
-        [this]() { ctx->release_current(); });
-    auto dpy = eglGetCurrentDisplay();
+    if (egl_display_bound)
+    {
+        auto context_guard = mir::raii::paired_calls(
+            [this]() { ctx->make_current(); },
+            [this]() { ctx->release_current(); });
+        auto dpy = eglGetCurrentDisplay();
 
-    mg::wayland::unbind_display(dpy, display, *egl_extensions);
+        mg::wayland::unbind_display(dpy, display, *egl_extensions);
+    }
 }
 
 std::shared_ptr<mg::Buffer> mgg::BufferAllocator::buffer_from_resource(
