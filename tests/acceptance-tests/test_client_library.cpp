@@ -245,7 +245,7 @@ TEST_F(ClientLibrary, can_set_pointer_confinement)
     auto const spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_set_pixel_format(spec, format);
 
-    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window_persistent);
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_persistent);
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 

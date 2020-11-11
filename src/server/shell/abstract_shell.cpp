@@ -103,8 +103,8 @@ void msh::AbstractShell::update_focused_surface_confined_region()
     {
         switch (current_focus->confine_pointer_state())
         {
-        case mir_pointer_confined_to_window_oneshot:
-        case mir_pointer_confined_to_window_persistent:
+        case mir_pointer_confined_oneshot:
+        case mir_pointer_confined_persistent:
             seat->set_confinement_regions({current_focus->input_bounds()});
             break;
 
@@ -455,7 +455,7 @@ void msh::AbstractShell::notify_focus_locked(
 
             switch (current_focus->confine_pointer_state())
             {
-            case mir_pointer_confined_to_window_oneshot:
+            case mir_pointer_confined_oneshot:
             case mir_pointer_locked_oneshot:
                 seat->reset_confinement_regions();
                 current_focus->set_confine_pointer_state(mir_pointer_unconfined);
@@ -503,8 +503,8 @@ void msh::AbstractShell::update_confinement_for(std::shared_ptr<ms::Surface> con
         this->seat->set_confinement_regions({rectangle});
         break;
     }
-    case mir_pointer_confined_to_window_oneshot:
-    case mir_pointer_confined_to_window_persistent:
+    case mir_pointer_confined_oneshot:
+    case mir_pointer_confined_persistent:
         this->seat->set_confinement_regions({surface->input_bounds()});
         break;
 
