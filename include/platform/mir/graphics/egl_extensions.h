@@ -247,7 +247,7 @@ struct EGLExtensions
     private:
         std::atomic<bool> mutable has_initialized{false};
         std::mutex mutable mutex;
-        EGLDisplay mutable cached_display{0};
+        EGLDisplay mutable cached_display{EGL_NO_DISPLAY};
         std::optional<Ext> mutable cached_ext;
     };
 
