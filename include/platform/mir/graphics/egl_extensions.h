@@ -45,6 +45,10 @@
 #define MIR_GRAPHICS_EGL_EXTENSIONS_H_
 
 #include <optional>
+#include <mutex>
+#include <atomic>
+
+#include <boost/throw_exception.hpp>
 
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
@@ -221,22 +225,29 @@ struct EGLExtensions
     {
         auto operator()(EGLDisplay dpy) const -> Ext const&
         {
-            if (cached_display && cached_display.value() != dpy)
+            if (!has_initialized)
             {
-                cached_ext = std::nullopt;
+                std::lock_guard<std::mutex> lock{mutex};
+                if (!has_initialized)
+                {
+                    cached_display = dpy;
+                    cached_ext.emplace(dpy);
+                    has_initialized = true;
+                }
             }
 
-            if (!cached_ext)
+            if (dpy != cached_display)
             {
-                cached_display = dpy;
-                cached_ext.emplace(dpy);
+                BOOST_THROW_EXCEPTION(std::logic_error("Multiple EGL displays used with the same extension object"));
             }
 
             return cached_ext.value();
         }
 
     private:
-        std::optional<EGLDisplay> mutable cached_display;
+        std::atomic<bool> mutable has_initialized{false};
+        std::mutex mutable mutex;
+        EGLDisplay mutable cached_display{0};
         std::optional<Ext> mutable cached_ext;
     };
 
