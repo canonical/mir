@@ -27,6 +27,7 @@ string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 if (MIR_ENABLE_WLCS_TESTS)
     set(MIR_WLCS_TEST_FRAMEWORK test_wlcs_display_server.cpp ${PROJECT_SOURCE_DIR}/include/test/miral/test_wlcs_display_server.h)
+    include_directories(${WLCS_INCLUDE_DIRS})
 endif()
 
 add_library(mir-public-test-framework OBJECT
