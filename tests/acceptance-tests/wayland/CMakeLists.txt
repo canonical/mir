@@ -1,3 +1,4 @@
+pkg_check_modules(WLCS REQUIRED wlcs)
 include_directories(${WLCS_INCLUDE_DIRS})
 
 add_library(
