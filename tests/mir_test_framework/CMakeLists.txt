@@ -25,10 +25,6 @@ add_definitions(
 string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-if (MIR_ENABLE_WLCS_TESTS)
-    set(MIR_WLCS_TEST_FRAMEWORK test_wlcs_display_server.cpp ${PROJECT_SOURCE_DIR}/include/test/miral/test_wlcs_display_server.h)
-endif()
-
 add_library(mir-public-test-framework OBJECT
   ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/any_surface.h
   any_surface.cpp
@@ -69,7 +65,6 @@ add_library(mir-public-test-framework OBJECT
   ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/open_wrapper.h
   test_server.cpp  ${PROJECT_SOURCE_DIR}/include/test/miral/test_server.h
   test_display_server.cpp  ${PROJECT_SOURCE_DIR}/include/test/miral/test_display_server.h
-  ${MIR_WLCS_TEST_FRAMEWORK}
 )
 
 set_property(
