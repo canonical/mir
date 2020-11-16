@@ -248,10 +248,6 @@ CMAKE_DEPENDENT_OPTION(
   "MIR_ENABLE_TESTS" OFF
 )
 
-if (MIR_ENABLE_WLCS_TESTS)
-  pkg_check_modules(WLCS REQUIRED wlcs)
-endif()
-
 foreach(platform IN LISTS MIR_PLATFORM)
   if (platform STREQUAL "gbm-kms")
     set(MIR_BUILD_PLATFORM_GBM_KMS TRUE)
