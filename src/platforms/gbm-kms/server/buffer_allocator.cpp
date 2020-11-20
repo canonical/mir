@@ -80,7 +80,7 @@ public:
     ~EGLImageBufferTextureBinder()
     {
         if (egl_image != EGL_NO_IMAGE_KHR)
-            egl_extensions->eglDestroyImageKHR(egl_display, egl_image);
+            egl_extensions->base(egl_display).eglDestroyImageKHR(egl_display, egl_image);
     }
 
 
@@ -88,7 +88,7 @@ public:
     {
         ensure_egl_image();
 
-        egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
+        egl_extensions->base(egl_display).glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
     }
 
 protected:
@@ -124,11 +124,12 @@ private:
                 EGL_NONE
             };
 
-            egl_image = egl_extensions->eglCreateImageKHR(egl_display,
-                                                          EGL_NO_CONTEXT,
-                                                          EGL_NATIVE_PIXMAP_KHR,
-                                                          reinterpret_cast<void*>(bo_raw),
-                                                          image_attrs);
+            egl_image = egl_extensions->base(egl_display).eglCreateImageKHR(
+                egl_display,
+                EGL_NO_CONTEXT,
+                EGL_NATIVE_PIXMAP_KHR,
+                reinterpret_cast<void*>(bo_raw),
+                image_attrs);
             if (egl_image == EGL_NO_IMAGE_KHR)
                 BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
         }
@@ -179,11 +180,12 @@ private:
                 EGL_NONE
             };
 
-            egl_image = egl_extensions->eglCreateImageKHR(egl_display,
-                                                          EGL_NO_CONTEXT,
-                                                          EGL_LINUX_DMA_BUF_EXT,
-                                                          static_cast<EGLClientBuffer>(nullptr),
-                                                          image_attrs_X);
+            egl_image = egl_extensions->base(egl_display).eglCreateImageKHR(
+                egl_display,
+                EGL_NO_CONTEXT,
+                EGL_LINUX_DMA_BUF_EXT,
+                static_cast<EGLClientBuffer>(nullptr),
+                image_attrs_X);
             if (egl_image == EGL_NO_IMAGE_KHR)
                 BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
         }
@@ -294,7 +296,19 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
         [this]() { ctx->release_current(); });
     auto dpy = eglGetCurrentDisplay();
 
-    mg::wayland::bind_display(dpy, display, *egl_extensions);
+    try
+    {
+        mg::wayland::bind_display(dpy, display, *egl_extensions);
+        egl_display_bound = true;
+    }
+    catch (...)
+    {
+        log(
+            logging::Severity::warning,
+            MIR_LOG_COMPONENT,
+            std::current_exception(),
+            "Failed to bind EGL Display to Wayland display, falling back to software buffers");
+    }
 
     try
     {
@@ -334,6 +348,19 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
     }
 
     this->wayland_executor = std::move(wayland_executor);
+}
+
+void mgg::BufferAllocator::unbind_display(wl_display* display)
+{
+    if (egl_display_bound)
+    {
+        auto context_guard = mir::raii::paired_calls(
+            [this]() { ctx->make_current(); },
+            [this]() { ctx->release_current(); });
+        auto dpy = eglGetCurrentDisplay();
+
+        mg::wayland::unbind_display(dpy, display, *egl_extensions);
+    }
 }
 
 std::shared_ptr<mg::Buffer> mgg::BufferAllocator::buffer_from_resource(

@@ -77,6 +77,7 @@ public:
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
     void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) override;
+    void unbind_display(wl_display* display) override;
     std::shared_ptr<Buffer> buffer_from_resource(
         wl_resource* buffer,
         std::function<void()>&& on_consumed,
@@ -95,6 +96,7 @@ private:
     std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>> dmabuf_extension;
     gbm_device* const device;
     std::shared_ptr<EGLExtensions> const egl_extensions;
+    bool egl_display_bound{false};
 
     BypassOption const bypass_option;
     BufferImportMethod const buffer_import_method;

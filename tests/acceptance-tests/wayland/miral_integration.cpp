@@ -17,7 +17,7 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include <miral/test_wlcs_display_server.h>
+#include "test_wlcs_display_server.h"
 #include <miral/wayland_extensions.h>
 
 namespace

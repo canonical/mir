@@ -200,6 +200,7 @@ void mtd::MockEGL::provide_egl_extensions()
         "EGL_KHR_image "
         "EGL_KHR_image_base "
         "EGL_KHR_image_pixmap "
+        "GL_OES_EGL_image "
         "EGL_EXT_image_dma_buf_import "
         "EGL_WL_bind_wayland_display "
         "EGL_EXT_platform_base";

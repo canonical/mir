@@ -47,6 +47,7 @@ public:
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat format) override;
 
     void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) override;
+    void unbind_display(wl_display* display) override;
 
     auto buffer_from_resource(
         wl_resource* buffer,
@@ -66,6 +67,7 @@ private:
     std::shared_ptr<renderer::gl::Context> const ctx;
     std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>> dmabuf_extension;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
+    bool egl_display_bound{false};
 };
 }
 }

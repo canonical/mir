@@ -47,6 +47,7 @@ class EGLExtensions;
 namespace wayland
 {
 void bind_display(EGLDisplay egl_dpy, wl_display* wl_dpy, EGLExtensions const& extensions);
+void unbind_display(EGLDisplay egl_dpy, wl_display* wl_dpy, EGLExtensions const& extensions);
 
 auto buffer_from_resource(
     wl_resource* buffer,
