@@ -10,6 +10,7 @@ then
 fi
 
 packages="\
+    libmiroil:MIROIL_ABI \
     libmiral:MIRAL_ABI \
     libmircore:MIRCORE_ABI \
     libmirclient:MIRCLIENT_ABI \
