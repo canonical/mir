@@ -21,9 +21,8 @@ target_include_directories(miroil
 )
 
 target_link_libraries(miroil
-    PUBLIC
-        mircommon
     PRIVATE
+        mircommon
         mirserver
         mirclient
 )
