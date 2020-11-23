@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -79,7 +79,7 @@ struct DisplayConfigurationObserver { };
 #endif
 }
 
-struct miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayConfigurationObserver
+struct miroil::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayConfigurationObserver
 {
     Self() = default;
     Self(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
@@ -103,23 +103,23 @@ struct miral::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayCo
 #endif
 };
 
-miral::PersistDisplayConfig::PersistDisplayConfig() :
+miroil::PersistDisplayConfig::PersistDisplayConfig() :
     self{std::make_shared<Self>()}
 {
 }
 
-miral::PersistDisplayConfig::PersistDisplayConfig(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
+miroil::PersistDisplayConfig::PersistDisplayConfig(DisplayConfigurationPolicyWrapper const& custom_wrapper) :
     self{std::make_shared<Self>(custom_wrapper)}
 {
 }
 
-miral::PersistDisplayConfig::~PersistDisplayConfig() = default;
+miroil::PersistDisplayConfig::~PersistDisplayConfig() = default;
 
-miral::PersistDisplayConfig::PersistDisplayConfig(PersistDisplayConfig const&) = default;
+miroil::PersistDisplayConfig::PersistDisplayConfig(PersistDisplayConfig const&) = default;
 
-auto miral::PersistDisplayConfig::operator=(PersistDisplayConfig const&) -> PersistDisplayConfig& = default;
+auto miroil::PersistDisplayConfig::operator=(PersistDisplayConfig const&) -> PersistDisplayConfig& = default;
 
-void miral::PersistDisplayConfig::operator()(mir::Server& server)
+void miroil::PersistDisplayConfig::operator()(mir::Server& server)
 {
     server.wrap_display_configuration_policy(
         [this](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,16 +16,15 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIRAL_PERSIST_DISPLAY_CONFIG_H
-#define MIRAL_PERSIST_DISPLAY_CONFIG_H
+#ifndef MIROIL_PERSIST_DISPLAY_CONFIG_H
+#define MIROIL_PERSIST_DISPLAY_CONFIG_H
 
 #include <functional>
 #include <memory>
 
 namespace mir { class Server; namespace graphics { class DisplayConfigurationPolicy; }}
 
-// Prototyping namespace for later incorporation in MirAL
-namespace miral
+namespace miroil
 {
 /// Restores the saved display configuration and saves changes to the base configuration
 class PersistDisplayConfig
@@ -49,4 +48,4 @@ private:
 };
 }
 
-#endif //MIRAL_PERSIST_DISPLAY_CONFIG_H
+#endif //MIROIL_PERSIST_DISPLAY_CONFIG_H
