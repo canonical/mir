@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -22,7 +22,7 @@
 #include <numeric>
 #include <stdexcept>
 
-miral::Edid& miral::Edid::parse_data(std::vector<uint8_t> const& data)
+miroil::Edid& miroil::Edid::parse_data(std::vector<uint8_t> const& data)
 {
     if (data.size() != 128 && data.size() != 256) {
         throw std::runtime_error("Incorrect EDID structure size");
@@ -97,7 +97,7 @@ miral::Edid& miral::Edid::parse_data(std::vector<uint8_t> const& data)
     return *this;
 }
 
-std::string miral::Edid::Descriptor::string_value() const
+std::string miroil::Edid::Descriptor::string_value() const
 {
     switch(type) {
     case Type::monitor_name:

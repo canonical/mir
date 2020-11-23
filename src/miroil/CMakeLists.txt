@@ -24,13 +24,13 @@ add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miroil" -DMIROIL_ENABLE_DEPRECATIO
 #)
 
 add_library(miroil SHARED
-    edid.cpp ${miroil_include}/edid.h
-    mirbuffer.cpp ${miroil_include}/mirbuffer.h
-    persist_display_config.cpp ${miroil_include}/persist_display_config.h
+    edid.cpp ${miroil_include}/miroil/edid.h
+    mirbuffer.cpp ${miroil_include}/miroil/mirbuffer.h
+    persist_display_config.cpp ${miroil_include}/miroil/persist_display_config.h
 )
 
 target_include_directories(miroil
-    PUBLIC  "${miroil_include}" "${PROJECT_SOURCE_DIR}/include/miral"
+    PUBLIC  "${miroil_include}"
     PRIVATE ${MIRSERVER_INCLUDE_DIRS}  ${MIRCLIENT_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include/platform
     ${PROJECT_SOURCE_DIR}/include/renderers/gl

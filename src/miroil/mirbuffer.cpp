@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 Canonical Ltd.
+ * Copyright © 2017-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -23,41 +23,41 @@
 
 using mir::renderer::gl::TextureSource;
 
-miral::GLBuffer::GLBuffer() = default;
-miral::GLBuffer::~GLBuffer() = default;
-miral::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer) :
+miroil::GLBuffer::GLBuffer() = default;
+miroil::GLBuffer::~GLBuffer() = default;
+miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer) :
     wrapped(buffer)
 {
 }
 
-void miral::GLBuffer::reset(std::shared_ptr<mir::graphics::Buffer> const& buffer)
+void miroil::GLBuffer::reset(std::shared_ptr<mir::graphics::Buffer> const& buffer)
 {
     wrapped = buffer;
 }
 
-miral::GLBuffer::operator bool() const
+miroil::GLBuffer::operator bool() const
 {
     return !!wrapped;
 }
 
-bool miral::GLBuffer::has_alpha_channel() const
+bool miroil::GLBuffer::has_alpha_channel() const
 {
     return wrapped &&
         (wrapped->pixel_format() == mir_pixel_format_abgr_8888
         || wrapped->pixel_format() == mir_pixel_format_argb_8888);
 }
 
-mir::geometry::Size miral::GLBuffer::size() const
+mir::geometry::Size miroil::GLBuffer::size() const
 {
     return wrapped->size();
 }
 
-void miral::GLBuffer::reset()
+void miroil::GLBuffer::reset()
 {
     wrapped.reset();
 }
 
-void miral::GLBuffer::bind_to_texture()
+void miroil::GLBuffer::bind_to_texture()
 {
     if (auto const texture_source = dynamic_cast<TextureSource*>(wrapped->native_buffer_base()))
     {

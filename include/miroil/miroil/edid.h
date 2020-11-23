@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,14 +16,13 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIRAL_EDID_H
-#define MIRAL_EDID_H
+#ifndef MIROIL_EDID_H
+#define MIROIL_EDID_H
 
 #include <string>
 #include <vector>
 
-// Prototyping namespace for later incorporation in MirAL
-namespace miral
+namespace miroil
 {
 
 struct Edid
@@ -65,4 +64,4 @@ struct Edid
 
 }
 
-#endif // MIRAL_EDID_H
+#endif // MIROIL_EDID_H
