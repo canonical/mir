@@ -86,11 +86,11 @@ struct miroil::PersistDisplayConfig::Self : PersistDisplayConfigPolicy, DisplayC
     }
 
     void session_configuration_applied(std::shared_ptr<mir::scene::Session> const&,
-                                       std::shared_ptr<mg::DisplayConfiguration> const&){}
-    void session_configuration_removed(std::shared_ptr<mir::scene::Session> const&)  {}
+                                       std::shared_ptr<mg::DisplayConfiguration> const&) override {}
+    void session_configuration_removed(std::shared_ptr<mir::scene::Session> const&) override {}
     void configuration_updated_for_session(
         std::shared_ptr<mir::scene::Session> const&,
-        std::shared_ptr<mg::DisplayConfiguration const> const&) {}
+        std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
 };
 
 miroil::PersistDisplayConfig::PersistDisplayConfig() :
