@@ -4,38 +4,46 @@ set(miroil_include ${PROJECT_SOURCE_DIR}/include/miroil)
 
 add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miroil" -DMIROIL_ENABLE_DEPRECATIONS=0)
 
-add_library(miroil-internal STATIC
-)
-
-set_target_properties(miroil-internal
-    PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS}  -fvisibility=hidden")
+#add_library(miroil-internal STATIC
+#)
+#
+#set_target_properties(miroil-internal
+#    PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS}  -fvisibility=hidden")
+#
+#target_include_directories(miroil-internal
+#    PRIVATE "${miroil_include}" ${MIRCLIENT_INCLUDE_DIRS}
+#    PRIVATE ${MIRSERVER_INCLUDE_DIRS} ${GIO_INCLUDE_DIRS}
+#    ${PROJECT_SOURCE_DIR}/include/platform
+#    ${PROJECT_SOURCE_DIR}/include/client
+#    ${PROJECT_SOURCE_DIR}/src/include/server
+#)
+#
+#target_link_libraries(miroil-internal
+#    PRIVATE
+#        mirserver
+#)
 
 add_library(miroil SHARED
-)
-
-target_include_directories(miroil-internal
-    PRIVATE "${miroil_include}" ${MIRCLIENT_INCLUDE_DIRS}
-    PRIVATE ${MIRSERVER_INCLUDE_DIRS} ${GIO_INCLUDE_DIRS}
-    ${PROJECT_SOURCE_DIR}/include/platform
-    ${PROJECT_SOURCE_DIR}/include/client
-    ${PROJECT_SOURCE_DIR}/src/include/server
-)
-
-target_link_libraries(miroil-internal
-    PRIVATE
-        mirserver
+    edid.cpp ${miroil_include}/edid.h
+    mirbuffer.cpp ${miroil_include}/mirbuffer.h
+    persist_display_config.cpp ${miroil_include}/persist_display_config.h
 )
 
 target_include_directories(miroil
-    PUBLIC  "${miroil_include}" ${MIRCLIENT_INCLUDE_DIRS}
-    PRIVATE ${MIRSERVER_INCLUDE_DIRS}
+    PUBLIC  "${miroil_include}" "${PROJECT_SOURCE_DIR}/include/miral"
+    PRIVATE ${MIRSERVER_INCLUDE_DIRS}  ${MIRCLIENT_INCLUDE_DIRS}
+    ${PROJECT_SOURCE_DIR}/include/platform
+    ${PROJECT_SOURCE_DIR}/include/renderers/gl
+    ${PROJECT_SOURCE_DIR}/include/server
+    ${PROJECT_SOURCE_DIR}/include/client
+    ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(miroil
     PUBLIC
         mircommon
     PRIVATE
-        miroil-internal
+#        miroil-internal
         mirserver
         mirclient
 )
