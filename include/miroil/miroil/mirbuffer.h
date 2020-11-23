@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 Canonical Ltd.
+ * Copyright © 2017-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRAL_GLBUFFER_H
-#define MIRAL_GLBUFFER_H
+#ifndef MIROIL_GLBUFFER_H
+#define MIROIL_GLBUFFER_H
 
 #include <mir/geometry/size.h>
 
@@ -23,7 +23,7 @@
 
 namespace mir { namespace graphics { class Buffer; }}
 
-namespace miral
+namespace miroil
 {
 class GLBuffer
 {
@@ -45,4 +45,4 @@ private:
 };
 }
 
-#endif //MIRAL_GLBUFFER_H
+#endif //MIROIL_GLBUFFER_H
