@@ -1,0 +1,3 @@
+libmiroil.so.1 libmiroil1 #MINVER#
+ MIROIL_3.0@MIROIL_3.0 3.0.0
+ (c++)"miroil::AddInitCallback::AddInitCallback(std::function<void ()> const&)@MIROIL_3.0" 3.0.0
