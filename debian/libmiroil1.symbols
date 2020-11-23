@@ -1,3 +1,19 @@
 libmiroil.so.1 libmiroil1 #MINVER#
- MIROIL_3.0@MIROIL_3.0 3.0.0
- (c++)"miroil::AddInitCallback::AddInitCallback(std::function<void ()> const&)@MIROIL_3.0" 3.0.0
+ MIROIL_1.0@MIROIL_1.0 1.0.0
+ (c++)"miroil::Edid::Descriptor::string_value[abi:cxx11]() const@MIROIL_1.0" 1.0.0
+ (c++)"miroil::Edid::parse_data(std::vector<unsigned char, std::allocator<unsigned char> > const&)@MIROIL_1.0" 1.0.0
+ (c++)"miroil::GLBuffer::bind_to_texture()@MIROIL_1.0" 1.0.0
+ (c++)"miroil::GLBuffer::~GLBuffer()@MIROIL_1.0" 1.0.0
+ (c++)"miroil::GLBuffer::GLBuffer()@MIROIL_1.0" 1.0.0
+ (c++)"miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_1.0" 1.0.0
+ (c++)"miroil::GLBuffer::has_alpha_channel() const@MIROIL_1.0" 1.0.0
+ (c++)"miroil::GLBuffer::operator bool() const@MIROIL_1.0" 1.0.0
+ (c++)"miroil::GLBuffer::reset()@MIROIL_1.0" 1.0.0
+ (c++)"miroil::GLBuffer::reset(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_1.0" 1.0.0
+ (c++)"miroil::GLBuffer::size() const@MIROIL_1.0" 1.0.0
+ (c++)"miroil::PersistDisplayConfig::operator=(miroil::PersistDisplayConfig const&)@MIROIL_1.0" 1.0.0
+ (c++)"miroil::PersistDisplayConfig::operator()(mir::Server&)@MIROIL_1.0" 1.0.0
+ (c++)"miroil::PersistDisplayConfig::~PersistDisplayConfig()@MIROIL_1.0" 1.0.0
+ (c++)"miroil::PersistDisplayConfig::PersistDisplayConfig()@MIROIL_1.0" 1.0.0
+ (c++)"miroil::PersistDisplayConfig::PersistDisplayConfig(miroil::PersistDisplayConfig const&)@MIROIL_1.0" 1.0.0
+ (c++)"miroil::PersistDisplayConfig::PersistDisplayConfig(std::function<std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> (std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&)> const&)@MIROIL_1.0" 1.0.0
