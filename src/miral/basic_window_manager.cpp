@@ -1425,16 +1425,15 @@ void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo& 
 
 void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWindowState value)
 {
-    auto const window = window_info.window();
-    auto const mir_surface = std::shared_ptr<scene::Surface>(window);
-
-    update_attached_and_fullscreen_sets(window_info, value);
-
     if (window_info.state() == value)
     {
         return;
     }
 
+    update_attached_and_fullscreen_sets(window_info, value);
+
+    auto const window = window_info.window();
+    auto const mir_surface = std::shared_ptr<scene::Surface>(window);
     bool const was_hidden = window_info.state() == mir_window_state_hidden ||
                             window_info.state() == mir_window_state_minimized;
 
