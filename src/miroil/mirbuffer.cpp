@@ -19,14 +19,45 @@
 #include <mir/graphics/buffer.h>
 #include <mir/graphics/texture.h>
 #include <mir/gl/texture.h>
+#include <mir/renderer/gl/texture_source.h>
 
 #include <stdexcept>
 
 miroil::GLBuffer::GLBuffer() = default;
-miroil::GLBuffer::~GLBuffer() = default;
-miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer) :
-    wrapped(buffer)
+miroil::GLBuffer::~GLBuffer()
 {
+    destroy();
+}
+
+miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer) :
+    wrapped(buffer),
+    m_textureId(0),
+    m_isOldTex(false)
+{
+    init();
+}
+
+void miroil::GLBuffer::init()
+{
+    if (m_inited)
+        return;
+
+    if (!dynamic_cast<mir::graphics::gl::Texture*>(wrapped->native_buffer_base()))
+    {
+        glGenTextures(1, &m_textureId);
+        m_isOldTex = true;
+    }
+
+    m_inited = true;
+}
+
+void miroil::GLBuffer::destroy()
+{
+    if (m_textureId) {
+        glDeleteTextures(1, &m_textureId);
+        m_textureId = 0;
+        m_isOldTex = false;
+    }
 }
 
 void miroil::GLBuffer::reset(std::shared_ptr<mir::graphics::Buffer> const& buffer)
@@ -56,8 +87,22 @@ void miroil::GLBuffer::reset()
     wrapped.reset();
 }
 
+void miroil::GLBuffer::gl_bind_tex()
+{
+    if (m_isOldTex)
+        glBindTexture(GL_TEXTURE_2D, m_textureId);
+}
+
 void miroil::GLBuffer::bind()
 {
+    if (m_isOldTex) {
+        auto const texsource = dynamic_cast<mir::renderer::gl::TextureSource*>(wrapped->native_buffer_base());
+
+        texsource->gl_bind_to_texture();
+        texsource->secure_for_render();
+        return;
+    }
+
     if (auto const texture = dynamic_cast<mir::graphics::gl::Texture*>(wrapped->native_buffer_base()))
     {
         texture->bind();
