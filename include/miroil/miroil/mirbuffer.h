@@ -21,6 +21,8 @@
 
 #include <memory>
 
+#include <GL/gl.h>
+
 namespace mir { namespace graphics { class Buffer; }}
 
 namespace miroil
@@ -39,9 +41,16 @@ public:
     void reset();
     void reset(std::shared_ptr<mir::graphics::Buffer> const& buffer);
     void bind();
+    void gl_bind_tex();
 
 private:
+    void init();
+    void destroy();
+
     std::shared_ptr<mir::graphics::Buffer> wrapped;
+    GLuint m_textureId;
+    bool m_isOldTex = false;
+    bool m_inited = false;
 };
 }
 
