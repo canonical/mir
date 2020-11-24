@@ -18,6 +18,7 @@ target_include_directories(miroil
     PRIVATE ${MIRSERVER_INCLUDE_DIRS}  ${MIRCLIENT_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include/platform
     ${PROJECT_SOURCE_DIR}/src/include/gl
+    ${PROJECT_SOURCE_DIR}/include/renderers/gl
     ${PROJECT_SOURCE_DIR}/include/server
     ${PROJECT_SOURCE_DIR}/include/client
     ${PROJECT_SOURCE_DIR}/src/include/server
