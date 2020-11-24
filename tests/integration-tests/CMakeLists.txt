@@ -41,7 +41,6 @@ link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 mir_add_wrapped_executable(mir_integration_tests NOINSTALL
   ${INTEGRATION_TESTS_SRCS}
   ${MIR_SERVER_OBJECTS}
-  ${MIR_PLATFORM_OBJECTS}
 )
 
 mir_precompiled_header(mir_integration_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
@@ -57,6 +56,7 @@ target_link_libraries(
   mirdraw
 
   mircommon
+  mirplatform
 
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
@@ -68,7 +68,6 @@ target_link_libraries(
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${MIR_PLATFORM_REFERENCES}
   ${MIR_SERVER_REFERENCES}
 )
 

@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.16)
 # Create target to discover tests
 include (CMakeParseArguments)
 
@@ -360,4 +360,36 @@ function (mir_check_no_unreleased_symbols TARGET DEPENDENT_TARGET)
     VERBATIM
   )
   add_dependencies(${DEPENDENT_TARGET} ${TARGET_NAME})
+endfunction()
+
+
+function(add_object_library_to_target TARGET OBJECT_LIB)
+  get_target_property(HEADERS ${OBJECT_LIB} INTERFACE_INCLUDE_DIRECTORIES)
+  get_target_property(LIBS ${OBJECT_LIB} INTERFACE_LINK_LIBRARIES)
+  get_target_property(LIBDIR ${OBJECT_LIB} INTERFACE_LINK_DIRECTORIES)
+  get_target_property(TARGET_TYPE ${TARGET} TYPE)
+
+  if (HEADERS)
+    target_include_directories(${TARGET} PUBLIC ${HEADERS})
+  endif()
+
+  if (LIBS)
+    target_link_libraries(${TARGET} PUBLIC ${LIBS})
+  endif()
+
+  if (LIBDIR)
+    target_link_directories(${TARGET} PUBLIC ${LIBS})
+  endif()
+
+  if (${TARGET_TYPE} STREQUAL "OBJECT_LIBRARY")
+    error("Adding object files to an object library. This doesn't do what you want.")
+  else()
+    target_sources(${TARGET} PUBLIC $<TARGET_OBJECTS:${OBJECT_LIB}>)
+  endif()
+endfunction()
+
+function(mir_add_object_libraries_to_target TARGET)
+  foreach(OBJECT_LIB ${ARGN})
+    add_object_library_to_target(${TARGET} ${OBJECT_LIB})
+  endforeach()
 endfunction()
