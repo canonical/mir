@@ -8,13 +8,16 @@ add_library(miroil SHARED
     edid.cpp ${miroil_include}/miroil/edid.h
     mirbuffer.cpp ${miroil_include}/miroil/mirbuffer.h
     persist_display_config.cpp ${miroil_include}/miroil/persist_display_config.h
+    display_configuration_policy.cpp ${miroil_include}/miroil/display_configuration_policy.h
+    ${miroil_include}/miroil/display_configuration_storage.h
+    ${miroil_include}/miroil/display_id.h
 )
 
 target_include_directories(miroil
     PUBLIC  "${miroil_include}"
     PRIVATE ${MIRSERVER_INCLUDE_DIRS}  ${MIRCLIENT_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include/platform
-    ${PROJECT_SOURCE_DIR}/include/renderers/gl
+    ${PROJECT_SOURCE_DIR}/src/include/gl
     ${PROJECT_SOURCE_DIR}/include/server
     ${PROJECT_SOURCE_DIR}/include/client
     ${PROJECT_SOURCE_DIR}/src/include/server
