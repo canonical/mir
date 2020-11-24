@@ -45,6 +45,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     initial_window_placement.cpp
     window_placement_attached.cpp
     window_placement_fullscreen.cpp
+    resize_and_move.cpp
     ignored_requests.cpp
     ${MIRAL_TEST_SOURCES}
 )
