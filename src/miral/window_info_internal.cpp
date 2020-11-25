@@ -76,7 +76,7 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     name{params.name().value()},
     type{optional_value_or_default(params.type(), mir_window_type_normal)},
     state{optional_value_or_default(params.state(), mir_window_state_restored)},
-    restore_rect{params.top_left().value(), params.size().value()},
+    restore_rect{},
     min_width{optional_value_or_default(params.min_width(), miral::default_min_width)},
     min_height{optional_value_or_default(params.min_height(), miral::default_min_height)},
     max_width{optional_value_or_default(params.max_width(), miral::default_max_width)},
