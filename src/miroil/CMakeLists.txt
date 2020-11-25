@@ -4,6 +4,21 @@ set(miroil_include ${PROJECT_SOURCE_DIR}/include/miroil)
 
 add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miroil" -DMIROIL_ENABLE_DEPRECATIONS=0)
 
+add_subdirectory(wayland-generated)
+
+add_library(miroil-internal STATIC
+    wayland-generated/mir-trusted-prompt-sessions-v1_wrapper.cpp
+    wayland-generated/mir-trusted-prompt-sessions-v1_wrapper.h
+)
+
+set_target_properties(miroil-internal
+        PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS}  -fvisibility=hidden")
+
+target_include_directories(miroil-internal
+    PRIVATE ${MIRSERVER_INCLUDE_DIRS}  ${MIRCLIENT_INCLUDE_DIRS}
+    ${PROJECT_SOURCE_DIR}/include/wayland
+)
+
 add_library(miroil SHARED
     edid.cpp ${miroil_include}/miroil/edid.h
     mirbuffer.cpp ${miroil_include}/miroil/mirbuffer.h
@@ -26,6 +41,7 @@ target_include_directories(miroil
 
 target_link_libraries(miroil
     PRIVATE
+        miroil-internal
         mircommon
         mirserver
         mirclient
