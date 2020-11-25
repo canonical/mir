@@ -125,6 +125,28 @@ TEST_F(WindowPlacementMaximized, window_size_maintained_after_maximization_and_r
     EXPECT_THAT(window.size(), Eq(window_size));
 }
 
+TEST_F(WindowPlacementMaximized, initially_maximized_window_given_smaller_size_when_restored)
+{
+    Window window;
+    {
+        ms::SurfaceCreationParameters params;
+        params.state = mir_window_state_maximized;
+        window = create_window(params);
+    }
+    auto const& info = basic_window_manager.info_for(window);
+    auto const maximized_size = window.size();
+
+    {
+        msh::SurfaceSpecification spec;
+        spec.state = mir_window_state_restored;
+        basic_window_manager.modify_surface(session, window, spec);
+    }
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_restored));
+    EXPECT_THAT(window.size().width, Lt(maximized_size.width));
+    EXPECT_THAT(window.size().height, Lt(maximized_size.height));
+}
+
 TEST_F(WindowPlacementMaximized, window_can_be_maximized_onto_a_logical_output_group)
 {
     Rectangle second_display_area{{1400, 70}, {640, 480}};
