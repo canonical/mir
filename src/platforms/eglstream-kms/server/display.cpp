@@ -268,7 +268,7 @@ public:
             EGL_DRM_FLIP_EVENT_DATA_NV, reinterpret_cast<EGLAttrib>(event_handler->drm_event_data()),
             EGL_NONE
         };
-        if (nv_stream.eglStreamConsumerAcquireAttribNV(dpy, output_stream, acquire_attribs) != EGL_TRUE)
+        if (nv_stream(dpy).eglStreamConsumerAcquireAttribNV(dpy, output_stream, acquire_attribs) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to submit frame from EGLStream for display"));
         }
@@ -296,7 +296,7 @@ private:
     mir::Fd const drm_node;
     std::shared_ptr<mge::DRMEventHandler> const event_handler;
     std::future<void> pending_flip;
-    mg::EGLExtensions::NVStreamAttribExtensions nv_stream;
+    mg::EGLExtensions::LazyDisplayExtensions<mg::EGLExtensions::NVStreamAttribExtensions> nv_stream;
     std::shared_ptr<mg::DisplayReport> const display_report;
 };
 

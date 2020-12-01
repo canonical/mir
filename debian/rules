@@ -38,11 +38,7 @@ endif
 
 $(info COMMON_CONFIGURE_OPTIONS: ${COMMON_CONFIGURE_OPTIONS})
 
-ifneq ($(filter amd64 i386,$(DEB_HOST_ARCH)),)
-  AVAILABLE_PLATFORMS=gbm-kms\;x11\;wayland\;eglstream-kms
-else
-	AVAILABLE_PLATFORMS=gbm-kms\;x11\;wayland
-endif
+AVAILABLE_PLATFORMS=gbm-kms\;x11\;wayland\;eglstream-kms
 
 override_dh_auto_configure:
 ifneq ($(filter armhf,$(DEB_HOST_ARCH)),)

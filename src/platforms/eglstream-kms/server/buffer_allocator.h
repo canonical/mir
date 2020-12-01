@@ -61,6 +61,7 @@ public:
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
     void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) override;
+    void unbind_display(wl_display* display) override;
 
     std::shared_ptr<Buffer> buffer_from_resource(
         wl_resource* buffer,
@@ -84,8 +85,8 @@ private:
         uint32_t version,
         uint32_t id);
 
-    EGLExtensions::WaylandExtensions const extensions;
-    EGLExtensions::NVStreamAttribExtensions const nv_extensions;
+    EGLExtensions::LazyDisplayExtensions<EGLExtensions::WaylandExtensions> const extensions;
+    EGLExtensions::LazyDisplayExtensions<EGLExtensions::NVStreamAttribExtensions> const nv_extensions;
     std::shared_ptr<renderer::gl::Context> const wayland_ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::unique_ptr<gl::Program> shader;

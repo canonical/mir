@@ -29,19 +29,8 @@ namespace mg=mir::graphics;
 
 namespace
 {
-std::experimental::optional<mg::EGLExtensions::WaylandExtensions> maybe_wayland_ext()
-{
-    try
-    {
-        return mg::EGLExtensions::WaylandExtensions{};
-    }
-    catch (std::runtime_error const&)
-    {
-        return {};
-    }
-}
 
-std::experimental::optional<mg::EGLExtensions::PlatformBaseEXT> maybe_platform_base_ext()
+auto maybe_platform_base_ext() -> std::optional<mg::EGLExtensions::PlatformBaseEXT>
 {
     try
     {
@@ -56,11 +45,15 @@ std::experimental::optional<mg::EGLExtensions::PlatformBaseEXT> maybe_platform_b
 }
 
 mg::EGLExtensions::EGLExtensions() :
+    platform_base{maybe_platform_base_ext()}
+{
+}
+
+mg::EGLExtensions::BaseExtensions::BaseExtensions(EGLDisplay dpy) :
     eglCreateImageKHR{
         reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"))},
     eglDestroyImageKHR{
         reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"))},
-
     /*
      * TODO: Find a non-ES GL equivalent for glEGLImageTargetTexture2DOES
      * It's the LAST remaining ES-specific function. Although Mesa lets you use
@@ -68,32 +61,44 @@ mg::EGLExtensions::EGLExtensions() :
      * mix ES and GL code. But other drivers won't be so lenient.
      */
     glEGLImageTargetTexture2DOES{
-        reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))},
-    wayland{maybe_wayland_ext()},
-    platform_base{maybe_platform_base_ext()}
+        reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))}
 {
-    if (!eglCreateImageKHR || !eglDestroyImageKHR)
-        BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGLImage"));
+    auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+    if (!egl_extensions || !strstr(egl_extensions, "EGL_KHR_image_base") || !eglCreateImageKHR || !eglDestroyImageKHR)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("EGL display doesn't support EGL_KHR_image_base"));
+    }
 
     if (!glEGLImageTargetTexture2DOES)
+    {
         BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage"));
+    }
 }
 
-mg::EGLExtensions::WaylandExtensions::WaylandExtensions() :
+mg::EGLExtensions::WaylandExtensions::WaylandExtensions(EGLDisplay dpy) :
     eglBindWaylandDisplayWL{
         reinterpret_cast<PFNEGLBINDWAYLANDDISPLAYWL>(eglGetProcAddress("eglBindWaylandDisplayWL"))
+    },
+    eglUnbindWaylandDisplayWL{
+        reinterpret_cast<PFNEGLBINDWAYLANDDISPLAYWL>(eglGetProcAddress("eglUnbindWaylandDisplayWL"))
     },
     eglQueryWaylandBufferWL{
         reinterpret_cast<PFNEGLQUERYWAYLANDBUFFERWL>(eglGetProcAddress("eglQueryWaylandBufferWL"))
     }
 {
-    if (!eglBindWaylandDisplayWL || !eglQueryWaylandBufferWL)
+    auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+    if (!egl_extensions || !strstr(egl_extensions, "EGL_WL_bind_wayland_display"))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGL_WL_bind_wayland_display"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("EGL display doesn't support EGL_WL_bind_wayland_display"));
+    }
+
+    if (!eglBindWaylandDisplayWL || !eglUnbindWaylandDisplayWL || !eglQueryWaylandBufferWL)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("EGL_WL_bind_wayland_display functions are null"));
     }
 }
 
-mg::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions() :
+mg::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions(EGLDisplay dpy) :
     eglCreateStreamAttribNV{
         reinterpret_cast<PFNEGLCREATESTREAMATTRIBNVPROC>(eglGetProcAddress("eglCreateStreamAttribNV"))
     },
@@ -102,9 +107,15 @@ mg::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions() :
             eglGetProcAddress("eglStreamConsumerAcquireAttribNV"))
     }
 {
+    auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+    if (!egl_extensions || !strstr(egl_extensions, "EGL_NV_stream_attrib"))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("EGL display doesn't support EGL_NV_stream_attrib"));
+    }
+
     if (!eglCreateStreamAttribNV || !eglStreamConsumerAcquireAttribNV)
     {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation doesn't support EGL_NV_stream_attrib"}));
+        BOOST_THROW_EXCEPTION((std::runtime_error{"EGL_NV_stream_attrib functions are null"}));
     }
 }
 
@@ -168,7 +179,7 @@ auto mg::EGLExtensions::DebugKHR::extension_or_null_object() -> DebugKHR
     };
 }
 
-auto mg::EGLExtensions::DebugKHR::maybe_debug_khr() -> std::experimental::optional<DebugKHR>
+auto mg::EGLExtensions::DebugKHR::maybe_debug_khr() -> std::optional<DebugKHR>
 {
     try
     {

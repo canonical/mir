@@ -60,9 +60,10 @@ mf::WlKeyboard::WlKeyboard(
      */
     set_keymap(initial_keymap);
 
-    // I don't know where to get "real" rate and delay args. These are better than nothing.
+    // 25 rate and 600 delay are the default in Weston and Sway
+    // At some point we will want to make this configurable
     if (version_supports_repeat_info())
-        send_repeat_info_event(30, 200);
+        send_repeat_info_event(25, 600);
 }
 
 mf::WlKeyboard::~WlKeyboard()

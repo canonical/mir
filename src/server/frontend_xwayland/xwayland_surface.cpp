@@ -47,6 +47,45 @@ enum class WmState: uint32_t
     ICONIC = 3,
 };
 
+// See ICCCM 4.1.2.3 (https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.2.3)
+// except actually I'm pretty sure that mistakenly drops min size/aspect so actually see anything that implements it
+// such as https://stackoverflow.com/a/59762666
+namespace WmSizeHintsIndices
+{
+enum WmSizeHintsIndices: unsigned
+{
+    FLAGS = 0,
+    X, Y,
+    WIDTH, HEIGHT,
+    MIN_WIDTH, MIN_HEIGHT,
+    MAX_WIDTH, MAX_HEIGHT,
+    WIDTH_INC, HEIGHT_INC,
+    MIN_ASPECT_NUM, MIN_ASPECT_DEN,
+    MAX_ASPECT_NUM, MAX_ASPECT_DEN,
+    BASE_WIDTH, BASE_HEIGHT,
+    WIN_GRAVITY,
+    END,
+};
+}
+
+/// See ICCCM 4.1.2.3 (https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.2.3)
+namespace WmSizeHintsFlags
+{
+enum WmSizeHintsFlags: uint32_t
+{
+    POSITION_FROM_USER = 1, // User-specified x, y
+    SIZE_FROM_USER = 2, // User-specified width, height
+    POSITION_FROM_CLEINT = 4, // Program-specified position
+    SIZE_FROM_CLIENT = 8, // Program-specified size
+    MIN_SIZE = 16, // Program-specified minimum size
+    MAX_SIZE = 32, // Program-specified maximum size
+    RESIZE_INC = 64, // Program-specified resize increments
+    ASPECT = 128, // Program-specified min and max aspect ratios
+    BASE_SIZE = 256, // Program-specified base size
+    GRAVITY = 512, // Program-specified window gravity
+};
+}
+
 /// See https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#sourceindication
 enum class SourceIndication: uint32_t
 {
@@ -71,6 +110,32 @@ enum class NetWmMoveresize: uint32_t
     MOVE_KEYBOARD = 10, /* move via keyboard */
     CANCEL = 11,        /* cancel operation */
 };
+
+// Any standard for the motif hints seems to be lost to time, but Weston has a reasonable definition:
+// https://github.com/wayland-project/weston/blob/f7f8f5f1a87dd697ad6de74a885493bcca920cde/xwayland/window-manager.c#L78
+namespace MotifWmHintsIndices
+{
+enum MotifWmHintsIndices: unsigned
+{
+    FLAGS,
+    FUNCTIONS,
+    DECORATIONS,
+    INPUT_MODE,
+    STATUS,
+    END,
+};
+}
+
+namespace MotifWmHintsFlags
+{
+enum MotifWmHintsFlags: uint32_t
+{
+    FUNCTIONS = (1L << 0),
+    DECORATIONS = (1L << 1),
+    INPUT_MODE = (1L << 2),
+    STATUS = (1L << 3),
+};
+}
 
 auto wm_resize_edge_to_mir_resize_edge(NetWmMoveresize wm_resize_edge) -> std::experimental::optional<MirResizeEdge>
 {
@@ -120,15 +185,24 @@ auto property_handler(
     std::shared_ptr<mf::XCBConnection> const& connection,
     xcb_window_t window,
     xcb_atom_t property,
-    std::function<void(T)>&& handler,
-    std::function<void()>&& on_error = [](){}) -> std::pair<xcb_atom_t, std::function<std::function<void()>()>>
+    mf::XCBConnection::Handler<T>&& handler) -> std::pair<xcb_atom_t, std::function<std::function<void()>()>>
 {
     return std::make_pair(
         property,
-        [connection, window, property, handler = move(handler), on_error = move(on_error)]()
+        [connection, window, property, handler = std::move(handler)]()
         {
-            return connection->read_property(window, property, handler, on_error);
+            return connection->read_property(window, property, std::move(handler));
         });
+}
+
+template<typename T>
+auto property_handler(
+    std::shared_ptr<mf::XCBConnection> const& connection,
+    xcb_window_t window,
+    xcb_atom_t property,
+    std::function<void(T const&)> handler) -> std::pair<xcb_atom_t, std::function<std::function<void()>()>>
+{
+    return property_handler<T>(connection, window, property, mf::XCBConnection::Handler<T>{std::move(handler)});
 }
 }
 
@@ -148,7 +222,7 @@ mf::XWaylandSurface::XWaylandSurface(
       client_manager{client_manager},
       window(window),
       property_handlers{
-          property_handler<std::string const&>(
+          property_handler<std::string>(
               connection,
               window,
               XCB_ATOM_WM_CLASS,
@@ -157,7 +231,7 @@ mf::XWaylandSurface::XWaylandSurface(
                   std::lock_guard<std::mutex> lock{mutex};
                   this->pending_spec(lock).application_id = value;
               }),
-          property_handler<std::string const&>(
+          property_handler<std::string>(
               connection,
               window,
               XCB_ATOM_WM_NAME,
@@ -166,7 +240,7 @@ mf::XWaylandSurface::XWaylandSurface(
                   std::lock_guard<std::mutex> lock{mutex};
                   this->pending_spec(lock).name = value;
               }),
-          property_handler<std::string const&>(
+          property_handler<std::string>(
               connection,
               window,
               connection->_NET_WM_NAME,
@@ -179,33 +253,55 @@ mf::XWaylandSurface::XWaylandSurface(
               connection,
               window,
               XCB_ATOM_WM_TRANSIENT_FOR,
-              [this](xcb_window_t value)
               {
-                  is_transient_for(value);
-              },
-              [this]()
-              {
-                  is_transient_for(XCB_WINDOW_NONE);
+                  [this](xcb_window_t const& value)
+                  {
+                      is_transient_for(value);
+                  },
+                  [this](auto)
+                  {
+                    is_transient_for(XCB_WINDOW_NONE);
+                  }
               }),
-          property_handler<std::vector<xcb_atom_t> const&>(
+          property_handler<std::vector<xcb_atom_t>>(
               connection,
               window,
               connection->_NET_WM_WINDOW_TYPE,
-              [this](std::vector<xcb_atom_t> const& wm_types) { window_type(wm_types); },
-              []{}),
-          property_handler<std::vector<xcb_atom_t> const&>(
+              [this](auto wm_types)
+              {
+                  window_type(wm_types);
+              }),
+          property_handler<std::vector<int32_t>>(
+              connection,
+              window,
+              connection->WM_NORMAL_HINTS,
+              [this](auto hints)
+              {
+                  wm_size_hints(hints);
+              }),
+          property_handler<std::vector<xcb_atom_t>>(
               connection,
               window,
               connection->WM_PROTOCOLS,
-              [this](std::vector<xcb_atom_t> const& value)
               {
-                  std::lock_guard<std::mutex> lock{mutex};
-                  this->cached.supported_wm_protocols = std::set<xcb_atom_t>{value.begin(), value.end()};
-              },
-              [this]()
+                  [this](auto value)
+                  {
+                      std::lock_guard<std::mutex> lock{mutex};
+                      this->cached.supported_wm_protocols = std::set<xcb_atom_t>{value.begin(), value.end()};
+                  },
+                  [this](auto)
+                  {
+                      std::lock_guard<std::mutex> lock{mutex};
+                      this->cached.supported_wm_protocols.clear();
+                  }
+              }),
+          property_handler<std::vector<uint32_t>>(
+              connection,
+              window,
+              connection->_MOTIF_WM_HINTS,
+              [this](auto hints)
               {
-                  std::lock_guard<std::mutex> lock{mutex};
-                  this->cached.supported_wm_protocols.clear();
+                  motif_wm_hints(hints);
               })}
 {
     cached.top_left = geometry.top_left;
@@ -235,14 +331,15 @@ void mf::XWaylandSurface::map()
     auto const cookie = connection->read_property(
         window,
         connection->_NET_WM_STATE,
-        [&](std::vector<xcb_atom_t> const& net_wm_states)
         {
-            for (auto const& net_wm_state : net_wm_states)
+            [&](std::vector<xcb_atom_t> const& net_wm_states)
             {
-                state.apply_change(connection, NetWmStateAction::ADD, net_wm_state);
+                for (auto const& net_wm_state : net_wm_states)
+                {
+                    state.apply_change(connection, NetWmStateAction::ADD, net_wm_state);
+                }
             }
-        },
-        [](){});
+        });
 
     // If we had more properties to read we would queue them all up before completing the first one
     cookie();
@@ -551,7 +648,6 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         params.top_left = cached.top_left;
         params.type = mir_window_type_freestyle;
         params.state = state.mir_window_state();
-        params.server_side_decorated = !cached.override_redirect;
     }
 
     std::vector<std::function<void()>> reply_functions;
@@ -566,15 +662,17 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     std::shared_ptr<ms::Session> session;
     reply_functions.push_back(connection->read_property(
         window, connection->_NET_WM_PID,
-        [&](uint32_t pid)
-        {
-            local_client_session = client_manager->session_for_client(pid);
-            session = local_client_session->session();
-        },
-        [&]()
-        {
-            log_warning("X11 app did not set _NET_WM_PID, grouping it under the default XWayland application");
-            session = get_session(wl_surface->resource);
+        XCBConnection::Handler<uint32_t>{
+            [&](uint32_t pid)
+            {
+                local_client_session = client_manager->session_for_client(pid);
+                session = local_client_session->session();
+            },
+            [&](std::string const&)
+            {
+                log_warning("X11 app did not set _NET_WM_PID, grouping it under the default XWayland application");
+                session = get_session(wl_surface->resource);
+            }
         }));
 
     // Wait for and process all the XCB replies
@@ -598,6 +696,8 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         {
             params.update_from(*spec.value());
         }
+
+        params.server_side_decorated = !cached.override_redirect && !cached.motif_decorations_disabled;
     }
 
     auto const surface = shell->create_surface(session, params, observer);
@@ -1132,5 +1232,59 @@ void mf::XWaylandSurface::fix_parent_if_necessary(const std::lock_guard<std::mut
             }
             set_parent(focused_window.value(), lock);
         }
+    }
+}
+
+void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
+{
+    // See ICCCM 4.1.2.3 (https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.2.3)
+    // except actually I'm pretty sure that mistakenly drops min size so actually see anything that implements it
+    std::lock_guard<std::mutex> lock{mutex};
+    if (hints.size() != WmSizeHintsIndices::END)
+    {
+        log_error("WM_NORMAL_HINTS only has %zu element(s)", hints.size());
+        return;
+    }
+    auto const flags = static_cast<uint32_t>(hints[WmSizeHintsIndices::FLAGS]);
+    if (flags & WmSizeHintsFlags::MIN_SIZE)
+    {
+        pending_spec(lock).min_width = geom::Width{hints[WmSizeHintsIndices::MIN_WIDTH]};
+        pending_spec(lock).min_height = geom::Height{hints[WmSizeHintsIndices::MIN_HEIGHT]};
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "%s min size set to %dx%d",
+                connection->window_debug_string(window).c_str(),
+                hints[WmSizeHintsIndices::MIN_WIDTH],
+                hints[WmSizeHintsIndices::MIN_HEIGHT]);
+        }
+    }
+    if (flags & WmSizeHintsFlags::MAX_SIZE)
+    {
+        pending_spec(lock).max_width = geom::Width{hints[WmSizeHintsIndices::MAX_WIDTH]};
+        pending_spec(lock).max_height = geom::Height{hints[WmSizeHintsIndices::MAX_HEIGHT]};
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug(
+                "%s max size set to %dx%d",
+                connection->window_debug_string(window).c_str(),
+                hints[WmSizeHintsIndices::MAX_WIDTH],
+                hints[WmSizeHintsIndices::MAX_HEIGHT]);
+        }
+    }
+}
+
+void mf::XWaylandSurface::motif_wm_hints(std::vector<uint32_t> const& hints)
+{
+    std::lock_guard<std::mutex> lock{mutex};
+    if (hints.size() != MotifWmHintsIndices::END)
+    {
+        log_error("_MOTIF_WM_HINTS value has incorrect size %zu", hints.size());
+        return;
+    }
+    if (MotifWmHintsFlags::DECORATIONS & hints[MotifWmHintsIndices::FLAGS])
+    {
+        // Disable decorations only if all flags are off
+        cached.motif_decorations_disabled = (hints[MotifWmHintsIndices::DECORATIONS] == 0);
     }
 }

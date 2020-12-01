@@ -1,4 +1,4 @@
-MIRPLATFORM_2.1 {
+MIRPLATFORM_2.2 {
  global:
   extern "C++" {
     mir::graphics::AtomicFrame::increment*;
@@ -19,6 +19,7 @@ MIRPLATFORM_2.1 {
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::operator*;
+    mir::graphics::EGLExtensions::BaseExtensions::BaseExtensions*;
     mir::graphics::EGLExtensions::DebugKHR::DebugKHR*;
     mir::graphics::EGLExtensions::DebugKHR::extension_or_null_object*;
     mir::graphics::EGLExtensions::DebugKHR::maybe_debug_khr*;
@@ -178,6 +179,9 @@ MIRPLATFORM_2.1 {
     vtable?for?mir::options::DefaultConfiguration;
     vtable?for?mir::options::Option;
     vtable?for?mir::options::ProgramOption;
+    mir::options::add_wayland_extensions_opt;
+    mir::options::drop_wayland_extensions_opt;
+    mir::graphics::wayland::unbind_display*;
  };
  local: *;
 };

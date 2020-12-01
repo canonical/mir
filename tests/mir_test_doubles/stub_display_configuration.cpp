@@ -78,6 +78,7 @@ mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
         DisplayConfigurationOutput{
             id,
             graphics::DisplayConfigurationCardId{0},
+            graphics::DisplayConfigurationLogicalGroupId{0},
             graphics::DisplayConfigurationOutputType::lvds,
             {format},
             {{px_size, vrefresh}},
@@ -108,6 +109,7 @@ mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
     : DisplayConfigurationOutput{
         id,
         graphics::DisplayConfigurationCardId{0},
+        graphics::DisplayConfigurationLogicalGroupId{0},
         graphics::DisplayConfigurationOutputType::edp,
         formats,
         modes,
@@ -212,6 +214,7 @@ mtd::StubDisplayConfig::StubDisplayConfig(unsigned int num_displays, std::vector
         graphics::DisplayConfigurationOutput output{
             graphics::DisplayConfigurationOutputId{static_cast<int>(i + 1)},
             graphics::DisplayConfigurationCardId{0},
+            graphics::DisplayConfigurationLogicalGroupId{0},
             graphics::DisplayConfigurationOutputType::vga,
             pfs,
             connected(i) ? modes : std::vector<graphics::DisplayConfigurationMode>{},
@@ -245,6 +248,7 @@ mtd::StubDisplayConfig::StubDisplayConfig(std::vector<geometry::Rectangle> const
             {
                 graphics::DisplayConfigurationOutputId{id},
                 graphics::DisplayConfigurationCardId{0},
+                graphics::DisplayConfigurationLogicalGroupId{0},
                 graphics::DisplayConfigurationOutputType::vga,
                 std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
                 {{rect.size, 60.0}},

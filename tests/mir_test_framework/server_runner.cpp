@@ -21,6 +21,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/display_server.h"
 #include "mir/frontend/connector.h"
+#include <mir/report_exception.h>
 #include "mir/run_mir.h"
 #include "mir/main_loop.h"
 #include "mir/log.h"
@@ -128,7 +129,9 @@ std::shared_ptr<mir::MainLoop> mtf::ServerRunner::start_mir_server()
         }
         catch (std::exception const& e)
         {
-            FAIL() << e.what();
+            std::ostringstream error;
+            mir::report_exception(error);
+            FAIL() << error.str();
         }
     });
 

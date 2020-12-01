@@ -23,6 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/fatal.h"
 #include "mir/fd.h"
+#include "mir/log.h"
 
 #include <xcb/xcb.h>
 #include <string>
@@ -90,6 +91,47 @@ public:
         std::atomic<xcb_atom_t> mutable atom{XCB_ATOM_NONE};
     };
 
+    struct Error
+    {
+        Error() = default;
+        Error(Error const&) = delete;
+        auto operator=(Error const&) -> Error const& = delete;
+        ~Error()
+        {
+            if (ptr)
+            {
+                free(ptr);
+            }
+        }
+
+        xcb_generic_error_t* ptr{nullptr};
+    };
+
+    template<typename T>
+    class Handler
+    {
+    public:
+        Handler(std::function<void(T const& value)>&& on_success)
+            : on_success{std::move(on_success)},
+              on_error{[](std::string const& message)
+                  {
+                      log_error("XCB error: %s", message.c_str());
+                  }}
+        {
+        }
+
+        Handler(
+            std::function<void(T const& value)>&& on_success,
+            std::function<void(std::string const& message)>&& on_error)
+            : on_success{move(on_success)},
+              on_error{move(on_error)}
+        {
+        }
+
+        std::function<void(T const& value)> on_success;
+        std::function<void(std::string const& message)> on_error;
+    };
+
     explicit XCBConnection(Fd const& fd);
     ~XCBConnection();
 
@@ -114,26 +156,32 @@ public:
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
-        std::function<void(xcb_get_property_reply_t*)> action,
-        std::function<void()> on_error) const -> std::function<void()>;
+        Handler<xcb_get_property_reply_t*>&& handler) const -> std::function<void()>;
 
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
-        std::function<void(std::string const&)> action,
-        std::function<void()> on_error = [](){}) const -> std::function<void()>;
+        Handler<std::string> handler) const -> std::function<void()>;
 
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
-        std::function<void(uint32_t)> action,
-        std::function<void()> on_error = [](){}) const -> std::function<void()>;
+        Handler<uint32_t> handler) const -> std::function<void()>;
 
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
-        std::function<void(std::vector<uint32_t> const&)> action,
-        std::function<void()> on_error = [](){}) const -> std::function<void()>;
+        Handler<int32_t> handler) const -> std::function<void()>;
+
+    auto read_property(
+        xcb_window_t window,
+        xcb_atom_t prop,
+        Handler<std::vector<uint32_t>> handler) const -> std::function<void()>;
+
+    auto read_property(
+        xcb_window_t window,
+        xcb_atom_t prop,
+        Handler<std::vector<int32_t>> handler) const -> std::function<void()>;
     /// @}
 
     /// Set X11 window properties
@@ -211,6 +259,7 @@ public:
     DECLARE_ATOM(WM_DELETE_WINDOW);
     DECLARE_ATOM(WM_STATE);
     DECLARE_ATOM(WM_CHANGE_STATE);
+    DECLARE_ATOM(WM_NORMAL_HINTS);
     DECLARE_ATOM(WM_S0);
     DECLARE_ATOM(_NET_WM_CM_S0);
     DECLARE_ATOM(_NET_WM_NAME);

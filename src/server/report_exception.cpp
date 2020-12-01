@@ -35,6 +35,16 @@ void mir::report_exception(std::ostream& out)
     }
     catch (std::exception const& error)
     {
+        // First report any nested exceptions
+        try
+        {
+            std::rethrow_if_nested(error);
+        }
+        catch(...)
+        {
+            report_exception(out);
+        }
+
         out << "ERROR: " << boost::diagnostic_information(error) << std::endl;
     }
     catch (...)

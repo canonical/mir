@@ -20,6 +20,7 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <limits>
 #include <algorithm>
 #include <stdexcept>
 

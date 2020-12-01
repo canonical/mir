@@ -29,6 +29,7 @@
 #include "egl_helper.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/gl_config.h"
+#include "mir/graphics/dmabuf_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>
@@ -534,12 +535,11 @@ bool mgg::DisplayBuffer::overlay(RenderableList const& renderable_list)
         if (bypass_it != renderable_list.rend())
         {
             auto bypass_buffer = (*bypass_it)->buffer();
-            auto native = std::dynamic_pointer_cast<mgg::NativeBuffer>(bypass_buffer->native_buffer_handle());
-            if (native && native->flags & mir_buffer_flag_can_scanout &&
-                bypass_buffer->size() == surface.size() &&
-                !needs_bounce_buffer(*outputs.front(), native->bo))
+            auto dmabuf_image = dynamic_cast<mg::DMABufBuffer*>(bypass_buffer->native_buffer_base());
+            if (dmabuf_image &&
+                bypass_buffer->size() == surface.size())
             {
-                if (auto bufobj = outputs.front()->fb_for(native->bo))
+                if (auto bufobj = outputs.front()->fb_for(*dmabuf_image))
                 {
                     bypass_buf = bypass_buffer;
                     bypass_bufobj = bufobj;
@@ -595,7 +595,7 @@ void mgg::DisplayBuffer::post()
      */
     wait_for_page_flip();
 
-    mgg::FBHandle *bufobj;
+    std::shared_ptr<mgg::FBHandle const> bufobj;
     if (bypass_buf)
     {
         bufobj = bypass_bufobj;
@@ -608,11 +608,12 @@ void mgg::DisplayBuffer::post()
             fatal_error("Failed to get front buffer object");
     }
 
+    scheduled_fb = std::move(bufobj);
     /*
      * Try to schedule a page flip as first preference to avoid tearing.
      * [will complete in a background thread]
      */
-    if (!needs_set_crtc && !schedule_page_flip(*bufobj))
+    if (!needs_set_crtc && !schedule_page_flip(*scheduled_fb))
         needs_set_crtc = true;
 
     /*
@@ -621,11 +622,15 @@ void mgg::DisplayBuffer::post()
      */
     if (needs_set_crtc)
     {
-        set_crtc(*bufobj);
+        set_crtc(*scheduled_fb);
+        // SetCrtc is immediate, so the FB is now visible and we have nothing pending
+        visible_fb = std::move(scheduled_fb);
+        scheduled_fb = nullptr;
+
         needs_set_crtc = false;
     }
 
-    using namespace std;  // For operator""ms()
+    using namespace std::chrono_literals;  // For operator""ms()
 
     // Predicted worst case render time for the next frame...
     auto predicted_render_time = 50ms;
@@ -707,6 +712,10 @@ void mgg::DisplayBuffer::wait_for_page_flip()
     {
         for (auto& output : outputs)
             output->wait_for_page_flip();
+
+        // The previously-scheduled FB has been page-flipped, and is now visible
+        visible_fb = std::move(scheduled_fb);
+        scheduled_fb = nullptr;
 
         page_flips_pending = false;
     }

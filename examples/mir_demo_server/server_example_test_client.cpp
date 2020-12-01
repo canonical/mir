@@ -32,27 +32,43 @@
 
 namespace me = mir::examples;
 namespace ml = mir::logging;
+using namespace std::chrono_literals;
 
 namespace
 {
 static auto const component = "server_example_test_client.cpp";
 
-bool exit_success(pid_t pid)
+struct Self
 {
+    std::unique_ptr<mir::time::Alarm> server_stop_action;
+    std::atomic<bool> test_failed;
+};
+
+void check_exit_status(pid_t pid, mir::Server& server, Self* self, int& countdown)
+{
+    countdown--;
     int status;
 
     auto const wait_rc = waitpid(pid, &status, WNOHANG);
 
     if (wait_rc == 0)
     {
-        ml::log(ml::Severity::informational, "Terminating client", component);
-        kill(pid, SIGKILL);
-        return false;
+        if (countdown > 0)
+        {
+            self->server_stop_action->reschedule_in(100ms);
+            return;
+        }
+        else
+        {
+            ml::log(ml::Severity::warning, "Client has not exited: Terminating client", component);
+            kill(pid, SIGKILL);
+            self->test_failed = true;
+        }
     }
     else if (wait_rc != pid)
     {
         ml::log(ml::Severity::informational, "No status available for client", component);
-        return false;
+        self->test_failed = true;
     }
     else if (WIFEXITED(status))
     {
@@ -60,7 +76,7 @@ bool exit_success(pid_t pid)
         if (exit_status == EXIT_SUCCESS)
         {
             ml::log(ml::Severity::informational, "Client exited successfully", component);
-            return true;
+            self->test_failed = false;
         }
         else
         {
@@ -68,7 +84,7 @@ bool exit_success(pid_t pid)
             char buffer[sizeof format + 10];
             snprintf(buffer, sizeof buffer, format, exit_status);
             ml::log(ml::Severity::informational, buffer, component);
-            return false;
+            self->test_failed = true;
         }
     }
     else if (WIFSIGNALED(status))
@@ -78,21 +94,21 @@ bool exit_success(pid_t pid)
         char buffer[sizeof format];
         snprintf(buffer, sizeof buffer, format, signal);
         ml::log(ml::Severity::informational, buffer, component);
-        return false;
+        self->test_failed = true;
     }
     else
     {
         ml::log(ml::Severity::informational, "Client died mysteriously", component);
-        return false;
+        self->test_failed = true;
     }
+
+    server.stop();
 }
 }
 
-struct me::TestClientRunner::Self
+struct me::TestClientRunner::Self : ::Self
 {
     std::unique_ptr<time::Alarm> client_kill_action;
-    std::unique_ptr<time::Alarm> server_stop_action;
-    std::atomic<bool> test_failed;
 };
 
 me::TestClientRunner::TestClientRunner() : self{std::make_shared<Self>()} {}
@@ -146,20 +162,19 @@ void me::TestClientRunner::operator()(mir::Server& server)
             else if (pid > 0)
             {
                 self->client_kill_action = server.the_main_loop()->create_alarm(
-                    [pid]
+                    [pid, self]
                     {
                         kill(pid, SIGTERM);
+                        self->server_stop_action->reschedule_in(100ms);
                     });
 
                 self->server_stop_action = server.the_main_loop()->create_alarm(
-                    [pid, &server, self]()
+                    [pid, &server, self, countdown = 100]() mutable
                     {
-                        self->test_failed = !exit_success(pid);
-                        server.stop();
+                        check_exit_status(pid, server, self.get(), countdown);
                     });
 
                 self->client_kill_action->reschedule_in(std::chrono::seconds(options1->get<int>(test_timeout_opt)));
-                self->server_stop_action->reschedule_in(std::chrono::seconds(options1->get<int>(test_timeout_opt) + 1));
             }
             else
             {

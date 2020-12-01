@@ -34,6 +34,7 @@ class EGLExtensions  : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        mock_egl.provide_egl_extensions();
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -46,25 +47,32 @@ TEST_F(EGLExtensions, constructor_throws_if_egl_image_not_supported)
     ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
 
+    mg::EGLExtensions extensions;
+    EGLDisplay dpy = eglGetDisplay(nullptr);
+
     EXPECT_THROW({
-        mg::EGLExtensions extensions;
+        extensions.base(dpy);
     }, std::runtime_error);
 }
 
-TEST_F(EGLExtensions, constructor_throws_if_gl_oes_egl_image_not_supported)
+TEST_F(EGLExtensions, base_throws_if_gl_oes_egl_image_not_supported)
 {
     ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
 
+    mg::EGLExtensions extensions;
+    EGLDisplay dpy = eglGetDisplay(nullptr);
+
     EXPECT_THROW({
-        mg::EGLExtensions extensions;
+        extensions.base(dpy);
     }, std::runtime_error);
 }
 
 TEST_F(EGLExtensions, success_has_sane_function_hooks)
 {
     mg::EGLExtensions extensions;
-    EXPECT_NE(nullptr, extensions.eglCreateImageKHR);
-    EXPECT_NE(nullptr, extensions.eglDestroyImageKHR);
-    EXPECT_NE(nullptr, extensions.glEGLImageTargetTexture2DOES);
+    EGLDisplay dpy = eglGetDisplay(nullptr);
+    EXPECT_NE(nullptr, extensions.base(dpy).eglCreateImageKHR);
+    EXPECT_NE(nullptr, extensions.base(dpy).eglDestroyImageKHR);
+    EXPECT_NE(nullptr, extensions.base(dpy).glEGLImageTargetTexture2DOES);
 }

@@ -71,26 +71,30 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
 void mir::run_mir(
     ServerConfiguration& config,
     std::function<void(DisplayServer&)> init,
-    std::function<void(int)> const& terminator)
+    std::function<void(int)> const& terminator_)
 {
     DisplayServer* server_ptr{nullptr};
     clear_termination_exception();
 
     auto const main_loop = config.the_main_loop();
 
-    if (terminator)
+    auto const& terminator = terminator_ ?
+        terminator_ :
+        [&server_ptr](int)
+        {
+          assert(server_ptr);
+          server_ptr->stop();
+        };
+
+    struct sigaction old_action;
+    if ((sigaction(SIGHUP, nullptr, &old_action) == 0) && (old_action.sa_handler == SIG_IGN))
     {
-        main_loop->register_signal_handler({SIGINT, SIGHUP, SIGTERM}, terminator);
+        // If our parent process is ignoring SIGHUP (e.g. is nohup) then we do the same
+        main_loop->register_signal_handler({SIGINT, SIGTERM}, terminator);
     }
     else
     {
-        main_loop->register_signal_handler(
-            {SIGINT, SIGHUP, SIGTERM},
-            [&server_ptr](int)
-            {
-                assert(server_ptr);
-                server_ptr->stop();
-            });
+        main_loop->register_signal_handler({SIGINT, SIGHUP, SIGTERM}, terminator);
     }
 
     FatalErrorStrategy fatal_error_strategy{config.the_fatal_error_strategy()};

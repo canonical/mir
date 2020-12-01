@@ -88,7 +88,10 @@ public:
         std::shared_ptr<mir::scene::Session> const& session,
         mir::scene::SurfaceCreationParameters const& params) -> std::shared_ptr<mir::scene::Surface>;
 
-    auto static create_fake_display_configuration(std::vector<miral::Rectangle> outputs)
+    auto static create_fake_display_configuration(std::vector<miral::Rectangle> const& outputs)
+        -> std::shared_ptr<graphics::DisplayConfiguration const>;
+    auto static create_fake_display_configuration(
+        std::vector<std::pair<graphics::DisplayConfigurationLogicalGroupId, miral::Rectangle>> const& outputs)
         -> std::shared_ptr<graphics::DisplayConfiguration const>;
     void notify_configuration_applied(
         std::shared_ptr<graphics::DisplayConfiguration const> display_config);

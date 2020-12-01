@@ -100,6 +100,11 @@ auto miral::Output::is_same_output(Output const& other) const -> bool
     return self->card_id == other.self->card_id && self->id == other.self->id;
 }
 
+auto miral::Output::logical_group_id() const -> int
+{
+    return self->logical_group_id.as_value();
+}
+
 bool miral::operator==(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs)
 {
     return lhs.width == rhs.width && lhs.height == rhs.height;
@@ -118,5 +123,6 @@ auto miral::equivalent_display_area(Output const& lhs, Output const& rhs) -> boo
            lhs.pixel_format() == rhs.pixel_format() &&
         lhs.physical_size_mm() == rhs.physical_size_mm() &&
            lhs.scale() == rhs.scale() &&
+           lhs.logical_group_id() == rhs.logical_group_id() &&
            lhs.type() == rhs.type();
 }

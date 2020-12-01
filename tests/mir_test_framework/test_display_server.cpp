@@ -49,7 +49,6 @@ namespace
 {
 std::chrono::seconds const timeout{20};
 char const* dummy_args[2] = { "TestServer", nullptr };
-char const* const trace_option = "window-management-trace";
 }
 
 miral::TestDisplayServer::TestDisplayServer() :
@@ -89,7 +88,6 @@ void miral::TestDisplayServer::start_server()
 
             auto init = [this](mir::Server& server)
                 {
-                    server.add_configuration_option(trace_option, "log trace message", mir::OptionType::null);
                     server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
 
                     // These options are needed to test through the legacy mirclient API

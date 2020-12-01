@@ -130,6 +130,7 @@ private:
 private:
     std::shared_ptr<DisplayReport> const report;
     mir::Fd const shutdown_signal;
+    mir::Fd const flush_signal;
     std::shared_ptr<platform::wayland::Cursor> cursor;
 
     std::mutex sink_mutex;
@@ -146,6 +147,7 @@ private:
     void run() const;
     void stop();
     auto get_touch_contact(int32_t id) -> decltype(touch_contacts)::iterator;
+    void flush_wl() const;
 };
 
 }

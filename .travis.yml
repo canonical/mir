@@ -43,17 +43,17 @@ env:
   - DEBEMAIL="mir-ci-bot@canonical.com"
   - SPREAD_PATH=/tmp/spread
   jobs:
-  - TASK=google:ubuntu-devel-64:spread/build/ubuntu:amd64
-  - TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
-  - TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
-  - TASK=google:debian-sid:spread/build/debian:amd64
-  - TASK=google:ubuntu-18.04-64:spread/build/ubuntu:amd64
-  - TASK=google:ubuntu-18.04-64:spread/build/ubuntu:arm64
-  - TASK=google:ubuntu-18.04-64:spread/build/ubuntu:rpi
-  - TASK=google:ubuntu-20.04-64:spread/build/ubuntu:amd64
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:debian_sid
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_groovy
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed
+  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64
+  - TASK=google:ubuntu-20.04-64:spread/build/ubuntu:rpi
   - TASK=google:ubuntu-20.04-64:spread/build/ubuntu:clang
   - TASK=google:fedora-31-64:spread/build/fedora:amd64
   - TASK=google:fedora-32-64:spread/build/fedora:amd64
+  - TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
 
 before_install:
 - mkdir -p ${SPREAD_PATH}
@@ -69,7 +69,7 @@ jobs:
   include:
   - &ppa-upload
     stage: upload to ppa:mir-team
-    env: RELEASE=18.04
+    env: RELEASE=20.04
     git:
       depth: false
     before_install: &decrypt-bot-data
@@ -89,23 +89,23 @@ jobs:
         - python-launchpadlib
         - python-paramiko
   - <<: *ppa-upload
-    env: RELEASE=20.04
+    env: RELEASE=20.10
   - <<: *ppa-upload
     env: RELEASE=devel
 
   - &sanitize
     stage: sanitize
-    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:asan
+    env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:asan
   - <<: *sanitize
-    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:tsan
+    env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:tsan
   - <<: *sanitize
-    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:ubsan
+    env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:ubsan
   - <<: *sanitize
-    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:asan_clang
+    env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:asan_clang
   - <<: *sanitize
-    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:tsan_clang
+    env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:tsan_clang
   - <<: *sanitize
-    env: TASK=google:ubuntu-18.04-64:spread/build/ubuntu:ubsan_clang
+    env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:ubsan_clang
 
   - stage: process snaps
     env: ~
@@ -119,6 +119,7 @@ jobs:
     script:
     - tools/process_snaps.py
   allow_failures:
-    - env: TASK=google:ubuntu-devel-proposed-64:spread/build/ubuntu:amd64
+    - env: TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel
+    - env: TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed
     - env: TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
   fast_finish: true

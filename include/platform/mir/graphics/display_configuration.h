@@ -37,10 +37,16 @@ namespace mir
 {
 namespace graphics
 {
-namespace detail { struct GraphicsConfCardIdTag; struct GraphicsConfOutputIdTag; }
+namespace detail
+{
+struct GraphicsConfCardIdTag;
+struct GraphicsConfOutputIdTag;
+struct GraphicsConfLogicalGroupId;
+}
 
 typedef IntWrapper<detail::GraphicsConfCardIdTag> DisplayConfigurationCardId;
 typedef IntWrapper<detail::GraphicsConfOutputIdTag> DisplayConfigurationOutputId;
+typedef IntWrapper<detail::GraphicsConfLogicalGroupId> DisplayConfigurationLogicalGroupId;
 
 /**
  * Configuration information for a display card.
@@ -94,6 +100,8 @@ struct DisplayConfigurationOutput
     DisplayConfigurationOutputId id;
     /** The id of the card the output is connected to. */
     DisplayConfigurationCardId card_id;
+    /** The id of the logical output group (aka display wall) this output belongs to, or 0 for none. */
+    DisplayConfigurationLogicalGroupId logical_group_id;
     /** The type of the output. */
     DisplayConfigurationOutputType type;
     /** The pixel formats supported by the output */
@@ -159,6 +167,7 @@ struct UserDisplayConfigurationOutput
 {
     DisplayConfigurationOutputId const& id;
     DisplayConfigurationCardId const& card_id;
+    DisplayConfigurationLogicalGroupId& logical_group_id;
     DisplayConfigurationOutputType const& type;
     std::vector<MirPixelFormat> const& pixel_formats;
     std::vector<DisplayConfigurationMode> const& modes;

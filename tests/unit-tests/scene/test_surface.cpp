@@ -34,7 +34,6 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
 
-#include "gmock_set_arg.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

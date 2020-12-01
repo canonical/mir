@@ -70,6 +70,16 @@ public:
      */
     virtual void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) = 0;
 
+    /**
+     * Deinitialise the BufferAllocator for this Wayland display
+     *
+     * This should do whatever is required to clean up before the Wayland loop is stopped. For
+     * example, calling eglUnindWaylandDisplayWL.
+     *
+     * \param display [in] The Wayland display to unbind from
+     */
+    virtual void unbind_display(wl_display* display) = 0;
+
     virtual std::shared_ptr<Buffer> buffer_from_resource(
         wl_resource* buffer,
         std::function<void()>&& on_consumed,
