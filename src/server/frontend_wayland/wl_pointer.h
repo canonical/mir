@@ -65,7 +65,7 @@ public:
         std::chrono::milliseconds const& ms,
         WlSurface* root_surface,
         std::pair<float, float> const& root_position);
-    void axis(std::chrono::milliseconds const& ms, geometry::Displacement const& scroll);
+    void axis(std::chrono::milliseconds const& ms, std::pair<float, float> const& scroll);
     void frame();
 
     struct Cursor;

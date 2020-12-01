@@ -219,11 +219,11 @@ void mf::WaylandInputDispatcher::handle_pointer_motion_event(
     auto const position = std::make_pair(
         mir_pointer_event_axis_value(event, mir_pointer_axis_x),
         mir_pointer_event_axis_value(event, mir_pointer_axis_y));
-    geom::Displacement const axis_motion{
+    auto const axis_motion = std::make_pair(
         mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll) * 10,
-        mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll) * 10};
+        mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll) * 10);
     bool const send_motion = (!last_pointer_position || position != last_pointer_position.value());
-    bool const send_axis = (axis_motion != geom::Displacement{});
+    bool const send_axis = (axis_motion.first || axis_motion.second);
 
     last_pointer_position = position;
 

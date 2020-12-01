@@ -189,23 +189,23 @@ void mf::WlPointer::motion(
     send_update(ms, target_surface, root_position);
 }
 
-void mf::WlPointer::axis(std::chrono::milliseconds const& ms, geometry::Displacement const& scroll)
+void mf::WlPointer::axis(std::chrono::milliseconds const& ms, std::pair<float, float> const& scroll)
 {
-    if (scroll.dx != geom::DeltaX{})
+    if (scroll.first)
     {
         send_axis_event(
             ms.count(),
             Axis::horizontal_scroll,
-            scroll.dx.as_int());
+            scroll.first);
         can_send_frame = true;
     }
 
-    if (scroll.dy != geom::DeltaY{})
+    if (scroll.second)
     {
         send_axis_event(
             ms.count(),
             Axis::vertical_scroll,
-            scroll.dy.as_int());
+            scroll.second);
         can_send_frame = true;
     }
 }
