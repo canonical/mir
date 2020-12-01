@@ -257,9 +257,9 @@ void mf::WaylandInputDispatcher::handle_touch_event(
 
     for (auto i = 0u; i < mir_touch_event_point_count(event); ++i)
     {
-        geometry::Point const position{
+        auto const position = std::make_pair(
             mir_touch_event_axis_value(event, i, mir_touch_axis_x),
-            mir_touch_event_axis_value(event, i, mir_touch_axis_y)};
+            mir_touch_event_axis_value(event, i, mir_touch_axis_y));
         int const touch_id = mir_touch_event_id(event, i);
         MirTouchAction const action = mir_touch_event_action(event, i);
 
