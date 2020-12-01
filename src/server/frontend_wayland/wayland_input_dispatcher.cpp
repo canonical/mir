@@ -138,9 +138,9 @@ void mf::WaylandInputDispatcher::handle_pointer_event(std::chrono::milliseconds 
             break;
         case mir_pointer_action_enter:
         {
-            geom::Point const position{
+            auto const position = std::make_pair(
                 mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-                mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+                mir_pointer_event_axis_value(event, mir_pointer_axis_y));
             seat->for_each_listener(client, [&](WlPointer* pointer)
                 {
                     pointer->enter(ms, &wl_surface.value(), position);
@@ -216,9 +216,9 @@ void mf::WaylandInputDispatcher::handle_pointer_motion_event(
     // TODO: send axis_source, axis_stop and axis_discrete events where appropriate
     // (may require significant eworking of the input system)
 
-    geom::Point const position{
+    auto const position = std::make_pair(
         mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+        mir_pointer_event_axis_value(event, mir_pointer_axis_y));
     geom::Displacement const axis_motion{
         mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll) * 10,
         mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll) * 10};

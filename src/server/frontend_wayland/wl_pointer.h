@@ -58,13 +58,13 @@ public:
     void enter(
         std::chrono::milliseconds const& ms,
         WlSurface* root_surface,
-        geometry::Point const& root_position);
+        std::pair<float, float> const& root_position);
     void leave();
     void button(std::chrono::milliseconds const& ms, uint32_t button, bool pressed);
     void motion(
         std::chrono::milliseconds const& ms,
         WlSurface* root_surface,
-        geometry::Point const& root_position);
+        std::pair<float, float> const& root_position);
     void axis(std::chrono::milliseconds const& ms, geometry::Displacement const& scroll);
     void frame();
 
@@ -80,7 +80,7 @@ private:
     void send_update(
         std::chrono::milliseconds const& ms,
         WlSurface* target_surface,
-        geometry::Point const& root_position);
+        std::pair<float, float> const& root_position);
 
     /// Wayland request handlers
     ///@{
