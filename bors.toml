@@ -1,4 +1,4 @@
 status = [ "Spread" ]
 block-labels = [ "no-merge" ]
-timeout-sec = 12000
+timeout-sec = 1800
 delete-merged-branches = true
