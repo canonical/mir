@@ -33,8 +33,6 @@ jobs:
           allow-fail: true
         - spread-task: google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed
           allow-fail: true
-        - spread-task: fedora-31-64:spread/build/fedora:amd64
-          allow-fail: true
         - spread-task: fedora-rawhide-64:spread/build/fedora:amd64
           allow-fail: true
 
