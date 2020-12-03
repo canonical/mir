@@ -1,4 +1,4 @@
-status = [ "Spread" ]
+status = [ "Bors" ]
 block-labels = [ "no-merge" ]
 timeout-sec = 1800
 delete-merged-branches = true
