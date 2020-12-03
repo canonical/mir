@@ -7,23 +7,12 @@ branches:
   - staging
   - trying
   - master
-  # release branch
-  - /^release\/[\d\.]+$/
-  # release tag
-  - /^v[\d\.]+$/
-
 stages:
 - name: process snaps
   if: (type = pull_request
         AND head_repo = MirServer/mir)
       OR (type != pull_request
         AND repo = MirServer/mir)
-- name: test
-  # don't test on pushes to master or release pull requests or tag events
-  # TODO: enable release pull request testing when we have more CI power
-  if: NOT (( branch = master AND type = push )
-             OR ( head_branch =~ ^release/[\d\.]+$ ))
-      AND tag IS blank
 - name: sanitize
   if: type = cron
       AND repo = MirServer/mir
@@ -42,28 +31,6 @@ env:
   - DEBFULLNAME="Mir CI Bot"
   - DEBEMAIL="mir-ci-bot@canonical.com"
   - SPREAD_PATH=/tmp/spread
-  jobs:
-  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:debian_sid
-  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel
-  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_groovy
-  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu
-  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed
-  - TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64
-  - TASK=google:ubuntu-20.04-64:spread/build/ubuntu:rpi
-  - TASK=google:ubuntu-20.04-64:spread/build/ubuntu:clang
-  - TASK=google:fedora-31-64:spread/build/fedora:amd64
-  - TASK=google:fedora-32-64:spread/build/fedora:amd64
-  - TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
-
-before_install:
-- mkdir -p ${SPREAD_PATH}
-- pushd "${SPREAD_PATH}"
-- curl -s -O https://niemeyer.s3.amazonaws.com/spread-amd64.tar.gz
-- tar xzvf spread-amd64.tar.gz
-- popd
-
-script:
-- ${SPREAD_PATH}/spread -v ${TASK}
 
 jobs:
   include:
@@ -118,8 +85,4 @@ jobs:
     - if [ ${TRAVIS_EVENT_TYPE} == cron ]; then sudo apt update; sudo apt install snapd; sudo snap install snapd review-tools; fi
     script:
     - tools/process_snaps.py
-  allow_failures:
-    - env: TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel
-    - env: TASK=google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed
-    - env: TASK=google:fedora-rawhide-64:spread/build/fedora:amd64
   fast_finish: true
