@@ -290,7 +290,7 @@ TEST_F(ThreadedDispatcherTest, DISABLED_sets_thread_names_appropriately)
 
     auto dispatched = std::make_shared<mt::Signal>();
     constexpr int const threadcount{3};
-    constexpr char const* threadname_base{"Madness Thread"};
+    static char const* const threadname_base{"Madness Thread"};
     std::atomic<int> dispatch_count{0};
 
     auto dispatchable = std::make_shared<mt::TestDispatchable>([dispatched, &dispatch_count]()
