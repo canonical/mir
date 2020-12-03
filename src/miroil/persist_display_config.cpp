@@ -19,14 +19,12 @@
 #include "miroil/persist_display_config.h"
 #include "miroil/display_configuration_policy.h"
 #include "miroil/display_configuration_storage.h"
-#include "miroil/edid.h"
 
-#include <mir/graphics/display_configuration_policy.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/display_configuration_observer.h>
+#include <mir/graphics/display_configuration_policy.h>
 #include <mir/observer_registrar.h>
 #include <mir/server.h>
-
 
 namespace mg = mir::graphics;
 
@@ -213,7 +211,7 @@ void PersistDisplayConfigPolicy::apply_to(
                 }
 
                 uint output_index = 0;
-                conf.for_each_output([this, &output, config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
+                conf.for_each_output([&output, config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
                     if (output_index == config.clone_output_index.value()) {
                         output.top_left = find_output.top_left;
                     }
@@ -247,7 +245,7 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
             miroil::DisplayConfigurationOptions config;
 
             uint output_index = 0;
-            conf.for_each_output([this, output, &config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
+            conf.for_each_output([output, &config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
                 if (!config.clone_output_index.is_set() && output.top_left == find_output.top_left) {
                     config.clone_output_index = output_index;
                 }
