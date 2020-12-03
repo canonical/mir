@@ -24,7 +24,7 @@
 
 namespace miral
 {
-void open_desktop_entry(std::string const& desktop_file, std::vector<std::string> const& env);
+void open_desktop_entry(std::string const& desktop_file);
 }
 
 #endif //MIRAL_OPEN_DESKTOP_ENTRY_H
