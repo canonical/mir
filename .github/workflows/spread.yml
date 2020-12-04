@@ -27,31 +27,70 @@ jobs:
     - name: Run clang-format through the diff
       uses: canonical/actions/clang-format@main
 
+  GetMatrix:
+    runs-on: ubuntu-latest
+
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+    steps:
+    - id: set-matrix
+      name: Determine BuildAndTest matrix
+      run: |
+        set -euo pipefail
+
+        if [ "${{ github.event_name }}" == "push" -a "${{ github.ref }}" == "refs/heads/master" ]; then
+          cat <<EOF | jq -c . | awk '{ print "::set-output name=matrix::" $0 }'
+        {
+          "spread-task": [
+            "google:ubuntu-20.04-64:spread/build/ubuntu:asan",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:tsan",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:asan_clang",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:tsan_clang",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan_clang"
+          ]
+        }
+        EOF
+        else
+          cat <<EOF | jq -c . | awk '{ print "::set-output name=matrix::" $0 }'
+        {
+          "spread-task": [
+            "google:ubuntu-20.04-64:spread/build/sbuild:debian_sid",
+            "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_groovy",
+            "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu",
+            "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:rpi",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:clang",
+            "google:fedora-32-64:spread/build/fedora:amd64"
+          ],
+          "include": [
+            {
+              "spread-task": "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel",
+              "allow-fail": true
+            },
+            {
+              "spread-task": "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed",
+              "allow-fail": true
+            },
+            {
+              "spread-task": "fedora-rawhide-64:spread/build/fedora:amd64",
+              "allow-fail": true
+            }
+          ]
+        }
+        EOF
+        fi
+
   BuildAndTest:
-    needs: Lint
+    needs: [Lint, GetMatrix]
 
     # Need to explicitly continue on Lint getting skipped.
-    if: ${{ !failure() && !( github.event_name == 'push' && github.ref == 'refs/heads/master' ) }}
+    if: ${{ !failure() }}
 
     strategy:
       fail-fast: true
-      matrix:
-        spread-task:
-        - google:ubuntu-20.04-64:spread/build/sbuild:debian_sid
-        - google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_groovy
-        - google:ubuntu-20.04-64:spread/build/sbuild:ubuntu
-        - google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64
-        - google:ubuntu-20.04-64:spread/build/ubuntu:rpi
-        - google:ubuntu-20.04-64:spread/build/ubuntu:clang
-        - google:fedora-32-64:spread/build/fedora:amd64
-        allow-fail: [false]
-        include:
-        - spread-task: google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel
-          allow-fail: true
-        - spread-task: google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed
-          allow-fail: true
-        - spread-task: fedora-rawhide-64:spread/build/fedora:amd64
-          allow-fail: true
+      matrix: ${{ fromJSON(needs.GetMatrix.outputs.matrix) }}
 
     runs-on: ubuntu-latest
 
