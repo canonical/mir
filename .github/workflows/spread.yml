@@ -1,0 +1,132 @@
+name: Spread
+
+on:
+  push:
+    branches:
+    - master
+    - staging
+    - trying
+    - release/[0-9]+.[0-9]+
+    tags:
+    - v[0-9]+[0-9]+.[0-9]+
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  Lint:
+    runs-on: ubuntu-latest
+
+    if: ${{ github.event_name == 'pull_request' || contains('refs/heads/staging refs/heads/trying', github.ref) }}
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+
+    - name: Run clang-format through the diff
+      uses: canonical/actions/clang-format@main
+
+  GetMatrix:
+    runs-on: ubuntu-latest
+
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+    steps:
+    - id: set-matrix
+      name: Determine BuildAndTest matrix
+      run: |
+        set -euo pipefail
+
+        if [ "${{ github.event_name }}" == "push" -a "${{ github.ref }}" == "refs/heads/master" ]; then
+          cat <<EOF | jq -c . | awk '{ print "::set-output name=matrix::" $0 }'
+        {
+          "spread-task": [
+            "google:ubuntu-20.04-64:spread/build/ubuntu:asan",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:tsan",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:asan_clang",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:tsan_clang",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan_clang"
+          ]
+        }
+        EOF
+        else
+          cat <<EOF | jq -c . | awk '{ print "::set-output name=matrix::" $0 }'
+        {
+          "spread-task": [
+            "google:ubuntu-20.04-64:spread/build/sbuild:debian_sid",
+            "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_groovy",
+            "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu",
+            "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:rpi",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:clang",
+            "google:fedora-32-64:spread/build/fedora:amd64"
+          ],
+          "include": [
+            {
+              "spread-task": "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel",
+              "allow-fail": true
+            },
+            {
+              "spread-task": "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed",
+              "allow-fail": true
+            },
+            {
+              "spread-task": "fedora-rawhide-64:spread/build/fedora:amd64",
+              "allow-fail": true
+            }
+          ]
+        }
+        EOF
+        fi
+
+  BuildAndTest:
+    needs: [Lint, GetMatrix]
+
+    # Need to explicitly continue on Lint getting skipped.
+    if: ${{ !failure() }}
+
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJSON(needs.GetMatrix.outputs.matrix) }}
+
+    runs-on: ubuntu-latest
+
+    env:
+      DEBFULLNAME: "Mir CI Bot"
+      DEBEMAIL: "mir-ci-bot@canonical.com"
+      SPREAD_PATH: "/tmp/spread"
+
+    steps:
+    - name: Set up Spread
+      run: |
+        set -e 
+        mkdir -p ${SPREAD_PATH}
+        pushd "${SPREAD_PATH}"
+        curl -s -O https://niemeyer.s3.amazonaws.com/spread-amd64.tar.gz
+        tar xzvf spread-amd64.tar.gz
+        popd
+
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Run Spread task
+      env:
+        SPREAD_GOOGLE_KEY: ${{ secrets.SPREAD_GOOGLE_KEY }}
+      run: ${SPREAD_PATH}/spread -v ${{ matrix.spread-task }}
+      continue-on-error: ${{ matrix.allow-fail }}
+
+  # Report result to Bors on `staging` and `trying` branches.
+  Bors:
+    if: ${{ always() && github.event_name == 'push' && contains('refs/heads/staging refs/heads/trying', github.ref) }}
+    needs:
+    - BuildAndTest
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Report failure
+      if: ${{ needs.BuildAndTest.result != 'success' }}
+      run: exit 1
