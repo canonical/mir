@@ -1505,7 +1505,7 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
     default:
         bool const can_become_active =
             !active_window() ||
-            active_window().application() == window_info.window().application();
+            active_window().application() == window.application();
         window_info.state(value);
         mir_surface->configure(mir_window_attrib_state, value);
         mir_surface->show();
