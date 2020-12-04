@@ -12,12 +12,6 @@ stages:
   if: type = cron
       AND repo = MirServer/mir
       AND branch = master
-- name: upload to ppa:mir-team
-  if: type = push
-      AND repo = MirServer/mir
-      AND ( branch = master
-            OR branch =~ ^release/[\d\.]+$
-            OR tag =~ ^v[\d\.]+$ )
 
 env:
   global:
@@ -29,32 +23,6 @@ env:
 
 jobs:
   include:
-  - &ppa-upload
-    stage: upload to ppa:mir-team
-    env: RELEASE=20.04
-    git:
-      depth: false
-    before_install: &decrypt-bot-data
-    - openssl aes-256-cbc -K $encrypted_0102c5bea602_key -iv $encrypted_0102c5bea602_iv
-      -in tools/bot-data.tar.xz.enc -out tools/bot-data.tar.xz -d
-    - tar --extract --xz --file tools/bot-data.tar.xz --directory ${HOME}
-    script:
-    - tools/ppa-upload.sh
-    addons:
-      apt:
-        packages:
-        - debhelper
-        - devscripts
-        - dput
-        - fakeroot
-        - python-bzrlib
-        - python-launchpadlib
-        - python-paramiko
-  - <<: *ppa-upload
-    env: RELEASE=20.10
-  - <<: *ppa-upload
-    env: RELEASE=devel
-
   - &sanitize
     stage: sanitize
     env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:asan
