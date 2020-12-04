@@ -13,8 +13,25 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
+  Lint:
+    runs-on: ubuntu-latest
+
+    if: ${{ github.event_name == 'pull_request' || contains('refs/heads/staging refs/heads/trying', github.ref) }}
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+
+    - name: Run clang-format through the diff
+      uses: canonical/actions/clang-format@main
+
   BuildAndTest:
-    if: ${{ ! ( github.event_name == 'push' && github.ref == 'refs/heads/master' ) }}
+    needs: Lint
+
+    # Need to explicitly continue on Lint getting skipped.
+    if: ${{ !failure() && !( github.event_name == 'push' && github.ref == 'refs/heads/master' ) }}
 
     strategy:
       fail-fast: true
