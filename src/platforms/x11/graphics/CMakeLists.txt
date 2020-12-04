@@ -27,3 +27,10 @@ add_library(
 
   graphics.cpp
 )
+
+target_link_libraries(
+  mirplatformgraphicsx11objects
+
+  PRIVATE
+    mirplatform
+)

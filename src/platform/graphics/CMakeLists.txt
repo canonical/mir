@@ -1,7 +1,7 @@
-include_directories(${GL_INCLUDE_DIRS})
+set(DMABUF_PROTO_HEADER ${CMAKE_CURRENT_BINARY_DIR}/linux-dmabuf-unstable-v1_wrapper.h)
+set(DMABUF_PROTO_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/linux-dmabuf-unstable-v1_wrapper.cpp)
 
-set(
-  GRAPHICS_SOURCES
+add_library(mirplatformgraphicscommon OBJECT
 
   egl_extensions.cpp
   egl_resources.cpp
@@ -25,19 +25,57 @@ set(
   cpu_buffers.cpp
   egl_logger.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/egl_logger.h
-  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/dmabuf_buffer.h
+  ${DMABUF_PROTO_HEADER}
+  ${DMABUF_PROTO_SOURCE}
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/linux_dmabuf.h
+  linux_dmabuf.cpp
 )
 
-add_library(mirplatformgraphicscommon OBJECT
+set(LINUX_DMABUF_PROTO "${CMAKE_CURRENT_SOURCE_DIR}/protocol/linux-dmabuf-unstable-v1.xml")
+set(WAYLAND_GENERATOR "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator")
 
-  ${GRAPHICS_SOURCES}
+add_custom_command(
+  OUTPUT
+  linux-dmabuf-unstable-v1_wrapper.h
+  VERBATIM
+  COMMAND
+  "sh" "-c"
+  "${WAYLAND_GENERATOR} zwp_ ${LINUX_DMABUF_PROTO} header > ${DMABUF_PROTO_HEADER}"
+  DEPENDS
+  ${LINUX_DMABUF_PROTO}
+  mir_wayland_generator
+)
+add_custom_command(
+  OUTPUT
+  linux-dmabuf-unstable-v1_wrapper.cpp
+  VERBATIM
+  COMMAND
+  "sh" "-c"
+  "${WAYLAND_GENERATOR} zwp_ ${LINUX_DMABUF_PROTO} source > ${DMABUF_PROTO_SOURCE}"
+  DEPENDS
+  ${LINUX_DMABUF_PROTO}
+  mir_wayland_generator
 )
 
 target_include_directories(
   mirplatformgraphicscommon
 
+  PUBLIC
+    ${CMAKE_CURRENT_BINARY_DIR}
   PRIVATE
-  ${PROJECT_SOURCE_DIR}/include/renderers/gl
+    ${GL_INCLUDE_DIRS}
+    ${DRM_INCLUDE_DIRS}
+    ${PROJECT_SOURCE_DIR}/include/renderers/gl
+)
+
+target_link_libraries(
+  mirplatformgraphicscommon
+
+  PUBLIC
+    mirwayland
+    ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+  PRIVATE
+    mircommon
 )
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
