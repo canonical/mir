@@ -1,6 +1,7 @@
 Language:        Cpp
 AccessModifierOffset: -4
 ConstructorInitializerIndentWidth: 4
+AlignAfterOpenBracket: false
 AlignEscapedNewlinesLeft: true
 AlignTrailingComments: true
 AllowAllParametersOfDeclarationOnNextLine: true

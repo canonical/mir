@@ -138,9 +138,9 @@ void mf::WaylandInputDispatcher::handle_pointer_event(std::chrono::milliseconds 
             break;
         case mir_pointer_action_enter:
         {
-            geom::Point const position{
+            auto const position = std::make_pair(
                 mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-                mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+                mir_pointer_event_axis_value(event, mir_pointer_axis_y));
             seat->for_each_listener(client, [&](WlPointer* pointer)
                 {
                     pointer->enter(ms, &wl_surface.value(), position);
@@ -216,14 +216,14 @@ void mf::WaylandInputDispatcher::handle_pointer_motion_event(
     // TODO: send axis_source, axis_stop and axis_discrete events where appropriate
     // (may require significant eworking of the input system)
 
-    geom::Point const position{
+    auto const position = std::make_pair(
         mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
-    geom::Displacement const axis_motion{
+        mir_pointer_event_axis_value(event, mir_pointer_axis_y));
+    auto const axis_motion = std::make_pair(
         mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll) * 10,
-        mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll) * 10};
+        mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll) * 10);
     bool const send_motion = (!last_pointer_position || position != last_pointer_position.value());
-    bool const send_axis = (axis_motion != geom::Displacement{});
+    bool const send_axis = (axis_motion.first || axis_motion.second);
 
     last_pointer_position = position;
 
@@ -257,9 +257,9 @@ void mf::WaylandInputDispatcher::handle_touch_event(
 
     for (auto i = 0u; i < mir_touch_event_point_count(event); ++i)
     {
-        geometry::Point const position{
+        auto const position = std::make_pair(
             mir_touch_event_axis_value(event, i, mir_touch_axis_x),
-            mir_touch_event_axis_value(event, i, mir_touch_axis_y)};
+            mir_touch_event_axis_value(event, i, mir_touch_axis_y));
         int const touch_id = mir_touch_event_id(event, i);
         MirTouchAction const action = mir_touch_event_action(event, i);
 

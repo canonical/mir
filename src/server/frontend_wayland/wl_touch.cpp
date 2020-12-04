@@ -60,10 +60,14 @@ void mf::WlTouch::down(
     std::chrono::milliseconds const& ms,
     int32_t touch_id,
     WlSurface* root_surface,
-    geometry::Point const& root_position)
+    std::pair<float, float> const& root_position)
 {
-    auto const target_surface = root_surface->subsurface_at(root_position).value_or(root_surface);
-    auto const position_on_target = root_position - target_surface->total_offset();
+    geom::Point root_point{root_position.first, root_position.second};
+    auto const target_surface = root_surface->subsurface_at(root_point).value_or(root_surface);
+    auto const offset = target_surface->total_offset();
+    auto const position_on_target = std::make_pair(
+        root_position.first - offset.dx.as_int(),
+        root_position.second - offset.dy.as_int());
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
 
     // We wont have a "real" timestamp from libinput, so we have to make our own based on the time offset
@@ -85,8 +89,8 @@ void mf::WlTouch::down(
         ms.count(),
         target_surface->raw_resource(),
         touch_id,
-        position_on_target.x.as_int(),
-        position_on_target.y.as_int());
+        position_on_target.first,
+        position_on_target.second);
     can_send_frame = true;
 }
 
@@ -94,7 +98,7 @@ void mf::WlTouch::motion(
     std::chrono::milliseconds const& ms,
     int32_t touch_id,
     WlSurface* /* root_surface */,
-    geometry::Point const& root_position)
+    std::pair<float, float> const& root_position)
 {
     auto const touch = touch_id_to_surface.find(touch_id);
 
@@ -109,13 +113,16 @@ void mf::WlTouch::motion(
         return;
     }
 
-    auto const position_on_target = root_position - touch->second.value().total_offset();
+    auto const offset = touch->second.value().total_offset();
+    auto const position_on_target = std::make_pair(
+        root_position.first - offset.dx.as_int(),
+        root_position.second - offset.dy.as_int());
 
     send_motion_event(
         ms.count(),
         touch_id,
-        position_on_target.x.as_int(),
-        position_on_target.y.as_int());
+        position_on_target.first,
+        position_on_target.second);
     can_send_frame = true;
 }
 
