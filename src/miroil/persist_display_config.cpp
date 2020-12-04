@@ -25,6 +25,11 @@
 #include <mir/graphics/display_configuration_policy.h>
 #include <mir/observer_registrar.h>
 #include <mir/server.h>
+#include <mir/log.h>
+
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
 
 namespace mg = mir::graphics;
 
@@ -177,7 +182,7 @@ void PersistDisplayConfigPolicy::apply_to(
     custom_policy.apply_to(conf);
 
     if (!storage) {
-        throw std::runtime_error("No display configuration storage supplied.");
+        BOOST_THROW_EXCEPTION(std::runtime_error("No display configuration storage supplied."));
     }
 
     conf.for_each_output([this, &conf](mg::UserDisplayConfigurationOutput& output) {
@@ -224,7 +229,7 @@ void PersistDisplayConfigPolicy::apply_to(
                 if (config.scale.is_set()) {output.scale = config.scale.value(); }
             }
         } catch (std::runtime_error const& e) {
-            printf("Failed to parse EDID - %s\n", e.what());
+            mir::log_info("Failed to parse EDID - %s\n", e.what());
         }
     });
 }
@@ -260,7 +265,7 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
 
             storage->save(display_id, config);
         } catch (std::runtime_error const& e) {
-            printf("Failed to parse EDID - %s\n", e.what());
+            mir::log_info("Failed to parse EDID - %s\n", e.what());
         }
     });
 }
