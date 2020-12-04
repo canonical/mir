@@ -21,8 +21,8 @@
 
 #include <boost/throw_exception.hpp>
 
-#include <unistd.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include <cstring>
 #include <stdexcept>
@@ -60,11 +60,10 @@ void strip_mir_env_variables()
 }
 }  // namespace
 
-auto miral::launch_app_env(
-    std::vector<std::string> const& app,
-    mir::optional_value<std::string> const& wayland_display,
-    mir::optional_value<std::string> const& x11_display,
-    miral::AppEnvironment const& app_env) -> pid_t
+auto miral::launch_app_env(std::vector<std::string> const& app,
+                           mir::optional_value<std::string> const& wayland_display,
+                           mir::optional_value<std::string> const& x11_display,
+                           miral::AppEnvironment const& app_env) -> pid_t
 {
     pid_t pid = fork();
 
@@ -79,7 +78,7 @@ auto miral::launch_app_env(
 
         if (x11_display)
         {
-            setenv("DISPLAY", x11_display.value().c_str(),  true);   // configure X11 socket
+            setenv("DISPLAY", x11_display.value().c_str(), true);  // configure X11 socket
         }
         else
         {
@@ -88,7 +87,7 @@ auto miral::launch_app_env(
 
         if (wayland_display)
         {
-            setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(),  true);   // configure Wayland socket
+            setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(), true);  // configure Wayland socket
         }
         else
         {
@@ -114,7 +113,7 @@ auto miral::launch_app_env(
 
         exec_args.push_back(nullptr);
 
-        execvp(exec_args[0], const_cast<char*const*>(exec_args.data()));
+        execvp(exec_args[0], const_cast<char* const*>(exec_args.data()));
 
         mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], strerror(errno));
         exit(EXIT_FAILURE);

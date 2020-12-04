@@ -21,7 +21,10 @@
 
 #include <functional>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
@@ -47,4 +50,4 @@ private:
 };
 }
 
-#endif //MIRAL_SET_COMMAND_LINE_HANDLER_H
+#endif  // MIRAL_SET_COMMAND_LINE_HANDLER_H

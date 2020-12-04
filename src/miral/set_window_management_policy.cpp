@@ -20,8 +20,8 @@
 #include "basic_window_manager.h"
 #include "window_management_trace.h"
 
-#include <mir/server.h>
 #include <mir/options/option.h>
+#include <mir/server.h>
 
 namespace msh = mir::shell;
 
@@ -32,8 +32,7 @@ char const* const trace_option = "window-management-trace";
 
 miral::SetWindowManagementPolicy::SetWindowManagementPolicy(WindowManagementPolicyBuilder const& builder) :
     builder{builder}
-{
-}
+{}
 
 miral::SetWindowManagementPolicy::~SetWindowManagementPolicy() = default;
 
@@ -41,33 +40,30 @@ void miral::SetWindowManagementPolicy::operator()(mir::Server& server) const
 {
     server.add_configuration_option(trace_option, "log trace message", mir::OptionType::null);
 
-    server.override_the_window_manager_builder([this, &server](msh::FocusController* focus_controller)
-        -> std::shared_ptr<msh::WindowManager>
-        {
+    server.override_the_window_manager_builder(
+        [this, &server](msh::FocusController* focus_controller) -> std::shared_ptr<msh::WindowManager> {
             auto const display_layout = server.the_shell_display_layout();
 
             auto const persistent_surface_store = server.the_persistent_surface_store();
 
             if (server.get_options()->is_set(trace_option))
             {
-                auto trace_builder = [this](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
-                    {
-                        return std::make_unique<WindowManagementTrace>(tools, builder);
-                    };
+                auto trace_builder =
+                    [this](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy> {
+                    return std::make_unique<WindowManagementTrace>(tools, builder);
+                };
 
-                return std::make_shared<BasicWindowManager>(
-                    focus_controller,
-                    display_layout,
-                    persistent_surface_store,
-                    *server.the_display_configuration_observer_registrar(),
-                    trace_builder);
+                return std::make_shared<BasicWindowManager>(focus_controller,
+                                                            display_layout,
+                                                            persistent_surface_store,
+                                                            *server.the_display_configuration_observer_registrar(),
+                                                            trace_builder);
             }
 
-            return std::make_shared<BasicWindowManager>(
-                focus_controller,
-                display_layout,
-                persistent_surface_store,
-                *server.the_display_configuration_observer_registrar(),
-                builder);
+            return std::make_shared<BasicWindowManager>(focus_controller,
+                                                        display_layout,
+                                                        persistent_surface_store,
+                                                        *server.the_display_configuration_observer_registrar(),
+                                                        builder);
         });
 }

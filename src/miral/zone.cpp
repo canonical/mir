@@ -25,10 +25,7 @@ class miral::Zone::Self
 public:
     struct IdTag;
 
-    Self(mir::IntWrapper<IdTag> id, Rectangle const& extents)
-        : id{id}, extents{extents}
-    {
-    }
+    Self(mir::IntWrapper<IdTag> id, Rectangle const& extents) : id{id}, extents{extents} {}
 
     auto operator=(Self const&) -> Self& = default;
 
@@ -42,15 +39,9 @@ public:
     }
 };
 
-miral::Zone::Zone(Rectangle const& extents)
-    : self{std::make_unique<Self>(Self::new_id(), extents)}
-{
-}
+miral::Zone::Zone(Rectangle const& extents) : self{std::make_unique<Self>(Self::new_id(), extents)} {}
 
-miral::Zone::Zone(Zone const& other)
-    : self{std::make_unique<Self>(other.self->id, other.self->extents)}
-{
-}
+miral::Zone::Zone(Zone const& other) : self{std::make_unique<Self>(other.self->id, other.self->extents)} {}
 
 miral::Zone& miral::Zone::operator=(Zone const& other)
 {
@@ -62,8 +53,7 @@ miral::Zone::~Zone() = default;
 
 auto miral::Zone::operator==(Zone const& other) const -> bool
 {
-    return self->id == other.self->id
-        && self->extents == other.self->extents;
+    return self->id == other.self->id && self->extents == other.self->extents;
 }
 
 auto miral::Zone::is_same_zone(Zone const& other) const -> bool

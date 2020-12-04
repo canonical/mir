@@ -18,8 +18,8 @@
 
 #include "miral/command_line_option.h"
 
-#include <mir/server.h>
 #include <mir/options/option.h>
+#include <mir/server.h>
 
 namespace
 {
@@ -58,136 +58,108 @@ struct miral::CommandLineOption::Self
          std::string const& option,
          std::string const& description,
          Value_t default_value) :
-        setup{[=](mir::Server& server)
-                  { server.add_configuration_option(option, description, default_value); }},
-        callback{[=](mir::Server& server)
-                     { callback(server.get_options()->get<Value_t>(option.c_str())); }}
-    {
-    }
+        setup{[=](mir::Server& server) { server.add_configuration_option(option, description, default_value); }},
+        callback{[=](mir::Server& server) { callback(server.get_options()->get<Value_t>(option.c_str())); }}
+    {}
 
     template<typename Value_t>
     Self(std::function<void(Value_t const& value)> callback,
          std::string const& option,
          std::string const& description,
          Value_t const& default_value) :
-        setup{[=](mir::Server& server)
-                  { server.add_configuration_option(option, description, default_value); }},
-        callback{[=](mir::Server& server)
-                     { callback(server.get_options()->get<Value_t>(option.c_str())); }}
-    {
-    }
+        setup{[=](mir::Server& server) { server.add_configuration_option(option, description, default_value); }},
+        callback{[=](mir::Server& server) { callback(server.get_options()->get<Value_t>(option.c_str())); }}
+    {}
 
     template<typename Value_t>
     Self(std::function<void(mir::optional_value<Value_t> const& value)> callback,
          std::string const& option,
          std::string const& description) :
-        setup{[=](mir::Server& server)
-                  { server.add_configuration_option(option, description, OptionType<Value_t>::value); }},
-        callback{[=](mir::Server& server)
-                     {
-                        mir::optional_value<Value_t> optional_value;
-                        auto const options = server.get_options();
-                        if (options->is_set(option.c_str()))
-                            optional_value = server.get_options()->get<Value_t>(option.c_str());
-                        callback(optional_value);
-                     }}
-    {
-    }
+        setup{[=](mir::Server& server) {
+            server.add_configuration_option(option, description, OptionType<Value_t>::value);
+        }},
+        callback{[=](mir::Server& server) {
+            mir::optional_value<Value_t> optional_value;
+            auto const options = server.get_options();
+            if (options->is_set(option.c_str()))
+                optional_value = server.get_options()->get<Value_t>(option.c_str());
+            callback(optional_value);
+        }}
+    {}
 
-    Self(std::function<void(bool is_set)> callback,
-         std::string const& option,
-         std::string const& description) :
-        setup{[=](mir::Server& server)
-                  { server.add_configuration_option(option, description, OptionType<void>::value); }},
-        callback{[=](mir::Server& server)
-                 {
-                     auto const options = server.get_options();
-                     callback(options->is_set(option.c_str()));
-                 }}
-    {
-    }
+    Self(std::function<void(bool is_set)> callback, std::string const& option, std::string const& description) :
+        setup{[=](mir::Server& server) {
+            server.add_configuration_option(option, description, OptionType<void>::value);
+        }},
+        callback{[=](mir::Server& server) {
+            auto const options = server.get_options();
+            callback(options->is_set(option.c_str()));
+        }}
+    {}
 
     bool pre_init{false};
     std::function<void(mir::Server& server)> setup;
     std::function<void(mir::Server& server)> callback;
 };
 
-miral::CommandLineOption::CommandLineOption(
-    std::function<void(int value)> callback,
-    std::string const& option,
-    std::string const& description,
-    int default_value) :
+miral::CommandLineOption::CommandLineOption(std::function<void(int value)> callback,
+                                            std::string const& option,
+                                            std::string const& description,
+                                            int default_value) :
     self{std::make_shared<Self>(callback, option, description, default_value)}
-{
-}
+{}
 
-miral::CommandLineOption::CommandLineOption(
-    std::function<void(double value)> callback,
-    std::string const& option,
-    std::string const& description,
-    double default_value) :
+miral::CommandLineOption::CommandLineOption(std::function<void(double value)> callback,
+                                            std::string const& option,
+                                            std::string const& description,
+                                            double default_value) :
     self{std::make_shared<Self>(callback, option, description, default_value)}
-{
-}
+{}
 
-miral::CommandLineOption::CommandLineOption(
-    std::function<void(std::string const& value)> callback,
-    std::string const& option,
-    std::string const& description,
-    std::string const& default_value) :
+miral::CommandLineOption::CommandLineOption(std::function<void(std::string const& value)> callback,
+                                            std::string const& option,
+                                            std::string const& description,
+                                            std::string const& default_value) :
     self{std::make_shared<Self>(callback, option, description, default_value)}
-{
-}
+{}
 
-miral::CommandLineOption::CommandLineOption(
-    std::function<void(std::string const& value)> callback,
-    std::string const& option,
-    std::string const& description,
-    char const* default_value) :
+miral::CommandLineOption::CommandLineOption(std::function<void(std::string const& value)> callback,
+                                            std::string const& option,
+                                            std::string const& description,
+                                            char const* default_value) :
     self{std::make_shared<Self>(callback, option, description, std::string{default_value})}
-{
-}
+{}
 
-miral::CommandLineOption::CommandLineOption(
-    std::function<void(bool value)> callback,
-    std::string const& option,
-    std::string const& description,
-    bool default_value) :
+miral::CommandLineOption::CommandLineOption(std::function<void(bool value)> callback,
+                                            std::string const& option,
+                                            std::string const& description,
+                                            bool default_value) :
     self{std::make_shared<Self>(callback, option, description, default_value)}
-{
-}
+{}
 
-miral::CommandLineOption::CommandLineOption(
-    std::function<void(mir::optional_value<int> const& value)> callback,
-    std::string const& option,
-    std::string const& description) :
+miral::CommandLineOption::CommandLineOption(std::function<void(mir::optional_value<int> const& value)> callback,
+                                            std::string const& option,
+                                            std::string const& description) :
     self{std::make_shared<Self>(callback, option, description)}
-{
-}
+{}
 
-miral::CommandLineOption::CommandLineOption(
-    std::function<void(mir::optional_value<std::string> const& value)> callback,
-    std::string const& option,
-    std::string const& description) :
+miral::CommandLineOption::CommandLineOption(std::function<void(mir::optional_value<std::string> const& value)> callback,
+                                            std::string const& option,
+                                            std::string const& description) :
     self{std::make_shared<Self>(callback, option, description)}
-{
-}
+{}
 
-miral::CommandLineOption::CommandLineOption(
-    std::function<void(mir::optional_value<bool> const& value)> callback,
-    std::string const& option,
-    std::string const& description) :
+miral::CommandLineOption::CommandLineOption(std::function<void(mir::optional_value<bool> const& value)> callback,
+                                            std::string const& option,
+                                            std::string const& description) :
     self{std::make_shared<Self>(callback, option, description)}
-{
-}
+{}
 
-miral::CommandLineOption::CommandLineOption(
-    std::function<void(bool is_set)> callback,
-    std::string const& option,
-    std::string const& description) :
+miral::CommandLineOption::CommandLineOption(std::function<void(bool is_set)> callback,
+                                            std::string const& option,
+                                            std::string const& description) :
     self{std::make_shared<Self>(callback, option, description)}
-{
-}
+{}
 
 auto miral::pre_init(CommandLineOption const& clo) -> CommandLineOption
 {
@@ -200,9 +172,9 @@ void miral::CommandLineOption::operator()(mir::Server& server) const
     self->setup(server);
 
     if (self->pre_init)
-        server.add_pre_init_callback([&]{ self->callback(server); });
+        server.add_pre_init_callback([&] { self->callback(server); });
     else
-        server.add_init_callback([&]{ self->callback(server); });
+        server.add_init_callback([&] { self->callback(server); });
 }
 
 miral::CommandLineOption::~CommandLineOption() = default;

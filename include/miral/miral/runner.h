@@ -25,7 +25,10 @@
 #include <initializer_list>
 #include <memory>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 /** Mir Abstraction Layer.
  * A thin, hopefully ABI stable, layer over the Mir libraries exposing only
@@ -34,7 +37,6 @@ namespace mir { class Server; }
  */
 namespace miral
 {
-
 /// Runner for applying initialization options to Mir.
 class MirRunner
 {
@@ -95,4 +97,4 @@ private:
 };
 }
 
-#endif //MIRAL_RUNNER_H
+#endif  // MIRAL_RUNNER_H

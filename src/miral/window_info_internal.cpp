@@ -50,9 +50,9 @@ miral::Height clamp(miral::Height const& source)
 }
 }
 
-miral::Width  const miral::default_min_width{0};
+miral::Width const miral::default_min_width{0};
 miral::Height const miral::default_min_height{0};
-miral::Width  const miral::default_max_width{std::numeric_limits<int>::max()};
+miral::Width const miral::default_max_width{std::numeric_limits<int>::max()};
 miral::Height const miral::default_max_height{std::numeric_limits<int>::max()};
 miral::DeltaX const miral::default_width_inc{1};
 miral::DeltaY const miral::default_height_inc{1};
@@ -64,8 +64,7 @@ miral::WindowInfo::AspectRatio const miral::default_max_aspect_ratio{
 namespace
 {
 template<typename Value>
-auto optional_value_or_default(mir::optional_value<Value> const& optional_value, Value default_ = Value{})
--> Value
+auto optional_value_or_default(mir::optional_value<Value> const& optional_value, Value default_ = Value{}) -> Value
 {
     return optional_value.is_set() ? optional_value.value() : default_;
 }
@@ -106,8 +105,7 @@ miral::WindowInfo::Self::Self() :
     state{mir_window_state_unknown},
     preferred_orientation{mir_orientation_mode_any},
     shell_chrome{mir_shell_chrome_normal}
-{
-}
+{}
 
 void miral::WindowInfo::name(std::string const& name)
 {

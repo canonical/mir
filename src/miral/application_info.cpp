@@ -31,22 +31,13 @@ struct miral::ApplicationInfo::Self
     std::shared_ptr<void> userdata;
 };
 
-miral::ApplicationInfo::ApplicationInfo() :
-    self{std::make_unique<Self>()}
-{
-}
+miral::ApplicationInfo::ApplicationInfo() : self{std::make_unique<Self>()} {}
 
-miral::ApplicationInfo::ApplicationInfo(Application const& app) :
-    self{std::make_unique<Self>(app)}
-{
-}
+miral::ApplicationInfo::ApplicationInfo(Application const& app) : self{std::make_unique<Self>(app)} {}
 
 miral::ApplicationInfo::~ApplicationInfo() = default;
 
-miral::ApplicationInfo::ApplicationInfo(ApplicationInfo const& that) :
-    self{std::make_unique<Self>(*that.self)}
-{
-}
+miral::ApplicationInfo::ApplicationInfo(ApplicationInfo const& that) : self{std::make_unique<Self>(*that.self)} {}
 
 auto miral::ApplicationInfo::operator=(ApplicationInfo const& that) -> ApplicationInfo&
 {
@@ -64,7 +55,7 @@ auto miral::ApplicationInfo::application() const -> Application
     return self->app;
 }
 
-auto miral::ApplicationInfo::windows() const -> std::vector <Window>&
+auto miral::ApplicationInfo::windows() const -> std::vector<Window>&
 {
     return self->windows;
 }

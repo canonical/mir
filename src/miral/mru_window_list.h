@@ -29,7 +29,6 @@ namespace miral
 class MRUWindowList
 {
 public:
-
     void push(Window const& window);
     void erase(Window const& window);
     auto top() const -> Window;
@@ -43,4 +42,4 @@ private:
 };
 }
 
-#endif //MIRAL_MRU_WINDOW_LIST_H
+#endif  // MIRAL_MRU_WINDOW_LIST_H

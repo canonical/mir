@@ -25,38 +25,35 @@
 
 #include <stdint.h>
 
-
-typedef int		XcursorBool;
+typedef int XcursorBool;
 typedef uint32_t XcursorUInt;
 
-typedef XcursorUInt	XcursorDim;
-typedef XcursorUInt	XcursorPixel;
+typedef XcursorUInt XcursorDim;
+typedef XcursorUInt XcursorPixel;
 
-typedef struct _XcursorImage {
-    XcursorUInt	    version;	/* version of the image data */
-    XcursorDim	    size;	/* nominal size for matching */
-    XcursorDim	    width;	/* actual width */
-    XcursorDim	    height;	/* actual height */
-    XcursorDim	    xhot;	/* hot spot x (must be inside image) */
-    XcursorDim	    yhot;	/* hot spot y (must be inside image) */
-    XcursorUInt	    delay;	/* animation delay to next frame (ms) */
-    XcursorPixel    *pixels;	/* pointer to pixels */
+typedef struct _XcursorImage
+{
+    XcursorUInt version; /* version of the image data */
+    XcursorDim size; /* nominal size for matching */
+    XcursorDim width; /* actual width */
+    XcursorDim height; /* actual height */
+    XcursorDim xhot; /* hot spot x (must be inside image) */
+    XcursorDim yhot; /* hot spot y (must be inside image) */
+    XcursorUInt delay; /* animation delay to next frame (ms) */
+    XcursorPixel *pixels; /* pointer to pixels */
 } XcursorImage;
 
 /*
  * Other data structures exposed by the library API
  */
-typedef struct _XcursorImages {
-    int		    nimage;	/* number of images */
-    XcursorImage    **images;	/* array of XcursorImage pointers */
-    char	    *name;	/* name used to load images */
+typedef struct _XcursorImages
+{
+    int nimage; /* number of images */
+    XcursorImage **images; /* array of XcursorImage pointers */
+    char *name; /* name used to load images */
 } XcursorImages;
 
-void
-XcursorImagesDestroy (XcursorImages *images);
+void XcursorImagesDestroy(XcursorImages *images);
 
-void
-xcursor_load_theme(const char *theme, int size,
-		    void (*load_callback)(XcursorImages *, void *),
-		    void *user_data);
+void xcursor_load_theme(const char *theme, int size, void (*load_callback)(XcursorImages *, void *), void *user_data);
 #endif

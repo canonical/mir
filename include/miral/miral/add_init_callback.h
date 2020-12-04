@@ -21,11 +21,14 @@
 
 #include <functional>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
-/// Add a callback to be invoked when the server has been initialized, but 
+/// Add a callback to be invoked when the server has been initialized, but
 /// before it starts.
 /// If multiple callbacks are added they will be invoked in the sequence added.
 class AddInitCallback
@@ -43,5 +46,4 @@ private:
 };
 }
 
-
-#endif //MIRAL_ADD_INIT_CALLBACK_H
+#endif  // MIRAL_ADD_INIT_CALLBACK_H

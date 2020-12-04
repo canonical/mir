@@ -26,7 +26,10 @@
 
 namespace mir
 {
-namespace scene { class Session; }
+namespace scene
+{
+class Session;
+}
 }
 
 namespace miral
@@ -39,4 +42,4 @@ auto name_of(Application const& application) -> std::string;
 auto pid_of(Application const& application) -> pid_t;
 }
 
-#endif //MIRAL_APPLICATION_H
+#endif  // MIRAL_APPLICATION_H

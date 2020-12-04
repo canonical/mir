@@ -45,35 +45,36 @@ void miral::DisplayConfigurationListeners::process_active_outputs(
     functor(active_outputs);
 }
 
-void miral::DisplayConfigurationListeners::initial_configuration(std::shared_ptr<mir::graphics::DisplayConfiguration const> const& configuration)
+void miral::DisplayConfigurationListeners::initial_configuration(
+    std::shared_ptr<mir::graphics::DisplayConfiguration const> const& configuration)
 {
     configuration_applied(configuration);
 }
 
 void miral::DisplayConfigurationListeners::configuration_failed(
-    std::shared_ptr<mir::graphics::DisplayConfiguration const> const&,
-    std::exception const&)
-{
-}
+    std::shared_ptr<mir::graphics::DisplayConfiguration const> const&, std::exception const&)
+{}
 
 void miral::DisplayConfigurationListeners::catastrophic_configuration_error(
-    std::shared_ptr<mir::graphics::DisplayConfiguration const> const&,
-    std::exception const&)
-{
-}
+    std::shared_ptr<mir::graphics::DisplayConfiguration const> const&, std::exception const&)
+{}
 
-void miral::DisplayConfigurationListeners::base_configuration_updated(std::shared_ptr<mir::graphics::DisplayConfiguration const> const& ) {}
+void miral::DisplayConfigurationListeners::base_configuration_updated(
+    std::shared_ptr<mir::graphics::DisplayConfiguration const> const&)
+{}
 
-void miral::DisplayConfigurationListeners::session_configuration_applied(std::shared_ptr<mir::scene::Session> const&,
-                                   std::shared_ptr<mir::graphics::DisplayConfiguration> const&) {}
+void miral::DisplayConfigurationListeners::session_configuration_applied(
+    std::shared_ptr<mir::scene::Session> const&, std::shared_ptr<mir::graphics::DisplayConfiguration> const&)
+{}
 
 void miral::DisplayConfigurationListeners::session_configuration_removed(std::shared_ptr<mir::scene::Session> const&) {}
 
 void miral::DisplayConfigurationListeners::configuration_updated_for_session(
-    std::shared_ptr<mir::scene::Session> const&,
-    std::shared_ptr<mir::graphics::DisplayConfiguration const> const&) {}
+    std::shared_ptr<mir::scene::Session> const&, std::shared_ptr<mir::graphics::DisplayConfiguration const> const&)
+{}
 
-void miral::DisplayConfigurationListeners::configuration_applied(std::shared_ptr<mir::graphics::DisplayConfiguration const> const& config)
+void miral::DisplayConfigurationListeners::configuration_applied(
+    std::shared_ptr<mir::graphics::DisplayConfiguration const> const& config)
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
 
@@ -82,37 +83,33 @@ void miral::DisplayConfigurationListeners::configuration_applied(std::shared_ptr
     for (auto const l : active_output_listeners)
         l->advise_output_begin();
 
-    config->for_each_output(
-        [&current_outputs, this](mir::graphics::DisplayConfigurationOutput const& output)
-            {
-            Output o{output};
+    config->for_each_output([&current_outputs, this](mir::graphics::DisplayConfigurationOutput const& output) {
+        Output o{output};
 
-            if (!o.valid() || !o.used() || !o.connected() || o.power_mode() != mir_power_mode_on)
-                return;
+        if (!o.valid() || !o.used() || !o.connected() || o.power_mode() != mir_power_mode_on)
+            return;
 
-            auto op = find_if(
-                begin(active_outputs), end(active_outputs), [&](Output const& oo)
-                    { return oo.is_same_output(o); });
+        auto op =
+            find_if(begin(active_outputs), end(active_outputs), [&](Output const& oo) { return oo.is_same_output(o); });
 
-            if (op == end(active_outputs))
-            {
-                for (auto const l : active_output_listeners)
-                    l->advise_output_create(o);
-            }
-            else if (!equivalent_display_area(o, *op))
-            {
-                for (auto const l : active_output_listeners)
-                    l->advise_output_update(o, *op);
-            }
+        if (op == end(active_outputs))
+        {
+            for (auto const l : active_output_listeners)
+                l->advise_output_create(o);
+        }
+        else if (!equivalent_display_area(o, *op))
+        {
+            for (auto const l : active_output_listeners)
+                l->advise_output_update(o, *op);
+        }
 
-            current_outputs.push_back(o);
-            });
+        current_outputs.push_back(o);
+    });
 
     for (auto const& o : active_outputs)
     {
         auto op = find_if(
-            begin(current_outputs), end(current_outputs), [&](Output const& oo)
-                { return oo.is_same_output(o); });
+            begin(current_outputs), end(current_outputs), [&](Output const& oo) { return oo.is_same_output(o); });
 
         if (op == end(current_outputs))
             for (auto const l : active_output_listeners)

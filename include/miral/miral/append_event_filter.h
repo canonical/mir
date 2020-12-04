@@ -24,7 +24,10 @@
 
 typedef struct MirEvent MirEvent;
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
@@ -41,4 +44,4 @@ private:
 };
 }
 
-#endif //MIRAL_APPEND_EVENT_FILTER_H
+#endif  // MIRAL_APPEND_EVENT_FILTER_H

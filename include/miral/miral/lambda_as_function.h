@@ -25,13 +25,20 @@ namespace miral
 {
 namespace detail
 {
-template <class F> struct FunctionType;
+template<class F>
+struct FunctionType;
 
 template<typename Lambda, typename Return, typename... Arg>
-struct FunctionType<Return (Lambda::*)(Arg...)> { using type = std::function<Return(Arg...)>; };
+struct FunctionType<Return (Lambda::*)(Arg...)>
+{
+    using type = std::function<Return(Arg...)>;
+};
 
 template<typename Lambda, typename Return, typename... Arg>
-struct FunctionType<Return (Lambda::*)(Arg...) const> { using type = std::function<Return(Arg...)>; };
+struct FunctionType<Return (Lambda::*)(Arg...) const>
+{
+    using type = std::function<Return(Arg...)>;
+};
 }
 
 template<typename Lambda>
@@ -41,4 +48,4 @@ auto lambda_as_function(Lambda&& lambda) -> typename detail::FunctionType<declty
 }
 }
 
-#endif //MIRAL_LAMBDA_AS_FUNCTION_H
+#endif  // MIRAL_LAMBDA_AS_FUNCTION_H

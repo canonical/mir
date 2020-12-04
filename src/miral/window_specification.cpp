@@ -18,8 +18,8 @@
 
 #include "miral/window_specification.h"
 
-#include <mir/shell/surface_specification.h>
 #include <mir/scene/surface_creation_parameters.h>
+#include <mir/shell/surface_specification.h>
 
 struct miral::WindowSpecification::Self
 {
@@ -108,10 +108,11 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     attached_edges(spec.attached_edges),
     exclusive_rect(spec.exclusive_rect),
     application_id(spec.application_id),
-    server_side_decorated() // Not currently on SurfaceSpecification
+    server_side_decorated()  // Not currently on SurfaceSpecification
 {
     if (spec.aux_rect_placement_offset_x.is_set() && spec.aux_rect_placement_offset_y.is_set())
-        aux_rect_placement_offset = Displacement{spec.aux_rect_placement_offset_x.value(), spec.aux_rect_placement_offset_y.value()};
+        aux_rect_placement_offset =
+            Displacement{spec.aux_rect_placement_offset_x.value(), spec.aux_rect_placement_offset_y.value()};
 
     if (spec.edge_attachment.is_set() && !placement_hints.is_set())
     {
@@ -158,57 +159,57 @@ namespace
 template<typename Dest, typename Source>
 void copy_if_set(Dest& dest, mir::optional_value<Source> const& source)
 {
-    if (source.is_set()) dest = source.value();
+    if (source.is_set())
+        dest = source.value();
 }
 
 template<typename Dest, typename Source>
 void copy_if_set(Dest& dest, std::weak_ptr<Source> const& source)
 {
-    if (source.lock()) dest = source;
+    if (source.lock())
+        dest = source;
 }
 
 template<typename Dest, typename Source>
 void copy_if_set(mir::optional_value<Dest>& dest, mir::optional_value<Source> const& source)
 {
-    if (source.is_set()) dest = source;
+    if (source.is_set())
+        dest = source;
 }
 
 template<typename Source>
 void copy_if_set(mir::graphics::BufferUsage& dest, mir::optional_value<Source> const& source)
 {
-    if (source.is_set()) dest = static_cast<mir::graphics::BufferUsage>(source.value());
+    if (source.is_set())
+        dest = static_cast<mir::graphics::BufferUsage>(source.value());
 }
 
 template<typename Source>
-void copy_if_set(
-    mir::graphics::DisplayConfigurationOutputId& dest,
-    mir::optional_value<Source> const& source)
+void copy_if_set(mir::graphics::DisplayConfigurationOutputId& dest, mir::optional_value<Source> const& source)
 {
-    if (source.is_set()) dest = static_cast<mir::graphics::DisplayConfigurationOutputId>(source.value());
+    if (source.is_set())
+        dest = static_cast<mir::graphics::DisplayConfigurationOutputId>(source.value());
 }
 
 template<typename Source>
-void copy_if_set(
-    mir::input::InputReceptionMode& dest,
-    mir::optional_value<Source> const& source)
+void copy_if_set(mir::input::InputReceptionMode& dest, mir::optional_value<Source> const& source)
 {
-    if (source.is_set()) dest = static_cast<mir::input::InputReceptionMode>(source.value());
+    if (source.is_set())
+        dest = static_cast<mir::input::InputReceptionMode>(source.value());
 }
 
 template<typename Source>
-void copy_if_set(
-    mir::optional_value<mir::shell::SurfaceAspectRatio>& dest,
-    mir::optional_value<Source> const& source)
+void copy_if_set(mir::optional_value<mir::shell::SurfaceAspectRatio>& dest, mir::optional_value<Source> const& source)
 {
-    if (source.is_set()) dest = mir::shell::SurfaceAspectRatio{source.value().width, source.value().height};
+    if (source.is_set())
+        dest = mir::shell::SurfaceAspectRatio{source.value().width, source.value().height};
 }
 
 template<typename Source>
-void copy_if_set(
-    mir::optional_value<mir::frontend::BufferStreamId>& dest,
-    mir::optional_value<Source> const& source)
+void copy_if_set(mir::optional_value<mir::frontend::BufferStreamId>& dest, mir::optional_value<Source> const& source)
 {
-    if (source.is_set()) dest = mir::frontend::BufferStreamId{source.value().as_value()};
+    if (source.is_set())
+        dest = mir::frontend::BufferStreamId{source.value().as_value()};
 }
 }
 
@@ -248,7 +249,8 @@ miral::WindowSpecification::Self::Self(mir::scene::SurfaceCreationParameters con
     server_side_decorated(params.server_side_decorated)
 {
     if (params.aux_rect_placement_offset_x.is_set() && params.aux_rect_placement_offset_y.is_set())
-        aux_rect_placement_offset = Displacement{params.aux_rect_placement_offset_x.value(), params.aux_rect_placement_offset_y.value()};
+        aux_rect_placement_offset =
+            Displacement{params.aux_rect_placement_offset_x.value(), params.aux_rect_placement_offset_y.value()};
 
     if (params.edge_attachment.is_set() && !placement_hints.is_set())
     {
@@ -325,25 +327,19 @@ void miral::WindowSpecification::Self::update(mir::scene::SurfaceCreationParamet
     }
 }
 
-miral::WindowSpecification::WindowSpecification() :
-    self{std::make_unique<Self>()}
-{
-}
+miral::WindowSpecification::WindowSpecification() : self{std::make_unique<Self>()} {}
 
 miral::WindowSpecification::WindowSpecification(mir::shell::SurfaceSpecification const& spec) :
     self{std::make_unique<Self>(spec)}
-{
-}
+{}
 
 miral::WindowSpecification::WindowSpecification(mir::scene::SurfaceCreationParameters const& params) :
     self{std::make_unique<Self>(params)}
-{
-}
+{}
 
 miral::WindowSpecification::WindowSpecification(WindowSpecification const& that) :
     self{std::make_unique<Self>(*that.self)}
-{
-}
+{}
 
 auto miral::WindowSpecification::operator=(WindowSpecification const& that) -> WindowSpecification&
 {
@@ -639,8 +635,7 @@ auto miral::WindowSpecification::attached_edges() -> mir::optional_value<MirPlac
     return self->attached_edges;
 }
 
-auto miral::WindowSpecification::exclusive_rect()
-    -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>>&
+auto miral::WindowSpecification::exclusive_rect() -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>>&
 {
     return self->exclusive_rect;
 }

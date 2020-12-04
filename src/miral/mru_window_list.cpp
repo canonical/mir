@@ -45,7 +45,7 @@ void miral::MRUWindowList::erase(Window const& window)
 auto miral::MRUWindowList::top() const -> Window
 {
     auto const& found = std::find_if(rbegin(windows), rend(windows), visible);
-    return (found != rend(windows)) ? *found: Window{};
+    return (found != rend(windows)) ? *found : Window{};
 }
 
 void miral::MRUWindowList::enumerate(Enumerator const& enumerator) const

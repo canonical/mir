@@ -29,17 +29,17 @@ struct miral::Window::Self
     std::weak_ptr<mir::scene::Surface> const surface;
 };
 
-miral::Window::Self::Self(std::shared_ptr<mir::scene::Session> const& session, std::shared_ptr<mir::scene::Surface> const& surface) :
-    session{session}, surface{surface} {}
+miral::Window::Self::Self(std::shared_ptr<mir::scene::Session> const& session,
+                          std::shared_ptr<mir::scene::Surface> const& surface) :
+    session{session},
+    surface{surface}
+{}
 
 miral::Window::Window(Application const& application, std::shared_ptr<mir::scene::Surface> const& surface) :
     self{std::make_shared<Self>(application, surface)}
-{
-}
+{}
 
-miral::Window::Window()
-{
-}
+miral::Window::Window() {}
 
 miral::Window::~Window() = default;
 
@@ -50,32 +50,35 @@ miral::Window::operator bool() const
 
 miral::Window::operator std::shared_ptr<mir::scene::Surface>() const
 {
-    if (!self) return {};
+    if (!self)
+        return {};
     return self->surface.lock();
 }
 
 miral::Window::operator std::weak_ptr<mir::scene::Surface>() const
 {
-    if (!self) return {};
+    if (!self)
+        return {};
     return self->surface;
 }
 
 void miral::Window::resize(mir::geometry::Size const& size)
 {
-    if (!self) return;
+    if (!self)
+        return;
     if (auto const surface = self->surface.lock())
         surface->resize(size);
 }
 
 void miral::Window::move_to(mir::geometry::Point top_left)
 {
-    if (!self) return;
+    if (!self)
+        return;
     if (auto const surface = self->surface.lock())
         surface->move_to(top_left);
 }
 
-auto miral::Window::top_left() const
--> mir::geometry::Point
+auto miral::Window::top_left() const -> mir::geometry::Point
 {
     if (self)
     {
@@ -86,8 +89,7 @@ auto miral::Window::top_left() const
     return {};
 }
 
-auto miral::Window::size() const
--> mir::geometry::Size
+auto miral::Window::size() const -> mir::geometry::Size
 {
     if (self)
     {
@@ -98,10 +100,10 @@ auto miral::Window::size() const
     return {};
 }
 
-auto miral::Window::application() const
--> Application
+auto miral::Window::application() const -> Application
 {
-    if (!self) return {};
+    if (!self)
+        return {};
     return self->session.lock();
 }
 
@@ -112,7 +114,8 @@ bool miral::operator==(Window const& lhs, Window const& rhs)
 
 bool miral::operator==(std::shared_ptr<mir::scene::Surface> const& lhs, Window const& rhs)
 {
-    if (!rhs.self) return !lhs;
+    if (!rhs.self)
+        return !lhs;
     return lhs == rhs.self->surface.lock();
 }
 

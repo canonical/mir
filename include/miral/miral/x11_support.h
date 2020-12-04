@@ -21,7 +21,10 @@
 
 #include <memory>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
@@ -30,7 +33,6 @@ namespace miral
 class X11Support
 {
 public:
-
     void operator()(mir::Server& server) const;
 
     X11Support();
@@ -45,4 +47,4 @@ private:
 
 }
 
-#endif //MIRAL_X11_SUPPORT_H
+#endif  // MIRAL_X11_SUPPORT_H

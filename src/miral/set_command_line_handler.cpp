@@ -20,10 +20,7 @@
 
 #include <mir/server.h>
 
-miral::SetCommandLineHandler::SetCommandLineHandler(Handler const& handler) :
-    handler{handler}
-{
-}
+miral::SetCommandLineHandler::SetCommandLineHandler(Handler const& handler) : handler{handler} {}
 
 miral::SetCommandLineHandler::~SetCommandLineHandler() = default;
 

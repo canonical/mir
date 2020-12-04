@@ -23,9 +23,9 @@
 #include <mir/graphics/default_display_configuration_policy.h>
 #include <mir/graphics/display_configuration.h>
 
-#include <map>
 #include <functional>
 #include <iosfwd>
+#include <map>
 
 namespace miral
 {
@@ -46,18 +46,17 @@ public:
     virtual void dump_config(std::function<void(std::ostream&)> const& print_template_config);
 
 private:
-
     std::string layout = "default";
 
     using Id = std::tuple<mir::graphics::DisplayConfigurationCardId, MirOutputType, int>;
     struct Config
     {
-        bool  disabled = false;
-        mir::optional_value<mir::geometry::Point>  position;
-        mir::optional_value<mir::geometry::Size>   size;
+        bool disabled = false;
+        mir::optional_value<mir::geometry::Point> position;
+        mir::optional_value<mir::geometry::Size> size;
         mir::optional_value<double> refresh;
-        mir::optional_value<float>  scale;
-        mir::optional_value<MirOrientation>  orientation;
+        mir::optional_value<float> scale;
+        mir::optional_value<MirOrientation> orientation;
         mir::optional_value<int> group_id;
     };
 
@@ -68,4 +67,4 @@ private:
 };
 }
 
-#endif //MIRAL_STATIC_DISPLAY_CONFIG_H_
+#endif  // MIRAL_STATIC_DISPLAY_CONFIG_H_

@@ -65,7 +65,7 @@ struct WindowInfo
 
     auto parent() const -> Window;
 
-    auto children() const -> std::vector <Window> const&;
+    auto children() const -> std::vector<Window> const&;
 
     auto min_width() const -> mir::geometry::Width;
 
@@ -152,7 +152,11 @@ private:
 
 namespace std
 {
-template<> inline void swap(miral::WindowInfo& lhs, miral::WindowInfo& rhs) { lhs.swap(rhs); }
+template<>
+inline void swap(miral::WindowInfo& lhs, miral::WindowInfo& rhs)
+{
+    lhs.swap(rhs);
+}
 }
 
-#endif //MIRAL_WINDOW_INFO_H
+#endif  // MIRAL_WINDOW_INFO_H

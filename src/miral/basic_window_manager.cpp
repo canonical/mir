@@ -55,18 +55,13 @@ struct miral::BasicWindowManager::Locker
 {
     explicit Locker(miral::BasicWindowManager* self);
 
-    ~Locker()
-    {
-        policy->advise_end();
-    }
+    ~Locker() { policy->advise_end(); }
 
     std::lock_guard<std::mutex> const lock;
     WindowManagementPolicy* const policy;
 };
 
-miral::BasicWindowManager::Locker::Locker(BasicWindowManager* self) :
-    lock{self->mutex},
-    policy{self->policy.get()}
+miral::BasicWindowManager::Locker::Locker(BasicWindowManager* self) : lock{self->mutex}, policy{self->policy.get()}
 {
     policy->advise_begin();
     std::vector<std::weak_ptr<Workspace>> workspaces;
@@ -114,10 +109,9 @@ void miral::BasicWindowManager::remove_session(std::shared_ptr<scene::Session> c
     auto info = app_info.find(session);
     if (info == app_info.end())
     {
-        log_debug(
-            "BasicWindowManager::remove_session() called with unknown or already removed session %s (PID: %d)",
-            session->name().c_str(),
-            session->process_id());
+        log_debug("BasicWindowManager::remove_session() called with unknown or already removed session %s (PID: %d)",
+                  session->name().c_str(),
+                  session->process_id());
         return;
     }
     policy->advise_delete_app(info->second);
@@ -127,10 +121,9 @@ void miral::BasicWindowManager::remove_session(std::shared_ptr<scene::Session> c
 auto miral::BasicWindowManager::add_surface(
     std::shared_ptr<scene::Session> const& session,
     scene::SurfaceCreationParameters const& params,
-    std::function<std::shared_ptr<scene::Surface>(
-        std::shared_ptr<scene::Session> const& session,
-        scene::SurfaceCreationParameters const& params)> const& build)
--> std::shared_ptr<scene::Surface>
+    std::function<std::shared_ptr<scene::Surface>(std::shared_ptr<scene::Session> const& session,
+                                                  scene::SurfaceCreationParameters const& params)> const& build)
+    -> std::shared_ptr<scene::Surface>
 {
     Locker lock{this};
 
@@ -161,8 +154,8 @@ auto miral::BasicWindowManager::add_surface(
     if (parent)
         info_for(parent).add_child(window);
 
-    for_each_workspace_containing(parent,
-        [&](std::shared_ptr<miral::Workspace> const& workspace) { add_tree_to_workspace(window, workspace); });
+    for_each_workspace_containing(
+        parent, [&](std::shared_ptr<miral::Workspace> const& workspace) { add_tree_to_workspace(window, workspace); });
 
     update_attached_and_fullscreen_sets(window_info, window_info.state());
 
@@ -179,15 +172,17 @@ auto miral::BasicWindowManager::add_surface(
     else
     {
         scene_surface->add_observer(std::make_shared<shell::SurfaceReadyObserver>(
-            [this, &window_info](std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&)
-                { Locker lock{this}; policy->handle_window_ready(window_info); },
+            [this, &window_info](std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&) {
+                Locker lock{this};
+                policy->handle_window_ready(window_info);
+            },
             session,
             scene_surface));
     }
 
     if (parent && spec.aux_rect().is_set() && spec.placement_hints().is_set())
     {
-        Rectangle relative_placement{window.top_left() - (parent.top_left()-Point{}), window.size()};
+        Rectangle relative_placement{window.top_left() - (parent.top_left() - Point{}), window.size()};
         auto const mir_surface = std::shared_ptr<scene::Surface>(window);
         mir_surface->placed_relative(relative_placement);
     }
@@ -195,10 +190,9 @@ auto miral::BasicWindowManager::add_surface(
     return surface;
 }
 
-void miral::BasicWindowManager::modify_surface(
-    std::shared_ptr<scene::Session> const& /*application*/,
-    std::shared_ptr<scene::Surface> const& surface,
-    shell::SurfaceSpecification const& modifications)
+void miral::BasicWindowManager::modify_surface(std::shared_ptr<scene::Session> const& /*application*/,
+                                               std::shared_ptr<scene::Surface> const& surface,
+                                               shell::SurfaceSpecification const& modifications)
 {
     Locker lock{this};
     if (!surface_known(surface, "modify"))
@@ -212,17 +206,15 @@ void miral::BasicWindowManager::modify_surface(
     policy->handle_modify_window(info, mods);
 }
 
-void miral::BasicWindowManager::remove_surface(
-    std::shared_ptr<scene::Session> const& session,
-    std::weak_ptr<scene::Surface> const& surface)
+void miral::BasicWindowManager::remove_surface(std::shared_ptr<scene::Session> const& session,
+                                               std::weak_ptr<scene::Surface> const& surface)
 {
     Locker lock{this};
     if (app_info.find(session) == app_info.end())
     {
-        log_debug(
-            "BasicWindowManager::remove_surface() called with unknown or already removed session %s (PID: %d)",
-            session->name().c_str(),
-            session->process_id());
+        log_debug("BasicWindowManager::remove_surface() called with unknown or already removed session %s (PID: %d)",
+                  session->name().c_str(),
+                  session->process_id());
         return;
     }
 
@@ -255,8 +247,7 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
     fullscreen_surfaces.erase(info.window());
     for (auto& area : display_areas)
         area->attached_windows.erase(info.window());
-    if (info.state() == mir_window_state_attached &&
-        info.exclusive_rect().is_set())
+    if (info.state() == mir_window_state_attached && info.exclusive_rect().is_set())
     {
         update_application_zones_and_attached_windows();
     }
@@ -273,9 +264,9 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
     }
 }
 
-void miral::BasicWindowManager::refocus(
-    miral::Application const& application, miral::Window const& parent,
-    std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window)
+void miral::BasicWindowManager::refocus(miral::Application const& application,
+                                        miral::Window const& parent,
+                                        std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window)
 {
     // Try to make the parent active
     if (parent && select_active_window(parent))
@@ -288,26 +279,26 @@ void miral::BasicWindowManager::refocus(
     {
         miral::Window new_focus;
 
-        mru_active_windows.enumerate([&](miral::Window& window)
-            {
-                // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
-                auto const w = window;
+        mru_active_windows.enumerate([&](miral::Window& window) {
+            // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
+            auto const w = window;
 
-                for (auto const& workspace : workspaces_containing(w))
+            for (auto const& workspace : workspaces_containing(w))
+            {
+                for (auto const& ww : workspaces_containing_window)
                 {
-                    for (auto const& ww : workspaces_containing_window)
+                    if (ww == workspace)
                     {
-                        if (ww == workspace)
-                        {
-                            return !(new_focus = select_active_window(w));
-                        }
+                        return !(new_focus = select_active_window(w));
                     }
                 }
+            }
 
-                return true;
-            });
+            return true;
+        });
 
-        if (new_focus) return;
+        if (new_focus)
+            return;
     }
 
     if (can_activate_window_for_session(application))
@@ -317,14 +308,14 @@ void miral::BasicWindowManager::refocus(
     {
         miral::Window new_focus;
 
-        mru_active_windows.enumerate([&](miral::Window& window)
-            {
-                // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
-                auto const w = window;
-                return !(new_focus = select_active_window(w));
-            });
+        mru_active_windows.enumerate([&](miral::Window& window) {
+            // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
+            auto const w = window;
+            return !(new_focus = select_active_window(w));
+        });
 
-        if (new_focus) return;
+        if (new_focus)
+            return;
     }
 
     // Fallback to cycling through applications
@@ -374,17 +365,15 @@ bool miral::BasicWindowManager::handle_pointer_event(MirPointerEvent const* even
     Locker lock{this};
     update_event_timestamp(event);
 
-    cursor = {
-        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+    cursor = {mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+              mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
 
     return policy->handle_pointer_event(event);
 }
 
-void miral::BasicWindowManager::handle_raise_surface(
-    std::shared_ptr<scene::Session> const& /*application*/,
-    std::shared_ptr<scene::Surface> const& surface,
-    uint64_t timestamp)
+void miral::BasicWindowManager::handle_raise_surface(std::shared_ptr<scene::Session> const& /*application*/,
+                                                     std::shared_ptr<scene::Surface> const& surface,
+                                                     uint64_t timestamp)
 {
     Locker lock{this};
 
@@ -395,10 +384,9 @@ void miral::BasicWindowManager::handle_raise_surface(
         policy->handle_raise_window(info_for(surface));
 }
 
-void miral::BasicWindowManager::handle_request_drag_and_drop(
-    std::shared_ptr<mir::scene::Session> const& /*session*/,
-    std::shared_ptr<mir::scene::Surface> const& surface,
-    uint64_t timestamp)
+void miral::BasicWindowManager::handle_request_drag_and_drop(std::shared_ptr<mir::scene::Session> const& /*session*/,
+                                                             std::shared_ptr<mir::scene::Surface> const& surface,
+                                                             uint64_t timestamp)
 {
     Locker lock{this};
 
@@ -409,10 +397,9 @@ void miral::BasicWindowManager::handle_request_drag_and_drop(
         policy->handle_request_drag_and_drop(info_for(surface));
 }
 
-void miral::BasicWindowManager::handle_request_move(
-    std::shared_ptr<mir::scene::Session> const& /*session*/,
-    std::shared_ptr<mir::scene::Surface> const& surface,
-    uint64_t timestamp)
+void miral::BasicWindowManager::handle_request_move(std::shared_ptr<mir::scene::Session> const& /*session*/,
+                                                    std::shared_ptr<mir::scene::Surface> const& surface,
+                                                    uint64_t timestamp)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -425,11 +412,10 @@ void miral::BasicWindowManager::handle_request_move(
     }
 }
 
-void miral::BasicWindowManager::handle_request_resize(
-    std::shared_ptr<mir::scene::Session> const& /*session*/,
-    std::shared_ptr<mir::scene::Surface> const& surface,
-    uint64_t timestamp,
-    MirResizeEdge edge)
+void miral::BasicWindowManager::handle_request_resize(std::shared_ptr<mir::scene::Session> const& /*session*/,
+                                                      std::shared_ptr<mir::scene::Surface> const& surface,
+                                                      uint64_t timestamp,
+                                                      MirResizeEdge edge)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -442,11 +428,10 @@ void miral::BasicWindowManager::handle_request_resize(
     }
 }
 
-int miral::BasicWindowManager::set_surface_attribute(
-    std::shared_ptr<scene::Session> const& /*application*/,
-    std::shared_ptr<scene::Surface> const& surface,
-    MirWindowAttrib attrib,
-    int value)
+int miral::BasicWindowManager::set_surface_attribute(std::shared_ptr<scene::Session> const& /*application*/,
+                                                     std::shared_ptr<scene::Surface> const& surface,
+                                                     MirWindowAttrib attrib,
+                                                     int value)
 {
     WindowSpecification modification;
     switch (attrib)
@@ -501,29 +486,27 @@ int miral::BasicWindowManager::set_surface_attribute(
         break;
 
     default:
-        return 0; // Can't get here anyway
+        return 0;  // Can't get here anyway
     }
 }
 
-auto miral::BasicWindowManager::count_applications() const
--> unsigned int
+auto miral::BasicWindowManager::count_applications() const -> unsigned int
 {
     return app_info.size();
 }
 
-
 void miral::BasicWindowManager::for_each_application(std::function<void(ApplicationInfo& info)> const& functor)
 {
-    for(auto& info : app_info)
+    for (auto& info : app_info)
     {
         functor(info.second);
     }
 }
 
 auto miral::BasicWindowManager::find_application(std::function<bool(ApplicationInfo const& info)> const& predicate)
--> Application
+    -> Application
 {
-    for(auto& info : app_info)
+    for (auto& info : app_info)
     {
         if (predicate(info.second))
         {
@@ -534,20 +517,17 @@ auto miral::BasicWindowManager::find_application(std::function<bool(ApplicationI
     return Application{};
 }
 
-auto miral::BasicWindowManager::info_for(std::weak_ptr<scene::Session> const& session) const
--> ApplicationInfo&
+auto miral::BasicWindowManager::info_for(std::weak_ptr<scene::Session> const& session) const -> ApplicationInfo&
 {
     return const_cast<ApplicationInfo&>(app_info.at(session));
 }
 
-auto miral::BasicWindowManager::info_for(std::weak_ptr<scene::Surface> const& surface) const
--> WindowInfo&
+auto miral::BasicWindowManager::info_for(std::weak_ptr<scene::Surface> const& surface) const -> WindowInfo&
 {
     return const_cast<WindowInfo&>(window_info.at(surface));
 }
 
-auto miral::BasicWindowManager::info_for(Window const& window) const
--> WindowInfo&
+auto miral::BasicWindowManager::info_for(Window const& window) const -> WindowInfo&
 {
     return info_for(std::weak_ptr<mir::scene::Surface>(window));
 }
@@ -576,13 +556,11 @@ void miral::BasicWindowManager::focus_next_application()
                 focus_controller->focus_next_session();
 
                 if (can_activate_window_for_session_in_workspace(
-                    focus_controller->focused_session(),
-                    workspaces_containing_window))
+                        focus_controller->focused_session(), workspaces_containing_window))
                 {
                     return;
                 }
-            }
-            while (focus_controller->focused_session() != prev.application());
+            } while (focus_controller->focused_session() != prev.application());
         }
         else
         {
@@ -594,8 +572,7 @@ void miral::BasicWindowManager::focus_next_application()
                 {
                     return;
                 }
-            }
-            while (focus_controller->focused_session() != prev.application());
+            } while (focus_controller->focused_session() != prev.application());
         }
     }
     else
@@ -626,13 +603,11 @@ void miral::BasicWindowManager::focus_prev_application()
                 focus_controller->focus_prev_session();
 
                 if (can_activate_window_for_session_in_workspace(
-                    focus_controller->focused_session(),
-                    workspaces_containing_window))
+                        focus_controller->focused_session(), workspaces_containing_window))
                 {
                     return;
                 }
-            }
-            while (focus_controller->focused_session() != prev.application());
+            } while (focus_controller->focused_session() != prev.application());
         }
         else
         {
@@ -644,8 +619,7 @@ void miral::BasicWindowManager::focus_prev_application()
                 {
                     return;
                 }
-            }
-            while (focus_controller->focused_session() != prev.application());
+            } while (focus_controller->focused_session() != prev.application());
         }
     }
     else
@@ -664,7 +638,7 @@ void miral::BasicWindowManager::focus_prev_application()
 }
 
 auto miral::BasicWindowManager::workspaces_containing(Window const& window) const
--> std::vector<std::shared_ptr<Workspace>>
+    -> std::vector<std::shared_ptr<Workspace>>
 {
     auto const iter_pair = workspaces_to_windows.right.equal_range(window);
 
@@ -762,12 +736,8 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
         {
             // or if none overlap, find the area that is closest
             auto distance = std::max(
-                std::max(
-                    window_rect.left() - area->area.right(),
-                    area->area.left() - window_rect.right()).as_int(),
-                std::max(
-                    window_rect.top() - area->area.bottom(),
-                    area->area.top() - window_rect.bottom()).as_int());
+                std::max(window_rect.left() - area->area.right(), area->area.left() - window_rect.right()).as_int(),
+                std::max(window_rect.top() - area->area.bottom(), area->area.top() - window_rect.bottom()).as_int());
             if (distance < min_distance)
             {
                 best_area = area;
@@ -896,8 +866,7 @@ void miral::BasicWindowManager::focus_prev_within_application()
     }
 }
 
-auto miral::BasicWindowManager::window_at(geometry::Point cursor) const
--> Window
+auto miral::BasicWindowManager::window_at(geometry::Point cursor) const -> Window
 {
     auto surface_at = focus_controller->surface_at(cursor);
     return surface_at ? info_for(surface_at).window() : Window{};
@@ -922,15 +891,13 @@ void miral::BasicWindowManager::raise_tree(Window const& root)
 
     std::vector<Window> windows;
 
-    std::function<void(WindowInfo const& info)> const add_children =
-        [&,this](WindowInfo const& info)
-            {
-                for (auto const& child : info.children())
-                {
-                    windows.push_back(child);
-                    add_children(info_for(child));
-                }
-            };
+    std::function<void(WindowInfo const& info)> const add_children = [&, this](WindowInfo const& info) {
+        for (auto const& child : info.children())
+        {
+            windows.push_back(child);
+            add_children(info_for(child));
+        }
+    };
 
     windows.push_back(root);
     add_children(info);
@@ -960,7 +927,7 @@ void miral::BasicWindowManager::move_tree(miral::WindowInfo& root, mir::geometry
     policy->advise_move_to(root, top_left);
     root.window().move_to(top_left);
 
-    for (auto const& child: root.children())
+    for (auto const& child : root.children())
     {
         auto const& pos = policy->confirm_inherited_move(info_for(child), movement);
         place_and_size(info_for(child), pos.top_left, pos.size);
@@ -985,9 +952,9 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 {
     WindowInfo window_info_tmp{window_info};
 
-#define COPY_IF_SET(field)\
-    if (modifications.field().is_set())\
-        window_info_tmp.field(modifications.field().value())
+#define COPY_IF_SET(field) \
+    if (modifications.field().is_set()) \
+    window_info_tmp.field(modifications.field().value())
 
     COPY_IF_SET(name);
     COPY_IF_SET(type);
@@ -1049,13 +1016,10 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
     bool application_zones_need_update = false;
     if (window_info.state() == mir_window_state_attached ||
-          (modifications.state().is_set() &&
-           modifications.state().value() == mir_window_state_attached))
+        (modifications.state().is_set() && modifications.state().value() == mir_window_state_attached))
     {
-        if (modifications.state().is_set() ||
-            modifications.size().is_set() ||
-            modifications.attached_edges().is_set() ||
-            modifications.exclusive_rect().is_set())
+        if (modifications.state().is_set() || modifications.size().is_set() ||
+            modifications.attached_edges().is_set() || modifications.exclusive_rect().is_set())
         {
             application_zones_need_update = true;
         }
@@ -1114,7 +1078,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
         {
             auto restore_rect = window_info.restore_rect();
             restore_rect.top_left.y = window.top_left().y;
-            restore_rect.size.height= window.size().height;
+            restore_rect.size.height = window.size().height;
             window_info.restore_rect(restore_rect);
             break;
         }
@@ -1213,10 +1177,9 @@ void miral::BasicWindowManager::place_and_size(WindowInfo& root, Point const& ne
     move_tree(root, new_pos - root.window().top_left());
 }
 
-void miral::BasicWindowManager::place_attached_to_zone(
-    WindowInfo& info,
-    Rectangle const& application_zone,
-    Rectangle const& output_area)
+void miral::BasicWindowManager::place_attached_to_zone(WindowInfo& info,
+                                                       Rectangle const& application_zone,
+                                                       Rectangle const& output_area)
 {
     Point top_left = info.window().top_left();
     Size size = info.window().size();
@@ -1247,16 +1210,14 @@ void miral::BasicWindowManager::place_attached_to_zone(
         MirPlacementGravity edges = info.attached_edges();
         Rectangle placement_zone = application_zone;
 
-        if ((edges & mir_placement_gravity_west) &&
-            (edges & mir_placement_gravity_east))
+        if ((edges & mir_placement_gravity_west) && (edges & mir_placement_gravity_east))
         {
             placement_zone.top_left.x = output_area.top_left.x;
             placement_zone.size.width = output_area.size.width;
             size.width = placement_zone.size.width;
         }
 
-        if ((edges & mir_placement_gravity_north) &&
-            (edges & mir_placement_gravity_south))
+        if ((edges & mir_placement_gravity_north) && (edges & mir_placement_gravity_south))
         {
             placement_zone.top_left.y = output_area.top_left.y;
             placement_zone.size.height = output_area.size.height;
@@ -1294,8 +1255,8 @@ void miral::BasicWindowManager::place_attached_to_zone(
     }
 }
 
-void miral::BasicWindowManager::place_and_size_for_state(
-    WindowSpecification& modifications, WindowInfo const& window_info) const
+void miral::BasicWindowManager::place_and_size_for_state(WindowSpecification& modifications,
+                                                         WindowInfo const& window_info) const
 {
     if (!modifications.state().is_set())
         return;
@@ -1306,8 +1267,8 @@ void miral::BasicWindowManager::place_and_size_for_state(
     {
     case mir_window_state_fullscreen:
         if (modifications.output_id().is_set() &&
-           (!window_info.has_output_id() || modifications.output_id().value() != window_info.output_id()))
-                break;
+            (!window_info.has_output_id() || modifications.output_id().value() != window_info.output_id()))
+            break;
         // Falls through.
     default:
         if (new_state == window_info.state())
@@ -1336,7 +1297,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
     case mir_window_state_horizmaximized:
     {
         restore_rect.top_left.y = window.top_left().y;
-        restore_rect.size.height= window.size().height;
+        restore_rect.size.height = window.size().height;
         break;
     }
 
@@ -1435,8 +1396,8 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
         return;
     }
 
-    bool const was_hidden = window_info.state() == mir_window_state_hidden ||
-                            window_info.state() == mir_window_state_minimized;
+    bool const was_hidden =
+        window_info.state() == mir_window_state_hidden || window_info.state() == mir_window_state_minimized;
 
     policy->advise_state_change(window_info, value);
 
@@ -1462,30 +1423,28 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
                 auto const workspaces_containing_window = workspaces_containing(window);
 
                 // Try to activate to recently active window of any application
-                mru_active_windows.enumerate([&](Window& candidate)
+                mru_active_windows.enumerate([&](Window& candidate) {
+                    if (candidate == window)
+                        return true;
+                    auto const w = candidate;
+                    for (auto const& workspace : workspaces_containing(w))
                     {
-                        if (candidate == window)
-                            return true;
-                        auto const w = candidate;
-                        for (auto const& workspace : workspaces_containing(w))
+                        for (auto const& ww : workspaces_containing_window)
                         {
-                            for (auto const& ww : workspaces_containing_window)
+                            if (ww == workspace)
                             {
-                                if (ww == workspace)
-                                {
-                                    return !(select_active_window(w));
-                                }
+                                return !(select_active_window(w));
                             }
                         }
+                    }
 
-                        return true;
-                    });
+                    return true;
+                });
             }
 
             // Try to activate to recently active window of any application
             if (window == active_window() || !active_window())
-                mru_active_windows.enumerate([&](Window& candidate)
-                {
+                mru_active_windows.enumerate([&](Window& candidate) {
                     if (candidate == window)
                         return true;
                     auto const w = candidate;
@@ -1523,8 +1482,7 @@ void miral::BasicWindowManager::update_event_timestamp(MirPointerEvent const* pe
 {
     auto pointer_action = mir_pointer_event_action(pev);
 
-    if (pointer_action == mir_pointer_action_button_up ||
-        pointer_action == mir_pointer_action_button_down)
+    if (pointer_action == mir_pointer_action_button_up || pointer_action == mir_pointer_action_button_down)
     {
         update_event_timestamp(mir_pointer_event_input_event(pev));
     }
@@ -1536,8 +1494,7 @@ void miral::BasicWindowManager::update_event_timestamp(MirTouchEvent const* tev)
     for (unsigned i = 0; i < touch_count; i++)
     {
         auto touch_action = mir_touch_event_action(tev, i);
-        if (touch_action == mir_touch_action_up ||
-            touch_action == mir_touch_action_down)
+        if (touch_action == mir_touch_action_up || touch_action == mir_touch_action_down)
         {
             update_event_timestamp(mir_touch_event_input_event(tev));
             break;
@@ -1640,11 +1597,11 @@ void miral::BasicWindowManager::drag_window(miral::Window const& window, Displac
     //                              Mir and Unity: Surfaces, input, and displays (v0.3)
     switch (window_info.type())
     {
-    case mir_window_type_normal:   // regular
+    case mir_window_type_normal:  // regular
     case mir_window_type_utility:  // floating regular
-    case mir_window_type_dialog:   // dialog
-    case mir_window_type_satellite:// satellite
-    case mir_window_type_freestyle:// freestyle
+    case mir_window_type_dialog:  // dialog
+    case mir_window_type_satellite:  // satellite
+    case mir_window_type_freestyle:  // freestyle
         break;
 
     case mir_window_type_gloss:
@@ -1685,9 +1642,8 @@ void miral::BasicWindowManager::drag_window(miral::Window const& window, Displac
     move_tree(window_info, movement);
 }
 
-auto miral::BasicWindowManager::surface_known(
-    std::weak_ptr<scene::Surface> const& surface,
-    std::string const& action) -> bool
+auto miral::BasicWindowManager::surface_known(std::weak_ptr<scene::Surface> const& surface, std::string const& action)
+    -> bool
 {
     if (window_info.find(surface) != window_info.end())
     {
@@ -1702,10 +1658,7 @@ auto miral::BasicWindowManager::surface_known(
         else
             description = "null surface";
 
-        log_debug(
-            "%s requested on %s",
-            action.c_str(),
-            description.c_str());
+        log_debug("%s requested on %s", action.c_str(), description.c_str());
 
         return false;
     }
@@ -1715,41 +1668,38 @@ auto miral::BasicWindowManager::can_activate_window_for_session(miral::Applicati
 {
     miral::Window new_focus;
 
-    mru_active_windows.enumerate([&](miral::Window& window)
-        {
-            // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
-            auto const w = window;
-            return w.application() != session || !(new_focus = select_active_window(w));
-        });
+    mru_active_windows.enumerate([&](miral::Window& window) {
+        // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
+        auto const w = window;
+        return w.application() != session || !(new_focus = select_active_window(w));
+    });
 
     return new_focus;
 }
 
 auto miral::BasicWindowManager::can_activate_window_for_session_in_workspace(
-    Application const& session,
-    std::vector<std::shared_ptr<Workspace>> const& workspaces) -> bool
+    Application const& session, std::vector<std::shared_ptr<Workspace>> const& workspaces) -> bool
 {
     miral::Window new_focus;
 
-    mru_active_windows.enumerate([&](miral::Window& window)
-        {
-            // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
-            auto const w = window;
+    mru_active_windows.enumerate([&](miral::Window& window) {
+        // select_active_window() calls set_focus_to() which updates mru_active_windows and changes window
+        auto const w = window;
 
-            if (w.application() != session)
-                return true;
-
-            for (auto const& workspace : workspaces_containing(w))
-            {
-                for (auto const& ww : workspaces)
-                {
-                    if (ww == workspace)
-                        return !(new_focus = select_active_window(w));
-                }
-            }
-
+        if (w.application() != session)
             return true;
-        });
+
+        for (auto const& workspace : workspaces_containing(w))
+        {
+            for (auto const& ww : workspaces)
+            {
+                if (ww == workspace)
+                    return !(new_focus = select_active_window(w));
+            }
+        }
+
+        return true;
+    });
 
     return new_focus;
 }
@@ -1772,15 +1722,14 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
         display_area = active_display_area();
     }
 
-    auto const application_zone = display_area->application_zone.extents();;
+    auto const application_zone = display_area->application_zone.extents();
+    ;
     auto const height = parameters.size().value().height.as_int();
 
     bool positioned = false;
 
     std::shared_ptr<scene::Surface> parent_scene_surface =
-        parameters.parent().is_set() ?
-        parameters.parent().value().lock() :
-        nullptr;
+        parameters.parent().is_set() ? parameters.parent().value().lock() : nullptr;
 
     if (parent_scene_surface)
     {
@@ -1790,10 +1739,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
                 parent_scene_surface->top_left() + parent_scene_surface->content_offset(),
                 parent_scene_surface->content_size()};
 
-            auto const position = place_relative(
-                parent_content_area,
-                parameters,
-                parameters.size().value());
+            auto const position = place_relative(parent_content_area, parameters, parameters.size().value());
 
             if (position.is_set())
             {
@@ -1813,9 +1759,9 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
             //        it to extend into shell space.
             auto const parent = info_for(parameters.parent().value()).window();
             auto const parent_top_left = parent.top_left();
-            auto const centred = parent_top_left
-                                 + 0.5*(as_displacement(parent.size()) - as_displacement(parameters.size().value()))
-                                 - DeltaY{(parent.size().height.as_int()-height)/6};
+            auto const centred = parent_top_left +
+                                 0.5 * (as_displacement(parent.size()) - as_displacement(parameters.size().value())) -
+                                 DeltaY{(parent.size().height.as_int() - height) / 6};
 
             parameters.top_left() = centred;
             positioned = true;
@@ -1824,9 +1770,9 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
 
     if (!positioned)
     {
-        auto centred = application_zone.top_left
-                       + 0.5*(as_displacement(application_zone.size) - as_displacement(parameters.size().value()))
-                       - DeltaY{(application_zone.size.height.as_int()-height)/6};
+        auto centred = application_zone.top_left +
+                       0.5 * (as_displacement(application_zone.size) - as_displacement(parameters.size().value())) -
+                       DeltaY{(application_zone.size.height.as_int() - height) / 6};
 
         switch (parameters.state().value())
         {
@@ -1921,8 +1867,14 @@ auto flip_y(MirPlacementGravity rect_gravity) -> MirPlacementGravity
     }
 }
 
-auto flip_x(Displacement const& d) -> Displacement { return {-1*d.dx, d.dy}; }
-auto flip_y(Displacement const& d) -> Displacement { return {d.dx, -1*d.dy}; }
+auto flip_x(Displacement const& d) -> Displacement
+{
+    return {-1 * d.dx, d.dy};
+}
+auto flip_y(Displacement const& d) -> Displacement
+{
+    return {d.dx, -1 * d.dy};
+}
 
 auto antipodes(MirPlacementGravity rect_gravity) -> MirPlacementGravity
 {
@@ -1982,25 +1934,25 @@ auto anchor_for(Rectangle const& aux_rect, MirPlacementGravity rect_gravity) -> 
         return aux_rect.top_left;
 
     case mir_placement_gravity_north:
-        return aux_rect.top_left + 0.5*as_displacement(aux_rect.size).dx;
+        return aux_rect.top_left + 0.5 * as_displacement(aux_rect.size).dx;
 
     case mir_placement_gravity_northeast:
         return aux_rect.top_right();
 
     case mir_placement_gravity_west:
-        return aux_rect.top_left + 0.5*as_displacement(aux_rect.size).dy;
+        return aux_rect.top_left + 0.5 * as_displacement(aux_rect.size).dy;
 
     case mir_placement_gravity_center:
-        return aux_rect.top_left + 0.5*as_displacement(aux_rect.size);
+        return aux_rect.top_left + 0.5 * as_displacement(aux_rect.size);
 
     case mir_placement_gravity_east:
-        return aux_rect.top_right() + 0.5*as_displacement(aux_rect.size).dy;
+        return aux_rect.top_right() + 0.5 * as_displacement(aux_rect.size).dy;
 
     case mir_placement_gravity_southwest:
         return aux_rect.bottom_left();
 
     case mir_placement_gravity_south:
-        return aux_rect.bottom_left() + 0.5*as_displacement(aux_rect.size).dx;
+        return aux_rect.bottom_left() + 0.5 * as_displacement(aux_rect.size).dx;
 
     case mir_placement_gravity_southeast:
         return aux_rect.bottom_right();
@@ -2049,8 +2001,9 @@ auto offset_for(Size const& size, MirPlacementGravity rect_gravity) -> Displacem
 }
 }
 
-auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& parent, WindowSpecification const& parameters, Size size)
--> mir::optional_value<Rectangle>
+auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& parent,
+                                               WindowSpecification const& parameters,
+                                               Size size) -> mir::optional_value<Rectangle>
 {
     auto const hints = parameters.placement_hints().value();
     auto const active_output_area = active_output();
@@ -2059,11 +2012,11 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
     if (parameters.size().is_set())
         size = parameters.size().value();
 
-    auto offset = parameters.aux_rect_placement_offset().is_set() ?
-                  parameters.aux_rect_placement_offset().value() : Displacement{};
+    auto offset = parameters.aux_rect_placement_offset().is_set() ? parameters.aux_rect_placement_offset().value() :
+                                                                    Displacement{};
 
     Rectangle aux_rect = parameters.aux_rect().value();
-    aux_rect.top_left = aux_rect.top_left + (parent.top_left-Point{});
+    aux_rect.top_left = aux_rect.top_left + (parent.top_left - Point{});
 
     std::vector<MirPlacementGravity> rect_gravities{parameters.aux_rect_placement_gravity().value()};
 
@@ -2075,8 +2028,8 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
     for (auto const& rect_gravity : rect_gravities)
     {
         {
-            auto result = constrain_to(parent, anchor_for(aux_rect, rect_gravity) + offset) +
-                offset_for(size, win_gravity);
+            auto result =
+                constrain_to(parent, anchor_for(aux_rect, rect_gravity) + offset) + offset_for(size, win_gravity);
 
             if (active_output_area.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
@@ -2088,7 +2041,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
         if (hints & mir_placement_hints_flip_x)
         {
             auto result = constrain_to(parent, anchor_for(aux_rect, flip_x(rect_gravity)) + flip_x(offset)) +
-                offset_for(size, flip_x(win_gravity));
+                          offset_for(size, flip_x(win_gravity));
 
             if (active_output_area.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
@@ -2097,7 +2050,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
         if (hints & mir_placement_hints_flip_y)
         {
             auto result = constrain_to(parent, anchor_for(aux_rect, flip_y(rect_gravity)) + flip_y(offset)) +
-                offset_for(size, flip_y(win_gravity));
+                          offset_for(size, flip_y(win_gravity));
 
             if (active_output_area.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
@@ -2105,7 +2058,8 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
         if (hints & mir_placement_hints_flip_x && hints & mir_placement_hints_flip_y)
         {
-            auto result = constrain_to(parent, anchor_for(aux_rect, flip_x(flip_y(rect_gravity))) + flip_x(flip_y(offset))) +
+            auto result =
+                constrain_to(parent, anchor_for(aux_rect, flip_x(flip_y(rect_gravity))) + flip_x(flip_y(offset))) +
                 offset_for(size, flip_x(flip_y(win_gravity)));
 
             if (active_output_area.contains(Rectangle{result, size}))
@@ -2115,12 +2069,11 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
     for (auto const& rect_gravity : rect_gravities)
     {
-        auto result = constrain_to(parent, anchor_for(aux_rect, rect_gravity) + offset) +
-            offset_for(size, win_gravity);
+        auto result = constrain_to(parent, anchor_for(aux_rect, rect_gravity) + offset) + offset_for(size, win_gravity);
 
         if (hints & mir_placement_hints_slide_x)
         {
-            auto const left_overhang  = result.x - active_output_area.top_left.x;
+            auto const left_overhang = result.x - active_output_area.top_left.x;
             auto const right_overhang = (result + as_displacement(size)).x - active_output_area.top_right().x;
 
             if (left_overhang < DeltaX{0})
@@ -2131,7 +2084,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
         if (hints & mir_placement_hints_slide_y)
         {
-            auto const top_overhang  = result.y - active_output_area.top_left.y;
+            auto const top_overhang = result.y - active_output_area.top_left.y;
             auto const bot_overhang = (result + as_displacement(size)).y - active_output_area.bottom_left().y;
 
             if (top_overhang < DeltaY{0})
@@ -2146,12 +2099,11 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
     for (auto const& rect_gravity : rect_gravities)
     {
-        auto result = constrain_to(parent, anchor_for(aux_rect, rect_gravity) + offset) +
-            offset_for(size, win_gravity);
+        auto result = constrain_to(parent, anchor_for(aux_rect, rect_gravity) + offset) + offset_for(size, win_gravity);
 
         if (hints & mir_placement_hints_resize_x)
         {
-            auto const left_overhang  = result.x - active_output_area.top_left.x;
+            auto const left_overhang = result.x - active_output_area.top_left.x;
             auto const right_overhang = (result + as_displacement(size)).x - active_output_area.top_right().x;
 
             if (left_overhang < DeltaX{0})
@@ -2168,7 +2120,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
         if (hints & mir_placement_hints_resize_y)
         {
-            auto const top_overhang  = result.y - active_output_area.top_left.y;
+            auto const top_overhang = result.y - active_output_area.top_left.y;
             auto const bot_overhang = (result + as_displacement(size)).y - active_output_area.bottom_left().y;
 
             if (top_overhang < DeltaY{0})
@@ -2190,7 +2142,8 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
     return default_result;
 }
 
-void miral::BasicWindowManager::validate_modification_request(WindowSpecification const& modifications, WindowInfo const& window_info) const
+void miral::BasicWindowManager::validate_modification_request(WindowSpecification const& modifications,
+                                                              WindowInfo const& window_info) const
 {
     auto target_type = window_info.type();
 
@@ -2217,7 +2170,7 @@ void miral::BasicWindowManager::validate_modification_request(WindowSpecificatio
             default:
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
             }
-	    // Falls through.
+            // Falls through.
 
         case mir_window_type_menu:
             switch (target_type)
@@ -2229,7 +2182,7 @@ void miral::BasicWindowManager::validate_modification_request(WindowSpecificatio
             default:
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
             }
-	    // Falls through.
+            // Falls through.
 
         case mir_window_type_gloss:
         case mir_window_type_freestyle:
@@ -2287,13 +2240,14 @@ class miral::Workspace
 {
 public:
     explicit Workspace(std::shared_ptr<miral::BasicWindowManager::DeadWorkspaces> const& dead_workspaces) :
-        dead_workspaces{dead_workspaces} {}
+        dead_workspaces{dead_workspaces}
+    {}
 
     std::weak_ptr<Workspace> self;
 
     ~Workspace()
     {
-        std::lock_guard<std::mutex> lock {dead_workspaces->dead_workspaces_mutex};
+        std::lock_guard<std::mutex> lock{dead_workspaces->dead_workspaces_mutex};
         dead_workspaces->workspaces.push_back(self);
     }
 
@@ -2308,10 +2262,11 @@ auto miral::BasicWindowManager::create_workspace() -> std::shared_ptr<Workspace>
     return result;
 }
 
-void miral::BasicWindowManager::add_tree_to_workspace(
-    miral::Window const& window, std::shared_ptr<miral::Workspace> const& workspace)
+void miral::BasicWindowManager::add_tree_to_workspace(miral::Window const& window,
+                                                      std::shared_ptr<miral::Workspace> const& workspace)
 {
-    if (!window) return;
+    if (!window)
+        return;
 
     auto root = window;
     auto const* info = &info_for(root);
@@ -2324,15 +2279,13 @@ void miral::BasicWindowManager::add_tree_to_workspace(
 
     std::vector<Window> windows;
 
-    std::function<void(WindowInfo const& info)> const add_children =
-        [&,this](WindowInfo const& info)
+    std::function<void(WindowInfo const& info)> const add_children = [&, this](WindowInfo const& info) {
+        for (auto const& child : info.children())
         {
-            for (auto const& child : info.children())
-            {
-                windows.push_back(child);
-                add_children(info_for(child));
-            }
-        };
+            windows.push_back(child);
+            add_children(info_for(child));
+        }
+    };
 
     windows.push_back(root);
     add_children(*info);
@@ -2343,8 +2296,9 @@ void miral::BasicWindowManager::add_tree_to_workspace(
 
     for (auto& w : windows)
     {
-        if (!std::count_if(iter_pair.first, iter_pair.second,
-                           [&w](wwbimap_t::left_value_type const& kv) { return kv.second == w; }))
+        if (!std::count_if(iter_pair.first, iter_pair.second, [&w](wwbimap_t::left_value_type const& kv) {
+                return kv.second == w;
+            }))
         {
             workspaces_to_windows.left.insert(wwbimap_t::left_value_type{workspace, w});
             windows_added.push_back(w);
@@ -2355,10 +2309,11 @@ void miral::BasicWindowManager::add_tree_to_workspace(
         policy->advise_adding_to_workspace(workspace, windows_added);
 }
 
-void miral::BasicWindowManager::remove_tree_from_workspace(
-    miral::Window const& window, std::shared_ptr<miral::Workspace> const& workspace)
+void miral::BasicWindowManager::remove_tree_from_workspace(miral::Window const& window,
+                                                           std::shared_ptr<miral::Workspace> const& workspace)
 {
-    if (!window) return;
+    if (!window)
+        return;
 
     auto root = window;
     auto const* info = &info_for(root);
@@ -2371,15 +2326,13 @@ void miral::BasicWindowManager::remove_tree_from_workspace(
 
     std::vector<Window> windows;
 
-    std::function<void(WindowInfo const& info)> const add_children =
-        [&,this](WindowInfo const& info)
+    std::function<void(WindowInfo const& info)> const add_children = [&, this](WindowInfo const& info) {
+        for (auto const& child : info.children())
         {
-            for (auto const& child : info.children())
-            {
-                windows.push_back(child);
-                add_children(info_for(child));
-            }
-        };
+            windows.push_back(child);
+            add_children(info_for(child));
+        }
+    };
 
     windows.push_back(root);
     add_children(*info);
@@ -2401,8 +2354,8 @@ void miral::BasicWindowManager::remove_tree_from_workspace(
         policy->advise_removing_from_workspace(workspace, windows_removed);
 }
 
-void miral::BasicWindowManager::move_workspace_content_to_workspace(
-    std::shared_ptr<Workspace> const& to_workspace, std::shared_ptr<Workspace> const& from_workspace)
+void miral::BasicWindowManager::move_workspace_content_to_workspace(std::shared_ptr<Workspace> const& to_workspace,
+                                                                    std::shared_ptr<Workspace> const& from_workspace)
 {
     std::vector<Window> windows_removed;
 
@@ -2422,8 +2375,9 @@ void miral::BasicWindowManager::move_workspace_content_to_workspace(
     auto const iter_pair_to = workspaces_to_windows.left.equal_range(to_workspace);
     for (auto& w : windows_removed)
     {
-        if (!std::count_if(iter_pair_to.first, iter_pair_to.second,
-                           [&w](wwbimap_t::left_value_type const& kv) { return kv.second == w; }))
+        if (!std::count_if(iter_pair_to.first, iter_pair_to.second, [&w](wwbimap_t::left_value_type const& kv) {
+                return kv.second == w;
+            }))
         {
             workspaces_to_windows.left.insert(wwbimap_t::left_value_type{to_workspace, w});
             windows_added.push_back(w);
@@ -2445,18 +2399,17 @@ void miral::BasicWindowManager::for_each_workspace_containing(
     }
 }
 
-void miral::BasicWindowManager::for_each_window_in_workspace(
-    std::shared_ptr<miral::Workspace> const& workspace, std::function<void(miral::Window const&)> const& callback)
+void miral::BasicWindowManager::for_each_window_in_workspace(std::shared_ptr<miral::Workspace> const& workspace,
+                                                             std::function<void(miral::Window const&)> const& callback)
 {
     auto const iter_pair = workspaces_to_windows.left.equal_range(workspace);
     for (auto kv = iter_pair.first; kv != iter_pair.second; ++kv)
         callback(kv->second);
 }
 
-auto miral::BasicWindowManager::apply_exclusive_rect_to_application_zone(
-    Rectangle const& original_zone,
-    Rectangle const& exclusive_rect,
-    MirPlacementGravity edges) -> Rectangle
+auto miral::BasicWindowManager::apply_exclusive_rect_to_application_zone(Rectangle const& original_zone,
+                                                                         Rectangle const& exclusive_rect,
+                                                                         MirPlacementGravity edges) -> Rectangle
 {
     /// if attached to both left and right, we can ignore both
     if ((edges & mir_placement_gravity_west) && (edges & mir_placement_gravity_east))
@@ -2508,12 +2461,10 @@ auto miral::BasicWindowManager::add_output_to_display_areas(Locker const&, Outpu
 
     if (output.logical_group_id())
     {
-        auto const area_iter = std::find_if(display_areas.begin(), display_areas.end(), [&](auto const& area)
-            {
-                return (
-                    area->logical_output_group_id &&
+        auto const area_iter = std::find_if(display_areas.begin(), display_areas.end(), [&](auto const& area) {
+            return (area->logical_output_group_id &&
                     area->logical_output_group_id.value() == output.logical_group_id());
-            });
+        });
         if (area_iter != display_areas.end())
         {
             existing_area = *area_iter;
@@ -2542,10 +2493,7 @@ auto miral::BasicWindowManager::remove_output_from_display_areas(Locker const&, 
     for (auto const& area : display_areas)
     {
         auto const removed = std::remove_if(
-            area->contained_outputs.begin(),
-            area->contained_outputs.end(),
-            [&](Output const& area_output)
-            {
+            area->contained_outputs.begin(), area->contained_outputs.end(), [&](Output const& area_output) {
                 return area_output.is_same_output(output);
             });
         bool const output_removed{removed != area->contained_outputs.end()};
@@ -2630,13 +2578,9 @@ void miral::BasicWindowManager::advise_output_end()
 void miral::BasicWindowManager::update_application_zones_and_attached_windows()
 {
     // Move all live areas to before the split and areas that should be removed to after
-    auto split = std::stable_partition(
-        display_areas.begin(),
-        display_areas.end(),
-        [&](std::shared_ptr<DisplayArea> const& area)
-        {
-            return area->is_alive();
-        });
+    auto split = std::stable_partition(display_areas.begin(),
+                                       display_areas.end(),
+                                       [&](std::shared_ptr<DisplayArea> const& area) { return area->is_alive(); });
 
     // Move areas after the split into a new vector
     std::vector<std::shared_ptr<DisplayArea>> removed_areas;

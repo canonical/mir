@@ -31,7 +31,7 @@
  *
  * See also: http://semver.org/
  */
-#define MIRAL_MAJOR_VERSION (@MIRAL_VERSION_MAJOR@)
+#define MIRAL_MAJOR_VERSION (@MIRAL_VERSION_MAJOR @)
 
 /**
  * MIRAL_MINOR_VERSION
@@ -41,7 +41,7 @@
  *
  * See also: http://semver.org/
  */
-#define MIRAL_MINOR_VERSION (@MIRAL_VERSION_MINOR@)
+#define MIRAL_MINOR_VERSION (@MIRAL_VERSION_MINOR @)
 
 /**
  * MIRAL_MICRO_VERSION
@@ -52,16 +52,13 @@
  *
  * This corresponds to the PATCH field of http://semver.org/
  */
-#define MIRAL_MICRO_VERSION (@MIRAL_VERSION_PATCH@)
+#define MIRAL_MICRO_VERSION (@MIRAL_VERSION_PATCH @)
 
 /**
  * MIRAL_VERSION
  *
  * The current version of the MirAL headers in use.
  */
-#define MIRAL_VERSION \
-    MIR_VERSION_NUMBER(MIRAL_MAJOR_VERSION, \
-                       MIRAL_MINOR_VERSION, \
-                       MIRAL_MICRO_VERSION)
+#define MIRAL_VERSION MIR_VERSION_NUMBER(MIRAL_MAJOR_VERSION, MIRAL_MINOR_VERSION, MIRAL_MICRO_VERSION)
 
 #endif /* MIRAL_VERSION_H_ */

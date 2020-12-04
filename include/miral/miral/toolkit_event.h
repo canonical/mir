@@ -66,7 +66,7 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* event);
 // * \param [in] event The input event
 // * \return           The id of the generating device
 // */
-//MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* event);
+// MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* event);
 
 /**
  * Retrieve the time at which an input event occurred.
@@ -127,7 +127,7 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev);
 // * \return        The cookie associated with the given input event
 // *                The cookie must be released by calling mir_cookie_release
 // */
-//MirCookie const* mir_input_event_get_cookie(MirInputEvent const* ev);
+// MirCookie const* mir_input_event_get_cookie(MirInputEvent const* ev);
 
 /**
  * Retrieve the MirEvent associated with a given input event.
@@ -235,7 +235,6 @@ MirTouchAction mir_touch_event_action(MirTouchEvent const* event, unsigned int t
  */
 MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event, unsigned int touch_index);
 
-
 /**
  * Retrieve the axis value for a given axis on an indexed touch.
  *
@@ -253,7 +252,6 @@ float mir_touch_event_axis_value(MirTouchEvent const* event, unsigned int touch_
  * \return           The input event
  */
 MirInputEvent const* mir_touch_event_input_event(MirTouchEvent const* event);
-
 
 /**
  * Retrieve the modifier keys pressed when the pointer action occured.
@@ -279,8 +277,7 @@ MirPointerAction mir_pointer_event_action(MirPointerEvent const* event);
  *
  * \return                   Whether the given button is depressed
  */
-bool mir_pointer_event_button_state(MirPointerEvent const* event,
-    MirPointerButton button);
+bool mir_pointer_event_button_state(MirPointerEvent const* event, MirPointerButton button);
 
 /**
  * Retreive the pointer button state as a masked set of values.
@@ -298,8 +295,7 @@ MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* event);
  *  \param [in] axis        The axis to retreive a value from
  *  \return                 The value of the given axis
  */
-float mir_pointer_event_axis_value(MirPointerEvent const* event,
-    MirPointerAxis axis);
+float mir_pointer_event_axis_value(MirPointerEvent const* event, MirPointerAxis axis);
 
 /**
  * Retrieve the corresponding input event.
@@ -311,4 +307,4 @@ MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event)
 }
 }
 
-#endif //MIRAL_TOOLKIT_EVENT_H_
+#endif  // MIRAL_TOOLKIT_EVENT_H_

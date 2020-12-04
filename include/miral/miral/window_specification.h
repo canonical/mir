@@ -23,21 +23,31 @@
 
 #include <mir/geometry/displacement.h>
 #include <mir/geometry/rectangles.h>
-#include <mir/optional_value.h>
 #include <mir/int_wrapper.h>
+#include <mir/optional_value.h>
 
 #include <memory>
 
 namespace mir
 {
-namespace scene { class Surface; struct SurfaceCreationParameters; }
-namespace shell { struct SurfaceSpecification; }
+namespace scene
+{
+class Surface;
+struct SurfaceCreationParameters;
+}
+namespace shell
+{
+struct SurfaceSpecification;
+}
 }
 
 namespace miral
 {
 using namespace mir::geometry;
-namespace detail { struct SessionsBufferStreamIdTag; }
+namespace detail
+{
+struct SessionsBufferStreamIdTag;
+}
 typedef mir::IntWrapper<detail::SessionsBufferStreamIdTag> BufferStreamId;
 
 class WindowSpecification
@@ -49,7 +59,11 @@ public:
         receives_all_input
     };
 
-    struct AspectRatio { unsigned width; unsigned height; };
+    struct AspectRatio
+    {
+        unsigned width;
+        unsigned height;
+    };
 
     WindowSpecification();
     WindowSpecification(WindowSpecification const& that);
@@ -162,4 +176,4 @@ private:
 };
 }
 
-#endif //MIRAL_WINDOW_SPECIFICATION_H
+#endif  // MIRAL_WINDOW_SPECIFICATION_H

@@ -35,7 +35,8 @@ class WindowManagementPolicy;
 class SetWindowManagementPolicy
 {
 public:
-    SetWindowManagementPolicy(std::function<std::unique_ptr<WindowManagementPolicy>(WindowManagerTools const& tools)> const& builder);
+    SetWindowManagementPolicy(
+        std::function<std::unique_ptr<WindowManagementPolicy>(WindowManagerTools const& tools)> const& builder);
     ~SetWindowManagementPolicy();
 
     void operator()(mir::Server& server) const;
@@ -44,12 +45,14 @@ private:
     std::function<std::unique_ptr<WindowManagementPolicy>(WindowManagerTools const& tools)> builder;
 };
 
-template<typename Policy, typename ...Args>
-auto set_window_management_policy(Args& ... args) -> SetWindowManagementPolicy
+template<typename Policy, typename... Args>
+auto set_window_management_policy(Args&... args) -> SetWindowManagementPolicy
 {
-    return SetWindowManagementPolicy{[&args...](WindowManagerTools const& tools) -> std::unique_ptr<WindowManagementPolicy>
-        { return std::make_unique<Policy>(tools, args...); }};
+    return SetWindowManagementPolicy{
+        [&args...](WindowManagerTools const& tools) -> std::unique_ptr<WindowManagementPolicy> {
+            return std::make_unique<Policy>(tools, args...);
+        }};
 }
 }
 
-#endif //MIRAL_SET_WINDOW_MANAGEMENT_POLICY_H
+#endif  // MIRAL_SET_WINDOW_MANAGEMENT_POLICY_H

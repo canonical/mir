@@ -16,24 +16,29 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-
 #ifndef MIRAL_CURSOR_LOADER_H_
 #define MIRAL_CURSOR_LOADER_H_
 
 #include "mir/input/cursor_images.h"
 
-#include <memory>
-#include <string>
 #include <map>
+#include <memory>
 #include <mutex>
+#include <string>
 
 // Unfortunately this library does not compile as C++ so we can not namespace it.
 extern "C"
 {
-struct _XcursorImages;
+    struct _XcursorImages;
 }
 
-namespace mir { namespace graphics { class CursorImage; } }
+namespace mir
+{
+namespace graphics
+{
+class CursorImage;
+}
+}
 
 namespace miral
 {
@@ -58,9 +63,8 @@ private:
     std::map<std::string, std::shared_ptr<mir::graphics::CursorImage>> loaded_images;
 
     void load_cursor_theme(std::string const& theme_name);
-    void load_appropriately_sized_image(_XcursorImages *images);
+    void load_appropriately_sized_image(_XcursorImages* images);
 };
 }
-
 
 #endif /* MIRAL_CURSOR_LOADER_H_ */

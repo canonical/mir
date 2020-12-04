@@ -25,14 +25,10 @@ namespace ms = mir::scene;
 
 // Based on "Mir and Unity: Surfaces, input, and displays (v0.3)"
 
-miral::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(WindowManagerTools const& tools) :
-    tools{tools}
-{
-}
+miral::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(WindowManagerTools const& tools) : tools{tools} {}
 
-auto miral::CanonicalWindowManagerPolicy::place_new_window(
-    miral::ApplicationInfo const& /*app_info*/,
-    miral::WindowSpecification const& request_parameters)
+auto miral::CanonicalWindowManagerPolicy::place_new_window(miral::ApplicationInfo const& /*app_info*/,
+                                                           miral::WindowSpecification const& request_parameters)
     -> miral::WindowSpecification
 {
     return request_parameters;
@@ -46,9 +42,8 @@ void miral::CanonicalWindowManagerPolicy::handle_window_ready(WindowInfo& window
     }
 }
 
-void miral::CanonicalWindowManagerPolicy::handle_modify_window(
-    WindowInfo& window_info,
-    WindowSpecification const& modifications)
+void miral::CanonicalWindowManagerPolicy::handle_modify_window(WindowInfo& window_info,
+                                                               WindowSpecification const& modifications)
 {
     tools.modify_window(window_info, modifications);
 }
@@ -64,20 +59,17 @@ void miral::CanonicalWindowManagerPolicy::advise_focus_gained(WindowInfo const& 
 }
 
 auto miral::CanonicalWindowManagerPolicy::confirm_inherited_move(WindowInfo const& window_info, Displacement movement)
--> Rectangle
+    -> Rectangle
 {
-    return {window_info.window().top_left()+movement, window_info.window().size()};
+    return {window_info.window().top_left() + movement, window_info.window().size()};
 }
 
-auto miral::CanonicalWindowManagerPolicy::confirm_placement_on_display(
-    WindowInfo const& /*window_info*/,
-    MirWindowState /*new_state*/,
-    Rectangle const& new_placement)
--> mir::geometry::Rectangle
+auto miral::CanonicalWindowManagerPolicy::confirm_placement_on_display(WindowInfo const& /*window_info*/,
+                                                                       MirWindowState /*new_state*/,
+                                                                       Rectangle const& new_placement)
+    -> mir::geometry::Rectangle
 {
     return new_placement;
 }
 
-void miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/)
-{
-}
+void miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/) {}

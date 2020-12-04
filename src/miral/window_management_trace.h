@@ -21,17 +21,15 @@
 
 #include "window_manager_tools_implementation.h"
 
-#include "miral/window_manager_tools.h"
 #include "miral/window_management_options.h"
 #include "miral/window_management_policy.h"
+#include "miral/window_manager_tools.h"
 
 #include <atomic>
 
 namespace miral
 {
-class WindowManagementTrace
-    : public WindowManagementPolicy,
-      WindowManagerToolsImplementation
+class WindowManagementTrace : public WindowManagementPolicy, WindowManagerToolsImplementation
 {
 public:
     WindowManagementTrace(WindowManagerTools const& wrapped, WindowManagementPolicyBuilder const& builder);
@@ -42,7 +40,7 @@ private:
     virtual void for_each_application(std::function<void(ApplicationInfo&)> const& functor) override;
 
     virtual auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate)
-    -> Application override;
+        -> Application override;
 
     virtual auto info_for(std::weak_ptr<mir::scene::Session> const& session) const -> ApplicationInfo& override;
 
@@ -59,7 +57,8 @@ private:
     virtual auto active_application_zone() -> Zone override;
     virtual auto info_for_window_id(std::string const& id) const -> WindowInfo& override;
     virtual auto id_for_window(Window const& window) const -> std::string override;
-    virtual void place_and_size_for_state(WindowSpecification& modifications, WindowInfo const& window_info) const override;
+    virtual void place_and_size_for_state(WindowSpecification& modifications,
+                                          WindowInfo const& window_info) const override;
 
     virtual void drag_active_window(mir::geometry::Displacement movement) override;
 
@@ -79,9 +78,8 @@ private:
 
     virtual void invoke_under_lock(std::function<void()> const& callback) override;
 
-    virtual auto place_new_window(
-        ApplicationInfo const& app_info,
-        WindowSpecification const& requested_specification) -> WindowSpecification override;
+    virtual auto place_new_window(ApplicationInfo const& app_info, WindowSpecification const& requested_specification)
+        -> WindowSpecification override;
     virtual void handle_window_ready(WindowInfo& window_info) override;
 
     virtual void handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications) override;
@@ -102,16 +100,15 @@ private:
 
     void remove_tree_from_workspace(Window const& window, std::shared_ptr<Workspace> const& workspace) override;
 
-    void move_workspace_content_to_workspace(
-        std::shared_ptr<Workspace> const& to_workspace,
-        std::shared_ptr<Workspace> const& from_workspace) override;
+    void move_workspace_content_to_workspace(std::shared_ptr<Workspace> const& to_workspace,
+                                             std::shared_ptr<Workspace> const& from_workspace) override;
 
     void for_each_workspace_containing(
         Window const& window,
         std::function<void(std::shared_ptr<Workspace> const& workspace)> const& callback) override;
 
-    void for_each_window_in_workspace(
-        std::shared_ptr<Workspace> const& workspace, std::function<void(Window const&)> const& callback) override;
+    void for_each_window_in_workspace(std::shared_ptr<Workspace> const& workspace,
+                                      std::function<void(Window const&)> const& callback) override;
 
     void handle_request_drag_and_drop(WindowInfo& window_info) override;
 
@@ -119,16 +116,15 @@ private:
 
     void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) override;
 
-    void advise_adding_to_workspace(
-        std::shared_ptr<Workspace> const& workspace, std::vector<Window> const& windows) override;
+    void advise_adding_to_workspace(std::shared_ptr<Workspace> const& workspace,
+                                    std::vector<Window> const& windows) override;
 
-    void advise_removing_from_workspace(
-        std::shared_ptr<Workspace> const& workspace, std::vector<Window> const& windows) override;
+    void advise_removing_from_workspace(std::shared_ptr<Workspace> const& workspace,
+                                        std::vector<Window> const& windows) override;
 
-    auto confirm_placement_on_display(
-        WindowInfo const& window_info,
-        MirWindowState new_state,
-        Rectangle const& new_placement) -> Rectangle override;
+    auto confirm_placement_on_display(WindowInfo const& window_info,
+                                      MirWindowState new_state,
+                                      Rectangle const& new_placement) -> Rectangle override;
 
 public:
     virtual void advise_begin() override;
@@ -175,4 +171,4 @@ private:
 };
 }
 
-#endif //MIRAL_WINDOW_MANAGEMENT_TRACE_H
+#endif  // MIRAL_WINDOW_MANAGEMENT_TRACE_H

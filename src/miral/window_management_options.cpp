@@ -22,8 +22,8 @@
 #include "window_management_trace.h"
 
 #include <mir/abnormal_exit.h>
-#include <mir/server.h>
 #include <mir/options/option.h>
+#include <mir/server.h>
 #include <mir/shell/system_compositor_window_manager.h>
 
 namespace msh = mir::shell;
@@ -42,7 +42,8 @@ void miral::WindowManagerOptions::operator()(mir::Server& server) const
     auto first = true;
     for (auto const& option : policies)
     {
-        if (!first) description += "|";
+        if (!first)
+            description += "|";
         first = false;
 
         description += option.name;
@@ -54,42 +55,39 @@ void miral::WindowManagerOptions::operator()(mir::Server& server) const
     server.add_configuration_option(trace_option, "log trace message", mir::OptionType::null);
 
     server.override_the_window_manager_builder([this, &server](msh::FocusController* focus_controller)
-        -> std::shared_ptr<msh::WindowManager>
+                                                   -> std::shared_ptr<msh::WindowManager> {
+        auto const options = server.get_options();
+        auto const selection = options->get<std::string>(wm_option);
+
+        auto const display_layout = server.the_shell_display_layout();
+        auto const persistent_surface_store = server.the_persistent_surface_store();
+
+        for (auto const& option : policies)
         {
-            auto const options = server.get_options();
-            auto const selection = options->get<std::string>(wm_option);
-
-            auto const display_layout = server.the_shell_display_layout();
-            auto const persistent_surface_store = server.the_persistent_surface_store();
-
-            for (auto const& option : policies)
+            if (selection == option.name)
             {
-                if (selection == option.name)
+                if (server.get_options()->is_set(trace_option))
                 {
-                    if (server.get_options()->is_set(trace_option))
-                    {
-                        auto trace_builder = [&option](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
-                            {
-                                return std::make_unique<WindowManagementTrace>(tools, option.build);
-                            };
+                    auto trace_builder =
+                        [&option](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy> {
+                        return std::make_unique<WindowManagementTrace>(tools, option.build);
+                    };
 
-                        return std::make_shared<BasicWindowManager>(
-                            focus_controller,
-                            display_layout,
-                            persistent_surface_store,
-                            *server.the_display_configuration_observer_registrar(),
-                            trace_builder);
-                    }
-
-                    return std::make_shared<BasicWindowManager>
-                        (focus_controller,
-                         display_layout,
-                         persistent_surface_store,
-                         *server.the_display_configuration_observer_registrar(),
-                         option.build);
+                    return std::make_shared<BasicWindowManager>(focus_controller,
+                                                                display_layout,
+                                                                persistent_surface_store,
+                                                                *server.the_display_configuration_observer_registrar(),
+                                                                trace_builder);
                 }
-            }
 
-            throw mir::AbnormalExit("Unknown window manager: " + selection);
-        });
+                return std::make_shared<BasicWindowManager>(focus_controller,
+                                                            display_layout,
+                                                            persistent_surface_store,
+                                                            *server.the_display_configuration_observer_registrar(),
+                                                            option.build);
+            }
+        }
+
+        throw mir::AbnormalExit("Unknown window manager: " + selection);
+    });
 }

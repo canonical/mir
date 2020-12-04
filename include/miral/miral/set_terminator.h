@@ -21,7 +21,10 @@
 
 #include <functional>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
@@ -44,4 +47,4 @@ private:
 };
 }
 
-#endif //MIRAL_SET_TERMINATOR_H
+#endif  // MIRAL_SET_TERMINATOR_H

@@ -37,8 +37,8 @@ struct ApplicationInfo
     auto operator=(ApplicationInfo const& that) -> miral::ApplicationInfo&;
 
     auto name() const -> std::string;
-    auto application()  const -> Application;
-    auto windows() const -> std::vector <Window>&;
+    auto application() const -> Application;
+    auto windows() const -> std::vector<Window>&;
 
     /// This can be used by client code to store window manager specific information
     auto userdata() const -> std::shared_ptr<void>;
@@ -54,4 +54,4 @@ private:
 };
 }
 
-#endif //MIRAL_APPLICATION_INFO_H
+#endif  // MIRAL_APPLICATION_INFO_H

@@ -23,14 +23,17 @@
 
 #include <functional>
 #include <memory>
-#include <string>
 #include <set>
+#include <string>
 
 struct wl_display;
 struct wl_client;
 struct wl_resource;
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
@@ -176,4 +179,4 @@ auto application_for(wl_resource* resource) -> Application;
 auto window_for(wl_resource* surface) -> Window;
 }
 
-#endif //MIRAL_WAYLAND_EXTENSIONS_H
+#endif  // MIRAL_WAYLAND_EXTENSIONS_H

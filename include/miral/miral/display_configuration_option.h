@@ -19,12 +19,14 @@
 #ifndef MIRAL_DISPLAY_CONFIGURATION_OPTIONS_H_
 #define MIRAL_DISPLAY_CONFIGURATION_OPTIONS_H_
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
 void display_configuration_options(mir::Server& server);
 }
-
 
 #endif /* MIRAL_DISPLAY_CONFIGURATION_OPTIONS_H_ */

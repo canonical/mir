@@ -23,9 +23,9 @@
 
 namespace miral
 {
-Width  extern const default_min_width;
+Width extern const default_min_width;
 Height extern const default_min_height;
-Width  extern const default_max_width;
+Width extern const default_max_width;
 Height extern const default_max_height;
 DeltaX extern const default_width_inc;
 DeltaY extern const default_height_inc;
@@ -33,4 +33,4 @@ WindowInfo::AspectRatio extern const default_min_aspect_ratio;
 WindowInfo::AspectRatio extern const default_max_aspect_ratio;
 }
 
-#endif //MIR_WINDOW_INFO_DEFAULTS_H
+#endif  // MIR_WINDOW_INFO_DEFAULTS_H

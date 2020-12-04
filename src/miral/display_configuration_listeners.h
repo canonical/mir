@@ -30,7 +30,7 @@ namespace miral
 {
 class ActiveOutputsListener;
 
-class DisplayConfigurationListeners :  public mir::graphics::DisplayConfigurationObserver
+class DisplayConfigurationListeners : public mir::graphics::DisplayConfigurationObserver
 {
 public:
     void add_listener(ActiveOutputsListener* listener);
@@ -40,16 +40,15 @@ public:
     void process_active_outputs(std::function<void(std::vector<Output> const& outputs)> const& functor) const;
 
 private:
-    void initial_configuration(std::shared_ptr<mir::graphics::DisplayConfiguration const> const& configuration) override;
+    void initial_configuration(
+        std::shared_ptr<mir::graphics::DisplayConfiguration const> const& configuration) override;
     void configuration_applied(std::shared_ptr<mir::graphics::DisplayConfiguration const> const& config) override;
 
-    void configuration_failed(
-        std::shared_ptr<mir::graphics::DisplayConfiguration const> const&,
-        std::exception const&) override;
+    void configuration_failed(std::shared_ptr<mir::graphics::DisplayConfiguration const> const&,
+                              std::exception const&) override;
 
-    void catastrophic_configuration_error(
-        std::shared_ptr<mir::graphics::DisplayConfiguration const> const&,
-        std::exception const&) override;
+    void catastrophic_configuration_error(std::shared_ptr<mir::graphics::DisplayConfiguration const> const&,
+                                          std::exception const&) override;
 
     void base_configuration_updated(std::shared_ptr<mir::graphics::DisplayConfiguration const> const&) override;
 
@@ -68,4 +67,4 @@ private:
 };
 }
 
-#endif //MIRAL_DISPLAY_CONFIGURATION_OBSERVERS_H
+#endif  // MIRAL_DISPLAY_CONFIGURATION_OBSERVERS_H

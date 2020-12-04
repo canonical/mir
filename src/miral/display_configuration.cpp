@@ -17,12 +17,12 @@
  */
 
 #include "miral/display_configuration.h"
-#include "miral/runner.h"
 #include "miral/command_line_option.h"
+#include "miral/runner.h"
 #include "static_display_config.h"
 
-#include <mir/server.h>
 #include <mir/log.h>
+#include <mir/server.h>
 
 #include <unistd.h>
 
@@ -105,20 +105,17 @@ void miral::DisplayConfiguration::operator()(mir::Server& server) const
     namespace mg = mir::graphics;
 
     server.wrap_display_configuration_policy([this](std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
-        -> std::shared_ptr<mg::DisplayConfigurationPolicy>
-        {
-            return self;
-        });
+                                                 -> std::shared_ptr<mg::DisplayConfigurationPolicy> { return self; });
 }
 
 auto miral::DisplayConfiguration::layout_option() -> miral::CommandLineOption
 {
-    return pre_init(CommandLineOption{
-        [this](std::string const& layout) { select_layout(layout); },
-        "display-layout",
-        "Display configuration layout from `" + self->name + "'\n"
-        "(Found in $XDG_CONFIG_HOME or $HOME/.config, followed by $XDG_CONFIG_DIRS)",
-        "default"});
+    return pre_init(CommandLineOption{[this](std::string const& layout) { select_layout(layout); },
+                                      "display-layout",
+                                      "Display configuration layout from `" + self->name +
+                                          "'\n"
+                                          "(Found in $XDG_CONFIG_HOME or $HOME/.config, followed by $XDG_CONFIG_DIRS)",
+                                      "default"});
 }
 
 auto miral::DisplayConfiguration::list_layouts() -> std::vector<std::string>
@@ -130,4 +127,5 @@ miral::DisplayConfiguration::~DisplayConfiguration() = default;
 
 miral::DisplayConfiguration::DisplayConfiguration(miral::DisplayConfiguration const&) = default;
 
-auto miral::DisplayConfiguration::operator=(miral::DisplayConfiguration const&) -> miral::DisplayConfiguration& = default;
+auto miral::DisplayConfiguration::operator=(miral::DisplayConfiguration const&)
+    -> miral::DisplayConfiguration& = default;

@@ -28,7 +28,10 @@
 
 namespace mir
 {
-namespace scene { class Surface; }
+namespace scene
+{
+class Surface;
+}
 }
 
 namespace miral
@@ -41,9 +44,9 @@ public:
     Window(Application const& application, std::shared_ptr<mir::scene::Surface> const& surface);
     ~Window();
 
-    auto top_left()     const -> mir::geometry::Point;
-    auto size()         const -> mir::geometry::Size;
-    auto application()  const -> Application;
+    auto top_left() const -> mir::geometry::Point;
+    auto size() const -> mir::geometry::Size;
+    auto application() const -> Application;
 
     // Indicates that the Window isn't null
     operator bool() const;
@@ -58,7 +61,7 @@ public:
 
 private:
     struct Self;
-    std::shared_ptr <Self> self;
+    std::shared_ptr<Self> self;
 
     friend bool operator==(Window const& lhs, Window const& rhs);
     friend bool operator==(std::shared_ptr<mir::scene::Surface> const& lhs, Window const& rhs);
@@ -71,12 +74,30 @@ bool operator==(std::shared_ptr<mir::scene::Surface> const& lhs, Window const& r
 bool operator==(Window const& lhs, std::shared_ptr<mir::scene::Surface> const& rhs);
 bool operator<(Window const& lhs, Window const& rhs);
 
-inline bool operator!=(Window const& lhs, Window const& rhs) { return !(lhs == rhs); }
-inline bool operator!=(std::shared_ptr<mir::scene::Surface> const& lhs, Window const& rhs) { return !(lhs == rhs); }
-inline bool operator!=(Window const& lhs, std::shared_ptr<mir::scene::Surface> const& rhs) { return !(lhs == rhs); }
-inline bool operator>(Window const& lhs, Window const& rhs) { return rhs < lhs; }
-inline bool operator<=(Window const& lhs, Window const& rhs) { return !(lhs > rhs); }
-inline bool operator>=(Window const& lhs, Window const& rhs) { return !(lhs < rhs); }
+inline bool operator!=(Window const& lhs, Window const& rhs)
+{
+    return !(lhs == rhs);
+}
+inline bool operator!=(std::shared_ptr<mir::scene::Surface> const& lhs, Window const& rhs)
+{
+    return !(lhs == rhs);
+}
+inline bool operator!=(Window const& lhs, std::shared_ptr<mir::scene::Surface> const& rhs)
+{
+    return !(lhs == rhs);
+}
+inline bool operator>(Window const& lhs, Window const& rhs)
+{
+    return rhs < lhs;
+}
+inline bool operator<=(Window const& lhs, Window const& rhs)
+{
+    return !(lhs > rhs);
+}
+inline bool operator>=(Window const& lhs, Window const& rhs)
+{
+    return !(lhs < rhs);
+}
 }
 
-#endif //MIRAL_WINDOW_H
+#endif  // MIRAL_WINDOW_H

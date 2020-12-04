@@ -29,7 +29,10 @@
 
 namespace mir
 {
-namespace scene { class Surface; }
+namespace scene
+{
+class Surface;
+}
 }
 
 namespace miral
@@ -64,11 +67,11 @@ public:
     WindowManagerTools& operator=(WindowManagerTools const&);
     ~WindowManagerTools();
 
-/** @name Query & Update Model
- *  These functions assume that the BasicWindowManager data structures can be accessed freely.
- *  I.e. they should only be used by a thread that has called the WindowManagementPolicy methods
- *  (where any necessary locks are held) or via a invoke_under_lock() callback.
- *  @{ */
+    /** @name Query & Update Model
+     *  These functions assume that the BasicWindowManager data structures can be accessed freely.
+     *  I.e. they should only be used by a thread that has called the WindowManagementPolicy methods
+     *  (where any necessary locks are held) or via a invoke_under_lock() callback.
+     *  @{ */
 
     /** count the applications
      *
@@ -87,8 +90,7 @@ public:
      * @param predicate the predicate
      * @return          the application
      */
-    auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate)
-    -> Application;
+    auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate) -> Application;
 
     /** retrieve metadata for an application
      *
@@ -217,9 +219,8 @@ public:
      * @param from_workspace the workspace to move the windows from;
      * @param to_workspace the workspace to move the windows to;
      */
-    void move_workspace_content_to_workspace(
-        std::shared_ptr<Workspace> const& to_workspace,
-        std::shared_ptr<Workspace> const& from_workspace);
+    void move_workspace_content_to_workspace(std::shared_ptr<Workspace> const& to_workspace,
+                                             std::shared_ptr<Workspace> const& from_workspace);
 
     /**
      * invoke callback with each workspace containing window
@@ -228,8 +229,7 @@ public:
      * @param callback
      */
     void for_each_workspace_containing(
-        Window const& window,
-        std::function<void(std::shared_ptr<Workspace> const& workspace)> const& callback);
+        Window const& window, std::function<void(std::shared_ptr<Workspace> const& workspace)> const& callback);
 
     /**
      * invoke callback with each window contained in workspace
@@ -237,11 +237,10 @@ public:
      * @param workspace
      * @param callback
      */
-    void for_each_window_in_workspace(
-        std::shared_ptr<Workspace> const& workspace,
-        std::function<void(Window const& window)> const& callback);
+    void for_each_window_in_workspace(std::shared_ptr<Workspace> const& workspace,
+                                      std::function<void(Window const& window)> const& callback);
 
-/** @} */
+    /** @} */
 
     /** Multi-thread support
      *  Allows threads that don't hold a lock on the model to acquire one and call the "Update Model"
@@ -256,4 +255,4 @@ private:
 };
 }
 
-#endif //MIRAL_WINDOW_MANAGER_TOOLS_H
+#endif  // MIRAL_WINDOW_MANAGER_TOOLS_H

@@ -23,7 +23,14 @@
 #include <memory>
 #include <string>
 
-namespace mir { class Server; namespace scene { class Session; }}
+namespace mir
+{
+class Server;
+namespace scene
+{
+class Session;
+}
+}
 
 struct wl_display;
 
@@ -43,9 +50,10 @@ public:
         std::function<void(struct ::wl_display* display)> client_code,
         std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification);
 
-    template <typename ClientObject>
+    template<typename ClientObject>
     explicit StartupInternalClient(ClientObject const& client_object) :
-        StartupInternalClient(client_object, client_object) {}
+        StartupInternalClient(client_object, client_object)
+    {}
 
     ~StartupInternalClient();
 
@@ -68,12 +76,11 @@ public:
         std::function<void(struct ::wl_display* display)> const& wayland_fd,
         std::function<void(std::weak_ptr<mir::scene::Session> const session)> const& connect_notification) const;
 
-    template <typename ClientObject>
+    template<typename ClientObject>
     void launch(ClientObject& client_object) const
     {
-        launch(
-            [&](struct ::wl_display* display) { client_object(display); },
-            [&](std::weak_ptr<mir::scene::Session> const session) { client_object(session); });
+        launch([&](struct ::wl_display* display) { client_object(display); },
+               [&](std::weak_ptr<mir::scene::Session> const session) { client_object(session); });
     }
 
 private:
@@ -82,4 +89,4 @@ private:
 };
 }
 
-#endif //MIRAL_INTERNAL_CLIENT_H
+#endif  // MIRAL_INTERNAL_CLIENT_H

@@ -32,7 +32,7 @@ struct miral::WindowInfo::Self
     MirWindowState state;
     mir::geometry::Rectangle restore_rect;
     Window parent;
-    std::vector <Window> children;
+    std::vector<Window> children;
     mir::geometry::Width min_width;
     mir::geometry::Height min_height;
     mir::geometry::Width max_width;

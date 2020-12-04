@@ -44,36 +44,23 @@ namespace
 class XCursorImage : public mg::CursorImage
 {
 public:
-    XCursorImage(_XcursorImage *image, std::shared_ptr<_XcursorImages> const& save_resource)
-        : image(image),
-          save_resource(save_resource)
-    {
-    }
+    XCursorImage(_XcursorImage* image, std::shared_ptr<_XcursorImages> const& save_resource) :
+        image(image),
+        save_resource(save_resource)
+    {}
 
-    ~XCursorImage()
-    {
-    }
+    ~XCursorImage() {}
 
-    void const* as_argb_8888() const override
-    {
-        return image->pixels;
-    }
-    geom::Size size() const override
-    {
-        return {image->width, image->height};
-    }
-    geom::Displacement hotspot() const override
-    {
-        return {image->xhot, image->yhot};
-    }
+    void const* as_argb_8888() const override { return image->pixels; }
+    geom::Size size() const override { return {image->width, image->height}; }
+    geom::Displacement hotspot() const override { return {image->xhot, image->yhot}; }
 
 private:
-    _XcursorImage *image;
+    _XcursorImage* image;
     std::shared_ptr<_XcursorImages> const save_resource;
 };
 
-std::string const
-xcursor_name_for_mir_cursor(std::string const& mir_cursor_name)
+std::string const xcursor_name_for_mir_cursor(std::string const& mir_cursor_name)
 {
     if (mir_cursor_name == mir_default_cursor_name)
     {
@@ -89,7 +76,7 @@ xcursor_name_for_mir_cursor(std::string const& mir_cursor_name)
     }
     else if (mir_cursor_name == mir_caret_cursor_name)
     {
-        return "xterm"; // Yep
+        return "xterm";  // Yep
     }
     else if (mir_cursor_name == mir_pointing_hand_cursor_name)
     {
@@ -153,7 +140,7 @@ miral::XCursorLoader::XCursorLoader(std::string const& theme)
 }
 
 // Each XcursorImages represents images for the different sizes of a given symbolic cursor.
-void miral::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
+void miral::XCursorLoader::load_appropriately_sized_image(_XcursorImages* images)
 {
     // We would rather take this lock in load_cursor_theme but the Xcursor lib style
     // makes it difficult to use our standard 'pass the lg around to _locked members' pattern
@@ -162,41 +149,41 @@ void miral::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images
     // We have to save all the images as XCursor expects us to free them.
     // This contains the actual image data though, so we need to ensure they stay alive
     // with the lifetime of the mg::CursorImage instance which refers to them.
-    auto saved_xcursor_library_resource = std::shared_ptr<_XcursorImages>(images, [](_XcursorImages *images)
-        {
-            XcursorImagesDestroy(images);
-        });
+    auto saved_xcursor_library_resource =
+        std::shared_ptr<_XcursorImages>(images, [](_XcursorImages* images) { XcursorImagesDestroy(images); });
 
     for (int i = 0; i < images->nimage; i++)
     {
-        _XcursorImage *candidate = images->images[i];
+        _XcursorImage* candidate = images->images[i];
         if (candidate->width == mi::default_cursor_size.width.as_uint32_t() &&
             candidate->height == mi::default_cursor_size.height.as_uint32_t())
         {
-            loaded_images[std::string(images->name)] = std::make_shared<XCursorImage>(candidate, saved_xcursor_library_resource);
+            loaded_images[std::string(images->name)] =
+                std::make_shared<XCursorImage>(candidate, saved_xcursor_library_resource);
             return;
         }
     }
 
-    loaded_images[std::string(images->name)] = std::make_shared<XCursorImage>(images->images[0], saved_xcursor_library_resource);
+    loaded_images[std::string(images->name)] =
+        std::make_shared<XCursorImage>(images->images[0], saved_xcursor_library_resource);
 }
 
 void miral::XCursorLoader::load_cursor_theme(std::string const& theme_name)
 {
-    // Cursors are named by their square dimension...called the nominal size in XCursor terminology, so we just look up by width.
-    // Later we verify the actual size.
-    xcursor_load_theme(theme_name.c_str(), mi::default_cursor_size.width.as_uint32_t(),
-        [](XcursorImages* images, void *this_ptr)  -> void
-        {
+    // Cursors are named by their square dimension...called the nominal size in XCursor terminology, so we just look up
+    // by width. Later we verify the actual size.
+    xcursor_load_theme(
+        theme_name.c_str(),
+        mi::default_cursor_size.width.as_uint32_t(),
+        [](XcursorImages* images, void* this_ptr) -> void {
             // Can't use lambda capture as this lambda is thunked to a C function ptr
             auto p = static_cast<miral::XCursorLoader*>(this_ptr);
             p->load_appropriately_sized_image(images);
-        }, this);
+        },
+        this);
 }
 
-std::shared_ptr<mg::CursorImage> miral::XCursorLoader::image(
-    std::string const& cursor_name,
-    geom::Size const& /*size*/)
+std::shared_ptr<mg::CursorImage> miral::XCursorLoader::image(std::string const& cursor_name, geom::Size const& /*size*/)
 {
     auto xcursor_name = xcursor_name_for_mir_cursor(cursor_name);
 

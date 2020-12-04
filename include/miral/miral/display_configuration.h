@@ -23,7 +23,10 @@
 #include <string>
 #include <vector>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
@@ -61,4 +64,4 @@ private:
 };
 }
 
-#endif //MIRAL_DISPLAY_CONFIGURATION_H
+#endif  // MIRAL_DISPLAY_CONFIGURATION_H

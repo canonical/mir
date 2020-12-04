@@ -22,8 +22,7 @@
 
 miral::Output::Output(const mir::graphics::DisplayConfigurationOutput& output) :
     self{std::make_shared<mir::graphics::DisplayConfigurationOutput>(output)}
-{
-}
+{}
 
 miral::Output::Output(Output const&) = default;
 miral::Output& miral::Output::operator=(Output const&) = default;
@@ -115,14 +114,11 @@ auto miral::equivalent_display_area(Output const& lhs, Output const& rhs) -> boo
     // Eliminate the cases where one or both output isn't available
     auto const lhs_bad = !lhs.valid() || !lhs.used() || !lhs.connected() || lhs.power_mode() != mir_power_mode_on;
     auto const rhs_bad = !rhs.valid() || !rhs.used() || !rhs.connected() || rhs.power_mode() != mir_power_mode_on;
-    if (lhs_bad || rhs_bad) return lhs_bad == rhs_bad;
+    if (lhs_bad || rhs_bad)
+        return lhs_bad == rhs_bad;
 
-    return lhs.extents() == rhs.extents() &&
-           lhs.form_factor() == rhs.form_factor() &&
-        lhs.orientation() == rhs.orientation() &&
-           lhs.pixel_format() == rhs.pixel_format() &&
-        lhs.physical_size_mm() == rhs.physical_size_mm() &&
-           lhs.scale() == rhs.scale() &&
-           lhs.logical_group_id() == rhs.logical_group_id() &&
-           lhs.type() == rhs.type();
+    return lhs.extents() == rhs.extents() && lhs.form_factor() == rhs.form_factor() &&
+           lhs.orientation() == rhs.orientation() && lhs.pixel_format() == rhs.pixel_format() &&
+           lhs.physical_size_mm() == rhs.physical_size_mm() && lhs.scale() == rhs.scale() &&
+           lhs.logical_group_id() == rhs.logical_group_id() && lhs.type() == rhs.type();
 }

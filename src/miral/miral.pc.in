@@ -1,10 +1,11 @@
-prefix=@CMAKE_INSTALL_PREFIX@
-libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
-includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@/miral
+prefix = @CMAKE_INSTALL_PREFIX
+    @libdir = ${prefix} / @CMAKE_INSTALL_LIBDIR @includedir = ${prefix} / @CMAKE_INSTALL_INCLUDEDIR @ /
+                                                                  miral
 
-Name: miral
-Description: Mir Abstraction Layer library
-Version: @MIRAL_VERSION@
-Requires: mircommon
-Libs: -L${libdir} -lmiral
-Cflags: -I${includedir}
+                                                                      Name :
+    miral Description :
+    Mir Abstraction Layer library Version :
+    @MIRAL_VERSION @Requires : mircommon Libs : -L${libdir} - lmiral Cflags : -I$
+{
+    includedir
+}

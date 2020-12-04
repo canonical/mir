@@ -20,17 +20,16 @@
 #include "join_client_threads.h"
 #include "launch_app.h"
 
-#include <mir/server.h>
 #include <mir/main_loop.h>
-#include <mir/report_exception.h>
-#include <mir/options/option.h>
 #include <mir/options/configuration.h>
+#include <mir/options/option.h>
+#include <mir/report_exception.h>
+#include <mir/server.h>
 
 #include <algorithm>
 #include <chrono>
 #include <mutex>
 #include <thread>
-
 
 namespace mo = mir::options;
 
@@ -40,17 +39,21 @@ inline auto filename(std::string path) -> std::string
 {
     // Remove the annoying ".bin" extension on Mir development binaries
     auto const bin = path.rfind(".bin");
-    if (bin+4 == path.size())
+    if (bin + 4 == path.size())
         path.erase(bin);
 
-    return path.substr(path.rfind('/')+1);
+    return path.substr(path.rfind('/') + 1);
 }
 }
 
 struct miral::MirRunner::Self
 {
     Self(int argc, char const* argv[], std::string const& config_file) :
-        argc(argc), argv(argv), config_file{config_file}, display_config_file{filename(argv[0])+ ".display"} {}
+        argc(argc),
+        argv(argv),
+        config_file{config_file},
+        display_config_file{filename(argv[0]) + ".display"}
+    {}
 
     auto run_with(std::initializer_list<std::function<void(::mir::Server&)>> options) -> int;
 
@@ -60,21 +63,19 @@ struct miral::MirRunner::Self
     std::string const display_config_file;
 
     std::mutex mutex;
-    std::function<void()> start_callback{[]{}};
-    std::function<void()> stop_callback{[this]{ join_client_threads(weak_server.lock().get()); }};
-    std::function<void()> exception_handler{static_cast<void(*)()>(mir::report_exception)};
+    std::function<void()> start_callback{[] {}};
+    std::function<void()> stop_callback{[this] { join_client_threads(weak_server.lock().get()); }};
+    std::function<void()> exception_handler{static_cast<void (*)()>(mir::report_exception)};
     std::weak_ptr<mir::Server> weak_server;
 };
 
 miral::MirRunner::MirRunner(int argc, char const* argv[]) :
     self{std::make_unique<Self>(argc, argv, filename(argv[0]) + ".config")}
-{
-}
+{}
 
 miral::MirRunner::MirRunner(int argc, char const* argv[], char const* config_file) :
     self{std::make_unique<Self>(argc, argv, config_file)}
-{
-}
+{}
 
 miral::MirRunner::~MirRunner() = default;
 
@@ -96,27 +97,28 @@ void apply_env_hacks(::mir::Server& server)
         {
             auto const value = options->get<std::string>(env_hacks);
 
-            for (auto i = begin(value); i != end(value); )
+            for (auto i = begin(value); i != end(value);)
             {
                 auto const j = find(i, end(value), ':');
 
                 auto equals = find(i, j, '=');
 
                 auto const key = std::string(i, equals);
-                if (j != equals) ++equals;
+                if (j != equals)
+                    ++equals;
                 auto const val = std::string(equals, j);
 
                 setenv(key.c_str(), val.c_str(), true);
 
-                if ((i = j) != end(value)) ++i;
+                if ((i = j) != end(value))
+                    ++i;
             }
         }
     }
 }
 }  // namespace
 
-auto miral::MirRunner::Self::run_with(std::initializer_list<std::function<void(::mir::Server&)>> options)
--> int
+auto miral::MirRunner::Self::run_with(std::initializer_list<std::function<void(::mir::Server&)>> options) -> int
 try
 {
     auto const server = std::make_shared<mir::Server>();
@@ -142,8 +144,7 @@ try
         weak_server = server;
     }
 
-    server->add_init_callback([server, this]
-    {
+    server->add_init_callback([server, this] {
         // By enqueuing the notification code in the main loop, we are
         // ensuring that the server has really and fully started.
         auto const main_loop = server->the_main_loop();
@@ -165,11 +166,10 @@ void miral::MirRunner::add_start_callback(std::function<void()> const& start_cal
     std::lock_guard<decltype(self->mutex)> lock{self->mutex};
     auto const& existing = self->start_callback;
 
-    auto const updated = [=]
-        {
-            existing();
-            start_callback();
-        };
+    auto const updated = [=] {
+        existing();
+        start_callback();
+    };
 
     self->start_callback = updated;
 }
@@ -179,11 +179,10 @@ void miral::MirRunner::add_stop_callback(std::function<void()> const& stop_callb
     std::lock_guard<decltype(self->mutex)> lock{self->mutex};
     auto const& existing = self->stop_callback;
 
-    auto const updated = [=]
-        {
-            stop_callback();
-            existing();
-        };
+    auto const updated = [=] {
+        stop_callback();
+        existing();
+    };
 
     self->stop_callback = updated;
 }
@@ -194,8 +193,7 @@ void miral::MirRunner::set_exception_handler(std::function<void()> const& handle
     self->exception_handler = handler;
 }
 
-auto miral::MirRunner::run_with(std::initializer_list<std::function<void(::mir::Server&)>> options)
--> int
+auto miral::MirRunner::run_with(std::initializer_list<std::function<void(::mir::Server&)>> options) -> int
 {
     return self->run_with(options);
 }

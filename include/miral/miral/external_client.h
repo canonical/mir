@@ -25,7 +25,10 @@
 #include <string>
 #include <vector>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
@@ -59,4 +62,4 @@ private:
 };
 }
 
-#endif //MIRAL_EXTERNAL_CLIENT_H
+#endif  // MIRAL_EXTERNAL_CLIENT_H

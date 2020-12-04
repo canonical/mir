@@ -20,10 +20,7 @@
 
 #include <mir/server.h>
 
-miral::AddInitCallback::AddInitCallback(Callback const& callback) :
-    callback{callback}
-{
-}
+miral::AddInitCallback::AddInitCallback(Callback const& callback) : callback{callback} {}
 
 miral::AddInitCallback::~AddInitCallback() = default;
 

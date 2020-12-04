@@ -18,8 +18,8 @@
 
 #include "coordinate_translator.h"
 
-#include <mir/scene/surface.h>
 #include <mir/geometry/displacement.h>
+#include <mir/scene/surface.h>
 
 #include <boost/exception/all.hpp>
 
@@ -34,8 +34,9 @@ void miral::CoordinateTranslator::disable_debug_api()
     enabled = false;
 }
 
-auto miral::CoordinateTranslator::surface_to_screen(std::shared_ptr<mir::frontend::Surface> surface, int32_t x, int32_t y)
--> mir::geometry::Point
+auto miral::CoordinateTranslator::surface_to_screen(std::shared_ptr<mir::frontend::Surface> surface,
+                                                    int32_t x,
+                                                    int32_t y) -> mir::geometry::Point
 {
     // On older versions of Mir this disconnects the client instead of just failing the operation. (LP:1641166)
     if (!enabled)

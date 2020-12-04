@@ -19,9 +19,9 @@
 #include "miral/keymap.h"
 
 #include <mir/fd.h>
-#include <mir/input/input_device_observer.h>
-#include <mir/input/input_device_hub.h>
 #include <mir/input/device.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_observer.h>
 #include <mir/options/option.h>
 #include <mir/server.h>
 #include <mir/udev/wrapper.h>
@@ -51,7 +51,7 @@ std::string keymap_default()
 
     for (auto& device : input_enumerator)
     {
-        if (auto const layout  = device.property("XKBLAYOUT"))
+        if (auto const layout = device.property("XKBLAYOUT"))
         {
             auto const options = device.property("XKBOPTIONS");
             auto const variant = device.property("XKBVARIANT");
@@ -86,20 +86,16 @@ char const* const keymap_option = "keymap";
 
 struct miral::Keymap::Self : mir::input::InputDeviceObserver
 {
-    Self(std::string const& keymap) : layout{}, variant{}
-    {
-        set_keymap(keymap);
-    }
+    Self(std::string const& keymap) : layout{}, variant{} { set_keymap(keymap); }
 
     void set_keymap(std::string const& keymap)
     {
         std::lock_guard<decltype(mutex)> lock{mutex};
-        auto get_next_token = [km = keymap]() mutable
-        {
+        auto get_next_token = [km = keymap]() mutable {
             auto const i = km.find('+');
-            auto ret = km.substr(0,i);
+            auto ret = km.substr(0, i);
             if (i != std::string::npos)
-                km = km.substr(i+1, std::string::npos);
+                km = km.substr(i + 1, std::string::npos);
             else
                 km = "";
             return ret;
@@ -169,9 +165,7 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
             keyboards.erase(std::find(begin(keyboards), end(keyboards), device));
     }
 
-    void changes_complete() override
-    {
-    }
+    void changes_complete() override {}
 
     std::mutex mutable mutex;
     std::string layout;
@@ -180,15 +174,9 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     std::vector<std::shared_ptr<mir::input::Device>> keyboards;
 };
 
-miral::Keymap::Keymap() :
-    self{std::make_shared<Self>(std::string{})}
-{
-}
+miral::Keymap::Keymap() : self{std::make_shared<Self>(std::string{})} {}
 
-miral::Keymap::Keymap(std::string const& keymap) :
-    self{std::make_shared<Self>(keymap)}
-{
-}
+miral::Keymap::Keymap(std::string const& keymap) : self{std::make_shared<Self>(keymap)} {}
 
 miral::Keymap::~Keymap() = default;
 
@@ -199,15 +187,17 @@ auto miral::Keymap::operator=(Keymap const& rhs) -> Keymap& = default;
 void miral::Keymap::operator()(mir::Server& server) const
 {
     if (self->layout.empty())
-        server.add_configuration_option(keymap_option, "keymap <layout>[+<variant>[+<options>]], e,g, \"gb\" or \"cz+qwerty\" or \"de++compose:caps\"", keymap_default());
+        server.add_configuration_option(
+            keymap_option,
+            "keymap <layout>[+<variant>[+<options>]], e,g, \"gb\" or \"cz+qwerty\" or \"de++compose:caps\"",
+            keymap_default());
 
-    server.add_init_callback([this, &server]
-        {
-            if (self->layout.empty())
-                self->set_keymap(server.get_options()->get<std::string>(keymap_option));
+    server.add_init_callback([this, &server] {
+        if (self->layout.empty())
+            self->set_keymap(server.get_options()->get<std::string>(keymap_option));
 
-            server.the_input_device_hub()->add_observer(self);
-        });
+        server.the_input_device_hub()->add_observer(self);
+    });
 }
 
 void miral::Keymap::set_keymap(std::string const& keymap)

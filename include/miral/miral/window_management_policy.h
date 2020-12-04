@@ -63,13 +63,12 @@ public:
      * @param requested_specification the requested specification (updated with default placement)
      * @return                        the customized specification
      */
-    virtual auto place_new_window(
-        ApplicationInfo const& app_info,
-        WindowSpecification const& requested_specification) -> WindowSpecification = 0;
+    virtual auto place_new_window(ApplicationInfo const& app_info, WindowSpecification const& requested_specification)
+        -> WindowSpecification = 0;
 
-/** @name handle events originating from the client
- * The policy is expected to update the model as appropriate
- *  @{ */
+    /** @name handle events originating from the client
+     * The policy is expected to update the model as appropriate
+     *  @{ */
     /** notification that the first buffer has been posted
      *
      * @param window_info   the window
@@ -101,15 +100,14 @@ public:
      *
      * @return the confirmed placement of the window
      */
-    virtual auto confirm_placement_on_display(
-        WindowInfo const& window_info,
-        MirWindowState new_state,
-        Rectangle const& new_placement) -> Rectangle = 0;
-/** @} */
+    virtual auto confirm_placement_on_display(WindowInfo const& window_info,
+                                              MirWindowState new_state,
+                                              Rectangle const& new_placement) -> Rectangle = 0;
+    /** @} */
 
-/** @name handle events originating from user
- * The policy is expected to interpret (and optionally consume) the event
- *  @{ */
+    /** @name handle events originating from user
+     * The policy is expected to interpret (and optionally consume) the event
+     *  @{ */
     /** keyboard event handler
      *
      * @param event the event
@@ -130,12 +128,12 @@ public:
      * @return      whether the policy has consumed the event
      */
     virtual bool handle_pointer_event(MirPointerEvent const* event) = 0;
-/** @} */
+    /** @} */
 
-/** @name notification of WM events that the policy may need to track.
- * \note if the policy updates a Window object directly (as opposed to using tools)
- * no notification is generated.
- *  @{ */
+    /** @name notification of WM events that the policy may need to track.
+     * \note if the policy updates a Window object directly (as opposed to using tools)
+     * no notification is generated.
+     *  @{ */
     /** Notification that a new application has connected
      *
      * @param application the application
@@ -201,10 +199,10 @@ public:
      * \note The relative Z-order of these windows will be maintained, they will be raised en bloc.
      */
     virtual void advise_raise(std::vector<Window> const& windows);
-/** @} */
+    /** @} */
 
-/** @name notification of WM events that the policy may need to track.
- *  @{ */
+    /** @name notification of WM events that the policy may need to track.
+     *  @{ */
 
     /** Notification that windows are being added to a workspace.
      *  These windows are ordered with parents before children,
@@ -213,9 +211,8 @@ public:
      * @param workspace   the workspace
      * @param windows   the windows
      */
-    virtual void advise_adding_to_workspace(
-        std::shared_ptr<Workspace> const& workspace,
-        std::vector<Window> const& windows);
+    virtual void advise_adding_to_workspace(std::shared_ptr<Workspace> const& workspace,
+                                            std::vector<Window> const& windows);
 
     /** Notification that windows are being removed from a workspace.
      *  These windows are ordered with parents before children,
@@ -224,14 +221,13 @@ public:
      * @param workspace   the workspace
      * @param windows   the windows
      */
-    virtual void advise_removing_from_workspace(
-        std::shared_ptr<Workspace> const& workspace,
-        std::vector<Window> const& windows);
-/** @} */
+    virtual void advise_removing_from_workspace(std::shared_ptr<Workspace> const& workspace,
+                                                std::vector<Window> const& windows);
+    /** @} */
 
-/** @name handle requests originating from the client
- * The policy is expected to update the model as appropriate
- *  @{ */
+    /** @name handle requests originating from the client
+     * The policy is expected to update the model as appropriate
+     *  @{ */
     /** request from client to initiate drag and drop
      * \note the request has already been validated against the requesting event
      *
@@ -254,16 +250,18 @@ public:
      * @param input_event   the requesting event
      * @param edge          the edge(s) being dragged
      */
-    virtual void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) = 0;
-/** @} */
+    virtual void handle_request_resize(WindowInfo& window_info,
+                                       MirInputEvent const* input_event,
+                                       MirResizeEdge edge) = 0;
+    /** @} */
 
-/** @name notification of changes to the (connected, active) outputs.
- *  @{ */
+    /** @name notification of changes to the (connected, active) outputs.
+     *  @{ */
     virtual void advise_output_create(Output const& output);
     virtual void advise_output_update(Output const& updated, Output const& original);
     virtual void advise_output_delete(Output const& output);
 
-/** @} */
+    /** @} */
 
     /** Confirm (and optionally adjust) the motion of a child window when the parent is moved.
      *
@@ -275,11 +273,11 @@ public:
     virtual auto confirm_inherited_move(WindowInfo const& window_info, Displacement movement) -> Rectangle = 0;
 
     /** @name notification of changes to the current application zones
-    * An application zone is the area a maximized application will fill.
-    * There is often (but not necessarily) one zone per output.
-    * The areas normal applications windows should avoid (such as the areas covered by panels)
-    * will not be part of an application zone
-    *  @{ */
+     * An application zone is the area a maximized application will fill.
+     * There is often (but not necessarily) one zone per output.
+     * The areas normal applications windows should avoid (such as the areas covered by panels)
+     * will not be part of an application zone
+     *  @{ */
     virtual void advise_application_zone_create(Zone const& application_zone);
     virtual void advise_application_zone_update(Zone const& updated, Zone const& original);
     virtual void advise_application_zone_delete(Zone const& application_zone);
@@ -294,4 +292,4 @@ public:
 class WindowManagerTools;
 }
 
-#endif //MIRAL_WINDOW_MANAGEMENT_POLICY_H
+#endif  // MIRAL_WINDOW_MANAGEMENT_POLICY_H

@@ -25,15 +25,12 @@
 namespace miral
 {
 /// Widely accepted defaults for window management
-class CanonicalWindowManagerPolicy  : public WindowManagementPolicy
+class CanonicalWindowManagerPolicy : public WindowManagementPolicy
 {
 public:
-
     explicit CanonicalWindowManagerPolicy(WindowManagerTools const& tools);
 
-    virtual auto place_new_window(
-        ApplicationInfo const& app_info,
-        WindowSpecification const& request_parameters)
+    virtual auto place_new_window(ApplicationInfo const& app_info, WindowSpecification const& request_parameters)
         -> WindowSpecification override;
 
     /// Tries to focus on the newly ready window
@@ -55,10 +52,9 @@ public:
     /// Move the child window with the parent
     auto confirm_inherited_move(WindowInfo const& window_info, Displacement movement) -> Rectangle override;
 
-    auto confirm_placement_on_display(
-        WindowInfo const& window_info,
-        MirWindowState new_state,
-        Rectangle const& new_placement) -> Rectangle override;
+    auto confirm_placement_on_display(WindowInfo const& window_info,
+                                      MirWindowState new_state,
+                                      Rectangle const& new_placement) -> Rectangle override;
 
 protected:
     WindowManagerTools tools;

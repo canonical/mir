@@ -33,10 +33,7 @@ struct miral::ActiveOutputsMonitor::Self : DisplayConfigurationListeners
 {
 };
 
-miral::ActiveOutputsMonitor::ActiveOutputsMonitor() :
-    self{std::make_shared<Self>()}
-{
-}
+miral::ActiveOutputsMonitor::ActiveOutputsMonitor() : self{std::make_shared<Self>()} {}
 
 miral::ActiveOutputsMonitor::~ActiveOutputsMonitor() = default;
 miral::ActiveOutputsMonitor::ActiveOutputsMonitor(ActiveOutputsMonitor const&) = default;
@@ -54,8 +51,8 @@ void miral::ActiveOutputsMonitor::delete_listener(ActiveOutputsListener* listene
 
 void miral::ActiveOutputsMonitor::operator()(mir::Server& server)
 {
-    server.add_pre_init_callback([this, &server]
-        { server.the_display_configuration_observer_registrar()->register_interest(self); });
+    server.add_pre_init_callback(
+        [this, &server] { server.the_display_configuration_observer_registrar()->register_interest(self); });
 }
 
 void miral::ActiveOutputsMonitor::process_outputs(

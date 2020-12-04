@@ -41,4 +41,4 @@ private:
 };
 }
 
-#endif //MIRAL_COORDINATE_TRANSLATOR_H
+#endif  // MIRAL_COORDINATE_TRANSLATOR_H

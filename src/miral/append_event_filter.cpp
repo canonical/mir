@@ -18,20 +18,16 @@
 
 #include "miral/append_event_filter.h"
 
-#include <mir/input/event_filter.h>
 #include <mir/input/composite_event_filter.h>
+#include <mir/input/event_filter.h>
 #include <mir/server.h>
 
 class miral::AppendEventFilter::Filter : public mir::input::EventFilter
 {
 public:
-    Filter(std::function<int(MirEvent const* event)> const& filter) :
-        filter{filter} {}
+    Filter(std::function<int(MirEvent const* event)> const& filter) : filter{filter} {}
 
-    bool handle(MirEvent const& event) override
-    {
-        return filter(&event);
-    }
+    bool handle(MirEvent const& event) override { return filter(&event); }
 
 private:
     std::function<int(MirEvent const* event)> const filter;
@@ -39,8 +35,7 @@ private:
 
 miral::AppendEventFilter::AppendEventFilter(std::function<int(MirEvent const* event)> const& filter) :
     filter{std::make_shared<Filter>(filter)}
-{
-}
+{}
 
 void miral::AppendEventFilter::operator()(mir::Server& server)
 {

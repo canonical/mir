@@ -23,8 +23,17 @@
 #include <functional>
 #include <memory>
 
-namespace mir { class Server; }
-namespace mir { namespace frontend { class SessionCredentials; } }
+namespace mir
+{
+class Server;
+}
+namespace mir
+{
+namespace frontend
+{
+class SessionCredentials;
+}
+}
 
 namespace miral
 {
@@ -78,13 +87,16 @@ template<typename Policy>
 class SetApplicationAuthorizer : public BasicSetApplicationAuthorizer
 {
 public:
-    template<typename ...Args>
-    explicit SetApplicationAuthorizer(Args const& ...args) :
-        BasicSetApplicationAuthorizer{[&args...]() { return std::make_shared<Policy>(args...); }} {}
+    template<typename... Args>
+    explicit SetApplicationAuthorizer(Args const&... args) :
+        BasicSetApplicationAuthorizer{[&args...]() { return std::make_shared<Policy>(args...); }}
+    {}
 
     auto the_custom_application_authorizer() const -> std::shared_ptr<Policy>
-        { return std::static_pointer_cast<Policy>(the_application_authorizer()); }
+    {
+        return std::static_pointer_cast<Policy>(the_application_authorizer());
+    }
 };
 }
 
-#endif //MIRAL_APPLICATION_AUTHORIZER_H
+#endif  // MIRAL_APPLICATION_AUTHORIZER_H

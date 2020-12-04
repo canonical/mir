@@ -20,10 +20,7 @@
 
 #include <mir/server.h>
 
-miral::SetTerminator::SetTerminator(Terminator const& terminator) :
-    terminator{terminator}
-{
-}
+miral::SetTerminator::SetTerminator(Terminator const& terminator) : terminator{terminator} {}
 
 miral::SetTerminator::~SetTerminator() = default;
 

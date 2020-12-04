@@ -23,7 +23,10 @@
 #include <memory>
 #include <vector>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
@@ -71,4 +74,4 @@ private:
 };
 }
 
-#endif //MIRAL_ACTIVE_OUTPUTS_H
+#endif  // MIRAL_ACTIVE_OUTPUTS_H

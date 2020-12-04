@@ -18,8 +18,8 @@
 
 #include "miral/application_authorizer.h"
 
-#include <mir/frontend/session_credentials.h>
 #include <mir/frontend/session_authorizer.h>
+#include <mir/frontend/session_credentials.h>
 #include <mir/server.h>
 
 namespace mf = mir::frontend;
@@ -28,9 +28,7 @@ namespace
 {
 struct SessionAuthorizerAdapter : mf::SessionAuthorizer
 {
-    SessionAuthorizerAdapter(std::shared_ptr<miral::ApplicationAuthorizer> const& app_auth) :
-        app_auth{app_auth}
-    {}
+    SessionAuthorizerAdapter(std::shared_ptr<miral::ApplicationAuthorizer> const& app_auth) : app_auth{app_auth} {}
 
     virtual bool connection_is_allowed(mf::SessionCredentials const& creds) override
     {
@@ -73,31 +71,26 @@ struct SessionAuthorizerAdapter : mf::SessionAuthorizer
 
 struct miral::BasicSetApplicationAuthorizer::Self
 {
-    Self(std::function<std::shared_ptr<ApplicationAuthorizer>()> const& builder) :
-        builder{builder} {}
+    Self(std::function<std::shared_ptr<ApplicationAuthorizer>()> const& builder) : builder{builder} {}
 
     std::function<std::shared_ptr<ApplicationAuthorizer>()> const builder;
     std::weak_ptr<ApplicationAuthorizer> my_authorizer;
 };
 
-
 miral::BasicSetApplicationAuthorizer::BasicSetApplicationAuthorizer(
     std::function<std::shared_ptr<ApplicationAuthorizer>()> const& builder) :
     self{std::make_shared<Self>(builder)}
-{
-}
+{}
 
 miral::BasicSetApplicationAuthorizer::~BasicSetApplicationAuthorizer() = default;
 
 void miral::BasicSetApplicationAuthorizer::operator()(mir::Server& server)
 {
-    server.override_the_session_authorizer([this]()
-        -> std::shared_ptr<mf::SessionAuthorizer>
-        {
-            auto wrapped = self->builder();
-            self->my_authorizer = wrapped;
-            return std::make_shared<SessionAuthorizerAdapter>(wrapped);
-        });
+    server.override_the_session_authorizer([this]() -> std::shared_ptr<mf::SessionAuthorizer> {
+        auto wrapped = self->builder();
+        self->my_authorizer = wrapped;
+        return std::make_shared<SessionAuthorizerAdapter>(wrapped);
+    });
 }
 
 auto miral::BasicSetApplicationAuthorizer::the_application_authorizer() const -> std::shared_ptr<ApplicationAuthorizer>
@@ -105,8 +98,7 @@ auto miral::BasicSetApplicationAuthorizer::the_application_authorizer() const ->
     return self->my_authorizer.lock();
 }
 
-miral::ApplicationCredentials::ApplicationCredentials(mir::frontend::SessionCredentials const& creds) :
-    creds{creds} {}
+miral::ApplicationCredentials::ApplicationCredentials(mir::frontend::SessionCredentials const& creds) : creds{creds} {}
 
 auto miral::ApplicationCredentials::pid() const -> pid_t
 {

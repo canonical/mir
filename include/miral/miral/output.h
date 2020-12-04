@@ -26,7 +26,13 @@
 
 #include <memory>
 
-namespace mir { namespace graphics { struct DisplayConfigurationOutput; } }
+namespace mir
+{
+namespace graphics
+{
+struct DisplayConfigurationOutput;
+}
+}
 
 namespace miral
 {
@@ -35,8 +41,11 @@ using namespace mir::geometry;
 class Output
 {
 public:
-
-    struct PhysicalSizeMM { int width; int height; };
+    struct PhysicalSizeMM
+    {
+        int width;
+        int height;
+    };
 
     enum class Type
     {
@@ -57,7 +66,7 @@ public:
         edp
     };
 
-    explicit Output(const mir::graphics::DisplayConfigurationOutput &output);
+    explicit Output(const mir::graphics::DisplayConfigurationOutput& output);
     Output(Output const&);
     Output& operator=(Output const&);
     ~Output();
@@ -76,7 +85,7 @@ public:
 
     /// The current output pixel format.
     auto pixel_format() const -> MirPixelFormat;
-    
+
     /// refresh_rate in Hz
     auto refresh_rate() const -> double;
 
@@ -114,9 +123,11 @@ private:
 
 bool operator==(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs);
 inline bool operator!=(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs)
-{ return !(lhs == rhs); }
+{
+    return !(lhs == rhs);
+}
 
 auto equivalent_display_area(Output const& lhs, Output const& rhs) -> bool;
 }
 
-#endif //MIRAL_OUTPUT_H
+#endif  // MIRAL_OUTPUT_H

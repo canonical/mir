@@ -35,10 +35,9 @@ using namespace mir::geometry;
 class Zone
 {
 public:
-
-    Zone(Rectangle const& extents); ///< Create a new zone with the given extents
-    Zone(Zone const& other); ///< Makes a copy of the underlying private data
-    Zone& operator=(Zone const& other); ///< Copies private data by value
+    Zone(Rectangle const& extents);  ///< Create a new zone with the given extents
+    Zone(Zone const& other);  ///< Makes a copy of the underlying private data
+    Zone& operator=(Zone const& other);  ///< Copies private data by value
     ~Zone();
 
     /// Returns false if any properties are different (even if they are the same zone)
@@ -63,4 +62,4 @@ private:
 };
 }
 
-#endif // MIRAL_ZONE_H
+#endif  // MIRAL_ZONE_H

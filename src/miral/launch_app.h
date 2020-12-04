@@ -34,9 +34,9 @@ namespace miral
 using AppEnvironment = std::map<std::string, std::experimental::optional<std::string>>;
 
 auto launch_app_env(std::vector<std::string> const& app,
-    mir::optional_value<std::string> const& wayland_display,
-    mir::optional_value<std::string> const& x11_display,
-    AppEnvironment const& app_env) -> pid_t;
+                    mir::optional_value<std::string> const& wayland_display,
+                    mir::optional_value<std::string> const& x11_display,
+                    AppEnvironment const& app_env) -> pid_t;
 }
 
-#endif //MIRAL_LAUNCH_APP_H
+#endif  // MIRAL_LAUNCH_APP_H

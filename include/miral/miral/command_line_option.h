@@ -26,7 +26,10 @@
 #include <memory>
 #include <string>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
@@ -40,62 +43,51 @@ namespace miral
 class CommandLineOption
 {
 public:
-    CommandLineOption(
-        std::function<void(int value)> callback,
-        std::string const& option,
-        std::string const& description,
-        int default_value);
+    CommandLineOption(std::function<void(int value)> callback,
+                      std::string const& option,
+                      std::string const& description,
+                      int default_value);
 
-    CommandLineOption(
-        std::function<void(double value)> callback,
-        std::string const& option,
-        std::string const& description,
-        double default_value);
+    CommandLineOption(std::function<void(double value)> callback,
+                      std::string const& option,
+                      std::string const& description,
+                      double default_value);
 
-    CommandLineOption(
-        std::function<void(std::string const& value)> callback,
-        std::string const& option,
-        std::string const& description,
-        std::string const& default_value);
+    CommandLineOption(std::function<void(std::string const& value)> callback,
+                      std::string const& option,
+                      std::string const& description,
+                      std::string const& default_value);
 
-    CommandLineOption(
-        std::function<void(std::string const& value)> callback,
-        std::string const& option,
-        std::string const& description,
-        char const* default_value);
+    CommandLineOption(std::function<void(std::string const& value)> callback,
+                      std::string const& option,
+                      std::string const& description,
+                      char const* default_value);
 
-    CommandLineOption(
-        std::function<void(bool value)> callback,
-        std::string const& option,
-        std::string const& description,
-        bool default_value);
+    CommandLineOption(std::function<void(bool value)> callback,
+                      std::string const& option,
+                      std::string const& description,
+                      bool default_value);
 
-    CommandLineOption(
-        std::function<void(mir::optional_value<int> const& value)> callback,
-        std::string const& option,
-        std::string const& description);
+    CommandLineOption(std::function<void(mir::optional_value<int> const& value)> callback,
+                      std::string const& option,
+                      std::string const& description);
 
-    CommandLineOption(
-        std::function<void(mir::optional_value<std::string> const& value)> callback,
-        std::string const& option,
-        std::string const& description);
+    CommandLineOption(std::function<void(mir::optional_value<std::string> const& value)> callback,
+                      std::string const& option,
+                      std::string const& description);
 
-    CommandLineOption(
-        std::function<void(mir::optional_value<bool> const& value)> callback,
-        std::string const& option,
-        std::string const& description);
+    CommandLineOption(std::function<void(mir::optional_value<bool> const& value)> callback,
+                      std::string const& option,
+                      std::string const& description);
 
-    CommandLineOption(
-        std::function<void(bool is_set)> callback,
-        std::string const& option,
-        std::string const& description);
+    CommandLineOption(std::function<void(bool is_set)> callback,
+                      std::string const& option,
+                      std::string const& description);
 
     template<typename Lambda>
-    CommandLineOption(
-            Lambda&& callback,
-            std::string const& option,
-            std::string const& description) :
-            CommandLineOption(lambda_as_function(std::forward<Lambda>(callback)), option, description) {}
+    CommandLineOption(Lambda&& callback, std::string const& option, std::string const& description) :
+        CommandLineOption(lambda_as_function(std::forward<Lambda>(callback)), option, description)
+    {}
 
     void operator()(mir::Server& server) const;
 
@@ -119,4 +111,4 @@ private:
 auto pre_init(CommandLineOption const& clo) -> CommandLineOption;
 }
 
-#endif //MIRAL_COMMAND_LINE_OPTION_H
+#endif  // MIRAL_COMMAND_LINE_OPTION_H

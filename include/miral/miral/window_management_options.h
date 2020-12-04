@@ -43,11 +43,12 @@ struct WindowManagerOption
     WindowManagementPolicyBuilder const build;
 };
 
-template<typename Policy, typename ...Args>
+template<typename Policy, typename... Args>
 inline auto add_window_manager_policy(std::string const& name, Args&... args) -> WindowManagerOption
 {
-    return {name, [&args...](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
-        { return std::make_unique<Policy>(tools, args...); }};
+    return {name, [&args...](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy> {
+                return std::make_unique<Policy>(tools, args...);
+            }};
 }
 
 class WindowManagerOptions
@@ -62,4 +63,4 @@ public:
 };
 }
 
-#endif // MIRAL_WINDOW_MANAGEMENT_OPTIONS_H_
+#endif  // MIRAL_WINDOW_MANAGEMENT_OPTIONS_H_

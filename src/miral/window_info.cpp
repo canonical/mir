@@ -26,26 +26,15 @@
 
 using namespace mir::geometry;
 
-miral::WindowInfo::WindowInfo() :
-    self{std::make_unique<Self>()}
-{
-}
+miral::WindowInfo::WindowInfo() : self{std::make_unique<Self>()} {}
 
-miral::WindowInfo::WindowInfo(
-    Window const& window,
-    WindowSpecification const& params) :
+miral::WindowInfo::WindowInfo(Window const& window, WindowSpecification const& params) :
     self{std::make_unique<Self>(window, params)}
-{
-}
+{}
 
-miral::WindowInfo::~WindowInfo()
-{
-}
+miral::WindowInfo::~WindowInfo() {}
 
-miral::WindowInfo::WindowInfo(WindowInfo const& that) :
-    self{std::make_unique<Self>(*that.self)}
-{
-}
+miral::WindowInfo::WindowInfo(WindowInfo const& that) : self{std::make_unique<Self>(*that.self)} {}
 
 miral::WindowInfo& miral::WindowInfo::operator=(WindowInfo const& that)
 {
@@ -57,17 +46,17 @@ bool miral::WindowInfo::can_be_active() const
 {
     switch (type())
     {
-    case mir_window_type_normal:       /**< AKA "regular"                       */
-    case mir_window_type_utility:      /**< AKA "floating"                      */
+    case mir_window_type_normal: /**< AKA "regular"                       */
+    case mir_window_type_utility: /**< AKA "floating"                      */
     case mir_window_type_dialog:
     case mir_window_type_freestyle:
     case mir_window_type_menu:
         return true;
 
-    case mir_window_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
-    case mir_window_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+    case mir_window_type_satellite: /**< AKA "toolbox"/"toolbar"             */
+    case mir_window_type_inputmethod: /**< AKA "OSK" or handwriting etc.       */
     case mir_window_type_gloss:
-    case mir_window_type_tip:          /**< AKA "tooltip"                       */
+    case mir_window_type_tip: /**< AKA "tooltip"                       */
     case mir_window_type_decoration:
     default:
         // Cannot have input focus
@@ -162,7 +151,7 @@ bool miral::WindowInfo::is_visible() const
 void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_size) const
 {
     bool const left_resize = requested_pos.x != self->window.top_left().x;
-    bool const top_resize  = requested_pos.y != self->window.top_left().y;
+    bool const top_resize = requested_pos.y != self->window.top_left().y;
 
     Point new_pos = requested_pos;
     Size new_size = requested_size;
@@ -183,27 +172,27 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
         auto const width = new_size.width.as_int() - min_width().as_int();
         auto inc = width_inc().as_int();
         if (width % inc)
-            new_size.width = min_width() + DeltaX{inc*(((2L*width + inc)/2)/inc)};
+            new_size.width = min_width() + DeltaX{inc * (((2L * width + inc) / 2) / inc)};
     }
 
     {
         auto const height = new_size.height.as_int() - min_height().as_int();
         auto inc = height_inc().as_int();
         if (height % inc)
-            new_size.height = min_height() + DeltaY{inc*(((2L*height + inc)/2)/inc)};
+            new_size.height = min_height() + DeltaY{inc * (((2L * height + inc) / 2) / inc)};
     }
 
     {
         auto const ar = min_aspect();
 
-        auto const error = new_size.height.as_int()*static_cast<long long>(ar.width) -
-                           new_size.width.as_int() *static_cast<long long>(ar.height);
+        auto const error = new_size.height.as_int() * static_cast<long long>(ar.width) -
+                           new_size.width.as_int() * static_cast<long long>(ar.height);
 
         if (error > 0)
         {
             // Add (denominator-1) to numerator to ensure rounding up
-            auto const width_correction  = (error+(ar.height-1))/ar.height;
-            auto const height_correction = (error+(ar.width-1))/ar.width;
+            auto const width_correction = (error + (ar.height - 1)) / ar.height;
+            auto const height_correction = (error + (ar.width - 1)) / ar.width;
 
             if (width_correction < height_correction)
             {
@@ -219,14 +208,14 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
     {
         auto const ar = max_aspect();
 
-        auto const error = new_size.width.as_int() *static_cast<long long>(ar.height) -
-                           new_size.height.as_int()*static_cast<long long>(ar.width);
+        auto const error = new_size.width.as_int() * static_cast<long long>(ar.height) -
+                           new_size.height.as_int() * static_cast<long long>(ar.width);
 
         if (error > 0)
         {
             // Add (denominator-1) to numerator to ensure rounding up
-            auto const height_correction = (error+(ar.width-1))/ar.width;
-            auto const width_correction  = (error+(ar.height-1))/ar.height;
+            auto const height_correction = (error + (ar.width - 1)) / ar.width;
+            auto const width_correction = (error + (ar.height - 1)) / ar.height;
 
             if (width_correction < height_correction)
             {
@@ -320,7 +309,7 @@ auto miral::WindowInfo::parent() const -> Window
     return self->parent;
 }
 
-auto miral::WindowInfo::children() const -> std::vector <Window> const&
+auto miral::WindowInfo::children() const -> std::vector<Window> const&
 {
     return self->children;
 }

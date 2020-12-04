@@ -22,7 +22,10 @@
 #include <memory>
 #include <string>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
@@ -30,7 +33,6 @@ namespace miral
 class Keymap
 {
 public:
-
     /// Apply keymap from the config.
     Keymap();
 
@@ -55,4 +57,4 @@ private:
 };
 }
 
-#endif //MIRAL_KEYMAP_H
+#endif  // MIRAL_KEYMAP_H

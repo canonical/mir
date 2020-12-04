@@ -65,11 +65,12 @@ auto extract_id(std::string const& filename) -> std::string
     if (pos == std::string::npos)
         return filename;
 
-    auto result = filename.substr(pos+applications.length());
+    auto result = filename.substr(pos + applications.length());
 
     for (auto& r : result)
     {
-        if (r == '/') r = '-';
+        if (r == '/')
+            r = '-';
     }
 
     return result;
@@ -106,7 +107,12 @@ void miral::open_desktop_entry(std::string const& desktop_file)
     if (error)
     {
         mir::log_info("Dbus error=%s, dest=%s, object_path=%s, interface_name=%s, method_name=%s, id=%s",
-                      error->message, dest, object_path, interface_name, method_name, id.c_str());
+                      error->message,
+                      dest,
+                      object_path,
+                      interface_name,
+                      method_name,
+                      id.c_str());
         g_error_free(error);
     }
 }

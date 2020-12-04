@@ -28,7 +28,13 @@
 #include <memory>
 #include <vector>
 
-namespace mir { namespace scene { class Surface; } }
+namespace mir
+{
+namespace scene
+{
+class Surface;
+}
+}
 
 namespace miral
 {
@@ -43,15 +49,14 @@ class Zone;
 class WindowManagerToolsImplementation
 {
 public:
-/** @name Update Model
- *  These functions assume that the BasicWindowManager data structures can be accessed freely.
- *  I.e. they should only be used by a thread that has called the WindowManagementPolicy methods
- *  (where any necessary locks are held) or via a invoke_under_lock() callback.
- *  @{ */
+    /** @name Update Model
+     *  These functions assume that the BasicWindowManager data structures can be accessed freely.
+     *  I.e. they should only be used by a thread that has called the WindowManagementPolicy methods
+     *  (where any necessary locks are held) or via a invoke_under_lock() callback.
+     *  @{ */
     virtual auto count_applications() const -> unsigned int = 0;
     virtual void for_each_application(std::function<void(ApplicationInfo& info)> const& functor) = 0;
-    virtual auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate)
-    -> Application = 0;
+    virtual auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate) -> Application = 0;
     virtual auto info_for(std::weak_ptr<mir::scene::Session> const& session) const -> ApplicationInfo& = 0;
     virtual auto info_for(std::weak_ptr<mir::scene::Surface> const& surface) const -> WindowInfo& = 0;
     virtual auto info_for(Window const& window) const -> WindowInfo& = 0;
@@ -74,31 +79,28 @@ public:
     virtual void modify_window(WindowInfo& window_info, WindowSpecification const& modifications) = 0;
     virtual auto info_for_window_id(std::string const& id) const -> WindowInfo& = 0;
     virtual auto id_for_window(Window const& window) const -> std::string = 0;
-    virtual void place_and_size_for_state(WindowSpecification& modifications, WindowInfo const& window_info) const= 0;
+    virtual void place_and_size_for_state(WindowSpecification& modifications, WindowInfo const& window_info) const = 0;
 
     virtual auto create_workspace() -> std::shared_ptr<Workspace> = 0;
     virtual void add_tree_to_workspace(Window const& window, std::shared_ptr<Workspace> const& workspace) = 0;
     virtual void remove_tree_from_workspace(Window const& window, std::shared_ptr<Workspace> const& workspace) = 0;
-    virtual void move_workspace_content_to_workspace(
-        std::shared_ptr<Workspace> const& to_workspace,
-        std::shared_ptr<Workspace> const& from_workspace) = 0;
+    virtual void move_workspace_content_to_workspace(std::shared_ptr<Workspace> const& to_workspace,
+                                                     std::shared_ptr<Workspace> const& from_workspace) = 0;
     virtual void for_each_workspace_containing(
-        Window const& window,
-        std::function<void(std::shared_ptr<Workspace> const& workspace)> const& callback) = 0;
-    virtual void for_each_window_in_workspace(
-        std::shared_ptr<Workspace> const& workspace,
-        std::function<void(Window const& window)> const& callback) = 0;
+        Window const& window, std::function<void(std::shared_ptr<Workspace> const& workspace)> const& callback) = 0;
+    virtual void for_each_window_in_workspace(std::shared_ptr<Workspace> const& workspace,
+                                              std::function<void(Window const& window)> const& callback) = 0;
 
-/** @} */
+    /** @} */
 
-/** @name Multi-thread support
- *  Allows threads that don't hold a lock on the model to acquire one and call the "Update Model"
- *  member functions.
- *  This should NOT be used by a thread that has called the WindowManagementPolicy methods (and
- *  already holds the lock).
- *  @{ */
+    /** @name Multi-thread support
+     *  Allows threads that don't hold a lock on the model to acquire one and call the "Update Model"
+     *  member functions.
+     *  This should NOT be used by a thread that has called the WindowManagementPolicy methods (and
+     *  already holds the lock).
+     *  @{ */
     virtual void invoke_under_lock(std::function<void()> const& callback) = 0;
-/** @} */
+    /** @} */
 
     virtual ~WindowManagerToolsImplementation() = default;
     WindowManagerToolsImplementation() = default;
@@ -107,4 +109,4 @@ public:
 };
 }
 
-#endif //MIRAL_WINDOW_MANAGER_TOOLS_IMPLEMENTATION_H
+#endif  // MIRAL_WINDOW_MANAGER_TOOLS_IMPLEMENTATION_H

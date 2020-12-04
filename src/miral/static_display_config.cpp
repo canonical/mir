@@ -22,7 +22,6 @@
 
 #include <mir/log.h>
 
-
 #include "yaml-cpp/yaml.h"
 
 #include <algorithm>
@@ -36,18 +35,18 @@ namespace
 {
 char const* const card_id = "card-id";
 char const* const state = "state";
-char const* const state_enabled  = "enabled";
+char const* const state_enabled = "enabled";
 char const* const state_disabled = "disabled";
 char const* const position = "position";
 char const* const mode = "mode";
 char const* const orientation = "orientation";
 char const* const scale = "scale";
 char const* const group = "group";
-char const* const orientation_value[] = { "normal", "left", "inverted", "right" };
+char const* const orientation_value[] = {"normal", "left", "inverted", "right"};
 
 auto as_string(MirOrientation orientation) -> char const*
 {
-    return orientation_value[orientation/90];
+    return orientation_value[orientation / 90];
 }
 
 auto as_orientation(std::string const& orientation) -> mir::optional_value<MirOrientation>
@@ -79,13 +78,13 @@ auto output_type_from(std::string const& output) -> MirOutputType
 
 auto output_index_from(std::string const& output) -> int
 {
-    std::istringstream in{output.substr(output.rfind('-')+1)};
+    std::istringstream in{output.substr(output.rfind('-') + 1)};
     int result = 0;
     in >> result;
     return result;
 }
 
-auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMode> const & modes) -> size_t
+auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMode> const& modes) -> size_t
 {
     if (modes.empty())
         return std::numeric_limits<size_t>::max();
@@ -96,7 +95,6 @@ auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMo
     return mode_index;
 }
 }
-
 
 miral::StaticDisplayConfig::StaticDisplayConfig() = default;
 
@@ -174,13 +172,14 @@ try
                         throw mir::AbnormalExit{error_prefix + "invalid port: " + port_name};
 
                     Id const output_id{card_no, output_type_from(port_name), output_index_from(port_name)};
-                    Config   output_config;
+                    Config output_config;
 
                     if (auto const s = port_config[state])
                     {
                         auto const state = s.as<std::string>();
                         if (state != state_enabled && state != state_disabled)
-                            throw mir::AbnormalExit{error_prefix + "invalid 'state' (" + state + ") for port: " + port_name};
+                            throw mir::AbnormalExit{error_prefix + "invalid 'state' (" + state +
+                                                    ") for port: " + port_name};
                         output_config.disabled = (state == state_disabled);
                     }
 
@@ -225,7 +224,7 @@ try
                             output_config.refresh = refresh;
                         }
                     }
-                    mode_error: // TODO better error handling
+mode_error:  // TODO better error handling
 
                     if (auto const o = port_config[orientation])
                     {
@@ -233,8 +232,8 @@ try
                         output_config.orientation = as_orientation(orientation);
 
                         if (!output_config.orientation)
-                            throw mir::AbnormalExit{error_prefix + "invalid 'orientation' (" +
-                                                    orientation + ") for port: " + port_name};
+                            throw mir::AbnormalExit{error_prefix + "invalid 'orientation' (" + orientation +
+                                                    ") for port: " + port_name};
                     }
 
                     if (auto const s = port_config[scale])
@@ -276,161 +275,168 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     };
     std::map<mg::DisplayConfigurationCardId, card_data> card_map;
 
-    conf.for_each_output([&](mg::UserDisplayConfigurationOutput& conf_output)
+    conf.for_each_output([&](mg::UserDisplayConfigurationOutput& conf_output) {
+        auto& card_data = card_map[conf_output.card_id];
+        auto& out = card_data.out;
+        auto const type = static_cast<MirOutputType>(conf_output.type);
+        auto const index_by_type = ++card_data.output_counts[type];
+
+        auto const& conf = (current_config != end(config)) ?
+                               current_config->second[Id{conf_output.card_id, type, index_by_type}] :
+                               Config{};
+
+        if (conf_output.connected && conf_output.modes.size() > 0 && !conf.disabled)
         {
-            auto& card_data = card_map[conf_output.card_id];
-            auto& out = card_data.out;
-            auto const type = static_cast<MirOutputType>(conf_output.type);
-            auto const index_by_type = ++card_data.output_counts[type];
+            conf_output.used = true;
+            conf_output.power_mode = mir_power_mode_on;
+            conf_output.orientation = mir_orientation_normal;
 
-            auto const& conf = (current_config != end(config)) ?
-                         current_config->second[Id{conf_output.card_id, type, index_by_type}] :
-                          Config{};
-
-            if (conf_output.connected && conf_output.modes.size() > 0 && !conf.disabled)
+            if (conf.position.is_set())
             {
-                conf_output.used = true;
-                conf_output.power_mode = mir_power_mode_on;
-                conf_output.orientation = mir_orientation_normal;
+                conf_output.top_left = conf.position.value();
+            }
+            else
+            {
+                conf_output.top_left = Point{0, 0};
+            }
 
-                if (conf.position.is_set())
+            size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
+            conf_output.current_mode_index = preferred_mode_index;
+
+            if (conf.size.is_set())
+            {
+                bool matched_mode = false;
+
+                for (auto mode = begin(conf_output.modes); mode != end(conf_output.modes); ++mode)
                 {
-                    conf_output.top_left = conf.position.value();
-                }
-                else
-                {
-                    conf_output.top_left = Point{0, 0};
-                }
-
-                size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
-                conf_output.current_mode_index = preferred_mode_index;
-
-                if (conf.size.is_set())
-                {
-                    bool matched_mode = false;
-
-                    for (auto mode = begin(conf_output.modes); mode != end(conf_output.modes); ++mode)
+                    if (mode->size == conf.size.value())
                     {
-                        if (mode->size == conf.size.value())
+                        if (conf.refresh.is_set())
                         {
-                            if (conf.refresh.is_set())
-                            {
-                                if (std::abs(conf.refresh.value() - mode->vrefresh_hz) < 1.0)
-                                {
-                                    conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
-                                    matched_mode = true;
-                                }
-                            }
-                            else if (conf_output.modes[conf_output.current_mode_index].size != conf.size.value()
-                                  || conf_output.modes[conf_output.current_mode_index].vrefresh_hz < mode->vrefresh_hz)
+                            if (std::abs(conf.refresh.value() - mode->vrefresh_hz) < 1.0)
                             {
                                 conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
                                 matched_mode = true;
                             }
                         }
+                        else if (conf_output.modes[conf_output.current_mode_index].size != conf.size.value() ||
+                                 conf_output.modes[conf_output.current_mode_index].vrefresh_hz < mode->vrefresh_hz)
+                        {
+                            conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
+                            matched_mode = true;
+                        }
                     }
+                }
 
-                    if (!matched_mode)
+                if (!matched_mode)
+                {
+                    if (conf.refresh.is_set())
                     {
-                        if (conf.refresh.is_set())
-                        {
-                            mir::log_warning("Display config contains unmatched mode: '%dx%d@%2.1f'",
-                                conf.size.value().width.as_int(), conf.size.value().height.as_int(), conf.refresh.value());
-                        }
-                        else
-                        {
-                            mir::log_warning("Display config contains unmatched mode: '%dx%d'",
-                                             conf.size.value().width.as_int(), conf.size.value().height.as_int());
-                        }
+                        mir::log_warning("Display config contains unmatched mode: '%dx%d@%2.1f'",
+                                         conf.size.value().width.as_int(),
+                                         conf.size.value().height.as_int(),
+                                         conf.refresh.value());
+                    }
+                    else
+                    {
+                        mir::log_warning("Display config contains unmatched mode: '%dx%d'",
+                                         conf.size.value().width.as_int(),
+                                         conf.size.value().height.as_int());
                     }
                 }
+            }
 
-                if (conf.scale.is_set())
-                {
-                    conf_output.scale = conf.scale.value();
-                }
+            if (conf.scale.is_set())
+            {
+                conf_output.scale = conf.scale.value();
+            }
 
-                if (conf.orientation.is_set())
-                {
-                    conf_output.orientation = conf.orientation.value();
-                }
+            if (conf.orientation.is_set())
+            {
+                conf_output.orientation = conf.orientation.value();
+            }
 
-                if (conf.group_id.is_set())
-                {
-                    conf_output.logical_group_id = mg::DisplayConfigurationLogicalGroupId{conf.group_id.value()};
-                }
-                else
-                {
-                    conf_output.logical_group_id = mg::DisplayConfigurationLogicalGroupId{};
-                }
+            if (conf.group_id.is_set())
+            {
+                conf_output.logical_group_id = mg::DisplayConfigurationLogicalGroupId{conf.group_id.value()};
             }
             else
             {
-                conf_output.used = false;
-                conf_output.power_mode = mir_power_mode_off;
+                conf_output.logical_group_id = mg::DisplayConfigurationLogicalGroupId{};
             }
-
-            out << "\n      " << mir_output_type_name(type);
-            if (conf_output.card_id.as_value() > 0)
-                out << '-' << conf_output.card_id.as_value();
-            out << '-' << index_by_type << ':';
-
-            if (conf_output.connected && conf_output.modes.size() > 0)
-            {
-                out << "\n        # This output supports the following modes:";
-                for (size_t i = 0; i < conf_output.modes.size(); ++i)
-                {
-                    if (i) out << ',';
-                    if ((i % 5) != 2) out << ' ';
-                    else out << "\n        # ";
-                    out << conf_output.modes[i];
-                }
-                out << "\n        #"
-                       "\n        # Uncomment the following to enforce the selected configuration."
-                       "\n        # Or amend as desired."
-                       "\n        #"
-                       "\n        # state: " << (conf_output.used ? state_enabled : state_disabled)
-                    << "\t# {enabled, disabled}, defaults to enabled";
-
-                if (conf_output.used) // The following are only set when used
-                {
-                    out << "\n        # mode: " << conf_output.modes[conf_output.current_mode_index]
-                        << "\t# Defaults to preferred mode"
-                           "\n        # position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
-                        << "\t# Defaults to [0, 0]"
-                           "\n        # orientation: " << as_string(conf_output.orientation)
-                        << "\t# {normal, left, right, inverted}, defaults to normal"
-                           "\n        # scale: " << conf_output.scale
-                        << "\n        # group: " << conf_output.logical_group_id.as_value()
-                        << "\t# Outputs with the same non-zero value are treated as a single display";
-                }
-            }
-            else
-            {
-                out << "\n        # (disconnected)";
-            }
-
-            out << "\n";
-        });
-
-    auto print_template_config = [&card_map](std::ostream& out)
+        }
+        else
         {
-            out << "layouts:"
-                   "\n# keys here are layout labels (used for atomically switching between them)"
-                   "\n# when enabling displays, surfaces should be matched in reverse recency order"
-                   "\n"
-                   "\n  default:                         # the default layout"
-                   "\n"
-                   "\n    cards:"
-                   "\n    # a list of cards (currently matched by card-id)";
+            conf_output.used = false;
+            conf_output.power_mode = mir_power_mode_off;
+        }
 
-            for (auto const& co : card_map)
+        out << "\n      " << mir_output_type_name(type);
+        if (conf_output.card_id.as_value() > 0)
+            out << '-' << conf_output.card_id.as_value();
+        out << '-' << index_by_type << ':';
+
+        if (conf_output.connected && conf_output.modes.size() > 0)
+        {
+            out << "\n        # This output supports the following modes:";
+            for (size_t i = 0; i < conf_output.modes.size(); ++i)
             {
-                out << "\n"
-                       "\n    - card-id: " << co.first.as_value()
-                    << co.second.out.str();
+                if (i)
+                    out << ',';
+                if ((i % 5) != 2)
+                    out << ' ';
+                else
+                    out << "\n        # ";
+                out << conf_output.modes[i];
             }
-        };
+            out << "\n        #"
+                   "\n        # Uncomment the following to enforce the selected configuration."
+                   "\n        # Or amend as desired."
+                   "\n        #"
+                   "\n        # state: "
+                << (conf_output.used ? state_enabled : state_disabled)
+                << "\t# {enabled, disabled}, defaults to enabled";
+
+            if (conf_output.used)  // The following are only set when used
+            {
+                out << "\n        # mode: " << conf_output.modes[conf_output.current_mode_index]
+                    << "\t# Defaults to preferred mode"
+                       "\n        # position: ["
+                    << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
+                    << "\t# Defaults to [0, 0]"
+                       "\n        # orientation: "
+                    << as_string(conf_output.orientation)
+                    << "\t# {normal, left, right, inverted}, defaults to normal"
+                       "\n        # scale: "
+                    << conf_output.scale << "\n        # group: " << conf_output.logical_group_id.as_value()
+                    << "\t# Outputs with the same non-zero value are treated as a single display";
+            }
+        }
+        else
+        {
+            out << "\n        # (disconnected)";
+        }
+
+        out << "\n";
+    });
+
+    auto print_template_config = [&card_map](std::ostream& out) {
+        out << "layouts:"
+               "\n# keys here are layout labels (used for atomically switching between them)"
+               "\n# when enabling displays, surfaces should be matched in reverse recency order"
+               "\n"
+               "\n  default:                         # the default layout"
+               "\n"
+               "\n    cards:"
+               "\n    # a list of cards (currently matched by card-id)";
+
+        for (auto const& co : card_map)
+        {
+            out << "\n"
+                   "\n    - card-id: "
+                << co.first.as_value() << co.second.out.str();
+        }
+    };
 
     dump_config(print_template_config);
 }
@@ -453,11 +459,10 @@ auto miral::StaticDisplayConfig::list_layouts() const -> std::vector<std::string
 {
     std::vector<std::string> result;
 
-    for (auto const& c: config)
+    for (auto const& c : config)
     {
         result.push_back(c.first);
     }
 
     return result;
 }
-

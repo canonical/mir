@@ -21,13 +21,13 @@
 
 #include "window_manager_tools_implementation.h"
 
-#include "miral/window_management_policy.h"
-#include "miral/window_info.h"
 #include "active_outputs.h"
 #include "miral/application.h"
 #include "miral/application_info.h"
-#include "miral/zone.h"
 #include "miral/output.h"
+#include "miral/window_info.h"
+#include "miral/window_management_policy.h"
+#include "miral/zone.h"
 #include "mru_window_list.h"
 
 #include <mir/geometry/rectangles.h>
@@ -44,8 +44,15 @@
 
 namespace mir
 {
-namespace shell { class DisplayLayout; class PersistentSurfaceStore; }
-namespace graphics { class DisplayConfigurationObserver; }
+namespace shell
+{
+class DisplayLayout;
+class PersistentSurfaceStore;
+}
+namespace graphics
+{
+class DisplayConfigurationObserver;
+}
 }
 
 namespace miral
@@ -58,7 +65,8 @@ using WindowManagementPolicyBuilder =
 
 /// A policy based window manager.
 /// This takes care of the management of any meta implementation held for the sessions and windows.
-class BasicWindowManager : public virtual mir::shell::WindowManager,
+class BasicWindowManager :
+    public virtual mir::shell::WindowManager,
     protected WindowManagerToolsImplementation,
     private ActiveOutputsListener
 {
@@ -78,22 +86,19 @@ public:
     auto add_surface(
         std::shared_ptr<mir::scene::Session> const& session,
         mir::scene::SurfaceCreationParameters const& params,
-        std::function<std::shared_ptr<mir::scene::Surface>(
-            std::shared_ptr<mir::scene::Session> const& session,
-            mir::scene::SurfaceCreationParameters const& params)> const& build)
-    -> std::shared_ptr<mir::scene::Surface> override;
+        std::function<std::shared_ptr<mir::scene::Surface>(std::shared_ptr<mir::scene::Session> const& session,
+                                                           mir::scene::SurfaceCreationParameters const& params)> const&
+            build) -> std::shared_ptr<mir::scene::Surface> override;
 
-    void modify_surface(
-        std::shared_ptr<mir::scene::Session> const& session,
-        std::shared_ptr<mir::scene::Surface> const& surface,
-        mir::shell::SurfaceSpecification const& modifications) override;
+    void modify_surface(std::shared_ptr<mir::scene::Session> const& session,
+                        std::shared_ptr<mir::scene::Surface> const& surface,
+                        mir::shell::SurfaceSpecification const& modifications) override;
 
-    void remove_surface(
-        std::shared_ptr<mir::scene::Session> const& session,
-        std::weak_ptr<mir::scene::Surface> const& surface) override;
+    void remove_surface(std::shared_ptr<mir::scene::Session> const& session,
+                        std::weak_ptr<mir::scene::Surface> const& surface) override;
 
-    void add_display(mir::geometry::Rectangle const& area) override
-    __attribute__((deprecated("Mir doesn't reliably call this: it is ignored. Use add_display_for_testing() instead")));
+    void add_display(mir::geometry::Rectangle const& area) override __attribute__((
+        deprecated("Mir doesn't reliably call this: it is ignored. Use add_display_for_testing() instead")));
 
     void remove_display(mir::geometry::Rectangle const& area) override;
 
@@ -103,32 +108,27 @@ public:
 
     bool handle_pointer_event(MirPointerEvent const* event) override;
 
-    void handle_raise_surface(
-        std::shared_ptr<mir::scene::Session> const& session,
-        std::shared_ptr<mir::scene::Surface> const& surface,
-        uint64_t timestamp) override;
+    void handle_raise_surface(std::shared_ptr<mir::scene::Session> const& session,
+                              std::shared_ptr<mir::scene::Surface> const& surface,
+                              uint64_t timestamp) override;
 
-    void handle_request_drag_and_drop(
-        std::shared_ptr<mir::scene::Session> const& session,
-        std::shared_ptr<mir::scene::Surface> const& surface,
-        uint64_t timestamp) override;
+    void handle_request_drag_and_drop(std::shared_ptr<mir::scene::Session> const& session,
+                                      std::shared_ptr<mir::scene::Surface> const& surface,
+                                      uint64_t timestamp) override;
 
-    void handle_request_move(
-        std::shared_ptr<mir::scene::Session> const& session,
-        std::shared_ptr<mir::scene::Surface> const& surface,
-        uint64_t timestamp) override;
+    void handle_request_move(std::shared_ptr<mir::scene::Session> const& session,
+                             std::shared_ptr<mir::scene::Surface> const& surface,
+                             uint64_t timestamp) override;
 
-    void handle_request_resize(
-        std::shared_ptr<mir::scene::Session> const& session,
-        std::shared_ptr<mir::scene::Surface> const& surface,
-        uint64_t timestamp,
-        ::MirResizeEdge edge) override;
+    void handle_request_resize(std::shared_ptr<mir::scene::Session> const& session,
+                               std::shared_ptr<mir::scene::Surface> const& surface,
+                               uint64_t timestamp,
+                               ::MirResizeEdge edge) override;
 
-    int set_surface_attribute(
-        std::shared_ptr<mir::scene::Session> const& /*application*/,
-        std::shared_ptr<mir::scene::Surface> const& surface,
-        MirWindowAttrib attrib,
-        int value) override;
+    int set_surface_attribute(std::shared_ptr<mir::scene::Session> const& /*application*/,
+                              std::shared_ptr<mir::scene::Surface> const& surface,
+                              MirWindowAttrib attrib,
+                              int value) override;
 
     auto create_workspace() -> std::shared_ptr<Workspace> override;
 
@@ -136,23 +136,21 @@ public:
 
     void remove_tree_from_workspace(Window const& window, std::shared_ptr<Workspace> const& workspace) override;
 
-    void move_workspace_content_to_workspace(
-        std::shared_ptr<Workspace> const& to_workspace,
-        std::shared_ptr<Workspace> const& from_workspace) override;
+    void move_workspace_content_to_workspace(std::shared_ptr<Workspace> const& to_workspace,
+                                             std::shared_ptr<Workspace> const& from_workspace) override;
 
     void for_each_workspace_containing(
         Window const& window,
         std::function<void(std::shared_ptr<Workspace> const& workspace)> const& callback) override;
 
-    void for_each_window_in_workspace(
-        std::shared_ptr<Workspace> const& workspace, std::function<void(Window const&)> const& callback) override;
+    void for_each_window_in_workspace(std::shared_ptr<Workspace> const& workspace,
+                                      std::function<void(Window const&)> const& callback) override;
 
     auto count_applications() const -> unsigned int override;
 
     void for_each_application(std::function<void(ApplicationInfo& info)> const& functor) override;
 
-    auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate)
-    -> Application override;
+    auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate) -> Application override;
 
     auto info_for(std::weak_ptr<mir::scene::Session> const& session) const -> ApplicationInfo& override;
 
@@ -198,18 +196,10 @@ private:
     /// An area for windows to be placed in
     struct DisplayArea
     {
-        DisplayArea(Output const& output)
-            : area{output.extents()},
-              application_zone{area},
-              contained_outputs{{output}}
-        {
-        }
+        DisplayArea(Output const& output) : area{output.extents()}, application_zone{area}, contained_outputs{{output}}
+        {}
 
-        DisplayArea(Rectangle const& area)
-            : area{area},
-              application_zone{area}
-        {
-        }
+        DisplayArea(Rectangle const& area) : area{area}, application_zone{area} {}
 
         /// Returns the bounding rectangle of the extents of all contained outputs
         auto bounding_rectangle_of_contained_outputs() const -> Rectangle;
@@ -217,7 +207,7 @@ private:
         /// Returns if this area is currently being used (update_application_zones() will remove it otherwise)
         auto is_alive() const -> bool;
 
-        Rectangle area; ///< The full area. If there is a single output, this is the same as the output's extents
+        Rectangle area;  ///< The full area. If there is a single output, this is the same as the output's extents
         /// The subset of the area where normal applications are generally placed (excludes, for example, panels)
         Zone application_zone;
         /// The last zone given to the policy, or nullopt if the policy hasn't been notified of this area's creation yet
@@ -228,11 +218,13 @@ private:
         std::vector<Output> contained_outputs;
         /// Only set if this display area represents a logical group of multiple outputs
         std::experimental::optional<int> logical_output_group_id;
-        std::set<Window> attached_windows; ///< Maximized/anchored/etc windows attached to this area
+        std::set<Window> attached_windows;  ///< Maximized/anchored/etc windows attached to this area
     };
 
-    using SurfaceInfoMap = std::map<std::weak_ptr<mir::scene::Surface>, WindowInfo, std::owner_less<std::weak_ptr<mir::scene::Surface>>>;
-    using SessionInfoMap = std::map<std::weak_ptr<mir::scene::Session>, ApplicationInfo, std::owner_less<std::weak_ptr<mir::scene::Session>>>;
+    using SurfaceInfoMap =
+        std::map<std::weak_ptr<mir::scene::Surface>, WindowInfo, std::owner_less<std::weak_ptr<mir::scene::Surface>>>;
+    using SessionInfoMap = std::
+        map<std::weak_ptr<mir::scene::Session>, ApplicationInfo, std::owner_less<std::weak_ptr<mir::scene::Session>>>;
 
     mir::shell::FocusController* const focus_controller;
     std::shared_ptr<mir::shell::DisplayLayout> const display_layout;
@@ -266,9 +258,9 @@ private:
     bool application_zones_need_update{false};
 
     friend class Workspace;
-    using wwbimap_t = boost::bimap<
-        boost::bimaps::multiset_of<std::weak_ptr<Workspace>, std::owner_less<std::weak_ptr<Workspace>>>,
-        boost::bimaps::multiset_of<Window>>;
+    using wwbimap_t =
+        boost::bimap<boost::bimaps::multiset_of<std::weak_ptr<Workspace>, std::owner_less<std::weak_ptr<Workspace>>>,
+                     boost::bimaps::multiset_of<Window>>;
 
     wwbimap_t workspaces_to_windows;
 
@@ -284,9 +276,9 @@ private:
     auto surface_known(std::weak_ptr<mir::scene::Surface> const& surface, std::string const& action) -> bool;
 
     auto can_activate_window_for_session(miral::Application const& session) -> bool;
-    auto can_activate_window_for_session_in_workspace(
-        miral::Application const& session,
-        std::vector<std::shared_ptr<Workspace>> const& workspaces) -> bool;
+    auto can_activate_window_for_session_in_workspace(miral::Application const& session,
+                                                      std::vector<std::shared_ptr<Workspace>> const& workspaces)
+        -> bool;
 
     auto place_new_surface(WindowSpecification parameters) -> WindowSpecification;
     auto place_relative(mir::geometry::Rectangle const& parent, miral::WindowSpecification const& parameters, Size size)
@@ -297,24 +289,25 @@ private:
     void erase(miral::WindowInfo const& info);
     void validate_modification_request(WindowSpecification const& modifications, WindowInfo const& window_info) const;
     void place_and_size(WindowInfo& root, Point const& new_pos, Size const& new_size);
-    void place_attached_to_zone(
-        WindowInfo& info,
-        mir::geometry::Rectangle const& application_zone,
-        mir::geometry::Rectangle const& output_area);
+    void place_attached_to_zone(WindowInfo& info,
+                                mir::geometry::Rectangle const& application_zone,
+                                mir::geometry::Rectangle const& output_area);
     void update_attached_and_fullscreen_sets(WindowInfo& window_info, MirWindowState state);
     void set_state(miral::WindowInfo& window_info, MirWindowState value);
     void remove_window(Application const& application, miral::WindowInfo const& info);
-    void refocus(Application const& application, Window const& parent,
+    void refocus(Application const& application,
+                 Window const& parent,
                  std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window);
     auto workspaces_containing(Window const& window) const -> std::vector<std::shared_ptr<Workspace>>;
     auto active_display_area() const -> std::shared_ptr<DisplayArea>;
-    auto display_area_for_output_id(int output_id) const -> std::shared_ptr<DisplayArea>; ///< returns null if not found
+    auto display_area_for_output_id(int output_id) const
+        -> std::shared_ptr<DisplayArea>;  ///< returns null if not found
     auto display_area_for(WindowInfo const& info) const -> std::shared_ptr<DisplayArea>;
     /// Returns the application zone area after shrinking it for the exclusive zone if needed
-    static auto apply_exclusive_rect_to_application_zone(
-        mir::geometry::Rectangle const& original_zone,
-        mir::geometry::Rectangle const& exclusive_rect_global_coords,
-        MirPlacementGravity attached_edges) -> mir::geometry::Rectangle;
+    static auto apply_exclusive_rect_to_application_zone(mir::geometry::Rectangle const& original_zone,
+                                                         mir::geometry::Rectangle const& exclusive_rect_global_coords,
+                                                         MirPlacementGravity attached_edges)
+        -> mir::geometry::Rectangle;
 
     /// Returns the new display area (or null if none was created)
     auto add_output_to_display_areas(Locker const&, Output const& output);

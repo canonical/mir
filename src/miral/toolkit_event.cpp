@@ -124,9 +124,7 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event, unsigned i
     return ::mir_touch_event_tooltype(event, touch_index);
 }
 
-float mir_touch_event_axis_value(
-    MirTouchEvent const* event, unsigned int touch_index,
-    MirTouchAxis axis)
+float mir_touch_event_axis_value(MirTouchEvent const* event, unsigned int touch_index, MirTouchAxis axis)
 {
     return ::mir_touch_event_axis_value(event, touch_index, axis);
 }

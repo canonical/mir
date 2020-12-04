@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/ usr / bin / python3
 """This script checks that the symbols in a library match the given debian symbols, and
 updates the debian symbols if needed.
 
@@ -54,7 +54,7 @@ class Run:
         assert isinstance(cwd, str) or cwd == None
         assert isinstance(stdin, str) or stdin == None
         self.args = args
-        # print('Running `' + ' '.join(self.args) + '`')
+#print('Running `' + ' '.join(self.args) + '`')
         p = subprocess.Popen(
                 args,
                 cwd=cwd,

@@ -21,7 +21,10 @@
 
 #include <string>
 
-namespace mir { class Server; }
+namespace mir
+{
+class Server;
+}
 
 namespace miral
 {
@@ -40,5 +43,4 @@ private:
 };
 }
 
-
-#endif //MIRAL_CURSOR_THEME_H
+#endif  // MIRAL_CURSOR_THEME_H

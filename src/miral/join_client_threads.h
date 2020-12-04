@@ -21,4 +21,4 @@
 
 void join_client_threads(mir::Server* server);
 
-#endif //MIRAL_JOIN_CLIENT_THREADS_H
+#endif  // MIRAL_JOIN_CLIENT_THREADS_H

@@ -21,9 +21,9 @@
 
 #include <mir/fd.h>
 #include <mir/main_loop.h>
-#include <mir/server.h>
-#include <mir/scene/session.h>
 #include <mir/raii.h>
+#include <mir/scene/session.h>
+#include <mir/server.h>
 
 #define MIR_LOG_COMPONENT "miral::Internal Client"
 #include <mir/log.h>
@@ -32,9 +32,9 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <map>
 #include <mutex>
 #include <thread>
-#include <map>
 
 namespace
 {
@@ -88,9 +88,8 @@ template<typename Base>
 class WlInternalClientRunner : public Base, public virtual InternalClientRunner
 {
 public:
-    WlInternalClientRunner(
-        std::function<void(struct ::wl_display* display)> client_code,
-        std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification);
+    WlInternalClientRunner(std::function<void(struct ::wl_display* display)> client_code,
+                           std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification);
 
     void run(mir::Server& server) override;
     void join_client_thread() override;
@@ -109,34 +108,30 @@ WlInternalClientRunner<Base>::WlInternalClientRunner(
     std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification) :
     client_code(std::move(client_code)),
     connect_notification(std::move(connect_notification))
-{
-}
+{}
 
 template<typename Base>
 void WlInternalClientRunner<Base>::run(mir::Server& server)
 {
-    int fd = server.open_client_wayland([this](std::shared_ptr<mir::scene::Session> const& mf_session)
-        {
-            connect_notification(std::dynamic_pointer_cast<mir::scene::Session>(mf_session));
-        });
+    int fd = server.open_client_wayland([this](std::shared_ptr<mir::scene::Session> const& mf_session) {
+        connect_notification(std::dynamic_pointer_cast<mir::scene::Session>(mf_session));
+    });
 
-    thread = std::thread{[this, fd]
+    thread = std::thread{[this, fd] {
+        try
         {
-            try
+            if (auto const display = wl_display_connect_to_fd(fd))
             {
-                if (auto const display = wl_display_connect_to_fd(fd))
-                {
-                    auto const deleter = mir::raii::deleter_for(display, &wl_display_disconnect);
-                    client_code(display);
-                    wl_display_roundtrip(display);
-                }
+                auto const deleter = mir::raii::deleter_for(display, &wl_display_disconnect);
+                client_code(display);
+                wl_display_roundtrip(display);
             }
-            catch (std::exception const& e)
-            {
-                mir::log(mir::logging::Severity::informational, MIR_LOG_COMPONENT,
-                         std::make_exception_ptr(e), e.what());
-            }
-        }};
+        }
+        catch (std::exception const& e)
+        {
+            mir::log(mir::logging::Severity::informational, MIR_LOG_COMPONENT, std::make_exception_ptr(e), e.what());
+        }
+    }};
 }
 
 template<typename Base>
@@ -144,7 +139,6 @@ WlInternalClientRunner<Base>::~WlInternalClientRunner()
 {
     join_client_thread();
 }
-
 
 template<typename Base>
 void WlInternalClientRunner<Base>::join_client_thread()
@@ -158,21 +152,16 @@ void WlInternalClientRunner<Base>::join_client_thread()
 miral::StartupInternalClient::StartupInternalClient(
     std::function<void(struct ::wl_display* display)> client_code,
     std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification) :
-    internal_client(std::make_shared<WlInternalClientRunner<Self>>(std::move(client_code), std::move(connect_notification)))
-{
-}
+    internal_client(
+        std::make_shared<WlInternalClientRunner<Self>>(std::move(client_code), std::move(connect_notification)))
+{}
 
 void miral::StartupInternalClient::operator()(mir::Server& server)
 {
     register_runner(&server, internal_client);
 
-    server.add_init_callback([this, &server]
-    {
-        server.the_main_loop()->enqueue(this, [this, &server]
-        {
-            internal_client->run(server);
-        });
-    });
+    server.add_init_callback(
+        [this, &server] { server.the_main_loop()->enqueue(this, [this, &server] { internal_client->run(server); }); });
 }
 
 miral::StartupInternalClient::~StartupInternalClient() = default;
