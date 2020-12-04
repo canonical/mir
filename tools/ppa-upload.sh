@@ -8,9 +8,9 @@ if [ -z "${RELEASE}" ]; then
   exit 1
 fi
 
-GIT_BRANCH=${TRAVIS_BRANCH-$( git rev-parse --abbrev-ref HEAD )}
+GIT_BRANCH=${GITHUB_REF-$( git rev-parse --abbrev-ref HEAD )}
 # determine the patch release
-if ! [[ "${GIT_BRANCH}" =~ ^(master|(release/|v)([0-9\.]+))$ ]]; then
+if ! [[ "${GIT_BRANCH}" =~ ^(refs/(heads|tags)/)?(master|(release/|v)([0-9\.]+))$ ]]; then
   echo "ERROR: This script should only run on master or release tags" >&2
   echo "  or branches." >&2
   exit 3
