@@ -8,11 +8,6 @@ branches:
   - trying
   - master
 stages:
-- name: process snaps
-  if: (type = pull_request
-        AND head_repo = MirServer/mir)
-      OR (type != pull_request
-        AND repo = MirServer/mir)
 - name: sanitize
   if: type = cron
       AND repo = MirServer/mir
@@ -74,15 +69,4 @@ jobs:
   - <<: *sanitize
     env: TASK=google:ubuntu-20.04-64:spread/build/ubuntu:ubsan_clang
 
-  - stage: process snaps
-    env: ~
-    language: python
-    python: 3.6
-    dist: xenial
-    before_install: *decrypt-bot-data
-    install:
-    - pip install -r tools/requirements.txt
-    - if [ ${TRAVIS_EVENT_TYPE} == cron ]; then sudo apt update; sudo apt install snapd; sudo snap install snapd review-tools; fi
-    script:
-    - tools/process_snaps.py
   fast_finish: true
