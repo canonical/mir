@@ -29,7 +29,7 @@ class DisplayConfigurationPolicy
 public:
     DisplayConfigurationPolicy();
 
-    virtual ~DisplayConfigurationPolicy() = default;
+    virtual ~DisplayConfigurationPolicy();
     DisplayConfigurationPolicy(DisplayConfigurationPolicy const&) = delete;
     DisplayConfigurationPolicy& operator=(DisplayConfigurationPolicy const&) = delete;
 
