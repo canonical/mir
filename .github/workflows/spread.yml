@@ -18,6 +18,8 @@ jobs:
 
     if: ${{ github.event_name == 'pull_request' || contains('refs/heads/staging refs/heads/trying', github.ref) }}
 
+    continue-on-error: true
+
     steps:
     - name: Check out code
       uses: actions/checkout@v2
@@ -83,10 +85,7 @@ jobs:
         fi
 
   BuildAndTest:
-    needs: [Lint, GetMatrix]
-
-    # Need to explicitly continue on Lint getting skipped.
-    if: ${{ !failure() }}
+    needs: GetMatrix
 
     strategy:
       fail-fast: true
