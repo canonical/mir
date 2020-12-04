@@ -146,8 +146,7 @@ if __name__ == '__main__':
             version="devel",
             authorization_engine=RequestTokenAuthorizationEngine(LAUNCHPAD,
                                                                  APPLICATION),
-            credential_store=UnencryptedFileCredentialStore(
-                os.path.expanduser("~/.launchpadlib/credentials"))
+            credential_store=UnencryptedFileCredentialStore(os.path.expanduser(sys.argv[1])),
         )
     except NotImplementedError:
         raise RuntimeError("Invalid credentials.")
