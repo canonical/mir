@@ -19,3 +19,4 @@
 #include "miroil/display_configuration_policy.h"
 
 miroil::DisplayConfigurationPolicy::DisplayConfigurationPolicy() = default;
+miroil::DisplayConfigurationPolicy::~DisplayConfigurationPolicy() = default;
