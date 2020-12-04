@@ -6,6 +6,7 @@ libmiroil.so.1 libmiroil1 #MINVER#
  (c++)"miroil::GLBuffer::GLBuffer()@MIROIL_1.0" 1.0.0
  (c++)"miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_1.0" 1.0.0
  (c++)"miroil::GLBuffer::bind()@MIROIL_1.0" 1.0.0
+ (c++)"miroil::GLBuffer::gl_bind_tex()@MIROIL_1.0" 1.0.0
  (c++)"miroil::GLBuffer::has_alpha_channel() const@MIROIL_1.0" 1.0.0
  (c++)"miroil::GLBuffer::operator bool() const@MIROIL_1.0" 1.0.0
  (c++)"miroil::GLBuffer::reset()@MIROIL_1.0" 1.0.0
