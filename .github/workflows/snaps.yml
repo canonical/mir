@@ -24,7 +24,7 @@ jobs:
 
     - name: Install Snap dependencies
       run: |
-        sudo snap install review-tools --edge
+        sudo snap install review-tools
 
     - name: Set up Launchpad credentials
       uses: DamianReeves/write-file-action@v1.0
