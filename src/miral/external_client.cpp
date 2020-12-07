@@ -136,21 +136,7 @@ void miral::ExternalClientLauncher::snapcraft_launch(const std::string& desktop_
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot launch apps when server has not started"));
     }
 
-    std::vector<std::string> env{
-        "XDG_SESSION_DESKTOP=mir",
-        "XDG_SESSION_TYPE=wayland"};
-
-    if (auto const& wayland_display = self->server->wayland_display())
-    {
-        env.push_back("WAYLAND_DISPLAY=" + wayland_display.value());
-    }
-
-    if (auto const& x11_display = self->server->x11_display())
-    {
-        env.push_back("DISPLAY=" + x11_display.value());
-    }
-
-    open_desktop_entry(desktop_file, env);
+    open_desktop_entry(desktop_file);
 }
 
 miral::ExternalClientLauncher::~ExternalClientLauncher() = default;

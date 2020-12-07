@@ -48,12 +48,12 @@ public:
         std::chrono::milliseconds const& ms,
         int32_t touch_id,
         WlSurface* root_surface,
-        geometry::Point const& root_position);
+        std::pair<float, float> const& root_position);
     void motion(
         std::chrono::milliseconds const& ms,
         int32_t touch_id,
         WlSurface* root_surface,
-        geometry::Point const& root_position);
+        std::pair<float, float> const& root_position);
     void up(std::chrono::milliseconds const& ms, int32_t touch_id);
     void frame();
 

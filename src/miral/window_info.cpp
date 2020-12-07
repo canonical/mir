@@ -247,38 +247,6 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
 
     // placeholder - constrain onscreen
 
-    switch (state())
-    {
-    case mir_window_state_restored:
-    case mir_window_state_attached:
-        break;
-
-        // "A vertically maximised window is anchored to the top and bottom of
-        // the available workspace and can have any width."
-    case mir_window_state_vertmaximized:
-        new_pos.y = self->window.top_left().y;
-        new_size.height = self->window.size().height;
-        break;
-
-        // "A horizontally maximised window is anchored to the left and right of
-        // the available workspace and can have any height"
-    case mir_window_state_horizmaximized:
-        new_pos.x = self->window.top_left().x;
-        new_size.width = self->window.size().width;
-        break;
-
-        // "A maximised window is anchored to the top, bottom, left and right of the
-        // available workspace. For example, if the launcher is always-visible then
-        // the left-edge of the window is anchored to the right-edge of the launcher."
-    case mir_window_state_maximized:
-    default:
-        new_pos.x = self->window.top_left().x;
-        new_pos.y = self->window.top_left().y;
-        new_size.width = self->window.size().width;
-        new_size.height = self->window.size().height;
-        break;
-    }
-
     requested_pos = new_pos;
     requested_size = new_size;
 }

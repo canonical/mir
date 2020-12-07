@@ -121,9 +121,10 @@ mf::WlPointer::~WlPointer()
 void mf::WlPointer::enter(
     std::chrono::milliseconds const& ms,
     WlSurface* root_surface,
-    geom::Point const& root_position)
+    std::pair<float, float> const& root_position)
 {
-    auto const target_surface = root_surface->subsurface_at(root_position).value_or(root_surface);
+    geom::Point root_point{root_position.first, root_position.second};
+    auto const target_surface = root_surface->subsurface_at(root_point).value_or(root_surface);
     send_update(ms, target_surface, root_position);
 }
 
@@ -175,35 +176,36 @@ void mf::WlPointer::button(std::chrono::milliseconds const& ms, uint32_t button,
 void mf::WlPointer::motion(
     std::chrono::milliseconds const& ms,
     WlSurface* root_surface,
-    geometry::Point const& root_position)
+    std::pair<float, float> const& root_position)
 {
     WlSurface* target_surface = surface_under_cursor.value_or(nullptr);
     if (!target_surface || pressed_buttons.empty())
     {
         // if pressed_buttons is empty there is no grab, so choose whatever surface we are over
-        target_surface = root_surface->subsurface_at(root_position).value_or(root_surface);
+        geom::Point root_point{root_position.first, root_position.second};
+        target_surface = root_surface->subsurface_at(root_point).value_or(root_surface);
     }
 
     send_update(ms, target_surface, root_position);
 }
 
-void mf::WlPointer::axis(std::chrono::milliseconds const& ms, geometry::Displacement const& scroll)
+void mf::WlPointer::axis(std::chrono::milliseconds const& ms, std::pair<float, float> const& scroll)
 {
-    if (scroll.dx != geom::DeltaX{})
+    if (scroll.first)
     {
         send_axis_event(
             ms.count(),
             Axis::horizontal_scroll,
-            scroll.dx.as_int());
+            scroll.first);
         can_send_frame = true;
     }
 
-    if (scroll.dy != geom::DeltaY{})
+    if (scroll.second)
     {
         send_axis_event(
             ms.count(),
             Axis::vertical_scroll,
-            scroll.dy.as_int());
+            scroll.second);
         can_send_frame = true;
     }
 }
@@ -218,16 +220,19 @@ void mf::WlPointer::frame()
 void mf::WlPointer::send_update(
     std::chrono::milliseconds const& ms,
     WlSurface* target_surface,
-    geometry::Point const& root_position)
+    std::pair<float, float> const& root_position)
 {
-    auto const position_on_wl_surface = root_position - target_surface->total_offset();
+    auto const offset = target_surface->total_offset();
+    auto const position_on_target = std::make_pair(
+        root_position.first - offset.dx.as_int(),
+        root_position.second - offset.dy.as_int());
 
     if (surface_under_cursor && surface_under_cursor.value() == target_surface)
     {
         send_motion_event(
             ms.count(),
-            position_on_wl_surface.x.as_int(),
-            position_on_wl_surface.y.as_int());
+            position_on_target.first,
+            position_on_target.second);
         can_send_frame = true;
     }
     else
@@ -238,8 +243,8 @@ void mf::WlPointer::send_update(
         send_enter_event(
             serial,
             target_surface->raw_resource(),
-            position_on_wl_surface.x.as_int(),
-            position_on_wl_surface.y.as_int());
+            position_on_target.first,
+            position_on_target.second);
         can_send_frame = true;
         target_surface->add_destroy_listener(
             this,

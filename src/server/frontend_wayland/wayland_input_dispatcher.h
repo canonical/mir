@@ -67,7 +67,7 @@ private:
 
     std::chrono::nanoseconds timestamp{0};
     MirPointerButtons last_pointer_buttons{0};
-    std::experimental::optional<geometry::Point> last_pointer_position;
+    std::experimental::optional<std::pair<float, float>> last_pointer_position;
 
     /// Handle user input events
     ///@{

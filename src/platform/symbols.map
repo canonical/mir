@@ -185,3 +185,12 @@ MIRPLATFORM_2.2 {
  };
  local: *;
 };
+
+MIRPLATFORM_2.3 {
+ global:
+  extern "C++" {
+    mir::graphics::LinuxDmaBufUnstable::LinuxDmaBufUnstable*;
+    mir::graphics::LinuxDmaBufUnstable::?LinuxDmaBufUnstable*;
+    mir::graphics::LinuxDmaBufUnstable::buffer_from_resource*;
+  };
+} MIRPLATFORM_2.2;
