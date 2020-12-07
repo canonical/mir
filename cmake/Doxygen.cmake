@@ -31,4 +31,12 @@ if(DOXYGEN_FOUND AND (DOXYGEN_VERSION VERSION_GREATER "1.8"))
                     SOURCES ${PROJECT_BINARY_DIR}/Doxyfile
                     DEPENDS guides)
   install(DIRECTORY ${CMAKE_BINARY_DIR}/doc/html DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/mir-doc/ OPTIONAL)
+
+  # support arch-indep-only builds
+  add_custom_target(doc-install
+                    COMMAND ${CMAKE_COMMAND} --trace-expand --debug-output -DCMAKE_INSTALL_COMPONENT=doc -P ${CMAKE_BINARY_DIR}/cmake_install.cmake VERBATIM )
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/doc/html
+          DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/mir-doc/
+          COMPONENT doc)
+
 endif()

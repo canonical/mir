@@ -34,6 +34,12 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mir_perf_framework_setup.py.in ${CMAK
 if (EXISTS "/etc/debian_version")
   # Debian requires special options, since they do a custom layout and things...
   install(CODE "execute_process(COMMAND python3 mir_perf_framework_setup.py install -f --prefix=${CMAKE_INSTALL_PREFIX} --root=\$ENV{DESTDIR} --install-layout=deb --no-compile WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})")
+
+  # Support arch-indep-only builds
+  add_custom_target(py-install
+                    COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_COMPONENT=python -P ${CMAKE_BINARY_DIR}/cmake_install.cmake VERBATIM )
+  install(CODE "execute_process(COMMAND python3 mir_perf_framework_setup.py install -f --prefix=${CMAKE_INSTALL_PREFIX} --root=\$ENV{DESTDIR} --install-layout=deb --no-compile WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})"
+          COMPONENT python)
 else()
   install(CODE "execute_process(COMMAND python3 mir_perf_framework_setup.py install -O1 -f --prefix=${CMAKE_INSTALL_PREFIX} --root=\$ENV{DESTDIR} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})")
 endif()
@@ -44,7 +50,15 @@ set(MIR_PERF_SCRIPTS
   touch_event_latency.py
 )
 
+# this install target is for normal builds...
 install(
   FILES ${MIR_PERF_SCRIPTS}
   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/mir-perf-framework
+)
+
+# ... and this for arch-indep-only builds.
+install(
+  FILES ${MIR_PERF_SCRIPTS}
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/mir-perf-framework
+  COMPONENT python
 )
