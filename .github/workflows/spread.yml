@@ -51,7 +51,8 @@ jobs:
             "google:ubuntu-20.04-64:spread/build/ubuntu:asan_clang",
             "google:ubuntu-20.04-64:spread/build/ubuntu:tsan_clang",
             "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan_clang"
-          ]
+          ],
+          "allow-fail": [false]
         }
         EOF
         else
@@ -67,6 +68,7 @@ jobs:
             "google:fedora-32-64:spread/build/fedora:amd64",
             "google:fedora-33-64:spread/build/fedora:amd64"
           ],
+          "allow-fail": [false],
           "include": [
             {
               "spread-task": "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel",
