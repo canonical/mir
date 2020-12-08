@@ -206,7 +206,7 @@ public:
 
     mir::graphics::gl::Program&
         compile_fragment_shader(
-            void* id,
+            void const* id,
             char const* extension_fragment,
             char const* fragment_fragment) override
     {
@@ -324,7 +324,7 @@ private:
     }
 
     ShaderHandle const vertex_shader;
-    std::vector<std::pair<void*, std::unique_ptr<::Program>>> programs;
+    std::vector<std::pair<void const*, std::unique_ptr<::Program>>> programs;
     // GL requires us to synchronise multi-threaded access to the shader APIs.
     std::mutex compilation_mutex;
 };
