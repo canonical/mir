@@ -224,12 +224,12 @@ public:
 
         std::stringstream opaque_fragment;
         opaque_fragment
+            << extension_fragment
+            << "\n"
             <<
             "#ifdef GL_ES\n"
             "precision mediump float;\n"
             "#endif\n"
-            << "\n"
-            << extension_fragment
             << "\n"
             << fragment_fragment
             << "\n"
@@ -241,12 +241,12 @@ public:
 
         std::stringstream alpha_fragment;
         alpha_fragment
+            << extension_fragment
+            << "\n"
             <<
             "#ifdef GL_ES\n"
             "precision mediump float;\n"
             "#endif\n"
-            << "\n"
-            << extension_fragment
             << "\n"
             << fragment_fragment
             << "\n"
