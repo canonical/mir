@@ -263,7 +263,7 @@ void mix::XInputPlatform::process_input_event()
                             event_time,
                             pos,
                             geom::Displacement{xbev.button == right ? 1 : xbev.button == left ? -1 : 0,
-                                               xbev.button == up ? 1 : xbev.button == down ? -1 : 0});
+                                               xbev.button == down ? 1 : xbev.button == up ? -1 : 0});
                     }
                     else
                     {
