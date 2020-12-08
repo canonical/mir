@@ -160,66 +160,77 @@ miw::PointerInputDevice::PointerInputDevice(std::shared_ptr<dispatch::ActionQueu
 {
 }
 
-void miw::PointerInputDevice::pointer_press(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll)
+void miw::PointerInputDevice::pointer_press(
+    std::chrono::nanoseconds event_time,
+    int button,
+    std::pair<float, float> const& pos,
+    std::pair<float, float> const& scroll)
 {
     enqueue([=](EventBuilder* b)
     {
         button_state |= to_pointer_button(button, mir_pointer_handedness_right);
 
-        auto const movement = pos - pointer_pos;
-        pointer_pos = pos;
+        auto const movement = std::make_pair(pos.first - cached_pos.first, pos.second - cached_pos.second);
+        cached_pos = pos;
         return b->pointer_event(
             event_time,
             mir_pointer_action_button_down,
             button_state,
-            pointer_pos.x.as_int(),
-            pointer_pos.y.as_int(),
-            scroll.dx.as_int(),
-            scroll.dy.as_int(),
-            movement.dx.as_int(),
-            movement.dy.as_int()
+            cached_pos.first,
+            cached_pos.second,
+            scroll.first,
+            scroll.second,
+            movement.first,
+            movement.second
         );
     });
 }
 
-void miw::PointerInputDevice::pointer_release(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll)
+void miw::PointerInputDevice::pointer_release(
+    std::chrono::nanoseconds event_time,
+    int button,
+    std::pair<float, float> const& pos,
+    std::pair<float, float> const& scroll)
 {
     enqueue([=](EventBuilder* b)
     {
         button_state &= ~to_pointer_button(button, mir_pointer_handedness_right);
 
-        auto const movement = pos - pointer_pos;
-        pointer_pos = pos;
+        auto const movement = std::make_pair(pos.first - cached_pos.first, pos.second - cached_pos.second);
+        cached_pos = pos;
         return b->pointer_event(
             event_time,
             mir_pointer_action_button_up,
             button_state,
-            pointer_pos.x.as_int(),
-            pointer_pos.y.as_int(),
-            scroll.dx.as_int(),
-            scroll.dy.as_int(),
-            movement.dx.as_int(),
-            movement.dy.as_int()
+            cached_pos.first,
+            cached_pos.second,
+            scroll.first,
+            scroll.second,
+            movement.first,
+            movement.second
         );
     });
 }
 
-void miw::PointerInputDevice::pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll)
+void miw::PointerInputDevice::pointer_motion(
+    std::chrono::nanoseconds event_time,
+    std::pair<float, float> const& pos,
+    std::pair<float, float> const& scroll)
 {
     enqueue([=](EventBuilder* b)
     {
-        auto const movement = pos - pointer_pos;
-        pointer_pos = pos;
+        auto const movement = std::make_pair(pos.first - cached_pos.first, pos.second - cached_pos.second);
+        cached_pos = pos;
         return b->pointer_event(
             event_time,
             mir_pointer_action_motion,
             button_state,
-            pointer_pos.x.as_int(),
-            pointer_pos.y.as_int(),
-            scroll.dx.as_int(),
-            scroll.dy.as_int(),
-            movement.dx.as_int(),
-            movement.dy.as_int()
+            cached_pos.first,
+            cached_pos.second,
+            scroll.first,
+            scroll.second,
+            movement.first,
+            movement.second
         );
     });
 }

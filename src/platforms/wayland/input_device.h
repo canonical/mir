@@ -99,11 +99,22 @@ public:
 
 private:
     MirPointerButtons button_state{0};
-    geometry::Point pointer_pos;
+    std::pair<float, float> cached_pos;
 
-    void pointer_press(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) override;
-    void pointer_release(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) override;
-    void pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll) override;
+    void pointer_press(
+        std::chrono::nanoseconds event_time,
+        int button,
+        std::pair<float, float> const& pos,
+        std::pair<float, float> const& scroll) override;
+    void pointer_release(
+        std::chrono::nanoseconds event_time,
+        int button,
+        std::pair<float, float> const& pos,
+        std::pair<float, float> const& scroll) override;
+    void pointer_motion(
+        std::chrono::nanoseconds event_time,
+        std::pair<float, float> const& pos,
+        std::pair<float, float> const& scroll) override;
 };
 
 class TouchInputDevice : public GenericInputDevice, public TouchInput

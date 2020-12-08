@@ -137,8 +137,8 @@ private:
     std::shared_ptr<input::wayland::KeyboardInput> keyboard_sink;
     std::shared_ptr<input::wayland::PointerInput> pointer_sink;
     std::shared_ptr<input::wayland::TouchInput> touch_sink;
-    geometry::Point pointer_pos;
-    geometry::Displacement pointer_scroll;
+    std::pair<float, float> pointer_pos;
+    std::pair<float, float> pointer_scroll;
     std::chrono::nanoseconds pointer_time;
     std::vector<events::ContactState> touch_contacts;
     std::chrono::nanoseconds touch_time;
