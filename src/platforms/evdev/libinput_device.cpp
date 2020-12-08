@@ -279,7 +279,7 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
             hscroll_value = horizontal_scroll_scale * libinput_event_pointer_get_axis_value_discrete(
                                                           pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
         if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
-            vscroll_value = -vertical_scroll_scale * libinput_event_pointer_get_axis_value_discrete(
+            vscroll_value = vertical_scroll_scale * libinput_event_pointer_get_axis_value_discrete(
                                                         pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
     }
     else
@@ -294,7 +294,7 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
                             scroll_units_to_ticks;
 
         if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
-            vscroll_value = -vertical_scroll_scale *
+            vscroll_value = vertical_scroll_scale *
                             libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) /
                             scroll_units_to_ticks;
     }
