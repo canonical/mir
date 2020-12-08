@@ -13,22 +13,6 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
-  Lint:
-    runs-on: ubuntu-latest
-
-    if: ${{ github.event_name == 'pull_request' || contains('refs/heads/staging refs/heads/trying', github.ref) }}
-
-    continue-on-error: true
-
-    steps:
-    - name: Check out code
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 2
-
-    - name: Run clang-format through the diff
-      uses: canonical/actions/clang-format@main
-
   GetMatrix:
     runs-on: ubuntu-latest
 
