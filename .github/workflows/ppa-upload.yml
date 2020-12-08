@@ -28,7 +28,7 @@ jobs:
     - name: Import GPG key
       uses: crazy-max/ghaction-import-gpg@v3
       with:
-        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+        gpg-private-key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
 
     - name: Check out code
       uses: actions/checkout@v2
