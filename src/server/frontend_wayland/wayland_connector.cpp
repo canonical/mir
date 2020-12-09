@@ -690,7 +690,8 @@ mf::WaylandConnector::WaylandConnector(
         if (wl_display_add_socket(display.get(), display_name) != 0)
         {
             BOOST_THROW_EXCEPTION(
-                std::system_error(errno, std::system_category(), "Failed to add Wayland socket"));
+                std::system_error(errno, std::system_category(),
+                    "Try unsetting or changing WAYLAND_DISPLAY. The current value can not be used:"));
         }
 
         wayland_display = display_name;
