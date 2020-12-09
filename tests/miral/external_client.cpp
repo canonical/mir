@@ -51,7 +51,7 @@ struct ExternalClient : miral::TestServer
 
     auto client_env_value(std::string const& key) const -> std::string
     {
-        auto const client_pid = external_client.launch({"bash", "-c", ("echo ${" + key + "} >" + output).c_str()});
+        auto const client_pid = external_client.launch({"bash", "-c", ("echo ${" + key + ":-(unset)} >" + output).c_str()});
         return get_client_env_value(client_pid);
     }
 
@@ -95,6 +95,10 @@ TEST_F(ExternalClient, default_app_env_is_as_expected)
     EXPECT_THAT(client_env_value("SDL_VIDEODRIVER"), StrEq("wayland"));
     EXPECT_THAT(client_env_value("NO_AT_BRIDGE"), StrEq("1"));
     EXPECT_THAT(client_env_value("_JAVA_AWT_WM_NONREPARENTING"), StrEq("1"));
+    EXPECT_THAT(client_env_value("MOZ_ENABLE_WAYLAND"), StrEq("1"));
+    EXPECT_THAT(client_env_value("GTK_MODULES"), StrEq("(unset)"));
+    EXPECT_THAT(client_env_value("OOO_FORCE_DESKTOP"), StrEq("(unset)"));
+    EXPECT_THAT(client_env_value("GNOME_ACCESSIBILITY"), StrEq("(unset)"));
 }
 
 TEST_F(ExternalClient, default_app_env_x11_is_as_expected)
