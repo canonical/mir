@@ -751,7 +751,12 @@ private:
             mw::ProtocolError{
                 resource,
                 Error::invalid_format,
-                "Format/modifier combination unsupported"}));
+                "Client requested unsupported format/modifier combination %s/%s (%u/%u,%u)",
+                drm_format_to_string(format),
+                drm_modifier_to_string(modifier.value_or(DRM_FORMAT_MOD_INVALID)),
+                format,
+                static_cast<uint32_t>(modifier.value_or(DRM_FORMAT_MOD_INVALID) >> 32),
+                static_cast<uint32_t>(modifier.value_or(DRM_FORMAT_MOD_INVALID) & 0xFFFFFFFF)}));
     }
 
     void create(int32_t width, int32_t height, uint32_t format, uint32_t flags) override
