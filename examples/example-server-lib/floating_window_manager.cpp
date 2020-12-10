@@ -203,8 +203,8 @@ bool FloatingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
         auto const delta_width = DeltaX{touch_pinch_width - old_touch_pinch_width};
         auto const delta_height = DeltaY{touch_pinch_height - old_touch_pinch_height};
 
-        auto new_width = std::max(old_size.width + delta_width, Width{5});
-        auto new_height = std::max(old_size.height + delta_height, Height{5});
+        auto new_width = std::max<Width>(old_size.width + delta_width, Width{5});
+        auto new_height = std::max<Height>(old_size.height + delta_height, Height{5});
         Displacement movement{
             DeltaX{touch_pinch_left - old_touch_pinch_left},
             DeltaY{touch_pinch_top  - old_touch_pinch_top}};

@@ -247,8 +247,8 @@ void Printer::printhelp(BackgroundInfo const& region)
                     std::max(X{}, region_top_left_in_glyph_space.x),
                     std::max(Y{}, region_top_left_in_glyph_space.y)};
             auto const clipped_glyph_lower_right = Point{
-                    std::min(X{} + as_displacement(glyph_size).dx, region_lower_right_in_glyph_space.x),
-                    std::min(Y{} + as_displacement(glyph_size).dy, region_lower_right_in_glyph_space.y)};
+                    std::min<X>(as_x(as_displacement(glyph_size).dx), region_lower_right_in_glyph_space.x),
+                    std::min<Y>(as_y(as_displacement(glyph_size).dy), region_lower_right_in_glyph_space.y)};
 
             unsigned char* const glyph_buffer = glyph->bitmap.buffer;
             auto glyph_pixel = Point{};
