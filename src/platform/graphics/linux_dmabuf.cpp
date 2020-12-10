@@ -638,30 +638,25 @@ private:
         planes[plane_idx].offset = offset;
         planes[plane_idx].stride = stride;
 
-        if (wl_resource_get_version(resource) >= 3)
+        auto const new_modifier = (static_cast<uint64_t>(modifier_hi) << 32) | modifier_lo;
+        if (modifier)
         {
-            // The modifier event was added in v3, but due to a quirk of the wrapping generator
-            // we can't use a helper here (https://github.com/MirServer/mir/issues/1715)
-            auto const new_modifier = (static_cast<uint64_t>(modifier_hi) << 32) | modifier_lo;
-            if (modifier)
+            if (*modifier != new_modifier)
             {
-                if (*modifier != new_modifier)
-                {
-                    BOOST_THROW_EXCEPTION((
-                        mw::ProtocolError{
-                            resource,
-                            Error::invalid_format,
-                            "Modifier %" PRIu64 " for plane %u doesn't match previously set"
-                            " modifier %" PRIu64 " - all planes must use the same modifier",
-                            new_modifier,
-                            plane_idx,
-                            *modifier}));
-                }
+                BOOST_THROW_EXCEPTION((
+                    mw::ProtocolError{
+                        resource,
+                        Error::invalid_format,
+                        "Modifier %" PRIu64 " for plane %u doesn't match previously set"
+                        " modifier %" PRIu64 " - all planes must use the same modifier",
+                        new_modifier,
+                        plane_idx,
+                        *modifier}));
             }
-            else
-            {
-                modifier = (static_cast<uint64_t>(modifier_hi) << 32) | modifier_lo;
-            }
+        }
+        else
+        {
+            modifier = (static_cast<uint64_t>(modifier_hi) << 32) | modifier_lo;
         }
     }
 
@@ -728,6 +723,11 @@ private:
 
     BufferGLDescription const& descriptor_for_format_and_modifiers(uint32_t format)
     {
+        /* The optional<uint64_t> modifier is guaranteed to be engaged here,
+         * as the add() call fills it if it is unset, and validate_and_count_planes()
+         * has already checked that add() has been called at least once.
+         */
+        auto const requested_modifier = modifier.value();
         for (auto i = 0u; i < formats->num_formats(); ++i)
         {
             auto const& [supported_format, modifiers, external_only] = (*formats)[i];
@@ -737,7 +737,7 @@ private:
                 auto const supported_modifier = modifiers[j];
 
                 if (static_cast<uint32_t>(supported_format) == format &&
-                    supported_modifier == modifier.value_or(DRM_FORMAT_MOD_INVALID))
+                    requested_modifier == supported_modifier)
                 {
                     if (external_only[j])
                     {
@@ -753,10 +753,10 @@ private:
                 Error::invalid_format,
                 "Client requested unsupported format/modifier combination %s/%s (%u/%u,%u)",
                 drm_format_to_string(format),
-                drm_modifier_to_string(modifier.value_or(DRM_FORMAT_MOD_INVALID)),
+                drm_modifier_to_string(requested_modifier),
                 format,
-                static_cast<uint32_t>(modifier.value_or(DRM_FORMAT_MOD_INVALID) >> 32),
-                static_cast<uint32_t>(modifier.value_or(DRM_FORMAT_MOD_INVALID) & 0xFFFFFFFF)}));
+                static_cast<uint32_t>(requested_modifier >> 32),
+                static_cast<uint32_t>(requested_modifier & 0xFFFFFFFF)}));
     }
 
     void create(int32_t width, int32_t height, uint32_t format, uint32_t flags) override
@@ -771,6 +771,8 @@ private:
                 wl_client_post_no_memory(client);
                 return;
             }
+
+            auto const last_valid_plane = validate_and_count_planes();
             new WlDmaBufBuffer{
                 dpy,
                 egl_extensions,
@@ -780,8 +782,8 @@ private:
                 height,
                 format,
                 flags,
-                modifier.value_or(DRM_FORMAT_MOD_INVALID),
-                {planes.cbegin(), validate_and_count_planes()}};
+                modifier.value(),
+                {planes.cbegin(), last_valid_plane}};
             send_created_event(buffer_resource);
         }
         catch (std::system_error const& err)
@@ -811,6 +813,8 @@ private:
 
         try
         {
+            auto const last_valid_plane = validate_and_count_planes();
+
             new WlDmaBufBuffer{
                 dpy,
                 egl_extensions,
@@ -820,8 +824,8 @@ private:
                 height,
                 format,
                 flags,
-                modifier.value_or(DRM_FORMAT_MOD_INVALID),
-                {planes.cbegin(), validate_and_count_planes()}};
+                modifier.value(),
+                {planes.cbegin(), last_valid_plane}};
         }
         catch (std::system_error const& err)
         {
