@@ -101,6 +101,7 @@ private:
     std::shared_ptr<XWaylandWMShell> const wm_shell;
     std::unique_ptr<XWaylandCursors> const cursors;
     xcb_window_t const wm_window;
+    xcb_window_t const selection_window; // TODO: can this be the same as the wm window?
     std::shared_ptr<XWaylandSceneObserver> const scene_observer;
     std::shared_ptr<XWaylandClientManager> const client_manager;
 

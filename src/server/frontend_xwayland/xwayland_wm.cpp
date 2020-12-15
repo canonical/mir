@@ -74,6 +74,32 @@ auto create_wm_window(mf::XCBConnection const& connection) -> xcb_window_t
     return wm_window;
 }
 
+auto create_selection_window(mf::XCBConnection const& connection) -> xcb_window_t
+{
+    uint32_t const attrib_values[]{XCB_EVENT_MASK_PROPERTY_CHANGE};
+
+    xcb_window_t const selection_window = xcb_generate_id(connection);
+    xcb_create_window(
+        connection,
+        XCB_COPY_FROM_PARENT,
+        selection_window,
+        connection.root_window(),
+        0, 0, 10, 10, 0,
+        XCB_WINDOW_CLASS_INPUT_OUTPUT,
+        connection.screen()->root_visual,
+        XCB_CW_EVENT_MASK, attrib_values);
+
+    xcb_set_selection_owner(connection, selection_window, connection.CLIPBOARD_MANAGER, XCB_TIME_CURRENT_TIME);
+
+    uint32_t const mask =
+        XCB_XFIXES_SELECTION_EVENT_MASK_SET_SELECTION_OWNER |
+        XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_WINDOW_DESTROY |
+        XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_CLIENT_CLOSE;
+    xcb_xfixes_select_selection_input(connection, selection_window, connection.CLIPBOARD, mask);
+
+    return selection_window;
+}
+
 void check_xfixes(mf::XCBConnection const& connection)
 {
     xcb_xfixes_query_version_cookie_t xfixes_cookie;
@@ -136,6 +162,7 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
       cursors{std::make_unique<XWaylandCursors>(connection)},
       wm_window{create_wm_window(*connection)},
+      selection_window{create_selection_window(*connection)},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
       client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)}
 {
