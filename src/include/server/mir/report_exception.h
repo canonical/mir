@@ -25,14 +25,17 @@
 namespace mir
 {
 /**
- *  Call this from a catch block (and only from a catch block)
- *  to write error information to an output stream.
+ *  Call from a catch block (and only from a catch block) to write error information to the appropriate stream.
  */
-void report_exception(std::ostream& out);
+void report_exception(std::ostream& out_stream, std::ostream& err_stream);
 
 /**
- *  Call this from a catch block (and only from a catch block)
- *  to write error information to std:cerr.
+ *  Call from a catch block (and only from a catch block) to write error information to the given stream.
+ */
+void report_exception(std::ostream& stream);
+
+/**
+ *  Call from a catch block (and only from a catch block) to write error information to stdout or stderr as appropriate.
  */
 void report_exception();
 }

@@ -24,11 +24,22 @@
 
 namespace mir
 {
+/// Indicates Mir should exit with an error message printed to stderr
 class AbnormalExit : public std::runtime_error
 {
 public:
     AbnormalExit(std::string const& what) :
         std::runtime_error(what)
+    {
+    }
+};
+
+/// Indicates Mir should exit with the given output (such as help text) printed to stdout
+class ExitWithOutput : public AbnormalExit
+{
+public:
+    ExitWithOutput(std::string const& what) :
+        AbnormalExit(what)
     {
     }
 };

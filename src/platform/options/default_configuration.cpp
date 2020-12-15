@@ -340,7 +340,7 @@ void mo::DefaultConfiguration::parse_arguments(
         {
             std::ostringstream help_text;
             help_text << desc;
-            BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
+            BOOST_THROW_EXCEPTION(mir::ExitWithOutput(help_text.str()));
         }
     }
     catch (po::error const& error)
