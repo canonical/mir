@@ -72,6 +72,7 @@ private:
     std::function<std::vector<uint32_t>()> const acquire_current_keyboard_state;
 
     wayland::Weak<WlSurface> focused_surface{};
+    wayland::DestroyListenerId destroy_listener_id{};
 
     uint32_t mods_depressed{0};
     uint32_t mods_latched{0};

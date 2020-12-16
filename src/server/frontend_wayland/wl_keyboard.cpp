@@ -70,7 +70,7 @@ mf::WlKeyboard::~WlKeyboard()
 {
     if (focused_surface)
     {
-        focused_surface.value().remove_destroy_listener(this);
+        focused_surface.value().remove_destroy_listener(destroy_listener_id);
     }
     on_destroy(this);
 }
@@ -116,7 +116,7 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
 
     if (focused_surface)
     {
-        focused_surface.value().remove_destroy_listener(this);
+        focused_surface.value().remove_destroy_listener(destroy_listener_id);
         auto const serial = wl_display_next_serial(wl_client_get_display(client));
         send_leave_event(serial, focused_surface.value().raw_resource());
     }
@@ -149,8 +149,7 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
                 keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
         }
 
-        surface->add_destroy_listener(
-            this,
+        destroy_listener_id = surface->add_destroy_listener(
             [this, surface]()
             {
                 focussed(surface, false);
@@ -164,6 +163,7 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
     }
     else
     {
+        destroy_listener_id = {};
         focused_surface = {};
     }
 }
