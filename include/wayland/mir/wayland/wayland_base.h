@@ -76,7 +76,7 @@ public:
 
     virtual ~LifetimeTracker();
     /// The pointed-at bool contains false if this object is still alive and true if it has been destroyed.
-    auto destroyed_flag() const -> std::shared_ptr<bool>;
+    auto destroyed_flag() const -> std::shared_ptr<bool const>;
     /// The given function will be called just before the object is marked as destroyed. The returned ID can be used
     /// to remove the listener in which case it is never called. DestroyListenerId{} (value 0) is never returned, and so
     /// it can be used as a null ID. Destroy listener call order is undefined.
@@ -177,7 +177,7 @@ private:
     T* resource;
     /// Is null if and only if resource is null
     /// If the target bool is true then resrouce has been freed and should not be used
-    std::shared_ptr<bool> destroyed_flag;
+    std::shared_ptr<bool const> destroyed_flag;
 };
 
 template<typename T>

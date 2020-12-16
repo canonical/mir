@@ -63,7 +63,7 @@ mw::LifetimeTracker::~LifetimeTracker()
     mark_destroyed();
 }
 
-auto mw::LifetimeTracker::destroyed_flag() const -> std::shared_ptr<bool>
+auto mw::LifetimeTracker::destroyed_flag() const -> std::shared_ptr<bool const>
 {
     if (!destroyed)
     {
