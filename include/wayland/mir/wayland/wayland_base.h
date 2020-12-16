@@ -19,9 +19,12 @@
 #ifndef MIR_WAYLAND_OBJECT_H_
 #define MIR_WAYLAND_OBJECT_H_
 
-#include <boost/throw_exception.hpp>
+#include "mir/int_wrapper.h"
 
+#include <boost/throw_exception.hpp>
 #include <memory>
+#include <map>
+#include <functional>
 #include <stdexcept>
 
 struct wl_resource;
@@ -54,6 +57,13 @@ private:
     uint32_t const error_code;
 };
 
+namespace detail
+{
+struct DestroyListenerIdTag;
+}
+
+typedef IntWrapper<detail::DestroyListenerIdTag> DestroyListenerId;
+
 /// The base class of any object that wants to provide a destroyed flag
 /// The destroyed flag is only created when needed and automatically set to true on destruction
 /// This pattern is only safe in a single-threaded context
@@ -66,12 +76,16 @@ public:
 
     virtual ~LifetimeTracker();
     auto destroyed_flag() const -> std::shared_ptr<bool>;
+    auto add_destroy_listener(std::function<void()> listener) const -> DestroyListenerId;
+    void remove_destroy_listener(DestroyListenerId id) const;
 
 protected:
     void mark_destroyed() const;
 
 private:
     std::shared_ptr<bool> mutable destroyed{nullptr};
+    std::map<DestroyListenerId, std::function<void()>> mutable destroy_listeners;
+    DestroyListenerId mutable last_id{0};
 };
 
 class Resource

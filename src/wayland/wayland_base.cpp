@@ -60,10 +60,7 @@ auto mw::ProtocolError::code() const -> uint32_t
 
 mw::LifetimeTracker::~LifetimeTracker()
 {
-    if (destroyed)
-    {
-        *destroyed = true;
-    }
+    mark_destroyed();
 }
 
 auto mw::LifetimeTracker::destroyed_flag() const -> std::shared_ptr<bool>
@@ -75,8 +72,26 @@ auto mw::LifetimeTracker::destroyed_flag() const -> std::shared_ptr<bool>
     return destroyed;
 }
 
+auto mw::LifetimeTracker::add_destroy_listener(std::function<void()> listener) const -> DestroyListenerId
+{
+    last_id = DestroyListenerId{last_id.as_value() + 1};
+    destroy_listeners[last_id] = listener;
+    return last_id;
+}
+
+void mw::LifetimeTracker::remove_destroy_listener(DestroyListenerId id) const
+{
+    destroy_listeners.erase(id);
+}
+
 void mw::LifetimeTracker::mark_destroyed() const
 {
+    auto const local_listeners = std::move(destroy_listeners);
+    destroy_listeners.clear();
+    for (auto const& listener : local_listeners)
+    {
+        listener.second();
+    }
     if (destroyed)
     {
         *destroyed = true;
