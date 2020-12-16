@@ -31,11 +31,8 @@ namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 
-mf::WlTouch::WlTouch(
-    wl_resource* new_resource,
-    std::function<void(WlTouch*)> const& on_destroy)
-    : Touch(new_resource, Version<6>()),
-      on_destroy{on_destroy}
+mf::WlTouch::WlTouch(wl_resource* new_resource)
+    : Touch(new_resource, Version<6>())
 {
 }
 
@@ -48,7 +45,6 @@ mf::WlTouch::~WlTouch()
             touch.second.surface.value().remove_destroy_listener(touch.second.destroy_listener_id);
         }
     }
-    on_destroy(this);
 }
 
 void mf::WlTouch::release()

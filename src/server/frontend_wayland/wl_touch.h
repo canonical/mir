@@ -38,9 +38,7 @@ class WlSurface;
 class WlTouch : public wayland::Touch
 {
 public:
-    WlTouch(
-        wl_resource* new_resource,
-        std::function<void(WlTouch*)> const& on_destroy);
+    WlTouch(wl_resource* new_resource);
 
     ~WlTouch();
 
@@ -58,8 +56,6 @@ public:
     void frame();
 
 private:
-    std::function<void(WlTouch*)> on_destroy;
-
     struct TouchedSurface
     {
         wayland::Weak<WlSurface> surface;

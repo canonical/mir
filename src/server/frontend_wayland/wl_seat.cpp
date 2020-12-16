@@ -287,14 +287,13 @@ void mf::WlSeat::Instance::get_keyboard(wl_resource* new_keyboard)
 
 void mf::WlSeat::Instance::get_touch(wl_resource* new_touch)
 {
-    seat->touch_listeners->register_listener(
-        client,
-        new WlTouch{
-            new_touch,
-            [listeners = seat->touch_listeners, client = client](WlTouch* listener)
-            {
-                listeners->unregister_listener(client, listener);
-            }});
+    auto const touch = new WlTouch{new_touch};
+    seat->touch_listeners->register_listener(client, touch);
+    touch->add_destroy_listener(
+        [listeners = seat->touch_listeners, listener = touch, client = client]()
+        {
+            listeners->unregister_listener(client, listener);
+        });
 }
 
 void mf::WlSeat::Instance::release()
