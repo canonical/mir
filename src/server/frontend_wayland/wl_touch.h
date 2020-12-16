@@ -59,16 +59,18 @@ public:
 
 private:
     std::function<void(WlTouch*)> on_destroy;
+
+    struct TouchedSurface
+    {
+        wayland::Weak<WlSurface> surface;
+        wayland::DestroyListenerId destroy_listener_id;
+    };
+
     /// Maps touch IDs to the surfaces the touch is on
-    std::unordered_map<int32_t, wayland::Weak<WlSurface>> touch_id_to_surface;
+    std::unordered_map<int32_t, TouchedSurface> touch_id_to_surface;
     bool can_send_frame{false};
 
     void release() override;
-
-    /// Maps every touch_id for every WlTouch to a stable and globally unique pointer
-    /// Used for surface destory listener keys
-    /// The returned pointer should only be used as a key, it will not necessarily point to anything meaningful/valid
-    void const* unique_key_for(int32_t touch_id) const;
 };
 
 }
