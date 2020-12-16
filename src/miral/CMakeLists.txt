@@ -37,7 +37,10 @@ add_library(miral-internal STATIC
 set_target_properties(miral-internal
     PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS}  -fvisibility=hidden")
 
-set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
+set_source_files_properties(xcursor.c PROPERTIES
+    COMPILE_DEFINITIONS _GNU_SOURCE
+    COMPILE_FLAGS "-Wno-error=stringop-truncation"
+)
 
 add_library(miral SHARED
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
