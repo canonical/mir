@@ -75,7 +75,7 @@ private:
     std::function<void(WlPointer*)> on_destroy;
 
     bool can_send_frame{false};
-    std::experimental::optional<WlSurface*> surface_under_cursor;
+    wayland::Weak<WlSurface> surface_under_cursor;
 
     void send_update(
         std::chrono::milliseconds const& ms,
