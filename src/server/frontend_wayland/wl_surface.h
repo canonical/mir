@@ -134,8 +134,6 @@ public:
                                std::vector<mir::geometry::Rectangle>& input_shape_accumulator,
                                geometry::Displacement const& parent_offset) const;
     void commit(WlSurfaceState const& state);
-    void add_destroy_listener(void const* key, std::function<void()> listener);
-    void remove_destroy_listener(void const* key);
 
     std::shared_ptr<scene::Session> const session;
     std::shared_ptr<compositor::BufferStream> const stream;
@@ -155,7 +153,6 @@ private:
     std::experimental::optional<geometry::Size> buffer_size_;
     std::vector<std::shared_ptr<WlSurfaceState::Callback>> frame_callbacks;
     std::experimental::optional<std::vector<mir::geometry::Rectangle>> input_shape;
-    std::map<void const*, std::function<void()>> destroy_listeners;
 
     void send_frame_callbacks();
 
