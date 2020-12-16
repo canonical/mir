@@ -114,7 +114,7 @@ mf::WlPointer::WlPointer(
 mf::WlPointer::~WlPointer()
 {
     if (surface_under_cursor)
-        surface_under_cursor.value().remove_destroy_listener(this);
+        surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
     on_destroy(this);
 }
 
@@ -132,13 +132,14 @@ void mf::WlPointer::leave()
 {
     if (!surface_under_cursor)
         return;
-    surface_under_cursor.value().remove_destroy_listener(this);
+    surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
     auto const serial = wl_display_next_serial(display);
     send_leave_event(
         serial,
         surface_under_cursor.value().raw_resource());
     can_send_frame = true;
     surface_under_cursor = {};
+    destroy_listener_id = {};
 }
 
 void mf::WlPointer::button(std::chrono::milliseconds const& ms, uint32_t button, bool pressed)
@@ -246,8 +247,7 @@ void mf::WlPointer::send_update(
             position_on_target.first,
             position_on_target.second);
         can_send_frame = true;
-        target_surface->add_destroy_listener(
-            this,
+        destroy_listener_id = target_surface->add_destroy_listener(
             [this]()
             {
                 leave();

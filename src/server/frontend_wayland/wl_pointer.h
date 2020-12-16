@@ -76,6 +76,7 @@ private:
 
     bool can_send_frame{false};
     wayland::Weak<WlSurface> surface_under_cursor;
+    wayland::DestroyListenerId destroy_listener_id;
 
     void send_update(
         std::chrono::milliseconds const& ms,
