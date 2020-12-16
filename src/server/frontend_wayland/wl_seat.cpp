@@ -236,14 +236,13 @@ mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
 
 void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
 {
-    seat->pointer_listeners->register_listener(
-        client,
-        new WlPointer{
-            new_pointer,
-            [listeners = seat->pointer_listeners, client = client](WlPointer* listener)
-            {
-                listeners->unregister_listener(client, listener);
-            }});
+    auto const pointer = new WlPointer{new_pointer};
+    seat->pointer_listeners->register_listener(client, pointer);
+    pointer->add_destroy_listener(
+        [listeners = seat->pointer_listeners, listener = pointer, client = client]()
+        {
+            listeners->unregister_listener(client, listener);
+        });
 }
 
 void mf::WlSeat::Instance::get_keyboard(wl_resource* new_keyboard)
