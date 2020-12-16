@@ -75,11 +75,19 @@ public:
     LifetimeTracker& operator=(LifetimeTracker const&) = delete;
 
     virtual ~LifetimeTracker();
+    /// The pointed-at bool contains false if this object is still alive and true if it has been destroyed.
     auto destroyed_flag() const -> std::shared_ptr<bool>;
+    /// The given function will be called just before the object is marked as destroyed. The returned ID can be used
+    /// to remove the listener in which case it is never called. DestroyListenerId{} (value 0) is never returned, and so
+    /// it can be used as a null ID. Destroy listener call order is undefined.
     auto add_destroy_listener(std::function<void()> listener) const -> DestroyListenerId;
+    /// If the given ID maps to a destroy listener, that listener is dropped without being called. If the listener has
+    /// already been dropped or never existed, this call is ignored.
     void remove_destroy_listener(DestroyListenerId id) const;
 
 protected:
+    /// Subclasses are not required to call this, but may do so during the destruction process if the object needs to
+    /// get marked as destroyed and fire its destroy listeners before some other part of the destructor runs.
     void mark_destroyed() const;
 
 private:
