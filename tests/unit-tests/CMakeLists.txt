@@ -77,6 +77,7 @@ set(
   test_posix_timestamp.cpp
   test_observer_multiplexer.cpp
   test_edid.cpp
+  test_report_exception.cpp
 )
 
 if (HAVE_PTHREAD_GETNAME_NP)
