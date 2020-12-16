@@ -39,13 +39,11 @@ namespace mi = mir::input;
 mf::WlKeyboard::WlKeyboard(
     wl_resource* new_resource,
     mir::input::Keymap const& initial_keymap,
-    std::function<void(WlKeyboard*)> const& on_destroy,
     std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state)
     : Keyboard(new_resource, Version<6>()),
       keymap{nullptr, &xkb_keymap_unref},
       state{nullptr, &xkb_state_unref},
       context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), &xkb_context_unref},
-      on_destroy{on_destroy},
       acquire_current_keyboard_state{acquire_current_keyboard_state}
 {
     // TODO: We should really grab the keymap for the focused surface when
@@ -72,7 +70,6 @@ mf::WlKeyboard::~WlKeyboard()
     {
         focused_surface.value().remove_destroy_listener(destroy_listener_id);
     }
-    on_destroy(this);
 }
 
 void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, WlSurface* surface, int scancode, bool down)

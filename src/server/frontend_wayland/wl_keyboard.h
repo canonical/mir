@@ -50,7 +50,6 @@ public:
     WlKeyboard(
         wl_resource* new_resource,
         mir::input::Keymap const& initial_keymap,
-        std::function<void(WlKeyboard*)> const& on_destroy,
         std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state);
 
     ~WlKeyboard();
@@ -68,7 +67,6 @@ private:
     std::unique_ptr<xkb_state, void (*)(xkb_state *)> state;
     std::unique_ptr<xkb_context, void (*)(xkb_context *)> const context;
 
-    std::function<void(WlKeyboard*)> on_destroy;
     std::function<std::vector<uint32_t>()> const acquire_current_keyboard_state;
 
     wayland::Weak<WlSurface> focused_surface{};
