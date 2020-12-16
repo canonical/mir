@@ -23,7 +23,6 @@
 
 #include <boost/throw_exception.hpp>
 #include <memory>
-#include <map>
 #include <functional>
 #include <stdexcept>
 
@@ -70,7 +69,7 @@ typedef IntWrapper<detail::DestroyListenerIdTag> DestroyListenerId;
 class LifetimeTracker
 {
 public:
-    LifetimeTracker() = default;
+    LifetimeTracker();
     LifetimeTracker(LifetimeTracker const&) = delete;
     LifetimeTracker& operator=(LifetimeTracker const&) = delete;
 
@@ -91,9 +90,11 @@ protected:
     void mark_destroyed() const;
 
 private:
-    std::shared_ptr<bool> mutable destroyed{nullptr};
-    std::map<DestroyListenerId, std::function<void()>> mutable destroy_listeners;
-    DestroyListenerId mutable last_id{0};
+    struct Impl;
+
+    /// Since many Wayland objects are created and the features of this class are used for only a few, impl is created
+    /// lazily to conserve memory.
+    std::unique_ptr<Impl> mutable impl;
 };
 
 class Resource

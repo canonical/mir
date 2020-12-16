@@ -16,11 +16,12 @@
  * Authored By: William Wold <william.wold@canonical.com>
  */
 
-#include <boost/throw_exception.hpp>
-#include <wayland-server-core.h>
+#include "mir/wayland/wayland_base.h"
 #include "mir/log.h"
 
-#include "mir/wayland/wayland_base.h"
+#include <map>
+#include <boost/throw_exception.hpp>
+#include <wayland-server-core.h>
 
 namespace mw = mir::wayland;
 
@@ -58,6 +59,17 @@ auto mw::ProtocolError::code() const -> uint32_t
     return error_code;
 }
 
+struct mw::LifetimeTracker::Impl
+{
+    std::shared_ptr<bool> destroyed{nullptr};
+    std::map<DestroyListenerId, std::function<void()>> destroy_listeners;
+    DestroyListenerId last_id{0};
+};
+
+mw::LifetimeTracker::LifetimeTracker()
+{
+}
+
 mw::LifetimeTracker::~LifetimeTracker()
 {
     mark_destroyed();
@@ -65,36 +77,51 @@ mw::LifetimeTracker::~LifetimeTracker()
 
 auto mw::LifetimeTracker::destroyed_flag() const -> std::shared_ptr<bool const>
 {
-    if (!destroyed)
+    if (!impl)
     {
-        destroyed = std::make_shared<bool>(false);
+        impl = std::make_unique<Impl>();
     }
-    return destroyed;
+    if (!impl->destroyed)
+    {
+        impl->destroyed = std::make_shared<bool>(false);
+    }
+    return impl->destroyed;
 }
 
 auto mw::LifetimeTracker::add_destroy_listener(std::function<void()> listener) const -> DestroyListenerId
 {
-    last_id = DestroyListenerId{last_id.as_value() + 1};
-    destroy_listeners[last_id] = listener;
-    return last_id;
+    if (!impl)
+    {
+        impl = std::make_unique<Impl>();
+    }
+    auto const id = DestroyListenerId{impl->last_id.as_value() + 1};
+    impl->last_id = id;
+    impl->destroy_listeners[id] = listener;
+    return id;
 }
 
 void mw::LifetimeTracker::remove_destroy_listener(DestroyListenerId id) const
 {
-    destroy_listeners.erase(id);
+    if (impl)
+    {
+        impl->destroy_listeners.erase(id);
+    }
 }
 
 void mw::LifetimeTracker::mark_destroyed() const
 {
-    auto const local_listeners = std::move(destroy_listeners);
-    destroy_listeners.clear();
-    for (auto const& listener : local_listeners)
+    if (impl)
     {
-        listener.second();
-    }
-    if (destroyed)
-    {
-        *destroyed = true;
+        auto const local_listeners = std::move(impl->destroy_listeners);
+        impl->destroy_listeners.clear();
+        for (auto const& listener : local_listeners)
+        {
+            listener.second();
+        }
+        if (impl->destroyed)
+        {
+            *impl->destroyed = true;
+        }
     }
 }
 
