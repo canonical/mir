@@ -360,7 +360,12 @@ global:
     mir::wayland::ProtocolError::resource*;
     typeinfo?for?mir::wayland::ProtocolError;
     vtable?for?mir::wayland::ProtocolError;
+  };
+} MIRWAYLAND_2.0;
 
+MIRWAYLAND_2.2 {
+global:
+  extern "C++" {
     mir::wayland::PointerConstraintsV1::*;
     non-virtual?thunk?to?mir::wayland::PointerConstraintsV1::*;
     typeinfo?for?mir::wayland::PointerConstraintsV1;
@@ -395,4 +400,4 @@ global:
     vtable?for?mir::wayland::RelativePointerV1;
     virtual?thunk?to?mir::wayland::RelativePointerV1::?RelativePointerV1*;
   };
-} MIRWAYLAND_2.0;
+} MIRWAYLAND_2.1;

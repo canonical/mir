@@ -181,9 +181,7 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
     return std::vector<std::string>{
         mw::Shell::interface_name,
         mw::XdgWmBase::interface_name,
-        mw::XdgShellV6::interface_name,
-        mw::PointerConstraintsV1::interface_name,
-        mw::RelativePointerManagerV1::interface_name};
+        mw::XdgShellV6::interface_name};
 }
 
 auto mf::get_supported_extensions() -> std::vector<std::string>
