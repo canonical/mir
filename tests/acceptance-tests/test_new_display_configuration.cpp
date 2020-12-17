@@ -200,7 +200,7 @@ struct DisplayConfigurationTest : mtf::ConnectedClientWithAWindow
 
         server.the_display_configuration_controller()->set_base_configuration(new_config);
 
-        if (future.wait_for(std::chrono::seconds{10}) != std::future_status::ready)
+        if (future.wait_for(60s) != std::future_status::ready)
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{"Timeout waiting for display configuration to apply"});
         }
@@ -248,7 +248,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
     mock_display->emit_configuration_change_event(
         mt::fake_shared(changed_stub_display_config));
 
-    EXPECT_TRUE(callback_called.wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(callback_called.wait_for(60s));
 
     // At this point, the message has gone out on the wire. since with unsubscribed_connection
     // we're emulating a client that is passively subscribed, we will just wait for the display
@@ -290,7 +290,7 @@ struct SimpleClient
         mir_window_spec_release(spec);
         mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 
-        ready_to_accept_events.wait_for(4s);
+        ready_to_accept_events.wait_for(60s);
         if (!ready_to_accept_events.raised())
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
     }
@@ -395,7 +395,7 @@ TEST_F(DisplayConfigurationTest, shell_initiated_display_configuration_notifies_
 
     server.the_display_configuration_controller()->set_base_configuration(new_conf);
 
-    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(context.done.wait_for(60s));
 
     EXPECT_THAT(
         *server.the_display()->configuration(),
@@ -696,7 +696,7 @@ TEST_F(DisplayConfigurationTest, mode_width_and_height_are_independent_of_orient
             });
         server.the_display_configuration_controller()->set_base_configuration(server_config);
 
-        EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
+        EXPECT_TRUE(context.done.wait_for(60s));
         context.done.reset();
 
         auto config = client.get_base_config();
@@ -778,7 +778,7 @@ TEST_F(DisplayConfigurationTest, output_position_is_independent_of_orientation)
         &context);
 
     server.the_display_configuration_controller()->set_base_configuration(server_config);
-    context.done.wait_for(std::chrono::seconds{10});
+    context.done.wait_for(60s);
 
     for (auto const orientation :
         {mir_orientation_normal, mir_orientation_left, mir_orientation_inverted, mir_orientation_right})
@@ -793,7 +793,7 @@ TEST_F(DisplayConfigurationTest, output_position_is_independent_of_orientation)
         context.done.reset();
         server.the_display_configuration_controller()->set_base_configuration(server_config);
 
-        EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
+        EXPECT_TRUE(context.done.wait_for(60s));
 
         auto config = client.get_base_config();
 
@@ -845,7 +845,7 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_output_positions)
 
     server.the_display_configuration_controller()->set_base_configuration(server_config);
 
-    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(context.done.wait_for(60s));
 
     auto config = client.get_base_config();
 
@@ -895,7 +895,7 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_scale_factor)
 
     server.the_display_configuration_controller()->set_base_configuration(current_config);
 
-    EXPECT_TRUE(configuration_received.wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(configuration_received.wait_for(60s));
 
     auto client_config = client.get_base_config();
 
@@ -938,7 +938,7 @@ TEST_F(DisplayConfigurationTest, client_can_set_scale_factor)
 
     mir_connection_preview_base_display_configuration(client.connection, client_config.get(), 10);
 
-    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{5}));
+    EXPECT_TRUE(context.done.wait_for(60s));
 
     mir_connection_confirm_base_display_configuration(client.connection, client_config.get());
 
@@ -1039,7 +1039,7 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
 
     server.the_display_configuration_controller()->set_base_configuration(current_config);
 
-    EXPECT_TRUE(configuration_received.wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(configuration_received.wait_for(60s));
 
     auto client_config = client.get_base_config();
 
@@ -1085,7 +1085,7 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_gamma)
 
     server.the_display_configuration_controller()->set_base_configuration(current_config);
 
-    EXPECT_TRUE(configuration_received.wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(configuration_received.wait_for(60s));
 
     auto client_config = client.get_base_config();
 
@@ -1161,7 +1161,7 @@ TEST_F(DisplayConfigurationTest, client_can_set_gamma)
 
     mir_connection_preview_base_display_configuration(client.connection, client_config.get(), 10);
 
-    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{5}));
+    EXPECT_TRUE(context.done.wait_for(60s));
 
     mir_connection_confirm_base_display_configuration(client.connection, client_config.get());
 
@@ -1453,7 +1453,7 @@ TEST_F(DisplayConfigurationTest, preview_base_display_configuration_sends_config
 
     mir_connection_preview_base_display_configuration(client.connection, config.get(), 5);
 
-    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(context.done.wait_for(60s));
 
     client.disconnect();
 }
@@ -1517,7 +1517,7 @@ TEST_F(DisplayConfigurationTest, preview_base_display_configuration_reverts_afte
     EXPECT_TRUE(context.done.raised());
     EXPECT_FALSE(reverted->raised());
 
-    EXPECT_TRUE(reverted->wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(reverted->wait_for(60s));
 
     client.disconnect();
 }
@@ -1568,11 +1568,11 @@ TEST_F(DisplayConfigurationTest, display_configuration_sticks_after_confirmation
 
     mir_connection_preview_base_display_configuration(client.connection, new_config.get(), 10);
 
-    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{5}));
+    EXPECT_TRUE(context.done.wait_for(60s));
 
     mir_connection_confirm_base_display_configuration(client.connection, new_config.get());
 
-    EXPECT_TRUE(signalled_twice->wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(signalled_twice->wait_for(60s));
 
     client.disconnect();
 }
@@ -1613,7 +1613,7 @@ TEST_F(DisplayConfigurationTest, unauthorised_client_receives_error)
 
     mir_connection_preview_base_display_configuration(client.connection, config.get(), 20);
 
-    EXPECT_TRUE(validator.received.wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(validator.received.wait_for(60s));
 
     client.disconnect();
 }
@@ -1655,7 +1655,7 @@ TEST_F(DisplayConfigurationTest, can_confirm_base_configuration_without_waiting_
     mir_connection_preview_base_display_configuration(client.connection, new_config.get(), 1);
     mir_connection_confirm_base_display_configuration(client.connection, new_config.get());
 
-    EXPECT_TRUE(received_new_configuration->wait_for(10s));
+    EXPECT_TRUE(received_new_configuration->wait_for(60s));
 
     client.disconnect();
 }
@@ -1679,7 +1679,7 @@ TEST_F(DisplayConfigurationTest, receives_error_when_display_configuration_alrea
     mir_connection_preview_base_display_configuration(client.connection, config.get(), 20);
     mir_connection_preview_base_display_configuration(client.connection, config.get(), 20);
 
-    EXPECT_TRUE(validator.received.wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(validator.received.wait_for(60s));
 
     client.disconnect();
 }
@@ -1721,13 +1721,13 @@ TEST_F(DisplayConfigurationTest, can_cancel_base_display_configuration_preview)
     expectation.configuration = new_config.get();
     mir_connection_preview_base_display_configuration(client.connection, new_config.get(), 20);
 
-    EXPECT_TRUE(expectation.satisfied.wait_for(10s));
+    EXPECT_TRUE(expectation.satisfied.wait_for(60s));
     expectation.satisfied.reset();
 
     expectation.configuration = old_config.get();
     mir_connection_cancel_base_display_configuration_preview(client.connection);
 
-    EXPECT_TRUE(expectation.satisfied.wait_for(10s));
+    EXPECT_TRUE(expectation.satisfied.wait_for(60s));
 
     client.disconnect();
 }
@@ -1750,7 +1750,7 @@ TEST_F(DisplayConfigurationTest, cancel_receives_error_when_no_preview_pending)
 
     mir_connection_cancel_base_display_configuration_preview(client.connection);
 
-    EXPECT_TRUE(validator.received.wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(validator.received.wait_for(60s));
 
     validator.received.reset();
 
@@ -1759,7 +1759,7 @@ TEST_F(DisplayConfigurationTest, cancel_receives_error_when_no_preview_pending)
 
     mir_connection_cancel_base_display_configuration_preview(client.connection);
 
-    EXPECT_TRUE(validator.received.wait_for(std::chrono::seconds{10}));
+    EXPECT_TRUE(validator.received.wait_for(60s));
 
     client.disconnect();
 }
@@ -1807,13 +1807,13 @@ TEST_F(DisplayConfigurationTest, client_receives_exactly_one_configuration_event
     auto timeout_time = std::chrono::steady_clock::now() + 2s;
     mir_connection_preview_base_display_configuration(client.connection, new_config.get(), 2);
 
-    EXPECT_TRUE(expectation.satisfied.wait_for(2s));
+    EXPECT_TRUE(expectation.satisfied.wait_for(60s));
     expectation.satisfied.reset();
 
     expectation.configuration = old_config.get();
     mir_connection_cancel_base_display_configuration_preview(client.connection);
 
-    EXPECT_TRUE(expectation.satisfied.wait_for(10s));
+    EXPECT_TRUE(expectation.satisfied.wait_for(60s));
 
     // Sleep until a bit after the preview would timeout to check that the timeout doesn't
     // send a second event.
@@ -1861,7 +1861,7 @@ TEST_F(DisplayConfigurationTest, cancel_doesnt_affect_other_clients_configuratio
     expectation.configuration = new_config.get();
     mir_connection_preview_base_display_configuration(configuring_client.connection, new_config.get(), 20);
 
-    EXPECT_TRUE(expectation.satisfied.wait_for(10s));
+    EXPECT_TRUE(expectation.satisfied.wait_for(60s));
     expectation.satisfied.reset();
 
     mt::Signal error_received;
@@ -1881,13 +1881,13 @@ TEST_F(DisplayConfigurationTest, cancel_doesnt_affect_other_clients_configuratio
 
     mir_connection_cancel_base_display_configuration_preview(interfering_client.connection);
 
-    EXPECT_TRUE(error_received.wait_for(10s));
+    EXPECT_TRUE(error_received.wait_for(60s));
     EXPECT_THAT(configuring_client.get_base_config().get(), mt::DisplayConfigMatches(new_config.get()));
 
     expectation.configuration = old_config.get();
     mir_connection_cancel_base_display_configuration_preview(configuring_client.connection);
 
-    EXPECT_TRUE(expectation.satisfied.wait_for(10s));
+    EXPECT_TRUE(expectation.satisfied.wait_for(60s));
 
     configuring_client.disconnect();
     interfering_client.disconnect();
@@ -1922,7 +1922,7 @@ TEST_F(DisplayConfigurationTest, error_in_configure_when_previewing_propagates_t
 
     mir_connection_preview_base_display_configuration(client.connection, config.get(), 100);
 
-    EXPECT_TRUE(error_received.wait_for(10s));
+    EXPECT_TRUE(error_received.wait_for(60s));
 
     client.disconnect();
 }
@@ -1937,7 +1937,7 @@ TEST_F(DisplayConfigurationTest, configure_session_display)
 
     mir_connection_apply_session_display_config(connection, configuration);
 
-    observed_changed.wait_for(10s);
+    observed_changed.wait_for(60s);
 
     mir_display_config_release(configuration);
 }
@@ -1952,7 +1952,7 @@ TEST_F(DisplayConfigurationTest, configure_session_removed_display)
 
     mir_connection_apply_session_display_config(connection, configuration);
 
-    observed_changed.wait_for(10s);
+    observed_changed.wait_for(60s);
     observed_changed.reset();
 
     EXPECT_CALL(*observer, session_configuration_removed(_))
@@ -1961,7 +1961,7 @@ TEST_F(DisplayConfigurationTest, configure_session_removed_display)
 
     mir_connection_remove_session_display_config(connection);
 
-    observed_changed.wait_for(10s);
+    observed_changed.wait_for(60s);
 
     mir_display_config_release(configuration);
 }
@@ -2001,7 +2001,7 @@ TEST_F(DisplayConfigurationTest, remove_from_focused_client_causes_hardware_chan
 
         mir_connection_apply_session_display_config(client.connection, new_config);
 
-        observed_changed.wait_for(10s);
+        observed_changed.wait_for(60s);
         observed_changed.reset();
         mir_display_config_release(new_config);
     }
@@ -2022,7 +2022,7 @@ TEST_F(DisplayConfigurationTest, remove_from_focused_client_causes_hardware_chan
 
         mir_connection_remove_session_display_config(client.connection);
 
-        observed_changed.wait_for(10s);
+        observed_changed.wait_for(60s);
     }
 
     client.disconnect();
@@ -2053,7 +2053,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_no_hardware
 
         mir_connection_apply_session_display_config(client.connection, new_config);
 
-        observed_changed.wait_for(10s);
+        observed_changed.wait_for(60s);
         observed_changed.reset();
         mir_display_config_release(new_config);
     }
@@ -2070,7 +2070,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_no_hardware
                     mt::WakeUp(&observed_changed)));
 
         client2.connect();
-        observed_changed.wait_for(10s);
+        observed_changed.wait_for(60s);
         observed_changed.reset();
     }
 
@@ -2084,7 +2084,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_no_hardware
 
         mir_connection_remove_session_display_config(client.connection);
 
-        observed_changed.wait_for(10s);
+        observed_changed.wait_for(60s);
         std::this_thread::sleep_for(1s);
     }
 
@@ -2117,7 +2117,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_hardware_ch
 
         mir_connection_apply_session_display_config(client.connection, new_config);
 
-        observed_changed.wait_for(10s);
+        observed_changed.wait_for(60s);
         observed_changed.reset();
     }
 
@@ -2133,7 +2133,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_hardware_ch
                     mt::WakeUp(&observed_changed)));
 
         client2.connect();
-        observed_changed.wait_for(10s);
+        observed_changed.wait_for(60s);
         observed_changed.reset();
     }
 
@@ -2152,7 +2152,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_hardware_ch
                     mt::WakeUpWhenZero(&observed_changed, &times)));
 
         mir_connection_apply_session_display_config(client2.connection, new_config);
-        observed_changed.wait_for(10s);
+        observed_changed.wait_for(60s);
         observed_changed.reset();
         mir_display_config_release(new_config);
     }
@@ -2168,7 +2168,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_hardware_ch
 
         mir_connection_remove_session_display_config(client.connection);
 
-        observed_changed.wait_for(10s);
+        observed_changed.wait_for(60s);
         std::this_thread::sleep_for(1s);
         observed_changed.reset();
     }
@@ -2186,7 +2186,7 @@ TEST_F(DisplayConfigurationTest, remove_from_unfocused_client_causes_hardware_ch
 
         client2.disconnect();
 
-        observed_changed.wait_for(10s);
+        observed_changed.wait_for(60s);
     }
 
     client.disconnect();
