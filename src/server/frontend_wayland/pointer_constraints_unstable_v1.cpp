@@ -81,7 +81,6 @@ public:
         PointerConstraintsV1::Lifetime lifetime);
 
 private:
-    WlSeat* const seat;
     std::shared_ptr<shell::Shell> const shell;
     std::weak_ptr<scene::Surface> const weak_scene_surface;
 
@@ -270,7 +269,6 @@ mir::frontend::LockedPointerV1::LockedPointerV1(
     std::experimental::optional<wl_resource*> const& region,
     PointerConstraintsV1::Lifetime lifetime) :
     wayland::LockedPointerV1{id, Version<1>{}},
-    seat{seat},
     shell{std::move(shell)},
     weak_scene_surface{scene_surface},
     my_surface_observer{std::make_shared<MyWaylandSurfaceObserver>(this, seat)}
