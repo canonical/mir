@@ -35,6 +35,11 @@ public:
     }
 };
 
+struct MockListener
+{
+    MOCK_METHOD0(callback, void());
+};
+
 TEST(LifetimeTrackerTest, first_destroy_listener_id_is_not_zero)
 {
     MockTracker tracker;
@@ -44,69 +49,59 @@ TEST(LifetimeTrackerTest, first_destroy_listener_id_is_not_zero)
 
 TEST(LifetimeTrackerTest, destroy_listener_is_called)
 {
-    int call_count = 0;
-    {
-        MockTracker tracker;
-        tracker.add_destroy_listener([&](){ call_count++; });
-    }
-    EXPECT_THAT(call_count, Eq(1));
+    MockListener listener;
+    EXPECT_CALL(listener, callback()).Times(1);
+    MockTracker tracker;
+    tracker.add_destroy_listener([&](){ listener.callback(); });
 }
 
 TEST(LifetimeTrackerTest, destroy_listener_only_called_once_when_marked_as_destroyed)
 {
-    int call_count = 0;
-    {
-        MockTracker tracker;
-        tracker.add_destroy_listener([&](){ call_count++; });
-        tracker.mark_destroyed();
-    }
-    EXPECT_THAT(call_count, Eq(1));
+    MockListener listener;
+    EXPECT_CALL(listener, callback()).Times(1);
+    MockTracker tracker;
+    tracker.add_destroy_listener([&](){ listener.callback(); });
+    tracker.mark_destroyed();
 }
 
 TEST(LifetimeTrackerTest, destroy_listener_can_be_removed)
 {
-    int call_count_a = 0;
-    int call_count_b = 0;
-    {
-        MockTracker tracker;
-        auto const id_a = tracker.add_destroy_listener([&](){ call_count_a++; });
-        tracker.add_destroy_listener([&](){ call_count_b++; });
-        tracker.remove_destroy_listener(id_a);
-    }
-    EXPECT_THAT(call_count_a, Eq(0));
-    EXPECT_THAT(call_count_b, Eq(1));
+    MockListener listener_a;
+    MockListener listener_b;
+    EXPECT_CALL(listener_a, callback()).Times(0);
+    EXPECT_CALL(listener_b, callback()).Times(1);
+    MockTracker tracker;
+    auto const id_a = tracker.add_destroy_listener([&](){ listener_a.callback(); });
+    tracker.add_destroy_listener([&](){ listener_b.callback(); });
+    tracker.remove_destroy_listener(id_a);
 }
 
 TEST(LifetimeTrackerTest, is_still_alive_when_destroy_listener_called)
 {
-    int call_count = 0;
-    {
-        MockTracker tracker;
-        mw::Weak<MockTracker> weak{&tracker};
-        tracker.add_destroy_listener(
-            [&]()
-            {
-                call_count++;
-                EXPECT_THAT(weak, IsTrue());
-            });
-    }
-    EXPECT_THAT(call_count, Eq(1));
+    MockListener listener;
+    EXPECT_CALL(listener, callback()).Times(1);
+    MockTracker tracker;
+    mw::Weak<MockTracker> weak{&tracker};
+    tracker.add_destroy_listener(
+        [&]()
+        {
+            listener.callback();
+            EXPECT_THAT(weak, IsTrue());
+        });
 }
 
 TEST(LifetimeTrackerTest, can_be_marked_as_destroyed_from_within_listener)
 {
-    int call_count = 0;
-    {
-        MockTracker tracker;
-        tracker.add_destroy_listener(
-            [&]()
-            {
-                call_count++;
-                // why would you want to do this? idk, but you can!
-                tracker.mark_destroyed();
-            });
-    }
-    EXPECT_THAT(call_count, Eq(1));
+    MockListener listener;
+    EXPECT_CALL(listener, callback()).Times(1);
+    MockTracker tracker;
+    tracker.add_destroy_listener(
+        [&]()
+        {
+            listener.callback();
+            // why would you want to do this? idk, but you can!
+            tracker.mark_destroyed();
+        });
 }
 
 TEST(LifetimeTrackerTest, removing_invalid_destroy_listener_ids_does_not_cause_problem)
