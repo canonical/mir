@@ -86,7 +86,6 @@ mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
 {
     mark_destroyed();
     surface->clear_role();
-    observer->disconnect();
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         shell->destroy_surface(session, scene_surface);
