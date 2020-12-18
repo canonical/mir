@@ -16,13 +16,17 @@
 
 #include "pointer_constraints_unstable_v1.h"
 #include "pointer-constraints-unstable-v1_wrapper.h"
-#include "basic_wayland_surface_observer.h"
 #include "wl_region.h"
 #include "wl_surface.h"
+#include "wl_seat.h"
 
 #include <mir/scene/surface.h>
+#include <mir/scene/null_surface_observer.h>
 #include <mir/shell/shell.h>
 #include <mir/shell/surface_specification.h>
+
+namespace mw = mir::wayland;
+namespace ms = mir::scene;
 
 namespace mir
 {
@@ -118,13 +122,14 @@ private:
     void set_region(const std::experimental::optional<wl_resource*>& /*region*/) override;
 };
 
-struct LockedPointerV1::MyWaylandSurfaceObserver : public BasicWaylandSurfaceObserver
+struct LockedPointerV1::MyWaylandSurfaceObserver : ms::NullSurfaceObserver
 {
     MyWaylandSurfaceObserver(LockedPointerV1* const self, WlSeat* seat) :
-        BasicWaylandSurfaceObserver{seat}, self{self} {}
+        seat{seat}, self{self} {}
 
     void attrib_changed(const scene::Surface* surf, MirWindowAttrib attrib, int value) override;
-    LockedPointerV1* const self;
+    WlSeat* seat;
+    mw::Weak<LockedPointerV1> const self;
 };
 
 void LockedPointerV1::MyWaylandSurfaceObserver::attrib_changed(
@@ -140,13 +145,23 @@ void LockedPointerV1::MyWaylandSurfaceObserver::attrib_changed(
         case mir_pointer_locked_oneshot:
             if (value)
             {
-                run_on_wayland_thread_unless_destroyed([self=self]()
-                    { self->send_locked_event(); });
+                seat->spawn([self=self]()
+                    {
+                        if (self)
+                        {
+                            self.value().send_locked_event();
+                        }
+                    });
             }
             else
             {
-                run_on_wayland_thread_unless_destroyed([self=self]()
-                    { self->send_unlocked_event(); });
+                seat->spawn([self=self]()
+                    {
+                        if (self)
+                        {
+                            self.value().send_unlocked_event();
+                        }
+                    });
             }
 
             break;
@@ -158,13 +173,14 @@ void LockedPointerV1::MyWaylandSurfaceObserver::attrib_changed(
     NullSurfaceObserver::attrib_changed(surf, attrib, value);
 }
 
-struct ConfinedPointerV1::SurfaceObserver : public BasicWaylandSurfaceObserver
+struct ConfinedPointerV1::SurfaceObserver : ms::NullSurfaceObserver
 {
     SurfaceObserver(ConfinedPointerV1* const self, WlSeat* seat) :
-        BasicWaylandSurfaceObserver{seat}, self{self} {}
+        seat{seat}, self{self} {}
 
     void attrib_changed(const scene::Surface* surf, MirWindowAttrib attrib, int value) override;
-    ConfinedPointerV1* const self;
+    WlSeat* seat;
+    mw::Weak<ConfinedPointerV1> const self;
 };
 
 void ConfinedPointerV1::SurfaceObserver::attrib_changed(
@@ -180,13 +196,23 @@ void ConfinedPointerV1::SurfaceObserver::attrib_changed(
         case mir_pointer_confined_oneshot:
             if (value)
             {
-                run_on_wayland_thread_unless_destroyed([self=self]()
-                    { self->send_confined_event(); });
+                seat->spawn([self=self]()
+                    {
+                        if (self)
+                        {
+                            self.value().send_confined_event();
+                        }
+                    });
             }
             else
             {
-                run_on_wayland_thread_unless_destroyed([self=self]()
-                    { self->send_unconfined_event(); });
+                seat->spawn([self=self]()
+                    {
+                        if (self)
+                        {
+                            self.value().send_unconfined_event();
+                        }
+                    });
             }
 
             break;
@@ -313,7 +339,7 @@ mir::frontend::LockedPointerV1::LockedPointerV1(
 
 void mir::frontend::LockedPointerV1::destroy()
 {
-    my_surface_observer->disconnect();
+    mark_destroyed();
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         scene_surface->remove_observer(my_surface_observer);
@@ -380,7 +406,7 @@ mir::frontend::ConfinedPointerV1::ConfinedPointerV1(
 
 void mir::frontend::ConfinedPointerV1::destroy()
 {
-    my_surface_observer->disconnect();
+    mark_destroyed();
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         scene_surface->remove_observer(my_surface_observer);
