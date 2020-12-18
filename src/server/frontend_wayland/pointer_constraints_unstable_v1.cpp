@@ -110,9 +110,9 @@ private:
     std::shared_ptr<shell::Shell> const shell;
     std::weak_ptr<scene::Surface> const weak_scene_surface;
 
-    struct MyWaylandSurfaceObserver;
+    struct SurfaceObserver;
 
-    std::shared_ptr<MyWaylandSurfaceObserver> const my_surface_observer;
+    std::shared_ptr<SurfaceObserver> const my_surface_observer;
 
     void destroy() override;
     void set_region(const std::experimental::optional<wl_resource*>& /*region*/) override;
@@ -158,16 +158,16 @@ void LockedPointerV1::MyWaylandSurfaceObserver::attrib_changed(
     NullSurfaceObserver::attrib_changed(surf, attrib, value);
 }
 
-struct ConfinedPointerV1::MyWaylandSurfaceObserver : public BasicWaylandSurfaceObserver
+struct ConfinedPointerV1::SurfaceObserver : public BasicWaylandSurfaceObserver
 {
-    MyWaylandSurfaceObserver(ConfinedPointerV1* const self, WlSeat* seat) :
+    SurfaceObserver(ConfinedPointerV1* const self, WlSeat* seat) :
         BasicWaylandSurfaceObserver{seat}, self{self} {}
 
     void attrib_changed(const scene::Surface* surf, MirWindowAttrib attrib, int value) override;
     ConfinedPointerV1* const self;
 };
 
-void ConfinedPointerV1::MyWaylandSurfaceObserver::attrib_changed(
+void ConfinedPointerV1::SurfaceObserver::attrib_changed(
     scene::Surface const* surf,
     MirWindowAttrib attrib,
     int value)
@@ -342,7 +342,7 @@ mir::frontend::ConfinedPointerV1::ConfinedPointerV1(
     wayland::ConfinedPointerV1{id, Version<1>{}},
     shell{std::move(shell)},
     weak_scene_surface(scene_surface),
-    my_surface_observer{std::make_shared<MyWaylandSurfaceObserver>(this, seat)}
+    my_surface_observer{std::make_shared<SurfaceObserver>(this, seat)}
 {
     scene_surface->add_observer(my_surface_observer);
 
