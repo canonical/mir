@@ -101,12 +101,9 @@ struct NullCursor : mf::WlPointer::Cursor
 };
 }
 
-mf::WlPointer::WlPointer(
-    wl_resource* new_resource,
-    std::function<void(WlPointer*)> const& on_destroy)
+mf::WlPointer::WlPointer(wl_resource* new_resource)
     : Pointer(new_resource, Version<6>()),
       display{wl_client_get_display(client)},
-      on_destroy{on_destroy},
       cursor{std::make_unique<NullCursor>()}
 {
 }
@@ -114,8 +111,7 @@ mf::WlPointer::WlPointer(
 mf::WlPointer::~WlPointer()
 {
     if (surface_under_cursor)
-        surface_under_cursor.value()->remove_destroy_listener(this);
-    on_destroy(this);
+        surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
 }
 
 void mf::WlPointer::enter(
@@ -132,13 +128,14 @@ void mf::WlPointer::leave()
 {
     if (!surface_under_cursor)
         return;
-    surface_under_cursor.value()->remove_destroy_listener(this);
+    surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
     auto const serial = wl_display_next_serial(display);
     send_leave_event(
         serial,
-        surface_under_cursor.value()->raw_resource());
+        surface_under_cursor.value().raw_resource());
     can_send_frame = true;
-    surface_under_cursor = std::experimental::nullopt;
+    surface_under_cursor = {};
+    destroy_listener_id = {};
 }
 
 void mf::WlPointer::button(std::chrono::milliseconds const& ms, uint32_t button, bool pressed)
@@ -178,7 +175,7 @@ void mf::WlPointer::motion(
     WlSurface* root_surface,
     std::pair<float, float> const& root_position)
 {
-    WlSurface* target_surface = surface_under_cursor.value_or(nullptr);
+    WlSurface* target_surface = surface_under_cursor ? &surface_under_cursor.value() : nullptr;
     if (!target_surface || pressed_buttons.empty())
     {
         // if pressed_buttons is empty there is no grab, so choose whatever surface we are over
@@ -227,7 +224,7 @@ void mf::WlPointer::send_update(
         root_position.first - offset.dx.as_int(),
         root_position.second - offset.dy.as_int());
 
-    if (surface_under_cursor && surface_under_cursor.value() == target_surface)
+    if (surface_under_cursor && &surface_under_cursor.value() == target_surface)
     {
         send_motion_event(
             ms.count(),
@@ -246,13 +243,12 @@ void mf::WlPointer::send_update(
             position_on_target.first,
             position_on_target.second);
         can_send_frame = true;
-        target_surface->add_destroy_listener(
-            this,
+        destroy_listener_id = target_surface->add_destroy_listener(
             [this]()
             {
                 leave();
             });
-        surface_under_cursor = target_surface;
+        surface_under_cursor = mw::make_weak(target_surface);
 
     }
 }
@@ -307,14 +303,14 @@ void mf::WlPointer::set_cursor(
             cursor.reset(); // clean up old cursor before creating new one
             cursor = std::make_unique<WlSurfaceCursor>(wl_surface, cursor_hotspot);
             if (surface_under_cursor)
-                cursor->apply_to(surface_under_cursor.value());
+                cursor->apply_to(&surface_under_cursor.value());
         }
     }
     else
     {
         cursor = std::make_unique<WlHiddenCursor>();
         if (surface_under_cursor)
-            cursor->apply_to(surface_under_cursor.value());
+            cursor->apply_to(&surface_under_cursor.value());
     }
 
     (void)serial;

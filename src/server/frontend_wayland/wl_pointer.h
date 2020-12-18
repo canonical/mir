@@ -47,9 +47,7 @@ class WlPointer : public wayland::Pointer
 {
 public:
 
-    WlPointer(
-        wl_resource* new_resource,
-        std::function<void(WlPointer*)> const& on_destroy);
+    WlPointer(wl_resource* new_resource);
 
     ~WlPointer();
 
@@ -72,10 +70,10 @@ public:
 
 private:
     wl_display* const display;
-    std::function<void(WlPointer*)> on_destroy;
 
     bool can_send_frame{false};
-    std::experimental::optional<WlSurface*> surface_under_cursor;
+    wayland::Weak<WlSurface> surface_under_cursor;
+    wayland::DestroyListenerId destroy_listener_id;
 
     void send_update(
         std::chrono::milliseconds const& ms,

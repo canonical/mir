@@ -236,65 +236,64 @@ mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
 
 void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
 {
-    seat->pointer_listeners->register_listener(
-        client,
-        new WlPointer{
-            new_pointer,
-            [listeners = seat->pointer_listeners, client = client](WlPointer* listener)
-            {
-                listeners->unregister_listener(client, listener);
-            }});
+    auto const pointer = new WlPointer{new_pointer};
+    seat->pointer_listeners->register_listener(client, pointer);
+    pointer->add_destroy_listener(
+        [listeners = seat->pointer_listeners, listener = pointer, client = client]()
+        {
+            listeners->unregister_listener(client, listener);
+        });
 }
 
 void mf::WlSeat::Instance::get_keyboard(wl_resource* new_keyboard)
 {
-    seat->keyboard_listeners->register_listener(
-        client,
-        new WlKeyboard{
-            new_keyboard,
-            *seat->keymap,
-            [listeners = seat->keyboard_listeners, client = client](WlKeyboard* listener)
-            {
-                listeners->unregister_listener(client, listener);
-            },
-            [seat = seat->seat]()
-            {
-                std::unordered_set<uint32_t> pressed_keys;
+    auto const keyboard = new WlKeyboard{
+        new_keyboard,
+        *seat->keymap,
+        [seat = seat->seat]()
+        {
+            std::unordered_set<uint32_t> pressed_keys;
 
-                auto const ev = seat->create_device_state();
-                auto const state_event = mir_event_get_input_device_state_event(ev.get());
+            auto const ev = seat->create_device_state();
+            auto const state_event = mir_event_get_input_device_state_event(ev.get());
+            for (
+                auto dev = 0u;
+                dev < mir_input_device_state_event_device_count(state_event);
+                ++dev)
+            {
                 for (
-                    auto dev = 0u;
-                    dev < mir_input_device_state_event_device_count(state_event);
-                    ++dev)
+                    auto idx = 0u;
+                    idx < mir_input_device_state_event_device_pressed_keys_count(state_event, dev);
+                    ++idx)
                 {
-                    for (
-                        auto idx = 0u;
-                        idx < mir_input_device_state_event_device_pressed_keys_count(state_event, dev);
-                        ++idx)
-                    {
-                        pressed_keys.insert(
-                            mir_input_device_state_event_device_pressed_keys_for_index(
-                                state_event,
-                                dev,
-                                idx));
-                    }
+                    pressed_keys.insert(
+                        mir_input_device_state_event_device_pressed_keys_for_index(
+                            state_event,
+                            dev,
+                            idx));
                 }
+            }
 
-                return std::vector<uint32_t>{pressed_keys.begin(), pressed_keys.end()};
-            }});
+            return std::vector<uint32_t>{pressed_keys.begin(), pressed_keys.end()};
+        }};
+
+    seat->keyboard_listeners->register_listener(client, keyboard);
+    keyboard->add_destroy_listener(
+        [listeners = seat->keyboard_listeners, listener = keyboard, client = client]()
+        {
+            listeners->unregister_listener(client, listener);
+        });
 }
 
 void mf::WlSeat::Instance::get_touch(wl_resource* new_touch)
 {
-    seat->touch_listeners->register_listener(
-        client,
-        new WlTouch{
-            new_touch,
-            [listeners = seat->touch_listeners, client = client](WlTouch* listener)
-            {
-                listeners->unregister_listener(client, listener);
-            }});
+    auto const touch = new WlTouch{new_touch};
+    seat->touch_listeners->register_listener(client, touch);
+    touch->add_destroy_listener(
+        [listeners = seat->touch_listeners, listener = touch, client = client]()
+        {
+            listeners->unregister_listener(client, listener);
+        });
 }
 
 void mf::WlSeat::Instance::release()
