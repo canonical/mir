@@ -56,17 +56,19 @@ private:
 
     void destroy() override;
 
-    void lock_pointer(wl_resource* id,
-                      wl_resource* surface,
-                      wl_resource* pointer,
-                      const std::experimental::optional<wl_resource*>& region,
-                      uint32_t lifetime) override;
+    void lock_pointer(
+        wl_resource* id,
+        wl_resource* surface,
+        wl_resource* pointer,
+        const std::experimental::optional<wl_resource*>& region,
+        uint32_t lifetime) override;
 
-    void confine_pointer(wl_resource* id,
-                         wl_resource* surface,
-                         wl_resource* pointer,
-                         const std::experimental::optional<wl_resource*>& region,
-                         uint32_t lifetime) override;
+    void confine_pointer(
+        wl_resource* id,
+        wl_resource* surface,
+        wl_resource* pointer,
+        const std::experimental::optional<wl_resource*>& region,
+        uint32_t lifetime) override;
 };
 
 class LockedPointerV1 : public wayland::LockedPointerV1
@@ -179,12 +181,12 @@ void ConfinedPointerV1::MyWaylandSurfaceObserver::attrib_changed(
             if (value)
             {
                 run_on_wayland_thread_unless_destroyed([self=self]()
-                                                           { self->send_confined_event(); });
+                    { self->send_confined_event(); });
             }
             else
             {
                 run_on_wayland_thread_unless_destroyed([self=self]()
-                                                           { self->send_unconfined_event(); });
+                    { self->send_unconfined_event(); });
             }
 
             break;
@@ -228,11 +230,12 @@ void mir::frontend::PointerConstraintsV1::destroy()
     destroy_wayland_object();
 }
 
-void mir::frontend::PointerConstraintsV1::lock_pointer(wl_resource* id,
-                                                       wl_resource* surface,
-                                                       wl_resource* /*pointer*/,
-                                                       std::experimental::optional<wl_resource*> const& region,
-                                                       uint32_t lifetime)
+void mir::frontend::PointerConstraintsV1::lock_pointer(
+    wl_resource* id,
+    wl_resource* surface,
+    wl_resource* /*pointer*/,
+    std::experimental::optional<wl_resource*> const& region,
+    uint32_t lifetime)
 {
     if (auto const s = WlSurface::from(surface)->scene_surface())
     {
@@ -244,11 +247,12 @@ void mir::frontend::PointerConstraintsV1::lock_pointer(wl_resource* id,
     }
 }
 
-void mir::frontend::PointerConstraintsV1::confine_pointer(wl_resource* id,
-                                                          wl_resource* surface,
-                                                          wl_resource* /*pointer*/,
-                                                          std::experimental::optional<wl_resource*> const& region,
-                                                          uint32_t lifetime)
+void mir::frontend::PointerConstraintsV1::confine_pointer(
+    wl_resource* id,
+    wl_resource* surface,
+    wl_resource* /*pointer*/,
+    std::experimental::optional<wl_resource*> const& region,
+    uint32_t lifetime)
 {
     if (auto const s = WlSurface::from(surface)->scene_surface())
     {

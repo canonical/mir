@@ -232,24 +232,27 @@ void mf::WaylandInputDispatcher::handle_pointer_motion_event(
 
     last_pointer_position = position;
 
-    seat->for_each_listener(
-        client,
-        [&](WlPointer* pointer)
-        {
-            if (send_position)
+    if (send_motion || send_axis || send_position)
+    {
+        seat->for_each_listener(
+            client,
+            [&](WlPointer* pointer)
             {
-                pointer->position(ms, &wl_surface.value(), position);
-            }
-            if (send_axis)
-            {
-                pointer->axis(ms, axis_motion);
-            }
-            if (send_motion)
-            {
-                pointer->motion(ms, motion);
-            }
-            pointer->frame();
-        });
+                if (send_position)
+                {
+                    pointer->position(ms, &wl_surface.value(), position);
+                }
+                if (send_axis)
+                {
+                    pointer->axis(ms, axis_motion);
+                }
+                if (send_motion)
+                {
+                    pointer->motion(ms, motion);
+                }
+                pointer->frame();
+            });
+    }
 }
 
 void mf::WaylandInputDispatcher::handle_touch_event(

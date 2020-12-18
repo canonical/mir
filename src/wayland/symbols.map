@@ -363,7 +363,7 @@ global:
   };
 } MIRWAYLAND_2.0;
 
-MIRWAYLAND_2.2 {
+MIRWAYLAND_2.2.1 {
 global:
   extern "C++" {
     mir::wayland::PointerConstraintsV1::*;
