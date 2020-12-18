@@ -334,13 +334,14 @@ void mir::frontend::WlPointer::set_relative_pointer(mir::wayland::RelativePointe
     relative_pointer = make_weak(relative_ptr);
 }
 
-void mir::frontend::WlPointer::motion(const std::chrono::milliseconds& ms, const mir::geometry::Displacement& movement)
+void mir::frontend::WlPointer::motion(const std::chrono::milliseconds& ms, std::pair<float, float> const movement)
 {
     if (relative_pointer)
     {
-        relative_pointer.value().send_relative_motion_event(ms.count(), ms.count(),
-            movement.dx.as_int(), movement.dy.as_int(),
-            movement.dx.as_int(), movement.dy.as_int());
+        relative_pointer.value().send_relative_motion_event(
+            ms.count(), ms.count(),
+            movement.first, movement.second,
+            movement.first, movement.second);
     }
 }
 

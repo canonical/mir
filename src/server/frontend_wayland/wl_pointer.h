@@ -69,7 +69,7 @@ public:
         WlSurface* root_surface,
         std::pair<float, float> const& root_position);
     void axis(std::chrono::milliseconds const& ms, std::pair<float, float> const& scroll);
-    void motion(const std::chrono::milliseconds& ms, const mir::geometry::Displacement& movement);
+    void motion(const std::chrono::milliseconds& ms, std::pair<float, float> const movement);
     void frame();
 
     struct Cursor;
