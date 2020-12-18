@@ -80,7 +80,7 @@ TEST_F(LifetimeTrackerTest, is_still_alive_when_destroy_listener_called)
 {
     mw::Weak<MockTracker> weak{&tracker};
     tracker.add_destroy_listener([&](){ listener.callback(); });
-    EXPECT_CALL(listener, callback()).Times(1).WillOnce(Invoke([&]()
+    EXPECT_CALL(listener, callback()).Times(1).WillOnce(Invoke([weak]()
         {
             EXPECT_THAT(weak, IsTrue());
         }));
