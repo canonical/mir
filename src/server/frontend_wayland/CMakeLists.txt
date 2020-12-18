@@ -7,6 +7,7 @@ include_directories(${mirwayland_includes})
 set(
   WAYLAND_SOURCES
 
+  basic_wayland_surface_observer.cpp basic_wayland_surface_observer.h
   mir_display.cpp               mir_display.h
   wayland_default_configuration.cpp
   wayland_connector.cpp         wayland_connector.h
@@ -16,6 +17,8 @@ set(
   wayland_input_dispatcher.cpp  wayland_input_dispatcher.h
   data_device.cpp               data_device.h
   output_manager.cpp            output_manager.h
+  pointer_constraints_unstable_v1.cpp pointer_constraints_unstable_v1.h
+  relative_pointer_unstable_v1.cpp    relative_pointer_unstable_v1.h
   wl_subcompositor.cpp          wl_subcompositor.h
                                 wl_surface_role.h
   window_wl_surface_role.cpp    window_wl_surface_role.h

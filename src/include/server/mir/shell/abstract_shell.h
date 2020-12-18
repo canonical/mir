@@ -181,6 +181,8 @@ private:
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface);
 
+    void update_confinement_for(std::shared_ptr<scene::Surface> const& surface) const;
+
     std::shared_ptr<decoration::Manager> decoration_manager;
 };
 }

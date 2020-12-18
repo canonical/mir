@@ -20,7 +20,7 @@
 #ifndef MIR_FRONTEND_WAYLAND_SURFACE_OBSERVER_H_
 #define MIR_FRONTEND_WAYLAND_SURFACE_OBSERVER_H_
 
-#include "mir/scene/null_surface_observer.h"
+#include "basic_wayland_surface_observer.h"
 
 #include <memory>
 #include <experimental/optional>
@@ -34,12 +34,10 @@ namespace mir
 namespace frontend
 {
 class WlSurface;
-class WlSeat;
 class WindowWlSurfaceRole;
 class WaylandInputDispatcher;
 
-class WaylandSurfaceObserver
-    : public scene::NullSurfaceObserver
+class WaylandSurfaceObserver : public BasicWaylandSurfaceObserver
 {
 public:
     WaylandSurfaceObserver(WlSeat* seat, WlSurface* surface, WindowWlSurfaceRole* window);
@@ -78,19 +76,13 @@ public:
         return current_state;
     }
 
-    void disconnect() { *destroyed = true; }
-
 private:
-    WlSeat* const seat; // only used by run_on_wayland_thread_unless_destroyed()
     WindowWlSurfaceRole* const window;
     std::unique_ptr<WaylandInputDispatcher> const input_dispatcher;
 
     geometry::Size window_size;
     std::experimental::optional<geometry::Size> requested_size;
     MirWindowState current_state{mir_window_state_unknown};
-    std::shared_ptr<bool> const destroyed;
-
-    void run_on_wayland_thread_unless_destroyed(std::function<void()>&& work);
 };
 }
 }

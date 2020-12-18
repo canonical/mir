@@ -20,6 +20,7 @@
 
 #include "wayland_utils.h"
 #include "wl_surface.h"
+#include "relative-pointer-unstable-v1_wrapper.h"
 
 #include "mir/log.h"
 #include "mir/executor.h"
@@ -170,7 +171,7 @@ void mf::WlPointer::button(std::chrono::milliseconds const& ms, uint32_t button,
     can_send_frame = true;
 }
 
-void mf::WlPointer::motion(
+void mf::WlPointer::position(
     std::chrono::milliseconds const& ms,
     WlSurface* root_surface,
     std::pair<float, float> const& root_position)
@@ -183,7 +184,10 @@ void mf::WlPointer::motion(
         target_surface = root_surface->subsurface_at(root_point).value_or(root_surface);
     }
 
-    send_update(ms, target_surface, root_position);
+    if (!relative_pointer)
+    {
+        send_update(ms, target_surface, root_position);
+    }
 }
 
 void mf::WlPointer::axis(std::chrono::milliseconds const& ms, std::pair<float, float> const& scroll)
@@ -319,6 +323,22 @@ void mf::WlPointer::set_cursor(
 void mf::WlPointer::release()
 {
     destroy_wayland_object();
+}
+
+void mir::frontend::WlPointer::set_relative_pointer(mir::wayland::RelativePointerV1* relative_ptr)
+{
+    relative_pointer = make_weak(relative_ptr);
+}
+
+void mir::frontend::WlPointer::motion(const std::chrono::milliseconds& ms, std::pair<float, float> const movement)
+{
+    if (relative_pointer)
+    {
+        relative_pointer.value().send_relative_motion_event(
+            ms.count(), ms.count(),
+            movement.first, movement.second,
+            movement.first, movement.second);
+    }
 }
 
 WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot)
