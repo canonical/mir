@@ -29,6 +29,7 @@
 #include "mir/terminate_with_current_exception.h"
 
 #include <future>
+#include <memory>
 
 namespace mi = mir::input;
 

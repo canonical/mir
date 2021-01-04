@@ -40,6 +40,7 @@
 
 #include <mutex>
 #include <vector>
+#include <optional>
 #include <drm_fourcc.h>
 #include <wayland-server.h>
 
