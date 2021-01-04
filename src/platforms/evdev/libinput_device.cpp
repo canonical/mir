@@ -19,7 +19,6 @@
 #include "libinput_device.h"
 #include "libinput_ptr.h"
 #include "libinput_device_ptr.h"
-#include "evdev_device_detection.h"
 #include "button_utils.h"
 
 #include "mir/input/input_sink.h"
