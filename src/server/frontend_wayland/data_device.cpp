@@ -25,14 +25,6 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
-namespace mir
-{
-namespace wayland
-{
-extern struct wl_interface const wl_data_offer_interface_data;
-}
-}
-
 namespace
 {
 class DataDeviceManager;
