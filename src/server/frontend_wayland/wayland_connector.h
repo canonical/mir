@@ -114,6 +114,7 @@ public:
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<SurfaceStack> const& surface_stack,
+        std::shared_ptr<scene::Clipboard> const& clipboard,
         bool arw_socket,
         std::unique_ptr<WaylandExtensions> extensions,
         WaylandProtocolExtensionFilter const& extension_filter);

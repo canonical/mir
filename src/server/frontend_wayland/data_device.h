@@ -23,6 +23,12 @@
 
 namespace mir
 {
+class Executor;
+namespace scene
+{
+class Clipboard;
+}
+
 namespace frontend
 {
 class DataDeviceManager : public wayland::DataDeviceManager::Global
@@ -31,7 +37,11 @@ public:
     using wayland::DataDeviceManager::Global::Global;
 };
 
-auto create_data_device_manager(struct wl_display* display) -> std::unique_ptr<DataDeviceManager>;
+auto create_data_device_manager(
+    struct wl_display* display,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<scene::Clipboard> const& clipboard)
+-> std::unique_ptr<DataDeviceManager>;
 }
 }
 

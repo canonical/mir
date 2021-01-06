@@ -18,11 +18,14 @@
 
 #include "data_device.h"
 #include "wl_seat.h"
+#include "mir/scene/clipboard.h"
+#include "mir/executor.h"
 
 #include <vector>
 #include <algorithm>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace mw = mir::wayland;
 
 namespace
@@ -132,7 +135,10 @@ public:
 class DataDeviceManager : public mf::DataDeviceManager
 {
 public:
-    DataDeviceManager(struct wl_display* display);
+    DataDeviceManager(
+        struct wl_display* display,
+        std::shared_ptr<mir::Executor> const& wayland_executor,
+        std::shared_ptr<ms::Clipboard> const& clipboard);
     ~DataDeviceManager();
 
     void notify_destroyed(DataSource* source);
@@ -141,6 +147,8 @@ public:
     void remove_listener(DataDevice* listener);
 
 private:
+    std::shared_ptr<mir::Executor> const wayland_executor;
+    std::shared_ptr<ms::Clipboard> const clipboard;
     using ds_ptr = std::unique_ptr<DataSource, void(*)(DataSource*)>;
     ds_ptr current_data_source;
     std::vector<DataDevice*> listeners;
@@ -196,8 +204,13 @@ DataSource::~DataSource()
         manager->notify_destroyed(this);
 }
 
-DataDeviceManager::DataDeviceManager(struct wl_display* display) :
+DataDeviceManager::DataDeviceManager(
+    struct wl_display* display,
+    std::shared_ptr<mir::Executor> const& wayland_executor,
+    std::shared_ptr<ms::Clipboard> const& clipboard) :
     mf::DataDeviceManager(display, Version<3>()),
+    wayland_executor{wayland_executor},
+    clipboard{clipboard},
     current_data_source{nullptr, [](DataSource* ds) { if(ds) ds->send_cancelled(); }}
 {
 }
@@ -340,8 +353,11 @@ void DataOffer::destroy()
     destroy_wayland_object();
 }
 
-auto mf::create_data_device_manager(struct wl_display* display)
+auto mf::create_data_device_manager(
+    struct wl_display* display,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<scene::Clipboard> const& clipboard)
 -> std::unique_ptr<DataDeviceManager>
 {
-    return std::unique_ptr<DataDeviceManager>{new ::DataDeviceManager(display)};
+    return std::unique_ptr<DataDeviceManager>{new ::DataDeviceManager(display, wayland_executor, clipboard)};
 }
