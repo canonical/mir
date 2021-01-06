@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2018 Canonical Ltd.
+ * Copyright © 2016-2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -26,6 +26,7 @@
 #include <miral/keymap.h>
 #include <miral/set_window_management_policy.h>
 #include <miral/internal_client.h>
+#include <miral/wayland_extensions.h>
 
 #include <unistd.h>
 #include <atomic>
@@ -115,6 +116,11 @@ int main(int argc, char const* argv[])
         "Set to false to suppress display of splash on startup",
         true};
 
+    WaylandExtensions wayland_extensions;
+
+    for (auto const& extension : {"zwp_pointer_constraints_v1", "zwp_relative_pointer_manager_v1"})
+        wayland_extensions.enable(extension);
+
     return runner.run_with(
         {
             display_config,
@@ -125,6 +131,7 @@ int main(int argc, char const* argv[])
             show_splash,
             startup_only,
             launcher,
+            wayland_extensions,
             CommandLineOption{run_startup_apps, "startup-apps", "Colon separated list of startup apps", ""},
             StartupInternalClient{splash}
         });
