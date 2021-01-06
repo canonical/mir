@@ -60,6 +60,7 @@ namespace scene
 {
 class ApplicationNotRespondingDetector;
 class Session;
+class Clipboard;
 }
 
 class MainLoop;
@@ -88,6 +89,7 @@ public:
     virtual std::shared_ptr<cookie::Authority> the_cookie_authority() = 0;
     virtual auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) = 0;
     virtual std::shared_ptr<scene::ApplicationNotRespondingDetector> the_application_not_responding_detector() = 0;
+    virtual std::shared_ptr<scene::Clipboard> the_clipboard() = 0;
     virtual std::function<void()> the_stop_callback() = 0;
     virtual void add_wayland_extension(
         std::string const& name,
