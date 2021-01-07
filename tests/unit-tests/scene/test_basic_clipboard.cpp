@@ -29,6 +29,16 @@ namespace mt = mir::test;
 
 struct MockClipboardSource : ms::ClipboardSource
 {
+    auto mime_types() const -> std::vector<std::string> const& override
+    {
+        return types;
+    }
+
+    void initiate_send(std::string const&, mir::Fd const&) override
+    {
+    }
+
+    std::vector<std::string> types;
 };
 
 struct MockClipboardObserver : ms::ClipboardObserver

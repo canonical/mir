@@ -20,8 +20,10 @@
 #define MIR_SCENE_CLIPBOARD_H_
 
 #include "mir/observer_registrar.h"
+#include "mir/fd.h"
 
 #include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -34,6 +36,12 @@ class ClipboardSource
 public:
     ClipboardSource() = default;
     virtual ~ClipboardSource() = default;
+
+    /// Returns the list of supported mime types.
+    virtual auto mime_types() const -> std::vector<std::string> const& = 0;
+
+    /// Instructs the source to start sending it's data in the given mime type to the given fd.
+    virtual void initiate_send(std::string const& mime_type, Fd const& target_fd) = 0;
 
 private:
     ClipboardSource(ClipboardSource const&) = delete;
