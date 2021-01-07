@@ -256,6 +256,32 @@ TEST(ObserverMultiplexer, can_remove_observer_from_callback_with_immediate_execu
     multiplexer.observation_made(value);
 }
 
+TEST(ObserverMultiplexer, observer_not_called_after_unregistered_from_other_observer)
+{
+    using namespace testing;
+    std::string const value = "Goldfinger";
+
+    auto observer_one = std::make_shared<NiceMock<MockObserver>>();
+    auto observer_two = std::make_shared<NiceMock<MockObserver>>();
+
+    ImmediateExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
+    EXPECT_CALL(*observer_one, observation_made(StrEq(value)))
+        .WillOnce(Invoke(
+            [observer_two = observer_two.get(), &multiplexer](auto)
+            {
+                multiplexer.unregister_interest(*observer_two);
+            }));
+    EXPECT_CALL(*observer_two, observation_made(StrEq(value)))
+        .Times(0);
+
+    multiplexer.register_interest(observer_one);
+    multiplexer.register_interest(observer_two);
+
+    multiplexer.observation_made(value);
+}
+
 TEST(ObserverMultiplexer, multiple_threads_can_simultaneously_make_observations)
 {
     using namespace testing;
