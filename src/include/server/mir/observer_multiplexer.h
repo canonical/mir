@@ -70,8 +70,9 @@ private:
     class WeakObserver
     {
     public:
-        explicit WeakObserver(std::weak_ptr<Observer> observer)
-            : observer{observer}
+        explicit WeakObserver(std::weak_ptr<Observer> observer, Executor& executor)
+            : observer{observer},
+              executor{executor}
         {
         }
 
@@ -98,20 +99,30 @@ private:
                 return observer.get();
             }
 
+            void spawn(std::function<void()>&& work)
+            {
+                executor->spawn(std::move(work));
+            }
+
             operator bool() const
             {
                 return static_cast<bool>(observer);
             }
         private:
             friend class WeakObserver;
-            LockedObserver(std::shared_ptr<Observer> observer, std::unique_lock<std::recursive_mutex>&& lock)
+            LockedObserver(
+                std::shared_ptr<Observer> observer,
+                Executor* const executor,
+                std::unique_lock<std::recursive_mutex>&& lock)
                 : lock{std::move(lock)},
-                  observer{std::move(observer)}
+                  observer{std::move(observer)},
+                  executor{executor}
             {
             }
 
             std::unique_lock<std::recursive_mutex> lock;
             std::shared_ptr<Observer> observer;
+            Executor* const executor;
         };
 
         LockedObserver lock()
@@ -119,11 +130,11 @@ private:
             auto live_observer = observer.lock();
             if (live_observer)
             {
-                return LockedObserver{live_observer, std::unique_lock<std::recursive_mutex>(mutex)};
+                return LockedObserver{live_observer, &executor, std::unique_lock<std::recursive_mutex>(mutex)};
             }
             else
             {
-                return LockedObserver{nullptr, {}};
+                return LockedObserver{nullptr, nullptr, {}};
             }
         }
 
@@ -146,10 +157,11 @@ private:
         // a LockedObserver.
         std::recursive_mutex mutex;
         std::weak_ptr<Observer> observer;
+        Executor& executor;
     };
 
     PosixRWMutex observer_mutex;
-    std::vector<std::pair<Executor&, std::shared_ptr<WeakObserver>>> observers;
+    std::vector<std::shared_ptr<WeakObserver>> observers;
 };
 
 template<class Observer>
@@ -165,7 +177,7 @@ void ObserverMultiplexer<Observer>::register_interest(
 {
     std::lock_guard<decltype(observer_mutex)> lock{observer_mutex};
 
-    observers.emplace_back(std::make_pair(std::ref(executor), std::make_shared<WeakObserver>(observer)));
+    observers.emplace_back(std::make_shared<WeakObserver>(observer, executor));
 }
 
 template<class Observer>
@@ -178,15 +190,15 @@ void ObserverMultiplexer<Observer>::unregister_interest(Observer const& observer
             observers.end(),
             [&observer](auto& candidate)
             {
-                if (*candidate.second == &observer)
+                if (*candidate == &observer)
                 {
                     // Kill the observer; this will wait for any (other) thread
                     // to finish with the observer first.
-                    candidate.second->reset();
+                    candidate->reset();
                     return true;
                 }
                 // We also might as well clean up any expired observers while we're here.
-                return candidate.second == nullptr;
+                return candidate == nullptr;
             }),
         observers.end());
 }
@@ -204,16 +216,19 @@ void ObserverMultiplexer<Observer>::for_each_observer(MemberFn f, Args&&... args
         std::lock_guard<decltype(observer_mutex)> lock{observer_mutex};
         local_observers = observers;
     }
-    for (auto& observer_pair: local_observers)
+    for (auto& weak_observer: local_observers)
     {
-        observer_pair.first.spawn(
-            [invokable_mem_fn, weak_observer = std::move(observer_pair.second), args...]() mutable
-            {
-                if (auto observer = weak_observer->lock())
+        if (auto observer = weak_observer->lock())
+        {
+            observer.spawn(
+                [invokable_mem_fn, weak_observer = std::move(weak_observer), args...]() mutable
                 {
-                    invokable_mem_fn(observer, std::forward<Args>(args)...);
-                }
-            });
+                    if (auto observer = weak_observer->lock())
+                    {
+                        invokable_mem_fn(observer, std::forward<Args>(args)...);
+                    }
+                });
+        }
     }
 }
 }
