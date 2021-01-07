@@ -77,6 +77,7 @@ public:
         ListenerTracker& operator=(ListenerTracker const&) = delete;
     };
 
+    auto current_focused_client() const -> wl_client*;
     void add_focus_listener(ListenerTracker* listener);
     void remove_focus_listener(ListenerTracker* listener);
     void notify_focus(wl_client* focus);

@@ -104,9 +104,9 @@ mf::WlDataDevice::WlDataDevice(
       seat{seat},
       clipboard_observer{std::make_shared<ClipboardObserver>(this)}
 {
-    seat.add_focus_listener(this);
     clipboard.register_interest(clipboard_observer, wayland_executor);
-    // TODO: call focus_on() with the current focus
+    seat.add_focus_listener(this);
+    focus_on(seat.current_focused_client());
 }
 
 mf::WlDataDevice::~WlDataDevice()
