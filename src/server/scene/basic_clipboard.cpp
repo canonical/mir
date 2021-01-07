@@ -49,6 +49,23 @@ void ms::BasicClipboard::set_paste_source(std::shared_ptr<ClipboardSource> const
     }
 }
 
+void ms::BasicClipboard::clear_paste_source()
+{
+    bool notify{false};
+    {
+        std::lock_guard<std::mutex> lock{paste_mutex};
+        if (paste_source_)
+        {
+            notify = true;
+            paste_source_ = nullptr;
+        }
+    }
+    if (notify)
+    {
+        multiplexer.paste_source_set(nullptr);
+    }
+}
+
 void ms::BasicClipboard::clear_paste_source(ClipboardSource const& source)
 {
     bool notify{false};

@@ -75,6 +75,9 @@ public:
     /// Sets the given source to be the current copy-paste source for all clients.
     virtual void set_paste_source(std::shared_ptr<ClipboardSource> const& source) = 0;
 
+    /// Clears the current copy-paste source
+    virtual void clear_paste_source() = 0;
+
     /// Clears the current copy-paste source ONLY if it is the same as the given source, otherwise does nothing.
     virtual void clear_paste_source(ClipboardSource const& source) = 0;
 };

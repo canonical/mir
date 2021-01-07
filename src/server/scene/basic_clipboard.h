@@ -54,6 +54,7 @@ class BasicClipboard : public Clipboard
 public:
     auto paste_source() const -> std::shared_ptr<ClipboardSource> override;
     void set_paste_source(std::shared_ptr<ClipboardSource> const& source) override;
+    void clear_paste_source() override;
     void clear_paste_source(ClipboardSource const& source) override;
 
     /// Implement ObserverRegistrar<ClipboardObserver>

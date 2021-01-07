@@ -73,6 +73,13 @@ TEST_F(BasicClipboardTest, paste_source_can_be_changed)
 TEST_F(BasicClipboardTest, paste_source_can_be_cleared)
 {
     clipboard.set_paste_source(source_a);
+    clipboard.clear_paste_source();
+    EXPECT_THAT(clipboard.paste_source(), Eq(nullptr));
+}
+
+TEST_F(BasicClipboardTest, paste_source_can_be_cleared_with_value)
+{
+    clipboard.set_paste_source(source_a);
     clipboard.clear_paste_source(*source_a);
     EXPECT_THAT(clipboard.paste_source(), Eq(nullptr));
 }
@@ -102,6 +109,15 @@ TEST_F(BasicClipboardTest, observer_notified_of_paste_source_change)
 }
 
 TEST_F(BasicClipboardTest, observer_notified_of_paste_source_cleared)
+{
+    clipboard.set_paste_source(source_a);
+
+    clipboard.register_interest(observer_ptr);
+    EXPECT_CALL(observer, paste_source_set(Eq(nullptr)));
+    clipboard.clear_paste_source();
+}
+
+TEST_F(BasicClipboardTest, observer_notified_of_paste_source_cleared_with_value)
 {
     clipboard.set_paste_source(source_a);
 
