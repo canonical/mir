@@ -199,7 +199,7 @@ void ObserverMultiplexer<Observer>::for_each_observer(MemberFn f, Args&&... args
         std::is_member_function_pointer<MemberFn>::value,
         "f must be of type (Observer::*)(Args...), a pointer to an Observer member function.");
     auto const invokable_mem_fn = std::mem_fn(f);
-    std::shared_lock<decltype(observer_mutex)> lock{observer_mutex};
+    std::lock_guard<decltype(observer_mutex)> lock{observer_mutex};
     for (auto& observer_pair: observers)
     {
         observer_pair.first.spawn(
