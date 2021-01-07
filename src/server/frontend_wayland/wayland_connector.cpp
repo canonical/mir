@@ -18,7 +18,7 @@
 
 #include "wayland_connector.h"
 
-#include "data_device.h"
+#include "wl_data_device_manager.h"
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
 #include "window_wl_surface_role.h"
@@ -672,7 +672,7 @@ mf::WaylandConnector::WaylandConnector(
         display_config,
         executor);
 
-    data_device_manager_global = mf::create_data_device_manager(display.get(), executor, clipboard);
+    data_device_manager_global = std::make_unique<WlDataDeviceManager>(display.get(), executor, clipboard);
 
     extensions->init(WaylandExtensions::Context{
         display.get(),
