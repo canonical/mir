@@ -219,6 +219,7 @@ std::shared_ptr<mf::Connector>
                 the_buffer_allocator(),
                 the_session_authorizer(),
                 the_frontend_surface_stack(),
+                the_clipboard(),
                 arw_socket,
                 configure_wayland_extensions(
                     wayland_extensions,

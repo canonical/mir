@@ -14,7 +14,9 @@ set(
   null_event_sink.cpp           null_event_sink.h
   wayland_surface_observer.cpp  wayland_surface_observer.h
   wayland_input_dispatcher.cpp  wayland_input_dispatcher.h
-  data_device.cpp               data_device.h
+  wl_data_device_manager.cpp    wl_data_device_manager.h
+  wl_data_device.cpp            wl_data_device.h
+  wl_data_source.cpp            wl_data_source.h
   output_manager.cpp            output_manager.h
   pointer_constraints_unstable_v1.cpp pointer_constraints_unstable_v1.h
   relative_pointer_unstable_v1.cpp    relative_pointer_unstable_v1.h

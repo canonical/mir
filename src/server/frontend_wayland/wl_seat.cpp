@@ -301,6 +301,11 @@ void mf::WlSeat::Instance::release()
     destroy_wayland_object();
 }
 
+auto mf::WlSeat::current_focused_client() const -> wl_client*
+{
+    return focused_client;
+}
+
 void mf::WlSeat::add_focus_listener(ListenerTracker* listener)
 {
     focus_listeners.push_back(listener);

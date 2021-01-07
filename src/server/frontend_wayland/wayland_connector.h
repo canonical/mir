@@ -63,7 +63,7 @@ class WlSeat;
 class OutputManager;
 class MirDisplay;
 class SessionAuthorizer;
-class DataDeviceManager;
+class WlDataDeviceManager;
 class WlSurface;
 class SurfaceStack;
 
@@ -114,6 +114,7 @@ public:
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<SurfaceStack> const& surface_stack,
+        std::shared_ptr<scene::Clipboard> const& clipboard,
         bool arw_socket,
         std::unique_ptr<WaylandExtensions> extensions,
         WaylandProtocolExtensionFilter const& extension_filter);
@@ -148,7 +149,7 @@ private:
     std::unique_ptr<WlSubcompositor> subcompositor_global;
     std::unique_ptr<WlSeat> seat_global;
     std::unique_ptr<OutputManager> output_manager;
-    std::unique_ptr<DataDeviceManager> data_device_manager_global;
+    std::unique_ptr<WlDataDeviceManager> data_device_manager_global;
     std::shared_ptr<Executor> const executor;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::Shell> const shell;

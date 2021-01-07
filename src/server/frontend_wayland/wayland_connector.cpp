@@ -18,7 +18,7 @@
 
 #include "wayland_connector.h"
 
-#include "data_device.h"
+#include "wl_data_device_manager.h"
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
 #include "window_wl_surface_role.h"
@@ -614,6 +614,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<SurfaceStack> const& surface_stack,
+    std::shared_ptr<ms::Clipboard> const& clipboard,
     bool arw_socket,
     std::unique_ptr<WaylandExtensions> extensions_,
     WaylandProtocolExtensionFilter const& extension_filter)
@@ -671,7 +672,7 @@ mf::WaylandConnector::WaylandConnector(
         display_config,
         executor);
 
-    data_device_manager_global = mf::create_data_device_manager(display.get());
+    data_device_manager_global = std::make_unique<WlDataDeviceManager>(display.get(), executor, clipboard);
 
     extensions->init(WaylandExtensions::Context{
         display.get(),
