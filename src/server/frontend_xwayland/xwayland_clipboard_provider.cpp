@@ -72,12 +72,12 @@ private:
 };
 
 mf::XWaylandClipboardProvider::XWaylandClipboardProvider(
-    std::shared_ptr<XCBConnection> const& connection,
+    XCBConnection& connection,
     std::shared_ptr<scene::Clipboard> const& clipboard)
     : connection{connection},
       clipboard{clipboard},
       clipboard_observer{std::make_shared<ClipboardObserver>(this)},
-      selection_window{create_selection_window(*connection)}
+      selection_window{create_selection_window(connection)}
 {
     clipboard->register_interest(clipboard_observer);
     if (auto const source = clipboard->paste_source())
@@ -89,8 +89,8 @@ mf::XWaylandClipboardProvider::XWaylandClipboardProvider(
 mf::XWaylandClipboardProvider::~XWaylandClipboardProvider()
 {
     clipboard->unregister_interest(*clipboard_observer);
-    xcb_destroy_window(*connection, selection_window);
-    connection->flush();
+    xcb_destroy_window(connection, selection_window);
+    connection.flush();
 }
 
 void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
@@ -108,13 +108,13 @@ void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::Clipboa
     owns_x11_clipboard = static_cast<bool>(source);
     if (source)
     {
-        xcb_set_selection_owner(*connection, selection_window, connection->CLIPBOARD, XCB_TIME_CURRENT_TIME);
+        xcb_set_selection_owner(connection, selection_window, connection.CLIPBOARD, XCB_TIME_CURRENT_TIME);
     }
     else
     {
-        xcb_set_selection_owner(*connection, XCB_WINDOW_NONE, connection->CLIPBOARD, XCB_TIME_CURRENT_TIME);
+        xcb_set_selection_owner(connection, XCB_WINDOW_NONE, connection.CLIPBOARD, XCB_TIME_CURRENT_TIME);
     }
 
     lock.unlock();
-    connection->flush();
+    connection.flush();
 }

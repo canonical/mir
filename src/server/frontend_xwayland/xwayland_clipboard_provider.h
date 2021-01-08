@@ -37,7 +37,7 @@ class XWaylandClipboardProvider
 {
 public:
     XWaylandClipboardProvider(
-        std::shared_ptr<XCBConnection> const& connection,
+        XCBConnection& connection,
         std::shared_ptr<scene::Clipboard> const& clipboard);
     ~XWaylandClipboardProvider();
 
@@ -50,7 +50,7 @@ private:
     XWaylandClipboardProvider(XWaylandClipboardProvider const&) = delete;
     XWaylandClipboardProvider& operator=(XWaylandClipboardProvider const&) = delete;
 
-    std::shared_ptr<XCBConnection> const connection;
+    XCBConnection& connection;
     std::shared_ptr<scene::Clipboard> const clipboard;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
     xcb_window_t const selection_window;
