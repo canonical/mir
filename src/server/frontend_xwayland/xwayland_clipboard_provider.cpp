@@ -16,7 +16,7 @@
  * Authored By: William Wold <william.wold@canonical.com>
  */
 
-#include "xwayland_clipboard.h"
+#include "xwayland_clipboard_provider.h"
 
 #include "mir/scene/clipboard.h"
 
@@ -54,10 +54,10 @@ auto create_selection_window(mf::XCBConnection const& connection) -> xcb_window_
 }
 }
 
-class mf::XWaylandClipboard::ClipboardObserver : public scene::ClipboardObserver
+class mf::XWaylandClipboardProvider::ClipboardObserver : public scene::ClipboardObserver
 {
 public:
-    ClipboardObserver(XWaylandClipboard* const owner)
+    ClipboardObserver(XWaylandClipboardProvider* const owner)
         : owner{owner}
     {
     }
@@ -68,10 +68,10 @@ public:
     }
 
 private:
-    XWaylandClipboard* const owner;
+    XWaylandClipboardProvider* const owner;
 };
 
-mf::XWaylandClipboard::XWaylandClipboard(
+mf::XWaylandClipboardProvider::XWaylandClipboardProvider(
     std::shared_ptr<XCBConnection> const& connection,
     std::shared_ptr<scene::Clipboard> const& clipboard)
     : connection{connection},
@@ -86,15 +86,35 @@ mf::XWaylandClipboard::XWaylandClipboard(
     }
 }
 
-mf::XWaylandClipboard::~XWaylandClipboard()
+mf::XWaylandClipboardProvider::~XWaylandClipboardProvider()
 {
     clipboard->unregister_interest(*clipboard_observer);
     xcb_destroy_window(*connection, selection_window);
     connection->flush();
 }
 
-void mf::XWaylandClipboard::paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
+void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
 {
-    (void)source;
-    // TODO
+    std::unique_lock<std::mutex> lock{mutex};
+
+    // TODO: early return if the source came from XWayland
+
+    if (static_cast<bool>(source) == owns_x11_clipboard)
+    {
+        // If the source is changed but we already own the clipboard or the source is cleared but we already don't, do
+        // nothing
+        return;
+    }
+    owns_x11_clipboard = static_cast<bool>(source);
+    if (source)
+    {
+        xcb_set_selection_owner(*connection, selection_window, connection->CLIPBOARD, XCB_TIME_CURRENT_TIME);
+    }
+    else
+    {
+        xcb_set_selection_owner(*connection, XCB_WINDOW_NONE, connection->CLIPBOARD, XCB_TIME_CURRENT_TIME);
+    }
+
+    lock.unlock();
+    connection->flush();
 }

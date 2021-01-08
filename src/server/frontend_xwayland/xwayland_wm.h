@@ -46,7 +46,7 @@ class XWaylandSurface;
 class XWaylandWMShell;
 class XWaylandCursors;
 class XWaylandClientManager;
-class XWaylandClipboard;
+class XWaylandClipboardProvider;
 
 class XWaylandSceneObserver;
 
@@ -101,7 +101,7 @@ private:
     wl_client* const wayland_client;
     std::shared_ptr<XWaylandWMShell> const wm_shell;
     std::unique_ptr<XWaylandCursors> const cursors;
-    std::unique_ptr<XWaylandClipboard> const clipboard;
+    std::unique_ptr<XWaylandClipboardProvider> const clipboard_provider;
     xcb_window_t const wm_window;
     std::shared_ptr<XWaylandSceneObserver> const scene_observer;
     std::shared_ptr<XWaylandClientManager> const client_manager;

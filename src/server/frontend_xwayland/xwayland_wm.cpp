@@ -25,7 +25,7 @@
 #include "xwayland_surface_role.h"
 #include "xwayland_cursors.h"
 #include "xwayland_client_manager.h"
-#include "xwayland_clipboard.h"
+#include "xwayland_clipboard_provider.h"
 
 #include "mir/c_memory.h"
 #include "mir/fd.h"
@@ -136,7 +136,7 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       wayland_client{wayland_client},
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
       cursors{std::make_unique<XWaylandCursors>(connection)},
-      clipboard{std::make_unique<XWaylandClipboard>(connection, wm_shell->clipboard)},
+      clipboard_provider{std::make_unique<XWaylandClipboardProvider>(connection, wm_shell->clipboard)},
       wm_window{create_wm_window(*connection)},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
       client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)}
