@@ -54,17 +54,47 @@ auto create_selection_window(mf::XCBConnection const& connection) -> xcb_window_
 }
 }
 
+class mf::XWaylandClipboard::ClipboardObserver : public scene::ClipboardObserver
+{
+public:
+    ClipboardObserver(XWaylandClipboard* const owner)
+        : owner{owner}
+    {
+    }
+
+    void paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source) override
+    {
+        owner->paste_source_set(source);
+    }
+
+private:
+    XWaylandClipboard* const owner;
+};
+
 mf::XWaylandClipboard::XWaylandClipboard(
     std::shared_ptr<XCBConnection> const& connection,
     std::shared_ptr<scene::Clipboard> const& clipboard)
     : connection{connection},
       clipboard{clipboard},
+      clipboard_observer{std::make_shared<ClipboardObserver>(this)},
       selection_window{create_selection_window(*connection)}
 {
+    clipboard->register_interest(clipboard_observer);
+    if (auto const source = clipboard->paste_source())
+    {
+        paste_source_set(source);
+    }
 }
 
 mf::XWaylandClipboard::~XWaylandClipboard()
 {
+    clipboard->unregister_interest(*clipboard_observer);
     xcb_destroy_window(*connection, selection_window);
     connection->flush();
+}
+
+void mf::XWaylandClipboard::paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
+{
+    (void)source;
+    // TODO
 }
