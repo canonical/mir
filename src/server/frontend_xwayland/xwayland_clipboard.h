@@ -23,12 +23,18 @@
 
 namespace mir
 {
+namespace scene
+{
+class Clipboard;
+}
 namespace frontend
 {
 class XWaylandClipboard
 {
 public:
-    XWaylandClipboard(std::shared_ptr<XCBConnection> const& connection);
+    XWaylandClipboard(
+        std::shared_ptr<XCBConnection> const& connection,
+        std::shared_ptr<scene::Clipboard> const& clipboard);
     ~XWaylandClipboard();
 
 private:
@@ -36,6 +42,7 @@ private:
     XWaylandClipboard& operator=(XWaylandClipboard const&) = delete;
 
     std::shared_ptr<XCBConnection> const connection;
+    std::shared_ptr<scene::Clipboard> const clipboard;
     xcb_window_t const selection_window;
 };
 }

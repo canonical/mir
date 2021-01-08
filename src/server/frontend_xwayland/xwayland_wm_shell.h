@@ -27,6 +27,10 @@ namespace shell
 {
 class Shell;
 }
+namespace scene
+{
+class Clipboard;
+}
 namespace frontend
 {
 class OutputManager;
@@ -40,15 +44,18 @@ class XWaylandWMShell
 public:
     XWaylandWMShell(
         std::shared_ptr<shell::Shell> const& shell,
+        std::shared_ptr<scene::Clipboard> const& clipboard,
         WlSeat& seat,
         std::shared_ptr<SurfaceStack> const& surface_stack)
         : shell{shell},
+          clipboard{clipboard},
           seat{seat},
           surface_stack{surface_stack}
     {
     }
 
     std::shared_ptr<shell::Shell> const shell;
+    std::shared_ptr<scene::Clipboard> const clipboard;
     WlSeat& seat;
     std::shared_ptr<SurfaceStack> const surface_stack;
 };

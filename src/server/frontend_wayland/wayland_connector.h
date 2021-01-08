@@ -76,6 +76,7 @@ public:
         wl_display* display;
         std::shared_ptr<Executor> wayland_executor;
         std::shared_ptr<shell::Shell> shell;
+        std::shared_ptr<scene::Clipboard> clipboard;
         WlSeat* seat;
         OutputManager* output_manager;
         std::shared_ptr<SurfaceStack> surface_stack;

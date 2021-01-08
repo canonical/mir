@@ -54,8 +54,11 @@ auto create_selection_window(mf::XCBConnection const& connection) -> xcb_window_
 }
 }
 
-mf::XWaylandClipboard::XWaylandClipboard(std::shared_ptr<XCBConnection> const& connection)
+mf::XWaylandClipboard::XWaylandClipboard(
+    std::shared_ptr<XCBConnection> const& connection,
+    std::shared_ptr<scene::Clipboard> const& clipboard)
     : connection{connection},
+      clipboard{clipboard},
       selection_window{create_selection_window(*connection)}
 {
 }
