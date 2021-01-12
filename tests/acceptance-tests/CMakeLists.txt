@@ -80,7 +80,18 @@ mir_add_wrapped_executable(mir_acceptance_tests NOINSTALL
   ${SOURCES}
 )
 
-mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
+if (MIR_USE_PRECOMPILED_HEADERS)
+  target_precompile_headers(
+    mir_acceptance_tests
+    PRIVATE
+      <gmock/gmock.h>
+      <gtest/gtest.h>
+      <vector>
+      <string>
+      <exception>
+      <memory>
+  )
+endif()
 
 add_dependencies(mir_acceptance_tests GMock)
 
