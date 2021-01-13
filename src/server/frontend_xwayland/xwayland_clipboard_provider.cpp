@@ -59,10 +59,18 @@ auto create_selection_window(mf::XCBConnection const& connection) -> xcb_window_
     return selection_window;
 }
 
-/// Like read(), but calls read() until the end of the file or the buffer fills up
-auto read_repeatedly(mir::Fd const& fd, uint8_t* buffer, ssize_t size) -> ssize_t
+class ReadError : public std::runtime_error
 {
-    ssize_t total_len = 0;
+public:
+    ReadError() : runtime_error{strerror(errno)}
+    {
+    }
+};
+
+/// Like read(), but calls read() until the end of the file or the buffer fills up
+auto read_repeatedly(mir::Fd const& fd, uint8_t* buffer, size_t size) -> size_t
+{
+    size_t total_len = 0;
     while (true)
     {
         auto const remaining = size - total_len;
@@ -73,7 +81,7 @@ auto read_repeatedly(mir::Fd const& fd, uint8_t* buffer, ssize_t size) -> ssize_
         auto const len = read(fd, buffer + total_len, remaining);
         if (len < 0)
         {
-            return -1; // error
+            throw ReadError();
         }
         total_len += len;
         if (len == 0)
@@ -239,17 +247,22 @@ void mf::XWaylandClipboardProvider::send_data(
         in_fd = {}; // important to release ownership of the fd, as we are about to block on it closing
     }
 
-    ssize_t const data_size = INCREMENT_CHUNK_SIZE;
+    size_t const data_size = INCREMENT_CHUNK_SIZE;
     std::unique_ptr<uint8_t[]> const data{new uint8_t[data_size]};
 
-    auto const len = read_repeatedly(out_fd, data.get(), data_size);
-    if (len < 0)
+    size_t len;
+    try
     {
-        log_warning("failed to send clipboard data to X11 client: failed to read from fd");
+        len = read_repeatedly(out_fd, data.get(), data_size);
+    }
+    catch (ReadError const& err)
+    {
+        log_warning("failed to send clipboard data to X11 client: failed to read from fd: %s", err.what());
         send_selection_notify(time, requester, XCB_ATOM_NONE, connection.CLIPBOARD, target);
         return;
     }
-    else if (len < data_size)
+
+    if (len < data_size)
     {
         // Call the XCB function directly instead of using connection->set_property() because target is variable
         xcb_change_property(
