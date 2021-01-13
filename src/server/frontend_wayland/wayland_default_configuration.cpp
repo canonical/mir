@@ -59,19 +59,47 @@ struct ExtensionBuilder
 std::vector<ExtensionBuilder> const internal_extension_builders = {
     {
         mw::Shell::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return mf::create_wl_shell(ctx.display, ctx.shell, ctx.seat, ctx.output_manager); }
+            {
+                return mf::create_wl_shell(
+                    ctx.display,
+                    *ctx.wayland_executor,
+                    ctx.shell,
+                    ctx.seat,
+                    ctx.output_manager);
+            }
     },
     {
         mw::XdgShellV6::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return std::make_shared<mf::XdgShellV6>(ctx.display, ctx.shell, *ctx.seat, ctx.output_manager); }
+            {
+                return std::make_shared<mf::XdgShellV6>(
+                    ctx.display,
+                    *ctx.wayland_executor,
+                    ctx.shell,
+                    *ctx.seat,
+                    ctx.output_manager);
+            }
     },
     {
         mw::XdgWmBase::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return std::make_shared<mf::XdgShellStable>(ctx.display, ctx.shell, *ctx.seat, ctx.output_manager); }
+            {
+                return std::make_shared<mf::XdgShellStable>(
+                    ctx.display,
+                    *ctx.wayland_executor,
+                    ctx.shell,
+                    *ctx.seat,
+                    ctx.output_manager);
+            }
     },
     {
         mw::LayerShellV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return std::make_shared<mf::LayerShellV1>(ctx.display, ctx.shell, *ctx.seat, ctx.output_manager); }
+            {
+                return std::make_shared<mf::LayerShellV1>(
+                    ctx.display,
+                    *ctx.wayland_executor,
+                    ctx.shell,
+                    *ctx.seat,
+                    ctx.output_manager);
+            }
     },
     {
         mw::XdgOutputManagerV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
@@ -93,7 +121,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     },
     {
         mw::PointerConstraintsV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return mf::create_pointer_constraints_unstable_v1(ctx.display, ctx.seat, ctx.shell); }
+            { return mf::create_pointer_constraints_unstable_v1(ctx.display, *ctx.wayland_executor, ctx.shell); }
     },
 };
 

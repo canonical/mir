@@ -32,6 +32,7 @@ struct wl_client;
 
 namespace mir
 {
+class Executor;
 namespace frontend
 {
 class WlSeat;
@@ -42,7 +43,7 @@ class WaylandInputDispatcher;
 class WaylandSurfaceObserver : public scene::NullSurfaceObserver
 {
 public:
-    WaylandSurfaceObserver(WlSeat* seat, WlSurface* surface, WindowWlSurfaceRole* window);
+    WaylandSurfaceObserver(Executor& wayland_executor, WlSeat* seat, WlSurface* surface, WindowWlSurfaceRole* window);
     ~WaylandSurfaceObserver();
 
     /// Overrides from scene::SurfaceObserver
@@ -104,7 +105,7 @@ private:
     void run_on_wayland_thread_unless_window_destroyed(
         std::function<void(Impl* impl, WindowWlSurfaceRole* window)>&& work);
 
-    WlSeat* const seat;
+    Executor& wayland_executor;
     /// shared_ptr so it can be captured by lambdas and possibly outlive this object
     std::shared_ptr<Impl> const impl;
 };

@@ -208,10 +208,12 @@ private:
 
 mf::LayerShellV1::LayerShellV1(
     struct wl_display* display,
+    Executor& wayland_executor,
     std::shared_ptr<msh::Shell> shell,
     WlSeat& seat,
     OutputManager* output_manager)
     : Global(display, Version<3>()),
+      wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
       output_manager{output_manager}
@@ -279,6 +281,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     MirDepthLayer layer)
     : mw::LayerSurfaceV1(new_resource, Version<3>()),
       WindowWlSurfaceRole(
+          layer_shell.wayland_executor,
           &layer_shell.seat,
           wayland::LayerSurfaceV1::client,
           surface,

@@ -312,12 +312,13 @@ class WlShellSurface : public wayland::ShellSurface, public WindowWlSurfaceRole
 public:
     WlShellSurface(
         wl_resource* new_resource,
+        Executor& wayland_executor,
         WlSurface* surface,
         std::shared_ptr<msh::Shell> const& shell,
         WlSeat& seat,
         OutputManager* output_manager)
         : ShellSurface(new_resource, Version<1>()),
-          WindowWlSurfaceRole{&seat, wayland::ShellSurface::client, surface, shell, output_manager}
+          WindowWlSurfaceRole{wayland_executor, &seat, wayland::ShellSurface::client, surface, shell, output_manager}
     {
     }
 
@@ -481,10 +482,12 @@ class WlShell : public wayland::Shell::Global
 public:
     WlShell(
         wl_display* display,
+        Executor& wayland_executor,
         std::shared_ptr<msh::Shell> const& shell,
         WlSeat& seat,
         OutputManager* const output_manager)
         : Global(display, Version<1>()),
+          wayland_executor{wayland_executor},
           shell{shell},
           seat{seat},
           output_manager{output_manager}
@@ -494,6 +497,7 @@ public:
     static auto get_window(wl_resource* window) -> std::shared_ptr<Surface>;
 
 private:
+    Executor& wayland_executor;
     std::shared_ptr<msh::Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
@@ -514,6 +518,7 @@ private:
         {
             new WlShellSurface(
                 new_shell_surface,
+                shell->wayland_executor,
                 WlSurface::from(surface),
                 shell->shell,
                 shell->seat,
@@ -573,10 +578,15 @@ std::shared_ptr<mg::GraphicBufferAllocator> allocator_for_display(
 }
 }
 
-auto mf::create_wl_shell(wl_display* display, std::shared_ptr<msh::Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)
+auto mf::create_wl_shell(
+    wl_display* display,
+    Executor& wayland_executor,
+    std::shared_ptr<msh::Shell> const& shell,
+    WlSeat* seat,
+    OutputManager* const output_manager)
 -> std::shared_ptr<void>
 {
-    return std::make_shared<mf::WlShell>(display, shell, *seat, output_manager);
+    return std::make_shared<mf::WlShell>(display, wayland_executor, shell, *seat, output_manager);
 }
 
 void mf::WaylandExtensions::init(Context const& context)
@@ -666,7 +676,7 @@ mf::WaylandConnector::WaylandConnector(
         executor,
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
-    seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, seat, executor);
+    seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, seat);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         display_config,

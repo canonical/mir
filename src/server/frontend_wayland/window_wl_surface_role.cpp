@@ -63,6 +63,7 @@ inline void clear_pending_if_unchanged(mir::optional_value<T>& pending, T& cache
 }
 
 mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
+    Executor& wayland_executor,
     WlSeat* seat,
     wl_client* client,
     WlSurface* surface,
@@ -73,7 +74,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
       shell{shell},
       session{get_session(client)},
       output_manager{output_manager},
-      observer{std::make_shared<WaylandSurfaceObserver>(seat, surface, this)},
+      observer{std::make_shared<WaylandSurfaceObserver>(wayland_executor, seat, surface, this)},
       params{std::make_unique<scene::SurfaceCreationParameters>(
           scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))},
       committed_min_size{0, 0},

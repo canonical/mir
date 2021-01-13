@@ -33,8 +33,6 @@ struct MirKeymapEvent;
 
 namespace mir
 {
-class Executor;
-
 namespace input
 {
 class InputDeviceHub;
@@ -53,8 +51,7 @@ public:
     WlSeat(
         wl_display* display,
         std::shared_ptr<mir::input::InputDeviceHub> const& input_hub,
-        std::shared_ptr<mir::input::Seat> const& seat,
-        std::shared_ptr<mir::Executor> const& executor);
+        std::shared_ptr<mir::input::Seat> const& seat);
 
     ~WlSeat();
 
@@ -63,8 +60,6 @@ public:
     void for_each_listener(wl_client* client, std::function<void(WlPointer*)> func);
     void for_each_listener(wl_client* client, std::function<void(WlKeyboard*)> func);
     void for_each_listener(wl_client* client, std::function<void(WlTouch*)> func);
-
-    void spawn(std::function<void()>&& work);
 
     class ListenerTracker
     {
@@ -115,10 +110,7 @@ private:
     std::shared_ptr<input::InputDeviceHub> const input_hub;
     std::shared_ptr<input::Seat> const seat;
 
-    std::shared_ptr<mir::Executor> const executor;
-
     void bind(wl_resource* new_wl_seat) override;
-
 };
 }
 }
