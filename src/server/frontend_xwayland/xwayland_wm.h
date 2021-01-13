@@ -103,6 +103,7 @@ private:
     std::unique_ptr<XWaylandCursors> const cursors;
     std::unique_ptr<XWaylandClipboardProvider> const clipboard_provider;
     xcb_window_t const wm_window;
+    xcb_query_extension_reply_t const* const xfixes; ///< Must not be freed, can be null
     std::shared_ptr<XWaylandSceneObserver> const scene_observer;
     std::shared_ptr<XWaylandClientManager> const client_manager;
 

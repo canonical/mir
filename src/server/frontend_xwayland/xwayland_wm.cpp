@@ -75,7 +75,7 @@ auto create_wm_window(mf::XCBConnection const& connection) -> xcb_window_t
     return wm_window;
 }
 
-void check_xfixes(mf::XCBConnection const& connection)
+auto init_xfixes(mf::XCBConnection const& connection) -> xcb_query_extension_reply_t const*
 {
     xcb_xfixes_query_version_cookie_t xfixes_cookie;
     xcb_xfixes_query_version_reply_t *xfixes_reply;
@@ -87,6 +87,7 @@ void check_xfixes(mf::XCBConnection const& connection)
     if (!xfixes || !xfixes->present)
     {
         mir::log_warning("xfixes not available");
+        return nullptr;
     }
 
     xfixes_cookie = xcb_xfixes_query_version(connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
@@ -98,6 +99,7 @@ void check_xfixes(mf::XCBConnection const& connection)
     }
 
     free(xfixes_reply);
+    return xfixes;
 }
 
 auto focus_mode_to_string(uint32_t focus_mode) -> std::string
@@ -138,11 +140,10 @@ mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, 
       cursors{std::make_unique<XWaylandCursors>(connection)},
       clipboard_provider{std::make_unique<XWaylandClipboardProvider>(*connection, wm_shell->clipboard)},
       wm_window{create_wm_window(*connection)},
+      xfixes{init_xfixes(*connection)},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
       client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)}
 {
-    check_xfixes(*connection);
-
     uint32_t const attrib_values[]{
         XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_PROPERTY_CHANGE};
 
