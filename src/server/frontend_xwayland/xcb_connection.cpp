@@ -591,6 +591,7 @@ auto mf::XCBConnection::xcb_type_atom(XCBType type) const -> xcb_atom_t
         case XCBType::ATOM:         return XCB_ATOM_ATOM;
         case XCBType::WINDOW:       return XCB_ATOM_WINDOW;
         case XCBType::CARDINAL32:   return XCB_ATOM_CARDINAL;
+        case XCBType::INTEGER:      return XCB_ATOM_INTEGER;
         case XCBType::STRING:       return XCB_ATOM_STRING;
         case XCBType::UTF8_STRING:  return UTF8_STRING;
         case XCBType::WM_STATE:     return WM_STATE;
