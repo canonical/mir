@@ -20,6 +20,7 @@
 #include "xwayland_log.h"
 #include "xwayland_surface_observer.h"
 #include "xwayland_client_manager.h"
+#include "xwayland_wm_shell.h"
 
 #include "mir/frontend/wayland.h"
 #include "mir/scene/surface_creation_parameters.h"
@@ -209,16 +210,15 @@ auto property_handler(
 mf::XWaylandSurface::XWaylandSurface(
     XWaylandWM *wm,
     std::shared_ptr<XCBConnection> const& connection,
-    WlSeat& seat,
-    std::shared_ptr<shell::Shell> const& shell,
+    XWaylandWMShell const& wm_shell,
     std::shared_ptr<XWaylandClientManager> const& client_manager,
     xcb_window_t window,
     geometry::Rectangle const& geometry,
     bool override_redirect)
     : xwm(wm),
       connection{connection},
-      seat(seat),
-      shell{shell},
+      wm_shell{wm_shell},
+      shell{wm_shell.shell},
       client_manager{client_manager},
       window(window),
       property_handlers{
@@ -625,7 +625,11 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     WindowState state;
     scene::SurfaceCreationParameters params;
 
-    auto const observer = std::make_shared<XWaylandSurfaceObserver>(seat, wl_surface, this);
+    auto const observer = std::make_shared<XWaylandSurfaceObserver>(
+        *wm_shell.wayland_executor,
+        wm_shell.seat,
+        wl_surface,
+        this);
 
     {
         std::lock_guard<std::mutex> lock{mutex};
@@ -929,11 +933,6 @@ void mf::XWaylandSurface::scene_surface_close_requested()
         xcb_kill_client(*connection, window);
     }
     connection->flush();
-}
-
-void mf::XWaylandSurface::run_on_wayland_thread(std::function<void()>&& work)
-{
-    xwm->run_on_wayland_thread(std::move(work));
 }
 
 void mf::XWaylandSurface::wl_surface_destroyed()

@@ -56,7 +56,10 @@ private:
 
 public:
     /// Takes ownership of the given FD
-    XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, Fd const& fd);
+    XWaylandWM(
+        std::shared_ptr<WaylandConnector> wayland_connector,
+        wl_client* wayland_client,
+        Fd const& fd);
     ~XWaylandWM();
 
     /// Called by the XWayland connector when there may be new events
@@ -67,7 +70,6 @@ public:
     void set_focus(xcb_window_t xcb_window, bool should_be_focused);
     void remember_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface, xcb_window_t window);
     void forget_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface);
-    void run_on_wayland_thread(std::function<void()>&& work);
 
     void surfaces_reordered(scene::SurfaceSet const& affected_surfaces);
 
@@ -99,6 +101,7 @@ private:
     std::shared_ptr<WaylandConnector> const wayland_connector;
     wl_client* const wayland_client;
     std::shared_ptr<XWaylandWMShell> const wm_shell;
+    Executor& wayland_executor;
     std::unique_ptr<XWaylandCursors> const cursors;
     xcb_window_t const wm_window;
     std::shared_ptr<XWaylandSceneObserver> const scene_observer;

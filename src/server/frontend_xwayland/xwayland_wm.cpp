@@ -28,6 +28,7 @@
 
 #include "mir/c_memory.h"
 #include "mir/fd.h"
+#include "mir/executor.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/scene/null_observer.h"
 
@@ -129,11 +130,15 @@ public:
     mf::XWaylandWM* const wm;
 };
 
-mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, Fd const& fd)
+mf::XWaylandWM::XWaylandWM(
+    std::shared_ptr<WaylandConnector> wayland_connector,
+    wl_client* wayland_client,
+    Fd const& fd)
     : connection{std::make_shared<XCBConnection>(fd)},
       wayland_connector(wayland_connector),
       wayland_client{wayland_client},
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
+      wayland_executor{*wm_shell->wayland_executor},
       cursors{std::make_unique<XWaylandCursors>(connection)},
       wm_window{create_wm_window(*connection)},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
@@ -369,11 +374,6 @@ void mf::XWaylandWM::forget_scene_surface(std::weak_ptr<scene::Surface> const& s
     scene_surface_set.erase(scene_surface);
 }
 
-void mf::XWaylandWM::run_on_wayland_thread(std::function<void()>&& work)
-{
-    wayland_connector->run_on_wayland_display([work = move(work)](auto){ work(); });
-}
-
 void mf::XWaylandWM::surfaces_reordered(scene::SurfaceSet const& affected_surfaces)
 {
     bool our_surfaces_affected = false;
@@ -500,8 +500,7 @@ void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& g
     surfaces[window] = std::make_shared<XWaylandSurface>(
         this,
         connection,
-        wm_shell->seat,
-        wm_shell->shell,
+        *wm_shell,
         client_manager,
         window,
         geometry,
@@ -774,12 +773,12 @@ void mf::XWaylandWM::handle_surface_id(
 {
     uint32_t id = event->data.data32[0];
 
-    wayland_connector->run_on_wayland_display([
+    wayland_executor.spawn([
             wayland_connector = wayland_connector,
             client=wayland_client,
             id,
             weak_surface,
-            weak_shell = std::weak_ptr<shell::Shell>{wm_shell->shell}](auto)
+            weak_shell = std::weak_ptr<shell::Shell>{wm_shell->shell}]()
         {
             wayland_connector->on_surface_created(client, id, [weak_surface, weak_shell](WlSurface* wl_surface)
                 {

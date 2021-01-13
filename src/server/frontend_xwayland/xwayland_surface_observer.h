@@ -45,6 +45,7 @@ class XWaylandSurfaceObserver
 {
 public:
     XWaylandSurfaceObserver(
+        Executor& wayland_executor,
         WlSeat& seat,
         WlSurface* wl_surface,
         XWaylandSurfaceObserverSurface* wm_surface);
@@ -83,6 +84,7 @@ private:
     };
 
     XWaylandSurfaceObserverSurface* const wm_surface;
+    Executor& wayland_executor;
     std::shared_ptr<ThreadsafeInputDispatcher> const input_dispatcher;
 
     /// Runs work on the Wayland thread if the input dispatcher still exists

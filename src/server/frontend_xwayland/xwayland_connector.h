@@ -26,6 +26,7 @@
 
 namespace mir
 {
+class Executor;
 namespace dispatch
 {
 class ReadableFd;
