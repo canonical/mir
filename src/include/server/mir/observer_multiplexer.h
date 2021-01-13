@@ -127,10 +127,11 @@ private:
 
         LockedObserver lock()
         {
+            std::unique_lock<std::recursive_mutex> lock{mutex};
             auto live_observer = observer.lock();
             if (live_observer)
             {
-                return LockedObserver{live_observer, &executor, std::unique_lock<std::recursive_mutex>(mutex)};
+                return LockedObserver{live_observer, &executor, std::move(lock)};
             }
             else
             {
@@ -138,19 +139,22 @@ private:
             }
         }
 
-        void reset()
+        /// Called when the given observer is unregistered. Returns true if this observer is now invalid (either because
+        /// this held the unregistered observer or this->observer has expired)
+        auto maybe_reset(Observer const* const unregistered_observer) -> bool
         {
             std::lock_guard<std::recursive_mutex> lock{mutex};
-            observer.reset();
-        }
-
-        bool operator==(Observer const* const other) const
-        {
-            return observer.lock().get() == other;
-        }
-        bool operator==(std::nullptr_t) const
-        {
-            return observer.expired();
+            auto const self = observer.lock().get();
+            if (self == unregistered_observer)
+            {
+                observer.reset();
+                return true;
+            }
+            else
+            {
+                // return true if our observer has expired
+                return self == nullptr;
+            }
         }
     private:
         // A recursive_mutex so that we can reset the observer pointer from a call to
@@ -190,15 +194,9 @@ void ObserverMultiplexer<Observer>::unregister_interest(Observer const& observer
             observers.end(),
             [&observer](auto& candidate)
             {
-                if (*candidate == &observer)
-                {
-                    // Kill the observer; this will wait for any (other) thread
-                    // to finish with the observer first.
-                    candidate->reset();
-                    return true;
-                }
-                // We also might as well clean up any expired observers while we're here.
-                return candidate == nullptr;
+                // This will wait for any (other) thread to finish with the candidate observer, then reset it
+                // (preventing future notifications from being sent) if it is the same as the unregistered observer.
+                return candidate->maybe_reset(&observer);
             }),
         observers.end());
 }
