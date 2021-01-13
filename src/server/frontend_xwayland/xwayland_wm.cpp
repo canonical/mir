@@ -516,7 +516,7 @@ void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
     // see https://www.systutorials.com/docs/linux/man/3-xcb-requests/
     int const xcb_error_type = 0;
 
-    int type = event->response_type & ~0x80;
+    auto const type = event->response_type & ~0x80;
     switch (type)
     {
     case XCB_BUTTON_PRESS:
@@ -580,11 +580,28 @@ void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
     case XCB_FOCUS_IN:
         handle_focus_in(reinterpret_cast<xcb_focus_in_event_t*>(event));
         break;
+    case XCB_SELECTION_REQUEST:
+        clipboard_provider->selection_request_event(reinterpret_cast<xcb_selection_request_event_t*>(event));
+        break;
     case xcb_error_type:
         handle_error(reinterpret_cast<xcb_generic_error_t*>(event));
         break;
     default:
         break;
+    }
+
+    if (xfixes)
+    {
+        auto const xfixes_type = event->response_type - xfixes->first_event;
+        switch (xfixes_type)
+        {
+        case XCB_XFIXES_SELECTION_NOTIFY:
+            clipboard_provider->xfixes_selection_notify_event(
+                reinterpret_cast<xcb_xfixes_selection_notify_event_t*>(event));
+            break;
+        default:
+            break;
+        }
     }
 }
 

@@ -18,15 +18,21 @@
 
 #include "xwayland_clipboard_provider.h"
 
+#include "xwayland_log.h"
 #include "mir/scene/clipboard.h"
 
 #include <xcb/xfixes.h>
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 
 namespace
 {
+size_t const INCREMENT_CHUNK_SIZE = 64 * 1024;
+
 auto create_selection_window(mf::XCBConnection const& connection) -> xcb_window_t
 {
     uint32_t const attrib_values[]{XCB_EVENT_MASK_PROPERTY_CHANGE};
@@ -51,6 +57,31 @@ auto create_selection_window(mf::XCBConnection const& connection) -> xcb_window_
     xcb_xfixes_select_selection_input(connection, selection_window, connection.CLIPBOARD, mask);
 
     return selection_window;
+}
+
+/// Like read(), but calls read() until the end of the file or the buffer fills up
+auto read_repeatedly(mir::Fd const& fd, uint8_t* buffer, ssize_t size) -> ssize_t
+{
+    ssize_t total_len = 0;
+    while (true)
+    {
+        auto const remaining = size - total_len;
+        if (remaining <= 0)
+        {
+            break; // buffer full
+        }
+        auto const len = read(fd, buffer + total_len, remaining);
+        if (len < 0)
+        {
+            return -1; // error
+        }
+        total_len += len;
+        if (len == 0)
+        {
+            break; // end of file
+        }
+    }
+    return total_len;
 }
 }
 
@@ -93,28 +124,214 @@ mf::XWaylandClipboardProvider::~XWaylandClipboardProvider()
     connection.flush();
 }
 
-void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
+void mf::XWaylandClipboardProvider::selection_request_event(xcb_selection_request_event_t* event)
 {
-    std::unique_lock<std::mutex> lock{mutex};
-
-    // TODO: early return if the source came from XWayland
-
-    if (static_cast<bool>(source) == owns_x11_clipboard)
+    if (verbose_xwayland_logging_enabled())
     {
-        // If the source is changed but we already own the clipboard or the source is cleared but we already don't, do
-        // nothing
+        log_debug("XCB_SELECTION_REQUEST");
+    }
+
+    if (event->owner != selection_window)
+    {
         return;
     }
-    owns_x11_clipboard = static_cast<bool>(source);
+
+    if (event->selection == connection.CLIPBOARD_MANAGER)
+    {
+        // TODO: figure out what to do here
+        log_warning("XCB_SELECTION_REQUEST with selection=CLIPBOARD_MANAGER (needs to be handled somehow)");
+    }
+    else if (event->selection != connection.CLIPBOARD)
+    {
+        // TODO: ignore this? or handle it?
+        log_warning("Got non-clipboard selection request event");
+        send_selection_notify(event->time, event->requestor, XCB_ATOM_NONE, event->selection, event->target);
+    }
+    else if (event->target == connection.TARGETS)
+    {
+        send_targets(event->time, event->requestor, event->property);
+    }
+    else if (event->target == connection.TIMESTAMP)
+    {
+        send_timestamp(event->time, event->requestor, event->property);
+    }
+    else if (event->target == connection.UTF8_STRING || event->target == connection.TEXT)
+    {
+        send_data(event->time, event->requestor, event->property, event->target, "text/plain;charset=utf-8");
+    }
+    else
+    {
+        // This seems to happen during normal operation
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_info(
+                "XWayland selection request event with invalid target %s",
+                connection.query_name(event->target).c_str());
+        }
+        send_selection_notify(event->time, event->requestor, XCB_ATOM_NONE, event->selection, event->target);
+    }
+}
+
+void mf::XWaylandClipboardProvider::xfixes_selection_notify_event(xcb_xfixes_selection_notify_event_t* event)
+{
+    // We have to use XCB_TIME_CURRENT_TIME when we claim the selection, so grab the actual timestamp here so we can
+    // answer TIMESTAMP conversion requests correctly (this is what Weston does)
+
+    // TODO: do we need to use the xfixes event? can we use the normal selection notify event instead?
+    if (event->owner == selection_window && event->selection == connection.CLIPBOARD) {
+        std::lock_guard<std::mutex> lock{mutex};
+        clipboard_ownership_timestamp = event->timestamp;
+    }
+}
+
+void mf::XWaylandClipboardProvider::send_targets(
+    xcb_timestamp_t time,
+    xcb_window_t requester,
+    xcb_atom_t property)
+{
+    xcb_atom_t const targets[] = {
+        connection.TIMESTAMP,
+        connection.TARGETS,
+        connection.UTF8_STRING,
+        connection.TEXT,
+    };
+
+    connection.set_property<XCBType::ATOM>(requester, property, targets);
+    send_selection_notify(time, requester, property, connection.CLIPBOARD, connection.TARGETS);
+}
+
+void mf::XWaylandClipboardProvider::send_timestamp(
+    xcb_timestamp_t time,
+    xcb_window_t requester,
+    xcb_atom_t property)
+{
+    connection.set_property<XCBType::INTEGER>(requester, property, clipboard_ownership_timestamp);
+    send_selection_notify(time, requester, property, connection.CLIPBOARD, connection.TIMESTAMP);
+}
+
+void mf::XWaylandClipboardProvider::send_data(
+    xcb_timestamp_t time,
+    xcb_window_t requester,
+    xcb_atom_t property,
+    xcb_atom_t target,
+    std::string const& mime_type)
+{
+    int fds[2];
+
+    if (pipe2(fds, O_CLOEXEC) != 0)
+    {
+        log_warning("failed to send clipboard data to X11 client: pipe2 error: %s", strerror(errno));
+        send_selection_notify(time, requester, XCB_ATOM_NONE, connection.CLIPBOARD, target);
+        return;
+    }
+
+    Fd out_fd{fds[0]}, in_fd{fds[1]};
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (!current_source)
+        {
+            log_warning("failed to send clipboard data to X11 client: no source");
+            send_selection_notify(time, requester, XCB_ATOM_NONE, connection.CLIPBOARD, target);
+            return;
+        }
+        current_source->initiate_send(mime_type, in_fd);
+        in_fd = {}; // important to release ownership of the fd, as we are about to block on it closing
+    }
+
+    ssize_t const data_size = INCREMENT_CHUNK_SIZE;
+    std::unique_ptr<uint8_t[]> const data{new uint8_t[data_size]};
+
+    auto const len = read_repeatedly(out_fd, data.get(), data_size);
+    if (len < 0)
+    {
+        log_warning("failed to send clipboard data to X11 client: failed to read from fd");
+        send_selection_notify(time, requester, XCB_ATOM_NONE, connection.CLIPBOARD, target);
+        return;
+    }
+    else if (len < data_size)
+    {
+        // Call the XCB function directly instead of using connection->set_property() because target is variable
+        xcb_change_property(
+            connection,
+            XCB_PROP_MODE_REPLACE,
+            requester,
+            property,
+            target,
+            8, // format
+            len,
+            data.get());
+        send_selection_notify(time, requester, property, connection.CLIPBOARD, target);
+    }
+    else
+    {
+        log_warning("failed to send clipboard data to X11 client: incremental transfers not yet implemented");
+        send_selection_notify(time, requester, XCB_ATOM_NONE, connection.CLIPBOARD, target);
+        // TODO: remember to flush the connection before reading
+        return;
+    }
+
+    xcb_flush(connection);
+}
+
+void mf::XWaylandClipboardProvider::send_selection_notify(
+    xcb_timestamp_t time,
+    xcb_window_t requestor,
+    xcb_atom_t property,
+    xcb_atom_t selection,
+    xcb_atom_t target)
+{
+    xcb_selection_notify_event_t const selection_notify = {
+        XCB_SELECTION_NOTIFY, // response_type
+        0, // pad0
+        0, // sequence
+        time,
+        requestor,
+        selection,
+        target,
+        property,
+    };
+
+    xcb_send_event(
+        connection,
+        0, // ropagate
+        requestor,
+        XCB_EVENT_MASK_NO_EVENT,
+        reinterpret_cast<const char*>(&selection_notify));
+}
+
+void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
+{
+    // TODO: early return if the source came from XWayland
+
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (static_cast<bool>(source) == static_cast<bool>(current_source))
+        {
+            // If the source is changed but we already own the clipboard or the source is cleared but we already don't,
+            // do nothing
+            return;
+        }
+        current_source = source;
+    }
+
     if (source)
     {
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug("Taking ownership of the XWayland clipboard");
+        }
         xcb_set_selection_owner(connection, selection_window, connection.CLIPBOARD, XCB_TIME_CURRENT_TIME);
     }
     else
     {
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug("Clearing our ownership of the XWayland clipboard");
+        }
+        // TODO: does this work? Or do we need to use "the timestamp that was used to acquire the selection"?
         xcb_set_selection_owner(connection, XCB_WINDOW_NONE, connection.CLIPBOARD, XCB_TIME_CURRENT_TIME);
     }
 
-    lock.unlock();
     connection.flush();
 }
