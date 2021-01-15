@@ -9,6 +9,7 @@ set(
   xwayland_wm.cpp         xwayland_wm.h
   xwayland_cursors.cpp    xwayland_cursors.h
   xwayland_clipboard_provider.cpp xwayland_clipboard_provider.h
+  xwayland_clipboard_source.cpp xwayland_clipboard_source.h
   xwayland_surface.cpp    xwayland_surface.h
   xwayland_client_manager.cpp xwayland_client_manager.h
   xwayland_surface_role.cpp xwayland_surface_role.h

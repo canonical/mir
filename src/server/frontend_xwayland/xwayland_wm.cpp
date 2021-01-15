@@ -25,6 +25,7 @@
 #include "xwayland_surface_role.h"
 #include "xwayland_cursors.h"
 #include "xwayland_client_manager.h"
+#include "xwayland_clipboard_source.h"
 #include "xwayland_clipboard_provider.h"
 
 #include "mir/c_memory.h"
@@ -134,13 +135,14 @@ public:
 
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, Fd const& fd)
     : connection{std::make_shared<XCBConnection>(fd)},
+      xfixes{init_xfixes(*connection)},
       wayland_connector(wayland_connector),
       wayland_client{wayland_client},
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
       cursors{std::make_unique<XWaylandCursors>(connection)},
+      clipboard_source{std::make_unique<XWaylandClipboardSource>(*connection, wm_shell->clipboard)},
       clipboard_provider{std::make_unique<XWaylandClipboardProvider>(*connection, wm_shell->clipboard)},
       wm_window{create_wm_window(*connection)},
-      xfixes{init_xfixes(*connection)},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
       client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)}
 {
@@ -583,6 +585,9 @@ void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
     case XCB_SELECTION_REQUEST:
         clipboard_provider->selection_request_event(reinterpret_cast<xcb_selection_request_event_t*>(event));
         break;
+    case XCB_SELECTION_NOTIFY:
+        clipboard_source->selection_notify_event(reinterpret_cast<xcb_selection_notify_event_t*>(event));
+        break;
     case xcb_error_type:
         handle_error(reinterpret_cast<xcb_generic_error_t*>(event));
         break;
@@ -596,7 +601,10 @@ void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
         switch (xfixes_type)
         {
         case XCB_XFIXES_SELECTION_NOTIFY:
+            // Order of calls should not matter
             clipboard_provider->xfixes_selection_notify_event(
+                reinterpret_cast<xcb_xfixes_selection_notify_event_t*>(event));
+            clipboard_source->xfixes_selection_notify_event(
                 reinterpret_cast<xcb_xfixes_selection_notify_event_t*>(event));
             break;
         default:

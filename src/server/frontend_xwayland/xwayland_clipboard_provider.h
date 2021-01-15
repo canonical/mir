@@ -21,8 +21,6 @@
 
 #include "xcb_connection.h"
 
-#include <mutex>
-
 struct xcb_xfixes_selection_notify_event_t;
 
 namespace mir

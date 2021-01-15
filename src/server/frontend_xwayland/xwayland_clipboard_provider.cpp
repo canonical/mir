@@ -17,6 +17,7 @@
  */
 
 #include "xwayland_clipboard_provider.h"
+#include "xwayland_clipboard_source.h"
 
 #include "xwayland_log.h"
 #include "mir/scene/clipboard.h"
@@ -47,14 +48,6 @@ auto create_selection_window(mf::XCBConnection const& connection) -> xcb_window_
         XCB_WINDOW_CLASS_INPUT_OUTPUT,
         connection.screen()->root_visual,
         XCB_CW_EVENT_MASK, attrib_values);
-
-    xcb_set_selection_owner(connection, selection_window, connection.CLIPBOARD_MANAGER, XCB_TIME_CURRENT_TIME);
-
-    uint32_t const mask =
-        XCB_XFIXES_SELECTION_EVENT_MASK_SET_SELECTION_OWNER |
-        XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_WINDOW_DESTROY |
-        XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_CLIENT_CLOSE;
-    xcb_xfixes_select_selection_input(connection, selection_window, connection.CLIPBOARD, mask);
 
     return selection_window;
 }
@@ -315,7 +308,11 @@ void mf::XWaylandClipboardProvider::send_selection_notify(
 
 void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
 {
-    // TODO: early return if the source came from XWayland
+    if (XWaylandClipboardSource::source_is_from(source.get(), connection))
+    {
+        // If the source is from our XWayland connection, do nothing
+        return;
+    }
 
     {
         std::lock_guard<std::mutex> lock{mutex};

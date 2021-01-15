@@ -46,6 +46,7 @@ class XWaylandSurface;
 class XWaylandWMShell;
 class XWaylandCursors;
 class XWaylandClientManager;
+class XWaylandClipboardSource;
 class XWaylandClipboardProvider;
 
 class XWaylandSceneObserver;
@@ -97,13 +98,14 @@ private:
     void handle_focus_in(xcb_focus_in_event_t* event);
     void handle_error(xcb_generic_error_t* event);
 
+    xcb_query_extension_reply_t const* const xfixes; ///< Must not be freed, can be null
     std::shared_ptr<WaylandConnector> const wayland_connector;
     wl_client* const wayland_client;
     std::shared_ptr<XWaylandWMShell> const wm_shell;
     std::unique_ptr<XWaylandCursors> const cursors;
+    std::unique_ptr<XWaylandClipboardSource> const clipboard_source;
     std::unique_ptr<XWaylandClipboardProvider> const clipboard_provider;
     xcb_window_t const wm_window;
-    xcb_query_extension_reply_t const* const xfixes; ///< Must not be freed, can be null
     std::shared_ptr<XWaylandSceneObserver> const scene_observer;
     std::shared_ptr<XWaylandClientManager> const client_manager;
 
