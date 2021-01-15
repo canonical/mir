@@ -318,7 +318,7 @@ auto mf::XCBConnection::read_property(
                     {
                         message +=  " for " + window_debug_string(window) + "." + query_name(prop);
                     }
-                    handler.on_error("no reply data" + message);
+                    handler.on_error(message);
                 }
                 else
                 {
