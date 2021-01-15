@@ -158,6 +158,13 @@ public:
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
+        bool delete_after_read,
+        uint32_t max_length,
+        Handler<xcb_get_property_reply_t*>&& handler) const -> std::function<void()>;
+
+    auto read_property(
+        xcb_window_t window,
+        xcb_atom_t prop,
         Handler<xcb_get_property_reply_t*>&& handler) const -> std::function<void()>;
 
     auto read_property(
@@ -301,6 +308,8 @@ public:
     DECLARE_ATOM(COMPOUND_TEXT);
     DECLARE_ATOM(TIMESTAMP);
     DECLARE_ATOM(TARGETS);
+    DECLARE_ATOM(INCR);
+    DECLARE_ATOM(_WL_SELECTION);
     DECLARE_ATOM(WL_SURFACE_ID);
 
 #undef DECLARE_ATOM
