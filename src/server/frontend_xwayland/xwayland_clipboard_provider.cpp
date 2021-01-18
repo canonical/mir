@@ -175,11 +175,10 @@ void mf::XWaylandClipboardProvider::selection_request_event(xcb_selection_reques
 
 void mf::XWaylandClipboardProvider::xfixes_selection_notify_event(xcb_xfixes_selection_notify_event_t* event)
 {
-    // We have to use XCB_TIME_CURRENT_TIME when we claim the selection, so grab the actual timestamp here so we can
-    // answer TIMESTAMP conversion requests correctly (this is what Weston does)
-
-    // TODO: do we need to use the xfixes event? can we use the normal selection notify event instead?
-    if (event->owner == selection_window && event->selection == connection.CLIPBOARD) {
+    if (event->owner == selection_window && event->selection == connection.CLIPBOARD)
+    {
+        // We have to use XCB_TIME_CURRENT_TIME when we claim the selection, so grab the actual timestamp here so we can
+        // answer TIMESTAMP conversion requests correctly (this is what Weston does)
         std::lock_guard<std::mutex> lock{mutex};
         clipboard_ownership_timestamp = event->timestamp;
     }
@@ -206,7 +205,10 @@ void mf::XWaylandClipboardProvider::send_timestamp(
     xcb_window_t requester,
     xcb_atom_t property)
 {
-    connection.set_property<XCBType::INTEGER>(requester, property, clipboard_ownership_timestamp);
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        connection.set_property<XCBType::INTEGER>(requester, property, clipboard_ownership_timestamp);
+    }
     send_selection_notify(time, requester, property, connection.CLIPBOARD, connection.TIMESTAMP);
 }
 
@@ -308,40 +310,38 @@ void mf::XWaylandClipboardProvider::send_selection_notify(
 
 void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
 {
+    std::unique_lock<std::mutex> lock{mutex};
+
     if (XWaylandClipboardSource::source_is_from(source.get(), connection))
     {
-        // If the source is from our XWayland connection, do nothing
-        return;
-    }
-
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        if (static_cast<bool>(source) == static_cast<bool>(current_source))
-        {
-            // If the source is changed but we already own the clipboard or the source is cleared but we already don't,
-            // do nothing
-            return;
-        }
-        current_source = source;
-    }
-
-    if (source)
-    {
-        if (verbose_xwayland_logging_enabled())
-        {
-            log_debug("Taking ownership of the XWayland clipboard");
-        }
-        xcb_set_selection_owner(connection, selection_window, connection.CLIPBOARD, XCB_TIME_CURRENT_TIME);
+        // If the source is from our XWayland connection, clear current_source and don't touch the X11 selection owner
+        current_source = nullptr;
     }
     else
     {
-        if (verbose_xwayland_logging_enabled())
+        current_source = source;
+        if (source)
         {
-            log_debug("Clearing our ownership of the XWayland clipboard");
+            // We have a source that isn't from this XWayland connection. Take ownership of the X11 clipboard. We don't
+            // try to prevent calling this multiple when we already have ownership.
+            if (verbose_xwayland_logging_enabled())
+            {
+                log_debug("Taking ownership of the XWayland clipboard");
+            }
+            xcb_set_selection_owner(connection, selection_window, connection.CLIPBOARD, XCB_TIME_CURRENT_TIME);
         }
-        // TODO: does this work? Or do we need to use "the timestamp that was used to acquire the selection"?
-        xcb_set_selection_owner(connection, XCB_WINDOW_NONE, connection.CLIPBOARD, XCB_TIME_CURRENT_TIME);
+        else
+        {
+            // Clear ownership of the X11 clipboard
+            if (verbose_xwayland_logging_enabled())
+            {
+                log_debug("Clearing our ownership of the XWayland clipboard");
+            }
+            xcb_set_selection_owner(connection, XCB_WINDOW_NONE, connection.CLIPBOARD, clipboard_ownership_timestamp);
+        }
     }
+
+    lock.unlock();
 
     connection.flush();
 }

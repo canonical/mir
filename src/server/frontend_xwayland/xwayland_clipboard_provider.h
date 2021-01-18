@@ -91,7 +91,10 @@ private:
     xcb_window_t const selection_window;
 
     std::mutex mutex;
-    xcb_timestamp_t clipboard_ownership_timestamp{0};
+    /// The timestamp of when we took ownership of the clipboard. May be XCB_TIME_CURRENT_TIME or outdated if we haven't
+    /// received the event we need to set it.
+    xcb_timestamp_t clipboard_ownership_timestamp{XCB_TIME_CURRENT_TIME};
+    /// The source X11 clients can paste from. Should never be a source from this XWayland connection. Can be null
     std::shared_ptr<scene::ClipboardSource> current_source;
 };
 }
