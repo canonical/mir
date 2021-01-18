@@ -185,10 +185,11 @@ void mf::XWaylandClipboardSource::initiate_send(xcb_atom_t target_type, Fd const
     std::unique_lock<std::mutex> lock{mutex};
     if (pending_send_fd)
     {
-        log_error("can not copy from X11 because operation is currently in progress");
+        log_error("can not send clipboard data from X11 because another send is currently in progress");
         return;
     }
     pending_send_fd = receiver_fd;
+    lock.unlock();
 
     if (verbose_xwayland_logging_enabled())
     {
@@ -262,6 +263,12 @@ void mf::XWaylandClipboardSource::selection_notify_event(xcb_selection_notify_ev
                         static_cast<uint8_t*>(xcb_get_property_value(reply)),
                         xcb_get_property_value_length(reply));
                 }
+            },
+            [&](const std::string& error_message)
+            {
+                log_error("Error getting selection property: %s", error_message.c_str());
+                std::lock_guard<std::mutex> lock{mutex};
+                pending_send_fd.reset();
             }});
 
         completion();
