@@ -1080,8 +1080,8 @@ void mir::scene::BasicSurface::set_window_margins(
 auto mir::scene::BasicSurface::content_size(ProofOfMutexLock const&) const -> geometry::Size
 {
     return geom::Size{
-        std::max<geom::Width>(surface_rect.size.width - margins.left - margins.right, geom::Width{1}),
-        std::max<geom::Height>(surface_rect.size.height - margins.top - margins.bottom, geom::Height{1})};
+        std::max(surface_rect.size.width - margins.left - margins.right, geom::Width{1}),
+        std::max(surface_rect.size.height - margins.top - margins.bottom, geom::Height{1})};
 }
 
 auto mir::scene::BasicSurface::content_top_left(ProofOfMutexLock const&) const -> geometry::Point
