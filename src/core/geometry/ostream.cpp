@@ -31,12 +31,6 @@ std::ostream& geom::operator<<(std::ostream& out, Displacement const& value)
     return out;
 }
 
-std::ostream& geom::operator<<(std::ostream& out, Point const& value)
-{
-    out << '(' << value.x << ", " << value.y << ')';
-    return out;
-}
-
 std::ostream& geom::operator<<(std::ostream& out, Size const& value)
 {
     out << '(' << value.width << ", " << value.height << ')';
