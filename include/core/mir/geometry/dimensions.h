@@ -25,18 +25,19 @@
 
 namespace mir
 {
-
 /// Basic geometry types. Types for dimensions, displacements, etc.
 /// and the operations that they support.
 namespace geometry
 {
 namespace detail
 {
-// TODO: On next ABI break, switch to just using Wrapper
 template<typename Tag>
 class IntWrapper : public generic::detail::Wrapper<Tag, int>
 {
 public:
+    template<typename OtherTag>
+    using WrapperType = IntWrapper<OtherTag>;
+
     constexpr IntWrapper() {}
 
     template<typename U>
