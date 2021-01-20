@@ -29,12 +29,17 @@ namespace mir
 namespace geometry
 {
 
-struct WidthTag;
-struct HeightTag;
-struct XTag;
-struct YTag;
-struct DeltaXTag;
-struct DeltaYTag;
+/// These tag types determine what type of dimension a value holds and what operations are possible with it. They are
+/// only used as template paramaters, are never instantiated and should only require forward declarations, but some
+/// compiler versions seem to fail if they aren't given real declarations.
+/// @{
+struct WidthTag{};
+struct HeightTag{};
+struct XTag{};
+struct YTag{};
+struct DeltaXTag{};
+struct DeltaYTag{};
+/// @}
 
 namespace generic
 {
