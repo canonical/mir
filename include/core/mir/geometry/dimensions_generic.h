@@ -41,15 +41,23 @@ struct DeltaXTag{};
 struct DeltaYTag{};
 /// @}
 
+namespace detail
+{
+struct ValueWrapperBase{}; // Used for determining if a type is a wrapper
+}
+
 namespace generic
 {
 template<typename T>
 struct Value
 {
+    /// Wraps a geometry value and prevents it from being accidentally used for invalid operations (such as setting a
+    /// width to a height or adding two x positions together). Of course, explicit casts are possible to get around
+    /// these restrictions (see the as_*() functions). int values (which are most values) should use the
+    /// derived IntWrapper class, and other types should use this directly.
     template<typename Tag>
-    class Wrapper
+    struct Wrapper: detail::ValueWrapperBase
     {
-    public:
         using ValueType = T;
         using TagType = Tag;
         template<typename OtherTag>
@@ -125,7 +133,7 @@ private:
     Value();
 };
 
-template<typename W, typename std::enable_if<std::is_void<typename W::IsGemetryWrapper>::value, bool>::type = true>
+template<typename W, typename std::enable_if<std::is_base_of<detail::ValueWrapperBase, W>::value, bool>::type = true>
 std::ostream& operator<<(std::ostream& out, W const& value)
 {
     out << value.as_value();
