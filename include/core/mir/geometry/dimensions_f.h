@@ -25,42 +25,12 @@ namespace mir
 {
 namespace geometry
 {
-namespace detail
-{
-template<typename Tag>
-class FloatWrapper : public generic::detail::Wrapper<Tag, float>
-{
-public:
-    template<typename OtherTag>
-    using WrapperType = FloatWrapper<OtherTag>;
-
-    constexpr FloatWrapper() {}
-
-    template<typename U>
-    constexpr FloatWrapper(generic::detail::Wrapper<Tag, U> const& value)
-        : generic::detail::Wrapper<Tag, int>{value}
-    {
-    }
-
-    template<typename U>
-    explicit constexpr FloatWrapper(U const& value)
-        : generic::detail::Wrapper<Tag, int>{value}
-    {
-    }
-
-    constexpr auto as_float() const -> float
-    {
-        return this->value;
-    }
-};
-} // namespace detail
-
-typedef detail::FloatWrapper<WidthTag> WidthF;
-typedef detail::FloatWrapper<HeightTag> HeightF;
-typedef detail::FloatWrapper<XTag> XF;
-typedef detail::FloatWrapper<YTag> YF;
-typedef detail::FloatWrapper<DeltaXTag> DeltaXF;
-typedef detail::FloatWrapper<DeltaYTag> DeltaYF;
+using WidthF = generic::Width<float>;
+using HeightF = generic::Height<float>;
+using XF = generic::X<float>;
+using YF = generic::Y<float>;
+using DeltaXF = generic::DeltaX<float>;
+using DeltaYF = generic::DeltaY<float>;
 }
 }
 

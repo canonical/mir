@@ -32,7 +32,7 @@ namespace geometry
 namespace detail
 {
 template<typename Tag>
-class IntWrapper : public generic::detail::Wrapper<Tag, int>
+class IntWrapper : public generic::Value<int>::Wrapper<Tag>
 {
 public:
     template<typename OtherTag>
@@ -41,14 +41,14 @@ public:
     constexpr IntWrapper() {}
 
     template<typename U>
-    constexpr IntWrapper(generic::detail::Wrapper<Tag, U> const& value)
-        : generic::detail::Wrapper<Tag, int>{value}
+    constexpr IntWrapper(typename generic::Value<U>::template Wrapper<Tag> const& value)
+        : generic::Value<int>::Wrapper<Tag>{value}
     {
     }
 
     template<typename U>
     explicit constexpr IntWrapper(U const& value)
-        : generic::detail::Wrapper<Tag, int>{value}
+        : generic::Value<int>::Wrapper<Tag>{value}
     {
     }
 

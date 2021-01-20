@@ -43,102 +43,101 @@ struct DeltaYTag{};
 
 namespace generic
 {
-namespace detail
+template<typename T>
+struct Value
 {
-template<typename Tag, typename T>
-class Wrapper
-{
-public:
-    using ValueType = T;
-    using TagType = Tag;
-    template<typename OtherTag>
-    using WrapperType = Wrapper<OtherTag, T>;
-
-    template <typename Q = T>
-    constexpr typename std::enable_if<std::is_integral<Q>::value, int>::type as_int() const
+    template<typename Tag>
+    class Wrapper
     {
-        return this->value;
-    }
+    public:
+        using ValueType = T;
+        using TagType = Tag;
+        template<typename OtherTag>
+        using WrapperType = Wrapper<OtherTag>;
+        using IsGemetryWrapper = void; ///< Used to check if this is a geometry wrapper type
 
-    constexpr T as_value() const
-    {
-        return value;
-    }
+        template <typename Q = T>
+        constexpr typename std::enable_if<std::is_integral<Q>::value, int>::type as_int() const
+        {
+            return this->value;
+        }
 
-protected:
-    constexpr Wrapper() : value{} {}
+        constexpr T as_value() const
+        {
+            return value;
+        }
 
-    template<typename U>
-    Wrapper& operator=(Wrapper<Tag, U> const& that)
-    {
-        value = static_cast<T>(that.value);
-    }
+        constexpr Wrapper() : value{} {}
 
-    template<typename U>
-    constexpr Wrapper(Wrapper<Tag, U> const& value)
-        : value{static_cast<T>(value.as_value())}
-    {
-    }
+        template<typename W, typename std::enable_if<std::is_same<typename W::TagType, Tag>::value, bool>::type = true>
+        Wrapper& operator=(W const& that)
+        {
+            value = static_cast<T>(that.value);
+        }
 
-    template<typename U>
-    explicit constexpr Wrapper(U const& value)
-        : value{static_cast<T>(value)}
-    {
-    }
+        template<typename W, typename std::enable_if<std::is_same<typename W::TagType, Tag>::value, bool>::type = true>
+        explicit constexpr Wrapper(W const& value)
+            : value{static_cast<T>(value.as_value())}
+        {
+        }
 
-    T value;
+        template<typename U, typename std::enable_if<std::is_scalar<U>::value, bool>::type = true>
+        explicit constexpr Wrapper(U const& value)
+            : value{static_cast<T>(value)}
+        {
+        }
+
+        inline constexpr auto operator == (Wrapper<Tag> const& rhs) const -> bool
+        {
+            return value == rhs.as_value();
+        }
+
+        inline constexpr auto operator != (Wrapper<Tag> const& rhs) const -> bool
+        {
+            return value != rhs.as_value();
+        }
+
+        inline constexpr auto operator <= (Wrapper<Tag> const& rhs) const -> bool
+        {
+            return value <= rhs.as_value();
+        }
+
+        inline constexpr auto operator >= (Wrapper<Tag> const& rhs) const -> bool
+        {
+            return value >= rhs.as_value();
+        }
+
+        inline constexpr auto operator < (Wrapper<Tag> const& rhs) const -> bool
+        {
+            return value < rhs.as_value();
+        }
+
+        inline constexpr auto operator > (Wrapper<Tag> const& rhs) const -> bool
+        {
+            return value > rhs.as_value();
+        }
+
+    protected:
+        T value;
+    };
+
+private:
+    Value();
 };
 
-template<typename Tag, typename T>
-std::ostream& operator<<(std::ostream& out, Wrapper<Tag, T> const& value)
+template<typename W, typename std::enable_if<std::is_void<typename W::IsGemetryWrapper>::value, bool>::type = true>
+std::ostream& operator<<(std::ostream& out, W const& value)
 {
     out << value.as_value();
     return out;
 }
 
-template<typename Tag, typename T>
-inline constexpr bool operator == (Wrapper<Tag, T> const& lhs, Wrapper<Tag, T> const& rhs)
-{
-    return lhs.as_value() == rhs.as_value();
-}
-
-template<typename Tag, typename T>
-inline constexpr bool operator != (Wrapper<Tag, T> const& lhs, Wrapper<Tag, T> const& rhs)
-{
-    return lhs.as_value() != rhs.as_value();
-}
-
-template<typename Tag, typename T>
-inline constexpr bool operator <= (Wrapper<Tag, T> const& lhs, Wrapper<Tag, T> const& rhs)
-{
-    return lhs.as_value() <= rhs.as_value();
-}
-
-template<typename Tag, typename T>
-inline constexpr bool operator >= (Wrapper<Tag, T> const& lhs, Wrapper<Tag, T> const& rhs)
-{
-    return lhs.as_value() >= rhs.as_value();
-}
-
-template<typename Tag, typename T>
-inline constexpr bool operator < (Wrapper<Tag, T> const& lhs, Wrapper<Tag, T> const& rhs)
-{
-    return lhs.as_value() < rhs.as_value();
-}
-
-template<typename Tag, typename T>
-inline constexpr bool operator > (Wrapper<Tag, T> const& lhs, Wrapper<Tag, T> const& rhs)
-{
-    return lhs.as_value() > rhs.as_value();
-}
-} // namespace detail
-
-template<typename T> using Width = detail::Wrapper<WidthTag, T>;
-template<typename T> using Height = detail::Wrapper<HeightTag, T>;
-template<typename T> using X = detail::Wrapper<XTag, T>;
-template<typename T> using Y = detail::Wrapper<YTag, T>;
-template<typename T> using DeltaX = detail::Wrapper<DeltaXTag, T>;
-template<typename T> using DeltaY = detail::Wrapper<DeltaYTag, T>;
+template<typename T> using Width = typename Value<T>::template Wrapper<WidthTag>;
+template<typename T> using Height = typename Value<T>::template Wrapper<HeightTag>;
+template<typename T> using X = typename Value<T>::template Wrapper<XTag>;
+template<typename T> using Y = typename Value<T>::template Wrapper<YTag>;
+template<typename T> using DeltaX = typename Value<T>::template Wrapper<DeltaXTag>;
+template<typename T> using DeltaY = typename Value<T>::template Wrapper<DeltaYTag>;
 } // namespace generic
 
 // Adding deltas is fine

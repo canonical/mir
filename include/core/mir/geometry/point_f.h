@@ -27,18 +27,7 @@ namespace mir
 {
 namespace geometry
 {
-struct PointF : generic::Point<detail::FloatWrapper>
-{
-    template<typename Tag>
-    using WrapperType = detail::FloatWrapper<Tag>;
-
-    constexpr PointF() = default;
-    constexpr PointF(PointF const&) = default;
-    PointF& operator=(PointF const&) = default;
-
-    template<typename XType, typename YType>
-    constexpr PointF(XType&& x, YType&& y) : generic::Point<detail::FloatWrapper>{x, y} {}
-};
+using PointF = generic::Point<generic::Value<float>::Wrapper>;
 }
 }
 #endif // MIR_GEOMETRY_POINT_F_H_
