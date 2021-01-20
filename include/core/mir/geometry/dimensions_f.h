@@ -55,12 +55,12 @@ public:
 };
 } // namespace detail
 
-typedef detail::FloatWrapper<WidthTag> FWidth;
-typedef detail::FloatWrapper<HeightTag> FHeight;
-typedef detail::FloatWrapper<XTag> FX;
-typedef detail::FloatWrapper<YTag> FY;
-typedef detail::FloatWrapper<DeltaXTag> FDeltaX;
-typedef detail::FloatWrapper<DeltaYTag> FDeltaY;
+typedef detail::FloatWrapper<WidthTag> WidthF;
+typedef detail::FloatWrapper<HeightTag> HeightF;
+typedef detail::FloatWrapper<XTag> XF;
+typedef detail::FloatWrapper<YTag> YF;
+typedef detail::FloatWrapper<DeltaXTag> DeltaXF;
+typedef detail::FloatWrapper<DeltaYTag> DeltaYF;
 }
 }
 
