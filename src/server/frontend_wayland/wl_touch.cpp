@@ -20,6 +20,7 @@
 
 #include "wayland_utils.h"
 #include "wl_surface.h"
+#include "wl_seat.h"
 
 #include "mir/executor.h"
 #include "mir/client/event.h"
@@ -47,34 +48,67 @@ mf::WlTouch::~WlTouch()
     }
 }
 
-void mf::WlTouch::release()
+void mf::WlTouch::event(MirTouchEvent const* event, WlSurface& root_surface)
 {
-    destroy_wayland_object();
+    std::chrono::milliseconds timestamp{WlSeat::timestamp_of(event)};
+
+    for (auto i = 0u; i < mir_touch_event_point_count(event); ++i)
+    {
+        auto const position = std::make_pair(
+            mir_touch_event_axis_value(event, i, mir_touch_axis_x),
+            mir_touch_event_axis_value(event, i, mir_touch_axis_y));
+        int const touch_id = mir_touch_event_id(event, i);
+        MirTouchAction const action = mir_touch_event_action(event, i);
+
+        switch (action)
+        {
+        case mir_touch_action_down:
+        {
+            auto const serial = wl_display_next_serial(wl_client_get_display(client));
+            down(serial, timestamp, touch_id, root_surface, position);
+        }   break;
+
+        case mir_touch_action_up:
+        {
+            auto const serial = wl_display_next_serial(wl_client_get_display(client));
+            up(serial, timestamp, touch_id);
+        }   break;
+
+        case mir_touch_action_change:
+            motion(timestamp, touch_id, position);
+            break;
+
+        case mir_touch_actions:;
+        }
+    }
+
+    maybe_frame();
 }
 
 void mf::WlTouch::down(
+    uint32_t serial,
     std::chrono::milliseconds const& ms,
     int32_t touch_id,
-    WlSurface* root_surface,
+    WlSurface& root_surface,
     std::pair<float, float> const& root_position)
 {
     geom::Point root_point{root_position.first, root_position.second};
-    auto const target_surface = root_surface->subsurface_at(root_point).value_or(root_surface);
+    auto const target_surface = root_surface.subsurface_at(root_point).value_or(&root_surface);
     auto const offset = target_surface->total_offset();
     auto const position_on_target = std::make_pair(
         root_position.first - offset.dx.as_int(),
         root_position.second - offset.dy.as_int());
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
 
     // We wont have a "real" timestamp from libinput, so we have to make our own based on the time offset
     auto const time_offset = ms - std::chrono::steady_clock::now().time_since_epoch();
     auto const listener_id = target_surface->add_destroy_listener(
         [this, touch_id, time_offset]()
         {
+            auto const serial = wl_display_next_serial(wl_client_get_display(client));
             auto const timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
                 time_offset + std::chrono::steady_clock::now().time_since_epoch());
-            up(timestamp, touch_id);
-            frame();
+            up(serial, timestamp, touch_id);
+            maybe_frame();
         });
     touch_id_to_surface[touch_id] = {mw::make_weak(target_surface), listener_id};
 
@@ -85,13 +119,12 @@ void mf::WlTouch::down(
         touch_id,
         position_on_target.first,
         position_on_target.second);
-    can_send_frame = true;
+    needs_frame = true;
 }
 
 void mf::WlTouch::motion(
     std::chrono::milliseconds const& ms,
     int32_t touch_id,
-    WlSurface* /* root_surface */,
     std::pair<float, float> const& root_position)
 {
     auto const touch = touch_id_to_surface.find(touch_id);
@@ -117,13 +150,11 @@ void mf::WlTouch::motion(
         touch_id,
         position_on_target.first,
         position_on_target.second);
-    can_send_frame = true;
+    needs_frame = true;
 }
 
-void mf::WlTouch::up(std::chrono::milliseconds const& ms, int32_t touch_id)
+void mf::WlTouch::up(uint32_t serial, std::chrono::milliseconds const& ms, int32_t touch_id)
 {
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
-
     auto const touch = touch_id_to_surface.find(touch_id);
     if (touch != touch_id_to_surface.end())
     {
@@ -136,7 +167,7 @@ void mf::WlTouch::up(std::chrono::milliseconds const& ms, int32_t touch_id)
             serial,
             ms.count(),
             touch_id);
-        can_send_frame = true;
+        needs_frame = true;
     }
     else
     {
@@ -144,9 +175,16 @@ void mf::WlTouch::up(std::chrono::milliseconds const& ms, int32_t touch_id)
     }
 }
 
-void mf::WlTouch::frame()
+void mf::WlTouch::maybe_frame()
 {
-    if (can_send_frame)
+    if (needs_frame)
+    {
         send_frame_event();
-    can_send_frame = false;
+        needs_frame = false;
+    }
+}
+
+void mf::WlTouch::release()
+{
+    destroy_wayland_object();
 }

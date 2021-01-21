@@ -70,7 +70,6 @@ private:
     /// Handle user input events
     ///@{
     void handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event);
-    void handle_touch_event(std::chrono::milliseconds const& ms, MirTouchEvent const* event);
     ///@}
 };
 }

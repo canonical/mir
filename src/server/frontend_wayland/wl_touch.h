@@ -27,6 +27,8 @@
 #include <functional>
 #include <chrono>
 
+struct MirTouchEvent;
+
 namespace mir
 {
 class Executor;
@@ -42,18 +44,9 @@ public:
 
     ~WlTouch();
 
-    void down(
-        std::chrono::milliseconds const& ms,
-        int32_t touch_id,
-        WlSurface* root_surface,
-        std::pair<float, float> const& root_position);
-    void motion(
-        std::chrono::milliseconds const& ms,
-        int32_t touch_id,
-        WlSurface* root_surface,
-        std::pair<float, float> const& root_position);
-    void up(std::chrono::milliseconds const& ms, int32_t touch_id);
-    void frame();
+    /// Convert the Mir event into Wayland events and send them to the client. root_surface is the one that received
+    /// the Mir event, but the final Wayland event may be sent to a subsurface.
+    void event(MirTouchEvent const* event, WlSurface& root_surface);
 
 private:
     struct TouchedSurface
@@ -64,7 +57,20 @@ private:
 
     /// Maps touch IDs to the surfaces the touch is on
     std::unordered_map<int32_t, TouchedSurface> touch_id_to_surface;
-    bool can_send_frame{false};
+    bool needs_frame{false};
+
+    void down(
+        uint32_t serial,
+        std::chrono::milliseconds const& ms,
+        int32_t touch_id,
+        WlSurface& root_surface,
+        std::pair<float, float> const& root_position);
+    void motion(
+        std::chrono::milliseconds const& ms,
+        int32_t touch_id,
+        std::pair<float, float> const& root_position);
+    void up(uint32_t serial, std::chrono::milliseconds const& ms, int32_t touch_id);
+    void maybe_frame();
 
     void release() override;
 };
