@@ -20,6 +20,7 @@
 
 #include "wayland_utils.h"
 #include "wl_surface.h"
+#include "wl_seat.h"
 #include "relative-pointer-unstable-v1_wrapper.h"
 
 #include "mir/log.h"
@@ -77,6 +78,17 @@ private:
     std::unique_ptr<mrs::Mapping<unsigned char const>> const mapping;
     geom::Displacement const hotspot_;
 };
+
+static auto const button_mapping = {
+    std::make_pair(mir_pointer_button_primary, BTN_LEFT),
+    std::make_pair(mir_pointer_button_secondary, BTN_RIGHT),
+    std::make_pair(mir_pointer_button_tertiary, BTN_MIDDLE),
+    std::make_pair(mir_pointer_button_back, BTN_BACK),
+    std::make_pair(mir_pointer_button_forward, BTN_FORWARD),
+    std::make_pair(mir_pointer_button_side, BTN_SIDE),
+    std::make_pair(mir_pointer_button_task, BTN_TASK),
+    std::make_pair(mir_pointer_button_extra, BTN_EXTRA)
+};
 }
 
 struct mf::WlPointer::Cursor
@@ -115,18 +127,41 @@ mf::WlPointer::~WlPointer()
         surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
 }
 
-void mf::WlPointer::enter(
-    std::chrono::milliseconds const& ms,
-    WlSurface* root_surface,
-    std::pair<float, float> const& root_position)
+void mir::frontend::WlPointer::set_relative_pointer(mir::wayland::RelativePointerV1* relative_ptr)
 {
-    geom::Point root_point{root_position.first, root_position.second};
-    auto const target_surface = root_surface->subsurface_at(root_point).value_or(root_surface);
-    send_update(ms, target_surface, root_position);
+    relative_pointer = make_weak(relative_ptr);
 }
 
-void mf::WlPointer::leave()
+void mir::frontend::WlPointer::event(MirPointerEvent const* event, WlSurface& root_surface)
 {
+    switch(mir_pointer_event_action(event))
+    {
+        case mir_pointer_action_button_down:
+        case mir_pointer_action_button_up:
+            buttons(event);
+            break;
+        case mir_pointer_action_enter:
+            leave(event); // If we're currently on a surface, leave it
+            enter_or_motion(event, root_surface);
+            break;
+        case mir_pointer_action_leave:
+            leave(event);
+            break;
+        case mir_pointer_action_motion:
+            enter_or_motion(event, root_surface);
+            relative_motion(event);
+            axis(event);
+            break;
+        case mir_pointer_actions:
+            break;
+    }
+
+    maybe_frame();
+}
+
+void mf::WlPointer::leave(std::optional<MirPointerEvent const*> event)
+{
+    (void)event;
     if (!surface_under_cursor)
         return;
     surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
@@ -134,111 +169,86 @@ void mf::WlPointer::leave()
     send_leave_event(
         serial,
         surface_under_cursor.value().raw_resource());
-    can_send_frame = true;
+    current_position = std::experimental::nullopt;
+    // Don't clear current_buttons, their state can survive leaving and entering surfaces (note we currently have logic
+    // to prevent changing surfaces while buttons are pressed, we wouln't need to clear current_buttons regardless)
+    needs_frame = true;
     surface_under_cursor = {};
     destroy_listener_id = {};
 }
 
-void mf::WlPointer::button(std::chrono::milliseconds const& ms, uint32_t button, bool pressed)
+void mf::WlPointer::buttons(MirPointerEvent const* event)
 {
-    if (pressed)
+    MirPointerButtons const event_buttons = mir_pointer_event_buttons(event);
+
+    for (auto const& mapping : button_mapping)
     {
-        if (!pressed_buttons.insert(button).second)
+        // Check if the state of this button changed
+        if (mapping.first & (event_buttons ^ current_buttons))
         {
-            log_warning(
-                "Got pressed event for wl_pointer@%d button %d when already down",
-                wl_resource_get_id(resource),
-                button);
-            return;
+            bool const pressed = (mapping.first & event_buttons);
+            auto const state = pressed ? ButtonState::pressed : ButtonState::released;
+            auto const serial = wl_display_next_serial(display);
+            send_button_event(serial, WlSeat::timestamp_of(event), mapping.second, state);
+            needs_frame = true;
         }
+    }
+
+    current_buttons = event_buttons;
+}
+
+void mf::WlPointer::axis(MirPointerEvent const* event)
+{
+    auto const h_scroll = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll);
+    auto const v_scroll = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll);
+
+    if (h_scroll)
+    {
+        send_axis_event(
+            WlSeat::timestamp_of(event),
+            Axis::horizontal_scroll,
+            h_scroll);
+        needs_frame = true;
+    }
+
+    if (v_scroll)
+    {
+        send_axis_event(
+            WlSeat::timestamp_of(event),
+            Axis::vertical_scroll,
+            v_scroll);
+        needs_frame = true;
+    }
+}
+
+void mf::WlPointer::enter_or_motion(MirPointerEvent const* event, WlSurface& root_surface)
+{
+    auto const root_position = std::make_pair(
+        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+        mir_pointer_event_axis_value(event, mir_pointer_axis_y));
+
+    WlSurface* target_surface;
+    if (current_buttons != 0 && surface_under_cursor)
+    {
+        // If there are pressed buttons, we let the pointer move outside the current surface without leaving it
+        target_surface = &surface_under_cursor.value();
     }
     else
     {
-        if (!pressed_buttons.erase(button))
-        {
-            log_warning(
-                "Got unpressed event for wl_pointer@%d button %d when already up",
-                wl_resource_get_id(resource),
-                button);
-            return;
-        }
-    }
-
-    auto const serial = wl_display_next_serial(display);
-    auto const state = pressed ? ButtonState::pressed : ButtonState::released;
-
-    send_button_event(serial, ms.count(), button, state);
-    can_send_frame = true;
-}
-
-void mf::WlPointer::position(
-    std::chrono::milliseconds const& ms,
-    WlSurface* root_surface,
-    std::pair<float, float> const& root_position)
-{
-    WlSurface* target_surface = surface_under_cursor ? &surface_under_cursor.value() : nullptr;
-    if (!target_surface || pressed_buttons.empty())
-    {
-        // if pressed_buttons is empty there is no grab, so choose whatever surface we are over
+        // Else choose whatever subsurface we are over top of
         geom::Point root_point{root_position.first, root_position.second};
-        target_surface = root_surface->subsurface_at(root_point).value_or(root_surface);
+        target_surface = root_surface.subsurface_at(root_point).value_or(&root_surface);
     }
 
-    if (!relative_pointer)
-    {
-        send_update(ms, target_surface, root_position);
-    }
-}
-
-void mf::WlPointer::axis(std::chrono::milliseconds const& ms, std::pair<float, float> const& scroll)
-{
-    if (scroll.first)
-    {
-        send_axis_event(
-            ms.count(),
-            Axis::horizontal_scroll,
-            scroll.first);
-        can_send_frame = true;
-    }
-
-    if (scroll.second)
-    {
-        send_axis_event(
-            ms.count(),
-            Axis::vertical_scroll,
-            scroll.second);
-        can_send_frame = true;
-    }
-}
-
-void mf::WlPointer::frame()
-{
-    if (can_send_frame && version_supports_frame())
-        send_frame_event();
-    can_send_frame = false;
-}
-
-void mf::WlPointer::send_update(
-    std::chrono::milliseconds const& ms,
-    WlSurface* target_surface,
-    std::pair<float, float> const& root_position)
-{
     auto const offset = target_surface->total_offset();
     auto const position_on_target = std::make_pair(
         root_position.first - offset.dx.as_int(),
         root_position.second - offset.dy.as_int());
 
-    if (surface_under_cursor && &surface_under_cursor.value() == target_surface)
+    if (!surface_under_cursor || &surface_under_cursor.value() != target_surface)
     {
-        send_motion_event(
-            ms.count(),
-            position_on_target.first,
-            position_on_target.second);
-        can_send_frame = true;
-    }
-    else
-    {
-        leave();
+        // We need to switch surfaces
+        leave(event); // If we're currently on a surface, leave it
         auto const serial = wl_display_next_serial(display);
         cursor->apply_to(target_surface);
         send_enter_event(
@@ -246,15 +256,54 @@ void mf::WlPointer::send_update(
             target_surface->raw_resource(),
             position_on_target.first,
             position_on_target.second);
-        can_send_frame = true;
+        current_position = position_on_target;
+        needs_frame = true;
         destroy_listener_id = target_surface->add_destroy_listener(
             [this]()
             {
-                leave();
+                leave(std::nullopt);
+                maybe_frame();
             });
         surface_under_cursor = mw::make_weak(target_surface);
-
     }
+    else if (!relative_pointer && position_on_target != current_position)
+    {
+        send_motion_event(
+            WlSeat::timestamp_of(event),
+            position_on_target.first,
+            position_on_target.second);
+        current_position = position_on_target;
+        needs_frame = true;
+    }
+}
+
+void mf::WlPointer::relative_motion(MirPointerEvent const* event)
+{
+    if (!relative_pointer)
+    {
+        return;
+    }
+    auto const motion = std::make_pair(
+        mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x),
+        mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y));
+    if (motion.first || motion.second)
+    {
+        auto const timestamp = WlSeat::timestamp_of(event);
+        relative_pointer.value().send_relative_motion_event(
+            timestamp, timestamp,
+            motion.first, motion.second,
+            motion.first, motion.second);
+        needs_frame = true;
+    }
+}
+
+void mf::WlPointer::maybe_frame()
+{
+    if (needs_frame && version_supports_frame())
+    {
+        send_frame_event();
+    }
+    needs_frame = false;
 }
 
 namespace
@@ -323,22 +372,6 @@ void mf::WlPointer::set_cursor(
 void mf::WlPointer::release()
 {
     destroy_wayland_object();
-}
-
-void mir::frontend::WlPointer::set_relative_pointer(mir::wayland::RelativePointerV1* relative_ptr)
-{
-    relative_pointer = make_weak(relative_ptr);
-}
-
-void mir::frontend::WlPointer::motion(const std::chrono::milliseconds& ms, std::pair<float, float> const movement)
-{
-    if (relative_pointer)
-    {
-        relative_pointer.value().send_relative_motion_event(
-            ms.count(), ms.count(),
-            movement.first, movement.second,
-            movement.first, movement.second);
-    }
 }
 
 WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot)

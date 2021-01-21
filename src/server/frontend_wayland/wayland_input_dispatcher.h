@@ -66,15 +66,10 @@ private:
     wayland::Weak<WlSurface> const wl_surface;
 
     std::chrono::nanoseconds timestamp{0};
-    MirPointerButtons last_pointer_buttons{0};
-    std::experimental::optional<std::pair<float, float>> last_pointer_position;
 
     /// Handle user input events
     ///@{
     void handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event);
-    void handle_pointer_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
-    void handle_pointer_button_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
-    void handle_pointer_motion_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
     void handle_touch_event(std::chrono::milliseconds const& ms, MirTouchEvent const* event);
     ///@}
 };
