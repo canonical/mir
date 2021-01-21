@@ -27,6 +27,9 @@
 
 // from "mir_toolkit/events/event.h"
 struct MirInputEvent;
+struct MirKeyboardEvent;
+struct MirPointerEvent;
+struct MirTouchEvent;
 struct MirSurfaceEvent;
 typedef struct MirSurfaceEvent MirWindowEvent;
 struct MirKeymapEvent;
@@ -59,6 +62,14 @@ public:
     ~WlSeat();
 
     static auto from(struct wl_resource* seat) -> WlSeat*;
+
+    /// Returns the timestamp of the event in milliseconds, suitable for Wayland events
+    /// @{
+    static auto timestamp_of(MirInputEvent const* event) -> uint32_t;
+    static auto timestamp_of(MirKeyboardEvent const* event) -> uint32_t;
+    static auto timestamp_of(MirPointerEvent const* event) -> uint32_t;
+    static auto timestamp_of(MirTouchEvent const* event) -> uint32_t;
+    /// @}
 
     void for_each_listener(wl_client* client, std::function<void(WlPointer*)> func);
     void for_each_listener(wl_client* client, std::function<void(WlKeyboard*)> func);
