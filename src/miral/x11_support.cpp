@@ -43,6 +43,11 @@ void miral::X11Support::operator()(mir::Server& server) const
         "Enable X11 support", mir::OptionType::null);
 
     server.add_configuration_option(
+        mo::x11_scale_opt,
+        "The scale to assume X11 apps use. If unset uses the value of GDK_SCALE or 1. Can be fractional",
+        mir::OptionType::string);
+
+    server.add_configuration_option(
         "xwayland-path",
         "Path to Xwayland executable", "/usr/bin/Xwayland");
 

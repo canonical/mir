@@ -194,3 +194,10 @@ MIRPLATFORM_2.3 {
     mir::graphics::LinuxDmaBufUnstable::buffer_from_resource*;
   };
 } MIRPLATFORM_2.2;
+
+MIRPLATFORM_2.4 {
+ global:
+  extern "C++" {
+    mir::options::x11_scale_opt;
+  };
+} MIRPLATFORM_2.3;
