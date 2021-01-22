@@ -133,7 +133,8 @@ public:
 mf::XWaylandWM::XWaylandWM(
     std::shared_ptr<WaylandConnector> wayland_connector,
     wl_client* wayland_client,
-    Fd const& fd)
+    Fd const& fd,
+    float assumed_surface_scale)
     : connection{std::make_shared<XCBConnection>(fd)},
       wayland_connector(wayland_connector),
       wayland_client{wayland_client},
@@ -142,7 +143,8 @@ mf::XWaylandWM::XWaylandWM(
       cursors{std::make_unique<XWaylandCursors>(connection)},
       wm_window{create_wm_window(*connection)},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
-      client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)}
+      client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)},
+      assumed_surface_scale{assumed_surface_scale}
 {
     check_xfixes(*connection);
 

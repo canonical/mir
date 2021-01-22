@@ -188,7 +188,8 @@ void mf::XWaylandConnector::spawn()
         wm = std::make_unique<XWaylandWM>(
             wayland_connector,
             server->client(),
-            x11_socket_pair.first);
+            x11_socket_pair.first,
+            scale);
         mir::log_info("XWayland is running");
     }
     catch (...)
