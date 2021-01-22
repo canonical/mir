@@ -56,7 +56,8 @@ public:
         std::shared_ptr<XWaylandClientManager> const& client_manager,
         xcb_window_t window,
         geometry::Rectangle const& geometry,
-        bool override_redirect);
+        bool override_redirect,
+        float scale);
     ~XWaylandSurface();
 
     void map();
@@ -151,6 +152,7 @@ private:
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<XWaylandClientManager> const client_manager;
     xcb_window_t const window;
+    float const scale;
     std::map<xcb_window_t, std::function<std::function<void()>()>> const property_handlers;
 
     std::mutex mutable mutex;

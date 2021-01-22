@@ -214,13 +214,15 @@ mf::XWaylandSurface::XWaylandSurface(
     std::shared_ptr<XWaylandClientManager> const& client_manager,
     xcb_window_t window,
     geometry::Rectangle const& geometry,
-    bool override_redirect)
+    bool override_redirect,
+    float scale)
     : xwm(wm),
       connection{connection},
       wm_shell{wm_shell},
       shell{wm_shell.shell},
       client_manager{client_manager},
       window(window),
+      scale{scale},
       property_handlers{
           property_handler<std::string>(
               connection,

@@ -506,7 +506,8 @@ void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& g
         client_manager,
         window,
         geometry,
-        override_redirect);
+        override_redirect,
+        assumed_surface_scale);
 }
 
 void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
