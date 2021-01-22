@@ -119,6 +119,7 @@ void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, MirEvent co
     if (mir_event_get_type(event) == mir_event_type_input)
     {
         std::shared_ptr<MirEvent> owned_event = mev::clone_event(*event);
+        mev::scale_positions(*owned_event, scale);
 
         aquire_input_dispatcher(
             [owned_event](auto input_dispatcher)
