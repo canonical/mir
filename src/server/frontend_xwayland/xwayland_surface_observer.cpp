@@ -40,11 +40,13 @@ mf::XWaylandSurfaceObserver::XWaylandSurfaceObserver(
     Executor& wayland_executor,
     WlSeat& seat,
     WlSurface* wl_surface,
-    XWaylandSurfaceObserverSurface* wm_surface)
+    XWaylandSurfaceObserverSurface* wm_surface,
+    float scale)
     : wm_surface{wm_surface},
       wayland_executor{wayland_executor},
       input_dispatcher{std::make_shared<ThreadsafeInputDispatcher>(
-          std::make_unique<WaylandInputDispatcher>(&seat, wl_surface))}
+          std::make_unique<WaylandInputDispatcher>(&seat, wl_surface))},
+      scale{scale}
 {
 }
 
@@ -81,12 +83,12 @@ void mf::XWaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAt
 
 void mf::XWaylandSurfaceObserver::content_resized_to(ms::Surface const*, geom::Size const& content_size)
 {
-    wm_surface->scene_surface_resized(content_size);
+    wm_surface->scene_surface_resized(content_size * scale);
 }
 
 void mf::XWaylandSurfaceObserver::moved_to(ms::Surface const*, geom::Point const& top_left)
 {
-    wm_surface->scene_surface_moved_to(top_left);
+    wm_surface->scene_surface_moved_to(as_point(as_displacement(top_left) * scale));
 }
 
 void mf::XWaylandSurfaceObserver::client_surface_close_requested(ms::Surface const*)

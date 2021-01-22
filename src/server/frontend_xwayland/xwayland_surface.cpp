@@ -631,7 +631,8 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         *wm_shell.wayland_executor,
         wm_shell.seat,
         wl_surface,
-        this);
+        this,
+        scale);
 
     {
         std::lock_guard<std::mutex> lock{mutex};

@@ -48,7 +48,8 @@ public:
         Executor& wayland_executor,
         WlSeat& seat,
         WlSurface* wl_surface,
-        XWaylandSurfaceObserverSurface* wm_surface);
+        XWaylandSurfaceObserverSurface* wm_surface,
+        float scale);
     ~XWaylandSurfaceObserver();
 
     /// Overrides from scene::SurfaceObserver
@@ -86,6 +87,7 @@ private:
     XWaylandSurfaceObserverSurface* const wm_surface;
     Executor& wayland_executor;
     std::shared_ptr<ThreadsafeInputDispatcher> const input_dispatcher;
+    float const scale;
 
     /// Runs work on the Wayland thread if the input dispatcher still exists
     /// Does nothing if the input dispatcher has already been destroyed
