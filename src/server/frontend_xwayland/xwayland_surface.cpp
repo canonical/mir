@@ -502,6 +502,7 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
 
         if (!mods.is_empty())
         {
+            scale_surface_spec(mods);
             shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
         }
     }
@@ -1075,6 +1076,7 @@ void mf::XWaylandSurface::request_scene_surface_state(MirWindowState new_state)
     {
         shell::SurfaceSpecification mods;
         mods.state = new_state;
+        // Just state is set so no need for scale_surface_spec()
         shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
     }
 }
@@ -1120,8 +1122,53 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
             spec.value()->parent.consume();
 
         if (!spec.value()->is_empty())
+        {
+            scale_surface_spec(*spec.value());
             shell->modify_surface(scene_surface->session().lock(), scene_surface, *spec.value());
+        }
     }
+}
+
+void mf::XWaylandSurface::scale_surface_spec(msh::SurfaceSpecification& mods)
+{
+    if (scale == 1.0f)
+    {
+        return;
+    }
+
+    auto const inv_scale = 1.0f / scale;
+
+    if (mods.top_left)
+    {
+        mods.top_left = as_point(as_displacement(mods.top_left.value()) * inv_scale);
+    }
+
+    if (mods.aux_rect)
+    {
+        mods.aux_rect.value().top_left = as_point(as_displacement(mods.aux_rect.value().top_left) * inv_scale);
+
+        mods.aux_rect.value().size = mods.aux_rect.value().size * inv_scale;
+        mods.aux_rect.value().size.width = std::max(geom::Width{1}, mods.aux_rect.value().size.width);
+        mods.aux_rect.value().size.height = std::max(geom::Height{1}, mods.aux_rect.value().size.height);
+    }
+
+#define SCALE_SIZE(type, prop) \
+    if (mods.prop) \
+    { \
+        mods.prop = std::max(geom::type{1}, mods.prop.value() * inv_scale); \
+    }
+
+    SCALE_SIZE(Width, width);
+    SCALE_SIZE(Height, height);
+    SCALE_SIZE(Width, min_width);
+    SCALE_SIZE(Height, min_height);
+    SCALE_SIZE(Width, max_width);
+    SCALE_SIZE(Height, max_height);
+
+#undef SCALE_SIZE
+
+    // NOTE: exclusive rect not checked because it is not used by XWayland surfaces
+    // NOTE: buffer streams and input shapes are set and thus fixed in XWaylandSurfaceRole
 }
 
 void mf::XWaylandSurface::window_type(std::vector<xcb_atom_t> const& wm_types)

@@ -140,6 +140,11 @@ private:
     /// Appplies any mods in nullable_pending_spec to the scene_surface (if any)
     void apply_any_mods_to_scene_surface();
 
+    /// One-stop-shop for scaling window modifications. Unlike with scaled Wayland surfaces, all the data going to and
+    /// from the client is in raw pixels, but Mir internally deals with scaled coordinates. This means before punting
+    /// our data off to Mir we need to scale it, which is what this function is for.
+    void scale_surface_spec(shell::SurfaceSpecification& mods);
+
     void window_type(std::vector<xcb_atom_t> const& wm_types);
     void set_parent(xcb_window_t xcb_window, std::lock_guard<std::mutex> const&);
     void fix_parent_if_necessary(const std::lock_guard<std::mutex>& lock);
