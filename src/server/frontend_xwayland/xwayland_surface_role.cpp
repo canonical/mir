@@ -82,11 +82,19 @@ void mf::XWaylandSurfaceRole::populate_surface_data(shell::SurfaceSpecification&
         stream.displacement = stream.displacement * inv_scale;
     }
 
+    // we *should* be scaling the input shape, however when it's not set explicitly (which it doesn't seem to be for
+    // XWayland apps) the surface is setting it based on the buffer size. Since we're scaling the buffer stream, it's
+    // seeing it's buffer size in Mir coordinates rather than XWayland ones (it should be XWayland). This might cause
+    // other problems (especially around selecting the right subsurface to dispatch input to), but that doesn't seem to
+    // be an issue at this time (probably because XWayland doesn't make subsurfaces either). Anyway, we need to sort
+    // this all out but it makes sense to wait until we've made subsurfaces real surfaces and simplified all that logic.
+    /*
     for (auto& rect : spec.input_shape.value())
     {
         rect.top_left = as_point(as_displacement(rect.top_left) * inv_scale);
         rect.size = rect.size * inv_scale;
     }
+    */
 }
 
 auto mf::XWaylandSurfaceRole::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
