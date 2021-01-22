@@ -46,13 +46,15 @@ public:
     XWaylandSurfaceRole(
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<XWaylandSurfaceRoleSurface> const& wm_surface,
-        WlSurface* wl_surface);
+        WlSurface* wl_surface,
+        float scale);
     ~XWaylandSurfaceRole(); ///< Must be called on the Wayland thread!
 
 private:
     std::shared_ptr<shell::Shell> const shell;
     std::weak_ptr<XWaylandSurfaceRoleSurface> const weak_wm_surface;
     WlSurface* const wl_surface;
+    float const scale;
 
     /// Overrides from WlSurfaceRole
     /// @{

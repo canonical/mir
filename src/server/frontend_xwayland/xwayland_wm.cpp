@@ -779,11 +779,12 @@ void mf::XWaylandWM::handle_surface_id(
     wayland_executor.spawn([
             wayland_connector = wayland_connector,
             client=wayland_client,
+            scale=assumed_surface_scale,
             id,
             weak_surface,
             weak_shell = std::weak_ptr<shell::Shell>{wm_shell->shell}]()
         {
-            wayland_connector->on_surface_created(client, id, [weak_surface, weak_shell](WlSurface* wl_surface)
+            wayland_connector->on_surface_created(client, id, [scale, weak_surface, weak_shell](WlSurface* wl_surface)
                 {
                     auto const surface = weak_surface.lock();
                     auto const shell = weak_shell.lock();
@@ -792,7 +793,7 @@ void mf::XWaylandWM::handle_surface_id(
                         surface->attach_wl_surface(wl_surface);
 
                         // Will destroy itself
-                        new XWaylandSurfaceRole{shell, surface, wl_surface};
+                        new XWaylandSurfaceRole{shell, surface, wl_surface, scale};
                     }
                     else
                     {

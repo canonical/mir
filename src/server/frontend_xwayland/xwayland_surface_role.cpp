@@ -33,11 +33,14 @@ namespace geom = mir::geometry;
 mf::XWaylandSurfaceRole::XWaylandSurfaceRole(
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<XWaylandSurfaceRoleSurface> const& wm_surface,
-    WlSurface* wl_surface)
+    WlSurface* wl_surface,
+    float scale)
     : shell{shell},
       weak_wm_surface{wm_surface},
-      wl_surface{wl_surface}
+      wl_surface{wl_surface},
+      scale{scale}
 {
+    (void)this->scale;
     wl_surface->set_role(this);
     if (verbose_xwayland_logging_enabled())
     {
