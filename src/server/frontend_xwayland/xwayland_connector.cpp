@@ -181,7 +181,8 @@ void mf::XWaylandConnector::spawn()
             *spawner,
             xwayland_path,
             wayland_socket_pair,
-            x11_socket_pair.second);
+            x11_socket_pair.second,
+            scale);
         wm = std::make_unique<XWaylandWM>(
             wayland_connector,
             server->client(),

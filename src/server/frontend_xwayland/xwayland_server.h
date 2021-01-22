@@ -43,7 +43,8 @@ public:
         XWaylandSpawner const& spawner,
         std::string const& xwayland_path,
         std::pair<mir::Fd, mir::Fd> const& wayland_socket_pair,
-        mir::Fd const& x11_server_fd);
+        mir::Fd const& x11_server_fd,
+        float scale);
     ~XWaylandServer();
 
     auto client() const -> wl_client* { return wayland_client; }

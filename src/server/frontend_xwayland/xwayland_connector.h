@@ -58,6 +58,7 @@ public:
 private:
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::string const xwayland_path;
+    float const scale{1};
 
     void spawn();
 
