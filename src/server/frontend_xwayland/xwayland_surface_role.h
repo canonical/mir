@@ -32,6 +32,7 @@ class Surface;
 namespace shell
 {
 class Shell;
+struct SurfaceSpecification;
 }
 namespace frontend
 {
@@ -55,6 +56,10 @@ private:
     std::weak_ptr<XWaylandSurfaceRoleSurface> const weak_wm_surface;
     WlSurface* const wl_surface;
     float const scale;
+
+    /// Populates the data from the surface and scales it from XWayland coordinates (which the XWayland-connected
+    /// WlSurface uses) to Mir coordinates
+    void populate_surface_data(shell::SurfaceSpecification& spec);
 
     /// Overrides from WlSurfaceRole
     /// @{

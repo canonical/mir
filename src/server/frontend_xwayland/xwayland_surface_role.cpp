@@ -40,7 +40,6 @@ mf::XWaylandSurfaceRole::XWaylandSurfaceRole(
       wl_surface{wl_surface},
       scale{scale}
 {
-    (void)this->scale;
     wl_surface->set_role(this);
     if (verbose_xwayland_logging_enabled())
     {
@@ -54,6 +53,39 @@ mf::XWaylandSurfaceRole::~XWaylandSurfaceRole()
     if (verbose_xwayland_logging_enabled())
     {
         log_debug("Destroyed XWaylandSurfaceRole for wl_surface@%d", wl_resource_get_id(wl_surface->resource));
+    }
+}
+
+void mf::XWaylandSurfaceRole::populate_surface_data(shell::SurfaceSpecification& spec)
+{
+    spec.streams = std::vector<shell::StreamSpecification>();
+    spec.input_shape = std::vector<geom::Rectangle>();
+    wl_surface->populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+
+    if (scale == 1.0f)
+    {
+        return;
+    }
+
+    auto const inv_scale = 1.0f / scale;
+
+    for (auto& stream : spec.streams.value())
+    {
+        if (auto const bs = stream.stream.lock())
+        {
+            bs->set_scale(scale);
+        }
+        if (stream.size)
+        {
+            stream.size = stream.size.value() * inv_scale;
+        }
+        stream.displacement = stream.displacement * inv_scale;
+    }
+
+    for (auto& rect : spec.input_shape.value())
+    {
+        rect.top_left = as_point(as_displacement(rect.top_left) * inv_scale);
+        rect.size = rect.size * inv_scale;
     }
 }
 
@@ -79,9 +111,7 @@ void mf::XWaylandSurfaceRole::refresh_surface_data_now()
         return;
 
     shell::SurfaceSpecification spec;
-    spec.streams = std::vector<shell::StreamSpecification>();
-    spec.input_shape = std::vector<geom::Rectangle>();
-    wl_surface->populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+    populate_surface_data(spec);
     shell->modify_surface(session, surface.value(), spec);
 }
 
@@ -113,9 +143,7 @@ void mf::XWaylandSurfaceRole::commit(WlSurfaceState const& state)
 
         if (state.surface_data_needs_refresh())
         {
-            spec.streams = std::vector<shell::StreamSpecification>();
-            spec.input_shape = std::vector<geom::Rectangle>();
-            wl_surface->populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+            populate_surface_data(spec);
         }
 
         if (!spec.is_empty())
