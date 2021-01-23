@@ -18,6 +18,7 @@
 
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
+#include "wl_client.h"
 #include "wayland_connector.h"
 #include "mir/log.h"
 
@@ -120,7 +121,8 @@ auto fork_xwayland_process(
 
 auto connect_xwayland_wl_client(
     std::shared_ptr<mf::WaylandConnector> const& wayland_connector,
-    mir::Fd const& wayland_fd) -> wl_client*
+    mir::Fd const& wayland_fd,
+    float scale) -> wl_client*
 {
     struct CreateClientContext
     {
@@ -133,10 +135,11 @@ auto connect_xwayland_wl_client(
     auto const ctx = std::make_shared<CreateClientContext>();
 
     wayland_connector->run_on_wayland_display(
-        [ctx, wayland_fd](wl_display* display)
+        [ctx, wayland_fd, scale](wl_display* display)
         {
             std::lock_guard<std::mutex> lock{ctx->mutex};
             ctx->client = wl_client_create(display, wayland_fd);
+            mf::WlClient::from(ctx->client)->set_output_geometry_scale(scale);
             ctx->ready = true;
             ctx->condition_variable.notify_all();
         });
@@ -166,7 +169,7 @@ mf::XWaylandServer::XWaylandServer(
     float scale)
     : xwayland_pid{fork_xwayland_process(spawner, xwayland_path, wayland_socket_pair.first, x11_server_fd, scale)},
       wayland_server_fd{wayland_socket_pair.second},
-      wayland_client{connect_xwayland_wl_client(wayland_connector, wayland_server_fd)},
+      wayland_client{connect_xwayland_wl_client(wayland_connector, wayland_server_fd, scale)},
       running{true}
 {
 }

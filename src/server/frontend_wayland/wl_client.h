@@ -67,6 +67,13 @@ public:
     /// individual apps.
     auto client_session() const -> std::shared_ptr<scene::Session> { return session; }
 
+    /// The XDG output protocol implementation sends the Mir-internal logical position and scale of outputs multiplied
+    /// by this. It's currently just used by XWayland.
+    /// @{
+    auto set_output_geometry_scale(float scale) { output_geometry_scale_ = scale; }
+    auto output_geometry_scale() -> float { return output_geometry_scale_; }
+    /// @}
+
 private:
     WlClient(wl_client* client, std::shared_ptr<scene::Session> const& session, shell::Shell* shell);
 
@@ -76,6 +83,8 @@ private:
     shell::Shell* const shell;
     wl_client* const client;
     std::shared_ptr<scene::Session> const session;
+
+    float output_geometry_scale_{1};
 };
 }
 }
