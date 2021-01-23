@@ -21,6 +21,7 @@
 #include "xwayland_surface_observer.h"
 #include "xwayland_client_manager.h"
 #include "xwayland_wm_shell.h"
+#include "xwayland_surface_role.h"
 
 #include "mir/frontend/wayland.h"
 #include "mir/scene/surface_creation_parameters.h"
@@ -605,6 +606,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
     WindowState state;
     shell::SurfaceSpecification spec;
+    std::vector<std::shared_ptr<void>> keep_alive_until_spec_is_used;
 
     auto const observer = std::make_shared<XWaylandSurfaceObserver>(
         *wm_shell.wayland_executor,
@@ -624,12 +626,8 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         state = cached.state;
         state.withdrawn = false;
 
-        spec.streams = std::vector<shell::StreamSpecification>{};
-        spec.input_shape = std::vector<geom::Rectangle>{};
-        wl_surface->populate_surface_data(
-            spec.streams.value(),
-            spec.input_shape.value(),
-            {});
+        XWaylandSurfaceRole::populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
+
         spec.width = cached.size.width;
         spec.height = cached.size.height;
         spec.top_left = cached.top_left;
