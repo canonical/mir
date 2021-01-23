@@ -18,6 +18,7 @@
 
 #include "xwayland_surface_role.h"
 #include "xwayland_surface_role_surface.h"
+#include "scaled_buffer_stream.h"
 #include "xwayland_log.h"
 
 #include "wl_surface.h"
@@ -28,6 +29,7 @@
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
+namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
 mf::XWaylandSurfaceRole::XWaylandSurfaceRole(
@@ -56,45 +58,43 @@ mf::XWaylandSurfaceRole::~XWaylandSurfaceRole()
     }
 }
 
-void mf::XWaylandSurfaceRole::populate_surface_data(shell::SurfaceSpecification& spec)
+void mf::XWaylandSurfaceRole::populate_surface_data_scaled(
+    WlSurface* wl_surface,
+    float scale,
+    shell::SurfaceSpecification& spec,
+    std::vector<std::shared_ptr<void>>& keep_alive_until_spec_is_used)
 {
     spec.streams = std::vector<shell::StreamSpecification>();
     spec.input_shape = std::vector<geom::Rectangle>();
     wl_surface->populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
 
-    if (scale == 1.0f)
+    if (scale != 1.0f)
     {
-        return;
-    }
+        auto const inv_scale = 1.0f / scale;
 
-    auto const inv_scale = 1.0f / scale;
-
-    for (auto& stream : spec.streams.value())
-    {
-        if (auto const bs = stream.stream.lock())
+        for (auto& stream : spec.streams.value())
         {
-            bs->set_scale(scale);
+            if (auto inner = std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()))
+            {
+                // We could set the scale of the original stream, but then the WlSurface would see the scaled size.
+                // Instead we wrap the surface's stream in our own that scales without the surface knowing.
+                auto scaled = std::make_shared<ScaledBufferStream>(std::move(inner), scale);
+                stream.stream = scaled;
+                keep_alive_until_spec_is_used.push_back(std::move(scaled));
+            }
+            if (stream.size)
+            {
+                stream.size = stream.size.value() * inv_scale;
+            }
+            stream.displacement = stream.displacement * inv_scale;
         }
-        if (stream.size)
-        {
-            stream.size = stream.size.value() * inv_scale;
-        }
-        stream.displacement = stream.displacement * inv_scale;
-    }
 
-    // we *should* be scaling the input shape, however when it's not set explicitly (which it doesn't seem to be for
-    // XWayland apps) the surface is setting it based on the buffer size. Since we're scaling the buffer stream, it's
-    // seeing it's buffer size in Mir coordinates rather than XWayland ones (it should be XWayland). This might cause
-    // other problems (especially around selecting the right subsurface to dispatch input to), but that doesn't seem to
-    // be an issue at this time (probably because XWayland doesn't make subsurfaces either). Anyway, we need to sort
-    // this all out but it makes sense to wait until we've made subsurfaces real surfaces and simplified all that logic.
-    /*
-    for (auto& rect : spec.input_shape.value())
-    {
-        rect.top_left = as_point(as_displacement(rect.top_left) * inv_scale);
-        rect.size = rect.size * inv_scale;
+        for (auto& rect : spec.input_shape.value())
+        {
+            rect.top_left = as_point(as_displacement(rect.top_left) * inv_scale);
+            rect.size = rect.size * inv_scale;
+        }
     }
-    */
 }
 
 auto mf::XWaylandSurfaceRole::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
@@ -119,7 +119,8 @@ void mf::XWaylandSurfaceRole::refresh_surface_data_now()
         return;
 
     shell::SurfaceSpecification spec;
-    populate_surface_data(spec);
+    std::vector<std::shared_ptr<void>> keep_alive_until_spec_is_used;
+    populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
     shell->modify_surface(session, surface.value(), spec);
 }
 
@@ -149,9 +150,10 @@ void mf::XWaylandSurfaceRole::commit(WlSurfaceState const& state)
             spec.state = mir_window_state_hidden;
         }
 
+        std::vector<std::shared_ptr<void>> keep_alive_until_spec_is_used;
         if (state.surface_data_needs_refresh())
         {
-            populate_surface_data(spec);
+            populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
         }
 
         if (!spec.is_empty())
