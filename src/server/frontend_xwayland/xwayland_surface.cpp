@@ -604,7 +604,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     }
 
     WindowState state;
-    scene::SurfaceCreationParameters params;
+    shell::SurfaceSpecification spec;
 
     auto const observer = std::make_shared<XWaylandSurfaceObserver>(
         *wm_shell.wayland_executor,
@@ -624,16 +624,17 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         state = cached.state;
         state.withdrawn = false;
 
-        params.streams = std::vector<shell::StreamSpecification>{};
-        params.input_shape = std::vector<geom::Rectangle>{};
+        spec.streams = std::vector<shell::StreamSpecification>{};
+        spec.input_shape = std::vector<geom::Rectangle>{};
         wl_surface->populate_surface_data(
-            params.streams.value(),
-            params.input_shape.value(),
+            spec.streams.value(),
+            spec.input_shape.value(),
             {});
-        params.size = cached.size;
-        params.top_left = cached.top_left;
-        params.type = mir_window_type_freestyle;
-        params.state = state.mir_window_state();
+        spec.width = cached.size.width;
+        spec.height = cached.size.height;
+        spec.top_left = cached.top_left;
+        spec.type = mir_window_type_freestyle;
+        spec.state = state.mir_window_state();
     }
 
     std::vector<std::function<void()>> reply_functions;
@@ -672,20 +673,26 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         fatal_error("Property handlers did not set a valid session");
     }
 
+    bool server_side_decorated;
+
     // property_handlers will have updated the pending spec. Use it.
     {
         std::lock_guard<std::mutex> lock{mutex};
 
         fix_parent_if_necessary(lock);
 
-        if (auto const spec = consume_pending_spec(lock))
+        if (auto const pending_spec = consume_pending_spec(lock))
         {
-            params.update_from(*spec.value());
+            spec.update_from(*pending_spec.value());
         }
 
-        params.server_side_decorated = !cached.override_redirect && !cached.motif_decorations_disabled;
+        server_side_decorated = !cached.override_redirect && !cached.motif_decorations_disabled;
     }
 
+    scale_surface_spec(spec);
+    ms::SurfaceCreationParameters params;
+    params.update_from(spec);
+    params.server_side_decorated = server_side_decorated;
     auto const surface = shell->create_surface(session, params, observer);
     inform_client_of_window_state(state);
     connection->configure_window(
