@@ -159,28 +159,6 @@ auto wm_resize_edge_to_mir_resize_edge(NetWmMoveresize wm_resize_edge) -> std::e
     return std::experimental::nullopt;
 }
 
-/// Sets up the position, either as a child window with and aux rect or a toplevel
-/// Parent can be nullptr
-/// top_left should be desired global top_left of the decorations of this window
-void set_position(std::shared_ptr<ms::Surface> parent, geom::Point top_left, msh::SurfaceSpecification& spec)
-{
-    if (parent)
-    {
-        auto const local_top_left =
-            top_left -
-            as_displacement(parent->top_left()) -
-            parent->content_offset();
-        spec.aux_rect = {local_top_left, {1, 1}};
-        spec.placement_hints = MirPlacementHints{};
-        spec.surface_placement_gravity = mir_placement_gravity_northwest;
-        spec.aux_rect_placement_gravity = mir_placement_gravity_northwest;
-    }
-    else
-    {
-        spec.top_left = top_left;
-    }
-}
-
 template<typename T>
 auto property_handler(
     std::shared_ptr<mf::XCBConnection> const& connection,
@@ -472,15 +450,15 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
 
     if (scene_surface)
     {
-        auto const content_offset = scene_surface->content_offset();
+        auto const content_offset = scaled_content_offset_of(*scene_surface);
 
-        geom::Point const old_position{scene_surface->top_left() + content_offset};
+        geom::Point const old_position{scaled_top_left_of(*scene_surface) + content_offset};
         geom::Point const new_position{
             event->value_mask & XCB_CONFIG_WINDOW_X ? geom::X{event->x} : old_position.x,
             event->value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{event->y} : old_position.y,
         };
 
-        geom::Size const old_size{scene_surface->content_size()};
+        geom::Size const old_size{scaled_content_size_of(*scene_surface)};
         geom::Size const new_size{
             event->value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{event->width} : old_size.width,
             event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{event->height} : old_size.height,
@@ -490,7 +468,7 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
 
         if (old_position != new_position)
         {
-            set_position(scene_surface->parent(), new_position - content_offset, mods);
+            surface_spec_set_position(mods, scene_surface->parent().get(), new_position - content_offset);
         }
 
         if (old_size != new_size)
@@ -712,8 +690,8 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     inform_client_of_window_state(state);
     connection->configure_window(
         window,
-        surface->top_left() + surface->content_offset(),
-        surface->content_size(),
+        scaled_top_left_of(*surface) + scaled_content_offset_of(*surface),
+        scaled_content_size_of(*surface),
         std::experimental::nullopt,
         XCB_STACK_MODE_ABOVE);
 
@@ -892,7 +870,7 @@ void mf::XWaylandSurface::scene_surface_moved_to(geometry::Point const& new_top_
         std::lock_guard<std::mutex> lock{mutex};
         scene_surface = weak_scene_surface.lock();
     }
-    auto const content_offset = scene_surface ? scene_surface->content_offset() : geom::Displacement{};
+    auto const content_offset = scene_surface ? scaled_content_offset_of(*scene_surface) : geom::Displacement{};
     connection->configure_window(
         window,
         new_top_left + content_offset,
@@ -1129,6 +1107,28 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
     }
 }
 
+void mf::XWaylandSurface::surface_spec_set_position(
+        msh::SurfaceSpecification& spec,
+        ms::Surface* parent,
+        geom::Point top_left)
+{
+    if (parent)
+    {
+        auto const local_top_left =
+            top_left -
+            as_displacement(scaled_top_left_of(*parent)) -
+            scaled_content_offset_of(*parent);
+        spec.aux_rect = {local_top_left, {1, 1}};
+        spec.placement_hints = MirPlacementHints{};
+        spec.surface_placement_gravity = mir_placement_gravity_northwest;
+        spec.aux_rect_placement_gravity = mir_placement_gravity_northwest;
+    }
+    else
+    {
+        spec.top_left = top_left;
+    }
+}
+
 void mf::XWaylandSurface::scale_surface_spec(msh::SurfaceSpecification& mods)
 {
     if (scale == 1.0f)
@@ -1152,6 +1152,16 @@ void mf::XWaylandSurface::scale_surface_spec(msh::SurfaceSpecification& mods)
         mods.aux_rect.value().size.height = std::max(geom::Height{1}, mods.aux_rect.value().size.height);
     }
 
+    if (mods.aux_rect_placement_offset_x)
+    {
+        mods.aux_rect_placement_offset_x = mods.aux_rect_placement_offset_x * inv_scale;
+    }
+
+    if (mods.aux_rect_placement_offset_y)
+    {
+        mods.aux_rect_placement_offset_y = mods.aux_rect_placement_offset_y * inv_scale;
+    }
+
 #define SCALE_SIZE(type, prop) \
     if (mods.prop) \
     { \
@@ -1169,6 +1179,21 @@ void mf::XWaylandSurface::scale_surface_spec(msh::SurfaceSpecification& mods)
 
     // NOTE: exclusive rect not checked because it is not used by XWayland surfaces
     // NOTE: buffer streams and input shapes are set and thus fixed in XWaylandSurfaceRole
+}
+
+auto mf::XWaylandSurface::scaled_top_left_of(ms::Surface const& surface) -> geometry::Point
+{
+    return as_point(as_displacement(surface.top_left()) * scale);
+}
+
+auto mf::XWaylandSurface::scaled_content_offset_of(ms::Surface const& surface) -> geometry::Displacement
+{
+    return surface.content_offset() * scale;
+}
+
+auto mf::XWaylandSurface::scaled_content_size_of(ms::Surface const& surface) -> geometry::Size
+{
+    return surface.content_size() * scale;
 }
 
 void mf::XWaylandSurface::window_type(std::vector<xcb_atom_t> const& wm_types)
@@ -1247,7 +1272,7 @@ void mf::XWaylandSurface::set_parent(xcb_window_t xcb_window, std::lock_guard<st
     // The "good" path sets parent_scene_surface above, on any error we unparent the window
     auto& spec = pending_spec(lock);
     spec.parent = parent_scene_surface;
-    set_position(parent_scene_surface, cached.top_left, spec);
+    surface_spec_set_position(spec, parent_scene_surface.get(), cached.top_left);
 }
 
 namespace
