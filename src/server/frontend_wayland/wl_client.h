@@ -54,11 +54,11 @@ public:
 
     static auto from(wl_client* client) -> WlClient*;
 
-    WlClient(wl_client* raw_client, std::shared_ptr<scene::Session> const& client_session, shell::Shell* shell);
+    WlClient(wl_client* client, std::shared_ptr<scene::Session> const& session, shell::Shell* shell);
     ~WlClient();
 
     /// The underlying Wayland client
-    wl_client* const raw_client;
+    auto raw_client() const -> wl_client* { return client; }
 
     /// The Mir session associated with this client. Be careful when using this that it's actually the session you want.
     /// All clients have a session but the surfaces they create may get associated with additional sessions.
@@ -66,11 +66,13 @@ public:
     /// For example all surfaces from a single XWayland server are attached to a single WlClient with a single cleint
     /// session, but their scene::Surfaces are associated with multiple sessions created in the XWayland frontend for
     /// individual apps.
-    std::shared_ptr<scene::Session> const client_session;
+    auto client_session() const -> std::shared_ptr<scene::Session> { return session; }
 
 private:
     /// This shell is owned by the ClientSessionConstructor, which outlives all clients.
     shell::Shell* const shell;
+    wl_client* const client;
+    std::shared_ptr<scene::Session> const session;
 };
 }
 }

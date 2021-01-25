@@ -151,14 +151,14 @@ auto mf::WlClient::from(wl_client* client) -> WlClient*
     return ctx ? ctx->client.get() : nullptr;
 }
 
-mf::WlClient::WlClient(wl_client* raw_client, std::shared_ptr<ms::Session> const& client_session, msh::Shell* shell)
-    : raw_client{raw_client},
-      client_session{client_session},
-      shell{shell}
+mf::WlClient::WlClient(wl_client* client, std::shared_ptr<ms::Session> const& session, msh::Shell* shell)
+    : shell{shell},
+      client{client},
+      session{session}
 {
 }
 
 mf::WlClient::~WlClient()
 {
-    shell->close_session(client_session);
+    shell->close_session(session);
 }

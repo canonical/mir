@@ -585,14 +585,14 @@ mf::WaylandConnector::WaylandConnector(
 
     WlClient::setup_new_client_handler(display.get(), shell, session_authorizer, [this](WlClient& client)
         {
-            int const fd = wl_client_get_fd(client.raw_client);
+            int const fd = wl_client_get_fd(client.raw_client());
             auto const handler_iter = connect_handlers.find(fd);
 
             if (handler_iter != std::end(connect_handlers))
             {
                 auto const callback = handler_iter->second;
                 connect_handlers.erase(handler_iter);
-                callback(client.client_session);
+                callback(client.client_session());
             }
         });
 
@@ -765,7 +765,7 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
 auto mir::frontend::get_session(wl_client* wl_client) -> std::shared_ptr<scene::Session>
 {
     auto const client = WlClient::from(wl_client);
-    return client ? client->client_session : nullptr;
+    return client ? client->client_session() : nullptr;
 }
 
 auto mf::get_session(wl_resource* surface) -> std::shared_ptr<ms::Session>
