@@ -30,15 +30,18 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-struct mf::WlClient::ConstructionCtx
+namespace
+{
+/// The context required for creating new WlClient's from wl_client*s
+struct ConstructionCtx
 {
     ConstructionCtx(
         std::shared_ptr<msh::Shell> const& shell,
         std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
-        std::function<void(WlClient&)>&& client_created_callback)
+        std::function<void(mf::WlClient&)>&& client_created_callback)
         : shell{shell},
           session_authorizer{session_authorizer},
-          client_created_callback{std::make_unique<std::function<void(WlClient&)>>(std::move(client_created_callback))}
+          client_created_callback{std::make_unique<std::function<void(mf::WlClient&)>>(std::move(client_created_callback))}
     {
     }
 
@@ -47,13 +50,18 @@ struct mf::WlClient::ConstructionCtx
     std::shared_ptr<msh::Shell> const shell;
     std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
     /// Needs to be a pointer so std::is_standard_layout passes
-    std::unique_ptr<std::function<void(WlClient&)>> const client_created_callback;
+    std::unique_ptr<std::function<void(mf::WlClient&)>> const client_created_callback;
 };
 
-struct mf::WlClient::ClientCtx
+static_assert(
+    std::is_standard_layout<ConstructionCtx>::value,
+    "ConstructionCtx must be standard layout for wl_container_of to be defined behaviour.");
+
+/// Intermediary between the wl_client* and WlClient
+struct ClientCtx
 {
-    ClientCtx(wl_client* raw_client, std::shared_ptr<ms::Session> const& client_session, msh::Shell* shell)
-        : client{std::unique_ptr<WlClient>{new WlClient{raw_client, client_session, shell}}}
+    ClientCtx(std::unique_ptr<mf::WlClient>&& client)
+        : client{std::move(client)}
     {
     }
 
@@ -64,31 +72,24 @@ struct mf::WlClient::ClientCtx
         return ctx;
     }
 
-    std::unique_ptr<WlClient> const client;
+    std::unique_ptr<mf::WlClient> const client;
     wl_listener destroy_listener;
 };
 
 static_assert(
-    std::is_standard_layout<mf::WlClient::ClientCtx>::value,
+    std::is_standard_layout<ClientCtx>::value,
     "ClientCtx must be standard layout for wl_container_of to be defined behaviour");
 
-static_assert(
-    std::is_standard_layout<mf::WlClient::ConstructionCtx>::value,
-    "ConstructionCtx must be standard layout for wl_container_of to be "
-    "defined behaviour.");
-
-namespace
-{
 void cleanup_construction_ctx(wl_listener* listener, void*)
 {
-    mf::WlClient::ConstructionCtx* construction_context;
+    ConstructionCtx* construction_context;
     construction_context = wl_container_of(listener, construction_context, display_destruction_listener);
     delete construction_context;
 }
 
 void cleanup_client_ctx(wl_listener* listener, void* /*data*/)
 {
-    auto const ctx = mf::WlClient::ClientCtx::from(listener);
+    auto const ctx = ClientCtx::from(listener);
     // This ensures that further calls to wl_client_get_destroy_listener(client, &cleanup_client_ctx) - and hence
     // WlClient::from(client) - return nullptr.
     wl_list_remove(&ctx->destroy_listener.link);
@@ -99,7 +100,7 @@ void handle_client_created(wl_listener* listener, void* data)
 {
     auto client = reinterpret_cast<wl_client*>(data);
 
-    mf::WlClient::ConstructionCtx* construction_context;
+    ConstructionCtx* construction_context;
     construction_context = wl_container_of(listener, construction_context, client_construction_listener);
 
     pid_t client_pid;
@@ -118,7 +119,8 @@ void handle_client_created(wl_listener* listener, void* data)
         "",
         std::make_shared<mf::NullEventSink>());
 
-    auto client_context = new mf::WlClient::ClientCtx{client, session, construction_context->shell.get()};
+    auto wl_client = std::make_unique<mf::WlClient>(client, session, construction_context->shell.get());
+    auto client_context = new ClientCtx{std::move(wl_client)};
     client_context->destroy_listener.notify = &cleanup_client_ctx;
     wl_client_add_destroy_listener(client, &client_context->destroy_listener);
 

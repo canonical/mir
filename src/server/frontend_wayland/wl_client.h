@@ -44,9 +44,6 @@ class SessionAuthorizer;
 class WlClient
 {
 public:
-    struct ConstructionCtx;
-    struct ClientCtx;
-
     /// Initializes a ConstructionCtx that will create a WlClient for each wl_client created on the display. Should only
     /// be called once per display. Destruction of the ConstructionCtx is handled automatically.
     static void setup_new_client_handler(
@@ -56,6 +53,9 @@ public:
         std::function<void(WlClient&)>&& client_created_callback);
 
     static auto from(wl_client* client) -> WlClient*;
+
+    WlClient(wl_client* raw_client, std::shared_ptr<scene::Session> const& client_session, shell::Shell* shell);
+    ~WlClient();
 
     /// The underlying Wayland client
     wl_client* const raw_client;
@@ -68,11 +68,7 @@ public:
     /// individual apps.
     std::shared_ptr<scene::Session> const client_session;
 
-    ~WlClient();
-
 private:
-    WlClient(wl_client* raw_client, std::shared_ptr<scene::Session> const& client_session, shell::Shell* shell);
-
     /// This shell is owned by the ClientSessionConstructor, which outlives all clients.
     shell::Shell* const shell;
 };
