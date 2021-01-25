@@ -54,7 +54,6 @@ public:
 
     static auto from(wl_client* client) -> WlClient*;
 
-    WlClient(wl_client* client, std::shared_ptr<scene::Session> const& session, shell::Shell* shell);
     ~WlClient();
 
     /// The underlying Wayland client
@@ -69,6 +68,10 @@ public:
     auto client_session() const -> std::shared_ptr<scene::Session> { return session; }
 
 private:
+    WlClient(wl_client* client, std::shared_ptr<scene::Session> const& session, shell::Shell* shell);
+
+    static void handle_client_created(wl_listener* listener, void* data);
+
     /// This shell is owned by the ClientSessionConstructor, which outlives all clients.
     shell::Shell* const shell;
     wl_client* const client;

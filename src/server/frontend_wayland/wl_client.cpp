@@ -95,37 +95,6 @@ void cleanup_client_ctx(wl_listener* listener, void* /*data*/)
     wl_list_remove(&ctx->destroy_listener.link);
     delete ctx;
 }
-
-void handle_client_created(wl_listener* listener, void* data)
-{
-    auto client = reinterpret_cast<wl_client*>(data);
-
-    ConstructionCtx* construction_context;
-    construction_context = wl_container_of(listener, construction_context, client_construction_listener);
-
-    pid_t client_pid;
-    uid_t client_uid;
-    gid_t client_gid;
-    wl_client_get_credentials(client, &client_pid, &client_uid, &client_gid);
-
-    if (!construction_context->session_authorizer->connection_is_allowed({client_pid, client_uid, client_gid}))
-    {
-        wl_client_destroy(client);
-        return;
-    }
-
-    auto session = construction_context->shell->open_session(
-        client_pid,
-        "",
-        std::make_shared<mf::NullEventSink>());
-
-    auto wl_client = std::make_unique<mf::WlClient>(client, session, construction_context->shell.get());
-    auto client_context = new ClientCtx{std::move(wl_client)};
-    client_context->destroy_listener.notify = &cleanup_client_ctx;
-    wl_client_add_destroy_listener(client, &client_context->destroy_listener);
-
-    (*construction_context->client_created_callback)(*client_context->client.get());
-}
 }
 
 void mf::WlClient::setup_new_client_handler(
@@ -151,6 +120,11 @@ auto mf::WlClient::from(wl_client* client) -> WlClient*
     return ctx ? ctx->client.get() : nullptr;
 }
 
+mf::WlClient::~WlClient()
+{
+    shell->close_session(session);
+}
+
 mf::WlClient::WlClient(wl_client* client, std::shared_ptr<ms::Session> const& session, msh::Shell* shell)
     : shell{shell},
       client{client},
@@ -158,7 +132,35 @@ mf::WlClient::WlClient(wl_client* client, std::shared_ptr<ms::Session> const& se
 {
 }
 
-mf::WlClient::~WlClient()
+void mf::WlClient::handle_client_created(wl_listener* listener, void* data)
 {
-    shell->close_session(session);
+    auto client = reinterpret_cast<wl_client*>(data);
+
+    ConstructionCtx* construction_context;
+    construction_context = wl_container_of(listener, construction_context, client_construction_listener);
+
+    pid_t client_pid;
+    uid_t client_uid;
+    gid_t client_gid;
+    wl_client_get_credentials(client, &client_pid, &client_uid, &client_gid);
+
+    if (!construction_context->session_authorizer->connection_is_allowed({client_pid, client_uid, client_gid}))
+    {
+        wl_client_destroy(client);
+        return;
+    }
+
+    auto session = construction_context->shell->open_session(
+        client_pid,
+        "",
+        std::make_shared<mf::NullEventSink>());
+
+    // Can't use std::make_unique because WlClient constructor is private
+    auto wl_client = std::unique_ptr<mf::WlClient>{
+        new mf::WlClient{client, session, construction_context->shell.get()}};
+    auto client_context = new ClientCtx{std::move(wl_client)};
+    client_context->destroy_listener.notify = &cleanup_client_ctx;
+    wl_client_add_destroy_listener(client, &client_context->destroy_listener);
+
+    (*construction_context->client_created_callback)(*client_context->client.get());
 }
