@@ -23,6 +23,7 @@
 
 namespace mir
 {
+class Executor;
 namespace scene
 {
 class Surface;
@@ -42,12 +43,14 @@ class LayerShellV1 : public wayland::LayerShellV1::Global
 public:
     LayerShellV1(
         wl_display* display,
+        Executor& wayland_executor,
         std::shared_ptr<shell::Shell> shell,
         WlSeat& seat,
         OutputManager* output_manager);
 
     static auto get_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>;
 
+    Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;

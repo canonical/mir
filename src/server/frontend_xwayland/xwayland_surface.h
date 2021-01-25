@@ -52,8 +52,7 @@ public:
     XWaylandSurface(
         XWaylandWM *wm,
         std::shared_ptr<XCBConnection> const& connection,
-        WlSeat& seat,
-        std::shared_ptr<shell::Shell> const& shell,
+        XWaylandWMShell const& wm_shell,
         std::shared_ptr<XWaylandClientManager> const& client_manager,
         xcb_window_t window,
         geometry::Rectangle const& geometry,
@@ -106,7 +105,6 @@ private:
     void scene_surface_resized(geometry::Size const& new_size) override;
     void scene_surface_moved_to(geometry::Point const& new_top_left) override;
     void scene_surface_close_requested() override;
-    void run_on_wayland_thread(std::function<void()>&& work) override;
     /// @}
 
     /// Overrides from XWaylandSurfaceRoleSurface
@@ -149,7 +147,7 @@ private:
 
     XWaylandWM* const xwm;
     std::shared_ptr<XCBConnection> const connection;
-    WlSeat& seat;
+    XWaylandWMShell const& wm_shell;
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<XWaylandClientManager> const client_manager;
     xcb_window_t const window;

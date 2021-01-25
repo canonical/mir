@@ -23,13 +23,17 @@ struct wl_display;
 
 namespace mir
 {
+class Executor;
 namespace shell { class Shell; }
 
 namespace frontend
 {
 class WlSeat;
 
-auto create_pointer_constraints_unstable_v1(wl_display* display, WlSeat* seat, std::shared_ptr<shell::Shell> shell) -> std::shared_ptr<void>;
+auto create_pointer_constraints_unstable_v1(
+    wl_display* display,
+    Executor& wayland_executor,
+    std::shared_ptr<shell::Shell> shell) -> std::shared_ptr<void>;
 
 }
 }

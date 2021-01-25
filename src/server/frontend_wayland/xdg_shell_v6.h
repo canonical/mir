@@ -23,6 +23,7 @@
 
 namespace mir
 {
+class Executor;
 namespace scene
 {
 class Surface;
@@ -39,8 +40,14 @@ class OutputManager;
 class XdgShellV6 : public wayland::XdgShellV6::Global
 {
 public:
-    XdgShellV6(wl_display* display, std::shared_ptr<shell::Shell> shell, WlSeat& seat, OutputManager* output_manager);
+    XdgShellV6(
+        wl_display* display,
+        Executor& wayland_executor,
+        std::shared_ptr<shell::Shell> shell,
+        WlSeat& seat,
+        OutputManager* output_manager);
 
+    Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;

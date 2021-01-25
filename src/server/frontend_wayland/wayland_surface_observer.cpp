@@ -20,10 +20,9 @@
 #include "wayland_surface_observer.h"
 #include "wayland_utils.h"
 #include "window_wl_surface_role.h"
-#include "wl_seat.h"
 
+#include <mir/executor.h>
 #include <mir/events/event_builders.h>
-
 #include <mir/input/keymap.h>
 #include <mir/log.h>
 
@@ -35,10 +34,11 @@ namespace mi = mir::input;
 namespace mw = mir::wayland;
 
 mf::WaylandSurfaceObserver::WaylandSurfaceObserver(
+    Executor& wayland_executor,
     WlSeat* seat,
     WlSurface* surface,
     WindowWlSurfaceRole* window)
-    : seat{seat},
+    : wayland_executor{wayland_executor},
       impl{std::make_shared<Impl>(
           mw::make_weak(window),
           std::make_unique<WaylandInputDispatcher>(seat, surface))}
@@ -149,7 +149,7 @@ auto mf::WaylandSurfaceObserver::latest_timestamp() const -> std::chrono::nanose
 void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_window_destroyed(
     std::function<void(Impl* impl, WindowWlSurfaceRole* window)>&& work)
 {
-    seat->spawn(
+    wayland_executor.spawn(
         [impl=impl, work=move(work)]
         {
             if (impl->window)

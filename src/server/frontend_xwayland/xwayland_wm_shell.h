@@ -23,6 +23,7 @@
 
 namespace mir
 {
+class Executor;
 namespace shell
 {
 class Shell;
@@ -39,15 +40,18 @@ class XWaylandWMShell
 {
 public:
     XWaylandWMShell(
+        std::shared_ptr<Executor> const& wayland_executor,
         std::shared_ptr<shell::Shell> const& shell,
         WlSeat& seat,
         std::shared_ptr<SurfaceStack> const& surface_stack)
-        : shell{shell},
+        : wayland_executor{wayland_executor},
+          shell{shell},
           seat{seat},
           surface_stack{surface_stack}
     {
     }
 
+    std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
     WlSeat& seat;
     std::shared_ptr<SurfaceStack> const surface_stack;
