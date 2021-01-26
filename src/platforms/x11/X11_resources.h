@@ -22,6 +22,7 @@
 #include <X11/Xlib.h>
 #include <experimental/optional>
 #include <unordered_map>
+#include <mutex>
 
 namespace mir
 {
@@ -49,6 +50,7 @@ public:
     static X11Resources instance;
 
 private:
+    std::mutex mutex;
     std::weak_ptr<::Display> connection;
     std::unordered_map<Window, std::weak_ptr<graphics::DisplayConfigurationOutput const>> output_configs;
 };
