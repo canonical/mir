@@ -61,32 +61,30 @@ auto mx::X11Resources::get_conn() -> std::shared_ptr<::Display>
     return new_conn;
 }
 
-void mx::X11Resources::set_output_config_for_win(
+void mx::X11Resources::set_set_output_for_window(Window win, VirtualOutput* output)
+{
+    std::lock_guard<std::mutex> lock{mutex};
+    outputs[win] = output;
+}
+
+void mx::X11Resources::clear_output_for_window(Window win)
+{
+    std::lock_guard<std::mutex> lock{mutex};
+    outputs.erase(win);
+}
+
+void mx::X11Resources::with_output_for_window(
     Window win,
-    std::weak_ptr<graphics::DisplayConfigurationOutput const> configuration)
+    std::function<void(std::optional<VirtualOutput const*> output)> fn)
 {
     std::lock_guard<std::mutex> lock{mutex};
-    output_configs[win] = configuration;
-}
-
-void mx::X11Resources::clear_output_config_for_win(Window win)
-{
-    std::lock_guard<std::mutex> lock{mutex};
-    output_configs.erase(win);
-}
-
-auto mx::X11Resources::get_output_config_for_win(Window win)
-    -> std::experimental::optional<graphics::DisplayConfigurationOutput const* const>
-{
-    std::lock_guard<std::mutex> lock{mutex};
-    auto iter = output_configs.find(win);
-    std::shared_ptr<graphics::DisplayConfigurationOutput const> configuration;
-    if (iter != output_configs.end() && (configuration = iter->second.lock()))
+    auto const iter = outputs.find(win);
+    if (iter != outputs.end())
     {
-        return {configuration.get()};
+        return fn(iter->second);
     }
     else
     {
-        return std::experimental::nullopt;
+        return fn(std::nullopt);
     }
 }
