@@ -66,11 +66,6 @@ private:
     wayland::Weak<WlSurface> const wl_surface;
 
     std::chrono::nanoseconds timestamp{0};
-
-    /// Handle user input events
-    ///@{
-    void handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event);
-    ///@}
 };
 }
 }
