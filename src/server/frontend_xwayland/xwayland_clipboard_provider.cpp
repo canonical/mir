@@ -32,7 +32,7 @@ namespace ms = mir::scene;
 
 namespace
 {
-size_t const INCREMENT_CHUNK_SIZE = 64 * 1024;
+size_t const increment_chunk_size = 64 * 1024;
 
 auto create_selection_window(mf::XCBConnection const& connection) -> xcb_window_t
 {
@@ -242,7 +242,7 @@ void mf::XWaylandClipboardProvider::send_data(
         in_fd = {}; // important to release ownership of the fd, as we are about to block on it closing
     }
 
-    size_t const data_size = INCREMENT_CHUNK_SIZE;
+    size_t const data_size = increment_chunk_size;
     std::unique_ptr<uint8_t[]> const data{new uint8_t[data_size]};
 
     size_t len;
