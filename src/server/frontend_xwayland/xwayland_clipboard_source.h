@@ -30,6 +30,10 @@ namespace scene
 class Clipboard;
 class ClipboardSource;
 }
+namespace dispatch
+{
+class MultiplexingDispatchable;
+}
 namespace frontend
 {
 /// Exposes X11 selections to non-X11 clients
@@ -38,6 +42,7 @@ class XWaylandClipboardSource
 public:
     XWaylandClipboardSource(
         XCBConnection& connection,
+        std::shared_ptr<dispatch::MultiplexingDispatchable> const& dispatcher,
         std::shared_ptr<scene::Clipboard> const& clipboard);
     ~XWaylandClipboardSource();
 
@@ -69,6 +74,7 @@ private:
     void send_data_to_fd(uint8_t const* data, size_t size);
 
     XCBConnection& connection;
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     std::shared_ptr<scene::Clipboard> const clipboard;
     xcb_window_t const receiving_window;
 

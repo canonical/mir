@@ -21,6 +21,7 @@
 
 #include "xwayland_log.h"
 #include "mir/scene/clipboard.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
 
 #include <xcb/xfixes.h>
 #include <string.h>
@@ -29,6 +30,7 @@
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
+namespace md = mir::dispatch;
 
 namespace
 {
@@ -105,8 +107,10 @@ private:
 
 mf::XWaylandClipboardProvider::XWaylandClipboardProvider(
     XCBConnection& connection,
+    std::shared_ptr<md::MultiplexingDispatchable> const& dispatcher,
     std::shared_ptr<scene::Clipboard> const& clipboard)
     : connection{connection},
+      dispatcher{dispatcher},
       clipboard{clipboard},
       clipboard_observer{std::make_shared<ClipboardObserver>(this)},
       selection_window{create_selection_window(connection)}

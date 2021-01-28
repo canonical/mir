@@ -138,6 +138,7 @@ mf::XWaylandWM::XWaylandWM(
     std::shared_ptr<WaylandConnector> wayland_connector,
     wl_client* wayland_client,
     Fd const& fd,
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const& dispatcher,
     float assumed_surface_scale)
     : connection{std::make_shared<XCBConnection>(fd)},
       xfixes{init_xfixes(*connection)},
@@ -146,8 +147,8 @@ mf::XWaylandWM::XWaylandWM(
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
       wayland_executor{*wm_shell->wayland_executor},
       cursors{std::make_unique<XWaylandCursors>(connection)},
-      clipboard_source{std::make_unique<XWaylandClipboardSource>(*connection, wm_shell->clipboard)},
-      clipboard_provider{std::make_unique<XWaylandClipboardProvider>(*connection, wm_shell->clipboard)},
+      clipboard_source{std::make_unique<XWaylandClipboardSource>(*connection, dispatcher, wm_shell->clipboard)},
+      clipboard_provider{std::make_unique<XWaylandClipboardProvider>(*connection, dispatcher, wm_shell->clipboard)},
       wm_window{create_wm_window(*connection)},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
       client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)},
