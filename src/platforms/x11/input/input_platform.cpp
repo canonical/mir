@@ -54,16 +54,21 @@ namespace
 {
 geom::Point get_pos_on_output(Window x11_window, int x, int y)
 {
-    auto output = mx::X11Resources::instance.get_output_config_for_win(x11_window);
-    if (output)
-    {
-        return output.value()->top_left + geom::Displacement{x, y};
-    }
-    else
-    {
-        mir::log_warning("X11 window %lu does not map to any known output, not applying input transformation", x11_window);
-        return geom::Point{x, y};
-    }
+    geom::Point pos{x, y};
+    mx::X11Resources::instance.with_output_for_window(x11_window, [&](std::optional<mx::X11Resources::VirtualOutput const*> output)
+        {
+            if (output)
+            {
+                pos += as_displacement(output.value()->configuration().top_left);
+            }
+            else
+            {
+                mir::log_warning(
+                    "X11 window %lu does not map to any known output, not applying input transformation",
+                    x11_window);
+            }
+        });
+    return pos;
 }
 }
 

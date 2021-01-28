@@ -24,12 +24,14 @@
 #include "mir/renderer/gl/context_source.h"
 #include "mir_toolkit/common.h"
 #include "egl_helper.h"
+#include "../X11_resources.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <EGL/egl.h>
 
 #include <memory>
+#include <map>
 
 namespace mir
 {
@@ -104,7 +106,7 @@ public:
     Frame last_frame_on(unsigned output_id) const override;
 
 private:
-    struct OutputInfo
+    struct OutputInfo : ::mir::X::X11Resources::VirtualOutput
     {
         OutputInfo(
             std::unique_ptr<X11Window> window,
@@ -112,9 +114,11 @@ private:
             std::shared_ptr<DisplayConfigurationOutput> configuration);
         ~OutputInfo();
 
+        auto configuration() const -> graphics::DisplayConfigurationOutput const& override { return *config; }
+
         std::unique_ptr<X11Window> window;
         std::unique_ptr<DisplayBuffer> display_buffer;
-        std::shared_ptr<DisplayConfigurationOutput> configuration;
+        std::shared_ptr<DisplayConfigurationOutput> config;
     };
 
     std::vector<std::unique_ptr<OutputInfo>> outputs;
