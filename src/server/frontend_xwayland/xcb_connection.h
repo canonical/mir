@@ -44,7 +44,7 @@ enum class XCBType
     ATOM,
     WINDOW,
     CARDINAL32, ///< also known as an unsigned int
-    INTEGER,    ///< not sure what the difference is between this and CARDINAL32
+    INTEGER32,  ///< signed int
     STRING,
     UTF8_STRING,
     WM_STATE,
@@ -55,7 +55,7 @@ template<XCBType T> struct NativeXCBType                { typedef void type;};
 template<> struct NativeXCBType<XCBType::ATOM>          { typedef xcb_atom_t type; };
 template<> struct NativeXCBType<XCBType::WINDOW>        { typedef xcb_window_t type; };
 template<> struct NativeXCBType<XCBType::CARDINAL32>    { typedef uint32_t type; };
-template<> struct NativeXCBType<XCBType::INTEGER>       { typedef uint32_t type; };
+template<> struct NativeXCBType<XCBType::INTEGER32>     { typedef int32_t type; };
 template<> struct NativeXCBType<XCBType::STRING>        { typedef char type; };
 template<> struct NativeXCBType<XCBType::UTF8_STRING>   { typedef char type; };
 template<> struct NativeXCBType<XCBType::WM_STATE>      { typedef uint32_t type; };

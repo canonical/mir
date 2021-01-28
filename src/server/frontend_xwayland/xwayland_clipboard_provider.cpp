@@ -207,7 +207,12 @@ void mf::XWaylandClipboardProvider::send_timestamp(
 {
     {
         std::lock_guard<std::mutex> lock{mutex};
-        connection.set_property<XCBType::INTEGER>(requester, property, clipboard_ownership_timestamp);
+        // Unclear why the timestamp (which has an unsigned type in our code) is sent with an integer (signed) type
+        // instead of a cardinal (unsigned) type, but that's what Weston does.
+        connection.set_property<XCBType::INTEGER32>(
+            requester,
+            property,
+            static_cast<int32_t>(clipboard_ownership_timestamp));
     }
     send_selection_notify(time, requester, property, connection.CLIPBOARD, connection.TIMESTAMP);
 }
