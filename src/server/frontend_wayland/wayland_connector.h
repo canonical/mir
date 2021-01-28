@@ -167,6 +167,7 @@ private:
 
 auto create_wl_shell(
     wl_display* display,
+    Executor& wayland_executor,
     std::shared_ptr<shell::Shell> const& shell,
     WlSeat* seat,
     OutputManager* const output_manager) -> std::shared_ptr<void>;

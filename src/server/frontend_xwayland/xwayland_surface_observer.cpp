@@ -24,6 +24,7 @@
 #include "window_wl_surface_role.h"
 #include "wayland_input_dispatcher.h"
 
+#include <mir/executor.h>
 #include <mir/events/event_builders.h>
 
 #include <mir/input/keymap.h>
@@ -36,10 +37,12 @@ namespace mev = mir::events;
 namespace mi = mir::input;
 
 mf::XWaylandSurfaceObserver::XWaylandSurfaceObserver(
+    Executor& wayland_executor,
     WlSeat& seat,
     WlSurface* wl_surface,
     XWaylandSurfaceObserverSurface* wm_surface)
     : wm_surface{wm_surface},
+      wayland_executor{wayland_executor},
       input_dispatcher{std::make_shared<ThreadsafeInputDispatcher>(
           std::make_unique<WaylandInputDispatcher>(&seat, wl_surface))}
 {
@@ -145,7 +148,7 @@ mf::XWaylandSurfaceObserver::ThreadsafeInputDispatcher::~ThreadsafeInputDispatch
 
 void mf::XWaylandSurfaceObserver::aquire_input_dispatcher(std::function<void(WaylandInputDispatcher*)>&& work)
 {
-    wm_surface->run_on_wayland_thread([work = move(work), input_dispatcher = input_dispatcher]()
+    wayland_executor.spawn([work = move(work), input_dispatcher = input_dispatcher]()
         {
             std::lock_guard<std::mutex> lock{input_dispatcher->mutex};
             if (input_dispatcher->dispatcher)
