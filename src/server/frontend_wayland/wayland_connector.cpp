@@ -556,6 +556,7 @@ mf::WaylandConnector::WaylandConnector(
         display.get(),
         executor,
         shell,
+        clipboard,
         seat_global.get(),
         output_manager.get(),
         surface_stack});

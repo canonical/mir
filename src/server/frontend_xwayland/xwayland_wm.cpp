@@ -25,6 +25,8 @@
 #include "xwayland_surface_role.h"
 #include "xwayland_cursors.h"
 #include "xwayland_client_manager.h"
+#include "xwayland_clipboard_source.h"
+#include "xwayland_clipboard_provider.h"
 
 #include "mir/c_memory.h"
 #include "mir/fd.h"
@@ -75,7 +77,7 @@ auto create_wm_window(mf::XCBConnection const& connection) -> xcb_window_t
     return wm_window;
 }
 
-void check_xfixes(mf::XCBConnection const& connection)
+auto init_xfixes(mf::XCBConnection const& connection) -> xcb_query_extension_reply_t const*
 {
     xcb_xfixes_query_version_cookie_t xfixes_cookie;
     xcb_xfixes_query_version_reply_t *xfixes_reply;
@@ -87,6 +89,7 @@ void check_xfixes(mf::XCBConnection const& connection)
     if (!xfixes || !xfixes->present)
     {
         mir::log_warning("xfixes not available");
+        return nullptr;
     }
 
     xfixes_cookie = xcb_xfixes_query_version(connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
@@ -98,6 +101,7 @@ void check_xfixes(mf::XCBConnection const& connection)
     }
 
     free(xfixes_reply);
+    return xfixes;
 }
 
 auto focus_mode_to_string(uint32_t focus_mode) -> std::string
@@ -135,17 +139,18 @@ mf::XWaylandWM::XWaylandWM(
     wl_client* wayland_client,
     Fd const& fd)
     : connection{std::make_shared<XCBConnection>(fd)},
+      xfixes{init_xfixes(*connection)},
       wayland_connector(wayland_connector),
       wayland_client{wayland_client},
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
       wayland_executor{*wm_shell->wayland_executor},
       cursors{std::make_unique<XWaylandCursors>(connection)},
+      clipboard_source{std::make_unique<XWaylandClipboardSource>(*connection, wm_shell->clipboard)},
+      clipboard_provider{std::make_unique<XWaylandClipboardProvider>(*connection, wm_shell->clipboard)},
       wm_window{create_wm_window(*connection)},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
       client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)}
 {
-    check_xfixes(*connection);
-
     uint32_t const attrib_values[]{
         XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_PROPERTY_CHANGE};
 
@@ -512,7 +517,7 @@ void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
     // see https://www.systutorials.com/docs/linux/man/3-xcb-requests/
     int const xcb_error_type = 0;
 
-    int type = event->response_type & ~0x80;
+    auto const type = event->response_type & ~0x80;
     switch (type)
     {
     case XCB_BUTTON_PRESS:
@@ -576,11 +581,34 @@ void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
     case XCB_FOCUS_IN:
         handle_focus_in(reinterpret_cast<xcb_focus_in_event_t*>(event));
         break;
+    case XCB_SELECTION_REQUEST:
+        clipboard_provider->selection_request_event(reinterpret_cast<xcb_selection_request_event_t*>(event));
+        break;
+    case XCB_SELECTION_NOTIFY:
+        clipboard_source->selection_notify_event(reinterpret_cast<xcb_selection_notify_event_t*>(event));
+        break;
     case xcb_error_type:
         handle_error(reinterpret_cast<xcb_generic_error_t*>(event));
         break;
     default:
         break;
+    }
+
+    if (xfixes)
+    {
+        auto const xfixes_type = event->response_type - xfixes->first_event;
+        switch (xfixes_type)
+        {
+        case XCB_XFIXES_SELECTION_NOTIFY:
+            // Order of calls should not matter
+            clipboard_provider->xfixes_selection_notify_event(
+                reinterpret_cast<xcb_xfixes_selection_notify_event_t*>(event));
+            clipboard_source->xfixes_selection_notify_event(
+                reinterpret_cast<xcb_xfixes_selection_notify_event_t*>(event));
+            break;
+        default:
+            break;
+        }
     }
 }
 

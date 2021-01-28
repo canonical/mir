@@ -288,16 +288,18 @@ bool mf::XCBConnection::is_ours(uint32_t id) const
 auto mf::XCBConnection::read_property(
     xcb_window_t window,
     xcb_atom_t prop,
+    bool delete_after_read,
+    uint32_t max_length,
     Handler<xcb_get_property_reply_t*>&& handler) const -> std::function<void()>
 {
     xcb_get_property_cookie_t cookie = xcb_get_property(
         xcb_connection,
-        0, // don't delete
+        delete_after_read ? 1 : 0,
         window,
         prop,
         XCB_ATOM_ANY,
         0, // no offset
-        2048); // big buffer
+        max_length);
 
     return [this, cookie, handler=std::move(handler), window, prop]()
         {
@@ -316,7 +318,7 @@ auto mf::XCBConnection::read_property(
                     {
                         message +=  " for " + window_debug_string(window) + "." + query_name(prop);
                     }
-                    handler.on_error("no reply data" + message);
+                    handler.on_error(message);
                 }
                 else
                 {
@@ -337,6 +339,14 @@ auto mf::XCBConnection::read_property(
                     window_debug_string(window) + "." + query_name(prop));
             }
         };
+}
+
+auto mf::XCBConnection::read_property(
+    xcb_window_t window,
+    xcb_atom_t prop,
+    Handler<xcb_get_property_reply_t*>&& handler) const -> std::function<void()>
+{
+    return read_property(window, prop, false, 2048, std::move(handler));
 }
 
 auto mf::XCBConnection::read_property(
@@ -591,6 +601,7 @@ auto mf::XCBConnection::xcb_type_atom(XCBType type) const -> xcb_atom_t
         case XCBType::ATOM:         return XCB_ATOM_ATOM;
         case XCBType::WINDOW:       return XCB_ATOM_WINDOW;
         case XCBType::CARDINAL32:   return XCB_ATOM_CARDINAL;
+        case XCBType::INTEGER32:    return XCB_ATOM_INTEGER;
         case XCBType::STRING:       return XCB_ATOM_STRING;
         case XCBType::UTF8_STRING:  return UTF8_STRING;
         case XCBType::WM_STATE:     return WM_STATE;
