@@ -17,13 +17,14 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/log.h"
+#include "mir/options/default_configuration.h"
 #include "wayland_connector.h"
 #include "xwayland_connector.h"
 
+#include <boost/lexical_cast.hpp>
+
 #include <string>
 #include <cstdlib>
-
-#include "mir/options/default_configuration.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -56,25 +57,6 @@ struct NullConnector : mf::Connector
         return mir::optional_value<std::string>();
     }
 };
-
-/// Get the scale from the provided options or from GDK_SCALE
-auto get_scale(mir::options::Option const& options) -> float
-{
-    if (auto const scale = atof(options.get(mo::x11_scale_opt, "").c_str()))
-    {
-        return scale;
-    }
-
-    if (auto const gdk_scale = getenv("GDK_SCALE"))
-    {
-        if (auto const scale = atof(gdk_scale))
-        {
-            return scale;
-        }
-    }
-
-    return 1.0f;
-}
 }
 
 std::shared_ptr<mf::Connector> mir::DefaultServerConfiguration::the_xwayland_connector()
@@ -90,7 +72,7 @@ std::shared_ptr<mf::Connector> mir::DefaultServerConfiguration::the_xwayland_con
                 return std::make_shared<mf::XWaylandConnector>(
                     wayland_connector,
                     options->get<std::string>("xwayland-path"),
-                    get_scale(*options));
+                    boost::lexical_cast<float>((*options).get<std::string>(mo::x11_scale_opt)));
             }
             catch (std::exception& x)
             {

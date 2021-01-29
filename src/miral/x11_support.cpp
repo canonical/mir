@@ -42,10 +42,23 @@ void miral::X11Support::operator()(mir::Server& server) const
         mo::x11_display_opt,
         "Enable X11 support", mir::OptionType::null);
 
+
+    auto const x11_scale_default = []() -> char const* {
+        if (auto const gdk_scale = getenv("GDK_SCALE"))
+        {
+            return gdk_scale;
+        }
+        else
+        {
+            return "1.0";
+        }
+    }();
+
     server.add_configuration_option(
         mo::x11_scale_opt,
-        "The scale to assume X11 apps use. If unset uses the value of GDK_SCALE or 1. Can be fractional",
-        mir::OptionType::string);
+        "The scale to assume X11 apps use. Defaults to the value of GDK_SCALE or 1. Can be fractional. "
+        "(Consider also setting GDK_SCALE in app-env-x11 when using this)",
+        x11_scale_default);
 
     server.add_configuration_option(
         "xwayland-path",
