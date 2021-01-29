@@ -35,9 +35,11 @@ namespace md = mir::dispatch;
 
 mf::XWaylandConnector::XWaylandConnector(
     std::shared_ptr<WaylandConnector> const& wayland_connector,
-    std::string const& xwayland_path)
+    std::string const& xwayland_path,
+    float scale)
     : wayland_connector{wayland_connector},
-      xwayland_path{xwayland_path}
+      xwayland_path{xwayland_path},
+      scale{scale}
 {
     if (access(xwayland_path.c_str(), F_OK | X_OK) != 0)
     {
@@ -181,11 +183,13 @@ void mf::XWaylandConnector::spawn()
             *spawner,
             xwayland_path,
             wayland_socket_pair,
-            x11_socket_pair.second);
+            x11_socket_pair.second,
+            scale);
         wm = std::make_unique<XWaylandWM>(
             wayland_connector,
             server->client(),
-            x11_socket_pair.first);
+            x11_socket_pair.first,
+            scale);
         mir::log_info("XWayland is running");
     }
     catch (...)

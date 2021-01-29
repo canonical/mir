@@ -532,6 +532,7 @@ MIR_CLIENT_DETAIL_2.0 {
       mir::client::DefaultConnectionConfiguration::the_error_handler*;
       mir::events::clone_event*;
       mir::events::transform_positions*;
+      mir::events::scale_positions*;
 
       mir::client::to_client_context*;
 

@@ -21,6 +21,7 @@
 #include "xwayland_connector.h"
 
 #include <string>
+#include <cstdlib>
 
 #include "mir/options/default_configuration.h"
 
@@ -55,6 +56,25 @@ struct NullConnector : mf::Connector
         return mir::optional_value<std::string>();
     }
 };
+
+/// Get the scale from the provided options or from GDK_SCALE
+auto get_scale(mir::options::Option const& options) -> float
+{
+    if (auto const scale = atof(options.get(mo::x11_scale_opt, "").c_str()))
+    {
+        return scale;
+    }
+
+    if (auto const gdk_scale = getenv("GDK_SCALE"))
+    {
+        if (auto const scale = atof(gdk_scale))
+        {
+            return scale;
+        }
+    }
+
+    return 1.0f;
+}
 }
 
 std::shared_ptr<mf::Connector> mir::DefaultServerConfiguration::the_xwayland_connector()
@@ -69,7 +89,8 @@ std::shared_ptr<mf::Connector> mir::DefaultServerConfiguration::the_xwayland_con
                 auto wayland_connector = std::static_pointer_cast<mf::WaylandConnector>(the_wayland_connector());
                 return std::make_shared<mf::XWaylandConnector>(
                     wayland_connector,
-                    options->get<std::string>("xwayland-path"));
+                    options->get<std::string>("xwayland-path"),
+                    get_scale(*options));
             }
             catch (std::exception& x)
             {

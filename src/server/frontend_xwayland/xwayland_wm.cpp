@@ -137,7 +137,8 @@ public:
 mf::XWaylandWM::XWaylandWM(
     std::shared_ptr<WaylandConnector> wayland_connector,
     wl_client* wayland_client,
-    Fd const& fd)
+    Fd const& fd,
+    float assumed_surface_scale)
     : connection{std::make_shared<XCBConnection>(fd)},
       xfixes{init_xfixes(*connection)},
       wayland_connector(wayland_connector),
@@ -149,7 +150,8 @@ mf::XWaylandWM::XWaylandWM(
       clipboard_provider{std::make_unique<XWaylandClipboardProvider>(*connection, wm_shell->clipboard)},
       wm_window{create_wm_window(*connection)},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
-      client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)}
+      client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)},
+      assumed_surface_scale{assumed_surface_scale}
 {
     uint32_t const attrib_values[]{
         XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_PROPERTY_CHANGE};
@@ -509,7 +511,8 @@ void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& g
         client_manager,
         window,
         geometry,
-        override_redirect);
+        override_redirect,
+        assumed_surface_scale);
 }
 
 void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
@@ -804,11 +807,12 @@ void mf::XWaylandWM::handle_surface_id(
     wayland_executor.spawn([
             wayland_connector = wayland_connector,
             client=wayland_client,
+            scale=assumed_surface_scale,
             id,
             weak_surface,
             weak_shell = std::weak_ptr<shell::Shell>{wm_shell->shell}]()
         {
-            wayland_connector->on_surface_created(client, id, [weak_surface, weak_shell](WlSurface* wl_surface)
+            wayland_connector->on_surface_created(client, id, [scale, weak_surface, weak_shell](WlSurface* wl_surface)
                 {
                     auto const surface = weak_surface.lock();
                     auto const shell = weak_shell.lock();
@@ -817,7 +821,7 @@ void mf::XWaylandWM::handle_surface_id(
                         surface->attach_wl_surface(wl_surface);
 
                         // Will destroy itself
-                        new XWaylandSurfaceRole{shell, surface, wl_surface};
+                        new XWaylandSurfaceRole{shell, surface, wl_surface, scale};
                     }
                     else
                     {

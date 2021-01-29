@@ -192,5 +192,6 @@ MIRPLATFORM_2.3 {
     mir::graphics::LinuxDmaBufUnstable::LinuxDmaBufUnstable*;
     mir::graphics::LinuxDmaBufUnstable::?LinuxDmaBufUnstable*;
     mir::graphics::LinuxDmaBufUnstable::buffer_from_resource*;
+    mir::options::x11_scale_opt;
   };
 } MIRPLATFORM_2.2;

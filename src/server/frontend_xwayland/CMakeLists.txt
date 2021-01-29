@@ -17,6 +17,7 @@ set(
   xwayland_surface_observer.cpp xwayland_surface_observer.h
                           xwayland_surface_observer_surface.h
   xwayland_wm_shell.cpp   xwayland_wm_shell.h
+  scaled_buffer_stream.cpp scaled_buffer_stream.h
 )
 
 add_definitions(-DMIR_LOG_COMPONENT="xwayland")

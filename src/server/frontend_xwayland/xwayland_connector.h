@@ -41,9 +41,15 @@ class XWaylandWM;
 class XWaylandConnector : public Connector
 {
 public:
+    /// Scale is a little complicated. It controls how big apps appear but *probably* not the scale they render at
+    /// (unless they respect the X11 DPI, which most don't). For sharp, correctly sized apps the output scale, XWayland
+    /// scale and the scale the application uses should all match. Application scale needs to be configured on a per-app
+    /// or even per-toolkit basis. GDK_SCALE is used by default for XWayland scale because many apps respect it, so it's
+    /// generally as correct as anything.
     XWaylandConnector(
         std::shared_ptr<WaylandConnector> const& wayland_connector,
-        std::string const& xwayland_path);
+        std::string const& xwayland_path,
+        float scale);
     ~XWaylandConnector();
 
     void start() override;
@@ -58,6 +64,7 @@ public:
 private:
     std::shared_ptr<WaylandConnector> const wayland_connector;
     std::string const xwayland_path;
+    float const scale;
 
     void spawn();
 

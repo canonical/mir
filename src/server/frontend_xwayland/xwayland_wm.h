@@ -61,7 +61,8 @@ public:
     XWaylandWM(
         std::shared_ptr<WaylandConnector> wayland_connector,
         wl_client* wayland_client,
-        Fd const& fd);
+        Fd const& fd,
+        float assumed_surface_scale);
     ~XWaylandWM();
 
     /// Called by the XWayland connector when there may be new events
@@ -111,6 +112,10 @@ private:
     xcb_window_t const wm_window;
     std::shared_ptr<XWaylandSceneObserver> const scene_observer;
     std::shared_ptr<XWaylandClientManager> const client_manager;
+    /// The scale we assume applications are rendering at. If this doesn't match the scale an app is actually rendering
+    /// at the app will appear the wrong size. If this matches the app but both are smaller than the output scale, the
+    /// app will appear the correct size but blurry.
+    float const assumed_surface_scale;
 
     std::mutex mutex;
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> surfaces;
