@@ -79,14 +79,6 @@ private:
         xcb_atom_t target,
         std::string const& mime_type);
 
-    /// Notify the client that the property is ready
-    void send_selection_notify(
-        xcb_timestamp_t time,
-        xcb_window_t requestor,
-        xcb_atom_t property,
-        xcb_atom_t selection,
-        xcb_atom_t target);
-
     /// Called by the observer, indicates the paste source has been set by someone (could be us or Wayland)
     void paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source);
 

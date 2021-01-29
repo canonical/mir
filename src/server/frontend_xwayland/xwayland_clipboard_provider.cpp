@@ -54,38 +54,139 @@ auto create_selection_window(mf::XCBConnection const& connection) -> xcb_window_
     return selection_window;
 }
 
-class ReadError : public std::runtime_error
+void send_selection_notify(
+    mf::XCBConnection& connection,
+    xcb_timestamp_t time,
+    xcb_window_t requestor,
+    xcb_atom_t property,
+    xcb_atom_t selection,
+    xcb_atom_t target)
+{
+    xcb_selection_notify_event_t const selection_notify = {
+        XCB_SELECTION_NOTIFY, // response_type
+        0, // pad0
+        0, // sequence
+        time,
+        requestor,
+        selection,
+        target,
+        property,
+    };
+
+    xcb_send_event(
+        connection,
+        0, // propagate
+        requestor,
+        XCB_EVENT_MASK_NO_EVENT,
+        reinterpret_cast<const char*>(&selection_notify));
+}
+
+class SelectionSender : public md::Dispatchable
 {
 public:
-    ReadError() : runtime_error{strerror(errno)}
+    SelectionSender(
+        std::shared_ptr<mf::XCBConnection> const& connection,
+        mir::Fd&& source_fd,
+        xcb_timestamp_t time,
+        xcb_window_t requester,
+        xcb_atom_t selection,
+        xcb_atom_t property,
+        xcb_atom_t target)
+        : connection{connection},
+          source_fd{std::move(source_fd)},
+          time{time},
+          requester{requester},
+          selection{selection},
+          property{property},
+          target{target},
+          buffer_size{increment_chunk_size},
+          data_size{0},
+          buffer{new uint8_t[buffer_size]}
     {
     }
-};
 
-/// Like read(), but calls read() until the end of the file or the buffer fills up
-auto read_repeatedly(mir::Fd const& fd, uint8_t* buffer, size_t size) -> size_t
-{
-    size_t total_len = 0;
-    while (true)
+private:
+
+    auto watch_fd() const -> mir::Fd override
     {
-        auto const remaining = size - total_len;
-        if (remaining <= 0)
-        {
-            break; // buffer full
-        }
-        auto const len = read(fd, buffer + total_len, remaining);
-        if (len < 0)
-        {
-            throw ReadError();
-        }
-        total_len += len;
-        if (len == 0)
-        {
-            break; // end of file
-        }
+        return source_fd;
     }
-    return total_len;
-}
+
+    auto dispatch(md::FdEvents events) -> bool override
+    {
+        if (events & md::FdEvent::error)
+        {
+            notify_cancelled("fd error");
+            return false;
+        }
+
+        if (events & md::FdEvent::readable || events & md::FdEvent::remote_closed)
+        {
+            auto const free_space = buffer_size - data_size;
+            auto const len = read(source_fd, buffer.get() + data_size, free_space);
+            if (len < 0)
+            {
+                // Error reading from fd
+                notify_cancelled(strerror(errno));
+                return false;
+            }
+            data_size += len;
+            if (len == 0)
+            {
+                // EOF, so we send it to the X11 client
+                send_data();
+                return false;
+            }
+            if (data_size == free_space)
+            {
+                // We filled up the buffer. Long buffers need to use incremental transfers, but we don't support that.'
+                notify_cancelled("incremental paste not yet supported");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    auto relevant_events() const -> md::FdEvents override
+    {
+        return md::FdEvent::readable;
+    }
+
+    void send_data()
+    {
+        // Call the XCB function directly instead of using connection->set_property() because target is variable
+        xcb_change_property(
+            *connection,
+            XCB_PROP_MODE_REPLACE,
+            requester,
+            property,
+            target,
+            8, // format
+            data_size,
+            buffer.get());
+        send_selection_notify(*connection, time, requester, property, selection, target);
+        connection->flush();
+    }
+
+    void notify_cancelled(const char* reason) const
+    {
+        mir::log_warning("failed to send clipboard data to X11 client: %s", reason);
+        send_selection_notify(*connection, time, requester, XCB_ATOM_NONE, selection, target);
+        connection->flush();
+    }
+
+    std::shared_ptr<mf::XCBConnection> const connection;
+    mir::Fd const source_fd;
+    xcb_timestamp_t const time;
+    xcb_window_t const requester;
+    xcb_atom_t const selection;
+    xcb_atom_t const property;
+    xcb_atom_t const target;
+    size_t const buffer_size; ///< the size of the allocated memory
+    size_t data_size; ///< how much of the buffer is being used
+    std::unique_ptr<uint8_t[]> const buffer;
+};
 }
 
 class mf::XWaylandClipboardProvider::ClipboardObserver : public scene::ClipboardObserver
@@ -150,7 +251,7 @@ void mf::XWaylandClipboardProvider::selection_request_event(xcb_selection_reques
     {
         // TODO: ignore this? or handle it?
         log_warning("Got non-clipboard selection request event");
-        send_selection_notify(event->time, event->requestor, XCB_ATOM_NONE, event->selection, event->target);
+        send_selection_notify(*connection, event->time, event->requestor, XCB_ATOM_NONE, event->selection, event->target);
     }
     else if (event->target == connection->TARGETS)
     {
@@ -173,7 +274,7 @@ void mf::XWaylandClipboardProvider::selection_request_event(xcb_selection_reques
                 "XWayland selection request event with invalid target %s",
                 connection->query_name(event->target).c_str());
         }
-        send_selection_notify(event->time, event->requestor, XCB_ATOM_NONE, event->selection, event->target);
+        send_selection_notify(*connection, event->time, event->requestor, XCB_ATOM_NONE, event->selection, event->target);
     }
 }
 
@@ -201,7 +302,7 @@ void mf::XWaylandClipboardProvider::send_targets(
     };
 
     connection->set_property<XCBType::ATOM>(requester, property, targets);
-    send_selection_notify(time, requester, property, connection->CLIPBOARD, connection->TARGETS);
+    send_selection_notify(*connection, time, requester, property, connection->CLIPBOARD, connection->TARGETS);
 }
 
 void mf::XWaylandClipboardProvider::send_timestamp(
@@ -218,7 +319,7 @@ void mf::XWaylandClipboardProvider::send_timestamp(
             property,
             static_cast<int32_t>(clipboard_ownership_timestamp));
     }
-    send_selection_notify(time, requester, property, connection->CLIPBOARD, connection->TIMESTAMP);
+    send_selection_notify(*connection, time, requester, property, connection->CLIPBOARD, connection->TIMESTAMP);
 }
 
 void mf::XWaylandClipboardProvider::send_data(
@@ -233,7 +334,7 @@ void mf::XWaylandClipboardProvider::send_data(
     if (pipe2(fds, O_CLOEXEC) != 0)
     {
         log_warning("failed to send clipboard data to X11 client: pipe2 error: %s", strerror(errno));
-        send_selection_notify(time, requester, XCB_ATOM_NONE, connection->CLIPBOARD, target);
+        send_selection_notify(*connection, time, requester, XCB_ATOM_NONE, connection->CLIPBOARD, target);
         return;
     }
 
@@ -244,77 +345,21 @@ void mf::XWaylandClipboardProvider::send_data(
         if (!current_source)
         {
             log_warning("failed to send clipboard data to X11 client: no source");
-            send_selection_notify(time, requester, XCB_ATOM_NONE, connection->CLIPBOARD, target);
+            send_selection_notify(*connection, time, requester, XCB_ATOM_NONE, connection->CLIPBOARD, target);
             return;
         }
         current_source->initiate_send(mime_type, in_fd);
-        in_fd = {}; // important to release ownership of the fd, as we are about to block on it closing
+        in_fd = {}; // release ownership of the fd here
     }
 
-    size_t const data_size = increment_chunk_size;
-    std::unique_ptr<uint8_t[]> const data{new uint8_t[data_size]};
-
-    size_t len;
-    try
-    {
-        len = read_repeatedly(out_fd, data.get(), data_size);
-    }
-    catch (ReadError const& err)
-    {
-        log_warning("failed to send clipboard data to X11 client: failed to read from fd: %s", err.what());
-        send_selection_notify(time, requester, XCB_ATOM_NONE, connection->CLIPBOARD, target);
-        return;
-    }
-
-    if (len < data_size)
-    {
-        // Call the XCB function directly instead of using connection->set_property() because target is variable
-        xcb_change_property(
-            *connection,
-            XCB_PROP_MODE_REPLACE,
-            requester,
-            property,
-            target,
-            8, // format
-            len,
-            data.get());
-        send_selection_notify(time, requester, property, connection->CLIPBOARD, target);
-    }
-    else
-    {
-        log_warning("failed to send clipboard data to X11 client: incremental transfers not yet implemented");
-        send_selection_notify(time, requester, XCB_ATOM_NONE, connection->CLIPBOARD, target);
-        // TODO: remember to flush the connection before reading
-        return;
-    }
-
-    connection->flush();
-}
-
-void mf::XWaylandClipboardProvider::send_selection_notify(
-    xcb_timestamp_t time,
-    xcb_window_t requestor,
-    xcb_atom_t property,
-    xcb_atom_t selection,
-    xcb_atom_t target)
-{
-    xcb_selection_notify_event_t const selection_notify = {
-        XCB_SELECTION_NOTIFY, // response_type
-        0, // pad0
-        0, // sequence
+    dispatcher->add_watch(std::make_shared<SelectionSender>(
+        connection,
+        std::move(out_fd),
         time,
-        requestor,
-        selection,
-        target,
+        requester,
+        connection->CLIPBOARD,
         property,
-    };
-
-    xcb_send_event(
-        *connection,
-        0, // propagate
-        requestor,
-        XCB_EVENT_MASK_NO_EVENT,
-        reinterpret_cast<const char*>(&selection_notify));
+        target));
 }
 
 void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
