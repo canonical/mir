@@ -92,7 +92,7 @@ void mf::WlKeyboard::event(MirKeyboardEvent const* event, WlSurface& surface)
     }
 
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
-    auto const timestamp = WlSeat::timestamp_of(event);
+    auto const timestamp = mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(event));
     int const scancode = mir_keyboard_event_scan_code(event);
     uint32_t const wayland_state = down ? KeyState::pressed : KeyState::released;
     send_key_event(serial, timestamp, scancode, wayland_state);

@@ -50,7 +50,7 @@ mf::WlTouch::~WlTouch()
 
 void mf::WlTouch::event(MirTouchEvent const* event, WlSurface& root_surface)
 {
-    std::chrono::milliseconds timestamp{WlSeat::timestamp_of(event)};
+    std::chrono::milliseconds timestamp{mir_input_event_get_wayland_timestamp(mir_touch_event_input_event(event))};
 
     for (auto i = 0u; i < mir_touch_event_point_count(event); ++i)
     {

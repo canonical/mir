@@ -189,28 +189,6 @@ auto mf::WlSeat::from(struct wl_resource* seat) -> WlSeat*
     return static_cast<mf::WlSeat::Instance*>(wayland::Seat::from(seat))->seat;
 }
 
-auto mf::WlSeat::timestamp_of(MirInputEvent const* event) -> uint32_t
-{
-    auto const ns = std::chrono::nanoseconds{mir_input_event_get_event_time(event)};
-    auto const ms = std::chrono::duration_cast<std::chrono::milliseconds>(ns);
-    return ms.count();
-}
-
-auto mf::WlSeat::timestamp_of(MirKeyboardEvent const* event) -> uint32_t
-{
-    return timestamp_of(mir_keyboard_event_input_event(event));
-}
-
-auto mf::WlSeat::timestamp_of(MirPointerEvent const* event) -> uint32_t
-{
-    return timestamp_of(mir_pointer_event_input_event(event));
-}
-
-auto mf::WlSeat::timestamp_of(MirTouchEvent const* event) -> uint32_t
-{
-    return timestamp_of(mir_touch_event_input_event(event));
-}
-
 void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlPointer*)> func)
 {
     pointer_listeners->for_each(client, func);
