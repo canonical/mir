@@ -148,7 +148,7 @@ mf::XWaylandWM::XWaylandWM(
       wayland_executor{*wm_shell->wayland_executor},
       cursors{std::make_unique<XWaylandCursors>(connection)},
       clipboard_source{std::make_unique<XWaylandClipboardSource>(*connection, dispatcher, wm_shell->clipboard)},
-      clipboard_provider{std::make_unique<XWaylandClipboardProvider>(*connection, dispatcher, wm_shell->clipboard)},
+      clipboard_provider{std::make_unique<XWaylandClipboardProvider>(connection, dispatcher, wm_shell->clipboard)},
       wm_window{create_wm_window(*connection)},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
       client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)},

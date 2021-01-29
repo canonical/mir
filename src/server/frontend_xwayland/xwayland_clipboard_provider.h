@@ -41,7 +41,7 @@ class XWaylandClipboardProvider
 {
 public:
     XWaylandClipboardProvider(
-        XCBConnection& connection,
+        std::shared_ptr<XCBConnection> const& connection,
         std::shared_ptr<dispatch::MultiplexingDispatchable> const& dispatcher,
         std::shared_ptr<scene::Clipboard> const& clipboard);
     ~XWaylandClipboardProvider();
@@ -90,7 +90,7 @@ private:
     /// Called by the observer, indicates the paste source has been set by someone (could be us or Wayland)
     void paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source);
 
-    XCBConnection& connection;
+    std::shared_ptr<XCBConnection> const connection;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     std::shared_ptr<scene::Clipboard> const clipboard;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
