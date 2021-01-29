@@ -56,14 +56,8 @@ void exec_xwayland(
     auto const x11_wm_server = std::to_string(x11_wm_server_fd);
     auto const dsp_str = spawner.x11_display();
 
-    // This DPI doesn't seem to effect much (mostly apps care about GDK_SCALE and other environment variables), but
-    // doen't hurt to set it
-    unsigned dpi = scale * 96;
-    if (dpi > 2000 || dpi < 10)
-    {
-        mir::log_warning("Ignoring probably invalid XWayland DPI %d, using 96 instead", dpi);
-        dpi = 96;
-    }
+    // This DPI only effects some apps (most app care about GDK_SCALE and other environment variables)
+    unsigned const dpi = scale * 96;
     auto const dpi_str = std::to_string(dpi);
 
     std::vector<char const*> args =

@@ -68,11 +68,16 @@ std::shared_ptr<mf::Connector> mir::DefaultServerConfiguration::the_xwayland_con
         {
             try
             {
+                auto const scale = boost::lexical_cast<float>(options->get<std::string>(mo::x11_scale_opt));
+                if (scale < 0.01f || scale > 100.0f)
+                {
+                    BOOST_THROW_EXCEPTION(std::runtime_error("scale outside of valid range"));
+                }
                 auto wayland_connector = std::static_pointer_cast<mf::WaylandConnector>(the_wayland_connector());
                 return std::make_shared<mf::XWaylandConnector>(
                     wayland_connector,
                     options->get<std::string>("xwayland-path"),
-                    boost::lexical_cast<float>(options->get<std::string>(mo::x11_scale_opt)));
+                    scale);
             }
             catch (std::exception& x)
             {
