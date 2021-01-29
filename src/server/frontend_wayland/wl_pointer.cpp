@@ -89,6 +89,11 @@ static auto const button_mapping = {
     std::make_pair(mir_pointer_button_task, BTN_TASK),
     std::make_pair(mir_pointer_button_extra, BTN_EXTRA)
 };
+
+auto timestamp_of(MirPointerEvent const* event) -> uint32_t
+{
+    return mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event));
+}
 }
 
 struct mf::WlPointer::Cursor
@@ -189,8 +194,7 @@ void mf::WlPointer::buttons(MirPointerEvent const* event)
             bool const pressed = (mapping.first & event_buttons);
             auto const state = pressed ? ButtonState::pressed : ButtonState::released;
             auto const serial = wl_display_next_serial(display);
-            auto const timestamp = mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event));
-            send_button_event(serial, timestamp, mapping.second, state);
+            send_button_event(serial, timestamp_of(event), mapping.second, state);
             needs_frame = true;
         }
     }
@@ -202,12 +206,11 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
 {
     auto const h_scroll = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll);
     auto const v_scroll = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll);
-    auto const timestamp = mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event));
 
     if (h_scroll)
     {
         send_axis_event(
-            timestamp,
+            timestamp_of(event),
             Axis::horizontal_scroll,
             h_scroll);
         needs_frame = true;
@@ -216,7 +219,7 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
     if (v_scroll)
     {
         send_axis_event(
-            timestamp,
+            timestamp_of(event),
             Axis::vertical_scroll,
             v_scroll);
         needs_frame = true;
@@ -270,9 +273,8 @@ void mf::WlPointer::enter_or_motion(MirPointerEvent const* event, WlSurface& roo
     }
     else if (!relative_pointer && position_on_target != current_position)
     {
-        auto const timestamp = mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event));
         send_motion_event(
-            timestamp,
+            timestamp_of(event),
             position_on_target.first,
             position_on_target.second);
         current_position = position_on_target;
@@ -291,7 +293,7 @@ void mf::WlPointer::relative_motion(MirPointerEvent const* event)
         mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y));
     if (motion.first || motion.second)
     {
-        auto const timestamp = mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event));
+        auto const timestamp = timestamp_of(event);
         relative_pointer.value().send_relative_motion_event(
             timestamp, timestamp,
             motion.first, motion.second,
