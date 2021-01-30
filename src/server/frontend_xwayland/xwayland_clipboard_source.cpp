@@ -306,6 +306,8 @@ void mf::XWaylandClipboardSource::selection_notify_event(xcb_selection_notify_ev
                 if (reply->type == connection.INCR)
                 {
                     log_error("Incremental copies from X11 are not supported");
+                    std::lock_guard<std::mutex> lock{mutex};
+                    in_progress_send.reset();
                 }
                 else
                 {
