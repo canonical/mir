@@ -19,7 +19,7 @@
 #ifndef MIR_GEOMETRY_POINT_GENERIC_H_
 #define MIR_GEOMETRY_POINT_GENERIC_H_
 
-#include "dimensions_generic.h"
+#include <iostream>
 
 namespace mir
 {
@@ -32,10 +32,15 @@ struct PointBase{}; ///< Used for determining if a type is a point
 namespace generic
 {
 template<template<typename> typename T>
+struct Size;
+
+template<template<typename> typename T>
 struct Point : detail::PointBase
 {
     template<typename Tag>
     using WrapperType = T<Tag>;
+
+    using SizeType = Size<T>;
 
     constexpr Point() = default;
     constexpr Point(Point const&) = default;

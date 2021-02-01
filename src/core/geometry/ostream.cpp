@@ -31,12 +31,6 @@ std::ostream& geom::operator<<(std::ostream& out, Displacement const& value)
     return out;
 }
 
-std::ostream& geom::operator<<(std::ostream& out, Size const& value)
-{
-    out << '(' << value.width << ", " << value.height << ')';
-    return out;
-}
-
 std::ostream& geom::operator<<(std::ostream& out, Rectangle const& value)
 {
     out << '(' << value.top_left << ", " << value.size << ')';

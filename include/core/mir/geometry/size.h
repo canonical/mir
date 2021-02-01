@@ -20,66 +20,19 @@
 #define MIR_GEOMETRY_SIZE_H_
 
 #include "mir/geometry/dimensions.h"
+#include "size_generic.h"
 #include "point.h"
-#include <iosfwd>
 
 namespace mir
 {
 namespace geometry
 {
-
-struct Size
+struct Point;
+struct Size : generic::Size<detail::IntWrapper>
 {
-    constexpr Size() noexcept {}
-    constexpr Size(Size const&) noexcept = default;
-    Size& operator=(Size const&) noexcept = default;
-
-    template<typename WidthType, typename HeightType>
-    constexpr Size(WidthType&& width, HeightType&& height) noexcept : width(width), height(height) {}
-
-    Width width;
-    Height height;
+    using PointType = Point;
+    using generic::Size<detail::IntWrapper>::Size;
 };
-
-inline constexpr bool operator == (Size const& lhs, Size const& rhs)
-{
-    return lhs.width == rhs.width && lhs.height == rhs.height;
-}
-
-inline constexpr bool operator != (Size const& lhs, Size const& rhs)
-{
-    return lhs.width != rhs.width || lhs.height != rhs.height;
-}
-
-std::ostream& operator<<(std::ostream& out, Size const& value);
-
-template<typename Scalar>
-inline constexpr Size operator*(Scalar scale, Size const& size)
-{
-    return Size{scale*size.width, scale*size.height};
-}
-
-template<typename Scalar>
-inline constexpr Size operator*(Size const& size, Scalar scale)
-{
-    return scale*size;
-}
-
-template<typename Scalar>
-inline constexpr Size operator/(Size const& size, Scalar scale)
-{
-    return Size{size.width / scale, size.height / scale};
-}
-
-inline constexpr Size as_size(Point const& point)
-{
-    return Size{point.x.as_int(), point.y.as_int()};
-}
-
-inline constexpr Point as_point(Size const& size)
-{
-    return Point{size.width.as_int(), size.height.as_int()};
-}
 }
 }
 

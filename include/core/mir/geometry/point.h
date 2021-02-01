@@ -21,22 +21,16 @@
 
 #include "dimensions.h"
 #include "point_generic.h"
-#include <iosfwd>
 
 namespace mir
 {
 namespace geometry
 {
+struct Size;
 struct Point : generic::Point<detail::IntWrapper>
 {
-    template<typename Tag>
-    using WrapperType = detail::IntWrapper<Tag>;
-
+    using SizeType = Size;
     using generic::Point<detail::IntWrapper>::Point;
-
-    constexpr Point() = default;
-    constexpr Point(Point const&) = default;
-    Point& operator=(Point const&) = default;
 };
 }
 }
