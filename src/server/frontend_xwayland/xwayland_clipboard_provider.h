@@ -30,6 +30,10 @@ namespace scene
 class Clipboard;
 class ClipboardSource;
 }
+namespace dispatch
+{
+class MultiplexingDispatchable;
+}
 namespace frontend
 {
 /// Exposes non-X11 selections to X11 clients
@@ -37,7 +41,8 @@ class XWaylandClipboardProvider
 {
 public:
     XWaylandClipboardProvider(
-        XCBConnection& connection,
+        std::shared_ptr<XCBConnection> const& connection,
+        std::shared_ptr<dispatch::MultiplexingDispatchable> const& dispatcher,
         std::shared_ptr<scene::Clipboard> const& clipboard);
     ~XWaylandClipboardProvider();
 
@@ -74,18 +79,11 @@ private:
         xcb_atom_t target,
         std::string const& mime_type);
 
-    /// Notify the client that the property is ready
-    void send_selection_notify(
-        xcb_timestamp_t time,
-        xcb_window_t requestor,
-        xcb_atom_t property,
-        xcb_atom_t selection,
-        xcb_atom_t target);
-
     /// Called by the observer, indicates the paste source has been set by someone (could be us or Wayland)
     void paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source);
 
-    XCBConnection& connection;
+    std::shared_ptr<XCBConnection> const connection;
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     std::shared_ptr<scene::Clipboard> const clipboard;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
     xcb_window_t const selection_window;

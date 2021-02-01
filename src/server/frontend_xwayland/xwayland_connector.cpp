@@ -142,14 +142,15 @@ void mf::XWaylandConnector::spawn()
     {
         auto const wayland_socket_pair = XWaylandServer::make_socket_pair();
         auto const x11_socket_pair = XWaylandServer::make_socket_pair();
-        auto const wm_dispatcher = std::make_shared<md::ReadableFd>(x11_socket_pair.first, [this]()
+        auto const wm_dispatcher = std::make_shared<md::MultiplexingDispatchable>();
+        wm_dispatcher->add_watch(std::make_shared<md::ReadableFd>(x11_socket_pair.first, [this]()
             {
                 std::lock_guard<std::mutex> lock{mutex};
                 if (wm)
                 {
                     wm->handle_events();
                 }
-            });
+            }));
         wm_event_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
             "Mir/X11 WM Reader",
             wm_dispatcher,
@@ -189,6 +190,7 @@ void mf::XWaylandConnector::spawn()
             wayland_connector,
             server->client(),
             x11_socket_pair.first,
+            wm_dispatcher,
             scale);
         mir::log_info("XWayland is running");
     }

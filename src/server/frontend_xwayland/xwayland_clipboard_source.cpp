@@ -20,6 +20,7 @@
 
 #include "xwayland_log.h"
 #include "mir/scene/clipboard.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
 
 #include <xcb/xfixes.h>
 #include <string.h>
@@ -29,6 +30,7 @@
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
+namespace md = mir::dispatch;
 
 namespace
 {
@@ -56,30 +58,6 @@ auto create_receiving_window(mf::XCBConnection const& connection) -> xcb_window_
     xcb_xfixes_select_selection_input(connection, receiving_window, connection.CLIPBOARD, mask);
 
     return receiving_window;
-}
-
-class WriteError : public std::runtime_error
-{
-public:
-    WriteError() : runtime_error{strerror(errno)}
-    {
-    }
-};
-
-/// Like write(), but calls write() until the whole buffer has been written
-void write_repeatedly(mir::Fd const& fd, uint8_t const* buffer, size_t size)
-{
-    auto remaining = size;
-    while (remaining > 0)
-    {
-        auto len = write(fd, buffer, remaining);
-        if (len < 0)
-        {
-            throw WriteError();
-        }
-        buffer += len;
-        remaining -= len;
-    }
 }
 
 auto map2vec(std::map<std::string, xcb_atom_t> const& map) -> std::vector<std::string>
@@ -140,10 +118,82 @@ private:
     XWaylandClipboardSource* owner; ///< Can be null
 };
 
+class mf::XWaylandClipboardSource::DataSender : public md::Dispatchable
+{
+public:
+    DataSender(mir::Fd const& destination_fd)
+        : destination_fd{destination_fd}
+    {
+    }
+
+    /// Returns if the previous buffer was empty. If return value is true, this needs to be added to the dispatcher.
+    auto add_data(std::vector<uint8_t>&& new_data) -> bool {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (data.empty())
+        {
+            data = std::move(new_data);
+            return true;
+        }
+        else
+        {
+            data.insert(data.end(), new_data.begin(), new_data.end());
+            return false;
+        }
+    }
+
+private:
+    auto watch_fd() const -> mir::Fd override
+    {
+        return destination_fd;
+    }
+
+    auto dispatch(md::FdEvents events) -> bool override
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+
+        if (events & md::FdEvent::error)
+        {
+            mir::log_error("failed to send X11 clipboard data: fd error");
+            return false;
+        }
+
+        if (events & md::FdEvent::remote_closed)
+        {
+            mir::log_error("failed to send X11 clipboard data: fd closed");
+            return false;
+        }
+
+        if (events & md::FdEvent::writable)
+        {
+            auto const len = write(destination_fd, &data[0], data.size());
+            if (len < 0)
+            {
+                mir::log_error("failed to send X11 clipboard data: %s", strerror(errno));
+                return false;
+            }
+            data.erase(data.begin(), data.begin() + len);
+        }
+
+        return !data.empty();
+    }
+
+    auto relevant_events() const -> md::FdEvents override
+    {
+        return md::FdEvent::writable;
+    }
+
+    mir::Fd const destination_fd;
+
+    std::mutex mutex;
+    std::vector<uint8_t> data;
+};
+
 mf::XWaylandClipboardSource::XWaylandClipboardSource(
     XCBConnection& connection,
+    std::shared_ptr<md::MultiplexingDispatchable> const& dispatcher,
     std::shared_ptr<scene::Clipboard> const& clipboard)
     : connection{connection},
+      dispatcher{dispatcher},
       clipboard{clipboard},
       receiving_window{create_receiving_window(connection)}
 {
@@ -183,12 +233,12 @@ mf::XWaylandClipboardSource::~XWaylandClipboardSource()
 void mf::XWaylandClipboardSource::initiate_send(xcb_atom_t target_type, Fd const& receiver_fd)
 {
     std::unique_lock<std::mutex> lock{mutex};
-    if (pending_send_fd)
+    if (in_progress_send)
     {
         log_error("can not send clipboard data from X11 because another send is currently in progress");
         return;
     }
-    pending_send_fd = receiver_fd;
+    in_progress_send = std::make_shared<DataSender>(receiver_fd);
     lock.unlock();
 
     if (verbose_xwayland_logging_enabled())
@@ -256,19 +306,22 @@ void mf::XWaylandClipboardSource::selection_notify_event(xcb_selection_notify_ev
                 if (reply->type == connection.INCR)
                 {
                     log_error("Incremental copies from X11 are not supported");
+                    std::lock_guard<std::mutex> lock{mutex};
+                    in_progress_send.reset();
                 }
                 else
                 {
-                    send_data_to_fd(
-                        static_cast<uint8_t*>(xcb_get_property_value(reply)),
-                        xcb_get_property_value_length(reply));
+                    auto const data_ptr = static_cast<uint8_t*>(xcb_get_property_value(reply));
+                    auto const data_size = xcb_get_property_value_length(reply);
+                    std::vector<uint8_t> data{data_ptr, data_ptr + data_size};
+                    add_data_to_in_progress_send(std::move(data), true);
                 }
             },
             [&](const std::string& error_message)
             {
                 log_error("Error getting selection property: %s", error_message.c_str());
                 std::lock_guard<std::mutex> lock{mutex};
-                pending_send_fd.reset();
+                in_progress_send.reset();
             }});
 
         completion();
@@ -359,35 +412,29 @@ void mf::XWaylandClipboardSource::create_source(xcb_timestamp_t timestamp, std::
     clipboard->set_paste_source(source);
 }
 
-void mf::XWaylandClipboardSource::send_data_to_fd(uint8_t const* data, size_t size)
+void mf::XWaylandClipboardSource::add_data_to_in_progress_send(std::vector<uint8_t>&& data, bool completes_send)
 {
-    std::unique_lock<std::mutex> lock{mutex};
-    if (!pending_send_fd)
+    std::lock_guard<std::mutex> lock{mutex};
+
+    if (!in_progress_send)
     {
         log_error("Can not send clipboard data from X11 because pending_send_fd is not set");
         return;
     }
-    auto const fd = pending_send_fd.value();
-    lock.unlock();
 
     if (verbose_xwayland_logging_enabled())
     {
-        log_info("Writing clipboard data from X11");
+        log_info("Writing %zu bytes of clipboard data from X11", data.size());
     }
 
-    try
+    if (in_progress_send->add_data(std::move(data)))
     {
-        write_repeatedly(fd, data, size);
-    }
-    catch (WriteError const& err)
-    {
-        log_error("Failed to write X11 clipboard data to fd: %s", err.what());
-        // Continue to clear the fd either way
+        dispatcher->add_watch(in_progress_send);
     }
 
-    lock.lock();
-    if (pending_send_fd && pending_send_fd.value() == fd)
+    if (completes_send)
     {
-        pending_send_fd.reset();
+        // The dispatcher will hold onto it until it's done
+        in_progress_send.reset();
     }
 }

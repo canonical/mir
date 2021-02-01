@@ -40,6 +40,10 @@ namespace scene
 using SurfaceSet = std::set<std::weak_ptr<Surface>, std::owner_less<std::weak_ptr<Surface>>>;
 class Surface;
 }
+namespace dispatch
+{
+class MultiplexingDispatchable;
+}
 namespace frontend
 {
 class XWaylandSurface;
@@ -62,6 +66,7 @@ public:
         std::shared_ptr<WaylandConnector> wayland_connector,
         wl_client* wayland_client,
         Fd const& fd,
+        std::shared_ptr<dispatch::MultiplexingDispatchable> const& dispatcher,
         float assumed_surface_scale);
     ~XWaylandWM();
 

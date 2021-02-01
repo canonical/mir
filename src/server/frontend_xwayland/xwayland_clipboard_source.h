@@ -30,6 +30,10 @@ namespace scene
 class Clipboard;
 class ClipboardSource;
 }
+namespace dispatch
+{
+class MultiplexingDispatchable;
+}
 namespace frontend
 {
 /// Exposes X11 selections to non-X11 clients
@@ -38,6 +42,7 @@ class XWaylandClipboardSource
 public:
     XWaylandClipboardSource(
         XCBConnection& connection,
+        std::shared_ptr<dispatch::MultiplexingDispatchable> const& dispatcher,
         std::shared_ptr<scene::Clipboard> const& clipboard);
     ~XWaylandClipboardSource();
 
@@ -57,6 +62,7 @@ public:
 
 private:
     class ClipboardSource;
+    class DataSender;
 
     XWaylandClipboardSource(XWaylandClipboardSource const&) = delete;
     XWaylandClipboardSource& operator=(XWaylandClipboardSource const&) = delete;
@@ -66,9 +72,10 @@ private:
     void create_source(xcb_timestamp_t timestamp, std::vector<xcb_atom_t> const& targets);
 
     /// Sends the given data to the current destination fd and then closes and removes the fd
-    void send_data_to_fd(uint8_t const* data, size_t size);
+    void add_data_to_in_progress_send(std::vector<uint8_t>&& data, bool completes_send);
 
     XCBConnection& connection;
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
     std::shared_ptr<scene::Clipboard> const clipboard;
     xcb_window_t const receiving_window;
 
@@ -76,7 +83,7 @@ private:
     xcb_window_t current_clipbaord_owner{XCB_WINDOW_NONE};
     xcb_timestamp_t clipboard_ownership_timestamp{0};
     std::shared_ptr<ClipboardSource> clipboard_source;
-    std::optional<Fd> pending_send_fd;
+    std::shared_ptr<DataSender> in_progress_send;
 };
 }
 }
