@@ -60,6 +60,8 @@ using namespace std::literals::chrono_literals;
 
 namespace
 {
+auto const preview_timeout = 60;
+
 mtd::StubDisplayConfig stub_display_config;
 
 mtd::StubDisplayConfig changed_stub_display_config{1};
@@ -936,7 +938,7 @@ TEST_F(DisplayConfigurationTest, client_can_set_scale_factor)
         &new_display_config_matches,
         &context);
 
-    mir_connection_preview_base_display_configuration(client.connection, client_config.get(), 10);
+    mir_connection_preview_base_display_configuration(client.connection, client_config.get(), preview_timeout);
 
     EXPECT_TRUE(context.done.wait_for(60s));
 
@@ -983,7 +985,7 @@ TEST_F(DisplayConfigurationTest, client_can_set_logical_size)
         &context);
 
     mir_connection_preview_base_display_configuration(client.connection,
-                                                      client_config.get(), 10);
+                                                      client_config.get(), preview_timeout);
 
     EXPECT_TRUE(context.done.wait_for(std::chrono::seconds(30)));
 
@@ -1159,7 +1161,7 @@ TEST_F(DisplayConfigurationTest, client_can_set_gamma)
         &new_display_config_matches,
         &context);
 
-    mir_connection_preview_base_display_configuration(client.connection, client_config.get(), 10);
+    mir_connection_preview_base_display_configuration(client.connection, client_config.get(), preview_timeout);
 
     EXPECT_TRUE(context.done.wait_for(60s));
 
@@ -1451,7 +1453,7 @@ TEST_F(DisplayConfigurationTest, preview_base_display_configuration_sends_config
         &new_display_config_matches,
         &context);
 
-    mir_connection_preview_base_display_configuration(client.connection, config.get(), 5);
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), preview_timeout);
 
     EXPECT_TRUE(context.done.wait_for(60s));
 
@@ -1566,7 +1568,7 @@ TEST_F(DisplayConfigurationTest, display_configuration_sticks_after_confirmation
         &new_display_config_matches,
         &context);
 
-    mir_connection_preview_base_display_configuration(client.connection, new_config.get(), 10);
+    mir_connection_preview_base_display_configuration(client.connection, new_config.get(), preview_timeout);
 
     EXPECT_TRUE(context.done.wait_for(60s));
 
@@ -1611,7 +1613,7 @@ TEST_F(DisplayConfigurationTest, unauthorised_client_receives_error)
         };
     mir_connection_set_error_callback(client.connection, &validating_error_handler, &validator);
 
-    mir_connection_preview_base_display_configuration(client.connection, config.get(), 20);
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), preview_timeout);
 
     EXPECT_TRUE(validator.received.wait_for(60s));
 
@@ -1676,8 +1678,8 @@ TEST_F(DisplayConfigurationTest, receives_error_when_display_configuration_alrea
     };
     mir_connection_set_error_callback(client.connection, &validating_error_handler, &validator);
 
-    mir_connection_preview_base_display_configuration(client.connection, config.get(), 20);
-    mir_connection_preview_base_display_configuration(client.connection, config.get(), 20);
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), preview_timeout);
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), preview_timeout);
 
     EXPECT_TRUE(validator.received.wait_for(60s));
 
@@ -1719,7 +1721,7 @@ TEST_F(DisplayConfigurationTest, can_cancel_base_display_configuration_preview)
         &expectation);
 
     expectation.configuration = new_config.get();
-    mir_connection_preview_base_display_configuration(client.connection, new_config.get(), 20);
+    mir_connection_preview_base_display_configuration(client.connection, new_config.get(), preview_timeout);
 
     EXPECT_TRUE(expectation.satisfied.wait_for(60s));
     expectation.satisfied.reset();
@@ -1754,7 +1756,7 @@ TEST_F(DisplayConfigurationTest, cancel_receives_error_when_no_preview_pending)
 
     validator.received.reset();
 
-    mir_connection_preview_base_display_configuration(client.connection, config.get(), 20);
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), preview_timeout);
     mir_connection_confirm_base_display_configuration(client.connection, config.get());
 
     mir_connection_cancel_base_display_configuration_preview(client.connection);
@@ -1805,7 +1807,7 @@ TEST_F(DisplayConfigurationTest, client_receives_exactly_one_configuration_event
     expectation.configuration = new_config.get();
 
     auto timeout_time = std::chrono::steady_clock::now() + 2s;
-    mir_connection_preview_base_display_configuration(client.connection, new_config.get(), 2);
+    mir_connection_preview_base_display_configuration(client.connection, new_config.get(), preview_timeout);
 
     EXPECT_TRUE(expectation.satisfied.wait_for(60s));
     expectation.satisfied.reset();
@@ -1859,7 +1861,7 @@ TEST_F(DisplayConfigurationTest, cancel_doesnt_affect_other_clients_configuratio
         &expectation);
 
     expectation.configuration = new_config.get();
-    mir_connection_preview_base_display_configuration(configuring_client.connection, new_config.get(), 20);
+    mir_connection_preview_base_display_configuration(configuring_client.connection, new_config.get(), preview_timeout);
 
     EXPECT_TRUE(expectation.satisfied.wait_for(60s));
     expectation.satisfied.reset();
@@ -1920,7 +1922,7 @@ TEST_F(DisplayConfigurationTest, error_in_configure_when_previewing_propagates_t
     auto config = client.get_base_config();
     mir_output_set_position(mir_display_config_get_mutable_output(config.get(), 0), 88, 42);
 
-    mir_connection_preview_base_display_configuration(client.connection, config.get(), 100);
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), preview_timeout);
 
     EXPECT_TRUE(error_received.wait_for(60s));
 
