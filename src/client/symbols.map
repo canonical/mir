@@ -495,6 +495,8 @@ MIR_CLIENT_DETAIL_2.0 {
     mir_presentation_chain_set_queueing_mode;
     mir_presentation_chain_set_dropping_mode;
 
+    mir_input_event_get_wayland_timestamp;
+
     extern "C++" {
       mir::events::make_event*;
       mir::events::add_touch*;

@@ -54,6 +54,14 @@ MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* event);
 int64_t mir_input_event_get_event_time(MirInputEvent const* event);
 
 /**
+ * Retrieve the event time as a Wayland timestamp.
+ *
+ * \param [in] event The input event
+ * \return           A wayland-compatible timestamp (miliseconds-since-epoch)
+ */
+uint32_t mir_input_event_get_wayland_timestamp(MirInputEvent const* event);
+
+/**
  * Retrieve the type of an input event. E.g. key, touch...
  *
  * \param [in] event The input event
