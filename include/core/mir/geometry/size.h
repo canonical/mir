@@ -19,18 +19,19 @@
 #ifndef MIR_GEOMETRY_SIZE_H_
 #define MIR_GEOMETRY_SIZE_H_
 
-#include "mir/geometry/dimensions.h"
 #include "size_generic.h"
-#include "point.h"
+#include "dimensions.h"
 
 namespace mir
 {
 namespace geometry
 {
 struct Point;
+struct Displacement;
 struct Size : generic::Size<detail::IntWrapper>
 {
     using PointType = Point;
+    using DisplacementType = Displacement;
     using generic::Size<detail::IntWrapper>::Size;
 };
 }

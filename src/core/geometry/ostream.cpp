@@ -25,12 +25,6 @@
 
 namespace geom = mir::geometry;
 
-std::ostream& geom::operator<<(std::ostream& out, Displacement const& value)
-{
-    out << '(' << value.dx << ", " << value.dy << ')';
-    return out;
-}
-
 std::ostream& geom::operator<<(std::ostream& out, Rectangle const& value)
 {
     out << '(' << value.top_left << ", " << value.size << ')';

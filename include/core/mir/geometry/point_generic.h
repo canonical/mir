@@ -19,6 +19,7 @@
 #ifndef MIR_GEOMETRY_POINT_GENERIC_H_
 #define MIR_GEOMETRY_POINT_GENERIC_H_
 
+#include "dimensions_generic.h"
 #include <iostream>
 
 namespace mir
@@ -33,6 +34,8 @@ namespace generic
 {
 template<template<typename> typename T>
 struct Size;
+template<template<typename> typename T>
+struct Displacement;
 
 template<template<typename> typename T>
 struct Point : detail::PointBase
@@ -41,6 +44,7 @@ struct Point : detail::PointBase
     using WrapperType = T<Tag>;
 
     using SizeType = Size<T>;
+    using DisplacementType = Displacement<T>;
 
     constexpr Point() = default;
     constexpr Point(Point const&) = default;

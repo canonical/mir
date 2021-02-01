@@ -19,6 +19,7 @@
 #ifndef MIR_GEOMETRY_SIZE_GENERIC_H_
 #define MIR_GEOMETRY_SIZE_GENERIC_H_
 
+#include "dimensions_generic.h"
 #include <iostream>
 
 namespace mir
@@ -34,6 +35,8 @@ namespace generic
 {
 template<template<typename> typename T>
 struct Point;
+template<template<typename> typename T>
+struct Displacement;
 
 template<template<typename> typename T>
 struct Size : detail::SizeBase
@@ -42,6 +45,7 @@ struct Size : detail::SizeBase
     using WrapperType = T<Tag>;
 
     using PointType = Point<T>;
+    using DisplacementType = Displacement<T>;
 
     constexpr Size() noexcept {}
     constexpr Size(Size const&) noexcept = default;
