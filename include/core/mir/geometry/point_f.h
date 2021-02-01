@@ -21,7 +21,6 @@
 
 #include "dimensions_f.h"
 #include "point_generic.h"
-#include <iosfwd>
 
 namespace mir
 {

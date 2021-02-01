@@ -20,68 +20,25 @@
 #ifndef MIR_GEOMETRY_RECTANGLE_H_
 #define MIR_GEOMETRY_RECTANGLE_H_
 
-#include "mir/geometry/point.h"
+#include "rectangle_generic.h"
+#include "point.h"
 #include "size.h"
-
-#include <iosfwd>
+#include "displacement.h"
 
 namespace mir
 {
 namespace geometry
 {
 
-struct Rectangle
+struct Rectangle : generic::Rectangle<Point, Size>
 {
-    constexpr Rectangle() = default;
+    using generic::Rectangle<Point, Size>::Rectangle;
 
-    constexpr Rectangle(Point const& top_left, Size const& size)
-        : top_left{top_left}, size{size}
+    Rectangle intersection_with(Rectangle const& r) const
     {
+        return intersection_of(*this, r);
     }
-
-    Point top_left;
-    Size size;
-
-    /**
-     * The bottom right boundary point of the rectangle.
-     *
-     * Note that the returned point is *not* included in the rectangle
-     * area, that is, the rectangle is represented as [top_left,bottom_right).
-     */
-    Point bottom_right() const;
-    Point top_right() const;
-    Point bottom_left() const;
-    bool contains(Point const& p) const;
-
-    /**
-     * Test if the rectangle contains another.
-     *
-     * Note that an empty rectangle can still contain other empty rectangles,
-     * which are treated as points or lines of thickness zero.
-     */
-    bool contains(Rectangle const& r) const;
-
-    bool overlaps(Rectangle const& r) const;
-
-    Rectangle intersection_with(Rectangle const& r) const;
-
-    X left() const   { return top_left.x; }
-    X right() const  { return bottom_right().x; }
-    Y top() const    { return top_left.y; } 
-    Y bottom() const { return bottom_right().y; }
 };
-
-inline constexpr bool operator == (Rectangle const& lhs, Rectangle const& rhs)
-{
-    return lhs.top_left == rhs.top_left && lhs.size == rhs.size;
-}
-
-inline constexpr bool operator != (Rectangle const& lhs, Rectangle const& rhs)
-{
-    return lhs.top_left != rhs.top_left || lhs.size != rhs.size;
-}
-
-std::ostream& operator<<(std::ostream& out, Rectangle const& value);
 }
 }
 

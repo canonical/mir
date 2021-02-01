@@ -8,9 +8,7 @@ add_library(mircore SHARED
     fatal.cpp
     fd.cpp
     depth_layer.cpp
-    geometry/rectangle.cpp
     geometry/rectangles.cpp
-    geometry/ostream.cpp
     ${PROJECT_SOURCE_DIR}/include/core/mir/anonymous_shm_file.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/int_wrapper.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/optional_value.h

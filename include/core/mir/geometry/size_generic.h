@@ -20,7 +20,7 @@
 #define MIR_GEOMETRY_SIZE_GENERIC_H_
 
 #include "dimensions_generic.h"
-#include <iostream>
+#include <ostream>
 
 namespace mir
 {
