@@ -38,19 +38,9 @@ public:
     template<typename OtherTag>
     using WrapperType = IntWrapper<OtherTag>;
 
+    using generic::Value<int>::Wrapper<Tag>::Wrapper;
+
     constexpr IntWrapper() {}
-
-    template<typename U>
-    constexpr IntWrapper(typename generic::Value<U>::template Wrapper<Tag> const& value)
-        : generic::Value<int>::Wrapper<Tag>{value}
-    {
-    }
-
-    template<typename U>
-    explicit constexpr IntWrapper(U const& value)
-        : generic::Value<int>::Wrapper<Tag>{value}
-    {
-    }
 
     constexpr uint32_t as_uint32_t() const  // TODO: Deprecate this later
     {
