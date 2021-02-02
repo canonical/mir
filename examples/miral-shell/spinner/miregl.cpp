@@ -92,11 +92,12 @@ public:
     ~MirEglApp();
 
     struct wl_display* const display;
-    struct wl_compositor* compositor;
-    struct wl_shm* shm;
-    struct wl_seat* seat;
-    std::vector<wl_output*> outputs;
-    struct wl_shell* shell;
+    std::unique_ptr<wl_registry, void(*)(wl_registry*)> registry{nullptr, [](auto){}};
+    std::unique_ptr<wl_compositor, void(*)(wl_compositor*)> compositor{nullptr, [](auto){}};
+    std::unique_ptr<wl_shm, void(*)(wl_shm*)> shm{nullptr, [](auto){}};
+    std::unique_ptr<wl_seat, void(*)(wl_seat*)> seat{nullptr, [](auto){}};
+    std::vector<std::unique_ptr<wl_output, void(*)(wl_output*)>> outputs;
+    std::unique_ptr<wl_shell, void(*)(wl_shell*)> shell{nullptr, [](auto){}};
 
 private:
     friend void new_global(
@@ -113,8 +114,9 @@ private:
     EGLSurface dummy_surface;
 };
 
-static void output_geometry(void *data,
-    struct wl_output *wl_output,
+static void output_geometry(
+    void* /*data*/,
+    struct wl_output* /*wl_output*/,
     int32_t /*x*/,
     int32_t /*y*/,
     int32_t /*physical_width*/,
@@ -124,26 +126,21 @@ static void output_geometry(void *data,
     const char */*model*/,
     int32_t /*transform*/)
 {
-    struct MirEglApp* app = static_cast<decltype(app)>(data);
-
-    if (std::find(app->outputs.begin(), app->outputs.end(), wl_output) == app->outputs.end())
-        app->outputs.push_back({wl_output});
+    // struct MirEglApp* app = static_cast<decltype(app)>(data);
 }
 
-static void output_mode(void *data,
-    struct wl_output *wl_output,
-    uint32_t flags,
+static void output_mode(
+    void* /*data*/,
+    struct wl_output* /*wl_output*/,
+    uint32_t /*flags*/,
     int32_t /*width*/,
     int32_t /*height*/,
     int32_t /*refresh*/)
 {
-    if (!(WL_OUTPUT_MODE_CURRENT & flags))
-        return;
+    // if (!(WL_OUTPUT_MODE_CURRENT & flags))
+    //     return;
 
-    struct MirEglApp* app = static_cast<decltype(app)>(data);
-
-    if (std::find(app->outputs.begin(), app->outputs.end(), wl_output) == app->outputs.end())
-        app->outputs.push_back({wl_output});
+    //struct MirEglApp* app = static_cast<decltype(app)>(data);
 }
 
 static void new_global(
@@ -158,27 +155,29 @@ static void new_global(
 
     if (strcmp(interface, "wl_compositor") == 0)
     {
-        app->compositor = static_cast<decltype(app->compositor)>(wl_registry_bind(registry, id, &wl_compositor_interface, 3));
+        app->compositor = {
+            static_cast<wl_compositor*>(wl_registry_bind(registry, id, &wl_compositor_interface, 3)),
+            wl_compositor_destroy};
     }
     else if (strcmp(interface, "wl_shm") == 0)
     {
-        app->shm = static_cast<decltype(app->shm)>(wl_registry_bind(registry, id, &wl_shm_interface, 1));
+        app->shm = {static_cast<wl_shm*>(wl_registry_bind(registry, id, &wl_shm_interface, 1)), wl_shm_destroy};
         // Normally we'd add a listener to pick up the supported formats here
         // As luck would have it, I know that argb8888 is the only format we support :)
     }
     else if (strcmp(interface, "wl_seat") == 0)
     {
-        app->seat = static_cast<decltype(app->seat)>(wl_registry_bind(registry, id, &wl_seat_interface, 4));
+        app->seat = {static_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, 4)), wl_seat_destroy};
     }
     else if (strcmp(interface, "wl_output") == 0)
     {
         wl_output* output = static_cast<decltype(output)>(wl_registry_bind(registry, id, &wl_output_interface, 2));
 
-        app->outputs.push_back(output);
+        app->outputs.push_back({output, wl_output_destroy});
     }
     else if (strcmp(interface, "wl_shell") == 0)
     {
-        app->shell = static_cast<decltype(app->shell)>(wl_registry_bind(registry, id, &wl_shell_interface, 1));
+        app->shell = {static_cast<wl_shell*>(wl_registry_bind(registry, id, &wl_shell_interface, 1)), wl_shell_destroy};
     }
 }
 
@@ -193,7 +192,7 @@ std::vector<std::shared_ptr<MirEglSurface>> mir_surface_init(std::shared_ptr<Mir
 
     for (auto const& output : mir_egl_app->outputs)
     {
-        result.push_back(std::make_shared<MirEglSurface>(mir_egl_app, output));
+        result.push_back(std::make_shared<MirEglSurface>(mir_egl_app, output.get()));
     }
 
     return result;
@@ -211,8 +210,8 @@ MirEglSurface::MirEglSurface(
     };
 
     display = mir_egl_app->display;
-    surface = wl_compositor_create_surface(mir_egl_app->compositor);
-    window = wl_shell_get_shell_surface(mir_egl_app->shell, surface);
+    surface = wl_compositor_create_surface(mir_egl_app->compositor.get());
+    window = wl_shell_get_shell_surface(mir_egl_app->shell.get(), surface);
     wl_shell_surface_add_listener(window, &shell_surface_listener, this);
     wl_shell_surface_set_fullscreen(window, WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, wl_output);
     wl_surface_commit(surface);
@@ -279,7 +278,8 @@ MirEglApp::MirEglApp(struct wl_display* display) :
         global_remove
     };
 
-    wl_registry_add_listener(wl_display_get_registry(display), &registry_listener, this);
+    registry = {wl_display_get_registry(display), &wl_registry_destroy};
+    wl_registry_add_listener(registry.get(), &registry_listener, this);
     wl_display_roundtrip(display);
 
     static struct wl_output_listener const output_listener = {
@@ -289,8 +289,8 @@ MirEglApp::MirEglApp(struct wl_display* display) :
         &output_scale,
     };
 
-    for (auto const output : outputs)
-        wl_output_add_listener(output, &output_listener, this);
+    for (auto const& output : outputs)
+        wl_output_add_listener(output.get(), &output_listener, this);
 
     wl_display_roundtrip(display);
 

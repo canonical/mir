@@ -301,19 +301,19 @@ private:
     void on_output_changed(Output const* output);
     void on_output_gone(Output const*);
 
-    wl_display* display = nullptr;
+    wl_display* const display;
     Globals globals;
     Outputs outputs;
 };
 
 DecorationProviderClient::DecorationProviderClient(wl_display* display) :
+    display{display},
     globals{
         [this](Output const& output) { on_new_output(&output); },
         [this](Output const& output) { on_output_changed(&output); },
         [this](Output const& output) { on_output_gone(&output); }
     }
 {
-    this->display = display;
     globals.init(display);
 }
 
@@ -366,6 +366,7 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
     if (ctx.buffer)
     {
         wl_buffer_destroy(ctx.buffer);
+        ctx.buffer = nullptr;
     }
 
     auto const width = ctx.buffer_size().width.as_int();
