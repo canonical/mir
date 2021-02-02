@@ -116,12 +116,11 @@ private:
 
         auto configuration() const -> graphics::DisplayConfigurationOutput const& override { return *config; }
 
-        std::unique_ptr<X11Window> window;
-        std::unique_ptr<DisplayBuffer> display_buffer;
-        std::shared_ptr<DisplayConfigurationOutput> config;
+        std::unique_ptr<X11Window> const window;
+        std::unique_ptr<DisplayBuffer> const display_buffer;
+        std::shared_ptr<DisplayConfigurationOutput> const config;
     };
 
-    std::vector<std::unique_ptr<OutputInfo>> outputs;
     helpers::EGLHelper const shared_egl;
     ::Display* const x_dpy;
     std::shared_ptr<GLConfig> const gl_config;
@@ -129,6 +128,9 @@ private:
     float const pixel_height;
     std::shared_ptr<DisplayReport> const report;
     std::shared_ptr<AtomicFrame> const last_frame;
+
+    std::mutex mutable mutex;
+    std::vector<std::unique_ptr<OutputInfo>> outputs;
 };
 
 }
