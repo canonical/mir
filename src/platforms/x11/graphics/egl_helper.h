@@ -40,18 +40,15 @@ namespace helpers
 class EGLHelper
 {
 public:
-    EGLHelper(GLConfig const& gl_config);
-    ~EGLHelper() noexcept;
-
     EGLHelper(const EGLHelper&) = delete;
     EGLHelper& operator=(const EGLHelper&) = delete;
 
-    void setup(::Display* const x_dpy);
-    void setup(::Display* const x_dpy, EGLContext shared_context);
-    void setup(::Display* const x_dpy, Window win,
-               EGLContext shared_context);
+    EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy);
+    EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy, EGLContext shared_context);
+    EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy, Window win, EGLContext shared_context);
+    ~EGLHelper() noexcept;
 
-    bool swap_buffers();
+    bool swap_buffers() const;
     bool make_current() const;
     bool release_current() const;
 
@@ -62,6 +59,7 @@ public:
 
     void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>) const;
 private:
+    EGLHelper(GLConfig const& gl_config);
     void setup_internal(::Display* const x_dpy, bool initialize);
 
     EGLint const depth_buffer_bits;
