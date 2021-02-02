@@ -174,18 +174,7 @@ mgx::X11Window::X11Window(::Display* x_dpy,
     {
         char const * const title = "Mir On X";
         XSizeHints sizehints;
-
-        // TODO: Due to a bug, resize doesn't work after XGrabKeyboard under Unity.
-        //       For now, make window unresizeable.
-        //     http://stackoverflow.com/questions/14555703/x11-unable-to-move-window-after-xgrabkeyboard
-        sizehints.base_width = size.width.as_int();
-        sizehints.base_height = size.height.as_int();
-        sizehints.min_width = size.width.as_int();
-        sizehints.min_height = size.height.as_int();
-        sizehints.max_width = size.width.as_int();
-        sizehints.max_height = size.height.as_int();
-        sizehints.flags = PSize | PMinSize | PMaxSize;
-
+        sizehints.flags = 0;
         XSetNormalHints(x_dpy, win, &sizehints);
         XSetStandardProperties(x_dpy, win, title, title, None, (char **)NULL, 0, &sizehints);
 
@@ -273,7 +262,7 @@ mgx::Display::Display(::Display* x_dpy,
             report,
             *gl_config);
         top_left.x += as_delta(configuration->extents().size.width);
-        outputs.push_back(std::make_unique<OutputInfo>(move(window), move(display_buffer), move(configuration)));
+        outputs.push_back(std::make_unique<OutputInfo>(this, move(window), move(display_buffer), move(configuration)));
     }
 
     shared_egl.make_current();
@@ -341,8 +330,10 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 
 void mgx::Display::register_configuration_change_handler(
     EventHandlerRegister& /* event_handler*/,
-    DisplayConfigurationChangeHandler const& /*change_handler*/)
+    DisplayConfigurationChangeHandler const& change_handler)
 {
+    std::lock_guard<std::mutex> lock{mutex};
+    config_change_handlers.push_back(change_handler);
 }
 
 void mgx::Display::register_pause_resume_handlers(
@@ -389,10 +380,12 @@ mg::Frame mgx::Display::last_frame_on(unsigned) const
 }
 
 mgx::Display::OutputInfo::OutputInfo(
+    Display* owner,
     std::unique_ptr<X11Window> window,
     std::unique_ptr<DisplayBuffer> display_buffer,
     std::shared_ptr<DisplayConfigurationOutput> configuration)
-    : window{move(window)},
+    : owner{owner},
+      window{move(window)},
       display_buffer{move(display_buffer)},
       config{move(configuration)}
 {
@@ -402,4 +395,18 @@ mgx::Display::OutputInfo::OutputInfo(
 mgx::Display::OutputInfo::~OutputInfo()
 {
     mx::X11Resources::instance.clear_output_for_window(*window);
+}
+
+void mgx::Display::OutputInfo::set_size(geometry::Size const& size)
+{
+    std::unique_lock<std::mutex> lock{owner->mutex};
+    display_buffer->set_view_area({display_buffer->view_area().top_left, size});
+    config->modes[0].size = size;
+    auto const handlers = owner->config_change_handlers;
+
+    lock.unlock();
+    for (auto const& handler : handlers)
+    {
+        handler();
+    }
 }

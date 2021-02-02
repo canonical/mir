@@ -109,13 +109,16 @@ private:
     struct OutputInfo : ::mir::X::X11Resources::VirtualOutput
     {
         OutputInfo(
+            Display* owner,
             std::unique_ptr<X11Window> window,
             std::unique_ptr<DisplayBuffer> display_buffer,
             std::shared_ptr<DisplayConfigurationOutput> configuration);
         ~OutputInfo();
 
         auto configuration() const -> graphics::DisplayConfigurationOutput const& override { return *config; }
+        void set_size(geometry::Size const& size) override;
 
+        Display* const owner;
         std::unique_ptr<X11Window> const window;
         std::unique_ptr<DisplayBuffer> const display_buffer;
         std::shared_ptr<DisplayConfigurationOutput> const config;
@@ -131,6 +134,7 @@ private:
 
     std::mutex mutable mutex;
     std::vector<std::unique_ptr<OutputInfo>> outputs;
+    std::vector<DisplayConfigurationChangeHandler> config_change_handlers;
 };
 
 }

@@ -55,7 +55,9 @@ namespace
 geom::Point get_pos_on_output(Window x11_window, int x, int y)
 {
     geom::Point pos{x, y};
-    mx::X11Resources::instance.with_output_for_window(x11_window, [&](std::optional<mx::X11Resources::VirtualOutput const*> output)
+    mx::X11Resources::instance.with_output_for_window(
+        x11_window,
+        [&](std::optional<mx::X11Resources::VirtualOutput const*> output)
         {
             if (output)
             {
@@ -69,6 +71,19 @@ geom::Point get_pos_on_output(Window x11_window, int x, int y)
             }
         });
     return pos;
+}
+
+void window_resized(Window x11_window, geom::Size const& size)
+{
+    mx::X11Resources::instance.with_output_for_window(
+        x11_window,
+        [&](std::optional<mx::X11Resources::VirtualOutput*> output)
+        {
+            if (output)
+            {
+                output.value()->set_size(size);
+            }
+        });
 }
 }
 
@@ -312,10 +327,16 @@ void mix::XInputPlatform::process_input_event()
 
             case ConfigureNotify:
                 {
-#ifdef MIR_ON_X11_INPUT_VERBOSE
                     auto const& xcev = xev.xconfigure;
+#ifdef MIR_ON_X11_INPUT_VERBOSE
                     mir::log_info("Window size : %dx%d", xcev.width, xcev.height);
 #endif
+                    geom::Size size{xcev.width, xcev.height};
+                    if (window_size != size)
+                    {
+                        window_size = size;
+                        window_resized(xcev.window, size);
+                    }
                     break;
                 }
 
