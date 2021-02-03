@@ -203,11 +203,11 @@ void mix::XInputPlatform::process_input_event()
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                     mir::log_info("X11 key event :"
-                                  " type=%s, serial=%u, send_event=%d, display=%p, window=%p,"
-                                  " root=%p, subwindow=%p, time=%d, x=%d, y=%d, x_root=%d,"
+                                  " type=%s, serial=%lu, send_event=%d, display=%p, window=%ld,"
+                                  " root=%ld, subwindow=%ld, time=%ld, x=%d, y=%d, x_root=%d,"
                                   " y_root=%d, state=0x%0X, keycode=%d, same_screen=%d",
                                   xkev.type == KeyPress ? "down" : "up", xkev.serial,
-                                  xkev.send_event, xkev.display, xkev.window, xkev.root,
+                                  xkev.send_event, (void*)xkev.display, xkev.window, xkev.root,
                                   xkev.subwindow, xkev.time, xkev.x, xkev.y, xkev.x_root,
                                   xkev.y_root, xkev.state, xkev.keycode, xkev.same_screen);
                     auto count =
@@ -222,8 +222,8 @@ void mix::XInputPlatform::process_input_event()
                     for (int i=0; i<count; i++)
                         mir::log_info("buffer[%d]='%c'", i, str[i]);
                     mir::log_info("Mir key event : "
-                                  "key_code=%d, scan_code=%d, event_time=%" PRId64,
-                                  keysym, xkev.keycode-8, event_time);
+                                  "key_code=%ld, scan_code=%d, event_time=%" PRId64,
+                                  keysym, xkev.keycode-8, event_time.count());
 #endif
 
                     if (xkev.type == KeyPress)
@@ -242,11 +242,11 @@ void mix::XInputPlatform::process_input_event()
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                     mir::log_info("X11 button event :"
-                                  " type=%s, serial=%u, send_event=%d, display=%p, window=%p,"
-                                  " root=%p, subwindow=%p, time=%d, x=%d, y=%d, x_root=%d,"
+                                  " type=%s, serial=%lu, send_event=%d, display=%p, window=%ld,"
+                                  " root=%ld, subwindow=%ld, time=%ld, x=%d, y=%d, x_root=%d,"
                                   " y_root=%d, state=0x%0X, button=%d, same_screen=%d",
                                   xbev.type == ButtonPress ? "down" : "up", xbev.serial,
-                                  xbev.send_event, xbev.display, xbev.window, xbev.root,
+                                  xbev.send_event, (void*)xbev.display, xbev.window, xbev.root,
                                   xbev.subwindow, xbev.time, xbev.x, xbev.y, xbev.x_root,
                                   xbev.y_root, xbev.state, xbev.button, xbev.same_screen);
 #endif
@@ -294,10 +294,10 @@ void mix::XInputPlatform::process_input_event()
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                     mir::log_info("X11 motion event :"
-                                  " type=motion, serial=%u, send_event=%d, display=%p, window=%p,"
-                                  " root=%p, subwindow=%p, time=%d, x=%d, y=%d, x_root=%d,"
+                                  " type=motion, serial=%lu, send_event=%d, display=%p, window=%ld,"
+                                  " root=%ld, subwindow=%ld, time=%ld, x=%d, y=%d, x_root=%d,"
                                   " y_root=%d, state=0x%0X, is_hint=%s, same_screen=%d",
-                                  xmev.serial, xmev.send_event, xmev.display, xmev.window,
+                                  xmev.serial, xmev.send_event, (void*)xmev.display, xmev.window,
                                   xmev.root, xmev.subwindow, xmev.time, xmev.x, xmev.y, xmev.x_root,
                                   xmev.y_root, xmev.state, xmev.is_hint == NotifyNormal ? "no" : "yes", xmev.same_screen);
 #endif
