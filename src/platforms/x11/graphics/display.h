@@ -122,13 +122,13 @@ private:
     };
 
     std::vector<std::unique_ptr<OutputInfo>> outputs;
-    helpers::EGLHelper shared_egl;
+    helpers::EGLHelper const shared_egl;
     ::Display* const x_dpy;
     std::shared_ptr<GLConfig> const gl_config;
-    float pixel_width;
-    float pixel_height;
+    float const pixel_width;
+    float const pixel_height;
     std::shared_ptr<DisplayReport> const report;
-    std::shared_ptr<AtomicFrame> last_frame;
+    std::shared_ptr<AtomicFrame> const last_frame;
 };
 
 }

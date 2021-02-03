@@ -40,12 +40,11 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                   : report{r},
                                     area{view_area},
                                     transform(1),
-                                    egl{gl_config},
+                                    egl{gl_config, x_dpy, win, shared_context},
                                     last_frame{f},
                                     output_id{output_id},
                                     eglGetSyncValues{nullptr}
 {
-    egl.setup(x_dpy, win, shared_context);
     egl.report_egl_configuration(
         [&r] (EGLDisplay disp, EGLConfig cfg)
         {

@@ -92,9 +92,8 @@ public:
     XGLContext(::Display* const x_dpy,
                std::shared_ptr<mg::GLConfig> const& gl_config,
                EGLContext const shared_ctx)
-        : egl{*gl_config}
+        : egl{*gl_config, x_dpy, shared_ctx}
     {
-        egl.setup(x_dpy, shared_ctx);
     }
 
     ~XGLContext() = default;
@@ -110,7 +109,7 @@ public:
     }
 
 private:
-    mgx::helpers::EGLHelper egl;
+    mgx::helpers::EGLHelper const egl;
 };
 }
 
@@ -239,7 +238,7 @@ mgx::Display::Display(::Display* x_dpy,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& report)
-    : shared_egl{*gl_config},
+    : shared_egl{*gl_config, x_dpy},
       x_dpy{x_dpy},
       gl_config{gl_config},
       pixel_width{get_pixel_width(x_dpy)},
@@ -247,8 +246,6 @@ mgx::Display::Display(::Display* x_dpy,
       report{report},
       last_frame{std::make_shared<AtomicFrame>()}
 {
-    shared_egl.setup(x_dpy);
-
     geom::Point top_left{0, 0};
 
     for (auto const& requested_size : requested_sizes)
