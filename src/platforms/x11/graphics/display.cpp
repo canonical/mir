@@ -400,8 +400,12 @@ mgx::Display::OutputInfo::~OutputInfo()
 void mgx::Display::OutputInfo::set_size(geometry::Size const& size)
 {
     std::unique_lock<std::mutex> lock{owner->mutex};
-    display_buffer->set_view_area({display_buffer->view_area().top_left, size});
+    if (config->modes[0].size == size)
+    {
+        return;
+    }
     config->modes[0].size = size;
+    display_buffer->set_view_area({display_buffer->view_area().top_left, size});
     auto const handlers = owner->config_change_handlers;
 
     lock.unlock();

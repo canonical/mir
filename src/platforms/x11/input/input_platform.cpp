@@ -331,12 +331,7 @@ void mix::XInputPlatform::process_input_event()
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                     mir::log_info("Window size : %dx%d", xcev.width, xcev.height);
 #endif
-                    geom::Size size{xcev.width, xcev.height};
-                    if (window_size != size)
-                    {
-                        window_size = size;
-                        window_resized(xcev.window, size);
-                    }
+                    window_resized(xcev.window, geom::Size{xcev.width, xcev.height});
                     break;
                 }
 

@@ -19,7 +19,6 @@
 #define MIR_INPUT_X_INPUT_PLATFORM_H_
 
 #include "mir/input/platform.h"
-#include "mir/geometry/size.h"
 #include <memory>
 #include <X11/Xlib.h>
 
@@ -61,7 +60,6 @@ private:
     std::shared_ptr<XInputDevice> const core_pointer;
     bool kbd_grabbed;
     bool ptr_grabbed;
-    geometry::Size window_size;
 };
 
 }
