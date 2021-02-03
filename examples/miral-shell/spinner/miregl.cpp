@@ -76,31 +76,23 @@ std::vector<std::shared_ptr<MirEglSurface>> mir_surface_init(std::shared_ptr<Mir
 MirEglSurface::MirEglSurface(
     std::shared_ptr<MirEglApp> const& mir_egl_app,
     struct wl_output* wl_output) :
+    WaylandSurface{mir_egl_app.get()},
     mir_egl_app{mir_egl_app}
 {
-    static struct wl_shell_surface_listener const shell_surface_listener = {
-        shell_surface_ping,
-        shell_surface_configure,
-        shell_surface_popup_done
-    };
+    set_fullscreen(wl_output);
+    commit();
+    mir_egl_app->roundtrip(); // get initial configure
 
-    display = mir_egl_app->display();
-    surface = wl_compositor_create_surface(mir_egl_app->compositor());
-    window = wl_shell_get_shell_surface(mir_egl_app->shell(), surface);
-    wl_shell_surface_add_listener(window, &shell_surface_listener, this);
-    wl_shell_surface_set_fullscreen(window, WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, wl_output);
-    wl_surface_commit(surface);
-    wl_display_roundtrip(display); // get initial configure
-
-    eglsurface = mir_egl_app->create_eglsurface(surface, width(), height());
+    eglsurface = mir_egl_app->create_eglsurface(
+        surface(),
+        configured_size().width.as_int(),
+        configured_size().height.as_int());
     mir_egl_app->set_swap_interval(eglsurface, -1);
 }
 
 MirEglSurface::~MirEglSurface()
 {
     mir_egl_app->destroy_surface(eglsurface);
-    wl_surface_destroy(surface);
-    wl_shell_surface_destroy(window);
 }
 
 void MirEglSurface::egl_make_current()
@@ -112,36 +104,6 @@ void MirEglSurface::egl_make_current()
 void MirEglSurface::swap_buffers()
 {
     mir_egl_app->swap_buffers(eglsurface);
-}
-
-unsigned int MirEglSurface::width() const
-{
-    return width_;
-}
-
-unsigned int MirEglSurface::height() const
-{
-    return height_;
-}
-
-void MirEglSurface::shell_surface_ping(void */*data*/, struct wl_shell_surface *wl_shell_surface, uint32_t serial)
-{
-    wl_shell_surface_pong(wl_shell_surface, serial);
-}
-
-void MirEglSurface::shell_surface_configure(void *data,
-    struct wl_shell_surface */*wl_shell_surface*/,
-    uint32_t /*edges*/,
-    int32_t width,
-    int32_t height)
-{
-    auto self = static_cast<MirEglSurface*>(data);
-    if (width) self->width_ = width;
-    if (height) self->height_ = height;
-}
-
-void MirEglSurface::shell_surface_popup_done(void */*data*/, struct wl_shell_surface */*wl_shell_surface*/)
-{
 }
 
 MirEglApp::MirEglApp(wl_display* display) :
