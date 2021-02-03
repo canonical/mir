@@ -9,6 +9,7 @@ add_library(example-shell-lib STATIC
         splash_session.h
     sw_splash.cpp               sw_splash.h
     wayland_app.cpp             wayland_app.h
+    wayland_surface.cpp         wayland_surface.h
     wayland_shm.cpp             wayland_shm.h
 )
 

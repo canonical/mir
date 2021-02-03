@@ -21,6 +21,7 @@
 #include "wallpaper_config.h"
 
 #include "wayland_app.h"
+#include "wayland_surface.h"
 #include "wayland_shm.h"
 
 #include <ft2build.h>
@@ -93,77 +94,47 @@ Printer::~Printer()
     }
 }
 
-struct BackgroundInfo
+struct BackgroundInfo : WaylandSurface
 {
     BackgroundInfo(
-        wl_display* display,
+        WaylandApp const* app,
         WaylandOutput const* output,
         std::function<void(BackgroundInfo&)> redraw_func)
-        : output{output},
-          display{display},
+        : WaylandSurface{app},
+          output{output},
           redraw_func{redraw_func}
-    {}
+    {
+        set_fullscreen(output->wl());
+        commit();
+        app->roundtrip();
+    }
+
+    void configured() override
+    {
+        redraw_func(*this);
+    }
 
     ~BackgroundInfo()
     {
-        if (buffer)
-            wl_buffer_destroy(buffer);
-
-        if (shell_surface)
-            wl_shell_surface_destroy(shell_surface);
-
-        if (surface)
-            wl_surface_destroy(surface);
-
-        wl_display_roundtrip(display);
+        app()->roundtrip();
     }
 
     /// returns the size (in pixels) the buffer should be
-    auto buffer_size() const -> Size { return logical_size * output->scale(); }
+    auto buffer_size() const -> Size { return configured_size() * output->scale(); }
 
     // Screen description
     WaylandOutput const* const output;
-    Size logical_size; ///< the size the client was configured to be
 
     // Content
     void* content_area = nullptr;
-    wl_surface* surface = nullptr;
-    wl_shell_surface* shell_surface = nullptr;
-    wl_buffer* buffer = nullptr;
-
-    static wl_shell_surface_listener const shell_surface_listener;
+    WaylandObject<wl_buffer> buffer;
 
 private:
     BackgroundInfo(BackgroundInfo const&) = delete;
     BackgroundInfo& operator=(BackgroundInfo const&) = delete;
 
-    static void shell_surface_configure(
-        void *data,
-        wl_shell_surface *,
-        uint32_t /*edges*/,
-        int32_t width,
-        int32_t height)
-    {
-        if (width <= 0)
-            width = 640;
-
-        if (height <= 0)
-            height = 480;
-
-        auto const self = static_cast<BackgroundInfo*>(data);
-
-        self->logical_size = Size{width, height};
-        self->redraw_func(*self);
-    }
-
-    wl_display *const display;
     std::function<void(BackgroundInfo&)> redraw_func;
 };
-
-wl_shell_surface_listener const BackgroundInfo::shell_surface_listener {
-    [](auto, auto, auto){}, // ping
-    &BackgroundInfo::shell_surface_configure,
-    [](auto, auto){}}; // popup_done
 
 void Printer::printhelp(BackgroundInfo const& region)
 {
@@ -315,7 +286,7 @@ void DecorationProviderClient::output_ready(WaylandOutput const* output)
         *outputs.insert({
             output,
             std::make_shared<BackgroundInfo>(
-                display(),
+                this,
                 output,
                 [this](BackgroundInfo& background)
                 {
@@ -337,29 +308,7 @@ void DecorationProviderClient::output_gone(WaylandOutput const* output)
 
 void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 {
-    if (!ctx.surface)
-    {
-        ctx.surface = wl_compositor_create_surface(this->compositor());
-    }
-
-    if (!ctx.shell_surface)
-    {
-        ctx.shell_surface = wl_shell_get_shell_surface(this->shell(), ctx.surface);
-        wl_shell_surface_add_listener(ctx.shell_surface, &BackgroundInfo::shell_surface_listener, &ctx);
-        wl_shell_surface_set_fullscreen(
-            ctx.shell_surface,
-            WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT,
-            0,
-            ctx.output->wl());
-        wl_surface_commit(ctx.surface);
-        wl_display_roundtrip(display());
-    }
-
-    if (ctx.buffer)
-    {
-        wl_buffer_destroy(ctx.buffer);
-        ctx.buffer = nullptr;
-    }
+    ctx.buffer = {};
 
     auto const width = ctx.buffer_size().width.as_int();
     auto const height = ctx.buffer_size().height.as_int();
@@ -374,11 +323,9 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
             make_shm_pool(this->shm(), stride * height, &ctx.content_area),
             &wl_shm_pool_destroy);
 
-        ctx.buffer = wl_shm_pool_create_buffer(
-            shm_pool.get(),
-            0,
-            width, height, stride,
-            WL_SHM_FORMAT_ARGB8888);
+        ctx.buffer = {
+            wl_shm_pool_create_buffer(shm_pool.get(), 0, width, height, stride, WL_SHM_FORMAT_ARGB8888),
+            wl_buffer_destroy};
     }
 
     uint8_t const bottom_colour[] = { 0x20, 0x54, 0xe9 };   // Ubuntu orange
@@ -405,10 +352,9 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 
     printer.printhelp(ctx);
 
-    wl_surface_set_buffer_scale(ctx.surface, ctx.output->scale());
-    wl_surface_attach(ctx.surface, ctx.buffer, 0, 0);
-    wl_surface_commit(ctx.surface);
-    wl_display_roundtrip(display());
+    ctx.attach_buffer(ctx.buffer, ctx.output->scale());
+    ctx.commit();
+    roundtrip();
 }
 
 DecorationProviderClient::~DecorationProviderClient()
