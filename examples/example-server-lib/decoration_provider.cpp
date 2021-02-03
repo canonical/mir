@@ -102,6 +102,7 @@ struct BackgroundInfo : WaylandSurface
         std::function<void(BackgroundInfo&)> redraw_func)
         : WaylandSurface{app},
           output{output},
+          shm{app->shm()},
           redraw_func{redraw_func}
     {
         set_fullscreen(output->wl());
@@ -124,10 +125,10 @@ struct BackgroundInfo : WaylandSurface
 
     // Screen description
     WaylandOutput const* const output;
+    WaylandShm shm;
 
     // Content
     void* content_area = nullptr;
-    WaylandObject<wl_buffer> buffer;
 
 private:
     BackgroundInfo(BackgroundInfo const&) = delete;
@@ -308,8 +309,6 @@ void DecorationProviderClient::output_gone(WaylandOutput const* output)
 
 void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 {
-    ctx.buffer = {};
-
     auto const width = ctx.buffer_size().width.as_int();
     auto const height = ctx.buffer_size().height.as_int();
 
@@ -318,15 +317,8 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 
     auto const stride = 4*width;
 
-    {
-        auto const shm_pool = make_scoped(
-            make_shm_pool(this->shm(), stride * height, &ctx.content_area),
-            &wl_shm_pool_destroy);
-
-        ctx.buffer = {
-            wl_shm_pool_create_buffer(shm_pool.get(), 0, width, height, stride, WL_SHM_FORMAT_ARGB8888),
-            wl_buffer_destroy};
-    }
+    auto const buffer = ctx.shm.get_buffer(ctx.buffer_size(), Stride{stride});
+    ctx.content_area = buffer->data();
 
     uint8_t const bottom_colour[] = { 0x20, 0x54, 0xe9 };   // Ubuntu orange
     uint8_t const top_colour[] =    { 0x33, 0x33, 0x33 };   // Cool grey
@@ -352,7 +344,7 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 
     printer.printhelp(ctx);
 
-    ctx.attach_buffer(ctx.buffer, ctx.output->scale());
+    ctx.attach_buffer(*buffer, ctx.output->scale());
     ctx.commit();
     roundtrip();
 }

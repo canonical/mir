@@ -17,6 +17,7 @@
  */
 
 #include "wayland_shm.h"
+#include "wayland_app.h"
 
 #include <mir/fd.h>
 #include <boost/throw_exception.hpp>
@@ -82,4 +83,54 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
     }
 
     return wl_shm_create_pool(shm, fd, size);
+}
+
+wl_buffer_listener const WaylandShmBuffer::buffer_listener {handle_release};
+
+WaylandShmBuffer::WaylandShmBuffer(void* data, size_t data_size, wl_buffer* buffer)
+    : data_{data},
+      data_size{data_size},
+      buffer{buffer}
+{
+    wl_buffer_add_listener(buffer, &buffer_listener, this);
+}
+
+WaylandShmBuffer::~WaylandShmBuffer()
+{
+    wl_buffer_destroy(buffer);
+    munmap(data_, data_size);
+}
+
+void WaylandShmBuffer::handle_release(void *data, wl_buffer*)
+{
+    auto const self = static_cast<WaylandShmBuffer*>(data);
+    self->self_ptr.reset();
+}
+
+WaylandShm::WaylandShm(wl_shm* shm)
+    : shm{shm}
+{
+}
+
+auto WaylandShm::get_buffer(mir::geometry::Size size, mir::geometry::Stride stride) -> WaylandShmBuffer*
+{
+    size_t const data_size = size.height.as_int() * stride.as_int();
+    if (!current_buffer || current_buffer->is_in_use() || data_size > current_buffer->data_size)
+    {
+        void* data;
+        WaylandObject<wl_shm_pool> pool{make_shm_pool(shm, data_size, &data), wl_shm_pool_destroy};
+        auto const buffer = wl_shm_pool_create_buffer(
+            pool,
+            0,
+            size.width.as_int(),
+            size.height.as_int(),
+            stride.as_int(),
+            WL_SHM_FORMAT_ARGB8888);
+        current_buffer = std::make_shared<WaylandShmBuffer>(data, data_size, std::move(buffer));
+        current_buffer->self_ptr = current_buffer;
+    }
+
+    // This will mark the buffer as in-use, and keep it alice until it's submitted and the compositor releases it.
+    current_buffer->self_ptr = current_buffer;
+    return current_buffer.get();
 }

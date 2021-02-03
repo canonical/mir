@@ -19,18 +19,52 @@
 #ifndef MIRAL_WAYLAND_SHM_H
 #define MIRAL_WAYLAND_SHM_H
 
+#include "mir/geometry/size.h"
+
 #include <wayland-client.h>
 #include <memory>
-#include <vector>
-#include <functional>
-#include <unordered_map>
 
-template<typename Type>
-auto make_scoped(Type* owned, void(*deleter)(Type*)) -> std::unique_ptr<Type, void(*)(Type*)>
+class WaylandShm;
+
+// TODO: migrate away from using this directly
+struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data);
+
+class WaylandShmBuffer
 {
-    return {owned, deleter};
-}
+public:
+    WaylandShmBuffer(void* data, size_t data_size, wl_buffer* buffer);
+    ~WaylandShmBuffer();
 
-wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data);
+    auto data() const -> void* { return data_; }
+    operator wl_buffer*() const { return buffer; }
+
+private:
+    friend WaylandShm;
+
+    auto is_in_use() const -> bool { return self_ptr != nullptr; }
+
+    static wl_buffer_listener const buffer_listener;
+
+    static void handle_release(void *data, wl_buffer*);
+
+    void* const data_;
+    size_t const data_size;
+    wl_buffer* const buffer;
+    std::shared_ptr<WaylandShmBuffer> self_ptr; ///< gets cleared on release
+};
+
+class WaylandShm
+{
+public:
+    /// Does not take ownership of the wl_shm
+    WaylandShm(wl_shm* shm);
+
+    /// The returned buffer is automatically released as long as it is sent to the compositor
+    auto get_buffer(mir::geometry::Size size, mir::geometry::Stride stride) -> WaylandShmBuffer*;
+
+private:
+    wl_shm* const shm;
+    std::shared_ptr<WaylandShmBuffer> current_buffer;
+};
 
 #endif // MIRAL_WAYLAND_SHM_H
