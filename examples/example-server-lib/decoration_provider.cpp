@@ -20,7 +20,8 @@
 
 #include "wallpaper_config.h"
 
-#include "wayland_helpers.h"
+#include "wayland_app.h"
+#include "wayland_shm.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -96,7 +97,7 @@ struct BackgroundInfo
 {
     BackgroundInfo(
         wl_display* display,
-        Output const* output,
+        WaylandOutput const* output,
         std::function<void(BackgroundInfo&)> redraw_func)
         : output{output},
           display{display},
@@ -118,10 +119,10 @@ struct BackgroundInfo
     }
 
     /// returns the size (in pixels) the buffer should be
-    auto buffer_size() const -> Size { return logical_size * output->scale; }
+    auto buffer_size() const -> Size { return logical_size * output->scale(); }
 
     // Screen description
-    Output const* const output;
+    WaylandOutput const* const output;
     Size logical_size; ///< the size the client was configured to be
 
     // Content
@@ -287,9 +288,7 @@ void Printer::printhelp(BackgroundInfo const& region)
     }
 }
 
-using Outputs = std::map<Output const*, std::shared_ptr<BackgroundInfo>>;
-
-struct DecorationProviderClient
+struct DecorationProviderClient : WaylandApp
 {
 public:
     DecorationProviderClient(wl_display* display);
@@ -297,45 +296,26 @@ public:
 
 private:
     void draw_background(BackgroundInfo& ctx) const;
-    void on_new_output(Output const*);
-    void on_output_changed(Output const* output);
-    void on_output_gone(Output const*);
 
-    wl_display* const display;
-    Globals globals;
-    Outputs outputs;
+    void output_ready(WaylandOutput const*) override;
+    void output_changed(WaylandOutput const* output) override;
+    void output_gone(WaylandOutput const*) override;
+
+    std::map<WaylandOutput const*, std::shared_ptr<BackgroundInfo>> outputs;
 };
 
-DecorationProviderClient::DecorationProviderClient(wl_display* display) :
-    display{display},
-    globals{
-        [this](Output const& output) { on_new_output(&output); },
-        [this](Output const& output) { on_output_changed(&output); },
-        [this](Output const& output) { on_output_gone(&output); }
-    }
+DecorationProviderClient::DecorationProviderClient(wl_display* display)
 {
-    globals.init(display);
+    wayland_init(display);
 }
 
-void DecorationProviderClient::on_output_changed(Output const* output)
-{
-    auto const p = outputs.find(output);
-    if (p != end(outputs))
-        draw_background(*p->second);
-}
-
-void DecorationProviderClient::on_output_gone(Output const* output)
-{
-    outputs.erase(output);
-}
-
-void DecorationProviderClient::on_new_output(Output const* output)
+void DecorationProviderClient::output_ready(WaylandOutput const* output)
 {
     draw_background(
         *outputs.insert({
             output,
             std::make_shared<BackgroundInfo>(
-                display,
+                display(),
                 output,
                 [this](BackgroundInfo& background)
                 {
@@ -343,24 +323,36 @@ void DecorationProviderClient::on_new_output(Output const* output)
                 })}).first->second);
 }
 
+void DecorationProviderClient::output_changed(WaylandOutput const* output)
+{
+    auto const p = outputs.find(output);
+    if (p != end(outputs))
+        draw_background(*p->second);
+}
+
+void DecorationProviderClient::output_gone(WaylandOutput const* output)
+{
+    outputs.erase(output);
+}
+
 void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 {
     if (!ctx.surface)
     {
-        ctx.surface = wl_compositor_create_surface(this->globals.compositor);
+        ctx.surface = wl_compositor_create_surface(this->compositor());
     }
 
     if (!ctx.shell_surface)
     {
-        ctx.shell_surface = wl_shell_get_shell_surface(this->globals.shell, ctx.surface);
+        ctx.shell_surface = wl_shell_get_shell_surface(this->shell(), ctx.surface);
         wl_shell_surface_add_listener(ctx.shell_surface, &BackgroundInfo::shell_surface_listener, &ctx);
         wl_shell_surface_set_fullscreen(
             ctx.shell_surface,
             WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT,
             0,
-            ctx.output->output);
+            ctx.output->wl());
         wl_surface_commit(ctx.surface);
-        wl_display_roundtrip(display);
+        wl_display_roundtrip(display());
     }
 
     if (ctx.buffer)
@@ -379,7 +371,7 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 
     {
         auto const shm_pool = make_scoped(
-            make_shm_pool(this->globals.shm, stride * height, &ctx.content_area),
+            make_shm_pool(this->shm(), stride * height, &ctx.content_area),
             &wl_shm_pool_destroy);
 
         ctx.buffer = wl_shm_pool_create_buffer(
@@ -413,17 +405,14 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 
     printer.printhelp(ctx);
 
-    wl_surface_set_buffer_scale(ctx.surface, ctx.output->scale);
+    wl_surface_set_buffer_scale(ctx.surface, ctx.output->scale());
     wl_surface_attach(ctx.surface, ctx.buffer, 0, 0);
     wl_surface_commit(ctx.surface);
-    wl_display_roundtrip(display);
+    wl_display_roundtrip(display());
 }
 
 DecorationProviderClient::~DecorationProviderClient()
 {
-    outputs.clear();
-    globals.teardown();
-    wl_display_roundtrip(display);
 }
 }
 

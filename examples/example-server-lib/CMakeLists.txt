@@ -8,7 +8,8 @@ add_library(example-shell-lib STATIC
     wallpaper_config.cpp        wallpaper_config.h
         splash_session.h
     sw_splash.cpp               sw_splash.h
-    wayland_helpers.cpp         wayland_helpers.h
+    wayland_app.cpp             wayland_app.h
+    wayland_shm.cpp             wayland_shm.h
 )
 
 target_include_directories(example-shell-lib
