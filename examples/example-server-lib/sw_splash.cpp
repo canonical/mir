@@ -17,7 +17,8 @@
  */
 
 #include "sw_splash.h"
-#include "wayland_helpers.h"
+#include "wayland_app.h"
+#include "wayland_shm.h"
 #include <wayland-client.h>
 
 #include <sys/types.h>
@@ -131,16 +132,8 @@ wl_buffer_listener const buffer_listener = {
 struct SwSplash::Self : SplashSession
 {
     Self()
-        : globals{
-              [](auto const&) {},
-              [](auto const&) {},
-              [](auto const&) {}}
     {
-        // Because we use the outputs exactly once, to enumerate the set of outputs at startup,
-        // we don't need to care about outputs changing or disappearing.
     }
-
-    Globals globals;
 
     bool show_splash=true;
 
@@ -181,10 +174,11 @@ void SwSplash::Self::operator()(struct wl_display* display)
 {
     if (!show_splash)
         return;
-    globals.init(display);
+
+    WaylandApp app{display};
 
     ctx.display = display;
-    ctx.surface = wl_compositor_create_surface(globals.compositor);
+    ctx.surface = wl_compositor_create_surface(app.compositor());
 
     static wl_shell_surface_listener const shell_surface_listener
     {
@@ -207,13 +201,13 @@ void SwSplash::Self::operator()(struct wl_display* display)
         [](auto, auto){}, // popup_done
     };
 
-    auto const shell_surface = wl_shell_get_shell_surface(globals.shell, ctx.surface);
+    auto const shell_surface = wl_shell_get_shell_surface(app.shell(), ctx.surface);
     wl_shell_surface_add_listener(shell_surface, &shell_surface_listener, &ctx);
     wl_shell_surface_set_fullscreen(shell_surface, WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT, 0, nullptr);
     wl_surface_commit(ctx.surface);
     wl_display_roundtrip(display);
 
-    struct wl_shm_pool* shm_pool = make_shm_pool(globals.shm, ctx.width * ctx.height * 4, &ctx.content_area);
+    struct wl_shm_pool* shm_pool = make_shm_pool(app.shm(), ctx.width * ctx.height * 4, &ctx.content_area);
 
     for (auto& b: ctx.buffers)
     {
@@ -251,8 +245,6 @@ void SwSplash::Self::operator()(struct wl_display* display)
 
     wl_shell_surface_destroy(shell_surface);
     wl_surface_destroy(ctx.surface);
-    globals.teardown();
-    wl_display_roundtrip(display);
 }
 
 void SwSplash::operator()(struct wl_display* display)
