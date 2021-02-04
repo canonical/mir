@@ -45,7 +45,7 @@ SNAPS = {
     },
     "egmde": {
         "edge": {"ppa": "dev", "recipe": "egmde-mir-master"},
-        "beta": {"ppa": "release", "recipe": "egmde-mir-release"},
+        "beta": {"ppa": "rc", "recipe": "egmde-mir-release"},
     },
     "egmde-confined-desktop": {
         "edge": {"ppa": "dev", "recipe": "egmde-confined-desktop"},
