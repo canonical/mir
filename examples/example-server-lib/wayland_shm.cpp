@@ -27,6 +27,8 @@
 #include <sys/mman.h>
 #include <system_error>
 
+namespace geom = mir::geometry;
+
 struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
 {
     static auto (*open_shm_file)() -> mir::Fd = []
@@ -87,9 +89,16 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
 
 wl_buffer_listener const WaylandShmBuffer::buffer_listener {handle_release};
 
-WaylandShmBuffer::WaylandShmBuffer(void* data, size_t data_size, wl_buffer* buffer)
+WaylandShmBuffer::WaylandShmBuffer(
+    void* data,
+    size_t data_size,
+    geom::Size size,
+    geom::Stride stride,
+    wl_buffer* buffer)
     : data_{data},
       data_size{data_size},
+      size{size},
+      stride{stride},
       buffer{buffer}
 {
     wl_buffer_add_listener(buffer, &buffer_listener, this);
@@ -112,7 +121,7 @@ WaylandShm::WaylandShm(wl_shm* shm)
 {
 }
 
-auto WaylandShm::get_buffer(mir::geometry::Size size, mir::geometry::Stride stride) -> WaylandShmBuffer*
+auto WaylandShm::get_buffer(geom::Size size, geom::Stride stride) -> WaylandShmBuffer*
 {
     size_t const data_size = size.height.as_int() * stride.as_int();
     if (!current_buffer || current_buffer->is_in_use() || data_size > current_buffer->data_size)
@@ -126,8 +135,7 @@ auto WaylandShm::get_buffer(mir::geometry::Size size, mir::geometry::Stride stri
             size.height.as_int(),
             stride.as_int(),
             WL_SHM_FORMAT_ARGB8888);
-        current_buffer = std::make_shared<WaylandShmBuffer>(data, data_size, std::move(buffer));
-        current_buffer->self_ptr = current_buffer;
+        current_buffer = std::make_shared<WaylandShmBuffer>(data, data_size, size, stride, std::move(buffer));
     }
 
     // This will mark the buffer as in-use, and keep it alice until it's submitted and the compositor releases it.

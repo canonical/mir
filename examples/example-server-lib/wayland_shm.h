@@ -32,7 +32,12 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data);
 class WaylandShmBuffer
 {
 public:
-    WaylandShmBuffer(void* data, size_t data_size, wl_buffer* buffer);
+    WaylandShmBuffer(
+        void* data,
+        size_t data_size,
+        mir::geometry::Size size,
+        mir::geometry::Stride stride,
+        wl_buffer* buffer);
     ~WaylandShmBuffer();
 
     auto data() const -> void* { return data_; }
@@ -49,6 +54,8 @@ private:
 
     void* const data_;
     size_t const data_size;
+    mir::geometry::Size const size;
+    mir::geometry::Stride const stride;
     wl_buffer* const buffer;
     std::shared_ptr<WaylandShmBuffer> self_ptr; ///< gets cleared on release
 };
