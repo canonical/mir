@@ -98,12 +98,10 @@ struct BackgroundInfo : WaylandSurface
 {
     BackgroundInfo(
         WaylandApp const* app,
-        WaylandOutput const* output,
-        std::function<void(BackgroundInfo&)> redraw_func)
+        WaylandOutput const* output)
         : WaylandSurface{app},
           output{output},
-          shm{app->shm()},
-          redraw_func{redraw_func}
+          shm{app->shm()}
     {
         set_fullscreen(output->wl());
         commit();
@@ -112,7 +110,7 @@ struct BackgroundInfo : WaylandSurface
 
     void configured() override
     {
-        redraw_func(*this);
+        needs_redraw = true;
     }
 
     ~BackgroundInfo()
@@ -130,11 +128,11 @@ struct BackgroundInfo : WaylandSurface
     // Content
     void* content_area = nullptr;
 
+    bool needs_redraw{true};
+
 private:
     BackgroundInfo(BackgroundInfo const&) = delete;
     BackgroundInfo& operator=(BackgroundInfo const&) = delete;
-
-    std::function<void(BackgroundInfo&)> redraw_func;
 };
 
 void Printer::printhelp(BackgroundInfo const& region)
@@ -266,6 +264,9 @@ public:
     DecorationProviderClient(wl_display* display);
     ~DecorationProviderClient();
 
+    // Called after events were dispatched and now the loop is idle
+    void events_dispatched();
+
 private:
     void draw_background(BackgroundInfo& ctx) const;
 
@@ -281,25 +282,36 @@ DecorationProviderClient::DecorationProviderClient(wl_display* display)
     wayland_init(display);
 }
 
+void DecorationProviderClient::events_dispatched()
+{
+    bool needs_flush = false;
+    for (auto const& output : outputs)
+    {
+        if (output.second->needs_redraw)
+        {
+            draw_background(*output.second);
+            output.second->needs_redraw = false;
+            needs_flush = true;
+        }
+    }
+    if (needs_flush)
+    {
+        wl_display_flush(display());
+    }
+}
+
 void DecorationProviderClient::output_ready(WaylandOutput const* output)
 {
-    draw_background(
-        *outputs.insert({
-            output,
-            std::make_shared<BackgroundInfo>(
-                this,
-                output,
-                [this](BackgroundInfo& background)
-                {
-                    draw_background(background);
-                })}).first->second);
+    outputs.insert({output, std::make_shared<BackgroundInfo>(this, output)});
 }
 
 void DecorationProviderClient::output_changed(WaylandOutput const* output)
 {
     auto const p = outputs.find(output);
     if (p != end(outputs))
-        draw_background(*p->second);
+    {
+        p->second->needs_redraw = true;
+    }
 }
 
 void DecorationProviderClient::output_gone(WaylandOutput const* output)
@@ -346,7 +358,6 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 
     ctx.attach_buffer(*buffer, ctx.output->scale());
     ctx.commit();
-    roundtrip();
 }
 
 DecorationProviderClient::~DecorationProviderClient()
@@ -404,6 +415,8 @@ void DecorationProvider::operator()(wl_display* display)
                     std::system_error{errno, std::system_category(), "Failed to dispatch Wayland events"}));
             }
         }
+
+        self.events_dispatched();
 
         if (poll(fds, indices, -1) == -1)
         {
