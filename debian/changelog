@@ -1,3 +1,48 @@
+mir (2.3.0) UNRELEASED; urgency=medium
+
+  * New upstream release 2.3.0
+
+    - ABI summary:
+      . mirclient ABI unchanged at 10
+      . miral ABI unchanged at 4
+      . mirserver ABI unchanged at 54
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 20
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 18
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+      . mirwayland ABI bumped to 2
+    - Enhancements:
+      . First pass at copy/paste between Wayland and XWayland
+      . Hint to Firefox that it should use Wayland when launched by miral
+      . [Error handling] Report information from nested exceptions
+      . Use standard key repeat values
+      . [platforms] Enable linux-dmabuf on X11 and Wayland platforms
+      . [platforms/linux-dmabuf] Support the full range of driver-exposed
+        formats
+      . [platforms/gbm-kms] Don't warn about being unable to find the current
+        mode of disconnected outputs
+      . [platforms/gbm-kms] Log exceptions in probe better
+      . [miral] Document miral::Window
+      . [miral] Document miral::display_configuration_options()
+      . [miral-kiosk] Allow wayland extensions to be configured in kiosks (and
+        enable pointer confinement by default)
+      . [Wayland] Enable xdg_output_unstable_v1 by default
+      . [Mir-on-X] Improve HiDPI support for XWayland
+    - Bugs fixed:
+      . Print help text to stdout instead of stderr. (Fixes #1043)
+      . [Wayland] Send sub-pixel input events to clients (Fixes: ##1814, #1828)
+      . [miral] Clamp window resize to min/max. (Fixes #1821)
+      . [miral] Shrink initially maximized windows on restore. (Fixes #1817)
+      . [Wayland] Better help message when WAYLAND_DISPLAY in use.
+        (Fixes: #1851)
+      . [platforms] Disable natural scrolling on the X11 and libinput platforms.
+        (Fixes #1813)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 4 Feb 2021 11:51:11 +0000
+
 mir (2.2.0) UNRELEASED; urgency=medium
 
   * New upstream release 2.2.0
