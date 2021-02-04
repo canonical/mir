@@ -284,14 +284,19 @@ DecorationProviderClient::DecorationProviderClient(wl_display* display)
 
 void DecorationProviderClient::events_dispatched()
 {
+    bool needs_flush = false;
     for (auto const& output : outputs)
     {
         if (output.second->needs_redraw)
         {
             draw_background(*output.second);
             output.second->needs_redraw = false;
-            wl_display_flush(display());
+            needs_flush = true;
         }
+    }
+    if (needs_flush)
+    {
+        wl_display_flush(display());
     }
 }
 
