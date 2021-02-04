@@ -31,7 +31,7 @@ SOURCE_NAME = "mir"
 SNAPS = {
     "mir-kiosk": {
         "edge": {"ppa": "dev", "recipe": "mir-kiosk-edge"},
-        "candidate": {"ppa": "rc", "recipe": "mir-kiosk-candidate"},
+        "beta": {"ppa": "rc", "recipe": "mir-kiosk-candidate"},
     },
     "mir-kiosk-apps": {
         "edge": {"recipe": "mir-kiosk-apps"},
@@ -41,7 +41,7 @@ SNAPS = {
     },
     "mir-test-tools": {
         "edge": {"ppa": "dev", "recipe": "mir-test-tools-edge"},
-        "candidate": {"ppa": "rc", "recipe": "mir-test-tools"},
+        "beta": {"ppa": "rc", "recipe": "mir-test-tools"},
     },
     "egmde": {
         "edge": {"ppa": "dev", "recipe": "egmde-mir-master"},
