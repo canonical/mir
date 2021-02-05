@@ -344,7 +344,7 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 
     printer.printhelp(ctx);
 
-    ctx.attach_buffer(*buffer, ctx.output->scale());
+    ctx.attach_buffer(buffer->use(), ctx.output->scale());
     ctx.commit();
     roundtrip();
 }

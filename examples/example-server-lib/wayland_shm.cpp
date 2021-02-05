@@ -20,6 +20,7 @@
 #include "wayland_app.h"
 
 #include <mir/fd.h>
+#include <mir/fatal.h>
 #include <boost/throw_exception.hpp>
 
 #include <fcntl.h>
@@ -110,6 +111,16 @@ WaylandShmBuffer::~WaylandShmBuffer()
     munmap(data_, data_size);
 }
 
+auto WaylandShmBuffer::use() -> wl_buffer*
+{
+    if (self_ptr)
+    {
+        mir::fatal_error("WaylandShmBuffer used multiple times");
+    }
+    self_ptr = shared_from_this();
+    return buffer;
+}
+
 void WaylandShmBuffer::handle_release(void *data, wl_buffer*)
 {
     auto const self = static_cast<WaylandShmBuffer*>(data);
@@ -121,7 +132,7 @@ WaylandShm::WaylandShm(wl_shm* shm)
 {
 }
 
-auto WaylandShm::get_buffer(geom::Size size, geom::Stride stride) -> WaylandShmBuffer*
+auto WaylandShm::get_buffer(geom::Size size, geom::Stride stride) -> std::shared_ptr<WaylandShmBuffer>
 {
     size_t const data_size = size.height.as_int() * stride.as_int();
     if (!current_buffer || current_buffer->is_in_use() || data_size > current_buffer->data_size)
@@ -138,7 +149,5 @@ auto WaylandShm::get_buffer(geom::Size size, geom::Stride stride) -> WaylandShmB
         current_buffer = std::make_shared<WaylandShmBuffer>(data, data_size, size, stride, std::move(buffer));
     }
 
-    // This will mark the buffer as in-use, and keep it alice until it's submitted and the compositor releases it.
-    current_buffer->self_ptr = current_buffer;
-    return current_buffer.get();
+    return current_buffer;
 }

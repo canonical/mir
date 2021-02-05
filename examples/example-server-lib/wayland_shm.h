@@ -29,7 +29,7 @@ class WaylandShm;
 // TODO: migrate away from using this directly
 struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data);
 
-class WaylandShmBuffer
+class WaylandShmBuffer : public std::enable_shared_from_this<WaylandShmBuffer>
 {
 public:
     WaylandShmBuffer(
@@ -41,7 +41,7 @@ public:
     ~WaylandShmBuffer();
 
     auto data() const -> void* { return data_; }
-    operator wl_buffer*() const { return buffer; }
+    auto use() -> wl_buffer*;
 
 private:
     friend WaylandShm;
@@ -57,7 +57,7 @@ private:
     mir::geometry::Size const size;
     mir::geometry::Stride const stride;
     wl_buffer* const buffer;
-    std::shared_ptr<WaylandShmBuffer> self_ptr; ///< gets cleared on release
+    std::shared_ptr<WaylandShmBuffer> self_ptr; ///< Is set on use and cleared on release
 };
 
 class WaylandShm
@@ -67,7 +67,7 @@ public:
     WaylandShm(wl_shm* shm);
 
     /// The returned buffer is automatically released as long as it is sent to the compositor
-    auto get_buffer(mir::geometry::Size size, mir::geometry::Stride stride) -> WaylandShmBuffer*;
+    auto get_buffer(mir::geometry::Size size, mir::geometry::Stride stride) -> std::shared_ptr<WaylandShmBuffer>;
 
 private:
     wl_shm* const shm;
