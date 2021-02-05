@@ -42,7 +42,11 @@ public:
     auto data() const -> void* { return data_; }
     auto size() const -> mir::geometry::Size { return size_; }
     auto stride() const -> mir::geometry::Stride { return stride_; }
+    /// Returns if this buffer is currently being used by the compositor. In-use buffers keep themselves alive.
     auto is_in_use() const -> bool { return self_ptr != nullptr; }
+    /// Marks this buffer as in-use and assumes the resulting wl_buffer is sent to the compositor. Keeps this buffer
+    /// alive until the compositor releases it (if it's not sent to the compositor or the compositor never releases it
+    /// this buffer is leaked). Should only be called if the buffer is not already in-use.
     auto use() -> wl_buffer*;
 
 private:
@@ -68,7 +72,7 @@ public:
     /// Does not take ownership of the wl_shm
     WaylandShm(wl_shm* shm);
 
-    /// The returned buffer is automatically released as long as it is sent to the compositor
+    /// Always returns a buffer of the correct size that is not in-use
     auto get_buffer(mir::geometry::Size size, mir::geometry::Stride stride) -> std::shared_ptr<WaylandShmBuffer>;
 
 private:

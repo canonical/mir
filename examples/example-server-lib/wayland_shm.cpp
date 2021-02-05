@@ -30,6 +30,8 @@
 
 namespace geom = mir::geometry;
 
+namespace
+{
 static wl_shm_pool* make_shm_pool(wl_shm* shm, int size, void **data)
 {
     static auto (*open_shm_file)() -> mir::Fd = []
@@ -86,6 +88,7 @@ static wl_shm_pool* make_shm_pool(wl_shm* shm, int size, void **data)
     }
 
     return wl_shm_create_pool(shm, fd, size);
+}
 }
 
 struct WaylandShmPool
