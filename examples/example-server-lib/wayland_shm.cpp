@@ -119,8 +119,8 @@ WaylandShmBuffer::WaylandShmBuffer(
     wl_buffer* buffer)
     : pool{pool},
       data_{data},
-      size{size},
-      stride{stride},
+      size_{size},
+      stride_{stride},
       buffer{buffer}
 {
     wl_buffer_add_listener(buffer, &buffer_listener, this);
@@ -157,8 +157,8 @@ auto WaylandShm::get_buffer(geom::Size size, geom::Stride stride) -> std::shared
     size_t const data_size = size.height.as_int() * stride.as_int();
     if (!current_buffer ||
         current_buffer->is_in_use() ||
-        current_buffer->size != size ||
-        current_buffer->stride != stride)
+        current_buffer->size() != size ||
+        current_buffer->stride() != stride)
     {
         void* data;
         auto const pool_resource = make_shm_pool(shm, data_size, &data);

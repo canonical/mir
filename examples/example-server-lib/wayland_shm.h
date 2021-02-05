@@ -43,12 +43,13 @@ public:
     ~WaylandShmBuffer();
 
     auto data() const -> void* { return data_; }
+    auto size() const -> mir::geometry::Size { return size_; }
+    auto stride() const -> mir::geometry::Stride { return stride_; }
+    auto is_in_use() const -> bool { return self_ptr != nullptr; }
     auto use() -> wl_buffer*;
 
 private:
     friend WaylandShm;
-
-    auto is_in_use() const -> bool { return self_ptr != nullptr; }
 
     static wl_buffer_listener const buffer_listener;
 
@@ -56,8 +57,8 @@ private:
 
     std::shared_ptr<WaylandShmPool> const pool;
     void* const data_;
-    mir::geometry::Size const size;
-    mir::geometry::Stride const stride;
+    mir::geometry::Size const size_;
+    mir::geometry::Stride const stride_;
     wl_buffer* const buffer;
     std::shared_ptr<WaylandShmBuffer> self_ptr; ///< Is set on use and cleared on release
 };
