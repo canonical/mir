@@ -18,6 +18,7 @@
 
 #include "sw_splash.h"
 #include "wayland_app.h"
+#include "wayland_surface.h"
 #include "wayland_shm.h"
 #include <wayland-client.h>
 
@@ -39,7 +40,7 @@ struct DrawContext
 
     void* content_area;
     struct wl_display* display;
-    struct wl_surface* surface;
+    std::unique_ptr<WaylandSurface> surface;
     struct wl_callback* new_frame_signal;
     struct Buffer
     {
@@ -49,13 +50,6 @@ struct DrawContext
     bool waiting_for_buffer;
 
     uint8_t pattern[4] = { 0x14, 0x48, 0xDD, 0xFF };
-};
-
-void draw_new_stuff(void* data, struct wl_callback* callback, uint32_t time);
-
-wl_callback_listener const frame_listener =
-{
-    &draw_new_stuff
 };
 
 wl_buffer* find_free_buffer(DrawContext* ctx)
@@ -71,15 +65,8 @@ wl_buffer* find_free_buffer(DrawContext* ctx)
     return NULL;
 }
 
-void draw_new_stuff(
-    void* data,
-    struct wl_callback* callback,
-    uint32_t /*time*/)
+void draw_new_stuff(DrawContext* ctx)
 {
-    DrawContext* ctx = static_cast<decltype(ctx)>(data);
-
-    wl_callback_destroy(callback);
-
     struct wl_buffer* buffer = find_free_buffer(ctx);
     if (!buffer)
     {
@@ -98,10 +85,12 @@ void draw_new_stuff(
         row += 4*ctx->width;
     }
 
-    ctx->new_frame_signal = wl_surface_frame(ctx->surface);
-    wl_callback_add_listener(ctx->new_frame_signal, &frame_listener, ctx);
-    wl_surface_attach(ctx->surface, buffer, 0, 0);
-    wl_surface_commit(ctx->surface);
+    ctx->surface->add_frame_callback([ctx]()
+        {
+            draw_new_stuff(ctx);
+        });
+    ctx->surface->attach_buffer(buffer, 1);
+    ctx->surface->commit();
 }
 
 void update_free_buffers(void* data, struct wl_buffer* buffer)
@@ -117,8 +106,10 @@ void update_free_buffers(void* data, struct wl_buffer* buffer)
 
     if (ctx->waiting_for_buffer)
     {
-        struct wl_callback* fake_frame = wl_display_sync(ctx->display);
-        wl_callback_add_listener(fake_frame, &frame_listener, ctx);
+        WaylandCallback::create(wl_display_sync(ctx->display), [ctx]()
+            {
+                draw_new_stuff(ctx);
+            });
     }
 
     ctx->waiting_for_buffer = false;
@@ -178,34 +169,13 @@ void SwSplash::Self::operator()(struct wl_display* display)
     WaylandApp app{display};
 
     ctx.display = display;
-    ctx.surface = wl_compositor_create_surface(app.compositor());
+    ctx.surface = std::make_unique<WaylandSurface>(&app);
+    ctx.surface->set_fullscreen(nullptr);
+    ctx.surface->commit();
+    app.roundtrip();
 
-    static wl_shell_surface_listener const shell_surface_listener
-    {
-        // ping
-        [](auto, auto, auto){},
-
-        // configure
-        [](void *data, wl_shell_surface *, uint32_t /*edges*/, int32_t width, int32_t height)
-        {
-            auto const ctx = static_cast<DrawContext*>(data);
-
-            if (width > 0)
-                ctx->width = width;
-
-            if (height > 0)
-                ctx->height = height;
-        },
-
-        // popup_done
-        [](auto, auto){}, // popup_done
-    };
-
-    auto const shell_surface = wl_shell_get_shell_surface(app.shell(), ctx.surface);
-    wl_shell_surface_add_listener(shell_surface, &shell_surface_listener, &ctx);
-    wl_shell_surface_set_fullscreen(shell_surface, WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT, 0, nullptr);
-    wl_surface_commit(ctx.surface);
-    wl_display_roundtrip(display);
+    ctx.width = ctx.surface->configured_size().width.as_int();
+    ctx.height = ctx.surface->configured_size().height.as_int();
 
     struct wl_shm_pool* shm_pool = make_shm_pool(app.shm(), ctx.width * ctx.height * 4, &ctx.content_area);
 
@@ -218,8 +188,10 @@ void SwSplash::Self::operator()(struct wl_display* display)
 
     wl_shm_pool_destroy(shm_pool);
 
-    struct wl_callback* first_frame = wl_display_sync(display);
-    wl_callback_add_listener(first_frame, &frame_listener, &ctx);
+    WaylandCallback::create(wl_display_sync(display), [this]()
+        {
+            draw_new_stuff(&ctx);
+        });
 
     auto const time_limit = std::chrono::steady_clock::now() + std::chrono::seconds(2);
 
@@ -243,8 +215,7 @@ void SwSplash::Self::operator()(struct wl_display* display)
             wl_buffer_destroy(b.buffer);
     }
 
-    wl_shell_surface_destroy(shell_surface);
-    wl_surface_destroy(ctx.surface);
+    ctx.surface.reset();
 }
 
 void SwSplash::operator()(struct wl_display* display)
