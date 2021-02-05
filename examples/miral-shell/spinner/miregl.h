@@ -52,27 +52,9 @@ private:
 
     std::shared_ptr<MirEglApp> const mir_egl_app;
 
-    void* content_area = nullptr;
-    struct wl_callback* new_frame_signal = nullptr;
-    struct Buffers
-    {
-        struct wl_buffer* buffer;
-        bool available;
-    } buffers[4];
-    bool waiting_for_buffer = true;
-
     EGLSurface eglsurface;
     int width_{0};
     int height_{0};
-
-    static void shell_surface_ping(void *data, struct wl_shell_surface *wl_shell_surface, uint32_t serial);
-
-    static void shell_surface_configure(void *data,
-        struct wl_shell_surface *wl_shell_surface,
-        uint32_t edges,
-        int32_t width,
-        int32_t height);
-    static void shell_surface_popup_done(void *data, struct wl_shell_surface *wl_shell_surface);
 
 };
 
