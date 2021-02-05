@@ -29,12 +29,14 @@ class WaylandShm;
 // TODO: migrate away from using this directly
 struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data);
 
+struct WaylandShmPool;
+
 class WaylandShmBuffer : public std::enable_shared_from_this<WaylandShmBuffer>
 {
 public:
     WaylandShmBuffer(
+        std::shared_ptr<WaylandShmPool> pool,
         void* data,
-        size_t data_size,
         mir::geometry::Size size,
         mir::geometry::Stride stride,
         wl_buffer* buffer);
@@ -52,8 +54,8 @@ private:
 
     static void handle_release(void *data, wl_buffer*);
 
+    std::shared_ptr<WaylandShmPool> const pool;
     void* const data_;
-    size_t const data_size;
     mir::geometry::Size const size;
     mir::geometry::Stride const stride;
     wl_buffer* const buffer;

@@ -88,16 +88,37 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
     return wl_shm_create_pool(shm, fd, size);
 }
 
+struct WaylandShmPool
+{
+public:
+    WaylandShmPool(wl_shm_pool* shm_pool, void* data, size_t size)
+        : shm_pool{shm_pool},
+          data{data},
+          size{size}
+    {
+    }
+
+    ~WaylandShmPool()
+    {
+        munmap(data, size);
+        wl_shm_pool_destroy(shm_pool);
+    }
+
+    wl_shm_pool* const shm_pool;
+    void* const data;
+    size_t const size;
+};
+
 wl_buffer_listener const WaylandShmBuffer::buffer_listener {handle_release};
 
 WaylandShmBuffer::WaylandShmBuffer(
+    std::shared_ptr<WaylandShmPool> pool,
     void* data,
-    size_t data_size,
     geom::Size size,
     geom::Stride stride,
     wl_buffer* buffer)
-    : data_{data},
-      data_size{data_size},
+    : pool{pool},
+      data_{data},
       size{size},
       stride{stride},
       buffer{buffer}
@@ -108,7 +129,6 @@ WaylandShmBuffer::WaylandShmBuffer(
 WaylandShmBuffer::~WaylandShmBuffer()
 {
     wl_buffer_destroy(buffer);
-    munmap(data_, data_size);
 }
 
 auto WaylandShmBuffer::use() -> wl_buffer*
@@ -141,15 +161,16 @@ auto WaylandShm::get_buffer(geom::Size size, geom::Stride stride) -> std::shared
         current_buffer->stride != stride)
     {
         void* data;
-        WaylandObject<wl_shm_pool> pool{make_shm_pool(shm, data_size, &data), wl_shm_pool_destroy};
+        auto const pool_resource = make_shm_pool(shm, data_size, &data);
+        auto const pool = std::make_shared<WaylandShmPool>(pool_resource, data, data_size);
         auto const buffer = wl_shm_pool_create_buffer(
-            pool,
+            pool_resource,
             0,
             size.width.as_int(),
             size.height.as_int(),
             stride.as_int(),
             WL_SHM_FORMAT_ARGB8888);
-        current_buffer = std::make_shared<WaylandShmBuffer>(data, data_size, size, stride, std::move(buffer));
+        current_buffer = std::make_shared<WaylandShmBuffer>(pool, data, size, stride, std::move(buffer));
     }
 
     return current_buffer;
