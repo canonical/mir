@@ -31,93 +31,68 @@
 #include <mutex>
 #include <map>
 
+using namespace mir::geometry;
+
 namespace
 {
 struct DrawContext
 {
-    int width = 400;
-    int height = 400;
-
-    void* content_area;
     struct wl_display* display;
+    std::unique_ptr<WaylandShm> shm;
     std::unique_ptr<WaylandSurface> surface;
-    struct wl_callback* new_frame_signal;
-    struct Buffer
-    {
-        wl_buffer* buffer = nullptr;
-        bool available = false;
-    } buffers[4];
-    bool waiting_for_buffer;
+    std::vector<std::shared_ptr<WaylandShmBuffer>> buffers;
 
     uint8_t pattern[4] = { 0x14, 0x48, 0xDD, 0xFF };
 };
 
-wl_buffer* find_free_buffer(DrawContext* ctx)
+WaylandShmBuffer* get_free_buffer(DrawContext* ctx)
 {
-    for (auto& b: ctx->buffers)
+    Size const surface_size{ctx->surface->configured_size()};
+    Stride stride{surface_size.width.as_int() * 4};
+
+    if (!ctx->buffers.empty() && ctx->buffers[0]->size() != surface_size)
     {
-        if (b.available)
+        ctx->buffers.clear();
+    }
+
+    for (auto const& b: ctx->buffers)
+    {
+        if (b && !b->is_in_use())
         {
-            b.available = false;
-            return b.buffer;
+            return b.get();
         }
     }
-    return NULL;
+
+    ctx->buffers.push_back(ctx->shm->get_buffer(surface_size, stride));
+    return ctx->buffers.back().get();
 }
 
 void draw_new_stuff(DrawContext* ctx)
 {
-    struct wl_buffer* buffer = find_free_buffer(ctx);
-    if (!buffer)
-    {
-        ctx->waiting_for_buffer = false;
-        return;
-    }
+    auto const buffer = get_free_buffer(ctx);
 
-    char* row = static_cast<decltype(row)>(ctx->content_area);
-    for (int j = 0; j < ctx->height; j++)
+    char* row = static_cast<decltype(row)>(buffer->data());
+    auto const width = buffer->size().width.as_int();
+    auto const height = buffer->size().height.as_int();
+    auto const stride = buffer->stride().as_int();
+
+    for (int j = 0; j < height; j++)
     {
         uint32_t* pixel = (uint32_t*)row;
 
-        for (int i = 0; i < ctx->width; i++)
+        for (int i = 0; i < width; i++)
             memcpy(pixel + i, ctx->pattern, sizeof pixel[i]);
 
-        row += 4*ctx->width;
+        row += stride;
     }
 
     ctx->surface->add_frame_callback([ctx]()
         {
             draw_new_stuff(ctx);
         });
-    ctx->surface->attach_buffer(buffer, 1);
+    ctx->surface->attach_buffer(buffer->use(), 1);
     ctx->surface->commit();
 }
-
-void update_free_buffers(void* data, struct wl_buffer* buffer)
-{
-    DrawContext* ctx = static_cast<decltype(ctx)>(data);
-    for (auto& b: ctx->buffers)
-    {
-        if (b.buffer == buffer)
-        {
-            b.available = true;
-        }
-    }
-
-    if (ctx->waiting_for_buffer)
-    {
-        WaylandCallback::create(wl_display_sync(ctx->display), [ctx]()
-            {
-                draw_new_stuff(ctx);
-            });
-    }
-
-    ctx->waiting_for_buffer = false;
-}
-
-wl_buffer_listener const buffer_listener = {
-    update_free_buffers
-};
 }
 
 struct SwSplash::Self : SplashSession
@@ -169,24 +144,11 @@ void SwSplash::Self::operator()(struct wl_display* display)
     WaylandApp app{display};
 
     ctx.display = display;
+    ctx.shm = std::make_unique<WaylandShm>(app.shm());
     ctx.surface = std::make_unique<WaylandSurface>(&app);
     ctx.surface->set_fullscreen(nullptr);
     ctx.surface->commit();
     app.roundtrip();
-
-    ctx.width = ctx.surface->configured_size().width.as_int();
-    ctx.height = ctx.surface->configured_size().height.as_int();
-
-    struct wl_shm_pool* shm_pool = make_shm_pool(app.shm(), ctx.width * ctx.height * 4, &ctx.content_area);
-
-    for (auto& b: ctx.buffers)
-    {
-        b.buffer = wl_shm_pool_create_buffer(shm_pool, 0, ctx.width, ctx.height, ctx.width*4, WL_SHM_FORMAT_ARGB8888);
-        b.available = true;
-        wl_buffer_add_listener(b.buffer, &buffer_listener, &ctx);
-    }
-
-    wl_shm_pool_destroy(shm_pool);
 
     WaylandCallback::create(wl_display_sync(display), [this]()
         {
@@ -209,13 +171,9 @@ void SwSplash::Self::operator()(struct wl_display* display)
     }
     while (std::chrono::steady_clock::now() < time_limit);
 
-    for (auto const& b: ctx.buffers)
-    {
-        if (b.buffer)
-            wl_buffer_destroy(b.buffer);
-    }
-
+    ctx.buffers.clear();
     ctx.surface.reset();
+    ctx.shm.reset();
 }
 
 void SwSplash::operator()(struct wl_display* display)

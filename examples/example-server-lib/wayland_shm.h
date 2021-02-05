@@ -25,10 +25,6 @@
 #include <memory>
 
 class WaylandShm;
-
-// TODO: migrate away from using this directly
-struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data);
-
 struct WaylandShmPool;
 
 class WaylandShmBuffer : public std::enable_shared_from_this<WaylandShmBuffer>

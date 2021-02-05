@@ -30,7 +30,7 @@
 
 namespace geom = mir::geometry;
 
-struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
+static wl_shm_pool* make_shm_pool(wl_shm* shm, int size, void **data)
 {
     static auto (*open_shm_file)() -> mir::Fd = []
         {
