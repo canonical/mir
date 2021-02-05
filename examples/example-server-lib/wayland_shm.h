@@ -23,6 +23,7 @@
 
 #include <wayland-client.h>
 #include <memory>
+#include <vector>
 
 class WaylandShm;
 struct WaylandShmPool;
@@ -59,6 +60,8 @@ private:
     std::shared_ptr<WaylandShmBuffer> self_ptr; ///< Is set on use and cleared on release
 };
 
+/// A single WaylandShm does not efficiently provision multiple buffers for multiple window sizes. Please use one
+/// WaylandShm per window (if windows may have distinct sizes)
 class WaylandShm
 {
 public:
@@ -70,7 +73,8 @@ public:
 
 private:
     wl_shm* const shm;
-    std::shared_ptr<WaylandShmBuffer> current_buffer;
+    /// get_buffer() assumes all buffers in the list have the same size and stride
+    std::vector<std::shared_ptr<WaylandShmBuffer>> buffers;
 };
 
 #endif // MIRAL_WAYLAND_SHM_H

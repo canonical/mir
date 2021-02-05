@@ -40,41 +40,19 @@ struct DrawContext
     struct wl_display* display;
     std::unique_ptr<WaylandShm> shm;
     std::unique_ptr<WaylandSurface> surface;
-    std::vector<std::shared_ptr<WaylandShmBuffer>> buffers;
 
     uint8_t pattern[4] = { 0x14, 0x48, 0xDD, 0xFF };
 };
 
-WaylandShmBuffer* get_free_buffer(DrawContext* ctx)
-{
-    Size const surface_size{ctx->surface->configured_size()};
-    Stride stride{surface_size.width.as_int() * 4};
-
-    if (!ctx->buffers.empty() && ctx->buffers[0]->size() != surface_size)
-    {
-        ctx->buffers.clear();
-    }
-
-    for (auto const& b: ctx->buffers)
-    {
-        if (b && !b->is_in_use())
-        {
-            return b.get();
-        }
-    }
-
-    ctx->buffers.push_back(ctx->shm->get_buffer(surface_size, stride));
-    return ctx->buffers.back().get();
-}
-
 void draw_new_stuff(DrawContext* ctx)
 {
-    auto const buffer = get_free_buffer(ctx);
+    Size const size{ctx->surface->configured_size()};
+    auto const width = size.width.as_int();
+    auto const height = size.height.as_int();
+    auto const stride = width * 4;
 
+    auto const buffer = ctx->shm->get_buffer(size, Stride{stride});
     char* row = static_cast<decltype(row)>(buffer->data());
-    auto const width = buffer->size().width.as_int();
-    auto const height = buffer->size().height.as_int();
-    auto const stride = buffer->stride().as_int();
 
     for (int j = 0; j < height; j++)
     {
@@ -171,7 +149,6 @@ void SwSplash::Self::operator()(struct wl_display* display)
     }
     while (std::chrono::steady_clock::now() < time_limit);
 
-    ctx.buffers.clear();
     ctx.surface.reset();
     ctx.shm.reset();
 }

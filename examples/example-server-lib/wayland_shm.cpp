@@ -154,13 +154,29 @@ WaylandShm::WaylandShm(wl_shm* shm)
 
 auto WaylandShm::get_buffer(geom::Size size, geom::Stride stride) -> std::shared_ptr<WaylandShmBuffer>
 {
-    size_t const data_size = size.height.as_int() * stride.as_int();
-    if (!current_buffer ||
-        current_buffer->is_in_use() ||
-        current_buffer->size() != size ||
-        current_buffer->stride() != stride)
+    // If the old buffers have a different size, clear them all
+    if (!buffers.empty() && (buffers[0]->size() != size || buffers[0]->stride() != stride))
+    {
+        buffers.clear();
+    }
+
+    std::shared_ptr<WaylandShmBuffer> free_buffer;
+
+    // We can now assume all buffers in the list are the correct size, and look for a free one
+    for (auto const& buffer : buffers)
+    {
+        if (!buffer->is_in_use())
+        {
+            free_buffer = buffer;
+            break;
+        }
+    }
+
+    // If we don't find one, we create a new buffer with a single-use pool
+    if (!free_buffer)
     {
         void* data;
+        size_t const data_size = size.height.as_int() * stride.as_int();
         auto const pool_resource = make_shm_pool(shm, data_size, &data);
         auto const pool = std::make_shared<WaylandShmPool>(pool_resource, data, data_size);
         auto const buffer = wl_shm_pool_create_buffer(
@@ -170,8 +186,9 @@ auto WaylandShm::get_buffer(geom::Size size, geom::Stride stride) -> std::shared
             size.height.as_int(),
             stride.as_int(),
             WL_SHM_FORMAT_ARGB8888);
-        current_buffer = std::make_shared<WaylandShmBuffer>(pool, data, size, stride, std::move(buffer));
+        free_buffer = std::make_shared<WaylandShmBuffer>(pool, data, size, stride, std::move(buffer));
+        buffers.push_back(free_buffer);
     }
 
-    return current_buffer;
+    return free_buffer;
 }
