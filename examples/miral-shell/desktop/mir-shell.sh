@@ -1,22 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 bindir="$(dirname "$0")"
-
-while [ $# -gt 0 ]
-do
-  if [ "$1" = "--help" ] || [ "$1" = "-h" ]
-  then
-    echo "$(basename "$0") - Launch script for \"Mir Shell\""
-    echo "Usage: $(basename "$0") [options] [shell options]"
-    echo "Options are:"
-    echo "    -bindir <bindir>            path to the miral-shell executable [${bindir}]"
-    exit 0
-  elif [ "$1" = "-bindir" ];  then shift; bindir=$1
-  elif [ "${1:0:2}" = "--" ]; then break
-  fi
-  shift
-done
 
 if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 
