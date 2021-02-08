@@ -25,6 +25,7 @@
 
 #include <linux/input.h>
 #include <algorithm>
+#include <limits>
 #include <csignal>
 
 namespace ms = mir::scene;

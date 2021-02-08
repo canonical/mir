@@ -21,8 +21,9 @@
 
 #include "mir/input/input_manager.h"
 
-#include <thread>
 #include <atomic>
+#include <memory>
+#include <thread>
 
 namespace mir
 {
