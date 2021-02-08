@@ -31,6 +31,7 @@ mir (2.3.0) UNRELEASED; urgency=medium
         enable pointer confinement by default)
       . [Wayland] Enable xdg_output_unstable_v1 by default
       . [Mir-on-X] Improve HiDPI support for XWayland
+      . [mir-shell] Improve launching of GNOME Terminal.
     - Bugs fixed:
       . Print help text to stdout instead of stderr. (Fixes #1043)
       . [Wayland] Send sub-pixel input events to clients (Fixes: ##1814, #1828)
@@ -40,6 +41,7 @@ mir (2.3.0) UNRELEASED; urgency=medium
         (Fixes: #1851)
       . [platforms] Disable natural scrolling on the X11 and libinput platforms.
         (Fixes #1813)
+      . [miral-app] Use mktemp instead of deprecated tempfile (Fixes #1924)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 4 Feb 2021 11:51:11 +0000
 
