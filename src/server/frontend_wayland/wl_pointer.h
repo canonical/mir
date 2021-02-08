@@ -25,8 +25,9 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/displacement.h"
 
-#include <functional>
 #include <chrono>
+#include <functional>
+#include <optional>
 #include <set>
 
 struct MirInputEvent;
