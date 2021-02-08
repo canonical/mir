@@ -147,7 +147,7 @@ try
         if (!cards.IsDefined() || !cards.IsSequence())
             throw mir::AbnormalExit{error_prefix + "invalid 'cards' in '" + ll.first.as<std::string>() + "' layout"};
 
-        for (Node const card : cards)
+        for (Node const& card : cards)
         {
             mg::DisplayConfigurationCardId card_no;
 
