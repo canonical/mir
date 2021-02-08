@@ -22,7 +22,7 @@ if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 
 unset QT_QPA_PLATFORMTHEME
 
-if which gsettings > /dev/null
+if command -v gsettings > /dev/null
 then
   keymap_index=$(gsettings get org.gnome.desktop.input-sources current | cut -d\  -f 2)
   if [ -n "$keymap_index" ]
