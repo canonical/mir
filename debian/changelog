@@ -10,7 +10,7 @@ mir (2.3.0) UNRELEASED; urgency=medium
       . mirplatform ABI unchanged at 20
       . mirprotobuf ABI unchanged at 3
       . mirplatformgraphics ABI unchanged at 18
-      . mirinputplatform ABI unchanged at 7
+      . mirinputplatform ABI bumped to 8
       . mircore ABI unchanged at 1
       . mircookie ABI unchanged at 2
       . mirwayland ABI bumped to 2
