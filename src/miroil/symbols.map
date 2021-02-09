@@ -18,6 +18,7 @@ global:
     miroil::PersistDisplayConfig::?PersistDisplayConfig*;
     miroil::PersistDisplayConfig::PersistDisplayConfig*;
     miroil::PersistDisplayConfig::operator*;
+    miroil::dispatchInputEvent*;
     non-virtual?thunk?to?miroil::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
     non-virtual?thunk?to?miroil::DisplayConfigurationStorage::?DisplayConfigurationStorage*;
     typeinfo?for?miroil::DisplayConfigurationOptions;
