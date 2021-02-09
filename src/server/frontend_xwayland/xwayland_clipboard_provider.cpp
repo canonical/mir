@@ -338,9 +338,11 @@ void mf::XWaylandClipboardProvider::send_data(
         return;
     }
 
-    Fd out_fd{fds[0]}, in_fd{fds[1]};
+    Fd out_fd{fds[0]};
 
     {
+        Fd in_fd{fds[1]};
+
         std::lock_guard<std::mutex> lock{mutex};
         if (!current_source)
         {
@@ -348,8 +350,7 @@ void mf::XWaylandClipboardProvider::send_data(
             send_selection_notify(*connection, time, requester, XCB_ATOM_NONE, connection->CLIPBOARD, target);
             return;
         }
-        current_source->initiate_send(mime_type, in_fd);
-        in_fd = {}; // release ownership of the fd here
+        current_source->initiate_send(mime_type, std::move(in_fd));
     }
 
     dispatcher->add_watch(std::make_shared<SelectionSender>(
