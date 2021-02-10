@@ -54,6 +54,7 @@ public:
 
 
 private:
+    class SelectionSender;
     class ClipboardObserver;
 
     XWaylandClipboardProvider(XWaylandClipboardProvider const&) = delete;

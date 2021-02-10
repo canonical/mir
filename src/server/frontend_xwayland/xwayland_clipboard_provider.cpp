@@ -80,13 +80,14 @@ void send_selection_notify(
         XCB_EVENT_MASK_NO_EVENT,
         reinterpret_cast<const char*>(&selection_notify));
 }
+}
 
-class SelectionSender : public md::Dispatchable
+class mf::XWaylandClipboardProvider::SelectionSender : public md::Dispatchable
 {
 public:
     SelectionSender(
         std::shared_ptr<mf::XCBConnection> const& connection,
-        mir::Fd&& source_fd,
+        Fd&& source_fd,
         xcb_timestamp_t time,
         xcb_window_t requester,
         xcb_atom_t selection,
@@ -107,7 +108,7 @@ public:
 
 private:
 
-    auto watch_fd() const -> mir::Fd override
+    auto watch_fd() const -> Fd override
     {
         return source_fd;
     }
@@ -187,7 +188,6 @@ private:
     size_t data_size; ///< how much of the buffer is being used
     std::unique_ptr<uint8_t[]> const buffer;
 };
-}
 
 class mf::XWaylandClipboardProvider::ClipboardObserver : public scene::ClipboardObserver
 {
