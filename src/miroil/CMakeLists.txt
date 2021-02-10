@@ -25,6 +25,7 @@ add_library(miroil SHARED
     persist_display_config.cpp ${miroil_include}/miroil/persist_display_config.h
     display_configuration_policy.cpp ${miroil_include}/miroil/display_configuration_policy.h
     eventdispatch.cpp ${miroil_include}/miroil/eventdispatch.h
+    eventbuilderbase.cpp ${miroil_include}/miroil/eventbuilderbase.h
     ${miroil_include}/miroil/display_configuration_storage.h
     ${miroil_include}/miroil/display_id.h
 )
