@@ -1,6 +1,7 @@
-mir (2.3.0) UNRELEASED; urgency=medium
+mir (2.3.2) UNRELEASED; urgency=medium
 
-  * New upstream release 2.3.0
+  [ Alan Griffiths ]
+  * New upstream release 2.3.2
 
     - ABI summary:
       . mirclient ABI unchanged at 10
@@ -43,7 +44,10 @@ mir (2.3.0) UNRELEASED; urgency=medium
         (Fixes #1813)
       . [miral-app] Use mktemp instead of deprecated tempfile (Fixes #1924)
 
- -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 4 Feb 2021 11:51:11 +0000
+  [ Michał Sawicz ]
+  * CI tooling fixes
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 11 Feb 2021 13:20:46 +0100
 
 mir (2.2.0) UNRELEASED; urgency=medium
 
