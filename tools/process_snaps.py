@@ -31,7 +31,7 @@ SOURCE_NAME = "mir"
 SNAPS = {
     "mir-kiosk": {
         "edge": {"ppa": "dev", "recipe": "mir-kiosk-edge"},
-        "beta": {"ppa": "rc", "recipe": "mir-kiosk-candidate"},
+        "beta": {"ppa": "rc", "recipe": "mir-kiosk-beta"},
     },
     "mir-kiosk-apps": {
         "edge": {"recipe": "mir-kiosk-apps"},
