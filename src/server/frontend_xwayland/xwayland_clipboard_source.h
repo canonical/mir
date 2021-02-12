@@ -58,6 +58,7 @@ public:
     /// @{
     void selection_notify_event(xcb_selection_notify_event_t* event);
     void xfixes_selection_notify_event(xcb_xfixes_selection_notify_event_t* event);
+    void property_notify_event(xcb_window_t window, xcb_atom_t property);
     /// @}
 
 private:
@@ -71,8 +72,11 @@ private:
     /// clipboard_ownership_timestamp when the source is ready.
     void create_source(xcb_timestamp_t timestamp, std::vector<xcb_atom_t> const& targets);
 
-    /// Sends the given data to the current destination fd and then closes and removes the fd
-    void add_data_to_in_progress_send(std::vector<uint8_t>&& data, bool completes_send);
+    /// Called when there is new data in the _WL_SELECTION property that needs to be sent to the in-progress send
+    void read_and_send_wl_selection_data(std::lock_guard<std::mutex> const& lock);
+
+    /// Sends the given data to the current destination fd
+    void add_data_to_in_progress_send(std::lock_guard<std::mutex> const& lock, uint8_t* data_ptr, size_t data_size);
 
     XCBConnection& connection;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const dispatcher;
@@ -83,6 +87,7 @@ private:
     xcb_window_t current_clipbaord_owner{XCB_WINDOW_NONE};
     xcb_timestamp_t clipboard_ownership_timestamp{0};
     std::shared_ptr<ClipboardSource> clipboard_source;
+    bool incremental_transfer_in_progress{false};
     std::shared_ptr<DataSender> in_progress_send;
 };
 }
