@@ -33,22 +33,16 @@ SNAPS = {
         "edge": {"ppa": "dev", "recipe": "mir-kiosk-edge"},
         "beta": {"ppa": "rc", "recipe": "mir-kiosk-beta"},
     },
-    "mir-kiosk-apps": {
-        "edge": {"recipe": "mir-kiosk-apps"},
-    },
-    "chromium-mir-kiosk": {
-        "edge": {"recipe": "chromium-mir-kiosk"},
-    },
     "mir-test-tools": {
         "edge": {"ppa": "dev", "recipe": "mir-test-tools-edge"},
-        "beta": {"ppa": "rc", "recipe": "mir-test-tools"},
+        "beta": {"ppa": "rc", "recipe": "mir-test-tools-beta"},
     },
     "egmde": {
-        "edge": {"ppa": "dev", "recipe": "egmde-mir-master"},
-        "beta": {"ppa": "rc", "recipe": "egmde-mir-release"},
+        "edge": {"ppa": "dev", "recipe": "egmde-mir-edge"},
+        "beta": {"ppa": "rc", "recipe": "egmde-mir-beta"},
     },
     "egmde-confined-desktop": {
-        "edge": {"ppa": "dev", "recipe": "egmde-confined-desktop"},
+        "edge": {"ppa": "dev", "recipe": "egmde-confined-desktop-edge"},
     },
 }
 
