@@ -82,11 +82,14 @@ void send_selection_notify(
 }
 }
 
-class mf::XWaylandClipboardProvider::SelectionSender : public md::Dispatchable
+class mf::XWaylandClipboardProvider::SelectionSender
+    : public md::Dispatchable,
+      public std::enable_shared_from_this<SelectionSender>
 {
 public:
     SelectionSender(
         std::shared_ptr<mf::XCBConnection> const& connection,
+        std::shared_ptr<ThreadsafeSelf> const& provider,
         Fd&& source_fd,
         xcb_timestamp_t time,
         xcb_window_t requester,
@@ -94,6 +97,7 @@ public:
         xcb_atom_t property,
         xcb_atom_t target)
         : connection{connection},
+          provider{provider},
           source_fd{std::move(source_fd)},
           time{time},
           requester{requester},
@@ -124,26 +128,44 @@ private:
         if (events & md::FdEvent::readable || events & md::FdEvent::remote_closed)
         {
             auto const free_space = buffer_size - data_size;
-            auto const len = read(source_fd, buffer.get() + data_size, free_space);
-            if (len < 0)
+            ssize_t len = 0;
+            if (free_space > 0)
             {
-                // Error reading from fd
-                notify_cancelled(strerror(errno));
-                return false;
+                len = read(source_fd, buffer.get() + data_size, free_space);
+                if (len < 0)
+                {
+                    // Error reading from fd
+                    notify_cancelled(strerror(errno));
+                    return false;
+                }
+                data_size += len;
             }
-            data_size += len;
+
             if (len == 0)
             {
-                // EOF, so we send it to the X11 client
-                send_data();
+                // We've either hit EOF or filled up our buffer
+
+                if (incremental_transfer_in_progress)
+                {
+                    // Time to send more data.
+                    progress_incremental_transfer();
+                }
+                else if (free_space == 0)
+                {
+                    // We filled up the buffer. Long buffers need to use incremental transfers.
+                    initiate_incremental_transfer();
+                }
+                else
+                {
+                    // We hit EOF before filling up the buffer, so we send all data to the X11 client in one go
+                    send_all_data_in_single_transfer();
+                }
+
+                // in any case, we don't want to keep reading
                 return false;
             }
-            if (data_size == free_space)
-            {
-                // We filled up the buffer. Long buffers need to use incremental transfers, but we don't support that.'
-                notify_cancelled("incremental paste not yet supported");
-                return false;
-            }
+
+            // If we haven't filled up the buffer or hit EOF, keep reading by returning true
         }
 
         return true;
@@ -154,7 +176,7 @@ private:
         return md::FdEvent::readable;
     }
 
-    void send_data()
+    void send_all_data_in_single_transfer()
     {
         // Call the XCB function directly instead of using connection->set_property() because target is variable
         xcb_change_property(
@@ -166,8 +188,70 @@ private:
             8, // format
             data_size,
             buffer.get());
-        send_selection_notify(*connection, time, requester, property, selection, target);
+        notify_sent();
         connection->flush();
+    }
+
+    void initiate_incremental_transfer()
+    {
+        std::lock_guard<std::mutex> lock{provider->mutex};
+        if (provider->ptr)
+        {
+            // https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#incr_properties:
+            // "The contents of the INCR property will be an integer, which represents a lower bound on the number of bytes
+            // of data in the selection"
+            //
+            // data_size is how much data we've read so far, which is such a lower bound
+            connection->set_property<XCBType::INCR>(requester, property, static_cast<int32_t>(data_size));
+            notify_sent();
+            connection->flush();
+            incremental_transfer_in_progress = true;
+            provider->ptr->defer_incremental_send(shared_from_this(), requester, property);
+            // The data is left in the buffer unsent. When the property is deleted by the client, the provider will add
+            // us back to the dispatcher. On the first fd readable notification we will notice our buffer is full and
+            // proceed to send it.
+        }
+        else
+        {
+            notify_cancelled("clipboard provider destroyed before incremental transfer initiated");
+        }
+    }
+
+    void progress_incremental_transfer()
+    {
+        // Call the XCB function directly instead of using connection->set_property() because target is variable and the
+        // spec says to append instead of replace (although both seem to work fine)
+        xcb_change_property(
+            *connection,
+            XCB_PROP_MODE_APPEND,
+            requester,
+            property,
+            target,
+            8, // format
+            data_size,
+            buffer.get());
+        connection->flush();
+        bool const still_sending = data_size > 0;
+        data_size = 0;
+
+        if (still_sending)
+        {
+            std::lock_guard<std::mutex> lock{provider->mutex};
+            if (provider->ptr)
+            {
+                provider->ptr->defer_incremental_send(shared_from_this(), requester, property);
+            }
+            else
+            {
+                log_warning("failed to finish incremental X11 data transfer because provider was destroyed");
+            }
+        }
+        // Once we send a zero-size chunk we're done!
+    }
+
+    void notify_sent() const
+    {
+        send_selection_notify(*connection, time, requester, property, selection, target);
     }
 
     void notify_cancelled(const char* reason) const
@@ -178,6 +262,7 @@ private:
     }
 
     std::shared_ptr<mf::XCBConnection> const connection;
+    std::shared_ptr<ThreadsafeSelf> const provider;
     mir::Fd const source_fd;
     xcb_timestamp_t const time;
     xcb_window_t const requester;
@@ -185,6 +270,7 @@ private:
     xcb_atom_t const property;
     xcb_atom_t const target;
     size_t const buffer_size; ///< the size of the allocated memory
+    bool incremental_transfer_in_progress = false;
     size_t data_size; ///< how much of the buffer is being used
     std::unique_ptr<uint8_t[]> const buffer;
 };
@@ -210,7 +296,8 @@ mf::XWaylandClipboardProvider::XWaylandClipboardProvider(
     std::shared_ptr<XCBConnection> const& connection,
     std::shared_ptr<md::MultiplexingDispatchable> const& dispatcher,
     std::shared_ptr<scene::Clipboard> const& clipboard)
-    : connection{connection},
+    : threadsafe_self{std::make_shared<ThreadsafeSelf>(this)},
+      connection{connection},
       dispatcher{dispatcher},
       clipboard{clipboard},
       clipboard_observer{std::make_shared<ClipboardObserver>(this)},
@@ -225,6 +312,16 @@ mf::XWaylandClipboardProvider::XWaylandClipboardProvider(
 
 mf::XWaylandClipboardProvider::~XWaylandClipboardProvider()
 {
+    {
+        std::lock_guard<std::mutex> lock{threadsafe_self->mutex};
+        threadsafe_self->ptr = nullptr;
+    }
+    if (!pending_incremental_sends.empty())
+    {
+        log_warning(
+            "XWaylandClipboardProvider destroyed with %zu incremental sends in progress",
+            pending_incremental_sends.size());
+    }
     clipboard->unregister_interest(*clipboard_observer);
     xcb_destroy_window(*connection, selection_window);
     connection->flush();
@@ -286,6 +383,18 @@ void mf::XWaylandClipboardProvider::xfixes_selection_notify_event(xcb_xfixes_sel
         // answer TIMESTAMP conversion requests correctly (this is what Weston does)
         std::lock_guard<std::mutex> lock{mutex};
         clipboard_ownership_timestamp = event->timestamp;
+    }
+}
+
+void mf::XWaylandClipboardProvider::property_deleted_event(xcb_window_t window, xcb_atom_t property)
+{
+    auto const window_prop = std::make_pair(window, property);
+    auto const iter = pending_incremental_sends.find(window_prop);
+    if (iter != pending_incremental_sends.end())
+    {
+        auto sender = std::move(iter->second);
+        pending_incremental_sends.erase(iter);
+        dispatcher->add_watch(std::move(sender));
     }
 }
 
@@ -355,6 +464,7 @@ void mf::XWaylandClipboardProvider::send_data(
 
     dispatcher->add_watch(std::make_shared<SelectionSender>(
         connection,
+        threadsafe_self,
         std::move(out_fd),
         time,
         requester,
@@ -399,4 +509,13 @@ void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::Clipboa
     lock.unlock();
 
     connection->flush();
+}
+
+void mf::XWaylandClipboardProvider::defer_incremental_send(
+    std::shared_ptr<SelectionSender> sender,
+    xcb_window_t window,
+    xcb_atom_t property)
+{
+    auto const window_prop = std::make_pair(window, property);
+    pending_incremental_sends[window_prop] = std::move(sender);
 }
