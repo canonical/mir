@@ -264,9 +264,8 @@ if __name__ == '__main__':
 
             logger.info("Triggering %s…", snap_recipe.description or snap_recipe.name)
 
-            snap_recipe.requestBuilds(archive=snap_recipe.auto_build_archive,
-                                      pocket=snap_recipe.auto_build_pocket,
-                                      channels=snap_recipe.auto_build_channels)
+            snap_recipe.requestBuilds(archive=ppa,
+                                      pocket=snap_recipe.auto_build_pocket)
             logger.debug("Triggered builds: %s", snap_recipe.web_link)
 
     for error in errors:
