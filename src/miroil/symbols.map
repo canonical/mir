@@ -32,6 +32,14 @@ global:
     miroil::MirServerHooks::theInputDeviceHub*;
     miroil::MirServerHooks::theMirDisplay*;
     miroil::MirServerHooks::thePromptSessionManager*;
+    miroil::MirServerHooksBase::MirServerHooksBase*;
+    miroil::MirServerHooksBase::createInputDeviceObserver*;
+    miroil::MirServerHooksBase::operator*;
+    miroil::MirServerHooksBase::promptSessionListener*;
+    miroil::MirServerHooksBase::theDisplayConfigurationController*;
+    miroil::MirServerHooksBase::theInputDeviceHub*;
+    miroil::MirServerHooksBase::theMirDisplay*;
+    miroil::MirServerHooksBase::thePromptSessionManager*;
     miroil::OpenGLContextFactory::OpenGLContextFactory*;
     miroil::OpenGLContextFactory::createPlatformOpenGLContext*;
     miroil::OpenGLContextFactory::operator*;
@@ -47,11 +55,14 @@ global:
     miroil::PromptSessionManager::resumePromptSession*;
     miroil::PromptSessionManager::stopPromptSession*;
     miroil::PromptSessionManager::suspendPromptSession*;
+    miroil::SetCompositor::SetCompositor*;
+    miroil::SetCompositor::operator*;
     miroil::dispatchInputEvent*;
     non-virtual?thunk?to?miroil::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
     non-virtual?thunk?to?miroil::DisplayConfigurationStorage::?DisplayConfigurationStorage*;
     non-virtual?thunk?to?miroil::InputDeviceObserver::?InputDeviceObserver*;
     non-virtual?thunk?to?miroil::PromptSessionManager::?PromptSessionManager*;
+    typeinfo?for?miroil::Compositor;
     typeinfo?for?miroil::DisplayConfigurationOptions;
     typeinfo?for?miroil::DisplayConfigurationOptions::DisplayMode;
     typeinfo?for?miroil::DisplayConfigurationPolicy;
@@ -72,6 +83,8 @@ global:
     typeinfo?for?miroil::PromptSession;
     typeinfo?for?miroil::PromptSessionListener;
     typeinfo?for?miroil::PromptSessionManager;
+    typeinfo?for?miroil::SetCompositor;
+    vtable?for?miroil::Compositor;
     vtable?for?miroil::DisplayConfigurationOptions;
     vtable?for?miroil::DisplayConfigurationOptions::DisplayMode;
     vtable?for?miroil::DisplayConfigurationPolicy;
@@ -92,6 +105,7 @@ global:
     vtable?for?miroil::PromptSession;
     vtable?for?miroil::PromptSessionListener;
     vtable?for?miroil::PromptSessionManager;
+    vtable?for?miroil::SetCompositor;
   };
 
 local: *;

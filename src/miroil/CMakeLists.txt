@@ -30,6 +30,7 @@ add_library(miroil SHARED
     inputdeviceobserver.cpp ${miroil_include}/miroil/inputdeviceobserver.h
     promptsessionmanager.cpp ${miroil_include}/miroil/promptsessionmanager.h    
     openglcontextfactory.cpp ${miroil_include}/miroil/openglcontextfactory.h    
+    setcompositor.cpp ${miroil_include}/miroil/setcompositor.h
     ${miroil_include}/miroil/promptsessionlistener.h
     ${miroil_include}/miroil/display_configuration_storage.h
     ${miroil_include}/miroil/display_id.h
