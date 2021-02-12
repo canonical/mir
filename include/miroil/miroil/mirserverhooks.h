@@ -42,7 +42,7 @@ public:
     std::shared_ptr<mir::input::InputDeviceHub> theInputDeviceHub() const;
     std::shared_ptr<mir::shell::DisplayConfigurationController> theDisplayConfigurationController() const;    
 
-    void createInputDeviceObserver(std::shared_ptr<miroil::InputDeviceObserver> const& observer);
+    void createInputDeviceObserver(std::shared_ptr<miroil::InputDeviceObserver> & observer);
 
 private:
     struct Self;

@@ -55,7 +55,7 @@ private:
 struct MirInputDeviceObserverImpl : mir::input::InputDeviceObserver
 {
 public:    
-    MirInputDeviceObserverImpl(std::shared_ptr<miroil::InputDeviceObserver> const& observer) : observer(observer) {};
+    MirInputDeviceObserverImpl(std::shared_ptr<miroil::InputDeviceObserver> & observer) : observer(observer) {};
     
     void device_added(std::shared_ptr<mir::input::Device> const& device) override;
     void device_changed(std::shared_ptr<mir::input::Device> const& /*device*/) override {}
@@ -63,7 +63,7 @@ public:
     void changes_complete() override {}
     
 private:    
-    std::shared_ptr<miroil::InputDeviceObserver> const observer;
+    std::shared_ptr<miroil::InputDeviceObserver> observer;
 };
 
 struct HiddenCursorWrapper : mg::Cursor
@@ -179,7 +179,7 @@ std::shared_ptr<mir::shell::DisplayConfigurationController> miroil::MirServerHoo
     throw std::logic_error("No input device hub available. Server not running?");
 }
 
-void miroil::MirServerHooks::createInputDeviceObserver(std::shared_ptr<miroil::InputDeviceObserver> const& observer)
+void miroil::MirServerHooks::createInputDeviceObserver(std::shared_ptr<miroil::InputDeviceObserver> & observer)
 {
     theInputDeviceHub()->add_observer(std::make_shared<MirInputDeviceObserverImpl>(observer));
 }
