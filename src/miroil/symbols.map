@@ -28,16 +28,10 @@ global:
     miroil::MirServerHooks::createInputDeviceObserver*;
     miroil::MirServerHooks::operator*;
     miroil::MirServerHooks::promptSessionListener*;
+    miroil::MirServerHooks::theDisplayConfigurationController*;
     miroil::MirServerHooks::theInputDeviceHub*;
     miroil::MirServerHooks::theMirDisplay*;
     miroil::MirServerHooks::thePromptSessionManager*;
-    miroil::MirServerHooksBase::MirServerHooksBase*;
-    miroil::MirServerHooksBase::createInputDeviceObserver*;
-    miroil::MirServerHooksBase::operator*;
-    miroil::MirServerHooksBase::promptSessionListener*;
-    miroil::MirServerHooksBase::theInputDeviceHub*;
-    miroil::MirServerHooksBase::theMirDisplay*;
-    miroil::MirServerHooksBase::thePromptSessionManager*;
     miroil::OpenGLContextFactory::OpenGLContextFactory*;
     miroil::OpenGLContextFactory::createPlatformOpenGLContext*;
     miroil::OpenGLContextFactory::operator*;

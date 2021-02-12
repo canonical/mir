@@ -14,24 +14,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIROIL_MIRSERVERHOOKSBASE_H
-#define MIROIL_MIRSERVERHOOKSBASE_H
+#ifndef MIROIL_MIRSERVERHOOKS_H
+#define MIROIL_MIRSERVERHOOKS_H
 #include "miroil/inputdeviceobserver.h"
 #include "miroil/promptsessionlistener.h"
 #include <functional>
 #include <memory>
 
 namespace mir { class Server; }
-namespace mir { namespace scene { class PromptSessionManager; }}
-namespace mir { namespace graphics { class Display; }}
+namespace mir { namespace scene { class PromptSessionManager; } }
+namespace mir { namespace graphics { class Display; } }
 namespace mir { namespace input { class InputDeviceHub; } }
+namespace mir { namespace shell { class DisplayConfigurationController; } }
 
 namespace miroil
 {
-class MirServerHooksBase
+class MirServerHooks
 {
 public:
-    MirServerHooksBase(std::function<std::shared_ptr<miroil::PromptSessionListener>()> createListener);
+    MirServerHooks(std::function<std::shared_ptr<miroil::PromptSessionListener>()> createListener);
 
     void operator()(mir::Server& server);
 
@@ -39,6 +40,7 @@ public:
     std::shared_ptr<mir::scene::PromptSessionManager> thePromptSessionManager() const;
     std::shared_ptr<mir::graphics::Display> theMirDisplay() const;
     std::shared_ptr<mir::input::InputDeviceHub> theInputDeviceHub() const;
+    std::shared_ptr<mir::shell::DisplayConfigurationController> theDisplayConfigurationController() const;    
 
     void createInputDeviceObserver(std::shared_ptr<miroil::InputDeviceObserver> const& observer);
 
@@ -48,4 +50,4 @@ private:
 };
 }
 
-#endif //MIROI_MIRSERVERHOOKSBASE_H
+#endif //MIROI_MIRSERVERHOOKS_H

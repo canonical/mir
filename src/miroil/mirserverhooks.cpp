@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "miroil/mirserverhooksbase.h"
+#include "miroil/mirserverhooks.h"
 #include "miroil/namedcursor.h"
 #include <stdexcept>
 
@@ -95,7 +95,7 @@ std::shared_ptr<mir::graphics::CursorImage> MirCursorImages::image(const std::st
     return std::make_shared<miroil::NamedCursor>(cursor_name.c_str());
 }
 
-struct miroil::MirServerHooksBase::Self
+struct miroil::MirServerHooks::Self
 {
     std::function<std::shared_ptr<miroil::PromptSessionListener>()> createListener;
     std::weak_ptr<PromptSessionListenerImpl> m_promptSessionListener;
@@ -105,13 +105,13 @@ struct miroil::MirServerHooksBase::Self
     std::weak_ptr<mir::input::InputDeviceHub> m_inputDeviceHub;
 };
 
-miroil::MirServerHooksBase::MirServerHooksBase(std::function<std::shared_ptr<miroil::PromptSessionListener>()> createListener) :
+miroil::MirServerHooks::MirServerHooks(std::function<std::shared_ptr<miroil::PromptSessionListener>()> createListener) :
     self{std::make_shared<Self>()}
 {
     self->createListener = createListener;
 }
 
-void miroil::MirServerHooksBase::operator()(mir::Server& server)
+void miroil::MirServerHooks::operator()(mir::Server& server)
 {
     server.override_the_cursor_images([]
         { return std::make_shared<MirCursorImages>(); });
@@ -138,7 +138,7 @@ void miroil::MirServerHooksBase::operator()(mir::Server& server)
         });
 }
 
-miroil::PromptSessionListener * miroil::MirServerHooksBase::promptSessionListener() const
+miroil::PromptSessionListener * miroil::MirServerHooks::promptSessionListener() const
 {
     if (auto result = self->m_promptSessionListener.lock()) {        
         return result.get()->promptSessionListener();
@@ -147,7 +147,7 @@ miroil::PromptSessionListener * miroil::MirServerHooksBase::promptSessionListene
     throw std::logic_error("No prompt session listener available. Server not running?");
 }
 
-std::shared_ptr<mir::scene::PromptSessionManager> miroil::MirServerHooksBase::thePromptSessionManager() const
+std::shared_ptr<mir::scene::PromptSessionManager> miroil::MirServerHooks::thePromptSessionManager() const
 {
     if (auto result = self->m_mirPromptSessionManager.lock())
         return result;
@@ -155,7 +155,7 @@ std::shared_ptr<mir::scene::PromptSessionManager> miroil::MirServerHooksBase::th
     throw std::logic_error("No prompt session manager available. Server not running?");
 }
 
-std::shared_ptr<mir::graphics::Display> miroil::MirServerHooksBase::theMirDisplay() const
+std::shared_ptr<mir::graphics::Display> miroil::MirServerHooks::theMirDisplay() const
 {
     if (auto result = self->m_mirDisplay.lock())
         return result;
@@ -163,7 +163,7 @@ std::shared_ptr<mir::graphics::Display> miroil::MirServerHooksBase::theMirDispla
     throw std::logic_error("No display available. Server not running?");
 }
 
-std::shared_ptr<mir::input::InputDeviceHub> miroil::MirServerHooksBase::theInputDeviceHub() const
+std::shared_ptr<mir::input::InputDeviceHub> miroil::MirServerHooks::theInputDeviceHub() const
 {
     if (auto result = self->m_inputDeviceHub.lock())
         return result;
@@ -171,7 +171,15 @@ std::shared_ptr<mir::input::InputDeviceHub> miroil::MirServerHooksBase::theInput
     throw std::logic_error("No input device hub available. Server not running?");
 }
 
-void miroil::MirServerHooksBase::createInputDeviceObserver(std::shared_ptr<miroil::InputDeviceObserver> const& observer)
+std::shared_ptr<mir::shell::DisplayConfigurationController> miroil::MirServerHooks::theDisplayConfigurationController() const
+{
+    if (auto result = self->m_mirDisplayConfigurationController.lock())
+        return result;
+
+    throw std::logic_error("No input device hub available. Server not running?");
+}
+
+void miroil::MirServerHooks::createInputDeviceObserver(std::shared_ptr<miroil::InputDeviceObserver> const& observer)
 {
     theInputDeviceHub()->add_observer(std::make_shared<MirInputDeviceObserverImpl>(observer));
 }
