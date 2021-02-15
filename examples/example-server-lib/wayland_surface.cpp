@@ -61,6 +61,11 @@ void WaylandSurface::set_fullscreen(wl_output* output)
         output);
 }
 
+void WaylandSurface::add_frame_callback(std::function<void()>&& func)
+{
+    WaylandCallback::create(wl_surface_frame(surface_), std::move(func));
+}
+
 void WaylandSurface::handle_ping(void* data, struct wl_shell_surface*, uint32_t serial)
 {
     auto const self = static_cast<WaylandSurface*>(data);

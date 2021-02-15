@@ -24,6 +24,8 @@
 
 #include "mir/geometry/size.h"
 
+#include <functional>
+
 class WaylandSurface
 {
 public:
@@ -34,6 +36,7 @@ public:
     void commit() const;
     /// output can be null, user needs to commit after
     void set_fullscreen(wl_output* output);
+    void add_frame_callback(std::function<void()>&& func);
 
     auto app() const -> WaylandApp const* { return app_; }
     auto surface() const -> wl_surface* { return surface_; }

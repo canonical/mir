@@ -23,48 +23,62 @@
 
 #include <wayland-client.h>
 #include <memory>
+#include <vector>
 
 class WaylandShm;
+struct WaylandShmPool;
 
-// TODO: migrate away from using this directly
-struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data);
-
-class WaylandShmBuffer
+class WaylandShmBuffer : public std::enable_shared_from_this<WaylandShmBuffer>
 {
 public:
-    WaylandShmBuffer(void* data, size_t data_size, wl_buffer* buffer);
+    WaylandShmBuffer(
+        std::shared_ptr<WaylandShmPool> pool,
+        void* data,
+        mir::geometry::Size size,
+        mir::geometry::Stride stride,
+        wl_buffer* buffer);
     ~WaylandShmBuffer();
 
     auto data() const -> void* { return data_; }
-    operator wl_buffer*() const { return buffer; }
+    auto size() const -> mir::geometry::Size { return size_; }
+    auto stride() const -> mir::geometry::Stride { return stride_; }
+    /// Returns if this buffer is currently being used by the compositor. In-use buffers keep themselves alive.
+    auto is_in_use() const -> bool { return self_ptr != nullptr; }
+    /// Marks this buffer as in-use and assumes the resulting wl_buffer is sent to the compositor. Keeps this buffer
+    /// alive until the compositor releases it (if it's not sent to the compositor or the compositor never releases it
+    /// this buffer is leaked). Should only be called if the buffer is not already in-use.
+    auto use() -> wl_buffer*;
 
 private:
     friend WaylandShm;
-
-    auto is_in_use() const -> bool { return self_ptr != nullptr; }
 
     static wl_buffer_listener const buffer_listener;
 
     static void handle_release(void *data, wl_buffer*);
 
+    std::shared_ptr<WaylandShmPool> const pool;
     void* const data_;
-    size_t const data_size;
+    mir::geometry::Size const size_;
+    mir::geometry::Stride const stride_;
     wl_buffer* const buffer;
-    std::shared_ptr<WaylandShmBuffer> self_ptr; ///< gets cleared on release
+    std::shared_ptr<WaylandShmBuffer> self_ptr; ///< Is set on use and cleared on release
 };
 
+/// A single WaylandShm does not efficiently provision multiple buffers for multiple window sizes. Please use one
+/// WaylandShm per window (if windows may have distinct sizes)
 class WaylandShm
 {
 public:
     /// Does not take ownership of the wl_shm
     WaylandShm(wl_shm* shm);
 
-    /// The returned buffer is automatically released as long as it is sent to the compositor
-    auto get_buffer(mir::geometry::Size size, mir::geometry::Stride stride) -> WaylandShmBuffer*;
+    /// Always returns a buffer of the correct size that is not in-use
+    auto get_buffer(mir::geometry::Size size, mir::geometry::Stride stride) -> std::shared_ptr<WaylandShmBuffer>;
 
 private:
     wl_shm* const shm;
-    std::shared_ptr<WaylandShmBuffer> current_buffer;
+    /// get_buffer() assumes all buffers in the list have the same size and stride
+    std::vector<std::shared_ptr<WaylandShmBuffer>> buffers;
 };
 
 #endif // MIRAL_WAYLAND_SHM_H

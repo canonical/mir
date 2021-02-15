@@ -51,6 +51,25 @@ private:
     std::unique_ptr<T, void(*)(T*)> proxy;
 };
 
+class WaylandCallback
+{
+public:
+    /// Takes ownership of callback
+    static void create(wl_callback* callback, std::function<void()>&& func);
+
+private:
+    WaylandCallback(WaylandObject<wl_callback> callback, std::function<void()>&& func)
+        : callback{std::move(callback)},
+          func{std::move(func)}
+    {
+    }
+
+    static wl_callback_listener const callback_listener;
+
+    WaylandObject<wl_callback> const callback;
+    std::function<void()> const func;
+};
+
 class WaylandOutput
 {
 public:
