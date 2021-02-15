@@ -49,6 +49,7 @@ enum class XCBType
     UTF8_STRING,
     WM_STATE,
     WM_PROTOCOLS,
+    INCR,
 };
 
 template<XCBType T> struct NativeXCBType                { typedef void type;};
@@ -60,6 +61,9 @@ template<> struct NativeXCBType<XCBType::STRING>        { typedef char type; };
 template<> struct NativeXCBType<XCBType::UTF8_STRING>   { typedef char type; };
 template<> struct NativeXCBType<XCBType::WM_STATE>      { typedef uint32_t type; };
 template<> struct NativeXCBType<XCBType::WM_PROTOCOLS>  { typedef uint32_t type; };
+// https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#incr_properties:
+// "The contents of the INCR property will be an integer"
+template<> struct NativeXCBType<XCBType::INCR>          { typedef int32_t type; };
 
 class XCBConnection
 {

@@ -606,6 +606,7 @@ auto mf::XCBConnection::xcb_type_atom(XCBType type) const -> xcb_atom_t
         case XCBType::UTF8_STRING:  return UTF8_STRING;
         case XCBType::WM_STATE:     return WM_STATE;
         case XCBType::WM_PROTOCOLS: return WM_PROTOCOLS;
+        case XCBType::INCR:         return INCR;
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error(
