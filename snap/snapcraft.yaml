@@ -1,0 +1,102 @@
+name: mir-core20
+base: core20
+summary: The fast, open and secure display server for any device - build environment
+description: |
+  Mir is a display server running on linux systems, with a focus on efficiency,
+  robust operation and a well-defined driver model.
+
+  This snap contains the build environment necessary to build Mir display servers.
+
+confinement: strict
+adopt-info: mir
+
+parts:
+  mir:
+    plugin: cmake
+    source: .
+    cmake-parameters:
+    - -DCMAKE_INSTALL_PREFIX=/usr
+    - -DMIR_ENABLE_TESTS=OFF
+    - -DMIR_PLATFORM='gbm-kms;eglstream-kms;x11;wayland'
+    build-packages:
+    - build-essential
+    - capnproto
+    - eglexternalplatform-dev
+    - git
+    - libboost-date-time-dev
+    - libboost-filesystem-dev
+    - libboost-iostreams-dev
+    - libboost-program-options-dev
+    - libcapnp-dev
+    - libdrm-dev
+    - libegl1-mesa-dev
+    - libepoxy-dev
+    - libfreetype6-dev
+    - libgbm-dev
+    - libglm-dev
+    - libgoogle-glog-dev
+    - libinput-dev
+    - liblttng-ust-dev
+    - libnvidia-egl-wayland-dev
+    - libprotobuf-dev
+    - libudev-dev
+    - libwayland-dev
+    - libxcb-composite0-dev
+    - libxcursor-dev
+    - libxkbcommon-dev
+    - libxml++2.6-dev
+    - libyaml-cpp-dev
+    - nettle-dev
+    - protobuf-compiler
+    - python3-pil
+    - systemtap-sdt-dev
+    stage-packages:
+    - libboost-filesystem1.71.0
+    - libboost-iostreams1.71.0
+    - libboost-program-options1.71.0
+    - libcapnp-0.7.0
+    - libdrm2
+    - libegl1
+    - libepoxy0
+    - libevdev2
+    - libfreetype6
+    - libgbm1
+    - libgflags2.2
+    - libgles2
+    - libglibmm-2.4-1v5
+    - libglvnd0
+    - libgoogle-glog0v5
+    - libgudev-1.0-0
+    - libicu66
+    - libinput10
+    - liblttng-ust0
+    - libmtdev1
+    - libnuma1
+    - libnvidia-egl-wayland1
+    - libpng16-16
+    - libprotobuf-lite17
+    - libsigc++-2.0-0v5
+    - libunwind8
+    - liburcu6
+    - libwacom2
+    - libwayland-client0
+    - libwayland-egl1
+    - libwayland-server0
+    - libx11-6
+    - libxau6
+    - libxcb-composite0
+    - libxcb-render0
+    - libxcb-xfixes0
+    - libxcb1
+    - libxcursor1
+    - libxdmcp6
+    - libxfixes3
+    - libxkbcommon0
+    - libxml++2.6-2v5
+    - libxml2
+    - libxrender1
+    - libyaml-cpp0.6
+    override-pull: |
+      snapcraftctl pull
+      snapcraftctl set-version $( git describe )
+      snapcraftctl set-grade $( [[ $( git describe ) =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo stable || echo devel )
