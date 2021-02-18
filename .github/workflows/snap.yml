@@ -42,3 +42,44 @@ jobs:
       if: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
       run: |
         snapcraft upload *.snap --release "edge/pr${{ github.event.number }}"
+
+  mir-kiosk:
+    needs: [mir-core20]
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+
+    steps:
+    - name: Setup LXD
+      uses: whywaita/setup-lxd@v1
+
+    - name: Install Snapcraft
+      uses: samuelmeuli/action-snapcraft@v1
+      with:
+        snapcraft_token: ${{ secrets.SNAPCRAFT_TOKEN }}
+
+    - name: Check out code
+      uses: actions/checkout@v2
+      with:
+        repository: MirServer/mir-kiosk
+        fetch-depth: 0  # needed for version determination
+
+    - name: Tweak the stage snap
+      run: |
+        sed -i 's@- mir-core20@\0/latest/edge/pr${{ github.event.number }}@' snap/snapcraft.yaml
+
+    - name: Build and verify the snap
+      env:
+        SNAPCRAFT_BUILD_INFO: 1
+        SNAP_ENFORCE_RESQUASHFS: 0
+      run: |
+        /snap/bin/snapcraft --use-lxd
+
+        sudo snap install review-tools
+        /snap/bin/review-tools.snap-review *.snap --plugs snap/local/plugs.json --slots snap/local/slots.json
+
+    - name: Publish the snap
+      if: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
+      run: |
+        snapcraft upload *.snap --release "edge/mir-pr${{ github.event.number }}"
