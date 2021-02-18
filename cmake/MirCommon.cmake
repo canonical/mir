@@ -178,7 +178,7 @@ function (mir_discover_external_gtests)
   endif()
 
   file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND}\" -- ${TEST_COMMAND} --gtest_filter=-${EXPECTED_FAILURE_STRING} ${TEST_ARGS_STRING}\n")
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND} ${TEST_ARGS_STRING}\" -- ${TEST_COMMAND} ${TEST_ARGS_STRING} --gtest_filter=-${EXPECTED_FAILURE_STRING}\n")
 
   foreach (xfail IN LISTS TEST_EXPECTED_FAILURES)
     # Add a test verifying that the expected failures really do fail
