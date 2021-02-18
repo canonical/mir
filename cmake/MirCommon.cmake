@@ -193,7 +193,8 @@ function (mir_discover_external_gtests)
       set_tests_properties("${TEST_NAME}_${xfail}_fails" PROPERTIES WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY})
     endif()
 
-    # Unsupported for ptest, but this should be ok
+    file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+      "echo \"add_test\(${TEST_NAME}.${xfail}_fails ${CMAKE_BINARY_DIR}/mir_gtest/xfail_if_gtest_exists.sh ${TEST_COMMAND} ${xfail} ${TEST_ARGS_STRING})\"\n")
   endforeach ()
 endfunction()
 
