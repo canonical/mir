@@ -43,12 +43,18 @@ jobs:
       run: |
         snapcraft upload *.snap --release "edge/pr${{ github.event.number }}"
 
-  mir-kiosk:
+  snap:
     needs: [mir-core20]
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 15
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        snap:
+        - MirServer/mir-kiosk
+        - MirServer/egmde-confined-desktop
 
     steps:
     - name: Setup LXD
@@ -62,7 +68,7 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
       with:
-        repository: MirServer/mir-kiosk
+        repository: ${{ matrix.snap }}
         fetch-depth: 0  # needed for version determination
 
     - name: Tweak the stage snap
@@ -77,7 +83,11 @@ jobs:
         /snap/bin/snapcraft --use-lxd
 
         sudo snap install review-tools
-        /snap/bin/review-tools.snap-review *.snap --plugs snap/local/plugs.json --slots snap/local/slots.json
+
+        ARGS=( *.snap )
+        [ -e snap/local/plugs.json ] && ARGS+=(--plugs snap/local/plugs.json)
+        [ -e snap/local/slots.json ] && ARGS+=(--slots snap/local/slots.json)
+        /snap/bin/review-tools.snap-review "${ARGS[@]}"
 
     - name: Publish the snap
       if: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
