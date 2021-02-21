@@ -161,7 +161,7 @@ void miroil::PersistDisplayConfig::operator()(mir::Server& server)
         [this](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
         -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
-            auto custom_wrapper = self->custom_wrapper();
+            auto custom_wrapper = self->custom_wrapper(wrapped);
             return std::make_shared<DisplayConfigurationPolicyAdapter>(self,
                                                                        std::make_shared<MiralWrappedMirDisplayConfigurationPolicy>(wrapped),
                                                                        custom_wrapper);
