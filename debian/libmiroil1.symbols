@@ -21,6 +21,5 @@ libmiroil.so.1 libmiroil1 #MINVER#
  (c++)"miroil::PersistDisplayConfig::~PersistDisplayConfig()@MIROIL_1.0" 2.2.0
  (c++)"typeinfo for miroil::DisplayConfigurationPolicy@MIROIL_1.0" 2.2.0
  (c++)"vtable for miroil::DisplayConfigurationPolicy@MIROIL_1.0" 2.2.0
- MIROIL_2.2@MIROIL_2.2 2.2.0
  (c++)"miroil::PersistDisplayConfig::PersistDisplayConfig(std::shared_ptr<miroil::DisplayConfigurationStorage> const&, std::function<std::shared_ptr<miroil::DisplayConfigurationPolicy> (std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&)> const&)@MIROIL_1.0" 2.2.0
  (c++)"miroil::dispatch_input_event(miral::Window const&, MirInputEvent const*)@MIROIL_1.0" 2.2.0
