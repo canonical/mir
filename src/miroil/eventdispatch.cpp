@@ -20,7 +20,7 @@
 #include <miral/window.h>
 #include <mir/scene/surface.h>
 
-void miroil::dispatchInputEvent(const miral::Window& window, const MirInputEvent* event)
+void miroil::dispatch_input_event(const miral::Window& window, const MirInputEvent* event)
 {
     auto e = reinterpret_cast<MirEvent const*>(event); // naughty
 
