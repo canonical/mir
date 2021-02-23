@@ -61,8 +61,7 @@ struct Value
         using ValueType = T;
         using TagType = Tag;
         template<typename OtherTag>
-        using WrapperType = Wrapper<OtherTag>;
-        using IsGemetryWrapper = void; ///< Used to check if this is a geometry wrapper type
+        using Corresponding = Wrapper<OtherTag>;
 
         template <typename Q = T>
         constexpr typename std::enable_if<std::is_integral<Q>::value, int>::type as_int() const

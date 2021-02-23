@@ -42,7 +42,7 @@ template<template<typename> typename T>
 struct Size : detail::SizeBase
 {
     template<typename Tag>
-    using WrapperType = T<Tag>;
+    using Corresponding = T<Tag>;
 
     using PointType = Point<T>;
     using DisplacementType = Displacement<T>;

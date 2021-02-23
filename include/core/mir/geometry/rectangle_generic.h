@@ -103,10 +103,10 @@ struct Rectangle : detail::RectangleBase
         return !disjoint;
     }
 
-    typename P::template WrapperType<XTag> left() const   { return top_left.x; }
-    typename P::template WrapperType<XTag> right() const  { return bottom_right().x; }
-    typename P::template WrapperType<YTag> top() const    { return top_left.y; }
-    typename P::template WrapperType<YTag> bottom() const { return bottom_right().y; }
+    typename P::template Corresponding<XTag> left() const   { return top_left.x; }
+    typename P::template Corresponding<XTag> right() const  { return bottom_right().x; }
+    typename P::template Corresponding<YTag> top() const    { return top_left.y; }
+    typename P::template Corresponding<YTag> bottom() const { return bottom_right().y; }
 
     P top_left;
     S size;

@@ -36,7 +36,7 @@ class IntWrapper : public generic::Value<int>::Wrapper<Tag>
 {
 public:
     template<typename OtherTag>
-    using WrapperType = IntWrapper<OtherTag>;
+    using Corresponding = IntWrapper<OtherTag>;
 
     using generic::Value<int>::Wrapper<Tag>::Wrapper;
 

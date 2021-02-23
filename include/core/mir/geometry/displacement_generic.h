@@ -44,7 +44,7 @@ template<template<typename> typename T>
 struct Displacement : detail::DisplacementBase
 {
     template<typename Tag>
-    using WrapperType = T<Tag>;
+    using Corresponding = T<Tag>;
 
     using PointType = Point<T>;
     using SizeType = Size<T>;

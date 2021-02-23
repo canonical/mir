@@ -41,7 +41,7 @@ template<template<typename> typename T>
 struct Point : detail::PointBase
 {
     template<typename Tag>
-    using WrapperType = T<Tag>;
+    using Corresponding = T<Tag>;
 
     using SizeType = Size<T>;
     using DisplacementType = Displacement<T>;
@@ -70,24 +70,24 @@ inline constexpr bool operator != (P const& lhs, P const& rhs)
 }
 
 template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr P operator+(P lhs, typename P::template WrapperType<DeltaXTag> rhs) { return{lhs.x + rhs, lhs.y}; }
+inline constexpr P operator+(P lhs, typename P::template Corresponding<DeltaXTag> rhs) { return{lhs.x + rhs, lhs.y}; }
 template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr P operator+(P lhs, typename P::template WrapperType<DeltaYTag> rhs) { return{lhs.x, lhs.y + rhs}; }
+inline constexpr P operator+(P lhs, typename P::template Corresponding<DeltaYTag> rhs) { return{lhs.x, lhs.y + rhs}; }
 
 template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr P operator-(P lhs, typename P::template WrapperType<DeltaXTag> rhs) { return{lhs.x - rhs, lhs.y}; }
+inline constexpr P operator-(P lhs, typename P::template Corresponding<DeltaXTag> rhs) { return{lhs.x - rhs, lhs.y}; }
 template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr P operator-(P lhs, typename P::template WrapperType<DeltaYTag> rhs) { return{lhs.x, lhs.y - rhs}; }
+inline constexpr P operator-(P lhs, typename P::template Corresponding<DeltaYTag> rhs) { return{lhs.x, lhs.y - rhs}; }
 
 template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline P& operator+=(P& lhs, typename P::template WrapperType<DeltaXTag> rhs) { lhs.x += rhs; return lhs; }
+inline P& operator+=(P& lhs, typename P::template Corresponding<DeltaXTag> rhs) { lhs.x += rhs; return lhs; }
 template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline P& operator+=(P& lhs, typename P::template WrapperType<DeltaYTag> rhs) { lhs.y += rhs; return lhs; }
+inline P& operator+=(P& lhs, typename P::template Corresponding<DeltaYTag> rhs) { lhs.y += rhs; return lhs; }
 
 template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline P& operator-=(P& lhs, typename P::template WrapperType<DeltaXTag> rhs) { lhs.x -= rhs; return lhs; }
+inline P& operator-=(P& lhs, typename P::template Corresponding<DeltaXTag> rhs) { lhs.x -= rhs; return lhs; }
 template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline P& operator-=(P& lhs, typename P::template WrapperType<DeltaYTag> rhs) { lhs.y -= rhs; return lhs; }
+inline P& operator-=(P& lhs, typename P::template Corresponding<DeltaYTag> rhs) { lhs.y -= rhs; return lhs; }
 
 template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
 std::ostream& operator<<(std::ostream& out, P const& value)
