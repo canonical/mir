@@ -11,7 +11,9 @@ global:
     miroil::EventBuilder::EventInfo::store*;
     miroil::EventBuilder::add_touch*;
     miroil::EventBuilder::find_info*;
-    miroil::EventBuilder::make_event*;
+    miroil::EventBuilder::make_key_event*;
+    miroil::EventBuilder::make_pointer_event*;
+    miroil::EventBuilder::make_touch_event*;
     miroil::EventBuilder::store*;
     miroil::EventBuilderBase::EventBuilderBase*;
     miroil::EventBuilderBase::EventInfo::store*;
