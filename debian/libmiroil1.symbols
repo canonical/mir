@@ -1,35 +1,35 @@
 libmiroil.so.1 libmiroil1 #MINVER#
- MIROIL_1.0@MIROIL_1.0 2.2.0
- (c++)"miroil::DisplayConfigurationPolicy::DisplayConfigurationPolicy()@MIROIL_1.0" 2.2.0
- (c++)"miroil::DisplayConfigurationPolicy::~DisplayConfigurationPolicy()@MIROIL_1.0" 2.2.0
- (c++)"miroil::Edid::Descriptor::string_value[abi:cxx11]() const@MIROIL_1.0" 2.2.0
- (c++)"miroil::Edid::parse_data(std::vector<unsigned char, std::allocator<unsigned char> > const&)@MIROIL_1.0" 2.2.0
- (c++)"miroil::GLBuffer::GLBuffer()@MIROIL_1.0" 2.2.0
- (c++)"miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_1.0" 2.2.0
- (c++)"miroil::GLBuffer::bind()@MIROIL_1.0" 2.2.0
- (c++)"miroil::GLBuffer::gl_bind_tex()@MIROIL_1.0" 2.2.0
- (c++)"miroil::GLBuffer::has_alpha_channel() const@MIROIL_1.0" 2.2.0
- (c++)"miroil::GLBuffer::operator bool() const@MIROIL_1.0" 2.2.0
- (c++)"miroil::GLBuffer::reset()@MIROIL_1.0" 2.2.0
- (c++)"miroil::GLBuffer::reset(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_1.0" 2.2.0
- (c++)"miroil::GLBuffer::size() const@MIROIL_1.0" 2.2.0
- (c++)"miroil::GLBuffer::~GLBuffer()@MIROIL_1.0" 2.2.0
- (c++)"miroil::PersistDisplayConfig::PersistDisplayConfig(miroil::PersistDisplayConfig const&)@MIROIL_1.0" 2.2.0
- (c++)"miroil::PersistDisplayConfig::PersistDisplayConfig(std::shared_ptr<miroil::DisplayConfigurationStorage> const&, std::function<std::shared_ptr<miroil::DisplayConfigurationPolicy> ()> const&)@MIROIL_1.0" 2.2.0
- (c++)"miroil::PersistDisplayConfig::operator()(mir::Server&)@MIROIL_1.0" 2.2.0
- (c++)"miroil::PersistDisplayConfig::operator=(miroil::PersistDisplayConfig const&)@MIROIL_1.0" 2.2.0
- (c++)"miroil::PersistDisplayConfig::~PersistDisplayConfig()@MIROIL_1.0" 2.2.0
- (c++)"typeinfo for miroil::DisplayConfigurationPolicy@MIROIL_1.0" 2.2.0
- (c++)"vtable for miroil::DisplayConfigurationPolicy@MIROIL_1.0" 2.2.0
- (c++)"miroil::PersistDisplayConfig::PersistDisplayConfig(std::shared_ptr<miroil::DisplayConfigurationStorage> const&, std::function<std::shared_ptr<miroil::DisplayConfigurationPolicy> (std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&)> const&)@MIROIL_1.0" 2.2.0
- (c++)"miroil::dispatch_input_event(miral::Window const&, MirInputEvent const*)@MIROIL_1.0" 2.2.0
- (c++)"miroil::EventBuilder::EventBuilder()@MIROIL_1.0" 2.2.0
- (c++)"miroil::EventBuilder::EventInfo::store(MirInputEvent const*, unsigned long)@MIROIL_1.0" 2.2.0
- (c++)"miroil::EventBuilder::add_touch(MirEvent&, int, MirTouchAction, MirTouchTooltype, float, float, float, float, float, float)@MIROIL_1.0" 2.2.0
- (c++)"miroil::EventBuilder::find_info(unsigned long)@MIROIL_1.0" 2.2.0
- (c++)"miroil::EventBuilder::make_key_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, MirKeyboardAction, unsigned int, int, unsigned int)@MIROIL_1.0" 2.2.0
- (c++)"miroil::EventBuilder::make_pointer_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_1.0" 2.2.0
- (c++)"miroil::EventBuilder::make_touch_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int)@MIROIL_1.0" 2.2.0 (c++)"miroil::EventBuilder::store(MirInputEvent const*, unsigned long)@MIROIL_1.0" 2.2.0
- (c++)"miroil::EventBuilder::store(MirInputEvent const*, unsigned long)@MIROIL_1.0" 2.2.0
- (c++)"typeinfo for miroil::EventBuilder@MIROIL_1.0" 2.2.0
- (c++)"vtable for miroil::EventBuilder@MIROIL_1.0" 2.2.0
+ MIROIL_1.0@MIROIL_1.0 2.3.0
+ (c++)"miroil::DisplayConfigurationPolicy::DisplayConfigurationPolicy()@MIROIL_1.0" 2.3.0
+ (c++)"miroil::DisplayConfigurationPolicy::~DisplayConfigurationPolicy()@MIROIL_1.0" 2.3.0
+ (c++)"miroil::Edid::Descriptor::string_value[abi:cxx11]() const@MIROIL_1.0" 2.3.0
+ (c++)"miroil::Edid::parse_data(std::vector<unsigned char, std::allocator<unsigned char> > const&)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::GLBuffer::GLBuffer()@MIROIL_1.0" 2.3.0
+ (c++)"miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::GLBuffer::bind()@MIROIL_1.0" 2.3.0
+ (c++)"miroil::GLBuffer::gl_bind_tex()@MIROIL_1.0" 2.3.0
+ (c++)"miroil::GLBuffer::has_alpha_channel() const@MIROIL_1.0" 2.3.0
+ (c++)"miroil::GLBuffer::operator bool() const@MIROIL_1.0" 2.3.0
+ (c++)"miroil::GLBuffer::reset()@MIROIL_1.0" 2.3.0
+ (c++)"miroil::GLBuffer::reset(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::GLBuffer::size() const@MIROIL_1.0" 2.3.0
+ (c++)"miroil::GLBuffer::~GLBuffer()@MIROIL_1.0" 2.3.0
+ (c++)"miroil::PersistDisplayConfig::PersistDisplayConfig(miroil::PersistDisplayConfig const&)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::PersistDisplayConfig::PersistDisplayConfig(std::shared_ptr<miroil::DisplayConfigurationStorage> const&, std::function<std::shared_ptr<miroil::DisplayConfigurationPolicy> ()> const&)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::PersistDisplayConfig::operator()(mir::Server&)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::PersistDisplayConfig::operator=(miroil::PersistDisplayConfig const&)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::PersistDisplayConfig::~PersistDisplayConfig()@MIROIL_1.0" 2.3.0
+ (c++)"typeinfo for miroil::DisplayConfigurationPolicy@MIROIL_1.0" 2.3.0
+ (c++)"vtable for miroil::DisplayConfigurationPolicy@MIROIL_1.0" 2.3.0
+ (c++)"miroil::PersistDisplayConfig::PersistDisplayConfig(std::shared_ptr<miroil::DisplayConfigurationStorage> const&, std::function<std::shared_ptr<miroil::DisplayConfigurationPolicy> (std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&)> const&)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::dispatch_input_event(miral::Window const&, MirInputEvent const*)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::EventBuilder::EventBuilder()@MIROIL_1.0" 2.3.0
+ (c++)"miroil::EventBuilder::EventInfo::store(MirInputEvent const*, unsigned long)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::EventBuilder::add_touch(MirEvent&, int, MirTouchAction, MirTouchTooltype, float, float, float, float, float, float)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::EventBuilder::find_info(unsigned long)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::EventBuilder::make_key_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, MirKeyboardAction, unsigned int, int, unsigned int)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::EventBuilder::make_pointer_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::EventBuilder::make_touch_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int)@MIROIL_1.0" 2.3.0 (c++)"miroil::EventBuilder::store(MirInputEvent const*, unsigned long)@MIROIL_1.0" 2.3.0
+ (c++)"miroil::EventBuilder::store(MirInputEvent const*, unsigned long)@MIROIL_1.0" 2.3.0
+ (c++)"typeinfo for miroil::EventBuilder@MIROIL_1.0" 2.3.0
+ (c++)"vtable for miroil::EventBuilder@MIROIL_1.0" 2.3.0
