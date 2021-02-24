@@ -46,5 +46,6 @@ else
       done
     fi
   fi
-  exec $terminal --app-id io.mirserver.Terminal "$@"
+  $terminal --app-id io.mirserver.Terminal "$@"
+  wait # wait for $terminal_server exit
 fi
