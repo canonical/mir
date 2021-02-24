@@ -66,16 +66,16 @@ public:
         float pressure_value, float touch_major_value, float touch_minor_value, float size_value);
     
     // Key event
-    mir::EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    mir::EventUPtr make_key_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
         std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t key_code,
         int scan_code, MirInputEventModifiers modifiers);
 
     // Touch event
-    mir::EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    mir::EventUPtr make_touch_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
         std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers);
 
     // Pointer event
-    mir::EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    mir::EventUPtr make_pointer_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
         std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers, MirPointerAction action,
         MirPointerButtons buttons_pressed,
         float x_axis_value, float y_axis_value,

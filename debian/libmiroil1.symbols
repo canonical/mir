@@ -27,9 +27,9 @@ libmiroil.so.1 libmiroil1 #MINVER#
  (c++)"miroil::EventBuilder::EventInfo::store(MirInputEvent const*, unsigned long)@MIROIL_1.0" 2.2.0
  (c++)"miroil::EventBuilder::add_touch(MirEvent&, int, MirTouchAction, MirTouchTooltype, float, float, float, float, float, float)@MIROIL_1.0" 2.2.0
  (c++)"miroil::EventBuilder::find_info(unsigned long)@MIROIL_1.0" 2.2.0
- (c++)"miroil::EventBuilder::make_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, MirKeyboardAction, unsigned int, int, unsigned int)@MIROIL_1.0" 2.2.0
- (c++)"miroil::EventBuilder::make_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int)@MIROIL_1.0" 2.2.0
- (c++)"miroil::EventBuilder::make_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_1.0" 2.2.0
+ (c++)"miroil::EventBuilder::make_key_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, MirKeyboardAction, unsigned int, int, unsigned int)@MIROIL_1.0" 2.2.0
+ (c++)"miroil::EventBuilder::make_pointer_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_1.0" 2.2.0
+ (c++)"miroil::EventBuilder::make_touch_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int)@MIROIL_1.0" 2.2.0 (c++)"miroil::EventBuilder::store(MirInputEvent const*, unsigned long)@MIROIL_1.0" 2.2.0
  (c++)"miroil::EventBuilder::store(MirInputEvent const*, unsigned long)@MIROIL_1.0" 2.2.0
  (c++)"typeinfo for miroil::EventBuilder@MIROIL_1.0" 2.2.0
  (c++)"vtable for miroil::EventBuilder@MIROIL_1.0" 2.2.0

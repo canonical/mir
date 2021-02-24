@@ -35,7 +35,7 @@ void EventBuilder::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchActio
 }
 
 // Key event
-mir::EventUPtr EventBuilder::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+mir::EventUPtr EventBuilder::make_key_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers)
 {
@@ -45,7 +45,7 @@ mir::EventUPtr EventBuilder::make_event(MirInputDeviceId device_id, std::chrono:
 }
 
 // Touch event
-mir::EventUPtr EventBuilder::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+mir::EventUPtr EventBuilder::make_touch_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers)
 {
     return mir::events::make_event(device_id, timestamp,
@@ -53,7 +53,7 @@ mir::EventUPtr EventBuilder::make_event(MirInputDeviceId device_id, std::chrono:
 }
 
 // Pointer event
-mir::EventUPtr EventBuilder::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+mir::EventUPtr EventBuilder::make_pointer_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers, MirPointerAction action,
     MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
