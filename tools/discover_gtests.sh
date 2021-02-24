@@ -12,6 +12,7 @@ print_help_and_exit()
     echo "      --gtest-executable EXECUTABLE the command to run to execute the GTest tests to discover"
     echo "                                    if not specified, the last element of \`cmds\` is used."
     echo "      --env=ENV                     add ENV to the environment of the tests"
+    echo "      --gtest-exclude FILTER        Exclude tests matching FILTER (may be specified multiple times)"
     echo "  -h, --help                        display this help and exit"
     echo ""
     echo "Example: $prog path/to/mir_unit_tests"
@@ -36,13 +37,19 @@ add_filter()
     filter="$filter $1"
 }
 
+add_exclude()
+{
+    excludes="$excludes:$1"
+}
+
 while [ $# -gt 0 ];
 do
     case "$1" in
         --test-name) shift; testname="$1";;
         --env) shift; add_env "$1";;
         --help|-h) print_help_and_exit;;
-	--gtest-executable) shift; test_binary="$1";;
+        --gtest-executable) shift; test_binary="$1";;
+        --gtest-exclude) shift; add_exclude "$1";;
         --) shift; break;;
         --*) print_help_and_exit;;
         *) break;;
@@ -71,10 +78,10 @@ then
     testname=$(basename $test_binary)
 fi
 
-tests=$($test_binary --gtest_list_tests $filter | grep -v '^ ' | cut -d' ' -f1 | grep '\.' | sed 's/$/*/')
+tests=$($test_binary --gtest_list_tests --gtest_filter=-$excludes | grep -v '^ ' | cut -d' ' -f1 | grep '\.' | sed 's/$/*/')
 
 for t in $tests;
 do
-    echo "add_test($testname.$t $cmd \"--gtest_filter=$t\")"
+    echo "add_test($testname.$t $cmd \"--gtest_filter=$t:-$excludes\")"
     echo "set_tests_properties($testname.$t PROPERTIES $env)"
 done
