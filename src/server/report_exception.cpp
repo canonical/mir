@@ -23,15 +23,19 @@
 
 #include <iostream>
 
-void mir::report_exception(std::ostream& out)
+void mir::report_exception(std::ostream& out_stream, std::ostream& err_stream)
 {
     try
     {
         throw;
     }
-    catch (mir::AbnormalExit const& error)
+    catch (ExitWithOutput const& output)
     {
-        out << error.what() << std::endl;
+        out_stream << output.what() << std::endl;
+    }
+    catch (AbnormalExit const& error)
+    {
+        err_stream << error.what() << std::endl;
     }
     catch (std::exception const& error)
     {
@@ -42,18 +46,23 @@ void mir::report_exception(std::ostream& out)
         }
         catch(...)
         {
-            report_exception(out);
+            report_exception(out_stream, err_stream);
         }
 
-        out << "ERROR: " << boost::diagnostic_information(error) << std::endl;
+        err_stream << "ERROR: " << boost::diagnostic_information(error) << std::endl;
     }
     catch (...)
     {
-        out << "ERROR: unrecognised exception. (This is weird!)" << std::endl;
+        err_stream << "ERROR: unrecognised exception. (This is weird!)" << std::endl;
     }
+}
+
+void mir::report_exception(std::ostream& stream)
+{
+    report_exception(stream, stream);
 }
 
 void mir::report_exception()
 {
-    report_exception(std::cerr);
+    report_exception(std::cout, std::cerr);
 }

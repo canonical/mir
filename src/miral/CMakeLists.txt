@@ -39,6 +39,13 @@ set_target_properties(miral-internal
 
 set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 
+check_cxx_compiler_flag(-Wstringop-truncation HAS_W_STRINGOP_TRUNCATION)
+if (HAS_W_STRINGOP_TRUNCATION)
+    set_source_files_properties(xcursor.c PROPERTIES
+        COMPILE_FLAGS "-Wno-error=stringop-truncation"
+    )
+endif()
+
 add_library(miral SHARED
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
     application.cpp                     ${miral_include}/miral/application.h

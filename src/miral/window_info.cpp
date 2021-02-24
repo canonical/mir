@@ -247,38 +247,6 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
 
     // placeholder - constrain onscreen
 
-    switch (state())
-    {
-    case mir_window_state_restored:
-    case mir_window_state_attached:
-        break;
-
-        // "A vertically maximised window is anchored to the top and bottom of
-        // the available workspace and can have any width."
-    case mir_window_state_vertmaximized:
-        new_pos.y = self->window.top_left().y;
-        new_size.height = self->window.size().height;
-        break;
-
-        // "A horizontally maximised window is anchored to the left and right of
-        // the available workspace and can have any height"
-    case mir_window_state_horizmaximized:
-        new_pos.x = self->window.top_left().x;
-        new_size.width = self->window.size().width;
-        break;
-
-        // "A maximised window is anchored to the top, bottom, left and right of the
-        // available workspace. For example, if the launcher is always-visible then
-        // the left-edge of the window is anchored to the right-edge of the launcher."
-    case mir_window_state_maximized:
-    default:
-        new_pos.x = self->window.top_left().x;
-        new_pos.y = self->window.top_left().y;
-        new_size.width = self->window.size().width;
-        new_size.height = self->window.size().height;
-        break;
-    }
-
     requested_pos = new_pos;
     requested_size = new_size;
 }
@@ -312,7 +280,53 @@ auto miral::WindowInfo::state() const -> MirWindowState
 
 auto miral::WindowInfo::restore_rect() const -> mir::geometry::Rectangle
 {
-    return self->restore_rect;
+    // Calculate a reasonable restore_rect if it hasn't already been explicitly set
+    if (!self->restore_rect)
+    {
+        Size restore_size{};
+        // If the window is restored or partially restored, us its current size
+        switch (self->state)
+        {
+        case mir_window_state_restored:
+            restore_size = self->window.size();
+            break;
+
+        case mir_window_state_vertmaximized:
+            restore_size.width = self->window.size().width;
+            break;
+
+        case mir_window_state_horizmaximized:
+            restore_size.height = self->window.size().height;
+            break;
+
+        default:;
+        }
+
+        // Half way between current size and min size is reasonable for a maximized/fullscreen window
+        auto const min_size_disp = Displacement{as_delta(self->min_width), as_delta(self->min_height)};
+        Size const reasonable_size{as_size(
+            (as_displacement(self->window.size()) - min_size_disp) * 0.5
+            + min_size_disp)};
+
+        // Set the dimensions that are 0 (unset)
+        if (restore_size.width == Width{})
+        {
+            restore_size.width = reasonable_size.width;
+        }
+
+        if (restore_size.height == Height{})
+        {
+            restore_size.height = reasonable_size.height;
+        }
+
+        // Adjust top_left such that the window is shrunk towards the center instead of the top left corner
+        Point const restore_top_left{
+            self->window.top_left() +
+            (as_displacement(self->window.size()) - as_displacement(restore_size)) * 0.5};
+
+        self->restore_rect = Rectangle{restore_top_left, restore_size};
+    }
+    return self->restore_rect.value();
 }
 
 auto miral::WindowInfo::parent() const -> Window

@@ -18,13 +18,11 @@
  */
 
 #include "wayland_surface_observer.h"
-#include "wl_seat.h"
 #include "wayland_utils.h"
 #include "window_wl_surface_role.h"
-#include "wayland_input_dispatcher.h"
 
+#include <mir/executor.h>
 #include <mir/events/event_builders.h>
-
 #include <mir/input/keymap.h>
 #include <mir/log.h>
 
@@ -33,22 +31,22 @@ namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mev = mir::events;
 namespace mi = mir::input;
+namespace mw = mir::wayland;
 
 mf::WaylandSurfaceObserver::WaylandSurfaceObserver(
+    Executor& wayland_executor,
     WlSeat* seat,
     WlSurface* surface,
     WindowWlSurfaceRole* window)
-    : seat{seat},
-      window{window},
-      input_dispatcher{std::make_unique<WaylandInputDispatcher>(seat, surface)},
-      window_size{geometry::Size{0,0}},
-      destroyed{std::make_shared<bool>(false)}
+    : wayland_executor{wayland_executor},
+      impl{std::make_shared<Impl>(
+          mw::make_weak(window),
+          std::make_unique<WaylandInputDispatcher>(seat, surface))}
 {
 }
 
 mf::WaylandSurfaceObserver::~WaylandSurfaceObserver()
 {
-    *destroyed = true;
 }
 
 void mf::WaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAttrib attrib, int value)
@@ -56,19 +54,21 @@ void mf::WaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAtt
     switch (attrib)
     {
     case mir_window_attrib_focus:
-        run_on_wayland_thread_unless_destroyed([this, value]()
+        run_on_wayland_thread_unless_window_destroyed(
+            [value](Impl* impl, WindowWlSurfaceRole* window)
             {
                 auto has_focus = static_cast<bool>(value);
-                input_dispatcher->set_focus(has_focus);
+                impl->input_dispatcher->set_focus(has_focus);
                 window->handle_active_change(has_focus);
             });
         break;
 
     case mir_window_attrib_state:
-        run_on_wayland_thread_unless_destroyed([this, value]()
+        run_on_wayland_thread_unless_window_destroyed(
+            [value](Impl* impl, WindowWlSurfaceRole* window)
             {
-                current_state = static_cast<MirWindowState>(value);
-                window->handle_state_change(current_state);
+                impl->current_state = static_cast<MirWindowState>(value);
+                window->handle_state_change(impl->current_state);
             });
         break;
 
@@ -78,12 +78,12 @@ void mf::WaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAtt
 
 void mf::WaylandSurfaceObserver::content_resized_to(ms::Surface const*, geom::Size const& content_size)
 {
-    run_on_wayland_thread_unless_destroyed(
-        [this, content_size]()
+    run_on_wayland_thread_unless_window_destroyed(
+        [content_size](Impl* impl, WindowWlSurfaceRole* window)
         {
-            if (content_size != window_size)
+            if (content_size != impl->window_size)
             {
-                requested_size = content_size;
+                impl->requested_size = content_size;
                 window->handle_resize(std::experimental::nullopt, content_size);
             }
         });
@@ -91,8 +91,8 @@ void mf::WaylandSurfaceObserver::content_resized_to(ms::Surface const*, geom::Si
 
 void mf::WaylandSurfaceObserver::client_surface_close_requested(ms::Surface const*)
 {
-    run_on_wayland_thread_unless_destroyed(
-        [this]()
+    run_on_wayland_thread_unless_window_destroyed(
+        [](Impl*, WindowWlSurfaceRole* window)
         {
             window->handle_close_request();
         });
@@ -109,19 +109,19 @@ void mf::WaylandSurfaceObserver::keymap_changed(
     // shared pointer instead of unique so it can be owned by the lambda
     auto const keymap = std::make_shared<mi::Keymap>(model, layout, variant, options);
 
-    run_on_wayland_thread_unless_destroyed(
-        [this, keymap]()
+    run_on_wayland_thread_unless_window_destroyed(
+        [keymap](Impl* impl, WindowWlSurfaceRole*)
         {
-            input_dispatcher->set_keymap(*keymap);
+            impl->input_dispatcher->set_keymap(*keymap);
         });
 }
 
 void mf::WaylandSurfaceObserver::placed_relative(ms::Surface const*, geometry::Rectangle const& placement)
 {
-    run_on_wayland_thread_unless_destroyed(
-        [this, placement = placement]()
+    run_on_wayland_thread_unless_window_destroyed(
+        [placement = placement](Impl* impl, WindowWlSurfaceRole* window)
         {
-            requested_size = placement.size;
+            impl->requested_size = placement.size;
             window->handle_resize(placement.top_left, placement.size);
         });
 }
@@ -132,21 +132,29 @@ void mf::WaylandSurfaceObserver::input_consumed(ms::Surface const*, MirEvent con
     {
         std::shared_ptr<MirEvent> owned_event = mev::clone_event(*event);
 
-        run_on_wayland_thread_unless_destroyed(
-            [this, owned_event]()
+        run_on_wayland_thread_unless_window_destroyed(
+            [owned_event](Impl* impl, WindowWlSurfaceRole*)
             {
                 auto const input_event = mir_event_get_input_event(owned_event.get());
-                input_dispatcher->handle_event(input_event);
+                impl->input_dispatcher->handle_event(input_event);
             });
     }
 }
 
 auto mf::WaylandSurfaceObserver::latest_timestamp() const -> std::chrono::nanoseconds
 {
-    return input_dispatcher->latest_timestamp();
+    return impl->input_dispatcher->latest_timestamp();
 }
 
-void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_destroyed(std::function<void()>&& work)
+void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_window_destroyed(
+    std::function<void(Impl* impl, WindowWlSurfaceRole* window)>&& work)
 {
-    seat->spawn(run_unless(destroyed, work));
+    wayland_executor.spawn(
+        [impl=impl, work=move(work)]
+        {
+            if (impl->window)
+            {
+                work(impl.get(), &impl->window.value());
+            }
+        });
 }

@@ -124,7 +124,7 @@ struct PrintingEventFilter : public mi::EventFilter
             print_pointer_event(input_event);
             break;
         default:
-            std::cout << "unkown input event type: " << mir_input_event_get_type(input_event) << std::endl;
+            std::cout << "unknown input event type: " << mir_input_event_get_type(input_event) << std::endl;
             break;
         }
 

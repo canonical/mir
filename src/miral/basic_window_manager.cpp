@@ -1124,24 +1124,17 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
         }
     }
 
-    Point new_pos = modifications.top_left().is_set() ? modifications.top_left().value() : window.top_left();
-
-    if (modifications.size().is_set())
+    if (modifications.size().is_set() || modifications.top_left().is_set() ||
+        modifications.min_width().is_set() || modifications.min_height().is_set() ||
+        modifications.max_width().is_set() || modifications.max_height().is_set() ||
+        modifications.width_inc().is_set() || modifications.height_inc().is_set())
     {
-        place_and_size(window_info, new_pos, modifications.size().value());
-    }
-    else if (modifications.min_width().is_set() || modifications.min_height().is_set() ||
-             modifications.max_width().is_set() || modifications.max_height().is_set() ||
-             modifications.width_inc().is_set() || modifications.height_inc().is_set())
-    {
-        Size new_size = window.size();
+        Point new_pos = modifications.top_left().is_set() ? modifications.top_left().value() : window.top_left();
+        Size new_size = modifications.size().is_set() ? modifications.size().value() : window.size();
 
+        // The new size constraints have already been applied to window_info and constrain_resize() will use them
         window_info.constrain_resize(new_pos, new_size);
         place_and_size(window_info, new_pos, new_size);
-    }
-    else if (modifications.top_left().is_set())
-    {
-        place_and_size(window_info, new_pos, window.size());
     }
 
     if (modifications.placement_hints().is_set())
@@ -1425,16 +1418,15 @@ void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo& 
 
 void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWindowState value)
 {
-    auto const window = window_info.window();
-    auto const mir_surface = std::shared_ptr<scene::Surface>(window);
-
-    update_attached_and_fullscreen_sets(window_info, value);
-
     if (window_info.state() == value)
     {
         return;
     }
 
+    update_attached_and_fullscreen_sets(window_info, value);
+
+    auto const window = window_info.window();
+    auto const mir_surface = std::shared_ptr<scene::Surface>(window);
     bool const was_hidden = window_info.state() == mir_window_state_hidden ||
                             window_info.state() == mir_window_state_minimized;
 
@@ -1503,11 +1495,13 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
         break;
 
     default:
-        auto const none_active = !active_window();
+        bool const can_become_active =
+            !active_window() ||
+            active_window().application() == window.application();
         window_info.state(value);
         mir_surface->configure(mir_window_attrib_state, value);
         mir_surface->show();
-        if (was_hidden && none_active)
+        if (was_hidden && can_become_active)
         {
             select_active_window(window);
         }

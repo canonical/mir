@@ -16,9 +16,8 @@ include_directories(
   )
 
 add_library(mirevdevutilsobjects OBJECT
-    evdev_device_detection.cpp
     button_utils.cpp
-    )
+)
 
 add_library(mirplatforminputevdevobjects OBJECT
     libinput_device.cpp

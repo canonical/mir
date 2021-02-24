@@ -19,7 +19,7 @@
 
 #include "buffer_allocator.h"
 #include "gbm_buffer.h"
-#include "linux_dmabuf.h"
+#include "mir/graphics/linux_dmabuf.h"
 #include "buffer_texture_binder.h"
 #include "mir/anonymous_shm_file.h"
 #include "shm_buffer.h"

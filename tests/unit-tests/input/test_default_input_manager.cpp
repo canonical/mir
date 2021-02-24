@@ -33,6 +33,7 @@
 #include <gmock/gmock.h>
 #include <chrono>
 #include <list>
+#include <memory>
 
 namespace mt = mir::test;
 namespace md = mir::dispatch;

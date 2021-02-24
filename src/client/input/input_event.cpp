@@ -87,6 +87,15 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev) MIR_HANDLE_EVENT
     return ev->event_time().count();
 })
 
+uint32_t mir_input_event_get_wayland_timestamp(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    expect_event_type(ev, mir_event_type_input);
+
+    auto const ns = ev->event_time();
+    auto const ms = std::chrono::duration_cast<std::chrono::milliseconds>(ns);
+    return ms.count();
+})
+
 MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event)
 {
     return reinterpret_cast<MirInputEvent const*>(event);

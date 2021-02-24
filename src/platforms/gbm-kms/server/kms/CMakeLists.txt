@@ -47,7 +47,11 @@ add_library(
   mutex.h
 )
 
-add_dependencies(mirplatformgraphicsgbmkmsobjects mirsharedgbmservercommon-static)
+target_link_libraries(
+  mirplatformgraphicsgbmkmsobjects
+
+  mirsharedgbmservercommon-static
+)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
     ${CMAKE_CURRENT_BINARY_DIR}/symbols.map
@@ -56,22 +60,23 @@ set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
 add_library(mirplatformgraphicsgbmkms MODULE
   platform_symbols.cpp
-  $<TARGET_OBJECTS:mirplatformgraphicsgbmkmsobjects>
 )
 
 target_link_libraries(
   mirplatformgraphicsgbmkms
+
   PRIVATE
-  mirplatform
-  mirsharedgbmservercommon-static
-  ${Boost_PROGRAM_OPTIONS_LIBRARY}
-  ${Boost_IOSTREAMS_LIBRARY}
-  ${Boost_THREAD_LIBRARY}
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
-  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
-  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-  ${GL_LDFLAGS} ${GL_LIBRARIES}
-  ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
+    mirplatform
+    mirplatformgraphicsgbmkmsobjects
+    mirsharedgbmservercommon-static
+    ${Boost_PROGRAM_OPTIONS_LIBRARY}
+    ${Boost_IOSTREAMS_LIBRARY}
+    ${Boost_THREAD_LIBRARY}
+    ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+    ${GBM_LDFLAGS} ${GBM_LIBRARIES}
+    ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+    ${GL_LDFLAGS} ${GL_LIBRARIES}
+    ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
 )
 
 set_target_properties(

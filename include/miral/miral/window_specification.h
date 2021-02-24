@@ -90,6 +90,10 @@ public:
     auto userdata() const -> mir::optional_value<std::shared_ptr<void>> const&;
 
     auto top_left() -> mir::optional_value<Point>&;
+    /// The new size of the window frame (including any decorations). Will be adjusted based on min_width(),
+    /// WindowInfo::max_width(), WindowInfo::min_height(), WindowInfo::max_height(), WindowInfo::min_aspect(),
+    /// WindowInfo::max_aspect(), WindowInfo::width_inc() and WindowInfo::height_inc(). Set these to properties to their
+    /// default values if they should be ignored.
     auto size() -> mir::optional_value<Size>&;
     auto name() -> mir::optional_value<std::string>&;
     auto output_id() -> mir::optional_value<int>&;
@@ -103,6 +107,9 @@ public:
     auto window_placement_gravity() -> mir::optional_value<MirPlacementGravity>&;
     auto aux_rect_placement_gravity() -> mir::optional_value<MirPlacementGravity>&;
     auto aux_rect_placement_offset() -> mir::optional_value<Displacement>&;
+
+    /// Constrains how a window can be resized, see the corresponding properties on WindowInfo for details.
+    /// @{
     auto min_width() -> mir::optional_value<Width>&;
     auto min_height() -> mir::optional_value<Height>&;
     auto max_width() -> mir::optional_value<Width>&;
@@ -111,6 +118,8 @@ public:
     auto height_inc() -> mir::optional_value<DeltaY>&;
     auto min_aspect() -> mir::optional_value<AspectRatio>&;
     auto max_aspect() -> mir::optional_value<AspectRatio>&;
+    /// @}
+
     auto parent() -> mir::optional_value<std::weak_ptr<mir::scene::Surface>>&;
     auto input_shape() -> mir::optional_value<std::vector<Rectangle>>&;
     auto input_mode() -> mir::optional_value<InputReceptionMode>&;

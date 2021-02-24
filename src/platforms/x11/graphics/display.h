@@ -24,12 +24,14 @@
 #include "mir/renderer/gl/context_source.h"
 #include "mir_toolkit/common.h"
 #include "egl_helper.h"
+#include "../X11_resources.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <EGL/egl.h>
 
 #include <memory>
+#include <map>
 
 namespace mir
 {
@@ -104,7 +106,7 @@ public:
     Frame last_frame_on(unsigned output_id) const override;
 
 private:
-    struct OutputInfo
+    struct OutputInfo : ::mir::X::X11Resources::VirtualOutput
     {
         OutputInfo(
             std::unique_ptr<X11Window> window,
@@ -112,19 +114,21 @@ private:
             std::shared_ptr<DisplayConfigurationOutput> configuration);
         ~OutputInfo();
 
+        auto configuration() const -> graphics::DisplayConfigurationOutput const& override { return *config; }
+
         std::unique_ptr<X11Window> window;
         std::unique_ptr<DisplayBuffer> display_buffer;
-        std::shared_ptr<DisplayConfigurationOutput> configuration;
+        std::shared_ptr<DisplayConfigurationOutput> config;
     };
 
     std::vector<std::unique_ptr<OutputInfo>> outputs;
-    helpers::EGLHelper shared_egl;
+    helpers::EGLHelper const shared_egl;
     ::Display* const x_dpy;
     std::shared_ptr<GLConfig> const gl_config;
-    float pixel_width;
-    float pixel_height;
+    float const pixel_width;
+    float const pixel_height;
     std::shared_ptr<DisplayReport> const report;
-    std::shared_ptr<AtomicFrame> last_frame;
+    std::shared_ptr<AtomicFrame> const last_frame;
 };
 
 }

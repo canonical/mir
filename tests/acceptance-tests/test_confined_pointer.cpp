@@ -82,7 +82,7 @@ struct Client
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 #pragma GCC diagnostic pop
-        mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
+        mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_persistent);
         mir_window_spec_set_name(spec, name.c_str());
         mir_window_spec_set_event_handler(spec, handle_event, this);
         window = mir_create_window_sync(spec);
@@ -293,7 +293,7 @@ TEST_F(PointerConfinement, cannot_confine_to_unfocused_surface)
 
     // Attempt to confine client_1 while client_2 is focused
     auto spec = mir_create_window_spec(client_1.connection);
-    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
+    mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_persistent);
 
     mir_window_apply_spec(client_1.window, spec);
     mir_window_spec_release(spec);

@@ -25,9 +25,12 @@
 #include "xwayland_surface_role.h"
 #include "xwayland_cursors.h"
 #include "xwayland_client_manager.h"
+#include "xwayland_clipboard_source.h"
+#include "xwayland_clipboard_provider.h"
 
 #include "mir/c_memory.h"
 #include "mir/fd.h"
+#include "mir/executor.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/scene/null_observer.h"
 
@@ -74,7 +77,7 @@ auto create_wm_window(mf::XCBConnection const& connection) -> xcb_window_t
     return wm_window;
 }
 
-void check_xfixes(mf::XCBConnection const& connection)
+auto init_xfixes(mf::XCBConnection const& connection) -> xcb_query_extension_reply_t const*
 {
     xcb_xfixes_query_version_cookie_t xfixes_cookie;
     xcb_xfixes_query_version_reply_t *xfixes_reply;
@@ -86,6 +89,7 @@ void check_xfixes(mf::XCBConnection const& connection)
     if (!xfixes || !xfixes->present)
     {
         mir::log_warning("xfixes not available");
+        return nullptr;
     }
 
     xfixes_cookie = xcb_xfixes_query_version(connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
@@ -97,6 +101,7 @@ void check_xfixes(mf::XCBConnection const& connection)
     }
 
     free(xfixes_reply);
+    return xfixes;
 }
 
 auto focus_mode_to_string(uint32_t focus_mode) -> std::string
@@ -129,18 +134,26 @@ public:
     mf::XWaylandWM* const wm;
 };
 
-mf::XWaylandWM::XWaylandWM(std::shared_ptr<WaylandConnector> wayland_connector, wl_client* wayland_client, Fd const& fd)
+mf::XWaylandWM::XWaylandWM(
+    std::shared_ptr<WaylandConnector> wayland_connector,
+    wl_client* wayland_client,
+    Fd const& fd,
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const& dispatcher,
+    float assumed_surface_scale)
     : connection{std::make_shared<XCBConnection>(fd)},
+      xfixes{init_xfixes(*connection)},
       wayland_connector(wayland_connector),
       wayland_client{wayland_client},
       wm_shell{std::static_pointer_cast<XWaylandWMShell>(wayland_connector->get_extension("x11-support"))},
+      wayland_executor{*wm_shell->wayland_executor},
       cursors{std::make_unique<XWaylandCursors>(connection)},
+      clipboard_source{std::make_unique<XWaylandClipboardSource>(*connection, dispatcher, wm_shell->clipboard)},
+      clipboard_provider{std::make_unique<XWaylandClipboardProvider>(connection, dispatcher, wm_shell->clipboard)},
       wm_window{create_wm_window(*connection)},
       scene_observer{std::make_shared<XWaylandSceneObserver>(this)},
-      client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)}
+      client_manager{std::make_shared<XWaylandClientManager>(wm_shell->shell)},
+      assumed_surface_scale{assumed_surface_scale}
 {
-    check_xfixes(*connection);
-
     uint32_t const attrib_values[]{
         XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_PROPERTY_CHANGE};
 
@@ -369,11 +382,6 @@ void mf::XWaylandWM::forget_scene_surface(std::weak_ptr<scene::Surface> const& s
     scene_surface_set.erase(scene_surface);
 }
 
-void mf::XWaylandWM::run_on_wayland_thread(std::function<void()>&& work)
-{
-    wayland_connector->run_on_wayland_display([work = move(work)](auto){ work(); });
-}
-
 void mf::XWaylandWM::surfaces_reordered(scene::SurfaceSet const& affected_surfaces)
 {
     bool our_surfaces_affected = false;
@@ -500,12 +508,12 @@ void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& g
     surfaces[window] = std::make_shared<XWaylandSurface>(
         this,
         connection,
-        wm_shell->seat,
-        wm_shell->shell,
+        *wm_shell,
         client_manager,
         window,
         geometry,
-        override_redirect);
+        override_redirect,
+        assumed_surface_scale);
 }
 
 void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
@@ -513,7 +521,7 @@ void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
     // see https://www.systutorials.com/docs/linux/man/3-xcb-requests/
     int const xcb_error_type = 0;
 
-    int type = event->response_type & ~0x80;
+    auto const type = event->response_type & ~0x80;
     switch (type)
     {
     case XCB_BUTTON_PRESS:
@@ -577,11 +585,34 @@ void mf::XWaylandWM::handle_event(xcb_generic_event_t* event)
     case XCB_FOCUS_IN:
         handle_focus_in(reinterpret_cast<xcb_focus_in_event_t*>(event));
         break;
+    case XCB_SELECTION_REQUEST:
+        clipboard_provider->selection_request_event(reinterpret_cast<xcb_selection_request_event_t*>(event));
+        break;
+    case XCB_SELECTION_NOTIFY:
+        clipboard_source->selection_notify_event(reinterpret_cast<xcb_selection_notify_event_t*>(event));
+        break;
     case xcb_error_type:
         handle_error(reinterpret_cast<xcb_generic_error_t*>(event));
         break;
     default:
         break;
+    }
+
+    if (xfixes)
+    {
+        auto const xfixes_type = event->response_type - xfixes->first_event;
+        switch (xfixes_type)
+        {
+        case XCB_XFIXES_SELECTION_NOTIFY:
+            // Order of calls should not matter
+            clipboard_provider->xfixes_selection_notify_event(
+                reinterpret_cast<xcb_xfixes_selection_notify_event_t*>(event));
+            clipboard_source->xfixes_selection_notify_event(
+                reinterpret_cast<xcb_xfixes_selection_notify_event_t*>(event));
+            break;
+        default:
+            break;
+        }
     }
 }
 
@@ -630,6 +661,18 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
     if (auto const surface = get_wm_surface(event->window))
     {
         surface.value()->property_notify(event->atom);
+    }
+
+    // Inform the clipboard provider, in case this is part of an incremental data send
+    if (event->state == XCB_PROPERTY_DELETE)
+    {
+        clipboard_provider->property_deleted_event(event->window, event->atom);
+    }
+
+    // Inform the clipboard source, in case it's new data for an incremental send
+    if (event->state == XCB_PROPERTY_NEW_VALUE && connection->is_ours(event->window))
+    {
+        clipboard_source->property_notify_event(event->window, event->atom);
     }
 }
 
@@ -774,14 +817,15 @@ void mf::XWaylandWM::handle_surface_id(
 {
     uint32_t id = event->data.data32[0];
 
-    wayland_connector->run_on_wayland_display([
+    wayland_executor.spawn([
             wayland_connector = wayland_connector,
             client=wayland_client,
+            scale=assumed_surface_scale,
             id,
             weak_surface,
-            weak_shell = std::weak_ptr<shell::Shell>{wm_shell->shell}](auto)
+            weak_shell = std::weak_ptr<shell::Shell>{wm_shell->shell}]()
         {
-            wayland_connector->on_surface_created(client, id, [weak_surface, weak_shell](WlSurface* wl_surface)
+            wayland_connector->on_surface_created(client, id, [scale, weak_surface, weak_shell](WlSurface* wl_surface)
                 {
                     auto const surface = weak_surface.lock();
                     auto const shell = weak_shell.lock();
@@ -790,7 +834,7 @@ void mf::XWaylandWM::handle_surface_id(
                         surface->attach_wl_surface(wl_surface);
 
                         // Will destroy itself
-                        new XWaylandSurfaceRole{shell, surface, wl_surface};
+                        new XWaylandSurfaceRole{shell, surface, wl_surface, scale};
                     }
                     else
                     {

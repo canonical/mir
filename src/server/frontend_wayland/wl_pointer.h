@@ -25,8 +25,9 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/displacement.h"
 
-#include <functional>
 #include <chrono>
+#include <functional>
+#include <optional>
 #include <set>
 
 struct MirInputEvent;
@@ -36,6 +37,7 @@ struct MirPointerEvent;
 
 namespace mir
 {
+namespace wayland { class RelativePointerV1; }
 
 class Executor;
 
@@ -47,40 +49,31 @@ class WlPointer : public wayland::Pointer
 {
 public:
 
-    WlPointer(
-        wl_resource* new_resource,
-        std::function<void(WlPointer*)> const& on_destroy);
+    WlPointer(wl_resource* new_resource);
 
     ~WlPointer();
 
-    /// Handles finding the correct subsurface and position on that subsurface if needed
-    /// Giving it an already transformed surface and position is also fine
-    void enter(
-        std::chrono::milliseconds const& ms,
-        WlSurface* root_surface,
-        geometry::Point const& root_position);
-    void leave();
-    void button(std::chrono::milliseconds const& ms, uint32_t button, bool pressed);
-    void motion(
-        std::chrono::milliseconds const& ms,
-        WlSurface* root_surface,
-        geometry::Point const& root_position);
-    void axis(std::chrono::milliseconds const& ms, geometry::Displacement const& scroll);
-    void frame();
+    void set_relative_pointer(wayland::RelativePointerV1* relative_ptr);
+
+    /// Convert the Mir event into Wayland events and send them to the client. root_surface is the one that received
+    /// the Mir event, but the final Wayland event may be sent to a subsurface.
+    void event(MirPointerEvent const* event, WlSurface& root_surface);
 
     struct Cursor;
 
 private:
     wl_display* const display;
-    std::function<void(WlPointer*)> on_destroy;
 
-    bool can_send_frame{false};
-    std::experimental::optional<WlSurface*> surface_under_cursor;
-
-    void send_update(
-        std::chrono::milliseconds const& ms,
-        WlSurface* target_surface,
-        geometry::Point const& root_position);
+    void leave(std::optional<MirPointerEvent const*> event);
+    void buttons(MirPointerEvent const* event);
+    void axis(MirPointerEvent const* event);
+    /// Handles finding the correct subsurface and position on that subsurface if needed
+    /// Giving it an already transformed surface and position is also fine
+    void enter_or_motion(MirPointerEvent const* event, WlSurface& root_surface);
+    /// Sends relative motion only if the relative pointer is set
+    void relative_motion(MirPointerEvent const* event);
+    /// Sends a frame event only if needed, leaves needs_frame false
+    void maybe_frame();
 
     /// Wayland request handlers
     ///@{
@@ -92,8 +85,13 @@ private:
     void release() override;
     ///@}
 
-    std::set<uint32_t> pressed_buttons;
+    wayland::Weak<WlSurface> surface_under_cursor;
+    wayland::DestroyListenerId destroy_listener_id; ///< ID of this pointer's destroy listener on surface_under_cursor
+    bool needs_frame{false};
+    MirPointerButtons current_buttons{0};
+    std::experimental::optional<std::pair<float, float>> current_position;
     std::unique_ptr<Cursor> cursor;
+    wayland::Weak<wayland::RelativePointerV1> relative_pointer;
 };
 
 }

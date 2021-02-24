@@ -57,7 +57,7 @@ public:
      * \return  A reference to the fully compiled and linked Program
      */
     virtual Program& compile_fragment_shader(
-        void* id,
+        void const* id,
         char const* extension_fragment,
         char const* fragment_fragment) = 0;
 };

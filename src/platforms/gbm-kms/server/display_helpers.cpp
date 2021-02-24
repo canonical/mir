@@ -40,6 +40,7 @@
 #include <xf86drm.h>
 #include <fcntl.h>
 #include <vector>
+#include <boost/exception/diagnostic_information.hpp>
 
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
@@ -68,18 +69,31 @@ mgmh::DRMHelper::open_all_devices(
     for(auto& device : devices)
     {
         mir::Fd tmp_fd;
-        auto device_handle = console.acquire_device(
-            major(device.devnum()), minor(device.devnum()),
-            std::make_unique<mgc::OneShotDeviceObserver>(tmp_fd)).get();
-
-        if (tmp_fd < 0)
+        std::unique_ptr<mir::Device> device_handle;
+        try
         {
-            error = errno;
+            device_handle = console.acquire_device(
+                major(device.devnum()), minor(device.devnum()),
+                std::make_unique<mgc::OneShotDeviceObserver>(tmp_fd))
+                    .get();
+        }
+        catch (std::exception const& error)
+        {
             mir::log_warning(
-                "Failed to open DRM device node %s: %i (%s)",
+                "Failed to open DRM device node %s: %s",
                 device.devnode(),
-                error,
-                strerror(error));
+                boost::diagnostic_information(error).c_str());
+            continue;
+        }
+
+        // Paranoia is always justified when dealing with hardware interfaces…
+        if (tmp_fd == mir::Fd::invalid)
+        {
+            mir::log_critical(
+                "Opening the DRM device %s succeeded, but provided an invalid descriptor!",
+                device.devnode());
+            mir::log_critical(
+                "This is probably a logic error in Mir, please report to https://github.com/MirServer/mir/issues");
             continue;
         }
 

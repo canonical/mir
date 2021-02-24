@@ -13,28 +13,70 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
+  GetMatrix:
+    runs-on: ubuntu-latest
+
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+    steps:
+    - id: set-matrix
+      name: Determine BuildAndTest matrix
+      run: |
+        set -euo pipefail
+
+        if [ "${{ github.event_name }}" == "push" -a "${{ github.ref }}" == "refs/heads/master" ]; then
+          cat <<EOF | jq -c . | awk '{ print "::set-output name=matrix::" $0 }'
+        {
+          "spread-task": [
+            "google:ubuntu-20.04-64:spread/build/ubuntu:asan",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:tsan",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:asan_clang",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:tsan_clang",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan_clang"
+          ],
+          "allow-fail": [false]
+        }
+        EOF
+        else
+          cat <<EOF | jq -c . | awk '{ print "::set-output name=matrix::" $0 }'
+        {
+          "spread-task": [
+            "google:ubuntu-20.04-64:spread/build/sbuild:debian_sid",
+            "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_groovy",
+            "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu",
+            "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:rpi",
+            "google:ubuntu-20.04-64:spread/build/ubuntu:clang",
+            "google:fedora-32-64:spread/build/fedora:amd64",
+            "google:fedora-33-64:spread/build/fedora:amd64"
+          ],
+          "allow-fail": [false],
+          "include": [
+            {
+              "spread-task": "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel",
+              "allow-fail": true
+            },
+            {
+              "spread-task": "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed",
+              "allow-fail": true
+            },
+            {
+              "spread-task": "fedora-rawhide-64:spread/build/fedora:amd64",
+              "allow-fail": true
+            }
+          ]
+        }
+        EOF
+        fi
+
   BuildAndTest:
-    if: ${{ ! ( github.event_name == 'push' && github.ref == 'refs/heads/master' ) }}
+    needs: GetMatrix
 
     strategy:
       fail-fast: true
-      matrix:
-        spread-task:
-        - google:ubuntu-20.04-64:spread/build/sbuild:debian_sid
-        - google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_groovy
-        - google:ubuntu-20.04-64:spread/build/sbuild:ubuntu
-        - google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64
-        - google:ubuntu-20.04-64:spread/build/ubuntu:rpi
-        - google:ubuntu-20.04-64:spread/build/ubuntu:clang
-        - google:fedora-32-64:spread/build/fedora:amd64
-        allow-fail: [false]
-        include:
-        - spread-task: google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel
-          allow-fail: true
-        - spread-task: google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed
-          allow-fail: true
-        - spread-task: fedora-rawhide-64:spread/build/fedora:amd64
-          allow-fail: true
+      matrix: ${{ fromJSON(needs.GetMatrix.outputs.matrix) }}
 
     runs-on: ubuntu-latest
 
@@ -61,3 +103,16 @@ jobs:
         SPREAD_GOOGLE_KEY: ${{ secrets.SPREAD_GOOGLE_KEY }}
       run: ${SPREAD_PATH}/spread -v ${{ matrix.spread-task }}
       continue-on-error: ${{ matrix.allow-fail }}
+
+  # Report result to Bors on `staging` and `trying` branches.
+  Bors:
+    if: ${{ always() && github.event_name == 'push' && contains('refs/heads/staging refs/heads/trying', github.ref) }}
+    needs:
+    - BuildAndTest
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Report failure
+      if: ${{ needs.BuildAndTest.result != 'success' }}
+      run: exit 1

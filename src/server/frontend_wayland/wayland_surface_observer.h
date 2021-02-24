@@ -20,7 +20,8 @@
 #ifndef MIR_FRONTEND_WAYLAND_SURFACE_OBSERVER_H_
 #define MIR_FRONTEND_WAYLAND_SURFACE_OBSERVER_H_
 
-#include "mir/scene/null_surface_observer.h"
+#include "wayland_input_dispatcher.h"
+#include <mir/scene/null_surface_observer.h>
 
 #include <memory>
 #include <experimental/optional>
@@ -31,18 +32,18 @@ struct wl_client;
 
 namespace mir
 {
+class Executor;
 namespace frontend
 {
-class WlSurface;
 class WlSeat;
+class WlSurface;
 class WindowWlSurfaceRole;
 class WaylandInputDispatcher;
 
-class WaylandSurfaceObserver
-    : public scene::NullSurfaceObserver
+class WaylandSurfaceObserver : public scene::NullSurfaceObserver
 {
 public:
-    WaylandSurfaceObserver(WlSeat* seat, WlSurface* surface, WindowWlSurfaceRole* window);
+    WaylandSurfaceObserver(Executor& wayland_executor, WlSeat* seat, WlSurface* surface, WindowWlSurfaceRole* window);
     ~WaylandSurfaceObserver();
 
     /// Overrides from scene::SurfaceObserver
@@ -61,36 +62,52 @@ public:
     void input_consumed(scene::Surface const*, MirEvent const* event) override;
     ///@}
 
+    /// Should only be called from the Wayland thread
     void latest_client_size(geometry::Size window_size)
     {
-        this->window_size = window_size;
+        impl->window_size = window_size;
     }
 
+    /// Should only be called from the Wayland thread
     std::experimental::optional<geometry::Size> requested_window_size()
     {
-        return requested_size;
+        return impl->requested_size;
     }
 
+    /// Should only be called from the Wayland thread
     auto latest_timestamp() const -> std::chrono::nanoseconds;
 
+    /// Should only be called from the Wayland thread
     auto state() const -> MirWindowState
     {
-        return current_state;
+        return impl->current_state;
     }
 
-    void disconnect() { *destroyed = true; }
-
 private:
-    WlSeat* const seat; // only used by run_on_wayland_thread_unless_destroyed()
-    WindowWlSurfaceRole* const window;
-    std::unique_ptr<WaylandInputDispatcher> const input_dispatcher;
+    struct Impl
+    {
+        Impl(
+            wayland::Weak<WindowWlSurfaceRole> window,
+            std::unique_ptr<WaylandInputDispatcher> input_dispatcher)
+            : window{window},
+              input_dispatcher{std::move(input_dispatcher)}
+        {
+        }
 
-    geometry::Size window_size;
-    std::experimental::optional<geometry::Size> requested_size;
-    MirWindowState current_state{mir_window_state_unknown};
-    std::shared_ptr<bool> const destroyed;
+        wayland::Weak<WindowWlSurfaceRole> const window;
+        std::unique_ptr<WaylandInputDispatcher> const input_dispatcher;
 
-    void run_on_wayland_thread_unless_destroyed(std::function<void()>&& work);
+        geometry::Size window_size{};
+        std::experimental::optional<geometry::Size> requested_size{};
+        MirWindowState current_state{mir_window_state_unknown};
+    };
+
+    void run_on_wayland_thread_unless_window_destroyed(
+        std::function<void(Impl* impl, WindowWlSurfaceRole* window)>&& work);
+
+    Executor& wayland_executor;
+    /// shared_ptr so it can be captured by lambdas and possibly outlive this object
+    std::shared_ptr<Impl> const impl;
 };
 }
 }

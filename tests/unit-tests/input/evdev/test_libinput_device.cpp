@@ -510,7 +510,7 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 5.0f)));
 
     mouse.start(&mock_sink, &mock_builder);
-    env.mock_libinput.setup_axis_event(fake_device, event_time_1, 0.0, 20.0);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, 0.0, -20.0);
     env.mock_libinput.setup_axis_event(fake_device, event_time_2, 5.0, 0.0);
     process_events(mouse);
 }
@@ -708,7 +708,7 @@ TEST_F(LibInputDeviceOnMouse, scroll_speed_scales_scroll_events)
     settings.horizontal_scroll_scale = 5.0;
     mouse.apply_settings(settings);
 
-    env.mock_libinput.setup_axis_event(fake_device, event_time_1, 0.0, 3.0);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, 0.0, -3.0);
     env.mock_libinput.setup_axis_event(fake_device, event_time_2, -2.0, 0.0);
 
     mouse.start(&mock_sink, &mock_builder);
@@ -734,8 +734,8 @@ TEST_F(LibInputDeviceOnTouchpad, process_event_handles_scroll)
                 pointer_event(time_stamp_2, mir_pointer_action_motion, 0, 1.0f, 0.0f, 0.0f, 0.0f));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 1.0f)));
 
-    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_1, 0.0, 150.0);
-    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_2, 15.0, 0.0);
+    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_1, 0.0, -10.0);
+    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_2, 1.0, 0.0);
     touchpad.start(&mock_sink, &mock_builder);
     process_events(touchpad);
 

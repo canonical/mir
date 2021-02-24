@@ -262,7 +262,11 @@ mg::PlatformPriority probe_graphics_platform(
         }
         catch (std::exception const& e)
         {
-            mir::log_info("%s", e.what());
+            mir::log(
+                mir::logging::Severity::informational,
+                MIR_LOG_COMPONENT,
+                std::current_exception(),
+                "Failed to probe DRM device");
         }
     }
 

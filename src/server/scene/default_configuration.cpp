@@ -40,6 +40,7 @@
 #include "default_coordinate_translator.h"
 #include "unsupported_coordinate_translator.h"
 #include "timeout_application_not_responding_detector.h"
+#include "basic_clipboard.h"
 #include "mir/options/program_option.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/display_configuration.h"
@@ -238,6 +239,16 @@ mir::DefaultServerConfiguration::the_coordinate_translator()
                 return std::make_shared<ms::DefaultCoordinateTranslator>();
             else
                 return std::make_shared<ms::UnsupportedCoordinateTranslator>();
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_clipboard()
+-> std::shared_ptr<ms::Clipboard>
+{
+    return clipboard(
+        []()
+        {
+            return std::make_shared<ms::BasicClipboard>();
         });
 }
 

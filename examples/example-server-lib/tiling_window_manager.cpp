@@ -26,6 +26,7 @@
 
 #include <linux/input.h>
 #include <algorithm>
+#include <limits>
 #include <csignal>
 
 namespace ms = mir::scene;
@@ -178,6 +179,19 @@ void reset(mir::optional_value<ValueType>& option)
 {
     if (option.is_set()) option.consume();
 }
+
+template<typename ValueType>
+void set_if_needed(mir::optional_value<ValueType>& pending, ValueType const& current, ValueType const& correct)
+{
+    if (current == correct)
+    {
+        reset(pending);
+    }
+    else
+    {
+        pending = correct;
+    }
+}
 }
 
 void TilingWindowManagerPolicy::handle_modify_window(
@@ -209,6 +223,11 @@ void TilingWindowManagerPolicy::constrain_size_and_place(
 {
     auto& info = tools.info_for(window);
     info.clip_area(tile);
+
+    set_if_needed(mods.min_width(), info.min_width(), Width{0});
+    set_if_needed(mods.min_height(), info.min_height(), Height{0});
+    set_if_needed(mods.max_width(), info.max_width(), Width{std::numeric_limits<int>::max()});
+    set_if_needed(mods.max_height(), info.max_height(), Height{std::numeric_limits<int>::max()});
 
     if ((mods.state().is_set() ? mods.state().value() : info.state()) == mir_window_state_maximized)
     {

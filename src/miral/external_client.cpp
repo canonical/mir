@@ -72,15 +72,22 @@ void miral::ExternalClientLauncher::operator()(mir::Server& server)
 
     static auto const app_env = "app-env";
     static auto const default_env = "GDK_BACKEND=wayland,x11:QT_QPA_PLATFORM=wayland:SDL_VIDEODRIVER=wayland:"
-        "-QT_QPA_PLATFORMTHEME:NO_AT_BRIDGE=1:QT_ACCESSIBILITY:QT_LINUX_ACCESSIBILITY_ALWAYS_ON:"
+        "-QT_QPA_PLATFORMTHEME:NO_AT_BRIDGE=1:QT_ACCESSIBILITY:QT_LINUX_ACCESSIBILITY_ALWAYS_ON:MOZ_ENABLE_WAYLAND=1:"
         "_JAVA_AWT_WM_NONREPARENTING=1:-GTK_MODULES:-OOO_FORCE_DESKTOP:-GNOME_ACCESSIBILITY:";
     static auto const app_x11_env = "app-env-x11";
     static auto const default_x11_env = "GDK_BACKEND=x11:QT_QPA_PLATFORM=xcb:SDL_VIDEODRIVER=x11";
+    static auto const app_env_amend = "app-env-amend";
+    static auto const default_env_amend = "";
 
     server.add_configuration_option(
         app_env,
-        "Environment for launched apps",
+        "Base environment for launched apps",
         default_env);
+
+    server.add_configuration_option(
+            app_env_amend,
+            "Amendments to environment for launched apps",
+            default_env_amend);
 
     server.add_configuration_option(
         app_x11_env,
@@ -92,6 +99,7 @@ void miral::ExternalClientLauncher::operator()(mir::Server& server)
              auto const options = server.get_options();
 
              parse_env(options->get(app_env, default_env), self->env);
+             parse_env(options->get(app_env_amend, default_env_amend), self->env);
 
              self->x11_env = self->env; // base the X11 environment on the "normal" one
              parse_env(options->get(app_x11_env, default_x11_env), self->x11_env);
@@ -136,21 +144,7 @@ void miral::ExternalClientLauncher::snapcraft_launch(const std::string& desktop_
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot launch apps when server has not started"));
     }
 
-    std::vector<std::string> env{
-        "XDG_SESSION_DESKTOP=mir",
-        "XDG_SESSION_TYPE=wayland"};
-
-    if (auto const& wayland_display = self->server->wayland_display())
-    {
-        env.push_back("WAYLAND_DISPLAY=" + wayland_display.value());
-    }
-
-    if (auto const& x11_display = self->server->x11_display())
-    {
-        env.push_back("DISPLAY=" + x11_display.value());
-    }
-
-    open_desktop_entry(desktop_file, env);
+    open_desktop_entry(desktop_file);
 }
 
 miral::ExternalClientLauncher::~ExternalClientLauncher() = default;

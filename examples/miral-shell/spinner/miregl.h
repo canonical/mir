@@ -17,6 +17,8 @@
 #ifndef UNITYSYSTEMCOMPOSITOR_MIREGL_H
 #define UNITYSYSTEMCOMPOSITOR_MIREGL_H
 
+#include "wayland_surface.h"
+
 #include <EGL/egl.h>
 
 #include <memory>
@@ -28,7 +30,7 @@ class MirEglSurface;
 std::shared_ptr<MirEglApp> make_mir_eglapp(struct wl_display* display);
 std::vector<std::shared_ptr<MirEglSurface>> mir_surface_init(std::shared_ptr<MirEglApp> const& app);
 
-class MirEglSurface
+class MirEglSurface : WaylandSurface
 {
 public:
     MirEglSurface(std::shared_ptr<MirEglApp> const& mir_egl_app, struct wl_output* wl_output);
@@ -39,7 +41,7 @@ public:
     void paint(Painter const& functor)
     {
         egl_make_current();
-        functor(width(), height());
+        functor(width_, height_);
         swap_buffers();
     }
 
@@ -47,35 +49,12 @@ private:
     void egl_make_current();
 
     void swap_buffers();
-    unsigned int width() const;
-    unsigned int height() const;
 
     std::shared_ptr<MirEglApp> const mir_egl_app;
 
-    void* content_area = nullptr;
-    struct wl_display* display = nullptr;
-    struct wl_surface* surface = nullptr;
-    struct wl_callback* new_frame_signal = nullptr;
-    struct wl_shell_surface* window = nullptr;
-    struct Buffers
-    {
-        struct wl_buffer* buffer;
-        bool available;
-    } buffers[4];
-    bool waiting_for_buffer = true;
-
     EGLSurface eglsurface;
-    int width_{640};
-    int height_{480};
-
-    static void shell_surface_ping(void *data, struct wl_shell_surface *wl_shell_surface, uint32_t serial);
-
-    static void shell_surface_configure(void *data,
-        struct wl_shell_surface *wl_shell_surface,
-        uint32_t edges,
-        int32_t width,
-        int32_t height);
-    static void shell_surface_popup_done(void *data, struct wl_shell_surface *wl_shell_surface);
+    int width_{0};
+    int height_{0};
 
 };
 
