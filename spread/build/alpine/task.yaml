@@ -1,0 +1,7 @@
+summary: Build (on Alpine)
+systems: [alpine-*]
+variants: [amd64]
+
+execute: |
+    cat /etc/os-release
+    exit 1
