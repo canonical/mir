@@ -25,6 +25,8 @@
 #include <functional>
 #include <chrono>
 
+struct MirKeyboardEvent;
+
 // from <xkbcommon/xkbcommon.h>
 struct xkb_keymap;
 struct xkb_state;
@@ -50,13 +52,12 @@ public:
     WlKeyboard(
         wl_resource* new_resource,
         mir::input::Keymap const& initial_keymap,
-        std::function<void(WlKeyboard*)> const& on_destroy,
         std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state);
 
     ~WlKeyboard();
 
-    void key(std::chrono::milliseconds const& ms, WlSurface* surface, int scancode, bool down);
-    void focussed(WlSurface* surface, bool should_be_focused);
+    void event(MirKeyboardEvent const* event, WlSurface& surface);
+    void focussed(WlSurface& surface, bool should_be_focused);
     void set_keymap(mir::input::Keymap const& new_keymap);
     void resync_keyboard();
 
@@ -68,10 +69,10 @@ private:
     std::unique_ptr<xkb_state, void (*)(xkb_state *)> state;
     std::unique_ptr<xkb_context, void (*)(xkb_context *)> const context;
 
-    std::function<void(WlKeyboard*)> on_destroy;
     std::function<std::vector<uint32_t>()> const acquire_current_keyboard_state;
 
-    wayland::Weak<WlSurface> focused_surface{};
+    wayland::Weak<WlSurface> focused_surface;
+    wayland::DestroyListenerId destroy_listener_id;
 
     uint32_t mods_depressed{0};
     uint32_t mods_latched{0};

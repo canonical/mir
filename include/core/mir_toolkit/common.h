@@ -403,8 +403,10 @@ typedef enum MirShellChrome
 typedef enum MirPointerConfinementState
 {
     mir_pointer_unconfined,
-    MIR_DEPRECATED_ENUM(mir_pointer_confined_to_surface, "mir_pointer_confined_to_window"),
-    mir_pointer_confined_to_window = mir_pointer_confined_to_surface,
+    mir_pointer_confined_oneshot,
+    mir_pointer_confined_persistent,
+    mir_pointer_locked_oneshot,
+    mir_pointer_locked_persistent,
 } MirPointerConfinementState;
 #pragma GCC diagnostic pop
 

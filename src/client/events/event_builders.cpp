@@ -315,6 +315,29 @@ void mev::transform_positions(MirEvent& event, mir::geometry::Displacement const
     }
 }
 
+void mev::scale_positions(MirEvent& event, float scale)
+{
+    if (event.type() == mir_event_type_input)
+    {
+        auto const input_type = event.to_input()->input_type();
+        if (input_type == mir_input_event_type_pointer)
+        {
+            auto pev = event.to_input()->to_pointer();
+            pev->set_x(pev->x() * scale);
+            pev->set_y(pev->y() * scale);
+        }
+        else if (input_type == mir_input_event_type_touch)
+        {
+            auto tev = event.to_input()->to_touch();
+            for (unsigned i = 0; i < tev->pointer_count(); i++)
+            {
+                tev->set_x(i, tev->x(i) * scale);
+                tev->set_y(i, tev->y(i) * scale);
+            }
+        }
+    }
+}
+
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
                                std::vector<uint8_t> const& cookie, MirInputEventModifiers modifiers,
                                std::vector<mev::ContactState> const& contacts)

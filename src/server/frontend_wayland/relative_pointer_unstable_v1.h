@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2020 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -12,19 +12,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_INTEGRATION_TESTS_PRECOMPILED_H_
-#define MIR_INTEGRATION_TESTS_PRECOMPILED_H_
+#ifndef MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H
+#define MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
-#include <vector>
-#include <string>
-#include <exception>
 #include <memory>
 
-#endif
+struct wl_display;
+
+namespace mir
+{
+namespace shell { class Shell; }
+
+namespace frontend
+{
+auto create_relative_pointer_unstable_v1(wl_display* display, std::shared_ptr<shell::Shell> shell) -> std::shared_ptr<void>;
+}
+}
+
+#endif  // MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H

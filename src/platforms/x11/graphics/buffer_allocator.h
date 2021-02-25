@@ -42,6 +42,7 @@ namespace graphics
 {
 class Display;
 struct EGLExtensions;
+struct LinuxDmaBufUnstable;
 
 namespace common
 {
@@ -74,6 +75,7 @@ private:
     std::shared_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<Executor> wayland_executor;
+    std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>> dmabuf_extension;
     std::shared_ptr<EGLExtensions> const egl_extensions;
     bool egl_display_bound{false};
 };

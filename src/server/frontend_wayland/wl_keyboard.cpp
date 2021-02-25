@@ -20,10 +20,12 @@
 
 #include "wayland_utils.h"
 #include "wl_surface.h"
+#include "wl_seat.h"
 
 #include "mir/executor.h"
 #include "mir/anonymous_shm_file.h"
 #include "mir/input/keymap.h"
+#include "mir/input/xkb_mapper.h"
 #include "mir/log.h"
 #include "mir/fatal.h"
 
@@ -39,13 +41,11 @@ namespace mi = mir::input;
 mf::WlKeyboard::WlKeyboard(
     wl_resource* new_resource,
     mir::input::Keymap const& initial_keymap,
-    std::function<void(WlKeyboard*)> const& on_destroy,
     std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state)
     : Keyboard(new_resource, Version<6>()),
       keymap{nullptr, &xkb_keymap_unref},
       state{nullptr, &xkb_state_unref},
       context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), &xkb_context_unref},
-      on_destroy{on_destroy},
       acquire_current_keyboard_state{acquire_current_keyboard_state}
 {
     // TODO: We should really grab the keymap for the focused surface when
@@ -70,18 +70,34 @@ mf::WlKeyboard::~WlKeyboard()
 {
     if (focused_surface)
     {
-        focused_surface.value().remove_destroy_listener(this);
+        focused_surface.value().remove_destroy_listener(destroy_listener_id);
     }
-    on_destroy(this);
 }
 
-void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, WlSurface* surface, int scancode, bool down)
+void mf::WlKeyboard::event(MirKeyboardEvent const* event, WlSurface& surface)
 {
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
-    auto const wayland_state = down ? KeyState::pressed : KeyState::released;
-    send_key_event(serial, ms.count(), scancode, wayland_state);
+    bool down;
+    switch (mir_keyboard_event_action(event))
+    {
+    case mir_keyboard_action_down:
+        down = true;
+        break;
 
-    if (as_nullable_ptr(focused_surface) == surface)
+    case mir_keyboard_action_up:
+        down = false;
+        break;
+
+    default:
+        return;
+    }
+
+    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+    auto const timestamp = mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(event));
+    int const scancode = mir_keyboard_event_scan_code(event);
+    uint32_t const wayland_state = down ? KeyState::pressed : KeyState::released;
+    send_key_event(serial, timestamp, scancode, wayland_state);
+
+    if (as_nullable_ptr(focused_surface) == &surface)
     {
         /*
          * HACK! Maintain our own XKB state, so we can serialise it for
@@ -96,27 +112,27 @@ void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, WlSurface* surface
     {
         log_warning(
             "Sending key 0x%2.2x %s to wl_surface@%u even though it was not explicitly given keyboard focus",
-            scancode, down ? "press" : "release", wl_resource_get_id(surface->resource));
+            scancode, down ? "press" : "release", wl_resource_get_id(surface.resource));
 
         focussed(surface, true);
     }
 }
 
-void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
+void mf::WlKeyboard::focussed(WlSurface& surface, bool should_be_focused)
 {
-    if (client != surface->client)
+    if (client != surface.client)
     {
         fatal_error("WlKeyboard::focussed() called with a surface of the wrong client");
     }
 
-    bool const is_currently_focused = (focused_surface && &focused_surface.value() == surface);
+    bool const is_currently_focused = (focused_surface && &focused_surface.value() == &surface);
 
     if (should_be_focused == is_currently_focused)
         return;
 
     if (focused_surface)
     {
-        focused_surface.value().remove_destroy_listener(this);
+        focused_surface.value().remove_destroy_listener(destroy_listener_id);
         auto const serial = wl_display_next_serial(wl_client_get_display(client));
         send_leave_event(serial, focused_surface.value().raw_resource());
     }
@@ -149,21 +165,21 @@ void mf::WlKeyboard::focussed(WlSurface* surface, bool should_be_focused)
                 keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
         }
 
-        surface->add_destroy_listener(
-            this,
-            [this, surface]()
+        destroy_listener_id = surface.add_destroy_listener(
+            [this, &surface]()
             {
                 focussed(surface, false);
             });
 
         auto const serial = wl_display_next_serial(wl_client_get_display(client));
-        send_enter_event(serial, surface->raw_resource(), &key_state);
+        send_enter_event(serial, surface.raw_resource(), &key_state);
         wl_array_release(&key_state);
 
-        focused_surface = mw::make_weak(surface);
+        focused_surface = mw::make_weak(&surface);
     }
     else
     {
+        destroy_listener_id = {};
         focused_surface = {};
     }
 }

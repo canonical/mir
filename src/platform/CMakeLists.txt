@@ -19,7 +19,29 @@ set(MIR_PLATFORM_OBJECTS
 set(MIR_PLATFORM_REFERENCES
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GL_LDFLAGS} ${GL_LIBRARIES}
+  mirwayland
 )
+
+function(add_object_library_to_target TARGET OBJECT_LIB)
+    get_target_property(HEADERS ${OBJECT_LIB} INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(LIBS ${OBJECT_LIB} INTERFACE_LINK_LIBRARIES)
+
+    if (HEADERS)
+        target_include_directories(${TARGET} PUBLIC ${HEADERS})
+    endif()
+
+    if (LIBS)
+        target_link_libraries(${TARGET} INTERFACE ${LIBS})
+    endif()
+
+    target_sources(${TARGET} PRIVATE $<TARGET_OBJECTS:${OBJECT_LIB}>)
+endfunction()
+
+function(add_object_libraries_to_target TARGET)
+    foreach(OBJECT_LIB ${ARGN})
+        add_object_library_to_target(${TARGET} ${OBJECT_LIB})
+    endforeach()
+endfunction()
 
 add_subdirectory(graphics/)
 add_subdirectory(options)
@@ -29,17 +51,23 @@ set(MIR_PLATFORM_OBJECTS ${MIR_PLATFORM_OBJECTS} PARENT_SCOPE)
 set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
 
 add_library(mirplatform SHARED
-  ${MIR_PLATFORM_OBJECTS}
-
   ${PROJECT_SOURCE_DIR}/include/platform/mir/input/input_sink.h
   ${PROJECT_SOURCE_DIR}/include/platform/mir/console_services.h
   ${PROJECT_SOURCE_DIR}/include/platform/mir/executor.h
 )
 
-target_link_libraries(mirplatform
+add_object_libraries_to_target(
+  mirplatform
 
-  mircommon
-  ${MIR_PLATFORM_REFERENCES}
+  mirplatformgraphicscommon
+  miroptions
+  mirudev
+)
+
+target_link_libraries(mirplatform
+  PRIVATE
+    mircommon
+    ${MIR_PLATFORM_REFERENCES}
 )
 
 set_target_properties(

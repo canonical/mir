@@ -42,11 +42,9 @@ class Context;
 namespace graphics
 {
 
-namespace gbm
-{
 class DmaBufFormatDescriptors;
 
-class LinuxDmaBufUnstable : public wayland::LinuxDmabufV1::Global
+class LinuxDmaBufUnstable : public mir::wayland::LinuxDmabufV1::Global
 {
 public:
     LinuxDmaBufUnstable(
@@ -71,7 +69,6 @@ private:
     std::shared_ptr<DmaBufFormatDescriptors> const formats;
 };
 
-}
 }
 }
 

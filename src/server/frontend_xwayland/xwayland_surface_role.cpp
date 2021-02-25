@@ -18,6 +18,7 @@
 
 #include "xwayland_surface_role.h"
 #include "xwayland_surface_role_surface.h"
+#include "scaled_buffer_stream.h"
 #include "xwayland_log.h"
 
 #include "wl_surface.h"
@@ -28,15 +29,18 @@
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
+namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
 mf::XWaylandSurfaceRole::XWaylandSurfaceRole(
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<XWaylandSurfaceRoleSurface> const& wm_surface,
-    WlSurface* wl_surface)
+    WlSurface* wl_surface,
+    float scale)
     : shell{shell},
       weak_wm_surface{wm_surface},
-      wl_surface{wl_surface}
+      wl_surface{wl_surface},
+      scale{scale}
 {
     wl_surface->set_role(this);
     if (verbose_xwayland_logging_enabled())
@@ -51,6 +55,45 @@ mf::XWaylandSurfaceRole::~XWaylandSurfaceRole()
     if (verbose_xwayland_logging_enabled())
     {
         log_debug("Destroyed XWaylandSurfaceRole for wl_surface@%d", wl_resource_get_id(wl_surface->resource));
+    }
+}
+
+void mf::XWaylandSurfaceRole::populate_surface_data_scaled(
+    WlSurface* wl_surface,
+    float scale,
+    shell::SurfaceSpecification& spec,
+    std::vector<std::shared_ptr<void>>& keep_alive_until_spec_is_used)
+{
+    spec.streams = std::vector<shell::StreamSpecification>();
+    spec.input_shape = std::vector<geom::Rectangle>();
+    wl_surface->populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+
+    if (scale != 1.0f)
+    {
+        auto const inv_scale = 1.0f / scale;
+
+        for (auto& stream : spec.streams.value())
+        {
+            if (auto inner = std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()))
+            {
+                // We could set the scale of the original stream, but then the WlSurface would see the scaled size.
+                // Instead we wrap the surface's stream in our own that scales without the surface knowing.
+                auto scaled = std::make_shared<ScaledBufferStream>(std::move(inner), scale);
+                stream.stream = scaled;
+                keep_alive_until_spec_is_used.push_back(std::move(scaled));
+            }
+            if (stream.size)
+            {
+                stream.size = stream.size.value() * inv_scale;
+            }
+            stream.displacement = stream.displacement * inv_scale;
+        }
+
+        for (auto& rect : spec.input_shape.value())
+        {
+            rect.top_left = as_point(as_displacement(rect.top_left) * inv_scale);
+            rect.size = rect.size * inv_scale;
+        }
     }
 }
 
@@ -76,9 +119,8 @@ void mf::XWaylandSurfaceRole::refresh_surface_data_now()
         return;
 
     shell::SurfaceSpecification spec;
-    spec.streams = std::vector<shell::StreamSpecification>();
-    spec.input_shape = std::vector<geom::Rectangle>();
-    wl_surface->populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+    std::vector<std::shared_ptr<void>> keep_alive_until_spec_is_used;
+    populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
     shell->modify_surface(session, surface.value(), spec);
 }
 
@@ -108,11 +150,10 @@ void mf::XWaylandSurfaceRole::commit(WlSurfaceState const& state)
             spec.state = mir_window_state_hidden;
         }
 
+        std::vector<std::shared_ptr<void>> keep_alive_until_spec_is_used;
         if (state.surface_data_needs_refresh())
         {
-            spec.streams = std::vector<shell::StreamSpecification>();
-            spec.input_shape = std::vector<geom::Rectangle>();
-            wl_surface->populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+            populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
         }
 
         if (!spec.is_empty())

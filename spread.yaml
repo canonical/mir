@@ -6,16 +6,16 @@ backends:
     lxd:
         systems:
             - ubuntu-20.04
-            - fedora-31
             - fedora-32
+            - fedora-33
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
         plan: n1-highcpu-8
         location: computeengine/us-east1-b
         systems:
             - ubuntu-20.04-64
-            - fedora-31-64
             - fedora-32-64
+            - fedora-33-64
             - fedora-rawhide-64
 
 environment:

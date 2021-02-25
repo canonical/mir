@@ -27,16 +27,8 @@ namespace mg = mir::graphics;
 namespace mgx = mg::X;
 namespace mgxh = mgx::helpers;
 
-mgxh::EGLHelper::EGLHelper(GLConfig const& gl_config)
-    : depth_buffer_bits{gl_config.depth_buffer_bits()},
-      stencil_buffer_bits{gl_config.stencil_buffer_bits()},
-      egl_display{EGL_NO_DISPLAY}, egl_config{0},
-      egl_context{EGL_NO_CONTEXT}, egl_surface{EGL_NO_SURFACE},
-      should_terminate_egl{false}
-{
-}
-
-void mgxh::EGLHelper::setup(::Display* const x_dpy)
+mgxh::EGLHelper::EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy)
+    : EGLHelper{gl_config}
 {
     eglBindAPI(EGL_OPENGL_ES_API);
 
@@ -52,7 +44,8 @@ void mgxh::EGLHelper::setup(::Display* const x_dpy)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 }
 
-void mgxh::EGLHelper::setup(::Display* const x_dpy, EGLContext shared_context)
+mgxh::EGLHelper::EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy, EGLContext shared_context)
+    : EGLHelper{gl_config}
 {
     eglBindAPI(EGL_OPENGL_ES_API);
 
@@ -68,8 +61,8 @@ void mgxh::EGLHelper::setup(::Display* const x_dpy, EGLContext shared_context)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 }
 
-void mgxh::EGLHelper::setup(::Display* const x_dpy, Window win,
-                            EGLContext shared_context)
+mgxh::EGLHelper::EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy, Window win, EGLContext shared_context)
+    : EGLHelper{gl_config}
 {
     eglBindAPI(EGL_OPENGL_ES_API);
 
@@ -106,7 +99,7 @@ mgxh::EGLHelper::~EGLHelper() noexcept
     }
 }
 
-bool mgxh::EGLHelper::swap_buffers()
+bool mgxh::EGLHelper::swap_buffers() const
 {
     auto ret = eglSwapBuffers(egl_display, egl_surface);
     return (ret == EGL_TRUE);
@@ -123,6 +116,15 @@ bool mgxh::EGLHelper::release_current() const
 {
     auto ret = eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     return (ret == EGL_TRUE);
+}
+
+mgxh::EGLHelper::EGLHelper(GLConfig const& gl_config)
+    : depth_buffer_bits{gl_config.depth_buffer_bits()},
+      stencil_buffer_bits{gl_config.stencil_buffer_bits()},
+      egl_display{EGL_NO_DISPLAY}, egl_config{0},
+      egl_context{EGL_NO_CONTEXT}, egl_surface{EGL_NO_SURFACE},
+      should_terminate_egl{false}
+{
 }
 
 void mgxh::EGLHelper::setup_internal(::Display* const x_dpy, bool initialize)

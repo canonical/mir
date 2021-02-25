@@ -36,6 +36,7 @@ struct wl_resource;
 
 namespace mir
 {
+class Executor;
 namespace scene
 {
 struct SurfaceCreationParameters;
@@ -59,8 +60,8 @@ class WindowWlSurfaceRole
       public virtual wayland::LifetimeTracker
 {
 public:
-
     WindowWlSurfaceRole(
+        Executor& wayland_executor,
         WlSeat* seat,
         wl_client* client,
         WlSurface* surface,

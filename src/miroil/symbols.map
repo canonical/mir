@@ -7,6 +7,14 @@ global:
     miroil::DisplayConfigurationStorage::?DisplayConfigurationStorage*;
     miroil::Edid::Descriptor::string_value*;
     miroil::Edid::parse_data*;
+    miroil::EventBuilder::EventBuilder*;
+    miroil::EventBuilder::EventInfo::store*;
+    miroil::EventBuilder::add_touch*;
+    miroil::EventBuilder::find_info*;
+    miroil::EventBuilder::make_key_event*;
+    miroil::EventBuilder::make_pointer_event*;
+    miroil::EventBuilder::make_touch_event*;
+    miroil::EventBuilder::store*;
     miroil::GLBuffer::?GLBuffer*;
     miroil::GLBuffer::GLBuffer*;
     miroil::GLBuffer::bind*;
@@ -29,6 +37,8 @@ global:
     typeinfo?for?miroil::Edid;
     typeinfo?for?miroil::Edid::Descriptor;
     typeinfo?for?miroil::Edid::PhysicalSizeMM;
+    typeinfo?for?miroil::EventBuilder;
+    typeinfo?for?miroil::EventBuilder::EventInfo;
     typeinfo?for?miroil::GLBuffer;
     typeinfo?for?miroil::PersistDisplayConfig;
     vtable?for?miroil::DisplayConfigurationOptions;
@@ -39,6 +49,8 @@ global:
     vtable?for?miroil::Edid;
     vtable?for?miroil::Edid::Descriptor;
     vtable?for?miroil::Edid::PhysicalSizeMM;
+    vtable?for?miroil::EventBuilder;
+    vtable?for?miroil::EventBuilder::EventInfo;
     vtable?for?miroil::GLBuffer;
     vtable?for?miroil::PersistDisplayConfig;
   };

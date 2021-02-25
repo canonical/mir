@@ -41,20 +41,28 @@ public:
     Window(Application const& application, std::shared_ptr<mir::scene::Surface> const& surface);
     ~Window();
 
+    /// The position of the top-left corner of the window frame
     auto top_left()     const -> mir::geometry::Point;
+    /// The size of the window frame. Units are logical screen coordinates (not necessarily device pixels). Any
+    /// decorations are included in the size.
     auto size()         const -> mir::geometry::Size;
+    /// The application that created this window
     auto application()  const -> Application;
 
-    // Indicates that the Window isn't null
+    /// Indicates that the Window isn't null
     operator bool() const;
 
+    /// Not for external use, use WindowManagerTools::modify_window() instead
+    /// @{
     void resize(mir::geometry::Size const& size);
-
     void move_to(mir::geometry::Point top_left);
+    /// @}
 
-    // Access to the underlying Mir surface
+    /// Access to the underlying Mir surface
+    /// @{
     operator std::weak_ptr<mir::scene::Surface>() const;
     operator std::shared_ptr<mir::scene::Surface>() const;
+    /// @}
 
 private:
     struct Self;

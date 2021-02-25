@@ -105,6 +105,7 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 
 EventUPtr clone_event(MirEvent const& event);
 void transform_positions(MirEvent& event, mir::geometry::Displacement const& movement);
+void scale_positions(MirEvent& event, float scale);
 void set_window_id(MirEvent& event, int window_id);
 
 EventUPtr make_start_drag_and_drop_event(frontend::SurfaceId const& surface_id, std::vector<uint8_t> const& handle);

@@ -596,7 +596,8 @@ void mgg::RealKMSOutput::update_from_hardware_state(
         }
     }
 
-    if (current_mode_index == invalid_mode_index) {
+    // There's no need to warn about failing to find a current display mode on a disconnected display.
+    if (connected && (current_mode_index == invalid_mode_index)) {
         mir::log_warning(
             "Unable to determine the current display mode.");
     }
