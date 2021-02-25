@@ -132,6 +132,9 @@ private:
     Value();
 };
 
+template<class GeometricType, typename Tag>
+using Corresponding = typename GeometricType::template Corresponding<Tag>;
+
 template<typename W, typename std::enable_if<std::is_base_of<detail::ValueWrapperBase, W>::value, bool>::type = true>
 std::ostream& operator<<(std::ostream& out, W const& value)
 {

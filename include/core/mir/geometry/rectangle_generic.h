@@ -103,10 +103,10 @@ struct Rectangle : detail::RectangleBase
         return !disjoint;
     }
 
-    typename P::template Corresponding<XTag> left() const   { return top_left.x; }
-    typename P::template Corresponding<XTag> right() const  { return bottom_right().x; }
-    typename P::template Corresponding<YTag> top() const    { return top_left.y; }
-    typename P::template Corresponding<YTag> bottom() const { return bottom_right().y; }
+    Corresponding<P, XTag> left() const   { return top_left.x; }
+    Corresponding<P, XTag> right() const  { return bottom_right().x; }
+    Corresponding<P, YTag> top() const    { return top_left.y; }
+    Corresponding<P, YTag> bottom() const { return bottom_right().y; }
 
     P top_left;
     S size;
