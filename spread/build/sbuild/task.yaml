@@ -45,11 +45,16 @@ execute: |
       --dist=${RELEASE}
       --build=${DEB_BUILD_ARCH}
       --host=${DEB_HOST_ARCH}
-      --extra-repository="deb http://ppa.launchpad.net/mir-team/dev/ubuntu ${RELEASE} main"
-      --extra-repository-key=${SPREAD_PATH}/${SPREAD_TASK}/mir-team.asc
     )
 
     [ "${PROPOSED}" == "true" ] || MKSBUILD_OPTS+=("--skip-proposed")
+
+    if [[ "${SPREAD_VARIANT}" == *"ubuntu"* ]]; then
+      SBUILD_OPTS+=(
+        --extra-repository="deb http://ppa.launchpad.net/mir-team/dev/ubuntu ${RELEASE} main"
+        --extra-repository-key=${SPREAD_PATH}/${SPREAD_TASK}/mir-team.asc
+      )
+    fi
 
     # Cross building
     if [ "${DEB_BUILD_ARCH}" != "${DEB_HOST_ARCH}" ]; then
