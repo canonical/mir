@@ -51,6 +51,13 @@ execute: |
 
     [ "${PROPOSED}" == "true" ] || MKSBUILD_OPTS+=("--skip-proposed")
 
+    if [ $(lsb_release --id --short) == "Ubuntu" ]; then
+      SBUILD_OPTS+=(
+        --extra-repository="deb http://ppa.launchpad.net/mir-team/dev/ubuntu ${RELEASE} main"
+        --extra-repository-key=${SPREAD_PATH}/${SPREAD_TASK}/mir-team.asc
+      )
+    fi
+
     # Cross building
     if [ "${DEB_BUILD_ARCH}" != "${DEB_HOST_ARCH}" ]; then
       MKSBUILD_OPTS+=("--arch=${DEB_BUILD_ARCH}" "--target=${DEB_HOST_ARCH}")
