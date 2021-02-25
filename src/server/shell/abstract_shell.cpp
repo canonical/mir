@@ -402,10 +402,24 @@ void msh::AbstractShell::set_focus_to(
     std::shared_ptr<ms::Session> const& focus_session,
     std::shared_ptr<ms::Surface> const& focus_surface)
 {
+    // Don't give keyboard focus to popups
+    auto surface = focus_surface;
+    while (surface)
+    {
+        auto const type = surface->type();
+        if (type != mir_window_type_gloss &&
+            type != mir_window_type_tip &&
+            type != mir_window_type_menu)
+        {
+            break;
+        }
+        surface = surface->parent();
+    }
+
     std::unique_lock<std::mutex> lock(focus_mutex);
 
-    notify_focus_locked(lock, focus_session, focus_surface);
-    update_focus_locked(lock, focus_session, focus_surface);
+    notify_focus_locked(lock, focus_session, surface);
+    update_focus_locked(lock, focus_session, surface);
 }
 
 void msh::AbstractShell::notify_focus_locked(
