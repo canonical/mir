@@ -23,12 +23,19 @@ global:
     miroil::GLBuffer::operator*;
     miroil::GLBuffer::reset*;
     miroil::GLBuffer::size*;
+    miroil::InputDeviceObserver::?InputDeviceObserver*;
+    miroil::InputDeviceObserver::apply_keymap*;
+    miroil::InputDeviceObserver::get_device_id*;
+    miroil::InputDeviceObserver::get_device_name*;
+    miroil::InputDeviceObserver::is_alpha_numeric*;
+    miroil::InputDeviceObserver::is_keyboard*;
     miroil::PersistDisplayConfig::?PersistDisplayConfig*;
     miroil::PersistDisplayConfig::PersistDisplayConfig*;
     miroil::PersistDisplayConfig::operator*;
     miroil::dispatch_input_event*;
     non-virtual?thunk?to?miroil::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
     non-virtual?thunk?to?miroil::DisplayConfigurationStorage::?DisplayConfigurationStorage*;
+    non-virtual?thunk?to?miroil::InputDeviceObserver::?InputDeviceObserver*;
     typeinfo?for?miroil::DisplayConfigurationOptions;
     typeinfo?for?miroil::DisplayConfigurationOptions::DisplayMode;
     typeinfo?for?miroil::DisplayConfigurationPolicy;
@@ -40,6 +47,7 @@ global:
     typeinfo?for?miroil::EventBuilder;
     typeinfo?for?miroil::EventBuilder::EventInfo;
     typeinfo?for?miroil::GLBuffer;
+    typeinfo?for?miroil::InputDeviceObserver;
     typeinfo?for?miroil::PersistDisplayConfig;
     vtable?for?miroil::DisplayConfigurationOptions;
     vtable?for?miroil::DisplayConfigurationOptions::DisplayMode;
@@ -52,6 +60,7 @@ global:
     vtable?for?miroil::EventBuilder;
     vtable?for?miroil::EventBuilder::EventInfo;
     vtable?for?miroil::GLBuffer;
+    vtable?for?miroil::InputDeviceObserver;
     vtable?for?miroil::PersistDisplayConfig;
   };
 
