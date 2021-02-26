@@ -15,12 +15,6 @@ global:
     miroil::EventBuilder::make_pointer_event*;
     miroil::EventBuilder::make_touch_event*;
     miroil::EventBuilder::store*;
-    miroil::EventBuilderBase::EventBuilderBase*;
-    miroil::EventBuilderBase::EventInfo::store*;
-    miroil::EventBuilderBase::add_touch*;
-    miroil::EventBuilderBase::find_info*;
-    miroil::EventBuilderBase::make_event*;
-    miroil::EventBuilderBase::store*;
     miroil::GLBuffer::?GLBuffer*;
     miroil::GLBuffer::GLBuffer*;
     miroil::GLBuffer::bind*;
@@ -76,8 +70,6 @@ global:
     typeinfo?for?miroil::Edid::PhysicalSizeMM;
     typeinfo?for?miroil::EventBuilder;
     typeinfo?for?miroil::EventBuilder::EventInfo;
-    typeinfo?for?miroil::EventBuilderBase;
-    typeinfo?for?miroil::EventBuilderBase::EventInfo;
     typeinfo?for?miroil::GLBuffer;
     typeinfo?for?miroil::InputDeviceObserver;
     typeinfo?for?miroil::MirServerHooks;
@@ -99,8 +91,6 @@ global:
     vtable?for?miroil::Edid::PhysicalSizeMM;
     vtable?for?miroil::EventBuilder;
     vtable?for?miroil::EventBuilder::EventInfo;
-    vtable?for?miroil::EventBuilderBase;
-    vtable?for?miroil::EventBuilderBase::EventInfo;
     vtable?for?miroil::GLBuffer;
     vtable?for?miroil::InputDeviceObserver;
     vtable?for?miroil::MirServerHooks;

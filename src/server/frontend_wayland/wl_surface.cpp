@@ -99,14 +99,6 @@ mf::WlSurface::WlSurface(
 
 mf::WlSurface::~WlSurface()
 {
-    // so that unregister_destroy_listener calls invoked from destroy listeners don't screw up the iterator
-    auto listeners = move(destroy_listeners);
-    destroy_listeners.clear();
-    for (auto listener: listeners)
-    {
-        listener.second();
-    }
-
     role->destroy();
     session->destroy_buffer_stream(stream);
 }
@@ -222,16 +214,6 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
     {
         subsurface->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
     }
-}
-
-void mf::WlSurface::add_destroy_listener(void const* key, std::function<void()> listener)
-{
-    destroy_listeners[key] = listener;
-}
-
-void mf::WlSurface::remove_destroy_listener(void const* key)
-{
-    destroy_listeners.erase(key);
 }
 
 mf::WlSurface* mf::WlSurface::from(wl_resource* resource)

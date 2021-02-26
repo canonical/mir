@@ -8,9 +8,9 @@ if [ -z "${RELEASE}" ]; then
   exit 1
 fi
 
-GIT_BRANCH=${TRAVIS_BRANCH-$( git rev-parse --abbrev-ref HEAD )}
+GIT_BRANCH=${GITHUB_REF-$( git rev-parse --abbrev-ref HEAD )}
 # determine the patch release
-if ! [[ "${GIT_BRANCH}" =~ ^(master|(release/|v)([0-9\.]+))$ ]]; then
+if ! [[ "${GIT_BRANCH}" =~ ^(refs/(heads|tags)/)?(master|(release/|v)([0-9\.]+))$ ]]; then
   echo "ERROR: This script should only run on master or release tags" >&2
   echo "  or branches." >&2
   exit 3
@@ -39,13 +39,13 @@ fi
 
 GIT_REVISION=$( git rev-parse --short HEAD )
 
-if [[ "${GIT_BRANCH}" =~ ^(release/|v)([0-9\.]+)$ ]]; then
+if [[ "${GIT_BRANCH}" =~ ^(refs/(heads|tags)/)?(release/|v)([0-9\.]+)$ ]]; then
   # we're on a release branch
   TARGET_PPA=ppa:mir-team/rc
-  MIR_SERIES=${BASH_REMATCH[2]}
-  if [[ "$( git describe --exact-match )" =~ ^v[0-9\.]+$ ]] 2> /dev/null; then
+  MIR_SERIES=${BASH_REMATCH[4]}
+  if [[ "$( git describe --tags --exact-match )" =~ ^v([0-9\.]+)$ ]]; then
     # this is a final release, use the tag version
-    MIR_VERSION=$( git describe | sed 's/^v//' )
+    MIR_VERSION=${BASH_REMATCH[1]}
   else
     # find the last tagged patch version
     PATCH_VERSION=$( git describe --abbrev=0 --match "v${MIR_SERIES}*" \

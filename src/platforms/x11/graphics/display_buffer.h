@@ -78,9 +78,9 @@ private:
     std::shared_ptr<DisplayReport> const report;
     geometry::Rectangle area;
     glm::mat2 transform;
-    helpers::EGLHelper egl;
+    helpers::EGLHelper const egl;
     std::shared_ptr<AtomicFrame> const last_frame;
-    DisplayConfigurationOutputId output_id;
+    DisplayConfigurationOutputId const output_id;
 
     typedef EGLBoolean (EGLAPIENTRY EglGetSyncValuesCHROMIUM)
         (EGLDisplay dpy, EGLSurface surface, int64_t *ust,

@@ -44,20 +44,26 @@ enum class XCBType
     ATOM,
     WINDOW,
     CARDINAL32, ///< also known as an unsigned int
+    INTEGER32,  ///< signed int
     STRING,
     UTF8_STRING,
     WM_STATE,
     WM_PROTOCOLS,
+    INCR,
 };
 
 template<XCBType T> struct NativeXCBType                { typedef void type;};
 template<> struct NativeXCBType<XCBType::ATOM>          { typedef xcb_atom_t type; };
 template<> struct NativeXCBType<XCBType::WINDOW>        { typedef xcb_window_t type; };
 template<> struct NativeXCBType<XCBType::CARDINAL32>    { typedef uint32_t type; };
+template<> struct NativeXCBType<XCBType::INTEGER32>     { typedef int32_t type; };
 template<> struct NativeXCBType<XCBType::STRING>        { typedef char type; };
 template<> struct NativeXCBType<XCBType::UTF8_STRING>   { typedef char type; };
 template<> struct NativeXCBType<XCBType::WM_STATE>      { typedef uint32_t type; };
 template<> struct NativeXCBType<XCBType::WM_PROTOCOLS>  { typedef uint32_t type; };
+// https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#incr_properties:
+// "The contents of the INCR property will be an integer"
+template<> struct NativeXCBType<XCBType::INCR>          { typedef int32_t type; };
 
 class XCBConnection
 {
@@ -153,6 +159,13 @@ public:
     /// Read a single property of various types from the window
     /// Returns a function that will wait on the reply before calling action()
     /// @{
+    auto read_property(
+        xcb_window_t window,
+        xcb_atom_t prop,
+        bool delete_after_read,
+        uint32_t max_length,
+        Handler<xcb_get_property_reply_t*>&& handler) const -> std::function<void()>;
+
     auto read_property(
         xcb_window_t window,
         xcb_atom_t prop,
@@ -295,7 +308,12 @@ public:
     DECLARE_ATOM(CLIPBOARD);
     DECLARE_ATOM(CLIPBOARD_MANAGER);
     DECLARE_ATOM(UTF8_STRING);
+    DECLARE_ATOM(TEXT);
     DECLARE_ATOM(COMPOUND_TEXT);
+    DECLARE_ATOM(TIMESTAMP);
+    DECLARE_ATOM(TARGETS);
+    DECLARE_ATOM(INCR);
+    DECLARE_ATOM(_WL_SELECTION);
     DECLARE_ATOM(WL_SURFACE_ID);
 
 #undef DECLARE_ATOM

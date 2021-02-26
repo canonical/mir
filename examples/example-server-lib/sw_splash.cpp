@@ -17,7 +17,9 @@
  */
 
 #include "sw_splash.h"
-#include "wayland_helpers.h"
+#include "wayland_app.h"
+#include "wayland_surface.h"
+#include "wayland_shm.h"
 #include <wayland-client.h>
 
 #include <sys/types.h>
@@ -29,118 +31,53 @@
 #include <mutex>
 #include <map>
 
+using namespace mir::geometry;
+
 namespace
 {
 struct DrawContext
 {
-    int width = 400;
-    int height = 400;
-
-    void* content_area;
     struct wl_display* display;
-    struct wl_surface* surface;
-    struct wl_callback* new_frame_signal;
-    struct Buffer
-    {
-        wl_buffer* buffer = nullptr;
-        bool available = false;
-    } buffers[4];
-    bool waiting_for_buffer;
+    std::unique_ptr<WaylandShm> shm;
+    std::unique_ptr<WaylandSurface> surface;
 
     uint8_t pattern[4] = { 0x14, 0x48, 0xDD, 0xFF };
 };
 
-void draw_new_stuff(void* data, struct wl_callback* callback, uint32_t time);
-
-wl_callback_listener const frame_listener =
+void draw_new_stuff(DrawContext* ctx)
 {
-    &draw_new_stuff
-};
+    Size const size{ctx->surface->configured_size()};
+    auto const width = size.width.as_int();
+    auto const height = size.height.as_int();
+    auto const stride = width * 4;
 
-wl_buffer* find_free_buffer(DrawContext* ctx)
-{
-    for (auto& b: ctx->buffers)
-    {
-        if (b.available)
-        {
-            b.available = false;
-            return b.buffer;
-        }
-    }
-    return NULL;
-}
+    auto const buffer = ctx->shm->get_buffer(size, Stride{stride});
+    char* row = static_cast<decltype(row)>(buffer->data());
 
-void draw_new_stuff(
-    void* data,
-    struct wl_callback* callback,
-    uint32_t /*time*/)
-{
-    DrawContext* ctx = static_cast<decltype(ctx)>(data);
-
-    wl_callback_destroy(callback);
-
-    struct wl_buffer* buffer = find_free_buffer(ctx);
-    if (!buffer)
-    {
-        ctx->waiting_for_buffer = false;
-        return;
-    }
-
-    char* row = static_cast<decltype(row)>(ctx->content_area);
-    for (int j = 0; j < ctx->height; j++)
+    for (int j = 0; j < height; j++)
     {
         uint32_t* pixel = (uint32_t*)row;
 
-        for (int i = 0; i < ctx->width; i++)
+        for (int i = 0; i < width; i++)
             memcpy(pixel + i, ctx->pattern, sizeof pixel[i]);
 
-        row += 4*ctx->width;
+        row += stride;
     }
 
-    ctx->new_frame_signal = wl_surface_frame(ctx->surface);
-    wl_callback_add_listener(ctx->new_frame_signal, &frame_listener, ctx);
-    wl_surface_attach(ctx->surface, buffer, 0, 0);
-    wl_surface_commit(ctx->surface);
-}
-
-void update_free_buffers(void* data, struct wl_buffer* buffer)
-{
-    DrawContext* ctx = static_cast<decltype(ctx)>(data);
-    for (auto& b: ctx->buffers)
-    {
-        if (b.buffer == buffer)
+    ctx->surface->add_frame_callback([ctx]()
         {
-            b.available = true;
-        }
-    }
-
-    if (ctx->waiting_for_buffer)
-    {
-        struct wl_callback* fake_frame = wl_display_sync(ctx->display);
-        wl_callback_add_listener(fake_frame, &frame_listener, ctx);
-    }
-
-    ctx->waiting_for_buffer = false;
+            draw_new_stuff(ctx);
+        });
+    ctx->surface->attach_buffer(buffer->use(), 1);
+    ctx->surface->commit();
 }
-
-wl_buffer_listener const buffer_listener = {
-    update_free_buffers
-};
 }
 
 struct SwSplash::Self : SplashSession
 {
     Self()
-        : globals{
-              [](auto const&) {},
-              [](auto const&) {},
-              [](auto const&) {}}
     {
-        // Because we use the outputs exactly once, to enumerate the set of outputs at startup,
-        // we don't need to care about outputs changing or disappearing.
     }
-
-    Globals globals;
 
     bool show_splash=true;
 
@@ -181,51 +118,20 @@ void SwSplash::Self::operator()(struct wl_display* display)
 {
     if (!show_splash)
         return;
-    globals.init(display);
+
+    WaylandApp app{display};
 
     ctx.display = display;
-    ctx.surface = wl_compositor_create_surface(globals.compositor);
+    ctx.shm = std::make_unique<WaylandShm>(app.shm());
+    ctx.surface = std::make_unique<WaylandSurface>(&app);
+    ctx.surface->set_fullscreen(nullptr);
+    ctx.surface->commit();
+    app.roundtrip();
 
-    static wl_shell_surface_listener const shell_surface_listener
-    {
-        // ping
-        [](auto, auto, auto){},
-
-        // configure
-        [](void *data, wl_shell_surface *, uint32_t /*edges*/, int32_t width, int32_t height)
+    WaylandCallback::create(wl_display_sync(display), [this]()
         {
-            auto const ctx = static_cast<DrawContext*>(data);
-
-            if (width > 0)
-                ctx->width = width;
-
-            if (height > 0)
-                ctx->height = height;
-        },
-
-        // popup_done
-        [](auto, auto){}, // popup_done
-    };
-
-    auto const shell_surface = wl_shell_get_shell_surface(globals.shell, ctx.surface);
-    wl_shell_surface_add_listener(shell_surface, &shell_surface_listener, &ctx);
-    wl_shell_surface_set_fullscreen(shell_surface, WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT, 0, nullptr);
-    wl_surface_commit(ctx.surface);
-    wl_display_roundtrip(display);
-
-    struct wl_shm_pool* shm_pool = make_shm_pool(globals.shm, ctx.width * ctx.height * 4, &ctx.content_area);
-
-    for (auto& b: ctx.buffers)
-    {
-        b.buffer = wl_shm_pool_create_buffer(shm_pool, 0, ctx.width, ctx.height, ctx.width*4, WL_SHM_FORMAT_ARGB8888);
-        b.available = true;
-        wl_buffer_add_listener(b.buffer, &buffer_listener, &ctx);
-    }
-
-    wl_shm_pool_destroy(shm_pool);
-
-    struct wl_callback* first_frame = wl_display_sync(display);
-    wl_callback_add_listener(first_frame, &frame_listener, &ctx);
+            draw_new_stuff(&ctx);
+        });
 
     auto const time_limit = std::chrono::steady_clock::now() + std::chrono::seconds(2);
 
@@ -243,16 +149,8 @@ void SwSplash::Self::operator()(struct wl_display* display)
     }
     while (std::chrono::steady_clock::now() < time_limit);
 
-    for (auto const& b: ctx.buffers)
-    {
-        if (b.buffer)
-            wl_buffer_destroy(b.buffer);
-    }
-
-    wl_shell_surface_destroy(shell_surface);
-    wl_surface_destroy(ctx.surface);
-    globals.teardown();
-    wl_display_roundtrip(display);
+    ctx.surface.reset();
+    ctx.shm.reset();
 }
 
 void SwSplash::operator()(struct wl_display* display)

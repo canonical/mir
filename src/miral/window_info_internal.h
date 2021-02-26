@@ -20,6 +20,7 @@
 #define MIR_WINDOW_INFO_INTERNAL_H
 
 #include "miral/window_info.h"
+#include <optional>
 
 struct miral::WindowInfo::Self
 {
@@ -30,7 +31,8 @@ struct miral::WindowInfo::Self
     std::string name;
     MirWindowType type;
     MirWindowState state;
-    mir::geometry::Rectangle restore_rect;
+    /// Not exposed as an optional, lazily calculated instead
+    std::optional<mir::geometry::Rectangle> restore_rect;
     Window parent;
     std::vector <Window> children;
     mir::geometry::Width min_width;

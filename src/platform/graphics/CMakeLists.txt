@@ -1,7 +1,10 @@
-include_directories(${GL_INCLUDE_DIRS})
+set(DMABUF_PROTO_HEADER ${CMAKE_CURRENT_BINARY_DIR}/linux-dmabuf-unstable-v1_wrapper.h)
+set(DMABUF_PROTO_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/linux-dmabuf-unstable-v1_wrapper.cpp)
 
-set(
-  GRAPHICS_SOURCES
+set(DRM_FORMATS_FILE ${CMAKE_CURRENT_BINARY_DIR}/drm-formats)
+set(DRM_FORMATS_BIG_ENDIAN_FILE ${CMAKE_CURRENT_BINARY_DIR}/drm-formats-big-endian)
+
+add_library(mirplatformgraphicscommon OBJECT
 
   egl_extensions.cpp
   egl_resources.cpp
@@ -25,19 +28,105 @@ set(
   cpu_buffers.cpp
   egl_logger.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/egl_logger.h
-  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/dmabuf_buffer.h
+  ${DMABUF_PROTO_HEADER}
+  ${DMABUF_PROTO_SOURCE}
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/linux_dmabuf.h
+  linux_dmabuf.cpp
+  ${DRM_FORMATS_FILE}
+  ${DRM_FORMATS_BIG_ENDIAN_FILE}
 )
 
-add_library(mirplatformgraphicscommon OBJECT
+set(LINUX_DMABUF_PROTO "${CMAKE_CURRENT_SOURCE_DIR}/protocol/linux-dmabuf-unstable-v1.xml")
+set(WAYLAND_GENERATOR "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator")
 
-  ${GRAPHICS_SOURCES}
+add_custom_command(
+  OUTPUT
+  linux-dmabuf-unstable-v1_wrapper.h
+  VERBATIM
+  COMMAND
+  "sh" "-c"
+  "${WAYLAND_GENERATOR} zwp_ ${LINUX_DMABUF_PROTO} header > ${DMABUF_PROTO_HEADER}"
+  DEPENDS
+  ${LINUX_DMABUF_PROTO}
+  mir_wayland_generator
+)
+add_custom_command(
+  OUTPUT
+  linux-dmabuf-unstable-v1_wrapper.cpp
+  VERBATIM
+  COMMAND
+  "sh" "-c"
+  "${WAYLAND_GENERATOR} zwp_ ${LINUX_DMABUF_PROTO} source > ${DMABUF_PROTO_SOURCE}"
+  DEPENDS
+  ${LINUX_DMABUF_PROTO}
+  mir_wayland_generator
+)
+
+add_custom_command(
+  OUTPUT
+    drm-formats
+  VERBATIM
+  COMMAND
+    "sh" "-c"
+      "grep \"#define DRM_FORMAT\" /usr/include/libdrm/drm_fourcc.h | \
+       grep -v DRM_FORMAT_BIG_ENDIAN |                             \
+       grep -v MOD |                                               \
+       grep -v DRM_FORMAT_RESERVED |                               \
+       tr -s [:blank:] ' ' |                                       \
+       cut -f2 -d' ' |                                             \
+       sed \"s/\\(.*\\)/STRINGIFY(\\1)/\" >                        \
+       ${DRM_FORMATS_FILE}"
+)
+add_custom_command(
+  OUTPUT
+    drm-formats-big-endian
+  VERBATIM
+  COMMAND
+    "sh" "-c"
+      "grep \"#define DRM_FORMAT\" /usr/include/libdrm/drm_fourcc.h | \
+       grep -v DRM_FORMAT_BIG_ENDIAN |                             \
+       grep -v MOD |                                               \
+       grep -v DRM_FORMAT_RESERVED |                               \
+       tr -s [:blank:] ' ' |                                       \
+       cut -f2 -d' ' |                                             \
+       sed \"s/\\(.*\\)/STRINGIFY_BIG_ENDIAN(\\1)/\" >             \
+       ${DRM_FORMATS_BIG_ENDIAN_FILE}"
+)
+
+# Here for posterity; the DRM modifier format #defines are a little too
+# weird to easily parse via grep ;)
+add_custom_command(
+  OUTPUT
+    drm-modifiers
+  VERBATIM
+  COMMAND
+    "sh" "-c"
+      "grep \"#define [[:alnum:]]*_FORMAT_MOD_\\([[:alnum:]]\\|_\\)*[[:space:]]\" /usr/include/drm/drm_fourcc.h | \
+       tr -s [:blank:] ' ' |                                              \
+       cut -f2 -d' ' |                                                    \
+       sed \"s/\\(.*\\)/STRINGIFY(\\1)/\" >                               \
+       ${DRM_MODIFIERS_FILE}"
 )
 
 target_include_directories(
   mirplatformgraphicscommon
 
+  PUBLIC
+    ${CMAKE_CURRENT_BINARY_DIR}
   PRIVATE
-  ${PROJECT_SOURCE_DIR}/include/renderers/gl
+    ${GL_INCLUDE_DIRS}
+    ${DRM_INCLUDE_DIRS}
+    ${PROJECT_SOURCE_DIR}/include/renderers/gl
+)
+
+target_link_libraries(
+  mirplatformgraphicscommon
+
+  PUBLIC
+    mirwayland
+    ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+  PRIVATE
+    mircommon
 )
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)

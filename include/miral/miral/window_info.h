@@ -67,21 +67,31 @@ struct WindowInfo
 
     auto children() const -> std::vector <Window> const&;
 
+    /// These constrain the sizes a window may be resized to (both interactively and pragmatically). Clients can request
+    /// a min/max size, but it can be overridden by the window management policy. By default, minimum values are 0 and
+    /// maximum values are `std::numeric_limits<int>::max()`.
+    /// @{
     auto min_width() const -> mir::geometry::Width;
-
     auto min_height() const -> mir::geometry::Height;
-
     auto max_width() const -> mir::geometry::Width;
-
     auto max_height() const -> mir::geometry::Height;
+    /// @}
 
+    /// These control the size increments of the window. This is used in cases like a terminal that can only be resized
+    /// character-by-character. Current Wayland protocols do not support this property, so it generally wont be
+    /// requested by clients. By default, both are 1.
+    /// @{
     auto width_inc() const -> mir::geometry::DeltaX;
-
     auto height_inc() const -> mir::geometry::DeltaY;
+    /// @}
 
+    /// These constrain the possible aspect ratio of the window. Current Wayland protocols to not support this property,
+    /// so it generally wont be requested by clients. By default, min_aspect is
+    /// `{0U, std::numeric_limits<unsigned>::max()}` and max_aspect is `{std::numeric_limits<unsigned>::max(), 0U}`.
+    /// @{
     auto min_aspect() const -> AspectRatio;
-
     auto max_aspect() const -> AspectRatio;
+    /// @}
 
     bool has_output_id() const;
     auto output_id() const -> int;

@@ -22,7 +22,8 @@
 
 static void shutdown(int)
 {
-    exit(EXIT_SUCCESS);
+    // NB we can't safely call exit() from a signal handler
+    _Exit(EXIT_SUCCESS);
 }
 
 int main()

@@ -77,6 +77,7 @@ set(
   test_posix_timestamp.cpp
   test_observer_multiplexer.cpp
   test_edid.cpp
+  test_report_exception.cpp
 )
 
 if (HAVE_PTHREAD_GETNAME_NP)
@@ -145,7 +146,18 @@ set_property(
   SOURCE graphics/test_platform_prober.cpp
   PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
-mir_precompiled_header(mir_unit_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
+if (MIR_USE_PRECOMPILED_HEADERS)
+  target_precompile_headers(
+    mir_unit_tests
+    PRIVATE
+      <gmock/gmock.h>
+      <gtest/gtest.h>
+      <vector>
+      <string>
+      <exception>
+      <memory>
+  )
+endif()
 
 add_dependencies(mir_unit_tests GMock)
 

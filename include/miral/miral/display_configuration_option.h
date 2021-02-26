@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014,2021 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -23,6 +23,10 @@ namespace mir { class Server; }
 
 namespace miral
 {
+/** Enable the display configuration options.
+ *   * display-config  {clone,sidebyside,single,static=<filename>}
+ *   * translucent     {on,off}
+ */
 void display_configuration_options(mir::Server& server);
 }
 

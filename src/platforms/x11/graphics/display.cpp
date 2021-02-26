@@ -30,7 +30,6 @@
 #include "display.h"
 #include "platform.h"
 #include "display_buffer.h"
-#include "../X11_resources.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -93,9 +92,8 @@ public:
     XGLContext(::Display* const x_dpy,
                std::shared_ptr<mg::GLConfig> const& gl_config,
                EGLContext const shared_ctx)
-        : egl{*gl_config}
+        : egl{*gl_config, x_dpy, shared_ctx}
     {
-        egl.setup(x_dpy, shared_ctx);
     }
 
     ~XGLContext() = default;
@@ -111,7 +109,7 @@ public:
     }
 
 private:
-    mgx::helpers::EGLHelper egl;
+    mgx::helpers::EGLHelper const egl;
 };
 }
 
@@ -240,7 +238,7 @@ mgx::Display::Display(::Display* x_dpy,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& report)
-    : shared_egl{*gl_config},
+    : shared_egl{*gl_config, x_dpy},
       x_dpy{x_dpy},
       gl_config{gl_config},
       pixel_width{get_pixel_width(x_dpy)},
@@ -248,8 +246,6 @@ mgx::Display::Display(::Display* x_dpy,
       report{report},
       last_frame{std::make_shared<AtomicFrame>()}
 {
-    shared_egl.setup(x_dpy);
-
     geom::Point top_left{0, 0};
 
     for (auto const& requested_size : requested_sizes)
@@ -276,8 +272,8 @@ mgx::Display::Display(::Display* x_dpy,
             last_frame,
             report,
             *gl_config);
-        outputs.push_back(std::make_unique<OutputInfo>(move(window), move(display_buffer), configuration));
         top_left.x += as_delta(configuration->extents().size.width);
+        outputs.push_back(std::make_unique<OutputInfo>(move(window), move(display_buffer), move(configuration)));
     }
 
     shared_egl.make_current();
@@ -305,7 +301,7 @@ std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
     std::vector<DisplayConfigurationOutput> output_configurations;
     for (auto const& output : outputs)
     {
-        output_configurations.push_back(*output->configuration);
+        output_configurations.push_back(*output->config);
     }
     return std::make_unique<mgx::DisplayConfiguration>(output_configurations);
 }
@@ -324,11 +320,11 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 
         for (auto& output : outputs)
         {
-            if (output->configuration->id == conf_output.id)
+            if (output->config->id == conf_output.id)
             {
-                *output->configuration = conf_output;
-                output->display_buffer->set_view_area(output->configuration->extents());
-                output->display_buffer->set_transformation(output->configuration->transformation());
+                *output->config = conf_output;
+                output->display_buffer->set_view_area(output->config->extents());
+                output->display_buffer->set_transformation(output->config->transformation());
                 found_info = true;
                 break;
             }
@@ -394,12 +390,12 @@ mgx::Display::OutputInfo::OutputInfo(
     std::shared_ptr<DisplayConfigurationOutput> configuration)
     : window{move(window)},
       display_buffer{move(display_buffer)},
-      configuration{configuration}
+      config{move(configuration)}
 {
-    mx::X11Resources::instance.set_output_config_for_win(*this->window, this->configuration);
+    mx::X11Resources::instance.set_set_output_for_window(*this->window, this);
 }
 
 mgx::Display::OutputInfo::~OutputInfo()
 {
-    mx::X11Resources::instance.clear_output_config_for_win(*this->window);
+    mx::X11Resources::instance.clear_output_for_window(*window);
 }

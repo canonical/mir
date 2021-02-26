@@ -149,10 +149,12 @@ private:
 
 mf::XdgShellStable::XdgShellStable(
     struct wl_display* display,
+    Executor& wayland_executor,
     std::shared_ptr<msh::Shell> shell,
     WlSeat& seat,
     OutputManager* output_manager)
     : Global(display, Version<1>()),
+      wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
       output_manager{output_manager}
@@ -288,6 +290,7 @@ mf::XdgPopupStable::XdgPopupStable(
     WlSurface* surface)
     : mw::XdgPopup(new_resource, Version<1>()),
       WindowWlSurfaceRole(
+          xdg_surface->xdg_shell.wayland_executor,
           &xdg_surface->xdg_shell.seat,
           mw::XdgPopup::client,
           surface,
@@ -401,6 +404,7 @@ auto mf::XdgPopupStable::from(wl_resource* resource) -> XdgPopupStable*
 mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceStable* xdg_surface, WlSurface* surface)
     : mw::XdgToplevel(new_resource, Version<1>()),
       WindowWlSurfaceRole(
+          xdg_surface->xdg_shell.wayland_executor,
           &xdg_surface->xdg_shell.seat,
           mw::XdgToplevel::client,
           surface,

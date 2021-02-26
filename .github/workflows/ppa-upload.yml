@@ -1,0 +1,50 @@
+name: PPA Upload
+
+on:
+  push:
+    branches:
+    - master
+    - release/[0-9]+.[0-9]+
+    tags:
+    - v[0-9]+.[0-9]+.[0-9]+
+
+jobs:
+  PPAUpload:
+    strategy:
+      fail-fast: true
+      matrix:
+        release:
+        - "20.04"
+        - "20.10"
+        - "devel"
+
+    runs-on: ubuntu-latest
+
+    env:
+      DEBFULLNAME: "Mir CI Bot"
+      DEBEMAIL: "mir-ci-bot@canonical.com"
+
+    steps:
+    - name: Import GPG key
+      uses: crazy-max/ghaction-import-gpg@v3
+      with:
+        gpg-private-key: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
+
+    - name: Check out code
+      uses: actions/checkout@v2
+      with:
+        # Need full history for version determination
+        fetch-depth: 0
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get install --no-install-recommends --yes \
+          debhelper \
+          devscripts \
+          dput \
+          python-launchpadlib
+
+    - name: Upload to PPA
+      env:
+        RELEASE: ${{ matrix.release }}
+      run: tools/ppa-upload.sh

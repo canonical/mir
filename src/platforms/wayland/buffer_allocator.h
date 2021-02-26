@@ -30,6 +30,7 @@ namespace mir
 namespace graphics
 {
 class Display;
+class LinuxDmaBufUnstable;
 
 namespace common
 {
@@ -64,6 +65,7 @@ private:
     std::shared_ptr<Executor> wayland_executor;
     std::shared_ptr<EGLExtensions> const egl_extensions;
     std::shared_ptr<renderer::gl::Context> const ctx;
+    std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>> dmabuf_extension;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     bool egl_display_bound{false};
 };

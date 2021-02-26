@@ -27,6 +27,8 @@
 #include <functional>
 #include <chrono>
 
+struct MirTouchEvent;
+
 namespace mir
 {
 class Executor;
@@ -38,37 +40,39 @@ class WlSurface;
 class WlTouch : public wayland::Touch
 {
 public:
-    WlTouch(
-        wl_resource* new_resource,
-        std::function<void(WlTouch*)> const& on_destroy);
+    WlTouch(wl_resource* new_resource);
 
     ~WlTouch();
 
+    /// Convert the Mir event into Wayland events and send them to the client. root_surface is the one that received
+    /// the Mir event, but the final Wayland event may be sent to a subsurface.
+    void event(MirTouchEvent const* event, WlSurface& root_surface);
+
+private:
+    struct TouchedSurface
+    {
+        wayland::Weak<WlSurface> surface;
+        wayland::DestroyListenerId destroy_listener_id;
+    };
+
+    /// Maps touch IDs to the surfaces the touch is on
+    std::unordered_map<int32_t, TouchedSurface> touch_id_to_surface;
+    bool needs_frame{false};
+
     void down(
+        uint32_t serial,
         std::chrono::milliseconds const& ms,
         int32_t touch_id,
-        WlSurface* root_surface,
-        geometry::Point const& root_position);
+        WlSurface& root_surface,
+        std::pair<float, float> const& root_position);
     void motion(
         std::chrono::milliseconds const& ms,
         int32_t touch_id,
-        WlSurface* root_surface,
-        geometry::Point const& root_position);
-    void up(std::chrono::milliseconds const& ms, int32_t touch_id);
-    void frame();
-
-private:
-    std::function<void(WlTouch*)> on_destroy;
-    /// Maps touch IDs to the surfaces the touch is on
-    std::unordered_map<int32_t, wayland::Weak<WlSurface>> touch_id_to_surface;
-    bool can_send_frame{false};
+        std::pair<float, float> const& root_position);
+    void up(uint32_t serial, std::chrono::milliseconds const& ms, int32_t touch_id);
+    void maybe_frame();
 
     void release() override;
-
-    /// Maps every touch_id for every WlTouch to a stable and globally unique pointer
-    /// Used for surface destory listener keys
-    /// The returned pointer should only be used as a key, it will not necessarily point to anything meaningful/valid
-    void const* unique_key_for(int32_t touch_id) const;
 };
 
 }
