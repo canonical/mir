@@ -15,7 +15,6 @@
  */
 
 #include "miroil/promptsessionmanager.h"
-#include "miroil/promptsession.h"
 #include "mir/scene/prompt_session_manager.h"
 
 namespace miroil {
@@ -27,22 +26,22 @@ PromptSessionManager::PromptSessionManager(std::shared_ptr<mir::scene::PromptSes
 
 PromptSessionManager::~PromptSessionManager() = default;
 
-miral::Application PromptSessionManager::applicationFor(const PromptSession &promptSession) const
+miral::Application PromptSessionManager::applicationFor(const std::shared_ptr<mir::scene::PromptSession> & promptSession) const
 {
     return m_promptSessionManager->application_for(promptSession);
 }
 
-void PromptSessionManager::stopPromptSession(const PromptSession &promptSession) const
+void PromptSessionManager::stopPromptSession(const std::shared_ptr<mir::scene::PromptSession> & promptSession) const
 {
     m_promptSessionManager->stop_prompt_session(promptSession);
 }
 
-void PromptSessionManager::suspendPromptSession(const PromptSession &promptSession) const
+void PromptSessionManager::suspendPromptSession(const std::shared_ptr<mir::scene::PromptSession> & promptSession) const
 {
     m_promptSessionManager->suspend_prompt_session(promptSession);
 }
 
-void PromptSessionManager::resumePromptSession(const PromptSession &promptSession) const
+void PromptSessionManager::resumePromptSession(const std::shared_ptr<mir::scene::PromptSession> & promptSession) const
 {
     m_promptSessionManager->resume_prompt_session(promptSession);
 }

@@ -1,4 +1,4 @@
-#include "miroil/inputdeviceobserver.h"
+#include "miroil/input_device_observer.h"
 #include "mir/flags.h"
 #include "mir/input/device.h"
 #include "mir/input/mir_keyboard_config.h"
@@ -9,7 +9,7 @@ InputDeviceObserver::~InputDeviceObserver()
 {
 }
         
-void InputDeviceObserver::applyKeymap(const std::shared_ptr<mir::input::Device> &device, const std::string & layout, const std::string & variant)
+void InputDeviceObserver::apply_keymap(const std::shared_ptr<mir::input::Device> &device, const std::string & layout, const std::string & variant)
 {
     MirKeyboardConfig oldConfig;
     
@@ -26,22 +26,22 @@ void InputDeviceObserver::applyKeymap(const std::shared_ptr<mir::input::Device> 
 }
     
 
-MirInputDeviceId InputDeviceObserver::getDeviceID(const std::shared_ptr<mir::input::Device> &device)
+MirInputDeviceId InputDeviceObserver::get_device_id(const std::shared_ptr<mir::input::Device> &device)
 {
     return device->id();
 }
 
-std::string InputDeviceObserver::getDeviceName(const std::shared_ptr<mir::input::Device> &device)
+std::string InputDeviceObserver::get_device_name(const std::shared_ptr<mir::input::Device> &device)
 {
     return device->name();
 }
     
-bool InputDeviceObserver::isKeyboard(const std::shared_ptr<mir::input::Device> &device)
+bool InputDeviceObserver::is_keyboard(const std::shared_ptr<mir::input::Device> &device)
 {
     return mir::contains(device->capabilities(), mir::input::DeviceCapability::keyboard);
 }
         
-bool InputDeviceObserver::isAlphaNumeric(const std::shared_ptr<mir::input::Device> &device)
+bool InputDeviceObserver::is_alpha_numeric(const std::shared_ptr<mir::input::Device> &device)
 {
     return mir::contains(device->capabilities(), mir::input::DeviceCapability::alpha_numeric);
 }

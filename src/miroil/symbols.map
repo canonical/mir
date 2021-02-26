@@ -30,11 +30,11 @@ global:
     miroil::GLBuffer::reset*;
     miroil::GLBuffer::size*;
     miroil::InputDeviceObserver::?InputDeviceObserver*;
-    miroil::InputDeviceObserver::applyKeymap*;
-    miroil::InputDeviceObserver::getDeviceID*;
-    miroil::InputDeviceObserver::getDeviceName*;
-    miroil::InputDeviceObserver::isAlphaNumeric*;
-    miroil::InputDeviceObserver::isKeyboard*;
+    miroil::InputDeviceObserver::apply_keymap*;
+    miroil::InputDeviceObserver::get_device_id*;
+    miroil::InputDeviceObserver::get_device_name*;
+    miroil::InputDeviceObserver::is_alpha_numeric*;
+    miroil::InputDeviceObserver::is_keyboard*;
     miroil::MirServerHooks::MirServerHooks*;
     miroil::MirServerHooks::createInputDeviceObserver*;
     miroil::MirServerHooks::operator*;

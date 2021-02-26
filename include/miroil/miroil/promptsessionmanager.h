@@ -25,19 +25,17 @@ namespace mir { namespace scene { class PromptSessionManager; class PromptSessio
 
 namespace miroil {
     
-class PromptSession;
-
 class PromptSessionManager
 {
 public:
     explicit PromptSessionManager(const std::shared_ptr<mir::scene::PromptSessionManager> &promptSessionManager);
     virtual ~PromptSessionManager();
 
-    miral::Application applicationFor(PromptSession const &promptSession) const;
+    miral::Application applicationFor(const std::shared_ptr<mir::scene::PromptSession> & promptSession) const;
 
-    void stopPromptSession(PromptSession const &promptSession) const;
-    void suspendPromptSession(PromptSession const &promptSession) const;
-    void resumePromptSession(PromptSession const &promptSession) const;
+    void stopPromptSession(const std::shared_ptr<mir::scene::PromptSession> & promptSession) const;
+    void suspendPromptSession(const std::shared_ptr<mir::scene::PromptSession> & promptSession) const;
+    void resumePromptSession(const std::shared_ptr<mir::scene::PromptSession> & promptSession) const;
 
 private:
     std::shared_ptr<mir::scene::PromptSessionManager> const m_promptSessionManager;

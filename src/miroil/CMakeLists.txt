@@ -27,7 +27,7 @@ add_library(miroil SHARED
     eventdispatch.cpp ${miroil_include}/miroil/eventdispatch.h
     event_builder.cpp ${miroil_include}/miroil/event_builder.h
     mirserverhooks.cpp ${miroil_include}/miroil/mirserverhooks.h
-    inputdeviceobserver.cpp ${miroil_include}/miroil/inputdeviceobserver.h
+    input_device_observer.cpp ${miroil_include}/miroil/input_device_observer.h
     promptsessionmanager.cpp ${miroil_include}/miroil/promptsessionmanager.h    
     openglcontextfactory.cpp ${miroil_include}/miroil/openglcontextfactory.h    
     setcompositor.cpp ${miroil_include}/miroil/setcompositor.h
