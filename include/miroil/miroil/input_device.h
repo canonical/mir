@@ -13,23 +13,32 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef MIROIL_INPUT_DEVICE_OBSERVER_H
-#define MIROIL_INPUT_DEVICE_OBSERVER_H
-#include "input_device.h"
+#ifndef MIROIL_INPUT_DEVICE_H
+#define MIROIL_INPUT_DEVICE_H
+#include <mir_toolkit/mir_input_device_types.h>
 #include <memory>
 #include <string>
 
+namespace mir { namespace input { class Device; } }
+
 namespace miroil
 {
-class InputDeviceObserver
+class InputDevice
 {
 public:
-    virtual ~InputDeviceObserver() {};
+    InputDevice(std::shared_ptr<mir::input::Device> & device);    
+    ~InputDevice();
     
-    virtual void device_added(const std::shared_ptr<miroil::InputDevice> &device) = 0;
-    virtual void device_removed(const std::shared_ptr<miroil::InputDevice> &device) = 0;
+    void             apply_keymap(std::string const & layout, std::string const & variant);
+    MirInputDeviceId get_device_id();
+    std::string      get_device_name();
+    bool             is_keyboard();
+    bool             is_alpha_numeric();
+
+private:
+    std::shared_ptr<mir::input::Device> device;
 };
     
 }
 
-#endif //MIROIL_INPUT_DEVICE_OBSERVER_H
+#endif //MIROIL_INPUT_DEVICE_H
