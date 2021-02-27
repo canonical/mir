@@ -26,7 +26,7 @@ namespace miroil
 class InputDevice
 {
 public:
-    InputDevice(std::shared_ptr<mir::input::Device> & device);    
+    InputDevice(std::shared_ptr<mir::input::Device> const & device);    
     ~InputDevice();
     
     void             apply_keymap(std::string const & layout, std::string const & variant);
@@ -36,7 +36,7 @@ public:
     bool             is_alpha_numeric();
 
 private:
-    std::shared_ptr<mir::input::Device> device;
+    std::shared_ptr<mir::input::Device> const & device;
 };
     
 }

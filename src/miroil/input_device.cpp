@@ -21,9 +21,9 @@
 
 namespace miroil {
 
-InputDevice::InputDevice(std::shared_ptr<mir::input::Device> & device)
+InputDevice::InputDevice(std::shared_ptr<mir::input::Device> const & device)
+: device(device)
 {
-    this->device = device;
 }
     
 InputDevice::~InputDevice()
