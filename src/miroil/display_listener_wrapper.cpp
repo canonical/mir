@@ -28,12 +28,12 @@ DisplayListenerWrapper::~DisplayListenerWrapper()
 {
 }
 
-void DisplayListenerWrapper::add_display(geometry::Rectangle const& area)
+void DisplayListenerWrapper::add_display(mir::geometry::Rectangle const& area)
 {
     displayListener->add_display(area);
 }
 
-void DisplayListenerWrapper::remove_display(geometry::Rectangle const& area)
+void DisplayListenerWrapper::remove_display(mir::geometry::Rectangle const& area)
 {
     displayListener->remove_display(area);
 }

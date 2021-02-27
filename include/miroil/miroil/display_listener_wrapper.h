@@ -32,8 +32,8 @@ public:
     DisplayListenerWrapper(std::shared_ptr<mir::compositor::DisplayListener> & displayListener);
     ~DisplayListenerWrapper();
 
-    void add_display(geometry::Rectangle const& area) = 0;
-    void remove_display(geometry::Rectangle const& area) = 0;
+    void add_display(mir::geometry::Rectangle const& area);
+    void remove_display(mir::geometry::Rectangle const& area);
     
     std::shared_ptr<mir::compositor::DisplayListener>& displayListener;     
 };
