@@ -220,13 +220,13 @@ void PromptSessionListenerImpl::prompt_provider_removed(mir::scene::PromptSessio
 
 void MirInputDeviceObserverImpl::device_added(const std::shared_ptr<mir::input::Device> &device)
 {
-    observer->device_added(device);
+    observer->device_added(std::make_shared<miroil::InputDevice>(device));
 }
 
 void MirInputDeviceObserverImpl::device_removed(const std::shared_ptr<mir::input::Device> &device)
 {
     if (device) {
-        observer->device_removed(device);
+        observer->device_removed(std::make_shared<miroil::InputDevice>(device));
     }
 }
 
