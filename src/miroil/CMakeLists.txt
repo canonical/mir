@@ -23,6 +23,7 @@ add_library(miroil SHARED
     edid.cpp ${miroil_include}/miroil/edid.h
     mirbuffer.cpp ${miroil_include}/miroil/mirbuffer.h
     persist_display_config.cpp ${miroil_include}/miroil/persist_display_config.h
+    display_configuration_controller_wrapper.cpp ${miroil_include}/miroil/display_configuration_controller_wrapper.h
     display_listener_wrapper.cpp ${miroil_include}/miroil/display_listener_wrapper.h
     display_configuration_policy.cpp ${miroil_include}/miroil/display_configuration_policy.h
     eventdispatch.cpp ${miroil_include}/miroil/eventdispatch.h

@@ -29,13 +29,13 @@ namespace miroil
 class DisplayListenerWrapper
 {
 public:
-    DisplayListenerWrapper(std::shared_ptr<mir::compositor::DisplayListener> & displayListener);
+    DisplayListenerWrapper(std::shared_ptr<mir::compositor::DisplayListener> const & displayListener);
     ~DisplayListenerWrapper();
 
     void add_display(mir::geometry::Rectangle const& area);
     void remove_display(mir::geometry::Rectangle const& area);
     
-    std::shared_ptr<mir::compositor::DisplayListener>& displayListener;     
+    std::shared_ptr<mir::compositor::DisplayListener> const & displayListener;     
 };
 
 }
