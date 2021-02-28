@@ -21,7 +21,7 @@
 
 namespace miroil {
 
-InputDevice::InputDevice(std::shared_ptr<mir::input::Device> const & device)
+InputDevice::InputDevice(std::shared_ptr<mir::input::Device> const& device)
 : device(device)
 {
 }
@@ -30,7 +30,7 @@ InputDevice::~InputDevice()
 {
 }
         
-void InputDevice::apply_keymap(std::string const  & layout, std::string const  & variant)
+void InputDevice::apply_keymap(std::string const& layout, std::string const& variant)
 {
     MirKeyboardConfig oldConfig;
     
