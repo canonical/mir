@@ -26,17 +26,17 @@ namespace miroil
 class InputDevice
 {
 public:
-    InputDevice(std::shared_ptr<mir::input::Device> const & device);    
+    InputDevice(std::shared_ptr<mir::input::Device> const& device);    
     ~InputDevice();
     
-    void             apply_keymap(std::string const & layout, std::string const & variant);
+    void             apply_keymap(std::string const& layout, std::string const& variant);
     MirInputDeviceId get_device_id();
     std::string      get_device_name();
     bool             is_keyboard();
     bool             is_alpha_numeric();
 
 private:
-    std::shared_ptr<mir::input::Device> const & device;
+    std::shared_ptr<mir::input::Device> device;
 };
     
 }
