@@ -313,9 +313,13 @@ list(APPEND CMAKE_REQUIRED_LIBRARIES ${DRM_LIBRARIES})
 # USDT integration. The integration only involves #include-ing a
 # SystemTap header and calling a macro from it in the LTTNG macro,
 # but there aren't guarantees this won't change in future.
-add_definitions(  # Drop in favour of add_compile_definitions when we drop 16.04
-  -DLTTNG_UST_HAVE_SDT_INTEGRATION
-)
+include(CheckIncludeFile)
+CHECK_INCLUDE_FILE(sys/sdt.h HAVE_SYS_SDT_H)
+if (HAVE_SYS_SDT_H)
+  add_definitions(  # Drop in favour of add_compile_definitions when we drop 16.04
+    -DLTTNG_UST_HAVE_SDT_INTEGRATION
+  )
+endif()
 
 pkg_check_modules(GL REQUIRED glesv2)
 
