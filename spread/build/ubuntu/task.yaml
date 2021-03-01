@@ -14,6 +14,10 @@ execute: |
 
     apt-get update
 
+    # Add Mir dev PPA for any out-of-archive packages needed
+    # (Currently: a newer version of WLCS)
+    add-apt-repository ppa:mir-team/dev
+
     # to get dpkg-architecture and mk-build-deps
     apt-get install \
       --yes \
