@@ -29,8 +29,8 @@ public:
     InputDeviceObserver& operator=(InputDeviceObserver const&) = delete;    
     virtual ~InputDeviceObserver() {};
     
-    virtual void device_added(std::shared_ptr<miroil::InputDevice> device) = 0;
-    virtual void device_removed(std::shared_ptr<miroil::InputDevice> device) = 0;
+    virtual void device_added(miroil::InputDevice device) = 0;
+    virtual void device_removed(miroil::InputDevice device) = 0;
 };
     
 }

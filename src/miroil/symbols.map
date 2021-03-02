@@ -30,6 +30,7 @@ global:
     miroil::InputDevice::get_device_name*;
     miroil::InputDevice::is_alpha_numeric*;
     miroil::InputDevice::is_keyboard*;
+    miroil::InputDevice::operator*;
     miroil::InputDeviceObserver::InputDeviceObserver*;
     miroil::InputDeviceObserver::operator*;
     miroil::PersistDisplayConfig::?PersistDisplayConfig*;

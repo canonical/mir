@@ -49,3 +49,5 @@ libmiroil.so.1 libmiroil1 #MINVER#
  (c++)"miroil::InputDevice::is_alpha_numeric()@MIROIL_1.0" 2.3.2
  (c++)"miroil::InputDevice::is_keyboard()@MIROIL_1.0" 2.3.2
  (c++)"miroil::InputDevice::~InputDevice()@MIROIL_1.0" 2.3.2
+ (c++)"miroil::InputDevice::InputDevice(miroil::InputDevice const&)@MIROIL_1.0" 2.3.2
+ (c++)"miroil::InputDevice::operator==(miroil::InputDevice const&)@MIROIL_1.0" 2.3.2
