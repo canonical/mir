@@ -25,9 +25,19 @@ InputDevice::InputDevice(std::shared_ptr<mir::input::Device> const& device)
 : device(device)
 {
 }
+
+InputDevice::InputDevice(InputDevice const& src)
+: device(src.device)
+{
+}
     
 InputDevice::~InputDevice()
 {
+}
+
+bool InputDevice::operator==(InputDevice const& other)
+{
+    return device.get() == other.device.get();    
 }
         
 void InputDevice::apply_keymap(std::string const& layout, std::string const& variant)
