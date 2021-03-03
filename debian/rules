@@ -39,7 +39,7 @@ endif
 # We can't guarantee non-Ubuntu builds will build against WLCS packages we
 # control, so disable it on non-Ubuntu builds
 ifeq ($(filter Ubuntu,$(DEB_VENDOR)),)
-	COMMON_CONFIGURE_OPTIONS += -DMIR_ENABLE_WLCS_TESTS=OFF
+	COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_WLCS_TESTS=OFF
 endif
 
 
