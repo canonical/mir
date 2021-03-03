@@ -247,6 +247,10 @@ CMAKE_DEPENDENT_OPTION(
   MIR_ENABLE_WLCS_TESTS "Also Build WLCS tests" ON
   "MIR_ENABLE_TESTS" OFF
 )
+CMAKE_DEPENDENT_OPTION(
+  MIR_RUN_WLCS_TESTS "Run WLCS tests as part of testsuite" ON
+  "MIR_ENABLE_WLCS_TESTS" OFF
+)
 
 foreach(platform IN LISTS MIR_PLATFORM)
   if (platform STREQUAL "gbm-kms")
