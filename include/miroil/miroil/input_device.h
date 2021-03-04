@@ -28,15 +28,19 @@ class InputDevice
 public:
     InputDevice(std::shared_ptr<mir::input::Device> const& device);
     InputDevice(InputDevice const& src);
+    InputDevice(InputDevice&& src);
     ~InputDevice();
-    
+
+    auto operator=(InputDevice const& src) -> InputDevice&;
+    auto operator=(InputDevice&& src) -> InputDevice&;
+
     bool operator==(InputDevice const& other);
-    
-    void             apply_keymap(std::string const& layout, std::string const& variant);
-    MirInputDeviceId get_device_id();
-    std::string      get_device_name();
-    bool             is_keyboard();
-    bool             is_alpha_numeric();
+
+    void apply_keymap(std::string const& layout, std::string const& variant);
+    auto get_device_id() -> MirInputDeviceId;
+    auto get_device_name() -> std::string;
+    auto is_keyboard() -> bool;
+    auto is_alpha_numeric() -> bool;
 
 private:
     std::shared_ptr<mir::input::Device> device;

@@ -14,33 +14,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miroil/input_device.h"
+#include <miroil/input_device.h>
+
 #include "mir/flags.h"
 #include "mir/input/device.h"
 #include "mir/input/mir_keyboard_config.h"
 
-namespace miroil {
-
-InputDevice::InputDevice(std::shared_ptr<mir::input::Device> const& device)
+miroil::InputDevice::InputDevice(std::shared_ptr<mir::input::Device> const& device)
 : device(device)
 {
 }
 
-InputDevice::InputDevice(InputDevice const& src)
-: device(src.device)
-{
-}
-    
-InputDevice::~InputDevice()
-{
-}
+miroil::InputDevice::InputDevice(InputDevice const& src) = default;
 
-bool InputDevice::operator==(InputDevice const& other)
+miroil::InputDevice::~InputDevice() = default;
+
+bool miroil::InputDevice::operator==(InputDevice const& other)
 {
-    return device.get() == other.device.get();    
+    return device == other.device;
 }
         
-void InputDevice::apply_keymap(std::string const& layout, std::string const& variant)
+void miroil::InputDevice::apply_keymap(std::string const& layout, std::string const& variant)
 {
     MirKeyboardConfig oldConfig;
     
@@ -57,24 +51,28 @@ void InputDevice::apply_keymap(std::string const& layout, std::string const& var
 }
     
 
-MirInputDeviceId InputDevice::get_device_id()
+MirInputDeviceId miroil::InputDevice::get_device_id()
 {
     return device->id();
 }
 
-std::string InputDevice::get_device_name()
+std::string miroil::InputDevice::get_device_name()
 {
     return device->name();
 }
     
-bool InputDevice::is_keyboard()
+bool miroil::InputDevice::is_keyboard()
 {
     return mir::contains(device->capabilities(), mir::input::DeviceCapability::keyboard);
 }
         
-bool InputDevice::is_alpha_numeric()
+bool miroil::InputDevice::is_alpha_numeric()
 {
     return mir::contains(device->capabilities(), mir::input::DeviceCapability::alpha_numeric);
 }
 
-}
+miroil::InputDevice::InputDevice(InputDevice&& src) = default;
+
+auto miroil::InputDevice::operator=(InputDevice const& src) -> InputDevice& = default;
+
+auto miroil::InputDevice::operator=(InputDevice&& src) -> InputDevice& = default;
