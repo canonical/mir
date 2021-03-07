@@ -25,7 +25,7 @@ miroil::InputDevice::InputDevice(std::shared_ptr<mir::input::Device> const& devi
 {
 }
 
-miroil::InputDevice::InputDevice(InputDevice const& src) = default;
+miroil::InputDevice::InputDevice(InputDevice const& ) = default;
 
 miroil::InputDevice::~InputDevice() = default;
 
@@ -71,7 +71,7 @@ bool miroil::InputDevice::is_alpha_numeric()
     return mir::contains(device->capabilities(), mir::input::DeviceCapability::alpha_numeric);
 }
 
-miroil::InputDevice::InputDevice(InputDevice&& src) = default;
+miroil::InputDevice::InputDevice(InputDevice&& ) = default;
 
 auto miroil::InputDevice::operator=(InputDevice const& src) -> InputDevice& = default;
 
