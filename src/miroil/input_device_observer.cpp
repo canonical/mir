@@ -13,28 +13,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef MIROIL_INPUT_DEVICE_OBSERVER_H
-#define MIROIL_INPUT_DEVICE_OBSERVER_H
 
-#include <miroil/input_device.h>
+#include <miroil/input_device_observer.h>
 
-#include <memory>
-#include <string>
-
-namespace miroil
-{
-class InputDeviceObserver
-{
-public:
-    InputDeviceObserver() = default;
-    InputDeviceObserver(InputDeviceObserver const&) = delete;
-    InputDeviceObserver& operator=(InputDeviceObserver const&) = delete;    
-    virtual ~InputDeviceObserver();
-    
-    virtual void device_added(miroil::InputDevice device) = 0;
-    virtual void device_removed(miroil::InputDevice device) = 0;
-};
-    
-}
-
-#endif //MIROIL_INPUT_DEVICE_OBSERVER_H
+miroil::InputDeviceObserver::~InputDeviceObserver() = default;
