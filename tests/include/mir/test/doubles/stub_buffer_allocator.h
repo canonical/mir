@@ -44,10 +44,10 @@ void memcpy_from_shm_buffer(struct wl_shm_buffer* buffer)
 {
     auto const height = wl_shm_buffer_get_height(buffer);
     auto const stride = wl_shm_buffer_get_stride(buffer);
-    auto dummy_destination = std::make_unique<unsigned char[]>(height * stride);
+    auto dummy_destination = std::make_unique<unsigned char[]>(height * stride + 32);
 
     wl_shm_buffer_begin_access(buffer);
-    ::memcpy(dummy_destination.get(), wl_shm_buffer_get_data(buffer), height * stride);
+    memcpy(dummy_destination.get(), wl_shm_buffer_get_data(buffer), height * stride);
     wl_shm_buffer_end_access(buffer);
 }
 }
