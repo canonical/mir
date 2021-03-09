@@ -38,13 +38,13 @@ public:
 
     bool operator==(PromptSessionManager const& other);
 
-    auto applicationFor(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const -> miral::Application;
-    void resumePromptSession(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const;
-    void stopPromptSession(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const;
-    void suspendPromptSession(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const;    
+    auto application_for(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const -> miral::Application;
+    void resume_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const;
+    void stop_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const;
+    void suspend_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const;    
 
 private:
-    std::shared_ptr<mir::scene::PromptSessionManager> m_promptSessionManager;
+    std::shared_ptr<mir::scene::PromptSessionManager> promptSessionManager;
 };
 }
 

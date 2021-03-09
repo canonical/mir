@@ -41,11 +41,11 @@ global:
     miroil::PromptSessionListener::operator*;
     miroil::PromptSessionManager::?PromptSessionManager*;
     miroil::PromptSessionManager::PromptSessionManager*;
-    miroil::PromptSessionManager::applicationFor*;
+    miroil::PromptSessionManager::application_for*;
     miroil::PromptSessionManager::operator*;
-    miroil::PromptSessionManager::resumePromptSession*;
-    miroil::PromptSessionManager::stopPromptSession*;
-    miroil::PromptSessionManager::suspendPromptSession*;
+    miroil::PromptSessionManager::resume_prompt_session*;
+    miroil::PromptSessionManager::stop_prompt_session*;
+    miroil::PromptSessionManager::suspend_prompt_session*;
     miroil::dispatch_input_event*;
     non-virtual?thunk?to?miroil::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
     non-virtual?thunk?to?miroil::DisplayConfigurationStorage::?DisplayConfigurationStorage*;
