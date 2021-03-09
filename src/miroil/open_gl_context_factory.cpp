@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "miroil/openglcontextfactory.h"
+#include "miroil/open_gl_context_factory.h"
 #include <stdexcept>
 
 // mir

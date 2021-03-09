@@ -17,7 +17,7 @@
 #ifndef MIROIL_MIRSERVERHOOKS_H
 #define MIROIL_MIRSERVERHOOKS_H
 #include "miroil/input_device_observer.h"
-#include "miroil/promptsessionlistener.h"
+#include "miroil/prompt_session_listener.h"
 #include <functional>
 #include <memory>
 

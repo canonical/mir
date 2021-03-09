@@ -29,12 +29,13 @@ add_library(miroil SHARED
     eventdispatch.cpp ${miroil_include}/miroil/eventdispatch.h
     event_builder.cpp ${miroil_include}/miroil/event_builder.h
     input_device.cpp ${miroil_include}/miroil/input_device.h
-    ${miroil_include}/miroil/input_device_observer.h
+    input_device_observer.cpp ${miroil_include}/miroil/input_device_observer.h
     mirserverhooks.cpp ${miroil_include}/miroil/mirserverhooks.h
-    promptsessionmanager.cpp ${miroil_include}/miroil/promptsessionmanager.h    
-    openglcontextfactory.cpp ${miroil_include}/miroil/openglcontextfactory.h    
+    prompt_session_listener.cpp ${miroil_include}/miroil/prompt_session_listener.h
+    prompt_session_manager.cpp ${miroil_include}/miroil/prompt_session_manager.h    
+    open_gl_context_factory.cpp ${miroil_include}/miroil/open_gl_context_factory.h    
     setcompositor.cpp ${miroil_include}/miroil/setcompositor.h
-    ${miroil_include}/miroil/promptsessionlistener.h
+    surface.cpp ${miroil_include}/miroil/surface.h    
     ${miroil_include}/miroil/display_configuration_storage.h
     ${miroil_include}/miroil/display_id.h
 )
