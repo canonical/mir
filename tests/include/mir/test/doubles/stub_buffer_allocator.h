@@ -44,6 +44,7 @@ void memcpy_from_shm_buffer(struct wl_shm_buffer* buffer)
 {
     auto const height = wl_shm_buffer_get_height(buffer);
     auto const stride = wl_shm_buffer_get_stride(buffer);
+    // The 32 here is a workaround for a spurious(?) Valgrind failure
     auto dummy_destination = std::make_unique<unsigned char[]>(height * stride + 32);
 
     wl_shm_buffer_begin_access(buffer);
