@@ -17,8 +17,8 @@
 #include "miroil/prompt_session_manager.h"
 #include "mir/scene/prompt_session_manager.h"
 
-miroil::PromptSessionManager::PromptSessionManager(std::shared_ptr<mir::scene::PromptSessionManager> const& promptSessionManager) 
-:    promptSessionManager{promptSessionManager}
+miroil::PromptSessionManager::PromptSessionManager(std::shared_ptr<mir::scene::PromptSessionManager> const& prompt_session_manager) 
+:    prompt_session_manager{prompt_session_manager}
 {
 }
 
@@ -30,25 +30,25 @@ miroil::PromptSessionManager::~PromptSessionManager() = default;
 
 bool miroil::PromptSessionManager::operator==(PromptSessionManager const& other)
 {
-    return promptSessionManager == other.promptSessionManager;
+    return prompt_session_manager == other.prompt_session_manager;
 }
 
-miral::Application miroil::PromptSessionManager::application_for(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const
+miral::Application miroil::PromptSessionManager::application_for(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const
 {
-    return promptSessionManager->application_for(promptSession);
+    return prompt_session_manager->application_for(prompt_session);
 }
 
-void miroil::PromptSessionManager::stop_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const
+void miroil::PromptSessionManager::stop_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const
 {
-    promptSessionManager->stop_prompt_session(promptSession);
+    prompt_session_manager->stop_prompt_session(prompt_session);
 }
 
-void miroil::PromptSessionManager::suspend_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const
+void miroil::PromptSessionManager::suspend_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const
 {
-    promptSessionManager->suspend_prompt_session(promptSession);
+    prompt_session_manager->suspend_prompt_session(prompt_session);
 }
 
-void miroil::PromptSessionManager::resume_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const
+void miroil::PromptSessionManager::resume_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const
 {
-    promptSessionManager->resume_prompt_session(promptSession);
+    prompt_session_manager->resume_prompt_session(prompt_session);
 }
