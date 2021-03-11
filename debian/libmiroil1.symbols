@@ -46,3 +46,15 @@ libmiroil.so.1 libmiroil1 #MINVER#
  (c++)"miroil::InputDevice::InputDevice(miroil::InputDevice&&)@MIROIL_1.0" 2.3.2
  (c++)"miroil::InputDevice::operator=(miroil::InputDevice const&)@MIROIL_1.0" 2.3.2
  (c++)"miroil::InputDevice::operator=(miroil::InputDevice&&)@MIROIL_1.0" 2.3.2
+ (c++)"miroil::PromptSessionListener::~PromptSessionListener()@MIROIL_1.0" 2.3.2
+ (c++)"miroil::PromptSessionManager::PromptSessionManager(miroil::PromptSessionManager const&)@MIROIL_1.0" 2.3.2
+ (c++)"miroil::PromptSessionManager::PromptSessionManager(miroil::PromptSessionManager&&)@MIROIL_1.0" 2.3.2
+ (c++)"miroil::PromptSessionManager::PromptSessionManager(std::shared_ptr<mir::scene::PromptSessionManager> const&)@MIROIL_1.0" 2.3.2
+ (c++)"miroil::PromptSessionManager::application_for(std::shared_ptr<mir::scene::PromptSession> const&) const@MIROIL_1.0" 2.3.2
+ (c++)"miroil::PromptSessionManager::operator==(miroil::PromptSessionManager const&)@MIROIL_1.0" 2.3.2
+ (c++)"miroil::PromptSessionManager::resume_prompt_session(std::shared_ptr<mir::scene::PromptSession> const&) const@MIROIL_1.0" 2.3.2
+ (c++)"miroil::PromptSessionManager::stop_prompt_session(std::shared_ptr<mir::scene::PromptSession> const&) const@MIROIL_1.0" 2.3.2
+ (c++)"miroil::PromptSessionManager::suspend_prompt_session(std::shared_ptr<mir::scene::PromptSession> const&) const@MIROIL_1.0" 2.3.2
+ (c++)"miroil::PromptSessionManager::~PromptSessionManager()@MIROIL_1.0" 2.3.2
+ (c++)"typeinfo for miroil::PromptSessionListener@MIROIL_1.0" 2.3.2
+ (c++)"vtable for miroil::PromptSessionListener@MIROIL_1.0" 2.3.2

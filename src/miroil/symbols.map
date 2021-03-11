@@ -36,9 +36,20 @@ global:
     miroil::PersistDisplayConfig::?PersistDisplayConfig*;
     miroil::PersistDisplayConfig::PersistDisplayConfig*;
     miroil::PersistDisplayConfig::operator*;
+    miroil::PromptSessionListener::?PromptSessionListener*;
+    miroil::PromptSessionListener::PromptSessionListener*;
+    miroil::PromptSessionListener::operator*;
+    miroil::PromptSessionManager::?PromptSessionManager*;
+    miroil::PromptSessionManager::PromptSessionManager*;
+    miroil::PromptSessionManager::application_for*;
+    miroil::PromptSessionManager::operator*;
+    miroil::PromptSessionManager::resume_prompt_session*;
+    miroil::PromptSessionManager::stop_prompt_session*;
+    miroil::PromptSessionManager::suspend_prompt_session*;
     miroil::dispatch_input_event*;
     non-virtual?thunk?to?miroil::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
     non-virtual?thunk?to?miroil::DisplayConfigurationStorage::?DisplayConfigurationStorage*;
+    non-virtual?thunk?to?miroil::PromptSessionListener::?PromptSessionListener*;
     typeinfo?for?miroil::DisplayConfigurationOptions;
     typeinfo?for?miroil::DisplayConfigurationOptions::DisplayMode;
     typeinfo?for?miroil::DisplayConfigurationPolicy;
@@ -53,6 +64,8 @@ global:
     typeinfo?for?miroil::InputDevice;
     typeinfo?for?miroil::InputDeviceObserver;
     typeinfo?for?miroil::PersistDisplayConfig;
+    typeinfo?for?miroil::PromptSessionListener;
+    typeinfo?for?miroil::PromptSessionManager;
     vtable?for?miroil::DisplayConfigurationOptions;
     vtable?for?miroil::DisplayConfigurationOptions::DisplayMode;
     vtable?for?miroil::DisplayConfigurationPolicy;
@@ -67,6 +80,8 @@ global:
     vtable?for?miroil::InputDevice;
     vtable?for?miroil::InputDeviceObserver;
     vtable?for?miroil::PersistDisplayConfig;
+    vtable?for?miroil::PromptSessionListener;
+    vtable?for?miroil::PromptSessionManager;
   };
 
 local: *;
