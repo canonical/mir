@@ -138,7 +138,7 @@ auto KioskWindowManagerPolicy::place_new_window(ApplicationInfo const& app_info,
     if ((specification.type() == mir_window_type_normal || specification.type() == mir_window_type_freestyle) &&
         (!specification.parent().is_set() || !specification.parent().value().lock()))
     {
-        specification.state() = mir_window_state_maximized;
+        specification.state() = mir_window_state_fullscreen;
         specification.top_left() = mir::optional_value<Point>{}; // Ignore requested position (if any) when we maximize
         specification.size() = mir::optional_value<Size>{}; // Ignore requested size (if any) when we maximize
         tools.place_and_size_for_state(specification, WindowInfo{});
@@ -157,7 +157,7 @@ void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, Win
     if ((window_info.type() == mir_window_type_normal || window_info.type() == mir_window_type_freestyle) &&
         !window_info.parent())
     {
-        specification.state() = mir_window_state_maximized;
+        specification.state() = mir_window_state_fullscreen;
         specification.top_left() = mir::optional_value<Point>{}; // Ignore requested position (if any) when we maximize
         specification.size() = mir::optional_value<Size>{}; // Ignore requested size (if any) when we maximize
         tools.place_and_size_for_state(specification, window_info);
