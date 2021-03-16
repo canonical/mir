@@ -28,7 +28,7 @@ namespace miroil {
 class PromptSessionManager
 {
 public:
-    PromptSessionManager(std::shared_ptr<mir::scene::PromptSessionManager> const& promptSessionManager);
+    PromptSessionManager(std::shared_ptr<mir::scene::PromptSessionManager> const& prompt_session_manager);
     PromptSessionManager(PromptSessionManager const& src);
     PromptSessionManager(PromptSessionManager&& src);
     ~PromptSessionManager();
@@ -38,13 +38,13 @@ public:
 
     bool operator==(PromptSessionManager const& other);
 
-    auto application_for(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const -> miral::Application;
-    void resume_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const;
-    void stop_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const;
-    void suspend_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& promptSession) const;    
+    auto application_for(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const -> miral::Application;
+    void resume_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const;
+    void stop_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const;
+    void suspend_prompt_session(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) const;    
 
 private:
-    std::shared_ptr<mir::scene::PromptSessionManager> promptSessionManager;
+    std::shared_ptr<mir::scene::PromptSessionManager> prompt_session_manager;
 };
 }
 
