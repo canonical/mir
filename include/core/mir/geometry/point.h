@@ -19,51 +19,21 @@
 #ifndef MIR_GEOMETRY_POINT_H_
 #define MIR_GEOMETRY_POINT_H_
 
+#include "point_generic.h"
 #include "dimensions.h"
-#include <iosfwd>
 
 namespace mir
 {
 namespace geometry
 {
-
-struct Point
+struct Size;
+struct Displacement;
+struct Point : generic::Point<detail::IntWrapper>
 {
-    constexpr Point() = default;
-    constexpr Point(Point const&) = default;
-    Point& operator=(Point const&) = default;
-
-    template<typename XType, typename YType>
-    constexpr Point(XType&& x, YType&& y) : x(x), y(y) {}
-
-    X x;
-    Y y;
+    using SizeType = Size;
+    using DisplacementType = Displacement;
+    using generic::Point<detail::IntWrapper>::Point;
 };
-
-inline constexpr bool operator == (Point const& lhs, Point const& rhs)
-{
-    return lhs.x == rhs.x && lhs.y == rhs.y;
-}
-
-inline constexpr bool operator != (Point const& lhs, Point const& rhs)
-{
-    return lhs.x != rhs.x || lhs.y != rhs.y;
-}
-
-inline constexpr Point operator+(Point lhs, DeltaX rhs) { return{lhs.x + rhs, lhs.y}; }
-inline constexpr Point operator+(Point lhs, DeltaY rhs) { return{lhs.x, lhs.y + rhs}; }
-
-inline constexpr Point operator-(Point lhs, DeltaX rhs) { return{lhs.x - rhs, lhs.y}; }
-inline constexpr Point operator-(Point lhs, DeltaY rhs) { return{lhs.x, lhs.y - rhs}; }
-
-inline Point& operator+=(Point& lhs, DeltaX rhs) { lhs.x += rhs; return lhs; }
-inline Point& operator+=(Point& lhs, DeltaY rhs) { lhs.y += rhs; return lhs; }
-
-inline Point& operator-=(Point& lhs, DeltaX rhs) { lhs.x -= rhs; return lhs; }
-inline Point& operator-=(Point& lhs, DeltaY rhs) { lhs.y -= rhs; return lhs; }
-
-std::ostream& operator<<(std::ostream& out, Point const& value);
 }
 }
-
 #endif /* MIR_GEOMETRY_POINT_H_ */
