@@ -271,7 +271,7 @@ void mf::WlPointer::enter_or_motion(MirPointerEvent const* event, WlSurface& roo
             });
         surface_under_cursor = mw::make_weak(target_surface);
     }
-    else if (!relative_pointer && position_on_target != current_position)
+    else if (position_on_target != current_position)
     {
         send_motion_event(
             timestamp_of(event),
