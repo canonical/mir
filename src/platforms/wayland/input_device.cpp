@@ -34,6 +34,7 @@
 
 namespace mi = mir::input;
 namespace miw = mi::wayland;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -163,25 +164,25 @@ miw::PointerInputDevice::PointerInputDevice(std::shared_ptr<dispatch::ActionQueu
 void miw::PointerInputDevice::pointer_press(
     std::chrono::nanoseconds event_time,
     int button,
-    std::pair<float, float> const& pos,
-    std::pair<float, float> const& scroll)
+    geom::PointF const& pos,
+    geom::DisplacementF const& scroll)
 {
     enqueue([=](EventBuilder* b)
     {
         button_state |= to_pointer_button(button, mir_pointer_handedness_right);
 
-        auto const movement = std::make_pair(pos.first - cached_pos.first, pos.second - cached_pos.second);
+        auto const movement = pos - cached_pos;
         cached_pos = pos;
         return b->pointer_event(
             event_time,
             mir_pointer_action_button_down,
             button_state,
-            cached_pos.first,
-            cached_pos.second,
-            scroll.first,
-            scroll.second,
-            movement.first,
-            movement.second
+            cached_pos.x.as_value(),
+            cached_pos.y.as_value(),
+            scroll.dx.as_value(),
+            scroll.dy.as_value(),
+            movement.dx.as_value(),
+            movement.dy.as_value()
         );
     });
 }
@@ -189,48 +190,48 @@ void miw::PointerInputDevice::pointer_press(
 void miw::PointerInputDevice::pointer_release(
     std::chrono::nanoseconds event_time,
     int button,
-    std::pair<float, float> const& pos,
-    std::pair<float, float> const& scroll)
+    geom::PointF const& pos,
+    geom::DisplacementF const& scroll)
 {
     enqueue([=](EventBuilder* b)
     {
         button_state &= ~to_pointer_button(button, mir_pointer_handedness_right);
 
-        auto const movement = std::make_pair(pos.first - cached_pos.first, pos.second - cached_pos.second);
+        auto const movement = pos - cached_pos;
         cached_pos = pos;
         return b->pointer_event(
             event_time,
             mir_pointer_action_button_up,
             button_state,
-            cached_pos.first,
-            cached_pos.second,
-            scroll.first,
-            scroll.second,
-            movement.first,
-            movement.second
+            cached_pos.x.as_value(),
+            cached_pos.y.as_value(),
+            scroll.dx.as_value(),
+            scroll.dy.as_value(),
+            movement.dx.as_value(),
+            movement.dy.as_value()
         );
     });
 }
 
 void miw::PointerInputDevice::pointer_motion(
     std::chrono::nanoseconds event_time,
-    std::pair<float, float> const& pos,
-    std::pair<float, float> const& scroll)
+    geom::PointF const& pos,
+    geom::DisplacementF const& scroll)
 {
     enqueue([=](EventBuilder* b)
     {
-        auto const movement = std::make_pair(pos.first - cached_pos.first, pos.second - cached_pos.second);
+        auto const movement = pos - cached_pos;
         cached_pos = pos;
         return b->pointer_event(
             event_time,
             mir_pointer_action_motion,
             button_state,
-            cached_pos.first,
-            cached_pos.second,
-            scroll.first,
-            scroll.second,
-            movement.first,
-            movement.second
+            cached_pos.x.as_value(),
+            cached_pos.y.as_value(),
+            scroll.dx.as_value(),
+            scroll.dy.as_value(),
+            movement.dx.as_value(),
+            movement.dy.as_value()
         );
     });
 }

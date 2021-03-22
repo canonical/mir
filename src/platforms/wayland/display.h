@@ -21,10 +21,11 @@
 
 #include <mir/fd.h>
 #include <mir/events/contact_state.h>
-#include <mir/geometry/displacement.h>
 #include <mir/graphics/display.h>
 #include <mir/graphics/display_report.h>
 #include <mir/renderer/gl/context_source.h>
+#include <mir/geometry/point_f.h>
+#include <mir/geometry/displacement_f.h>
 
 #include <xkbcommon/xkbcommon.h>
 
@@ -137,8 +138,8 @@ private:
     std::shared_ptr<input::wayland::KeyboardInput> keyboard_sink;
     std::shared_ptr<input::wayland::PointerInput> pointer_sink;
     std::shared_ptr<input::wayland::TouchInput> touch_sink;
-    std::pair<float, float> pointer_pos;
-    std::pair<float, float> pointer_scroll;
+    geometry::PointF pointer_pos;
+    geometry::DisplacementF pointer_scroll;
     std::chrono::nanoseconds pointer_time;
     std::vector<events::ContactState> touch_contacts;
     std::chrono::nanoseconds touch_time;

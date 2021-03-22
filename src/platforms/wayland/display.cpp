@@ -52,22 +52,22 @@ class NullPointerInput : public mir::input::wayland::PointerInput
 {
     void pointer_press(
         std::chrono::nanoseconds, int,
-        std::pair<float, float> const&,
-        std::pair<float, float> const&) override
+        geom::PointF const&,
+        geom::DisplacementF const&) override
     {
     }
 
     void pointer_release(
         std::chrono::nanoseconds, int,
-        std::pair<float, float> const&,
-        std::pair<float, float> const&) override
+        geom::PointF const&,
+        geom::DisplacementF const&) override
     {
     }
 
     void pointer_motion(
         std::chrono::nanoseconds,
-        std::pair<float, float> const&,
-        std::pair<float, float> const&) override
+        geom::PointF const&,
+        geom::DisplacementF const&) override
     {
     }
 };
@@ -335,9 +335,7 @@ void mir::graphics::wayland::Display::pointer_motion(wl_pointer* pointer, uint32
 {
     {
         std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
-        pointer_pos = std::make_pair(
-            wl_fixed_to_double(x) + pointer_displacement.dx.as_int(),
-            wl_fixed_to_double(y) + pointer_displacement.dy.as_int());
+        pointer_pos = geom::PointF{wl_fixed_to_double(x), wl_fixed_to_double(y)} + geom::DisplacementF{pointer_displacement};
         pointer_time = std::chrono::milliseconds{time};
     }
 
@@ -372,11 +370,11 @@ void mir::graphics::wayland::Display::pointer_axis(wl_pointer* pointer, uint32_t
         switch (axis)
         {
         case WL_POINTER_AXIS_HORIZONTAL_SCROLL:
-            pointer_scroll.first = wl_fixed_to_double(value);
+            pointer_scroll.dx = geom::DeltaXF{wl_fixed_to_double(value)};
             break;
 
         case WL_POINTER_AXIS_VERTICAL_SCROLL:
-            pointer_scroll.second = wl_fixed_to_double(value);
+            pointer_scroll.dy = geom::DeltaYF{wl_fixed_to_double(value)};
             break;
         }
     }
