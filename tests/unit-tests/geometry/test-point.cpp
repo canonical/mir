@@ -17,6 +17,7 @@
  */
 
 #include "mir/geometry/point.h"
+#include "mir/geometry/point_f.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -53,4 +54,26 @@ TEST(geometry, point_is_usable)
 
     EXPECT_EQ(X(x), p.x);
     EXPECT_EQ(Y(y), p.y);
+}
+
+TEST(geometry, point_can_be_converted_from_int_to_float)
+{
+    using namespace geom;
+
+    Point const i{1, 3};
+    PointF const f{i};
+
+    EXPECT_EQ(XF(1.0), f.x);
+    EXPECT_EQ(YF(3.0), f.y);
+}
+
+TEST(geometry, point_can_be_converted_from_float_to_int)
+{
+    using namespace geom;
+
+    PointF const f{1.2, 3.0};
+    Point const i{f};
+
+    EXPECT_EQ(X(1), i.x);
+    EXPECT_EQ(Y(3), i.y);
 }
