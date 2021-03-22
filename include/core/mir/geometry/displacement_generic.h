@@ -53,6 +53,13 @@ struct Displacement : detail::DisplacementBase
     constexpr Displacement(Displacement const&) = default;
     Displacement& operator=(Displacement const&) = default;
 
+    template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
+    explicit constexpr Displacement(D const& other)
+        : dx{T<DeltaXTag>{other.dx}},
+          dy{T<DeltaYTag>{other.dy}}
+    {
+    }
+
     template<typename DeltaXType, typename DeltaYType>
     constexpr Displacement(DeltaXType&& dx, DeltaYType&& dy) : dx{dx}, dy{dy} {}
 
