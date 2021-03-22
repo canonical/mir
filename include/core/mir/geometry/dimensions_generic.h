@@ -76,10 +76,15 @@ struct Value
 
         constexpr Wrapper() : value{} {}
 
-        template<typename W, typename std::enable_if<std::is_same<typename W::TagType, Tag>::value, bool>::type = true>
-        Wrapper& operator=(W const& that)
+        Wrapper& operator=(Wrapper const& that)
         {
-            value = static_cast<T>(that.value);
+            value = that.value;
+            return *this;
+        }
+
+        constexpr Wrapper(Wrapper const& that)
+            : value{that.value}
+        {
         }
 
         template<typename W, typename std::enable_if<std::is_same<typename W::TagType, Tag>::value, bool>::type = true>
