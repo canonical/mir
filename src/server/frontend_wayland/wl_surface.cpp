@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2021 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -34,6 +34,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/executor.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/scene/surface.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
 
@@ -462,6 +463,19 @@ void mf::WlSurface::set_buffer_transform(int32_t transform)
 void mf::WlSurface::set_buffer_scale(int32_t scale)
 {
     pending.scale = scale;
+}
+
+auto mf::WlSurface::confine_pointer_state() const -> MirPointerConfinementState
+{
+    if (auto const maybe_scene_surface = scene_surface())
+    {
+        if (auto const scene_surface = *maybe_scene_surface)
+        {
+            return scene_surface->confine_pointer_state();
+        }
+    }
+
+    return mir_pointer_unconfined;
 }
 
 mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :
