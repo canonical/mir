@@ -42,7 +42,7 @@ jobs:
           debhelper \
           devscripts \
           dput \
-          python-launchpadlib
+          python3-launchpadlib
 
     - name: Upload to PPA
       env:
