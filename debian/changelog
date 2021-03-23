@@ -23,6 +23,7 @@ mir (2.3.3) UNRELEASED; urgency=medium
       . Add missing <cstring> header for strdup
       . [Wayland] Do not suppress motion events when relative motion is used
         (Fixes #1959)
+      . Fix protobuf symbols for Arch (Fixes FTBFS on Arch)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 23 Mar 2021 09:06:12 +0000
 
