@@ -1,3 +1,32 @@
+mir (2.3.3) UNRELEASED; urgency=medium
+
+  [ Alan Griffiths ]
+  * New upstream release 2.3.3
+
+    - ABI summary:
+      . mirclient ABI unchanged at 10
+      . miral ABI unchanged at 4
+      . mirserver ABI unchanged at 54
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 20
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 18
+      . mirinputplatform ABI unchanged at 8
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+      . mirwayland ABI unchanged at 2
+    - Enhancements:
+    - Bugs fixed:
+      . Add `app-env-amend` configuration option. (Fixes: #1934)
+      . [miral-terminal] wait for gnome-terminal-server to exit
+      . Fix mirplatform.pc include dirs
+      . Add missing <cstring> header for strdup
+      . [Wayland] Do not suppress motion events when relative motion is used
+        (Fixes #1959)
+      . Fix protobuf symbols for Arch (Fixes FTBFS on Arch)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 23 Mar 2021 09:06:12 +0000
+
 mir (2.3.2) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]
