@@ -143,6 +143,13 @@ void mf::XWaylandConnector::spawn()
     {
         auto const wayland_socket_pair = XWaylandServer::make_socket_pair();
         auto const x11_socket_pair = XWaylandServer::make_socket_pair();
+        server = std::make_unique<XWaylandServer>(
+            wayland_connector,
+            *spawner,
+            xwayland_path,
+            wayland_socket_pair,
+            x11_socket_pair.second,
+            scale);
         auto const wm_dispatcher = std::make_shared<md::MultiplexingDispatchable>();
         wm_dispatcher->add_watch(std::make_shared<md::ReadableFd>(x11_socket_pair.first, [this]()
             {
@@ -183,13 +190,6 @@ void mf::XWaylandConnector::spawn()
                 local_wm.reset();
                 local_server.reset();
             });
-        server = std::make_unique<XWaylandServer>(
-            wayland_connector,
-            *spawner,
-            xwayland_path,
-            wayland_socket_pair,
-            x11_socket_pair.second,
-            scale);
         wm = std::make_unique<XWaylandWM>(
             wayland_connector,
             server->client(),
