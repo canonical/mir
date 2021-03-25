@@ -141,17 +141,13 @@ void mf::XWaylandConnector::spawn()
 
     try
     {
-        auto const wayland_socket_pair = XWaylandServer::make_socket_pair();
-        auto const x11_socket_pair = XWaylandServer::make_socket_pair();
         server = std::make_unique<XWaylandServer>(
             wayland_connector,
             *spawner,
             xwayland_path,
-            wayland_socket_pair,
-            x11_socket_pair.second,
             scale);
         auto const wm_dispatcher = std::make_shared<md::MultiplexingDispatchable>();
-        wm_dispatcher->add_watch(std::make_shared<md::ReadableFd>(x11_socket_pair.first, [this]()
+        wm_dispatcher->add_watch(std::make_shared<md::ReadableFd>(server->x11_wm_fd(), [this]()
             {
                 std::lock_guard<std::mutex> lock{mutex};
                 if (wm)
@@ -193,7 +189,7 @@ void mf::XWaylandConnector::spawn()
         wm = std::make_unique<XWaylandWM>(
             wayland_connector,
             server->client(),
-            x11_socket_pair.first,
+            server->x11_wm_fd(),
             wm_dispatcher,
             scale);
         mir::log_info("XWayland is running");
