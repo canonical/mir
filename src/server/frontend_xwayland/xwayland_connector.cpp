@@ -170,15 +170,18 @@ void mf::XWaylandConnector::spawn()
                 // NOTE: we do not stop the spawner, so the server/wm will be recreated when new clients connect
                 auto local_wm{std::move(wm)};
                 auto local_server{std::move(server)};
-                auto local_wm_event_thread{std::move(wm_event_thread)};
+                // This lambda is called by the window manager event dispatcher. It is a runtime error to destroy a
+                // ThreadedDispatcher from it's own call, so we destroy it on the main loop thread.  We turn it into a
+                // shared_ptr because unique_ptrs can not be captured in lambdas.
+                main_loop->spawn(
+                    [wm_event_thread=std::shared_ptr<md::ThreadedDispatcher>{wm_event_thread.release()}]()
+                    {
+                    });
 
                 lock.unlock();
 
                 local_wm.reset();
                 local_server.reset();
-
-                // We can't destroy a ThreadedDispatcher from inside a call it made, so do it from another thread
-                std::thread{[&](){ local_wm_event_thread.reset(); }}.join();
             });
         server = std::make_unique<XWaylandServer>(
             wayland_connector,
