@@ -81,7 +81,7 @@ void miral::open_desktop_entry(std::string const& desktop_file)
     Connection const connection{g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, nullptr)};
 
     static char const* const dest = "io.snapcraft.Launcher";
-    static char const* const object_path = "/io/snapcraft/Launcher";
+    static char const* const object_path = "/io/snapcraft/PrivilegedDesktopLauncher";
     static char const* const interface_name = "io.snapcraft.PrivilegedDesktopLauncher";
     static char const* const method_name = "OpenDesktopEntry";
     auto const id = extract_id(desktop_file);
