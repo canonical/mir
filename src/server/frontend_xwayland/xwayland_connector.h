@@ -38,7 +38,7 @@ class WaylandConnector;
 class XWaylandServer;
 class XWaylandSpawner;
 class XWaylandWM;
-class XWaylandConnector : public Connector
+class XWaylandConnector : public Connector, public std::enable_shared_from_this<XWaylandConnector>
 {
 public:
     /// Scale is a little complicated. It controls how big apps appear but *probably* not the scale they render at
@@ -68,9 +68,17 @@ private:
     std::string const xwayland_path;
     float const scale;
 
+    /// Creates the spawner if it doesn't already exist and is_started is true
+    void maybe_create_spawner(std::unique_lock<std::mutex>& lock);
+    /// Destroyes all objects including the spawner, leaves the given lock unlocked
+    void clean_up(std::unique_lock<std::mutex>& lock);
+    /// Called the first time a client attempts to connect. Creates the server (which forks the XWayland process), wm
+    /// and wm_event_thread.
     void spawn();
 
     std::mutex mutable mutex;
+    /// Set in start() and stop(), should always reflect the state Mir has requested this object to be in
+    bool is_started{false};
     std::unique_ptr<XWaylandSpawner> spawner;
     std::unique_ptr<XWaylandServer> server;
     std::unique_ptr<XWaylandWM> wm;
