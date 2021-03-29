@@ -81,7 +81,7 @@ void mf::XWaylandConnector::stop()
     bool const was_started = is_started;
     is_started = false;
 
-    clean_up(lock);
+    clean_up(std::move(lock));
     // note that lock is no longer locked now
 
     if (was_started)
@@ -115,11 +115,11 @@ auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
     }
 }
 
-void mf::XWaylandConnector::maybe_create_spawner(std::unique_lock<std::mutex>& lock)
+void mf::XWaylandConnector::maybe_create_spawner(std::unique_lock<std::mutex> const& lock)
 {
     if (!lock.owns_lock())
     {
-        lock.lock();
+        fatal_error("XWaylandConnector::maybe_create_spawner() given unlocked lock");
     }
 
     if (is_started && !spawner)
@@ -129,24 +129,21 @@ void mf::XWaylandConnector::maybe_create_spawner(std::unique_lock<std::mutex>& l
     }
 }
 
-void mf::XWaylandConnector::clean_up(std::unique_lock<std::mutex>& lock)
+void mf::XWaylandConnector::clean_up(std::unique_lock<std::mutex> lock)
 {
     if (!lock.owns_lock())
     {
-        lock.lock();
+        fatal_error("XWaylandConnector::clean_up() given unlocked lock");
     }
 
-    auto local_spawner{std::move(spawner)};
-    auto local_wm_event_thread{std::move(wm_event_thread)};
-    auto local_wm{std::move(wm)};
     auto local_server{std::move(server)};
+    auto local_wm{std::move(wm)};
+    auto local_wm_event_thread{std::move(wm_event_thread)};
+    auto local_spawner{std::move(spawner)};
 
     lock.unlock();
 
-    local_spawner.reset();
-    local_wm_event_thread.reset();
-    local_wm.reset();
-    local_server.reset();
+    // Local objects are now dropped with the mutex not locked
 }
 
 void mf::XWaylandConnector::spawn()
@@ -196,10 +193,9 @@ void mf::XWaylandConnector::spawn()
                     {
                         if (auto const self = weak_self.lock())
                         {
-                            std::unique_lock<std::mutex> lock{self->mutex};
-                            self->clean_up(lock);
+                            self->clean_up(std::unique_lock<std::mutex>{self->mutex});
                             log_info("Restarting XWayland");
-                            self->maybe_create_spawner(lock);
+                            self->maybe_create_spawner(std::unique_lock<std::mutex>{self->mutex});
                         }
                     });
             });
@@ -225,12 +221,11 @@ void mf::XWaylandConnector::spawn()
             {
                 if (auto const self = weak_self.lock())
                 {
-                    std::unique_lock<std::mutex> lock{self->mutex};
-                    self->clean_up(lock);
+                    self->clean_up(std::unique_lock<std::mutex>{self->mutex});
                     log_info("Restarting XWayland");
                     // XWaylandConnector::spawn() is only called when a client tries to connect, so restarting the
                     // on failure should not result in an endless loop.
-                    self->maybe_create_spawner(lock);
+                    self->maybe_create_spawner(std::unique_lock<std::mutex>{self->mutex});
                 }
             });
     }

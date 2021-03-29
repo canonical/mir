@@ -68,10 +68,10 @@ private:
     std::string const xwayland_path;
     float const scale;
 
-    /// Creates the spawner if it doesn't already exist and is_started is true
-    void maybe_create_spawner(std::unique_lock<std::mutex>& lock);
-    /// Destroyes all objects including the spawner, leaves the given lock unlocked
-    void clean_up(std::unique_lock<std::mutex>& lock);
+    /// Creates the spawner if it doesn't already exist and is_started is true, given lock must be locked
+    void maybe_create_spawner(std::unique_lock<std::mutex> const& lock);
+    /// Destroyes all objects including the spawner, given lock must be locked
+    void clean_up(std::unique_lock<std::mutex> lock);
     /// Called the first time a client attempts to connect. Creates the server (which forks the XWayland process), wm
     /// and wm_event_thread.
     void spawn();
