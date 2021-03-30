@@ -35,6 +35,13 @@ namespace frontend
 class WaylandConnector;
 class XWaylandSpawner;
 
+struct XWaylandProcessInfo
+{
+    pid_t const pid;
+    Fd const wayland_fd;
+    Fd const x11_fd;
+};
+
 class XWaylandServer
 {
 public:
@@ -42,23 +49,18 @@ public:
         std::shared_ptr<WaylandConnector> const& wayland_connector,
         XWaylandSpawner const& spawner,
         std::string const& xwayland_path,
-        std::pair<mir::Fd, mir::Fd> const& wayland_socket_pair,
-        mir::Fd const& x11_server_fd,
         float scale);
     ~XWaylandServer();
 
     auto client() const -> wl_client* { return wayland_client; }
+    auto x11_wm_fd() const -> Fd const& { return xwayland.x11_fd; }
     auto is_running() const -> bool;
-
-    // Returns a symmetrical pair of connected sockets
-    static auto make_socket_pair() -> std::pair<mir::Fd, mir::Fd>;
 
 private:
     XWaylandServer(XWaylandServer const&) = delete;
     XWaylandServer& operator=(XWaylandServer const&) = delete;
 
-    pid_t const xwayland_pid;
-    mir::Fd const wayland_server_fd;
+    XWaylandProcessInfo const xwayland;
     wl_client* const wayland_client{nullptr};
 
     mutable std::mutex mutex;
