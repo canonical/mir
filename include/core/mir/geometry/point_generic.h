@@ -50,6 +50,13 @@ struct Point : detail::PointBase
     constexpr Point(Point const&) = default;
     Point& operator=(Point const&) = default;
 
+    template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
+    explicit constexpr Point(P const& other) noexcept
+        : x{T<XTag>{other.x}},
+          y{T<YTag>{other.y}}
+    {
+    }
+
     template<typename XType, typename YType>
     constexpr Point(XType&& x, YType&& y) : x(x), y(y) {}
 

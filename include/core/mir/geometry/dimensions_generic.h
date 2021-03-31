@@ -69,27 +69,32 @@ struct Value
             return this->value;
         }
 
-        constexpr T as_value() const
+        constexpr T as_value() const noexcept
         {
             return value;
         }
 
-        constexpr Wrapper() : value{} {}
+        constexpr Wrapper() noexcept : value{} {}
 
-        template<typename W, typename std::enable_if<std::is_same<typename W::TagType, Tag>::value, bool>::type = true>
-        Wrapper& operator=(W const& that)
+        Wrapper& operator=(Wrapper const& that) noexcept
         {
-            value = static_cast<T>(that.value);
+            value = that.value;
+            return *this;
+        }
+
+        constexpr Wrapper(Wrapper const& that) noexcept
+            : value{that.value}
+        {
         }
 
         template<typename W, typename std::enable_if<std::is_same<typename W::TagType, Tag>::value, bool>::type = true>
-        explicit constexpr Wrapper(W const& value)
+        explicit constexpr Wrapper(W const& value) noexcept
             : value{static_cast<T>(value.as_value())}
         {
         }
 
         template<typename U, typename std::enable_if<std::is_scalar<U>::value, bool>::type = true>
-        explicit constexpr Wrapper(U const& value)
+        explicit constexpr Wrapper(U const& value) noexcept
             : value{static_cast<T>(value)}
         {
         }

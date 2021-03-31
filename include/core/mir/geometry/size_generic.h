@@ -51,6 +51,13 @@ struct Size : detail::SizeBase
     constexpr Size(Size const&) noexcept = default;
     Size& operator=(Size const&) noexcept = default;
 
+    template<typename S, typename std::enable_if<std::is_base_of<detail::SizeBase, S>::value, bool>::type = true>
+    explicit constexpr Size(S const& other) noexcept
+        : width{T<WidthTag>{other.width}},
+          height{T<HeightTag>{other.height}}
+    {
+    }
+
     template<typename WidthType, typename HeightType>
     constexpr Size(WidthType&& width, HeightType&& height) noexcept : width(width), height(height) {}
 
