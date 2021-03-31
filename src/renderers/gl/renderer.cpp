@@ -351,7 +351,7 @@ mrg::Renderer::Program::Program(GLuint program_id)
 
 mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
     : render_target(&display_buffer),
-      clear_color{0.0f, 0.0f, 0.0f, 0.0f},
+      clear_color{0.2f, 0.2f, 0.2f, 1.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
       program_factory{std::make_unique<ProgramFactory>()},
