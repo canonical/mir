@@ -251,6 +251,11 @@ CMAKE_DEPENDENT_OPTION(
   MIR_RUN_WLCS_TESTS "Run WLCS tests as part of testsuite" ON
   "MIR_ENABLE_WLCS_TESTS" OFF
 )
+CMAKE_DEPENDENT_OPTION(
+  MIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN "Expect WLCS BadBuffer tests to fail" OFF
+  "MIR_RUN_WLCS_TESTS" OFF
+)
+
 
 foreach(platform IN LISTS MIR_PLATFORM)
   if (platform STREQUAL "gbm-kms")
