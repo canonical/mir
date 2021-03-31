@@ -39,6 +39,7 @@
 #include "mir/log.h"
 
 #include <algorithm>
+#include <chrono>
 #include <boost/throw_exception.hpp>
 #include <wayland-server-protocol.h>
 
@@ -229,8 +230,9 @@ void mf::WlSurface::send_frame_callbacks()
     {
         if (!*frame->destroyed)
         {
-            // TODO: argument should be a timestamp
-            frame->send_done_event(0);
+            auto const timestamp_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now().time_since_epoch());
+            frame->send_done_event(timestamp_ms.count());
             frame->destroy_wayland_object();
         }
     }
