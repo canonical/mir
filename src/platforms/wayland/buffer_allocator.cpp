@@ -182,8 +182,8 @@ auto mgw::BufferAllocator::buffer_from_resource(
     if (auto dmabuf = dmabuf_extension->buffer_from_resource(
         buffer,
         ctx,
-        std::move(on_consumed),
-        std::move(on_release),
+        std::function<void()>{on_consumed},
+        std::function<void()>{on_release},
         wayland_executor))
     {
         return dmabuf;
