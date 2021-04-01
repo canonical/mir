@@ -220,10 +220,10 @@ TEST_F(GLRenderer, avoids_src_alpha_for_rgbx_blending)  // LP: #1423462
     renderer.render(renderable_list);
 }
 
-TEST_F(GLRenderer, clears_all_channels_zero)
+TEST_F(GLRenderer, clears_all_channels)
 {
     InSequence seq;
-    EXPECT_CALL(mock_gl, glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+    EXPECT_CALL(mock_gl, glClearColor(_, _, _, _));
     EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     EXPECT_CALL(mock_gl, glClear(_));
 
