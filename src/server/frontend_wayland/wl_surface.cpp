@@ -332,6 +332,16 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     // callbacks in wl_surface because if a client commits multiple times before the first buffer is handled, all the
     // callbacks should be sent at once.
     frame_callbacks.insert(end(frame_callbacks), begin(state.frame_callbacks), end(state.frame_callbacks));
+    auto const executor_send_frame_callbacks = [executor = executor, weak_self = mw::make_weak(this)]()
+        {
+            executor->spawn([weak_self]()
+                {
+                    if (weak_self)
+                    {
+                        weak_self.value().send_frame_callbacks();
+                    }
+                });
+        };
 
     if (state.offset)
         offset_ = state.offset.value();
@@ -354,17 +364,6 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         }
         else
         {
-            auto const executor_send_frame_callbacks = [executor = executor, weak_self = mw::make_weak(this)]()
-                {
-                    executor->spawn([weak_self]()
-                        {
-                            if (weak_self)
-                            {
-                                weak_self.value().send_frame_callbacks();
-                            }
-                        });
-                };
-
             std::shared_ptr<graphics::Buffer> mir_buffer;
 
             if (auto const shm_buffer = wl_shm_buffer_get(buffer))
@@ -426,9 +425,9 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             buffer_size_ = new_buffer_size;
         }
     }
-    else
+    else if (auto const ss = scene_surface())
     {
-        send_frame_callbacks();
+        ss.value()->on_next_render(std::move(executor_send_frame_callbacks));
     }
 
     for (WlSubsurface* child: children)

@@ -85,6 +85,8 @@ struct StubSurface : scene::Surface
         geometry::DeltaX,
         geometry::DeltaY,
         geometry::DeltaX) override {}
+    void notify_rendered() override {}
+    void on_next_render(std::function<void()>&&) override {}
 };
 }
 }

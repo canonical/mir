@@ -167,6 +167,9 @@ public:
         geometry::DeltaY bottom,
         geometry::DeltaX right) override;
 
+    void notify_rendered() override;
+    void on_next_render(std::function<void()>&& callback) override;
+
 private:
     struct ProofOfMutexLock
     {
@@ -226,6 +229,9 @@ private:
         geometry::DeltaY bottom;
         geometry::DeltaX right;
     } margins;
+
+    std::atomic<bool> has_render_callbacks{false};
+    std::vector<std::function<void()>> render_callbacks;
 };
 
 }

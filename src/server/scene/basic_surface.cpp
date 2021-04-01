@@ -1077,6 +1077,27 @@ void mir::scene::BasicSurface::set_window_margins(
     }
 }
 
+void mir::scene::BasicSurface::notify_rendered()
+{
+    if (has_render_callbacks)
+    {
+        std::lock_guard<std::mutex> lock(guard);
+        for (auto const& callback : render_callbacks)
+        {
+            callback();
+        }
+        render_callbacks.clear();
+        has_render_callbacks = false;
+    }
+}
+
+void mir::scene::BasicSurface::on_next_render(std::function<void()>&& callback)
+{
+    std::lock_guard<std::mutex> lock(guard);
+    has_render_callbacks = true;
+    render_callbacks.push_back(std::move(callback));
+}
+
 auto mir::scene::BasicSurface::content_size(ProofOfMutexLock const&) const -> geometry::Size
 {
     return geom::Size{

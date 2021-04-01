@@ -88,7 +88,13 @@ bool ms::RenderingTracker::occluded_in_all_active_compositors()
 void ms::RenderingTracker::configure_visibility(MirWindowVisibility visibility)
 {
     if (auto const surface = weak_surface.lock())
+    {
         surface->configure(mir_window_attrib_visibility, visibility);
+        if (visibility == mir_window_visibility_exposed)
+        {
+            surface->notify_rendered();
+        }
+    }
 }
 
 void ms::RenderingTracker::remove_occlusions_for_inactive_compositors()
