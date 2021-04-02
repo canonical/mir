@@ -39,6 +39,8 @@
 #include "mir/log.h"
 
 #include <algorithm>
+#include <chrono>
+#include <thread>
 #include <boost/throw_exception.hpp>
 #include <wayland-server-protocol.h>
 
@@ -427,7 +429,11 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     }
     else if (auto const ss = scene_surface())
     {
-        ss.value()->on_next_render(std::move(executor_send_frame_callbacks));
+        std::thread{[callback=std::move(executor_send_frame_callbacks)]()
+            {
+                usleep(10000);
+                callback();
+            }}.detach();
     }
 
     for (WlSubsurface* child: children)
