@@ -39,7 +39,6 @@
 #include "mir/log.h"
 
 #include <algorithm>
-#include <chrono>
 #include <thread>
 #include <boost/throw_exception.hpp>
 #include <wayland-server-protocol.h>
@@ -427,7 +426,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             buffer_size_ = new_buffer_size;
         }
     }
-    else if (auto const ss = scene_surface())
+    else
     {
         std::thread{[callback=std::move(executor_send_frame_callbacks)]()
             {

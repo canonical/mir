@@ -151,12 +151,6 @@ public:
         geometry::DeltaX left,
         geometry::DeltaY bottom,
         geometry::DeltaX right) = 0;
-
-    /// Tells the surface it has been rendered
-    virtual void notify_rendered() = 0;
-
-    /// Register a callback to be fired next time the surface is rendered (needs to be re-registered each frame)
-    virtual void on_next_render(std::function<void()>&& callback) = 0;
 };
 }
 }
