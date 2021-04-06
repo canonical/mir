@@ -1,10 +1,19 @@
 #!/bin/bash
 
+set -ex
+
+RELEASE_TAG=HEAD
+
 while [ $# -gt 0 ]
 do
   if [ "$1" == "--skip-checks" ]
   then
     skip_checks=true
+  fi
+  if [ "$1" == "--release-tag" ]
+  then
+    shift
+    RELEASE_TAG=$1
   fi
   shift
 done
@@ -17,9 +26,9 @@ fi
 
 set -e
 
-VERSION_MAJOR=$(grep set.MIR_VERSION_MAJOR CMakeLists.txt | cut -f2 -d' ' | tr -d \))
-VERSION_MINOR=$(grep set.MIR_VERSION_MINOR CMakeLists.txt | cut -f2 -d' ' | tr -d \))
-VERSION_PATCH=$(grep set.MIR_VERSION_PATCH CMakeLists.txt | cut -f2 -d' ' | tr -d \))
+VERSION_MAJOR=$(git show ${RELEASE_TAG}:CMakeLists.txt | grep set.MIR_VERSION_MAJOR | cut -f2 -d' ' | tr -d \))
+VERSION_MINOR=$(git show ${RELEASE_TAG}:CMakeLists.txt | grep set.MIR_VERSION_MINOR | cut -f2 -d' ' | tr -d \))
+VERSION_PATCH=$(git show ${RELEASE_TAG}:CMakeLists.txt | grep set.MIR_VERSION_PATCH | cut -f2 -d' ' | tr -d \))
 
 VERSIONED_NAME=mir-$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH
 
@@ -38,15 +47,7 @@ function cleanup() {
 trap cleanup EXIT
 
 echo "Generating Mir tarball…"
-git archive --format=tar -o $SCRATCH_DIR/$VERSIONED_NAME.tar --prefix=$VERSIONED_NAME/ HEAD
-for submodule in $(git submodule --quiet foreach 'echo $path')
-do
-  pushd $submodule
-  git archive --format=tar -o $SCRATCH_DIR/$VERSIONED_NAME-temp.tar --prefix=$VERSIONED_NAME/$submodule/ HEAD
-  tar --concatenate -vf $SCRATCH_DIR/$VERSIONED_NAME.tar $SCRATCH_DIR/$VERSIONED_NAME-temp.tar
-  popd
-done
-xz -9 $SCRATCH_DIR/$VERSIONED_NAME.tar
+git archive --format=tar --prefix=$VERSIONED_NAME/ $RELEASE_TAG | xz -9 > $SCRATCH_DIR/$VERSIONED_NAME.tar.xz
 
 if [ ! -v skip_checks ]
 then
