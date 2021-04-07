@@ -745,12 +745,22 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
 
     // If the window is not explicity attached to any area, find the area it overlaps most with
     Rectangle window_rect{window.top_left(), window.size()};
+
+    if (auto best_area = display_area_for(window_rect))
+        return best_area.value();
+    else
+        return std::make_shared<DisplayArea>(window_rect);
+}
+
+auto miral::BasicWindowManager::display_area_for(Rectangle const& rect) const
+-> std::experimental::optional<std::shared_ptr<DisplayArea>>
+{
     int max_overlap_area = 0;
     int min_distance = INT_MAX;
     std::experimental::optional<std::shared_ptr<DisplayArea>> best_area;
     for (auto& area : display_areas)
     {
-        auto const intersection = window_rect.intersection_with(area->area).size;
+        auto const intersection = rect.intersection_with(area->area).size;
         auto const intersection_area = intersection.width.as_int() * intersection.height.as_int();
         if (intersection_area > max_overlap_area)
         {
@@ -763,11 +773,11 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
             // or if none overlap, find the area that is closest
             auto distance = std::max(
                 std::max(
-                    window_rect.left() - area->area.right(),
-                    area->area.left() - window_rect.right()).as_int(),
+                    rect.left() - area->area.right(),
+                    area->area.left() - rect.right()).as_int(),
                 std::max(
-                    window_rect.top() - area->area.bottom(),
-                    area->area.top() - window_rect.bottom()).as_int());
+                    rect.top() - area->area.bottom(),
+                    area->area.top() - rect.bottom()).as_int());
             if (distance < min_distance)
             {
                 best_area = area;
@@ -775,11 +785,7 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
             }
         }
     }
-
-    if (best_area)
-        return best_area.value();
-    else
-        return std::make_shared<DisplayArea>(window_rect);
+    return best_area;
 }
 
 void miral::BasicWindowManager::focus_next_within_application()

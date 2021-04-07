@@ -310,6 +310,7 @@ private:
     auto active_display_area() const -> std::shared_ptr<DisplayArea>;
     auto display_area_for_output_id(int output_id) const -> std::shared_ptr<DisplayArea>; ///< returns null if not found
     auto display_area_for(WindowInfo const& info) const -> std::shared_ptr<DisplayArea>;
+    auto display_area_for(Rectangle const& rect) const -> std::experimental::optional<std::shared_ptr<DisplayArea>>;
     /// Returns the application zone area after shrinking it for the exclusive zone if needed
     static auto apply_exclusive_rect_to_application_zone(
         mir::geometry::Rectangle const& original_zone,
