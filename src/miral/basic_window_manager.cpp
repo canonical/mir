@@ -753,11 +753,11 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
 }
 
 auto miral::BasicWindowManager::display_area_for(Rectangle const& rect) const
--> std::experimental::optional<std::shared_ptr<DisplayArea>>
+-> std::optional<std::shared_ptr<DisplayArea>>
 {
     int max_overlap_area = 0;
     int min_distance = INT_MAX;
-    std::experimental::optional<std::shared_ptr<DisplayArea>> best_area;
+    std::optional<std::shared_ptr<DisplayArea>> best_area;
     for (auto& area : display_areas)
     {
         auto const intersection = rect.intersection_with(area->area).size;
