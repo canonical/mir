@@ -2064,7 +2064,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
     Rectangle aux_rect = parameters.aux_rect().value();
     aux_rect.top_left = aux_rect.top_left + (parent.top_left-Point{});
 
-    auto const probable_display_area= display_area_for(aux_rect);
+    auto const probable_display_area = display_area_for(aux_rect);
     auto const placement_bounds = probable_display_area ? probable_display_area.value()->area : parent;
 
     std::vector<MirPlacementGravity> rect_gravities{parameters.aux_rect_placement_gravity().value()};
