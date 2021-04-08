@@ -745,12 +745,22 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
 
     // If the window is not explicity attached to any area, find the area it overlaps most with
     Rectangle window_rect{window.top_left(), window.size()};
+
+    if (auto best_area = display_area_for(window_rect))
+        return best_area.value();
+    else
+        return std::make_shared<DisplayArea>(window_rect);
+}
+
+auto miral::BasicWindowManager::display_area_for(Rectangle const& rect) const
+-> std::optional<std::shared_ptr<DisplayArea>>
+{
     int max_overlap_area = 0;
     int min_distance = INT_MAX;
-    std::experimental::optional<std::shared_ptr<DisplayArea>> best_area;
+    std::optional<std::shared_ptr<DisplayArea>> best_area;
     for (auto& area : display_areas)
     {
-        auto const intersection = window_rect.intersection_with(area->area).size;
+        auto const intersection = rect.intersection_with(area->area).size;
         auto const intersection_area = intersection.width.as_int() * intersection.height.as_int();
         if (intersection_area > max_overlap_area)
         {
@@ -763,11 +773,11 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
             // or if none overlap, find the area that is closest
             auto distance = std::max(
                 std::max(
-                    window_rect.left() - area->area.right(),
-                    area->area.left() - window_rect.right()).as_int(),
+                    rect.left() - area->area.right(),
+                    area->area.left() - rect.right()).as_int(),
                 std::max(
-                    window_rect.top() - area->area.bottom(),
-                    area->area.top() - window_rect.bottom()).as_int());
+                    rect.top() - area->area.bottom(),
+                    area->area.top() - rect.bottom()).as_int());
             if (distance < min_distance)
             {
                 best_area = area;
@@ -775,11 +785,7 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
             }
         }
     }
-
-    if (best_area)
-        return best_area.value();
-    else
-        return std::make_shared<DisplayArea>(window_rect);
+    return best_area;
 }
 
 void miral::BasicWindowManager::focus_next_within_application()
@@ -2047,7 +2053,6 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 -> mir::optional_value<Rectangle>
 {
     auto const hints = parameters.placement_hints().value();
-    auto const active_output_area = active_output();
     auto const win_gravity = parameters.window_placement_gravity().value();
 
     if (parameters.size().is_set())
@@ -2058,6 +2063,9 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
     Rectangle aux_rect = parameters.aux_rect().value();
     aux_rect.top_left = aux_rect.top_left + (parent.top_left-Point{});
+
+    auto const probable_display_area = display_area_for(aux_rect);
+    auto const placement_bounds = probable_display_area ? probable_display_area.value()->area : parent;
 
     std::vector<MirPlacementGravity> rect_gravities{parameters.aux_rect_placement_gravity().value()};
 
@@ -2072,7 +2080,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
             auto result = constrain_to(parent, anchor_for(aux_rect, rect_gravity) + offset) +
                 offset_for(size, win_gravity);
 
-            if (active_output_area.contains(Rectangle{result, size}))
+            if (placement_bounds.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
 
             if (!default_result.is_set())
@@ -2084,7 +2092,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
             auto result = constrain_to(parent, anchor_for(aux_rect, flip_x(rect_gravity)) + flip_x(offset)) +
                 offset_for(size, flip_x(win_gravity));
 
-            if (active_output_area.contains(Rectangle{result, size}))
+            if (placement_bounds.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
         }
 
@@ -2093,7 +2101,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
             auto result = constrain_to(parent, anchor_for(aux_rect, flip_y(rect_gravity)) + flip_y(offset)) +
                 offset_for(size, flip_y(win_gravity));
 
-            if (active_output_area.contains(Rectangle{result, size}))
+            if (placement_bounds.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
         }
 
@@ -2102,7 +2110,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
             auto result = constrain_to(parent, anchor_for(aux_rect, flip_x(flip_y(rect_gravity))) + flip_x(flip_y(offset))) +
                 offset_for(size, flip_x(flip_y(win_gravity)));
 
-            if (active_output_area.contains(Rectangle{result, size}))
+            if (placement_bounds.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
         }
     }
@@ -2114,8 +2122,8 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
         if (hints & mir_placement_hints_slide_x)
         {
-            auto const left_overhang  = result.x - active_output_area.top_left.x;
-            auto const right_overhang = (result + as_displacement(size)).x - active_output_area.top_right().x;
+            auto const left_overhang  = result.x - placement_bounds.top_left.x;
+            auto const right_overhang = (result + as_displacement(size)).x - placement_bounds.top_right().x;
 
             if (left_overhang < DeltaX{0})
                 result -= left_overhang;
@@ -2125,8 +2133,8 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
         if (hints & mir_placement_hints_slide_y)
         {
-            auto const top_overhang  = result.y - active_output_area.top_left.y;
-            auto const bot_overhang = (result + as_displacement(size)).y - active_output_area.bottom_left().y;
+            auto const top_overhang  = result.y - placement_bounds.top_left.y;
+            auto const bot_overhang = (result + as_displacement(size)).y - placement_bounds.bottom_left().y;
 
             if (top_overhang < DeltaY{0})
                 result -= top_overhang;
@@ -2134,7 +2142,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
                 result -= bot_overhang;
         }
 
-        if (active_output_area.contains(Rectangle{result, size}))
+        if (placement_bounds.contains(Rectangle{result, size}))
             return Rectangle{result, size};
     }
 
@@ -2145,8 +2153,8 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
         if (hints & mir_placement_hints_resize_x)
         {
-            auto const left_overhang  = result.x - active_output_area.top_left.x;
-            auto const right_overhang = (result + as_displacement(size)).x - active_output_area.top_right().x;
+            auto const left_overhang  = result.x - placement_bounds.top_left.x;
+            auto const right_overhang = (result + as_displacement(size)).x - placement_bounds.top_right().x;
 
             if (left_overhang < DeltaX{0})
             {
@@ -2162,8 +2170,8 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
         if (hints & mir_placement_hints_resize_y)
         {
-            auto const top_overhang  = result.y - active_output_area.top_left.y;
-            auto const bot_overhang = (result + as_displacement(size)).y - active_output_area.bottom_left().y;
+            auto const top_overhang  = result.y - placement_bounds.top_left.y;
+            auto const bot_overhang = (result + as_displacement(size)).y - placement_bounds.bottom_left().y;
 
             if (top_overhang < DeltaY{0})
             {
@@ -2177,7 +2185,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
             }
         }
 
-        if (active_output_area.contains(Rectangle{result, size}))
+        if (placement_bounds.contains(Rectangle{result, size}))
             return Rectangle{result, size};
     }
 
