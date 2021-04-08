@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2021 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -34,10 +34,12 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/executor.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/scene/surface.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
 
 #include <algorithm>
+#include <chrono>
 #include <boost/throw_exception.hpp>
 #include <wayland-server-protocol.h>
 
@@ -228,8 +230,9 @@ void mf::WlSurface::send_frame_callbacks()
     {
         if (!*frame->destroyed)
         {
-            // TODO: argument should be a timestamp
-            frame->send_done_event(0);
+            auto const timestamp_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now().time_since_epoch());
+            frame->send_done_event(timestamp_ms.count());
             frame->destroy_wayland_object();
         }
     }
@@ -462,6 +465,19 @@ void mf::WlSurface::set_buffer_transform(int32_t transform)
 void mf::WlSurface::set_buffer_scale(int32_t scale)
 {
     pending.scale = scale;
+}
+
+auto mf::WlSurface::confine_pointer_state() const -> MirPointerConfinementState
+{
+    if (auto const maybe_scene_surface = scene_surface())
+    {
+        if (auto const scene_surface = *maybe_scene_surface)
+        {
+            return scene_surface->confine_pointer_state();
+        }
+    }
+
+    return mir_pointer_unconfined;
 }
 
 mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :

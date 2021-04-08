@@ -54,7 +54,7 @@ else
   elif [ "${miral_server}" == "mir_demo_server" ]
   then
     # With mir_demo_server we will get the display saved to this file
-    x11_display_file=$(tempfile)
+    x11_display_file=$(mktemp --tmpdir="${XDG_RUNTIME_DIR}")
 
     # Start mir_demo_server with the chosen WAYLAND_DISPLAY
     MIR_SERVER_ENABLE_X11=1 WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} $* --x11-displayfd 5 5>${x11_display_file}&

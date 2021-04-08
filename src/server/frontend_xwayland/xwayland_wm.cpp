@@ -662,6 +662,18 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
     {
         surface.value()->property_notify(event->atom);
     }
+
+    // Inform the clipboard provider, in case this is part of an incremental data send
+    if (event->state == XCB_PROPERTY_DELETE)
+    {
+        clipboard_provider->property_deleted_event(event->window, event->atom);
+    }
+
+    // Inform the clipboard source, in case it's new data for an incremental send
+    if (event->state == XCB_PROPERTY_NEW_VALUE && connection->is_ours(event->window))
+    {
+        clipboard_source->property_notify_event(event->window, event->atom);
+    }
 }
 
 void mf::XWaylandWM::handle_create_notify(xcb_create_notify_event_t *event)

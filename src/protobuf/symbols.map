@@ -1159,7 +1159,7 @@ MIR_PROTOBUF_0.27 {
   };
 } MIR_PROTOBUF_0.26;
 
-# When building with the Fedora 26 toolchain these are needed
+# When building with the Fedora 26 or Arch toolchains these are needed
 MIR_PROTOBUF_FEDORA {
  global:
   extern "C++" {
@@ -1180,6 +1180,17 @@ MIR_PROTOBUF_FEDORA {
     mir::protobuf::_SurfaceId_default_instance_;
     mir::protobuf::_SurfaceSpecification_default_instance_;
     mir::protobuf::_Rectangle_default_instance_;
+    mir::protobuf::_ConnectParameters_default_instance_;
+    mir::protobuf::_Connection_default_instance_;
+    mir::protobuf::_Void_default_instance_;
+    mir::protobuf::_PlatformOperationMessage_default_instance_;
+    mir::protobuf::_Surface_default_instance_;
+    mir::protobuf::_SurfaceSetting_default_instance_;
+    mir::protobuf::_Screencast_default_instance_;
+    mir::protobuf::_SocketFD_default_instance_;
+    mir::protobuf::_PromptSessionParameters_default_instance_;
+    mir::protobuf::_PromptSession_default_instance_;
+    mir::protobuf::wire::_Result_default_instance_;
     mir::protobuf::*::InternalSwap*;
   };
 } MIR_PROTOBUF_0.27;

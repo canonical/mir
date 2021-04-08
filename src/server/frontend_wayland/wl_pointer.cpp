@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2021 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -271,14 +271,22 @@ void mf::WlPointer::enter_or_motion(MirPointerEvent const* event, WlSurface& roo
             });
         surface_under_cursor = mw::make_weak(target_surface);
     }
-    else if (!relative_pointer && position_on_target != current_position)
+    else if (position_on_target != current_position)
     {
-        send_motion_event(
-            timestamp_of(event),
-            position_on_target.first,
-            position_on_target.second);
-        current_position = position_on_target;
-        needs_frame = true;
+        switch (target_surface->confine_pointer_state())
+        {
+        case mir_pointer_locked_oneshot:
+        case mir_pointer_locked_persistent:
+            break;
+
+        default:
+            send_motion_event(
+                timestamp_of(event),
+                position_on_target.first,
+                position_on_target.second);
+            current_position = position_on_target;
+            needs_frame = true;
+        }
     }
 }
 

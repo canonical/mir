@@ -20,6 +20,7 @@
 #include "wayland_app.h"
 
 #include <mir/fd.h>
+#include <mir/fatal.h>
 #include <boost/throw_exception.hpp>
 
 #include <fcntl.h>
@@ -27,7 +28,11 @@
 #include <sys/mman.h>
 #include <system_error>
 
-struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
+namespace geom = mir::geometry;
+
+namespace
+{
+static wl_shm_pool* make_shm_pool(wl_shm* shm, int size, void **data)
 {
     static auto (*open_shm_file)() -> mir::Fd = []
         {
@@ -84,12 +89,41 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
 
     return wl_shm_create_pool(shm, fd, size);
 }
+}
+
+struct WaylandShmPool
+{
+public:
+    WaylandShmPool(wl_shm_pool* shm_pool, void* data, size_t size)
+        : shm_pool{shm_pool},
+          data{data},
+          size{size}
+    {
+    }
+
+    ~WaylandShmPool()
+    {
+        munmap(data, size);
+        wl_shm_pool_destroy(shm_pool);
+    }
+
+    wl_shm_pool* const shm_pool;
+    void* const data;
+    size_t const size;
+};
 
 wl_buffer_listener const WaylandShmBuffer::buffer_listener {handle_release};
 
-WaylandShmBuffer::WaylandShmBuffer(void* data, size_t data_size, wl_buffer* buffer)
-    : data_{data},
-      data_size{data_size},
+WaylandShmBuffer::WaylandShmBuffer(
+    std::shared_ptr<WaylandShmPool> pool,
+    void* data,
+    geom::Size size,
+    geom::Stride stride,
+    wl_buffer* buffer)
+    : pool{pool},
+      data_{data},
+      size_{size},
+      stride_{stride},
       buffer{buffer}
 {
     wl_buffer_add_listener(buffer, &buffer_listener, this);
@@ -98,7 +132,16 @@ WaylandShmBuffer::WaylandShmBuffer(void* data, size_t data_size, wl_buffer* buff
 WaylandShmBuffer::~WaylandShmBuffer()
 {
     wl_buffer_destroy(buffer);
-    munmap(data_, data_size);
+}
+
+auto WaylandShmBuffer::use() -> wl_buffer*
+{
+    if (self_ptr)
+    {
+        mir::fatal_error("WaylandShmBuffer used multiple times");
+    }
+    self_ptr = shared_from_this();
+    return buffer;
 }
 
 void WaylandShmBuffer::handle_release(void *data, wl_buffer*)
@@ -112,25 +155,43 @@ WaylandShm::WaylandShm(wl_shm* shm)
 {
 }
 
-auto WaylandShm::get_buffer(mir::geometry::Size size, mir::geometry::Stride stride) -> WaylandShmBuffer*
+auto WaylandShm::get_buffer(geom::Size size, geom::Stride stride) -> std::shared_ptr<WaylandShmBuffer>
 {
-    size_t const data_size = size.height.as_int() * stride.as_int();
-    if (!current_buffer || current_buffer->is_in_use() || data_size > current_buffer->data_size)
+    // If the old buffers have a different size, clear them all
+    if (!buffers.empty() && (buffers[0]->size() != size || buffers[0]->stride() != stride))
+    {
+        buffers.clear();
+    }
+
+    std::shared_ptr<WaylandShmBuffer> free_buffer;
+
+    // We can now assume all buffers in the list are the correct size, and look for a free one
+    for (auto const& buffer : buffers)
+    {
+        if (!buffer->is_in_use())
+        {
+            free_buffer = buffer;
+            break;
+        }
+    }
+
+    // If we don't find one, we create a new buffer with a single-use pool
+    if (!free_buffer)
     {
         void* data;
-        WaylandObject<wl_shm_pool> pool{make_shm_pool(shm, data_size, &data), wl_shm_pool_destroy};
+        size_t const data_size = size.height.as_int() * stride.as_int();
+        auto const pool_resource = make_shm_pool(shm, data_size, &data);
+        auto const pool = std::make_shared<WaylandShmPool>(pool_resource, data, data_size);
         auto const buffer = wl_shm_pool_create_buffer(
-            pool,
+            pool_resource,
             0,
             size.width.as_int(),
             size.height.as_int(),
             stride.as_int(),
             WL_SHM_FORMAT_ARGB8888);
-        current_buffer = std::make_shared<WaylandShmBuffer>(data, data_size, std::move(buffer));
-        current_buffer->self_ptr = current_buffer;
+        free_buffer = std::make_shared<WaylandShmBuffer>(pool, data, size, stride, std::move(buffer));
+        buffers.push_back(free_buffer);
     }
 
-    // This will mark the buffer as in-use, and keep it alice until it's submitted and the compositor releases it.
-    current_buffer->self_ptr = current_buffer;
-    return current_buffer.get();
+    return free_buffer;
 }

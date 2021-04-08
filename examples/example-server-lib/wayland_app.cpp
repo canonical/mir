@@ -21,6 +21,22 @@
 #include <cstring>
 #include <algorithm>
 
+wl_callback_listener const WaylandCallback::callback_listener {
+    []/* done */(void* data, wl_callback*, uint32_t)
+    {
+        auto const cb = static_cast<WaylandCallback*>(data);
+        cb->func();
+        delete cb;
+    },
+};
+
+void WaylandCallback::create(wl_callback* callback, std::function<void()>&& func)
+{
+    auto const cb = new WaylandCallback({callback, wl_callback_destroy}, std::move(func));
+    wl_callback_add_listener(callback, &callback_listener, cb);
+    // Will destroy itself when called
+}
+
 wl_output_listener const WaylandOutput::output_listener = {
     handle_geometry,
     handle_mode,

@@ -17,6 +17,7 @@
  */
 
 #include "mir/geometry/size.h"
+#include "mir/geometry/size_f.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -40,4 +41,26 @@ TEST(geometry, size)
     EXPECT_EQ(Width(0), defaultValue.width);
     EXPECT_EQ(Height(0), defaultValue.height);
     EXPECT_NE(size2x4, defaultValue);
+}
+
+TEST(geometry, size_can_be_converted_from_int_to_float)
+{
+    using namespace geom;
+
+    Size const i{1, 3};
+    SizeF const f{i};
+
+    EXPECT_EQ(WidthF(1.0), f.width);
+    EXPECT_EQ(HeightF(3.0), f.height);
+}
+
+TEST(geometry, size_can_be_converted_from_float_to_int)
+{
+    using namespace geom;
+
+    SizeF const f{1.2, 3.0};
+    Size const i{f};
+
+    EXPECT_EQ(Width(1), i.width);
+    EXPECT_EQ(Height(3), i.height);
 }

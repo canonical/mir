@@ -289,42 +289,15 @@ void mf::XWaylandClipboardSource::selection_notify_event(xcb_selection_notify_ev
     else
     {
         // A send from our source has been requested, and the data is now loaded into a property on our window. We will
-        // now read the data out and write it to the receiver fd
+        // now read it out and give it to in_progress_send, which will write it to the receiver fd
 
         if (verbose_xwayland_logging_enabled())
         {
             log_info("Clipboard data from X11 client is ready");
         }
 
-        auto const completion = connection.read_property(
-            receiving_window,
-            connection._WL_SELECTION,
-            true, // delete
-            0x1fffffff, // length lifted from Weston
-            {[&](xcb_get_property_reply_t* reply)
-            {
-                if (reply->type == connection.INCR)
-                {
-                    log_error("Incremental copies from X11 are not supported");
-                    std::lock_guard<std::mutex> lock{mutex};
-                    in_progress_send.reset();
-                }
-                else
-                {
-                    auto const data_ptr = static_cast<uint8_t*>(xcb_get_property_value(reply));
-                    auto const data_size = xcb_get_property_value_length(reply);
-                    std::vector<uint8_t> data{data_ptr, data_ptr + data_size};
-                    add_data_to_in_progress_send(std::move(data), true);
-                }
-            },
-            [&](const std::string& error_message)
-            {
-                log_error("Error getting selection property: %s", error_message.c_str());
-                std::lock_guard<std::mutex> lock{mutex};
-                in_progress_send.reset();
-            }});
-
-        completion();
+        std::lock_guard<std::mutex> lock{mutex};
+        read_and_send_wl_selection_data(lock);
     }
 }
 
@@ -373,6 +346,20 @@ void mf::XWaylandClipboardSource::xfixes_selection_notify_event(xcb_xfixes_selec
     }
 }
 
+void mf::XWaylandClipboardSource::property_notify_event(xcb_window_t window, xcb_atom_t property)
+{
+    if (window != receiving_window || property != connection._WL_SELECTION)
+    {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock{mutex};
+    if (incremental_transfer_in_progress)
+    {
+        read_and_send_wl_selection_data(lock);
+    }
+}
+
 void mf::XWaylandClipboardSource::create_source(xcb_timestamp_t timestamp, std::vector<xcb_atom_t> const& targets)
 {
     std::set<xcb_atom_t> target_set{targets.begin(), targets.end()};
@@ -412,29 +399,71 @@ void mf::XWaylandClipboardSource::create_source(xcb_timestamp_t timestamp, std::
     clipboard->set_paste_source(source);
 }
 
-void mf::XWaylandClipboardSource::add_data_to_in_progress_send(std::vector<uint8_t>&& data, bool completes_send)
+void mf::XWaylandClipboardSource::read_and_send_wl_selection_data(std::lock_guard<std::mutex> const& lock)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    auto const completion = connection.read_property(
+        receiving_window,
+        connection._WL_SELECTION,
+        true, // delete
+        0x1fffffff, // length lifted from Weston
+        {[&](xcb_get_property_reply_t* reply)
+        {
+            if (reply->type == connection.INCR)
+            {
+                if (verbose_xwayland_logging_enabled())
+                {
+                    log_info("Initiating incremental data transfer from X11");
+                }
+                incremental_transfer_in_progress = true;
+            }
+            else
+            {
+                auto const data_ptr = static_cast<uint8_t*>(xcb_get_property_value(reply));
+                auto const data_size = xcb_get_property_value_length(reply);
+                add_data_to_in_progress_send(lock, data_ptr, data_size);
+            }
+        },
+        [&](const std::string& error_message)
+        {
+            log_error("Error getting selection property: %s", error_message.c_str());
+            in_progress_send.reset();
+        }});
+
+    completion();
+}
+
+void mf::XWaylandClipboardSource::add_data_to_in_progress_send(
+    std::lock_guard<std::mutex> const&,
+    uint8_t* data_ptr,
+    size_t data_size)
+{
 
     if (!in_progress_send)
     {
-        log_error("Can not send clipboard data from X11 because pending_send_fd is not set");
+        log_error("Can not send clipboard data from X11 because there is no send in progress");
         return;
     }
 
-    if (verbose_xwayland_logging_enabled())
+    if (data_size > 0)
     {
-        log_info("Writing %zu bytes of clipboard data from X11", data.size());
+        std::vector<uint8_t> data{data_ptr, data_ptr + data_size};
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_info("Writing %zu bytes of clipboard data from X11", data.size());
+        }
+
+        if (in_progress_send->add_data(std::move(data)))
+        {
+            // add_data() returns if it needs to be added to the dispatcher
+            dispatcher->add_watch(in_progress_send);
+        }
     }
 
-    if (in_progress_send->add_data(std::move(data)))
+    // Normal transfers are done after the first chunk, incremental transfers are done after a zero-size chunk
+    if (!incremental_transfer_in_progress || data_size == 0)
     {
-        dispatcher->add_watch(in_progress_send);
-    }
-
-    if (completes_send)
-    {
-        // The dispatcher will hold onto it until it's done
+        // in_progress_send may still be sending data on it's fd, but the dispatcher will hold onto it until it's done
         in_progress_send.reset();
+        incremental_transfer_in_progress = false;
     }
 }

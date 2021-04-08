@@ -341,7 +341,7 @@ Description: Display server for Ubuntu - Nvidia driver metapackage
  .
  This package depends on a full set of graphics and input drivers for Nvidia systems.
 
-Package: mir-platform-input-evdev7
+Package: mir-platform-input-evdev8
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -378,7 +378,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          mir-platform-graphics-gbm-kms19,
-         mir-platform-input-evdev7,
+         mir-platform-input-evdev8,
 Description: Display server for Ubuntu - gbm-kms driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -393,7 +393,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          mir-platform-graphics-eglstream-kms19,
-         mir-platform-input-evdev7,
+         mir-platform-input-evdev8,
 Description: Display server for Ubuntu - eglstream-kms driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -531,7 +531,7 @@ Description: Developer files for the Mir ABI-stable abstraction layer
  Contains header files required for development using the MirAL abstraction
  layer.
 
-Package: libmirwayland1
+Package: libmirwayland2
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -549,7 +549,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirwayland1 (= ${binary:Version}),
+Depends: libmirwayland2 (= ${binary:Version}),
          libmircore-dev (= ${binary:Version}),
          ${misc:Depends},
          libmirwayland-bin (= ${binary:Version})
