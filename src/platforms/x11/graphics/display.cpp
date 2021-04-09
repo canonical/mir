@@ -46,33 +46,6 @@ namespace geom=mir::geometry;
 
 namespace
 {
-geom::Size clip_to_display(Display *dpy, geom::Size requested_size)
-{
-    unsigned int screen_width, screen_height, uint_dummy;
-    int int_dummy;
-    Window window_dummy;
-    int const border = 150;
-
-    XGetGeometry(dpy, XDefaultRootWindow(dpy), &window_dummy, &int_dummy, &int_dummy,
-        &screen_width, &screen_height, &uint_dummy, &uint_dummy);
-
-    mir::log_info("Screen resolution = %dx%d", screen_width, screen_height);
-
-    auto const width  = std::min(requested_size.width,  geom::Width{screen_width-border});
-    auto const height = std::min(requested_size.height, geom::Height{screen_height-border});
-
-    geom::Size const result{width, height};
-
-    if (result != requested_size)
-    {
-        mir::log_info(" ... is smaller than the requested size (%dx%d) plus border (%d). Clipping to (%dx%d).",
-                      requested_size.width.as_uint32_t(), requested_size.height.as_uint32_t(), border,
-                      width.as_uint32_t(), height.as_uint32_t());
-    }
-
-    return result;
-}
-
 auto get_pixel_width(Display *dpy)
 {
     auto screen = XDefaultScreenOfDisplay(dpy);
@@ -239,7 +212,7 @@ mgx::Display::Display(::Display* x_dpy,
 
     for (auto const& requested_size : requested_sizes)
     {
-        auto actual_size = clip_to_display(x_dpy, requested_size.size);
+        auto actual_size = requested_size.size;
         auto window = std::make_unique<X11Window>(x_dpy, shared_egl.display(), actual_size, shared_egl.config());
         auto red_mask = window->red_mask();
         auto pf = (red_mask == 0xFF0000 ?
