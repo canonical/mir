@@ -199,6 +199,8 @@ private:
     bool configure_on_next_commit{true}; ///< If to send a .configure event at the end of the next or current commit
     std::deque<std::pair<uint32_t, OptionalSize>> inflight_configures;
     std::vector<wayland::Weak<XdgPopupStable>> popups; ///< We have to keep track of popups to adjust their offset
+
+    void send_configure(OptionalSize configure_size);
 };
 
 }
@@ -474,6 +476,11 @@ void mf::LayerSurfaceV1::configure()
         configure_size.height = opt_size.committed().height.value();
     }
 
+    send_configure(configure_size);
+}
+
+void mf::LayerSurfaceV1::send_configure(OptionalSize configure_size)
+{
     auto const serial = wl_display_next_serial(wl_client_get_display(wayland::LayerSurfaceV1::client));
     if (!inflight_configures.empty() && serial <= inflight_configures.back().first)
         BOOST_THROW_EXCEPTION(std::runtime_error("Generated invalid configure serial"));
@@ -634,9 +641,9 @@ void mf::LayerSurfaceV1::handle_commit()
 
 void mf::LayerSurfaceV1::handle_resize(
     std::experimental::optional<geom::Point> const& /*new_top_left*/,
-    geom::Size const& /*new_size*/)
+    geom::Size const& new_size)
 {
-    configure();
+    send_configure({new_size.width, new_size.height});
 }
 
 void mf::LayerSurfaceV1::handle_close_request()
