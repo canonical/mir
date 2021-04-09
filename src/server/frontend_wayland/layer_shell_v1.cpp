@@ -643,7 +643,6 @@ void mf::LayerSurfaceV1::handle_resize(
     std::experimental::optional<geom::Point> const& /*new_top_left*/,
     geom::Size const& new_size)
 {
-
     send_configure({new_size.width, new_size.height});
 }
 
