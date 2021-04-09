@@ -75,7 +75,7 @@ void mx::X11Resources::clear_output_for_window(Window win)
 
 void mx::X11Resources::with_output_for_window(
     Window win,
-    std::function<void(std::optional<VirtualOutput const*> output)> fn)
+    std::function<void(std::optional<VirtualOutput*> output)> fn)
 {
     std::lock_guard<std::mutex> lock{mutex};
     auto const iter = outputs.find(win);

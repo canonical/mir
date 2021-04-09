@@ -27,6 +27,10 @@
 
 namespace mir
 {
+namespace geometry
+{
+struct Size;
+}
 namespace graphics
 {
 struct DisplayConfigurationOutput;
@@ -49,6 +53,7 @@ public:
         VirtualOutput& operator=(VirtualOutput const&) = delete;
 
         virtual auto configuration() const -> graphics::DisplayConfigurationOutput const& = 0;
+        virtual void set_size(geometry::Size const& size) = 0;
     };
 
     auto get_conn() -> std::shared_ptr<::Display>;
@@ -57,7 +62,7 @@ public:
     void clear_output_for_window(Window win);
 
     /// X11Resources's mutex stays locked while the provided function runs
-    void with_output_for_window(Window win, std::function<void(std::optional<VirtualOutput const*> output)> fn);
+    void with_output_for_window(Window win, std::function<void(std::optional<VirtualOutput*> output)> fn);
 
     static X11Resources instance;
 

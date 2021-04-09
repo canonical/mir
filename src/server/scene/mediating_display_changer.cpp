@@ -392,10 +392,28 @@ ms::MediatingDisplayChanger::base_configuration()
 void ms::MediatingDisplayChanger::configure_for_hardware_change(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
-    server_action_queue->enqueue(
-        this,
-        [this, conf]
+    {
+        std::lock_guard<std::mutex> lg{pending_configuration_mutex};
+        // if pending_configuration is not null, there is already an action queued
+        bool const has_in_flight_action{pending_configuration};
+        pending_configuration = conf;
+        if (has_in_flight_action)
         {
+            return;
+        }
+    }
+
+    server_action_queue->enqueue(this, [this]
+        {
+            std::unique_lock<std::mutex> pending_lg{pending_configuration_mutex};
+            if (!pending_configuration)
+            {
+                return;
+            }
+            auto const conf = pending_configuration;
+            pending_configuration = {};
+            pending_lg.unlock();
+
             std::lock_guard<std::mutex> lg{configuration_mutex};
 
             auto existing_configuration = base_configuration_;
