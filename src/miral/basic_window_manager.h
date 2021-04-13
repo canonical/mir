@@ -299,8 +299,7 @@ private:
     void place_and_size(WindowInfo& root, Point const& new_pos, Size const& new_size);
     void place_attached_to_zone(
         WindowInfo& info,
-        mir::geometry::Rectangle const& application_zone,
-        mir::geometry::Rectangle const& output_area);
+        mir::geometry::Rectangle const& application_zone);
     void update_attached_and_fullscreen_sets(WindowInfo& window_info, MirWindowState state);
     void set_state(miral::WindowInfo& window_info, MirWindowState value);
     void remove_window(Application const& application, miral::WindowInfo const& info);

@@ -1214,8 +1214,7 @@ void miral::BasicWindowManager::place_and_size(WindowInfo& root, Point const& ne
 
 void miral::BasicWindowManager::place_attached_to_zone(
     WindowInfo& info,
-    Rectangle const& application_zone,
-    Rectangle const& output_area)
+    Rectangle const& application_zone)
 {
     Point top_left = info.window().top_left();
     Size size = info.window().size();
@@ -1249,16 +1248,16 @@ void miral::BasicWindowManager::place_attached_to_zone(
         if ((edges & mir_placement_gravity_west) &&
             (edges & mir_placement_gravity_east))
         {
-            placement_zone.top_left.x = output_area.top_left.x;
-            placement_zone.size.width = output_area.size.width;
+            placement_zone.top_left.x = application_zone.top_left.x;
+            placement_zone.size.width = application_zone.size.width;
             size.width = placement_zone.size.width;
         }
 
         if ((edges & mir_placement_gravity_north) &&
             (edges & mir_placement_gravity_south))
         {
-            placement_zone.top_left.y = output_area.top_left.y;
-            placement_zone.size.height = output_area.size.height;
+            placement_zone.top_left.y = application_zone.top_left.y;
+            placement_zone.size.height = application_zone.size.height;
             size.height = placement_zone.size.height;
         }
 
@@ -2699,7 +2698,7 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
 
         for (auto info_ptr : first_pass)
         {
-            place_attached_to_zone(*info_ptr, zone_rect, area->area);
+            place_attached_to_zone(*info_ptr, zone_rect);
 
             auto& info = *info_ptr;
             if (info.state() == mir_window_state_attached && info.exclusive_rect().is_set())
@@ -2715,7 +2714,7 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
 
         for (auto info_ptr : second_pass)
         {
-            place_attached_to_zone(*info_ptr, zone_rect, area->area);
+            place_attached_to_zone(*info_ptr, zone_rect);
         }
 
         area->application_zone.extents(zone_rect);
