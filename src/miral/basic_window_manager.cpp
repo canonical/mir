@@ -1280,7 +1280,7 @@ void miral::BasicWindowManager::place_attached_to_zone(
     }
 
     default:
-        fatal_error("BasicWindowManager::place_maximized() called for window not in a maximized or attached state");
+        log_error("BasicWindowManager::place_maximized() called for window not in a maximized or attached state");
     }
 
     // TODO: Maybe remove update_window and update only if the rect has changed?
@@ -1592,6 +1592,7 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
     {
         if (!info_for_hint.is_visible())
         {
+            update_attached_and_fullscreen_sets(info_for_hint, mir_window_state_restored);
             policy->advise_state_change(info_for_hint, mir_window_state_restored);
             info_for_hint.state(mir_window_state_restored);
             std::shared_ptr<scene::Surface> const& mir_surface = hint;
