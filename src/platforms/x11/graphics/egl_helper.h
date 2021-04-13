@@ -22,8 +22,10 @@
 #include <memory>
 #include <functional>
 
-#include <X11/Xlib.h>
+#include <xcb/xcb.h>
 #include <EGL/egl.h>
+
+typedef struct _XDisplay Display;
 
 namespace mir
 {
@@ -45,7 +47,8 @@ public:
 
     EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy);
     EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy, EGLContext shared_context);
-    EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy, Window win, EGLContext shared_context);
+    // Passing an XLib Display and an XCB window is, in fact, not a mistake
+    EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy, xcb_window_t win, EGLContext shared_context);
     ~EGLHelper() noexcept;
 
     bool swap_buffers() const;

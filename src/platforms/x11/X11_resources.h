@@ -19,11 +19,13 @@
 #ifndef MIR_X11_RESOURCES_H_
 #define MIR_X11_RESOURCES_H_
 
-#include <X11/Xlib.h>
+#include <xcb/xcb.h>
 #include <optional>
 #include <unordered_map>
 #include <functional>
 #include <mutex>
+
+typedef struct _XDisplay Display;
 
 namespace mir
 {
@@ -38,8 +40,16 @@ struct DisplayConfigurationOutput;
 
 namespace X
 {
+class X11Connection
+{
+public:
+    X11Connection(xcb_connection_t* conn, ::Display* xlib_dpy);
+    X11Connection(X11Connection const&) = delete;
+    ~X11Connection();
 
-int mir_x11_error_handler(Display* dpy, XErrorEvent* eev);
+    xcb_connection_t* const conn; ///< Used for most things
+    ::Display* const xlib_dpy; ///< Needed for EGL
+};
 
 class X11Resources
 {
@@ -56,20 +66,20 @@ public:
         virtual void set_size(geometry::Size const& size) = 0;
     };
 
-    auto get_conn() -> std::shared_ptr<::Display>;
+    auto get_conn() -> std::shared_ptr<X11Connection>;
 
-    void set_set_output_for_window(Window win, VirtualOutput* output);
-    void clear_output_for_window(Window win);
+    void set_set_output_for_window(xcb_window_t win, VirtualOutput* output);
+    void clear_output_for_window(xcb_window_t win);
 
     /// X11Resources's mutex stays locked while the provided function runs
-    void with_output_for_window(Window win, std::function<void(std::optional<VirtualOutput*> output)> fn);
+    void with_output_for_window(xcb_window_t win, std::function<void(std::optional<VirtualOutput*> output)> fn);
 
     static X11Resources instance;
 
 private:
     std::mutex mutex;
-    std::weak_ptr<::Display> connection;
-    std::unordered_map<Window, VirtualOutput*> outputs;
+    std::weak_ptr<X11Connection> connection;
+    std::unordered_map<xcb_window_t, VirtualOutput*> outputs;
 };
 
 }

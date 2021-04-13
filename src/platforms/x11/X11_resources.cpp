@@ -21,24 +21,25 @@
 
 #include "X11_resources.h"
 
+#include <X11/Xlib-xcb.h>
+
 namespace mg=mir::graphics;
 namespace mx = mir::X;
 
-//Force synchronous Xlib operation - for debugging
-//#define FORCE_SYNCHRONOUS
-
 mx::X11Resources mx::X11Resources::instance;
 
-int mx::mir_x11_error_handler(Display* dpy, XErrorEvent* eev)
+mx::X11Connection::X11Connection(xcb_connection_t* conn, ::Display* xlib_dpy)
+    : conn{conn},
+      xlib_dpy{xlib_dpy}
 {
-    char msg[80];
-    XGetErrorText(dpy, eev->error_code, msg, sizeof(msg));
-    log_error("X11 error %d (%s): request %d.%d\n",
-        eev->error_code, msg, eev->request_code, eev->minor_code);
-    return 0;
 }
 
-auto mx::X11Resources::get_conn() -> std::shared_ptr<::Display>
+mx::X11Connection::~X11Connection()
+{
+    XCloseDisplay(xlib_dpy); // calls xcb_disconnect() for us
+}
+
+auto mx::X11Resources::get_conn() -> std::shared_ptr<X11Connection>
 {
     std::lock_guard<std::mutex> lock{mutex};
 
@@ -47,34 +48,40 @@ auto mx::X11Resources::get_conn() -> std::shared_ptr<::Display>
 
     XInitThreads();
 
-    XSetErrorHandler(mir_x11_error_handler);
+    auto const xlib_dpy = XOpenDisplay(nullptr);
+    if (!xlib_dpy)
+    {
+        // Faled to open X11 display, probably X isn't running
+        return nullptr;
+    }
 
-    std::shared_ptr<::Display> new_conn{
-        XOpenDisplay(nullptr),
-        [](::Display* display) { if (display) XCloseDisplay(display); }};
+    auto const xcb_conn = XGetXCBConnection(xlib_dpy);
+    if (!xcb_conn || xcb_connection_has_error(xcb_conn))
+    {
+        log_error("XGetXCBConnection() failed");
+        XCloseDisplay(xlib_dpy); // closes XCB connection if needed
+        return nullptr;
+    }
 
-#ifdef FORCE_SYNCHRONOUS
-    if (new_conn)
-        XSynchronize(new_conn.get(), True);
-#endif
+    auto const new_conn = std::make_shared<X11Connection>(xcb_conn, xlib_dpy);
     connection = new_conn;
     return new_conn;
 }
 
-void mx::X11Resources::set_set_output_for_window(Window win, VirtualOutput* output)
+void mx::X11Resources::set_set_output_for_window(xcb_window_t win, VirtualOutput* output)
 {
     std::lock_guard<std::mutex> lock{mutex};
     outputs[win] = output;
 }
 
-void mx::X11Resources::clear_output_for_window(Window win)
+void mx::X11Resources::clear_output_for_window(xcb_window_t win)
 {
     std::lock_guard<std::mutex> lock{mutex};
     outputs.erase(win);
 }
 
 void mx::X11Resources::with_output_for_window(
-    Window win,
+    xcb_window_t win,
     std::function<void(std::optional<VirtualOutput*> output)> fn)
 {
     std::lock_guard<std::mutex> lock{mutex};

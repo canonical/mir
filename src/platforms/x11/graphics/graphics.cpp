@@ -83,10 +83,8 @@ mg::PlatformPriority probe_graphics_platform(
         mo::ProgramOption const& /*options*/)
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
-    auto dpy = XOpenDisplay(nullptr);
-    if (dpy)
+    if (mx::X11Resources::instance.get_conn())
     {
-        XCloseDisplay(dpy);
         return mg::PlatformPriority::hosted;
     }
     return mg::PlatformPriority::unsupported;

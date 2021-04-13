@@ -19,8 +19,15 @@
 #define MIR_INPUT_X_INPUT_PLATFORM_H_
 
 #include "mir/input/platform.h"
+#include "mir/geometry/size.h"
 #include <memory>
-#include <X11/Xlib.h>
+#include <functional>
+#include <vector>
+#include <xcb/xcb.h>
+
+struct xkb_context;
+struct xkb_keymap;
+struct xkb_state;
 
 namespace mir
 {
@@ -28,6 +35,11 @@ namespace mir
 namespace dispatch
 {
 class ReadableFd;
+}
+
+namespace X
+{
+class X11Connection;
 }
 
 namespace input
@@ -42,8 +54,8 @@ class XInputPlatform : public input::Platform
 public:
     explicit XInputPlatform(
         std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
-        std::shared_ptr<::Display> const& conn);
-    ~XInputPlatform() = default;
+        std::shared_ptr<mir::X::X11Connection> const& conn);
+    ~XInputPlatform();
 
     std::shared_ptr<dispatch::Dispatchable> dispatchable() override;
     void start() override;
@@ -52,14 +64,27 @@ public:
     void continue_after_config() override;
 
 private:
-    void process_input_event();
-    std::shared_ptr<::Display> x11_connection;
+    void process_input_events();
+    void process_input_event(xcb_generic_event_t* event);
+    /// Defer work until all pending events are processed. Should only be called while processing events.
+    void defer(std::function<void()>&& work);
+    /// Defer work until after processing the current event. Called with nullopt if the current event is the last
+    /// event that is currently pending (doesn't wait for new events). Should only be called while processing events.
+    /// Given function returns true if it consumes the event (otherwise the process_input_event() is then called).
+    void with_next_pending_event(std::function<bool(std::optional<xcb_generic_event_t*> event)>&& work);
+    std::shared_ptr<mir::X::X11Connection> const conn;
     std::shared_ptr<dispatch::ReadableFd> const xcon_dispatchable;
     std::shared_ptr<input::InputDeviceRegistry> const registry;
     std::shared_ptr<XInputDevice> const core_keyboard;
     std::shared_ptr<XInputDevice> const core_pointer;
+    xkb_context* const xkb_ctx;
+    xkb_keymap* const keymap;
+    xkb_state* const key_state;
     bool kbd_grabbed;
     bool ptr_grabbed;
+    geometry::Size current_size;
+    std::vector<std::function<void()>> deferred;
+    std::vector<std::function<bool(std::optional<xcb_generic_event_t*> event)>> next_pending_event_callbacks;
 };
 
 }

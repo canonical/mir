@@ -107,7 +107,7 @@ auto mgx::Platform::parse_output_sizes(std::string output_sizes) -> std::vector<
     return sizes;
 }
 
-mgx::Platform::Platform(std::shared_ptr<::Display> const& conn,
+mgx::Platform::Platform(std::shared_ptr<mir::X::X11Connection> const& conn,
                         std::vector<X11OutputConfig> output_sizes,
                         std::shared_ptr<mg::DisplayReport> const& report)
     : x11_connection{conn},

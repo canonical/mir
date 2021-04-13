@@ -19,6 +19,7 @@
 #include "input_platform.h"
 #include "input_device.h"
 
+#include "mir/c_memory.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_device_info.h"
@@ -28,17 +29,15 @@
 #define MIR_LOG_COMPONENT "x11-input"
 #include "mir/log.h"
 
-#include <X11/extensions/Xfixes.h>
-#include <X11/Xutil.h>
-#include <X11/Xlib.h>
 #include <linux/input.h>
 #include <inttypes.h>
 #include <signal.h>
 #include <stdio.h>
-
 #include <chrono>
-// Uncomment for verbose output with log_info.
-//#define MIR_ON_X11_INPUT_VERBOSE
+
+#include <xcb/xfixes.h>
+#include <xkbcommon/xkbcommon.h>
+#include <xkbcommon/xkbcommon-x11.h>
 
 // Due to a bug in Unity when keyboard is grabbed,
 // client cannot be resized. This helps in debugging.
@@ -52,7 +51,13 @@ namespace mx = mir::X;
 
 namespace
 {
-geom::Point get_pos_on_output(Window x11_window, int x, int y)
+auto const button_scroll_up = XCB_BUTTON_INDEX_4;
+auto const button_scroll_down = XCB_BUTTON_INDEX_5;
+auto const button_scroll_left = 6;
+auto const button_scroll_right = 7;
+auto const scroll_factor = 10;
+
+geom::Point get_pos_on_output(xcb_window_t x11_window, int x, int y)
 {
     geom::Point pos{x, y};
     mx::X11Resources::instance.with_output_for_window(
@@ -66,14 +71,14 @@ geom::Point get_pos_on_output(Window x11_window, int x, int y)
             else
             {
                 mir::log_warning(
-                    "X11 window %lu does not map to any known output, not applying input transformation",
+                    "X11 window %d does not map to any known output, not applying input transformation",
                     x11_window);
             }
         });
     return pos;
 }
 
-void window_resized(Window x11_window, geom::Size const& size)
+void window_resized(xcb_window_t x11_window, geom::Size const& size)
 {
     mx::X11Resources::instance.with_output_for_window(
         x11_window,
@@ -88,21 +93,39 @@ void window_resized(Window x11_window, geom::Size const& size)
 }
 
 mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
-                                    std::shared_ptr<::Display> const& conn) :
-    x11_connection{conn},
+                                    std::shared_ptr<mir::X::X11Connection> const& conn) :
+    conn{conn},
     xcon_dispatchable(std::make_shared<md::ReadableFd>(
-                                mir::Fd{mir::IntOwnedFd{XConnectionNumber(conn.get())}}, [this]()
-                                {
-                                    process_input_event();
-                                })),
+        mir::Fd{mir::IntOwnedFd{xcb_get_file_descriptor(conn->conn)}}, [this]()
+        {
+            process_input_events();
+        })),
     registry(input_device_registry),
     core_keyboard(std::make_shared<mix::XInputDevice>(
             mi::InputDeviceInfo{"x11-keyboard-device", "x11-key-dev-1", mi::DeviceCapability::keyboard})),
     core_pointer(std::make_shared<mix::XInputDevice>(
             mi::InputDeviceInfo{"x11-mouse-device", "x11-mouse-dev-1", mi::DeviceCapability::pointer})),
+    xkb_ctx{xkb_context_new(XKB_CONTEXT_NO_FLAGS)},
+    keymap{xkb_x11_keymap_new_from_device(
+        xkb_ctx,
+        conn->conn,
+        xkb_x11_get_core_keyboard_device_id(conn->conn),
+        XKB_KEYMAP_COMPILE_NO_FLAGS)},
+    key_state{xkb_x11_state_new_from_device(keymap, conn->conn, xkb_x11_get_core_keyboard_device_id(conn->conn))},
     kbd_grabbed{false},
     ptr_grabbed{false}
 {
+    if (!xkb_ctx || !keymap || !key_state)
+    {
+        log_error("Failed to set up X11 keymap");
+    }
+}
+
+mix::XInputPlatform::~XInputPlatform()
+{
+    xkb_state_unref(key_state);
+    xkb_keymap_unref(keymap);
+    xkb_context_unref(xkb_ctx);
 }
 
 void mix::XInputPlatform::start()
@@ -130,231 +153,292 @@ void mix::XInputPlatform::continue_after_config()
 {
 }
 
-void mix::XInputPlatform::process_input_event()
+void mix::XInputPlatform::process_input_events()
 {
-    while(XPending(x11_connection.get()))
+    if (xcb_connection_has_error(conn->conn))
     {
-        // This code is based on :
-        // https://tronche.com/gui/x/xlib/events/keyboard-pointer/keyboard-pointer.html
-        XEvent xev;
+        BOOST_THROW_EXCEPTION(std::runtime_error("XCB connection error"));
+    }
 
-        XNextEvent(x11_connection.get(), &xev);
-
+    while(auto const event = make_unique_cptr(xcb_poll_for_event(conn->conn)))
+    {
         if (core_keyboard->started() && core_pointer->started())
         {
-            switch (xev.type)
+            bool consumed{false};
+            auto const callbacks = std::move(next_pending_event_callbacks);
+            next_pending_event_callbacks.clear();
+            for (auto const& callback : callbacks)
             {
-#ifdef GRAB_KBD
-            case FocusIn:
+                if (callback(event.get()))
                 {
-                    auto const& xfiev = xev.xfocus;
-                    if (!kbd_grabbed && (xfiev.mode == NotifyNormal || xfiev.mode == NotifyWhileGrabbed))
-                    {
-                        XGrabKeyboard(xfiev.display, xfiev.window, True, GrabModeAsync, GrabModeAsync, CurrentTime);
-                        kbd_grabbed = true;
-                    }
-                    break;
+                    consumed = true;
                 }
-
-            case FocusOut:
-                {
-                    auto const& xfoev = xev.xfocus;
-                    if (kbd_grabbed && (xfoev.mode == NotifyNormal || xfoev.mode == NotifyWhileGrabbed))
-                    {
-                        XUngrabKeyboard(xfoev.display, CurrentTime);
-                        kbd_grabbed = false;
-                    }
-                    break;
-                }
-#endif
-            case EnterNotify:
-                {
-                    if (!ptr_grabbed && kbd_grabbed)
-                    {
-                        auto const& xenev = xev.xcrossing;
-                        XGrabPointer(xenev.display, xenev.window, True, 0, GrabModeAsync,
-                                     GrabModeAsync, None, None, CurrentTime);
-                        XFixesHideCursor(xenev.display, xenev.window);
-                        ptr_grabbed = true;
-                    }
-                    break;
-                }
-
-            case LeaveNotify:
-                {
-                    if (ptr_grabbed)
-                    {
-                        auto const& xlnev = xev.xcrossing;
-                        XUngrabPointer(xlnev.display, CurrentTime);
-                        XFixesShowCursor(xlnev.display, xlnev.window);
-                        ptr_grabbed = false;
-                    }
-                    break;
-                }
-
-            case KeyPress:
-            case KeyRelease:
-                {
-                    auto & xkev = xev.xkey;
-                    static const int STRMAX = 32;
-                    char str[STRMAX];
-                    KeySym keysym;
-
-                    // Ignore key repeats
-                    if (XEventsQueued(x11_connection.get(), QueuedAfterReading))
-                    {
-                        XEvent next_ev;
-                        XPeekEvent(x11_connection.get(), &next_ev);
-                        if (xev.type == KeyRelease &&
-                            next_ev.type == KeyPress &&
-                            xkev.time == next_ev.xkey.time &&
-                            xkev.keycode == next_ev.xkey.keycode)
-                        {
-                            // Looks like a key repeat, ignore
-                            XNextEvent(x11_connection.get(), &next_ev);
-                            break;
-                        }
-                    }
-
-#ifdef MIR_ON_X11_INPUT_VERBOSE
-                    mir::log_info("X11 key event :"
-                                  " type=%s, serial=%lu, send_event=%d, display=%p, window=%ld,"
-                                  " root=%ld, subwindow=%ld, time=%ld, x=%d, y=%d, x_root=%d,"
-                                  " y_root=%d, state=0x%0X, keycode=%d, same_screen=%d",
-                                  xkev.type == KeyPress ? "down" : "up", xkev.serial,
-                                  xkev.send_event, (void*)xkev.display, xkev.window, xkev.root,
-                                  xkev.subwindow, xkev.time, xkev.x, xkev.y, xkev.x_root,
-                                  xkev.y_root, xkev.state, xkev.keycode, xkev.same_screen);
-                    auto count =
-#endif
-                        XLookupString(&xkev, str, STRMAX, &keysym, NULL);
-
-                    auto const event_time =
-                        std::chrono::duration_cast<std::chrono::nanoseconds>(
-                            std::chrono::milliseconds{xkev.time});
-
-#ifdef MIR_ON_X11_INPUT_VERBOSE
-                    for (int i=0; i<count; i++)
-                        mir::log_info("buffer[%d]='%c'", i, str[i]);
-                    mir::log_info("Mir key event : "
-                                  "key_code=%ld, scan_code=%d, event_time=%" PRId64,
-                                  keysym, xkev.keycode-8, event_time.count());
-#endif
-
-                    if (xkev.type == KeyPress)
-                        core_keyboard->key_press(event_time, keysym, xkev.keycode - 8);
-                    else
-                        core_keyboard->key_release(event_time, keysym, xkev.keycode - 8);
-
-                    break;
-                }
-
-            case ButtonPress:
-            case ButtonRelease:
-                {
-                    auto const& xbev = xev.xbutton;
-                    auto const up = Button4, down = Button5, left = 6, right = 7;
-
-#ifdef MIR_ON_X11_INPUT_VERBOSE
-                    mir::log_info("X11 button event :"
-                                  " type=%s, serial=%lu, send_event=%d, display=%p, window=%ld,"
-                                  " root=%ld, subwindow=%ld, time=%ld, x=%d, y=%d, x_root=%d,"
-                                  " y_root=%d, state=0x%0X, button=%d, same_screen=%d",
-                                  xbev.type == ButtonPress ? "down" : "up", xbev.serial,
-                                  xbev.send_event, (void*)xbev.display, xbev.window, xbev.root,
-                                  xbev.subwindow, xbev.time, xbev.x, xbev.y, xbev.x_root,
-                                  xbev.y_root, xbev.state, xbev.button, xbev.same_screen);
-#endif
-                    if (xbev.type == ButtonRelease && xbev.button >= up && xbev.button <= right)
-                    {
-#ifdef MIR_ON_X11_INPUT_VERBOSE
-                        mir::log_info("Swallowed");
-#endif
-                        break;
-                    }
-                    auto const event_time =
-                        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{xbev.time});
-                    auto pos = get_pos_on_output(xbev.window, xbev.x, xbev.y);
-                    core_pointer->update_button_state(xbev.state);
-
-                    if (xbev.button >= up && xbev.button <= right)
-                    {  // scroll event
-                        core_pointer->pointer_motion(
-                            event_time,
-                            pos,
-                            geom::Displacement{xbev.button == right ? 10 : xbev.button == left ? -10 : 0,
-                                               xbev.button == down ? 10 : xbev.button == up ? -10 : 0});
-                    }
-                    else
-                    {
-                        if (xbev.type == ButtonPress)
-                            core_pointer->pointer_press(
-                                event_time,
-                                xbev.button,
-                                pos,
-                                geom::Displacement{0, 0});
-                        else
-                            core_pointer->pointer_release(
-                                event_time,
-                                xbev.button,
-                                pos,
-                                geom::Displacement{0, 0});
-                    }
-                    break;
-                }
-
-            case MotionNotify:
-                {
-                    auto const& xmev = xev.xmotion;
-
-#ifdef MIR_ON_X11_INPUT_VERBOSE
-                    mir::log_info("X11 motion event :"
-                                  " type=motion, serial=%lu, send_event=%d, display=%p, window=%ld,"
-                                  " root=%ld, subwindow=%ld, time=%ld, x=%d, y=%d, x_root=%d,"
-                                  " y_root=%d, state=0x%0X, is_hint=%s, same_screen=%d",
-                                  xmev.serial, xmev.send_event, (void*)xmev.display, xmev.window,
-                                  xmev.root, xmev.subwindow, xmev.time, xmev.x, xmev.y, xmev.x_root,
-                                  xmev.y_root, xmev.state, xmev.is_hint == NotifyNormal ? "no" : "yes", xmev.same_screen);
-#endif
-
-                    core_pointer->update_button_state(xmev.state);
-                    auto pos = get_pos_on_output(xmev.window, xmev.x, xmev.y);
-                    core_pointer->pointer_motion(
-                        std::chrono::milliseconds{xmev.time}, pos, geom::Displacement{0, 0});
-
-                    break;
-                }
-
-            case ConfigureNotify:
-                {
-                    auto const& xcev = xev.xconfigure;
-#ifdef MIR_ON_X11_INPUT_VERBOSE
-                    mir::log_info("Window size : %dx%d", xcev.width, xcev.height);
-#endif
-                    window_resized(xcev.window, geom::Size{xcev.width, xcev.height});
-                    break;
-                }
-
-            case MappingNotify:
-#ifdef MIR_ON_X11_INPUT_VERBOSE
-                mir::log_info("Keyboard mapping changed at server. Refreshing the cache.");
-#endif
-                XRefreshKeyboardMapping(&(xev.xmapping));
-                break;
-
-            case ClientMessage:
-                mir::log_info("Exiting");
-                kill(getpid(), SIGTERM);
-                break;
-
-            default:
-#ifdef MIR_ON_X11_INPUT_VERBOSE
-                mir::log_info("Uninteresting event : %08X", xev.type);
-#endif
-                break;
+            }
+            if (!consumed)
+            {
+                process_input_event(event.get());
             }
         }
         else
+        {
             mir::log_error("input event received with no sink to handle it");
+        }
     }
+
+    auto const callbacks = std::move(next_pending_event_callbacks);
+    next_pending_event_callbacks.clear();
+    for (auto const& callback : callbacks)
+    {
+        callback(std::nullopt);
+        // Ignore result because "consuming" a null event is meaningless
+    }
+
+    while (!deferred.empty())
+    {
+        auto const local_deferred = std::move(deferred);
+        deferred.clear();
+        for (auto const& callback : local_deferred)
+        {
+            callback();
+        }
+    }
+
+    xcb_flush(conn->conn);
+}
+
+void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
+{
+    switch (event->response_type & ~0x80)
+    {
+#ifdef GRAB_KBD
+    case XCB_FOCUS_IN:
+    {
+        auto const focus_in_ev = reinterpret_cast<xcb_focus_in_event_t*>(event);
+        if (!kbd_grabbed && (
+            focus_in_ev->mode == XCB_NOTIFY_MODE_NORMAL ||
+            focus_in_ev->mode == XCB_NOTIFY_MODE_WHILE_GRABBED))
+        {
+            auto const cookie = xcb_grab_keyboard(
+                conn->conn,
+                1,
+                focus_in_ev->event,
+                XCB_CURRENT_TIME,
+                XCB_GRAB_MODE_ASYNC,
+                XCB_GRAB_MODE_ASYNC);
+            kbd_grabbed = true;
+            defer([this, cookie]()
+                {
+                    auto const reply = make_unique_cptr(xcb_grab_keyboard_reply(conn->conn, cookie, nullptr));
+                    if (!reply || reply->status != XCB_GRAB_STATUS_SUCCESS)
+                    {
+                        kbd_grabbed = false;
+                    }
+                });
+        }
+    }   break;
+
+    case XCB_FOCUS_OUT:
+    {
+        auto const focus_out_ev = reinterpret_cast<xcb_focus_out_event_t*>(event);
+        if (kbd_grabbed && (
+            focus_out_ev->mode == XCB_NOTIFY_MODE_NORMAL ||
+            focus_out_ev->mode == XCB_NOTIFY_MODE_WHILE_GRABBED))
+        {
+            xcb_ungrab_keyboard(conn->conn, XCB_CURRENT_TIME);
+            kbd_grabbed = false;
+        }
+    }   break;
+#endif
+    case XCB_ENTER_NOTIFY:
+    {
+        if (!ptr_grabbed && kbd_grabbed)
+        {
+            auto const enter_ev = reinterpret_cast<xcb_enter_notify_event_t*>(event);
+            auto const cookie = xcb_grab_pointer(
+                conn->conn,
+                1,
+                enter_ev->event,
+                0,
+                XCB_GRAB_MODE_ASYNC,
+                XCB_GRAB_MODE_ASYNC,
+                XCB_NONE,
+                XCB_NONE,
+                XCB_CURRENT_TIME);
+            xcb_xfixes_hide_cursor(conn->conn, enter_ev->event);
+            ptr_grabbed = true;
+            defer([this, cookie]()
+                {
+                    auto const reply = make_unique_cptr(xcb_grab_pointer_reply(conn->conn, cookie, nullptr));
+                    if (!reply || reply->status != XCB_GRAB_STATUS_SUCCESS)
+                    {
+                        ptr_grabbed = false;
+                    }
+                });
+        }
+    }   break;
+
+    case XCB_LEAVE_NOTIFY:
+    {
+        if (ptr_grabbed)
+        {
+            auto const leave_ev = reinterpret_cast<xcb_leave_notify_event_t*>(event);
+            xcb_ungrab_pointer(conn->conn, XCB_CURRENT_TIME);
+            xcb_xfixes_show_cursor(conn->conn, leave_ev->event);
+            ptr_grabbed = false;
+        }
+        break;
+    }
+
+    case XCB_KEY_PRESS:
+    {
+        auto const press_ev = reinterpret_cast<xcb_key_press_event_t*>(event);
+
+        auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::milliseconds{press_ev->time});
+
+        xkb_keysym_t const* keysyms;
+        auto const num_keysyms = xkb_state_key_get_syms(key_state, press_ev->detail, &keysyms);
+        // num_keysyms is generally 1
+        for (int i = 0; i < num_keysyms; i++)
+        {
+            core_keyboard->key_press(event_time, keysyms[i], press_ev->detail - 8);
+        }
+        // it appears that keysyms should not be freed
+
+        // TODO: update XKB state?
+    }   break;
+
+    case XCB_KEY_RELEASE:
+    {
+        auto const release_ev = reinterpret_cast<xcb_key_release_event_t*>(event);
+
+        // Key repeats look like a release and an immediate press with the same timestamp. The only way to detect and
+        // discard them is by peaking at the next event.
+
+        with_next_pending_event([this, keycode = release_ev->detail, time = release_ev->time](auto next_event)
+            {
+                if (next_event && (next_event.value()->response_type & ~0x80) == XCB_KEY_PRESS)
+                {
+                    auto const press_ev = reinterpret_cast<xcb_key_press_event_t*>(next_event.value());
+                    if (press_ev->detail == keycode && press_ev->time == time)
+                    {
+                        // This event is a key repeat, so ignore it. Also consume the next event by returning true.
+                        return true;
+                    }
+                }
+
+                auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::milliseconds{time});
+
+                xkb_keysym_t const* keysyms;
+                auto const num_keysyms = xkb_state_key_get_syms(key_state, keycode, &keysyms);
+                // num_keysyms is generally 1
+                for (int i = 0; i < num_keysyms; i++)
+                {
+                    core_keyboard->key_release(event_time, keysyms[i], keycode - 8);
+                }
+                // it appears that keysyms should not be freed
+                return false; // do not consume next event, process it normally
+            });
+    }   break;
+
+    case XCB_BUTTON_PRESS:
+    {
+        auto const press_ev = reinterpret_cast<xcb_button_press_event_t*>(event);
+
+        auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::milliseconds{press_ev->time});
+        auto const pos = get_pos_on_output(press_ev->event, press_ev->event_x, press_ev->event_y);
+        core_pointer->update_button_state(press_ev->state);
+
+        switch (press_ev->detail)
+        {
+        case button_scroll_up:
+            core_pointer->pointer_motion(event_time, pos, {0, -scroll_factor});
+            break;
+
+        case button_scroll_down:
+            core_pointer->pointer_motion(event_time, pos, {0, scroll_factor});
+            break;
+
+        case button_scroll_left:
+            core_pointer->pointer_motion(event_time, pos, {-scroll_factor, 0});
+            break;
+
+        case button_scroll_right:
+            core_pointer->pointer_motion(event_time, pos, {scroll_factor, 0});
+            break;
+
+        default:
+            core_pointer->pointer_press(event_time, press_ev->detail, pos, {});
+        }
+    }   break;
+
+    case XCB_BUTTON_RELEASE:
+    {
+        auto const press_ev = reinterpret_cast<xcb_button_release_event_t*>(event);
+
+        core_pointer->update_button_state(press_ev->state);
+
+        switch (press_ev->detail)
+        {
+        case button_scroll_up:
+        case button_scroll_down:
+        case button_scroll_left:
+        case button_scroll_right:
+            break;
+
+        default:
+            auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::milliseconds{press_ev->time});
+            auto const pos = get_pos_on_output(press_ev->event, press_ev->event_x, press_ev->event_y);
+            core_pointer->pointer_release(event_time, press_ev->detail, pos, {});
+        }
+    }   break;
+
+    case XCB_MOTION_NOTIFY:
+    {
+        auto const motion_ev = reinterpret_cast<xcb_motion_notify_event_t*>(event);
+        core_pointer->update_button_state(motion_ev->state);
+        auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::milliseconds{motion_ev->time});
+        auto pos = get_pos_on_output(motion_ev->event, motion_ev->event_x, motion_ev->event_y);
+        core_pointer->pointer_motion(event_time, pos, {});
+    }   break;
+
+    case XCB_CONFIGURE_NOTIFY:
+    {
+        auto const config_ev = reinterpret_cast<xcb_configure_notify_event_t*>(event);
+        geom::Size const new_size{config_ev->width, config_ev->height};
+        if (new_size != current_size)
+        {
+            current_size = new_size;
+            window_resized(config_ev->event, new_size);
+        }
+    }   break;
+
+    // TODO: watch for changes in the keymap?
+
+    case XCB_CLIENT_MESSAGE:
+        // Assume this is a WM_DELETE_WINDOW message
+        log_info("Exiting");
+        kill(getpid(), SIGTERM);
+        break;
+
+    default:
+        break;
+    }
+}
+
+void mix::XInputPlatform::defer(std::function<void()>&& work)
+{
+    // We've presumably just fired off a request, we're goind to wait on later. Flush so the roudtrip starts now rather
+    // than when we get around to waiting on the reply.
+    xcb_flush(conn->conn);
+    deferred.push_back(std::move(work));
+}
+
+void mix::XInputPlatform::with_next_pending_event(std::function<bool(std::optional<xcb_generic_event_t*> event)>&& work)
+{
+    next_pending_event_callbacks.push_back(std::move(work));
 }
