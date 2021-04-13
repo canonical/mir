@@ -129,8 +129,8 @@ private:
 
     struct OptionalSize
     {
-        std::experimental::optional<geom::Width> width;
-        std::experimental::optional<geom::Height> height;
+        std::optional<geom::Width> width;
+        std::optional<geom::Height> height;
     };
 
     struct Margin
@@ -199,6 +199,9 @@ private:
     bool configure_on_next_commit{true}; ///< If to send a .configure event at the end of the next or current commit
     std::deque<std::pair<uint32_t, OptionalSize>> inflight_configures;
     std::vector<wayland::Weak<XdgPopupStable>> popups; ///< We have to keep track of popups to adjust their offset
+
+    std::optional<geometry::Width> width_requested = std::nullopt;
+    std::optional<geometry::Height> height_requested = std::nullopt;
 
     void send_configure(OptionalSize configure_size);
 };
@@ -453,7 +456,7 @@ void mf::LayerSurfaceV1::configure()
 {
     // TODO: Error if told to configure on an axis the window is not streatched along
 
-    OptionalSize configure_size{std::experimental::nullopt, std::experimental::nullopt};
+    OptionalSize configure_size{std::nullopt, std::nullopt};
     auto requested = unpadded_requested_size();
 
     if (anchors.committed().left && anchors.committed().right)
@@ -494,9 +497,10 @@ void mf::LayerSurfaceV1::send_configure(OptionalSize configure_size)
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 {
-    opt_size.set_pending(OptionalSize{
-        width  > 0 ? std::experimental::make_optional(geom::Width {width }) : std::experimental::nullopt,
-        height > 0 ? std::experimental::make_optional(geom::Height{height}) : std::experimental::nullopt});
+    width_requested = (width  > 0) ? std::optional<geometry::Width>{geom::Width{width}} : std::nullopt;
+    height_requested = (height > 0) ? std::optional<geometry::Height>{geom::Height{height}} : std::nullopt;
+
+    opt_size.set_pending(OptionalSize{width_requested, height_requested});
     inform_window_role_of_pending_placement();
     configure_on_next_commit = true;
 }
@@ -643,7 +647,11 @@ void mf::LayerSurfaceV1::handle_resize(
     std::experimental::optional<geom::Point> const& /*new_top_left*/,
     geom::Size const& new_size)
 {
-    send_configure({new_size.width, new_size.height});
+    send_configure({
+        width_requested.value_or(
+            new_size.width - horiz_padding(anchors.committed(), margin.committed())),
+        height_requested.value_or(
+            new_size.height - vert_padding(anchors.committed(), margin.committed()))});
 }
 
 void mf::LayerSurfaceV1::handle_close_request()
