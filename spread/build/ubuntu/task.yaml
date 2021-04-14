@@ -101,5 +101,8 @@ execute: |
     # change the build type
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_BUILD_TYPE=${BUILD_TYPE}" >> debian/opts.mk
 
+    # Quirk for the GitHub actions CI environment
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
+
     # build and run tests
     debian/rules build
