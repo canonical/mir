@@ -194,13 +194,15 @@ private:
     DoubleBuffered<uint32_t> exclusive_zone{0};
     DoubleBuffered<Anchors> anchors;
     DoubleBuffered<Margin> margin;
-    DoubleBuffered<OptionalSize> opt_size;
+    bool width_set_by_client{false}; ///< If the client gave a width on the last .set_size() request
+    bool height_set_by_client{false}; ///< If the client gave a width on the last .set_size() request
+    /// This is the size known to the client. It's pending value is set either by the .set_size() request(), or when
+    /// the client acks a configure.
+    DoubleBuffered<geometry::Size> client_size;
     DoubleBuffered<geometry::Displacement> offset;
     bool configure_on_next_commit{true}; ///< If to send a .configure event at the end of the next or current commit
     std::deque<std::pair<uint32_t, OptionalSize>> inflight_configures;
     std::vector<wayland::Weak<XdgPopupStable>> popups; ///< We have to keep track of popups to adjust their offset
-
-    void send_configure(OptionalSize configure_size);
 };
 
 }
@@ -417,19 +419,8 @@ auto mf::LayerSurfaceV1::unpadded_requested_size() const -> geom::Size
 
 auto mf::LayerSurfaceV1::inform_window_role_of_pending_placement()
 {
-    if (opt_size.pending().width)
-    {
-        auto width = opt_size.pending().width.value();
-        width += horiz_padding(anchors.pending(), margin.pending());
-        set_pending_width(width);
-    }
-
-    if (opt_size.pending().height)
-    {
-        auto height = opt_size.pending().height.value();
-        height += vert_padding(anchors.pending(), margin.pending());
-        set_pending_height(height);
-    }
+    set_pending_width(client_size.pending().width + horiz_padding(anchors.pending(), margin.pending()));
+    set_pending_height(client_size.pending().height + vert_padding(anchors.pending(), margin.pending()));
 
     offset.set_pending({
         anchors.pending().left ? margin.pending().left : geom::DeltaX{},
@@ -466,21 +457,16 @@ void mf::LayerSurfaceV1::configure()
         configure_size.height = requested.height;
     }
 
-    if (opt_size.committed().width)
+    if (width_set_by_client)
     {
-        configure_size.width = opt_size.committed().width.value();
+        configure_size.width = client_size.committed().width;
     }
 
-    if (opt_size.committed().height)
+    if (height_set_by_client)
     {
-        configure_size.height = opt_size.committed().height.value();
+        configure_size.height = client_size.committed().height;
     }
 
-    send_configure(configure_size);
-}
-
-void mf::LayerSurfaceV1::send_configure(OptionalSize configure_size)
-{
     auto const serial = wl_display_next_serial(wl_client_get_display(wayland::LayerSurfaceV1::client));
     if (!inflight_configures.empty() && serial <= inflight_configures.back().first)
         BOOST_THROW_EXCEPTION(std::runtime_error("Generated invalid configure serial"));
@@ -494,9 +480,18 @@ void mf::LayerSurfaceV1::send_configure(OptionalSize configure_size)
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 {
-    opt_size.set_pending(OptionalSize{
-        width  > 0 ? std::experimental::make_optional(geom::Width {width }) : std::experimental::nullopt,
-        height > 0 ? std::experimental::make_optional(geom::Height{height}) : std::experimental::nullopt});
+    width_set_by_client = width > 0;
+    height_set_by_client = height > 0;
+    auto pending = client_size.pending();
+    if (width > 0)
+    {
+        pending.width = geom::Width{width};
+    }
+    if (height > 0)
+    {
+        pending.height = geom::Height{height};
+    }
+    client_size.set_pending(pending);
     inform_window_role_of_pending_placement();
     configure_on_next_commit = true;
 }
@@ -573,11 +568,17 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
             "Could not find acked configure with serial " + std::to_string(serial)));
     }
 
-    opt_size.set_pending(inflight_configures.front().second);
+    auto const acked_configure_size = inflight_configures.front().second;
     inflight_configures.pop_front();
+
+    client_size.set_pending(geom::Size{
+        acked_configure_size.width.value_or(client_size.pending().width),
+        acked_configure_size.height.value_or(client_size.pending().height)});
 
     // Do NOT set configure_on_next_commit (as we do in the other case when opt_size is set)
     // We don't want to make the client acking one configure result in us sending another
+
+    inform_window_role_of_pending_placement();
 }
 
 void mf::LayerSurfaceV1::destroy()
@@ -598,7 +599,7 @@ void mf::LayerSurfaceV1::handle_commit()
     exclusive_zone.commit();
     anchors.commit();
     margin.commit();
-    opt_size.commit();
+    client_size.commit();
 
     if (offset.pending() != offset.committed())
     {
@@ -617,14 +618,14 @@ void mf::LayerSurfaceV1::handle_commit()
     // "You must set your anchor to opposite edges in the dimensions you omit; not doing so is a protocol error."
     bool const horiz_stretched = anchors.committed().left && anchors.committed().right;
     bool const vert_stretched = anchors.committed().top && anchors.committed().bottom;
-    if (!horiz_stretched && !opt_size.committed().width)
+    if (!horiz_stretched && !width_set_by_client)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
             Error::invalid_size,
             "Width may be unspecified only when surface is anchored to left and right edges"));
     }
-    if (!vert_stretched && !opt_size.committed().height)
+    if (!vert_stretched && !height_set_by_client)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource,
@@ -641,9 +642,9 @@ void mf::LayerSurfaceV1::handle_commit()
 
 void mf::LayerSurfaceV1::handle_resize(
     std::experimental::optional<geom::Point> const& /*new_top_left*/,
-    geom::Size const& new_size)
+    geom::Size const& /*new_size*/)
 {
-    send_configure({new_size.width, new_size.height});
+    configure();
 }
 
 void mf::LayerSurfaceV1::handle_close_request()

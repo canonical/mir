@@ -178,7 +178,7 @@ function (mir_discover_external_gtests)
   endif()
 
   file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND}\" -- ${TEST_COMMAND} --gtest_filter=-${EXPECTED_FAILURE_STRING} ${TEST_ARGS_STRING}\n")
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND} ${TEST_ARGS_STRING}\" --gtest-exclude ${EXPECTED_FAILURE_STRING} -- ${TEST_COMMAND} ${TEST_ARGS_STRING} \n")
 
   foreach (xfail IN LISTS TEST_EXPECTED_FAILURES)
     # Add a test verifying that the expected failures really do fail
@@ -193,7 +193,8 @@ function (mir_discover_external_gtests)
       set_tests_properties("${TEST_NAME}_${xfail}_fails" PROPERTIES WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY})
     endif()
 
-    # Unsupported for ptest, but this should be ok
+    file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+      "echo \"add_test\(${TEST_NAME}.${xfail}_fails ${CMAKE_BINARY_DIR}/mir_gtest/xfail_if_gtest_exists.sh ${TEST_COMMAND} ${xfail} ${TEST_ARGS_STRING})\"\n")
   endforeach ()
 endfunction()
 
