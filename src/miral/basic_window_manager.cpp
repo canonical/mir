@@ -1280,8 +1280,7 @@ void miral::BasicWindowManager::place_attached_to_zone(
     }
 
     default:
-        fatal_error("BasicWindowManager::place_attached_to_zone() called for window not in a maximized or attached state\n"
-                    "Please report here: https://github.com/MirServer/mir/issues/new");
+        fatal_error("BasicWindowManager::place_attached_to_zone() called for window not in a maximized or attached state");
     }
 
     // TODO: Maybe remove update_window and update only if the rect has changed?
