@@ -1395,18 +1395,23 @@ void miral::BasicWindowManager::place_and_size_for_state(
 
 void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo const& window_info)
 {
+    auto const state = window_info.state();
     auto const window = window_info.window();
 
-    fullscreen_surfaces.erase(window);
+    if (state == mir_window_state_fullscreen)
+    {
+        fullscreen_surfaces.insert(window);
+    }
+    else
+    {
+        fullscreen_surfaces.erase(window);
+    }
+
     for (auto& area : display_areas)
         area->attached_windows.erase(window);
 
-    switch (window_info.state())
+    switch (state)
     {
-    case mir_window_state_fullscreen:
-        fullscreen_surfaces.insert(window);
-        break;
-
     case mir_window_state_maximized:
     case mir_window_state_vertmaximized:
     case mir_window_state_horizmaximized:
