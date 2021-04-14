@@ -54,24 +54,6 @@ constexpr size_t length_of(T(&)[length])
     return length;
 }
 
-/// Convert any sort of ID into a human-like readable (and memorable) name for debugging
-/// 0 results in Null, and IDs that are close together often rhyme
-auto number_to_readable_name(uint32_t number) -> std::string
-{
-    static const char* beginnings[]{"N", "Al", "Aver", "B", "Ch", "D", "Ell", "Ev", "F", "G", "Gr", "H", "Iv", "J", "K",
-        "L", "M", "Mr ", "Ms ", "Mx ", "P", "Pr", "Qu", "R", "S", "T", "Tr", "V", "W", "Z"};
-    static const char* middles[]{"u", "a", "ai", "ay", "e", "ee", "el", "en", "i", "ing", "o", "oo", "ou", "or"};
-    static const char* ends[]{"ll", "b", "ck", "cy", "d", "dy", "gh", "gia", "r", "l", "le", "liet", "lie", "mer", "nd",
-        "ny", "rd", "sly", "son", "ss", "thy", "te", "tt", "xon", "y", "yton", "zz", ""};
-    std::stringstream ss;
-    ss << beginnings[number % length_of(beginnings)];
-    number /= length_of(beginnings);
-    ss << middles[number % length_of(middles)];
-    number /= length_of(middles);
-    ss << ends[number % length_of(ends)];
-    return ss.str();
-}
-
 auto xcb_error_to_string(int error) -> std::string
 {
     // see https://xcb.freedesktop.org/manual/group__XCB__Core__API.html#ga70a6bade94bd2824db552abcf5fbdbe3
@@ -538,9 +520,9 @@ auto mf::XCBConnection::window_debug_string(xcb_window_t window) const -> std::s
     else if (window == xcb_screen->root)
         return "root window";
     else if (is_ours(window))
-        return "our window " + number_to_readable_name(window);
+        return "our window " + std::to_string(window);
     else
-        return "window " + number_to_readable_name(window);
+        return "window " + std::to_string(window);
 }
 
 auto mf::XCBConnection::error_debug_string(xcb_generic_error_t* error) const -> std::string
