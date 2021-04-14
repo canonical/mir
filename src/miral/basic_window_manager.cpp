@@ -1592,10 +1592,13 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
     {
         if (!info_for_hint.is_visible())
         {
-            policy->advise_state_change(info_for_hint, mir_window_state_restored);
-            info_for_hint.state(mir_window_state_restored);
             std::shared_ptr<scene::Surface> const& mir_surface = hint;
-            mir_surface->configure(mir_window_attrib_state, mir_window_state_restored);
+            if (info_for_hint.state() == mir_window_state_minimized)
+            {
+                policy->advise_state_change(info_for_hint, mir_window_state_restored);
+                info_for_hint.state(mir_window_state_restored);
+                mir_surface->configure(mir_window_attrib_state, mir_window_state_restored);
+            }
             mir_surface->show();
         }
 
@@ -2683,6 +2686,8 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         /// The second pass will use the final application zone
         std::vector<WindowInfo*> first_pass;
         std::vector<WindowInfo*> second_pass;
+        // Windows that believe they are not attached
+        std::vector<WindowInfo*> unattached;
 
         for (auto const& window : area->attached_windows)
         {
@@ -2690,10 +2695,24 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
             {
                 auto& info = info_for(window);
 
-                if (info.state() == mir_window_state_attached && info.exclusive_rect().is_set())
-                    first_pass.push_back(&info);
-                else
+                switch (info.state())
+                {
+                case mir_window_state_attached:
+                    if (info.exclusive_rect().is_set())
+                    {
+                        first_pass.push_back(&info);
+                        break;
+                    }
+                    // fallthrough
+                case mir_window_state_maximized:
+                case mir_window_state_horizmaximized:
+                case mir_window_state_vertmaximized:
                     second_pass.push_back(&info);
+                    break;
+
+                default:
+                    unattached.push_back(&info);
+                }
             }
         }
 
@@ -2702,20 +2721,24 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
             place_attached_to_zone(*info_ptr, zone_rect, area->area);
 
             auto& info = *info_ptr;
-            if (info.state() == mir_window_state_attached && info.exclusive_rect().is_set())
-            {
-                auto edges = info.attached_edges();
-                Rectangle exclusive_rect{
-                    info.exclusive_rect().value().top_left + as_displacement(info.window().top_left()),
-                    info.exclusive_rect().value().size};
 
-                zone_rect = apply_exclusive_rect_to_application_zone(zone_rect, exclusive_rect, edges);
-            }
+            auto edges = info.attached_edges();
+            Rectangle exclusive_rect{
+                info.exclusive_rect().value().top_left + as_displacement(info.window().top_left()),
+                info.exclusive_rect().value().size};
+
+            zone_rect = apply_exclusive_rect_to_application_zone(zone_rect, exclusive_rect, edges);
         }
 
         for (auto info_ptr : second_pass)
         {
             place_attached_to_zone(*info_ptr, zone_rect, area->area);
+        }
+
+        for (auto info_ptr : unattached)
+        {
+            puts("=============> SOMETHING WENT WRONG <=============");
+            update_attached_and_fullscreen_sets(*info_ptr, info_ptr->state());
         }
 
         area->application_zone.extents(zone_rect);
