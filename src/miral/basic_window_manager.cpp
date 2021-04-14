@@ -1393,10 +1393,9 @@ void miral::BasicWindowManager::place_and_size_for_state(
     modifications.size() = rect.size;
 }
 
-void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo& window_info)
+void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo const& window_info)
 {
     auto const window = window_info.window();
-    auto const area = display_area_for(window_info);
 
     fullscreen_surfaces.erase(window);
     for (auto& area : display_areas)
