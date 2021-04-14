@@ -164,7 +164,7 @@ auto miral::BasicWindowManager::add_surface(
     for_each_workspace_containing(parent,
         [&](std::shared_ptr<miral::Workspace> const& workspace) { add_tree_to_workspace(window, workspace); });
 
-    update_attached_and_fullscreen_sets(window_info, window_info.state());
+    update_attached_and_fullscreen_sets(window_info);
 
     if (window_info.state() == mir_window_state_attached)
         update_application_zones_and_attached_windows();
@@ -1170,7 +1170,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     }
     else if (modifications.output_id().is_set())
     {
-        update_attached_and_fullscreen_sets(window_info, window_info.state());
+        update_attached_and_fullscreen_sets(window_info);
         application_zones_need_update = true;
     }
 
@@ -1393,7 +1393,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
     modifications.size() = rect.size;
 }
 
-void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo& window_info, MirWindowState state)
+void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo& window_info)
 {
     auto const window = window_info.window();
     auto const area = display_area_for(window_info);
@@ -1402,7 +1402,7 @@ void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo& 
     for (auto& area : display_areas)
         area->attached_windows.erase(window);
 
-    switch (state)
+    switch (window_info.state())
     {
     case mir_window_state_fullscreen:
         fullscreen_surfaces.insert(window);
@@ -1428,8 +1428,6 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
     {
         return;
     }
-
-    update_attached_and_fullscreen_sets(window_info, value);
 
     auto const window = window_info.window();
     auto const mir_surface = std::shared_ptr<scene::Surface>(window);
@@ -1512,6 +1510,8 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
             select_active_window(window);
         }
     }
+
+    update_attached_and_fullscreen_sets(window_info);
 }
 
 void miral::BasicWindowManager::update_event_timestamp(MirKeyboardEvent const* kev)
@@ -2653,7 +2653,7 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         for (auto const& window : area->attached_windows)
         {
             auto info{info_for(window)};
-            update_attached_and_fullscreen_sets(info, info.state());
+            update_attached_and_fullscreen_sets(info);
         }
 
         // Tell the policy about removed application zones
