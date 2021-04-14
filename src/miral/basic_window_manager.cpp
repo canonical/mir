@@ -2690,10 +2690,24 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
             {
                 auto& info = info_for(window);
 
-                if (info.state() == mir_window_state_attached && info.exclusive_rect().is_set())
-                    first_pass.push_back(&info);
-                else
+                switch (info.state())
+                {
+                case mir_window_state_attached:
+                    if (info.exclusive_rect().is_set())
+                    {
+                        first_pass.push_back(&info);
+                        break;
+                    }
+                    // fallthrough
+                case mir_window_state_maximized:
+                case mir_window_state_horizmaximized:
+                case mir_window_state_vertmaximized:
                     second_pass.push_back(&info);
+                    break;
+
+                default:
+                    break;
+                }
             }
         }
 
@@ -2702,15 +2716,11 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
             place_attached_to_zone(*info_ptr, zone_rect, area->area);
 
             auto& info = *info_ptr;
-            if (info.state() == mir_window_state_attached && info.exclusive_rect().is_set())
-            {
-                auto edges = info.attached_edges();
-                Rectangle exclusive_rect{
-                    info.exclusive_rect().value().top_left + as_displacement(info.window().top_left()),
-                    info.exclusive_rect().value().size};
+            Rectangle exclusive_rect{
+                info.exclusive_rect().value().top_left + as_displacement(info.window().top_left()),
+                info.exclusive_rect().value().size};
 
-                zone_rect = apply_exclusive_rect_to_application_zone(zone_rect, exclusive_rect, edges);
-            }
+            zone_rect = apply_exclusive_rect_to_application_zone(zone_rect, exclusive_rect, info.attached_edges());
         }
 
         for (auto info_ptr : second_pass)
