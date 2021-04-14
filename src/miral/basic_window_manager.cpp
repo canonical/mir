@@ -1592,10 +1592,13 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
     {
         if (!info_for_hint.is_visible())
         {
-            policy->advise_state_change(info_for_hint, mir_window_state_restored);
-            info_for_hint.state(mir_window_state_restored);
             std::shared_ptr<scene::Surface> const& mir_surface = hint;
-            mir_surface->configure(mir_window_attrib_state, mir_window_state_restored);
+            if (info_for_hint.state() == mir_window_state_minimized)
+            {
+                policy->advise_state_change(info_for_hint, mir_window_state_restored);
+                info_for_hint.state(mir_window_state_restored);
+                mir_surface->configure(mir_window_attrib_state, mir_window_state_restored);
+            }
             mir_surface->show();
         }
 
