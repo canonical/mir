@@ -67,11 +67,7 @@ class BufferAllocator:
     public graphics::GraphicBufferAllocator
 {
 public:
-    BufferAllocator(
-        Display const& output,
-        gbm_device* device,
-        BypassOption bypass_option,
-        BufferImportMethod const buffer_import_method);
+    explicit BufferAllocator(Display const& output);
 
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
@@ -87,19 +83,12 @@ public:
         std::shared_ptr<Executor> wayland_executor,
         std::function<void()>&& on_consumed) -> std::shared_ptr<Buffer> override;
 private:
-    std::shared_ptr<Buffer> alloc_hardware_buffer(
-        graphics::BufferProperties const& buffer_properties);
-
     std::shared_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<Executor> wayland_executor;
     std::unique_ptr<LinuxDmaBufUnstable, std::function<void(LinuxDmaBufUnstable*)>> dmabuf_extension;
-    gbm_device* const device;
     std::shared_ptr<EGLExtensions> const egl_extensions;
     bool egl_display_bound{false};
-
-    BypassOption const bypass_option;
-    BufferImportMethod const buffer_import_method;
 };
 
 }

@@ -91,11 +91,7 @@ protected:
         display = platform->create_display(
             std::make_shared<mtd::NullDisplayConfigurationPolicy>(),
             std::make_shared<mtd::NullGLConfig>());
-        allocator.reset(new mgg::BufferAllocator(
-            *display,
-            platform->gbm->device,
-            mgg::BypassOption::allowed,
-            mgg::BufferImportMethod::gbm_native_pixmap));
+        allocator.reset(new mgg::BufferAllocator(*display));
     }
 
     // Defaults

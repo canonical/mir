@@ -47,11 +47,7 @@ mir::Fd drm_fd_from_authentication(mg::PlatformAuthentication& authenticator)
 }
 
 mgg::GBMPlatform::GBMPlatform(
-    BypassOption bypass_option,
-    BufferImportMethod import_method,
     std::shared_ptr<mg::PlatformAuthentication> const& platform_authentication) :
-    bypass_option(bypass_option),
-    import_method(import_method),
     platform_authentication(platform_authentication),
     gbm{std::make_shared<mgg::helpers::GBMHelper>(drm_fd_from_authentication(*platform_authentication))},
     auth{std::make_shared<mgg::NestedAuthentication>(platform_authentication)}
@@ -62,12 +58,8 @@ mgg::GBMPlatform::GBMPlatform(
 }
 
 mgg::GBMPlatform::GBMPlatform(
-    BypassOption bypass_option,
-    BufferImportMethod import_method,
     std::shared_ptr<mir::udev::Context> const& udev,
     std::shared_ptr<mgg::helpers::DRMHelper> const& drm) :
-    bypass_option(bypass_option),
-    import_method(import_method),
     udev(udev),
     drm(drm),
     gbm{std::make_shared<mgg::helpers::GBMHelper>(drm->fd)},
@@ -78,7 +70,7 @@ mgg::GBMPlatform::GBMPlatform(
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allocator(
     Display const& output)
 {
-    return make_module_ptr<mgg::BufferAllocator>(output, gbm->device, bypass_option, import_method);
+    return make_module_ptr<mgg::BufferAllocator>(output);
 }
 
 MirServerEGLNativeDisplayType mgg::GBMPlatform::egl_native_display() const
