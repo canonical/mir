@@ -2712,6 +2712,7 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
                     break;
 
                 default:
+                    log_error("Window in attached_windows is not attached or maximized");
                     break;
                 }
             }
