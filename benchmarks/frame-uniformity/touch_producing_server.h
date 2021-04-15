@@ -39,7 +39,7 @@ public:
     };
     TouchTimings touch_timings();
     
-    std::shared_ptr<mir::graphics::Platform> the_graphics_platform() override;
+    std::vector<std::shared_ptr<mir::graphics::DisplayPlatform>> const& the_display_platforms() override;
 
     ~TouchProducingServer();    
 private:
@@ -56,7 +56,7 @@ private:
     std::chrono::high_resolution_clock::time_point touch_start_time;
     std::chrono::high_resolution_clock::time_point touch_end_time;
     
-    std::shared_ptr<mir::graphics::Platform> graphics_platform;
+    std::vector<std::shared_ptr<mir::graphics::DisplayPlatform>> display_platforms;
     
     void synthesize_event_at(mir::geometry::Point const& point);
     void thread_function();

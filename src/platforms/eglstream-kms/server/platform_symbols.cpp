@@ -84,14 +84,14 @@ EGLDeviceEXT find_device()
 }
 }
 
-mir::UniqueModulePtr<mg::Platform> create_host_platform(
+mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mir::logging::Logger> const& logger)
 {
-    mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
+    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
 
     if (options->is_set(mo::debug_opt))
     {
@@ -101,6 +101,16 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     return mir::make_module_ptr<mge::Platform>(
         std::make_shared<mge::RenderingPlatform>(),
         std::make_shared<mge::DisplayPlatform>(*console, find_device(), display_report));
+}
+
+auto create_rendering_platform(
+    mo::Option const&,
+    mir::EmergencyCleanupRegistry&,
+    std::shared_ptr<mir::logging::Logger> const&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
+{
+    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
+
+    return mir::make_module_ptr<mge::RenderingPlatform>();
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& /*config*/)

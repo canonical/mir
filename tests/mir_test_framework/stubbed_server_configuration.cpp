@@ -93,14 +93,24 @@ mtf::StubbedServerConfiguration::StubbedServerConfiguration(
 
 mtf::StubbedServerConfiguration::~StubbedServerConfiguration() = default;
 
-std::shared_ptr<mg::Platform> mtf::StubbedServerConfiguration::the_graphics_platform()
+auto mtf::StubbedServerConfiguration::the_display_platforms()
+-> std::vector<std::shared_ptr<graphics::DisplayPlatform>> const&
 {
-    if (!graphics_platform)
+    if (display_platform.empty())
     {
-        graphics_platform = mtf::make_stubbed_server_graphics_platform(display_rects);
+        display_platform.push_back(mtf::make_stubbed_display_platform(display_rects));
     }
+    return display_platform;
+}
 
-    return graphics_platform;
+auto mtf::StubbedServerConfiguration::the_rendering_platforms()
+    -> std::vector<std::shared_ptr<graphics::RenderingPlatform>> const&
+{
+    if (rendering_platform.empty())
+    {
+        rendering_platform.push_back(mtf::make_stubbed_rendering_platform());
+    }
+    return rendering_platform;
 }
 
 std::shared_ptr<mir::renderer::RendererFactory> mtf::StubbedServerConfiguration::the_renderer_factory()

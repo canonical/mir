@@ -118,7 +118,7 @@ mgx::Platform::Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resourc
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator(
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgx::RenderingPlatform::create_buffer_allocator(
     mg::Display const& output)
 {
     return make_module_ptr<mgx::BufferAllocator>(output);

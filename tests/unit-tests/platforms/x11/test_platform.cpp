@@ -65,7 +65,7 @@ public:
     {
     }
 
-    std::shared_ptr<mg::Platform> create_platform()
+    std::shared_ptr<mg::DisplayPlatform> create_platform()
     {
         return std::make_shared<mg::X::Platform>(
             std::make_shared<mtd::MockX11Resources>(),

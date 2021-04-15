@@ -24,21 +24,16 @@
 
 #include "mir/test/doubles/null_platform.h"
 
-class VsyncSimulatingPlatform : public mir::test::doubles::NullPlatform
+class VsyncSimulatingPlatform : public mir::graphics::DisplayPlatform
 {
 public:
     VsyncSimulatingPlatform(mir::geometry::Size const& output_size, int vsync_rate_in_hz);
     ~VsyncSimulatingPlatform() = default;
     
-    mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator> create_buffer_allocator(
-        mir::graphics::Display const& output);
-    
     mir::UniqueModulePtr<mir::graphics::Display> create_display(
         std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const& initial_conf_policy,
-        std::shared_ptr<mir::graphics::GLConfig> const& gl_config);
+        std::shared_ptr<mir::graphics::GLConfig> const& gl_config) override;
     
-    mir::UniqueModulePtr<mir::graphics::PlatformIpcOperations> make_ipc_operations() const;
-
 private:
     mir::geometry::Size const output_size;
     int const vsync_rate_in_hz;

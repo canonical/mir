@@ -107,7 +107,7 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
 }
 
 auto mi::input_platform_from_graphics_module(
-    graphics::Platform const& graphics_platform,
+    SharedLibrary const& graphics_platform,
     options::Option const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
     std::shared_ptr<InputDeviceRegistry> const& device_registry,
@@ -117,11 +117,7 @@ auto mi::input_platform_from_graphics_module(
 {
     try
     {
-        // Yes, this is dirty code that assumes the object layout. Sorry!
-        auto* const vtab = (void*&)(graphics_platform);
-        SharedLibrary const platform_module{detail::libname_impl(vtab)};
-
-        return create_input_platform(platform_module, options, emergency_cleanup, device_registry, console, input_report);
+        return create_input_platform(graphics_platform, options, emergency_cleanup, device_registry, console, input_report);
     }
     catch (std::runtime_error const&)
     {

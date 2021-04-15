@@ -64,7 +64,8 @@ extern char const* const off_opt_value;
 extern char const* const log_opt_value;
 extern char const* const lttng_opt_value;
 
-extern char const* const platform_graphics_lib;
+extern char const* const platform_display_libs;
+extern char const* const platform_rendering_libs;
 extern char const* const platform_input_lib;
 extern char const* const platform_path;
 

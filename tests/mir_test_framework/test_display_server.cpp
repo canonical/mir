@@ -60,7 +60,9 @@ miral::TestDisplayServer::TestDisplayServer(int argc, char const** argv) :
     runner{argc, argv}
 {
     unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing server
-    add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
+    add_to_environment("MIR_SERVER_PLATFORM_PATH", mtf::server_platform_path().c_str());
+    add_to_environment("MIR_SERVER_PLATFORM_DISPLAY_LIBS", "mir:stub-graphics");
+    add_to_environment("MIR_SERVER_PLATFORM_RENDERING_LIBS", "mir:stub-graphics");
     add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     add_to_environment("MIR_SERVER_NO_FILE", "on");
     add_to_environment("MIR_SERVER_CONSOLE_PROVIDER", "none");

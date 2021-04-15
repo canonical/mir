@@ -4,6 +4,8 @@ if (MIR_ENABLE_WLCS_TESTS)
   add_subdirectory(wayland)
 endif()
 
+add_subdirectory(platforms)
+
 set(
   SOURCES
 
@@ -78,6 +80,12 @@ endif()
 mir_add_wrapped_executable(mir_acceptance_tests NOINSTALL
 
   ${SOURCES}
+)
+
+target_link_libraries(
+  mir_acceptance_tests
+
+  mirplatformtest
 )
 
 if (MIR_USE_PRECOMPILED_HEADERS)

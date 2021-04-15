@@ -1,7 +1,5 @@
 add_library(mirplatformgraphicsrpidispmanxobjects OBJECT
   platform_symbols.cpp
-  platform.cpp
-  platform.h
   display_platform.cpp
   display_platform.h
   rendering_platform.cpp
@@ -12,7 +10,9 @@ add_library(mirplatformgraphicsrpidispmanxobjects OBJECT
   display.h
   display_buffer.cpp
   display_buffer.h
-  helpers.h helpers.cpp)
+  helpers.h
+  helpers.cpp
+)
 
 target_include_directories(
   mirplatformgraphicsrpidispmanxobjects

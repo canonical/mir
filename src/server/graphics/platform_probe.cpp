@@ -48,23 +48,36 @@ auto mir::graphics::probe_module(
 }
 
 
-std::shared_ptr<mir::SharedLibrary>
-mir::graphics::module_for_device(
+auto mir::graphics::modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
     mir::options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console)
+    -> std::vector<std::shared_ptr<SharedLibrary>>
 {
     mir::graphics::PlatformPriority best_priority_so_far = mir::graphics::unsupported;
-    std::shared_ptr<mir::SharedLibrary> best_module_so_far;
+    std::vector<std::shared_ptr<SharedLibrary>> best_modules_so_far;
     for (auto& module : modules)
     {
         try
         {
+            /* TODO: We will (pretty shortly) need to have some concept of binding-a-device.
+             * What we really want to do here is:
+             * foreach device in system:
+             *   find best driver for device
+             *
+             * For now, hopefully “load each platform that claims to best support (at least some)
+             * device” will work.
+             */
             auto module_priority = probe_module(*module, options, console);
             if (module_priority > best_priority_so_far)
             {
                 best_priority_so_far = module_priority;
-                best_module_so_far = module;
+                best_modules_so_far.clear();
+                best_modules_so_far.push_back(module);
+            }
+            else if (module_priority == best_priority_so_far)
+            {
+                best_modules_so_far.push_back(module);
             }
         }
         catch (std::runtime_error const&)
@@ -73,7 +86,7 @@ mir::graphics::module_for_device(
     }
     if (best_priority_so_far > mir::graphics::unsupported)
     {
-        return best_module_so_far;
+        return best_modules_so_far;
     }
-    BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find platform for current system"}));
+    BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find any platforms for current system"}));
 }

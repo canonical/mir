@@ -41,15 +41,24 @@ mir::ModuleProperties const description = {
 };
 }
 
-mir::UniqueModulePtr<mg::Platform> create_host_platform(
+mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const& /*console*/,
     std::shared_ptr<mg::DisplayReport> const& report,
     std::shared_ptr<mir::logging::Logger> const&)
 {
-    mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
+    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
     return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report);
+}
+
+auto create_rendering_platform(
+    mo::Option const&,
+    mir::EmergencyCleanupRegistry&,
+    std::shared_ptr<mir::logging::Logger> const&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
+{
+    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
+    return mir::make_module_ptr<mgw::RenderingPlatform>();
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)

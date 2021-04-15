@@ -100,34 +100,6 @@ mir::UniqueModulePtr<mg::Display> mtf::StubGraphicPlatform::create_display(
 
 namespace
 {
-struct GuestPlatformAdapter : mg::Platform
-{
-    GuestPlatformAdapter(
-        std::shared_ptr<mg::PlatformAuthentication> const& context,
-        std::shared_ptr<mg::Platform> const& adaptee) :
-        context(context),
-        adaptee(adaptee)
-    {
-    }
-
-    mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator> create_buffer_allocator(
-        mg::Display const& output) override
-    {
-        return adaptee->create_buffer_allocator(output);
-    }
-
-    mir::UniqueModulePtr<mg::Display> create_display(
-        std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
-        std::shared_ptr<mg::GLConfig> const& gl_config) override
-    {
-        return adaptee->create_display(initial_conf_policy, gl_config);
-    }
-
-    std::shared_ptr<mg::PlatformAuthentication> const context;
-    std::shared_ptr<mg::Platform> const adaptee;
-};
-
-std::weak_ptr<mg::Platform> the_graphics_platform{};
 std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
 }
 
@@ -137,35 +109,49 @@ std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
 // (We don't want a warning for doing this intentionally.)
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #endif
-extern "C" std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::Rectangle> const& display_rects)
+extern "C" std::shared_ptr<mtf::StubGraphicPlatform> create_stub_platform(std::vector<geom::Rectangle> const& display_rects)
 {
     return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
+}
+
+extern "C" std::shared_ptr<mg::RenderingPlatform> create_stub_render_platform()
+{
+    static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
+    return std::make_shared<mtf::StubGraphicPlatform>(default_display_rects);
 }
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
 
-mir::UniqueModulePtr<mg::Platform> create_host_platform(
+mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const&,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mir::logging::Logger> const&)
 {
-    mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
-    std::shared_ptr<mg::Platform> result{};
+    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
 
     if (auto const display_rects = std::move(chosen_display_rects))
     {
-        result = create_stub_platform(*display_rects);
+        return mir::make_module_ptr<mtf::StubGraphicPlatform>(*display_rects);
     }
     else
     {
         static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
-        result = create_stub_platform(default_display_rects);
+        return mir::make_module_ptr<mtf::StubGraphicPlatform>(default_display_rects);
     }
-    the_graphics_platform = result;
-    return mir::make_module_ptr<GuestPlatformAdapter>(nullptr, result);
+}
+
+mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
+    mo::Option const&,
+    mir::EmergencyCleanupRegistry&,
+    std::shared_ptr<mir::logging::Logger> const&)
+{
+    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
+
+    static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
+    return mir::make_module_ptr<mtf::StubGraphicPlatform>(default_display_rects);
 }
 
 void add_graphics_platform_options(

@@ -60,7 +60,8 @@ char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
 char const* const mo::lttng_opt_value = "lttng";
 
-char const* const mo::platform_graphics_lib = "platform-graphics-lib";
+char const* const mo::platform_display_libs = "platform-display-libs";
+char const* const mo::platform_rendering_libs = "platform-rendering-libs";
 char const* const mo::platform_input_lib = "platform-input-lib";
 char const* const mo::platform_path = "platform-path";
 
@@ -150,8 +151,10 @@ mo::DefaultConfiguration::DefaultConfiguration(
 
     add_options()
         (arw_server_socket_opt, "Make socket filename globally rw (equivalent to chmod a=rw)")
-        (platform_graphics_lib, po::value<std::string>(),
-            "Library to use for platform graphics support (default: autodetect)")
+        (platform_display_libs, po::value<std::string>(),
+            "Libraries to use for platform output support (default: autodetect)")
+        (platform_rendering_libs, po::value<std::string>(),
+            "Libraries to use for platform rendering support (default: autodetect)")
         (platform_input_lib, po::value<std::string>(),
             "Library to use for platform input support (default: input-stub.so)")
         (platform_path, po::value<std::string>()->default_value(MIR_SERVER_PLATFORM_PATH),
@@ -220,9 +223,6 @@ void mo::DefaultConfiguration::add_platform_options()
     namespace po = boost::program_options;
     po::options_description program_options;
     program_options.add_options()
-        (platform_graphics_lib,
-         po::value<std::string>(), "");
-    program_options.add_options()
         (platform_path,
          po::value<std::string>()->default_value(MIR_SERVER_PLATFORM_PATH),
         "");
@@ -231,30 +231,15 @@ void mo::DefaultConfiguration::add_platform_options()
 
     try
     {
-        auto env_libname = ::getenv("MIR_SERVER_PLATFORM_GRAPHICS_LIB");
         auto env_libpath = ::getenv("MIR_SERVER_PLATFORM_PATH");
 
         platform_libraries =
-            [env_libname, env_libpath, &options]()
+            [env_libpath, &options]()
             {
-                if (options.is_set(platform_graphics_lib))
-                {
-                    return std::vector<std::shared_ptr<mir::SharedLibrary>>{
-                        std::make_shared<mir::SharedLibrary>(
-                            options.get<std::string>(platform_graphics_lib))};
-                }
-                else if (env_libname)
-                {
-                    return std::vector<std::shared_ptr<mir::SharedLibrary>>{
-                        std::make_shared<mir::SharedLibrary>(std::string{env_libname})
-                    };
-                }
-                else
-                {
+                    // TODO: When platform libraries have been manually specified, load only those options
                     mir::logging::NullSharedLibraryProberReport null_report;
                     auto const plugin_path = env_libpath ? env_libpath : options.get<std::string>(platform_path);
                     return mir::libraries_for_path(plugin_path, null_report);
-                }
             }();
 
         for (auto& platform : platform_libraries)

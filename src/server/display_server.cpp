@@ -45,11 +45,29 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace msh = mir::shell;
 
+namespace
+{
+std::vector<std::shared_ptr<void>> extract_all_platform_modules(mir::ServerConfiguration& config)
+{
+    std::vector<std::shared_ptr<void>> modules;
+    for (auto const& module : config.the_display_platforms())
+    {
+        modules.push_back(module);
+    }
+    for (auto const& module : config.the_rendering_platforms())
+    {
+        modules.push_back(module);
+    }
+
+    return modules;
+}
+}
+
 struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
         : emergency_cleanup{config.the_emergency_cleanup()},
-          graphics_platform{config.the_graphics_platform()},
+          graphics_platforms{extract_all_platform_modules(config)},
           display{config.the_display()},
           input_dispatcher{config.the_input_dispatcher()},
           compositor{config.the_compositor()},
@@ -187,7 +205,7 @@ struct mir::DisplayServer::Private
     }
 
     std::shared_ptr<EmergencyCleanup> const emergency_cleanup; // Hold this so it does not get freed prematurely
-    std::shared_ptr<mg::Platform> const graphics_platform; // Hold this so the platform is loaded once
+    std::vector<std::shared_ptr<void>> const graphics_platforms; // Hold this so the platform is loaded once
     std::shared_ptr<mg::Display> const display;
     std::shared_ptr<mi::InputDispatcher> const input_dispatcher;
     std::shared_ptr<mc::Compositor> const compositor;

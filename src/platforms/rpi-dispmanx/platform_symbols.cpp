@@ -29,7 +29,6 @@
 #include "mir/fd.h"
 #include "mir/signal_blocker.h"
 
-#include "platform.h"
 #include "display_platform.h"
 #include "rendering_platform.h"
 
@@ -40,14 +39,14 @@
 namespace mg = mir::graphics;
 namespace mo = mir::options;
 
-mir::UniqueModulePtr<mg::Platform> create_host_platform(
+mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mir::ConsoleServices> const& /*console*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/,
     std::shared_ptr<mir::logging::Logger> const& /*logger*/)
 {
-    mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
+    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
 
     {
         // bcm_host_init() spawns threads, which must not receive signals
@@ -57,7 +56,25 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
         bcm_host_init();
     }
 
-    return mir::make_module_ptr<mg::rpi::Platform>();
+    return mir::make_module_ptr<mg::rpi::DisplayPlatform>();
+}
+
+auto create_rendering_platform(
+    mo::Option const&,
+    mir::EmergencyCleanupRegistry&,
+    std::shared_ptr<mir::logging::Logger> const&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
+{
+    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
+
+    {
+        // bcm_host_init() spawns threads, which must not receive signals
+        mir::SignalBlocker blocker;
+        // bcm_host_init() must be called before any other call which touches the GPU
+        // Conveniently, however, it is idempotent.
+        bcm_host_init();
+    }
+
+    return mir::make_module_ptr<mg::rpi::RenderingPlatform>();
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& /*config*/)

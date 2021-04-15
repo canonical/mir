@@ -47,7 +47,8 @@ namespace graphics
 {
 class Display;
 class DisplayConfigurationPolicy;
-class Platform;
+class DisplayPlatform;
+class RenderingPlatform;
 }
 namespace input
 {
@@ -84,7 +85,8 @@ public:
     virtual std::shared_ptr<MainLoop> the_main_loop() = 0;
     virtual std::shared_ptr<ServerStatusListener> the_server_status_listener() = 0;
     virtual std::shared_ptr<DisplayChanger> the_display_changer() = 0;
-    virtual std::shared_ptr<graphics::Platform>  the_graphics_platform() = 0;
+    virtual auto the_display_platforms() -> std::vector<std::shared_ptr<graphics::DisplayPlatform>> const& = 0;
+    virtual auto the_rendering_platforms() -> std::vector<std::shared_ptr<graphics::RenderingPlatform>> const& = 0;
     virtual std::shared_ptr<EmergencyCleanup> the_emergency_cleanup() = 0;
     virtual std::shared_ptr<cookie::Authority> the_cookie_authority() = 0;
     virtual auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) = 0;

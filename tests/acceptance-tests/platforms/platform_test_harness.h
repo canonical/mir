@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2021 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -16,35 +16,27 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_PLATFORM_PROBE_H_
-#define MIR_GRAPHICS_PLATFORM_PROBE_H_
+#ifndef MIR_PLATFORM_TEST_HARNESS_H
+#define MIR_PLATFORM_TEST_HARNESS_H
 
-#include <vector>
-#include <memory>
 #include "mir/shared_library.h"
-#include "mir/options/program_option.h"
-#include "mir/graphics/platform.h"
+#include <memory>
 
 namespace mir
 {
-class ConsoleServices;
-
-namespace graphics
+namespace test
 {
-class Platform;
+class PlatformTestHarness
+{
+public:
+    PlatformTestHarness() = default;
+    virtual ~PlatformTestHarness() = default;
 
-auto probe_module(
-    SharedLibrary& module,
-    options::ProgramOption const& options,
-    std::shared_ptr<ConsoleServices> const& console) -> PlatformPriority;
-
-auto modules_for_device(
-    std::vector<std::shared_ptr<SharedLibrary>> const& modules,
-    options::ProgramOption const& options,
-    std::shared_ptr<ConsoleServices> const& console)
-    -> std::vector<std::shared_ptr<SharedLibrary>>;
-
+    virtual void setup() = 0;
+    virtual void teardown() = 0;
+    virtual auto platform_module() -> std::shared_ptr<mir::SharedLibrary> = 0;
+};
 }
 }
 
-#endif // MIR_GRAPHICS_PLATFORM_PROBE_H_
+#endif //MIR_PLATFORM_TEST_HARNESS_H

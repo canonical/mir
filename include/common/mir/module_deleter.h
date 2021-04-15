@@ -65,7 +65,7 @@ private:
 };
 
 /*!
- * \brief Use UniqueModulePtr to ensure that your loadable libray outlives
+ * \brief Use UniqueModulePtr to ensure that your loadable library outlives
  * instances created within it.
  *
  * Use mir::make_module_ptr(...) or pass a function from your library to the

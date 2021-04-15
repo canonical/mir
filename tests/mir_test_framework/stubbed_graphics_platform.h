@@ -23,7 +23,9 @@
 
 namespace mir_test_framework
 {
-class StubGraphicPlatform : public mir::test::doubles::NullPlatform
+class StubGraphicPlatform :
+    public mir::test::doubles::NullDisplayPlatform,
+    public mir::test::doubles::NullRenderingPlatform
 {
 public:
     StubGraphicPlatform(std::vector<mir::geometry::Rectangle> const& display_rects);
