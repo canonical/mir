@@ -51,20 +51,23 @@ class NullKeyboardInput : public mir::input::wayland::KeyboardInput
 class NullPointerInput : public mir::input::wayland::PointerInput
 {
     void pointer_press(
-        std::chrono::nanoseconds, int, mir::geometry::Point const&,
-        mir::geometry::Displacement) override
+        std::chrono::nanoseconds, int,
+        geom::PointF const&,
+        geom::DisplacementF const&) override
     {
     }
 
     void pointer_release(
-        std::chrono::nanoseconds, int, mir::geometry::Point const&,
-        mir::geometry::Displacement) override
+        std::chrono::nanoseconds, int,
+        geom::PointF const&,
+        geom::DisplacementF const&) override
     {
     }
 
     void pointer_motion(
-        std::chrono::nanoseconds, mir::geometry::Point const&,
-        mir::geometry::Displacement) override
+        std::chrono::nanoseconds,
+        geom::PointF const&,
+        geom::DisplacementF const&) override
     {
     }
 };
@@ -332,8 +335,7 @@ void mir::graphics::wayland::Display::pointer_motion(wl_pointer* pointer, uint32
 {
     {
         std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
-        geom::Point const new_pointer{wl_fixed_to_int(x), wl_fixed_to_int(y)};
-        pointer_pos = new_pointer + pointer_displacement;
+        pointer_pos = geom::PointF{wl_fixed_to_double(x), wl_fixed_to_double(y)} + geom::DisplacementF{pointer_displacement};
         pointer_time = std::chrono::milliseconds{time};
     }
 
@@ -367,12 +369,12 @@ void mir::graphics::wayland::Display::pointer_axis(wl_pointer* pointer, uint32_t
         std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
         switch (axis)
         {
-        case WL_POINTER_AXIS_VERTICAL_SCROLL:
-            pointer_scroll.dy = geom::DeltaY{wl_fixed_to_int(value)};
+        case WL_POINTER_AXIS_HORIZONTAL_SCROLL:
+            pointer_scroll.dx = geom::DeltaXF{wl_fixed_to_double(value)};
             break;
 
-        case WL_POINTER_AXIS_HORIZONTAL_SCROLL:
-            pointer_scroll.dx = geom::DeltaX{wl_fixed_to_int(value)};
+        case WL_POINTER_AXIS_VERTICAL_SCROLL:
+            pointer_scroll.dy = geom::DeltaYF{wl_fixed_to_double(value)};
             break;
         }
     }

@@ -19,7 +19,8 @@
 
 #include <mir/fd.h>
 #include <mir/events/contact_state.h>
-#include <mir/geometry/displacement.h>
+#include <mir/geometry/point_f.h>
+#include <mir/geometry/displacement_f.h>
 
 #include <xkbcommon/xkbcommon.h>
 
@@ -47,9 +48,20 @@ public:
 class PointerInput
 {
 public:
-    virtual void pointer_press(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) = 0;
-    virtual void pointer_release(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) = 0;
-    virtual void pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll) = 0;
+    virtual void pointer_press(
+        std::chrono::nanoseconds event_time,
+        int button,
+        geometry::PointF const& pos,
+        geometry::DisplacementF const& scroll) = 0;
+    virtual void pointer_release(
+        std::chrono::nanoseconds event_time,
+        int button,
+        geometry::PointF const& pos,
+        geometry::DisplacementF const& scroll) = 0;
+    virtual void pointer_motion(
+        std::chrono::nanoseconds event_time,
+        geometry::PointF const& pos,
+        geometry::DisplacementF const& scroll) = 0;
 
     PointerInput() = default;
     virtual ~PointerInput() = default;

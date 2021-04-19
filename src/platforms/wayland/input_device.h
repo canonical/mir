@@ -21,8 +21,6 @@
 #include "display_input.h"
 
 #include <mir/events/event_builders.h>
-#include <mir/geometry/point.h>
-#include <mir/geometry/displacement.h>
 #include <mir/input/input_device.h>
 #include <mir/input/input_device_info.h>
 
@@ -99,11 +97,22 @@ public:
 
 private:
     MirPointerButtons button_state{0};
-    geometry::Point pointer_pos;
+    geometry::PointF cached_pos;
 
-    void pointer_press(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) override;
-    void pointer_release(std::chrono::nanoseconds event_time, int button, geometry::Point const& pos, geometry::Displacement scroll) override;
-    void pointer_motion(std::chrono::nanoseconds event_time, geometry::Point const& pos, geometry::Displacement scroll) override;
+    void pointer_press(
+        std::chrono::nanoseconds event_time,
+        int button,
+        geometry::PointF const& pos,
+        geometry::DisplacementF const& scroll) override;
+    void pointer_release(
+        std::chrono::nanoseconds event_time,
+        int button,
+        geometry::PointF const& pos,
+        geometry::DisplacementF const& scroll) override;
+    void pointer_motion(
+        std::chrono::nanoseconds event_time,
+        geometry::PointF const& pos,
+        geometry::DisplacementF const& scroll) override;
 };
 
 class TouchInputDevice : public GenericInputDevice, public TouchInput
