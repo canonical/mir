@@ -63,6 +63,7 @@ jobs:
     - name: Install Snapcraft
       uses: samuelmeuli/action-snapcraft@v1
       with:
+        channel: edge
         snapcraft_token: ${{ secrets.SNAPCRAFT_TOKEN }}
 
     - name: Check out code
