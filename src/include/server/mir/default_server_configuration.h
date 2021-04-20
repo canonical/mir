@@ -195,6 +195,7 @@ public:
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>       the_emergency_cleanup() override;
     std::shared_ptr<cookie::Authority>      the_cookie_authority() override;
+    std::shared_ptr<scene::Clipboard>       the_clipboard() override;
     std::function<void()>                   the_stop_callback() override;
     void add_wayland_extension(
         std::string const& name,
@@ -437,6 +438,7 @@ protected:
     CachedPtr<scene::SessionListener> session_listener;
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
+    CachedPtr<scene::Clipboard>         clipboard;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;

@@ -68,7 +68,7 @@ private:
     geometry::Size latest_buffer_size;
     float scale_{1.0f};
     MirPixelFormat pf;
-    bool first_frame_posted;
+    std::atomic<bool> first_frame_posted;
 
     std::mutex callback_mutex;
     std::function<void(geometry::Size const&)> frame_callback;

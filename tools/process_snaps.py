@@ -31,24 +31,18 @@ SOURCE_NAME = "mir"
 SNAPS = {
     "mir-kiosk": {
         "edge": {"ppa": "dev", "recipe": "mir-kiosk-edge"},
-        "candidate": {"ppa": "rc", "recipe": "mir-kiosk-candidate"},
-    },
-    "mir-kiosk-apps": {
-        "edge": {"recipe": "mir-kiosk-apps"},
-    },
-    "chromium-mir-kiosk": {
-        "edge": {"recipe": "chromium-mir-kiosk"},
+        "beta": {"ppa": "rc", "recipe": "mir-kiosk-beta"},
     },
     "mir-test-tools": {
         "edge": {"ppa": "dev", "recipe": "mir-test-tools-edge"},
-        "candidate": {"ppa": "rc", "recipe": "mir-test-tools"},
+        "beta": {"ppa": "rc", "recipe": "mir-test-tools-beta"},
     },
     "egmde": {
-        "edge": {"ppa": "dev", "recipe": "egmde-mir-master"},
-        "beta": {"ppa": "release", "recipe": "egmde-mir-release"},
+        "edge": {"ppa": "dev", "recipe": "egmde-mir-edge"},
+        "beta": {"ppa": "rc", "recipe": "egmde-mir-beta"},
     },
     "egmde-confined-desktop": {
-        "edge": {"ppa": "dev", "recipe": "egmde-confined-desktop"},
+        "edge": {"ppa": "dev", "recipe": "egmde-confined-desktop-edge"},
     },
 }
 
@@ -270,9 +264,8 @@ if __name__ == '__main__':
 
             logger.info("Triggering %s…", snap_recipe.description or snap_recipe.name)
 
-            snap_recipe.requestBuilds(archive=snap_recipe.auto_build_archive,
-                                      pocket=snap_recipe.auto_build_pocket,
-                                      channels=snap_recipe.auto_build_channels)
+            snap_recipe.requestBuilds(archive=ppa,
+                                      pocket=snap_recipe.auto_build_pocket)
             logger.debug("Triggered builds: %s", snap_recipe.web_link)
 
     for error in errors:

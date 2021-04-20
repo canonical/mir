@@ -15,9 +15,7 @@
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
 add_library(mirsharedgeometry OBJECT
-  rectangle.cpp
   rectangles.cpp
-  ostream.cpp
 )
 
 list(APPEND MIR_COMMON_SOURCES

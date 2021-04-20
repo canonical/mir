@@ -18,7 +18,6 @@
 
 #include "xwayland_connector.h"
 
-
 #include "wayland_connector.h"
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
@@ -26,7 +25,7 @@
 #include "mir/log.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/readable_fd.h"
-#include "mir/terminate_with_current_exception.h"
+#include "mir/executor.h"
 
 #include <unistd.h>
 
@@ -34,10 +33,14 @@ namespace mf = mir::frontend;
 namespace md = mir::dispatch;
 
 mf::XWaylandConnector::XWaylandConnector(
+    std::shared_ptr<Executor> const& main_loop,
     std::shared_ptr<WaylandConnector> const& wayland_connector,
-    std::string const& xwayland_path)
-    : wayland_connector{wayland_connector},
-      xwayland_path{xwayland_path}
+    std::string const& xwayland_path,
+    float scale)
+    : main_loop{main_loop},
+      wayland_connector{wayland_connector},
+      xwayland_path{xwayland_path},
+      scale{scale}
 {
     if (access(xwayland_path.c_str(), F_OK | X_OK) != 0)
     {
@@ -47,11 +50,12 @@ mf::XWaylandConnector::XWaylandConnector(
 
 mf::XWaylandConnector::~XWaylandConnector()
 {
-    if (spawner || server || wm || wm_event_thread)
+    if (is_started || spawner || server || wm || wm_event_thread)
     {
         fatal_error(
             "XWaylandConnector was not stopped before being destroyed "
-            "(spawner: %s, server: %s, wm: %s, wm_event_thread: %s)",
+            "(is_started: %s, spawner: %s, server: %s, wm: %s, wm_event_thread: %s)",
+            is_started ? "yes" : "no",
             spawner ? "exists" : "null",
             wm ? "exists" : "null",
             spawner ? "exists" : "null",
@@ -63,14 +67,9 @@ void mf::XWaylandConnector::start()
 {
     if (wayland_connector->get_extension("x11-support"))
     {
-        std::lock_guard<std::mutex> lock{mutex};
-
-        if (spawner)
-        {
-            return;
-        }
-
-        spawner = std::make_unique<XWaylandSpawner>([this]() { spawn(); });
+        std::unique_lock<std::mutex> lock{mutex};
+        is_started = true;
+        maybe_create_spawner(lock);
         mir::log_info("XWayland started on X11 display %s", spawner->x11_display().c_str());
     }
 }
@@ -79,21 +78,13 @@ void mf::XWaylandConnector::stop()
 {
     std::unique_lock<std::mutex> lock{mutex};
 
-    bool const was_running{server};
+    bool const was_started = is_started;
+    is_started = false;
 
-    auto local_spawner{std::move(spawner)};
-    auto local_wm_event_thread{std::move(wm_event_thread)};
-    auto local_wm{std::move(wm)};
-    auto local_server{std::move(server)};
+    clean_up(std::move(lock));
+    // note that lock is no longer locked now
 
-    lock.unlock();
-
-    local_spawner.reset();
-    local_wm_event_thread.reset();
-    local_wm.reset();
-    local_server.reset();
-
-    if (was_running)
+    if (was_started)
     {
         mir::log_info("XWayland stopped");
     }
@@ -124,9 +115,40 @@ auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
     }
 }
 
+void mf::XWaylandConnector::maybe_create_spawner(std::unique_lock<std::mutex> const& lock)
+{
+    if (!lock.owns_lock())
+    {
+        fatal_error("XWaylandConnector::maybe_create_spawner() given unlocked lock");
+    }
+
+    if (is_started && !spawner)
+    {
+        // If we should be running but a spawner does not exist, create one
+        spawner = std::make_unique<XWaylandSpawner>([this]() { spawn(); });
+    }
+}
+
+void mf::XWaylandConnector::clean_up(std::unique_lock<std::mutex> lock)
+{
+    if (!lock.owns_lock())
+    {
+        fatal_error("XWaylandConnector::clean_up() given unlocked lock");
+    }
+
+    auto local_server{std::move(server)};
+    auto local_wm{std::move(wm)};
+    auto local_wm_event_thread{std::move(wm_event_thread)};
+    auto local_spawner{std::move(spawner)};
+
+    lock.unlock();
+
+    // Local objects are now dropped with the mutex not locked
+}
+
 void mf::XWaylandConnector::spawn()
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::unique_lock<std::mutex> lock{mutex};
 
     if (server || !spawner)
     {
@@ -138,16 +160,20 @@ void mf::XWaylandConnector::spawn()
 
     try
     {
-        auto const wayland_socket_pair = XWaylandServer::make_socket_pair();
-        auto const x11_socket_pair = XWaylandServer::make_socket_pair();
-        auto const wm_dispatcher = std::make_shared<md::ReadableFd>(x11_socket_pair.first, [this]()
+        server = std::make_unique<XWaylandServer>(
+            wayland_connector,
+            *spawner,
+            xwayland_path,
+            scale);
+        auto const wm_dispatcher = std::make_shared<md::MultiplexingDispatchable>();
+        wm_dispatcher->add_watch(std::make_shared<md::ReadableFd>(server->x11_wm_fd(), [this]()
             {
                 std::lock_guard<std::mutex> lock{mutex};
                 if (wm)
                 {
                     wm->handle_events();
                 }
-            });
+            }));
         wm_event_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
             "Mir/X11 WM Reader",
             wm_dispatcher,
@@ -159,33 +185,26 @@ void mf::XWaylandConnector::spawn()
                     logging::Severity::error,
                     MIR_LOG_COMPONENT,
                     std::current_exception(),
-                    "X11 window manager error, killing XWayland");
+                    "X11 window manager error");
 
-                std::unique_lock<std::mutex> lock{mutex};
-
-                // NOTE: we do not stop the spawner, so the server/wm will be recreated when new clients connect
-                auto local_wm{std::move(wm)};
-                auto local_server{std::move(server)};
-                auto local_wm_event_thread{std::move(wm_event_thread)};
-
-                lock.unlock();
-
-                local_wm.reset();
-                local_server.reset();
-
-                // We can't destroy a ThreadedDispatcher from inside a call it made, so do it from another thread
-                std::thread{[&](){ local_wm_event_thread.reset(); }}.join();
+                // This lambda is called by the window manager event dispatcher. It is a runtime error to destroy a
+                // ThreadedDispatcher from it's own call, so we clean up on the main loop.
+                main_loop->spawn([weak_self=weak_from_this()]()
+                    {
+                        if (auto const self = weak_self.lock())
+                        {
+                            self->clean_up(std::unique_lock<std::mutex>{self->mutex});
+                            log_info("Restarting XWayland");
+                            self->maybe_create_spawner(std::unique_lock<std::mutex>{self->mutex});
+                        }
+                    });
             });
-        server = std::make_unique<XWaylandServer>(
-            wayland_connector,
-            *spawner,
-            xwayland_path,
-            wayland_socket_pair,
-            x11_socket_pair.second);
         wm = std::make_unique<XWaylandWM>(
             wayland_connector,
             server->client(),
-            x11_socket_pair.first);
+            server->x11_wm_fd(),
+            wm_dispatcher,
+            scale);
         mir::log_info("XWayland is running");
     }
     catch (...)
@@ -195,5 +214,19 @@ void mf::XWaylandConnector::spawn()
             MIR_LOG_COMPONENT,
             std::current_exception(),
             "Spawning XWayland failed");
+
+        // This lambda is called by the spawner's ThreadedDispatcher. It is a runtime error to destroy a
+        // ThreadedDispatcher from it's own call, so we clean up on the main loop.
+        main_loop->spawn([weak_self=weak_from_this()]()
+            {
+                if (auto const self = weak_self.lock())
+                {
+                    self->clean_up(std::unique_lock<std::mutex>{self->mutex});
+                    log_info("Restarting XWayland");
+                    // XWaylandConnector::spawn() is only called when a client tries to connect, so restarting the
+                    // on failure should not result in an endless loop.
+                    self->maybe_create_spawner(std::unique_lock<std::mutex>{self->mutex});
+                }
+            });
     }
 }

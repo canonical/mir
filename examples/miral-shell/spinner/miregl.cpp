@@ -15,7 +15,7 @@
  */
 
 #include "miregl.h"
-#include <wayland-client.h>
+#include "wayland_app.h"
 
 #include <cstring>
 
@@ -26,161 +26,35 @@
 #include <chrono>
 #include <algorithm>
 #include <stdexcept>
+#include <set>
 
-static void new_global(
-    void* data,
-    struct wl_registry* registry,
-    uint32_t id,
-    char const* interface,
-    uint32_t version);
-
-static void global_remove(
-    void* data,
-    struct wl_registry* registry,
-    uint32_t name)
-{
-    (void)data;
-    (void)registry;
-    (void)name;
-}
-
-static void output_geometry(void */*data*/,
-    struct wl_output */*wl_output*/,
-    int32_t /*x*/,
-    int32_t /*y*/,
-    int32_t /*physical_width*/,
-    int32_t /*physical_height*/,
-    int32_t /*subpixel*/,
-    const char */*make*/,
-    const char */*model*/,
-    int32_t /*transform*/);
-
-static void output_mode(void *data,
-    struct wl_output */*wl_output*/,
-    uint32_t /*flags*/,
-    int32_t width,
-    int32_t height,
-    int32_t /*refresh*/);
-
-static void output_done(void* /*data*/, struct wl_output* /*wl_output*/)
-{
-}
-
-static void output_scale(void* /*data*/, struct wl_output* /*wl_output*/, int32_t /*factor*/)
-{
-}
-
-class MirEglApp
+class MirEglApp : public WaylandApp
 {
 public:
-    MirEglApp(struct wl_display* display);
+    MirEglApp(wl_display* display);
+
+    void output_ready(WaylandOutput const* output) override;
+    void output_gone(WaylandOutput const* output) override;
 
     EGLSurface create_eglsurface(wl_surface* surface, int width, int height);
-
     void make_current(EGLSurface eglsurface) const;
-
     void swap_buffers(EGLSurface eglsurface) const;
-
     void destroy_surface(EGLSurface eglsurface) const;
-
     void get_surface_size(EGLSurface eglsurface, int* width, int* height) const;
-
     void set_swap_interval(EGLSurface eglsurface, int interval) const;
-
     bool supports_surfaceless_context();
 
     ~MirEglApp();
 
-    struct wl_display* const display;
-    struct wl_compositor* compositor;
-    struct wl_shm* shm;
-    struct wl_seat* seat;
-    std::vector<wl_output*> outputs;
-    struct wl_shell* shell;
+    std::set<wl_output*> outputs;
 
 private:
-    friend void new_global(
-        void* data,
-        struct wl_registry* registry,
-        uint32_t id,
-        char const* interface,
-        uint32_t version);
-
     EGLDisplay egldisplay;
     EGLContext eglctx;
     EGLConfig eglconfig;
     EGLint neglconfigs;
     EGLSurface dummy_surface;
 };
-
-static void output_geometry(void *data,
-    struct wl_output *wl_output,
-    int32_t /*x*/,
-    int32_t /*y*/,
-    int32_t /*physical_width*/,
-    int32_t /*physical_height*/,
-    int32_t /*subpixel*/,
-    const char */*make*/,
-    const char */*model*/,
-    int32_t /*transform*/)
-{
-    struct MirEglApp* app = static_cast<decltype(app)>(data);
-
-    if (std::find(app->outputs.begin(), app->outputs.end(), wl_output) == app->outputs.end())
-        app->outputs.push_back({wl_output});
-}
-
-static void output_mode(void *data,
-    struct wl_output *wl_output,
-    uint32_t flags,
-    int32_t /*width*/,
-    int32_t /*height*/,
-    int32_t /*refresh*/)
-{
-    if (!(WL_OUTPUT_MODE_CURRENT & flags))
-        return;
-
-    struct MirEglApp* app = static_cast<decltype(app)>(data);
-
-    if (std::find(app->outputs.begin(), app->outputs.end(), wl_output) == app->outputs.end())
-        app->outputs.push_back({wl_output});
-}
-
-static void new_global(
-    void* data,
-    struct wl_registry* registry,
-    uint32_t id,
-    char const* interface,
-    uint32_t version)
-{
-    (void)version;
-    struct MirEglApp* app = static_cast<decltype(app)>(data);
-
-    if (strcmp(interface, "wl_compositor") == 0)
-    {
-        app->compositor = static_cast<decltype(app->compositor)>(wl_registry_bind(registry, id, &wl_compositor_interface, 3));
-    }
-    else if (strcmp(interface, "wl_shm") == 0)
-    {
-        app->shm = static_cast<decltype(app->shm)>(wl_registry_bind(registry, id, &wl_shm_interface, 1));
-        // Normally we'd add a listener to pick up the supported formats here
-        // As luck would have it, I know that argb8888 is the only format we support :)
-    }
-    else if (strcmp(interface, "wl_seat") == 0)
-    {
-        app->seat = static_cast<decltype(app->seat)>(wl_registry_bind(registry, id, &wl_seat_interface, 4));
-    }
-    else if (strcmp(interface, "wl_output") == 0)
-    {
-        wl_output* output = static_cast<decltype(output)>(wl_registry_bind(registry, id, &wl_output_interface, 2));
-
-        app->outputs.push_back(output);
-    }
-    else if (strcmp(interface, "wl_shell") == 0)
-    {
-        app->shell = static_cast<decltype(app->shell)>(wl_registry_bind(registry, id, &wl_shell_interface, 1));
-    }
-}
 
 std::shared_ptr<MirEglApp> make_mir_eglapp(struct wl_display* display)
 {
@@ -202,31 +76,23 @@ std::vector<std::shared_ptr<MirEglSurface>> mir_surface_init(std::shared_ptr<Mir
 MirEglSurface::MirEglSurface(
     std::shared_ptr<MirEglApp> const& mir_egl_app,
     struct wl_output* wl_output) :
+    WaylandSurface{mir_egl_app.get()},
     mir_egl_app{mir_egl_app}
 {
-    static struct wl_shell_surface_listener const shell_surface_listener = {
-        shell_surface_ping,
-        shell_surface_configure,
-        shell_surface_popup_done
-    };
+    set_fullscreen(wl_output);
+    commit();
+    mir_egl_app->roundtrip(); // get initial configure
 
-    display = mir_egl_app->display;
-    surface = wl_compositor_create_surface(mir_egl_app->compositor);
-    window = wl_shell_get_shell_surface(mir_egl_app->shell, surface);
-    wl_shell_surface_add_listener(window, &shell_surface_listener, this);
-    wl_shell_surface_set_fullscreen(window, WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, wl_output);
-    wl_surface_commit(surface);
-    wl_display_roundtrip(display); // get initial configure
-
-    eglsurface = mir_egl_app->create_eglsurface(surface, width(), height());
+    eglsurface = mir_egl_app->create_eglsurface(
+        surface(),
+        configured_size().width.as_int(),
+        configured_size().height.as_int());
     mir_egl_app->set_swap_interval(eglsurface, -1);
 }
 
 MirEglSurface::~MirEglSurface()
 {
     mir_egl_app->destroy_surface(eglsurface);
-    wl_surface_destroy(surface);
-    wl_shell_surface_destroy(window);
 }
 
 void MirEglSurface::egl_make_current()
@@ -240,59 +106,10 @@ void MirEglSurface::swap_buffers()
     mir_egl_app->swap_buffers(eglsurface);
 }
 
-unsigned int MirEglSurface::width() const
-{
-    return width_;
-}
-
-unsigned int MirEglSurface::height() const
-{
-    return height_;
-}
-
-void MirEglSurface::shell_surface_ping(void */*data*/, struct wl_shell_surface *wl_shell_surface, uint32_t serial)
-{
-    wl_shell_surface_pong(wl_shell_surface, serial);
-}
-
-void MirEglSurface::shell_surface_configure(void *data,
-    struct wl_shell_surface */*wl_shell_surface*/,
-    uint32_t /*edges*/,
-    int32_t width,
-    int32_t height)
-{
-    auto self = static_cast<MirEglSurface*>(data);
-    if (width) self->width_ = width;
-    if (height) self->height_ = height;
-}
-
-void MirEglSurface::shell_surface_popup_done(void */*data*/, struct wl_shell_surface */*wl_shell_surface*/)
-{
-}
-
-MirEglApp::MirEglApp(struct wl_display* display) :
-    display{display},
+MirEglApp::MirEglApp(wl_display* display) :
     dummy_surface{EGL_NO_SURFACE}
 {
-    static struct wl_registry_listener const registry_listener = {
-        new_global,
-        global_remove
-    };
-
-    wl_registry_add_listener(wl_display_get_registry(display), &registry_listener, this);
-    wl_display_roundtrip(display);
-
-    static struct wl_output_listener const output_listener = {
-        &output_geometry,
-        &output_mode,
-        &output_done,
-        &output_scale,
-    };
-
-    for (auto const output : outputs)
-        wl_output_add_listener(output, &output_listener, this);
-
-    wl_display_roundtrip(display);
+    wayland_init(display);
 
     unsigned int bpp = 32; //8*MIR_BYTES_PER_PIXEL(pixel_format);
 
@@ -350,9 +167,18 @@ MirEglApp::MirEglApp(struct wl_display* display) :
     make_current(dummy_surface);
 }
 
+void MirEglApp::output_ready(WaylandOutput const* output)
+{
+    outputs.insert(output->wl());
+}
+
+void MirEglApp::output_gone(WaylandOutput const* output)
+{
+    outputs.erase(output->wl());
+}
+
 EGLSurface MirEglApp::create_eglsurface(wl_surface* surface, int width, int height)
 {
-
     auto const eglsurface = eglCreateWindowSurface(
         egldisplay,
         eglconfig,

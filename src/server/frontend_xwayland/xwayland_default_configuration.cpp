@@ -17,12 +17,15 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/log.h"
+#include "mir/options/default_configuration.h"
+#include "mir/main_loop.h"
 #include "wayland_connector.h"
 #include "xwayland_connector.h"
 
-#include <string>
+#include <boost/lexical_cast.hpp>
 
-#include "mir/options/default_configuration.h"
+#include <string>
+#include <cstdlib>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -66,14 +69,25 @@ std::shared_ptr<mf::Connector> mir::DefaultServerConfiguration::the_xwayland_con
         {
             try
             {
+                auto const scale = boost::lexical_cast<float>(options->get<std::string>(mo::x11_scale_opt));
+                if (scale < 0.01f || scale > 100.0f)
+                {
+                    BOOST_THROW_EXCEPTION(std::runtime_error("scale outside of valid range"));
+                }
                 auto wayland_connector = std::static_pointer_cast<mf::WaylandConnector>(the_wayland_connector());
                 return std::make_shared<mf::XWaylandConnector>(
+                    the_main_loop(),
                     wayland_connector,
-                    options->get<std::string>("xwayland-path"));
+                    options->get<std::string>("xwayland-path"),
+                    scale);
             }
             catch (std::exception& x)
             {
-                mir::fatal_error("Failed to start XWaylandConnector: %s", x.what());
+                mir::fatal_error(
+                    "Failed to start XWaylandConnector: %s\n  (xwayland-path is '%s', x11-scale is '%s')",
+                    x.what(),
+                    options->get<std::string>("xwayland-path").c_str(),
+                    options->get<std::string>(mo::x11_scale_opt).c_str());
             }
         }
 

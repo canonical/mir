@@ -41,9 +41,13 @@ auto parse_size_dimension(std::string const& str) -> int
             BOOST_THROW_EXCEPTION(std::runtime_error("Output dimensions must be greater than zero"));
         return value;
     }
-    catch (std::invalid_argument const &e)
+    catch (std::invalid_argument const &)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is not a valid number"));
+    }
+    catch (std::out_of_range const &)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is out of range"));
     }
 }
 
@@ -59,9 +63,13 @@ auto parse_scale(std::string const& str) -> float
             BOOST_THROW_EXCEPTION(std::runtime_error("Scale must be greater than zero"));
         return value;
     }
-    catch (std::invalid_argument const &e)
+    catch (std::invalid_argument const &)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Scale \"" + str + "\" is not a valid float"));
+    }
+    catch (std::out_of_range const &)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Scale \"" + str + "\" is out of range"));
     }
 }
 

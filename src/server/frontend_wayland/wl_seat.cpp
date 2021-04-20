@@ -26,7 +26,6 @@
 #include "wl_pointer.h"
 #include "wl_touch.h"
 
-#include "mir/executor.h"
 #include "mir/client/event.h"
 
 #include "mir/input/input_device_observer.h"
@@ -43,11 +42,6 @@
 namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace mw = mir::wayland;
-
-namespace mir
-{
-class Executor;
-}
 
 template<class T>
 class mf::WlSeat::ListenerList
@@ -157,8 +151,7 @@ private:
 mf::WlSeat::WlSeat(
     wl_display* display,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
-    std::shared_ptr<mi::Seat> const& seat,
-    std::shared_ptr<mir::Executor> const& executor)
+    std::shared_ptr<mi::Seat> const& seat)
     :   Global(display, Version<6>()),
         keymap{std::make_unique<input::Keymap>()},
         config_observer{
@@ -172,8 +165,7 @@ mf::WlSeat::WlSeat(
         keyboard_listeners{std::make_shared<ListenerList<WlKeyboard>>()},
         touch_listeners{std::make_shared<ListenerList<WlTouch>>()},
         input_hub{input_hub},
-        seat{seat},
-        executor{executor}
+        seat{seat}
 {
     input_hub->add_observer(config_observer);
     add_focus_listener(&focus);
@@ -212,11 +204,6 @@ void mf::WlSeat::notify_focus(wl_client *focus)
         for (auto const listener : focus_listeners)
             listener->focus_on(focus);
     }
-}
-
-void mf::WlSeat::spawn(std::function<void()>&& work)
-{
-    executor->spawn(std::move(work));
 }
 
 void mf::WlSeat::bind(wl_resource* new_wl_seat)
@@ -299,6 +286,11 @@ void mf::WlSeat::Instance::get_touch(wl_resource* new_touch)
 void mf::WlSeat::Instance::release()
 {
     destroy_wayland_object();
+}
+
+auto mf::WlSeat::current_focused_client() const -> wl_client*
+{
+    return focused_client;
 }
 
 void mf::WlSeat::add_focus_listener(ListenerTracker* listener)

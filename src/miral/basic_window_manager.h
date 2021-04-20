@@ -37,7 +37,7 @@
 
 #include <boost/bimap.hpp>
 #include <boost/bimap/multiset_of.hpp>
-#include <experimental/optional>
+#include <optional>
 
 #include <map>
 #include <mutex>
@@ -221,13 +221,13 @@ private:
         /// The subset of the area where normal applications are generally placed (excludes, for example, panels)
         Zone application_zone;
         /// The last zone given to the policy, or nullopt if the policy hasn't been notified of this area's creation yet
-        std::experimental::optional<Zone> zone_policy_knows_about;
+        std::optional<Zone> zone_policy_knows_about;
         /// Often a single output
         /// can be empty or (in the case of logical output groups) contain multiple outputs
         /// if all outputs are removed the next call to update_application_zones() will drop this DisplayArea
         std::vector<Output> contained_outputs;
         /// Only set if this display area represents a logical group of multiple outputs
-        std::experimental::optional<int> logical_output_group_id;
+        std::optional<int> logical_output_group_id;
         std::set<Window> attached_windows; ///< Maximized/anchored/etc windows attached to this area
     };
 
@@ -299,9 +299,8 @@ private:
     void place_and_size(WindowInfo& root, Point const& new_pos, Size const& new_size);
     void place_attached_to_zone(
         WindowInfo& info,
-        mir::geometry::Rectangle const& application_zone,
-        mir::geometry::Rectangle const& output_area);
-    void update_attached_and_fullscreen_sets(WindowInfo& window_info, MirWindowState state);
+        mir::geometry::Rectangle const& application_zone);
+    void update_attached_and_fullscreen_sets(WindowInfo const& window_info);
     void set_state(miral::WindowInfo& window_info, MirWindowState value);
     void remove_window(Application const& application, miral::WindowInfo const& info);
     void refocus(Application const& application, Window const& parent,
@@ -310,6 +309,7 @@ private:
     auto active_display_area() const -> std::shared_ptr<DisplayArea>;
     auto display_area_for_output_id(int output_id) const -> std::shared_ptr<DisplayArea>; ///< returns null if not found
     auto display_area_for(WindowInfo const& info) const -> std::shared_ptr<DisplayArea>;
+    auto display_area_for(Rectangle const& rect) const -> std::optional<std::shared_ptr<DisplayArea>>;
     /// Returns the application zone area after shrinking it for the exclusive zone if needed
     static auto apply_exclusive_rect_to_application_zone(
         mir::geometry::Rectangle const& original_zone,

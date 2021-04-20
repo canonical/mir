@@ -55,10 +55,10 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 
     {
         std::lock_guard<decltype(mutex)> lk(mutex);
-        first_frame_posted = true;
         pf = buffer->pixel_format();
         latest_buffer_size = buffer->size();
         schedule->schedule(buffer);
+        first_frame_posted = true;
     }
     {
         std::lock_guard<decltype(callback_mutex)> lock{callback_mutex};
@@ -156,7 +156,7 @@ void mc::Stream::drop_old_buffers()
 
 bool mc::Stream::has_submitted_buffer() const
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
+    // Don't need to lock mutex because first_frame_posted is atomic
     return first_frame_posted;
 }
 

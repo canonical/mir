@@ -297,51 +297,6 @@ TEST_F(X11DisplayTest, multiple_outputs_are_organized_horizontally)
         );
 }
 
-TEST_F(X11DisplayTest, adjusts_resolution_with_respect_to_screen_size)
-{
-    auto const pixel = geom::Size{1000, 1000};
-    auto const mm = geom::Size{677, 290};
-    auto const window = geom::Size{1280, 1024};
-    auto const border = 150; //must match the border value in clip_to_display()
-
-    setup_x11_screen(pixel, mm, {window});
-
-    auto display = create_display();
-    auto config = display->configuration();
-    geom::Size reported_resolution;
-    config->for_each_output(
-        [&reported_resolution](mg::DisplayConfigurationOutput const& output)
-        {
-            reported_resolution = output.modes[0].size;
-        });
-
-    EXPECT_THAT(reported_resolution, Eq(geom::Size{pixel.width.as_uint32_t()-border, pixel.height.as_uint32_t()-border}));
-}
-
-TEST_F(X11DisplayTest, multiple_outputs_are_organized_horizontally_after_adjusting_resolution)
-{
-    auto const pixel = geom::Size{1000, 1000};
-    auto const mm = geom::Size{677, 290};
-    auto const border = 150; //must match the border value in clip_to_display()
-    auto const window_sizes = std::vector<mgx::X11OutputConfig>{{{1280, 1024}}, {{100, 100}}};
-
-    setup_x11_screen(pixel, mm, window_sizes);
-
-    auto display = create_display();
-    auto config = display->configuration();
-    geom::Point reported_top_left;
-    config->for_each_output(
-        [&reported_top_left](mg::DisplayConfigurationOutput const& output)
-        {
-            if (output.modes[0].size == geom::Size{100, 100})
-            {
-                reported_top_left = output.top_left;
-            }
-        });
-
-    EXPECT_THAT(reported_top_left, Eq(geom::Point{pixel.width.as_uint32_t()-border, 0}));
-}
-
 TEST_F(X11DisplayTest, updates_scale_property_correctly)
 {
     auto const scale = 2.2f;

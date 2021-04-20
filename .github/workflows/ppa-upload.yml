@@ -6,7 +6,7 @@ on:
     - master
     - release/[0-9]+.[0-9]+
     tags:
-    - v[0-9]+[0-9]+.[0-9]+
+    - v[0-9]+.[0-9]+.[0-9]+
 
 jobs:
   PPAUpload:
@@ -42,7 +42,8 @@ jobs:
           debhelper \
           devscripts \
           dput \
-          python-launchpadlib
+          dh-python \
+          python3-launchpadlib
 
     - name: Upload to PPA
       env:

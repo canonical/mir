@@ -402,10 +402,46 @@ void msh::AbstractShell::set_focus_to(
     std::shared_ptr<ms::Session> const& focus_session,
     std::shared_ptr<ms::Surface> const& focus_surface)
 {
+    std::vector<std::shared_ptr<ms::Surface>> new_popups;
+
+    // Don't give keyboard focus to popups
+    auto surface = focus_surface;
+    while (surface)
+    {
+        auto const type = surface->type();
+        if (type != mir_window_type_gloss &&
+            type != mir_window_type_tip &&
+            type != mir_window_type_menu)
+        {
+            break;
+        }
+        new_popups.push_back(surface);
+        surface = surface->parent();
+    }
+
     std::unique_lock<std::mutex> lock(focus_mutex);
 
-    notify_focus_locked(lock, focus_session, focus_surface);
-    update_focus_locked(lock, focus_session, focus_surface);
+    for (auto const& old_popup_weak : popups_of_focused_surface)
+    {
+        if (auto const old_popup = old_popup_weak.lock())
+        {
+            if (find(begin(new_popups), end(new_popups), old_popup) == end(new_popups))
+            {
+                // If the popup isn't in the set of new popups, hide it
+                old_popup->request_client_surface_close();
+                old_popup->hide();
+            }
+        }
+    }
+
+    popups_of_focused_surface.clear();
+    for (auto const& new_popup : new_popups)
+    {
+        popups_of_focused_surface.push_back(new_popup);
+    }
+
+    notify_focus_locked(lock, focus_session, surface);
+    update_focus_locked(lock, focus_session, surface);
 }
 
 void msh::AbstractShell::notify_focus_locked(
@@ -439,13 +475,6 @@ void msh::AbstractShell::notify_focus_locked(
             if (find(begin(new_focus_tree), end(new_focus_tree), item) == end(new_focus_tree))
             {
                 item->set_focus_state(mir_window_focus_state_unfocused);
-
-                // When a menu loses focus we should close and unmap it
-                if (item->type() == mir_window_type_menu)
-                {
-                    item->request_client_surface_close();
-                    item->hide();
-                }
             }
         }
 

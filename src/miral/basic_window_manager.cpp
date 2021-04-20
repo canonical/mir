@@ -164,7 +164,7 @@ auto miral::BasicWindowManager::add_surface(
     for_each_workspace_containing(parent,
         [&](std::shared_ptr<miral::Workspace> const& workspace) { add_tree_to_workspace(window, workspace); });
 
-    update_attached_and_fullscreen_sets(window_info, window_info.state());
+    update_attached_and_fullscreen_sets(window_info);
 
     if (window_info.state() == mir_window_state_attached)
         update_application_zones_and_attached_windows();
@@ -745,12 +745,22 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
 
     // If the window is not explicity attached to any area, find the area it overlaps most with
     Rectangle window_rect{window.top_left(), window.size()};
+
+    if (auto best_area = display_area_for(window_rect))
+        return best_area.value();
+    else
+        return std::make_shared<DisplayArea>(window_rect);
+}
+
+auto miral::BasicWindowManager::display_area_for(Rectangle const& rect) const
+-> std::optional<std::shared_ptr<DisplayArea>>
+{
     int max_overlap_area = 0;
     int min_distance = INT_MAX;
-    std::experimental::optional<std::shared_ptr<DisplayArea>> best_area;
+    std::optional<std::shared_ptr<DisplayArea>> best_area;
     for (auto& area : display_areas)
     {
-        auto const intersection = window_rect.intersection_with(area->area).size;
+        auto const intersection = rect.intersection_with(area->area).size;
         auto const intersection_area = intersection.width.as_int() * intersection.height.as_int();
         if (intersection_area > max_overlap_area)
         {
@@ -763,11 +773,11 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
             // or if none overlap, find the area that is closest
             auto distance = std::max(
                 std::max(
-                    window_rect.left() - area->area.right(),
-                    area->area.left() - window_rect.right()).as_int(),
+                    rect.left() - area->area.right(),
+                    area->area.left() - rect.right()).as_int(),
                 std::max(
-                    window_rect.top() - area->area.bottom(),
-                    area->area.top() - window_rect.bottom()).as_int());
+                    rect.top() - area->area.bottom(),
+                    area->area.top() - rect.bottom()).as_int());
             if (distance < min_distance)
             {
                 best_area = area;
@@ -775,11 +785,7 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
             }
         }
     }
-
-    if (best_area)
-        return best_area.value();
-    else
-        return std::make_shared<DisplayArea>(window_rect);
+    return best_area;
 }
 
 void miral::BasicWindowManager::focus_next_within_application()
@@ -1164,7 +1170,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     }
     else if (modifications.output_id().is_set())
     {
-        update_attached_and_fullscreen_sets(window_info, window_info.state());
+        update_attached_and_fullscreen_sets(window_info);
         application_zones_need_update = true;
     }
 
@@ -1208,8 +1214,7 @@ void miral::BasicWindowManager::place_and_size(WindowInfo& root, Point const& ne
 
 void miral::BasicWindowManager::place_attached_to_zone(
     WindowInfo& info,
-    Rectangle const& application_zone,
-    Rectangle const& output_area)
+    Rectangle const& application_zone)
 {
     Point top_left = info.window().top_left();
     Size size = info.window().size();
@@ -1243,16 +1248,16 @@ void miral::BasicWindowManager::place_attached_to_zone(
         if ((edges & mir_placement_gravity_west) &&
             (edges & mir_placement_gravity_east))
         {
-            placement_zone.top_left.x = output_area.top_left.x;
-            placement_zone.size.width = output_area.size.width;
+            placement_zone.top_left.x = application_zone.top_left.x;
+            placement_zone.size.width = application_zone.size.width;
             size.width = placement_zone.size.width;
         }
 
         if ((edges & mir_placement_gravity_north) &&
             (edges & mir_placement_gravity_south))
         {
-            placement_zone.top_left.y = output_area.top_left.y;
-            placement_zone.size.height = output_area.size.height;
+            placement_zone.top_left.y = application_zone.top_left.y;
+            placement_zone.size.height = application_zone.size.height;
             size.height = placement_zone.size.height;
         }
 
@@ -1274,7 +1279,7 @@ void miral::BasicWindowManager::place_attached_to_zone(
     }
 
     default:
-        fatal_error("BasicWindowManager::place_maximized() called for window not in a maximized or attached state");
+        fatal_error("BasicWindowManager::place_attached_to_zone() called for window not in a maximized or attached state");
     }
 
     // TODO: Maybe remove update_window and update only if the rect has changed?
@@ -1387,21 +1392,25 @@ void miral::BasicWindowManager::place_and_size_for_state(
     modifications.size() = rect.size;
 }
 
-void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo& window_info, MirWindowState state)
+void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo const& window_info)
 {
+    auto const state = window_info.state();
     auto const window = window_info.window();
-    auto const area = display_area_for(window_info);
 
-    fullscreen_surfaces.erase(window);
+    if (state == mir_window_state_fullscreen)
+    {
+        fullscreen_surfaces.insert(window);
+    }
+    else
+    {
+        fullscreen_surfaces.erase(window);
+    }
+
     for (auto& area : display_areas)
         area->attached_windows.erase(window);
 
     switch (state)
     {
-    case mir_window_state_fullscreen:
-        fullscreen_surfaces.insert(window);
-        break;
-
     case mir_window_state_maximized:
     case mir_window_state_vertmaximized:
     case mir_window_state_horizmaximized:
@@ -1422,8 +1431,6 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
     {
         return;
     }
-
-    update_attached_and_fullscreen_sets(window_info, value);
 
     auto const window = window_info.window();
     auto const mir_surface = std::shared_ptr<scene::Surface>(window);
@@ -1506,6 +1513,8 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
             select_active_window(window);
         }
     }
+
+    update_attached_and_fullscreen_sets(window_info);
 }
 
 void miral::BasicWindowManager::update_event_timestamp(MirKeyboardEvent const* kev)
@@ -1586,10 +1595,13 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
     {
         if (!info_for_hint.is_visible())
         {
-            policy->advise_state_change(info_for_hint, mir_window_state_restored);
-            info_for_hint.state(mir_window_state_restored);
             std::shared_ptr<scene::Surface> const& mir_surface = hint;
-            mir_surface->configure(mir_window_attrib_state, mir_window_state_restored);
+            if (info_for_hint.state() == mir_window_state_minimized)
+            {
+                policy->advise_state_change(info_for_hint, mir_window_state_restored);
+                info_for_hint.state(mir_window_state_restored);
+                mir_surface->configure(mir_window_attrib_state, mir_window_state_restored);
+            }
             mir_surface->show();
         }
 
@@ -2047,7 +2059,6 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 -> mir::optional_value<Rectangle>
 {
     auto const hints = parameters.placement_hints().value();
-    auto const active_output_area = active_output();
     auto const win_gravity = parameters.window_placement_gravity().value();
 
     if (parameters.size().is_set())
@@ -2058,6 +2069,9 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
     Rectangle aux_rect = parameters.aux_rect().value();
     aux_rect.top_left = aux_rect.top_left + (parent.top_left-Point{});
+
+    auto const probable_display_area = display_area_for(aux_rect);
+    auto const placement_bounds = probable_display_area ? probable_display_area.value()->area : parent;
 
     std::vector<MirPlacementGravity> rect_gravities{parameters.aux_rect_placement_gravity().value()};
 
@@ -2072,7 +2086,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
             auto result = constrain_to(parent, anchor_for(aux_rect, rect_gravity) + offset) +
                 offset_for(size, win_gravity);
 
-            if (active_output_area.contains(Rectangle{result, size}))
+            if (placement_bounds.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
 
             if (!default_result.is_set())
@@ -2084,7 +2098,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
             auto result = constrain_to(parent, anchor_for(aux_rect, flip_x(rect_gravity)) + flip_x(offset)) +
                 offset_for(size, flip_x(win_gravity));
 
-            if (active_output_area.contains(Rectangle{result, size}))
+            if (placement_bounds.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
         }
 
@@ -2093,7 +2107,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
             auto result = constrain_to(parent, anchor_for(aux_rect, flip_y(rect_gravity)) + flip_y(offset)) +
                 offset_for(size, flip_y(win_gravity));
 
-            if (active_output_area.contains(Rectangle{result, size}))
+            if (placement_bounds.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
         }
 
@@ -2102,7 +2116,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
             auto result = constrain_to(parent, anchor_for(aux_rect, flip_x(flip_y(rect_gravity))) + flip_x(flip_y(offset))) +
                 offset_for(size, flip_x(flip_y(win_gravity)));
 
-            if (active_output_area.contains(Rectangle{result, size}))
+            if (placement_bounds.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
         }
     }
@@ -2114,8 +2128,8 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
         if (hints & mir_placement_hints_slide_x)
         {
-            auto const left_overhang  = result.x - active_output_area.top_left.x;
-            auto const right_overhang = (result + as_displacement(size)).x - active_output_area.top_right().x;
+            auto const left_overhang  = result.x - placement_bounds.top_left.x;
+            auto const right_overhang = (result + as_displacement(size)).x - placement_bounds.top_right().x;
 
             if (left_overhang < DeltaX{0})
                 result -= left_overhang;
@@ -2125,8 +2139,8 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
         if (hints & mir_placement_hints_slide_y)
         {
-            auto const top_overhang  = result.y - active_output_area.top_left.y;
-            auto const bot_overhang = (result + as_displacement(size)).y - active_output_area.bottom_left().y;
+            auto const top_overhang  = result.y - placement_bounds.top_left.y;
+            auto const bot_overhang = (result + as_displacement(size)).y - placement_bounds.bottom_left().y;
 
             if (top_overhang < DeltaY{0})
                 result -= top_overhang;
@@ -2134,7 +2148,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
                 result -= bot_overhang;
         }
 
-        if (active_output_area.contains(Rectangle{result, size}))
+        if (placement_bounds.contains(Rectangle{result, size}))
             return Rectangle{result, size};
     }
 
@@ -2145,8 +2159,8 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
         if (hints & mir_placement_hints_resize_x)
         {
-            auto const left_overhang  = result.x - active_output_area.top_left.x;
-            auto const right_overhang = (result + as_displacement(size)).x - active_output_area.top_right().x;
+            auto const left_overhang  = result.x - placement_bounds.top_left.x;
+            auto const right_overhang = (result + as_displacement(size)).x - placement_bounds.top_right().x;
 
             if (left_overhang < DeltaX{0})
             {
@@ -2162,8 +2176,8 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
         if (hints & mir_placement_hints_resize_y)
         {
-            auto const top_overhang  = result.y - active_output_area.top_left.y;
-            auto const bot_overhang = (result + as_displacement(size)).y - active_output_area.bottom_left().y;
+            auto const top_overhang  = result.y - placement_bounds.top_left.y;
+            auto const bot_overhang = (result + as_displacement(size)).y - placement_bounds.bottom_left().y;
 
             if (top_overhang < DeltaY{0})
             {
@@ -2177,7 +2191,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
             }
         }
 
-        if (active_output_area.contains(Rectangle{result, size}))
+        if (placement_bounds.contains(Rectangle{result, size}))
             return Rectangle{result, size};
     }
 
@@ -2645,7 +2659,7 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         for (auto const& window : area->attached_windows)
         {
             auto info{info_for(window)};
-            update_attached_and_fullscreen_sets(info, info.state());
+            update_attached_and_fullscreen_sets(info);
         }
 
         // Tell the policy about removed application zones
@@ -2682,32 +2696,43 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
             {
                 auto& info = info_for(window);
 
-                if (info.state() == mir_window_state_attached && info.exclusive_rect().is_set())
-                    first_pass.push_back(&info);
-                else
+                switch (info.state())
+                {
+                case mir_window_state_attached:
+                    if (info.exclusive_rect().is_set())
+                    {
+                        first_pass.push_back(&info);
+                        break;
+                    }
+                    // fallthrough
+                case mir_window_state_maximized:
+                case mir_window_state_horizmaximized:
+                case mir_window_state_vertmaximized:
                     second_pass.push_back(&info);
+                    break;
+
+                default:
+                    log_error("Window in attached_windows is not attached or maximized");
+                    break;
+                }
             }
         }
 
         for (auto info_ptr : first_pass)
         {
-            place_attached_to_zone(*info_ptr, zone_rect, area->area);
+            place_attached_to_zone(*info_ptr, zone_rect);
 
             auto& info = *info_ptr;
-            if (info.state() == mir_window_state_attached && info.exclusive_rect().is_set())
-            {
-                auto edges = info.attached_edges();
-                Rectangle exclusive_rect{
-                    info.exclusive_rect().value().top_left + as_displacement(info.window().top_left()),
-                    info.exclusive_rect().value().size};
+            Rectangle exclusive_rect{
+                info.exclusive_rect().value().top_left + as_displacement(info.window().top_left()),
+                info.exclusive_rect().value().size};
 
-                zone_rect = apply_exclusive_rect_to_application_zone(zone_rect, exclusive_rect, edges);
-            }
+            zone_rect = apply_exclusive_rect_to_application_zone(zone_rect, exclusive_rect, info.attached_edges());
         }
 
         for (auto info_ptr : second_pass)
         {
-            place_attached_to_zone(*info_ptr, zone_rect, area->area);
+            place_attached_to_zone(*info_ptr, zone_rect);
         }
 
         area->application_zone.extents(zone_rect);

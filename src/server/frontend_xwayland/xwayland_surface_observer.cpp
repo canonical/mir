@@ -24,6 +24,7 @@
 #include "window_wl_surface_role.h"
 #include "wayland_input_dispatcher.h"
 
+#include <mir/executor.h>
 #include <mir/events/event_builders.h>
 
 #include <mir/input/keymap.h>
@@ -36,12 +37,16 @@ namespace mev = mir::events;
 namespace mi = mir::input;
 
 mf::XWaylandSurfaceObserver::XWaylandSurfaceObserver(
+    Executor& wayland_executor,
     WlSeat& seat,
     WlSurface* wl_surface,
-    XWaylandSurfaceObserverSurface* wm_surface)
+    XWaylandSurfaceObserverSurface* wm_surface,
+    float scale)
     : wm_surface{wm_surface},
+      wayland_executor{wayland_executor},
       input_dispatcher{std::make_shared<ThreadsafeInputDispatcher>(
-          std::make_unique<WaylandInputDispatcher>(&seat, wl_surface))}
+          std::make_unique<WaylandInputDispatcher>(&seat, wl_surface))},
+      scale{scale}
 {
 }
 
@@ -78,12 +83,12 @@ void mf::XWaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAt
 
 void mf::XWaylandSurfaceObserver::content_resized_to(ms::Surface const*, geom::Size const& content_size)
 {
-    wm_surface->scene_surface_resized(content_size);
+    wm_surface->scene_surface_resized(content_size * scale);
 }
 
 void mf::XWaylandSurfaceObserver::moved_to(ms::Surface const*, geom::Point const& top_left)
 {
-    wm_surface->scene_surface_moved_to(top_left);
+    wm_surface->scene_surface_moved_to(as_point(as_displacement(top_left) * scale));
 }
 
 void mf::XWaylandSurfaceObserver::client_surface_close_requested(ms::Surface const*)
@@ -114,6 +119,7 @@ void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, MirEvent co
     if (mir_event_get_type(event) == mir_event_type_input)
     {
         std::shared_ptr<MirEvent> owned_event = mev::clone_event(*event);
+        mev::scale_positions(*owned_event, scale);
 
         aquire_input_dispatcher(
             [owned_event](auto input_dispatcher)
@@ -145,7 +151,7 @@ mf::XWaylandSurfaceObserver::ThreadsafeInputDispatcher::~ThreadsafeInputDispatch
 
 void mf::XWaylandSurfaceObserver::aquire_input_dispatcher(std::function<void(WaylandInputDispatcher*)>&& work)
 {
-    wm_surface->run_on_wayland_thread([work = move(work), input_dispatcher = input_dispatcher]()
+    wayland_executor.spawn([work = move(work), input_dispatcher = input_dispatcher]()
         {
             std::lock_guard<std::mutex> lock{input_dispatcher->mutex};
             if (input_dispatcher->dispatcher)

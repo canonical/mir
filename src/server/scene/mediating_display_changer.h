@@ -122,6 +122,12 @@ private:
     std::weak_ptr<scene::Session> currently_previewing_session;
     struct SessionObserver;
     std::unique_ptr<SessionObserver> const session_observer;
+
+    /// Mutex protecting pending_configuration
+    std::mutex pending_configuration_mutex;
+    /// See configure_for_hardware_change(). The config that will be applied by a currently in-flight server action.
+    /// If null, there is no config to apply or hardware config server action queued.
+    std::shared_ptr<graphics::DisplayConfiguration> pending_configuration;
 };
 
 }

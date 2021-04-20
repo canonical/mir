@@ -17,6 +17,7 @@
  */
 
 #include "mir/geometry/displacement.h"
+#include "mir/geometry/displacement_f.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -81,4 +82,26 @@ TEST(geometry, displacement_point_arithmetic)
     EXPECT_EQ(expected_pd_sub2, pd_sub2);
     EXPECT_EQ(expected_pp_sub, pp_sub);
     EXPECT_EQ(expected_pp_sub2, pp_sub2);
+}
+
+TEST(geometry, displacement_can_be_converted_from_int_to_float)
+{
+    using namespace geom;
+
+    Displacement const i{1, 3};
+    DisplacementF const f{i};
+
+    EXPECT_EQ(DeltaXF(1.0), f.dx);
+    EXPECT_EQ(DeltaYF(3.0), f.dy);
+}
+
+TEST(geometry, displacement_can_be_converted_from_float_to_int)
+{
+    using namespace geom;
+
+    DisplacementF const f{1.2, 3.0};
+    Displacement const i{f};
+
+    EXPECT_EQ(DeltaX(1), i.dx);
+    EXPECT_EQ(DeltaY(3), i.dy);
 }

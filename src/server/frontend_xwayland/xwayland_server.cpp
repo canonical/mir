@@ -18,6 +18,7 @@
 
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
+#include "wl_client.h"
 #include "wayland_connector.h"
 #include "mir/log.h"
 
@@ -33,6 +34,7 @@
 
 #include <chrono>
 #include <condition_variable>
+#include <cstring>
 
 namespace mf = mir::frontend;
 namespace md = mir::dispatch;
@@ -40,11 +42,23 @@ using namespace std::chrono_literals;
 
 namespace
 {
+/// Returns a symmetrical pair of connected sockets
+auto make_socket_pair() -> std::pair<mir::Fd, mir::Fd>
+{
+    int pipe[2];
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, pipe) < 0)
+    {
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Creating socket pair failed"));
+    }
+    return std::make_pair(mir::Fd{pipe[0]}, mir::Fd{pipe[1]});
+}
+
 void exec_xwayland(
     mf::XWaylandSpawner const& spawner,
     std::string const& xwayland_path,
     mir::Fd wayland_client_fd,
-    mir::Fd x11_wm_server_fd)
+    mir::Fd x11_wm_server_fd,
+    float scale)
 {
     mf::XWaylandSpawner::set_cloexec(wayland_client_fd, false);
     mf::XWaylandSpawner::set_cloexec(x11_wm_server_fd, false);
@@ -54,11 +68,17 @@ void exec_xwayland(
     auto const x11_wm_server = std::to_string(x11_wm_server_fd);
     auto const dsp_str = spawner.x11_display();
 
+    // This DPI only effects some apps (most app care about GDK_SCALE and other environment variables)
+    unsigned const dpi = scale * 96;
+    auto const dpi_str = std::to_string(dpi);
+
     std::vector<char const*> args =
         {
             xwayland_path.c_str(),
             dsp_str.c_str(),
             "-rootless",
+            "-dpi",
+            dpi_str.c_str(),
             "-wm", x11_wm_server.c_str(),
             "-terminate",
         };
@@ -83,10 +103,11 @@ void exec_xwayland(
 auto fork_xwayland_process(
     mf::XWaylandSpawner const& spawner,
     std::string const& xwayland_path,
-    mir::Fd wayland_client_fd,
-    mir::Fd x11_wm_server_fd) -> pid_t
+    float scale) -> mf::XWaylandProcessInfo
 {
     mir::log_info("Starting XWayland");
+    auto const wayland_socket_pair = make_socket_pair();
+    auto const x11_socket_pair = make_socket_pair();
     pid_t const xwayland_pid = fork();
 
     switch (xwayland_pid)
@@ -95,18 +116,22 @@ auto fork_xwayland_process(
         BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to fork XWayland process"));
 
     case 0:
-        exec_xwayland(spawner, xwayland_path, wayland_client_fd, x11_wm_server_fd);
+        exec_xwayland(spawner, xwayland_path, wayland_socket_pair.second, x11_socket_pair.second, scale);
         // Only reached if Xwayland was not executed
         abort();
 
     default:
-        return xwayland_pid;
+        return mf::XWaylandProcessInfo{
+            xwayland_pid,
+            wayland_socket_pair.first,
+            x11_socket_pair.first};
     }
 }
 
 auto connect_xwayland_wl_client(
     std::shared_ptr<mf::WaylandConnector> const& wayland_connector,
-    mir::Fd const& wayland_fd) -> wl_client*
+    mir::Fd const& wayland_fd,
+    float scale) -> wl_client*
 {
     struct CreateClientContext
     {
@@ -119,10 +144,11 @@ auto connect_xwayland_wl_client(
     auto const ctx = std::make_shared<CreateClientContext>();
 
     wayland_connector->run_on_wayland_display(
-        [ctx, wayland_fd](wl_display* display)
+        [ctx, wayland_fd, scale](wl_display* display)
         {
             std::lock_guard<std::mutex> lock{ctx->mutex};
             ctx->client = wl_client_create(display, wayland_fd);
+            mf::WlClient::from(ctx->client)->set_output_geometry_scale(scale);
             ctx->ready = true;
             ctx->condition_variable.notify_all();
         });
@@ -147,11 +173,9 @@ mf::XWaylandServer::XWaylandServer(
     std::shared_ptr<WaylandConnector> const& wayland_connector,
     XWaylandSpawner const& spawner,
     std::string const& xwayland_path,
-    std::pair<mir::Fd, mir::Fd> const& wayland_socket_pair,
-    mir::Fd const& x11_server_fd)
-    : xwayland_pid{fork_xwayland_process(spawner, xwayland_path, wayland_socket_pair.first, x11_server_fd)},
-      wayland_server_fd{wayland_socket_pair.second},
-      wayland_client{connect_xwayland_wl_client(wayland_connector, wayland_server_fd)},
+    float scale)
+    : xwayland{fork_xwayland_process(spawner, xwayland_path, scale)},
+      wayland_client{connect_xwayland_wl_client(wayland_connector, xwayland.wayland_fd, scale)},
       running{true}
 {
 }
@@ -161,20 +185,20 @@ mf::XWaylandServer::~XWaylandServer()
     mir::log_info("Deiniting xwayland server");
 
     // Terminate any running xservers
-    if (kill(xwayland_pid, SIGTERM) == 0)
+    if (kill(xwayland.pid, SIGTERM) == 0)
     {
         std::this_thread::sleep_for(100ms);// After 100ms...
         if (is_running())
         {
             mir::log_info("Xwayland didn't close, killing it");
-            kill(xwayland_pid, SIGKILL);     // ...then kill it!
+            kill(xwayland.pid, SIGKILL);     // ...then kill it!
         }
     }
 
     // Calling is_running() one more time will ensure the process is reaped
     if (is_running())
     {
-        log_warning("Failed to kill Xwayland process with PID %d", xwayland_pid);
+        log_warning("Failed to kill Xwayland process with PID %d", xwayland.pid);
     }
 }
 
@@ -185,21 +209,11 @@ auto mf::XWaylandServer::is_running() const -> bool
     if (running)
     {
         int status; // Special waitpid() status, not the process exit status
-        if (waitpid(xwayland_pid, &status, WNOHANG) != 0)
+        if (waitpid(xwayland.pid, &status, WNOHANG) != 0)
         {
             running = false;
         }
     }
 
     return running;
-}
-
-auto mf::XWaylandServer::make_socket_pair() -> std::pair<mir::Fd, mir::Fd>
-{
-    int pipe[2];
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, pipe) < 0)
-    {
-        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Creating socket pair failed"));
-    }
-    return std::make_pair(mir::Fd{pipe[0]}, mir::Fd{pipe[1]});
 }

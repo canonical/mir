@@ -20,11 +20,17 @@
 #define MIR_X11_RESOURCES_H_
 
 #include <X11/Xlib.h>
-#include <experimental/optional>
+#include <optional>
 #include <unordered_map>
+#include <functional>
+#include <mutex>
 
 namespace mir
 {
+namespace geometry
+{
+struct Size;
+}
 namespace graphics
 {
 struct DisplayConfigurationOutput;
@@ -38,19 +44,32 @@ int mir_x11_error_handler(Display* dpy, XErrorEvent* eev);
 class X11Resources
 {
 public:
+    class VirtualOutput
+    {
+    public:
+        VirtualOutput() = default;
+        virtual ~VirtualOutput() = default;
+        VirtualOutput(VirtualOutput const&) = delete;
+        VirtualOutput& operator=(VirtualOutput const&) = delete;
+
+        virtual auto configuration() const -> graphics::DisplayConfigurationOutput const& = 0;
+        virtual void set_size(geometry::Size const& size) = 0;
+    };
+
     auto get_conn() -> std::shared_ptr<::Display>;
-    void set_output_config_for_win(
-        Window win,
-        std::weak_ptr<graphics::DisplayConfigurationOutput const> configuration);
-    void clear_output_config_for_win(Window win);
-    auto get_output_config_for_win(Window win)
-        -> std::experimental::optional<graphics::DisplayConfigurationOutput const* const>;
+
+    void set_set_output_for_window(Window win, VirtualOutput* output);
+    void clear_output_for_window(Window win);
+
+    /// X11Resources's mutex stays locked while the provided function runs
+    void with_output_for_window(Window win, std::function<void(std::optional<VirtualOutput*> output)> fn);
 
     static X11Resources instance;
 
 private:
+    std::mutex mutex;
     std::weak_ptr<::Display> connection;
-    std::unordered_map<Window, std::weak_ptr<graphics::DisplayConfigurationOutput const>> output_configs;
+    std::unordered_map<Window, VirtualOutput*> outputs;
 };
 
 }

@@ -943,6 +943,7 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     mir::DefaultServerConfiguration::wrap_shell*;
     mir::DefaultServerConfiguration::wrap_surface_stack*;
+    mir::DefaultServerConfiguration::the_clipboard*;
     typeinfo?for?mir::DefaultServerConfiguration;
     VTT?for?mir::DefaultServerConfiguration;
     vtable?for?mir::DefaultServerConfiguration;

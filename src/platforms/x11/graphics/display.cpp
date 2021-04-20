@@ -30,7 +30,6 @@
 #include "display.h"
 #include "platform.h"
 #include "display_buffer.h"
-#include "../X11_resources.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -47,33 +46,6 @@ namespace geom=mir::geometry;
 
 namespace
 {
-geom::Size clip_to_display(Display *dpy, geom::Size requested_size)
-{
-    unsigned int screen_width, screen_height, uint_dummy;
-    int int_dummy;
-    Window window_dummy;
-    int const border = 150;
-
-    XGetGeometry(dpy, XDefaultRootWindow(dpy), &window_dummy, &int_dummy, &int_dummy,
-        &screen_width, &screen_height, &uint_dummy, &uint_dummy);
-
-    mir::log_info("Screen resolution = %dx%d", screen_width, screen_height);
-
-    auto const width  = std::min(requested_size.width,  geom::Width{screen_width-border});
-    auto const height = std::min(requested_size.height, geom::Height{screen_height-border});
-
-    geom::Size const result{width, height};
-
-    if (result != requested_size)
-    {
-        mir::log_info(" ... is smaller than the requested size (%dx%d) plus border (%d). Clipping to (%dx%d).",
-                      requested_size.width.as_uint32_t(), requested_size.height.as_uint32_t(), border,
-                      width.as_uint32_t(), height.as_uint32_t());
-    }
-
-    return result;
-}
-
 auto get_pixel_width(Display *dpy)
 {
     auto screen = XDefaultScreenOfDisplay(dpy);
@@ -93,9 +65,8 @@ public:
     XGLContext(::Display* const x_dpy,
                std::shared_ptr<mg::GLConfig> const& gl_config,
                EGLContext const shared_ctx)
-        : egl{*gl_config}
+        : egl{*gl_config, x_dpy, shared_ctx}
     {
-        egl.setup(x_dpy, shared_ctx);
     }
 
     ~XGLContext() = default;
@@ -111,7 +82,7 @@ public:
     }
 
 private:
-    mgx::helpers::EGLHelper egl;
+    mgx::helpers::EGLHelper const egl;
 };
 }
 
@@ -176,18 +147,7 @@ mgx::X11Window::X11Window(::Display* x_dpy,
     {
         char const * const title = "Mir On X";
         XSizeHints sizehints;
-
-        // TODO: Due to a bug, resize doesn't work after XGrabKeyboard under Unity.
-        //       For now, make window unresizeable.
-        //     http://stackoverflow.com/questions/14555703/x11-unable-to-move-window-after-xgrabkeyboard
-        sizehints.base_width = size.width.as_int();
-        sizehints.base_height = size.height.as_int();
-        sizehints.min_width = size.width.as_int();
-        sizehints.min_height = size.height.as_int();
-        sizehints.max_width = size.width.as_int();
-        sizehints.max_height = size.height.as_int();
-        sizehints.flags = PSize | PMinSize | PMaxSize;
-
+        sizehints.flags = 0;
         XSetNormalHints(x_dpy, win, &sizehints);
         XSetStandardProperties(x_dpy, win, title, title, None, (char **)NULL, 0, &sizehints);
 
@@ -240,7 +200,7 @@ mgx::Display::Display(::Display* x_dpy,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& report)
-    : shared_egl{*gl_config},
+    : shared_egl{*gl_config, x_dpy},
       x_dpy{x_dpy},
       gl_config{gl_config},
       pixel_width{get_pixel_width(x_dpy)},
@@ -248,13 +208,11 @@ mgx::Display::Display(::Display* x_dpy,
       report{report},
       last_frame{std::make_shared<AtomicFrame>()}
 {
-    shared_egl.setup(x_dpy);
-
     geom::Point top_left{0, 0};
 
     for (auto const& requested_size : requested_sizes)
     {
-        auto actual_size = clip_to_display(x_dpy, requested_size.size);
+        auto actual_size = requested_size.size;
         auto window = std::make_unique<X11Window>(x_dpy, shared_egl.display(), actual_size, shared_egl.config());
         auto red_mask = window->red_mask();
         auto pf = (red_mask == 0xFF0000 ?
@@ -276,8 +234,8 @@ mgx::Display::Display(::Display* x_dpy,
             last_frame,
             report,
             *gl_config);
-        outputs.push_back(std::make_unique<OutputInfo>(move(window), move(display_buffer), configuration));
         top_left.x += as_delta(configuration->extents().size.width);
+        outputs.push_back(std::make_unique<OutputInfo>(this, move(window), move(display_buffer), move(configuration)));
     }
 
     shared_egl.make_current();
@@ -294,6 +252,7 @@ mgx::Display::~Display() noexcept
 
 void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
 {
+    std::lock_guard<std::mutex> lock{mutex};
     for (auto const& output : outputs)
     {
         f(*output->display_buffer);
@@ -302,16 +261,19 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
+    std::lock_guard<std::mutex> lock{mutex};
     std::vector<DisplayConfigurationOutput> output_configurations;
     for (auto const& output : outputs)
     {
-        output_configurations.push_back(*output->configuration);
+        output_configurations.push_back(*output->config);
     }
     return std::make_unique<mgx::DisplayConfiguration>(output_configurations);
 }
 
 void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 {
+    std::lock_guard<std::mutex> lock{mutex};
+
     if (!new_configuration.valid())
     {
         BOOST_THROW_EXCEPTION(
@@ -324,11 +286,11 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 
         for (auto& output : outputs)
         {
-            if (output->configuration->id == conf_output.id)
+            if (output->config->id == conf_output.id)
             {
-                *output->configuration = conf_output;
-                output->display_buffer->set_view_area(output->configuration->extents());
-                output->display_buffer->set_transformation(output->configuration->transformation());
+                *output->config = conf_output;
+                output->display_buffer->set_view_area(output->config->extents());
+                output->display_buffer->set_transformation(output->config->transformation());
                 found_info = true;
                 break;
             }
@@ -341,8 +303,10 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 
 void mgx::Display::register_configuration_change_handler(
     EventHandlerRegister& /* event_handler*/,
-    DisplayConfigurationChangeHandler const& /*change_handler*/)
+    DisplayConfigurationChangeHandler const& change_handler)
 {
+    std::lock_guard<std::mutex> lock{mutex};
+    config_change_handlers.push_back(change_handler);
 }
 
 void mgx::Display::register_pause_resume_handlers(
@@ -389,17 +353,37 @@ mg::Frame mgx::Display::last_frame_on(unsigned) const
 }
 
 mgx::Display::OutputInfo::OutputInfo(
+    Display* owner,
     std::unique_ptr<X11Window> window,
     std::unique_ptr<DisplayBuffer> display_buffer,
     std::shared_ptr<DisplayConfigurationOutput> configuration)
-    : window{move(window)},
+    : owner{owner},
+      window{move(window)},
       display_buffer{move(display_buffer)},
-      configuration{configuration}
+      config{move(configuration)}
 {
-    mx::X11Resources::instance.set_output_config_for_win(*this->window, this->configuration);
+    mx::X11Resources::instance.set_set_output_for_window(*this->window, this);
 }
 
 mgx::Display::OutputInfo::~OutputInfo()
 {
-    mx::X11Resources::instance.clear_output_config_for_win(*this->window);
+    mx::X11Resources::instance.clear_output_for_window(*window);
+}
+
+void mgx::Display::OutputInfo::set_size(geometry::Size const& size)
+{
+    std::unique_lock<std::mutex> lock{owner->mutex};
+    if (config->modes[0].size == size)
+    {
+        return;
+    }
+    config->modes[0].size = size;
+    display_buffer->set_view_area({display_buffer->view_area().top_left, size});
+    auto const handlers = owner->config_change_handlers;
+
+    lock.unlock();
+    for (auto const& handler : handlers)
+    {
+        handler();
+    }
 }

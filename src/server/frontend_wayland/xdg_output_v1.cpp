@@ -19,6 +19,7 @@
 #include "xdg_output_v1.h"
 
 #include "wl_surface.h"
+#include "wl_client.h"
 #include "xdg-output-unstable-v1_wrapper.h"
 #include "mir/log.h"
 #include "output_manager.h"
@@ -68,6 +69,8 @@ public:
 
 private:
     void destroy();
+
+    float const geometry_scale;
 };
 
 }
@@ -138,11 +141,16 @@ mf::XdgOutputV1::XdgOutputV1(
     wl_resource* new_resource,
     mg::DisplayConfigurationOutput const& config,
     wl_resource* wl_output_resource)
-    : mw::XdgOutputV1(new_resource, Version<3>())
+    : mw::XdgOutputV1(new_resource, Version<3>()),
+      geometry_scale{WlClient::from(client)->output_geometry_scale()}
 {
     auto extents = config.extents();
-    send_logical_position_event(extents.left().as_int(), extents.top().as_int());
-    send_logical_size_event(extents.size.width.as_int(), extents.size.height.as_int());
+    send_logical_position_event(
+        extents.top_left.x.as_int() * geometry_scale,
+        extents.top_left.y.as_int() * geometry_scale);
+    send_logical_size_event(
+        extents.size.width.as_int() * geometry_scale,
+        extents.size.height.as_int() * geometry_scale);
     if (version_supports_name())
     {
         // TODO: Better output names that are consistant between sessions

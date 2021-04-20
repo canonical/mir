@@ -178,7 +178,7 @@ function (mir_discover_external_gtests)
   endif()
 
   file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND}\" -- ${TEST_COMMAND} --gtest_filter=-${EXPECTED_FAILURE_STRING} ${TEST_ARGS_STRING}\n")
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND} ${TEST_ARGS_STRING}\" --gtest-exclude ${EXPECTED_FAILURE_STRING} -- ${TEST_COMMAND} ${TEST_ARGS_STRING} \n")
 
   foreach (xfail IN LISTS TEST_EXPECTED_FAILURES)
     # Add a test verifying that the expected failures really do fail
@@ -193,7 +193,8 @@ function (mir_discover_external_gtests)
       set_tests_properties("${TEST_NAME}_${xfail}_fails" PROPERTIES WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY})
     endif()
 
-    # Unsupported for ptest, but this should be ok
+    file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+      "echo \"add_test\(${TEST_NAME}.${xfail}_fails ${CMAKE_BINARY_DIR}/mir_gtest/xfail_if_gtest_exists.sh ${TEST_COMMAND} ${xfail} ${TEST_ARGS_STRING})\"\n")
   endforeach ()
 endfunction()
 
@@ -217,77 +218,6 @@ function (mir_add_detect_fd_leaks_test)
     mir_add_test(NAME "detect-fd-leaks-propagates-test-failure"
       COMMAND ${CMAKE_BINARY_DIR}/mir_gtest/fail_on_success.sh ${CMAKE_SOURCE_DIR}/tools/detect_fd_leaks.bash ${VALGRIND_CMD} ${CMAKE_BINARY_DIR}/mir_gtest/mir_test_memory_error)
     add_dependencies(detect_fd_leaks_propagates_test_failure_test mir_test_memory_error)
-  endif()
-endfunction()
-
-function (mir_precompiled_header TARGET HEADER)
-  if (MIR_USE_PRECOMPILED_HEADERS)
-    get_filename_component(HEADER_NAME ${HEADER} NAME)
-
-    get_property(TARGET_INCLUDE_DIRECTORIES TARGET ${TARGET} PROPERTY INCLUDE_DIRECTORIES)
-
-    set(TARGET_COMPILE_DEFINITIONS "$<TARGET_PROPERTY:${TARGET},COMPILE_DEFINITIONS>")
-    set(TARGET_COMPILE_DEFINITIONS "$<$<BOOL:${TARGET_COMPILE_DEFINITIONS}>:-D$<JOIN:${TARGET_COMPILE_DEFINITIONS},\n-D>\n>")
-
-    foreach(dir ${TARGET_INCLUDE_DIRECTORIES})
-      set(TARGET_INCLUDE_DIRECTORIES_STRING "${TARGET_INCLUDE_DIRECTORIES_STRING} -I${dir}")
-    endforeach()
-
-    # So.
-    # ${CMAKE_CXX_FLAGS} *only* includes the base flags, not any extra flags set by the build target.
-    # The build targets set flags which affect the precompiled headers - -g verses no debug for the Debug build,
-    # -g -O2 -NDEBUG versus no specified optimisation for RelWithDebugInfo, etc.
-    #
-    # The various CMAKE_CXX_FLAGS_DEBUG, CMAKE_CXX_FLAGS_RELWITHDEBUGINFO, etc variables have the extra flags
-    # to add. CMAKE_BUILD_TYPE contains "Debug" or "RelWithDebugInfo" or "Release" etc, however, so first
-    # we need to uppercase CMAKE_BUILD_TYPE, then dereference ${CMAKE_CXX_FLAGS_${UC_BUILD_TYPE}}.
-    #
-    # I'm unaware of a less roundabout method of getting the *actual* build flags for a target.
-    string(TOUPPER "${CMAKE_BUILD_TYPE}" UC_BUILD_TYPE)
-
-    # Lllloook at you, haaacker. A pa-pa-pathetic creature of meat and bone.
-    #
-    # It appears that we can *only* get the COMPILE_DEFINITIONS as a generator expression.
-    # This wouldn't be so bad if http://www.kwwidgets.org/Bug/view.php?id=14353#c33712 didn't mean
-    # that you can't use generator expressions in custom commands.
-    #
-    # So!
-    # What we *can* do is generate a file with the contents of the generator expressions,
-    # then use gcc's @file mechanism...
-    set(FLAGS_FILE "${CMAKE_CURRENT_BINARY_DIR}/${HEADER_NAME}.compileflags")
-
-    file(
-      GENERATE
-      OUTPUT "${FLAGS_FILE}"
-      CONTENT "
-        ${CMAKE_CXX_FLAGS}
-        ${CMAKE_CXX_FLAGS_${UC_BUILD_TYPE}}
-        ${TARGET_INCLUDE_DIRECTORIES_STRING}
-        ${TARGET_COMPILE_DEFINITIONS}"
-    )
-
-    # HA HA!
-    #
-    # Of course, that has unescaped all the escaped \"s we have in the compile definitions.
-    # gcc treats the contents of @file exactly as if it came from the command line, so we need to
-    # re-escape them.
-    add_custom_command(
-      OUTPUT ${FLAGS_FILE}.processed
-      DEPENDS ${FLAGS_FILE}
-      # ESCAPE ALL THE THINGS!
-      COMMAND sh -c "sed s_\\\"_\\\\\\\\\\\"_g ${FLAGS_FILE} > ${FLAGS_FILE}.processed"
-      VERBATIM
-    )
-    add_custom_command(
-      OUTPUT ${TARGET}_precompiled.hpp.gch
-      DEPENDS ${HEADER} ${FLAGS_FILE}.processed
-      COMMAND ${CMAKE_CXX_COMPILER} @${FLAGS_FILE}.processed -x c++-header -c ${HEADER} -o ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_precompiled.hpp.gch
-    )
-
-    set_property(TARGET ${TARGET} APPEND_STRING PROPERTY COMPILE_FLAGS " -include ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_precompiled.hpp -Winvalid-pch ")
-
-    add_custom_target(${TARGET}_pch DEPENDS ${TARGET}_precompiled.hpp.gch)
-    add_dependencies(${TARGET} ${TARGET}_pch)
   endif()
 endfunction()
 

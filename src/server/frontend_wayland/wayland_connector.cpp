@@ -18,7 +18,8 @@
 
 #include "wayland_connector.h"
 
-#include "data_device.h"
+#include "wl_client.h"
+#include "wl_data_device_manager.h"
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
 #include "window_wl_surface_role.h"
@@ -27,15 +28,12 @@
 #include "wl_seat.h"
 #include "wl_region.h"
 
-#include "null_event_sink.h"
 #include "output_manager.h"
 #include "wayland_executor.h"
 
 #include "wayland_wrapper.h"
 
 #include "mir/frontend/surface.h"
-#include "mir/frontend/session_credentials.h"
-#include "mir/frontend/session_authorizer.h"
 #include "mir/frontend/wayland.h"
 
 #include "mir/compositor/buffer_stream.h"
@@ -101,136 +99,6 @@ namespace mir
 {
 namespace frontend
 {
-
-namespace
-{
-struct ClientPrivate
-{
-    ClientPrivate(std::shared_ptr<ms::Session> const& session, msh::Shell* shell)
-        : session{session},
-          shell{shell}
-    {
-    }
-
-    ~ClientPrivate()
-    {
-        shell->close_session(session);
-        /*
-         * This ensures that further calls to
-         * wl_client_get_destroy_listener(client, &cleanup_private)
-         * - and hence session_for_client(client) - return nullptr.
-         */
-        wl_list_remove(&destroy_listener.link);
-    }
-
-    wl_listener destroy_listener;
-    std::shared_ptr<ms::Session> const session;
-    /*
-     * This shell is owned by the ClientSessionConstructor, which outlives all clients.
-     */
-    msh::Shell* const shell;
-};
-
-static_assert(
-    std::is_standard_layout<ClientPrivate>::value,
-    "ClientPrivate must be standard layout for wl_container_of to be defined behaviour");
-
-ClientPrivate* private_from_listener(wl_listener* listener)
-{
-    ClientPrivate* userdata;
-    return wl_container_of(listener, userdata, destroy_listener);
-}
-
-void cleanup_private(wl_listener* listener, void* /*data*/)
-{
-    delete private_from_listener(listener);
-}
-
-struct ClientSessionConstructor
-{
-    ClientSessionConstructor(std::shared_ptr<msh::Shell> const& shell,
-                             std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
-                             std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>>* connect_handlers)
-        : shell{shell},
-          session_authorizer{session_authorizer},
-          connect_handlers{connect_handlers}
-    {
-    }
-
-    wl_listener construction_listener;
-    wl_listener destruction_listener;
-    std::shared_ptr<msh::Shell> const shell;
-    std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
-    std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>>* connect_handlers;
-
-};
-
-static_assert(
-    std::is_standard_layout<ClientSessionConstructor>::value,
-    "ClientSessionConstructor must be standard layout for wl_container_of to be "
-    "defined behaviour.");
-
-void create_client_session(wl_listener* listener, void* data)
-{
-    auto client = reinterpret_cast<wl_client*>(data);
-
-    ClientSessionConstructor* construction_context;
-    construction_context =
-        wl_container_of(listener, construction_context, construction_listener);
-
-    auto const handler_iter = construction_context->connect_handlers->find(wl_client_get_fd(client));
-
-    std::function<void(std::shared_ptr<scene::Session> const& session)> const connection_handler =
-        (handler_iter != std::end(*construction_context->connect_handlers)) ? handler_iter->second : [](auto){};
-
-    if (handler_iter != std::end(*construction_context->connect_handlers))
-        construction_context->connect_handlers->erase(handler_iter);
-
-    pid_t client_pid;
-    uid_t client_uid;
-    gid_t client_gid;
-    wl_client_get_credentials(client, &client_pid, &client_uid, &client_gid);
-
-    if (!construction_context->session_authorizer->connection_is_allowed({client_pid, client_uid, client_gid}))
-    {
-        wl_client_destroy(client);
-        return;
-    }
-
-    auto session = construction_context->shell->open_session(
-        client_pid,
-        "",
-        std::make_shared<NullEventSink>());
-
-    auto client_context = new ClientPrivate{session, construction_context->shell.get()};
-    client_context->destroy_listener.notify = &cleanup_private;
-    wl_client_add_destroy_listener(client, &client_context->destroy_listener);
-
-    connection_handler(session);
-}
-
-void cleanup_client_handler(wl_listener* listener, void*)
-{
-    ClientSessionConstructor* construction_context;
-    construction_context = wl_container_of(listener, construction_context, destruction_listener);
-
-    delete construction_context;
-}
-
-void setup_new_client_handler(wl_display* display, std::shared_ptr<msh::Shell> const& shell,
-                              std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
-                              std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>>* connect_handlers)
-{
-    auto context = new ClientSessionConstructor{shell, session_authorizer, connect_handlers};
-    context->construction_listener.notify = &create_client_session;
-
-    wl_display_add_client_created_listener(display, &context->construction_listener);
-
-    context->destruction_listener.notify = &cleanup_client_handler;
-    wl_display_add_destroy_listener(display, &context->destruction_listener);
-}
-}
-
 class WlCompositor : public wayland::Compositor::Global
 {
 public:
@@ -312,12 +180,13 @@ class WlShellSurface : public wayland::ShellSurface, public WindowWlSurfaceRole
 public:
     WlShellSurface(
         wl_resource* new_resource,
+        Executor& wayland_executor,
         WlSurface* surface,
         std::shared_ptr<msh::Shell> const& shell,
         WlSeat& seat,
         OutputManager* output_manager)
         : ShellSurface(new_resource, Version<1>()),
-          WindowWlSurfaceRole{&seat, wayland::ShellSurface::client, surface, shell, output_manager}
+          WindowWlSurfaceRole{wayland_executor, &seat, wayland::ShellSurface::client, surface, shell, output_manager}
     {
     }
 
@@ -481,10 +350,12 @@ class WlShell : public wayland::Shell::Global
 public:
     WlShell(
         wl_display* display,
+        Executor& wayland_executor,
         std::shared_ptr<msh::Shell> const& shell,
         WlSeat& seat,
         OutputManager* const output_manager)
         : Global(display, Version<1>()),
+          wayland_executor{wayland_executor},
           shell{shell},
           seat{seat},
           output_manager{output_manager}
@@ -494,6 +365,7 @@ public:
     static auto get_window(wl_resource* window) -> std::shared_ptr<Surface>;
 
 private:
+    Executor& wayland_executor;
     std::shared_ptr<msh::Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
@@ -514,6 +386,7 @@ private:
         {
             new WlShellSurface(
                 new_shell_surface,
+                shell->wayland_executor,
                 WlSurface::from(surface),
                 shell->shell,
                 shell->seat,
@@ -573,10 +446,15 @@ std::shared_ptr<mg::GraphicBufferAllocator> allocator_for_display(
 }
 }
 
-auto mf::create_wl_shell(wl_display* display, std::shared_ptr<msh::Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)
+auto mf::create_wl_shell(
+    wl_display* display,
+    Executor& wayland_executor,
+    std::shared_ptr<msh::Shell> const& shell,
+    WlSeat* seat,
+    OutputManager* const output_manager)
 -> std::shared_ptr<void>
 {
-    return std::make_shared<mf::WlShell>(display, shell, *seat, output_manager);
+    return std::make_shared<mf::WlShell>(display, wayland_executor, shell, *seat, output_manager);
 }
 
 void mf::WaylandExtensions::init(Context const& context)
@@ -614,6 +492,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<SurfaceStack> const& surface_stack,
+    std::shared_ptr<ms::Clipboard> const& clipboard,
     bool arw_socket,
     std::unique_ptr<WaylandExtensions> extensions_,
     WaylandProtocolExtensionFilter const& extension_filter)
@@ -665,18 +544,19 @@ mf::WaylandConnector::WaylandConnector(
         executor,
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
-    seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, seat, executor);
+    seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, seat);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         display_config,
         executor);
 
-    data_device_manager_global = mf::create_data_device_manager(display.get());
+    data_device_manager_global = std::make_unique<WlDataDeviceManager>(display.get(), executor, clipboard);
 
     extensions->init(WaylandExtensions::Context{
         display.get(),
         executor,
         shell,
+        clipboard,
         seat_global.get(),
         output_manager.get(),
         surface_stack});
@@ -714,7 +594,18 @@ mf::WaylandConnector::WaylandConnector(
 
     auto wayland_loop = wl_display_get_event_loop(display.get());
 
-    setup_new_client_handler(display.get(), shell, session_authorizer, &connect_handlers);
+    WlClient::setup_new_client_handler(display.get(), shell, session_authorizer, [this](WlClient& client)
+        {
+            int const fd = wl_client_get_fd(client.raw_client());
+            auto const handler_iter = connect_handlers.find(fd);
+
+            if (handler_iter != std::end(connect_handlers))
+            {
+                auto const callback = handler_iter->second;
+                connect_handlers.erase(handler_iter);
+                callback(client.client_session());
+            }
+        });
 
     pause_source = wl_event_loop_add_fd(wayland_loop, pause_signal, WL_EVENT_READABLE, &halt_eventloop, display.get());
 }
@@ -882,21 +773,16 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
 #endif
 }
 
-auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<scene::Session>
+auto mir::frontend::get_session(wl_client* wl_client) -> std::shared_ptr<scene::Session>
 {
-    auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
-
-    if (listener)
-    {
-        auto client_private = private_from_listener(listener);
-        return client_private->session;
-    }
-
-    return {};
+    auto const client = WlClient::from(wl_client);
+    return client ? client->client_session() : nullptr;
 }
 
 auto mf::get_session(wl_resource* surface) -> std::shared_ptr<ms::Session>
 {
+    // TODO: evaluate if this is actually what we want. Sometime's a surface's client's session is not the most
+    // applicable session for the surface. See WlClient::client_session for details.
     return get_session(wl_resource_get_client(surface));
 }
 
