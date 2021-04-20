@@ -309,12 +309,8 @@ void mc::MultiThreadedCompositor::start()
     /* To cleanup state if any code below throws */
     auto cleanup_if_unwinding = on_unwind([this]
         {
-            // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62258
-            // After using rethrow_exception() (and catching the exception),
-            // all subsequent calls to uncaught_exception() return `true'.
-            if (state == CompositorState::started) return;
-
-            destroy_compositing_threads(); state = CompositorState::stopped;
+            destroy_compositing_threads();
+            state = CompositorState::stopped;
         });
 
     create_compositing_threads();
@@ -339,11 +335,6 @@ void mc::MultiThreadedCompositor::stop()
     /* To cleanup state if any code below throws */
     auto cleanup_if_unwinding = on_unwind([this]
         {
-            // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62258
-            // After using rethrow_exception() (and catching the exception),
-            // all subsequent calls to uncaught_exception() return `true'.
-            if (state == CompositorState::stopped) return;
-
             state = CompositorState::started;
         });
 

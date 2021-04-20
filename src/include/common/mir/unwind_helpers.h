@@ -30,24 +30,28 @@ class RevertIfUnwinding
 public:
     template<typename Apply>
     RevertIfUnwinding(Apply && apply, Unwind&& unwind)
-        : unwind{std::move(unwind)}
+        : unwind{std::move(unwind)},
+          initial_exception_count{std::uncaught_exceptions()}
     {
         apply();
     }
 
     RevertIfUnwinding(Unwind&& unwind)
-        : unwind{std::move(unwind)}
+        : unwind{std::move(unwind)},
+          initial_exception_count{std::uncaught_exceptions()}
     {
     }
 
-    RevertIfUnwinding(RevertIfUnwinding<Unwind> && rhs)
-        : unwind{std::move(rhs.unwind)}
+    RevertIfUnwinding(RevertIfUnwinding<Unwind>&& rhs)
+        : unwind{std::move(rhs.unwind)},
+          initial_exception_count{std::uncaught_exceptions()}
     {
+        rhs.unwind = nullptr;
     }
 
     ~RevertIfUnwinding()
     {
-        if (std::uncaught_exceptions())
+        if (std::uncaught_exceptions() > initial_exception_count)
             unwind();
     }
 
@@ -56,6 +60,7 @@ private:
     RevertIfUnwinding& operator=(RevertIfUnwinding const&) = delete;
 
     Unwind unwind;
+    int const initial_exception_count;
 };
 
 template<typename Apply, typename Revert>
