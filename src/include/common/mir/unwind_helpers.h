@@ -40,9 +40,10 @@ public:
     {
     }
 
-    RevertIfUnwinding(RevertIfUnwinding<Unwind> && rhs)
+    RevertIfUnwinding(RevertIfUnwinding<Unwind>&& rhs)
         : unwind{std::move(rhs.unwind)}
     {
+        rhs.unwind = nullptr;
     }
 
     ~RevertIfUnwinding()
