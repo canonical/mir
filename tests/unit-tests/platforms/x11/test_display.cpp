@@ -110,13 +110,14 @@ public:
     std::shared_ptr<mgx::Display> create_display()
     {
         return std::make_shared<mgx::Display>(
-                   mock_x11.fake_x11.display,
+                   &connection,
                    sizes,
                    mt::fake_shared(null_display_configuration_policy),
                    mt::fake_shared(mock_gl_config),
                    std::make_shared<mir::report::null::DisplayReport>());
     }
 
+    mir::X::X11Connection connection{nullptr, nullptr};
     mtd::NullDisplayConfigurationPolicy null_display_configuration_policy;
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockX11> mock_x11;

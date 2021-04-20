@@ -29,6 +29,7 @@
 #include "src/server/report/null/display_report.h"
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "src/platforms/x11/graphics/platform.h"
+#include "src/platforms/x11/X11_resources.h"
 #include "mir/test/doubles/mock_x11.h"
 
 #include <gtest/gtest.h>
@@ -91,12 +92,7 @@ public:
     std::shared_ptr<mg::Display> create_display()
     {
         auto const platform = std::make_shared<mg::X::Platform>(
-            std::shared_ptr<::Display>(
-                XOpenDisplay(nullptr),
-                [](::Display* display)
-                {
-                    XCloseDisplay(display);
-                }),
+            std::make_shared<mir::X::X11Connection>(nullptr, nullptr),
             std::vector<mg::X::X11OutputConfig>{{{1280, 1024}}},
             std::make_shared<mir::report::null::DisplayReport>());
         return platform->create_display(

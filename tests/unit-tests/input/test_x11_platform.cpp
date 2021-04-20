@@ -22,6 +22,7 @@
 #include "src/server/input/default_event_builder.h"
 #include "src/platforms/x11/input/input_platform.h"
 #include "src/platforms/x11/input/input_device.h"
+#include "src/platforms/x11/X11_resources.h"
 
 #include "mir/events/event_private.h"
 #include "mir/dispatch/dispatchable.h"
@@ -56,9 +57,7 @@ struct X11PlatformTest : ::testing::Test
 
     mir::input::X::XInputPlatform x11_platform{
         mt::fake_shared(mock_registry),
-        std::shared_ptr<::Display>(
-            XOpenDisplay(nullptr),
-            [](::Display* display) { XCloseDisplay(display); })};
+        std::make_shared<mir::X::X11Connection>(nullptr, nullptr)};
 
     std::vector<std::shared_ptr<mi::InputDevice>> devices;
     enum class GrabState { FOCUSIN, FOCUSOUT, ENTERNOTIFY, LEAVENOTIFY };
