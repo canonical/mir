@@ -26,6 +26,7 @@ execute: |
         libinput-devel \
         libxml++-devel \
         libuuid-devel \
+        libX11-devel \
         libxkbcommon-devel \
         freetype-devel \
         lttng-ust-devel \
