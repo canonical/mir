@@ -34,13 +34,14 @@ class AlarmFactory;
 namespace frontend
 {
 
-/// Runs frame callbacks that do not have a buffer to be attached to. Is threadsafe. Given callbacks are run on the
-/// main loop thread, the wayland executor is NOT automatically used.
+/// Runs frame callbacks that do not have a buffer to be attached to.
 class FrameCallbackExecutor : public Executor
 {
 public:
     FrameCallbackExecutor(time::AlarmFactory& alarm_factory);
 
+    // This can be called from any thread. Given callback is run on the main loop thread. The wayland executor is NOT
+    // automatically used.
     void spawn(std::function<void()>&& work) override;
 
 private:
