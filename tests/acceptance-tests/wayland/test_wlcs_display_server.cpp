@@ -280,7 +280,6 @@ private:
                 err);
         }
 
-        std::unique_lock<std::recursive_mutex> lock{executor->mutex};
         while (auto work = executor->get_work())
         {
             try
