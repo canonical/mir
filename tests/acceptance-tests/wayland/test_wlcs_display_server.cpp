@@ -199,7 +199,7 @@ public:
     void spawn (std::function<void()>&& work) override
     {
         {
-            std::lock_guard<std::recursive_mutex> lock{mutex};
+            std::lock_guard<std::mutex> lock{mutex};
             workqueue.emplace_back(std::move(work));
         }
         if (auto err = eventfd_write(notify_fd, 1))
@@ -254,7 +254,7 @@ private:
 
     std::function<void()> get_work()
     {
-        std::lock_guard<std::recursive_mutex> lock{mutex};
+        std::lock_guard<std::mutex> lock{mutex};
         if (!workqueue.empty())
         {
             auto const work = std::move(workqueue.front());
@@ -305,13 +305,13 @@ private:
         shim = wl_container_of(listener, shim, destruction_listener);
 
         {
-            std::lock_guard<std::recursive_mutex> lock{shim->executor->mutex};
+            std::lock_guard<std::mutex> lock{shim->executor->mutex};
             wl_event_source_remove(shim->executor->notify_source);
         }
         delete shim;
     }
 
-    std::recursive_mutex mutex;
+    std::mutex mutex;
     mir::Fd const notify_fd;
     std::deque<std::function<void()>> workqueue;
 
