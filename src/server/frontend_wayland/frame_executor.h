@@ -38,7 +38,7 @@ namespace frontend
 class FrameExecutor : public Executor
 {
 public:
-    FrameExecutor(time::AlarmFactory& alarm_factory);
+    explicit FrameExecutor(time::AlarmFactory& alarm_factory);
 
     // This can be called from any thread. Given callback is run on the main loop thread. The wayland executor is NOT
     // automatically used.
