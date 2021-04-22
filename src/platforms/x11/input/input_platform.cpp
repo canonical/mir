@@ -193,28 +193,29 @@ void mix::XInputPlatform::process_input_event()
                 }
 
             case KeyPress:
+                // Ignore key repeats
+                if (XEventsQueued(x11_connection.get(), QueuedAfterReading))
+                {
+                    auto & xkev = xev.xkey;
+                    XEvent next_ev;
+                    XPeekEvent(x11_connection.get(), &next_ev);
+                    if (xev.type == KeyRelease &&
+                        next_ev.type == KeyPress &&
+                        xkev.time == next_ev.xkey.time &&
+                        xkev.keycode == next_ev.xkey.keycode)
+                    {
+                        // Looks like a key repeat, ignore
+                        XNextEvent(x11_connection.get(), &next_ev);
+                        break;
+                    }
+                }
+                // fallthrough
             case KeyRelease:
                 {
                     auto & xkev = xev.xkey;
                     static const int STRMAX = 32;
                     char str[STRMAX];
                     KeySym keysym;
-
-                    // Ignore key repeats
-                    if (XEventsQueued(x11_connection.get(), QueuedAfterReading))
-                    {
-                        XEvent next_ev;
-                        XPeekEvent(x11_connection.get(), &next_ev);
-                        if (xev.type == KeyRelease &&
-                            next_ev.type == KeyPress &&
-                            xkev.time == next_ev.xkey.time &&
-                            xkev.keycode == next_ev.xkey.keycode)
-                        {
-                            // Looks like a key repeat, ignore
-                            XNextEvent(x11_connection.get(), &next_ev);
-                            break;
-                        }
-                    }
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                     mir::log_info("X11 key event :"
