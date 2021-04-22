@@ -35,10 +35,10 @@ namespace frontend
 {
 
 /// Runs frame callbacks that do not have a buffer to be attached to.
-class FrameCallbackExecutor : public Executor
+class FrameExecutor : public Executor
 {
 public:
-    FrameCallbackExecutor(time::AlarmFactory& alarm_factory);
+    FrameExecutor(time::AlarmFactory& alarm_factory);
 
     // This can be called from any thread. Given callback is run on the main loop thread. The wayland executor is NOT
     // automatically used.

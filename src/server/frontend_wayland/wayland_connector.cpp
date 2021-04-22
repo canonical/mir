@@ -27,7 +27,7 @@
 #include "wl_surface.h"
 #include "wl_seat.h"
 #include "wl_region.h"
-#include "frame_callback_executor.h"
+#include "frame_executor.h"
 
 #include "output_manager.h"
 #include "wayland_executor.h"
@@ -553,7 +553,7 @@ mf::WaylandConnector::WaylandConnector(
     compositor_global = std::make_unique<mf::WlCompositor>(
         display.get(),
         executor,
-        std::make_shared<FrameCallbackExecutor>(*main_loop),
+        std::make_shared<FrameExecutor>(*main_loop),
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
     seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, seat);

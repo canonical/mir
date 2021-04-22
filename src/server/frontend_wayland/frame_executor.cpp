@@ -16,7 +16,7 @@
  * Authored by: William Wold <william.wold@canonical.com>
  */
 
-#include "frame_callback_executor.h"
+#include "frame_executor.h"
 
 #include <mir/main_loop.h>
 
@@ -30,13 +30,13 @@ namespace
 auto const delay = std::chrono::milliseconds{16};
 }
 
-struct mf::FrameCallbackExecutor::Callbacks
+struct mf::FrameExecutor::Callbacks
 {
     std::mutex mutex;
     std::vector<std::function<void()>> queued;
 };
 
-mf::FrameCallbackExecutor::FrameCallbackExecutor(time::AlarmFactory& alarm_factory)
+mf::FrameExecutor::FrameExecutor(time::AlarmFactory& alarm_factory)
     : callbacks{std::make_shared<Callbacks>()},
       alarm{alarm_factory.create_alarm([weak_callbacks = std::weak_ptr<Callbacks>{callbacks}]()
           {
@@ -45,7 +45,7 @@ mf::FrameCallbackExecutor::FrameCallbackExecutor(time::AlarmFactory& alarm_facto
 {
 }
 
-void mf::FrameCallbackExecutor::spawn(std::function<void()>&& work)
+void mf::FrameExecutor::spawn(std::function<void()>&& work)
 {
     std::unique_lock<std::mutex> lock{callbacks->mutex};
     bool const needs_alarm = callbacks->queued.empty();
@@ -58,7 +58,7 @@ void mf::FrameCallbackExecutor::spawn(std::function<void()>&& work)
     }
 }
 
-void mf::FrameCallbackExecutor::fire_callbacks(std::weak_ptr<Callbacks> const& weak_callbacks)
+void mf::FrameExecutor::fire_callbacks(std::weak_ptr<Callbacks> const& weak_callbacks)
 {
     if (auto const callbacks = weak_callbacks.lock())
     {
