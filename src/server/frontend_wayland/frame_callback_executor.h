@@ -21,8 +21,6 @@
 
 #include <mir/executor.h>
 
-#include <vector>
-#include <mutex>
 #include <memory>
 
 namespace mir
@@ -46,11 +44,7 @@ public:
     void spawn(std::function<void()>&& work) override;
 
 private:
-    struct Callbacks
-    {
-        std::mutex mutex;
-        std::vector<std::function<void()>> queued;
-    };
+    struct Callbacks;
 
     std::shared_ptr<Callbacks> const callbacks; // shared_ptr so it can potentially outlive this object
     std::unique_ptr<time::Alarm> const alarm;

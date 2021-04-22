@@ -20,12 +20,21 @@
 
 #include <mir/main_loop.h>
 
+#include <mutex>
+#include <vector>
+
 namespace mf = mir::frontend;
 
 namespace
 {
 auto const delay = std::chrono::milliseconds{16};
 }
+
+struct mf::FrameCallbackExecutor::Callbacks
+{
+    std::mutex mutex;
+    std::vector<std::function<void()>> queued;
+};
 
 mf::FrameCallbackExecutor::FrameCallbackExecutor(time::AlarmFactory& alarm_factory)
     : callbacks{std::make_shared<Callbacks>()},
