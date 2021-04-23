@@ -118,7 +118,8 @@ public:
         std::shared_ptr<scene::Clipboard> const& clipboard,
         bool arw_socket,
         std::unique_ptr<WaylandExtensions> extensions,
-        WaylandProtocolExtensionFilter const& extension_filter);
+        WaylandProtocolExtensionFilter const& extension_filter,
+        bool enable_key_repeat);
 
     ~WaylandConnector() override;
 

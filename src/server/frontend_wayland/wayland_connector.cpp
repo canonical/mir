@@ -495,7 +495,8 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<ms::Clipboard> const& clipboard,
     bool arw_socket,
     std::unique_ptr<WaylandExtensions> extensions_,
-    WaylandProtocolExtensionFilter const& extension_filter)
+    WaylandProtocolExtensionFilter const& extension_filter,
+    bool enable_key_repeat)
     : display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
@@ -544,7 +545,7 @@ mf::WaylandConnector::WaylandConnector(
         executor,
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
-    seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, seat);
+    seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, seat, enable_key_repeat);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         display_config,

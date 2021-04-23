@@ -137,11 +137,12 @@ void mf::WlSeat::ConfigObserver::changes_complete()
 class mf::WlSeat::Instance : public wayland::Seat
 {
 public:
-    Instance(wl_resource* new_resource, mf::WlSeat* seat);
+    Instance(wl_resource* new_resource, mf::WlSeat* seat, bool enable_key_repeat);
 
     mf::WlSeat* const seat;
 
 private:
+    bool const enable_key_repeat;
     void get_pointer(wl_resource* new_pointer) override;
     void get_keyboard(wl_resource* new_keyboard) override;
     void get_touch(wl_resource* new_touch) override;
@@ -151,7 +152,8 @@ private:
 mf::WlSeat::WlSeat(
     wl_display* display,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
-    std::shared_ptr<mi::Seat> const& seat)
+    std::shared_ptr<mi::Seat> const& seat,
+    bool enable_key_repeat)
     :   Global(display, Version<6>()),
         keymap{std::make_unique<input::Keymap>()},
         config_observer{
@@ -165,7 +167,8 @@ mf::WlSeat::WlSeat(
         keyboard_listeners{std::make_shared<ListenerList<WlKeyboard>>()},
         touch_listeners{std::make_shared<ListenerList<WlTouch>>()},
         input_hub{input_hub},
-        seat{seat}
+        seat{seat},
+        enable_key_repeat{enable_key_repeat}
 {
     input_hub->add_observer(config_observer);
     add_focus_listener(&focus);
@@ -208,12 +211,13 @@ void mf::WlSeat::notify_focus(wl_client *focus)
 
 void mf::WlSeat::bind(wl_resource* new_wl_seat)
 {
-    new Instance{new_wl_seat, this};
+    new Instance{new_wl_seat, this, enable_key_repeat};
 }
 
-mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
+mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat, bool enable_key_repeat)
     : mw::Seat(new_resource, Version<6>()),
-      seat{seat}
+      seat{seat},
+      enable_key_repeat{enable_key_repeat}
 {
     // TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
     send_capabilities_event(Capability::pointer | Capability::keyboard | Capability::touch);
@@ -262,7 +266,9 @@ void mf::WlSeat::Instance::get_keyboard(wl_resource* new_keyboard)
             }
 
             return std::vector<uint32_t>{pressed_keys.begin(), pressed_keys.end()};
-        }};
+        },
+        enable_key_repeat
+    };
 
     seat->keyboard_listeners->register_listener(client, keyboard);
     keyboard->add_destroy_listener(
