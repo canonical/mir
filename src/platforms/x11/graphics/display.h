@@ -25,7 +25,7 @@
 #include "mir/renderer/gl/context_source.h"
 #include "mir_toolkit/common.h"
 #include "egl_helper.h"
-#include "../X11_resources.h"
+#include "../x11_resources.h"
 
 #include <EGL/egl.h>
 

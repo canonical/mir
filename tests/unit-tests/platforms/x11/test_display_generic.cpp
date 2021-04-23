@@ -29,7 +29,7 @@
 #include "src/server/report/null/display_report.h"
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "src/platforms/x11/graphics/platform.h"
-#include "src/platforms/x11/X11_resources.h"
+#include "src/platforms/x11/x11_resources.h"
 #include "mir/test/doubles/mock_x11.h"
 
 #include <gtest/gtest.h>

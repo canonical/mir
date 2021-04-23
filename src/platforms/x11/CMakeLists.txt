@@ -3,7 +3,7 @@ add_subdirectory(input/)
 
 add_library(
   mirplatformserverx11sharedresources OBJECT
-  X11_resources.cpp
+  x11_resources.cpp
 )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in

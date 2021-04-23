@@ -19,7 +19,7 @@
 #define MIR_LOG_COMPONENT "x11-error"
 #include "mir/log.h"
 
-#include "X11_resources.h"
+#include "x11_resources.h"
 
 #include <X11/Xlib-xcb.h>
 

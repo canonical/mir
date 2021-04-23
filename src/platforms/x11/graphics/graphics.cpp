@@ -20,7 +20,7 @@
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
 #include "platform.h"
-#include "../X11_resources.h"
+#include "../x11_resources.h"
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"

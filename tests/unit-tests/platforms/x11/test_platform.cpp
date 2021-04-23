@@ -21,7 +21,7 @@
 
 #include "mir/options/program_option.h"
 #include "src/platforms/x11/graphics/platform.h"
-#include "src/platforms/x11/X11_resources.h"
+#include "src/platforms/x11/x11_resources.h"
 #include "src/server/report/null/display_report.h"
 
 #include "mir/test/doubles/mock_x11.h"

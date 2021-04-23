@@ -24,7 +24,7 @@
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_device_info.h"
 #include "mir/dispatch/readable_fd.h"
-#include "../X11_resources.h"
+#include "../x11_resources.h"
 
 #define MIR_LOG_COMPONENT "x11-input"
 #include "mir/log.h"

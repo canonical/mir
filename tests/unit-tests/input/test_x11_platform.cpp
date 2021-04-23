@@ -22,7 +22,7 @@
 #include "src/server/input/default_event_builder.h"
 #include "src/platforms/x11/input/input_platform.h"
 #include "src/platforms/x11/input/input_device.h"
-#include "src/platforms/x11/X11_resources.h"
+#include "src/platforms/x11/x11_resources.h"
 
 #include "mir/events/event_private.h"
 #include "mir/dispatch/dispatchable.h"

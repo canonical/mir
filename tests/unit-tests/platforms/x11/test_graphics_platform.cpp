@@ -27,7 +27,7 @@
 #include "mir/test/doubles/null_console_services.h"
 #include "mir/options/program_option.h"
 #include "src/platforms/x11/graphics/platform.h"
-#include "src/platforms/x11/X11_resources.h"
+#include "src/platforms/x11/x11_resources.h"
 #include "mir/test/doubles/mock_x11.h"
 
 #include "mir/logging/dumb_console_logger.h"

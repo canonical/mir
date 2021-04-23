@@ -31,7 +31,7 @@
 #include "display.h"
 #include "platform.h"
 #include "display_buffer.h"
-#include "../X11_resources.h"
+#include "../x11_resources.h"
 
 #include <boost/throw_exception.hpp>
 #include <algorithm>
