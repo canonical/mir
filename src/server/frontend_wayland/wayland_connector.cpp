@@ -485,21 +485,25 @@ void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::fu
 }
 
 mf::WaylandConnector::WaylandConnector(
-    std::shared_ptr<shell::Shell> const& shell, std::shared_ptr<MirDisplay> const& display_config,
-    std::shared_ptr<input::InputDeviceHub> const& input_hub, std::shared_ptr<input::Seat> const& seat,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-    std::shared_ptr<SurfaceStack> const& surface_stack, std::shared_ptr<scene::Clipboard> const& clipboard,
-    bool arw_socket, std::unique_ptr<WaylandExtensions> extensions_,
-    WaylandProtocolExtensionFilter const& extension_filter, bool enable_key_repeat)
+    std::shared_ptr<msh::Shell> const& shell,
+    std::shared_ptr<MirDisplay> const& display_config,
+    std::shared_ptr<mi::InputDeviceHub> const& input_hub,
+    std::shared_ptr<mi::Seat> const& seat,
+    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
+    std::shared_ptr<SurfaceStack> const& surface_stack,
+    std::shared_ptr<ms::Clipboard> const& clipboard,
+    bool arw_socket,
+    std::unique_ptr<WaylandExtensions> extensions_,
+    WaylandProtocolExtensionFilter const& extension_filter,
+    bool enable_key_repeat)
     : display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
       allocator{allocator_for_display(allocator, display.get(), executor)},
       shell{shell},
       extensions{std::move(extensions_)},
-      extension_filter{extension_filter},
-      enable_key_repeat{enable_key_repeat}
+      extension_filter{extension_filter}
 {
     if (pause_signal == mir::Fd::invalid)
     {
@@ -534,7 +538,7 @@ mf::WaylandConnector::WaylandConnector(
      * crash with a different order. Yay!
      *
      * So far I've only found ones which expect wl_compositor before anything else,
-     * so stick that first
+     * so stick that first.
      */
     compositor_global = std::make_unique<mf::WlCompositor>(
         display.get(),

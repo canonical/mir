@@ -161,7 +161,6 @@ private:
     std::string wayland_display;
 
     WaylandProtocolExtensionFilter const extension_filter;
-    bool const enable_key_repeat;
 
     // Only accessed on event loop
     std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>> mutable connect_handlers;
