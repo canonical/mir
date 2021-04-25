@@ -27,6 +27,8 @@ miroil::InputDevice::InputDevice(std::shared_ptr<mir::input::Device> const& devi
 
 miroil::InputDevice::InputDevice(InputDevice const& ) = default;
 
+miroil::InputDevice::InputDevice() = default;
+
 miroil::InputDevice::~InputDevice() = default;
 
 bool miroil::InputDevice::operator==(InputDevice const& other)
