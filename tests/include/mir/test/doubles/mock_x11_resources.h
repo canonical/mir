@@ -29,12 +29,37 @@ namespace test
 {
 namespace doubles
 {
+class MockXCBConnection : public mir::X::XCBConnection
+{
+public:
+    MOCK_CONST_METHOD0(has_error, int());
+    MOCK_CONST_METHOD0(poll_for_event, xcb_generic_event_t*());
+    MOCK_CONST_METHOD0(screen, xcb_screen_t*());
+    MOCK_CONST_METHOD1(intern_atom, xcb_atom_t(std::string const& name));
+    MOCK_CONST_METHOD0(generate_id, uint32_t());
+    MOCK_CONST_METHOD5(create_window, void(
+        xcb_window_t window,
+        int16_t x, int16_t y,
+        uint32_t value_mask,
+        const void* value_list));
+    MOCK_CONST_METHOD6(change_property, void(
+        xcb_window_t window,
+        xcb_atom_t property_atom,
+        xcb_atom_t type_atom,
+        uint8_t format,
+        size_t length,
+        void const* data));
+    MOCK_CONST_METHOD1(map_window, void(xcb_window_t window));
+    MOCK_CONST_METHOD1(destroy_window, void(xcb_window_t window));
+    MOCK_CONST_METHOD0(flush, void());
+    MOCK_CONST_METHOD0(connection, xcb_connection_t*());
+};
 
 class MockX11Resources : public mir::X::X11Resources
 {
 public:
     MockX11Resources()
-        : X11Resources{nullptr, nullptr}
+        : X11Resources{std::make_unique<testing::NiceMock<MockXCBConnection>>(), nullptr}
     {
     }
 };
