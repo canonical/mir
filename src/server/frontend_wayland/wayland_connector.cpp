@@ -27,6 +27,7 @@
 #include "wl_surface.h"
 #include "wl_seat.h"
 #include "wl_region.h"
+#include "frame_executor.h"
 
 #include "output_manager.h"
 #include "wayland_executor.h"
@@ -35,6 +36,8 @@
 
 #include "mir/frontend/surface.h"
 #include "mir/frontend/wayland.h"
+
+#include "mir/main_loop.h"
 
 #include "mir/compositor/buffer_stream.h"
 
@@ -104,11 +107,13 @@ class WlCompositor : public wayland::Compositor::Global
 public:
     WlCompositor(
         struct wl_display* display,
-        std::shared_ptr<mir::Executor> const& executor,
+        std::shared_ptr<mir::Executor> const& wayland_executor,
+        std::shared_ptr<mir::Executor> const& frame_callback_executor,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
         : Global(display, Version<4>()),
           allocator{allocator},
-          executor{executor}
+          wayland_executor{wayland_executor},
+          frame_callback_executor{frame_callback_executor}
     {
     }
 
@@ -116,7 +121,8 @@ public:
 
 private:
     std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
-    std::shared_ptr<mir::Executor> const executor;
+    std::shared_ptr<mir::Executor> const wayland_executor;
+    std::shared_ptr<mir::Executor> const frame_callback_executor;
     std::map<std::pair<wl_client*, uint32_t>, std::vector<std::function<void(WlSurface*)>>> surface_callbacks;
 
     class Instance : wayland::Compositor
@@ -156,7 +162,11 @@ void WlCompositor::on_surface_created(wl_client* client, uint32_t id, std::funct
 
 void WlCompositor::Instance::create_surface(wl_resource* new_surface)
 {
-    auto const surface = new WlSurface{new_surface, compositor->executor, compositor->allocator};
+    auto const surface = new WlSurface{
+        new_surface,
+        compositor->wayland_executor,
+        compositor->frame_callback_executor,
+        compositor->allocator};
     auto const key = std::make_pair(wl_resource_get_client(new_surface), wl_resource_get_id(new_surface));
     auto const callbacks = compositor->surface_callbacks.find(key);
     if (callbacks != compositor->surface_callbacks.end())
@@ -493,6 +503,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<SurfaceStack> const& surface_stack,
     std::shared_ptr<ms::Clipboard> const& clipboard,
+    std::shared_ptr<MainLoop> const& main_loop,
     bool arw_socket,
     std::unique_ptr<WaylandExtensions> extensions_,
     WaylandProtocolExtensionFilter const& extension_filter,
@@ -543,6 +554,7 @@ mf::WaylandConnector::WaylandConnector(
     compositor_global = std::make_unique<mf::WlCompositor>(
         display.get(),
         executor,
+        std::make_shared<FrameExecutor>(*main_loop),
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
     seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, seat, enable_key_repeat);
