@@ -19,7 +19,6 @@
 #define MIR_INPUT_X_INPUT_PLATFORM_H_
 
 #include "mir/input/platform.h"
-#include "mir/geometry/size.h"
 #include <memory>
 #include <functional>
 #include <vector>
@@ -82,7 +81,6 @@ private:
     xkb_state* const key_state;
     bool kbd_grabbed;
     bool ptr_grabbed;
-    geometry::Size current_size;
     std::vector<std::function<void()>> deferred;
     std::vector<std::function<bool(std::optional<xcb_generic_event_t*> event)>> next_pending_event_callbacks;
 };

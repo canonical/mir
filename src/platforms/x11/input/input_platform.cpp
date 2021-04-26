@@ -423,11 +423,8 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
     {
         auto const config_ev = reinterpret_cast<xcb_configure_notify_event_t*>(event);
         geom::Size const new_size{config_ev->width, config_ev->height};
-        if (new_size != current_size)
-        {
-            current_size = new_size;
-            window_resized(x11_resources.get(), config_ev->event, new_size);
-        }
+        // Caching the size would require mapping windows to sizes. We already do this later on. No need to here.
+        window_resized(x11_resources.get(), config_ev->event, new_size);
     }   break;
 
     // TODO: watch for changes in the keymap?
