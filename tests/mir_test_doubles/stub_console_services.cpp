@@ -54,10 +54,21 @@ mtd::StubConsoleServices::acquire_device(
     /* NOTE: This uses the behaviour that MockDRM will intercept any open() call
      * under /dev/dri/
      */
+    std::promise<std::unique_ptr<mir::Device>> promise;
+
     auto devnode = devnode_for_devnum(major, minor);
     mir::Fd device_fd{::open(devnode, O_RDWR | O_CLOEXEC)};
-    std::promise<std::unique_ptr<mir::Device>> promise;
-    if (!is_drm_device(major, minor) || drmSetMaster(device_fd) == 0)
+
+    if (device_fd == mir::Fd::invalid)
+    {
+        promise.set_exception(
+            std::make_exception_ptr(
+                std::system_error{
+                    errno,
+                    std::system_category(),
+                    "open() failed"}));
+    }
+    else if (!is_drm_device(major, minor) || drmSetMaster(device_fd) == 0)
     {
         observer->activated(std::move(device_fd));
         // The Device is *just* a handle; there's no reason for anything to dereference it
