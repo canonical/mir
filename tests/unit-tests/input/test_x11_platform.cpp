@@ -57,7 +57,7 @@ struct X11PlatformTest : ::testing::Test
 
     mir::input::X::XInputPlatform x11_platform{
         mt::fake_shared(mock_registry),
-        std::make_shared<mir::X::X11Connection>(nullptr, nullptr)};
+        std::make_shared<mir::X::X11Resources>(nullptr, nullptr)};
 
     std::vector<std::shared_ptr<mi::InputDevice>> devices;
     enum class GrabState { FOCUSIN, FOCUSOUT, ENTERNOTIFY, LEAVENOTIFY };

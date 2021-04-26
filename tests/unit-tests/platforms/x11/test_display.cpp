@@ -28,6 +28,7 @@
 #include "mir/test/doubles/null_display_configuration_policy.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_x11.h"
+#include "mir/test/doubles/mock_x11_resources.h"
 #include "mir/test/doubles/mock_gl_config.h"
 #include "mir/test/fake_shared.h"
 
@@ -110,14 +111,14 @@ public:
     std::shared_ptr<mgx::Display> create_display()
     {
         return std::make_shared<mgx::Display>(
-                   &connection,
+                   &x11_resources,
                    sizes,
                    mt::fake_shared(null_display_configuration_policy),
                    mt::fake_shared(mock_gl_config),
                    std::make_shared<mir::report::null::DisplayReport>());
     }
 
-    mir::X::X11Connection connection{nullptr, nullptr};
+    mtd::MockX11Resources x11_resources;
     mtd::NullDisplayConfigurationPolicy null_display_configuration_policy;
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockX11> mock_x11;

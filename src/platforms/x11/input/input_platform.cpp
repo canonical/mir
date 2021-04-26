@@ -57,10 +57,10 @@ auto const button_scroll_left = 6;
 auto const button_scroll_right = 7;
 auto const scroll_factor = 10;
 
-geom::Point get_pos_on_output(xcb_window_t x11_window, int x, int y)
+geom::Point get_pos_on_output(mir::X::X11Resources* x11_resources, xcb_window_t x11_window, int x, int y)
 {
     geom::Point pos{x, y};
-    mx::X11Resources::instance.with_output_for_window(
+    x11_resources->with_output_for_window(
         x11_window,
         [&](std::optional<mx::X11Resources::VirtualOutput const*> output)
         {
@@ -78,9 +78,9 @@ geom::Point get_pos_on_output(xcb_window_t x11_window, int x, int y)
     return pos;
 }
 
-void window_resized(xcb_window_t x11_window, geom::Size const& size)
+void window_resized(mir::X::X11Resources* x11_resources, xcb_window_t x11_window, geom::Size const& size)
 {
-    mx::X11Resources::instance.with_output_for_window(
+    x11_resources->with_output_for_window(
         x11_window,
         [&](std::optional<mx::X11Resources::VirtualOutput*> output)
         {
@@ -93,10 +93,10 @@ void window_resized(xcb_window_t x11_window, geom::Size const& size)
 }
 
 mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
-                                    std::shared_ptr<mir::X::X11Connection> const& conn) :
-    conn{conn},
+                                    std::shared_ptr<mir::X::X11Resources> const& x11_resources) :
+    x11_resources{x11_resources},
     xcon_dispatchable(std::make_shared<md::ReadableFd>(
-        mir::Fd{mir::IntOwnedFd{xcb_get_file_descriptor(conn->conn)}}, [this]()
+        mir::Fd{mir::IntOwnedFd{xcb_get_file_descriptor(x11_resources->conn->connection())}}, [this]()
         {
             process_input_events();
         })),
@@ -108,10 +108,13 @@ mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> con
     xkb_ctx{xkb_context_new(XKB_CONTEXT_NO_FLAGS)},
     keymap{xkb_x11_keymap_new_from_device(
         xkb_ctx,
-        conn->conn,
-        xkb_x11_get_core_keyboard_device_id(conn->conn),
+        x11_resources->conn->connection(),
+        xkb_x11_get_core_keyboard_device_id(x11_resources->conn->connection()),
         XKB_KEYMAP_COMPILE_NO_FLAGS)},
-    key_state{xkb_x11_state_new_from_device(keymap, conn->conn, xkb_x11_get_core_keyboard_device_id(conn->conn))},
+    key_state{xkb_x11_state_new_from_device(
+        keymap,
+        x11_resources->conn->connection(),
+        xkb_x11_get_core_keyboard_device_id(x11_resources->conn->connection()))},
     kbd_grabbed{false},
     ptr_grabbed{false}
 {
@@ -155,12 +158,12 @@ void mix::XInputPlatform::continue_after_config()
 
 void mix::XInputPlatform::process_input_events()
 {
-    if (xcb_connection_has_error(conn->conn))
+    if (x11_resources->conn->has_error())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("XCB connection error"));
     }
 
-    while(auto const event = make_unique_cptr(xcb_poll_for_event(conn->conn)))
+    while(auto const event = make_unique_cptr(x11_resources->conn->poll_for_event()))
     {
         if (core_keyboard->started() && core_pointer->started())
         {
@@ -203,7 +206,7 @@ void mix::XInputPlatform::process_input_events()
         }
     }
 
-    xcb_flush(conn->conn);
+    x11_resources->conn->flush();
 }
 
 void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
@@ -219,7 +222,7 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
             focus_in_ev->mode == XCB_NOTIFY_MODE_WHILE_GRABBED))
         {
             auto const cookie = xcb_grab_keyboard(
-                conn->conn,
+                x11_resources->conn->connection(),
                 1,
                 focus_in_ev->event,
                 XCB_CURRENT_TIME,
@@ -228,7 +231,10 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
             kbd_grabbed = true;
             defer([this, cookie]()
                 {
-                    auto const reply = make_unique_cptr(xcb_grab_keyboard_reply(conn->conn, cookie, nullptr));
+                    auto const reply = make_unique_cptr(xcb_grab_keyboard_reply(
+                        x11_resources->conn->connection(),
+                        cookie,
+                        nullptr));
                     if (!reply || reply->status != XCB_GRAB_STATUS_SUCCESS)
                     {
                         kbd_grabbed = false;
@@ -244,7 +250,7 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
             focus_out_ev->mode == XCB_NOTIFY_MODE_NORMAL ||
             focus_out_ev->mode == XCB_NOTIFY_MODE_WHILE_GRABBED))
         {
-            xcb_ungrab_keyboard(conn->conn, XCB_CURRENT_TIME);
+            xcb_ungrab_keyboard(x11_resources->conn->connection(), XCB_CURRENT_TIME);
             kbd_grabbed = false;
         }
     }   break;
@@ -255,7 +261,7 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
         {
             auto const enter_ev = reinterpret_cast<xcb_enter_notify_event_t*>(event);
             auto const cookie = xcb_grab_pointer(
-                conn->conn,
+                x11_resources->conn->connection(),
                 1,
                 enter_ev->event,
                 0,
@@ -264,11 +270,14 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
                 XCB_NONE,
                 XCB_NONE,
                 XCB_CURRENT_TIME);
-            xcb_xfixes_hide_cursor(conn->conn, enter_ev->event);
+            xcb_xfixes_hide_cursor(x11_resources->conn->connection(), enter_ev->event);
             ptr_grabbed = true;
             defer([this, cookie]()
                 {
-                    auto const reply = make_unique_cptr(xcb_grab_pointer_reply(conn->conn, cookie, nullptr));
+                    auto const reply = make_unique_cptr(xcb_grab_pointer_reply(
+                        x11_resources->conn->connection(),
+                        cookie,
+                        nullptr));
                     if (!reply || reply->status != XCB_GRAB_STATUS_SUCCESS)
                     {
                         ptr_grabbed = false;
@@ -282,8 +291,8 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
         if (ptr_grabbed)
         {
             auto const leave_ev = reinterpret_cast<xcb_leave_notify_event_t*>(event);
-            xcb_ungrab_pointer(conn->conn, XCB_CURRENT_TIME);
-            xcb_xfixes_show_cursor(conn->conn, leave_ev->event);
+            xcb_ungrab_pointer(x11_resources->conn->connection(), XCB_CURRENT_TIME);
+            xcb_xfixes_show_cursor(x11_resources->conn->connection(), leave_ev->event);
             ptr_grabbed = false;
         }
         break;
@@ -348,7 +357,7 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
 
         auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::milliseconds{press_ev->time});
-        auto const pos = get_pos_on_output(press_ev->event, press_ev->event_x, press_ev->event_y);
+        auto const pos = get_pos_on_output(x11_resources.get(), press_ev->event, press_ev->event_x, press_ev->event_y);
         core_pointer->update_button_state(press_ev->state);
 
         switch (press_ev->detail)
@@ -391,7 +400,11 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
         default:
             auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::milliseconds{press_ev->time});
-            auto const pos = get_pos_on_output(press_ev->event, press_ev->event_x, press_ev->event_y);
+            auto const pos = get_pos_on_output(
+                x11_resources.get(),
+                press_ev->event,
+                press_ev->event_x,
+                press_ev->event_y);
             core_pointer->pointer_release(event_time, press_ev->detail, pos, {});
         }
     }   break;
@@ -402,7 +415,7 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
         core_pointer->update_button_state(motion_ev->state);
         auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::milliseconds{motion_ev->time});
-        auto pos = get_pos_on_output(motion_ev->event, motion_ev->event_x, motion_ev->event_y);
+        auto pos = get_pos_on_output(x11_resources.get(), motion_ev->event, motion_ev->event_x, motion_ev->event_y);
         core_pointer->pointer_motion(event_time, pos, {});
     }   break;
 
@@ -413,7 +426,7 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
         if (new_size != current_size)
         {
             current_size = new_size;
-            window_resized(config_ev->event, new_size);
+            window_resized(x11_resources.get(), config_ev->event, new_size);
         }
     }   break;
 
@@ -432,9 +445,9 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
 
 void mix::XInputPlatform::defer(std::function<void()>&& work)
 {
-    // We've presumably just fired off a request, we're goind to wait on later. Flush so the roudtrip starts now rather
+    // We've presumably just fired off a request we're going to wait on later. Flush so the roudtrip starts now rather
     // than when we get around to waiting on the reply.
-    xcb_flush(conn->conn);
+    x11_resources->conn->flush();
     deferred.push_back(std::move(work));
 }
 

@@ -28,7 +28,7 @@ namespace mir
 {
 namespace X
 {
-class X11Connection;
+class X11Resources;
 }
 
 namespace graphics
@@ -62,7 +62,7 @@ public:
     // Parses colon separated list of sizes in the form WIDTHxHEIGHT^SCALE (^SCALE is optional)
     static auto parse_output_sizes(std::string output_sizes) -> std::vector<X11OutputConfig>;
 
-    explicit Platform(std::shared_ptr<mir::X::X11Connection> const& conn,
+    explicit Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
                       std::vector<X11OutputConfig> output_sizes,
                       std::shared_ptr<DisplayReport> const& report);
     ~Platform() = default;
@@ -77,7 +77,7 @@ public:
 
     EGLNativeDisplayType egl_native_display() const override;
 private:
-    std::shared_ptr<mir::X::X11Connection> const x11_connection;
+    std::shared_ptr<mir::X::X11Resources> const x11_resources;
     std::shared_ptr<DisplayReport> const report;
     std::vector<X11OutputConfig> const output_sizes;
 };

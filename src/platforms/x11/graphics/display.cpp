@@ -46,9 +46,9 @@ namespace geom=mir::geometry;
 
 namespace
 {
-auto get_pixel_size_mm(xcb_connection_t* conn) -> geom::SizeF
+auto get_pixel_size_mm(mx::XCBConnection* conn) -> geom::SizeF
 {
-    auto const screen = xcb_setup_roots_iterator(xcb_get_setup(conn)).data;
+    auto const screen = conn->screen();
     return geom::SizeF{
         float(screen->width_in_millimeters) / screen->width_in_pixels,
         float(screen->height_in_millimeters) / screen->height_in_pixels};
@@ -81,20 +81,21 @@ private:
 };
 }
 
-mgx::X11Window::X11Window(xcb_connection_t* conn,
+mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
                           EGLDisplay egl_dpy,
                           geom::Size const size,
                           EGLConfig const egl_cfg)
-    : conn{conn}
+    : x11_resources{x11_resources}
 {
-    auto const screen = xcb_setup_roots_iterator(xcb_get_setup(conn)).data;
+    auto const conn = x11_resources->conn.get();
+    auto const screen = conn->screen();
 
     EGLint vid;
     if (!eglGetConfigAttrib(egl_dpy, egl_cfg, EGL_NATIVE_VISUAL_ID, &vid))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get config attrib"));
 
-    auto const colormap = xcb_generate_id(conn);
-    xcb_create_colormap(conn, XCB_COLORMAP_ALLOC_NONE, colormap, screen->root, screen->root_visual);
+    xcb_colormap_t const colormap = conn->generate_id();
+    xcb_create_colormap(conn->connection(), XCB_COLORMAP_ALLOC_NONE, colormap, screen->root, screen->root_visual);
 
     uint32_t const value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     uint32_t value_list[32];
@@ -112,36 +113,18 @@ mgx::X11Window::X11Window(xcb_connection_t* conn,
                     XCB_EVENT_MASK_POINTER_MOTION;
     value_list[3] = colormap;
 
-    win = xcb_generate_id(conn);
-    xcb_create_window(
-        conn,
-        XCB_COPY_FROM_PARENT,
-        win,
-        screen->root,
-        0, 0,
-        size.width.as_int(), size.height.as_int(),
-        0,
-        XCB_WINDOW_CLASS_INPUT_OUTPUT,
-        screen->root_visual,
-        value_mask,
-        value_list);
+    win = conn->generate_id();
+    conn->create_window(win, size.width.as_int(), size.height.as_int(), value_mask, value_list);
 
-    std::string const delete_win_str{"WM_DELETE_WINDOW"};
-    auto const delete_win_cookie = xcb_intern_atom(conn, 0, delete_win_str.size(), delete_win_str.c_str());
-    std::string const protocols_str{"WM_PROTOCOLS"};
-    auto const protocols_cookie = xcb_intern_atom(conn, 0, protocols_str.size(), protocols_str.c_str());
-
-    auto const delete_win_reply = make_unique_cptr(xcb_intern_atom_reply(conn, delete_win_cookie, nullptr));
-    auto const protocols_reply = make_unique_cptr(xcb_intern_atom_reply(conn, protocols_cookie, nullptr));
     // Enable the WM_DELETE_WINDOW protocol for the window (causes a client message to be sent when window is closed)
-    xcb_change_property(conn, XCB_PROP_MODE_REPLACE, win, (*protocols_reply).atom, 4, 32, 1, &(*delete_win_reply).atom);
+    conn->change_property(win, x11_resources->WM_PROTOCOLS, 4, 32, 1, &x11_resources->WM_DELETE_WINDOW);
 
-    xcb_map_window(conn, win);
+    conn->map_window(win);
 }
 
 mgx::X11Window::~X11Window()
 {
-    xcb_destroy_window(conn, win);
+    x11_resources->conn->destroy_window(win);
 }
 
 mgx::X11Window::operator xcb_window_t() const
@@ -154,15 +137,15 @@ unsigned long mgx::X11Window::red_mask() const
     return r_mask;
 }
 
-mgx::Display::Display(mir::X::X11Connection* x11_connection,
+mgx::Display::Display(mir::X::X11Resources* x11_resources,
                       std::vector<X11OutputConfig> const& requested_sizes,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& report)
-    : shared_egl{*gl_config, x11_connection->xlib_dpy},
-      x11_connection{x11_connection},
+    : shared_egl{*gl_config, x11_resources->xlib_dpy},
+      x11_resources{x11_resources},
       gl_config{gl_config},
-      pixel_size_mm{get_pixel_size_mm(x11_connection->conn)},
+      pixel_size_mm{get_pixel_size_mm(x11_resources->conn.get())},
       report{report},
       last_frame{std::make_shared<AtomicFrame>()}
 {
@@ -172,7 +155,7 @@ mgx::Display::Display(mir::X::X11Connection* x11_connection,
     {
         auto actual_size = requested_size.size;
         auto window = std::make_unique<X11Window>(
-            x11_connection->conn,
+            x11_resources,
             shared_egl.display(),
             actual_size,
             shared_egl.config());
@@ -190,7 +173,7 @@ mgx::Display::Display(mir::X::X11Connection* x11_connection,
             requested_size.scale,
             mir_orientation_normal);
         auto display_buffer = std::make_unique<mgx::DisplayBuffer>(
-            x11_connection->xlib_dpy,
+            x11_resources->xlib_dpy,
             configuration->id,
             *window,
             configuration->extents(),
@@ -208,7 +191,7 @@ mgx::Display::Display(mir::X::X11Connection* x11_connection,
     initial_conf_policy->apply_to(*display_config);
     configure(*display_config);
     report->report_successful_display_construction();
-    xcb_flush(x11_connection->conn);
+    x11_resources->conn->flush();
 }
 
 mgx::Display::~Display() noexcept
@@ -303,7 +286,7 @@ std::unique_ptr<mg::VirtualOutput> mgx::Display::create_virtual_output(int /*wid
 
 std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context() const
 {
-    return std::make_unique<XGLContext>(x11_connection->xlib_dpy, gl_config, shared_egl.context());
+    return std::make_unique<XGLContext>(x11_resources->xlib_dpy, gl_config, shared_egl.context());
 }
 
 bool mgx::Display::apply_if_configuration_preserves_display_buffers(
@@ -327,12 +310,12 @@ mgx::Display::OutputInfo::OutputInfo(
       display_buffer{move(display_buffer)},
       config{move(configuration)}
 {
-    mx::X11Resources::instance.set_set_output_for_window(*this->window, this);
+    owner->x11_resources->set_set_output_for_window(*this->window, this);
 }
 
 mgx::Display::OutputInfo::~OutputInfo()
 {
-    mx::X11Resources::instance.clear_output_for_window(*window);
+    owner->x11_resources->clear_output_for_window(*window);
 }
 
 void mgx::Display::OutputInfo::set_size(geometry::Size const& size)

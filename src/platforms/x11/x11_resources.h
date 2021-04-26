@@ -40,15 +40,38 @@ struct DisplayConfigurationOutput;
 
 namespace X
 {
-class X11Connection
+class XCBConnection
 {
 public:
-    X11Connection(xcb_connection_t* conn, ::Display* xlib_dpy);
-    X11Connection(X11Connection const&) = delete;
-    ~X11Connection();
+    XCBConnection() = default;
+    virtual ~XCBConnection() = default;
+    XCBConnection(XCBConnection const&) = delete;
+    XCBConnection& operator=(XCBConnection const&) = delete;
 
-    xcb_connection_t* const conn; ///< Used for most things
-    ::Display* const xlib_dpy; ///< Needed for EGL
+    virtual auto has_error() const -> int = 0;
+    virtual auto poll_for_event() const -> xcb_generic_event_t* = 0;
+    virtual auto screen() const -> xcb_screen_t* = 0;
+    /// Synchronous for now, since that makes everything simpler
+    virtual auto intern_atom(std::string const& name) const -> xcb_atom_t = 0;
+    virtual auto generate_id() const -> uint32_t = 0;
+    virtual void create_window(
+        xcb_window_t window,
+        int16_t x, int16_t y,
+        uint32_t value_mask,
+        const void* value_list) const = 0;
+    virtual void change_property(
+        xcb_window_t window,
+        xcb_atom_t property_atom,
+        xcb_atom_t type_atom,
+        uint8_t format,
+        size_t length,
+        void const* data) const = 0;
+    virtual void map_window(xcb_window_t window) const = 0;
+    virtual void destroy_window(xcb_window_t window) const = 0;
+    virtual void flush() const = 0;
+
+    /// Note that this will not be able to return a valid connection when mocked
+    virtual auto connection() const -> xcb_connection_t* = 0;
 };
 
 class X11Resources
@@ -66,20 +89,30 @@ public:
         virtual void set_size(geometry::Size const& size) = 0;
     };
 
-    auto get_conn() -> std::shared_ptr<X11Connection>;
+    static auto instance() -> std::shared_ptr<X11Resources>;
+
+    X11Resources(std::unique_ptr<XCBConnection>&& conn, ::Display* xlib_dpy);
+    virtual ~X11Resources();
 
     void set_set_output_for_window(xcb_window_t win, VirtualOutput* output);
     void clear_output_for_window(xcb_window_t win);
-
     /// X11Resources's mutex stays locked while the provided function runs
     void with_output_for_window(xcb_window_t win, std::function<void(std::optional<VirtualOutput*> output)> fn);
 
-    static X11Resources instance;
+    std::unique_ptr<XCBConnection> const conn;
+    ::Display* const xlib_dpy; ///< Needed for EGL
+    xcb_atom_t const WM_PROTOCOLS;
+    xcb_atom_t const WM_DELETE_WINDOW;
 
 private:
-    std::mutex mutex;
-    std::weak_ptr<X11Connection> connection;
+    X11Resources(X11Resources const&) = delete;
+    X11Resources& operator=(X11Resources const&) = delete;
+
+    std::mutex outputs_mutex;
     std::unordered_map<xcb_window_t, VirtualOutput*> outputs;
+
+    static std::mutex instance_mutex;
+    static std::weak_ptr<X11Resources> instance_;
 };
 
 }

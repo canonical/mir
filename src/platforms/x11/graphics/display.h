@@ -52,7 +52,7 @@ class X11OutputConfig;
 class X11Window
 {
 public:
-    X11Window(xcb_connection_t* conn,
+    X11Window(mir::X::X11Resources* x11_resources,
               EGLDisplay egl_dpy,
               geometry::Size const size,
               EGLConfig const egl_cfg);
@@ -62,7 +62,7 @@ public:
     unsigned long red_mask() const;
 
 private:
-    xcb_connection_t* conn;
+    mir::X::X11Resources* const x11_resources;
     xcb_window_t win;
     unsigned long r_mask;
 };
@@ -70,7 +70,7 @@ private:
 class Display : public graphics::Display
 {
 public:
-    explicit Display(mir::X::X11Connection* x11_connection,
+    explicit Display(mir::X::X11Resources* x11_resources,
                      std::vector<X11OutputConfig> const& requested_size,
                      std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                      std::shared_ptr<GLConfig> const& gl_config,
@@ -124,7 +124,7 @@ private:
     };
 
     helpers::EGLHelper const shared_egl;
-    mir::X::X11Connection* const x11_connection;
+    mir::X::X11Resources* const x11_resources;
     std::shared_ptr<GLConfig> const gl_config;
     geometry::SizeF pixel_size_mm;
     std::shared_ptr<DisplayReport> const report;

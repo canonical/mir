@@ -50,8 +50,8 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mir::logging::Logger> const& logger)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
-    auto const conn = mx::X11Resources::instance.get_conn();
-    if (!conn)
+    auto const x11_resources = mx::X11Resources::instance();
+    if (!x11_resources)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 output"));
 
     if (options->is_set(mir::options::debug_opt))
@@ -62,7 +62,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     auto output_sizes = mgx::Platform::parse_output_sizes(options->get<std::string>(x11_displays_option_name));
 
     return mir::make_module_ptr<mgx::Platform>(
-        conn,
+        std::move(x11_resources),
         move(output_sizes),
         report
     );
@@ -83,7 +83,7 @@ mg::PlatformPriority probe_graphics_platform(
         mo::ProgramOption const& /*options*/)
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
-    if (mx::X11Resources::instance.get_conn())
+    if (mx::X11Resources::instance())
     {
         return mg::PlatformPriority::hosted;
     }

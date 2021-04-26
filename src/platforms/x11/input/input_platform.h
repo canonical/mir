@@ -39,7 +39,7 @@ class ReadableFd;
 
 namespace X
 {
-class X11Connection;
+class X11Resources;
 }
 
 namespace input
@@ -54,7 +54,7 @@ class XInputPlatform : public input::Platform
 public:
     explicit XInputPlatform(
         std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
-        std::shared_ptr<mir::X::X11Connection> const& conn);
+        std::shared_ptr<mir::X::X11Resources> const& x11_resources);
     ~XInputPlatform();
 
     std::shared_ptr<dispatch::Dispatchable> dispatchable() override;
@@ -72,7 +72,7 @@ private:
     /// event that is currently pending (doesn't wait for new events). Should only be called while processing events.
     /// Given function returns true if it consumes the event (otherwise the process_input_event() is then called).
     void with_next_pending_event(std::function<bool(std::optional<xcb_generic_event_t*> event)>&& work);
-    std::shared_ptr<mir::X::X11Connection> const conn;
+    std::shared_ptr<mir::X::X11Resources> const x11_resources;
     std::shared_ptr<dispatch::ReadableFd> const xcon_dispatchable;
     std::shared_ptr<input::InputDeviceRegistry> const registry;
     std::shared_ptr<XInputDevice> const core_keyboard;
