@@ -32,6 +32,7 @@
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
+#include "mir_test_framework/temporary_environment_value.h"
 #include "mir/test/pipe.h"
 
 #include "mir/test/doubles/mock_drm.h"
@@ -288,4 +289,20 @@ TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_cannot_determine_busid
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::supported, probe(stub_vt, options));
 
+}
+
+TEST_F(MesaGraphicsPlatform, display_probe_returns_supported_when_KMS_probe_is_overridden)
+{
+    using namespace testing;
+
+    boost::program_options::options_description po;
+    mir::options::ProgramOption options;
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
+
+    ON_CALL(mock_drm, drmCheckModesettingSupported(_)).WillByDefault(Return(-ENOSYS));
+    mtf::TemporaryEnvironmentValue disable_kms_probe{"MIR_MESA_KMS_DISABLE_MODESET_PROBE", "1"};
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(display_platform_probe_symbol);
+    EXPECT_EQ(mg::PlatformPriority::supported, probe(stub_vt, options));
 }
