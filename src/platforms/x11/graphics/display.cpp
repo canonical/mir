@@ -88,16 +88,12 @@ mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
     : x11_resources{x11_resources}
 {
     auto const conn = x11_resources->conn.get();
-    auto const screen = conn->screen();
 
     EGLint vid;
     if (!eglGetConfigAttrib(egl_dpy, egl_cfg, EGL_NATIVE_VISUAL_ID, &vid))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get config attrib"));
 
-    xcb_colormap_t const colormap = conn->generate_id();
-    xcb_create_colormap(conn->connection(), XCB_COLORMAP_ALLOC_NONE, colormap, screen->root, screen->root_visual);
-
-    uint32_t const value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
+    uint32_t const value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK;
     uint32_t value_list[32];
     value_list[0] = 0; // background_pixel
     value_list[1] = 0; // border_pixel
@@ -111,7 +107,6 @@ mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
                     XCB_EVENT_MASK_ENTER_WINDOW     |
                     XCB_EVENT_MASK_LEAVE_WINDOW     |
                     XCB_EVENT_MASK_POINTER_MOTION;
-    value_list[3] = colormap;
 
     win = conn->generate_id();
     conn->create_window(win, size.width.as_int(), size.height.as_int(), value_mask, value_list);
