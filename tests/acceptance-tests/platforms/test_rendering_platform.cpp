@@ -65,4 +65,17 @@ TEST_P(RenderingPlatformTest, has_render_platform_entrypoints)
             << "Failed to find create_rendering_platform (version " << MIR_SERVER_GRAPHICS_PLATFORM_VERSION << "): "
             << err.what();
     }
+
+    try
+    {
+        module->load_function<mg::PlatformProbe>(
+            "probe_rendering_platform",
+            MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+    }
+    catch(std::runtime_error const& err)
+    {
+        FAIL()
+            << "Failed to find probe_rendering_platform (version " << MIR_SERVER_GRAPHICS_PLATFORM_VERSION << "): "
+            << err.what();
+    }
 }

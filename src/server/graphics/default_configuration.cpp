@@ -171,7 +171,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                 for (auto const& platform : platform_modules)
                 {
                     auto const platform_priority =
-                        graphics::probe_module(
+                        graphics::probe_display_module(
                             *platform,
                             dynamic_cast<mir::options::ProgramOption&>(*the_options()),
                             the_console_services());
@@ -190,7 +190,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
             }
             else
             {
-                platform_libraries = mir::graphics::modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
+                platform_libraries = mir::graphics::display_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
             }
 
             for (auto const& platform : platform_libraries)
@@ -265,7 +265,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 for (auto const& platform : platform_modules)
                 {
                     auto const platform_priority =
-                        graphics::probe_module(
+                        graphics::probe_rendering_module(
                             *platform,
                             dynamic_cast<mir::options::ProgramOption&>(*the_options()),
                             the_console_services());
@@ -284,7 +284,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
             }
             else
             {
-                platform_libraries = mir::graphics::modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
+                platform_libraries = mir::graphics::rendering_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
             }
 
             for (auto const& platform : platform_libraries)

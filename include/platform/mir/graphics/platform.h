@@ -195,7 +195,11 @@ void add_graphics_platform_options(
 // TODO: We actually need to be more granular here; on a device with more
 //       than one graphics system we may need a different platform per GPU,
 //       so we should be associating platforms with graphics devices in some way
-mir::graphics::PlatformPriority probe_graphics_platform(
+mir::graphics::PlatformPriority probe_display_platform(
+    std::shared_ptr<mir::ConsoleServices> const& console,
+    mir::options::ProgramOption const& options);
+
+mir::graphics::PlatformPriority probe_rendering_platform(
     std::shared_ptr<mir::ConsoleServices> const& console,
     mir::options::ProgramOption const& options);
 

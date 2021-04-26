@@ -5,6 +5,7 @@
     create_guest_platform;
     create_display_platform;
     create_rendering_platform;
-    probe_graphics_platform;
+    probe_display_platform;
+    probe_rendering_platform;
     describe_graphics_module;
 };

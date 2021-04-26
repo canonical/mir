@@ -110,11 +110,19 @@ private:
 
 }
 
-mg::PlatformPriority probe_graphics_platform(
+mg::PlatformPriority probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
     mo::ProgramOption const& /*options*/)
 {
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
+    return mg::PlatformPriority::unsupported;
+}
+
+mg::PlatformPriority probe_rendering_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mo::ProgramOption const& /*options*/)
+{
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
     return mg::PlatformPriority::unsupported;
 }
 

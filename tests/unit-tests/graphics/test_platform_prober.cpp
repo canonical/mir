@@ -164,7 +164,7 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
     std::vector<std::shared_ptr<mir::SharedLibrary>> empty_modules;
     mir::options::ProgramOption options;
 
-    EXPECT_THROW(mir::graphics::modules_for_device(empty_modules, options, nullptr),
+    EXPECT_THROW(mir::graphics::display_modules_for_device(empty_modules, options, nullptr),
                  std::runtime_error);
 }
 
@@ -177,7 +177,7 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 
     auto modules = available_platforms();
 
-    auto selected_modules = mir::graphics::modules_for_device(
+    auto selected_modules = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<StubConsoleServices>());
@@ -211,7 +211,7 @@ TEST_F(ServerPlatformProbeMockDRM, returns_kms_platform_when_nested)
 
     auto modules = available_platforms();
 
-    auto selected_modules = mir::graphics::modules_for_device(
+    auto selected_modules = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<StubConsoleServices>());
@@ -235,7 +235,7 @@ TEST(ServerPlatformProbe, ThrowsExceptionWhenNothingProbesSuccessfully)
     auto block_mesa = ensure_mesa_probing_fails();
 
     EXPECT_THROW(
-        mir::graphics::modules_for_device(
+        mir::graphics::display_modules_for_device(
             available_platforms(),
             options,
             std::make_shared<mtd::NullConsoleServices>()),
@@ -251,7 +251,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     auto modules = available_platforms();
     add_dummy_platform(modules);
 
-    auto selected_modules = mir::graphics::modules_for_device(
+    auto selected_modules = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<mtd::NullConsoleServices>());
@@ -280,7 +280,7 @@ TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
     // due to protobuf throwing a screaming hissy fit if it gets loaded twice.
     modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("dummy.so")));
 
-    auto selected_modules = mir::graphics::modules_for_device(
+    auto selected_modules = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<StubConsoleServices>());
