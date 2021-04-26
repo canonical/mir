@@ -31,6 +31,7 @@ global:
     miroil::InputDevice::is_alpha_numeric*;
     miroil::InputDevice::is_keyboard*;
     miroil::InputDevice::operator*;
+    miroil::InputDeviceObserver::?InputDeviceObserver*;
     miroil::InputDeviceObserver::InputDeviceObserver*;
     miroil::InputDeviceObserver::operator*;
     miroil::PersistDisplayConfig::?PersistDisplayConfig*;
@@ -49,6 +50,7 @@ global:
     miroil::dispatch_input_event*;
     non-virtual?thunk?to?miroil::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
     non-virtual?thunk?to?miroil::DisplayConfigurationStorage::?DisplayConfigurationStorage*;
+    non-virtual?thunk?to?miroil::InputDeviceObserver::?InputDeviceObserver*;
     non-virtual?thunk?to?miroil::PromptSessionListener::?PromptSessionListener*;
     typeinfo?for?miroil::DisplayConfigurationOptions;
     typeinfo?for?miroil::DisplayConfigurationOptions::DisplayMode;

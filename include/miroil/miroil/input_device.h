@@ -29,6 +29,7 @@ public:
     InputDevice(std::shared_ptr<mir::input::Device> const& device);
     InputDevice(InputDevice const& src);
     InputDevice(InputDevice&& src);
+    InputDevice();
     ~InputDevice();
 
     auto operator=(InputDevice const& src) -> InputDevice&;
