@@ -117,11 +117,11 @@ public:
 };
 }
 
-mg::PlatformPriority probe_graphics_platform(
+mg::PlatformPriority probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const& console,
     mo::ProgramOption const& options)
 {
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
 
     auto nested = options.is_set(host_socket);
     mgg::Quirks quirks{options};
@@ -253,31 +253,6 @@ mg::PlatformPriority probe_graphics_platform(
                     }
                 }
 
-                mgg::helpers::GBMHelper gbm_device{tmp_fd};
-                mgg::helpers::EGLHelper egl{MinimalGLConfig()};
-
-                egl.setup(gbm_device);
-
-                egl.make_current();
-
-                auto const renderer_string = reinterpret_cast<char const*>(glGetString(GL_RENDERER));
-                if (!renderer_string)
-                {
-                    throw mg::gl_error(
-                        "Probe failed to query GL renderer");
-                }
-
-                if (strncmp(
-                    "llvmpipe",
-                    renderer_string,
-                    strlen("llvmpipe")) == 0)
-                {
-                     mir::log_info("Detected software renderer: %s", renderer_string);
-                     // TODO:   Check if any *other* DRM devices support HW acceleration, and
-                     //         use them instead.
-                     maximum_suitability = mg::PlatformPriority::supported;
-                }
-
                 return maximum_suitability;
             }
         }
@@ -299,6 +274,111 @@ mg::PlatformPriority probe_graphics_platform(
      * the reason, so we don't have to pretend to be supported.
      */
     return mg::PlatformPriority::unsupported;
+}
+
+mg::PlatformPriority probe_rendering_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mir::options::ProgramOption const&)
+{
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
+
+    auto udev = std::make_shared<mir::udev::Context>();
+
+    mir::udev::Enumerator drm_devices{udev};
+    drm_devices.match_subsystem("drm");
+    drm_devices.match_sysname("card[0-9]*");
+    drm_devices.match_sysname("render[0-9]*");
+    drm_devices.scan_devices();
+
+    if (drm_devices.begin() == drm_devices.end())
+    {
+        mir::log_info("Unsupported: No DRM devices detected");
+        return mg::PlatformPriority::unsupported;
+    }
+
+    // We also require GBM EGL platform
+    auto const* client_extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
+    if (!client_extensions)
+    {
+        // Doesn't support EGL client extensions; Mesa does, so this is unlikely to be gbm-kms.
+        mir::log_info("Unsupported: EGL platform does not support client extensions.");
+        return mg::PlatformPriority::unsupported;
+    }
+    if (strstr(client_extensions, "EGL_KHR_platform_gbm") == nullptr)
+    {
+        // Doesn't support the Khronos-standardised GBM platform…
+        mir::log_info("EGL platform does not support EGL_KHR_platform_gbm extension");
+        // …maybe we support the old pre-standardised Mesa GBM platform?
+        if (strstr(client_extensions, "EGL_MESA_platform_gbm") == nullptr)
+        {
+            mir::log_info(
+                "Unsupported: EGL platform supports neither EGL_KHR_platform_gbm nor EGL_MESA_platform_gbm");
+            return mg::PlatformPriority::unsupported;
+        }
+    }
+
+    // Check for suitability
+    auto maximum_suitability = mg::PlatformPriority::unsupported;
+    for (auto& device : drm_devices)
+    {
+        auto const device_node = device.devnode();
+        if (device_node == nullptr)
+        {
+            /* The display connectors attached to the card appear as subdevices
+             * of the card[0-9] node.
+             * These won't have a device node, so pass on anything that doesn't have
+             * a /dev/dri/card* node
+             */
+            continue;
+        }
+
+        try
+        {
+            // Open the device node directly; we don't need DRM master
+            mir::Fd tmp_fd{::open(device_node, O_RDWR | O_CLOEXEC)};
+
+            if (tmp_fd != mir::Fd::invalid)
+            {
+                mgg::helpers::GBMHelper gbm_device{tmp_fd};
+                mgg::helpers::EGLHelper egl{MinimalGLConfig()};
+
+                egl.setup(gbm_device);
+
+                egl.make_current();
+
+                auto const renderer_string = reinterpret_cast<char const*>(glGetString(GL_RENDERER));
+                if (!renderer_string)
+                {
+                    throw mg::gl_error(
+                        "Probe failed to query GL renderer");
+                }
+
+                if (strncmp(
+                    "llvmpipe",
+                    renderer_string,
+                    strlen("llvmpipe")) == 0)
+                {
+                    mir::log_info("Detected software renderer: %s", renderer_string);
+                    maximum_suitability = mg::PlatformPriority::supported;
+                }
+                else
+                {
+                    // If we're good on *any* device, we're best.
+                    return mg::PlatformPriority::best;
+                }
+            }
+        }
+        catch (std::exception const& e)
+        {
+            mir::log(
+                mir::logging::Severity::informational,
+                MIR_LOG_COMPONENT,
+                std::current_exception(),
+                "Failed to probe DRM device");
+        }
+    }
+
+    return maximum_suitability;
 }
 
 namespace
