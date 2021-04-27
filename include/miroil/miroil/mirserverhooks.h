@@ -34,17 +34,18 @@ namespace miroil
 class MirServerHooks
 {
 public:
-    MirServerHooks(std::function<std::shared_ptr<miroil::PromptSessionListener>()> createListener);
+    MirServerHooks();
 
     void operator()(mir::Server& server);
 
-    miroil::PromptSessionListener * promptSessionListener() const;
+    miroil::PromptSessionListener *promptSessionListener() const;
     std::shared_ptr<mir::scene::PromptSessionManager> thePromptSessionManager() const;
     std::shared_ptr<mir::graphics::Display> theMirDisplay() const;
     std::shared_ptr<mir::input::InputDeviceHub> theInputDeviceHub() const;
     std::shared_ptr<mir::shell::DisplayConfigurationController> theDisplayConfigurationController() const;    
 
     void createInputDeviceObserver(std::shared_ptr<miroil::InputDeviceObserver> & observer);
+    void createPromptSessionListener(std::shared_ptr<miroil::PromptSessionListener> listener);
 
 private:
     struct Self;
