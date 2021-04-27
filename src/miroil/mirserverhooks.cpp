@@ -31,14 +31,14 @@
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
-    
+
+namespace
+{
 struct PromptSessionListenerImpl : mir::scene::PromptSessionListener
 {
     PromptSessionListenerImpl(std::shared_ptr<miroil::PromptSessionListener> const& listener) : listener(listener) {};
     ~PromptSessionListenerImpl();
-    
-    miroil::PromptSessionListener * promptSessionListener() const { return listener.get(); };
-    
+
     void starting(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) override;
     void stopping(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) override;
     void suspending(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) override;
@@ -48,7 +48,8 @@ struct PromptSessionListenerImpl : mir::scene::PromptSessionListener
                                std::shared_ptr<mir::scene::Session> const& prompt_provider) override;
     void prompt_provider_removed(mir::scene::PromptSession const& prompt_session,
                                  std::shared_ptr<mir::scene::Session> const& prompt_provider) override;
-private:    
+
+private:   
     std::shared_ptr<miroil::PromptSessionListener> const listener;
 };
 
@@ -79,6 +80,7 @@ struct HiddenCursorWrapper : mg::Cursor
 private:
     std::shared_ptr<mg::Cursor> const wrapped;
 };
+}
 
 class MirCursorImages : public mir::input::CursorImages
 {
@@ -97,7 +99,7 @@ std::shared_ptr<mir::graphics::CursorImage> MirCursorImages::image(const std::st
 
 struct miroil::MirServerHooks::Self
 {
-    std::function<std::shared_ptr<miroil::PromptSessionListener>()> createListener;
+    std::shared_ptr<miroil::PromptSessionListener> prompt_session_listener;
     std::weak_ptr<PromptSessionListenerImpl> m_promptSessionListener;
     std::weak_ptr<mir::graphics::Display> m_mirDisplay;
     std::weak_ptr<mir::shell::DisplayConfigurationController> m_mirDisplayConfigurationController;
@@ -105,10 +107,9 @@ struct miroil::MirServerHooks::Self
     std::weak_ptr<mir::input::InputDeviceHub> m_inputDeviceHub;
 };
 
-miroil::MirServerHooks::MirServerHooks(std::function<std::shared_ptr<miroil::PromptSessionListener>()> createListener) :
+miroil::MirServerHooks::MirServerHooks() :
     self{std::make_shared<Self>()}
 {
-    self->createListener = createListener;
 }
 
 void miroil::MirServerHooks::operator()(mir::Server& server)
@@ -118,12 +119,11 @@ void miroil::MirServerHooks::operator()(mir::Server& server)
 
     server.wrap_cursor([&](std::shared_ptr<mg::Cursor> const& wrapped)
         { return std::make_shared<HiddenCursorWrapper>(wrapped); });
-    
-    if (self->createListener) {
+
+    if (self->prompt_session_listener) {
         server.override_the_prompt_session_listener([this]
-        {            
-            auto promptListener = self->createListener();
-            auto const result = std::make_shared<PromptSessionListenerImpl>(promptListener);
+        {
+            auto const result = std::make_shared<PromptSessionListenerImpl>(self->prompt_session_listener);
             self->m_promptSessionListener = result;
             return result;
         });
@@ -138,13 +138,9 @@ void miroil::MirServerHooks::operator()(mir::Server& server)
         });
 }
 
-miroil::PromptSessionListener * miroil::MirServerHooks::promptSessionListener() const
+miroil::PromptSessionListener *qtmir::MirServerHooks::promptSessionListener() const
 {
-    if (auto result = self->m_promptSessionListener.lock()) {        
-        return result.get()->promptSessionListener();
-    }    
-
-    throw std::logic_error("No prompt session listener available. Server not running?");
+    return self->prompt_session_listener.get();
 }
 
 std::shared_ptr<mir::scene::PromptSessionManager> miroil::MirServerHooks::thePromptSessionManager() const
@@ -184,35 +180,40 @@ void miroil::MirServerHooks::createInputDeviceObserver(std::shared_ptr<miroil::I
     theInputDeviceHub()->add_observer(std::make_shared<MirInputDeviceObserverImpl>(observer));
 }
 
+void qtmir::MirServerHooks::createPromptSessionListener(std::shared_ptr<miroil::PromptSessionListener> listener)
+{
+    self->prompt_session_listener = listener;
+}
+
 PromptSessionListenerImpl::~PromptSessionListenerImpl() = default;
 
-void PromptSessionListenerImpl::starting(std::shared_ptr<mir::scene::PromptSession> const& prompt_session)
+void PromptSessionListenerImpl::starting(std::shared_ptr<ms::PromptSession> const& prompt_session)
 {
     listener->starting(prompt_session);
 }
 
-void PromptSessionListenerImpl::stopping(std::shared_ptr<mir::scene::PromptSession> const& prompt_session)
+void PromptSessionListenerImpl::stopping(std::shared_ptr<ms::PromptSession> const& prompt_session)
 {
     listener->stopping(prompt_session);
 }
 
-void PromptSessionListenerImpl::suspending(std::shared_ptr<mir::scene::PromptSession> const& prompt_session)
+void PromptSessionListenerImpl::suspending(std::shared_ptr<ms::PromptSession> const& prompt_session)
 {
     listener->suspending(prompt_session);
 }
 
-void PromptSessionListenerImpl::resuming(std::shared_ptr<mir::scene::PromptSession> const& prompt_session)
+void PromptSessionListenerImpl::resuming(std::shared_ptr<ms::PromptSession> const& prompt_session)
 {
     listener->resuming(prompt_session);
 }
 
-void PromptSessionListenerImpl::prompt_provider_added(mir::scene::PromptSession const& prompt_session,
+void PromptSessionListenerImpl::prompt_provider_added(ms::PromptSession const& prompt_session,
                                                       std::shared_ptr<ms::Session> const& prompt_provider)
 {
     listener->prompt_provider_added(prompt_session, prompt_provider);
 }
 
-void PromptSessionListenerImpl::prompt_provider_removed(mir::scene::PromptSession const& prompt_session,
+void PromptSessionListenerImpl::prompt_provider_removed(ms::PromptSession const& prompt_session,
                                                         std::shared_ptr<ms::Session> const& prompt_provider)
 {
     listener->prompt_provider_removed(prompt_session, prompt_provider);

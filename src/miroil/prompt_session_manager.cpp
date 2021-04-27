@@ -22,9 +22,9 @@ miroil::PromptSessionManager::PromptSessionManager(std::shared_ptr<mir::scene::P
 {
 }
 
-miroil::PromptSessionManager::PromptSessionManager(PromptSessionManager&& src) = default;
+miroil::PromptSessionManager::PromptSessionManager(PromptSessionManager&& /*src*/) = default;
 
-miroil::PromptSessionManager::PromptSessionManager(PromptSessionManager const& src) = default;
+miroil::PromptSessionManager::PromptSessionManager(PromptSessionManager const& /*src*/) = default;
 
 miroil::PromptSessionManager::~PromptSessionManager() = default;
 
