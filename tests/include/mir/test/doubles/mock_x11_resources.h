@@ -29,10 +29,18 @@ namespace test
 {
 namespace doubles
 {
+
 class MockXCBConnection : public mir::X::XCBConnection
 {
 public:
+    MockXCBConnection()
+    {
+        ON_CALL(*this, screen())
+            .WillByDefault(testing::Return(&fake_screen));
+    }
+
     MOCK_CONST_METHOD0(has_error, int());
+    MOCK_CONST_METHOD0(get_file_descriptor, int());
     MOCK_CONST_METHOD0(poll_for_event, xcb_generic_event_t*());
     MOCK_CONST_METHOD0(screen, xcb_screen_t*());
     MOCK_CONST_METHOD1(intern_atom, xcb_atom_t(std::string const& name));
@@ -53,6 +61,14 @@ public:
     MOCK_CONST_METHOD1(destroy_window, void(xcb_window_t window));
     MOCK_CONST_METHOD0(flush, void());
     MOCK_CONST_METHOD0(connection, xcb_connection_t*());
+
+    xcb_screen_t fake_screen{
+        0, 0, 0, 0, 0,
+        640, // width_in_pixels;
+        480, // height_in_pixels;
+        400, // width_in_millimeters;
+        300, // height_in_millimeters;
+        0, 0, 0, 0, 0, 0, 0};
 };
 
 class MockX11Resources : public mir::X::X11Resources

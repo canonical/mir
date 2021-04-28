@@ -84,7 +84,13 @@ TEST_F(X11GraphicsPlatformTest, failure_to_open_x11_display_results_in_an_error)
     EXPECT_CALL(mock_x11, XOpenDisplay(_))
         .WillRepeatedly(Return(nullptr));
 
-    EXPECT_THROW({ create_platform(); }, std::exception);
+    EXPECT_THROW(
+        {
+            std::make_shared<mg::X::Platform>(
+                nullptr,
+                std::vector<mg::X::X11OutputConfig>{{{1280, 1024}}},
+                std::make_shared<mir::report::null::DisplayReport>());
+        }, std::exception);
 }
 
 TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_x_cannot_open_display)

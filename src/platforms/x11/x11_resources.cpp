@@ -44,6 +44,11 @@ public:
         return xcb_connection_has_error(conn);
     }
 
+    auto get_file_descriptor() const -> int override
+    {
+        return xcb_get_file_descriptor(conn);
+    }
+
     auto poll_for_event() const -> xcb_generic_event_t* override
     {
         return xcb_poll_for_event(conn);
@@ -177,7 +182,10 @@ mx::X11Resources::X11Resources(std::unique_ptr<XCBConnection>&& conn, ::Display*
 
 mx::X11Resources::~X11Resources()
 {
-    XCloseDisplay(xlib_dpy); // calls xcb_disconnect() for us
+    if (xlib_dpy)
+    {
+        XCloseDisplay(xlib_dpy); // calls xcb_disconnect() for us
+    }
 }
 
 void mx::X11Resources::set_set_output_for_window(xcb_window_t win, VirtualOutput* output)

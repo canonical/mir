@@ -70,7 +70,7 @@ private:
 class Display : public graphics::Display
 {
 public:
-    explicit Display(mir::X::X11Resources* x11_resources,
+    explicit Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
                      std::vector<X11OutputConfig> const& requested_size,
                      std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                      std::shared_ptr<GLConfig> const& gl_config,
@@ -124,7 +124,7 @@ private:
     };
 
     helpers::EGLHelper const shared_egl;
-    mir::X::X11Resources* const x11_resources;
+    std::shared_ptr<mir::X::X11Resources> const x11_resources;
     std::shared_ptr<GLConfig> const gl_config;
     geometry::SizeF pixel_size_mm;
     std::shared_ptr<DisplayReport> const report;

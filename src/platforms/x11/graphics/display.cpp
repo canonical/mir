@@ -132,7 +132,7 @@ unsigned long mgx::X11Window::red_mask() const
     return r_mask;
 }
 
-mgx::Display::Display(mir::X::X11Resources* x11_resources,
+mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
                       std::vector<X11OutputConfig> const& requested_sizes,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
@@ -150,7 +150,7 @@ mgx::Display::Display(mir::X::X11Resources* x11_resources,
     {
         auto actual_size = requested_size.size;
         auto window = std::make_unique<X11Window>(
-            x11_resources,
+            x11_resources.get(),
             shared_egl.display(),
             actual_size,
             shared_egl.config());

@@ -49,6 +49,7 @@ public:
     XCBConnection& operator=(XCBConnection const&) = delete;
 
     virtual auto has_error() const -> int = 0;
+    virtual auto get_file_descriptor() const -> int = 0;
     virtual auto poll_for_event() const -> xcb_generic_event_t* = 0;
     virtual auto screen() const -> xcb_screen_t* = 0;
     /// Synchronous for now, since that makes everything simpler

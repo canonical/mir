@@ -75,6 +75,8 @@ struct InputPlatformProbe : ::testing::Test
                     {
                         return platform_input_lib_value_as_any;
                     }));
+        ON_CALL(mock_x11, XGetXCBConnection(_))
+            .WillByDefault(Return(reinterpret_cast<xcb_connection_t*>(1)));
     }
 
     void disable_x11()
@@ -145,42 +147,6 @@ TEST_F(InputPlatformProbe, stub_platform_not_picked_up_by_default)
 
 #ifdef MIR_BUILD_PLATFORM_X11
 char const vt[] = "vt";
-TEST_F(InputPlatformProbe, x11_platform_found_and_used_when_display_connection_works)
-{
-    auto platform =
-        mi::probe_input_platforms(
-            mock_options,
-            mt::fake_shared(stub_emergency),
-            mt::fake_shared(mock_registry),
-            nullptr,
-            mr::null_input_report(),
-            *stub_prober_report);
-
-    EXPECT_THAT(platform, OfPtrType<mi::X::XInputPlatform>());
-}
-
-TEST_F(InputPlatformProbe, when_multiple_x11_platforms_are_eligible_only_one_is_selected)
-{
-    auto const real_lib = mtf::server_platform_path() + "server-x11.so." MIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING;
-    auto const fake_lib = mtf::server_platform_path() + "server-x11.so.0";
-
-    ASSERT_THAT(real_lib, Ne(fake_lib));
-    remove(fake_lib.c_str());
-    ASSERT_THAT(link(real_lib.c_str(), fake_lib.c_str()), Eq(0));
-
-    auto platform =
-        mi::probe_input_platforms(
-            mock_options,
-            mt::fake_shared(stub_emergency),
-            mt::fake_shared(mock_registry),
-            nullptr,
-            mr::null_input_report(),
-            *stub_prober_report);
-
-    EXPECT_THAT(platform, OfPtrType<mi::X::XInputPlatform>());
-
-    remove(fake_lib.c_str());
-}
 
 TEST_F(InputPlatformProbe, x11_input_platform_not_used_when_vt_specified)
 {

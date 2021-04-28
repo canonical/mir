@@ -128,7 +128,7 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return make_module_ptr<mgx::Display>(x11_resources.get(), output_sizes, initial_conf_policy, gl_config, report);
+    return make_module_ptr<mgx::Display>(x11_resources, output_sizes, initial_conf_policy, gl_config, report);
 }
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
