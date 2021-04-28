@@ -175,6 +175,8 @@ auto mx::X11Resources::instance() -> std::shared_ptr<X11Resources>
 mx::X11Resources::X11Resources(std::unique_ptr<XCBConnection>&& conn, ::Display* xlib_dpy)
     : conn{std::move(conn)},
       xlib_dpy{xlib_dpy},
+      UTF8_STRING{this->conn->intern_atom("UTF8_STRING")},
+      _NET_WM_NAME{this->conn->intern_atom("_NET_WM_NAME")},
       WM_PROTOCOLS{this->conn->intern_atom("WM_PROTOCOLS")},
       WM_DELETE_WINDOW{this->conn->intern_atom("WM_DELETE_WINDOW")}
 {

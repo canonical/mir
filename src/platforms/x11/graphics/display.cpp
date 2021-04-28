@@ -112,7 +112,10 @@ mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
     conn->create_window(win, size.width.as_int(), size.height.as_int(), value_mask, value_list);
 
     // Enable the WM_DELETE_WINDOW protocol for the window (causes a client message to be sent when window is closed)
-    conn->change_property(win, x11_resources->WM_PROTOCOLS, 4, 32, 1, &x11_resources->WM_DELETE_WINDOW);
+    conn->change_property(win, x11_resources->WM_PROTOCOLS, XCB_ATOM_ATOM, 32, 1, &x11_resources->WM_DELETE_WINDOW);
+    // Set the window title
+    std::string const title{"Mir on X"};
+    conn->change_property(win, x11_resources->_NET_WM_NAME, x11_resources->UTF8_STRING, 8, title.size(), title.c_str());
 
     conn->map_window(win);
 }

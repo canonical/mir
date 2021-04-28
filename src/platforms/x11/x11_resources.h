@@ -102,6 +102,8 @@ public:
 
     std::unique_ptr<XCBConnection> const conn;
     ::Display* const xlib_dpy; ///< Needed for EGL
+    xcb_atom_t const UTF8_STRING;
+    xcb_atom_t const _NET_WM_NAME;
     xcb_atom_t const WM_PROTOCOLS;
     xcb_atom_t const WM_DELETE_WINDOW;
 
