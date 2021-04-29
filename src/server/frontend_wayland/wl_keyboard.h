@@ -52,7 +52,8 @@ public:
     WlKeyboard(
         wl_resource* new_resource,
         mir::input::Keymap const& initial_keymap,
-        std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state);
+        std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state,
+        bool enable_key_repeat);
 
     ~WlKeyboard();
 

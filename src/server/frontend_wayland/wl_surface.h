@@ -110,7 +110,8 @@ class WlSurface : public wayland::Surface
 {
 public:
     WlSurface(wl_resource* new_resource,
-              std::shared_ptr<mir::Executor> const& executor,
+              std::shared_ptr<mir::Executor> const& wayland_executor,
+              std::shared_ptr<mir::Executor> const& frame_callback_executor,
               std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     ~WlSurface();
@@ -143,7 +144,8 @@ public:
 
 private:
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
-    std::shared_ptr<mir::Executor> const executor;
+    std::shared_ptr<mir::Executor> const wayland_executor;
+    std::shared_ptr<mir::Executor> const frame_callback_executor;
 
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;

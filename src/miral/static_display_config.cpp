@@ -18,7 +18,7 @@
 
 #include "static_display_config.h"
 
-#include <mir_toolkit/mir_client_library.h>
+#include <mir/output_type_names.h>
 
 #include <mir/log.h>
 
@@ -69,7 +69,7 @@ auto as_orientation(std::string const& orientation) -> mir::optional_value<MirOr
 
 auto output_type_from(std::string const& output) -> MirOutputType
 {
-    for (int i = 0; auto const name = mir_output_type_name(static_cast<MirOutputType>(i)); ++i)
+    for (int i = 0; auto const name = mir::output_type_name(static_cast<MirOutputType>(i)); ++i)
     {
         if (output.find(name) == 0)
             return static_cast<MirOutputType>(i);
@@ -370,7 +370,7 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 conf_output.power_mode = mir_power_mode_off;
             }
 
-            out << "\n      " << mir_output_type_name(type);
+            out << "\n      " << mir::output_type_name(type);
             if (conf_output.card_id.as_value() > 0)
                 out << '-' << conf_output.card_id.as_value();
             out << '-' << index_by_type << ':';

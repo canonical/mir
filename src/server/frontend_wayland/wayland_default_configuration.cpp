@@ -247,6 +247,8 @@ std::shared_ptr<mf::Connector>
                 the_frontend_display_changer(),
                 the_display_configuration_observer_registrar());
 
+            auto const enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
+
             return std::make_shared<mf::WaylandConnector>(
                 the_shell(),
                 display_config,
@@ -256,12 +258,14 @@ std::shared_ptr<mf::Connector>
                 the_session_authorizer(),
                 the_frontend_surface_stack(),
                 the_clipboard(),
+                the_main_loop(),
                 arw_socket,
                 configure_wayland_extensions(
                     wayland_extensions,
                     options->is_set(mo::x11_display_opt),
                     wayland_extension_hooks),
-                wayland_extension_filter);
+                wayland_extension_filter,
+                enable_repeat);
         });
 }
 

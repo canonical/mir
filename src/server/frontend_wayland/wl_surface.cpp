@@ -85,13 +85,15 @@ bool mf::WlSurfaceState::surface_data_needs_refresh() const
 
 mf::WlSurface::WlSurface(
     wl_resource* new_resource,
-    std::shared_ptr<Executor> const& executor,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<Executor> const& frame_callback_executor,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator)
     : Surface(new_resource, Version<4>()),
         session{get_session(client)},
         stream{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
         allocator{allocator},
-        executor{executor},
+        wayland_executor{wayland_executor},
+        frame_callback_executor{frame_callback_executor},
         null_role{this},
         role{&null_role}
 {
@@ -344,6 +346,17 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     if (state.scale)
         stream->set_scale(state.scale.value());
 
+    auto const executor_send_frame_callbacks = [executor = wayland_executor, weak_self = mw::make_weak(this)]()
+        {
+            executor->spawn([weak_self]()
+                {
+                    if (weak_self)
+                    {
+                        weak_self.value().send_frame_callbacks();
+                    }
+                });
+        };
+
     if (state.buffer)
     {
         wl_resource * buffer = *state.buffer;
@@ -356,17 +369,6 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         }
         else
         {
-            auto const executor_send_frame_callbacks = [executor = executor, weak_self = mw::make_weak(this)]()
-                {
-                    executor->spawn([weak_self]()
-                        {
-                            if (weak_self)
-                            {
-                                weak_self.value().send_frame_callbacks();
-                            }
-                        });
-                };
-
             std::shared_ptr<graphics::Buffer> mir_buffer;
 
             if (auto const shm_buffer = wl_shm_buffer_get(buffer))
@@ -387,7 +389,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                 }
                 mir_buffer = allocator->buffer_from_shm(
                     buffer,
-                    executor,
+                    wayland_executor,
                     std::move(executor_send_frame_callbacks));
                 tracepoint(
                     mir_server_wayland,
@@ -399,7 +401,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             {
                 std::shared_ptr<bool> buffer_destroyed = deleted_flag_for_resource(buffer);
 
-                auto release_buffer = [executor = executor, buffer = buffer, destroyed = buffer_destroyed]()
+                auto release_buffer = [executor = wayland_executor, buffer = buffer, destroyed = buffer_destroyed]()
                     {
                         executor->spawn(run_unless(
                             destroyed,
@@ -430,7 +432,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     }
     else
     {
-        send_frame_callbacks();
+        frame_callback_executor->spawn(std::move(executor_send_frame_callbacks));
     }
 
     for (WlSubsurface* child: children)
