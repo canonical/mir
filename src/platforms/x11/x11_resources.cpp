@@ -158,6 +158,7 @@ auto mx::X11Resources::instance() -> std::shared_ptr<X11Resources>
         // Faled to open X11 display, probably X isn't running
         return nullptr;
     }
+    XSetEventQueueOwner(xlib_dpy, XCBOwnsEventQueue);
 
     auto const xcb_conn = XGetXCBConnection(xlib_dpy);
     if (!xcb_conn || xcb_connection_has_error(xcb_conn))
