@@ -98,6 +98,7 @@ public:
     MOCK_METHOD2(XFixesHideCursor, void(Display *dpy, Window win));
     MOCK_METHOD2(XFixesShowCursor, void(Display *dpy, Window win));
     MOCK_METHOD1(XGetXCBConnection, xcb_connection_t*(Display *dpy));
+    MOCK_METHOD2(XSetEventQueueOwner, void(Display*, int));
 
     FakeX11Resources fake_x11;
 };
