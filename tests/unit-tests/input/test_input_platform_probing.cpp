@@ -75,8 +75,10 @@ struct InputPlatformProbe : ::testing::Test
                     {
                         return platform_input_lib_value_as_any;
                     }));
+#ifdef MIR_BUILD_PLATFORM_X11
         ON_CALL(mock_x11, XGetXCBConnection(_))
             .WillByDefault(Return(reinterpret_cast<xcb_connection_t*>(1)));
+#endif
     }
 
     void disable_x11()
