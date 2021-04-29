@@ -167,15 +167,11 @@ void mix::XInputPlatform::process_input_events()
     {
         if (core_keyboard->started() && core_pointer->started())
         {
-            bool consumed{false};
-            auto const callbacks = std::move(next_pending_event_callbacks);
-            next_pending_event_callbacks.clear();
-            for (auto const& callback : callbacks)
+            bool consumed = false;
+            if (next_pending_event_callback)
             {
-                if (callback(event.get()))
-                {
-                    consumed = true;
-                }
+                (*next_pending_event_callback)(event.get());
+                next_pending_event_callback = {};
             }
             if (!consumed)
             {
@@ -188,12 +184,11 @@ void mix::XInputPlatform::process_input_events()
         }
     }
 
-    auto const callbacks = std::move(next_pending_event_callbacks);
-    next_pending_event_callbacks.clear();
-    for (auto const& callback : callbacks)
+    if (next_pending_event_callback)
     {
-        callback(std::nullopt);
+        (*next_pending_event_callback)(std::nullopt);
         // Ignore result because "consuming" a null event is meaningless
+        next_pending_event_callback.reset();
     }
 
     while (!deferred.empty())
@@ -324,7 +319,7 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
         // Key repeats look like a release and an immediate press with the same timestamp. The only way to detect and
         // discard them is by peaking at the next event.
 
-        with_next_pending_event([this, keycode = release_ev->detail, time = release_ev->time](auto next_event)
+        next_pending_event_callback = [this, keycode = release_ev->detail, time = release_ev->time](auto next_event)
             {
                 if (next_event && (next_event.value()->response_type & ~0x80) == XCB_KEY_PRESS)
                 {
@@ -348,7 +343,7 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
                 }
                 // it appears that keysyms should not be freed
                 return false; // do not consume next event, process it normally
-            });
+            };
     }   break;
 
     case XCB_BUTTON_PRESS:
@@ -446,9 +441,4 @@ void mix::XInputPlatform::defer(std::function<void()>&& work)
     // than when we get around to waiting on the reply.
     x11_resources->conn->flush();
     deferred.push_back(std::move(work));
-}
-
-void mix::XInputPlatform::with_next_pending_event(std::function<bool(std::optional<xcb_generic_event_t*> event)>&& work)
-{
-    next_pending_event_callbacks.push_back(std::move(work));
 }

@@ -67,10 +67,6 @@ private:
     void process_input_event(xcb_generic_event_t* event);
     /// Defer work until all pending events are processed. Should only be called while processing events.
     void defer(std::function<void()>&& work);
-    /// Defer work until after processing the current event. Called with nullopt if the current event is the last
-    /// event that is currently pending (doesn't wait for new events). Should only be called while processing events.
-    /// Given function returns true if it consumes the event (otherwise the process_input_event() is then called).
-    void with_next_pending_event(std::function<bool(std::optional<xcb_generic_event_t*> event)>&& work);
     std::shared_ptr<mir::X::X11Resources> const x11_resources;
     std::shared_ptr<dispatch::ReadableFd> const xcon_dispatchable;
     std::shared_ptr<input::InputDeviceRegistry> const registry;
@@ -82,7 +78,10 @@ private:
     bool kbd_grabbed;
     bool ptr_grabbed;
     std::vector<std::function<void()>> deferred;
-    std::vector<std::function<bool(std::optional<xcb_generic_event_t*> event)>> next_pending_event_callbacks;
+    /// Called with the next pending event before it's processed normally. If the event that is being processed is the
+    /// last that is currently available, called with nullopt (the next event is NOT waited for). If this function
+    /// returns true it "consumes" the event. If it returns false, the event is sent to process_input_event()
+    std::optional<std::function<bool(std::optional<xcb_generic_event_t*> event)>> next_pending_event_callback;
 };
 
 }
