@@ -82,6 +82,7 @@ private:
 
     /// contains more information than just a MirWindowState
     /// (for example if a minimized window would otherwise be maximized)
+    /// TODO: delete this and use scene::SurfaceStateStack in it's place
     struct WindowState
     {
         bool withdrawn{true};
