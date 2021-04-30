@@ -25,6 +25,7 @@
 #include "mir/frontend/mir_client_session.h"
 #include "mir/frontend/wayland.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/scene/surface.h"
 #include "mir/log.h"
 
 namespace mf = mir::frontend;
@@ -527,22 +528,24 @@ void mf::XdgToplevelV6::send_toplevel_configure()
             *state = State::activated;
     }
 
-    switch (window_state())
+    if (auto const surface = scene_surface())
     {
-    case mir_window_state_maximized:
-    case mir_window_state_horizmaximized:
-    case mir_window_state_vertmaximized:
-        if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = State::maximized;
-        break;
+        auto const state = surface.value()->state_stack();
+        if (state.has(mir_window_state_maximized) ||
+            state.has(mir_window_state_horizmaximized) ||
+            state.has(mir_window_state_vertmaximized))
+        {
+            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+                *state = State::maximized;
+        }
 
-    case mir_window_state_fullscreen:
-        if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = State::fullscreen;
-        break;
+        if (state.has(mir_window_state_fullscreen))
+        {
+            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+                *state = State::fullscreen;
+        }
 
-    default:
-        break;
+        // TODO: plumb resizing state through Mir?
     }
 
     // 0 sizes means default for toplevel configure
