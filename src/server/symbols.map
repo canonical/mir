@@ -169,6 +169,7 @@ MIR_SERVER_1.6.0 {
     mir::scene::SurfaceObserver::operator*;
     mir::scene::SurfaceObserver::?SurfaceObserver*;
     mir::scene::SurfaceObserver::SurfaceObserver*;
+    mir::scene::SurfaceStateStack::*;
     mir::ServerActionQueue::operator*;
     mir::ServerActionQueue::?ServerActionQueue*;
     mir::ServerActionQueue::ServerActionQueue*;
