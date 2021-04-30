@@ -512,6 +512,12 @@ MirWindowType ms::BasicSurface::set_type(MirWindowType t)
 MirWindowState ms::BasicSurface::state() const
 {
     std::lock_guard<std::mutex> lock(guard);
+    return state_.active_state();
+}
+
+auto ms::BasicSurface::state_stack() const -> SurfaceStateStack
+{
+    std::lock_guard<std::mutex> lock(guard);
     return state_;
 }
 
@@ -521,9 +527,9 @@ MirWindowState ms::BasicSurface::set_state(MirWindowState s)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
 
     std::unique_lock<std::mutex> lock(guard);
-    if (state_ != s)
+    if (state_.active_state() != s)
     {
-        state_ = s;
+        state_.set_active_state(s);
 
         lock.unlock();
         observers->attrib_changed(this, mir_window_attrib_state, s);
@@ -612,7 +618,7 @@ int ms::BasicSurface::query(MirWindowAttrib attrib) const
     switch (attrib)
     {
         case mir_window_attrib_type: return type_;
-        case mir_window_attrib_state: return state_;
+        case mir_window_attrib_state: return state_.active_state();
         case mir_window_attrib_swapinterval: return swapinterval_;
         case mir_window_attrib_focus: return focus_;
         case mir_window_attrib_dpi: return dpi_;

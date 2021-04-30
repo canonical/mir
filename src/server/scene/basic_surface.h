@@ -113,6 +113,7 @@ public:
 
     MirWindowType type() const override;
     MirWindowState state() const override;
+    auto state_stack() const -> SurfaceStateStack override;
     int configure(MirWindowAttrib attrib, int value) override;
     int query(MirWindowAttrib attrib) const override;
     void hide() override;
@@ -203,7 +204,7 @@ private:
     std::list<StreamInfo> layers;
     // Surface attributes:
     MirWindowType type_ = mir_window_type_normal;
-    MirWindowState state_ = mir_window_state_restored;
+    SurfaceStateStack state_{mir_window_state_restored};
     int swapinterval_ = 1;
     MirWindowFocusState focus_ = mir_window_focus_state_unfocused;
     int dpi_ = 0;
