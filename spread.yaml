@@ -11,7 +11,8 @@ backends:
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
         plan: n1-highcpu-8
-        location: computeengine/us-east1-b
+        location: snapd-spread/us-east1-b
+        halt-timeout: 2h
         systems:
             - ubuntu-20.04-64
             - fedora-32-64
