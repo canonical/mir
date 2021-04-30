@@ -17,7 +17,7 @@
  */
 
 #include "input_platform.h"
-#include "../X11_resources.h"
+#include "../x11_resources.h"
 #include "mir/module_properties.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
@@ -35,7 +35,7 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mi::InputReport> const& /*report*/)
 {
     mir::assert_entry_point_signature<mi::CreatePlatform>(&create_input_platform);
-    return mir::make_module_ptr<mix::XInputPlatform>(input_device_registry, mx::X11Resources::instance.get_conn());
+    return mir::make_module_ptr<mix::XInputPlatform>(input_device_registry, mx::X11Resources::instance());
 }
 
 void add_input_platform_options(
@@ -52,7 +52,7 @@ mi::PlatformPriority probe_input_platform(
     if (options.is_set("host-socket") || options.is_set("vt"))
         return mi::PlatformPriority::unsupported;
 
-    auto display_available = mx::X11Resources::instance.get_conn() != nullptr;
+    bool const display_available = mx::X11Resources::instance() != nullptr;
     if (display_available)
         return mi::PlatformPriority::best;
     else

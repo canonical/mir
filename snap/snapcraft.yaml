@@ -42,8 +42,10 @@ parts:
     - libudev-dev
     - libwayland-dev
     - libxcb-composite0-dev
+    - libx11-xcb-dev
     - libxcursor-dev
     - libxkbcommon-dev
+    - libxkbcommon-x11-dev
     - libxml++2.6-dev
     - libyaml-cpp-dev
     - nettle-dev
@@ -88,10 +90,12 @@ parts:
     - libxcb-render0
     - libxcb-xfixes0
     - libxcb1
+    - libx11-xcb1
     - libxcursor1
     - libxdmcp6
     - libxfixes3
     - libxkbcommon0
+    - libxkbcommon-x11-0
     - libxml++2.6-2v5
     - libxml2
     - libxrender1

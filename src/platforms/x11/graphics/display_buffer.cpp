@@ -31,7 +31,7 @@ namespace geom=mir::geometry;
 
 mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                   DisplayConfigurationOutputId output_id,
-                                  Window const win,
+                                  xcb_window_t win,
                                   geometry::Rectangle const& view_area,
                                   EGLContext const shared_context,
                                   std::shared_ptr<AtomicFrame> const& f,

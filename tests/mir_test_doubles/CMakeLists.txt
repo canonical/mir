@@ -54,6 +54,7 @@ if (MIR_BUILD_PLATFORM_X11)
   )
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_x11.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mock_xkb.cpp
   )
 endif()
 

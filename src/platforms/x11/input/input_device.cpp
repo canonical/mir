@@ -26,7 +26,7 @@
 #include "mir/input/event_builder.h"
 #include "mir/input/input_sink.h"
 
-#include <X11/Xlib.h>
+#include <xcb/xcb.h>
 
 namespace mi = mir::input;
 namespace geom = mir::geometry;
@@ -36,13 +36,13 @@ namespace
 {
 MirPointerButtons to_mir_button(int button)
 {
-    auto const button_side = 8;
-    auto const button_extra = 9;
-    if (button == Button1)
+    static auto const button_side = 8;
+    static auto const button_extra = 9;
+    if (button == XCB_BUTTON_INDEX_1)
         return mir_pointer_button_primary;
-    if (button == Button2)  // tertiary (middle) button is Button2 in X
+    if (button == XCB_BUTTON_INDEX_2)  // tertiary (middle) button is button 2 in X
         return mir_pointer_button_tertiary;
-    if (button == Button3)
+    if (button == XCB_BUTTON_INDEX_3)
         return mir_pointer_button_secondary;
     if (button == button_side)
         return mir_pointer_button_side;
@@ -54,19 +54,18 @@ MirPointerButtons to_mir_button(int button)
 MirPointerButtons to_mir_button_state(int x_button_key_state)
 {
     MirPointerButtons button_state = 0;
-    if (x_button_key_state & Button1Mask)
+    if (x_button_key_state & XCB_BUTTON_MASK_1)
         button_state |= mir_pointer_button_primary;
-    if (x_button_key_state & Button2Mask)
+    if (x_button_key_state & XCB_BUTTON_MASK_2)
         button_state |= mir_pointer_button_tertiary;
-    if (x_button_key_state & Button3Mask)
+    if (x_button_key_state & XCB_BUTTON_MASK_3)
         button_state |= mir_pointer_button_secondary;
-    if (x_button_key_state & Button4Mask)
+    if (x_button_key_state & XCB_BUTTON_MASK_4)
         button_state |= mir_pointer_button_back;
-    if (x_button_key_state & Button5Mask)
+    if (x_button_key_state & XCB_BUTTON_MASK_5)
         button_state |= mir_pointer_button_forward;
     return button_state;
 }
-
 }
 
 mix::XInputDevice::XInputDevice(InputDeviceInfo const& device_info)
@@ -171,7 +170,6 @@ void mix::XInputDevice::update_button_state(int button)
 void mix::XInputDevice::pointer_press(std::chrono::nanoseconds event_time, int button, mir::geometry::Point const& pos, mir::geometry::Displacement scroll)
 {
     button_state |= to_mir_button(button);
-
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
     sink->handle_input(
@@ -192,7 +190,6 @@ void mix::XInputDevice::pointer_press(std::chrono::nanoseconds event_time, int b
 void mix::XInputDevice::pointer_release(std::chrono::nanoseconds event_time, int button, mir::geometry::Point const& pos, mir::geometry::Displacement scroll)
 {
     button_state &= ~to_mir_button(button);
-
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
     sink->handle_input(

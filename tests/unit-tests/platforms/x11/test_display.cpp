@@ -28,6 +28,7 @@
 #include "mir/test/doubles/null_display_configuration_policy.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_x11.h"
+#include "mir/test/doubles/mock_x11_resources.h"
 #include "mir/test/doubles/mock_gl_config.h"
 #include "mir/test/fake_shared.h"
 
@@ -84,11 +85,6 @@ public:
                                              _))
             .WillByDefault(DoAll(SetArgPointee<3>(EGL_WINDOW_BIT),
                             Return(EGL_TRUE)));
-
-        ON_CALL(mock_x11, XNextEvent(mock_x11.fake_x11.display,
-                                     _))
-            .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.expose_event_return),
-                       Return(1)));
     }
 
     void setup_x11_screen(
@@ -96,56 +92,30 @@ public:
         geom::Size const& mm,
         std::vector<mgx::X11OutputConfig> const& window_sizes)
     {
-        mock_x11.fake_x11.screen.width = pixel.width.as_int();
-        mock_x11.fake_x11.screen.height = pixel.height.as_int();
-        mock_x11.fake_x11.screen.mwidth = mm.width.as_int();
-        mock_x11.fake_x11.screen.mheight = mm.height.as_int();
+        auto const mock_xcb_conn = dynamic_cast<mtd::MockXCBConnection*>(x11_resources.conn.get());
+        mock_xcb_conn->fake_screen.width_in_pixels = pixel.width.as_int();
+        mock_xcb_conn->fake_screen.height_in_pixels = pixel.height.as_int();
+        mock_xcb_conn->fake_screen.width_in_millimeters = mm.width.as_int();
+        mock_xcb_conn->fake_screen.height_in_millimeters = mm.height.as_int();
         sizes = window_sizes;
-
-        ON_CALL(mock_x11, XGetGeometry(mock_x11.fake_x11.display,_,_,_,_,_,_,_,_))
-        .WillByDefault(DoAll(SetArgPointee<5>(mock_x11.fake_x11.screen.width),
-                             SetArgPointee<6>(mock_x11.fake_x11.screen.height),
-                             Return(1)));
     }
     std::shared_ptr<mgx::Display> create_display()
     {
         return std::make_shared<mgx::Display>(
-                   mock_x11.fake_x11.display,
+                   mt::fake_shared(x11_resources),
                    sizes,
                    mt::fake_shared(null_display_configuration_policy),
                    mt::fake_shared(mock_gl_config),
                    std::make_shared<mir::report::null::DisplayReport>());
     }
 
+    mtd::MockX11Resources x11_resources;
     mtd::NullDisplayConfigurationPolicy null_display_configuration_policy;
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockX11> mock_x11;
     mtd::MockGLConfig mock_gl_config;
 };
 
-}
-
-TEST_F(X11DisplayTest, creates_display_successfully)
-{
-    using namespace testing;
-
-    EXPECT_CALL(
-        mock_x11,
-        XCreateWindow_wrapper(
-            mock_x11.fake_x11.display,
-            _,
-            sizes[0].size.width.as_int(),
-            sizes[0].size.height.as_int()
-            ,_ ,_ ,_ ,_ ,_ ,_))
-        .Times(Exactly(1));
-
-    EXPECT_CALL(mock_x11, XNextEvent(mock_x11.fake_x11.display,_))
-        .Times(AtLeast(1));
-
-    EXPECT_CALL(mock_x11, XMapWindow(mock_x11.fake_x11.display,_))
-        .Times(Exactly(1));
-
-    auto display = create_display();
 }
 
 TEST_F(X11DisplayTest, respects_gl_config)

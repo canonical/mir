@@ -61,7 +61,11 @@ mgxh::EGLHelper::EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy, EG
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
 }
 
-mgxh::EGLHelper::EGLHelper(GLConfig const& gl_config, ::Display* const x_dpy, Window win, EGLContext shared_context)
+mgxh::EGLHelper::EGLHelper(
+    GLConfig const& gl_config,
+    ::Display* const x_dpy,
+    xcb_window_t win,
+    EGLContext shared_context)
     : EGLHelper{gl_config}
 {
     eglBindAPI(EGL_OPENGL_ES_API);
@@ -127,7 +131,7 @@ mgxh::EGLHelper::EGLHelper(GLConfig const& gl_config)
 {
 }
 
-void mgxh::EGLHelper::setup_internal(::Display* const x_dpy, bool initialize)
+void mgxh::EGLHelper::setup_internal(::Display* x_dpy, bool initialize)
 {
     EGLint const config_attr[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,

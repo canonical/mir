@@ -16,6 +16,7 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
+#include "mir/c_memory.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_configuration.h"
@@ -30,10 +31,9 @@
 #include "display.h"
 #include "platform.h"
 #include "display_buffer.h"
+#include "../x11_resources.h"
 
 #include <boost/throw_exception.hpp>
-
-#include <X11/Xatom.h>
 #include <algorithm>
 
 #define MIR_LOG_COMPONENT "display"
@@ -46,17 +46,12 @@ namespace geom=mir::geometry;
 
 namespace
 {
-auto get_pixel_width(Display *dpy)
+auto get_pixel_size_mm(mx::XCBConnection* conn) -> geom::SizeF
 {
-    auto screen = XDefaultScreenOfDisplay(dpy);
-
-    return float(screen->mwidth) / screen->width;
-}
-auto get_pixel_height(Display *dpy)
-{
-    auto screen = XDefaultScreenOfDisplay(dpy);
-
-    return float(screen->mheight) / screen->height;
+    auto const screen = conn->screen();
+    return geom::SizeF{
+        float(screen->width_in_millimeters) / screen->width_in_pixels,
+        float(screen->height_in_millimeters) / screen->height_in_pixels};
 }
 
 class XGLContext : public mir::renderer::gl::Context
@@ -86,106 +81,51 @@ private:
 };
 }
 
-mgx::X11Window::X11Window(::Display* x_dpy,
+mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
                           EGLDisplay egl_dpy,
                           geom::Size const size,
                           EGLConfig const egl_cfg)
-    : x_dpy{x_dpy}
+    : x11_resources{x11_resources}
 {
-    auto root = XDefaultRootWindow(x_dpy);
+    auto const conn = x11_resources->conn.get();
 
     EGLint vid;
     if (!eglGetConfigAttrib(egl_dpy, egl_cfg, EGL_NATIVE_VISUAL_ID, &vid))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get config attrib"));
 
-    XVisualInfo visTemplate;
-    std::memset(&visTemplate, 0, sizeof visTemplate);
-    int num_visuals = 0;
-    visTemplate.visualid = vid;
-    auto visInfo = XGetVisualInfo(x_dpy, VisualIDMask, &visTemplate, &num_visuals);
-    if (!visInfo || !num_visuals)
-        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get visual info, or no matching visuals"));
+    uint32_t const value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK;
+    uint32_t value_list[32];
+    value_list[0] = 0; // background_pixel
+    value_list[1] = 0; // border_pixel
+    value_list[2] = XCB_EVENT_MASK_STRUCTURE_NOTIFY |
+                    XCB_EVENT_MASK_EXPOSURE         |
+                    XCB_EVENT_MASK_KEY_PRESS        |
+                    XCB_EVENT_MASK_KEY_RELEASE      |
+                    XCB_EVENT_MASK_BUTTON_PRESS     |
+                    XCB_EVENT_MASK_BUTTON_RELEASE   |
+                    XCB_EVENT_MASK_FOCUS_CHANGE     |
+                    XCB_EVENT_MASK_ENTER_WINDOW     |
+                    XCB_EVENT_MASK_LEAVE_WINDOW     |
+                    XCB_EVENT_MASK_POINTER_MOTION;
 
-    mir::log_info("%d visual(s) found", num_visuals);
-    mir::log_info("Using the first one :");
-    mir::log_info("ID\t\t:\t%lu", visInfo->visualid);
-    mir::log_info("screen\t:\t%d", visInfo->screen);
-    mir::log_info("depth\t\t:\t%d", visInfo->depth);
-    mir::log_info("red_mask\t:\t0x%0lX", visInfo->red_mask);
-    mir::log_info("green_mask\t:\t0x%0lX", visInfo->green_mask);
-    mir::log_info("blue_mask\t:\t0x%0lX", visInfo->blue_mask);
-    mir::log_info("colormap_size\t:\t%d", visInfo->colormap_size);
-    mir::log_info("bits_per_rgb\t:\t%d", visInfo->bits_per_rgb);
+    win = conn->generate_id();
+    conn->create_window(win, size.width.as_int(), size.height.as_int(), value_mask, value_list);
 
-    r_mask = visInfo->red_mask;
+    // Enable the WM_DELETE_WINDOW protocol for the window (causes a client message to be sent when window is closed)
+    conn->change_property(win, x11_resources->WM_PROTOCOLS, XCB_ATOM_ATOM, 32, 1, &x11_resources->WM_DELETE_WINDOW);
+    // Set the window title
+    std::string const title{"Mir on X"};
+    conn->change_property(win, x11_resources->_NET_WM_NAME, x11_resources->UTF8_STRING, 8, title.size(), title.c_str());
 
-    XSetWindowAttributes attr;
-    std::memset(&attr, 0, sizeof(attr));
-    attr.background_pixel = 0;
-    attr.border_pixel = 0;
-    attr.colormap = XCreateColormap(x_dpy, root, visInfo->visual, AllocNone);
-    attr.event_mask = StructureNotifyMask |
-                      ExposureMask        |
-                      KeyPressMask        |
-                      KeyReleaseMask      |
-                      ButtonPressMask     |
-                      ButtonReleaseMask   |
-                      FocusChangeMask     |
-                      EnterWindowMask     |
-                      LeaveWindowMask     |
-                      PointerMotionMask;
-
-    auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
-
-    win = XCreateWindow(x_dpy, root, 0, 0,
-                        size.width.as_int(), size.height.as_int(),
-                        0, visInfo->depth, InputOutput,
-                        visInfo->visual, mask, &attr);
-
-    XFree(visInfo);
-
-    {
-        char const * const title = "Mir On X";
-        XSizeHints sizehints;
-        sizehints.flags = 0;
-        XSetNormalHints(x_dpy, win, &sizehints);
-        XSetStandardProperties(x_dpy, win, title, title, None, (char **)NULL, 0, &sizehints);
-
-        XWMHints wm_hints = {
-            (InputHint|StateHint), // fields in this structure that are defined
-            True,                  // does this application rely on the window manager
-                                   // to get keyboard input? Yes, if this is False,
-                                   // XGrabKeyboard doesn't work reliably.
-            NormalState,           // initial_state
-            0,                     // icon_pixmap
-            0,                     // icon_window
-            0, 0,                  // initial position of icon
-            0,                     // pixmap to be used as mask for icon_pixmap
-            0                      // id of related window_group
-        };
-
-        XSetWMHints(x_dpy, win, &wm_hints);
-
-        Atom wmDeleteMessage = XInternAtom(x_dpy, "WM_DELETE_WINDOW", False);
-        XSetWMProtocols(x_dpy, win, &wmDeleteMessage, 1);
-    }
-
-    XMapWindow(x_dpy, win);
-
-    XEvent xev;
-    do 
-    {
-        XNextEvent(x_dpy, &xev);
-    }
-    while (xev.type != Expose);
+    conn->map_window(win);
 }
 
 mgx::X11Window::~X11Window()
 {
-    XDestroyWindow(x_dpy, win);
+    x11_resources->conn->destroy_window(win);
 }
 
-mgx::X11Window::operator Window() const
+mgx::X11Window::operator xcb_window_t() const
 {
     return win;
 }
@@ -195,16 +135,15 @@ unsigned long mgx::X11Window::red_mask() const
     return r_mask;
 }
 
-mgx::Display::Display(::Display* x_dpy,
+mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
                       std::vector<X11OutputConfig> const& requested_sizes,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& report)
-    : shared_egl{*gl_config, x_dpy},
-      x_dpy{x_dpy},
+    : shared_egl{*gl_config, x11_resources->xlib_dpy},
+      x11_resources{x11_resources},
       gl_config{gl_config},
-      pixel_width{get_pixel_width(x_dpy)},
-      pixel_height{get_pixel_height(x_dpy)},
+      pixel_size_mm{get_pixel_size_mm(x11_resources->conn.get())},
       report{report},
       last_frame{std::make_shared<AtomicFrame>()}
 {
@@ -213,7 +152,11 @@ mgx::Display::Display(::Display* x_dpy,
     for (auto const& requested_size : requested_sizes)
     {
         auto actual_size = requested_size.size;
-        auto window = std::make_unique<X11Window>(x_dpy, shared_egl.display(), actual_size, shared_egl.config());
+        auto window = std::make_unique<X11Window>(
+            x11_resources.get(),
+            shared_egl.display(),
+            actual_size,
+            shared_egl.config());
         auto red_mask = window->red_mask();
         auto pf = (red_mask == 0xFF0000 ?
             mir_pixel_format_argb_8888 :
@@ -222,11 +165,13 @@ mgx::Display::Display(::Display* x_dpy,
             pf,
             actual_size,
             top_left,
-            geom::Size{actual_size.width * pixel_width, actual_size.height * pixel_height},
+            geom::Size{
+                actual_size.width * pixel_size_mm.width.as_value(),
+                actual_size.height * pixel_size_mm.height.as_value()},
             requested_size.scale,
             mir_orientation_normal);
         auto display_buffer = std::make_unique<mgx::DisplayBuffer>(
-            x_dpy,
+            x11_resources->xlib_dpy,
             configuration->id,
             *window,
             configuration->extents(),
@@ -244,6 +189,7 @@ mgx::Display::Display(::Display* x_dpy,
     initial_conf_policy->apply_to(*display_config);
     configure(*display_config);
     report->report_successful_display_construction();
+    x11_resources->conn->flush();
 }
 
 mgx::Display::~Display() noexcept
@@ -338,7 +284,7 @@ std::unique_ptr<mg::VirtualOutput> mgx::Display::create_virtual_output(int /*wid
 
 std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context() const
 {
-    return std::make_unique<XGLContext>(x_dpy, gl_config, shared_egl.context());
+    return std::make_unique<XGLContext>(x11_resources->xlib_dpy, gl_config, shared_egl.context());
 }
 
 bool mgx::Display::apply_if_configuration_preserves_display_buffers(
@@ -362,12 +308,12 @@ mgx::Display::OutputInfo::OutputInfo(
       display_buffer{move(display_buffer)},
       config{move(configuration)}
 {
-    mx::X11Resources::instance.set_set_output_for_window(*this->window, this);
+    owner->x11_resources->set_set_output_for_window(*this->window, this);
 }
 
 mgx::Display::OutputInfo::~OutputInfo()
 {
-    mx::X11Resources::instance.clear_output_for_window(*window);
+    owner->x11_resources->clear_output_for_window(*window);
 }
 
 void mgx::Display::OutputInfo::set_size(geometry::Size const& size)

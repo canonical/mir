@@ -107,14 +107,14 @@ auto mgx::Platform::parse_output_sizes(std::string output_sizes) -> std::vector<
     return sizes;
 }
 
-mgx::Platform::Platform(std::shared_ptr<::Display> const& conn,
+mgx::Platform::Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
                         std::vector<X11OutputConfig> output_sizes,
                         std::shared_ptr<mg::DisplayReport> const& report)
-    : x11_connection{conn},
+    : x11_resources{x11_resources},
       report{report},
       output_sizes{move(output_sizes)}
 {
-    if (!x11_connection)
+    if (!x11_resources)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
 }
 
@@ -128,10 +128,10 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return make_module_ptr<mgx::Display>(x11_connection.get(), output_sizes, initial_conf_policy, gl_config, report);
+    return make_module_ptr<mgx::Display>(x11_resources, output_sizes, initial_conf_policy, gl_config, report);
 }
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
-    return eglGetDisplay(x11_connection.get());
+    return eglGetDisplay(x11_resources->xlib_dpy);
 }

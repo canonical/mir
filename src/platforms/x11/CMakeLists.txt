@@ -3,7 +3,7 @@ add_subdirectory(input/)
 
 add_library(
   mirplatformserverx11sharedresources OBJECT
-  X11_resources.cpp
+  x11_resources.cpp
 )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
@@ -25,8 +25,15 @@ target_link_libraries(
   mirplatform
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GL_LDFLAGS} ${GL_LIBRARIES}
+  ${XCB_LDFLAGS} ${XCB_LIBRARIES}
+  ${XCB_COMPOSITE_LDFLAGS} ${XCB_COMPOSITE_LIBRARIES}
+  ${XCB_XFIXES_LDFLAGS} ${XCB_XFIXES_LIBRARIES}
+  ${XCB_RENDER_LDFLAGS} ${XCB_RENDER_LIBRARIES}
+  xkbcommon
+  xcb-xkb
+  xkbcommon-x11
   X11
-  Xfixes
+  X11-xcb
   server_platform_common
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
 )

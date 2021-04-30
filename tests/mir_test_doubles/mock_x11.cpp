@@ -21,6 +21,7 @@
 #include <gtest/gtest.h>
 
 #include <cstring>
+#include <X11/Xlib-xcb.h>
 
 namespace mtd=mir::test::doubles;
 
@@ -104,6 +105,9 @@ mtd::MockX11::MockX11()
     .WillByDefault(DoAll(SetArgPointee<5>(fake_x11.screen.width),
                          SetArgPointee<6>(fake_x11.screen.height),
                          Return(1)));
+
+    ON_CALL(*this, XGetXCBConnection(_))
+    .WillByDefault(Return(nullptr));
 }
 
 mtd::MockX11::~MockX11()
@@ -281,4 +285,14 @@ extern "C" void XFixesHideCursor(Display *dpy, Window win)
 extern "C" void XFixesShowCursor(Display *dpy, Window win)
 {
     global_mock->XFixesShowCursor(dpy, win);
+}
+
+extern "C" xcb_connection_t* XGetXCBConnection(Display* dpy)
+{
+    return global_mock->XGetXCBConnection(dpy);
+}
+
+extern "C" void XSetEventQueueOwner(Display *dpy, enum XEventQueueOwner owner)
+{
+    return global_mock->XSetEventQueueOwner(dpy, owner);
 }

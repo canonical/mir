@@ -60,11 +60,3 @@ TEST_F(X11Platform, probes_as_unsupported_without_display)
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
     EXPECT_THAT(probe_fun(options, console), Eq(mir::input::PlatformPriority::unsupported));
 }
-
-TEST_F(X11Platform, probes_as_supported_with_display)
-{
-    // default setup of MockX11 already provides fake objects
-
-    auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
-    EXPECT_THAT(probe_fun(options, console), Ge(mir::input::PlatformPriority::supported));
-}

@@ -21,8 +21,10 @@
 
 #include "mir/options/program_option.h"
 #include "src/platforms/x11/graphics/platform.h"
+#include "src/platforms/x11/x11_resources.h"
 #include "src/server/report/null/display_report.h"
 
+#include "mir/test/doubles/mock_x11_resources.h"
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/shared_library.h"
 #include "mir_test_framework/executable_path.h"
@@ -66,12 +68,7 @@ public:
     std::shared_ptr<mg::Platform> create_platform()
     {
         return std::make_shared<mg::X::Platform>(
-            std::shared_ptr<::Display>(
-                XOpenDisplay(nullptr),
-                [](::Display* display)
-                {
-                    XCloseDisplay(display);
-                }),
+            std::make_shared<mtd::MockX11Resources>(),
             std::vector<mg::X::X11OutputConfig>{{{1280, 1024}}},
             std::make_shared<mir::report::null::DisplayReport>());
     }
@@ -87,7 +84,13 @@ TEST_F(X11GraphicsPlatformTest, failure_to_open_x11_display_results_in_an_error)
     EXPECT_CALL(mock_x11, XOpenDisplay(_))
         .WillRepeatedly(Return(nullptr));
 
-    EXPECT_THROW({ create_platform(); }, std::exception);
+    EXPECT_THROW(
+        {
+            std::make_shared<mg::X::Platform>(
+                nullptr,
+                std::vector<mg::X::X11OutputConfig>{{{1280, 1024}}},
+                std::make_shared<mir::report::null::DisplayReport>());
+        }, std::exception);
 }
 
 TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_x_cannot_open_display)

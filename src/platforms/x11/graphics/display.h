@@ -21,13 +21,12 @@
 
 #include "mir/graphics/display.h"
 #include "mir/geometry/size.h"
+#include "mir/geometry/size_f.h"
 #include "mir/renderer/gl/context_source.h"
 #include "mir_toolkit/common.h"
 #include "egl_helper.h"
-#include "../X11_resources.h"
+#include "../x11_resources.h"
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include <EGL/egl.h>
 
 #include <memory>
@@ -53,25 +52,25 @@ class X11OutputConfig;
 class X11Window
 {
 public:
-    X11Window(::Display* const x_dpy,
+    X11Window(mir::X::X11Resources* x11_resources,
               EGLDisplay egl_dpy,
               geometry::Size const size,
               EGLConfig const egl_cfg);
     ~X11Window();
 
-    operator Window() const;
+    operator xcb_window_t() const;
     unsigned long red_mask() const;
 
 private:
-    ::Display* const x_dpy;
-    Window win;
+    mir::X::X11Resources* const x11_resources;
+    xcb_window_t win;
     unsigned long r_mask;
 };
 
 class Display : public graphics::Display
 {
 public:
-    explicit Display(::Display* x_dpy,
+    explicit Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
                      std::vector<X11OutputConfig> const& requested_size,
                      std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                      std::shared_ptr<GLConfig> const& gl_config,
@@ -125,10 +124,9 @@ private:
     };
 
     helpers::EGLHelper const shared_egl;
-    ::Display* const x_dpy;
+    std::shared_ptr<mir::X::X11Resources> const x11_resources;
     std::shared_ptr<GLConfig> const gl_config;
-    float const pixel_width;
-    float const pixel_height;
+    geometry::SizeF pixel_size_mm;
     std::shared_ptr<DisplayReport> const report;
     std::shared_ptr<AtomicFrame> const last_frame;
 

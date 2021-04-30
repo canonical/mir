@@ -24,6 +24,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+struct xcb_connection_t;
+
 namespace mir
 {
 namespace test
@@ -95,6 +97,8 @@ public:
     MOCK_METHOD9(XGetGeometry, Status(Display*, Drawable, Window*, int*, int*, unsigned int*, unsigned int*, unsigned int*, unsigned int*));
     MOCK_METHOD2(XFixesHideCursor, void(Display *dpy, Window win));
     MOCK_METHOD2(XFixesShowCursor, void(Display *dpy, Window win));
+    MOCK_METHOD1(XGetXCBConnection, xcb_connection_t*(Display *dpy));
+    MOCK_METHOD2(XSetEventQueueOwner, void(Display*, int));
 
     FakeX11Resources fake_x11;
 };
