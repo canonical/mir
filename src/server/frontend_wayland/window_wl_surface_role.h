@@ -90,7 +90,8 @@ public:
     void set_server_side_decorated(bool server_side_decorated);
     void set_type(MirWindowType type);
 
-    void set_state_now(MirWindowState state);
+    void add_state_now(MirWindowState state);
+    void remove_state_now(MirWindowState state);
     void create_scene_surface();
 
     /// Gets called after the surface has committed (so current_size() may return the committed buffer size) but before

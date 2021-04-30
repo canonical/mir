@@ -262,7 +262,7 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::experimental::optional<struct 
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         shell::SurfaceSpecification mods;
-        mods.state = mir_window_state_fullscreen;
+        mods.state = scene_surface->state_stack().with(mir_window_state_fullscreen).active_state();
         auto const output_id = output ?
             output_manager->output_id_for(client, output.value()) :
             std::experimental::nullopt;
@@ -306,17 +306,31 @@ void mir::frontend::WindowWlSurfaceRole::set_type(MirWindowType type)
     }
 }
 
-void mf::WindowWlSurfaceRole::set_state_now(MirWindowState state)
+void mf::WindowWlSurfaceRole::add_state_now(MirWindowState state)
 {
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         shell::SurfaceSpecification mods;
-        mods.state = state;
+        mods.state = scene_surface->state_stack().with(state).active_state();
         shell->modify_surface(session, scene_surface, mods);
     }
     else
     {
         params->state = state;
+        create_scene_surface();
+    }
+}
+
+void mf::WindowWlSurfaceRole::remove_state_now(MirWindowState state)
+{
+    if (auto const scene_surface = weak_scene_surface.lock())
+    {
+        shell::SurfaceSpecification mods;
+        mods.state = scene_surface->state_stack().without(state).active_state();
+        shell->modify_surface(session, scene_surface, mods);
+    }
+    else
+    {
         create_scene_surface();
     }
 }
