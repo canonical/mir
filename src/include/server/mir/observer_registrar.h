@@ -53,12 +53,8 @@ public:
      * automatically remove it when \p observer expires.
      *
      * All calls to \p observer methods are performed in the context of
-     * \p executor.
-     *
-     * The \p executor should process work in a delayed fashion. Particularly,
-     * executor::spawn(work) is expected to \b not run \p work in the current
-     * stack. Eager execution of work may result in deadlocks if calls to the
-     * observer result in calls into the ObserverRegistrar.
+     * \p executor. The \p executor may defer execution of \p work run it
+     * immediately.
      *
      * \param [in] observer The observer to register
      * \param [in] executor Execution environment for calls to \p observer methods.
