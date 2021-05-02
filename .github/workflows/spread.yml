@@ -86,14 +86,8 @@ jobs:
       SPREAD_PATH: "/tmp/spread"
 
     steps:
-    - name: Set up Spread
-      run: |
-        set -e 
-        mkdir -p ${SPREAD_PATH}
-        pushd "${SPREAD_PATH}"
-        curl -s -O https://niemeyer.s3.amazonaws.com/spread-amd64.tar.gz
-        tar xzvf spread-amd64.tar.gz
-        popd
+    - name: Install Spread
+      run: sudo snap install spread
 
     - name: Check out code
       uses: actions/checkout@v2
@@ -101,7 +95,7 @@ jobs:
     - name: Run Spread task
       env:
         SPREAD_GOOGLE_KEY: ${{ secrets.SPREAD_GOOGLE_KEY }}
-      run: ${SPREAD_PATH}/spread -v ${{ matrix.spread-task }}
+      run: snap run spread -v ${{ matrix.spread-task }}
       continue-on-error: ${{ matrix.allow-fail }}
 
   # Report result to Bors on `staging` and `trying` branches.
