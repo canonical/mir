@@ -39,11 +39,15 @@ jobs:
         /snap/bin/review-tools.snap-review *.snap
 
     - name: Publish the snap
+      # Only run if we have access to secrets.
       if: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
       run: |
         snapcraft upload *.snap --release "edge/pr${{ github.event.number }}"
 
   snap:
+    # Only run if we have access to secrets.
+    if: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
+
     needs: [mir-core20]
 
     runs-on: ubuntu-latest
