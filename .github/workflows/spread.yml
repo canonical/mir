@@ -19,6 +19,9 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 
+    # Only run if we have access to secrets.
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+
     steps:
     - id: set-matrix
       name: Determine BuildAndTest matrix
