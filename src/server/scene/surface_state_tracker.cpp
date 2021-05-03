@@ -83,6 +83,18 @@ auto ms::SurfaceStateTracker::has(MirWindowState state) const -> bool
     }
 }
 
+auto ms::SurfaceStateTracker::has_any(std::initializer_list<MirWindowState> const& states) const -> bool
+{
+    for (auto const& state: states)
+    {
+        if (has(state))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 auto ms::SurfaceStateTracker::with(MirWindowState state) const -> SurfaceStateTracker
 {
     return SurfaceStateTracker{*this, state, true};

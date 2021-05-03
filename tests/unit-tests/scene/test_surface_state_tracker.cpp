@@ -42,6 +42,14 @@ auto precedence(MirWindowState state) -> int
     default: throw "Invalid state " + std::to_string(state);
     }
 }
+
+auto is_maximized_state(MirWindowState state) -> bool
+{
+    return
+        state == mir_window_state_maximized ||
+        state == mir_window_state_vertmaximized ||
+        state == mir_window_state_horizmaximized;
+}
 }
 
 struct SurfaceStateTrackerTestSingle : TestWithParam<MirWindowState>
@@ -162,8 +170,7 @@ TEST_P(SurfaceStateTrackerTestDouble, can_add_and_remove_same_state)
     {
         EXPECT_THAT(tracker.active_state(), Eq(mir_window_state_horizmaximized));
     }
-    else if ((a == mir_window_state_horizmaximized || a == mir_window_state_vertmaximized) &&
-        b == mir_window_state_maximized)
+    else if (is_maximized_state(a) && b == mir_window_state_maximized)
     {
         EXPECT_THAT(tracker.active_state(), Eq(mir_window_state_restored));
     }
@@ -171,6 +178,24 @@ TEST_P(SurfaceStateTrackerTestDouble, can_add_and_remove_same_state)
     {
         EXPECT_THAT(tracker.active_state(), Eq(a));
     }
+}
+
+TEST_P(SurfaceStateTrackerTestDouble, has_any_checks_against_list)
+{
+    MirWindowState a, b;
+    std::tie(a, b) = GetParam();
+    ms::SurfaceStateTracker tracker{a};
+
+    bool expected = (a == b) || (a == mir_window_state_fullscreen);
+    if (a == mir_window_state_maximized && is_maximized_state(b))
+    {
+        expected = true;
+    }
+    if (b == mir_window_state_restored && !is_maximized_state(a))
+    {
+        expected = true;
+    }
+    EXPECT_THAT(tracker.has_any({b, mir_window_state_fullscreen}), Eq(expected));
 }
 
 TEST_P(SurfaceStateTrackerTestDouble, state_with_highest_precedence_is_active_state)

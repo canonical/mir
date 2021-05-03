@@ -20,6 +20,7 @@
 #define MIR_SCENE_SURFACE_STATE_TRACKER_
 
 #include "mir_toolkit/common.h"
+#include <initializer_list>
 
 namespace mir
 {
@@ -49,6 +50,9 @@ public:
 
     /// Returns if the given state is present
     auto has(MirWindowState state) const -> bool;
+
+    /// Returns if any of the given states are present
+    auto has_any(std::initializer_list<MirWindowState> const& states) const -> bool;
 
     /// Returns a copy of this tracker with the given state added (which may or may not effect the active state).
     /// Sending mir_window_state_restored is NOT allowed, as restored is the baseline state all surfaces always have.
