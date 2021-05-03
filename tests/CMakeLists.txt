@@ -113,11 +113,6 @@ check_symbol_exists(pthread_getname_np pthread.h HAVE_PTHREAD_GETNAME_NP)
 list(REMOVE_ITEM CMAKE_REQUIRED_LIBRARIES "-lpthread")
 
 list(APPEND CMAKE_REQUIRED_HEADERS ${GTEST_INCLUDE_DIRECTORIES})
-check_cxx_symbol_exists(INSTANTIATE_TEST_SUITE_P "gtest/gtest.h" HAVE_INSTANTIATE_TEST_SUITE_P)
-if (NOT HAVE_INSTANTIATE_TEST_SUITE_P)
-  #GTest conveniently renamed INSTANTIATE_TEST_CASE_P and then deprecated it.
-  add_definitions(-DINSTANTIATE_TEST_SUITE_P=INSTANTIATE_TEST_CASE_P)
-endif()
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)
   add_definitions(-DMIR_BUILD_PLATFORM_GBM_KMS)
