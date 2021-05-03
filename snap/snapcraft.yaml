@@ -102,5 +102,5 @@ parts:
     - libyaml-cpp0.6
     override-pull: |
       snapcraftctl pull
-      snapcraftctl set-version $( git describe )
-      snapcraftctl set-grade $( [[ $( git describe ) =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo stable || echo devel )
+      snapcraftctl set-version $( git describe | awk -F- '{ gsub(/^v/, "", $1); printf $1; if ($2) { printf "+dev" $2 "-" $3 } }' )
+      snapcraftctl set-grade $( [[ $( git describe ) =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && echo stable || echo devel )
