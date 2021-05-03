@@ -852,7 +852,13 @@ MIR_SERVER_1.7.1 {
 MIR_SERVER_2.4.0 {
  global:
   extern "C++" {
-    mir::scene::SurfaceStateTracker::*;
+    mir::scene::SurfaceStateTracker::SurfaceStateTracker*;
+    mir::scene::SurfaceStateTracker::active_state*;
+    mir::scene::SurfaceStateTracker::with_active_state*;
+    mir::scene::SurfaceStateTracker::has*;
+    mir::scene::SurfaceStateTracker::has_any*;
+    mir::scene::SurfaceStateTracker::with*;
+    mir::scene::SurfaceStateTracker::without*;
   };
 } MIR_SERVER_1.7.1;
 
