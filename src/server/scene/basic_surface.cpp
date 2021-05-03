@@ -515,7 +515,7 @@ MirWindowState ms::BasicSurface::state() const
     return state_.active_state();
 }
 
-auto ms::BasicSurface::state_stack() const -> SurfaceStateStack
+auto ms::BasicSurface::state_tracker() const -> SurfaceStateTracker
 {
     std::lock_guard<std::mutex> lock(guard);
     return state_;

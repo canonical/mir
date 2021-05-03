@@ -24,7 +24,7 @@
 #include "mir/frontend/surface.h"
 #include "mir/compositor/compositor_id.h"
 #include "mir/optional_value.h"
-#include "surface_state_stack.h"
+#include "surface_state_tracker.h"
 
 #include <vector>
 #include <list>
@@ -70,7 +70,7 @@ public:
 
     virtual MirWindowType type() const = 0;
     virtual MirWindowState state() const = 0;
-    virtual auto state_stack() const -> SurfaceStateStack = 0;
+    virtual auto state_tracker() const -> SurfaceStateTracker = 0;
     virtual void hide() = 0;
     virtual void show() = 0;
     virtual bool visible() const = 0;

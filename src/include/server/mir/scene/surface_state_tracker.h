@@ -16,8 +16,8 @@
  * Authored by: William Wold <william.wold@canonical.com>
  */
 
-#ifndef MIR_SCENE_SURFACE_STATE_STACK_
-#define MIR_SCENE_SURFACE_STATE_STACK_
+#ifndef MIR_SCENE_SURFACE_STATE_TRACKER_
+#define MIR_SCENE_SURFACE_STATE_TRACKER_
 
 #include "mir_toolkit/common.h"
 
@@ -31,10 +31,10 @@ namespace scene
 /// States have this order of precedence (earlier ones will be the active state if present):
 /// - hidden, minimized, fullscreen, attached, maximized/vertmaximized/horizmaximized, restored
 /// This struct can NOT be safely accessed by multiple threads at once.
-struct SurfaceStateStack
+struct SurfaceStateTracker
 {
 public:
-    explicit SurfaceStateStack(MirWindowState initial)
+    explicit SurfaceStateTracker(MirWindowState initial)
         : hidden{false},
           minimized{false},
           fullscreen{false},
@@ -45,13 +45,13 @@ public:
         set_active_state(initial);
     }
     /// This class can be freely copied and assigned
-    SurfaceStateStack(const SurfaceStateStack&) = default;
-    SurfaceStateStack& operator=(const SurfaceStateStack&) = default;
+    SurfaceStateTracker(const SurfaceStateTracker&) = default;
+    SurfaceStateTracker& operator=(const SurfaceStateTracker&) = default;
 
     /// Returns the currently active state
     auto active_state() const -> MirWindowState;
 
-    /// Sets the currently active state, pushes to and pops from the stack as needed
+    /// Adds or removes states as needed to make the given state active
     void set_active_state(MirWindowState state);
 
     /// Returns if the given state is present
@@ -59,11 +59,11 @@ public:
 
     /// Adds the given state (which may or may not effect the active state) and returns this object. Sending
     /// mir_window_state_restored is NOT allowed, as restored is the baseline state all surfaces always have.
-    auto with(MirWindowState state) -> SurfaceStateStack&;
+    auto with(MirWindowState state) -> SurfaceStateTracker&;
 
     /// Removes the given state (which may or may not effect the active state) and returns this object. Sending
     /// mir_window_state_restored is NOT allowed, as restored is the baseline state all surfaces always have.
-    auto without(MirWindowState state) -> SurfaceStateStack&;
+    auto without(MirWindowState state) -> SurfaceStateTracker&;
 
 private:
     bool hidden : 1;
@@ -78,4 +78,4 @@ private:
 }
 }
 
-#endif // MIR_SCENE_SURFACE_STATE_STACK_
+#endif // MIR_SCENE_SURFACE_STATE_TRACKER_

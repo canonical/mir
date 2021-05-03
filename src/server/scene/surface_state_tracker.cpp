@@ -16,12 +16,12 @@
  * Authored by: William Wold <william.wold@canonical.com>
  */
 
-#include "mir/scene/surface_state_stack.h"
+#include "mir/scene/surface_state_tracker.h"
 #include "mir/fatal.h"
 
 namespace ms = mir::scene;
 
-auto ms::SurfaceStateStack::active_state() const -> MirWindowState
+auto ms::SurfaceStateTracker::active_state() const -> MirWindowState
 {
     if (hidden)
     {
@@ -57,7 +57,7 @@ auto ms::SurfaceStateStack::active_state() const -> MirWindowState
     }
 }
 
-void ms::SurfaceStateStack::set_active_state(MirWindowState state)
+void ms::SurfaceStateTracker::set_active_state(MirWindowState state)
 {
     switch (state)
     {
@@ -123,11 +123,11 @@ void ms::SurfaceStateStack::set_active_state(MirWindowState state)
         break;
 
     default:
-        fatal_error("Invalid window state %d sent to SurfaceStateStack::set_active_state()", state);
+        fatal_error("Invalid window state %d sent to SurfaceStateTracker::set_active_state()", state);
     }
 }
 
-auto ms::SurfaceStateStack::has(MirWindowState state) const -> bool
+auto ms::SurfaceStateTracker::has(MirWindowState state) const -> bool
 {
     switch (state)
     {
@@ -143,19 +143,19 @@ auto ms::SurfaceStateStack::has(MirWindowState state) const -> bool
     }
 }
 
-auto ms::SurfaceStateStack::with(MirWindowState state) -> SurfaceStateStack&
+auto ms::SurfaceStateTracker::with(MirWindowState state) -> SurfaceStateTracker&
 {
     set_enabled(state, true);
     return *this;
 }
 
-auto ms::SurfaceStateStack::without(MirWindowState state) -> SurfaceStateStack&
+auto ms::SurfaceStateTracker::without(MirWindowState state) -> SurfaceStateTracker&
 {
     set_enabled(state, false);
     return *this;
 }
 
-void ms::SurfaceStateStack::set_enabled(MirWindowState state, bool enabled)
+void ms::SurfaceStateTracker::set_enabled(MirWindowState state, bool enabled)
 {
     switch (state)
     {
@@ -189,7 +189,7 @@ void ms::SurfaceStateStack::set_enabled(MirWindowState state, bool enabled)
         break;
 
     case mir_window_state_restored:
-        fatal_error("Sending mir_window_state_restored to SurfaceStateStack::with()/without() is not allowed");
+        fatal_error("Sending mir_window_state_restored to SurfaceStateTracker::with()/without() is not allowed");
         break;
 
     default:

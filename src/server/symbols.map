@@ -852,7 +852,7 @@ MIR_SERVER_1.7.1 {
 MIR_SERVER_2.4.0 {
  global:
   extern "C++" {
-    mir::scene::SurfaceStateStack::*;
+    mir::scene::SurfaceStateTracker::*;
   };
 } MIR_SERVER_1.7.1;
 
