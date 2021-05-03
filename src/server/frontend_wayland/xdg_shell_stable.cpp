@@ -576,9 +576,10 @@ void mf::XdgToplevelStable::send_toplevel_configure()
     if (auto const surface = scene_surface())
     {
         auto const state = surface.value()->state_tracker();
-        if (state.has(mir_window_state_maximized) ||
-            state.has(mir_window_state_horizmaximized) ||
-            state.has(mir_window_state_vertmaximized))
+        if (state.has_any({
+            mir_window_state_maximized,
+            mir_window_state_horizmaximized,
+            mir_window_state_vertmaximized}))
         {
             if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
                 *state = State::maximized;
