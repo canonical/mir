@@ -207,12 +207,12 @@ auto const all_states = Values(
     mir_window_state_minimized,
     mir_window_state_hidden);
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SurfaceStateStackTestSingle,
     SurfaceStateStackTestSingle,
     all_states);
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SurfaceStateStackTestDouble,
     SurfaceStateStackTestDouble,
     Combine(all_states, all_states));
