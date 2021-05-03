@@ -113,8 +113,21 @@ mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
 
     // Enable the WM_DELETE_WINDOW protocol for the window (causes a client message to be sent when window is closed)
     conn->change_property(win, x11_resources->WM_PROTOCOLS, XCB_ATOM_ATOM, 32, 1, &x11_resources->WM_DELETE_WINDOW);
+
     // Set the window title
-    std::string const title{"Mir on X"};
+    std::string title{"Mir on X"};
+
+    // Include hostname in title when X-forwarding
+    if (getenv("SSH_CONNECTION"))
+    {
+        char buffer[128] = { '\0' };
+        if (gethostname(buffer, sizeof buffer - 1) == 0)
+        {
+            title += " - ";
+            title += buffer;
+        }
+    }
+
     conn->change_property(win, x11_resources->_NET_WM_NAME, x11_resources->UTF8_STRING, 8, title.size(), title.c_str());
 
     conn->map_window(win);
