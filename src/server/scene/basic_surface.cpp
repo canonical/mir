@@ -529,7 +529,7 @@ MirWindowState ms::BasicSurface::set_state(MirWindowState s)
     std::unique_lock<std::mutex> lock(guard);
     if (state_.active_state() != s)
     {
-        state_.set_active_state(s);
+        state_ = state_.with_active_state(s);
 
         lock.unlock();
         observers->attrib_changed(this, mir_window_attrib_state, s);

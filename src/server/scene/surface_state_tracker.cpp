@@ -21,6 +21,11 @@
 
 namespace ms = mir::scene;
 
+ms::SurfaceStateTracker::SurfaceStateTracker(MirWindowState initial)
+    : SurfaceStateTracker{SurfaceStateTracker{}, initial}
+{
+}
+
 auto ms::SurfaceStateTracker::active_state() const -> MirWindowState
 {
     if (hidden)
@@ -57,9 +62,41 @@ auto ms::SurfaceStateTracker::active_state() const -> MirWindowState
     }
 }
 
-void ms::SurfaceStateTracker::set_active_state(MirWindowState state)
+auto ms::SurfaceStateTracker::with_active_state(MirWindowState state) const -> SurfaceStateTracker
+{
+    return SurfaceStateTracker{*this, state};
+}
+
+auto ms::SurfaceStateTracker::has(MirWindowState state) const -> bool
 {
     switch (state)
+    {
+    case mir_window_state_hidden: return hidden;
+    case mir_window_state_minimized: return minimized;
+    case mir_window_state_fullscreen: return fullscreen;
+    case mir_window_state_attached: return attached;
+    case mir_window_state_maximized: return horiz_maximized && vert_maximized;
+    case mir_window_state_horizmaximized: return horiz_maximized;
+    case mir_window_state_vertmaximized: return vert_maximized;
+    case mir_window_state_restored: return (!horiz_maximized && !vert_maximized);
+    default: return false;
+    }
+}
+
+auto ms::SurfaceStateTracker::with(MirWindowState state) const -> SurfaceStateTracker
+{
+    return SurfaceStateTracker{*this, state, true};
+}
+
+auto ms::SurfaceStateTracker::without(MirWindowState state) const -> SurfaceStateTracker
+{
+    return SurfaceStateTracker{*this, state, false};
+}
+
+ms::SurfaceStateTracker::SurfaceStateTracker(SurfaceStateTracker base, MirWindowState active)
+    : SurfaceStateTracker{base}
+{
+    switch (active)
     {
     case mir_window_state_hidden:
         hidden          = true;
@@ -123,69 +160,42 @@ void ms::SurfaceStateTracker::set_active_state(MirWindowState state)
         break;
 
     default:
-        fatal_error("Invalid window state %d sent to SurfaceStateTracker::set_active_state()", state);
+        fatal_error("Invalid window state: %d", active);
     }
 }
 
-auto ms::SurfaceStateTracker::has(MirWindowState state) const -> bool
-{
-    switch (state)
-    {
-    case mir_window_state_hidden: return hidden;
-    case mir_window_state_minimized: return minimized;
-    case mir_window_state_fullscreen: return fullscreen;
-    case mir_window_state_attached: return attached;
-    case mir_window_state_maximized: return horiz_maximized && vert_maximized;
-    case mir_window_state_horizmaximized: return horiz_maximized;
-    case mir_window_state_vertmaximized: return vert_maximized;
-    case mir_window_state_restored: return (!horiz_maximized && !vert_maximized);
-    default: return false;
-    }
-}
-
-auto ms::SurfaceStateTracker::with(MirWindowState state) -> SurfaceStateTracker&
-{
-    set_enabled(state, true);
-    return *this;
-}
-
-auto ms::SurfaceStateTracker::without(MirWindowState state) -> SurfaceStateTracker&
-{
-    set_enabled(state, false);
-    return *this;
-}
-
-void ms::SurfaceStateTracker::set_enabled(MirWindowState state, bool enabled)
+ms::SurfaceStateTracker::SurfaceStateTracker(SurfaceStateTracker base, MirWindowState state, bool present)
+    : SurfaceStateTracker{base}
 {
     switch (state)
     {
     case mir_window_state_hidden:
-        hidden = enabled;
+        hidden = present;
         break;
 
     case mir_window_state_minimized:
-        minimized = enabled;
+        minimized = present;
         break;
 
     case mir_window_state_fullscreen:
-        fullscreen = enabled;
+        fullscreen = present;
         break;
 
     case mir_window_state_attached:
-        attached = enabled;
+        attached = present;
         break;
 
     case mir_window_state_maximized:
-        horiz_maximized = enabled;
-        vert_maximized = enabled;
+        horiz_maximized = present;
+        vert_maximized = present;
         break;
 
     case mir_window_state_horizmaximized:
-        horiz_maximized = enabled;
+        horiz_maximized = present;
         break;
 
     case mir_window_state_vertmaximized:
-        vert_maximized = enabled;
+        vert_maximized = present;
         break;
 
     case mir_window_state_restored:
@@ -193,6 +203,6 @@ void ms::SurfaceStateTracker::set_enabled(MirWindowState state, bool enabled)
         break;
 
     default:
-        fatal_error("Invalid window state %d", state);
+        fatal_error("Invalid window state: %d", state);
     }
 }

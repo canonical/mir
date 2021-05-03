@@ -68,7 +68,7 @@ TEST(SurfaceStateTrackerTest, by_default_all_states_false_except_restored)
 TEST(SurfaceStateTrackerTest, with_and_without_return_this)
 {
     ms::SurfaceStateTracker tracker{mir_window_state_fullscreen};
-    tracker.with(mir_window_state_minimized).without(mir_window_state_minimized).with(mir_window_state_attached);
+    tracker = tracker.with(mir_window_state_minimized).without(mir_window_state_minimized).with(mir_window_state_attached);
     EXPECT_THAT(tracker.active_state(), Eq(mir_window_state_fullscreen));
     EXPECT_THAT(tracker.has(mir_window_state_fullscreen), Eq(true));
     EXPECT_THAT(tracker.has(mir_window_state_minimized), Eq(false));
@@ -78,7 +78,7 @@ TEST(SurfaceStateTrackerTest, with_and_without_return_this)
 TEST(SurfaceStateTrackerTest, with_maximized_sets_both_horiz_and_virt)
 {
     ms::SurfaceStateTracker tracker{mir_window_state_restored};
-    tracker.with(mir_window_state_maximized);
+    tracker = tracker.with(mir_window_state_maximized);
     EXPECT_THAT(tracker.has(mir_window_state_horizmaximized), Eq(true));
     EXPECT_THAT(tracker.has(mir_window_state_vertmaximized), Eq(true));
 }
@@ -102,7 +102,7 @@ TEST_P(SurfaceStateTrackerTestDouble, can_set_active_state)
     MirWindowState a, b;
     std::tie(a, b) = GetParam();
     ms::SurfaceStateTracker tracker{a};
-    tracker.set_active_state(b);
+    tracker = tracker.with_active_state(b);
     EXPECT_THAT(tracker.active_state(), Eq(b));
 }
 
@@ -111,8 +111,8 @@ TEST_P(SurfaceStateTrackerTestDouble, can_set_active_state_multiple_times)
     MirWindowState a, b;
     std::tie(a, b) = GetParam();
     ms::SurfaceStateTracker tracker{a};
-    tracker.set_active_state(b);
-    tracker.set_active_state(a);
+    tracker = tracker.with_active_state(b);
+    tracker = tracker.with_active_state(a);
     EXPECT_THAT(tracker.active_state(), Eq(a));
 }
 
@@ -123,7 +123,7 @@ TEST_P(SurfaceStateTrackerTestDouble, has_state_once_added)
     ms::SurfaceStateTracker tracker{a};
     if (b != mir_window_state_restored)
     {
-        tracker.with(b);
+        tracker = tracker.with(b);
         EXPECT_THAT(tracker.has(b), Eq(true));
     }
 }
@@ -135,7 +135,7 @@ TEST_P(SurfaceStateTrackerTestDouble, does_not_have_state_once_removed)
     ms::SurfaceStateTracker tracker{a};
     if (b != mir_window_state_restored)
     {
-        tracker.without(b);
+        tracker = tracker.without(b);
         EXPECT_THAT(tracker.has(b), Eq(false));
     }
 }
@@ -147,8 +147,8 @@ TEST_P(SurfaceStateTrackerTestDouble, can_add_and_remove_same_state)
     ms::SurfaceStateTracker tracker{a};
     if (b != mir_window_state_restored)
     {
-        tracker.with(b);
-        tracker.without(b);
+        tracker = tracker.with(b);
+        tracker = tracker.without(b);
     }
     if (a == b)
     {
@@ -180,7 +180,7 @@ TEST_P(SurfaceStateTrackerTestDouble, state_with_highest_precedence_is_active_st
     ms::SurfaceStateTracker tracker{a};
     if (b != mir_window_state_restored)
     {
-        tracker.with(b);
+        tracker = tracker.with(b);
     }
     if (a != b && precedence(a) == 2 && precedence(b) == 2)
     {
