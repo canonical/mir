@@ -164,15 +164,17 @@ endfunction()
 
 function (mir_discover_external_gtests)
   set(one_value_args NAME COMMAND WORKING_DIRECTORY)
-  set(multi_value_args EXPECTED_FAILURES ARGS)
+  set(multi_value_args EXPECTED_FAILURES ARGS BROKEN_TESTS)
   cmake_parse_arguments(TEST "" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
   # The expected failures, in a colon-delimited list for GTest
   string(REPLACE ";" ":" EXPECTED_FAILURE_STRING "${TEST_EXPECTED_FAILURES}")
+  # The expected failures, in a colon-delimited list for GTest
+  string(REPLACE ";" ":" BROKEN_TESTS "${TEST_BROKEN_TESTS}")
   # The command line arguments, as would be passed to the shell
   string(REPLACE ";" " " TEST_ARGS_STRING "${TEST_ARGS}")
 
-  add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND} "--gtest_filter=-${EXPECTED_FAILURE_STRING}" ${TEST_ARGS})
+  add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND} "--gtest_filter=-${BROKEN_TESTS}:${EXPECTED_FAILURE_STRING}" ${TEST_ARGS})
   if (TEST_WORKING_DIRECTORY)
     set_tests_properties(${TEST_NAME} PROPERTIES WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY})
   endif()

@@ -91,12 +91,17 @@ if (MIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN)
   list(APPEND EXPECTED_FAILURES BadBufferTest.test_truncated_shm_file)
 endif ()
 
+set(BROKEN_TESTS
+  ClientSurfaceEventsTest.buffer_release # Has been removed upstream
+)
+
 if (MIR_RUN_WLCS_TESTS)
   mir_discover_external_gtests(
     NAME wlcs
     COMMAND ${WLCS_BINARY}
     ARGS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/miral_wlcs_integration.so
     EXPECTED_FAILURES ${EXPECTED_FAILURES}
+    BROKEN_TESTS ${BROKEN_TESTS}
   )
 endif()
 
