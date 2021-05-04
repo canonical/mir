@@ -514,13 +514,13 @@ void mf::XdgToplevelStable::set_min_size(int32_t width, int32_t height)
 void mf::XdgToplevelStable::set_maximized()
 {
     // We must process this request immediately (i.e. don't defer until commit())
-    set_state_now(mir_window_state_maximized);
+    add_state_now(mir_window_state_maximized);
 }
 
 void mf::XdgToplevelStable::unset_maximized()
 {
     // We must process this request immediately (i.e. don't defer until commit())
-    set_state_now(mir_window_state_restored);
+    remove_state_now(mir_window_state_maximized);
 }
 
 void mf::XdgToplevelStable::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
@@ -532,13 +532,13 @@ void mf::XdgToplevelStable::unset_fullscreen()
 {
     // We must process this request immediately (i.e. don't defer until commit())
     // TODO: should we instead restore the previous state?
-    set_state_now(mir_window_state_restored);
+    remove_state_now(mir_window_state_fullscreen);
 }
 
 void mf::XdgToplevelStable::set_minimized()
 {
     // We must process this request immediately (i.e. don't defer until commit())
-    set_state_now(mir_window_state_minimized);
+    add_state_now(mir_window_state_minimized);
 }
 
 void mf::XdgToplevelStable::handle_state_change(MirWindowState /*new_state*/)
@@ -573,22 +573,25 @@ void mf::XdgToplevelStable::send_toplevel_configure()
             *state = State::activated;
     }
 
-    switch (window_state())
+    if (auto const surface = scene_surface())
     {
-    case mir_window_state_maximized:
-    case mir_window_state_horizmaximized:
-    case mir_window_state_vertmaximized:
-        if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = State::maximized;
-        break;
+        auto const state = surface.value()->state_tracker();
+        if (state.has_any({
+            mir_window_state_maximized,
+            mir_window_state_horizmaximized,
+            mir_window_state_vertmaximized}))
+        {
+            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+                *state = State::maximized;
+        }
 
-    case mir_window_state_fullscreen:
-        if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = State::fullscreen;
-        break;
+        if (state.has(mir_window_state_fullscreen))
+        {
+            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+                *state = State::fullscreen;
+        }
 
-    default:
-        break;
+        // TODO: plumb resizing state through Mir?
     }
 
     // 0 sizes means default for toplevel configure

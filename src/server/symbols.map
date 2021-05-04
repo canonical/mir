@@ -849,6 +849,19 @@ MIR_SERVER_1.7.1 {
   };
 } MIR_SERVER_1.7.0;
 
+MIR_SERVER_2.4.0 {
+ global:
+  extern "C++" {
+    mir::scene::SurfaceStateTracker::SurfaceStateTracker*;
+    mir::scene::SurfaceStateTracker::active_state*;
+    mir::scene::SurfaceStateTracker::with_active_state*;
+    mir::scene::SurfaceStateTracker::has*;
+    mir::scene::SurfaceStateTracker::has_any*;
+    mir::scene::SurfaceStateTracker::with*;
+    mir::scene::SurfaceStateTracker::without*;
+  };
+} MIR_SERVER_1.7.1;
+
 # these symbols are needed by the "throwback" tests but are not intended to be public
 MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
  global:

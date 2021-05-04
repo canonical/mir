@@ -52,6 +52,10 @@ struct StubSurface : scene::Surface
     graphics::RenderableList generate_renderables(compositor::CompositorID) const override { return {}; }
     int buffers_ready_for_compositor(void const*) const override { return 0; }
     MirWindowType type() const override { return mir_window_type_normal; }
+    auto state_tracker() const -> scene::SurfaceStateTracker override
+    {
+        return scene::SurfaceStateTracker{mir_window_state_fullscreen};
+    }
     MirWindowState state() const override { return mir_window_state_fullscreen; }
     int configure(MirWindowAttrib, int value) override { return value; }
     int query(MirWindowAttrib) const override { return 0; }
