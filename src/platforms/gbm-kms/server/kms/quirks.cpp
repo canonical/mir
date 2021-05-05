@@ -118,8 +118,17 @@ public:
     {
         auto const devnode = value_or(device.devnode(), "");
         auto const parent_device = device.parent();
-        auto const driver = value_or(parent_device->driver(), "");
-        mir::log_debug("Quirks: checking device with devnode: %s, driver %s", device.devnode(), parent_device->driver());
+        auto const driver =
+            [&]()
+            {
+                if (parent_device)
+                {
+                    return value_or(parent_device->driver(), "");
+                }
+                mir::log_warning("udev device has no parent! Unable to determine driver for quirks.");
+                return "<UNKNOWN>";
+            }();
+        mir::log_debug("Quirks: checking device with devnode: %s, driver %s", device.devnode(), driver);
         bool const should_skip_driver = drivers_to_skip.count(driver);
         bool const should_skip_devnode = devnodes_to_skip.count(devnode);
         if (should_skip_driver)
