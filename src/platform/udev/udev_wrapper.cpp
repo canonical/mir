@@ -47,6 +47,8 @@ public:
     virtual bool initialised() const override;
     virtual char const* syspath() const override;
     virtual std::shared_ptr<udev_device> as_raw() const override;
+    virtual auto driver() const -> char const* override;
+    virtual auto parent() const -> std::unique_ptr<mu::Device> override;
 
     udev_device* const dev;
 };
@@ -117,6 +119,19 @@ std::shared_ptr<udev_device> DeviceImpl::as_raw() const
         udev_device_ref(dev),
         &udev_device_unref
     };
+}
+
+auto DeviceImpl::driver() const -> char const*
+{
+    return udev_device_get_driver(dev);
+}
+
+auto DeviceImpl::parent() const -> std::unique_ptr<mu::Device>
+{
+    auto* const parent_udev = udev_device_get_parent(dev);
+    // udev_device_get_parent does *not* take a referenece to the returned device; we need to do that ourselves
+    udev_device_ref(parent_udev);
+    return std::make_unique<DeviceImpl>(parent_udev);
 }
 }
 
