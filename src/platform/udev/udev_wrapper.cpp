@@ -129,9 +129,13 @@ auto DeviceImpl::driver() const -> char const*
 auto DeviceImpl::parent() const -> std::unique_ptr<mu::Device>
 {
     auto* const parent_udev = udev_device_get_parent(dev);
-    // udev_device_get_parent does *not* take a referenece to the returned device; we need to do that ourselves
-    udev_device_ref(parent_udev);
-    return std::make_unique<DeviceImpl>(parent_udev);
+    if (parent_udev)
+    {
+        // udev_device_get_parent does *not* take a referenece to the returned device; we need to do that ourselves
+        udev_device_ref(parent_udev);
+        return std::make_unique<DeviceImpl>(parent_udev);
+    }
+    return {nullptr};
 }
 }
 
