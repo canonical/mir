@@ -22,6 +22,7 @@
 #include "platform.h"
 #include "gbm_platform.h"
 #include "display_helpers.h"
+#include "quirks.h"
 #include "mir/options/program_option.h"
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
@@ -73,8 +74,10 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     if (!options->get<bool>(bypass_option_name))
         bypass_option = mgg::BypassOption::prohibited;
 
+    auto quirks = std::make_unique<mgg::Quirks>(*options);
+
     return mir::make_module_ptr<mgg::Platform>(
-        report, console, *emergency_cleanup_registry, bypass_option);
+        report, console, *emergency_cleanup_registry, bypass_option, std::move(quirks));
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
@@ -84,6 +87,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
         (bypass_option_name,
          boost::program_options::value<bool>()->default_value(false),
          "[platform-specific] utilize the bypass optimization for fullscreen surfaces.");
+    mgg::Quirks::add_quirks_option(config);
 }
 
 namespace
@@ -110,6 +114,7 @@ mg::PlatformPriority probe_graphics_platform(
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
 
     auto nested = options.is_set(host_socket);
+    mgg::Quirks quirks{options};
 
     auto udev = std::make_shared<mir::udev::Context>();
 
@@ -149,6 +154,12 @@ mg::PlatformPriority probe_graphics_platform(
     mir::Fd tmp_fd;
     for (auto& device : drm_devices)
     {
+        if (quirks.should_skip(device))
+        {
+            mir::log_info("Not probing device %s due to specified quirk", device.devnode());
+            continue;
+        }
+
         auto const devnum = device.devnum();
         if (devnum == makedev(0, 0))
         {

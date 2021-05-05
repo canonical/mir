@@ -22,6 +22,7 @@
 #include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
+#include "kms/quirks.h"
 
 #include "mir/udev/wrapper.h"
 #include "mir/console_services.h"
@@ -54,7 +55,8 @@ namespace mgmh = mir::graphics::gbm::helpers;
 std::vector<std::shared_ptr<mgmh::DRMHelper>>
 mgmh::DRMHelper::open_all_devices(
     std::shared_ptr<mir::udev::Context> const& udev,
-    mir::ConsoleServices& console)
+    mir::ConsoleServices& console,
+    mgg::Quirks const& quirks)
 {
     int error = ENODEV; //Default error is "there are no DRM devices"
 
@@ -68,6 +70,12 @@ mgmh::DRMHelper::open_all_devices(
 
     for(auto& device : devices)
     {
+        if (quirks.should_skip(device))
+        {
+            mir::log_info("Ignoring device %s due to specified quirk", device.devnode());
+            continue;
+        }
+
         mir::Fd tmp_fd;
         std::unique_ptr<mir::Device> device_handle;
         try

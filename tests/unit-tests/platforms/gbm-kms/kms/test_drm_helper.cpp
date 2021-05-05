@@ -17,11 +17,13 @@
  */
 
 #include "src/platforms/gbm-kms/server/display_helpers.h"
+#include "src/platforms/gbm-kms/server/kms/quirks.h"
 #include "mir/udev/wrapper.h"
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/stub_console_services.h"
+#include "mir/test/doubles/mock_option.h"
 
 #include <fcntl.h>
 
@@ -81,7 +83,8 @@ TEST_F(DRMHelperTest, throws_if_drm_auth_magic_fails)
 
     auto helpers = mgg::helpers::DRMHelper::open_all_devices(
         std::make_shared<mir::udev::Context>(),
-        console);
+        console,
+        mgg::Quirks{mtd::MockOption{}});
 
     ASSERT_THAT(helpers, Not(IsEmpty()));
 

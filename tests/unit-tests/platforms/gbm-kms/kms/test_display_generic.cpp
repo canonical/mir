@@ -32,6 +32,7 @@
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
+#include "src/platforms/gbm-kms/server/kms/quirks.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -80,7 +81,8 @@ public:
                 mir::report::null_display_report(),
                 std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
-                mgg::BypassOption::allowed);
+                mgg::BypassOption::allowed,
+                std::make_unique<mgg::Quirks>(mir::options::ProgramOption{}));
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLConfig>());

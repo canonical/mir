@@ -18,6 +18,7 @@
 #include <boost/throw_exception.hpp>
 #include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/platforms/gbm-kms/server/kms/display.h"
+#include "src/platforms/gbm-kms/server/kms/quirks.h"
 #include "mir/console_services.h"
 #include "src/server/report/logging/display_report.h"
 #include "mir/logging/logger.h"
@@ -27,6 +28,7 @@
 #include "mir/time/steady_clock.h"
 #include "mir/glib_main_loop.h"
 #include "mir/fatal.h"
+#include "mir/options/program_option.h"
 #include "src/platforms/common/server/kms-utils/drm_mode_resources.h"
 
 #include "mir/test/doubles/mock_egl.h"
@@ -121,7 +123,8 @@ public:
                mir::report::null_display_report(),
                std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
-               mgg::BypassOption::allowed);
+               mgg::BypassOption::allowed,
+               std::make_unique<mgg::Quirks>(mir::options::ProgramOption{}));
     }
 
     std::shared_ptr<mgg::Display> create_display(

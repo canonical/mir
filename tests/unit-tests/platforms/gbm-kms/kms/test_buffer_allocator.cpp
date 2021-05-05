@@ -20,11 +20,13 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/stub_console_services.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
+#include "src/platforms/gbm-kms/server/kms/quirks.h"
 #include "src/platforms/gbm-kms/include/native_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/platforms/gbm-kms/server/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/display.h"
+#include "mir/options/program_option.h"
 
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
@@ -49,6 +51,7 @@ namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
+namespace mo = mir::options;
 
 class MesaBufferAllocatorTest  : public ::testing::Test
 {
@@ -83,7 +86,8 @@ protected:
                 mir::report::null_display_report(),
                 std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
-                mgg::BypassOption::allowed);
+                mgg::BypassOption::allowed,
+                std::make_unique<mgg::Quirks>(mo::ProgramOption{}));
         display = platform->create_display(
             std::make_shared<mtd::NullDisplayConfigurationPolicy>(),
             std::make_shared<mtd::NullGLConfig>());
