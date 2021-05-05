@@ -35,12 +35,19 @@ class Device;
 
 namespace graphics::gbm
 {
+/**
+ * Interface for querying device-specific quirks
+ */
 class Quirks
 {
 public:
     explicit Quirks(options::Option const& options);
     ~Quirks();
 
+    /**
+     * Should this device be skipped entirely from use and probing?
+     */
+    [[nodiscard]]
     auto should_skip(udev::Device const& device) const -> bool;
 
     static void add_quirks_option(boost::program_options::options_description& config);
