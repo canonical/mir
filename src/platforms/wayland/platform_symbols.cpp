@@ -68,13 +68,27 @@ void add_graphics_platform_options(boost::program_options::options_description& 
 }
 
 mg::PlatformPriority probe_graphics_platform(
-    std::shared_ptr<mir::ConsoleServices> const& /*console*/,
     mo::ProgramOption const& options)
 {
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
 
     return mpw::connection_options_supplied(options) ? mg::PlatformPriority::best :
            mg::PlatformPriority::unsupported;
+}
+
+auto probe_rendering_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mo::ProgramOption const& options) -> mg::PlatformPriority
+{
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
+    return probe_graphics_platform(options);
+}
+
+auto probe_display_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mo::ProgramOption const& options) -> mg::PlatformPriority
+{
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
+    return probe_graphics_platform(options);
 }
 
 mir::ModuleProperties const* describe_graphics_module()
