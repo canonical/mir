@@ -88,16 +88,29 @@ void add_graphics_platform_options(boost::program_options::options_description& 
          " ^SCALE may also be appended to any output");
 }
 
-mg::PlatformPriority probe_graphics_platform(
-    std::shared_ptr<mir::ConsoleServices> const&,
-        mo::ProgramOption const& /*options*/)
+mg::PlatformPriority probe_graphics_platform()
 {
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
     if (mx::X11Resources::instance())
     {
         return mg::PlatformPriority::hosted;
     }
     return mg::PlatformPriority::unsupported;
+}
+
+auto probe_display_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mo::ProgramOption const&) -> mg::PlatformPriority
+{
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
+    return probe_graphics_platform();
+}
+
+auto probe_rendering_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mo::ProgramOption const&) -> mg::PlatformPriority
+{
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
+    return probe_graphics_platform();
 }
 
 namespace

@@ -56,7 +56,7 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-const char probe_platform[] = "probe_graphics_platform";
+const char probe_platform[] = "probe_display_platform";
 
 class X11GraphicsPlatformTest : public ::testing::Test
 {
