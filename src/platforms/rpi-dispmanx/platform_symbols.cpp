@@ -82,10 +82,8 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
 }
 
-mg::PlatformPriority probe_graphics_platform(std::shared_ptr<mir::ConsoleServices> const& /*console*/,
-                                             mo::ProgramOption const& /*options*/)
+auto probe_graphics_platform() -> mg::PlatformPriority
 {
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
 
     auto udev = std::make_shared<mir::udev::Context>();
 
@@ -118,6 +116,22 @@ mg::PlatformPriority probe_graphics_platform(std::shared_ptr<mir::ConsoleService
      * just say we're plausible
      */
     return mg::PlatformPriority::supported;
+}
+
+auto probe_display_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mo::ProgramOptions const&) -> mg::PlatformPriority
+{
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
+    probe_graphics_platform();
+}
+
+auto probe_rendering_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mo::ProgramOptions const&) -> mg::PlatformPriority
+{
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
+    probe_graphics_platform();
 }
 
 namespace
