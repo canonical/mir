@@ -185,15 +185,14 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
 
                         mir::log_warning("Manually-specified graphics platform %s does not claim to support this system. Trying anyway...", descriptor->name);
                     }
-                    platform_libraries.push_back(platform);
                 }
             }
             else
             {
-                platform_libraries = mir::graphics::display_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
+                platform_modules = mir::graphics::display_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
             }
 
-            for (auto const& platform : platform_libraries)
+            for (auto const& platform : platform_modules)
             {
                 auto create_display_platform = platform->load_function<mg::CreateDisplayPlatform>(
                     "create_display_platform",
@@ -220,7 +219,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                         the_logger()));
                 // Add this module to the list searched by the input stack later
                 // TODO: Come up with a more principled solution for combined input/rendering/output platforms
-                platform_modules.push_back(platform);
+                platform_libraries.push_back(platform);
             }
         }
         catch(std::exception const&)
@@ -279,15 +278,14 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
 
                         mir::log_warning("Manually-specified graphics platform %s does not claim to support this system. Trying anyway...", descriptor->name);
                     }
-                    platform_libraries.push_back(platform);
                 }
             }
             else
             {
-                platform_libraries = mir::graphics::rendering_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
+                platform_modules = mir::graphics::rendering_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
             }
 
-            for (auto const& platform : platform_libraries)
+            for (auto const& platform : platform_modules)
             {
                 auto create_rendering_platform = platform->load_function<mg::CreateRenderPlatform>(
                     "create_rendering_platform",
@@ -312,7 +310,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                         the_logger()));
                 // Add this module to the list searched by the input stack later
                 // TODO: Come up with a more principled solution for combined input/rendering/output platforms
-                platform_modules.push_back(platform);
+                platform_libraries.push_back(platform);
             }
         }
         catch(std::exception const&)
