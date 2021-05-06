@@ -29,31 +29,53 @@
 namespace mtf = mir_test_framework;
 namespace mgg = mir::graphics::gbm;
 
-
-TEST(Quirks, skip_devnode_quirk_fires)
+class Quirks : public testing::Test
 {
+public:
+    void SetUp() override
+    {
+        udev.add_standard_device("standard-drm-devices");
+    }
+
+    auto make_drm_device_enumerator() -> std::unique_ptr<mir::udev::Enumerator>
+    {
+        auto udev_ctx = std::make_shared<mir::udev::Context>();
+        auto enumerator = std::make_unique<mir::udev::Enumerator>(udev_ctx);
+
+        enumerator->match_subsystem("drm");
+        enumerator->match_sysname("card[0-9]*");
+        enumerator->scan_devices();
+
+        return enumerator;
+    }
+
+    auto parsed_options_from_args(std::initializer_list<char const*> const& options) const
+        -> std::unique_ptr<mir::options::ProgramOption>
+    {
+        auto parsed_options = std::make_unique<mir::options::ProgramOption>();
+
+        auto argv = std::make_unique<char const*[]>(options.size() + 1);
+        argv[0] = "argv0";
+        std::copy(options.begin(), options.end(), &argv[1]);
+
+        parsed_options->parse_arguments(description, static_cast<int>(options.size() + 1), argv.get());
+        return parsed_options;
+    }
+
     mtf::UdevEnvironment udev;
-    udev.add_standard_device("standard-drm-devices");
-
     boost::program_options::options_description description;
-    mir::options::ProgramOption options;
+};
 
+
+TEST_F(Quirks, skip_devnode_quirk_fires)
+{
     mgg::Quirks::add_quirks_option(description);
+    mgg::Quirks quirks{*parsed_options_from_args({"--driver-quirks=skip:devnode:/dev/dri/card0"})};
 
-    char const* arguments[] = {"argv0", "--driver-quirks=skip:devnode:/dev/dri/card0"};
-    options.parse_arguments(description, 2, arguments);
-
-    mgg::Quirks quirks{options};
-
-    auto udev_ctx = std::make_shared<mir::udev::Context>();
-    mir::udev::Enumerator enumerator{udev_ctx};
-
-    enumerator.match_subsystem("drm");
-    enumerator.match_sysname("card[0-9]*");
-    enumerator.scan_devices();
+    auto const enumerator = make_drm_device_enumerator();
 
     bool seen_card[] = {false, false};
-    for (auto const& device : enumerator)
+    for (auto const& device : *enumerator)
     {
         if (device.devnode() && strstr(device.devnode(), "card0"))
         {
@@ -71,30 +93,15 @@ TEST(Quirks, skip_devnode_quirk_fires)
     ASSERT_TRUE(seen_card[1]);
 }
 
-TEST(Quirks, skip_driver_quirk_fires)
+TEST_F(Quirks, skip_driver_quirk_fires)
 {
-    mtf::UdevEnvironment udev;
-    udev.add_standard_device("standard-drm-devices");
-
-    boost::program_options::options_description description;
-    mir::options::ProgramOption options;
-
     mgg::Quirks::add_quirks_option(description);
+    mgg::Quirks quirks{*parsed_options_from_args({"--driver-quirks=skip:driver:amdgpu"})};
 
-    char const* arguments[] = {"argv0", "--driver-quirks=skip:driver:amdgpu"};
-    options.parse_arguments(description, 2, arguments);
-
-    mgg::Quirks quirks{options};
-
-    auto udev_ctx = std::make_shared<mir::udev::Context>();
-    mir::udev::Enumerator enumerator{udev_ctx};
-
-    enumerator.match_subsystem("drm");
-    enumerator.match_sysname("card[0-9]*");
-    enumerator.scan_devices();
+    auto const enumerator = make_drm_device_enumerator();
 
     bool seen_card[] = {false, false};
-    for (auto const& device : enumerator)
+    for (auto const& device : *enumerator)
     {
         if (device.devnode() && strstr(device.devnode(), "card0"))
         {
@@ -112,31 +119,15 @@ TEST(Quirks, skip_driver_quirk_fires)
     ASSERT_TRUE(seen_card[1]);
 }
 
-TEST(Quirks, specifying_multiple_quirks_is_additive)
+TEST_F(Quirks, specifying_multiple_quirks_is_additive)
 {
-    mtf::UdevEnvironment udev;
-    udev.add_standard_device("standard-drm-devices");
-
-    boost::program_options::options_description description;
-    mir::options::ProgramOption options;
-
     mgg::Quirks::add_quirks_option(description);
+    mgg::Quirks quirks{*parsed_options_from_args({"--driver-quirks=skip:driver:amdgpu", "--driver-quirks=skip:devnode:/dev/dri/card0"})};
 
-    char const* arguments[] =
-        {"argv0", "--driver-quirks=skip:driver:amdgpu", "--driver-quirks=skip:devnode:/dev/dri/card0"};
-    options.parse_arguments(description, 3, arguments);
-
-    mgg::Quirks quirks{options};
-
-    auto udev_ctx = std::make_shared<mir::udev::Context>();
-    mir::udev::Enumerator enumerator{udev_ctx};
-
-    enumerator.match_subsystem("drm");
-    enumerator.match_sysname("card[0-9]*");
-    enumerator.scan_devices();
+    auto const enumerator = make_drm_device_enumerator();
 
     bool seen_card[] = {false, false};
-    for (auto const& device : enumerator)
+    for (auto const& device : *enumerator)
     {
         if (device.devnode() && strstr(device.devnode(), "card0"))
         {
