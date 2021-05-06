@@ -255,6 +255,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                         device_registry,
                         the_console_services(),
                         input_report,
+                        the_platform_libaries(),
                         *the_shared_library_prober_report());
                 }
 

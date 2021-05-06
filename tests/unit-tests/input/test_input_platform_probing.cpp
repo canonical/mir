@@ -104,6 +104,7 @@ struct InputPlatformProbe : ::testing::Test
     boost::any platform_path_value_as_any{platform_path_value};
     std::string platform_input_lib_value;
     boost::any platform_input_lib_value_as_any;
+    std::vector<std::shared_ptr<mir::SharedLibrary>> const empty_loaded_module_list{};
 };
 
 template <typename Expected>
@@ -142,6 +143,7 @@ TEST_F(InputPlatformProbe, stub_platform_not_picked_up_by_default)
             mt::fake_shared(mock_registry),
             nullptr,
             mr::null_input_report(),
+            empty_loaded_module_list,
             *stub_prober_report);
 
     EXPECT_THAT(platform, OfPtrType<mi::evdev::Platform>());
@@ -160,6 +162,7 @@ TEST_F(InputPlatformProbe, x11_input_platform_not_used_when_vt_specified)
             mt::fake_shared(mock_registry),
             nullptr,
             mr::null_input_report(),
+            empty_loaded_module_list,
             *stub_prober_report);
 
     EXPECT_THAT(platform, OfPtrType<mi::evdev::Platform>());
@@ -179,6 +182,7 @@ TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)
             mt::fake_shared(mock_registry),
             nullptr,
             mr::null_input_report(),
+            empty_loaded_module_list,
             *stub_prober_report);
     EXPECT_THAT(platform, OfPtrType<mtf::StubInputPlatform>());
 }
