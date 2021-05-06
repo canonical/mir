@@ -71,11 +71,7 @@ public:
                     quirk.c_str());
                 continue;
             }
-            if (quirk[0] != 's' ||
-                quirk[1] != 'k' ||
-                quirk[2] != 'i' ||
-                quirk[3] != 'p' ||
-                quirk[4] != ':')
+            if (strncmp(quirk.c_str(), "skip:", strlen("skip:")) != 0)
             {
                 mir::log_warning(
                     "Ignoring unexpected value for %s option: %s (expects value of the form “skip:<type>:<value>”)",
