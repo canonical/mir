@@ -118,11 +118,11 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
 }
 
-mg::PlatformPriority probe_graphics_platform(
+auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const& console,
-    mo::ProgramOption const& /*options*/)
+    mo::ProgramOption const& /*options*/) -> mg::PlatformPriority
 {
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
 
     std::vector<char const*> missing_extensions;
     for (char const* extension : {
@@ -352,6 +352,118 @@ mg::PlatformPriority probe_graphics_platform(
                 mir::log_debug("Found EGLDeviceEXT with no device extensions");
                 return false;
             }
+        }))
+    {
+        mir::log_debug(
+            "EGLDeviceEXTs found, but none are suitable for Mir");
+        return mg::PlatformPriority::unsupported;
+    }
+
+    return mg::PlatformPriority::best;
+}
+
+auto probe_rendering_platform(
+    std::shared_ptr<mir::ConsoleServices> const& console,
+    mo::ProgramOption const& /*options*/) -> mg::PlatformPriority
+{
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
+
+    std::vector<char const*> missing_extensions;
+    for (char const* extension : {
+        "EGL_EXT_platform_base",
+        "EGL_EXT_platform_device",
+        "EGL_EXT_device_base",})
+    {
+        if (!epoxy_has_egl_extension(EGL_NO_DISPLAY, extension))
+        {
+            missing_extensions.push_back(extension);
+        }
+    }
+
+    if (!missing_extensions.empty())
+    {
+        std::stringstream message;
+        message << "Missing required extension" << (missing_extensions.size() > 1 ? "s:" : ":");
+        for (auto missing_extension : missing_extensions)
+        {
+            message << " " << missing_extension;
+        }
+
+        mir::log_debug("EGLStream platform is unsupported: %s",
+                       message.str().c_str());
+        return mg::PlatformPriority::unsupported;
+    }
+
+    int device_count{0};
+    if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
+    {
+        mir::log_info("Platform claims to support EGL_EXT_device_base, but "
+                      "eglQueryDevicesEXT falied: %s",
+                      mg::egl_category().message(eglGetError()).c_str());
+        return mg::PlatformPriority::unsupported;
+    }
+
+    auto devices = std::make_unique<EGLDeviceEXT[]>(device_count);
+    if (eglQueryDevicesEXT(device_count, devices.get(), &device_count) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get device list with eglQueryDevicesEXT"));
+    }
+
+    if (std::none_of(
+        devices.get(), devices.get() + device_count,
+        [console](EGLDeviceEXT device)
+        {
+            EGLDisplay display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
+
+            if (display == EGL_NO_DISPLAY)
+            {
+                mir::log_debug("Failed to create EGLDisplay: %s", mg::egl_category().message(eglGetError()).c_str());
+                return false;
+            }
+
+            auto egl_init = mir::raii::paired_calls(
+                [&display]()
+                {
+                    EGLint major_ver{1}, minor_ver{4};
+                    if (!eglInitialize(display, &major_ver, &minor_ver))
+                    {
+                        mir::log_debug("Failed to initialise EGL: %s", mg::egl_category().message(eglGetError()).c_str());
+                        display = EGL_NO_DISPLAY;
+                    }
+                },
+                [&display]()
+                {
+                    if (display != EGL_NO_DISPLAY)
+                    {
+                        eglTerminate(display);
+                    }
+                });
+
+            if (display == EGL_NO_DISPLAY)
+            {
+                return false;
+            }
+
+            std::vector<char const*> missing_extensions;
+            for (char const* extension : {
+                "EGL_KHR_stream_consumer_gltexture",
+                "EGL_NV_stream_attrib"})
+            {
+                if (!epoxy_has_egl_extension(display, extension))
+                {
+                    missing_extensions.push_back(extension);
+                }
+            }
+            if (!missing_extensions.empty())
+            {
+                for (auto const missing_extension: missing_extensions)
+                {
+                    mir::log_info("EGLDevice found but unsuitable. Missing extension %s", missing_extension);
+                }
+                return false;
+            }
+
+            return true;
         }))
     {
         mir::log_debug(
