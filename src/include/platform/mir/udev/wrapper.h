@@ -66,6 +66,13 @@ public:
     virtual bool initialised() const = 0;
     virtual char const* syspath() const = 0;
     virtual std::shared_ptr<udev_device> as_raw() const = 0;
+    virtual auto driver() const -> char const* = 0;
+    /**
+     * Get a handle to the parent udev device
+     *
+     * \note    udev devices may be parentless. This returns an empty unique_ptr on parentless udev devices.
+     */
+    virtual auto parent() const -> std::unique_ptr<Device> = 0;
 protected:
     Device() = default;
 };

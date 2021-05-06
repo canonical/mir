@@ -45,6 +45,8 @@ add_library(
   egl_helper.h
   egl_helper.cpp
   mutex.h
+  quirks.cpp
+  quirks.h
 )
 
 target_link_libraries(

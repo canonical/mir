@@ -22,6 +22,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/mock_option.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/stub_console_services.h"
@@ -30,6 +31,7 @@
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
+#include "src/platforms/gbm-kms/server/kms/quirks.h"
 
 #include "mir/logging/dumb_console_logger.h"
 
@@ -85,7 +87,8 @@ public:
               mir::report::null_display_report(),
               std::make_shared<mtd::StubConsoleServices>(),
               *std::make_shared<mtd::NullEmergencyCleanup>(),
-              mgg::BypassOption::allowed);
+              mgg::BypassOption::allowed,
+              std::make_unique<mgg::Quirks>(mtd::MockOption{}));
     }
 
     std::shared_ptr<ml::Logger> logger;

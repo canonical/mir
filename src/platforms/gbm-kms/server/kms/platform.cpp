@@ -50,9 +50,10 @@ namespace mgmh = mgg::helpers;
 mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         std::shared_ptr<ConsoleServices> const& vt,
                         EmergencyCleanupRegistry&,
-                        BypassOption bypass_option)
+                        BypassOption bypass_option,
+                        std::unique_ptr<Quirks> quirks)
     : udev{std::make_shared<mir::udev::Context>()},
-      drm{helpers::DRMHelper::open_all_devices(udev, *vt)},
+      drm{helpers::DRMHelper::open_all_devices(udev, *vt, *quirks)},
       // We assume the first DRM device is the boot GPU, and arbitrarily pick it as our
       // shell renderer.
       //

@@ -18,6 +18,7 @@
 
 #include "mir/graphics/event_handler_register.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
+#include "src/platforms/gbm-kms/server/kms/quirks.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/shared_library.h"
 #include "mir/options/program_option.h"
@@ -88,7 +89,8 @@ public:
                 mir::report::null_display_report(),
                 std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
-                mgg::BypassOption::allowed);
+                mgg::BypassOption::allowed,
+                std::make_unique<mgg::Quirks>(mir::options::ProgramOption{}));
     }
 
     EGLDisplay fake_display{reinterpret_cast<EGLDisplay>(0xabcd)};

@@ -36,6 +36,8 @@ namespace graphics
 namespace gbm
 {
 
+class Quirks;
+
 class Platform : public graphics::Platform,
                  public mir::renderer::gl::EGLPlatform
 {
@@ -43,7 +45,8 @@ public:
     explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
                       std::shared_ptr<ConsoleServices> const& vt,
                       EmergencyCleanupRegistry& emergency_cleanup_registry,
-                      BypassOption bypass_option);
+                      BypassOption bypass_option,
+                      std::unique_ptr<Quirks> quirks);
 
     /* From Platform */
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator(

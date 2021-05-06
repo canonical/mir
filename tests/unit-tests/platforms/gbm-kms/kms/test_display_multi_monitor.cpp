@@ -22,7 +22,9 @@
 #include "mir/graphics/platform.h"
 
 #include "src/platforms/gbm-kms/server/kms/platform.h"
+#include "src/platforms/gbm-kms/server/kms/quirks.h"
 
+#include "mir/options/program_option.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/stub_console_services.h"
@@ -152,7 +154,8 @@ public:
                mir::report::null_display_report(),
                std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
-               mgg::BypassOption::allowed);
+               mgg::BypassOption::allowed,
+               std::make_unique<mgg::Quirks>(mir::options::ProgramOption{}));
     }
 
     std::shared_ptr<mg::Display> create_display_cloned(

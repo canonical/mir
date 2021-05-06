@@ -42,6 +42,7 @@ namespace graphics
 {
 namespace gbm
 {
+class Quirks;
 
 typedef std::unique_ptr<gbm_surface,std::function<void(gbm_surface*)>> GBMSurfaceUPtr;
 
@@ -64,7 +65,8 @@ public:
 
     static std::vector<std::shared_ptr<DRMHelper>> open_all_devices(
         std::shared_ptr<mir::udev::Context> const& udev,
-        mir::ConsoleServices& console);
+        mir::ConsoleServices& console,
+        mir::graphics::gbm::Quirks const& quirks);
 
     static std::unique_ptr<DRMHelper> open_any_render_node(
         std::shared_ptr<mir::udev::Context> const& udev);
