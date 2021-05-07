@@ -120,18 +120,18 @@ auto probe_graphics_platform() -> mg::PlatformPriority
 
 auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mo::ProgramOptions const&) -> mg::PlatformPriority
+    mo::ProgramOption const&) -> mg::PlatformPriority
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
-    probe_graphics_platform();
+    return probe_graphics_platform();
 }
 
 auto probe_rendering_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mo::ProgramOptions const&) -> mg::PlatformPriority
+    mo::ProgramOption const&) -> mg::PlatformPriority
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
-    probe_graphics_platform();
+    return probe_graphics_platform();
 }
 
 namespace
