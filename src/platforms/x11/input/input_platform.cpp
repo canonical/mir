@@ -39,6 +39,18 @@
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-x11.h>
 
+// xcb/xkb.h has a struct member named "explicit", which C++ does not like
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wkeyword-macro"
+#endif
+#define explicit explicit_
+#include <xcb/xkb.h>
+#undef explicit
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
 // Due to a bug in Unity when keyboard is grabbed,
 // client cannot be resized. This helps in debugging.
 #define GRAB_KBD
@@ -56,6 +68,54 @@ auto const button_scroll_down = XCB_BUTTON_INDEX_5;
 auto const button_scroll_left = 6;
 auto const button_scroll_right = 7;
 auto const scroll_factor = 10;
+
+auto init_xkb_extension(mir::X::X11Resources* x11_resources) -> xcb_query_extension_reply_t const*
+{
+    auto const xkb_extension = xcb_get_extension_data(x11_resources->conn->connection(), &xcb_xkb_id);
+    if (!xkb_extension || !xkb_extension->present)
+    {
+        mir::log_warning("XKB X11 extension not available, keyboard will not work");
+        return nullptr;
+    }
+
+    auto const required_major = 1;
+    auto const required_minor = 0;
+    auto const cookie = xcb_xkb_use_extension(x11_resources->conn->connection(), required_major, required_minor);
+    auto const reply = mir::make_unique_cptr(
+        xcb_xkb_use_extension_reply(x11_resources->conn->connection(), cookie, nullptr));
+    if (!reply || !reply->supported)
+    {
+        mir::log_warning("XKB X11 extension does not have a supported version, keyboard will not work");
+        return nullptr;
+    }
+
+    auto const map_mask =
+        XCB_XKB_MAP_PART_KEY_TYPES |
+        XCB_XKB_MAP_PART_KEY_SYMS |
+        XCB_XKB_MAP_PART_MODIFIER_MAP |
+        XCB_XKB_MAP_PART_EXPLICIT_COMPONENTS |
+        XCB_XKB_MAP_PART_KEY_ACTIONS |
+        XCB_XKB_MAP_PART_KEY_BEHAVIORS |
+        XCB_XKB_MAP_PART_VIRTUAL_MODS |
+        XCB_XKB_MAP_PART_VIRTUAL_MOD_MAP;
+
+    auto const event_mask =
+        XCB_XKB_EVENT_TYPE_NEW_KEYBOARD_NOTIFY |
+        XCB_XKB_EVENT_TYPE_MAP_NOTIFY |
+        XCB_XKB_EVENT_TYPE_STATE_NOTIFY;
+
+    xcb_xkb_select_events(
+        x11_resources->conn->connection(),
+        XCB_XKB_ID_USE_CORE_KBD,
+        event_mask,
+        0,
+        event_mask,
+        map_mask,
+        map_mask,
+        0);
+
+    return xkb_extension;
+}
 
 geom::Point get_pos_on_output(mir::X::X11Resources* x11_resources, xcb_window_t x11_window, int x, int y)
 {
@@ -105,6 +165,7 @@ mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> con
             mi::InputDeviceInfo{"x11-keyboard-device", "x11-key-dev-1", mi::DeviceCapability::keyboard})),
     core_pointer(std::make_shared<mix::XInputDevice>(
             mi::InputDeviceInfo{"x11-mouse-device", "x11-mouse-dev-1", mi::DeviceCapability::pointer})),
+    xkb_extension{init_xkb_extension(x11_resources.get())},
     xkb_ctx{xkb_context_new(XKB_CONTEXT_NO_FLAGS)},
     keymap{xkb_x11_keymap_new_from_device(
         xkb_ctx,
@@ -122,6 +183,8 @@ mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> con
     {
         log_error("Failed to set up X11 keymap");
     }
+
+    x11_resources->conn->flush();
 }
 
 mix::XInputPlatform::~XInputPlatform()
@@ -424,6 +487,55 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
 
     default:
         break;
+    }
+
+    if (xkb_extension && event->response_type == xkb_extension->first_event)
+    {
+        process_xkb_event(event);
+    }
+}
+
+void mix::XInputPlatform::process_xkb_event(xcb_generic_event_t* event)
+{
+    struct XkbEventGeneric
+    {
+        uint8_t response_type;
+        uint8_t xkbType;
+    };
+
+    switch (reinterpret_cast<XkbEventGeneric*>(event)->xkbType)
+    {
+    case XCB_XKB_NEW_KEYBOARD_NOTIFY:
+    {
+        auto const new_keyboard_ev = reinterpret_cast<xcb_xkb_new_keyboard_notify_event_t*>(event);
+        if (new_keyboard_ev->changed & XCB_XKB_NKN_DETAIL_KEYCODES)
+        {
+            // TODO: update keymap?
+        }
+    }   break;
+
+    case XCB_XKB_MAP_NOTIFY:
+    {
+        auto const map_ev = reinterpret_cast<xcb_xkb_map_notify_event_t*>(event);
+        (void)map_ev;
+        // TODO: update keymap?
+    }   break;
+
+    case XCB_XKB_STATE_NOTIFY:
+    {
+        auto const state_ev = reinterpret_cast<xcb_xkb_state_notify_event_t*>(event);
+        auto const changed = xkb_state_update_mask(
+            key_state,
+            state_ev->baseMods,
+            state_ev->latchedMods,
+            state_ev->lockedMods,
+            state_ev->baseGroup,
+            state_ev->latchedGroup,
+            state_ev->lockedGroup);
+        (void)changed;
+    }   break;
+
+    default:;
     }
 }
 

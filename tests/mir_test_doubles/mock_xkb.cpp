@@ -21,11 +21,52 @@
 
 #include <cstring>
 
+// xcb/xkb.h has a struct member named "explicit", which C++ does not like
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wkeyword-macro"
+#endif
+#define explicit explicit_
+#include <xcb/xkb.h>
+#undef explicit
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
 namespace mtd=mir::test::doubles;
 
 namespace
 {
 mtd::MockXkb* global_mock = nullptr;
+}
+
+struct xcb_extension_t {};
+xcb_extension_t xcb_xkb_id;
+
+xcb_xkb_use_extension_cookie_t
+xcb_xkb_use_extension(xcb_connection_t*, uint16_t, uint16_t)
+{
+    return {0};
+}
+
+xcb_xkb_use_extension_reply_t *
+xcb_xkb_use_extension_reply(xcb_connection_t*, xcb_xkb_use_extension_cookie_t, xcb_generic_error_t**)
+{
+    return nullptr;
+}
+
+xcb_void_cookie_t
+xcb_xkb_select_events(
+    xcb_connection_t*,
+    xcb_xkb_device_spec_t,
+    uint16_t,
+    uint16_t,
+    uint16_t,
+    uint16_t,
+    uint16_t,
+    const void*)
+{
+    return {0};
 }
 
 mtd::MockXkb::MockXkb()

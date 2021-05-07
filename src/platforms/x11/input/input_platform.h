@@ -66,6 +66,7 @@ public:
 private:
     void process_input_events();
     void process_input_event(xcb_generic_event_t* event);
+    void process_xkb_event(xcb_generic_event_t* event);
     void key_pressed(xcb_keycode_t key, xcb_timestamp_t timestamp);
     void key_released(xcb_keycode_t key, xcb_timestamp_t timestamp);
     /// Defer work until all pending events are processed. Should only be called while processing events.
@@ -75,6 +76,7 @@ private:
     std::shared_ptr<input::InputDeviceRegistry> const registry;
     std::shared_ptr<XInputDevice> const core_keyboard;
     std::shared_ptr<XInputDevice> const core_pointer;
+    xcb_query_extension_reply_t const* const xkb_extension;
     xkb_context* const xkb_ctx;
     xkb_keymap* const keymap;
     xkb_state* const key_state;
