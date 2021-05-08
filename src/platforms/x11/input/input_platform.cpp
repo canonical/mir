@@ -71,7 +71,7 @@ auto const scroll_factor = 10;
 
 auto init_xkb_extension(mir::X::X11Resources* x11_resources) -> xcb_query_extension_reply_t const*
 {
-    auto const xkb_extension = xcb_get_extension_data(x11_resources->conn->connection(), &xcb_xkb_id);
+    auto const xkb_extension = x11_resources->conn->get_extension_data(&xcb_xkb_id);
     if (!xkb_extension || !xkb_extension->present)
     {
         mir::log_warning("XKB X11 extension not available, keyboard will not work");
