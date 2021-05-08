@@ -524,7 +524,7 @@ void mix::XInputPlatform::process_xkb_event(xcb_generic_event_t* event)
     case XCB_XKB_STATE_NOTIFY:
     {
         auto const state_ev = reinterpret_cast<xcb_xkb_state_notify_event_t*>(event);
-        auto const changed = xkb_state_update_mask(
+        xkb_state_update_mask(
             key_state,
             state_ev->baseMods,
             state_ev->latchedMods,
@@ -532,7 +532,20 @@ void mix::XInputPlatform::process_xkb_event(xcb_generic_event_t* event)
             state_ev->baseGroup,
             state_ev->latchedGroup,
             state_ev->lockedGroup);
-        (void)changed;
+        // This only works for modifiers, but unlike the normal events it tracks presses and releases when the window
+        // is not focused
+        switch (state_ev->eventType)
+        {
+        case XCB_KEY_PRESS:
+            key_pressed(state_ev->keycode, state_ev->time);
+            break;
+
+        case XCB_KEY_RELEASE:
+            key_released(state_ev->keycode, state_ev->time);
+            break;
+
+        default:;
+        }
     }   break;
 
     default:;
