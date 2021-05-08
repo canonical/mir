@@ -304,13 +304,19 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
 
     case XCB_FOCUS_OUT:
     {
-        auto const focus_out_ev = reinterpret_cast<xcb_focus_out_event_t*>(event);
-        while (!pressed_keys.empty())
+        // key_released() will modify pressed_keys, so make a local copy
+        std::vector<xcb_keycode_t> const pressed{pressed_keys.begin(), pressed_keys.end()};
+        for (auto const& key : pressed)
         {
-            key_released(*pressed_keys.begin(), last_timestamp);
+            // Only release keys that aren't modifiers
+            if (modifiers.find(key) == modifiers.end())
+            {
+                key_released(key, last_timestamp);
+            }
         }
 
 #ifdef GRAB_KBD
+        auto const focus_out_ev = reinterpret_cast<xcb_focus_out_event_t*>(event);
         if (kbd_grabbed && (
             focus_out_ev->mode == XCB_NOTIFY_MODE_NORMAL ||
             focus_out_ev->mode == XCB_NOTIFY_MODE_WHILE_GRABBED))
@@ -534,6 +540,10 @@ void mix::XInputPlatform::process_xkb_event(xcb_generic_event_t* event)
             state_ev->lockedGroup);
         // This only works for modifiers, but unlike the normal events it tracks presses and releases when the window
         // is not focused
+        if (state_ev->keycode != 0)
+        {
+            modifiers.insert(state_ev->keycode);
+        }
         switch (state_ev->eventType)
         {
         case XCB_KEY_PRESS:

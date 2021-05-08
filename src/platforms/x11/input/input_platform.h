@@ -82,6 +82,7 @@ private:
     xkb_state* const key_state;
     xcb_timestamp_t last_timestamp{0};
     std::set<xcb_keycode_t> pressed_keys;
+    std::set<xcb_keycode_t> modifiers;
     bool kbd_grabbed;
     bool ptr_grabbed;
     std::vector<std::function<void()>> deferred;
