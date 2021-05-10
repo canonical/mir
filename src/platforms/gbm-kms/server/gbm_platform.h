@@ -35,13 +35,9 @@ class GBMPlatform : public graphics::RenderingPlatform,
                     public renderer::gl::EGLPlatform
 {
 public:
-    GBMPlatform(
-        BypassOption option,
-        BufferImportMethod import_method,
+    explicit GBMPlatform(
         std::shared_ptr<PlatformAuthentication> const& platform_authentication);
     GBMPlatform(
-        BypassOption bypass_option,
-        BufferImportMethod import_method,
         std::shared_ptr<mir::udev::Context> const& udev,
         std::shared_ptr<helpers::DRMHelper> const& drm);
 
@@ -49,8 +45,6 @@ public:
         create_buffer_allocator(Display const& output) override;
     MirServerEGLNativeDisplayType egl_native_display() const override;
 private:
-    BypassOption const bypass_option;
-    BufferImportMethod const import_method;
     std::shared_ptr<graphics::PlatformAuthentication> const platform_authentication;
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<graphics::gbm::helpers::DRMHelper> drm;

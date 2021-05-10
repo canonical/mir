@@ -35,7 +35,7 @@ template<class Observer>
 class ObserverRegistrar;
 
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
-namespace graphics { class Cursor; class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; }
+namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub;}
 namespace logging { class Logger; }
 namespace options { class Option; }
@@ -371,8 +371,11 @@ public:
     /// \return the GL config.
     auto the_gl_config() const -> std::shared_ptr<graphics::GLConfig>;
 
-    /// \return the graphics platform.
-    auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;
+    /// \return the display platforms.
+    auto the_display_platforms() const -> std::vector<std::shared_ptr<graphics::DisplayPlatform>> const&;
+
+    /// \return the rendering platforms.
+    auto the_rendering_platforms() const -> std::vector<std::shared_ptr<graphics::RenderingPlatform>> const&;
 
     /// \return the input targeter.
     auto the_input_targeter() const -> std::shared_ptr<shell::InputTargeter>;

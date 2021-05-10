@@ -29,20 +29,24 @@ namespace test
 {
 namespace doubles
 {
-class NullPlatform : public graphics::Platform
+class NullDisplayPlatform : public graphics::DisplayPlatform
 {
  public:
-    mir::UniqueModulePtr<graphics::GraphicBufferAllocator>
-        create_buffer_allocator(graphics::Display const&) override
-    {
-        return nullptr;
-    }
-
-    mir::UniqueModulePtr<graphics::Display> create_display(
+    auto create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
-        std::shared_ptr<graphics::GLConfig> const&) override
+        std::shared_ptr<graphics::GLConfig> const&) -> mir::UniqueModulePtr<graphics::Display> override
     {
         return mir::make_module_ptr<NullDisplay>();
+    }
+};
+
+class NullRenderingPlatform : public graphics::RenderingPlatform
+{
+public:
+    auto create_buffer_allocator(graphics::Display const&)
+        -> mir::UniqueModulePtr<graphics::GraphicBufferAllocator> override
+    {
+        return nullptr;
     }
 };
 }

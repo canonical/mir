@@ -55,7 +55,7 @@ struct X11OutputConfig
     float scale;
 };
 
-class Platform : public graphics::Platform,
+class Platform : public graphics::DisplayPlatform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
@@ -68,9 +68,6 @@ public:
     ~Platform() = default;
 
     /* From Platform */
-    UniqueModulePtr<GraphicBufferAllocator>
-        create_buffer_allocator(graphics::Display const& output) override;
-
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
@@ -82,6 +79,10 @@ private:
     std::vector<X11OutputConfig> const output_sizes;
 };
 
+class RenderingPlatform : public graphics::RenderingPlatform
+{
+    auto create_buffer_allocator(graphics::Display const& output) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
+};
 }
 }
 }

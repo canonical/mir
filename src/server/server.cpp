@@ -118,8 +118,9 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_display_configuration_controller)\
     MACRO(the_focus_controller)\
     MACRO(the_gl_config)\
-    MACRO(the_graphics_platform)\
-    MACRO(the_input_targeter)\
+    MACRO(the_display_platforms)    \
+    MACRO(the_rendering_platforms)  \
+    MACRO(the_input_targeter)  \
     MACRO(the_logger)\
     MACRO(the_main_loop)\
     MACRO(the_prompt_session_listener)\

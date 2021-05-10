@@ -53,7 +53,7 @@ EGLNativeDisplayType mgw::Platform::egl_native_display() const
     return eglGetDisplay(wl_display);
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgw::Platform::create_buffer_allocator(mg::Display const& output)
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgw::RenderingPlatform::create_buffer_allocator(mg::Display const& output)
 {
     return mir::make_module_ptr<mgw::BufferAllocator>(output);
 }

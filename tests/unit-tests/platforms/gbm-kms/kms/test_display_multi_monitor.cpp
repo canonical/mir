@@ -167,11 +167,11 @@ public:
     }
 
     std::shared_ptr<mg::Display> create_display_side_by_side(
-        std::shared_ptr<mg::Platform> const& platform)
+        std::shared_ptr<mg::DisplayPlatform> const& platform)
     {
         return platform->create_display(
             std::make_shared<SideBySideDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubGLConfig>());
+            std::make_shared<mtd::StubGLConfig>());;
     }
 
     void setup_outputs(int connected, int disconnected)

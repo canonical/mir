@@ -33,16 +33,27 @@ namespace graphics
 {
 class Platform;
 
-auto probe_module(
+auto probe_display_module(
     SharedLibrary& module,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console) -> PlatformPriority;
 
-std::shared_ptr<SharedLibrary> module_for_device(
+auto probe_rendering_module(
+    SharedLibrary& module,
+    options::ProgramOption const& options,
+    std::shared_ptr<ConsoleServices> const& console) -> PlatformPriority;
+
+auto display_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
     options::ProgramOption const& options,
-    std::shared_ptr<ConsoleServices> const& console);
+    std::shared_ptr<ConsoleServices> const& console)
+    -> std::vector<std::shared_ptr<SharedLibrary>>;
 
+auto rendering_modules_for_device(
+    std::vector<std::shared_ptr<SharedLibrary>> const& modules,
+    options::ProgramOption const& options,
+    std::shared_ptr<ConsoleServices> const& console)
+    -> std::vector<std::shared_ptr<SharedLibrary>>;
 }
 }
 

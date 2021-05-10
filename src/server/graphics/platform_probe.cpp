@@ -22,18 +22,18 @@
 
 #include <boost/throw_exception.hpp>
 
-auto mir::graphics::probe_module(
+namespace
+{
+auto probe_module(
+    mir::graphics::PlatformProbe const& probe,
     mir::SharedLibrary& module,
     mir::options::ProgramOption const& options,
-    std::shared_ptr<ConsoleServices> const& console) -> mir::graphics::PlatformPriority
+    std::shared_ptr<mir::ConsoleServices> const& console) -> mir::graphics::PlatformPriority
 {
-    auto probe = module.load_function<PlatformProbe>(
-        "probe_graphics_platform",
-        MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
     auto module_priority = probe(console, options);
 
-    auto describe = module.load_function<DescribeModule>(
+    auto describe = module.load_function<mir::graphics::DescribeModule>(
         "describe_graphics_module",
         MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
@@ -46,25 +46,84 @@ auto mir::graphics::probe_module(
                   module_priority);
     return module_priority;
 }
+}
 
+auto mir::graphics::probe_display_module(
+    SharedLibrary& module,
+    options::ProgramOption const& options,
+    std::shared_ptr<ConsoleServices> const& console) -> PlatformPriority
+{
+    return probe_module(
+        module.load_function<mir::graphics::PlatformProbe>(
+            "probe_display_platform",
+            MIR_SERVER_GRAPHICS_PLATFORM_VERSION),
+        module,
+        options,
+        console);
+}
 
-std::shared_ptr<mir::SharedLibrary>
-mir::graphics::module_for_device(
-    std::vector<std::shared_ptr<SharedLibrary>> const& modules,
+auto mir::graphics::probe_rendering_module(
+    SharedLibrary& module,
+    options::ProgramOption const& options,
+    std::shared_ptr<ConsoleServices> const& console) -> PlatformPriority
+{
+    return probe_module(
+        module.load_function<mir::graphics::PlatformProbe>(
+            "probe_rendering_platform",
+            MIR_SERVER_GRAPHICS_PLATFORM_VERSION),
+        module,
+        options,
+        console);
+}
+
+namespace
+{
+enum class ModuleType
+{
+    Rendering,
+    Display
+};
+
+auto modules_for_device(
+    ModuleType type,
+    std::vector<std::shared_ptr<mir::SharedLibrary>> const& modules,
     mir::options::ProgramOption const& options,
-    std::shared_ptr<ConsoleServices> const& console)
+    std::shared_ptr<mir::ConsoleServices> const& console)
+-> std::vector<std::shared_ptr<mir::SharedLibrary>>
 {
     mir::graphics::PlatformPriority best_priority_so_far = mir::graphics::unsupported;
-    std::shared_ptr<mir::SharedLibrary> best_module_so_far;
+    std::vector<std::shared_ptr<mir::SharedLibrary>> best_modules_so_far;
     for (auto& module : modules)
     {
         try
         {
-            auto module_priority = probe_module(*module, options, console);
+            /* TODO: We will (pretty shortly) need to have some concept of binding-a-device.
+             * What we really want to do here is:
+             * foreach device in system:
+             *   find best driver for device
+             *
+             * For now, hopefully “load each platform that claims to best support (at least some)
+             * device” will work.
+             */
+            mir::graphics::PlatformPriority module_priority;
+            switch (type)
+            {
+            case ModuleType::Rendering:
+                module_priority = mir::graphics::probe_rendering_module(*module, options, console);
+                break;
+            case ModuleType::Display:
+                module_priority = mir::graphics::probe_display_module(*module, options, console);
+                break;
+            }
             if (module_priority > best_priority_so_far)
             {
                 best_priority_so_far = module_priority;
-                best_module_so_far = module;
+                best_modules_so_far.clear();
+                best_modules_so_far.push_back(module);
+            }
+            else if (module_priority == best_priority_so_far)
+            {
+                best_modules_so_far.push_back(module);
             }
         }
         catch (std::runtime_error const&)
@@ -73,7 +132,32 @@ mir::graphics::module_for_device(
     }
     if (best_priority_so_far > mir::graphics::unsupported)
     {
-        return best_module_so_far;
+        return best_modules_so_far;
     }
-    BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find platform for current system"}));
+    BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find any platforms for current system"}));
+}
+}
+
+auto mir::graphics::display_modules_for_device(
+    std::vector<std::shared_ptr<SharedLibrary>> const& modules,
+    options::ProgramOption const& options,
+    std::shared_ptr<ConsoleServices> const& console) -> std::vector<std::shared_ptr<SharedLibrary>>
+{
+    return modules_for_device(
+        ModuleType::Display,
+        modules,
+        options,
+        console);
+}
+
+auto mir::graphics::rendering_modules_for_device(
+    std::vector<std::shared_ptr<SharedLibrary>> const& modules,
+    options::ProgramOption const& options,
+    std::shared_ptr<ConsoleServices> const& console) -> std::vector<std::shared_ptr<SharedLibrary>>
+{
+    return modules_for_device(
+        ModuleType::Rendering,
+        modules,
+        options,
+        console);
 }

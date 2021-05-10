@@ -28,11 +28,19 @@ class ProgramOption;
 }
 }
 
-mir::graphics::PlatformPriority probe_graphics_platform(
+mir::graphics::PlatformPriority probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
     mir::options::ProgramOption const& /*options*/)
 {
-    mir::assert_entry_point_signature<mir::graphics::PlatformProbe>(&probe_graphics_platform);
+    mir::assert_entry_point_signature<mir::graphics::PlatformProbe>(&probe_display_platform);
+    return mir::graphics::PlatformPriority::dummy;
+}
+
+mir::graphics::PlatformPriority probe_rendering_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mir::options::ProgramOption const& /*options*/)
+{
+    mir::assert_entry_point_signature<mir::graphics::PlatformProbe>(&probe_rendering_platform);
     return mir::graphics::PlatformPriority::dummy;
 }
 

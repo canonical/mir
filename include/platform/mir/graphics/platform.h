@@ -97,17 +97,6 @@ public:
         std::shared_ptr<GLConfig> const& gl_config) = 0;
 };
 
-class Platform : public DisplayPlatform,
-                 public RenderingPlatform
-{
-public:
-    Platform() = default;
-    Platform(const Platform& p) = delete;
-    Platform& operator=(const Platform& p) = delete;
-
-    virtual ~Platform() = default;
-};
-
 /**
  * A measure of how well a platform supports a device
  *
@@ -133,11 +122,16 @@ enum PlatformPriority : uint32_t
                          */
 };
 
-typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
+typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger);
+
+typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderPlatform)(
+    mir::options::Option const& options,
+    mir::EmergencyCleanupRegistry& emergency_cleanup_registry,
     std::shared_ptr<mir::logging::Logger> const& logger);
 
 typedef void(*AddPlatformOptions)(
@@ -174,11 +168,16 @@ extern "C"
  *
  * \ingroup platform_enablement
  */
-mir::UniqueModulePtr<mir::graphics::Platform> create_host_platform(
+mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger);
+
+mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
+    mir::options::Option const& options,
+    mir::EmergencyCleanupRegistry& emergency_cleanup_registry,
     std::shared_ptr<mir::logging::Logger> const& logger);
 
 /**
@@ -196,7 +195,11 @@ void add_graphics_platform_options(
 // TODO: We actually need to be more granular here; on a device with more
 //       than one graphics system we may need a different platform per GPU,
 //       so we should be associating platforms with graphics devices in some way
-mir::graphics::PlatformPriority probe_graphics_platform(
+mir::graphics::PlatformPriority probe_display_platform(
+    std::shared_ptr<mir::ConsoleServices> const& console,
+    mir::options::ProgramOption const& options);
+
+mir::graphics::PlatformPriority probe_rendering_platform(
     std::shared_ptr<mir::ConsoleServices> const& console,
     mir::options::ProgramOption const& options);
 

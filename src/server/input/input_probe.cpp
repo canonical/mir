@@ -60,6 +60,7 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
     std::shared_ptr<mi::InputDeviceRegistry> const& device_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mi::InputReport> const& input_report,
+    std::vector<std::shared_ptr<SharedLibrary>> const& loaded_platforms,
     mir::SharedLibraryProberReport& prober_report)
 {
     auto reject_platform_priority = mi::PlatformPriority::dummy;
@@ -97,6 +98,25 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
     }
     else
     {
+        /* First check if any already-loaded graphics modules double as input platforms
+         * If so, pick the first.
+         *
+         * NOTE: This makes the (correct for now) assumption that input probing happens after graphics initialisation.
+         */
+        for (auto const& module : loaded_platforms)
+        {
+            auto input_platform = input_platform_from_graphics_module(
+                *module,
+                options,
+                emergency_cleanup,
+                device_registry,
+                console,
+                input_report);
+            if (input_platform)
+            {
+                return input_platform;
+            }
+        }
         select_libraries_for_path(options.get<std::string>(mo::platform_path), module_selector, prober_report);
     }
 
@@ -107,21 +127,16 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
 }
 
 auto mi::input_platform_from_graphics_module(
-    graphics::Platform const& graphics_platform,
+    SharedLibrary const& graphics_platform,
     options::Option const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
     std::shared_ptr<InputDeviceRegistry> const& device_registry,
     std::shared_ptr<ConsoleServices> const& console,
-    std::shared_ptr<InputReport> const& input_report)
--> mir::UniqueModulePtr<Platform>
+    std::shared_ptr<InputReport> const& input_report) -> mir::UniqueModulePtr<Platform>
 {
     try
     {
-        // Yes, this is dirty code that assumes the object layout. Sorry!
-        auto* const vtab = (void*&)(graphics_platform);
-        SharedLibrary const platform_module{detail::libname_impl(vtab)};
-
-        return create_input_platform(platform_module, options, emergency_cleanup, device_registry, console, input_report);
+        return create_input_platform(graphics_platform, options, emergency_cleanup, device_registry, console, input_report);
     }
     catch (std::runtime_error const&)
     {

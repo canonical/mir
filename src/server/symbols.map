@@ -859,6 +859,10 @@ MIR_SERVER_2.4.0 {
     mir::scene::SurfaceStateTracker::has_any*;
     mir::scene::SurfaceStateTracker::with*;
     mir::scene::SurfaceStateTracker::without*;
+    mir::Server::the_display_platforms*;
+    mir::Server::the_rendering_platforms*;
+    mir::DefaultServerConfiguration::the_display_platforms*;
+    mir::DefaultServerConfiguration::the_rendering_platforms*;
   };
 } MIR_SERVER_1.7.1;
 
@@ -896,7 +900,7 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
     mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     mir::DefaultServerConfiguration::the_frontend_display_changer*;
     mir::DefaultServerConfiguration::the_gl_config*;
-    mir::DefaultServerConfiguration::the_graphics_platform*;
+    mir::DefaultServerConfiguration::the_display_platforms*;
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
     mir::DefaultServerConfiguration::the_input_configuration_changer*;

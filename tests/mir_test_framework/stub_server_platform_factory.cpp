@@ -52,12 +52,21 @@ void ensure_platform_library()
 }
 }
 
-std::shared_ptr<mg::Platform> mtf::make_stubbed_server_graphics_platform(std::vector<geom::Rectangle> const& display_rects)
+std::shared_ptr<mg::DisplayPlatform> mtf::make_stubbed_display_platform(std::vector<geom::Rectangle> const& display_rects)
 {
     ensure_platform_library();
-    auto factory = platform_graphics_lib->load_function<std::shared_ptr<mg::Platform>(*)(std::vector<geom::Rectangle> const&)>("create_stub_platform");
+    auto factory = platform_graphics_lib->load_function<std::shared_ptr<mg::DisplayPlatform>(*)(std::vector<geom::Rectangle> const&)>("create_stub_platform");
 
     return factory(display_rects);
+}
+
+auto mtf::make_stubbed_rendering_platform() -> std::shared_ptr<mg::RenderingPlatform>
+{
+    ensure_platform_library();
+
+    auto factory = platform_graphics_lib->load_function<std::shared_ptr<mg::RenderingPlatform>(*)()>("create_stub_render_platform");
+
+    return factory();
 }
 
 void mtf::set_next_display_rects(std::unique_ptr<std::vector<geom::Rectangle>>&& display_rects)

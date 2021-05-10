@@ -66,10 +66,10 @@ mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
     auth_factory = std::make_unique<DRMNativePlatformAuthFactory>(*drm.front());
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::Platform::create_buffer_allocator(
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::RenderingPlatform::create_buffer_allocator(
     mg::Display const& output)
 {
-    return make_module_ptr<mgg::BufferAllocator>(output, gbm->device, bypass_option_, mgg::BufferImportMethod::gbm_native_pixmap);
+    return make_module_ptr<mgg::BufferAllocator>(output);
 }
 
 mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(

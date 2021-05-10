@@ -233,20 +233,11 @@ std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const
 }
 }
 
-mgg::BufferAllocator::BufferAllocator(
-    mg::Display const& output,
-    gbm_device* device,
-    BypassOption bypass_option,
-    mgg::BufferImportMethod const buffer_import_method)
+mgg::BufferAllocator::BufferAllocator(mg::Display const& output)
     : ctx{context_for_output(output)},
       egl_delegate{
           std::make_shared<mgc::EGLContextExecutor>(context_for_output(output))},
-      device(device),
-      egl_extensions(std::make_shared<mg::EGLExtensions>()),
-      bypass_option(buffer_import_method == mgg::BufferImportMethod::dma_buf ?
-                        mgg::BypassOption::prohibited :
-                        bypass_option),
-      buffer_import_method(buffer_import_method)
+      egl_extensions(std::make_shared<mg::EGLExtensions>())
 {
 }
 

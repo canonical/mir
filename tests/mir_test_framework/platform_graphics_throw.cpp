@@ -18,8 +18,10 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/test/doubles/null_platform.h"
+#include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
+#include "mir/options/program_option.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdlib.h>
@@ -30,17 +32,11 @@
 
 namespace mg = mir::graphics;
 namespace mo = mir::options;
-namespace mir
-{
-namespace options
-{
-class ProgramOption;
-}
-}
+namespace mtd = mir::test::doubles;
 
 namespace
 {
-class ExceptionThrowingPlatform : public mg::Platform
+class ExceptionThrowingPlatform : public mg::DisplayPlatform, public mg::RenderingPlatform
 {
 public:
     ExceptionThrowingPlatform()
@@ -53,9 +49,12 @@ public:
         auto platform_path = dirname(library_path.get());
 
         mir::SharedLibrary stub_platform_library{std::string(platform_path) + "/graphics-dummy.so"};
-        auto create_stub_platform = stub_platform_library.load_function<mg::CreateHostPlatform>("create_host_platform");
+        auto create_stub_display_platform = stub_platform_library.load_function<mg::CreateDisplayPlatform>("create_display_platform");
+        auto create_stub_render_platform = stub_platform_library.load_function<mg::CreateRenderPlatform>("create_rendering_platform");
 
-        stub_platform = create_stub_platform(nullptr, nullptr, nullptr, nullptr, nullptr);
+        mtd::NullEmergencyCleanup null_cleanup;
+        stub_render_platform = create_stub_render_platform(mo::ProgramOption{}, null_cleanup, nullptr);
+        stub_display_platform = create_stub_display_platform(nullptr, nullptr, nullptr, nullptr, nullptr);
     }
 
     mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator>
@@ -64,7 +63,7 @@ public:
         if (should_throw.at(ExceptionLocation::at_create_buffer_allocator))
             BOOST_THROW_EXCEPTION(std::runtime_error("Exception during create_buffer_allocator"));
 
-        return stub_platform->create_buffer_allocator(output);
+        return stub_render_platform->create_buffer_allocator(output);
     }
 
     mir::UniqueModulePtr<mg::Display> create_display(
@@ -74,7 +73,7 @@ public:
         if (should_throw.at(ExceptionLocation::at_create_display))
             BOOST_THROW_EXCEPTION(std::runtime_error("Exception during create_display"));
 
-        return stub_platform->create_display(ptr, shared_ptr);
+        return stub_display_platform->create_display(ptr, shared_ptr);
     }
 
 private:
@@ -105,16 +104,25 @@ private:
     };
 
     std::unordered_map<ExceptionLocation, bool, std::hash<uint32_t>> const should_throw;
-    mir::UniqueModulePtr<mg::Platform> stub_platform;
+    mir::UniqueModulePtr<mg::RenderingPlatform> stub_render_platform;
+    mir::UniqueModulePtr<mg::DisplayPlatform> stub_display_platform;
 };
 
 }
 
-mg::PlatformPriority probe_graphics_platform(
+mg::PlatformPriority probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
     mo::ProgramOption const& /*options*/)
 {
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
+    return mg::PlatformPriority::unsupported;
+}
+
+mg::PlatformPriority probe_rendering_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mo::ProgramOption const& /*options*/)
+{
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
     return mg::PlatformPriority::unsupported;
 }
 
@@ -137,14 +145,23 @@ void add_graphics_platform_options(boost::program_options::options_description&)
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
 }
 
-mir::UniqueModulePtr<mg::Platform> create_host_platform(
+mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
+    mo::Option const&,
+    mir::EmergencyCleanupRegistry&,
+    std::shared_ptr<mir::logging::Logger> const&)
+{
+    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
+    return mir::make_module_ptr<ExceptionThrowingPlatform>();
+}
+
+mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const&,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mir::logging::Logger> const&)
 {
-    mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
+    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
     return mir::make_module_ptr<ExceptionThrowingPlatform>();
 }
 

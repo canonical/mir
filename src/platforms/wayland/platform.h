@@ -37,14 +37,13 @@ namespace graphics
 {
 namespace wayland
 {
-class Platform : public graphics::Platform,
+class Platform : public graphics::DisplayPlatform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
     Platform(struct wl_display* const wl_display, std::shared_ptr<DisplayReport> const& report);
     ~Platform() = default;
 
-    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator(Display const& output) override;
 
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
@@ -55,6 +54,12 @@ public:
 private:
     struct wl_display* const wl_display;
     std::shared_ptr<DisplayReport> const report;
+};
+
+class RenderingPlatform : public graphics::RenderingPlatform
+{
+public:
+    auto create_buffer_allocator(Display const& output) -> UniqueModulePtr<GraphicBufferAllocator> override;
 };
 }
 }

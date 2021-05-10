@@ -189,14 +189,14 @@ bool test_probe(mir::SharedLibrary const& dso, MinimalServerEnvironment& config)
 }
 
 auto test_platform_construction(mir::SharedLibrary const& dso, MinimalServerEnvironment& env)
--> std::shared_ptr<mir::graphics::Platform>
+-> std::shared_ptr<mir::graphics::DisplayPlatform>
 {
     try
     {
-        auto create_host_platform = dso.load_function<mg::CreateHostPlatform>(
-            "create_host_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+        auto create_display_platform = dso.load_function<mg::CreateDisplayPlatform>(
+            "create_display_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
-        auto display = create_host_platform(
+        auto display = create_display_platform(
             env.options(),
             env.emergency_cleanup_registry(),
             env.console_services(),
@@ -416,6 +416,7 @@ auto bounce_within(
     return bounced_motion;
 }
 
+[[maybe_unused]]
 void basic_software_buffer_drawing(
     mg::Display& display,
     mg::GraphicBufferAllocator& allocator,
@@ -594,12 +595,13 @@ int main(int argc, char const** argv)
                 success &= test_display_buffers_support_gl(*display);
                 basic_display_swapping(*display);
 
-                auto buffer_allocator = platform->create_buffer_allocator(*display);
-
-                basic_software_buffer_drawing(
-                    *display,
-                    *buffer_allocator,
-                    *config.render_factory());
+                // TODO: Update for display/render platform split
+//                auto buffer_allocator = platform->create_buffer_allocator(*display);
+//
+//                basic_software_buffer_drawing(
+//                    *display,
+//                    *buffer_allocator,
+//                    *config.render_factory());
             }
             else
             {

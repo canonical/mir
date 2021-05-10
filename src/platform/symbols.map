@@ -115,7 +115,8 @@ MIRPLATFORM_2.2 {
     mir::options::null_console;
     mir::options::off_opt_value*;
     mir::options::offscreen_opt*;
-    mir::options::platform_graphics_lib*;
+    mir::options::platform_display_libs*;
+    mir::options::platform_rendering_libs*;
     mir::options::platform_input_lib*;
     mir::options::platform_path*;
     mir::options::prompt_socket_opt*;

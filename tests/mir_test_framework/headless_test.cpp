@@ -33,12 +33,14 @@ namespace mtf = mir_test_framework;
 namespace
 {
 // This avoids an intermittent shutdown crash deleting a stub-graphics buffer (LP: #1728931)
-std::shared_ptr<void> delay_unloading_graphics_platform;
+std::vector<std::shared_ptr<void>> delay_unloading_graphics_platforms;
 }
 
 mtf::HeadlessTest::HeadlessTest()
 {
-    add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
+    add_to_environment("MIR_SERVER_PLATFORM_PATH", mtf::server_platform_path().c_str());
+    add_to_environment("MIR_SERVER_PLATFORM_DISPLAY_LIBS", "mir:stub-graphics");
+    add_to_environment("MIR_SERVER_PLATFORM_RENDERING_LIBS", "mir:stub-graphics");
     add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
     add_to_environment("MIR_SERVER_CONSOLE_PROVIDER", "none");
@@ -47,13 +49,23 @@ mtf::HeadlessTest::HeadlessTest()
         return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>();
     });
 
-    server.add_init_callback([server = &server]
-        {delay_unloading_graphics_platform = server->the_graphics_platform(); });
+    server.add_init_callback(
+        [server = &server]
+        {
+            auto display_platforms = server->the_display_platforms();
+            auto rendering_platforms = server->the_rendering_platforms();
+            delay_unloading_graphics_platforms.insert(
+                delay_unloading_graphics_platforms.end(),
+                display_platforms.begin(), display_platforms.end());
+            delay_unloading_graphics_platforms.insert(
+                delay_unloading_graphics_platforms.end(),
+                rendering_platforms.begin(), rendering_platforms.end());
+        });
 }
 
 mtf::HeadlessTest::~HeadlessTest() noexcept
 {
-    delay_unloading_graphics_platform.reset();
+    delay_unloading_graphics_platforms.clear();
 }
 
 void mtf::HeadlessTest::preset_display(std::unique_ptr<mir::graphics::Display> display)

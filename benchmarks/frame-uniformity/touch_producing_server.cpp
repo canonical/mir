@@ -54,15 +54,15 @@ TouchProducingServer::~TouchProducingServer()
         input_injection_thread.join();
 }
 
-std::shared_ptr<mg::Platform> TouchProducingServer::the_graphics_platform()
+auto TouchProducingServer::the_display_platforms() -> std::vector<std::shared_ptr<mg::DisplayPlatform>> const&
 {
     // TODO: Support configuration
     int const refresh_rate_in_hz = 60;
 
-    if (!graphics_platform)
-        graphics_platform = std::make_shared<VsyncSimulatingPlatform>(screen_dimensions.size, refresh_rate_in_hz);
+    if (display_platforms.empty())
+        display_platforms.emplace_back(std::make_shared<VsyncSimulatingPlatform>(screen_dimensions.size, refresh_rate_in_hz));
     
-    return graphics_platform;
+    return display_platforms;
 }
 
 void TouchProducingServer::synthesize_event_at(geom::Point const& point)

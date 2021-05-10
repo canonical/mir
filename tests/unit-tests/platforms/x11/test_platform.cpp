@@ -56,7 +56,7 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-const char probe_platform[] = "probe_graphics_platform";
+const char probe_platform[] = "probe_display_platform";
 
 class X11GraphicsPlatformTest : public ::testing::Test
 {
@@ -65,7 +65,7 @@ public:
     {
     }
 
-    std::shared_ptr<mg::Platform> create_platform()
+    std::shared_ptr<mg::DisplayPlatform> create_platform()
     {
         return std::make_shared<mg::X::Platform>(
             std::make_shared<mtd::MockX11Resources>(),

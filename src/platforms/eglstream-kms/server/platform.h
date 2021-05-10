@@ -69,7 +69,8 @@ private:
     std::unique_ptr<mir::Device> drm_device;
 };
 
-class Platform : public graphics::Platform
+class Platform : public graphics::DisplayPlatform,
+                 public graphics::RenderingPlatform
 {
 public:
     Platform(

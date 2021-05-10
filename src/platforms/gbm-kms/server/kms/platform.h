@@ -38,7 +38,7 @@ namespace gbm
 
 class Quirks;
 
-class Platform : public graphics::Platform,
+class Platform : public graphics::DisplayPlatform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
@@ -49,8 +49,6 @@ public:
                       std::unique_ptr<Quirks> quirks);
 
     /* From Platform */
-    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator(
-        graphics::Display const& output) override;
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
@@ -68,6 +66,12 @@ public:
 private:
     BypassOption const bypass_option_;
     std::unique_ptr<DRMNativePlatformAuthFactory> auth_factory;
+};
+
+class RenderingPlatform : public graphics::RenderingPlatform
+{
+    auto create_buffer_allocator(
+        graphics::Display const& output) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
 };
 
 }

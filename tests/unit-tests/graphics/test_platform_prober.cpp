@@ -164,7 +164,7 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
     std::vector<std::shared_ptr<mir::SharedLibrary>> empty_modules;
     mir::options::ProgramOption options;
 
-    EXPECT_THROW(mir::graphics::module_for_device(empty_modules, options, nullptr),
+    EXPECT_THROW(mir::graphics::display_modules_for_device(empty_modules, options, nullptr),
                  std::runtime_error);
 }
 
@@ -177,16 +177,20 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 
     auto modules = available_platforms();
 
-    auto module = mir::graphics::module_for_device(
+    auto selected_modules = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<StubConsoleServices>());
-    ASSERT_NE(nullptr, module);
 
-    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
-    auto description = descriptor();
+    std::vector<std::string> found_platforms;
+    for (auto& module : selected_modules)
+    {
+        auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
+        auto description = descriptor();
+        found_platforms.emplace_back(description->name);
+    }
 
-    EXPECT_THAT(description->name, HasSubstr("gbm-kms"));
+    EXPECT_THAT(found_platforms, Contains(HasSubstr("gbm-kms")));
 }
 
 //LP: #1526225, LP: #1526505, LP: #1515558, LP: #1526209
@@ -207,16 +211,20 @@ TEST_F(ServerPlatformProbeMockDRM, returns_kms_platform_when_nested)
 
     auto modules = available_platforms();
 
-    auto module = mir::graphics::module_for_device(
+    auto selected_modules = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<StubConsoleServices>());
-    ASSERT_NE(nullptr, module);
 
-    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
-    auto description = descriptor();
+    std::vector<std::string> found_platforms;
+    for (auto& module : selected_modules)
+    {
+        auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
+        auto description = descriptor();
+        found_platforms.emplace_back(description->name);
+    }
 
-    EXPECT_THAT(description->name, HasSubstr("gbm-kms"));
+    EXPECT_THAT(found_platforms, Contains(HasSubstr("gbm-kms")));
 }
 #endif
 
@@ -227,7 +235,7 @@ TEST(ServerPlatformProbe, ThrowsExceptionWhenNothingProbesSuccessfully)
     auto block_mesa = ensure_mesa_probing_fails();
 
     EXPECT_THROW(
-        mir::graphics::module_for_device(
+        mir::graphics::display_modules_for_device(
             available_platforms(),
             options,
             std::make_shared<mtd::NullConsoleServices>()),
@@ -243,16 +251,20 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     auto modules = available_platforms();
     add_dummy_platform(modules);
 
-    auto module = mir::graphics::module_for_device(
+    auto selected_modules = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<mtd::NullConsoleServices>());
-    ASSERT_NE(nullptr, module);
+    ASSERT_THAT(selected_modules, Not(IsEmpty()));
 
-    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
-    auto description = descriptor();
+    std::vector<std::string> loaded_descriptors;
+    for (auto const& module : selected_modules)
+    {
+        auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
+        loaded_descriptors.emplace_back(descriptor()->name);
+    }
 
-    EXPECT_THAT(description->name, HasSubstr("mir:stub-graphics"));
+    EXPECT_THAT(loaded_descriptors, Contains(HasSubstr("mir:stub-graphics")));
 }
 
 TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
@@ -268,9 +280,9 @@ TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
     // due to protobuf throwing a screaming hissy fit if it gets loaded twice.
     modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("dummy.so")));
 
-    auto module = mir::graphics::module_for_device(
+    auto selected_modules = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<StubConsoleServices>());
-    EXPECT_NE(nullptr, module);
+    EXPECT_THAT(selected_modules, Not(IsEmpty()));
 }

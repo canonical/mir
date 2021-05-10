@@ -126,7 +126,7 @@ public:
         mock_drm.reset("/dev/dri/card2");
     }
 
-    std::shared_ptr<mg::Platform> create_platform()
+    std::shared_ptr<mg::DisplayPlatform> create_platform()
     {
         return std::make_shared<mgg::Platform>(
                mir::report::null_display_report(),
@@ -137,7 +137,7 @@ public:
     }
 
     std::shared_ptr<mg::Display> create_display(
-        std::shared_ptr<mg::Platform> const& platform)
+        std::shared_ptr<mg::DisplayPlatform> const& platform)
     {
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),

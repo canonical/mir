@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <string>
+#include <mutex>
 
 namespace mir
 {
@@ -191,7 +192,8 @@ public:
     std::shared_ptr<MainLoop>               the_main_loop() override;
     std::shared_ptr<ServerStatusListener>   the_server_status_listener() override;
     std::shared_ptr<DisplayChanger>         the_display_changer() override;
-    std::shared_ptr<graphics::Platform>     the_graphics_platform() override;
+    std::vector<std::shared_ptr<graphics::DisplayPlatform>> const& the_display_platforms() override;
+    auto the_rendering_platforms() -> std::vector<std::shared_ptr<graphics::RenderingPlatform>> const& override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>       the_emergency_cleanup() override;
     std::shared_ptr<cookie::Authority>      the_cookie_authority() override;
@@ -493,6 +495,13 @@ private:
     WaylandProtocolExtensionFilter wayland_extension_filter =
         [](std::shared_ptr<scene::Session> const&, char const*) { return true; };
     std::vector<std::string> enabled_wayland_extensions;
+
+    // Helpers for platform library loading
+    std::vector<std::shared_ptr<mir::SharedLibrary>> platform_libraries;
+    auto the_platform_libaries() -> std::vector<std::shared_ptr<mir::SharedLibrary>> const&;
+
+    std::vector<std::shared_ptr<graphics::DisplayPlatform>> display_platforms;
+    std::vector<std::shared_ptr<graphics::RenderingPlatform>> rendering_platforms;
 };
 }
 

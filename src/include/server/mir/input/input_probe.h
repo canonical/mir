@@ -21,6 +21,8 @@
 
 #include "mir/module_deleter.h"
 
+#include <vector>
+
 namespace mir
 {
 namespace graphics { class Platform; }
@@ -44,11 +46,12 @@ mir::UniqueModulePtr<Platform> probe_input_platforms(
     std::shared_ptr<InputDeviceRegistry> const& device_registry,
     std::shared_ptr<ConsoleServices> const& console,
     std::shared_ptr<InputReport> const& input_report,
+    std::vector<std::shared_ptr<SharedLibrary>> const& loaded_platforms,
     SharedLibraryProberReport & prober_report);
 
 /// Tries to create an input platform from the graphics module, otherwise returns a null pointer
 auto input_platform_from_graphics_module(
-    graphics::Platform const& graphics_platform,
+    SharedLibrary const& graphics_platform,
     options::Option const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
     std::shared_ptr<InputDeviceRegistry> const& device_registry,
