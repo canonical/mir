@@ -39,6 +39,18 @@
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-x11.h>
 
+// xcb/xkb.h has a struct member named "explicit", which C++ does not like
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wkeyword-macro"
+#endif
+#define explicit explicit_
+#include <xcb/xkb.h>
+#undef explicit
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
 // Due to a bug in Unity when keyboard is grabbed,
 // client cannot be resized. This helps in debugging.
 #define GRAB_KBD
@@ -56,6 +68,54 @@ auto const button_scroll_down = XCB_BUTTON_INDEX_5;
 auto const button_scroll_left = 6;
 auto const button_scroll_right = 7;
 auto const scroll_factor = 10;
+
+auto init_xkb_extension(mir::X::X11Resources* x11_resources) -> xcb_query_extension_reply_t const*
+{
+    auto const xkb_extension = x11_resources->conn->get_extension_data(&xcb_xkb_id);
+    if (!xkb_extension || !xkb_extension->present)
+    {
+        mir::log_warning("XKB X11 extension not available, keyboard will not work");
+        return nullptr;
+    }
+
+    auto const required_major = 1;
+    auto const required_minor = 0;
+    auto const cookie = xcb_xkb_use_extension(x11_resources->conn->connection(), required_major, required_minor);
+    auto const reply = mir::make_unique_cptr(
+        xcb_xkb_use_extension_reply(x11_resources->conn->connection(), cookie, nullptr));
+    if (!reply || !reply->supported)
+    {
+        mir::log_warning("XKB X11 extension does not have a supported version, keyboard will not work");
+        return nullptr;
+    }
+
+    auto const map_mask =
+        XCB_XKB_MAP_PART_KEY_TYPES |
+        XCB_XKB_MAP_PART_KEY_SYMS |
+        XCB_XKB_MAP_PART_MODIFIER_MAP |
+        XCB_XKB_MAP_PART_EXPLICIT_COMPONENTS |
+        XCB_XKB_MAP_PART_KEY_ACTIONS |
+        XCB_XKB_MAP_PART_KEY_BEHAVIORS |
+        XCB_XKB_MAP_PART_VIRTUAL_MODS |
+        XCB_XKB_MAP_PART_VIRTUAL_MOD_MAP;
+
+    auto const event_mask =
+        XCB_XKB_EVENT_TYPE_NEW_KEYBOARD_NOTIFY |
+        XCB_XKB_EVENT_TYPE_MAP_NOTIFY |
+        XCB_XKB_EVENT_TYPE_STATE_NOTIFY;
+
+    xcb_xkb_select_events(
+        x11_resources->conn->connection(),
+        XCB_XKB_ID_USE_CORE_KBD,
+        event_mask,
+        0,
+        event_mask,
+        map_mask,
+        map_mask,
+        0);
+
+    return xkb_extension;
+}
 
 geom::Point get_pos_on_output(mir::X::X11Resources* x11_resources, xcb_window_t x11_window, int x, int y)
 {
@@ -105,6 +165,7 @@ mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> con
             mi::InputDeviceInfo{"x11-keyboard-device", "x11-key-dev-1", mi::DeviceCapability::keyboard})),
     core_pointer(std::make_shared<mix::XInputDevice>(
             mi::InputDeviceInfo{"x11-mouse-device", "x11-mouse-dev-1", mi::DeviceCapability::pointer})),
+    xkb_extension{init_xkb_extension(x11_resources.get())},
     xkb_ctx{xkb_context_new(XKB_CONTEXT_NO_FLAGS)},
     keymap{xkb_x11_keymap_new_from_device(
         xkb_ctx,
@@ -122,6 +183,8 @@ mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> con
     {
         log_error("Failed to set up X11 keymap");
     }
+
+    x11_resources->conn->flush();
 }
 
 mix::XInputPlatform::~XInputPlatform()
@@ -208,9 +271,9 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
 {
     switch (event->response_type & ~0x80)
     {
-#ifdef GRAB_KBD
     case XCB_FOCUS_IN:
     {
+#ifdef GRAB_KBD
         auto const focus_in_ev = reinterpret_cast<xcb_focus_in_event_t*>(event);
         if (!kbd_grabbed && (
             focus_in_ev->mode == XCB_NOTIFY_MODE_NORMAL ||
@@ -236,10 +299,23 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
                     }
                 });
         }
+#endif
     }   break;
 
     case XCB_FOCUS_OUT:
     {
+        // key_released() will modify pressed_keys, so make a local copy
+        std::vector<xcb_keycode_t> const pressed{pressed_keys.begin(), pressed_keys.end()};
+        for (auto const& key : pressed)
+        {
+            // Only release keys that aren't modifiers
+            if (modifiers.find(key) == modifiers.end())
+            {
+                key_released(key, last_timestamp);
+            }
+        }
+
+#ifdef GRAB_KBD
         auto const focus_out_ev = reinterpret_cast<xcb_focus_out_event_t*>(event);
         if (kbd_grabbed && (
             focus_out_ev->mode == XCB_NOTIFY_MODE_NORMAL ||
@@ -248,13 +324,15 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
             xcb_ungrab_keyboard(x11_resources->conn->connection(), XCB_CURRENT_TIME);
             kbd_grabbed = false;
         }
-    }   break;
 #endif
+    }   break;
     case XCB_ENTER_NOTIFY:
     {
+        auto const enter_ev = reinterpret_cast<xcb_enter_notify_event_t*>(event);
+        last_timestamp = enter_ev->time;
+
         if (!ptr_grabbed && kbd_grabbed)
         {
-            auto const enter_ev = reinterpret_cast<xcb_enter_notify_event_t*>(event);
             auto const cookie = xcb_grab_pointer(
                 x11_resources->conn->connection(),
                 1,
@@ -283,38 +361,28 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
 
     case XCB_LEAVE_NOTIFY:
     {
+        auto const leave_ev = reinterpret_cast<xcb_leave_notify_event_t*>(event);
+        last_timestamp = leave_ev->time;
+
         if (ptr_grabbed)
         {
-            auto const leave_ev = reinterpret_cast<xcb_leave_notify_event_t*>(event);
             xcb_ungrab_pointer(x11_resources->conn->connection(), XCB_CURRENT_TIME);
             xcb_xfixes_show_cursor(x11_resources->conn->connection(), leave_ev->event);
             ptr_grabbed = false;
         }
-        break;
-    }
+    }   break;
 
     case XCB_KEY_PRESS:
     {
         auto const press_ev = reinterpret_cast<xcb_key_press_event_t*>(event);
-
-        auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::milliseconds{press_ev->time});
-
-        xkb_keysym_t const* keysyms;
-        auto const num_keysyms = xkb_state_key_get_syms(key_state, press_ev->detail, &keysyms);
-        // num_keysyms is generally 1
-        for (int i = 0; i < num_keysyms; i++)
-        {
-            core_keyboard->key_press(event_time, keysyms[i], press_ev->detail - 8);
-        }
-        // it appears that keysyms should not be freed
-
-        // TODO: update XKB state?
+        last_timestamp = press_ev->time;
+        key_pressed(press_ev->detail, press_ev->time);
     }   break;
 
     case XCB_KEY_RELEASE:
     {
         auto const release_ev = reinterpret_cast<xcb_key_release_event_t*>(event);
+        last_timestamp = release_ev->time;
 
         // Key repeats look like a release and an immediate press with the same timestamp. The only way to detect and
         // discard them is by peaking at the next event.
@@ -331,17 +399,7 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
                     }
                 }
 
-                auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                        std::chrono::milliseconds{time});
-
-                xkb_keysym_t const* keysyms;
-                auto const num_keysyms = xkb_state_key_get_syms(key_state, keycode, &keysyms);
-                // num_keysyms is generally 1
-                for (int i = 0; i < num_keysyms; i++)
-                {
-                    core_keyboard->key_release(event_time, keysyms[i], keycode - 8);
-                }
-                // it appears that keysyms should not be freed
+                key_released(keycode, time);
                 return false; // do not consume next event, process it normally
             };
     }   break;
@@ -349,6 +407,7 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
     case XCB_BUTTON_PRESS:
     {
         auto const press_ev = reinterpret_cast<xcb_button_press_event_t*>(event);
+        last_timestamp = press_ev->time;
 
         auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::milliseconds{press_ev->time});
@@ -380,11 +439,12 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
 
     case XCB_BUTTON_RELEASE:
     {
-        auto const press_ev = reinterpret_cast<xcb_button_release_event_t*>(event);
+        auto const release_ev = reinterpret_cast<xcb_button_release_event_t*>(event);
+        last_timestamp = release_ev->time;
 
-        core_pointer->update_button_state(press_ev->state);
+        core_pointer->update_button_state(release_ev->state);
 
-        switch (press_ev->detail)
+        switch (release_ev->detail)
         {
         case button_scroll_up:
         case button_scroll_down:
@@ -394,19 +454,20 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
 
         default:
             auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                std::chrono::milliseconds{press_ev->time});
+                std::chrono::milliseconds{release_ev->time});
             auto const pos = get_pos_on_output(
                 x11_resources.get(),
-                press_ev->event,
-                press_ev->event_x,
-                press_ev->event_y);
-            core_pointer->pointer_release(event_time, press_ev->detail, pos, {});
+                release_ev->event,
+                release_ev->event_x,
+                release_ev->event_y);
+            core_pointer->pointer_release(event_time, release_ev->detail, pos, {});
         }
     }   break;
 
     case XCB_MOTION_NOTIFY:
     {
         auto const motion_ev = reinterpret_cast<xcb_motion_notify_event_t*>(event);
+        last_timestamp = motion_ev->time;
         core_pointer->update_button_state(motion_ev->state);
         auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::milliseconds{motion_ev->time});
@@ -432,6 +493,96 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
 
     default:
         break;
+    }
+
+    if (xkb_extension && event->response_type == xkb_extension->first_event)
+    {
+        process_xkb_event(event);
+    }
+}
+
+void mix::XInputPlatform::process_xkb_event(xcb_generic_event_t* event)
+{
+    struct XkbEventGeneric
+    {
+        uint8_t response_type;
+        uint8_t xkbType;
+    };
+
+    switch (reinterpret_cast<XkbEventGeneric*>(event)->xkbType)
+    {
+    case XCB_XKB_NEW_KEYBOARD_NOTIFY:
+    {
+        auto const new_keyboard_ev = reinterpret_cast<xcb_xkb_new_keyboard_notify_event_t*>(event);
+        if (new_keyboard_ev->changed & XCB_XKB_NKN_DETAIL_KEYCODES)
+        {
+            // TODO: update keymap?
+        }
+    }   break;
+
+    case XCB_XKB_MAP_NOTIFY:
+    {
+        auto const map_ev = reinterpret_cast<xcb_xkb_map_notify_event_t*>(event);
+        (void)map_ev;
+        // TODO: update keymap?
+    }   break;
+
+    case XCB_XKB_STATE_NOTIFY:
+    {
+        auto const state_ev = reinterpret_cast<xcb_xkb_state_notify_event_t*>(event);
+        xkb_state_update_mask(
+            key_state,
+            state_ev->baseMods,
+            state_ev->latchedMods,
+            state_ev->lockedMods,
+            state_ev->baseGroup,
+            state_ev->latchedGroup,
+            state_ev->lockedGroup);
+        // This only works for modifiers, but unlike the normal events it tracks presses and releases when the window
+        // is not focused
+        if (state_ev->keycode != 0)
+        {
+            modifiers.insert(state_ev->keycode);
+        }
+        switch (state_ev->eventType)
+        {
+        case XCB_KEY_PRESS:
+            key_pressed(state_ev->keycode, state_ev->time);
+            break;
+
+        case XCB_KEY_RELEASE:
+            key_released(state_ev->keycode, state_ev->time);
+            break;
+
+        default:;
+        }
+    }   break;
+
+    default:;
+    }
+}
+
+void mix::XInputPlatform::key_pressed(xcb_keycode_t keycode, xcb_timestamp_t timestamp)
+{
+    if (pressed_keys.insert(keycode).second)
+    {
+        auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::milliseconds{timestamp});
+        xkb_keysym_t keysym = xkb_state_key_get_one_sym(key_state, keycode);
+        // Why keycode - 8? Unclear.
+        core_keyboard->key_press(event_time, keysym, keycode - 8);
+    }
+}
+
+void mix::XInputPlatform::key_released(xcb_keycode_t keycode, xcb_timestamp_t timestamp)
+{
+    if (pressed_keys.erase(keycode))
+    {
+        auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::milliseconds{timestamp});
+        xkb_keysym_t keysym = xkb_state_key_get_one_sym(key_state, keycode);
+        // Why keycode - 8? Unclear.
+        core_keyboard->key_release(event_time, keysym, keycode - 8);
     }
 }
 

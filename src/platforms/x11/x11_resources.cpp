@@ -68,6 +68,11 @@ public:
         return atom;
     }
 
+    auto get_extension_data(xcb_extension_t *ext) const -> xcb_query_extension_reply_t const* override
+    {
+        return xcb_get_extension_data(conn, ext);
+    }
+
     auto generate_id() const -> uint32_t override
     {
         return xcb_generate_id(conn);
