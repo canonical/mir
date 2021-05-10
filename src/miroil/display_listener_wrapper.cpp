@@ -19,8 +19,8 @@
 namespace miroil
 {
     
-DisplayListenerWrapper::DisplayListenerWrapper(std::shared_ptr<mir::compositor::DisplayListener> const & displayListener)
- : displayListener(displayListener)
+DisplayListenerWrapper::DisplayListenerWrapper(std::shared_ptr<mir::compositor::DisplayListener> const & display_listener)
+ : display_listener(display_listener)
 {
 }
 
@@ -30,12 +30,12 @@ DisplayListenerWrapper::~DisplayListenerWrapper()
 
 void DisplayListenerWrapper::add_display(mir::geometry::Rectangle const& area)
 {
-    displayListener->add_display(area);
+    display_listener->add_display(area);
 }
 
 void DisplayListenerWrapper::remove_display(mir::geometry::Rectangle const& area)
 {
-    displayListener->remove_display(area);
+    display_listener->remove_display(area);
 }
 
 }

@@ -17,7 +17,7 @@
  */
 
 #include "miroil/mirserverhooks.h"
-#include "miroil/namedcursor.h"
+#include "miroil/named_cursor.h"
 #include <stdexcept>
 
 // mir
@@ -138,7 +138,7 @@ void miroil::MirServerHooks::operator()(mir::Server& server)
         });
 }
 
-miroil::PromptSessionListener *qtmir::MirServerHooks::promptSessionListener() const
+miroil::PromptSessionListener *miroil::MirServerHooks::promptSessionListener() const
 {
     return self->prompt_session_listener.get();
 }
@@ -180,7 +180,7 @@ void miroil::MirServerHooks::createInputDeviceObserver(std::shared_ptr<miroil::I
     theInputDeviceHub()->add_observer(std::make_shared<MirInputDeviceObserverImpl>(observer));
 }
 
-void qtmir::MirServerHooks::createPromptSessionListener(std::shared_ptr<miroil::PromptSessionListener> listener)
+void miroil::MirServerHooks::createPromptSessionListener(std::shared_ptr<miroil::PromptSessionListener> listener)
 {
     self->prompt_session_listener = listener;
 }

@@ -31,13 +31,13 @@ public:
     NamedCursor(const char *name);
     ~NamedCursor();
 
-    auto as_argb_8888() const override void const*;
-    auto hotspot() const override -> mir::geometry::Displacement;
+    auto as_argb_8888() const -> void const* override;
+    auto hotspot() const -> mir::geometry::Displacement override;
     auto name() const -> std::string const&;
-    auto size() const override -> mir::geometry::Size;
+    auto size() const -> mir::geometry::Size override;
 
 private:
-    std::string name;
+    std::string cursor_name;
 };
 
 } // namespace miroil

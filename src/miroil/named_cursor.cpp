@@ -12,22 +12,37 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#ifndef QTMIR_MIRCURSORIMAGES_H_
-#define QTMIR_MIRCURSORIMAGES_H_
+#include "miroil/named_cursor.h"
 
-#include <mir/input/cursor_images.h>
-
-namespace qtmir {
-
-class MirCursorImages : public mir::input::CursorImages
+miroil::NamedCursor::NamedCursor(char const* name)
+: cursor_name(name) 
 {
-public:
-    std::shared_ptr<mir::graphics::CursorImage> image(const std::string &cursor_name,
-            const mir::geometry::Size &size) override;
-};
-
 }
 
-#endif // QTMIR_MIRCURSORIMAGES_H_
+miroil::NamedCursor::~NamedCursor() = default;
+
+auto miroil::NamedCursor::name() const 
+-> std::string const&
+{ 
+    return cursor_name; 
+}
+    
+auto miroil::NamedCursor::as_argb_8888() const
+-> void const*
+{ 
+    return nullptr; 
+}
+
+auto miroil::NamedCursor::size() const
+-> mir::geometry::Size
+{ 
+    return {0,0}; 
+}
+
+auto miroil::NamedCursor::hotspot() const
+-> mir::geometry::Displacement
+{ 
+    return {0,0}; 
+}
