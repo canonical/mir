@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIROIL_NAMEDCURSOR_H
-#define MIROIL_NAMEDCURSOR_H
+#ifndef MIROIL_NAMED_CURSOR_H
+#define MIROIL_NAMED_CURSOR_H
 #include <string>
 #include <mir/geometry/size.h>
 #include <mir/graphics/cursor_image.h>
@@ -28,19 +28,18 @@ namespace miroil {
 class NamedCursor : public mir::graphics::CursorImage
 {
 public:
-    NamedCursor(const char *name)
-        : m_name(name) {}
+    NamedCursor(const char *name);
+    ~NamedCursor();
 
-    const std::string &name() const { return m_name; }
-    
-    const void *as_argb_8888() const override { return nullptr; }
-    mir::geometry::Size size() const override { return {0,0}; }
-    mir::geometry::Displacement hotspot() const override { return {0,0}; }
+    auto as_argb_8888() const override void const*;
+    auto hotspot() const override -> mir::geometry::Displacement;
+    auto name() const -> std::string const&;
+    auto size() const override -> mir::geometry::Size;
 
 private:
-    std::string m_name;
+    std::string name;
 };
 
 } // namespace miroil
 
-#endif // MIROIL_NAMEDCURSOR_H
+#endif // MIROIL_NAMED_CURSOR_H

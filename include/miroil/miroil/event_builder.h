@@ -16,8 +16,15 @@
 
 #ifndef MIROIL_EVENT_BUILDER_H
 #define MIROIL_EVENT_BUILDER_H
-#include <miral/toolkit_event.h>
+
 #include <mir_toolkit/mir_input_device_types.h>
+#include <miral/version.h>
+#if MIRAL_VERSION >= MIR_VERSION_NUMBER(3, 0, 0)
+#include <miral/toolkit_event.h>
+#else
+#include <mir_toolkit/event.h>
+#endif
+
 #include <chrono>
 #include <memory>
 #include <sys/types.h>
