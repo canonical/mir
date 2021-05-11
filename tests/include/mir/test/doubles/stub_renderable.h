@@ -90,11 +90,6 @@ public:
     {
         return false;
     }
-    unsigned int swap_interval() const override
-    {
-        return 1;
-    }
-
 private:
     std::shared_ptr<graphics::Buffer> make_stub_buffer(geometry::Rectangle const& rect)
     {
@@ -163,11 +158,6 @@ struct IntervalZeroRenderable : StubRenderable
         std::shared_ptr<graphics::Buffer> const& buffer, geometry::Rectangle const& rect) :
         StubRenderable(buffer, rect)
     {
-    }
-
-    unsigned int swap_interval() const override
-    {
-        return 0;
     }
 };
 

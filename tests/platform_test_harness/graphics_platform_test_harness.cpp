@@ -488,11 +488,6 @@ void basic_software_buffer_drawing(
             return std::experimental::optional<mir::geometry::Rectangle>{};
         }
 
-        unsigned int swap_interval() const override
-        {
-            return 0;
-        }
-
         void set_position(mir::geometry::Point top_left)
         {
             this->top_left = top_left;
