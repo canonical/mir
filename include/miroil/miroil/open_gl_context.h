@@ -32,7 +32,7 @@ public:
     OpenGLContext(mir::graphics::GLConfig* glConfig);
 
     void operator()(mir::Server& server);
-    auto the_open_gl_config() -> std::shared_ptr<mir::graphics::GLConfig>;
+    auto the_open_gl_config() const -> std::shared_ptr<mir::graphics::GLConfig>;
 
 private:
     struct Self;

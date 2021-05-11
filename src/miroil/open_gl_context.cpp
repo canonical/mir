@@ -46,7 +46,7 @@ void OpenGLContext::operator()(mir::Server& server)
     );
 }
 
-auto OpenGLContext::the_open_gl_config()
+auto OpenGLContext::the_open_gl_config() const
 -> std::shared_ptr<mir::graphics::GLConfig>
 {
     return self->m_glConfig;
