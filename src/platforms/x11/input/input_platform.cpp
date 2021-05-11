@@ -117,16 +117,16 @@ auto init_xkb_extension(mir::X::X11Resources* x11_resources) -> xcb_query_extens
     return xkb_extension;
 }
 
-geom::Point get_pos_on_output(mir::X::X11Resources* x11_resources, xcb_window_t x11_window, int x, int y)
+auto get_pos_on_output(mir::X::X11Resources* x11_resources, xcb_window_t x11_window, float x, float y) -> geom::PointF
 {
-    geom::Point pos{x, y};
+    geom::PointF pos{x, y};
     x11_resources->with_output_for_window(
         x11_window,
         [&](std::optional<mx::X11Resources::VirtualOutput const*> output)
         {
             if (output)
             {
-                pos += as_displacement(output.value()->configuration().top_left);
+                pos += geom::DisplacementF{as_displacement(output.value()->configuration().top_left)};
             }
             else
             {

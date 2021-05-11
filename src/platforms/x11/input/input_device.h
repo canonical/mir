@@ -22,8 +22,8 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 #include "mir_toolkit/event.h"
-#include "mir/geometry/point.h"
-#include "mir/geometry/displacement.h"
+#include "mir/geometry/point_f.h"
+#include "mir/geometry/displacement_f.h"
 #include "mir/optional_value.h"
 
 #include <chrono>
@@ -57,15 +57,26 @@ public:
     void key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code);
     void key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code);
     void update_button_state(int button);
-    void pointer_press(std::chrono::nanoseconds event_time, int button, mir::geometry::Point const& pos, mir::geometry::Displacement scroll);
-    void pointer_release(std::chrono::nanoseconds event_time, int button, mir::geometry::Point const& pos, mir::geometry::Displacement scroll);
-    void pointer_motion(std::chrono::nanoseconds event_time, mir::geometry::Point const& pos, mir::geometry::Displacement scroll);
+    void pointer_press(
+        std::chrono::nanoseconds event_time,
+        int button,
+        mir::geometry::PointF pos,
+        mir::geometry::DisplacementF scroll);
+    void pointer_release(
+        std::chrono::nanoseconds event_time,
+        int button,
+        mir::geometry::PointF pos,
+        mir::geometry::DisplacementF scroll);
+    void pointer_motion(
+        std::chrono::nanoseconds event_time,
+        mir::geometry::PointF pos,
+        mir::geometry::DisplacementF scroll);
 
 private:
     MirPointerButtons button_state{0};
     InputSink* sink{nullptr};
     EventBuilder* builder{nullptr};
-    geometry::Point pointer_pos;
+    geometry::PointF pointer_pos;
     InputDeviceInfo info;
 };
 
