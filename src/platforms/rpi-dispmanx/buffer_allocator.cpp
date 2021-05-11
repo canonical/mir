@@ -120,11 +120,6 @@ public:
         vc_dispmanx_resource_delete(handle);
     }
 
-    auto native_buffer_handle() const -> std::shared_ptr<mg::NativeBuffer> override
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"mirclient not supported"}));
-    }
-
     void write(unsigned char const* pixels, size_t /*size*/) override
     {
         auto const vc_format = mg::rpi::vc_image_type_from_mir_pf(pixel_format());
@@ -253,11 +248,6 @@ public:
     {
         vc_dispmanx_set_wl_buffer_in_use(buffer, 0);
         on_release();
-    }
-
-    auto native_buffer_handle() const -> std::shared_ptr<mg::NativeBuffer> override
-    {
-        return {};
     }
 
     mir::geometry::Size size() const override

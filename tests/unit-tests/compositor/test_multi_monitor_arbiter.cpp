@@ -98,11 +98,6 @@ std::shared_ptr<mg::Buffer> wrap_with_destruction_notifier(
             *destroyed = true;
         }
 
-        std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
-        {
-            return wrapped->native_buffer_handle();
-        }
-
         mg::BufferID id() const override
         {
             return wrapped->id();

@@ -321,11 +321,6 @@ public:
     {
     }
 
-    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
-    {
-        BOOST_THROW_EXCEPTION((std::logic_error{"Attempt to get mirclient handle for Wayland Shm buffer"}));
-    }
-
     void bind() override
     {
         ShmBuffer::bind();

@@ -1,4 +1,4 @@
-MIRPLATFORM_2.2 {
+MIRPLATFORM_2.4 {
  global:
   extern "C++" {
     mir::graphics::AtomicFrame::increment*;
@@ -24,10 +24,10 @@ MIRPLATFORM_2.2 {
     mir::graphics::EGLExtensions::DebugKHR::extension_or_null_object*;
     mir::graphics::EGLExtensions::DebugKHR::maybe_debug_khr*;
     mir::graphics::EGLExtensions::EGLExtensions*;
+    mir::graphics::EGLExtensions::EXTImageDmaBufImportModifiers::EXTImageDmaBufImportModifiers*;
     mir::graphics::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions*;
     mir::graphics::EGLExtensions::PlatformBaseEXT*;
     mir::graphics::EGLExtensions::WaylandExtensions::WaylandExtensions*;
-    mir::graphics::EGLExtensions::EXTImageDmaBufImportModifiers::EXTImageDmaBufImportModifiers*;
     mir::graphics::EGLSurfaceStore::?EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
@@ -40,6 +40,9 @@ MIRPLATFORM_2.2 {
     mir::graphics::EventHandlerRegister::unregister_fd_handler*;
     mir::graphics::GammaCurves::GammaCurves*;
     mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
+    mir::graphics::LinuxDmaBufUnstable::?LinuxDmaBufUnstable*;
+    mir::graphics::LinuxDmaBufUnstable::LinuxDmaBufUnstable*;
+    mir::graphics::LinuxDmaBufUnstable::buffer_from_resource*;
     mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
     mir::graphics::OverlappingOutputGroup::for_each_output*;
     mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;
@@ -64,6 +67,7 @@ MIRPLATFORM_2.2 {
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::graphics::wayland::bind_display*;
     mir::graphics::wayland::buffer_from_resource*;
+    mir::graphics::wayland::unbind_display*;
     mir::options::Configuration::?Configuration*;
     mir::options::Configuration::Configuration*;
     mir::options::Configuration::operator*;
@@ -87,6 +91,7 @@ MIRPLATFORM_2.2 {
     mir::options::ProgramOption::parse_environment*;
     mir::options::ProgramOption::parse_file*;
     mir::options::ProgramOption::unparsed_command_line*;
+    mir::options::add_wayland_extensions_opt;
     mir::options::arw_server_socket_opt*;
     mir::options::auto_console;
     mir::options::composite_delay_opt*;
@@ -96,6 +101,7 @@ MIRPLATFORM_2.2 {
     mir::options::cursor_opt*;
     mir::options::debug_opt*;
     mir::options::display_report_opt*;
+    mir::options::drop_wayland_extensions_opt;
     mir::options::enable_input_opt*;
     mir::options::enable_key_repeat_opt*;
     mir::options::enable_mirclient_opt;
@@ -116,9 +122,9 @@ MIRPLATFORM_2.2 {
     mir::options::off_opt_value*;
     mir::options::offscreen_opt*;
     mir::options::platform_display_libs*;
-    mir::options::platform_rendering_libs*;
     mir::options::platform_input_lib*;
     mir::options::platform_path*;
+    mir::options::platform_rendering_libs*;
     mir::options::prompt_socket_opt*;
     mir::options::scene_report_opt*;
     mir::options::seat_report_opt*;
@@ -132,6 +138,7 @@ MIRPLATFORM_2.2 {
     mir::options::wayland_extensions_opt;
     mir::options::wayland_extensions_value;
     mir::options::x11_display_opt;
+    mir::options::x11_scale_opt;
     mir::renderer::software::alloc_buffer_with_content*;
     mir::renderer::software::as_read_mappable_buffer*;
     mir::udev::Context::?Context*;
@@ -180,19 +187,6 @@ MIRPLATFORM_2.2 {
     vtable?for?mir::options::DefaultConfiguration;
     vtable?for?mir::options::Option;
     vtable?for?mir::options::ProgramOption;
-    mir::options::add_wayland_extensions_opt;
-    mir::options::drop_wayland_extensions_opt;
-    mir::graphics::wayland::unbind_display*;
  };
  local: *;
 };
-
-MIRPLATFORM_2.3 {
- global:
-  extern "C++" {
-    mir::graphics::LinuxDmaBufUnstable::LinuxDmaBufUnstable*;
-    mir::graphics::LinuxDmaBufUnstable::?LinuxDmaBufUnstable*;
-    mir::graphics::LinuxDmaBufUnstable::buffer_from_resource*;
-    mir::options::x11_scale_opt;
-  };
-} MIRPLATFORM_2.2;

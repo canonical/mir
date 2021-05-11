@@ -87,11 +87,6 @@ struct PlatformlessShmBuffer : mgc::MemoryBackedShmBuffer
             });
         return buffer;
     }
-
-    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
-    {
-        return nullptr;
-    }
 };
 
 struct ShmBufferTest : public testing::Test
