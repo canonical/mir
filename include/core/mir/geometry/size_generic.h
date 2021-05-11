@@ -105,13 +105,13 @@ inline constexpr S operator/(S const& size, Scalar scale)
 template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
 inline constexpr typename P::SizeType as_size(P const& point)
 {
-    return typename P::SizeType{point.x.as_int(), point.y.as_int()};
+    return typename P::SizeType{point.x.as_value(), point.y.as_value()};
 }
 
 template<typename S, typename std::enable_if<std::is_base_of<detail::SizeBase, S>::value, bool>::type = true>
 inline constexpr typename S::PointType as_point(S const& size)
 {
-    return typename S::PointType{size.width.as_int(), size.height.as_int()};
+    return typename S::PointType{size.width.as_value(), size.height.as_value()};
 }
 }
 }
