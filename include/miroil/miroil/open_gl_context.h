@@ -16,28 +16,23 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIRAL_OPENGLCONTEXTFACTORY_H
-#define MIRAL_OPENGLCONTEXTFACTORY_H
+#ifndef MIROIL_OPEN_GL_CONTEXT_H
+#define MIROIL_OPEN_GL_CONTEXT_H
 #include <mir/graphics/gl_config.h>
 #include <memory>
 #include <functional>
 
-namespace mir { namespace graphics { class Display; }}
 namespace mir { class Server; }
-
-class QPlatformOpenGLContext;
-class QSurfaceFormat;
 
 namespace miroil
 {
-class OpenGLContextFactory
+class OpenGLContext
 {
 public:
-    OpenGLContextFactory(mir::graphics::GLConfig * glConfig);
+    OpenGLContext(mir::graphics::GLConfig* glConfig);
 
     void operator()(mir::Server& server);
-
-    QPlatformOpenGLContext *createPlatformOpenGLContext(std::function<QPlatformOpenGLContext *(mir::graphics::GLConfig &gl_config)> createOpenGlContext) const;
+    auto the_open_gl_config() -> std::shared_ptr<mir::graphics::GLConfig>;
 
 private:
     struct Self;
@@ -45,4 +40,4 @@ private:
 };
 }
 
-#endif //MIRAL_OPENGLCONTEXTFACTORY_H
+#endif //MIROIL_OPEN_GL_CONTEXT_H

@@ -36,7 +36,7 @@ add_library(miroil SHARED
     named_cursor.cpp ${miroil_include}/miroil/named_cursor.h
     prompt_session_listener.cpp ${miroil_include}/miroil/prompt_session_listener.h
     prompt_session_manager.cpp ${miroil_include}/miroil/prompt_session_manager.h    
-    open_gl_context_factory.cpp ${miroil_include}/miroil/open_gl_context_factory.h    
+    open_gl_context.cpp ${miroil_include}/miroil/open_gl_context.h    
     setcompositor.cpp ${miroil_include}/miroil/setcompositor.h
     surface.cpp ${miroil_include}/miroil/surface.h    
     ${miroil_include}/miroil/display_configuration_storage.h

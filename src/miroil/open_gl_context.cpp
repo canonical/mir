@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "miroil/open_gl_context_factory.h"
+#include "miroil/open_gl_context.h"
 #include <stdexcept>
 
 // mir
@@ -24,7 +24,7 @@
 
 namespace miroil {
     
-struct OpenGLContextFactory::Self
+struct OpenGLContext::Self
 {
     Self(mir::graphics::GLConfig * glConfig)
     : m_glConfig(glConfig) 
@@ -34,24 +34,21 @@ struct OpenGLContextFactory::Self
     std::shared_ptr<mir::graphics::GLConfig> m_glConfig;
 };
 
-OpenGLContextFactory::OpenGLContextFactory(mir::graphics::GLConfig * glConfig)
+OpenGLContext::OpenGLContext(mir::graphics::GLConfig * glConfig)
 :    self{std::make_shared<Self>(glConfig)}
 {    
 }
 
-void OpenGLContextFactory::operator()(mir::Server& server)
+void OpenGLContext::operator()(mir::Server& server)
 {
     server.override_the_gl_config([this]
         { return self->m_glConfig; }
     );
 }
 
-QPlatformOpenGLContext * OpenGLContextFactory::createPlatformOpenGLContext(std::function<QPlatformOpenGLContext *(mir::graphics::GLConfig &gl_config)> createOpenGlContext) const
+auto OpenGLContext::the_open_gl_config()
+-> std::shared_ptr<mir::graphics::GLConfig>
 {
-    if (!self->m_glConfig)
-        throw std::logic_error("No gl config available. Server not running?");
-    
-    return createOpenGlContext(*self->m_glConfig);
+    return self->m_glConfig;
 }
-
 }
