@@ -100,11 +100,6 @@ public:
         return std::experimental::optional<geometry::Rectangle>();
     }
 
-    unsigned int swap_interval() const override
-    {
-        return 1u;
-    }
-
 private:
     std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;
