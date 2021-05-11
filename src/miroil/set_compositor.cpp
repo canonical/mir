@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miroil/setcompositor.h"
+#include "miroil/set_compositor.h"
 #include "miroil/compositor.h"
 #include <stdexcept>
 
@@ -25,34 +25,41 @@
 
 namespace miroil {
 
-struct SetCompositor::QtCompositorImpl : public mir::compositor::Compositor
+struct SetCompositor::CompositorImpl : public mir::compositor::Compositor
 {
-    QtCompositorImpl(const std::shared_ptr<miroil::Compositor> & compositor) 
-    : m_customCompositor(compositor)
-    {
-    }
+    CompositorImpl(const std::shared_ptr<miroil::Compositor> & compositor);
     
-    // QtCompositor, 
-    std::shared_ptr<miroil::Compositor> getWrapped() { return m_customCompositor; };
-    
+    auto get_wrapped() -> std::shared_ptr<miroil::Compositor>;    
     void start();
     void stop();
     
-    std::shared_ptr<miroil::Compositor> m_customCompositor;
+    std::shared_ptr<miroil::Compositor> custom_compositor;
 };
 
-void SetCompositor::QtCompositorImpl::start()
+SetCompositor::CompositorImpl::CompositorImpl(const std::shared_ptr<miroil::Compositor> & compositor) 
+: custom_compositor(compositor)
 {
-    return m_customCompositor->start();
+}
+    
+auto SetCompositor::CompositorImpl::get_wrapped() 
+-> std::shared_ptr<miroil::Compositor>
+{ 
+    return custom_compositor;     
 }
 
-void SetCompositor::QtCompositorImpl::stop()
+
+void SetCompositor::CompositorImpl::start()
 {
-    return m_customCompositor->stop();
+    return custom_compositor->start();
+}
+
+void SetCompositor::CompositorImpl::stop()
+{
+    return custom_compositor->stop();
 }
 
 SetCompositor::SetCompositor(constructorFunction constr, initFunction init)
-    : m_constructor(constr), m_init(init)
+    : constructor_function(constr), init_function(init)
 {
 }
 
@@ -60,16 +67,16 @@ void SetCompositor::operator()(mir::Server& server)
 {
     server.override_the_compositor([this]
     {
-        auto result = std::make_shared<QtCompositorImpl>(m_constructor());
-        m_compositor = result;
+        auto result = std::make_shared<CompositorImpl>(constructor_function());
+        compositor_impl = result;
         return result;
     });
 
     server.add_init_callback([&, this]
         {
-            if (auto const compositor = m_compositor.lock())
+            if (auto const comp = compositor_impl.lock())
             {
-                m_init(server.the_display(), compositor->getWrapped(), server.the_shell());
+                init_function(server.the_display(), comp->get_wrapped(), server.the_shell());
             }
             else
             {

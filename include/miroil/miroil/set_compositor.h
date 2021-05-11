@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Erlend <me@erlend.io>
  */
 
 #ifndef MIROIL_SET_COMPOSITOR_H
@@ -44,11 +42,11 @@ public:
     void operator()(mir::Server& server);
 
 private:
-    struct QtCompositorImpl;
+    struct CompositorImpl;
     
-    std::weak_ptr<QtCompositorImpl> m_compositor;
-    constructorFunction m_constructor;    
-    initFunction m_init;    
+    std::weak_ptr<CompositorImpl> compositor_impl;
+    constructorFunction           constructor_function;    
+    initFunction                  init_function;    
 };
 
 }

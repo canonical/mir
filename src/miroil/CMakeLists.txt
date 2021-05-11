@@ -37,7 +37,7 @@ add_library(miroil SHARED
     prompt_session_listener.cpp ${miroil_include}/miroil/prompt_session_listener.h
     prompt_session_manager.cpp ${miroil_include}/miroil/prompt_session_manager.h    
     open_gl_context.cpp ${miroil_include}/miroil/open_gl_context.h    
-    setcompositor.cpp ${miroil_include}/miroil/setcompositor.h
+    set_compositor.cpp ${miroil_include}/miroil/set_compositor.h
     surface.cpp ${miroil_include}/miroil/surface.h    
     ${miroil_include}/miroil/display_configuration_storage.h
     ${miroil_include}/miroil/display_id.h
