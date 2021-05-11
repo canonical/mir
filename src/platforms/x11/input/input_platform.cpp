@@ -126,7 +126,9 @@ auto get_pos_on_output(mir::X::X11Resources* x11_resources, xcb_window_t x11_win
         {
             if (output)
             {
-                pos += geom::DisplacementF{as_displacement(output.value()->configuration().top_left)};
+                float const inv_scale{1 / output.value()->configuration().scale};
+                geom::PointF const top_left{output.value()->configuration().top_left};
+                pos = top_left + as_displacement(pos) * inv_scale;
             }
             else
             {
