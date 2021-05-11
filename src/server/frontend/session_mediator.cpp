@@ -386,11 +386,6 @@ namespace
                 });
         }
 
-        std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const override
-        {
-            return buffer->native_buffer_handle();
-        }
-
         mir::graphics::BufferID id() const override
         {
             return buffer->id();

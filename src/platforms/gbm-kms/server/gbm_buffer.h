@@ -92,8 +92,6 @@ public:
 
     virtual MirPixelFormat pixel_format() const override;
 
-    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override;
-
     virtual void gl_bind_to_texture() override;
     virtual void upload_to_texture() override;
     virtual void secure_for_render() override;

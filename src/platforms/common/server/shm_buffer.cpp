@@ -231,11 +231,6 @@ void mgc::MemoryBackedShmBuffer::bind()
     }
 }
 
-auto mgc::MemoryBackedShmBuffer::native_buffer_handle() const -> std::shared_ptr<mg::NativeBuffer>
-{
-    BOOST_THROW_EXCEPTION((std::runtime_error{"MemoryBackedShmBuffer does not support mirclient APIs"}));
-}
-
 mg::gl::Program const& mgc::ShmBuffer::shader(mg::gl::ProgramFactory& cache) const
 {
     static int argb_shader{0};

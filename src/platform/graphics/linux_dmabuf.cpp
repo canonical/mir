@@ -942,11 +942,6 @@ public:
         on_release();
     }
 
-    std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const override
-    {
-        return {nullptr};
-    }
-
     mir::geometry::Size size() const override
     {
         return size_;

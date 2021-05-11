@@ -91,8 +91,6 @@ public:
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
     geometry::Stride stride() const override;
 
-    std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
-
     void bind() override;
 
     MemoryBackedShmBuffer(MemoryBackedShmBuffer const&) = delete;

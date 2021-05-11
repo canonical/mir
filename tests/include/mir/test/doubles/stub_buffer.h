@@ -118,13 +118,6 @@ public:
 
     virtual MirPixelFormat pixel_format() const override { return buf_pixel_format; }
 
-    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override
-    {
-        if (native_buffer)
-            return native_buffer;
-        BOOST_THROW_EXCEPTION(std::runtime_error("cannot access native buffer"));
-    }
-
     void write(unsigned char const* pixels, size_t len) override
     {
         if (pixels) written_pixels.assign(pixels, pixels + len);

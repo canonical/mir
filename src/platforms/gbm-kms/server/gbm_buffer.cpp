@@ -96,11 +96,6 @@ void mgg::GBMBuffer::gl_bind_to_texture()
     texture_binder->gl_bind_to_texture();
 }
 
-std::shared_ptr<mg::NativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
-{
-    BOOST_THROW_EXCEPTION((std::runtime_error{"Native buffer interface removed"}));
-}
-
 mg::NativeBufferBase* mgg::GBMBuffer::native_buffer_base()
 {
     return this;
