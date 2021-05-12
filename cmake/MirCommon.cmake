@@ -169,18 +169,19 @@ function (mir_discover_external_gtests)
 
   # The expected failures, in a colon-delimited list for GTest
   string(REPLACE ";" ":" EXPECTED_FAILURE_STRING "${TEST_EXPECTED_FAILURES}")
-  # The expected failures, in a colon-delimited list for GTest
-  string(REPLACE ";" ":" BROKEN_TESTS "${TEST_BROKEN_TESTS}")
+  # The excluded tests (broken or expected failures), in a colon-delimited list for GTest
+  list(APPEND TEST_BROKEN_TESTS ${TEST_EXPECTED_FAILURES})
+  string(REPLACE ";" ":" EXCLUDED_TESTS "${TEST_BROKEN_TESTS}")
   # The command line arguments, as would be passed to the shell
   string(REPLACE ";" " " TEST_ARGS_STRING "${TEST_ARGS}")
 
-  add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND} "--gtest_filter=-${BROKEN_TESTS}:${EXPECTED_FAILURE_STRING}" ${TEST_ARGS})
+  add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND} "--gtest_filter=-${EXCLUDED_TESTS}" ${TEST_ARGS})
   if (TEST_WORKING_DIRECTORY)
     set_tests_properties(${TEST_NAME} PROPERTIES WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY})
   endif()
 
   file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
-    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND} ${TEST_ARGS_STRING}\" --gtest-exclude ${EXPECTED_FAILURE_STRING} -- ${TEST_COMMAND} ${TEST_ARGS_STRING} \n")
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND} ${TEST_ARGS_STRING}\" --gtest-exclude ${EXCLUDED_TESTS} -- ${TEST_COMMAND} ${TEST_ARGS_STRING} \n")
 
   foreach (xfail IN LISTS TEST_EXPECTED_FAILURES)
     # Add a test verifying that the expected failures really do fail
