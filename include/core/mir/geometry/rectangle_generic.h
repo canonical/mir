@@ -122,8 +122,8 @@ R intersection_of(R const& a, R const& b)
 
     if (max_left < min_right && max_top < min_bottom)
         return {{max_left, max_top},
-                {(min_right - max_left).as_int(),
-                (min_bottom - max_top).as_int()}};
+                {(min_right - max_left).as_value(),
+                (min_bottom - max_top).as_value()}};
     else
         return {};
 }

@@ -161,25 +161,25 @@ inline constexpr D operator*(D const& disp, Scalar scale)
 template<typename S, typename std::enable_if<std::is_base_of<detail::SizeBase, S>::value, bool>::type = true>
 inline constexpr typename S::DisplacementType as_displacement(S const& size)
 {
-    return typename S::DisplacementType{size.width.as_int(), size.height.as_int()};
+    return typename S::DisplacementType{size.width.as_value(), size.height.as_value()};
 }
 
 template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
 inline constexpr typename D::SizeType as_size(D const& disp)
 {
-    return typename D::SizeType{disp.dx.as_int(), disp.dy.as_int()};
+    return typename D::SizeType{disp.dx.as_value(), disp.dy.as_value()};
 }
 
 template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
 inline constexpr typename P::DisplacementType as_displacement(P const& point)
 {
-    return typename P::DisplacementType{point.x.as_int(), point.y.as_int()};
+    return typename P::DisplacementType{point.x.as_value(), point.y.as_value()};
 }
 
 template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
 inline constexpr typename D::PointType as_point(D const& disp)
 {
-    return typename D::PointType{disp.dx.as_int(), disp.dy.as_int()};
+    return typename D::PointType{disp.dx.as_value(), disp.dy.as_value()};
 }
 }
 }
