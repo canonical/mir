@@ -1103,6 +1103,10 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
             spec.value()->parent.value().lock() == scene_surface->parent())
             spec.value()->parent.consume();
 
+        if (spec.value()->type.is_set() &&
+            spec.value()->type.value() == scene_surface->type())
+            spec.value()->type.consume();
+
         if (!spec.value()->is_empty())
         {
             scale_surface_spec(*spec.value());
