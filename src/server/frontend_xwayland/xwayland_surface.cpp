@@ -159,6 +159,35 @@ auto wm_resize_edge_to_mir_resize_edge(NetWmMoveresize wm_resize_edge) -> std::o
     return std::nullopt;
 }
 
+auto wm_window_type_to_mir_window_type(
+    mf::XCBConnection* connection,
+    std::vector<xcb_atom_t> const& wm_types) -> MirWindowType
+{
+    for (auto const& wm_type : wm_types)
+    {
+        if (wm_type == connection->_NET_WM_WINDOW_TYPE_NORMAL)
+        {
+            return mir_window_type_freestyle;
+        }
+        else if (wm_type == connection->_NET_WM_WINDOW_TYPE_POPUP_MENU)
+        {
+            return mir_window_type_gloss;
+        }
+        else if (wm_type == connection->_NET_WM_WINDOW_TYPE_MENU)
+        {
+            return mir_window_type_menu;
+        }
+        else if (mir::verbose_xwayland_logging_enabled())
+        {
+            mir::log_debug(
+                "Ignoring unknown window type %s",
+                connection->query_name(wm_type).c_str());
+        }
+    }
+
+    return mir_window_type_freestyle;
+}
+
 template<typename T>
 auto property_handler(
     std::shared_ptr<mf::XCBConnection> const& connection,
@@ -249,7 +278,9 @@ mf::XWaylandSurface::XWaylandSurface(
               connection->_NET_WM_WINDOW_TYPE,
               [this](auto wm_types)
               {
-                  window_type(wm_types);
+                  std::lock_guard<std::mutex> lock{mutex};
+                  this->cached.type = wm_window_type_to_mir_window_type(this->connection.get(), wm_types);
+                  apply_cached_transient_for_and_type(lock);
               }),
           property_handler<std::vector<int32_t>>(
               connection,
@@ -676,8 +707,6 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        fix_parent_if_necessary(lock);
-
         if (auto const pending_spec = consume_pending_spec(lock))
         {
             spec.update_from(*pending_spec.value());
@@ -973,7 +1002,9 @@ void mf::XWaylandSurface::is_transient_for(xcb_window_t transient_for)
         }
     }
 
-    set_parent(transient_for, std::lock_guard<std::mutex>{mutex});
+    std::lock_guard<std::mutex> lock{mutex};
+    cached.transient_for = transient_for;
+    apply_cached_transient_for_and_type(lock);
 }
 
 void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_window_state)
@@ -1204,117 +1235,72 @@ auto mf::XWaylandSurface::scaled_content_size_of(ms::Surface const& surface) -> 
     return surface.content_size() * scale;
 }
 
-void mf::XWaylandSurface::window_type(std::vector<xcb_atom_t> const& wm_types)
+auto mf::XWaylandSurface::plausible_parent(std::lock_guard<std::mutex> const&) -> std::shared_ptr<ms::Surface>
 {
-    auto set_type = [this](MirWindowType type)
-        {
-            std::lock_guard<std::mutex> lock{mutex};
-            pending_spec(lock).type = type;
-        };
-
-    for (auto const& wm_type : wm_types)
+    if (auto const current_effective = effective_parent.lock())
     {
-        if (connection->_NET_WM_WINDOW_TYPE_NORMAL == wm_type)
+        return current_effective;
+    }
+
+    // Taking the focussed window is plausible, but it is just a best guess. Having focus means is the most likely one
+    // to be interacting with the user.
+    if (auto const focused_window = xwm->get_focused_window())
+    {
+        // We don't want to be our own parent, that would be weird
+        if (focused_window != window)
         {
-            set_type(mir_window_type_freestyle);
-            return;
-        }
-        else if (connection->_NET_WM_WINDOW_TYPE_POPUP_MENU == wm_type)
-        {
-            set_type(mir_window_type_gloss);
-            return;
-        }
-        else if (connection->_NET_WM_WINDOW_TYPE_MENU == wm_type)
-        {
-            set_type(mir_window_type_menu);
-            return;
-        }
-        else if (verbose_xwayland_logging_enabled())
-        {
-            log_debug(
-                "Ignoring type (%s) of %s",
-                connection->query_name(wm_type).c_str(),
-                connection->window_debug_string(window).c_str());
+            if (auto const parent = xcb_window_get_scene_surface(xwm, focused_window.value()))
+            {
+                if (verbose_xwayland_logging_enabled())
+                {
+                    log_debug(
+                        "Set parent of %s from xwm->get_focused_window() (%s)",
+                        connection->window_debug_string(window).c_str(),
+                        connection->window_debug_string(focused_window.value()).c_str());
+                }
+                return parent;
+            }
         }
     }
 
-    set_type(mir_window_type_freestyle);
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("Unable to find suitable parent for %s", connection->window_debug_string(window).c_str());
+    }
+    return {};
 }
 
-void mf::XWaylandSurface::set_parent(xcb_window_t xcb_window, std::lock_guard<std::mutex> const& lock)
+void mf::XWaylandSurface::apply_cached_transient_for_and_type(std::lock_guard<std::mutex> const& lock)
 {
-    char const* debug_message = nullptr;
-    std::shared_ptr<scene::Surface> parent_scene_surface; // May remain nullptr
-
-    if (auto const xwayland_surface = xwm->get_wm_surface(xcb_window))
+    auto parent = xcb_window_get_scene_surface(xwm, cached.transient_for);
+    auto type = cached.type;
+    if (type == mir_window_type_gloss || type == mir_window_type_menu)
     {
-        if (auto const optional_scene_surface = xwayland_surface.value()->scene_surface())
+        // Type should have parent
+        if (!parent)
         {
-            if (auto const scene_surface = optional_scene_surface.value())
+            parent = plausible_parent(lock);
+            if (!parent)
             {
-                parent_scene_surface = scene_surface;
+                type = mir_window_type_freestyle;
             }
-            else
-            {
-                debug_message = "has a null scene surface";
-            }
-        }
-        else
-        {
-            debug_message = "does not have a scene surface";
         }
     }
     else
     {
-        debug_message = "does not have an XWayland surface";
-    }
-
-    if (debug_message && verbose_xwayland_logging_enabled())
-    {
-        log_debug("%s can not be transient for %s as the latter %s",
-            connection->window_debug_string(window).c_str(),
-            connection->window_debug_string(xcb_window).c_str(),
-            debug_message);
-    }
-
-    // The "good" path sets parent_scene_surface above, on any error we unparent the window
-    auto& spec = pending_spec(lock);
-    spec.parent = parent_scene_surface;
-    surface_spec_set_position(spec, parent_scene_surface.get(), cached.top_left);
-}
-
-namespace
-{
-auto needs_parent(MirWindowType mir_window_type)
-{
-    // We don't use all the Mir types, but for these we should find a parent
-    return mir_window_type == mir_window_type_gloss || mir_window_type == mir_window_type_menu;
-}
-}
-
-// Workaround: Sometimes Mir expects a parent when the client has not set XCB_ATOM_WM_TRANSIENT_FOR.
-// NB Most clients do set XCB_ATOM_WM_TRANSIENT_FOR. (chromium, for one, doesn't #1665)
-void mf::XWaylandSurface::fix_parent_if_necessary(const std::lock_guard<std::mutex>& lock)
-{
-    auto& spec = pending_spec(lock);
-
-    if ((spec.type && needs_parent(spec.type.value())) &&
-        (!spec.parent || !spec.parent.value().lock()))
-    {
-        // Taking the focussed window is plausible, but it is just a best guess.
-        // Having focus means is the most likely one to be interacting with the
-        // user.
-        if (auto const focused_window = xwm->get_focused_window())
+        // Type should not have parent, if it does we should use a different type
+        if (parent)
         {
-            if (verbose_xwayland_logging_enabled())
-            {
-                log_debug("Fixup parent of (%s) from xwm->get_focused_window() (%s)",
-                          connection->window_debug_string(window).c_str(),
-                          connection->window_debug_string(focused_window.value()).c_str());
-            }
-            set_parent(focused_window.value(), lock);
+            type = mir_window_type_gloss;
         }
     }
+
+    effective_parent = parent;
+
+    auto& spec = pending_spec(lock);
+    spec.parent = parent;
+    spec.type = type;
+    surface_spec_set_position(spec, parent.get(), cached.top_left);
 }
 
 void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
@@ -1369,4 +1355,19 @@ void mf::XWaylandSurface::motif_wm_hints(std::vector<uint32_t> const& hints)
         // Disable decorations only if all flags are off
         cached.motif_decorations_disabled = (hints[MotifWmHintsIndices::DECORATIONS] == 0);
     }
+}
+
+auto mf::XWaylandSurface::xcb_window_get_scene_surface(
+    mf::XWaylandWM* xwm,
+    xcb_window_t window) -> std::shared_ptr<ms::Surface>
+{
+    if (auto const xwayland_surface = xwm->get_wm_surface(window))
+    {
+        if (auto const scene_surface = xwayland_surface.value()->scene_surface())
+        {
+            return scene_surface.value();
+        }
+    }
+
+    return {};
 }
