@@ -887,6 +887,15 @@ void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
 
 void mf::XWaylandSurface::scene_surface_resized(geometry::Size const& new_size)
 {
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (new_size == cached.size)
+        {
+            // If size is same as the cache, the X server already knows the correct size and we should not send a
+            // configure (this happens when the surface is resized in reaction to a configure notify event)
+            return;
+        }
+    }
     connection->configure_window(
         window,
         std::nullopt,
@@ -901,6 +910,12 @@ void mf::XWaylandSurface::scene_surface_moved_to(geometry::Point const& new_top_
     std::shared_ptr<scene::Surface> scene_surface;
     {
         std::lock_guard<std::mutex> lock{mutex};
+        if (new_top_left == cached.top_left)
+        {
+            // If position is same as the cache, the X server already knows the correct position and we should not send
+            // a configure (this happens when the surface is moved in reaction to a configure notify event)
+            return;
+        }
         scene_surface = weak_scene_surface.lock();
     }
     auto const content_offset = scene_surface ? scaled_content_offset_of(*scene_surface) : geom::Displacement{};
