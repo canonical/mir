@@ -33,7 +33,6 @@ add_library(miroil SHARED
     mir_connection.cpp ${miroil_include}/miroil/mir_connection.h
     mir_prompt_session.cpp ${miroil_include}/miroil/mir_prompt_session.h    
     mirserverhooks.cpp ${miroil_include}/miroil/mirserverhooks.h
-    named_cursor.cpp ${miroil_include}/miroil/named_cursor.h
     prompt_session_listener.cpp ${miroil_include}/miroil/prompt_session_listener.h
     prompt_session_manager.cpp ${miroil_include}/miroil/prompt_session_manager.h    
     open_gl_context.cpp ${miroil_include}/miroil/open_gl_context.h    

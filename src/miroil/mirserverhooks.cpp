@@ -17,7 +17,6 @@
  */
 
 #include "miroil/mirserverhooks.h"
-#include "miroil/named_cursor.h"
 #include <stdexcept>
 
 // mir
@@ -85,16 +84,24 @@ private:
 class MirCursorImages : public mir::input::CursorImages
 {
 public:
+    MirCursorImages(miroil::CreateNamedCursor func);
+    
     std::shared_ptr<mir::graphics::CursorImage> image(const std::string &cursor_name,
             const mir::geometry::Size &size) override;
+    
+private:    
+    miroil::CreateNamedCursor create_func;    
 };
+
+MirCursorImages::MirCursorImages(miroil::CreateNamedCursor func)
+{
+    create_func = func;    
+}
 
 std::shared_ptr<mir::graphics::CursorImage> MirCursorImages::image(const std::string &cursor_name,
         const mir::geometry::Size &)
 {
-    // We are not responsible for loading cursors. This is left for shell to do as it's drawing its own QML cursor.
-    // So here we work around Mir API by storing just the cursor name in the CursorImage.
-    return std::make_shared<miroil::NamedCursor>(cursor_name.c_str());
+    return create_func(cursor_name);
 }
 
 struct miroil::MirServerHooks::Self
@@ -105,6 +112,7 @@ struct miroil::MirServerHooks::Self
     std::weak_ptr<mir::shell::DisplayConfigurationController> m_mirDisplayConfigurationController;
     std::weak_ptr<mir::scene::PromptSessionManager> m_mirPromptSessionManager;
     std::weak_ptr<mir::input::InputDeviceHub> m_inputDeviceHub;
+    CreateNamedCursor create_cursor;    
 };
 
 miroil::MirServerHooks::MirServerHooks() :
@@ -114,8 +122,10 @@ miroil::MirServerHooks::MirServerHooks() :
 
 void miroil::MirServerHooks::operator()(mir::Server& server)
 {
-    server.override_the_cursor_images([]
-        { return std::make_shared<MirCursorImages>(); });
+    if (self->create_cursor) {
+        server.override_the_cursor_images([this]
+            { return std::make_shared<MirCursorImages>(self->create_cursor); });
+    }
 
     server.wrap_cursor([&](std::shared_ptr<mg::Cursor> const& wrapped)
         { return std::make_shared<HiddenCursorWrapper>(wrapped); });
@@ -173,6 +183,11 @@ std::shared_ptr<mir::shell::DisplayConfigurationController> miroil::MirServerHoo
         return result;
 
     throw std::logic_error("No input device hub available. Server not running?");
+}
+
+void miroil::MirServerHooks::createNamedCursor(CreateNamedCursor func)
+{
+    self->create_cursor = func;    
 }
 
 void miroil::MirServerHooks::createInputDeviceObserver(std::shared_ptr<miroil::InputDeviceObserver> & observer)
