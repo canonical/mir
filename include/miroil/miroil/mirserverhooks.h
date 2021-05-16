@@ -20,6 +20,7 @@
 #define MIROIL_MIRSERVERHOOKS_H
 #include "miroil/input_device_observer.h"
 #include "miroil/prompt_session_listener.h"
+#include <mir/graphics/cursor_image.h>
 #include <functional>
 #include <memory>
 
@@ -31,6 +32,8 @@ namespace mir { namespace shell { class DisplayConfigurationController; } }
 
 namespace miroil
 {
+using CreateNamedCursor = std::function<std::shared_ptr< mir::graphics::CursorImage>(std::string const& name)>;        
+    
 class MirServerHooks
 {
 public:
@@ -44,6 +47,7 @@ public:
     std::shared_ptr<mir::input::InputDeviceHub> theInputDeviceHub() const;
     std::shared_ptr<mir::shell::DisplayConfigurationController> theDisplayConfigurationController() const;    
 
+    void createNamedCursor(CreateNamedCursor func);    
     void createInputDeviceObserver(std::shared_ptr<miroil::InputDeviceObserver> & observer);
     void createPromptSessionListener(std::shared_ptr<miroil::PromptSessionListener> listener);
 
