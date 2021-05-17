@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "miroil/mirserverhooks.h"
+#include "miroil/mir_server_hooks.h"
 #include <stdexcept>
 
 // mir

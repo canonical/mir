@@ -32,7 +32,7 @@ add_library(miroil SHARED
     input_device_observer.cpp ${miroil_include}/miroil/input_device_observer.h
     mir_connection.cpp ${miroil_include}/miroil/mir_connection.h
     mir_prompt_session.cpp ${miroil_include}/miroil/mir_prompt_session.h    
-    mirserverhooks.cpp ${miroil_include}/miroil/mirserverhooks.h
+    mir_server_hooks.cpp ${miroil_include}/miroil/mir_server_hooks.h
     prompt_session_listener.cpp ${miroil_include}/miroil/prompt_session_listener.h
     prompt_session_manager.cpp ${miroil_include}/miroil/prompt_session_manager.h    
     open_gl_context.cpp ${miroil_include}/miroil/open_gl_context.h    
