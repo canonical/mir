@@ -35,8 +35,6 @@ class Executor;
 namespace graphics
 {
 
-struct BufferProperties;
-
 /**
  * Interface to graphic buffer allocation.
  */
