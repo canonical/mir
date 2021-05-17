@@ -44,6 +44,10 @@ SNAPS = {
     "egmde-confined-desktop": {
         "edge": {"ppa": "dev", "recipe": "egmde-confined-desktop-edge"},
     },
+    "ubuntu-core-kiosk": {
+        "edge": {"ppa": "dev", "recipe": "ubuntu-core-kiosk-edge"},
+        "beta": {"ppa": "rc", "recipe": "ubuntu-core-kiosk-beta"},
+    },
 }
 
 
