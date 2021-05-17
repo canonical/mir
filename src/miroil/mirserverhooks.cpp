@@ -98,8 +98,8 @@ MirCursorImages::MirCursorImages(miroil::CreateNamedCursor func)
     create_func = func;    
 }
 
-std::shared_ptr<mir::graphics::CursorImage> MirCursorImages::image(const std::string &cursor_name,
-        const mir::geometry::Size &)
+auto MirCursorImages::image(const std::string &cursor_name, const mir::geometry::Size &)
+-> std::shared_ptr<mir::graphics::CursorImage>
 {
     return create_func(cursor_name);
 }
@@ -107,11 +107,11 @@ std::shared_ptr<mir::graphics::CursorImage> MirCursorImages::image(const std::st
 struct miroil::MirServerHooks::Self
 {
     std::shared_ptr<miroil::PromptSessionListener> prompt_session_listener;
-    std::weak_ptr<PromptSessionListenerImpl> m_promptSessionListener;
-    std::weak_ptr<mir::graphics::Display> m_mirDisplay;
-    std::weak_ptr<mir::shell::DisplayConfigurationController> m_mirDisplayConfigurationController;
-    std::weak_ptr<mir::scene::PromptSessionManager> m_mirPromptSessionManager;
-    std::weak_ptr<mir::input::InputDeviceHub> m_inputDeviceHub;
+    std::weak_ptr<PromptSessionListenerImpl> prompt_session_listener_impl;
+    std::weak_ptr<mir::graphics::Display> mir_display;
+    std::weak_ptr<mir::shell::DisplayConfigurationController> mir_display_configuration_controller;
+    std::weak_ptr<mir::scene::PromptSessionManager> mir_prompt_session_manager;
+    std::weak_ptr<mir::input::InputDeviceHub> input_device_hub;
     CreateNamedCursor create_cursor;    
 };
 
@@ -134,68 +134,68 @@ void miroil::MirServerHooks::operator()(mir::Server& server)
         server.override_the_prompt_session_listener([this]
         {
             auto const result = std::make_shared<PromptSessionListenerImpl>(self->prompt_session_listener);
-            self->m_promptSessionListener = result;
+            self->prompt_session_listener_impl = result;
             return result;
         });
     }
 
     server.add_init_callback([this, &server]
         {
-            self->m_mirDisplay = server.the_display();
-            self->m_mirDisplayConfigurationController = server.the_display_configuration_controller();
-            self->m_mirPromptSessionManager = server.the_prompt_session_manager();
-            self->m_inputDeviceHub = server.the_input_device_hub();
+            self->mir_display = server.the_display();
+            self->mir_display_configuration_controller = server.the_display_configuration_controller();
+            self->mir_prompt_session_manager = server.the_prompt_session_manager();
+            self->input_device_hub = server.the_input_device_hub();
         });
 }
 
-miroil::PromptSessionListener *miroil::MirServerHooks::promptSessionListener() const
+auto miroil::MirServerHooks::the_prompt_session_listener() const
+-> miroil::PromptSessionListener*
 {
     return self->prompt_session_listener.get();
 }
 
-std::shared_ptr<mir::scene::PromptSessionManager> miroil::MirServerHooks::thePromptSessionManager() const
+auto miroil::MirServerHooks::the_prompt_session_manager() const
+-> std::shared_ptr<mir::scene::PromptSessionManager>
 {
-    if (auto result = self->m_mirPromptSessionManager.lock())
+    if (auto result = self->mir_prompt_session_manager.lock())
         return result;
 
     throw std::logic_error("No prompt session manager available. Server not running?");
 }
 
-std::shared_ptr<mir::graphics::Display> miroil::MirServerHooks::theMirDisplay() const
+auto miroil::MirServerHooks::the_mir_display() const
+-> std::shared_ptr<mir::graphics::Display>
 {
-    if (auto result = self->m_mirDisplay.lock())
+    if (auto result = self->mir_display.lock())
         return result;
 
     throw std::logic_error("No display available. Server not running?");
 }
 
-std::shared_ptr<mir::input::InputDeviceHub> miroil::MirServerHooks::theInputDeviceHub() const
+auto miroil::MirServerHooks::the_display_configuration_controller() const
+-> std::shared_ptr<mir::shell::DisplayConfigurationController>
 {
-    if (auto result = self->m_inputDeviceHub.lock())
+    if (auto result = self->mir_display_configuration_controller.lock())
         return result;
 
     throw std::logic_error("No input device hub available. Server not running?");
 }
 
-std::shared_ptr<mir::shell::DisplayConfigurationController> miroil::MirServerHooks::theDisplayConfigurationController() const
-{
-    if (auto result = self->m_mirDisplayConfigurationController.lock())
-        return result;
-
-    throw std::logic_error("No input device hub available. Server not running?");
-}
-
-void miroil::MirServerHooks::createNamedCursor(CreateNamedCursor func)
+void miroil::MirServerHooks::create_named_cursor(CreateNamedCursor func)
 {
     self->create_cursor = func;    
 }
 
-void miroil::MirServerHooks::createInputDeviceObserver(std::shared_ptr<miroil::InputDeviceObserver> & observer)
+void miroil::MirServerHooks::create_input_device_observer(std::shared_ptr<miroil::InputDeviceObserver> & observer)
 {
-    theInputDeviceHub()->add_observer(std::make_shared<MirInputDeviceObserverImpl>(observer));
+    if (auto result = self->input_device_hub.lock()) {
+        result->add_observer(std::make_shared<MirInputDeviceObserverImpl>(observer));
+    }
+
+    throw std::logic_error("No input device hub available. Server not running?");
 }
 
-void miroil::MirServerHooks::createPromptSessionListener(std::shared_ptr<miroil::PromptSessionListener> listener)
+void miroil::MirServerHooks::create_prompt_session_listener(std::shared_ptr<miroil::PromptSessionListener> listener)
 {
     self->prompt_session_listener = listener;
 }
@@ -245,4 +245,3 @@ void MirInputDeviceObserverImpl::device_removed(const std::shared_ptr<mir::input
         observer->device_removed(miroil::InputDevice(device));
     }
 }
-
