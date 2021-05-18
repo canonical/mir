@@ -43,8 +43,8 @@ public:
     auto the_prompt_session_listener() const -> miroil::PromptSessionListener*;
     auto the_prompt_session_manager() const -> std::shared_ptr<mir::scene::PromptSessionManager>;
     auto the_mir_display() const -> std::shared_ptr<mir::graphics::Display>;
-    auto the_display_configuration_controller() const -> std::shared_ptr<mir::shell::DisplayConfigurationController>;    
-    void create_named_cursor(CreateNamedCursor func);    
+    auto the_display_configuration_controller() const -> std::shared_ptr<mir::shell::DisplayConfigurationController>;
+    void create_named_cursor(CreateNamedCursor func);
     void create_input_device_observer(std::shared_ptr<miroil::InputDeviceObserver> & observer);
     void create_prompt_session_listener(std::shared_ptr<miroil::PromptSessionListener> listener);
 
@@ -54,4 +54,4 @@ private:
 };
 }
 
-#endif //MIROI_MIRSERVERHOOKS_H
+#endif //MIROIL_MIRSERVERHOOKS_H

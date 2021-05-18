@@ -16,16 +16,14 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "miroil/mir_server_hooks.h"
-#include <stdexcept>
+#include <miroil/mir_server_hooks.h>
 
 // mir
-#include <mir/scene/prompt_session_listener.h>
 #include <mir/server.h>
-#include <mir/input/input_device_hub.h>
-#include <mir/shell/display_configuration_controller.h>
-#include <mir/input/input_device_observer.h>
 #include <mir/graphics/cursor.h>
+#include <mir/scene/prompt_session_listener.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_observer.h>
 #include <mir/input/cursor_images.h>
 
 namespace mg = mir::graphics;
@@ -85,17 +83,17 @@ class MirCursorImages : public mir::input::CursorImages
 {
 public:
     MirCursorImages(miroil::CreateNamedCursor func);
-    
+
     std::shared_ptr<mir::graphics::CursorImage> image(const std::string &cursor_name,
             const mir::geometry::Size &size) override;
-    
-private:    
-    miroil::CreateNamedCursor create_func;    
+
+private:
+    miroil::CreateNamedCursor create_func;
 };
 
 MirCursorImages::MirCursorImages(miroil::CreateNamedCursor func)
 {
-    create_func = func;    
+    create_func = func;
 }
 
 auto MirCursorImages::image(const std::string &cursor_name, const mir::geometry::Size &)
@@ -183,13 +181,14 @@ auto miroil::MirServerHooks::the_display_configuration_controller() const
 
 void miroil::MirServerHooks::create_named_cursor(CreateNamedCursor func)
 {
-    self->create_cursor = func;    
+    self->create_cursor = func;
 }
 
 void miroil::MirServerHooks::create_input_device_observer(std::shared_ptr<miroil::InputDeviceObserver> & observer)
 {
     if (auto result = self->input_device_hub.lock()) {
         result->add_observer(std::make_shared<MirInputDeviceObserverImpl>(observer));
+	return;
     }
 
     throw std::logic_error("No input device hub available. Server not running?");
@@ -245,3 +244,4 @@ void MirInputDeviceObserverImpl::device_removed(const std::shared_ptr<mir::input
         observer->device_removed(miroil::InputDevice(device));
     }
 }
+
