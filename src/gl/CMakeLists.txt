@@ -7,9 +7,5 @@ include_directories(
 ADD_LIBRARY(
   mirgl OBJECT
 
-  default_program_factory.cpp
-  program.cpp
-  recently_used_cache.cpp
   tessellation_helpers.cpp
-  texture.cpp
 )

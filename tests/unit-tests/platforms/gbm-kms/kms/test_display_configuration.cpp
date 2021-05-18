@@ -38,7 +38,6 @@
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/test/doubles/stub_console_services.h"
 #include "mir/test/doubles/stub_gl_config.h"
-#include "mir/test/doubles/stub_gl_program_factory.h"
 
 #include "mir_test_framework/udev_environment.h"
 

@@ -19,8 +19,6 @@
 #ifndef MIR_RENDERER_GL_RENDERER_H_
 #define MIR_RENDERER_GL_RENDERER_H_
 
-#include "program_family.h"
-
 #include <mir/renderer/renderer.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
@@ -116,13 +114,6 @@ protected:
 
     mutable long long frameno = 0;
 
-    ProgramFamily family;
-    Program default_program, alpha_program;
-
-    static const GLchar* const vshader;
-    static const GLchar* const default_fshader;
-    static const GLchar* const alpha_fshader;
-
     virtual void draw(graphics::Renderable const& renderable) const;
 
 private:
@@ -130,7 +121,6 @@ private:
 
     class ProgramFactory;
     std::unique_ptr<ProgramFactory> const program_factory;
-    std::unique_ptr<mir::gl::TextureCache> const texture_cache;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords;
     glm::mat4 display_transform;
