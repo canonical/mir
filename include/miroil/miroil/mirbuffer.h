@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017-2020 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -21,8 +21,6 @@
 
 #include <memory>
 
-#include <GL/gl.h>
-
 namespace mir { namespace graphics { class Buffer; }}
 
 namespace miroil
@@ -30,28 +28,46 @@ namespace miroil
 class GLBuffer
 {
 public:
-    GLBuffer();
-    ~GLBuffer();
+    enum Type {
+        GLTexture = 0,
+        GLTextureSource = 1,
+    };
+
+    virtual ~GLBuffer();
     explicit GLBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer);
 
-    operator bool() const;
     bool has_alpha_channel() const;
     mir::geometry::Size size() const;
 
+    virtual void bind() = 0;
+    virtual Type type() = 0;
+
     void reset();
     void reset(std::shared_ptr<mir::graphics::Buffer> const& buffer);
-    void bind();
-    void gl_bind_tex();
+    bool empty();
 
-private:
-    void init();
-    void destroy();
+    static std::shared_ptr<GLBuffer> from_mir_buffer(std::shared_ptr<mir::graphics::Buffer> const& buffer);
 
+protected:
     std::shared_ptr<mir::graphics::Buffer> wrapped;
-    GLuint m_textureId;
-    bool m_isOldTex = false;
-    bool m_inited = false;
 };
+
+class GLTextureSourceBuffer : public GLBuffer
+{
+public:
+    GLTextureSourceBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer);
+    void bind() override;
+    Type type() override { return Type::GLTextureSource; };
+};
+
+class GLTextureBuffer : public GLBuffer
+{
+public:
+    GLTextureBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer);
+    void bind() override;
+    Type type() override { return Type::GLTexture; };
+};
+
 }
 
 #endif //MIROIL_GLBUFFER_H

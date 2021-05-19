@@ -1,5 +1,6 @@
 /*
- * Copyright © 2017-2020 Canonical Ltd.
+ * Copyright 2021 UBports Foundation.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,47 +18,34 @@
 #include "miroil/mirbuffer.h"
 
 #include <mir/graphics/buffer.h>
-#include <mir/graphics/texture.h>
-#include <mir/gl/texture.h>
+#include "mir/graphics/texture.h"
 #include <mir/renderer/gl/texture_source.h>
 
 #include <stdexcept>
 
-miroil::GLBuffer::GLBuffer() = default;
-miroil::GLBuffer::~GLBuffer()
-{
-    destroy();
-}
+miroil::GLBuffer::~GLBuffer() = default;
 
 miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer) :
-    wrapped(buffer),
-    m_textureId(0),
-    m_isOldTex(false)
+    wrapped(buffer)
 {
-    init();
 }
 
-void miroil::GLBuffer::init()
+std::shared_ptr<miroil::GLBuffer> miroil::GLBuffer::from_mir_buffer(std::shared_ptr<mir::graphics::Buffer> const& buffer)
 {
-    if (m_inited)
-        return;
+    bool usingTextureSource = false;
 
-    if (!dynamic_cast<mir::graphics::gl::Texture*>(wrapped->native_buffer_base()))
-    {
-        glGenTextures(1, &m_textureId);
-        m_isOldTex = true;
-    }
+    // We would like to use gl::Texture, but if we cant, fallback to gl::textureSource
+    if (!dynamic_cast<mir::graphics::gl::Texture*>(buffer->native_buffer_base()))
+        // As textures will never change once inited, there is no need to do vodo magic
+        // on each bind(), so lets create class overrides to save some cpu cycles.
+        usingTextureSource = true;
 
-    m_inited = true;
-}
+    //qDebug() << "Mir buffer is" << (usingTextureSource ? "gl:TextureSource (old)" : "gl:Texture (new)");
 
-void miroil::GLBuffer::destroy()
-{
-    if (m_textureId) {
-        glDeleteTextures(1, &m_textureId);
-        m_textureId = 0;
-        m_isOldTex = false;
-    }
+    if (usingTextureSource)
+        return std::make_shared<miroil::GLTextureSourceBuffer>(buffer);
+    else
+        return std::make_shared<miroil::GLTextureBuffer>(buffer);
 }
 
 void miroil::GLBuffer::reset(std::shared_ptr<mir::graphics::Buffer> const& buffer)
@@ -65,9 +53,14 @@ void miroil::GLBuffer::reset(std::shared_ptr<mir::graphics::Buffer> const& buffe
     wrapped = buffer;
 }
 
-miroil::GLBuffer::operator bool() const
+void miroil::GLBuffer::reset()
 {
-    return !!wrapped;
+    wrapped.reset();
+}
+
+bool miroil::GLBuffer::empty()
+{
+    return !wrapped;
 }
 
 bool miroil::GLBuffer::has_alpha_channel() const
@@ -82,33 +75,37 @@ mir::geometry::Size miroil::GLBuffer::size() const
     return wrapped->size();
 }
 
-void miroil::GLBuffer::reset()
+miroil::GLTextureSourceBuffer::GLTextureSourceBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer) :
+    GLBuffer(buffer)
 {
-    wrapped.reset();
 }
 
-void miroil::GLBuffer::gl_bind_tex()
+void miroil::GLTextureSourceBuffer::bind()
 {
-    if (m_isOldTex)
-        glBindTexture(GL_TEXTURE_2D, m_textureId);
-}
+    if (!wrapped)
+        throw std::logic_error("Bind called without any buffers!");
 
-void miroil::GLBuffer::bind()
-{
-    if (m_isOldTex) {
-        auto const texsource = dynamic_cast<mir::renderer::gl::TextureSource*>(wrapped->native_buffer_base());
-
+    if (auto const texsource = dynamic_cast<mir::renderer::gl::TextureSource*>(wrapped->native_buffer_base())) {
         texsource->gl_bind_to_texture();
         texsource->secure_for_render();
-        return;
+    } else {
+        throw std::logic_error("Buffer does not support GL rendering");
     }
+}
 
-    if (auto const texture = dynamic_cast<mir::graphics::gl::Texture*>(wrapped->native_buffer_base()))
-    {
+miroil::GLTextureBuffer::GLTextureBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer) :
+    GLBuffer(buffer)
+{
+}
+
+void miroil::GLTextureBuffer::bind()
+{
+    if (!wrapped)
+        throw std::logic_error("Bind called without any buffers!");
+
+    if (auto const texture = dynamic_cast<mir::graphics::gl::Texture*>(wrapped->native_buffer_base())) {
         texture->bind();
-    }
-    else
-    {
+    } else {
         throw std::logic_error("Buffer does not support GL rendering");
     }
 }

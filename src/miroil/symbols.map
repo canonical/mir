@@ -30,6 +30,8 @@ global:
     miroil::GLBuffer::operator*;
     miroil::GLBuffer::reset*;
     miroil::GLBuffer::size*;
+    miroil::GLBuffer::empty*;
+    miroil::GLBuffer::from_mir_buffer*;
     miroil::InputDevice::?InputDevice*;
     miroil::InputDevice::InputDevice*;
     miroil::InputDevice::apply_keymap*;
