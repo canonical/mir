@@ -21,6 +21,9 @@
 
 #include "mock_buffer.h"
 #include "mir/renderer/gl/texture_source.h"
+#include "mir/graphics/texture.h"
+#include "mir/graphics/program.h"
+#include "mir/graphics/program_factory.h"
 
 namespace mir
 {
@@ -40,6 +43,17 @@ struct MockGLBuffer : public MockBuffer,
     MOCK_METHOD0(bind, void());
 };
 
+struct MockTextureBuffer : public MockBuffer,
+                           public graphics::gl::Texture
+{
+public:
+    using MockBuffer::MockBuffer;
+
+    MOCK_METHOD(graphics::gl::Program const&, shader, (graphics::gl::ProgramFactory&), (const override));
+    MOCK_METHOD(Layout, layout, (), (const override));
+    MOCK_METHOD(void, bind, (), (override));
+    MOCK_METHOD(void, add_syncpoint, (), (override));
+};
 }
 }
 }
