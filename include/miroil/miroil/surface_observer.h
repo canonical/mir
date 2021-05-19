@@ -36,7 +36,7 @@ public:
     SurfaceObserver() = default;
     SurfaceObserver(SurfaceObserver const&) = delete;
     SurfaceObserver& operator=(SurfaceObserver const&) = delete;    
-    virtual ~SurfaceObserver();
+    virtual ~SurfaceObserver() = default;
     
     virtual void attrib_changed(mir::scene::Surface const* surf, MirWindowAttrib attrib, int value) = 0;
     virtual void window_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& window_size) = 0;
