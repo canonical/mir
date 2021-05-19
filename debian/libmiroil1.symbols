@@ -98,8 +98,6 @@ libmiroil.so.1 libmiroil1 #MINVER#
  (c++)"typeinfo for miroil::InputDeviceObserver@MIROIL_1.0" 2.3.2
  (c++)"typeinfo for miroil::PromptSessionListener@MIROIL_1.0" 2.3.2
  (c++)"vtable for miroil::DisplayConfigurationPolicy@MIROIL_1.0" 2.3.2
- (c++)"typeinfo for miroil::EventBuilder@MIROIL_1.0" 2.3.2
- (c++)"vtable for miroil::EventBuilder@MIROIL_1.0" 2.3.2
  (c++)"vtable for miroil::GLBuffer@MIROIL_1.0" 2.3.2
  (c++)"vtable for miroil::InputDeviceObserver@MIROIL_1.0" 2.3.2
  (c++)"vtable for miroil::PromptSessionListener@MIROIL_1.0" 2.3.2
