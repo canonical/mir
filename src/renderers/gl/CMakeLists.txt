@@ -28,7 +28,6 @@ include_directories(
 ADD_LIBRARY(
   mirrenderergl OBJECT
 
-  program_family.cpp
   renderer.cpp
   renderer_factory.cpp
 )

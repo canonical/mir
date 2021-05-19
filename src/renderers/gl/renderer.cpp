@@ -20,13 +20,10 @@
 
 #include "renderer.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/gl/default_program_factory.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/gl/tessellation_helpers.h"
-#include "mir/gl/texture_cache.h"
-#include "mir/gl/texture.h"
 #include "mir/log.h"
 #include "mir/report_exception.h"
 #include "mir/graphics/egl_error.h"
@@ -43,6 +40,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <sstream>
+#include <mutex>
 
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;
@@ -79,49 +77,6 @@ void mrg::CurrentRenderTarget::swap_buffers()
 {
     render_target->swap_buffers();
 }
-
-const GLchar* const mrg::Renderer::vshader =
-{
-    "attribute vec3 position;\n"
-    "attribute vec2 texcoord;\n"
-    "uniform mat4 screen_to_gl_coords;\n"
-    "uniform mat4 display_transform;\n"
-    "uniform mat4 transform;\n"
-    "uniform vec2 centre;\n"
-    "varying vec2 v_texcoord;\n"
-    "void main() {\n"
-    "   vec4 mid = vec4(centre, 0.0, 0.0);\n"
-    "   vec4 transformed = (transform * (vec4(position, 1.0) - mid)) + mid;\n"
-    "   gl_Position = display_transform * screen_to_gl_coords * transformed;\n"
-    "   v_texcoord = texcoord;\n"
-    "}\n"
-};
-
-const GLchar* const mrg::Renderer::alpha_fshader =
-{
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
-    "uniform sampler2D tex;\n"
-    "uniform float alpha;\n"
-    "varying vec2 v_texcoord;\n"
-    "void main() {\n"
-    "   vec4 frag = texture2D(tex, v_texcoord);\n"
-    "   gl_FragColor = alpha*frag;\n"
-    "}\n"
-};
-
-const GLchar* const mrg::Renderer::default_fshader =
-{   // This is the fastest fragment shader. Use it when you can.
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
-    "uniform sampler2D tex;\n"
-    "varying vec2 v_texcoord;\n"
-    "void main() {\n"
-    "   gl_FragColor = texture2D(tex, v_texcoord);\n"
-    "}\n"
-};
 
 namespace
 {
@@ -352,10 +307,7 @@ mrg::Renderer::Program::Program(GLuint program_id)
 mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
     : render_target(&display_buffer),
       clear_color{0.0f, 0.0f, 0.0f, 0.0f},
-      default_program(family.add_program(vshader, default_fshader)),
-      alpha_program(family.add_program(vshader, alpha_fshader)),
       program_factory{std::make_unique<ProgramFactory>()},
-      texture_cache(mgl::DefaultProgramFactory().create_texture_cache()),
       display_transform(1)
 {
     eglBindAPI(EGL_OPENGL_ES_API);
@@ -438,10 +390,6 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
 
     render_target.swap_buffers();
 
-    // Deleting unused textures only requires the GL context. This clean-up
-    // does not affect screen contents so can happen after swap_buffers...
-    texture_cache->drop_unused();
-
     while (auto const gl_error = glGetError())
         mir::log_debug("GL error: %d", gl_error);
 }
@@ -465,53 +413,22 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     }
 
     auto const texture = std::dynamic_pointer_cast<mg::gl::Texture>(renderable.buffer());
-    auto const surface_tex =
-        [this, &renderable, need_fallback = !static_cast<bool>(texture)]() -> std::shared_ptr<mir::gl::Texture>
-        {
-            if (need_fallback)
-            {
-                try
-                {
-                    return texture_cache->load(renderable);
-                }
-                catch (std::exception const&)
-                {
-                    report_exception();
-                }
-            }
-            return {nullptr};
-        }();
-
-    auto const* maybe_prog =
-        [this, &texture, &surface_tex](bool alpha) -> Program const*
-        {
-            if (texture)
-            {
-                auto const& family = static_cast<::Program const&>(texture->shader(*program_factory));
-                if (alpha)
-                {
-                    return &family.alpha;
-                }
-                return &family.opaque;
-            }
-            else if(surface_tex)
-            {
-                if (alpha)
-                {
-                    return &alpha_program;
-                }
-                return &default_program;
-            }
-            return nullptr;
-        }(renderable.alpha() < 1.0f);
-
-    if (!maybe_prog)
+    if (!texture)
     {
         mir::log_error("Buffer does not support GL rendering!");
         return;
     }
 
-    auto const& prog = *maybe_prog;
+    auto const& prog =
+        [this, &texture](bool alpha) -> Program const&
+        {
+                auto const& family = static_cast<::Program const&>(texture->shader(*program_factory));
+                if (alpha)
+                {
+                    return family.alpha;
+                }
+                return family.opaque;
+        }(renderable.alpha() < 1.0f);
 
     glUseProgram(prog.id);
     if (prog.last_used_frameno != frameno)
@@ -541,7 +458,7 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     glUniform2f(prog.centre_uniform, centrex, centrey);
 
     glm::mat4 transform = renderable.transformation();
-    if (texture && (texture->layout() == mg::gl::Texture::Layout::TopRowFirst))
+    if (texture->layout() == mg::gl::Texture::Layout::TopRowFirst)
     {
         // GL textures have (0,0) at bottom-left rather than top-left
         // We have to invert this texture to get it the way up GL expects.
@@ -600,14 +517,7 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
             BlendSeparate blend;
 
             blend = client_blend;
-            if (surface_tex)
-            {
-                surface_tex->bind();
-            }
-            else
-            {
-                texture->bind();
-            }
+            texture->bind();
 
             glVertexAttribPointer(prog.position_attr, 3, GL_FLOAT,
                                   GL_FALSE, sizeof(mgl::Vertex),
@@ -629,11 +539,8 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
 
             glDrawArrays(p.type, 0, p.nvertices);
 
-            if (texture)
-            {
-                // We're done with the texture for now
-                texture->add_syncpoint();
-            }
+            // We're done with the texture for now
+            texture->add_syncpoint();
         }
     }
     catch (std::exception const& ex)
@@ -740,6 +647,5 @@ void mrg::Renderer::set_output_transform(glm::mat2 const& t)
 
 void mrg::Renderer::suspend()
 {
-    texture_cache->invalidate();
 }
 

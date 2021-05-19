@@ -121,13 +121,18 @@ public:
         EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glDisableVertexAttribArray(_)).Times(AnyNumber());
 
-        mock_buffer = std::make_shared<mtd::MockGLBuffer>();
-        EXPECT_CALL(*mock_buffer, gl_bind_to_texture()).Times(AnyNumber());
-        EXPECT_CALL(*mock_buffer, native_buffer_base()).Times(AnyNumber());
+        mock_buffer = std::make_shared<testing::NiceMock<mtd::MockTextureBuffer>>();
         EXPECT_CALL(*mock_buffer, id())
             .WillRepeatedly(Return(mir::graphics::BufferID(789)));
         EXPECT_CALL(*mock_buffer, size())
             .WillRepeatedly(Return(mir::geometry::Size{123, 456}));
+        ON_CALL(*mock_buffer, shader(_))
+            .WillByDefault(testing::Invoke(
+                [](auto& factory) -> mg::gl::Program&
+                {
+                    static int unused = 1;
+                    return factory.compile_fragment_shader(&unused, "extension code", "fragment code");
+                }));
 
         renderable = std::make_shared<testing::NiceMock<mtd::MockRenderable>>();
         EXPECT_CALL(*renderable, id()).WillRepeatedly(Return(&renderable));
@@ -152,12 +157,17 @@ public:
 
     testing::NiceMock<mtd::MockGL> mock_gl;
     testing::NiceMock<mtd::MockEGL> mock_egl;
-    std::shared_ptr<mtd::MockGLBuffer> mock_buffer;
+    std::shared_ptr<mtd::MockTextureBuffer> mock_buffer;
     mtd::StubGLDisplayBuffer display_buffer{{{1, 2}, {3, 4}}};
     testing::NiceMock<mtd::MockGLDisplayBuffer> mock_display_buffer;
     std::shared_ptr<testing::NiceMock<mtd::MockRenderable>> renderable;
     mg::RenderableList renderable_list;
     glm::mat4 trans;
+
+    class StubProgram : public mg::gl::Program
+    {
+    };
+    StubProgram prog;
 };
 
 }
@@ -248,20 +258,36 @@ TEST_F(GLRenderer, releases_display_buffer_current_when_destroyed)
     EXPECT_CALL(mock_display_buffer, release_current());
 }
 
+
 TEST_F(GLRenderer, makes_display_buffer_current_before_deleting_programs)
 {
     mrg::Renderer renderer(mock_display_buffer);
 
     testing::Sequence s1, s2;
-    EXPECT_CALL(mock_display_buffer, make_current()).InSequence(s1, s2);
-    EXPECT_CALL(mock_display_buffer, swap_buffers()).InSequence(s1, s2);
-    EXPECT_CALL(mock_display_buffer, make_current()).InSequence(s1, s2);
-    /*We only care that all glDeleteProgram() and glDeleteShader calls
+    // We must call MakeCurrent before anything else.
+    EXPECT_CALL(mock_display_buffer, make_current())
+        .InSequence(s1, s2);
+    /* As an implementation detail ProgramFactory calls
+     * glDeleteShader during shader compilation; this has to happen
+     * before rendering (and so, before SwapBuffers)
+     */
+    EXPECT_CALL(mock_gl, glDeleteShader(_))
+        .Times(AtLeast(1))
+        .InSequence(s1, s2);
+    EXPECT_CALL(mock_display_buffer, swap_buffers())
+        .InSequence(s1, s2);
+    EXPECT_CALL(mock_display_buffer, make_current())
+        .InSequence(s1, s2);
+    /* We only care that all glDeleteProgram() and glDeleteShader calls
      * happen after make_current() and before the final release_current();
      * we don't care what order they happen in otherwise.
      */
-    EXPECT_CALL(mock_gl, glDeleteProgram(_)).Times(AtLeast(1)).InSequence(s1);
-    EXPECT_CALL(mock_gl, glDeleteShader(_)).Times(AtLeast(1)).InSequence(s2);
+    EXPECT_CALL(mock_gl, glDeleteProgram(_))
+        .Times(AtLeast(1))
+        .InSequence(s1);
+    EXPECT_CALL(mock_gl, glDeleteShader(_))
+        .Times(AtLeast(1))
+        .InSequence(s2);
     EXPECT_CALL(mock_display_buffer, release_current()).InSequence(s1, s2);
 
     renderer.render(renderable_list);

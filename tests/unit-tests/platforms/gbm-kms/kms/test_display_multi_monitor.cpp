@@ -32,7 +32,6 @@
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/test/doubles/stub_gl_config.h"
-#include "mir/test/doubles/stub_gl_program_factory.h"
 
 #include "mir_test_framework/udev_environment.h"
 
