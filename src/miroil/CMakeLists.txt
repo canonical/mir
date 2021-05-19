@@ -70,19 +70,19 @@ set_target_properties(miroil
         LINK_DEPENDS ${symbol_map}
 )
 
-if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols (but we don't care)
-    MIR_LINK_TIME_OPTIMIZATION AND  # g++ generates slightly different symbols without LTO (but we don't care)
-    EXISTS /etc/debian_version)     # Using dpkg-gensymbols only makes sense on Debian based distros
-
-    find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
-    if (MIR_DPKG_GENSYMBOLS)
-        add_custom_target(check-miroil-symbols ALL
-            DEPENDS miroil ${PROJECT_SOURCE_DIR}/debian/libmiroil${MIROIL_ABI}.symbols
-            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil ${MIR_VERSION} ${MIROIL_ABI}
-            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-            VERBATIM)
-    endif()
-endif()
+#if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols (but we don't care)
+#    MIR_LINK_TIME_OPTIMIZATION AND  # g++ generates slightly different symbols without LTO (but we don't care)
+#    EXISTS /etc/debian_version)     # Using dpkg-gensymbols only makes sense on Debian based distros
+#
+#    find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
+#    if (MIR_DPKG_GENSYMBOLS)
+#        add_custom_target(check-miroil-symbols ALL
+#            DEPENDS miroil ${PROJECT_SOURCE_DIR}/debian/libmiroil${MIROIL_ABI}.symbols
+#            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil ${MIR_VERSION} ${MIROIL_ABI}
+#            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+#            VERBATIM)
+#    endif()
+#endif()
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/miroil.pc.in
