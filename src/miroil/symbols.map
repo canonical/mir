@@ -34,6 +34,15 @@ global:
     miroil::InputDeviceObserver::?InputDeviceObserver*;
     miroil::InputDeviceObserver::InputDeviceObserver*;
     miroil::InputDeviceObserver::operator*;
+    miroil::MirServerHooks::MirServerHooks*;
+    miroil::MirServerHooks::create_input_device_observer*;
+    miroil::MirServerHooks::create_named_cursor*;
+    miroil::MirServerHooks::create_prompt_session_listener*;
+    miroil::MirServerHooks::operator*;
+    miroil::MirServerHooks::the_display_configuration_controller*;
+    miroil::MirServerHooks::the_mir_display*;
+    miroil::MirServerHooks::the_prompt_session_listener*;
+    miroil::MirServerHooks::the_prompt_session_manager*;
     miroil::PersistDisplayConfig::?PersistDisplayConfig*;
     miroil::PersistDisplayConfig::PersistDisplayConfig*;
     miroil::PersistDisplayConfig::operator*;
@@ -65,6 +74,7 @@ global:
     typeinfo?for?miroil::GLBuffer;
     typeinfo?for?miroil::InputDevice;
     typeinfo?for?miroil::InputDeviceObserver;
+    typeinfo?for?miroil::MirServerHooks;
     typeinfo?for?miroil::PersistDisplayConfig;
     typeinfo?for?miroil::PromptSessionListener;
     typeinfo?for?miroil::PromptSessionManager;
@@ -81,6 +91,7 @@ global:
     vtable?for?miroil::GLBuffer;
     vtable?for?miroil::InputDevice;
     vtable?for?miroil::InputDeviceObserver;
+    vtable?for?miroil::MirServerHooks;
     vtable?for?miroil::PersistDisplayConfig;
     vtable?for?miroil::PromptSessionListener;
     vtable?for?miroil::PromptSessionManager;
