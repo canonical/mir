@@ -35,7 +35,6 @@
 #include "session_manager.h"
 #include "surface_allocator.h"
 #include "surface_stack.h"
-#include "threaded_snapshot_strategy.h"
 #include "prompt_session_manager_impl.h"
 #include "default_coordinate_translator.h"
 #include "unsupported_coordinate_translator.h"
@@ -177,43 +176,12 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                 the_surface_factory(),
                 the_buffer_stream_factory(),
                 the_session_container(),
-                the_snapshot_strategy(),
                 the_session_event_sink(),
                 the_session_listener(),
                 the_display(),
                 the_application_not_responding_detector(),
                 the_buffer_allocator(),
                 the_display_configuration_observer_registrar());
-        });
-}
-
-std::shared_ptr<ms::PixelBuffer>
-mir::DefaultServerConfiguration::the_pixel_buffer()
-{
-    return pixel_buffer(
-        [this]()
-        {
-            auto as_context_source = [](mg::Display* display)
-            {
-                auto const ctx = dynamic_cast<renderer::gl::ContextSource*>(display);
-                if (!ctx)
-                    BOOST_THROW_EXCEPTION(std::logic_error("Display does not support GL rendering"));
-                return ctx;
-            };
-
-            return std::make_shared<ms::GLPixelBuffer>(
-                as_context_source(the_display().get())->create_gl_context());
-        });
-}
-
-std::shared_ptr<ms::SnapshotStrategy>
-mir::DefaultServerConfiguration::the_snapshot_strategy()
-{
-    return snapshot_strategy(
-        [this]()
-        {
-            return std::make_shared<ms::ThreadedSnapshotStrategy>(
-                the_pixel_buffer());
         });
 }
 

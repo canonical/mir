@@ -34,7 +34,6 @@
 #include "mir/test/doubles/mock_session_listener.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/doubles/stub_buffer_stream_factory.h"
-#include "mir/test/doubles/null_snapshot_strategy.h"
 #include "mir/test/doubles/null_session_event_sink.h"
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/stub_surface_factory.h"
@@ -90,7 +89,6 @@ struct SessionManagerSetup : public testing::Test
         mt::fake_shared(stub_surface_factory),
         mt::fake_shared(buffer_stream_factory),
         mt::fake_shared(container),
-        std::make_shared<mtd::NullSnapshotStrategy>(),
         std::make_shared<mtd::NullSessionEventSink>(),
         mt::fake_shared(session_listener),
         mt::fake_shared(display),
@@ -118,7 +116,6 @@ struct SessionManagerSessionListenerSetup : public testing::Test
         mt::fake_shared(stub_surface_factory),
         std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(container),
-        std::make_shared<mtd::NullSnapshotStrategy>(),
         std::make_shared<mtd::NullSessionEventSink>(),
         mt::fake_shared(session_listener),
         mt::fake_shared(display),
@@ -200,7 +197,6 @@ struct SessionManagerSessionEventsSetup : public testing::Test
         mt::fake_shared(stub_surface_factory),
         std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(container),
-        std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),
         mt::fake_shared(session_listener),
         mt::fake_shared(display),

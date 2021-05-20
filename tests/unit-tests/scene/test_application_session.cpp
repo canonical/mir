@@ -33,7 +33,6 @@
 #include "mir/test/doubles/stub_surface_factory.h"
 #include "mir/test/doubles/stub_buffer_stream_factory.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
-#include "mir/test/doubles/null_snapshot_strategy.h"
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/null_prompt_session.h"
@@ -74,32 +73,6 @@ struct MockBufferStreamFactory : public ms::BufferStreamFactory
 };
 
 
-class MockSnapshotStrategy : public ms::SnapshotStrategy
-{
-public:
-    ~MockSnapshotStrategy() noexcept {}
-
-    MOCK_METHOD2(take_snapshot_of,
-                void(std::shared_ptr<mc::BufferStream> const&,
-                     ms::SnapshotCallback const&));
-};
-
-struct MockSnapshotCallback
-{
-    void operator()(ms::Snapshot const& snapshot)
-    {
-        operator_call(snapshot);
-    }
-    MOCK_METHOD1(operator_call, void(ms::Snapshot const&));
-};
-
-MATCHER(IsNullSnapshot, "")
-{
-    return arg.size == mir::geometry::Size{} &&
-           arg.stride == mir::geometry::Stride{} &&
-           arg.pixels == nullptr;
-}
-
 MATCHER_P(EqPromptSessionEventState, state, "") {
   return arg.type() == mir_event_type_prompt_session_state_change && arg.to_prompt_session()->new_state() == state;
 }
@@ -136,7 +109,6 @@ struct ApplicationSession : public testing::Test
           surface_observer(std::make_shared<ms::NullSurfaceObserver>()),
           stub_session_listener(std::make_shared<ms::NullSessionListener>()),
           stub_surface_stack(std::make_shared<StubSurfaceStack>()),
-          null_snapshot_strategy(std::make_shared<mtd::NullSnapshotStrategy>()),
           pid(0),
           name("test-session-name")
     {
@@ -150,7 +122,6 @@ struct ApplicationSession : public testing::Test
            stub_buffer_stream_factory,
            pid,
            name,
-           null_snapshot_strategy,
            stub_session_listener,
            event_sink,
            allocator);
@@ -166,7 +137,6 @@ struct ApplicationSession : public testing::Test
            bstream_factory,
            pid,
            name,
-           null_snapshot_strategy,
            stub_session_listener,
            event_sink,
            allocator);
@@ -182,7 +152,6 @@ struct ApplicationSession : public testing::Test
            stub_buffer_stream_factory,
            pid,
            name,
-           null_snapshot_strategy,
            stub_session_listener,
            event_sink,
            allocator);
@@ -196,7 +165,6 @@ struct ApplicationSession : public testing::Test
            stub_buffer_stream_factory,
            pid,
            name,
-           null_snapshot_strategy,
            stub_session_listener,
            event_sink,
            allocator);
@@ -211,7 +179,6 @@ struct ApplicationSession : public testing::Test
            stub_buffer_stream_factory,
            pid,
            name,
-           null_snapshot_strategy,
            session_listener,
            event_sink,
            allocator);
@@ -227,7 +194,6 @@ struct ApplicationSession : public testing::Test
            buffer_stream_factory,
            pid,
            name,
-           null_snapshot_strategy,
            stub_session_listener,
            event_sink,
            allocator);
@@ -479,64 +445,6 @@ TEST_F(ApplicationSession, session_visbility_propagates_to_surfaces)
     app_session->destroy_surface(surf);
 }
 
-TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
-{
-    using namespace ::testing;
-
-    auto mock_surface = make_mock_surface();
-    NiceMock<MockSurfaceFactory> surface_factory;
-    MockBufferStreamFactory mock_buffer_stream_factory;
-    std::shared_ptr<mc::BufferStream> const mock_stream = std::make_shared<mtd::MockBufferStream>();
-    ON_CALL(mock_buffer_stream_factory, create_buffer_stream(_)).WillByDefault(Return(mock_stream));
-    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
-    NiceMock<mtd::MockSurfaceStack> surface_stack;
-
-    auto const snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
-
-    EXPECT_CALL(*snapshot_strategy, take_snapshot_of(mock_stream, _));
-
-    ms::ApplicationSession app_session(
-        mt::fake_shared(surface_stack),
-        mt::fake_shared(surface_factory),
-        mt::fake_shared(mock_buffer_stream_factory),
-        pid,
-        name,
-        snapshot_strategy,
-        std::make_shared<ms::NullSessionListener>(),
-        event_sink,
-        allocator);
-
-    ms::SurfaceCreationParameters params = ms::a_surface()
-        .with_buffer_stream(app_session.create_buffer_stream(properties));
-    auto surface = app_session.create_surface(nullptr, params, surface_observer);
-    app_session.take_snapshot(ms::SnapshotCallback());
-    app_session.destroy_surface(surface);
-}
-
-TEST_F(ApplicationSession, returns_null_snapshot_if_no_default_surface)
-{
-    using namespace ::testing;
-
-    auto snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
-    MockSnapshotCallback mock_snapshot_callback;
-
-    ms::ApplicationSession app_session(
-        stub_surface_stack,
-        stub_surface_factory,
-        stub_buffer_stream_factory,
-        pid,
-        name,
-        snapshot_strategy,
-        std::make_shared<ms::NullSessionListener>(),
-        event_sink,
-        allocator);
-
-    EXPECT_CALL(*snapshot_strategy, take_snapshot_of(_,_)).Times(0);
-    EXPECT_CALL(mock_snapshot_callback, operator_call(IsNullSnapshot()));
-
-    app_session.take_snapshot(std::ref(mock_snapshot_callback));
-}
-
 TEST_F(ApplicationSession, process_id)
 {
     using namespace ::testing;
@@ -549,7 +457,6 @@ TEST_F(ApplicationSession, process_id)
         stub_buffer_stream_factory,
         session_pid,
         name,
-        null_snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
         event_sink,
         allocator);
@@ -718,7 +625,6 @@ struct ApplicationSessionSender : public ApplicationSession
             stub_buffer_stream_factory,
             pid,
             name,
-            null_snapshot_strategy,
             stub_session_listener,
             mt::fake_shared(sender),
             allocator)
@@ -841,7 +747,6 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
             stub_buffer_stream_factory,
             pid,
             name,
-            null_snapshot_strategy,
             stub_session_listener,
             sender,
             allocator)

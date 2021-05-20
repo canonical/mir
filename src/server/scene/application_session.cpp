@@ -17,7 +17,6 @@
  */
 
 #include "application_session.h"
-#include "snapshot_strategy.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
@@ -53,7 +52,6 @@ ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<ms::BufferStreamFactory> const& buffer_stream_factory,
     pid_t pid,
     std::string const& session_name,
-    std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<mf::EventSink> const& sink,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc) :
@@ -62,7 +60,6 @@ ms::ApplicationSession::ApplicationSession(
     buffer_stream_factory(buffer_stream_factory),
     pid(pid),
     session_name(session_name),
-    snapshot_strategy(snapshot_strategy),
     session_listener(session_listener),
     event_sink(sink),
     gralloc(gralloc)
@@ -217,27 +214,6 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
         return {};
 
     return *next;
-}
-
-void ms::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_taken)
-{
-    //TODO: taking a snapshot of a session doesn't make much sense. Snapshots can be on surfaces
-    //or bufferstreams, as those represent some content. A multi-surface session doesn't have enough
-    //info to cobble together a snapshot buffer without WM info.
-    for(auto const& surface_it : surfaces)
-    {
-        if (default_surface() == surface_it)
-        {
-            auto content = default_content_map[surface_it].lock();
-            if (!content)
-                BOOST_THROW_EXCEPTION(std::logic_error(
-                    "Buffer was dropped without being removed from default_content_map"));
-            snapshot_strategy->take_snapshot_of(content, snapshot_taken);
-            return;
-        }
-    }
-
-    snapshot_taken(Snapshot());
 }
 
 std::shared_ptr<ms::Surface> ms::ApplicationSession::default_surface() const

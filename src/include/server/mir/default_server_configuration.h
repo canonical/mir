@@ -306,8 +306,6 @@ public:
      * builder functions used in the default implementation.
      * The interfaces returned are not published, so the functions are only useful in tests
      *  @{ */
-    virtual std::shared_ptr<scene::PixelBuffer>       the_pixel_buffer();
-    virtual std::shared_ptr<scene::SnapshotStrategy>  the_snapshot_strategy();
     virtual std::shared_ptr<scene::SessionContainer>  the_session_container();
     virtual std::shared_ptr<scene::SessionEventSink>  the_session_event_sink();
     virtual std::shared_ptr<scene::SessionEventHandlerRegister> the_session_event_handler_register();

@@ -93,7 +93,6 @@ ms::SessionManager::SessionManager(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
     std::shared_ptr<SessionContainer> const& container,
-    std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionEventSink> const& session_event_sink,
     std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<graphics::Display const> const& display,
@@ -105,7 +104,6 @@ ms::SessionManager::SessionManager(
     surface_factory(surface_factory),
     buffer_stream_factory(buffer_stream_factory),
     app_container(container),
-    snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
     session_listener(session_listener),
     display{display},
@@ -147,7 +145,6 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
         buffer_stream_factory,
         client_pid,
         name,
-        snapshot_strategy,
         observers,
         sender,
         allocator);

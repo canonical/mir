@@ -57,7 +57,6 @@ public:
         std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
         pid_t pid,
         std::string const& session_name,
-        std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
         std::shared_ptr<SessionListener> const& session_listener,
         std::shared_ptr<frontend::EventSink> const& sink,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
@@ -71,7 +70,6 @@ public:
     void destroy_surface(std::shared_ptr<Surface> const& surface) override;
     auto surface_after(std::shared_ptr<Surface> const& sruface) const -> std::shared_ptr<Surface> override;
 
-    void take_snapshot(SnapshotCallback const& snapshot_taken) override;
     std::shared_ptr<Surface> default_surface() const override;
 
     std::string name() const override;
@@ -108,7 +106,6 @@ private:
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     pid_t const pid;
     std::string const session_name;
-    std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;
     std::shared_ptr<graphics::GraphicBufferAllocator> const gralloc;
