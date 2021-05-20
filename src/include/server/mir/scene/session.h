@@ -23,7 +23,6 @@
 #include "mir_toolkit/client_types.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/geometry/size.h"
-#include "mir/scene/snapshot.h"
 
 #include <vector>
 #include <sys/types.h>
@@ -71,7 +70,6 @@ public:
     virtual void send_error(ClientVisibleError const&) = 0;
     virtual void send_input_config(MirInputConfig const& config) = 0;
 
-    virtual void take_snapshot(SnapshotCallback const& snapshot_taken) = 0;
     virtual auto default_surface() const -> std::shared_ptr<Surface> = 0;
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
 

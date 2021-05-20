@@ -36,8 +36,6 @@ struct StubSession : scene::Session
 
     pid_t process_id() const override;
 
-    void take_snapshot(scene::SnapshotCallback const& snapshot_taken) override;
-
     std::shared_ptr<scene::Surface> default_surface() const override;
 
     void set_lifecycle_state(MirLifecycleState state) override;
