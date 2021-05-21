@@ -5,7 +5,6 @@ add_library(
 
   buffer_allocator.cpp
   display_helpers.cpp
-  gbm_buffer.cpp
   gbm_platform.cpp
   nested_authentication.cpp
   drm_native_platform.cpp

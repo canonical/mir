@@ -29,7 +29,6 @@
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/stub_gl_config.h"
-#include "mir/test/doubles/stub_gbm_native_buffer.h"
 #include "mir_test_framework/udev_environment.h"
 #include "mir/test/doubles/fake_renderable.h"
 #include "mir/graphics/transformation.h"
@@ -476,31 +475,6 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_list)
         std::make_shared<FakeRenderable>(display_area),
         std::make_shared<FakeRenderable>(geometry::Rectangle{{12, 34}, {1, 1}})
     };
-
-    graphics::gbm::DisplayBuffer db(
-        graphics::gbm::BypassOption::allowed,
-        null_display_report(),
-        {mock_kms_output},
-        make_output_surface(),
-        display_area,
-        identity);
-
-    EXPECT_FALSE(db.overlay(list));
-}
-
-TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer)
-{
-    auto fullscreen = std::make_shared<FakeRenderable>(display_area);
-    auto nonbypassable = std::make_shared<testing::NiceMock<MockBuffer>>();
-    auto nonbypassable_gbm_native_buffer =
-        std::make_shared<StubGBMNativeBuffer>(display_area.size, false);
-    ON_CALL(*nonbypassable, native_buffer_handle())
-        .WillByDefault(Return(nonbypassable_gbm_native_buffer));
-    ON_CALL(*nonbypassable, size())
-        .WillByDefault(Return(display_area.size));
-
-    fullscreen->set_buffer(nonbypassable);
-    graphics::RenderableList list{fullscreen};
 
     graphics::gbm::DisplayBuffer db(
         graphics::gbm::BypassOption::allowed,
