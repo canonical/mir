@@ -21,7 +21,6 @@
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/transformation.h"
 #include "bypass.h"
-#include "gbm_buffer.h"
 #include "mir/fatal.h"
 #include "mir/log.h"
 #include "native_buffer.h"
