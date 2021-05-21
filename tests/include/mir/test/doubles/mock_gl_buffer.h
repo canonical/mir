@@ -20,7 +20,6 @@
 #define MIR_TEST_DOUBLES_MOCK_GL_BUFFER_H_
 
 #include "mock_buffer.h"
-#include "mir/renderer/gl/texture_source.h"
 #include "mir/graphics/texture.h"
 #include "mir/graphics/program.h"
 #include "mir/graphics/program_factory.h"
@@ -31,17 +30,6 @@ namespace test
 {
 namespace doubles
 {
-
-struct MockGLBuffer : public MockBuffer,
-                      public renderer::gl::TextureSource
-{
- public:
-    using MockBuffer::MockBuffer;
-
-    MOCK_METHOD0(gl_bind_to_texture, void());
-    MOCK_METHOD0(secure_for_render, void());
-    MOCK_METHOD0(bind, void());
-};
 
 struct MockTextureBuffer : public MockBuffer,
                            public graphics::gl::Texture

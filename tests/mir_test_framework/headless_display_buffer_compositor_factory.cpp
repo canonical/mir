@@ -19,7 +19,6 @@
 #include "mir_test_framework/headless_display_buffer_compositor_factory.h"
 #include "mir_test_framework/passthrough_tracker.h"
 #include "mir/renderer/gl/render_target.h"
-#include "mir/renderer/gl/texture_source.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/texture.h"
 #include "mir/compositor/display_buffer_compositor.h"
@@ -105,14 +104,9 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
             for (auto const& renderable : renderlist)
             {
                 auto buf = renderable->buffer();
-                if (auto gl_buf = dynamic_cast<mrg::TextureSource*>(buf->native_buffer_base()))
+                if (auto tex = dynamic_cast<mg::gl::Texture*>(buf->native_buffer_base()))
                 {
-                    // Bind to texture is what drives the Wayland frame event.
-                    gl_buf->gl_bind_to_texture();
-                }
-                else if (auto tex = dynamic_cast<mg::gl::Texture*>(buf->native_buffer_base()))
-                {
-                    // And, likewise, bind() drives the Wayland frame event for mg::gl::Texture
+                    // bind() is what drives the Wayland frame event.
                     tex->bind();
                 }
             }
