@@ -39,7 +39,6 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-#include <mir/renderer/gl/texture_source.h>
 #include <wayland-server-core.h>
 #include <wayland-server-protocol.h>
 
