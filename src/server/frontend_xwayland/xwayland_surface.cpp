@@ -1316,14 +1316,6 @@ void mf::XWaylandSurface::apply_cached_transient_for_and_type(std::lock_guard<st
             }
         }
     }
-    else
-    {
-        // Type should not have parent, if it does we should use a different type
-        if (parent)
-        {
-            type = mir_window_type_gloss;
-        }
-    }
 
     effective_parent = parent;
 
