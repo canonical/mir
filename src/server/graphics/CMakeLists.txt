@@ -17,5 +17,3 @@ add_library(
   platform_probe.cpp
   platform_probe.h
 )
-
-add_subdirectory(offscreen/)

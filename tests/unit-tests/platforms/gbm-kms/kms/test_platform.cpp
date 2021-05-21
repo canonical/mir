@@ -122,12 +122,6 @@ TEST_F(MesaGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_e
     FAIL() << "Expected an exception to be thrown.";
 }
 
-TEST_F(MesaGraphicsPlatform, egl_native_display_is_gbm_device)
-{
-    auto platform = create_platform();
-    EXPECT_EQ(mock_gbm.fake_gbm.device, platform->egl_native_display());
-}
-
 TEST_F(MesaGraphicsPlatform, display_probe_returns_unsupported_when_no_drm_udev_devices)
 {
     mtf::UdevEnvironment udev_environment;

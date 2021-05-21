@@ -22,9 +22,8 @@
 
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/renderer/gl/egl_platform.h"
+#include "mir/graphics/display.h"
 #include "null_cursor.h"
-#include "offscreen/display.h"
 #include "software_cursor.h"
 #include "platform_probe.h"
 

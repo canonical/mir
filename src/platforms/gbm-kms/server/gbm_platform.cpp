@@ -72,8 +72,3 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer
 {
     return make_module_ptr<mgg::BufferAllocator>(output);
 }
-
-MirServerEGLNativeDisplayType mgg::GBMPlatform::egl_native_display() const
-{
-    return gbm->device;
-}

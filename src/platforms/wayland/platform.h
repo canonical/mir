@@ -22,7 +22,6 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
 #include "mir/fd.h"
-#include "mir/renderer/gl/egl_platform.h"
 
 #include "displayclient.h"
 
@@ -37,8 +36,7 @@ namespace graphics
 {
 namespace wayland
 {
-class Platform : public graphics::DisplayPlatform,
-                 public mir::renderer::gl::EGLPlatform
+class Platform : public graphics::DisplayPlatform
 {
 public:
     Platform(struct wl_display* const wl_display, std::shared_ptr<DisplayReport> const& report);
@@ -48,8 +46,6 @@ public:
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
-
-    EGLNativeDisplayType egl_native_display() const override;
 
 private:
     struct wl_display* const wl_display;

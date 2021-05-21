@@ -22,7 +22,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_authentication.h"
 #include "drm_native_platform.h"
-#include "mir/renderer/gl/egl_platform.h"
 #include "platform_common.h"
 #include "display_helpers.h"
 
@@ -38,8 +37,7 @@ namespace gbm
 
 class Quirks;
 
-class Platform : public graphics::DisplayPlatform,
-                 public mir::renderer::gl::EGLPlatform
+class Platform : public graphics::DisplayPlatform
 {
 public:
     explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
@@ -52,8 +50,6 @@ public:
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
-
-    MirServerEGLNativeDisplayType egl_native_display() const override;
 
     std::shared_ptr<mir::udev::Context> udev;
     std::vector<std::shared_ptr<helpers::DRMHelper>> const drm;

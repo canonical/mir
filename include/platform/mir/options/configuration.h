@@ -56,8 +56,6 @@ extern char const* const add_wayland_extensions_opt;
 extern char const* const drop_wayland_extensions_opt;
 extern char const* const enable_mirclient_opt;
 
-extern char const* const offscreen_opt;
-
 extern char const* const enable_key_repeat_opt;
 
 extern char const* const off_opt_value;

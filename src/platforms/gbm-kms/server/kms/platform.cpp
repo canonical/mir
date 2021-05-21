@@ -85,11 +85,6 @@ mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
         listener);
 }
 
-MirServerEGLNativeDisplayType mgg::Platform::egl_native_display() const
-{
-    return gbm->device;
-}
-
 mgg::BypassOption mgg::Platform::bypass_option() const
 {
     return bypass_option_;
