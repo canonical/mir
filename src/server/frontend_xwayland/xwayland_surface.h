@@ -138,6 +138,13 @@ private:
 
     auto latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds;
 
+    /// Modifies the scene surface's geometry if needed, should not be called under lock
+    void modify_surface_geometry(
+        std::shared_ptr<scene::Surface> const& scene_surface,
+        uint16_t xcb_value_mask,
+        int16_t x, int16_t y,
+        int16_t width, int16_t height);
+
     /// Appplies any mods in nullable_pending_spec to the scene_surface (if any)
     void apply_any_mods_to_scene_surface();
 

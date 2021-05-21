@@ -472,48 +472,12 @@ void mf::XWaylandSurface::take_focus()
 
 void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event)
 {
-    std::shared_ptr<scene::Surface> scene_surface;
-
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        scene_surface = weak_scene_surface.lock();
-    }
-
+    std::unique_lock<std::mutex> lock{mutex};
+    auto const scene_surface = weak_scene_surface.lock();
     if (scene_surface)
     {
-        auto const content_offset = scaled_content_offset_of(*scene_surface);
-
-        geom::Point const old_position{scaled_top_left_of(*scene_surface) + content_offset};
-        geom::Point const new_position{
-            event->value_mask & XCB_CONFIG_WINDOW_X ? geom::X{event->x} : old_position.x,
-            event->value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{event->y} : old_position.y,
-        };
-
-        geom::Size const old_size{scaled_content_size_of(*scene_surface)};
-        geom::Size const new_size{
-            event->value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{event->width} : old_size.width,
-            event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{event->height} : old_size.height,
-        };
-
-        shell::SurfaceSpecification mods;
-
-        if (old_position != new_position)
-        {
-            surface_spec_set_position(mods, scene_surface->parent().get(), new_position - content_offset);
-        }
-
-        if (old_size != new_size)
-        {
-            // Mir appears to not respect size request unless both width and height are set
-            mods.width = new_size.width;
-            mods.height = new_size.height;
-        }
-
-        if (!mods.is_empty())
-        {
-            scale_surface_spec(mods);
-            shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
-        }
+        lock.unlock();
+        modify_surface_geometry(scene_surface, event->value_mask, event->x, event->y, event->width, event->height);
     }
     else
     {
@@ -525,6 +489,7 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
             event->value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{event->width} : cached.size.width,
             event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{event->height} : cached.size.height};
 
+        lock.unlock();
         connection->configure_window(
             window,
             top_left,
@@ -538,10 +503,19 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
 
 void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::unique_lock<std::mutex> lock{mutex};
     cached.override_redirect = event->override_redirect;
-    cached.top_left = geom::Point{event->x, event->y},
+    cached.top_left = geom::Point{event->x, event->y};
     cached.size = geom::Size{event->width, event->height};
+    if (auto const scene_surface = weak_scene_surface.lock())
+    {
+        lock.unlock();
+        modify_surface_geometry(
+            scene_surface,
+            XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
+            event->x, event->y,
+            event->width, event->height);
+    }
 }
 
 void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
@@ -907,18 +881,19 @@ void mf::XWaylandSurface::scene_surface_resized(geometry::Size const& new_size)
 
 void mf::XWaylandSurface::scene_surface_moved_to(geometry::Point const& new_top_left)
 {
-    std::shared_ptr<scene::Surface> scene_surface;
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        if (new_top_left == cached.top_left)
-        {
-            // If position is same as the cache, the X server already knows the correct position and we should not send
-            // a configure (this happens when the surface is moved in reaction to a configure notify event)
-            return;
-        }
-        scene_surface = weak_scene_surface.lock();
-    }
+    std::unique_lock<std::mutex> lock{mutex};
+    auto const scene_surface = weak_scene_surface.lock();
+    auto const cached_top_left = cached.top_left;
+    lock.unlock();
+
     auto const content_offset = scene_surface ? scaled_content_offset_of(*scene_surface) : geom::Displacement{};
+    auto const offset_new_top_left = new_top_left + content_offset;
+    if (offset_new_top_left == cached_top_left)
+    {
+        // If position is same as the cache, the X server already knows the correct position and we should not send
+        // a configure (this happens when the surface is moved in reaction to a configure notify event)
+        return;
+    }
     connection->configure_window(
         window,
         new_top_left + content_offset,
@@ -1119,6 +1094,46 @@ auto mf::XWaylandSurface::latest_input_timestamp(std::lock_guard<std::mutex> con
     {
         log_warning("Can not get timestamp because surface_observer is null");
         return {};
+    }
+}
+
+void mf::XWaylandSurface::modify_surface_geometry(
+    std::shared_ptr<ms::Surface> const& scene_surface,
+    uint16_t xcb_value_mask,
+    int16_t x, int16_t y,
+    int16_t width, int16_t height)
+{
+    auto const content_offset = scaled_content_offset_of(*scene_surface);
+    geom::Point const old_position{scaled_top_left_of(*scene_surface) + content_offset};
+    geom::Point const new_position{
+        xcb_value_mask & XCB_CONFIG_WINDOW_X ? geom::X{x} : old_position.x,
+        xcb_value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{y} : old_position.y,
+    };
+
+    geom::Size const old_size{scaled_content_size_of(*scene_surface)};
+    geom::Size const new_size{
+        xcb_value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{width} : old_size.width,
+        xcb_value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{height} : old_size.height,
+    };
+
+    shell::SurfaceSpecification mods;
+
+    if (old_position != new_position)
+    {
+        surface_spec_set_position(mods, scene_surface->parent().get(), new_position - content_offset);
+    }
+
+    if (old_size != new_size)
+    {
+        // Mir appears to not respect size request unless both width and height are set
+        mods.width = new_size.width;
+        mods.height = new_size.height;
+    }
+
+    if (!mods.is_empty())
+    {
+        scale_surface_spec(mods);
+        shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
     }
 }
 
