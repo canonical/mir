@@ -130,8 +130,3 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
 {
     return make_module_ptr<mgx::Display>(x11_resources, output_sizes, initial_conf_policy, gl_config, report);
 }
-
-EGLNativeDisplayType mgx::Platform::egl_native_display() const
-{
-    return eglGetDisplay(x11_resources->xlib_dpy);
-}

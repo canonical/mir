@@ -22,7 +22,6 @@
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/platform.h"
 #include "mir/geometry/size.h"
-#include "mir/renderer/gl/egl_platform.h"
 
 namespace mir
 {
@@ -55,8 +54,7 @@ struct X11OutputConfig
     float scale;
 };
 
-class Platform : public graphics::DisplayPlatform,
-                 public mir::renderer::gl::EGLPlatform
+class Platform : public graphics::DisplayPlatform
 {
 public:
     // Parses colon separated list of sizes in the form WIDTHxHEIGHT^SCALE (^SCALE is optional)
@@ -71,8 +69,6 @@ public:
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
-
-    EGLNativeDisplayType egl_native_display() const override;
 private:
     std::shared_ptr<mir::X::X11Resources> const x11_resources;
     std::shared_ptr<DisplayReport> const report;

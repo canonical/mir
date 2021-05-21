@@ -15,7 +15,6 @@ list(APPEND UNIT_TEST_SOURCES
 )
 
 list(APPEND UMOCK_UNIT_TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_platform_prober.cpp)
-add_subdirectory(offscreen/)
 
 add_subdirectory(egl_mock/)
 

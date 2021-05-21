@@ -117,14 +117,13 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
 
 TEST_F(ServerConfigurationOptions, unknown_command_line_options_are_passed_to_handler)
 {
-    const int argc = 10;
+    const int argc = 9;
     char const* argv[argc] = {
         __PRETTY_FUNCTION__,
         "--enable-input", "no",
         "--hello",
         "-f", "test_file",
         "world",
-        "--offscreen",
         "--answer", "42"
     };
 

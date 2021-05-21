@@ -89,7 +89,6 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirreport>
   $<TARGET_OBJECTS:mirlogging>
   $<TARGET_OBJECTS:mirnullreport>
-  $<TARGET_OBJECTS:miroffscreengraphics>
   $<TARGET_OBJECTS:mirthread>
   $<TARGET_OBJECTS:mirconsole>
 
