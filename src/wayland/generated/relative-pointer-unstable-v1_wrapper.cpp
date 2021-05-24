@@ -39,11 +39,6 @@ struct wl_interface const* all_null_types [] {
 
 // RelativePointerManagerV1
 
-mw::RelativePointerManagerV1* mw::RelativePointerManagerV1::from(struct wl_resource* resource)
-{
-    return static_cast<RelativePointerManagerV1*>(wl_resource_get_user_data(resource));
-}
-
 struct mw::RelativePointerManagerV1::Thunks
 {
     static int const supported_version;
@@ -54,6 +49,10 @@ struct mw::RelativePointerManagerV1::Thunks
         try
         {
             me->destroy();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -74,6 +73,10 @@ struct mw::RelativePointerManagerV1::Thunks
         try
         {
             me->get_relative_pointer(id_resolved, pointer);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -170,12 +173,16 @@ void const* mw::RelativePointerManagerV1::Thunks::request_vtable[] {
     (void*)Thunks::destroy_thunk,
     (void*)Thunks::get_relative_pointer_thunk};
 
-// RelativePointerV1
-
-mw::RelativePointerV1* mw::RelativePointerV1::from(struct wl_resource* resource)
+mw::RelativePointerManagerV1* mw::RelativePointerManagerV1::from(struct wl_resource* resource)
 {
-    return static_cast<RelativePointerV1*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &zwp_relative_pointer_manager_v1_interface_data, RelativePointerManagerV1::Thunks::request_vtable))
+    {
+        return static_cast<RelativePointerManagerV1*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
+
+// RelativePointerV1
 
 struct mw::RelativePointerV1::Thunks
 {
@@ -187,6 +194,10 @@ struct mw::RelativePointerV1::Thunks
         try
         {
             me->destroy();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -249,6 +260,15 @@ struct wl_message const mw::RelativePointerV1::Thunks::event_messages[] {
 
 void const* mw::RelativePointerV1::Thunks::request_vtable[] {
     (void*)Thunks::destroy_thunk};
+
+mw::RelativePointerV1* mw::RelativePointerV1::from(struct wl_resource* resource)
+{
+    if (wl_resource_instance_of(resource, &zwp_relative_pointer_v1_interface_data, RelativePointerV1::Thunks::request_vtable))
+    {
+        return static_cast<RelativePointerV1*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
+}
 
 namespace mir
 {

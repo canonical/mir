@@ -42,11 +42,6 @@ struct wl_interface const* all_null_types [] {
 
 // PointerConstraintsV1
 
-mw::PointerConstraintsV1* mw::PointerConstraintsV1::from(struct wl_resource* resource)
-{
-    return static_cast<PointerConstraintsV1*>(wl_resource_get_user_data(resource));
-}
-
 struct mw::PointerConstraintsV1::Thunks
 {
     static int const supported_version;
@@ -57,6 +52,10 @@ struct mw::PointerConstraintsV1::Thunks
         try
         {
             me->destroy();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -83,6 +82,10 @@ struct mw::PointerConstraintsV1::Thunks
         {
             me->lock_pointer(id_resolved, surface, pointer, region_resolved, lifetime);
         }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
         catch(...)
         {
             internal_error_processing_request(client, "PointerConstraintsV1::lock_pointer()");
@@ -107,6 +110,10 @@ struct mw::PointerConstraintsV1::Thunks
         try
         {
             me->confine_pointer(id_resolved, surface, pointer, region_resolved, lifetime);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -216,12 +223,16 @@ void const* mw::PointerConstraintsV1::Thunks::request_vtable[] {
     (void*)Thunks::lock_pointer_thunk,
     (void*)Thunks::confine_pointer_thunk};
 
-// LockedPointerV1
-
-mw::LockedPointerV1* mw::LockedPointerV1::from(struct wl_resource* resource)
+mw::PointerConstraintsV1* mw::PointerConstraintsV1::from(struct wl_resource* resource)
 {
-    return static_cast<LockedPointerV1*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &zwp_pointer_constraints_v1_interface_data, PointerConstraintsV1::Thunks::request_vtable))
+    {
+        return static_cast<PointerConstraintsV1*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
+
+// LockedPointerV1
 
 struct mw::LockedPointerV1::Thunks
 {
@@ -233,6 +244,10 @@ struct mw::LockedPointerV1::Thunks
         try
         {
             me->destroy();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -248,6 +263,10 @@ struct mw::LockedPointerV1::Thunks
         try
         {
             me->set_cursor_position_hint(surface_x_resolved, surface_y_resolved);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -266,6 +285,10 @@ struct mw::LockedPointerV1::Thunks
         try
         {
             me->set_region(region_resolved);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -339,12 +362,16 @@ void const* mw::LockedPointerV1::Thunks::request_vtable[] {
     (void*)Thunks::set_cursor_position_hint_thunk,
     (void*)Thunks::set_region_thunk};
 
-// ConfinedPointerV1
-
-mw::ConfinedPointerV1* mw::ConfinedPointerV1::from(struct wl_resource* resource)
+mw::LockedPointerV1* mw::LockedPointerV1::from(struct wl_resource* resource)
 {
-    return static_cast<ConfinedPointerV1*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &zwp_locked_pointer_v1_interface_data, LockedPointerV1::Thunks::request_vtable))
+    {
+        return static_cast<LockedPointerV1*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
+
+// ConfinedPointerV1
 
 struct mw::ConfinedPointerV1::Thunks
 {
@@ -356,6 +383,10 @@ struct mw::ConfinedPointerV1::Thunks
         try
         {
             me->destroy();
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -374,6 +405,10 @@ struct mw::ConfinedPointerV1::Thunks
         try
         {
             me->set_region(region_resolved);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
         }
         catch(...)
         {
@@ -444,6 +479,15 @@ struct wl_message const mw::ConfinedPointerV1::Thunks::event_messages[] {
 void const* mw::ConfinedPointerV1::Thunks::request_vtable[] {
     (void*)Thunks::destroy_thunk,
     (void*)Thunks::set_region_thunk};
+
+mw::ConfinedPointerV1* mw::ConfinedPointerV1::from(struct wl_resource* resource)
+{
+    if (wl_resource_instance_of(resource, &zwp_confined_pointer_v1_interface_data, ConfinedPointerV1::Thunks::request_vtable))
+    {
+        return static_cast<ConfinedPointerV1*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
+}
 
 namespace mir
 {

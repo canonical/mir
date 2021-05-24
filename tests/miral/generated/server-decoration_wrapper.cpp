@@ -39,11 +39,6 @@ struct wl_interface const* all_null_types [] {
 
 // ServerDecorationManager
 
-mw::ServerDecorationManager* mw::ServerDecorationManager::from(struct wl_resource* resource)
-{
-    return static_cast<ServerDecorationManager*>(wl_resource_get_user_data(resource));
-}
-
 struct mw::ServerDecorationManager::Thunks
 {
     static int const supported_version;
@@ -168,12 +163,16 @@ struct wl_message const mw::ServerDecorationManager::Thunks::event_messages[] {
 void const* mw::ServerDecorationManager::Thunks::request_vtable[] {
     (void*)Thunks::create_thunk};
 
-// ServerDecoration
-
-mw::ServerDecoration* mw::ServerDecoration::from(struct wl_resource* resource)
+mw::ServerDecorationManager* mw::ServerDecorationManager::from(struct wl_resource* resource)
 {
-    return static_cast<ServerDecoration*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &org_kde_kwin_server_decoration_manager_interface_data, ServerDecorationManager::Thunks::request_vtable))
+    {
+        return static_cast<ServerDecorationManager*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
+
+// ServerDecoration
 
 struct mw::ServerDecoration::Thunks
 {
@@ -266,6 +265,15 @@ struct wl_message const mw::ServerDecoration::Thunks::event_messages[] {
 void const* mw::ServerDecoration::Thunks::request_vtable[] {
     (void*)Thunks::release_thunk,
     (void*)Thunks::request_mode_thunk};
+
+mw::ServerDecoration* mw::ServerDecoration::from(struct wl_resource* resource)
+{
+    if (wl_resource_instance_of(resource, &org_kde_kwin_server_decoration_interface_data, ServerDecoration::Thunks::request_vtable))
+    {
+        return static_cast<ServerDecoration*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
+}
 
 namespace mir
 {
