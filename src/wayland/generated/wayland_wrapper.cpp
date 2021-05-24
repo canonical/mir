@@ -60,7 +60,13 @@ struct mw::Callback::Thunks
 {
     static int const supported_version;
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<Callback*>(wl_resource_get_user_data(resource));
+    }
+
     static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 int const mw::Callback::Thunks::supported_version = 1;
@@ -73,15 +79,22 @@ mw::Callback::Callback(struct wl_resource* resource, Version<1>)
     {
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 mw::Callback::~Callback()
 {
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::Callback::send_done_event(uint32_t callback_data) const
 {
     wl_resource_post_event(resource, Opcode::done, callback_data);
+}
+
+bool mw::Callback::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_callback_interface_data, Thunks::request_vtable);
 }
 
 void mw::Callback::destroy_wayland_object() const
@@ -92,10 +105,16 @@ void mw::Callback::destroy_wayland_object() const
 struct wl_message const mw::Callback::Thunks::event_messages[] {
     {"done", "u", all_null_types}};
 
+void const* mw::Callback::Thunks::request_vtable[] {
+    nullptr};
+
 mw::Callback* mw::Callback::from(struct wl_resource* resource)
 {
-    // WARNING: This is potentially unsafe; there is no guarantee that resource is a Callback
-    return static_cast<Callback*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &wl_callback_interface_data, Callback::Thunks::request_vtable))
+    {
+        return static_cast<Callback*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
 
 // Compositor
