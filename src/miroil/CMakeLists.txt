@@ -20,6 +20,7 @@ target_include_directories(miroil-internal
 )
 
 add_library(miroil SHARED
+    compositor.cpp ${miroil_include}/miroil/compositor.h    
     edid.cpp ${miroil_include}/miroil/edid.h
     mirbuffer.cpp ${miroil_include}/miroil/mirbuffer.h
     persist_display_config.cpp ${miroil_include}/miroil/persist_display_config.h
@@ -31,6 +32,7 @@ add_library(miroil SHARED
     mir_server_hooks.cpp ${miroil_include}/miroil/mir_server_hooks.h
     prompt_session_listener.cpp ${miroil_include}/miroil/prompt_session_listener.h
     prompt_session_manager.cpp ${miroil_include}/miroil/prompt_session_manager.h    
+    set_compositor.cpp ${miroil_include}/miroil/set_compositor.h
     ${miroil_include}/miroil/display_configuration_storage.h
     ${miroil_include}/miroil/display_id.h
 )
