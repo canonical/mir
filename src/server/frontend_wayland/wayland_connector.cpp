@@ -203,9 +203,13 @@ public:
     ~WlShellSurface() = default;
 
 protected:
-    void destroy() override
+    void surface_destroyed() override
     {
-        wl_resource_destroy(resource);
+        // The spec is a little contradictory:
+        // wl_surface: When a client wants to destroy a wl_surface, they must destroy this 'role object' before the wl_surface
+        // wl_shell_surface: On the server side the object is automatically destroyed when the related wl_surface is destroyed
+        // Without a destroy request, it seems the latter must be correct, so that is what we implement
+        destroy_wayland_object();
     }
 
     void set_toplevel() override

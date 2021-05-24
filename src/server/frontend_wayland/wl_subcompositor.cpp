@@ -209,3 +209,11 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
         cached_state = std::experimental::nullopt;
     }
 }
+
+void mf::WlSubsurface::surface_destroyed()
+{
+    // "When a client wants to destroy a wl_surface, they must destroy this 'role object' before the wl_surface."
+    BOOST_THROW_EXCEPTION(std::runtime_error{
+        "wl_surface@" + std::to_string(wl_resource_get_id(surface->resource)) +
+        " destroyed before it's associated wl_subsurface@" + std::to_string(wl_resource_get_id(resource))});
+}

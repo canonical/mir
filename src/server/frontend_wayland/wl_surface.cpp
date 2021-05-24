@@ -103,7 +103,7 @@ mf::WlSurface::WlSurface(
 
 mf::WlSurface::~WlSurface()
 {
-    role->destroy();
+    role->surface_destroyed();
     session->destroy_buffer_stream(stream);
 }
 
@@ -493,4 +493,4 @@ auto mf::NullWlSurfaceRole::scene_surface() const -> std::experimental::optional
 }
 void mf::NullWlSurfaceRole::refresh_surface_data_now() {}
 void mf::NullWlSurfaceRole::commit(WlSurfaceState const& state) { surface->commit(state); }
-void mf::NullWlSurfaceRole::destroy() {}
+void mf::NullWlSurfaceRole::surface_destroyed() {}
