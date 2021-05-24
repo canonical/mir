@@ -121,7 +121,7 @@ Emitter Interface::declaration() const
                 destructor_prototype(),
             },
             event_prototypes(),
-            {"void destroy_wayland_object() const;"},
+            (has_destroy_request ? nullptr : "void destroy_and_delete() const;"),
             member_vars(),
             enum_declarations(),
             event_opcodes(),
@@ -149,12 +149,15 @@ Emitter Interface::implementation() const
             destructor_impl(),
             event_impls(),
             is_instance_impl(),
-            Lines{
-                {"void ", nmspace, "destroy_wayland_object() const"},
-                Block{
-                    {"wl_resource_destroy(resource);"}
+            (has_destroy_request ? Emitter{nullptr} :
+                Lines{
+                    {"void ", nmspace, "destroy_and_delete() const"},
+                    Block{
+                        {"// Will result in this object being deleted"},
+                        {"wl_resource_destroy(resource);"},
+                    }
                 }
-            },
+            ),
             (global ? global.value().implementation() : nullptr),
             types_init(),
             Lines{
