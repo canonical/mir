@@ -36,6 +36,9 @@ public:
     // the bit of this objects vtable that holds this method
     Emitter vtable_initialiser() const;
 
+    // If this request destroys the object
+    bool is_destroy() const;
+
 protected:
     // arguments from libwayland to the thunk
     Emitter wl_args() const;

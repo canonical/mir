@@ -57,6 +57,11 @@ Emitter Request::vtable_initialiser() const
     return {name, "_thunk"};
 }
 
+bool Request::is_destroy() const
+{
+    return name == "destroy";
+}
+
 Emitter Request::wl_args() const
 {
     Emitter client_arg = "struct wl_client* client";

@@ -87,7 +87,7 @@ private:
     std::vector<Event> const events;
     std::vector<Enum> const enums;
     std::vector<std::string> const parent_interfaces;
-    bool const has_vtable;
+    bool const has_destroy_request;
 };
 
 #endif // MIR_WAYLAND_GENERATOR_INTERFACE_H
