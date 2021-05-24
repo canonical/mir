@@ -34,8 +34,6 @@ public:
     PointerConstraintsV1(struct wl_resource* resource, Version<1>);
     virtual ~PointerConstraintsV1();
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -67,7 +65,6 @@ public:
     };
 
 private:
-    virtual void destroy() = 0;
     virtual void lock_pointer(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* pointer, std::experimental::optional<struct wl_resource*> const& region, uint32_t lifetime) = 0;
     virtual void confine_pointer(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* pointer, std::experimental::optional<struct wl_resource*> const& region, uint32_t lifetime) = 0;
 };
@@ -85,8 +82,6 @@ public:
     void send_locked_event() const;
     void send_unlocked_event() const;
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -101,7 +96,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void destroy() = 0;
     virtual void set_cursor_position_hint(double surface_x, double surface_y) = 0;
     virtual void set_region(std::experimental::optional<struct wl_resource*> const& region) = 0;
 };
@@ -119,8 +113,6 @@ public:
     void send_confined_event() const;
     void send_unconfined_event() const;
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -135,7 +127,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void destroy() = 0;
     virtual void set_region(std::experimental::optional<struct wl_resource*> const& region) = 0;
 };
 

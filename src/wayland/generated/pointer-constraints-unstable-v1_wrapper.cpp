@@ -48,10 +48,9 @@ struct mw::PointerConstraintsV1::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<PointerConstraintsV1*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -65,7 +64,6 @@ struct mw::PointerConstraintsV1::Thunks
 
     static void lock_pointer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* pointer, struct wl_resource* region, uint32_t lifetime)
     {
-        auto me = static_cast<PointerConstraintsV1*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &zwp_locked_pointer_v1_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -80,6 +78,7 @@ struct mw::PointerConstraintsV1::Thunks
         }
         try
         {
+            auto me = static_cast<PointerConstraintsV1*>(wl_resource_get_user_data(resource));
             me->lock_pointer(id_resolved, surface, pointer, region_resolved, lifetime);
         }
         catch(ProtocolError const& err)
@@ -94,7 +93,6 @@ struct mw::PointerConstraintsV1::Thunks
 
     static void confine_pointer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* pointer, struct wl_resource* region, uint32_t lifetime)
     {
-        auto me = static_cast<PointerConstraintsV1*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &zwp_confined_pointer_v1_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -109,6 +107,7 @@ struct mw::PointerConstraintsV1::Thunks
         }
         try
         {
+            auto me = static_cast<PointerConstraintsV1*>(wl_resource_get_user_data(resource));
             me->confine_pointer(id_resolved, surface, pointer, region_resolved, lifetime);
         }
         catch(ProtocolError const& err)
@@ -178,11 +177,6 @@ bool mw::PointerConstraintsV1::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zwp_pointer_constraints_v1_interface_data, Thunks::request_vtable);
 }
 
-void mw::PointerConstraintsV1::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 mw::PointerConstraintsV1::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
@@ -240,10 +234,9 @@ struct mw::LockedPointerV1::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<LockedPointerV1*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -257,11 +250,11 @@ struct mw::LockedPointerV1::Thunks
 
     static void set_cursor_position_hint_thunk(struct wl_client* client, struct wl_resource* resource, wl_fixed_t surface_x, wl_fixed_t surface_y)
     {
-        auto me = static_cast<LockedPointerV1*>(wl_resource_get_user_data(resource));
         double surface_x_resolved{wl_fixed_to_double(surface_x)};
         double surface_y_resolved{wl_fixed_to_double(surface_y)};
         try
         {
+            auto me = static_cast<LockedPointerV1*>(wl_resource_get_user_data(resource));
             me->set_cursor_position_hint(surface_x_resolved, surface_y_resolved);
         }
         catch(ProtocolError const& err)
@@ -276,7 +269,6 @@ struct mw::LockedPointerV1::Thunks
 
     static void set_region_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* region)
     {
-        auto me = static_cast<LockedPointerV1*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> region_resolved;
         if (region != nullptr)
         {
@@ -284,6 +276,7 @@ struct mw::LockedPointerV1::Thunks
         }
         try
         {
+            auto me = static_cast<LockedPointerV1*>(wl_resource_get_user_data(resource));
             me->set_region(region_resolved);
         }
         catch(ProtocolError const& err)
@@ -340,11 +333,6 @@ bool mw::LockedPointerV1::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zwp_locked_pointer_v1_interface_data, Thunks::request_vtable);
 }
 
-void mw::LockedPointerV1::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_interface const* mw::LockedPointerV1::Thunks::set_region_types[] {
     &wl_region_interface_data};
 
@@ -379,10 +367,9 @@ struct mw::ConfinedPointerV1::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ConfinedPointerV1*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -396,7 +383,6 @@ struct mw::ConfinedPointerV1::Thunks
 
     static void set_region_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* region)
     {
-        auto me = static_cast<ConfinedPointerV1*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> region_resolved;
         if (region != nullptr)
         {
@@ -404,6 +390,7 @@ struct mw::ConfinedPointerV1::Thunks
         }
         try
         {
+            auto me = static_cast<ConfinedPointerV1*>(wl_resource_get_user_data(resource));
             me->set_region(region_resolved);
         }
         catch(ProtocolError const& err)
@@ -458,11 +445,6 @@ void mw::ConfinedPointerV1::send_unconfined_event() const
 bool mw::ConfinedPointerV1::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zwp_confined_pointer_v1_interface_data, Thunks::request_vtable);
-}
-
-void mw::ConfinedPointerV1::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::ConfinedPointerV1::Thunks::set_region_types[] {

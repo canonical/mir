@@ -53,7 +53,7 @@ public:
 
     void send_done_event(uint32_t callback_data) const;
 
-    void destroy_wayland_object() const;
+    void destroy_and_delete() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -80,7 +80,7 @@ public:
     Compositor(struct wl_resource* resource, Version<4>);
     virtual ~Compositor();
 
-    void destroy_wayland_object() const;
+    void destroy_and_delete() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -116,8 +116,6 @@ public:
     ShmPool(struct wl_resource* resource, Version<1>);
     virtual ~ShmPool();
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -127,7 +125,6 @@ public:
 
 private:
     virtual void create_buffer(struct wl_resource* id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) = 0;
-    virtual void destroy() = 0;
     virtual void resize(int32_t size) = 0;
 };
 
@@ -143,7 +140,7 @@ public:
 
     void send_format_event(uint32_t format) const;
 
-    void destroy_wayland_object() const;
+    void destroy_and_delete() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -254,8 +251,6 @@ public:
 
     void send_release_event() const;
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -269,7 +264,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void destroy() = 0;
 };
 
 class DataOffer : public Resource
@@ -287,8 +281,6 @@ public:
     void send_source_actions_event(uint32_t source_actions) const;
     bool version_supports_action();
     void send_action_event(uint32_t dnd_action) const;
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -315,7 +307,6 @@ public:
 private:
     virtual void accept(uint32_t serial, std::experimental::optional<std::string> const& mime_type) = 0;
     virtual void receive(std::string const& mime_type, mir::Fd fd) = 0;
-    virtual void destroy() = 0;
     virtual void finish() = 0;
     virtual void set_actions(uint32_t dnd_actions, uint32_t preferred_action) = 0;
 };
@@ -339,8 +330,6 @@ public:
     void send_dnd_finished_event() const;
     bool version_supports_action();
     void send_action_event(uint32_t dnd_action) const;
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -367,7 +356,6 @@ public:
 
 private:
     virtual void offer(std::string const& mime_type) = 0;
-    virtual void destroy() = 0;
     virtual void set_actions(uint32_t dnd_actions) = 0;
 };
 
@@ -387,8 +375,6 @@ public:
     void send_motion_event(uint32_t time, double x, double y) const;
     void send_drop_event() const;
     void send_selection_event(std::experimental::optional<struct wl_resource*> const& id) const;
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -415,7 +401,6 @@ public:
 private:
     virtual void start_drag(std::experimental::optional<struct wl_resource*> const& source, struct wl_resource* origin, std::experimental::optional<struct wl_resource*> const& icon, uint32_t serial) = 0;
     virtual void set_selection(std::experimental::optional<struct wl_resource*> const& source, uint32_t serial) = 0;
-    virtual void release() = 0;
 };
 
 class DataDeviceManager : public Resource
@@ -428,7 +413,7 @@ public:
     DataDeviceManager(struct wl_resource* resource, Version<3>);
     virtual ~DataDeviceManager();
 
-    void destroy_wayland_object() const;
+    void destroy_and_delete() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -472,7 +457,7 @@ public:
     Shell(struct wl_resource* resource, Version<1>);
     virtual ~Shell();
 
-    void destroy_wayland_object() const;
+    void destroy_and_delete() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -516,7 +501,7 @@ public:
     void send_configure_event(uint32_t edges, int32_t width, int32_t height) const;
     void send_popup_done_event() const;
 
-    void destroy_wayland_object() const;
+    void destroy_and_delete() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -584,8 +569,6 @@ public:
     void send_enter_event(struct wl_resource* output) const;
     void send_leave_event(struct wl_resource* output) const;
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -606,7 +589,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void destroy() = 0;
     virtual void attach(std::experimental::optional<struct wl_resource*> const& buffer, int32_t x, int32_t y) = 0;
     virtual void damage(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
     virtual void frame(struct wl_resource* callback) = 0;
@@ -631,8 +613,6 @@ public:
     void send_capabilities_event(uint32_t capabilities) const;
     bool version_supports_name();
     void send_name_event(std::string const& name) const;
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -670,7 +650,6 @@ private:
     virtual void get_pointer(struct wl_resource* id) = 0;
     virtual void get_keyboard(struct wl_resource* id) = 0;
     virtual void get_touch(struct wl_resource* id) = 0;
-    virtual void release() = 0;
 };
 
 class Pointer : public Resource
@@ -696,8 +675,6 @@ public:
     void send_axis_stop_event(uint32_t time, uint32_t axis) const;
     bool version_supports_axis_discrete();
     void send_axis_discrete_event(uint32_t axis, int32_t discrete) const;
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -746,7 +723,6 @@ public:
 
 private:
     virtual void set_cursor(uint32_t serial, std::experimental::optional<struct wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) = 0;
-    virtual void release() = 0;
 };
 
 class Keyboard : public Resource
@@ -766,8 +742,6 @@ public:
     void send_modifiers_event(uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) const;
     bool version_supports_repeat_info();
     void send_repeat_info_event(int32_t rate, int32_t delay) const;
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -799,7 +773,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void release() = 0;
 };
 
 class Touch : public Resource
@@ -822,8 +795,6 @@ public:
     bool version_supports_orientation();
     void send_orientation_event(int32_t id, double orientation) const;
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -843,7 +814,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void release() = 0;
 };
 
 class Output : public Resource
@@ -862,8 +832,6 @@ public:
     void send_done_event() const;
     bool version_supports_scale();
     void send_scale_event(int32_t factor) const;
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -921,7 +889,6 @@ public:
     };
 
 private:
-    virtual void release() = 0;
 };
 
 class Region : public Resource
@@ -934,8 +901,6 @@ public:
     Region(struct wl_resource* resource, Version<1>);
     virtual ~Region();
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -944,7 +909,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void destroy() = 0;
     virtual void add(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
     virtual void subtract(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
 };
@@ -958,8 +922,6 @@ public:
 
     Subcompositor(struct wl_resource* resource, Version<1>);
     virtual ~Subcompositor();
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -986,7 +948,6 @@ public:
     };
 
 private:
-    virtual void destroy() = 0;
     virtual void get_subsurface(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* parent) = 0;
 };
 
@@ -999,8 +960,6 @@ public:
 
     Subsurface(struct wl_resource* resource, Version<1>);
     virtual ~Subsurface();
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -1015,7 +974,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void destroy() = 0;
     virtual void set_position(int32_t x, int32_t y) = 0;
     virtual void place_above(struct wl_resource* sibling) = 0;
     virtual void place_below(struct wl_resource* sibling) = 0;

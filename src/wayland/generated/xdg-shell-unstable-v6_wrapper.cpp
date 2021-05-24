@@ -50,10 +50,9 @@ struct mw::XdgShellV6::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<XdgShellV6*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -67,7 +66,6 @@ struct mw::XdgShellV6::Thunks
 
     static void create_positioner_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
-        auto me = static_cast<XdgShellV6*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &zxdg_positioner_v6_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -77,6 +75,7 @@ struct mw::XdgShellV6::Thunks
         }
         try
         {
+            auto me = static_cast<XdgShellV6*>(wl_resource_get_user_data(resource));
             me->create_positioner(id_resolved);
         }
         catch(ProtocolError const& err)
@@ -91,7 +90,6 @@ struct mw::XdgShellV6::Thunks
 
     static void get_xdg_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
-        auto me = static_cast<XdgShellV6*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &zxdg_surface_v6_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -101,6 +99,7 @@ struct mw::XdgShellV6::Thunks
         }
         try
         {
+            auto me = static_cast<XdgShellV6*>(wl_resource_get_user_data(resource));
             me->get_xdg_surface(id_resolved, surface);
         }
         catch(ProtocolError const& err)
@@ -115,9 +114,9 @@ struct mw::XdgShellV6::Thunks
 
     static void pong_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
     {
-        auto me = static_cast<XdgShellV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgShellV6*>(wl_resource_get_user_data(resource));
             me->pong(serial);
         }
         catch(ProtocolError const& err)
@@ -193,11 +192,6 @@ bool mw::XdgShellV6::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zxdg_shell_v6_interface_data, Thunks::request_vtable);
 }
 
-void mw::XdgShellV6::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 mw::XdgShellV6::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
@@ -253,10 +247,9 @@ struct mw::XdgPositionerV6::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -270,9 +263,9 @@ struct mw::XdgPositionerV6::Thunks
 
     static void set_size_thunk(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
     {
-        auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
             me->set_size(width, height);
         }
         catch(ProtocolError const& err)
@@ -287,9 +280,9 @@ struct mw::XdgPositionerV6::Thunks
 
     static void set_anchor_rect_thunk(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
     {
-        auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
             me->set_anchor_rect(x, y, width, height);
         }
         catch(ProtocolError const& err)
@@ -304,9 +297,9 @@ struct mw::XdgPositionerV6::Thunks
 
     static void set_anchor_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t anchor)
     {
-        auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
             me->set_anchor(anchor);
         }
         catch(ProtocolError const& err)
@@ -321,9 +314,9 @@ struct mw::XdgPositionerV6::Thunks
 
     static void set_gravity_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t gravity)
     {
-        auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
             me->set_gravity(gravity);
         }
         catch(ProtocolError const& err)
@@ -338,9 +331,9 @@ struct mw::XdgPositionerV6::Thunks
 
     static void set_constraint_adjustment_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t constraint_adjustment)
     {
-        auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
             me->set_constraint_adjustment(constraint_adjustment);
         }
         catch(ProtocolError const& err)
@@ -355,9 +348,9 @@ struct mw::XdgPositionerV6::Thunks
 
     static void set_offset_thunk(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y)
     {
-        auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
             me->set_offset(x, y);
         }
         catch(ProtocolError const& err)
@@ -402,11 +395,6 @@ bool mw::XdgPositionerV6::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zxdg_positioner_v6_interface_data, Thunks::request_vtable);
 }
 
-void mw::XdgPositionerV6::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_message const mw::XdgPositionerV6::Thunks::request_messages[] {
     {"destroy", "", all_null_types},
     {"set_size", "ii", all_null_types},
@@ -442,10 +430,9 @@ struct mw::XdgSurfaceV6::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -459,7 +446,6 @@ struct mw::XdgSurfaceV6::Thunks
 
     static void get_toplevel_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
-        auto me = static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &zxdg_toplevel_v6_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -469,6 +455,7 @@ struct mw::XdgSurfaceV6::Thunks
         }
         try
         {
+            auto me = static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(resource));
             me->get_toplevel(id_resolved);
         }
         catch(ProtocolError const& err)
@@ -483,7 +470,6 @@ struct mw::XdgSurfaceV6::Thunks
 
     static void get_popup_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
     {
-        auto me = static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &zxdg_popup_v6_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -493,6 +479,7 @@ struct mw::XdgSurfaceV6::Thunks
         }
         try
         {
+            auto me = static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(resource));
             me->get_popup(id_resolved, parent, positioner);
         }
         catch(ProtocolError const& err)
@@ -507,9 +494,9 @@ struct mw::XdgSurfaceV6::Thunks
 
     static void set_window_geometry_thunk(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
     {
-        auto me = static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(resource));
             me->set_window_geometry(x, y, width, height);
         }
         catch(ProtocolError const& err)
@@ -524,9 +511,9 @@ struct mw::XdgSurfaceV6::Thunks
 
     static void ack_configure_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
     {
-        auto me = static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(resource));
             me->ack_configure(serial);
         }
         catch(ProtocolError const& err)
@@ -579,11 +566,6 @@ bool mw::XdgSurfaceV6::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zxdg_surface_v6_interface_data, Thunks::request_vtable);
 }
 
-void mw::XdgSurfaceV6::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_interface const* mw::XdgSurfaceV6::Thunks::get_toplevel_types[] {
     &zxdg_toplevel_v6_interface_data};
 
@@ -626,10 +608,9 @@ struct mw::XdgToplevelV6::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -643,7 +624,6 @@ struct mw::XdgToplevelV6::Thunks
 
     static void set_parent_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* parent)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> parent_resolved;
         if (parent != nullptr)
         {
@@ -651,6 +631,7 @@ struct mw::XdgToplevelV6::Thunks
         }
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->set_parent(parent_resolved);
         }
         catch(ProtocolError const& err)
@@ -665,9 +646,9 @@ struct mw::XdgToplevelV6::Thunks
 
     static void set_title_thunk(struct wl_client* client, struct wl_resource* resource, char const* title)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->set_title(title);
         }
         catch(ProtocolError const& err)
@@ -682,9 +663,9 @@ struct mw::XdgToplevelV6::Thunks
 
     static void set_app_id_thunk(struct wl_client* client, struct wl_resource* resource, char const* app_id)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->set_app_id(app_id);
         }
         catch(ProtocolError const& err)
@@ -699,9 +680,9 @@ struct mw::XdgToplevelV6::Thunks
 
     static void show_window_menu_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->show_window_menu(seat, serial, x, y);
         }
         catch(ProtocolError const& err)
@@ -716,9 +697,9 @@ struct mw::XdgToplevelV6::Thunks
 
     static void move_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->move(seat, serial);
         }
         catch(ProtocolError const& err)
@@ -733,9 +714,9 @@ struct mw::XdgToplevelV6::Thunks
 
     static void resize_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->resize(seat, serial, edges);
         }
         catch(ProtocolError const& err)
@@ -750,9 +731,9 @@ struct mw::XdgToplevelV6::Thunks
 
     static void set_max_size_thunk(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->set_max_size(width, height);
         }
         catch(ProtocolError const& err)
@@ -767,9 +748,9 @@ struct mw::XdgToplevelV6::Thunks
 
     static void set_min_size_thunk(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->set_min_size(width, height);
         }
         catch(ProtocolError const& err)
@@ -784,9 +765,9 @@ struct mw::XdgToplevelV6::Thunks
 
     static void set_maximized_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->set_maximized();
         }
         catch(ProtocolError const& err)
@@ -801,9 +782,9 @@ struct mw::XdgToplevelV6::Thunks
 
     static void unset_maximized_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->unset_maximized();
         }
         catch(ProtocolError const& err)
@@ -818,7 +799,6 @@ struct mw::XdgToplevelV6::Thunks
 
     static void set_fullscreen_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* output)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
@@ -826,6 +806,7 @@ struct mw::XdgToplevelV6::Thunks
         }
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->set_fullscreen(output_resolved);
         }
         catch(ProtocolError const& err)
@@ -840,9 +821,9 @@ struct mw::XdgToplevelV6::Thunks
 
     static void unset_fullscreen_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->unset_fullscreen();
         }
         catch(ProtocolError const& err)
@@ -857,9 +838,9 @@ struct mw::XdgToplevelV6::Thunks
 
     static void set_minimized_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
             me->set_minimized();
         }
         catch(ProtocolError const& err)
@@ -918,11 +899,6 @@ void mw::XdgToplevelV6::send_close_event() const
 bool mw::XdgToplevelV6::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zxdg_toplevel_v6_interface_data, Thunks::request_vtable);
-}
-
-void mw::XdgToplevelV6::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::XdgToplevelV6::Thunks::set_parent_types[] {
@@ -999,10 +975,9 @@ struct mw::XdgPopupV6::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<XdgPopupV6*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -1016,9 +991,9 @@ struct mw::XdgPopupV6::Thunks
 
     static void grab_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
     {
-        auto me = static_cast<XdgPopupV6*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<XdgPopupV6*>(wl_resource_get_user_data(resource));
             me->grab(seat, serial);
         }
         catch(ProtocolError const& err)
@@ -1073,11 +1048,6 @@ void mw::XdgPopupV6::send_popup_done_event() const
 bool mw::XdgPopupV6::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zxdg_popup_v6_interface_data, Thunks::request_vtable);
-}
-
-void mw::XdgPopupV6::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::XdgPopupV6::Thunks::grab_types[] {

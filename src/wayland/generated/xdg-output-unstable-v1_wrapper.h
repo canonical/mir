@@ -33,8 +33,6 @@ public:
     XdgOutputManagerV1(struct wl_resource* resource, Version<3>);
     virtual ~XdgOutputManagerV1();
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -55,7 +53,6 @@ public:
     };
 
 private:
-    virtual void destroy() = 0;
     virtual void get_xdg_output(struct wl_resource* id, struct wl_resource* output) = 0;
 };
 
@@ -77,8 +74,6 @@ public:
     bool version_supports_description();
     void send_description_event(std::string const& description) const;
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -96,7 +91,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void destroy() = 0;
 };
 
 }

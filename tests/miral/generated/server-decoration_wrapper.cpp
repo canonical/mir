@@ -45,7 +45,6 @@ struct mw::ServerDecorationManager::Thunks
 
     static void create_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
-        auto me = static_cast<ServerDecorationManager*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &org_kde_kwin_server_decoration_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -55,6 +54,7 @@ struct mw::ServerDecorationManager::Thunks
         }
         try
         {
+            auto me = static_cast<ServerDecorationManager*>(wl_resource_get_user_data(resource));
             me->create(id_resolved, surface);
         }
         catch(ProtocolError const& err)
@@ -129,8 +129,9 @@ bool mw::ServerDecorationManager::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &org_kde_kwin_server_decoration_manager_interface_data, Thunks::request_vtable);
 }
 
-void mw::ServerDecorationManager::destroy_wayland_object() const
+void mw::ServerDecorationManager::destroy_and_delete() const
 {
+    // Will result in this object being deleted
     wl_resource_destroy(resource);
 }
 
@@ -180,10 +181,9 @@ struct mw::ServerDecoration::Thunks
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ServerDecoration*>(wl_resource_get_user_data(resource));
         try
         {
-            me->release();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -197,9 +197,9 @@ struct mw::ServerDecoration::Thunks
 
     static void request_mode_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t mode)
     {
-        auto me = static_cast<ServerDecoration*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ServerDecoration*>(wl_resource_get_user_data(resource));
             me->request_mode(mode);
         }
         catch(ProtocolError const& err)
@@ -248,11 +248,6 @@ void mw::ServerDecoration::send_mode_event(uint32_t mode) const
 bool mw::ServerDecoration::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &org_kde_kwin_server_decoration_interface_data, Thunks::request_vtable);
-}
-
-void mw::ServerDecoration::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_message const mw::ServerDecoration::Thunks::request_messages[] {

@@ -47,7 +47,6 @@ struct mw::LayerShellV1::Thunks
 
     static void get_layer_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* output, uint32_t layer, char const* namespace_)
     {
-        auto me = static_cast<LayerShellV1*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &zwlr_layer_surface_v1_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -62,6 +61,7 @@ struct mw::LayerShellV1::Thunks
         }
         try
         {
+            auto me = static_cast<LayerShellV1*>(wl_resource_get_user_data(resource));
             me->get_layer_surface(id_resolved, surface, output_resolved, layer, namespace_);
         }
         catch(ProtocolError const& err)
@@ -76,10 +76,9 @@ struct mw::LayerShellV1::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<LayerShellV1*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -147,11 +146,6 @@ bool mw::LayerShellV1::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zwlr_layer_shell_v1_interface_data, Thunks::request_vtable);
 }
 
-void mw::LayerShellV1::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 mw::LayerShellV1::Global::Global(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
@@ -200,9 +194,9 @@ struct mw::LayerSurfaceV1::Thunks
 
     static void set_size_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t width, uint32_t height)
     {
-        auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
             me->set_size(width, height);
         }
         catch(ProtocolError const& err)
@@ -217,9 +211,9 @@ struct mw::LayerSurfaceV1::Thunks
 
     static void set_anchor_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t anchor)
     {
-        auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
             me->set_anchor(anchor);
         }
         catch(ProtocolError const& err)
@@ -234,9 +228,9 @@ struct mw::LayerSurfaceV1::Thunks
 
     static void set_exclusive_zone_thunk(struct wl_client* client, struct wl_resource* resource, int32_t zone)
     {
-        auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
             me->set_exclusive_zone(zone);
         }
         catch(ProtocolError const& err)
@@ -251,9 +245,9 @@ struct mw::LayerSurfaceV1::Thunks
 
     static void set_margin_thunk(struct wl_client* client, struct wl_resource* resource, int32_t top, int32_t right, int32_t bottom, int32_t left)
     {
-        auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
             me->set_margin(top, right, bottom, left);
         }
         catch(ProtocolError const& err)
@@ -268,9 +262,9 @@ struct mw::LayerSurfaceV1::Thunks
 
     static void set_keyboard_interactivity_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t keyboard_interactivity)
     {
-        auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
             me->set_keyboard_interactivity(keyboard_interactivity);
         }
         catch(ProtocolError const& err)
@@ -285,9 +279,9 @@ struct mw::LayerSurfaceV1::Thunks
 
     static void get_popup_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* popup)
     {
-        auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
             me->get_popup(popup);
         }
         catch(ProtocolError const& err)
@@ -302,9 +296,9 @@ struct mw::LayerSurfaceV1::Thunks
 
     static void ack_configure_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
     {
-        auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
             me->ack_configure(serial);
         }
         catch(ProtocolError const& err)
@@ -319,10 +313,9 @@ struct mw::LayerSurfaceV1::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -336,9 +329,9 @@ struct mw::LayerSurfaceV1::Thunks
 
     static void set_layer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t layer)
     {
-        auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
             me->set_layer(layer);
         }
         catch(ProtocolError const& err)
@@ -393,11 +386,6 @@ void mw::LayerSurfaceV1::send_closed_event() const
 bool mw::LayerSurfaceV1::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zwlr_layer_surface_v1_interface_data, Thunks::request_vtable);
-}
-
-void mw::LayerSurfaceV1::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::LayerSurfaceV1::Thunks::get_popup_types[] {

@@ -35,7 +35,7 @@ public:
 
     void send_default_mode_event(uint32_t mode) const;
 
-    void destroy_wayland_object() const;
+    void destroy_and_delete() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -84,8 +84,6 @@ public:
 
     void send_mode_event(uint32_t mode) const;
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -106,7 +104,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void release() = 0;
     virtual void request_mode(uint32_t mode) = 0;
 };
 

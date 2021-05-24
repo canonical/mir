@@ -33,8 +33,6 @@ public:
     LayerShellV1(struct wl_resource* resource, Version<3>);
     virtual ~LayerShellV1();
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -71,7 +69,6 @@ public:
 
 private:
     virtual void get_layer_surface(struct wl_resource* id, struct wl_resource* surface, std::experimental::optional<struct wl_resource*> const& output, uint32_t layer, std::string const& namespace_) = 0;
-    virtual void destroy() = 0;
 };
 
 class LayerSurfaceV1 : public Resource
@@ -86,8 +83,6 @@ public:
 
     void send_configure_event(uint32_t serial, uint32_t width, uint32_t height) const;
     void send_closed_event() const;
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -125,7 +120,6 @@ private:
     virtual void set_keyboard_interactivity(uint32_t keyboard_interactivity) = 0;
     virtual void get_popup(struct wl_resource* popup) = 0;
     virtual void ack_configure(uint32_t serial) = 0;
-    virtual void destroy() = 0;
     virtual void set_layer(uint32_t layer) = 0;
 };
 
