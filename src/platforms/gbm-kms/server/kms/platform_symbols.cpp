@@ -278,10 +278,11 @@ mg::PlatformPriority probe_display_platform(
 
 mg::PlatformPriority probe_rendering_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mir::options::ProgramOption const&)
+    mir::options::ProgramOption const& options)
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
 
+    mgg::Quirks quirks{options};
     auto udev = std::make_shared<mir::udev::Context>();
 
     mir::udev::Enumerator drm_devices{udev};
@@ -321,6 +322,12 @@ mg::PlatformPriority probe_rendering_platform(
     auto maximum_suitability = mg::PlatformPriority::unsupported;
     for (auto& device : drm_devices)
     {
+        if (quirks.should_skip(device))
+        {
+            mir::log_info("Not probing device %s due to specified quirk", device.devnode());
+            continue;
+        }
+
         auto const device_node = device.devnode();
         if (device_node == nullptr)
         {
@@ -352,6 +359,8 @@ mg::PlatformPriority probe_rendering_platform(
                     throw mg::gl_error(
                         "Probe failed to query GL renderer");
                 }
+
+                // TODO: Probe for necessary EGL extensions (ie: at least one of WL_bind_display / dmabuf_import
 
                 if (strncmp(
                     "llvmpipe",
