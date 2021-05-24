@@ -21,6 +21,7 @@
 #include "mir/input/platform.h"
 #include <memory>
 #include <functional>
+#include <optional>
 #include <vector>
 #include <set>
 #include <xcb/xcb.h>
