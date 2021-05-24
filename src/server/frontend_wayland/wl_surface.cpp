@@ -235,7 +235,6 @@ void mf::WlSurface::send_frame_callbacks()
             auto const timestamp_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now().time_since_epoch());
             frame->send_done_event(timestamp_ms.count());
-            frame->destroy_wayland_object();
         }
     }
     frame_callbacks.clear();
