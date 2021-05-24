@@ -240,11 +240,6 @@ void mf::WlSurface::send_frame_callbacks()
     frame_callbacks.clear();
 }
 
-void mf::WlSurface::destroy()
-{
-    destroy_wayland_object();
-}
-
 void mf::WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
 {
     if (x != 0 || y != 0)

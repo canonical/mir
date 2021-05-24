@@ -159,7 +159,6 @@ private:
 
     void send_frame_callbacks();
 
-    void destroy() override;
     void attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y) override;
     void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void frame(wl_resource* callback) override;

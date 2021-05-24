@@ -82,7 +82,6 @@ private:
         std::experimental::optional<wl_resource*> const& surface,
         int32_t hotspot_x,
         int32_t hotspot_y) override;
-    void release() override;
     ///@}
 
     wayland::Weak<WlSurface> surface_under_cursor;

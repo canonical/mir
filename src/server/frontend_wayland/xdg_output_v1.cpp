@@ -48,7 +48,6 @@ private:
         Instance(wl_resource* new_resource, OutputManager* manager);
 
     private:
-        void destroy() override;
         void get_xdg_output(wl_resource* new_output, wl_resource* output) override;
 
         OutputManager* const output_manager;
@@ -97,11 +96,6 @@ mf::XdgOutputManagerV1::Instance::Instance(wl_resource* new_resource, OutputMana
     : XdgOutputManagerV1{new_resource, Version<3>()},
       output_manager{manager}
 {
-}
-
-void mf::XdgOutputManagerV1::Instance::destroy()
-{
-    destroy_wayland_object();
 }
 
 void mf::XdgOutputManagerV1::Instance::get_xdg_output(wl_resource* new_output, wl_resource* output)
@@ -194,9 +188,4 @@ mf::XdgOutputV1::XdgOutputV1(
          */
         send_done_event();
     }
-}
-
-void mf::XdgOutputV1::destroy()
-{
-    destroy_wayland_object();
 }

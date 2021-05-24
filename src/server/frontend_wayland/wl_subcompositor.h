@@ -74,8 +74,6 @@ private:
     void set_sync() override;
     void set_desync() override;
 
-    void destroy() override; // overrides function in both WlSurfaceRole and wayland::Subsurface
-
     void refresh_surface_data_now() override;
     virtual void commit(WlSurfaceState const& state) override;
     void surface_destroyed() override;

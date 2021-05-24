@@ -37,7 +37,6 @@ public:
     WlSubcompositorInstance(wl_resource* new_resource);
 
 private:
-    void destroy() override;
     void get_subsurface(wl_resource* new_subsurface, wl_resource* surface, wl_resource* parent) override;
 };
 }
@@ -56,11 +55,6 @@ void mf::WlSubcompositor::bind(wl_resource* new_wl_subcompositor)
 mf::WlSubcompositorInstance::WlSubcompositorInstance(wl_resource* new_resource)
     : wayland::Subcompositor(new_resource, Version<1>())
 {
-}
-
-void mf::WlSubcompositorInstance::destroy()
-{
-    destroy_wayland_object();
 }
 
 void mf::WlSubcompositorInstance::get_subsurface(
@@ -163,11 +157,6 @@ void mf::WlSubsurface::set_sync()
 void mf::WlSubsurface::set_desync()
 {
     synchronized_ = false;
-}
-
-void mf::WlSubsurface::destroy()
-{
-    destroy_wayland_object();
 }
 
 void mf::WlSubsurface::refresh_surface_data_now()

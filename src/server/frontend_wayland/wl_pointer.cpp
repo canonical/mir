@@ -382,11 +382,6 @@ void mf::WlPointer::set_cursor(
     (void)serial;
 }
 
-void mf::WlPointer::release()
-{
-    destroy_wayland_object();
-}
-
 WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot)
     : surface{surface},
       stream{surface->stream},

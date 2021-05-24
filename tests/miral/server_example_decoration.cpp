@@ -34,11 +34,6 @@ struct ServerDecoration :
         send_mode_event(decoration_mode);
     }
 
-    void release() override
-    {
-        destroy_wayland_object();
-    }
-
     void request_mode(uint32_t mode) override
     {
         if (mode != decoration_mode)

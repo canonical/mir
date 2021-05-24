@@ -80,7 +80,6 @@ private:
         std::experimental::optional<wl_resource*> const& output,
         uint32_t layer,
         std::string const& namespace_) override;
-    void destroy() override;
 
     mf::LayerShellV1* const shell;
 };
@@ -179,7 +178,6 @@ private:
     void set_keyboard_interactivity(uint32_t keyboard_interactivity) override;
     void get_popup(wl_resource* popup) override;
     void ack_configure(uint32_t serial) override;
-    void destroy() override;
     void set_layer(uint32_t layer) override;
 
     // from WindowWlSurfaceRole
@@ -268,11 +266,6 @@ void mf::LayerShellV1::Instance::get_layer_surface(
         output_id,
         *shell,
         layer_shell_layer_to_mir_depth_layer(layer));
-}
-
-void mf::LayerShellV1::Instance::destroy()
-{
-    destroy_wayland_object();
 }
 
 // LayerSurfaceV1
@@ -579,11 +572,6 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
     // We don't want to make the client acking one configure result in us sending another
 
     inform_window_role_of_pending_placement();
-}
-
-void mf::LayerSurfaceV1::destroy()
-{
-    destroy_wayland_object();
 }
 
 void mf::LayerSurfaceV1::set_layer(uint32_t layer)

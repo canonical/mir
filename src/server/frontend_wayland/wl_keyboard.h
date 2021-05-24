@@ -79,8 +79,6 @@ private:
     uint32_t mods_latched{0};
     uint32_t mods_locked{0};
     uint32_t group{0};
-
-    void release() override;
 };
 }
 }

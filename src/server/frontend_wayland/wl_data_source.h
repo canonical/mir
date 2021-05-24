@@ -48,7 +48,6 @@ public:
     /// Wayland requests
     /// @{
     void offer(std::string const& mime_type) override;
-    void destroy() override;
     void set_actions(uint32_t dnd_actions) override
     {
         (void)dnd_actions;

@@ -73,7 +73,6 @@ public:
     void set_aux_rect_offset_now(geometry::Displacement const& new_aux_rect_offset);
 
     void grab(struct wl_resource* seat, uint32_t serial) override;
-    void destroy() override;
 
     void handle_commit() override {};
     void handle_state_change(MirWindowState /*new_state*/) override {};
