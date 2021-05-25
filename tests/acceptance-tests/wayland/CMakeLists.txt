@@ -85,6 +85,9 @@ set(EXPECTED_FAILURES
   XdgToplevelStableTest.pointer_leaves_surface_during_interactive_resize
   XdgToplevelV6Test.pointer_leaves_surface_during_interactive_move
   XdgToplevelV6Test.pointer_leaves_surface_during_interactive_resize
+
+  AllSurfaceTypes/TouchTest.sends_touch_up_on_surface_destroy/4 # Fixed by https://github.com/MirServer/wlcs/pull/199
+  AllSurfaceTypes/TouchTest.sends_touch_up_on_surface_destroy/5 # Fixed by https://github.com/MirServer/wlcs/pull/199
 )
 
 if (MIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN)
