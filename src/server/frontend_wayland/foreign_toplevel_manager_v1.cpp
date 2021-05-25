@@ -514,7 +514,7 @@ mf::ForeignToplevelManagerV1::~ForeignToplevelManagerV1()
 void mf::ForeignToplevelManagerV1::stop()
 {
     send_finished_event();
-    wl_resource_destroy(resource); // Will result in this being deleted
+    destroy_and_delete();
 }
 
 // ForeignToplevelHandleV1
