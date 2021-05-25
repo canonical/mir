@@ -65,7 +65,6 @@ struct WlSurfaceState
     {
     public:
         Callback(wl_resource* new_resource);
-        std::shared_ptr<bool> destroyed;
     };
 
     // if you add variables, don't forget to update this
@@ -83,7 +82,7 @@ struct WlSurfaceState
     std::experimental::optional<int> scale;
     std::experimental::optional<geometry::Displacement> offset;
     std::experimental::optional<std::experimental::optional<std::vector<geometry::Rectangle>>> input_shape;
-    std::vector<std::shared_ptr<Callback>> frame_callbacks;
+    std::vector<wayland::Weak<Callback>> frame_callbacks;
 
 private:
     // only set to true if invalidate_surface_data() is called
@@ -154,7 +153,7 @@ private:
     WlSurfaceState pending;
     geometry::Displacement offset_;
     std::experimental::optional<geometry::Size> buffer_size_;
-    std::vector<std::shared_ptr<WlSurfaceState::Callback>> frame_callbacks;
+    std::vector<wayland::Weak<WlSurfaceState::Callback>> frame_callbacks;
     std::experimental::optional<std::vector<mir::geometry::Rectangle>> input_shape;
 
     void send_frame_callbacks();
