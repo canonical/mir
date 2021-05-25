@@ -26,6 +26,8 @@ struct wl_display;
 #include <memory>
 #include <functional>
 
+#include "mir/wayland/wayland_base.h"
+
 namespace mir
 {
 namespace shell
@@ -41,7 +43,7 @@ namespace frontend
 {
 class SessionAuthorizer;
 
-class WlClient
+class WlClient : public wayland::LifetimeTracker
 {
 public:
     /// Initializes a ConstructionCtx that will create a WlClient for each wl_client created on the display. Should only
