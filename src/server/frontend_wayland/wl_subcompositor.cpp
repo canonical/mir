@@ -75,6 +75,7 @@ mf::WlSubsurface::WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, 
     : wayland::Subsurface(new_subsurface, Version<1>()),
       surface{surface},
       parent{parent_surface},
+      weak_client{WlClient::from(client)},
       synchronized_{true}
 {
     parent_surface->add_subsurface(this);
@@ -212,8 +213,17 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
 void mf::WlSubsurface::surface_destroyed()
 {
-    // "When a client wants to destroy a wl_surface, they must destroy this 'role object' before the wl_surface."
-    BOOST_THROW_EXCEPTION(std::runtime_error{
-        "wl_surface@" + std::to_string(wl_resource_get_id(surface->resource)) +
-        " destroyed before it's associated wl_subsurface@" + std::to_string(wl_resource_get_id(resource))});
+    if (weak_client)
+    {
+        // "When a client wants to destroy a wl_surface, they must destroy this 'role object' wl_surface"
+        BOOST_THROW_EXCEPTION(std::runtime_error{
+            "wl_surface@" + std::to_string(wl_resource_get_id(surface->resource)) +
+            " destroyed before it's associated wl_subsurface@" + std::to_string(wl_resource_get_id(resource))});
+    }
+    else
+    {
+        // If the client has been destroyed, everything is getting cleaned up in an arbitrary order. Delete this so our
+        // derived class doesn't end up using the now-defunct surface.
+        delete this;
+    }
 }
