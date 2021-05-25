@@ -60,6 +60,7 @@ namespace
 
 const char rendering_platform_probe_symbol[] = "probe_rendering_platform";
 const char display_platform_probe_symbol[] = "probe_display_platform";
+const char add_platform_options_symbol[] = "add_graphics_platform_options";
 
 class MesaGraphicsPlatform : public ::testing::Test
 {
@@ -93,6 +94,21 @@ public:
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgg::BypassOption::allowed,
                 std::make_unique<mgg::Quirks>(mir::options::ProgramOption{}));
+    }
+
+    auto parsed_options_from_args(
+        std::initializer_list<char const*> const& options,
+        boost::program_options::options_description const& description) const
+            -> std::unique_ptr<mir::options::ProgramOption>
+    {
+        auto parsed_options = std::make_unique<mir::options::ProgramOption>();
+
+        auto argv = std::make_unique<char const*[]>(options.size() + 1);
+        argv[0] = "argv0";
+        std::copy(options.begin(), options.end(), &argv[1]);
+
+        parsed_options->parse_arguments(description, static_cast<int>(options.size() + 1), argv.get());
+        return parsed_options;
     }
 
     EGLDisplay fake_display{reinterpret_cast<EGLDisplay>(0xabcd)};
@@ -329,4 +345,78 @@ TEST_F(MesaGraphicsPlatform, rendering_probe_succeeds_without_drm_master)
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(rendering_platform_probe_symbol);
     EXPECT_EQ(mg::PlatformPriority::best, probe(stub_vt, options));
+}
+
+TEST_F(MesaGraphicsPlatform, display_probe_does_not_touch_quirked_device)
+{
+    using namespace testing;
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
+
+    mtf::UdevEnvironment udev_environment;
+    boost::program_options::options_description po;
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
+
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    auto add_options = platform_lib.load_function<mg::AddPlatformOptions>(add_platform_options_symbol);
+
+    add_options(po);
+    /* NOTE: Implementation details of StubConsoleServices means we can only test the second device node
+     *
+     * Specifically: probe() will call StubConsoleServices::acquire_device(major, minor, _). However,
+     * StubConsoleServices does not attempt to consult udev to do the (major, minor) → "/dev/dri/card?" mapping.
+     * Instead, the *first* request for a DRM device gets "/dev/dri/card0", the second gets "/dev/dri/card1", etc.
+     *
+     * This means that even if the Quirks skip the first DRM device, StubConsoleServices will attempt to open
+     * "/dev/dri/card0".
+     *
+     * This doesn't affect the quality of the test - we're already testing that Quirks handle things correctly.
+     */
+    auto const options_with_quirk = parsed_options_from_args({"--driver-quirks=skip:devnode:/dev/dri/card1"}, po);
+
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card0"), _, _))
+        .Times(AtLeast(1));
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card1"), _, _))
+        .Times(0);
+
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(display_platform_probe_symbol);
+    probe(stub_vt, *options_with_quirk);
+}
+
+TEST_F(MesaGraphicsPlatform, render_probe_does_not_touch_quirked_device)
+{
+    using namespace testing;
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
+
+    mtf::UdevEnvironment udev_environment;
+    boost::program_options::options_description po;
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
+
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    auto add_options = platform_lib.load_function<mg::AddPlatformOptions>(add_platform_options_symbol);
+
+    add_options(po);
+    /* NOTE: Implementation details of StubConsoleServices means we can only test the second device node
+     *
+     * Specifically: probe() will call StubConsoleServices::acquire_device(major, minor, _). However,
+     * StubConsoleServices does not attempt to consult udev to do the (major, minor) → "/dev/dri/card?" mapping.
+     * Instead, the *first* request for a DRM device gets "/dev/dri/card0", the second gets "/dev/dri/card1", etc.
+     *
+     * This means that even if the Quirks skip the first DRM device, StubConsoleServices will attempt to open
+     * "/dev/dri/card0".
+     *
+     * This doesn't affect the quality of the test - we're already testing that Quirks handle things correctly.
+     */
+    auto const options_with_quirk = parsed_options_from_args({"--driver-quirks=skip:devnode:/dev/dri/card1"}, po);
+
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card0"), _, _))
+        .Times(AtLeast(1));
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card1"), _, _))
+        .Times(0);
+
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(rendering_platform_probe_symbol);
+    probe(stub_vt, *options_with_quirk);
 }
