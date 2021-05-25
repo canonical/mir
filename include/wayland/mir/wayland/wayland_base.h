@@ -169,7 +169,10 @@ public:
     {
         if (!*this)
         {
-            BOOST_THROW_EXCEPTION(std::logic_error("Attempted access of destroyed Wayland resource"));
+            BOOST_THROW_EXCEPTION(std::logic_error(
+                std::string{"Attempted access of "} +
+                (resource ? "destroyed" : "null") +
+                " wayland::Weak<" + typeid(T).name() + ">"));
         }
         return *resource;
     }
@@ -177,7 +180,7 @@ public:
 private:
     T* resource;
     /// Is null if and only if resource is null
-    /// If the target bool is true then resrouce has been freed and should not be used
+    /// If the target bool is true then resource has been freed and should not be used
     std::shared_ptr<bool const> destroyed_flag;
 };
 
