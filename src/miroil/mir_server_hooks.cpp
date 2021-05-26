@@ -25,6 +25,7 @@
 #include <mir/input/input_device_hub.h>
 #include <mir/input/input_device_observer.h>
 #include <mir/input/cursor_images.h>
+#include <mir/version.h>
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
@@ -68,7 +69,9 @@ struct HiddenCursorWrapper : mg::Cursor
 {
     HiddenCursorWrapper(std::shared_ptr<mg::Cursor> const& wrapped) :
         wrapped{wrapped} { wrapped->hide(); }
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
     void show() override { }
+#endif
     void show(mg::CursorImage const&) override { }
     void hide() override { wrapped->hide(); }
 

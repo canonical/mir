@@ -18,8 +18,11 @@
 
 #include <mir/graphics/buffer.h>
 #include <mir/graphics/texture.h>
+
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
 #include <mir/gl/texture.h>
 #include <mir/renderer/gl/texture_source.h>
+#endif
 
 #include <stdexcept>
 
@@ -31,14 +34,18 @@ miroil::GLBuffer::~GLBuffer()
 
 miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer) :
     wrapped(buffer),
-    m_textureId(0),
+    m_textureId(0)
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
+    ,
     m_isOldTex(false)
+#endif
 {
     init();
 }
 
 void miroil::GLBuffer::init()
 {
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
     if (m_inited)
         return;
 
@@ -49,6 +56,7 @@ void miroil::GLBuffer::init()
     }
 
     m_inited = true;
+#endif
 }
 
 void miroil::GLBuffer::destroy()
@@ -56,7 +64,9 @@ void miroil::GLBuffer::destroy()
     if (m_textureId) {
         glDeleteTextures(1, &m_textureId);
         m_textureId = 0;
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
         m_isOldTex = false;
+#endif
     }
 }
 
@@ -70,12 +80,14 @@ miroil::GLBuffer::operator bool() const
     return !!wrapped;
 }
 
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
 bool miroil::GLBuffer::has_alpha_channel() const
 {
     return wrapped &&
         (wrapped->pixel_format() == mir_pixel_format_abgr_8888
         || wrapped->pixel_format() == mir_pixel_format_argb_8888);
 }
+#endif
 
 mir::geometry::Size miroil::GLBuffer::size() const
 {
@@ -87,14 +99,17 @@ void miroil::GLBuffer::reset()
     wrapped.reset();
 }
 
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
 void miroil::GLBuffer::gl_bind_tex()
 {
     if (m_isOldTex)
         glBindTexture(GL_TEXTURE_2D, m_textureId);
 }
+#endif
 
 void miroil::GLBuffer::bind()
 {
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
     if (m_isOldTex) {
         auto const texsource = dynamic_cast<mir::renderer::gl::TextureSource*>(wrapped->native_buffer_base());
 
@@ -102,7 +117,7 @@ void miroil::GLBuffer::bind()
         texsource->secure_for_render();
         return;
     }
-
+#endif
     if (auto const texture = dynamic_cast<mir::graphics::gl::Texture*>(wrapped->native_buffer_base()))
     {
         texture->bind();
