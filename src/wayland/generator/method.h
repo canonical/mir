@@ -50,6 +50,7 @@ protected:
     static int get_since_version(xmlpp::Element const& node);
 
     std::string const name;
+    std::string const type;
     std::string const class_name;
     int const min_version;
     std::vector<Argument> arguments;

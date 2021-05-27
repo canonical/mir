@@ -60,7 +60,13 @@ struct mw::Callback::Thunks
 {
     static int const supported_version;
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<Callback*>(wl_resource_get_user_data(resource));
+    }
+
     static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 int const mw::Callback::Thunks::supported_version = 1;
@@ -73,10 +79,12 @@ mw::Callback::Callback(struct wl_resource* resource, Version<1>)
     {
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 mw::Callback::~Callback()
 {
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
 void mw::Callback::send_done_event(uint32_t callback_data) const
@@ -84,18 +92,30 @@ void mw::Callback::send_done_event(uint32_t callback_data) const
     wl_resource_post_event(resource, Opcode::done, callback_data);
 }
 
-void mw::Callback::destroy_wayland_object() const
+bool mw::Callback::is_instance(wl_resource* resource)
 {
+    return wl_resource_instance_of(resource, &wl_callback_interface_data, Thunks::request_vtable);
+}
+
+void mw::Callback::destroy_and_delete() const
+{
+    // Will result in this object being deleted
     wl_resource_destroy(resource);
 }
 
 struct wl_message const mw::Callback::Thunks::event_messages[] {
     {"done", "u", all_null_types}};
 
+void const* mw::Callback::Thunks::request_vtable[] {
+    nullptr};
+
 mw::Callback* mw::Callback::from(struct wl_resource* resource)
 {
-    // WARNING: This is potentially unsafe; there is no guarantee that resource is a Callback
-    return static_cast<Callback*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &wl_callback_interface_data, Callback::Thunks::request_vtable))
+    {
+        return static_cast<Callback*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
 
 // Compositor
@@ -106,7 +126,6 @@ struct mw::Compositor::Thunks
 
     static void create_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
-        auto me = static_cast<Compositor*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &wl_surface_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -116,6 +135,7 @@ struct mw::Compositor::Thunks
         }
         try
         {
+            auto me = static_cast<Compositor*>(wl_resource_get_user_data(resource));
             me->create_surface(id_resolved);
         }
         catch(ProtocolError const& err)
@@ -130,7 +150,6 @@ struct mw::Compositor::Thunks
 
     static void create_region_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
-        auto me = static_cast<Compositor*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &wl_region_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -140,6 +159,7 @@ struct mw::Compositor::Thunks
         }
         try
         {
+            auto me = static_cast<Compositor*>(wl_resource_get_user_data(resource));
             me->create_region(id_resolved);
         }
         catch(ProtocolError const& err)
@@ -209,8 +229,9 @@ bool mw::Compositor::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_compositor_interface_data, Thunks::request_vtable);
 }
 
-void mw::Compositor::destroy_wayland_object() const
+void mw::Compositor::destroy_and_delete() const
 {
+    // Will result in this object being deleted
     wl_resource_destroy(resource);
 }
 
@@ -261,7 +282,6 @@ struct mw::ShmPool::Thunks
 
     static void create_buffer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format)
     {
-        auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &wl_buffer_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -271,6 +291,7 @@ struct mw::ShmPool::Thunks
         }
         try
         {
+            auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
             me->create_buffer(id_resolved, offset, width, height, stride, format);
         }
         catch(ProtocolError const& err)
@@ -285,10 +306,9 @@ struct mw::ShmPool::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -302,9 +322,9 @@ struct mw::ShmPool::Thunks
 
     static void resize_thunk(struct wl_client* client, struct wl_resource* resource, int32_t size)
     {
-        auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
             me->resize(size);
         }
         catch(ProtocolError const& err)
@@ -350,11 +370,6 @@ bool mw::ShmPool::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_shm_pool_interface_data, Thunks::request_vtable);
 }
 
-void mw::ShmPool::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_interface const* mw::ShmPool::Thunks::create_buffer_types[] {
     &wl_buffer_interface_data,
     nullptr,
@@ -390,7 +405,6 @@ struct mw::Shm::Thunks
 
     static void create_pool_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int32_t fd, int32_t size)
     {
-        auto me = static_cast<Shm*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &wl_shm_pool_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -401,6 +415,7 @@ struct mw::Shm::Thunks
         mir::Fd fd_resolved{fd};
         try
         {
+            auto me = static_cast<Shm*>(wl_resource_get_user_data(resource));
             me->create_pool(id_resolved, fd_resolved, size);
         }
         catch(ProtocolError const& err)
@@ -475,8 +490,9 @@ bool mw::Shm::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_shm_interface_data, Thunks::request_vtable);
 }
 
-void mw::Shm::destroy_wayland_object() const
+void mw::Shm::destroy_and_delete() const
 {
+    // Will result in this object being deleted
     wl_resource_destroy(resource);
 }
 
@@ -527,10 +543,9 @@ struct mw::Buffer::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Buffer*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -580,11 +595,6 @@ bool mw::Buffer::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_buffer_interface_data, Thunks::request_vtable);
 }
 
-void mw::Buffer::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_message const mw::Buffer::Thunks::request_messages[] {
     {"destroy", "", all_null_types}};
 
@@ -611,7 +621,6 @@ struct mw::DataOffer::Thunks
 
     static void accept_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial, char const* mime_type)
     {
-        auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
         std::experimental::optional<std::string> mime_type_resolved;
         if (mime_type != nullptr)
         {
@@ -619,6 +628,7 @@ struct mw::DataOffer::Thunks
         }
         try
         {
+            auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
             me->accept(serial, mime_type_resolved);
         }
         catch(ProtocolError const& err)
@@ -633,10 +643,10 @@ struct mw::DataOffer::Thunks
 
     static void receive_thunk(struct wl_client* client, struct wl_resource* resource, char const* mime_type, int32_t fd)
     {
-        auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
         mir::Fd fd_resolved{fd};
         try
         {
+            auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
             me->receive(mime_type, fd_resolved);
         }
         catch(ProtocolError const& err)
@@ -651,10 +661,9 @@ struct mw::DataOffer::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -668,9 +677,9 @@ struct mw::DataOffer::Thunks
 
     static void finish_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
             me->finish();
         }
         catch(ProtocolError const& err)
@@ -685,9 +694,9 @@ struct mw::DataOffer::Thunks
 
     static void set_actions_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t dnd_actions, uint32_t preferred_action)
     {
-        auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
             me->set_actions(dnd_actions, preferred_action);
         }
         catch(ProtocolError const& err)
@@ -759,11 +768,6 @@ bool mw::DataOffer::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_data_offer_interface_data, Thunks::request_vtable);
 }
 
-void mw::DataOffer::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_message const mw::DataOffer::Thunks::request_messages[] {
     {"accept", "u?s", all_null_types},
     {"receive", "sh", all_null_types},
@@ -800,9 +804,9 @@ struct mw::DataSource::Thunks
 
     static void offer_thunk(struct wl_client* client, struct wl_resource* resource, char const* mime_type)
     {
-        auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
             me->offer(mime_type);
         }
         catch(ProtocolError const& err)
@@ -817,10 +821,9 @@ struct mw::DataSource::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -834,9 +837,9 @@ struct mw::DataSource::Thunks
 
     static void set_actions_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t dnd_actions)
     {
-        auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
             me->set_actions(dnd_actions);
         }
         catch(ProtocolError const& err)
@@ -934,11 +937,6 @@ bool mw::DataSource::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_data_source_interface_data, Thunks::request_vtable);
 }
 
-void mw::DataSource::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_message const mw::DataSource::Thunks::request_messages[] {
     {"offer", "s", all_null_types},
     {"destroy", "", all_null_types},
@@ -974,7 +972,6 @@ struct mw::DataDevice::Thunks
 
     static void start_drag_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* source, struct wl_resource* origin, struct wl_resource* icon, uint32_t serial)
     {
-        auto me = static_cast<DataDevice*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> source_resolved;
         if (source != nullptr)
         {
@@ -987,6 +984,7 @@ struct mw::DataDevice::Thunks
         }
         try
         {
+            auto me = static_cast<DataDevice*>(wl_resource_get_user_data(resource));
             me->start_drag(source_resolved, origin, icon_resolved, serial);
         }
         catch(ProtocolError const& err)
@@ -1001,7 +999,6 @@ struct mw::DataDevice::Thunks
 
     static void set_selection_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* source, uint32_t serial)
     {
-        auto me = static_cast<DataDevice*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> source_resolved;
         if (source != nullptr)
         {
@@ -1009,6 +1006,7 @@ struct mw::DataDevice::Thunks
         }
         try
         {
+            auto me = static_cast<DataDevice*>(wl_resource_get_user_data(resource));
             me->set_selection(source_resolved, serial);
         }
         catch(ProtocolError const& err)
@@ -1023,10 +1021,9 @@ struct mw::DataDevice::Thunks
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<DataDevice*>(wl_resource_get_user_data(resource));
         try
         {
-            me->release();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -1120,11 +1117,6 @@ bool mw::DataDevice::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_data_device_interface_data, Thunks::request_vtable);
 }
 
-void mw::DataDevice::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_interface const* mw::DataDevice::Thunks::start_drag_types[] {
     &wl_data_source_interface_data,
     &wl_surface_interface_data,
@@ -1183,7 +1175,6 @@ struct mw::DataDeviceManager::Thunks
 
     static void create_data_source_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
-        auto me = static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &wl_data_source_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -1193,6 +1184,7 @@ struct mw::DataDeviceManager::Thunks
         }
         try
         {
+            auto me = static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
             me->create_data_source(id_resolved);
         }
         catch(ProtocolError const& err)
@@ -1207,7 +1199,6 @@ struct mw::DataDeviceManager::Thunks
 
     static void get_data_device_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat)
     {
-        auto me = static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &wl_data_device_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -1217,6 +1208,7 @@ struct mw::DataDeviceManager::Thunks
         }
         try
         {
+            auto me = static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
             me->get_data_device(id_resolved, seat);
         }
         catch(ProtocolError const& err)
@@ -1286,8 +1278,9 @@ bool mw::DataDeviceManager::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_data_device_manager_interface_data, Thunks::request_vtable);
 }
 
-void mw::DataDeviceManager::destroy_wayland_object() const
+void mw::DataDeviceManager::destroy_and_delete() const
 {
+    // Will result in this object being deleted
     wl_resource_destroy(resource);
 }
 
@@ -1339,7 +1332,6 @@ struct mw::Shell::Thunks
 
     static void get_shell_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
-        auto me = static_cast<Shell*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &wl_shell_surface_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -1349,6 +1341,7 @@ struct mw::Shell::Thunks
         }
         try
         {
+            auto me = static_cast<Shell*>(wl_resource_get_user_data(resource));
             me->get_shell_surface(id_resolved, surface);
         }
         catch(ProtocolError const& err)
@@ -1417,8 +1410,9 @@ bool mw::Shell::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_shell_interface_data, Thunks::request_vtable);
 }
 
-void mw::Shell::destroy_wayland_object() const
+void mw::Shell::destroy_and_delete() const
 {
+    // Will result in this object being deleted
     wl_resource_destroy(resource);
 }
 
@@ -1465,9 +1459,9 @@ struct mw::ShellSurface::Thunks
 
     static void pong_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
     {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
             me->pong(serial);
         }
         catch(ProtocolError const& err)
@@ -1482,9 +1476,9 @@ struct mw::ShellSurface::Thunks
 
     static void move_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
     {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
             me->move(seat, serial);
         }
         catch(ProtocolError const& err)
@@ -1499,9 +1493,9 @@ struct mw::ShellSurface::Thunks
 
     static void resize_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
     {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
             me->resize(seat, serial, edges);
         }
         catch(ProtocolError const& err)
@@ -1516,9 +1510,9 @@ struct mw::ShellSurface::Thunks
 
     static void set_toplevel_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
             me->set_toplevel();
         }
         catch(ProtocolError const& err)
@@ -1533,9 +1527,9 @@ struct mw::ShellSurface::Thunks
 
     static void set_transient_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
     {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
             me->set_transient(parent, x, y, flags);
         }
         catch(ProtocolError const& err)
@@ -1550,7 +1544,6 @@ struct mw::ShellSurface::Thunks
 
     static void set_fullscreen_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t method, uint32_t framerate, struct wl_resource* output)
     {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
@@ -1558,6 +1551,7 @@ struct mw::ShellSurface::Thunks
         }
         try
         {
+            auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
             me->set_fullscreen(method, framerate, output_resolved);
         }
         catch(ProtocolError const& err)
@@ -1572,9 +1566,9 @@ struct mw::ShellSurface::Thunks
 
     static void set_popup_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
     {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
             me->set_popup(seat, serial, parent, x, y, flags);
         }
         catch(ProtocolError const& err)
@@ -1589,7 +1583,6 @@ struct mw::ShellSurface::Thunks
 
     static void set_maximized_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* output)
     {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
@@ -1597,6 +1590,7 @@ struct mw::ShellSurface::Thunks
         }
         try
         {
+            auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
             me->set_maximized(output_resolved);
         }
         catch(ProtocolError const& err)
@@ -1611,9 +1605,9 @@ struct mw::ShellSurface::Thunks
 
     static void set_title_thunk(struct wl_client* client, struct wl_resource* resource, char const* title)
     {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
             me->set_title(title);
         }
         catch(ProtocolError const& err)
@@ -1628,9 +1622,9 @@ struct mw::ShellSurface::Thunks
 
     static void set_class_thunk(struct wl_client* client, struct wl_resource* resource, char const* class_)
     {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
             me->set_class(class_);
         }
         catch(ProtocolError const& err)
@@ -1697,8 +1691,9 @@ bool mw::ShellSurface::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_shell_surface_interface_data, Thunks::request_vtable);
 }
 
-void mw::ShellSurface::destroy_wayland_object() const
+void mw::ShellSurface::destroy_and_delete() const
 {
+    // Will result in this object being deleted
     wl_resource_destroy(resource);
 }
 
@@ -1779,10 +1774,9 @@ struct mw::Surface::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -1796,7 +1790,6 @@ struct mw::Surface::Thunks
 
     static void attach_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* buffer, int32_t x, int32_t y)
     {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> buffer_resolved;
         if (buffer != nullptr)
         {
@@ -1804,6 +1797,7 @@ struct mw::Surface::Thunks
         }
         try
         {
+            auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
             me->attach(buffer_resolved, x, y);
         }
         catch(ProtocolError const& err)
@@ -1818,9 +1812,9 @@ struct mw::Surface::Thunks
 
     static void damage_thunk(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
     {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
             me->damage(x, y, width, height);
         }
         catch(ProtocolError const& err)
@@ -1835,7 +1829,6 @@ struct mw::Surface::Thunks
 
     static void frame_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t callback)
     {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
         wl_resource* callback_resolved{
             wl_resource_create(client, &wl_callback_interface_data, wl_resource_get_version(resource), callback)};
         if (callback_resolved == nullptr)
@@ -1845,6 +1838,7 @@ struct mw::Surface::Thunks
         }
         try
         {
+            auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
             me->frame(callback_resolved);
         }
         catch(ProtocolError const& err)
@@ -1859,7 +1853,6 @@ struct mw::Surface::Thunks
 
     static void set_opaque_region_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* region)
     {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> region_resolved;
         if (region != nullptr)
         {
@@ -1867,6 +1860,7 @@ struct mw::Surface::Thunks
         }
         try
         {
+            auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
             me->set_opaque_region(region_resolved);
         }
         catch(ProtocolError const& err)
@@ -1881,7 +1875,6 @@ struct mw::Surface::Thunks
 
     static void set_input_region_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* region)
     {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> region_resolved;
         if (region != nullptr)
         {
@@ -1889,6 +1882,7 @@ struct mw::Surface::Thunks
         }
         try
         {
+            auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
             me->set_input_region(region_resolved);
         }
         catch(ProtocolError const& err)
@@ -1903,9 +1897,9 @@ struct mw::Surface::Thunks
 
     static void commit_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
             me->commit();
         }
         catch(ProtocolError const& err)
@@ -1920,9 +1914,9 @@ struct mw::Surface::Thunks
 
     static void set_buffer_transform_thunk(struct wl_client* client, struct wl_resource* resource, int32_t transform)
     {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
             me->set_buffer_transform(transform);
         }
         catch(ProtocolError const& err)
@@ -1937,9 +1931,9 @@ struct mw::Surface::Thunks
 
     static void set_buffer_scale_thunk(struct wl_client* client, struct wl_resource* resource, int32_t scale)
     {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
             me->set_buffer_scale(scale);
         }
         catch(ProtocolError const& err)
@@ -1954,9 +1948,9 @@ struct mw::Surface::Thunks
 
     static void damage_buffer_thunk(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
     {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
             me->damage_buffer(x, y, width, height);
         }
         catch(ProtocolError const& err)
@@ -2016,11 +2010,6 @@ void mw::Surface::send_leave_event(struct wl_resource* output) const
 bool mw::Surface::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &wl_surface_interface_data, Thunks::request_vtable);
-}
-
-void mw::Surface::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::Surface::Thunks::attach_types[] {
@@ -2088,7 +2077,6 @@ struct mw::Seat::Thunks
 
     static void get_pointer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
-        auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &wl_pointer_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -2098,6 +2086,7 @@ struct mw::Seat::Thunks
         }
         try
         {
+            auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
             me->get_pointer(id_resolved);
         }
         catch(ProtocolError const& err)
@@ -2112,7 +2101,6 @@ struct mw::Seat::Thunks
 
     static void get_keyboard_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
-        auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &wl_keyboard_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -2122,6 +2110,7 @@ struct mw::Seat::Thunks
         }
         try
         {
+            auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
             me->get_keyboard(id_resolved);
         }
         catch(ProtocolError const& err)
@@ -2136,7 +2125,6 @@ struct mw::Seat::Thunks
 
     static void get_touch_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
-        auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &wl_touch_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -2146,6 +2134,7 @@ struct mw::Seat::Thunks
         }
         try
         {
+            auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
             me->get_touch(id_resolved);
         }
         catch(ProtocolError const& err)
@@ -2160,10 +2149,9 @@ struct mw::Seat::Thunks
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
         try
         {
-            me->release();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -2250,11 +2238,6 @@ bool mw::Seat::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_seat_interface_data, Thunks::request_vtable);
 }
 
-void mw::Seat::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 mw::Seat::Global::Global(wl_display* display, Version<6>)
     : wayland::Global{
           wl_global_create(
@@ -2313,7 +2296,6 @@ struct mw::Pointer::Thunks
 
     static void set_cursor_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial, struct wl_resource* surface, int32_t hotspot_x, int32_t hotspot_y)
     {
-        auto me = static_cast<Pointer*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> surface_resolved;
         if (surface != nullptr)
         {
@@ -2321,6 +2303,7 @@ struct mw::Pointer::Thunks
         }
         try
         {
+            auto me = static_cast<Pointer*>(wl_resource_get_user_data(resource));
             me->set_cursor(serial, surface_resolved, hotspot_x, hotspot_y);
         }
         catch(ProtocolError const& err)
@@ -2335,10 +2318,9 @@ struct mw::Pointer::Thunks
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Pointer*>(wl_resource_get_user_data(resource));
         try
         {
-            me->release();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -2456,11 +2438,6 @@ bool mw::Pointer::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_pointer_interface_data, Thunks::request_vtable);
 }
 
-void mw::Pointer::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_interface const* mw::Pointer::Thunks::set_cursor_types[] {
     nullptr,
     &wl_surface_interface_data,
@@ -2513,10 +2490,9 @@ struct mw::Keyboard::Thunks
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Keyboard*>(wl_resource_get_user_data(resource));
         try
         {
-            me->release();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -2599,11 +2575,6 @@ bool mw::Keyboard::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_keyboard_interface_data, Thunks::request_vtable);
 }
 
-void mw::Keyboard::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_interface const* mw::Keyboard::Thunks::enter_types[] {
     nullptr,
     &wl_surface_interface_data,
@@ -2644,10 +2615,9 @@ struct mw::Touch::Thunks
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Touch*>(wl_resource_get_user_data(resource));
         try
         {
-            me->release();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -2745,11 +2715,6 @@ bool mw::Touch::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_touch_interface_data, Thunks::request_vtable);
 }
 
-void mw::Touch::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_interface const* mw::Touch::Thunks::down_types[] {
     nullptr,
     nullptr,
@@ -2790,10 +2755,9 @@ struct mw::Output::Thunks
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Output*>(wl_resource_get_user_data(resource));
         try
         {
-            me->release();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -2894,11 +2858,6 @@ bool mw::Output::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_output_interface_data, Thunks::request_vtable);
 }
 
-void mw::Output::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 mw::Output::Global::Global(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
@@ -2954,10 +2913,9 @@ struct mw::Region::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -2971,9 +2929,9 @@ struct mw::Region::Thunks
 
     static void add_thunk(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
     {
-        auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
             me->add(x, y, width, height);
         }
         catch(ProtocolError const& err)
@@ -2988,9 +2946,9 @@ struct mw::Region::Thunks
 
     static void subtract_thunk(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
     {
-        auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
             me->subtract(x, y, width, height);
         }
         catch(ProtocolError const& err)
@@ -3035,11 +2993,6 @@ bool mw::Region::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_region_interface_data, Thunks::request_vtable);
 }
 
-void mw::Region::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_message const mw::Region::Thunks::request_messages[] {
     {"destroy", "", all_null_types},
     {"add", "iiii", all_null_types},
@@ -3067,10 +3020,9 @@ struct mw::Subcompositor::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -3084,7 +3036,6 @@ struct mw::Subcompositor::Thunks
 
     static void get_subsurface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* parent)
     {
-        auto me = static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &wl_subsurface_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -3094,6 +3045,7 @@ struct mw::Subcompositor::Thunks
         }
         try
         {
+            auto me = static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
             me->get_subsurface(id_resolved, surface, parent);
         }
         catch(ProtocolError const& err)
@@ -3162,11 +3114,6 @@ bool mw::Subcompositor::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_subcompositor_interface_data, Thunks::request_vtable);
 }
 
-void mw::Subcompositor::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 mw::Subcompositor::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
@@ -3213,10 +3160,9 @@ struct mw::Subsurface::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -3230,9 +3176,9 @@ struct mw::Subsurface::Thunks
 
     static void set_position_thunk(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y)
     {
-        auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
             me->set_position(x, y);
         }
         catch(ProtocolError const& err)
@@ -3247,9 +3193,9 @@ struct mw::Subsurface::Thunks
 
     static void place_above_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* sibling)
     {
-        auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
             me->place_above(sibling);
         }
         catch(ProtocolError const& err)
@@ -3264,9 +3210,9 @@ struct mw::Subsurface::Thunks
 
     static void place_below_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* sibling)
     {
-        auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
             me->place_below(sibling);
         }
         catch(ProtocolError const& err)
@@ -3281,9 +3227,9 @@ struct mw::Subsurface::Thunks
 
     static void set_sync_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
             me->set_sync();
         }
         catch(ProtocolError const& err)
@@ -3298,9 +3244,9 @@ struct mw::Subsurface::Thunks
 
     static void set_desync_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
             me->set_desync();
         }
         catch(ProtocolError const& err)
@@ -3345,11 +3291,6 @@ mw::Subsurface::~Subsurface()
 bool mw::Subsurface::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &wl_subsurface_interface_data, Thunks::request_vtable);
-}
-
-void mw::Subsurface::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::Subsurface::Thunks::place_above_types[] {

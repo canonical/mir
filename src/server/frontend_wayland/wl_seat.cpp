@@ -146,7 +146,6 @@ private:
     void get_pointer(wl_resource* new_pointer) override;
     void get_keyboard(wl_resource* new_keyboard) override;
     void get_touch(wl_resource* new_touch) override;
-    void release() override;
 };
 
 mf::WlSeat::WlSeat(
@@ -287,11 +286,6 @@ void mf::WlSeat::Instance::get_touch(wl_resource* new_touch)
         {
             listeners->unregister_listener(client, listener);
         });
-}
-
-void mf::WlSeat::Instance::release()
-{
-    destroy_wayland_object();
 }
 
 auto mf::WlSeat::current_focused_client() const -> wl_client*

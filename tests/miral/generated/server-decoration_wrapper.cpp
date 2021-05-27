@@ -39,18 +39,12 @@ struct wl_interface const* all_null_types [] {
 
 // ServerDecorationManager
 
-mw::ServerDecorationManager* mw::ServerDecorationManager::from(struct wl_resource* resource)
-{
-    return static_cast<ServerDecorationManager*>(wl_resource_get_user_data(resource));
-}
-
 struct mw::ServerDecorationManager::Thunks
 {
     static int const supported_version;
 
     static void create_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
-        auto me = static_cast<ServerDecorationManager*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &org_kde_kwin_server_decoration_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -60,6 +54,7 @@ struct mw::ServerDecorationManager::Thunks
         }
         try
         {
+            auto me = static_cast<ServerDecorationManager*>(wl_resource_get_user_data(resource));
             me->create(id_resolved, surface);
         }
         catch(ProtocolError const& err)
@@ -134,8 +129,9 @@ bool mw::ServerDecorationManager::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &org_kde_kwin_server_decoration_manager_interface_data, Thunks::request_vtable);
 }
 
-void mw::ServerDecorationManager::destroy_wayland_object() const
+void mw::ServerDecorationManager::destroy_and_delete() const
 {
+    // Will result in this object being deleted
     wl_resource_destroy(resource);
 }
 
@@ -168,12 +164,16 @@ struct wl_message const mw::ServerDecorationManager::Thunks::event_messages[] {
 void const* mw::ServerDecorationManager::Thunks::request_vtable[] {
     (void*)Thunks::create_thunk};
 
-// ServerDecoration
-
-mw::ServerDecoration* mw::ServerDecoration::from(struct wl_resource* resource)
+mw::ServerDecorationManager* mw::ServerDecorationManager::from(struct wl_resource* resource)
 {
-    return static_cast<ServerDecoration*>(wl_resource_get_user_data(resource));
+    if (wl_resource_instance_of(resource, &org_kde_kwin_server_decoration_manager_interface_data, ServerDecorationManager::Thunks::request_vtable))
+    {
+        return static_cast<ServerDecorationManager*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
 }
+
+// ServerDecoration
 
 struct mw::ServerDecoration::Thunks
 {
@@ -181,10 +181,9 @@ struct mw::ServerDecoration::Thunks
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ServerDecoration*>(wl_resource_get_user_data(resource));
         try
         {
-            me->release();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -198,9 +197,9 @@ struct mw::ServerDecoration::Thunks
 
     static void request_mode_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t mode)
     {
-        auto me = static_cast<ServerDecoration*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ServerDecoration*>(wl_resource_get_user_data(resource));
             me->request_mode(mode);
         }
         catch(ProtocolError const& err)
@@ -251,11 +250,6 @@ bool mw::ServerDecoration::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &org_kde_kwin_server_decoration_interface_data, Thunks::request_vtable);
 }
 
-void mw::ServerDecoration::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 struct wl_message const mw::ServerDecoration::Thunks::request_messages[] {
     {"release", "", all_null_types},
     {"request_mode", "u", all_null_types}};
@@ -266,6 +260,15 @@ struct wl_message const mw::ServerDecoration::Thunks::event_messages[] {
 void const* mw::ServerDecoration::Thunks::request_vtable[] {
     (void*)Thunks::release_thunk,
     (void*)Thunks::request_mode_thunk};
+
+mw::ServerDecoration* mw::ServerDecoration::from(struct wl_resource* resource)
+{
+    if (wl_resource_instance_of(resource, &org_kde_kwin_server_decoration_interface_data, ServerDecoration::Thunks::request_vtable))
+    {
+        return static_cast<ServerDecoration*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
+}
 
 namespace mir
 {

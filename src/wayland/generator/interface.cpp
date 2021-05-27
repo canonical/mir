@@ -59,6 +59,26 @@ auto matching_keys_to_vector(
     }
     return interfaces;
 }
+
+auto vec_has_destroy_request(std::vector<Request> const& requests) -> bool
+{
+    int count = 0;
+    for (auto const& request : requests)
+    {
+        if (request.is_destroy())
+        {
+            count++;
+        }
+    }
+    if (count > 1)
+    {
+        throw std::runtime_error{"interface has multiple destroy requests"};
+    }
+    else
+    {
+        return count;
+    }
+}
 }
 
 Interface::Interface(xmlpp::Element const& node,
@@ -78,7 +98,7 @@ Interface::Interface(xmlpp::Element const& node,
       events{get_events(node, generated_name)},
       enums{get_enums(node)},
       parent_interfaces{matching_keys_to_vector(event_constructable_interfaces, name_transform, wl_name)},
-      has_vtable{!requests.empty()}
+      has_destroy_request{vec_has_destroy_request(requests)}
 {
 }
 
@@ -101,7 +121,7 @@ Emitter Interface::declaration() const
                 destructor_prototype(),
             },
             event_prototypes(),
-            {"void destroy_wayland_object() const;"},
+            (has_destroy_request ? nullptr : "void destroy_and_delete() const;"),
             member_vars(),
             enum_declarations(),
             event_opcodes(),
@@ -129,31 +149,30 @@ Emitter Interface::implementation() const
             destructor_impl(),
             event_impls(),
             is_instance_impl(),
-            Lines{
-                {"void ", nmspace, "destroy_wayland_object() const"},
-                Block{
-                    {"wl_resource_destroy(resource);"}
+            (has_destroy_request ? Emitter{nullptr} :
+                Lines{
+                    {"void ", nmspace, "destroy_and_delete() const"},
+                    Block{
+                        {"// Will result in this object being deleted"},
+                        {"wl_resource_destroy(resource);"},
+                    }
                 }
-            },
+            ),
             (global ? global.value().implementation() : nullptr),
             types_init(),
             Lines{
                 {"mw::", generated_name, "* ", nmspace, "from(struct wl_resource* resource)"},
                 Block{
-                    (has_vtable ?
-                        Lines{
-                            {"if (wl_resource_instance_of(resource, &", wl_name, "_interface_data, ", generated_name, "::Thunks::request_vtable))"},
-                            Block{
-                                {"return static_cast<", generated_name, "*>(wl_resource_get_user_data(resource));"}
-                            },
-                            {"return nullptr;"}}
-                        : Lines{
-                            {"// WARNING: This is potentially unsafe; there is no guarantee that resource is a ", generated_name},
+                    Lines{
+                        {"if (wl_resource_instance_of(resource, &", wl_name, "_interface_data, ", generated_name, "::Thunks::request_vtable))"},
+                        Block{
                             {"return static_cast<", generated_name, "*>(wl_resource_get_user_data(resource));"}
-                        }),
-                    }
+                        },
+                        {"return nullptr;"}
+                    },
                 }
             },
+        },
     };
 }
 
@@ -216,9 +235,9 @@ Emitter Interface::constructor_impl() const
                 Block{
                     "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
                 },
-                (has_vtable ? "wl_resource_set_implementation(resource, Thunks::request_vtable, "
-                              "this, &Thunks::resource_destroyed_thunk);" :
-                              Emitter{nullptr})}});
+                "wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);",
+            }
+        });
     }
     for (auto const& parent : parent_interfaces)
     {
@@ -238,9 +257,7 @@ Emitter Interface::constructor_impl(std::string const& parent_interface) const
             Block{
                 "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
             },
-            (has_vtable ?
-             "wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);" :
-             Emitter{nullptr})
+            "wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);",
         }
     };
 }
@@ -265,9 +282,7 @@ Emitter Interface::destructor_impl() const
     return Lines{
         {nmspace, "~", generated_name, "()"},
         Block{
-            has_vtable ?
-                "wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);" :
-                Emitter{nullptr}
+            "wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);"
         }
     };
 }
@@ -318,9 +333,6 @@ Emitter Interface::is_instance_prototype() const
 
 Emitter Interface::is_instance_impl() const
 {
-    if (!has_vtable)
-        return Lines{};
-
     return Lines{
         {"bool ", nmspace, "is_instance(wl_resource* resource)"},
         Block{"return wl_resource_instance_of(resource, &" + wl_name + "_interface_data, Thunks::request_vtable);"}
@@ -390,8 +402,7 @@ Emitter Interface::thunks_impl_contents() const
     for (auto const& request : requests)
         impls.push_back(request.thunk_impl());
 
-    if (has_vtable)
-        impls.push_back(resource_destroyed_thunk());
+    impls.push_back(resource_destroyed_thunk());
 
     if (global)
         impls.push_back(global.value().bind_thunk_impl());
@@ -405,8 +416,7 @@ Emitter Interface::thunks_impl_contents() const
         declares.push_back("static struct wl_message const request_messages[];");
     if (!events.empty())
         declares.push_back("static struct wl_message const event_messages[];");
-    if (has_vtable)
-        declares.push_back({"static void const* request_vtable[];"});
+    declares.push_back({"static void const* request_vtable[];"});
     impls.push_back(Lines{declares});
 
     return EmptyLineList{impls};
@@ -454,19 +464,21 @@ Emitter Interface::types_init() const
         });
     }
 
-    if (has_vtable)
+    std::vector<Emitter> request_initializers;
+    for (auto const& request : requests)
     {
-        std::vector<Emitter> elems;
-        for (auto const& request : requests)
-        {
-            elems.push_back({"(void*)Thunks::", request.vtable_initialiser()});
-        }
-
-        types.push_back(Lines{
-            {"void const* ", nmspace, "Thunks::request_vtable[] ",
-                BraceList{elems}},
-        });
+        request_initializers.push_back({"(void*)Thunks::", request.vtable_initialiser()});
     }
+
+    if (request_initializers.empty())
+    {
+        request_initializers.push_back("nullptr");
+    }
+
+    types.push_back(Lines{
+        {"void const* ", nmspace, "Thunks::request_vtable[] ",
+            BraceList{request_initializers}},
+    });
 
     return EmptyLineList{types};
 }

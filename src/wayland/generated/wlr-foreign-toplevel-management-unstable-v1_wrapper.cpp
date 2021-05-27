@@ -47,9 +47,9 @@ struct mw::ForeignToplevelManagerV1::Thunks
 
     static void stop_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ForeignToplevelManagerV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ForeignToplevelManagerV1*>(wl_resource_get_user_data(resource));
             me->stop();
         }
         catch(ProtocolError const& err)
@@ -129,8 +129,9 @@ bool mw::ForeignToplevelManagerV1::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zwlr_foreign_toplevel_manager_v1_interface_data, Thunks::request_vtable);
 }
 
-void mw::ForeignToplevelManagerV1::destroy_wayland_object() const
+void mw::ForeignToplevelManagerV1::destroy_and_delete() const
 {
+    // Will result in this object being deleted
     wl_resource_destroy(resource);
 }
 
@@ -180,9 +181,9 @@ struct mw::ForeignToplevelHandleV1::Thunks
 
     static void set_maximized_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
             me->set_maximized();
         }
         catch(ProtocolError const& err)
@@ -197,9 +198,9 @@ struct mw::ForeignToplevelHandleV1::Thunks
 
     static void unset_maximized_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
             me->unset_maximized();
         }
         catch(ProtocolError const& err)
@@ -214,9 +215,9 @@ struct mw::ForeignToplevelHandleV1::Thunks
 
     static void set_minimized_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
             me->set_minimized();
         }
         catch(ProtocolError const& err)
@@ -231,9 +232,9 @@ struct mw::ForeignToplevelHandleV1::Thunks
 
     static void unset_minimized_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
             me->unset_minimized();
         }
         catch(ProtocolError const& err)
@@ -248,9 +249,9 @@ struct mw::ForeignToplevelHandleV1::Thunks
 
     static void activate_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat)
     {
-        auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
             me->activate(seat);
         }
         catch(ProtocolError const& err)
@@ -265,9 +266,9 @@ struct mw::ForeignToplevelHandleV1::Thunks
 
     static void close_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
             me->close();
         }
         catch(ProtocolError const& err)
@@ -282,9 +283,9 @@ struct mw::ForeignToplevelHandleV1::Thunks
 
     static void set_rectangle_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* surface, int32_t x, int32_t y, int32_t width, int32_t height)
     {
-        auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
             me->set_rectangle(surface, x, y, width, height);
         }
         catch(ProtocolError const& err)
@@ -299,10 +300,9 @@ struct mw::ForeignToplevelHandleV1::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -316,7 +316,6 @@ struct mw::ForeignToplevelHandleV1::Thunks
 
     static void set_fullscreen_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* output)
     {
-        auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
         std::experimental::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
@@ -324,6 +323,7 @@ struct mw::ForeignToplevelHandleV1::Thunks
         }
         try
         {
+            auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
             me->set_fullscreen(output_resolved);
         }
         catch(ProtocolError const& err)
@@ -338,9 +338,9 @@ struct mw::ForeignToplevelHandleV1::Thunks
 
     static void unset_fullscreen_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
         try
         {
+            auto me = static_cast<ForeignToplevelHandleV1*>(wl_resource_get_user_data(resource));
             me->unset_fullscreen();
         }
         catch(ProtocolError const& err)
@@ -426,11 +426,6 @@ void mw::ForeignToplevelHandleV1::send_closed_event() const
 bool mw::ForeignToplevelHandleV1::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zwlr_foreign_toplevel_handle_v1_interface_data, Thunks::request_vtable);
-}
-
-void mw::ForeignToplevelHandleV1::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::ForeignToplevelHandleV1::Thunks::activate_types[] {

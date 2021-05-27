@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_WINDOW_WL_SURFACE_ROLE_H
 
 #include "wl_surface_role.h"
+#include "wl_client.h"
 
 #include "mir/wayland/wayland_base.h"
 #include "mir/geometry/displacement.h"
@@ -119,10 +120,11 @@ protected:
     auto latest_timestamp() const -> std::chrono::nanoseconds;
 
     void commit(WlSurfaceState const& state) override;
+    void surface_destroyed() override;
 
 private:
     WlSurface* const surface;
-    wl_client* client;
+    wayland::Weak<WlClient> const weak_client;
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<scene::Session> const session;
     OutputManager* output_manager;

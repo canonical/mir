@@ -33,8 +33,6 @@ public:
     RelativePointerManagerV1(struct wl_resource* resource, Version<1>);
     virtual ~RelativePointerManagerV1();
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -55,7 +53,6 @@ public:
     };
 
 private:
-    virtual void destroy() = 0;
     virtual void get_relative_pointer(struct wl_resource* id, struct wl_resource* pointer) = 0;
 };
 
@@ -71,8 +68,6 @@ public:
 
     void send_relative_motion_event(uint32_t utime_hi, uint32_t utime_lo, double dx, double dy, double dx_unaccel, double dy_unaccel) const;
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -86,7 +81,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void destroy() = 0;
 };
 
 }

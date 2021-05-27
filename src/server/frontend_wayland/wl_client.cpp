@@ -115,6 +115,10 @@ void mf::WlClient::setup_new_client_handler(
 
 auto mf::WlClient::from(wl_client* client) -> WlClient*
 {
+    if (!client)
+    {
+        return nullptr;
+    }
     auto listener = wl_client_get_destroy_listener(client, &cleanup_client_ctx);
     auto ctx = ClientCtx::from(listener);
     return ctx ? ctx->client.get() : nullptr;

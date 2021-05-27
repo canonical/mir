@@ -70,9 +70,9 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     std::shared_ptr<msh::Shell> const& shell,
     OutputManager* output_manager)
     : surface{surface},
-      client{client},
+      weak_client{WlClient::from(client)},
       shell{shell},
-      session{get_session(client)},
+      session{weak_client.value().client_session()},
       output_manager{output_manager},
       observer{std::make_shared<WaylandSurfaceObserver>(wayland_executor, seat, surface, this)},
       params{std::make_unique<scene::SurfaceCreationParameters>(
@@ -264,7 +264,7 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::experimental::optional<struct 
         shell::SurfaceSpecification mods;
         mods.state = scene_surface->state_tracker().with(mir_window_state_fullscreen).active_state();
         auto const output_id = output ?
-            output_manager->output_id_for(client, output.value()) :
+            output_manager->output_id_for(weak_client.value().raw_client(), output.value()) :
             std::experimental::nullopt;
         if (output_id)
             mods.output_id = output_id.value();
@@ -274,7 +274,7 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::experimental::optional<struct 
     {
         params->state = mir_window_state_fullscreen;
         auto const output_id = output ?
-            output_manager->output_id_for(client, output.value()) :
+            output_manager->output_id_for(weak_client.value().raw_client(), output.value()) :
             std::experimental::nullopt;
         if (output_id)
             params->output_id = output_id.value();
@@ -441,6 +441,24 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     pending_explicit_height = std::experimental::nullopt;
 }
 
+void mf::WindowWlSurfaceRole::surface_destroyed()
+{
+    if (weak_client)
+    {
+        // "When a client wants to destroy a wl_surface, they must destroy this 'role object' wl_surface"
+        // NOTE: the wl_shell_surface specification seems contradictory, so this method is overridden in it's implementation
+        BOOST_THROW_EXCEPTION(std::runtime_error{
+            "wl_surface@" + std::to_string(wl_resource_get_id(surface->resource)) +
+            " destroyed before associated role"});
+    }
+    else
+    {
+        // If the client has been destroyed, everything is getting cleaned up in an arbitrary order. Delete this so our
+        // derived class doesn't end up using the now-defunct surface.
+        delete this;
+    }
+}
+
 mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
 {
     if (!pending_changes)
@@ -482,7 +500,9 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
             auto const output = output_manager->output_for(conf.id);
             if (output)
             {
-                output.value()->for_each_output_resource_bound_by(client, [&](wl_resource* resource)
+                output.value()->for_each_output_resource_bound_by(
+                    weak_client.value().raw_client(),
+                    [&](wl_resource* resource)
                     {
                         surface->send_enter_event(resource);
                     });

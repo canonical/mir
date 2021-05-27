@@ -177,7 +177,6 @@ private:
     void activate(struct wl_resource* seat) override;
     void close() override;
     void set_rectangle(struct wl_resource* surface, int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void destroy() override;
     void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output) override;
     void unset_fullscreen() override;
     ///@}
@@ -515,7 +514,7 @@ mf::ForeignToplevelManagerV1::~ForeignToplevelManagerV1()
 void mf::ForeignToplevelManagerV1::stop()
 {
     send_finished_event();
-    destroy_wayland_object();
+    destroy_and_delete();
 }
 
 // ForeignToplevelHandleV1
@@ -678,11 +677,6 @@ void mf::ForeignToplevelHandleV1::set_rectangle(
 {
     // This would be used for the destination of a window minimization animation
     // Nothing must be done with this info. It is not a protocol violation to ignore it
-}
-
-void mf::ForeignToplevelHandleV1::destroy()
-{
-    destroy_wayland_object();
 }
 
 void mf::ForeignToplevelHandleV1::set_fullscreen(std::experimental::optional<struct wl_resource*> const& /*output*/)

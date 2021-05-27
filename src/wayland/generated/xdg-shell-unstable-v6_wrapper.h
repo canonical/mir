@@ -38,8 +38,6 @@ public:
 
     void send_ping_event(uint32_t serial) const;
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -75,7 +73,6 @@ public:
     };
 
 private:
-    virtual void destroy() = 0;
     virtual void create_positioner(struct wl_resource* id) = 0;
     virtual void get_xdg_surface(struct wl_resource* id, struct wl_resource* surface) = 0;
     virtual void pong(uint32_t serial) = 0;
@@ -90,8 +87,6 @@ public:
 
     XdgPositionerV6(struct wl_resource* resource, Version<1>);
     virtual ~XdgPositionerV6();
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -135,7 +130,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void destroy() = 0;
     virtual void set_size(int32_t width, int32_t height) = 0;
     virtual void set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
     virtual void set_anchor(uint32_t anchor) = 0;
@@ -155,8 +149,6 @@ public:
     virtual ~XdgSurfaceV6();
 
     void send_configure_event(uint32_t serial) const;
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -178,7 +170,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void destroy() = 0;
     virtual void get_toplevel(struct wl_resource* id) = 0;
     virtual void get_popup(struct wl_resource* id, struct wl_resource* parent, struct wl_resource* positioner) = 0;
     virtual void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
@@ -197,8 +188,6 @@ public:
 
     void send_configure_event(int32_t width, int32_t height, struct wl_array* states) const;
     void send_close_event() const;
-
-    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -235,7 +224,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void destroy() = 0;
     virtual void set_parent(std::experimental::optional<struct wl_resource*> const& parent) = 0;
     virtual void set_title(std::string const& title) = 0;
     virtual void set_app_id(std::string const& app_id) = 0;
@@ -264,8 +252,6 @@ public:
     void send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height) const;
     void send_popup_done_event() const;
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -285,7 +271,6 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void destroy() = 0;
     virtual void grab(struct wl_resource* seat, uint32_t serial) = 0;
 };
 

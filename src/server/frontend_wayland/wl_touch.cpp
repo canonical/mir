@@ -183,8 +183,3 @@ void mf::WlTouch::maybe_frame()
         needs_frame = false;
     }
 }
-
-void mf::WlTouch::release()
-{
-    destroy_wayland_object();
-}

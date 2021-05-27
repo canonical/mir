@@ -36,7 +36,7 @@ public:
     void send_toplevel_event(struct wl_resource* toplevel) const;
     void send_finished_event() const;
 
-    void destroy_wayland_object() const;
+    void destroy_and_delete() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -85,8 +85,6 @@ public:
     void send_done_event() const;
     void send_closed_event() const;
 
-    void destroy_wayland_object() const;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -126,7 +124,6 @@ private:
     virtual void activate(struct wl_resource* seat) = 0;
     virtual void close() = 0;
     virtual void set_rectangle(struct wl_resource* surface, int32_t x, int32_t y, int32_t width, int32_t height) = 0;
-    virtual void destroy() = 0;
     virtual void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output) = 0;
     virtual void unset_fullscreen() = 0;
 };

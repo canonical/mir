@@ -42,7 +42,6 @@ public:
     static WlRegion* from(wl_resource* resource);
 
 private:
-    void destroy() override;
     void add(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void subtract(int32_t x, int32_t y, int32_t width, int32_t height) override;
 

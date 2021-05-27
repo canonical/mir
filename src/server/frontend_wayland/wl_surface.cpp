@@ -49,8 +49,7 @@ namespace mw = mir::wayland;
 namespace msh = mir::shell;
 
 mf::WlSurfaceState::Callback::Callback(wl_resource* new_resource)
-    : mw::Callback{new_resource, Version<1>()},
-      destroyed{deleted_flag_for_resource(resource)}
+    : mw::Callback{new_resource, Version<1>()}
 {
 }
 
@@ -103,7 +102,7 @@ mf::WlSurface::WlSurface(
 
 mf::WlSurface::~WlSurface()
 {
-    role->destroy();
+    role->surface_destroyed();
     session->destroy_buffer_stream(stream);
 }
 
@@ -230,20 +229,15 @@ void mf::WlSurface::send_frame_callbacks()
 {
     for (auto const& frame : frame_callbacks)
     {
-        if (!*frame->destroyed)
+        if (frame)
         {
             auto const timestamp_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now().time_since_epoch());
-            frame->send_done_event(timestamp_ms.count());
-            frame->destroy_wayland_object();
+            frame.value().send_done_event(timestamp_ms.count());
+            frame.value().destroy_and_delete();
         }
     }
     frame_callbacks.clear();
-}
-
-void mf::WlSurface::destroy()
-{
-    destroy_wayland_object();
 }
 
 void mf::WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
@@ -276,7 +270,8 @@ void mf::WlSurface::damage_buffer(int32_t x, int32_t y, int32_t width, int32_t h
 
 void mf::WlSurface::frame(wl_resource* new_callback)
 {
-    pending.frame_callbacks.push_back(std::make_shared<WlSurfaceState::Callback>(new_callback));
+    auto callback = new WlSurfaceState::Callback{new_callback};
+    pending.frame_callbacks.push_back(wayland::make_weak(callback));
 }
 
 void mf::WlSurface::set_opaque_region(std::experimental::optional<wl_resource*> const& region)
@@ -493,4 +488,4 @@ auto mf::NullWlSurfaceRole::scene_surface() const -> std::experimental::optional
 }
 void mf::NullWlSurfaceRole::refresh_surface_data_now() {}
 void mf::NullWlSurfaceRole::commit(WlSurfaceState const& state) { surface->commit(state); }
-void mf::NullWlSurfaceRole::destroy() {}
+void mf::NullWlSurfaceRole::surface_destroyed() {}

@@ -47,7 +47,6 @@ public:
     XdgSurfaceV6(wl_resource* new_resource, WlSurface* surface, XdgShellV6 const& xdg_shell);
     ~XdgSurfaceV6() = default;
 
-    void destroy() override;
     void get_toplevel(wl_resource* new_toplevel) override;
     void get_popup(wl_resource* new_popup, wl_resource* parent_surface, wl_resource* positioner) override;
     void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override;
@@ -81,7 +80,6 @@ public:
         WlSurface* surface);
 
     void grab(struct wl_resource* seat, uint32_t serial) override;
-    void destroy() override;
 
     void handle_commit() override {};
     void handle_state_change(MirWindowState /*new_state*/) override {};
@@ -103,7 +101,6 @@ class XdgToplevelV6 : mw::XdgToplevelV6, public WindowWlSurfaceRole
 public:
     XdgToplevelV6(wl_resource* new_resource, XdgSurfaceV6* xdg_surface, WlSurface* surface);
 
-    void destroy() override;
     void set_parent(std::experimental::optional<struct wl_resource*> const& parent) override;
     void set_title(std::string const& title) override;
     void set_app_id(std::string const& app_id) override;
@@ -138,7 +135,6 @@ public:
     XdgPositionerV6(wl_resource* new_resource);
 
 private:
-    void destroy() override;
     void set_size(int32_t width, int32_t height) override;
     void set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void set_anchor(uint32_t anchor) override;
@@ -157,7 +153,6 @@ public:
     Instance(wl_resource* new_resource, mf::XdgShellV6* shell);
 
 private:
-    void destroy() override;
     void create_positioner(wl_resource* new_positioner) override;
     void get_xdg_surface(wl_resource* new_xdg_surface, wl_resource* surface) override;
     void pong(uint32_t serial) override;
@@ -169,11 +164,6 @@ mf::XdgShellV6::Instance::Instance(wl_resource* new_resource, mf::XdgShellV6* sh
     : mw::XdgShellV6{new_resource, Version<1>()},
       shell{shell}
 {
-}
-
-void mf::XdgShellV6::Instance::destroy()
-{
-    destroy_wayland_object();
 }
 
 void mf::XdgShellV6::Instance::create_positioner(wl_resource* new_positioner)
@@ -227,11 +217,6 @@ mf::XdgSurfaceV6::XdgSurfaceV6(wl_resource* new_resource, WlSurface* surface,
       surface{surface},
       xdg_shell{xdg_shell}
 {
-}
-
-void mf::XdgSurfaceV6::destroy()
-{
-    wl_resource_destroy(resource);
 }
 
 void mf::XdgSurfaceV6::get_toplevel(wl_resource* new_toplevel)
@@ -325,11 +310,6 @@ void mf::XdgPopupV6::grab(struct wl_resource* seat, uint32_t serial)
     set_type(mir_window_type_menu);
 }
 
-void mf::XdgPopupV6::destroy()
-{
-    wl_resource_destroy(resource);
-}
-
 void mf::XdgPopupV6::handle_resize(const std::experimental::optional<geometry::Point>& new_top_left,
                                    const geometry::Size& new_size)
 {
@@ -373,11 +353,6 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_resource* new_resource, XdgSurfaceV6*
     send_configure_event(0, 0, &states);
     wl_array_release(&states);
     xdg_surface->send_configure();
-}
-
-void mf::XdgToplevelV6::destroy()
-{
-    wl_resource_destroy(resource);
 }
 
 void mf::XdgToplevelV6::set_parent(std::experimental::optional<struct wl_resource*> const& parent)
@@ -572,11 +547,6 @@ mf::XdgPositionerV6::XdgPositionerV6(wl_resource* new_resource)
     // specifying gravity is not required by the xdg shell protocol, but is by Mir window managers
     surface_placement_gravity = mir_placement_gravity_center;
     aux_rect_placement_gravity = mir_placement_gravity_center;
-}
-
-void mf::XdgPositionerV6::destroy()
-{
-    wl_resource_destroy(resource);
 }
 
 void mf::XdgPositionerV6::set_size(int32_t width, int32_t height)

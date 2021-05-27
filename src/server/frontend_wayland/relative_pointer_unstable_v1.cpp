@@ -44,8 +44,6 @@ public:
 private:
     std::shared_ptr<shell::Shell> const shell;
 
-    void destroy() override;
-
     void get_relative_pointer(wl_resource* id, wl_resource* pointer) override;
 };
 
@@ -56,7 +54,6 @@ public:
 
 private:
     wayland::Weak<WlPointer> const pointer;
-    void destroy() override;
 };
 }
 }
@@ -84,11 +81,6 @@ mir::frontend::RelativePointerManagerV1::RelativePointerManagerV1(wl_resource* r
 {
 }
 
-void mir::frontend::RelativePointerManagerV1::destroy()
-{
-    destroy_wayland_object();
-}
-
 void mir::frontend::RelativePointerManagerV1::get_relative_pointer(wl_resource* id, wl_resource* pointer)
 {
     new RelativePointerV1{id, dynamic_cast<WlPointer*>(wayland::Pointer::from(pointer))};
@@ -99,10 +91,4 @@ mir::frontend::RelativePointerV1::RelativePointerV1(wl_resource* id, WlPointer* 
     pointer{pointer}
 {
     pointer->set_relative_pointer(this);
-}
-
-
-void mir::frontend::RelativePointerV1::destroy()
-{
-    destroy_wayland_object();
 }

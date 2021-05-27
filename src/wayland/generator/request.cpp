@@ -26,7 +26,14 @@ Request::Request(xmlpp::Element const& node, std::string const& class_name)
 // TODO: Decide whether to resolve wl_resource* to wrapped types (ie: Region, Surface, etc).
 Emitter Request::virtual_mir_prototype() const
 {
-    return {"virtual void ", name, "(", mir_args(), ") = 0;"};
+    if (is_destroy())
+    {
+        return nullptr;
+    }
+    else
+    {
+        return {"virtual void ", name, "(", mir_args(), ") = 0;"};
+    }
 }
 
 // TODO: Decide whether to resolve wl_resource* to wrapped types (ie: Region, Surface, etc).
@@ -34,11 +41,17 @@ Emitter Request::thunk_impl() const
 {
     return {"static void ", name, "_thunk(", wl_args(), ")",
         Block{
-            {"auto me = static_cast<", class_name, "*>(wl_resource_get_user_data(resource));"},
             wl2mir_converters(),
             "try",
             Block{
-                {"me->", name, "(", mir_call_args(), ");"}
+                (is_destroy() ?
+                    Emitter{"wl_resource_destroy(resource);"}
+                :
+                    Lines{
+                        {"auto me = static_cast<", class_name, "*>(wl_resource_get_user_data(resource));"},
+                        {"me->", name, "(", mir_call_args(), ");"},
+                    }
+                )
             },
             "catch(ProtocolError const& err)",
             Block{
@@ -55,6 +68,11 @@ Emitter Request::thunk_impl() const
 Emitter Request::vtable_initialiser() const
 {
     return {name, "_thunk"};
+}
+
+bool Request::is_destroy() const
+{
+    return type == "destructor";
 }
 
 Emitter Request::wl_args() const

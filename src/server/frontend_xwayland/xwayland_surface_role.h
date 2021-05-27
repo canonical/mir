@@ -70,7 +70,7 @@ private:
     auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
     void refresh_surface_data_now() override;
     void commit(WlSurfaceState const& state) override;
-    void destroy() override;
+    void surface_destroyed() override;
     /// @}
 };
 }

@@ -55,8 +55,6 @@ public:
 
     void receive(std::string const& mime_type, mir::Fd fd) override;
 
-    void destroy() override;
-
     void finish() override
     {
     }
@@ -87,11 +85,6 @@ mf::WlDataDevice::Offer::Offer(WlDataDevice* device, std::shared_ptr<scene::Clip
 void mf::WlDataDevice::Offer::receive(std::string const& mime_type, mir::Fd fd)
 {
     source->initiate_send(mime_type, fd);
-}
-
-void mf::WlDataDevice::Offer::destroy()
-{
-    destroy_wayland_object();
 }
 
 mf::WlDataDevice::WlDataDevice(
@@ -128,11 +121,6 @@ void mf::WlDataDevice::set_selection(std::experimental::optional<struct wl_resou
     {
         clipboard.clear_paste_source();
     }
-}
-
-void mf::WlDataDevice::release()
-{
-    destroy_wayland_object();
 }
 
 void mf::WlDataDevice::focus_on(wl_client* focus)

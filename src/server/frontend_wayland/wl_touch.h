@@ -71,8 +71,6 @@ private:
         std::pair<float, float> const& root_position);
     void up(uint32_t serial, std::chrono::milliseconds const& ms, int32_t touch_id);
     void maybe_frame();
-
-    void release() override;
 };
 
 }

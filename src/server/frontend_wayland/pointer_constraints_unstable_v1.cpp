@@ -58,8 +58,6 @@ private:
     Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
 
-    void destroy() override;
-
     void lock_pointer(
         wl_resource* id,
         wl_resource* surface,
@@ -85,6 +83,7 @@ public:
         std::shared_ptr<scene::Surface> const& scene_surface,
         std::experimental::optional<wl_resource*> const& region,
         PointerConstraintsV1::Lifetime lifetime);
+    ~LockedPointerV1();
 
 private:
     std::shared_ptr<shell::Shell> const shell;
@@ -94,7 +93,6 @@ private:
 
     std::shared_ptr<MyWaylandSurfaceObserver> const my_surface_observer;
 
-    void destroy() override;
     void set_cursor_position_hint(double /*surface_x*/, double /*surface_y*/) override;
     void set_region(const std::experimental::optional<wl_resource*>& /*region*/) override;
 };
@@ -109,6 +107,7 @@ public:
         std::shared_ptr<scene::Surface> const& scene_surface,
         std::experimental::optional<wl_resource*> const& region,
         PointerConstraintsV1::Lifetime lifetime);
+    ~ConfinedPointerV1();
 
 private:
     std::shared_ptr<shell::Shell> const shell;
@@ -118,7 +117,6 @@ private:
 
     std::shared_ptr<SurfaceObserver> const my_surface_observer;
 
-    void destroy() override;
     void set_region(const std::experimental::optional<wl_resource*>& /*region*/) override;
 };
 
@@ -251,11 +249,6 @@ mir::frontend::PointerConstraintsV1::PointerConstraintsV1(wl_resource* resource,
 {
 }
 
-void mir::frontend::PointerConstraintsV1::destroy()
-{
-    destroy_wayland_object();
-}
-
 void mir::frontend::PointerConstraintsV1::lock_pointer(
     wl_resource* id,
     wl_resource* surface,
@@ -337,7 +330,7 @@ mir::frontend::LockedPointerV1::LockedPointerV1(
         send_locked_event();
 }
 
-void mir::frontend::LockedPointerV1::destroy()
+mir::frontend::LockedPointerV1::~LockedPointerV1()
 {
     mark_destroyed();
     if (auto const scene_surface = weak_scene_surface.lock())
@@ -347,7 +340,6 @@ void mir::frontend::LockedPointerV1::destroy()
         mods.confine_pointer = MirPointerConfinementState::mir_pointer_unconfined;
         shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
     }
-    destroy_wayland_object();
 }
 
 void mir::frontend::LockedPointerV1::set_cursor_position_hint(double /*surface_x*/, double /*surface_y*/)
@@ -404,7 +396,7 @@ mir::frontend::ConfinedPointerV1::ConfinedPointerV1(
         send_confined_event();
 }
 
-void mir::frontend::ConfinedPointerV1::destroy()
+mir::frontend::ConfinedPointerV1::~ConfinedPointerV1()
 {
     mark_destroyed();
     if (auto const scene_surface = weak_scene_surface.lock())
@@ -414,7 +406,6 @@ void mir::frontend::ConfinedPointerV1::destroy()
         mods.confine_pointer = MirPointerConfinementState::mir_pointer_unconfined;
         shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
     }
-    destroy_wayland_object();
 }
 
 void mir::frontend::ConfinedPointerV1::set_region(const std::experimental::optional<wl_resource*>& /*region*/)

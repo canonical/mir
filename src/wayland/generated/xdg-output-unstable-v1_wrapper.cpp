@@ -45,10 +45,9 @@ struct mw::XdgOutputManagerV1::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<XdgOutputManagerV1*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -62,7 +61,6 @@ struct mw::XdgOutputManagerV1::Thunks
 
     static void get_xdg_output_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* output)
     {
-        auto me = static_cast<XdgOutputManagerV1*>(wl_resource_get_user_data(resource));
         wl_resource* id_resolved{
             wl_resource_create(client, &zxdg_output_v1_interface_data, wl_resource_get_version(resource), id)};
         if (id_resolved == nullptr)
@@ -72,6 +70,7 @@ struct mw::XdgOutputManagerV1::Thunks
         }
         try
         {
+            auto me = static_cast<XdgOutputManagerV1*>(wl_resource_get_user_data(resource));
             me->get_xdg_output(id_resolved, output);
         }
         catch(ProtocolError const& err)
@@ -140,11 +139,6 @@ bool mw::XdgOutputManagerV1::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zxdg_output_manager_v1_interface_data, Thunks::request_vtable);
 }
 
-void mw::XdgOutputManagerV1::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
-}
-
 mw::XdgOutputManagerV1::Global::Global(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
@@ -190,10 +184,9 @@ struct mw::XdgOutputV1::Thunks
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
-        auto me = static_cast<XdgOutputV1*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy();
+            wl_resource_destroy(resource);
         }
         catch(ProtocolError const& err)
         {
@@ -273,11 +266,6 @@ void mw::XdgOutputV1::send_description_event(std::string const& description) con
 bool mw::XdgOutputV1::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zxdg_output_v1_interface_data, Thunks::request_vtable);
-}
-
-void mw::XdgOutputV1::destroy_wayland_object() const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_message const mw::XdgOutputV1::Thunks::request_messages[] {

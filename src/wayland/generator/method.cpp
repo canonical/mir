@@ -23,6 +23,7 @@
 
 Method::Method(xmlpp::Element const& node, std::string const& class_name, bool is_event)
     : name{node.get_attribute_value("name")},
+      type{node.get_attribute_value("type")},
       class_name{class_name},
       min_version{get_since_version(node)}
 {

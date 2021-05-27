@@ -43,11 +43,6 @@ mf::WlRegion* mf::WlRegion::from(wl_resource* resource)
     return static_cast<WlRegion*>(static_cast<wayland::Region*>(raw));
 }
 
-void mf::WlRegion::destroy()
-{
-    wl_resource_destroy(resource);
-}
-
 void mf::WlRegion::add(int32_t x, int32_t y, int32_t width, int32_t height)
 {
     rects.push_back(geom::Rectangle{{x, y}, {width, height}});

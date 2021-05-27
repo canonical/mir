@@ -263,11 +263,6 @@ void mf::WlKeyboard::update_modifier_state()
     }
 }
 
-void mf::WlKeyboard::release()
-{
-    wl_resource_destroy(resource);
-}
-
 void mir::frontend::WlKeyboard::resync_keyboard()
 {
     update_keyboard_state(acquire_current_keyboard_state());

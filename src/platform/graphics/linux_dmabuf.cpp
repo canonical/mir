@@ -514,11 +514,6 @@ public:
         return planes_;
     }
 private:
-    void destroy() override
-    {
-        destroy_wayland_object();
-    }
-
     EGLDisplay const dpy;
     std::shared_ptr<mg::EGLExtensions> const egl_extensions;
     BufferGLDescription const& desc;
@@ -595,11 +590,6 @@ private:
     EGLDisplay dpy;
     std::shared_ptr<mg::EGLExtensions> egl_extensions;
     std::shared_ptr<mg::DmaBufFormatDescriptors const> const formats;
-
-    void destroy() override
-    {
-        destroy_wayland_object();
-    }
 
     void add(
         mir::Fd fd,
@@ -1065,11 +1055,6 @@ public:
         }
     }
 private:
-    void destroy() override
-    {
-        destroy_wayland_object();
-    }
-
     void create_params(struct wl_resource* params_id) override
     {
         new LinuxDmaBufParams{params_id, dpy, egl_extensions, formats};

@@ -37,7 +37,6 @@ public:
     WlSubcompositorInstance(wl_resource* new_resource);
 
 private:
-    void destroy() override;
     void get_subsurface(wl_resource* new_subsurface, wl_resource* surface, wl_resource* parent) override;
 };
 }
@@ -58,11 +57,6 @@ mf::WlSubcompositorInstance::WlSubcompositorInstance(wl_resource* new_resource)
 {
 }
 
-void mf::WlSubcompositorInstance::destroy()
-{
-    destroy_wayland_object();
-}
-
 void mf::WlSubcompositorInstance::get_subsurface(
     wl_resource* new_subsurface,
     wl_resource* surface,
@@ -75,6 +69,7 @@ mf::WlSubsurface::WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, 
     : wayland::Subsurface(new_subsurface, Version<1>()),
       surface{surface},
       parent{parent_surface},
+      weak_client{WlClient::from(client)},
       synchronized_{true}
 {
     parent_surface->add_subsurface(this);
@@ -164,11 +159,6 @@ void mf::WlSubsurface::set_desync()
     synchronized_ = false;
 }
 
-void mf::WlSubsurface::destroy()
-{
-    destroy_wayland_object();
-}
-
 void mf::WlSubsurface::refresh_surface_data_now()
 {
     if (parent)
@@ -207,5 +197,22 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
         if (cached_state.value().surface_data_needs_refresh())
             refresh_surface_data_now();
         cached_state = std::experimental::nullopt;
+    }
+}
+
+void mf::WlSubsurface::surface_destroyed()
+{
+    if (weak_client)
+    {
+        // "When a client wants to destroy a wl_surface, they must destroy this 'role object' wl_surface"
+        BOOST_THROW_EXCEPTION(std::runtime_error{
+            "wl_surface@" + std::to_string(wl_resource_get_id(surface->resource)) +
+            " destroyed before it's associated wl_subsurface@" + std::to_string(wl_resource_get_id(resource))});
+    }
+    else
+    {
+        // If the client has been destroyed, everything is getting cleaned up in an arbitrary order. Delete this so our
+        // derived class doesn't end up using the now-defunct surface.
+        delete this;
     }
 }

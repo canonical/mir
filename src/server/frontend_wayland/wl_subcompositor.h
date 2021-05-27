@@ -23,6 +23,7 @@
 #include "wayland_wrapper.h"
 #include "wl_surface_role.h"
 #include "wl_surface.h"
+#include "wl_client.h"
 
 #include <vector>
 #include <memory>
@@ -73,14 +74,14 @@ private:
     void set_sync() override;
     void set_desync() override;
 
-    void destroy() override; // overrides function in both WlSurfaceRole and wayland::Subsurface
-
     void refresh_surface_data_now() override;
     virtual void commit(WlSurfaceState const& state) override;
+    void surface_destroyed() override;
 
     WlSurface* const surface;
     /// This class is responsible for removing itself from the parent's children list when needed
     wayland::Weak<WlSurface> const parent;
+    wayland::Weak<WlClient> const weak_client;
     bool synchronized_;
     std::experimental::optional<WlSurfaceState> cached_state;
 };

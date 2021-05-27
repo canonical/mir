@@ -121,11 +121,6 @@ void mf::WlDataSource::offer(std::string const& mime_type)
     mime_types.push_back(mime_type);
 }
 
-void mf::WlDataSource::destroy()
-{
-    destroy_wayland_object();
-}
-
 void mf::WlDataSource::paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source)
 {
     if (source && source == paste_source.lock())

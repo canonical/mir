@@ -52,7 +52,6 @@ public:
         (void)source, (void)origin, (void)icon, (void)serial;
     }
     void set_selection(std::experimental::optional<struct wl_resource*> const& source, uint32_t serial) override;
-    void release() override;
     /// @}
 
 private:
