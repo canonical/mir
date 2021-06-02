@@ -16,21 +16,27 @@ mir (2.4.0) UNRELEASED; urgency=medium
       . mircookie ABI unchanged at 2
       . mirwayland ABI unchanged at 2
     - Enhancements:
-      . [gbm-kms] Also respect --driver-quirks in the RenderingPlatform
-      . [X11 platform] Add hostname to title when remote over X-forwarding (Fixes #1889)
-      . [Wayland] Respect --enable-key-repeat with Wayland
-      . [X11 platform] Port from XLib to XCB
       . Make attached surfaces respect exclusive zones
-      . [X11 platform] Don't clamp Mir-on-X window size
+      . split `mg::Platform` into `DisplayPlatform` and `RenderingPlatform`
+      . [gbm-kms] Add --driver-quirks option to avoid probing devices where probing crashes
+      . [Wayland] Respect --enable-key-repeat with Wayland
       . [Wayland] Send timestamps with frame done event
+      . [Wayland] Send timestamps with frame done event
+      . [X11 platform] Add hostname to title when remote over X-forwarding (Fixes #1889)
+      . [X11 platform] Port from XLib to XCB
+      . [X11 platform] Don't clamp Mir-on-X window size
+      . [X11 platform] Allow resizing Mir-on-X windows
     - Bugs fixed:
+      . Keep track of past surface states (Fixes #1979)
+      . Place popups on output their anchor is on (Fixes #1408)
+      . [mirplatform] Fix mirplatform.pc include dirs
       . [X11 platform] Fix cursor position on scaled outputs (Fixes #2034)
       . [X11 platform] Handle key state changes when window is not focused (Fixes #2029)
-      . Keep track of past surface states (Fixes #1979)
+      . [XWayland] Gracefully handle XWayland errors (Fixes #1969)
       . [Wayland] Send bufferless frame callbacks after timeout (Fixes #1967)
       . [Wayland] Fix resize of layer shell surfaces (Fixes #1986)
-      . Place popups on output their anchor is on (Fixes #1408)
-      . [XWayland] Gracefully handle XWayland errors (Fixes #1969)
+      . [Wayland] Check for locked cursor before sending pointer movement
+      . [Wayland platform] Precise (floating point) pointer events. (Fixes #1852)
 
  -- William Wold <william.wold@canonical.com>  Tue, 01 Jun 2021 15:25:00 -0800
 
