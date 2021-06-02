@@ -1,3 +1,39 @@
+mir (2.4.0) UNRELEASED; urgency=medium
+
+  [ William Wold ]
+  * New upstream release 2.4.0
+
+    - ABI summary:
+      . mirclient ABI unchanged at 10
+      . miral ABI unchanged at 4
+      . mirserver ABI bumped to 55
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI bumped to 22
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 18
+      . mirinputplatform ABI unchanged at 8
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+      . mirwayland ABI unchanged at 2
+    - Enhancements:
+      . [gbm-kms] Also respect --driver-quirks in the RenderingPlatform
+      . [X11 platform] Add hostname to title when remote over X-forwarding (Fixes #1889)
+      . [Wayland] Respect --enable-key-repeat with Wayland
+      . [X11 platform] Port from XLib to XCB
+      . Make attached surfaces respect exclusive zones
+      . [X11 platform] Don't clamp Mir-on-X window size
+      . [Wayland] Send timestamps with frame done event
+    - Bugs fixed:
+      . [X11 platform] Fix cursor position on scaled outputs (Fixes #2034)
+      . [X11 platform] Handle key state changes when window is not focused (Fixes #2029)
+      . Keep track of past surface states (Fixes #1979)
+      . [Wayland] Send bufferless frame callbacks after timeout (Fixes #1967)
+      . [Wayland] Fix resize of layer shell surfaces (Fixes #1986)
+      . Place popups on output their anchor is on (Fixes #1408)
+      . [XWayland] Gracefully handle XWayland errors (Fixes #1969)
+
+ -- William Wold <william.wold@canonical.com>  Tue, 01 Jun 2021 15:25:00 -0800
+
 mir (2.3.3) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]
