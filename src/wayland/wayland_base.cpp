@@ -143,13 +143,23 @@ mw::Global::~Global()
     wl_global_destroy(global);
 }
 
-void mw::internal_error_processing_request(wl_client* client, char const* method_name)
+void mw::post_implementation_error(wl_client* client, char const* fmt, ...)
 {
+    va_list va;
+    va_start(va, fmt);
 #if (WAYLAND_VERSION_MAJOR > 1 || (WAYLAND_VERSION_MAJOR == 1 && WAYLAND_VERSION_MINOR > 16))
-    wl_client_post_implementation_error(client, "Mir internal error processing %s request", method_name);
+    wl_client_post_implementation_error(client, fmt, va);
 #else
+    (void)va;
+    (void)fmt;
     wl_client_post_no_memory(client);
 #endif
+    va_end(va);
+}
+
+void mw::internal_error_processing_request(wl_client* client, char const* method_name)
+{
+    post_implementation_error(client, "Mir internal error processing %s request", method_name);
     ::mir::log(
         ::mir::logging::Severity::warning,
         "frontend:Wayland",

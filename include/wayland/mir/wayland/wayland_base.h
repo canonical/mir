@@ -215,6 +215,10 @@ public:
     wl_global* const global;
 };
 
+/// Calls wl_client_post_implementation_error() if available
+[[gnu::format(printf, 2, 3)]]
+void post_implementation_error(wl_client* client, char const* fmt, ...);
+
 void internal_error_processing_request(wl_client* client, char const* method_name);
 
 }

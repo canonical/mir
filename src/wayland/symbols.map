@@ -401,3 +401,10 @@ global:
     virtual?thunk?to?mir::wayland::RelativePointerV1::?RelativePointerV1*;
   };
 } MIRWAYLAND_2.1;
+
+MIRWAYLAND_2.2.2 {
+global:
+  extern "C++" {
+    mir::wayland::post_implementation_error*;
+  };
+} MIRWAYLAND_2.2.1;
