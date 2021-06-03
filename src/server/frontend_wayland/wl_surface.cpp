@@ -488,4 +488,4 @@ auto mf::NullWlSurfaceRole::scene_surface() const -> std::experimental::optional
 }
 void mf::NullWlSurfaceRole::refresh_surface_data_now() {}
 void mf::NullWlSurfaceRole::commit(WlSurfaceState const& state) { surface->commit(state); }
-void mf::NullWlSurfaceRole::surface_destroyed() {}
+void mf::NullWlSurfaceRole::surface_destroyed() noexcept {}

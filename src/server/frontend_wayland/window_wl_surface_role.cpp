@@ -441,7 +441,7 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     pending_explicit_height = std::experimental::nullopt;
 }
 
-void mf::WindowWlSurfaceRole::surface_destroyed()
+void mf::WindowWlSurfaceRole::surface_destroyed() noexcept
 {
     if (weak_client)
     {

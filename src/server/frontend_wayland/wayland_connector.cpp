@@ -203,7 +203,7 @@ public:
     ~WlShellSurface() = default;
 
 protected:
-    void surface_destroyed() override
+    void surface_destroyed() noexcept override
     {
         // The spec is a little contradictory:
         // wl_surface: When a client wants to destroy a wl_surface, they must destroy this 'role object' before the wl_surface

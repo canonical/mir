@@ -163,7 +163,7 @@ void mf::XWaylandSurfaceRole::commit(WlSurfaceState const& state)
     }
 }
 
-void mf::XWaylandSurfaceRole::surface_destroyed()
+void mf::XWaylandSurfaceRole::surface_destroyed() noexcept
 {
     if (auto const wm_surface = weak_wm_surface.lock())
     {

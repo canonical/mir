@@ -76,7 +76,7 @@ private:
 
     void refresh_surface_data_now() override;
     virtual void commit(WlSurfaceState const& state) override;
-    void surface_destroyed() override;
+    void surface_destroyed() noexcept override;
 
     WlSurface* const surface;
     /// This class is responsible for removing itself from the parent's children list when needed

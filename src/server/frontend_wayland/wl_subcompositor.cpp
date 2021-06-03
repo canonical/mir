@@ -200,7 +200,7 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
     }
 }
 
-void mf::WlSubsurface::surface_destroyed()
+void mf::WlSubsurface::surface_destroyed() noexcept
 {
     if (weak_client)
     {

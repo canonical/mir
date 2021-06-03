@@ -120,7 +120,7 @@ protected:
     auto latest_timestamp() const -> std::chrono::nanoseconds;
 
     void commit(WlSurfaceState const& state) override;
-    void surface_destroyed() override;
+    void surface_destroyed() noexcept override;
 
 private:
     WlSurface* const surface;
