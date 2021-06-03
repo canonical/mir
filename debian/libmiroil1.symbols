@@ -45,6 +45,9 @@ libmiroil.so.1 libmiroil1 #MINVER#
  (c++)"miroil::MirServerHooks::the_mir_display() const@MIROIL_1.0" 2.4.0
  (c++)"miroil::MirServerHooks::the_prompt_session_listener() const@MIROIL_1.0" 2.4.0
  (c++)"miroil::MirServerHooks::the_prompt_session_manager() const@MIROIL_1.0" 2.4.0
+ (c++)"miroil::OpenGLContext::OpenGLContext(mir::graphics::GLConfig*)@MIROIL_1.0" 2.4.0
+ (c++)"miroil::OpenGLContext::operator()(mir::Server&)@MIROIL_1.0" 2.4.0
+ (c++)"miroil::OpenGLContext::the_open_gl_config() const@MIROIL_1.0" 2.4.0
  (c++)"miroil::PersistDisplayConfig::PersistDisplayConfig(miroil::PersistDisplayConfig const&)@MIROIL_1.0" 2.4.0
  (c++)"miroil::PersistDisplayConfig::PersistDisplayConfig(std::shared_ptr<miroil::DisplayConfigurationStorage> const&, std::function<std::shared_ptr<miroil::DisplayConfigurationPolicy> (std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&)> const&)@MIROIL_1.0" 2.4.0
  (c++)"miroil::PersistDisplayConfig::operator()(mir::Server&)@MIROIL_1.0" 2.4.0
