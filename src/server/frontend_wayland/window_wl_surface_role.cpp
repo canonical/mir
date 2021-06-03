@@ -447,9 +447,14 @@ void mf::WindowWlSurfaceRole::surface_destroyed()
     {
         // "When a client wants to destroy a wl_surface, they must destroy this 'role object' wl_surface"
         // NOTE: the wl_shell_surface specification seems contradictory, so this method is overridden in it's implementation
-        BOOST_THROW_EXCEPTION(std::runtime_error{
-            "wl_surface@" + std::to_string(wl_resource_get_id(surface->resource)) +
-            " destroyed before associated role"});
+        log_warning(
+            "wl_surface@%d destroyed before associated role",
+            wl_resource_get_id(surface->resource));
+        // Post error manually instead of throwing exception because this method is called by the surface destructor
+        wayland::post_implementation_error(
+            weak_client.value().raw_client(),
+            "wl_surface@%d destroyed before associated role",
+            wl_resource_get_id(surface->resource));
     }
     else
     {
