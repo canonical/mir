@@ -33,7 +33,6 @@
 #include "mir/log.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
-#include "mir/wayland/wayland_base.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -448,10 +447,9 @@ void mf::WindowWlSurfaceRole::surface_destroyed()
     {
         // "When a client wants to destroy a wl_surface, they must destroy this 'role object' wl_surface"
         // NOTE: the wl_shell_surface specification seems contradictory, so this method is overridden in it's implementation
-        BOOST_THROW_EXCEPTION((wayland::ProtocolError{
-            surface->resource,
-            std::numeric_limits<int32_t>::max(),    // There's no good error code: use a bad one
-            "wl_surface@%d destroyed before associated role", wl_resource_get_id(surface->resource)}));
+        BOOST_THROW_EXCEPTION(std::runtime_error{
+            "wl_surface@" + std::to_string(wl_resource_get_id(surface->resource)) +
+            " destroyed before associated role"});
     }
     else
     {

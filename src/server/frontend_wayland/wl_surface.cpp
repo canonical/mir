@@ -111,10 +111,6 @@ mf::WlSurface::~WlSurface()
         session->destroy_buffer_stream(stream);
         role->surface_destroyed();
     }
-    catch (mw::ProtocolError const& error)
-    {
-        wl_resource_post_error(error.resource(), error.code(), "%s", error.message());
-    }
     catch (...)
     {
         mw::internal_error_processing_request(client, "WlSurface::~WlSurface()");
