@@ -205,12 +205,9 @@ void mf::WlSubsurface::surface_destroyed()
     if (weak_client)
     {
         // "When a client wants to destroy a wl_surface, they must destroy this 'role object' wl_surface"
-        BOOST_THROW_EXCEPTION((wayland::ProtocolError{
-            surface->resource,
-            std::numeric_limits<int32_t>::max(),    // There's no good error code: use a bad one
-            "wl_surface@%d destroyed before associated wl_subsurface@%d",
-            wl_resource_get_id(surface->resource),
-            wl_resource_get_id(resource)}));
+        BOOST_THROW_EXCEPTION(std::runtime_error{
+            "wl_surface@" + std::to_string(wl_resource_get_id(surface->resource)) +
+            " destroyed before it's associated wl_subsurface@" + std::to_string(wl_resource_get_id(resource))});
     }
     else
     {
