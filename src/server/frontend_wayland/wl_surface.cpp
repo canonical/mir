@@ -101,9 +101,16 @@ mf::WlSurface::WlSurface(
 }
 
 mf::WlSurface::~WlSurface()
+try
 {
-    role->surface_destroyed();
+    // Destroy the buffer stream first, as surface_destroyed() may throw
     session->destroy_buffer_stream(stream);
+    role->surface_destroyed();
+}
+catch (...)
+{
+    // We can safely access `client` from the superclass as that destructor hasn't run
+    mw::internal_error_processing_request(client, "WlSurface::~WlSurface()");
 }
 
 bool mf::WlSurface::synchronized() const
