@@ -10,6 +10,7 @@ global:
     miroil::DisplayConfigurationStorage::?DisplayConfigurationStorage*;
     miroil::Edid::Descriptor::string_value*;
     miroil::Edid::parse_data*;
+    miroil::EventBuilder::?EventBuilder*;
     miroil::EventBuilder::EventBuilder*;
     miroil::EventBuilder::EventInfo::store*;
     miroil::EventBuilder::add_touch*;
@@ -21,8 +22,6 @@ global:
     miroil::GLBuffer::?GLBuffer*;
     miroil::GLBuffer::GLBuffer*;
     miroil::GLBuffer::bind*;
-    miroil::GLBuffer::gl_bind_tex*;
-    miroil::GLBuffer::has_alpha_channel*;
     miroil::GLBuffer::operator*;
     miroil::GLBuffer::reset*;
     miroil::GLBuffer::size*;
@@ -65,6 +64,7 @@ global:
     non-virtual?thunk?to?miroil::Compositor::?Compositor*;
     non-virtual?thunk?to?miroil::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
     non-virtual?thunk?to?miroil::DisplayConfigurationStorage::?DisplayConfigurationStorage*;
+    non-virtual?thunk?to?miroil::EventBuilder::?EventBuilder*;
     non-virtual?thunk?to?miroil::InputDeviceObserver::?InputDeviceObserver*;
     non-virtual?thunk?to?miroil::PromptSessionListener::?PromptSessionListener*;
     typeinfo?for?miroil::Compositor;

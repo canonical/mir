@@ -13,6 +13,7 @@ libmiroil.so.1 libmiroil1 #MINVER#
  (c++)"miroil::EventBuilder::make_pointer_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_1.0" 2.4.0
  (c++)"miroil::EventBuilder::make_touch_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, std::vector<unsigned char, std::allocator<unsigned char> > const&, unsigned int)@MIROIL_1.0" 2.4.0
  (c++)"miroil::EventBuilder::store(MirInputEvent const*, unsigned long)@MIROIL_1.0" 2.4.0
+ (c++)"miroil::EventBuilder::~EventBuilder()@MIROIL_1.0" 2.4.0
  (c++)"miroil::GLBuffer::GLBuffer()@MIROIL_1.0" 2.4.0
  (c++)"miroil::GLBuffer::GLBuffer(std::shared_ptr<mir::graphics::Buffer> const&)@MIROIL_1.0" 2.4.0
  (c++)"miroil::GLBuffer::bind()@MIROIL_1.0" 2.4.0
@@ -64,9 +65,11 @@ libmiroil.so.1 libmiroil1 #MINVER#
  (c++)"miroil::dispatch_input_event(miral::Window const&, MirInputEvent const*)@MIROIL_1.0" 2.4.0
  (c++)"typeinfo for miroil::Compositor@MIROIL_1.0" 2.4.0
  (c++)"typeinfo for miroil::DisplayConfigurationPolicy@MIROIL_1.0" 2.4.0
+ (c++)"typeinfo for miroil::EventBuilder@MIROIL_1.0" 2.4.0
  (c++)"typeinfo for miroil::InputDeviceObserver@MIROIL_1.0" 2.4.0
  (c++)"typeinfo for miroil::PromptSessionListener@MIROIL_1.0" 2.4.0
  (c++)"vtable for miroil::Compositor@MIROIL_1.0" 2.4.0
  (c++)"vtable for miroil::DisplayConfigurationPolicy@MIROIL_1.0" 2.4.0
+ (c++)"vtable for miroil::EventBuilder@MIROIL_1.0" 2.4.0
  (c++)"vtable for miroil::InputDeviceObserver@MIROIL_1.0" 2.4.0
  (c++)"vtable for miroil::PromptSessionListener@MIROIL_1.0" 2.4.0
