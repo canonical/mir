@@ -22,7 +22,7 @@ class Context:
     def __init__(self, args):
         assert isinstance(args, list)
         i = 0
-        arg_len = 4
+        arg_len = 5
         if len(args) == 0 or '-h' in args or '--help' in args:
             raise RuntimeError('help')
         assert len(args) == arg_len, 'There should be exactly ' + str(arg_len) + ' arguments, not ' + str(len(args))
@@ -33,6 +33,8 @@ class Context:
         self.library_version = [int(i) for i in args[i].split('.')]
         i += 1
         self.abi_version = int(args[i])
+        i += 1
+        self.abi_minor_version = int(args[i])
         i += 1
         assert i == arg_len, 'i does not match arg_len'
         self.library_so_path = self.library_dir_path + '/lib' + self.library_name + '.so.' + str(self.abi_version)
@@ -84,16 +86,15 @@ class SymbolsFile:
         f = open(context.deb_symbols_path, 'r')
         lines = f.readlines()
         f.close()
-        self.two_component_version = (
-            str(context.library_version[0]) + '.' +
-            str(context.library_version[1]))
         self.three_component_version = (
             str(context.library_version[0]) + '.' +
             str(context.library_version[1]) + '.' +
             str(context.library_version[2]))
         self.version_marker_line = (
-            ' ' + context.library_name.upper() + '_' + self.two_component_version +
-            '@' + context.library_name.upper() + '_' + self.two_component_version +
+            ' ' + context.library_name.upper() + '_' +
+            str(context.abi_version) + '.' + str(context.abi_minor_version) +
+            '@' + context.library_name.upper() + '_' +
+            str(context.abi_version) + '.' + str(context.abi_minor_version) +
             ' ' + self.three_component_version + '\n')
         for i in reversed(range(len(lines))):
             if lines[i] == self.version_marker_line:

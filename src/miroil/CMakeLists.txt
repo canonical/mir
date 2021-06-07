@@ -1,4 +1,10 @@
 set(MIROIL_ABI 1)
+set(MIROIL_VERSION_MAJOR ${MIROIL_ABI})
+set(MIROIL_VERSION_MINOR 0)
+set(MIROIL_VERSION_PATCH 0)
+set(MIROIL_VERSION ${MIROIL_VERSION_MAJOR}.${MIROIL_VERSION_MINOR}.${MIROIL_VERSION_PATCH})
+
+
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miroil_include ${PROJECT_SOURCE_DIR}/include/miroil)
 
@@ -73,7 +79,7 @@ if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols
     if (MIR_DPKG_GENSYMBOLS)
         add_custom_target(check-miroil-symbols ALL
             DEPENDS miroil ${PROJECT_SOURCE_DIR}/debian/libmiroil${MIROIL_ABI}.symbols
-            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil ${MIR_VERSION} ${MIROIL_ABI}
+            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil 2.4.0 ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             VERBATIM)
     endif()
