@@ -68,7 +68,7 @@ class LayerShellV1::Instance : wayland::LayerShellV1
 {
 public:
     Instance(wl_resource* new_resource, mf::LayerShellV1* shell)
-        : LayerShellV1{new_resource, Version<3>()},
+        : LayerShellV1{new_resource, Version<4>()},
           shell{shell}
     {
     }
@@ -214,7 +214,7 @@ mf::LayerShellV1::LayerShellV1(
     std::shared_ptr<msh::Shell> shell,
     WlSeat& seat,
     OutputManager* output_manager)
-    : Global(display, Version<3>()),
+    : Global(display, Version<4>()),
       wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
@@ -276,7 +276,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     std::experimental::optional<graphics::DisplayConfigurationOutputId> output_id,
     LayerShellV1 const& layer_shell,
     MirDepthLayer layer)
-    : mw::LayerSurfaceV1(new_resource, Version<3>()),
+    : mw::LayerSurfaceV1(new_resource, Version<4>()),
       WindowWlSurfaceRole(
           layer_shell.wayland_executor,
           &layer_shell.seat,
