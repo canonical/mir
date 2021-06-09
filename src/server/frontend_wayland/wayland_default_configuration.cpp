@@ -255,6 +255,7 @@ std::shared_ptr<mf::Connector>
                 the_clock(),
                 the_input_device_hub(),
                 the_seat(),
+                the_input_device_registry(),
                 the_buffer_allocator(),
                 the_session_authorizer(),
                 the_frontend_surface_stack(),
