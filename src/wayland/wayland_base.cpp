@@ -145,11 +145,8 @@ mw::Global::~Global()
 
 void mw::internal_error_processing_request(wl_client* client, char const* method_name)
 {
-#if (WAYLAND_VERSION_MAJOR > 1 || (WAYLAND_VERSION_MAJOR == 1 && WAYLAND_VERSION_MINOR > 16))
     wl_client_post_implementation_error(client, "Mir internal error processing %s request", method_name);
-#else
-    wl_client_post_no_memory(client);
-#endif
+
     ::mir::log(
         ::mir::logging::Severity::warning,
         "frontend:Wayland",

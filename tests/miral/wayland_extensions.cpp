@@ -32,10 +32,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#if (WAYLAND_VERSION_MAJOR == 1) && (WAYLAND_VERSION_MINOR < 14)
-#define MIR_NO_WAYLAND_FILTER
-#endif
-
 using namespace testing;
 
 namespace
@@ -263,9 +259,7 @@ TEST_F(WaylandExtensions, filter_is_called)
 
     run_as_client(trivial_client);
 
-#ifndef MIR_NO_WAYLAND_FILTER
     EXPECT_THAT(filter_called, Eq(true));
-#endif
 }
 
 TEST_F(WaylandExtensions, client_sees_default_extensions)
@@ -293,9 +287,7 @@ TEST_F(WaylandExtensions, filter_controls_extensions_exposed_to_client)
 
     run_as_client(enumerator_client);
 
-#ifndef MIR_NO_WAYLAND_FILTER
     EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(std::string{unavailable_extension}))));
-#endif
 }
 
 TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
@@ -314,9 +306,7 @@ TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
     run_as_client(enumerator_client);
 
     EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(mir::examples::server_decoration_extension().name)));
-#ifndef MIR_NO_WAYLAND_FILTER
     EXPECT_THAT(filter_saw_bespoke_extension, Eq(true));
-#endif
 }
 
 TEST_F(WaylandExtensions, add_extension_adds_protocol_to_supported_enabled_extensions)
