@@ -30,14 +30,11 @@ add_library(mir-public-test-framework OBJECT
   any_surface.cpp
   async_server_runner.cpp
   command_line_server_configuration.cpp
-  connected_client_headless_server.cpp
-  connected_client_with_a_window.cpp
   declarative_placement_window_manage_policy.cpp
   executable_path.cpp
   headless_in_process_server.cpp
   headless_display_buffer_compositor_factory.cpp
   headless_test.cpp
-  interprocess_client_server_test.cpp
   main.cpp
   observant_shell.cpp
   passthrough_tracker.cpp       ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/passthrough_tracker.h

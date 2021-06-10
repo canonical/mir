@@ -170,12 +170,6 @@ void miral::TestDisplayServer::stop_server()
     server_thread.stop();
 }
 
-auto miral::TestDisplayServer::connect_client(std::string /*name*/) -> mir::client::Connection
-{
-    // TODO remove
-    abort();
-}
-
 void miral::TestDisplayServer::invoke_tools(std::function<void(WindowManagerTools& tools)> const& f)
 {
     tools.invoke_under_lock([&]{f(tools); });

@@ -35,12 +35,6 @@ struct InProcessServer : testing::Test, private ServerRunner
     /// Stops the server
     /// \warning don't forget to call this if you override TearDown()
     void TearDown() override { ServerRunner::stop_server(); }
-
-    /// \return a connection string for a new client to connect to the server
-    using ServerRunner::new_connection;
-
-    /// \return a connection string for a new client to connect to the prompt server
-    using ServerRunner::new_prompt_connection;
 };
 }
 

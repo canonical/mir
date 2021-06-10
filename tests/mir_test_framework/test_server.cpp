@@ -42,11 +42,3 @@ void miral::TestServer::TearDown()
 }
 
 using miral::TestServer;
-
-// Minimal test to ensure the server runs and exits
-TEST_F(TestServer, connect_client_works)
-{
-    auto const connection = connect_client(__PRETTY_FUNCTION__);
-
-    EXPECT_TRUE(mir_connection_is_valid(connection));
-}

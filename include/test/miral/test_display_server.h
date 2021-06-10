@@ -78,10 +78,6 @@ struct TestDisplayServer : private TestRuntimeEnvironment
     /// \note Typically called by TestServer::SetUp()
     void start_server();
 
-    /// Get a connection for a mirclient
-    /// \note call after start_server()
-    auto connect_client(std::string name) -> mir::client::Connection;
-
     /// Wrapper to gain access to WindowManagerTools API (with correct locking in place)
     /// \note call after start_server()
     void invoke_tools(std::function<void(WindowManagerTools& tools)> const& f);

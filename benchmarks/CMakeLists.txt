@@ -11,12 +11,6 @@ if (TARGET memory_benchmarks)
   add_dependencies(benchmarks memory_benchmarks)
 endif ()
 
-if (MIR_ENABLE_TESTS)
-  # Shouldn't tests dependent things be in tests/?
-  add_subdirectory(frame-uniformity)
-  add_dependencies(benchmarks frame_uniformity_test_client)
-endif ()
-
 add_executable(benchmark_multiplexing_dispatchable
   benchmark_multiplexing_dispatchable.cpp
 )

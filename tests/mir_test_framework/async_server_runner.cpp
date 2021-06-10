@@ -166,19 +166,3 @@ void mtf::AsyncServerRunner::wait_for_server_exit()
 mtf::AsyncServerRunner::~AsyncServerRunner() noexcept
 {
 }
-
-auto mtf::AsyncServerRunner::new_connection() -> std::string
-{
-    // TODO remove
-    abort();
-}
-
-auto mtf::AsyncServerRunner::connection(int fd) -> std::string
-{
-    char connect_string[64] = {0};
-    // We can't have both the server and the client owning the same fd, since
-    // that will result in a double-close(). We give the client a duplicate which
-    // the client can safely own (and should close when done).
-    sprintf(connect_string, "fd://%d", dup(fd));
-    return connect_string;
-}

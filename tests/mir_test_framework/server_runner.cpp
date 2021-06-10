@@ -60,18 +60,6 @@ void mtf::ServerRunner::start_server()
     std::swap(ml, main_loop);
 }
 
-std::string mtf::ServerRunner::new_connection()
-{
-    // TODO remove
-    abort();
-}
-
-std::string mtf::ServerRunner::new_prompt_connection()
-{
-    // TODO remove
-    abort();
-}
-
 void mtf::ServerRunner::stop_server()
 {
     {
