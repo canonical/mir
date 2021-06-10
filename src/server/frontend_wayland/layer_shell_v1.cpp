@@ -288,6 +288,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     // TODO: Error if surface has buffer attached or committed
     shell::SurfaceSpecification spec;
     spec.state = mir_window_state_attached;
+    spec.type = mir_window_type_decoration; // default keybaord interactivity is none
     spec.depth_layer = layer;
     if (output_id)
         spec.output_id = output_id.value();
@@ -517,7 +518,27 @@ void mf::LayerSurfaceV1::set_margin(int32_t top, int32_t right, int32_t bottom, 
 
 void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactivity)
 {
-    (void)keyboard_interactivity;
+    msh::SurfaceSpecification spec;
+    switch (keyboard_interactivity)
+    {
+    case KeyboardInteractivity::none:
+        spec.type = mir_window_type_decoration;
+        break;
+
+    // TODO: implement exclusive keyboard interactivity correctly
+    case KeyboardInteractivity::exclusive:
+    case KeyboardInteractivity::on_demand:
+        spec.type = mir_window_type_normal;
+        break;
+
+    default:
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_keyboard_interactivity,
+            "Invalid keyboard interactivity %d",
+            keyboard_interactivity));
+    }
+    apply_spec(spec);
 }
 
 void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
