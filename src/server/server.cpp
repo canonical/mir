@@ -137,8 +137,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_application_not_responding_detector)\
     MACRO(the_persistent_surface_store)\
     MACRO(the_display_configuration_observer_registrar)\
-    MACRO(the_seat_observer_registrar)\
-    MACRO(the_session_mediator_observer_registrar)
+    MACRO(the_seat_observer_registrar)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;
@@ -459,34 +458,10 @@ bool mir::Server::exited_normally()
     return self->exit_status;
 }
 
-auto mir::Server::open_client_socket() -> Fd
-{
-    if (auto const config = self->server_config)
-        return Fd{config->the_connector()->client_socket_fd()};
-
-    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
-}
-
-auto mir::Server::open_prompt_socket() -> Fd
-{
-    if (auto const config = self->server_config)
-        return Fd{config->the_prompt_connector()->client_socket_fd()};
-
-    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
-}
-
 auto mir::Server::open_wayland_client_socket() -> Fd
 {
     if (auto const config = self->server_config)
         return Fd{config->the_wayland_connector()->client_socket_fd()};
-
-    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
-}
-
-auto mir::Server::mir_socket_name() const -> optional_value<std::string>
-{
-    if (auto const config = self->server_config)
-        return config->the_connector()->socket_name();
 
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
@@ -542,14 +517,6 @@ void mir::Server::set_enabled_wayland_extensions(std::vector<std::string> const&
     {
         config->set_enabled_wayland_extensions(extensions);
     }
-}
-
-auto mir::Server::open_client_socket(ConnectHandler const& connect_handler) -> Fd
-{
-    if (auto const config = self->server_config)
-        return Fd{config->the_connector()->client_socket_fd(connect_handler)};
-
-    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
 auto mir::Server::open_client_wayland(ConnectHandler const& connect_handler) -> int

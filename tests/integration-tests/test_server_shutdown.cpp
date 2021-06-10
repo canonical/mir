@@ -164,14 +164,12 @@ TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clie
 
     std::weak_ptr<mir::graphics::Display> display = server_configuration->the_display();
     std::weak_ptr<mir::compositor::Compositor> compositor = server_configuration->the_compositor();
-    std::weak_ptr<mir::frontend::Connector> connector = server_configuration->the_connector();
     std::weak_ptr<mi::InputManager> input_manager = server_configuration->the_input_manager();
 
     server_configuration.reset();
 
     EXPECT_EQ(0, display.use_count());
     EXPECT_EQ(0, compositor.use_count());
-    EXPECT_EQ(0, connector.use_count());
     EXPECT_EQ(0, input_manager.use_count());
 }
 
@@ -229,7 +227,6 @@ TEST(ServerShutdownWithThreadException,
 
     std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
     std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();
-    std::weak_ptr<mir::frontend::Connector> connector = server_config->the_connector();
     std::weak_ptr<mi::InputManager> input_manager = server_config->the_input_manager();
     std::weak_ptr<mi::InputDeviceHub> hub = server_config->the_input_device_hub();
 
@@ -237,7 +234,6 @@ TEST(ServerShutdownWithThreadException,
 
     EXPECT_EQ(0, display.use_count());
     EXPECT_EQ(0, compositor.use_count());
-    EXPECT_EQ(0, connector.use_count());
     EXPECT_EQ(0, input_manager.use_count());
     EXPECT_EQ(0, hub.use_count());
 }
@@ -265,7 +261,6 @@ TEST(ServerShutdownWithThreadException,
 
     std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
     std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();
-    std::weak_ptr<mir::frontend::Connector> connector = server_config->the_connector();
     std::weak_ptr<mi::InputManager> input_manager = server_config->the_input_manager();
     std::weak_ptr<mi::InputDeviceHub> hub = server_config->the_input_device_hub();
 
@@ -273,7 +268,6 @@ TEST(ServerShutdownWithThreadException,
 
     EXPECT_EQ(0, display.use_count());
     EXPECT_EQ(0, compositor.use_count());
-    EXPECT_EQ(0, connector.use_count());
     EXPECT_EQ(0, input_manager.use_count());
     EXPECT_EQ(0, hub.use_count());
     }
@@ -303,7 +297,6 @@ TEST(ServerShutdownWithThreadException,
 
     std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
     std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();
-    std::weak_ptr<mir::frontend::Connector> connector = server_config->the_connector();
     std::weak_ptr<mi::InputManager> input_manager = server_config->the_input_manager();
     std::weak_ptr<mi::InputDeviceHub> hub = server_config->the_input_device_hub();
 
@@ -311,7 +304,6 @@ TEST(ServerShutdownWithThreadException,
 
     EXPECT_EQ(0, display.use_count());
     EXPECT_EQ(0, compositor.use_count());
-    EXPECT_EQ(0, connector.use_count());
     EXPECT_EQ(0, input_manager.use_count());
     EXPECT_EQ(0, hub.use_count());
 }

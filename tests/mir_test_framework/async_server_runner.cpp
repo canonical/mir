@@ -169,7 +169,8 @@ mtf::AsyncServerRunner::~AsyncServerRunner() noexcept
 
 auto mtf::AsyncServerRunner::new_connection() -> std::string
 {
-    return connection(server.open_client_socket());
+    // TODO remove
+    abort();
 }
 
 auto mtf::AsyncServerRunner::connection(int fd) -> std::string

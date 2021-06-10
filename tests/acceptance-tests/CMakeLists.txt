@@ -32,7 +32,6 @@ set(
   test_client_focus_notification.cpp
   test_mirblob.cpp
   test_surfaces_with_output_id.cpp
-  test_prompt_session_client_api.cpp
   test_client_scaling.cpp
   test_client_surface_visibility.cpp
   test_buffer_stream_arrangement.cpp
@@ -44,7 +43,6 @@ set(
   test_surface_morphing.cpp
   test_surface_specification.cpp
   test_system_compositor_window_manager.cpp
-  test_session_mediator_report.cpp
   test_surface_raise.cpp
   test_client_cookie.cpp
   test_new_display_configuration.cpp

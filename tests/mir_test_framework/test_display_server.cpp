@@ -170,17 +170,10 @@ void miral::TestDisplayServer::stop_server()
     server_thread.stop();
 }
 
-auto miral::TestDisplayServer::connect_client(std::string name) -> mir::client::Connection
+auto miral::TestDisplayServer::connect_client(std::string /*name*/) -> mir::client::Connection
 {
-    std::lock_guard<std::mutex> lock(mutex);
-
-    if (!server_running)
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Server not running"});
-
-    char connect_string[64] = {0};
-    sprintf(connect_string, "fd://%d", dup(server_running->open_client_socket()));
-
-    return mir::client::Connection{mir_connect_sync(connect_string, name.c_str())};
+    // TODO remove
+    abort();
 }
 
 void miral::TestDisplayServer::invoke_tools(std::function<void(WindowManagerTools& tools)> const& f)

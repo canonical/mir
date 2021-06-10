@@ -182,10 +182,8 @@ public:
     /** @name DisplayServer dependencies
      * dependencies of DisplayServer on the rest of the Mir
      *  @{ */
-    std::shared_ptr<frontend::Connector>    the_connector() override;
     std::shared_ptr<frontend::Connector>    the_wayland_connector() override;
     std::shared_ptr<frontend::Connector>    the_xwayland_connector() override;
-    std::shared_ptr<frontend::Connector>    the_prompt_connector() override;
     std::shared_ptr<graphics::Display>      the_display() override;
     std::shared_ptr<compositor::Compositor> the_compositor() override;
     std::shared_ptr<input::InputManager>    the_input_manager() override;
@@ -265,8 +263,6 @@ public:
     /** @name frontend configuration - dependencies
      * dependencies of frontend on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<ObserverRegistrar<frontend::SessionMediatorObserver>>
-        the_session_mediator_observer_registrar();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
     // the_frontend_shell() is an adapter for the_shell().
@@ -277,9 +273,6 @@ public:
     /** @name frontend configuration - internal dependencies
      * internal dependencies of frontend
      *  @{ */
-    virtual std::shared_ptr<frontend::ConnectionCreator>      the_connection_creator();
-    virtual std::shared_ptr<frontend::ConnectionCreator>      the_prompt_connection_creator();
-    virtual std::shared_ptr<frontend::ConnectorReport>        the_connector_report();
     virtual std::shared_ptr<frontend::SurfaceStack>           the_frontend_surface_stack();
     /** @} */
     /** @} */
@@ -375,11 +368,8 @@ protected:
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
     std::shared_ptr<graphics::DisplayConfigurationObserver> the_display_configuration_observer();
     std::shared_ptr<input::SeatObserver> the_seat_observer();
-    std::shared_ptr<frontend::SessionMediatorObserver> the_session_mediator_observer();
 
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> new_ipc_factory(
-        std::shared_ptr<frontend::SessionAuthorizer> const& session_authorizer);
 
     /** @} */
 

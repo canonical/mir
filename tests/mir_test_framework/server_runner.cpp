@@ -62,16 +62,14 @@ void mtf::ServerRunner::start_server()
 
 std::string mtf::ServerRunner::new_connection()
 {
-    char connect_string[64] = {0};
-    sprintf(connect_string, "fd://%d", server_config().the_connector()->client_socket_fd());
-    return connect_string;
+    // TODO remove
+    abort();
 }
 
 std::string mtf::ServerRunner::new_prompt_connection()
 {
-    char connect_string[64] = {0};
-    sprintf(connect_string, "fd://%d", server_config().the_prompt_connector()->client_socket_fd());
-    return connect_string;
+    // TODO remove
+    abort();
 }
 
 void mtf::ServerRunner::stop_server()
