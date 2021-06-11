@@ -44,7 +44,6 @@ typedef struct MirSurfaceSpec MirWindowSpec;
 typedef struct MirScreencast MirScreencast;
 typedef struct MirScreencastSpec MirScreencastSpec;
 typedef struct MirPromptSession MirPromptSession;
-typedef struct MirBufferStream MirBufferStream;
 typedef struct MirPersistentId MirWindowId;
 typedef struct MirBlob MirBlob;
 typedef struct MirDisplayConfig MirDisplayConfig;
@@ -76,91 +75,6 @@ typedef struct MirOutput MirOutput;
 typedef struct MirWaitHandle MirWaitHandle;
 
 typedef struct MirPlatformMessage MirPlatformMessage;
-
-/**
- * Callback to be passed when issuing a mir_connect request.
- *   \param [in] connection          the new connection
- *   \param [in,out] client_context  context provided by client in calling
- *                                   mir_connect
- */
-typedef void (*MirConnectedCallback)(
-    MirConnection *connection, void *client_context);
-
-/**
- * Callback to be passed when calling window functions :
- *   \param [in] window             the window being updated
- *   \param [in,out] client_context  context provided by client in calling
- *                                   mir_connect
- */
-typedef void (*MirWindowCallback)(MirWindow *window, void *client_context);
-
-/**
- * Callback to be passed when calling:
- *  - mir_buffer_stream_* functions requiring a callback.
- *   \param [in] stream              the buffer stream being updated
- *   \param [in,out] client_context  context provided by client in calling
- *                                   mir_connect
- */
-typedef void (*MirBufferStreamCallback)(
-    MirBufferStream *stream, void *client_context);
-
-/**
- * Callback for handling of window events.
- *   \param [in] window     The window on which an event has occurred
- *   \param [in] event       The event to be handled
- *   \param [in,out] context The context provided by client
- */
-typedef void (*MirWindowEventCallback)(
-    MirWindow* window, MirEvent const* event, void* context);
-
-/**
- * Callback called when a lifecycle event/callback is requested
- * from the running server.
- *   \param [in] connection     The connection associated with the lifecycle event
- *   \param [in] cb             The callback requested
- *   \param [in,out] context    The context provided by the client
- */
-
-typedef void (*MirLifecycleEventCallback)(
-    MirConnection* connection, MirLifecycleState state, void* context);
-
-/**
- * Callback called when the server pings for responsiveness testing.
- * \param [in] connection       The connection associated with this ping
- * \param [in] serial           Identifier of this ping, to be passed to
- *                              mir_connection_pong()
- * \param [in,out] context      The context provided by the client
- */
-typedef void (*MirPingEventCallback)(
-    MirConnection* connection, int32_t serial, void* context);
-
-/**
- * Callback called when a display config change has occurred
- *   \param [in] connection     The connection associated with the display change
- *   \param [in,out] context    The context provided by client
- */
-
-typedef void (*MirDisplayConfigCallback)(
-    MirConnection* connection, void* context);
-
-/**
- * Callback called when a request for client file descriptors completes
- *   \param [in] prompt_session  The prompt session
- *   \param [in] count          The number of FDs allocated
- *   \param [in] fds            Array of FDs
- *   \param [in,out] context    The context provided by client
- *
- *   \note Copy the FDs as the array will be invalidated after callback completes
- */
-
-typedef void (*MirClientFdCallback)(
-    MirPromptSession *prompt_session, size_t count, int const* fds, void* context);
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-typedef void (*MirWindowIdCallback)(
-    MirWindow* window, MirWindowId* id, void* context);
-#pragma GCC diagnostic pop
 
 /**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
@@ -330,16 +244,6 @@ typedef struct MirDisplayConfiguration
     uint32_t num_cards;
     MirDisplayCard *cards;
 } MirDisplayConfiguration;
-
-/**
- * The displacement from the top-left corner of the surface.
- */
-typedef struct MirBufferStreamInfo
-{
-    MirBufferStream* stream;
-    int displacement_x;
-    int displacement_y;
-} MirBufferStreamInfo;
 
 typedef struct MirRectangle
 {

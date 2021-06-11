@@ -747,7 +747,6 @@ MIR_SERVER_1.6.0 {
     vtable?for?mir::compositor::SceneElement;
     vtable?for?mir::Executor;
     vtable?for?mir::frontend::BufferSink;
-    vtable?for?mir::frontend::BufferStream;
     vtable?for?mir::frontend::PromptSession;
     vtable?for?mir::frontend::Session;
     vtable?for?mir::frontend::SessionAuthorizer;
