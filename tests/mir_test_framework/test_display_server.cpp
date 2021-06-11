@@ -26,7 +26,6 @@
 #include <mir_test_framework/headless_display_buffer_compositor_factory.h>
 #include <mir/test/doubles/null_logger.h>
 
-#include <mir/default_configuration.h>
 #include <mir/fd.h>
 #include <mir/main_loop.h>
 #include <mir/server.h>
@@ -62,9 +61,7 @@ miral::TestDisplayServer::TestDisplayServer(int argc, char const** argv) :
     add_to_environment("MIR_SERVER_PLATFORM_DISPLAY_LIBS", "mir:stub-graphics");
     add_to_environment("MIR_SERVER_PLATFORM_RENDERING_LIBS", "mir:stub-graphics");
     add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
-    add_to_environment("MIR_SERVER_NO_FILE", "on");
     add_to_environment("MIR_SERVER_CONSOLE_PROVIDER", "none");
-    add_to_environment("MIR_SERVER_ENABLE_MIRCLIENT", "");
 }
 
 miral::TestDisplayServer::~TestDisplayServer() = default;
@@ -89,17 +86,6 @@ void miral::TestDisplayServer::start_server()
             auto init = [this](mir::Server& server)
                 {
                     server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
-
-                    // These options are needed to test through the legacy mirclient API
-                    server.add_configuration_option(mo::server_socket_opt,
-                                                    "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]",
-                                                    mir::default_server_socket);
-                    server.add_configuration_option(mo::no_server_socket_opt,
-                                                    "Do not provide a socket filename for client connections", mir::OptionType::null);
-                    server.add_configuration_option(mo::prompt_socket_opt,
-                                                    "Provide a \"..._trusted\" filename for prompt helper connections", mir::OptionType::null);
-                    server.add_configuration_option(mo::enable_mirclient_opt,
-                                                    "Enable deprecated mirclient socket", mir::OptionType::null);
 
                     server.add_init_callback([&]
                         {

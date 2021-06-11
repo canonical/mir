@@ -356,16 +356,3 @@ mir::DefaultServerConfiguration::the_seat_observer_registrar()
             return std::make_shared<mi::SeatObserverMultiplexer>(default_executor);
         });
 }
-
-std::shared_ptr<mir::frontend::InputConfigurationChanger>
-mir::DefaultServerConfiguration::the_input_configuration_changer()
-{
-    return input_configuration_changer(
-        [this]()
-        {
-            return std::make_shared<mi::ConfigChanger>(
-                the_input_manager(), the_default_input_device_hub(), the_session_container(),
-                the_session_event_handler_register(), the_input_device_hub());
-        }
-        );
-}

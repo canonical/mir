@@ -28,8 +28,6 @@ namespace
 {
 struct ServerStopCallback : mtf::HeadlessTest
 {
-    ServerStopCallback() { add_to_environment("MIR_SERVER_NO_FILE", ""); }
-
     MOCK_CONST_METHOD0(stop_callback0, void());
     MOCK_CONST_METHOD0(stop_callback1, void());
     MOCK_CONST_METHOD0(stop_callback2, void());

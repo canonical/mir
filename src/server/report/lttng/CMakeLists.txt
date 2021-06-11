@@ -35,7 +35,6 @@ set(
   connector_report.cpp
   display_report.cpp
   input_report.cpp
-  message_processor_report.cpp
   lttng_report_factory.cpp
   session_mediator_report.cpp
   scene_report.cpp

@@ -34,7 +34,6 @@
 
 #include "wayland_wrapper.h"
 
-#include "mir/frontend/surface.h"
 #include "mir/frontend/wayland.h"
 
 #include "mir/main_loop.h"

@@ -20,7 +20,6 @@
 
 #include "compositor_report.h"
 #include "connector_report.h"
-#include "message_processor_report.h"
 #include "session_mediator_report.h"
 #include "display_report.h"
 #include "input_report.h"
@@ -52,11 +51,6 @@ std::shared_ptr<mir::frontend::ConnectorReport> mir::report::NullReportFactory::
 std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::NullReportFactory::create_session_mediator_report()
 {
     return std::make_shared<null::SessionMediatorReport>();
-}
-
-std::shared_ptr<mir::frontend::MessageProcessorReport> mir::report::NullReportFactory::create_message_processor_report()
-{
-    return std::make_shared<null::MessageProcessorReport>();
 }
 
 std::shared_ptr<mir::input::InputReport> mir::report::NullReportFactory::create_input_report()
@@ -104,10 +98,6 @@ std::shared_ptr<mir::frontend::ConnectorReport> mir::report::null_connector_repo
 std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::null_session_mediator_report()
 {
     return NullReportFactory{}.create_session_mediator_report();
-}
-std::shared_ptr<mir::frontend::MessageProcessorReport> mir::report::null_message_processor_report()
-{
-    return NullReportFactory{}.create_message_processor_report();
 }
 std::shared_ptr<mir::input::InputReport> mir::report::null_input_report()
 {

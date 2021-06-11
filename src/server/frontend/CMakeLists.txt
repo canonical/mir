@@ -2,8 +2,6 @@ set(
   FRONTEND_SOURCES
 
   session_credentials.cpp
-  basic_mir_client_session.cpp
-  ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/shell.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/buffer_stream.h
 )
 

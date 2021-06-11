@@ -29,7 +29,6 @@
 
 #include <mir/executor.h>
 #include <mir/fd.h>
-#include <mir/frontend/mir_client_session.h>
 #include <mir/input/cursor_listener.h>
 #include <mir/input/device.h>
 #include <mir/input/input_device_hub.h>

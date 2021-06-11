@@ -263,13 +263,8 @@ public:
     /** @name frontend configuration - dependencies
      * dependencies of frontend on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
-    // the_frontend_shell() is an adapter for the_shell().
-    // To customize this behaviour it is recommended you override wrap_shell().
-    std::shared_ptr<frontend::Shell>                          the_frontend_shell();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
-    virtual std::shared_ptr<frontend::InputConfigurationChanger> the_input_configuration_changer();
     /** @name frontend configuration - internal dependencies
      * internal dependencies of frontend
      *  @{ */
@@ -467,8 +462,6 @@ private:
         seat_observer_multiplexer;
     CachedPtr<ObserverMultiplexer<frontend::SessionMediatorObserver>>
         session_mediator_observer_multiplexer;
-
-    virtual std::string the_socket_file() const;
 
     // The following caches and factory functions are internal to the
     // default implementations of corresponding the Mir components

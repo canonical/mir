@@ -4,7 +4,6 @@ set(
   SHELL_SOURCES
 
   abstract_shell.cpp
-  frontend_shell.cpp
   graphics_display_layout.cpp
   graphics_display_layout.h
   default_configuration.cpp

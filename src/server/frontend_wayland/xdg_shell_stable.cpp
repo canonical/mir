@@ -21,7 +21,6 @@
 #include "wl_surface.h"
 #include "wayland_utils.h"
 
-#include "mir/frontend/mir_client_session.h"
 #include "mir/frontend/wayland.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/shell/shell.h"

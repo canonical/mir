@@ -903,7 +903,6 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
     mir::DefaultServerConfiguration::the_display_platforms*;
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
-    mir::DefaultServerConfiguration::the_input_configuration_changer*;
     mir::DefaultServerConfiguration::the_input_device_hub*;
     mir::DefaultServerConfiguration::the_input_device_registry*;
     mir::DefaultServerConfiguration::the_input_dispatcher*;
@@ -944,7 +943,6 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
     mir::DefaultServerConfiguration::the_shell_display_layout*;
     mir::DefaultServerConfiguration::the_shell_report*;
     mir::DefaultServerConfiguration::the_snapshot_strategy*;
-    mir::DefaultServerConfiguration::the_socket_file*;
     mir::DefaultServerConfiguration::the_stop_callback*;
     mir::DefaultServerConfiguration::the_surface_factory*;
     mir::DefaultServerConfiguration::the_surface_input_dispatcher*;

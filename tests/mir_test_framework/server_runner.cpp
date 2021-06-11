@@ -33,19 +33,9 @@
 
 namespace mtf = mir_test_framework;
 
-namespace
-{
-char const* const env_no_file = "MIR_SERVER_NO_FILE";
-}
-
 mtf::ServerRunner::ServerRunner()
 {
     unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing server
-    if (!getenv(env_no_file))
-    {
-        env.emplace_back(env_no_file, "");
-    }
-    env.emplace_back("MIR_SERVER_ENABLE_MIRCLIENT", "");
 }
 
 void mtf::ServerRunner::start_server()

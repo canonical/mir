@@ -19,7 +19,6 @@ set(
   test_surface_stack_with_compositor.cpp
   test_display_server_main_loop_events.cpp
   test_server_client_types.cpp
-  session_management.cpp
 )
 
 add_subdirectory(compositor/)

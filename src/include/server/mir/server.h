@@ -43,7 +43,6 @@ namespace frontend
 {
 class SessionAuthorizer;
 class SessionMediatorObserver;
-class MirClientSession;
 }
 namespace cookie
 {

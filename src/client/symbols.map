@@ -510,7 +510,6 @@ MIR_CLIENT_DETAIL_2.0 {
       mir::client::DefaultConnectionConfiguration::the_ping_handler*;
       mir::client::DefaultConnectionConfiguration::the_event_sink*;
       mir::client::DefaultConnectionConfiguration::the_event_handler_register*;
-      mir::client::DefaultConnectionConfiguration::the_socket_file*;
       mir::client::DefaultConnectionConfiguration::the_rpc_report*;
       mir::client::DefaultConnectionConfiguration::the_input_receiver_report*;
       typeinfo?for?mir::client::DefaultConnectionConfiguration;

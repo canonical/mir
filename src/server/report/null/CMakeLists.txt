@@ -5,7 +5,6 @@ add_library(
     connector_report.cpp
     display_report.cpp
     input_report.cpp
-    message_processor_report.cpp
     null_report_factory.cpp
     scene_report.cpp
     seat_report.cpp

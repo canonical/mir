@@ -60,7 +60,6 @@ struct ActiveOutputs : mtf::HeadlessTest
 {
     ActiveOutputs()
     {
-        add_to_environment("MIR_SERVER_NO_FILE", "");
     }
 
     void SetUp() override
