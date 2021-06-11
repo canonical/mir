@@ -18,7 +18,7 @@
 
 #define MIR_LOG_COMPONENT "MirCursorAPI"
 
-#include "cursor_configuration.h"
+#include "mir_toolkit/cursors.h"
 
 #include "mir/uncaught.h"
 
@@ -41,63 +41,3 @@ extern "C" char const* const mir_omnidirectional_resize_cursor_name = "move";
 extern "C" char const* const mir_vsplit_resize_cursor_name = "row-resize";
 extern "C" char const* const mir_hsplit_resize_cursor_name = "col-resize";
 extern "C" char const* const mir_crosshair_cursor_name = "crosshair";
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
-MirCursorConfiguration::MirCursorConfiguration(char const* name) :
-    name{name ? name : std::string()},
-    stream(nullptr),
-    surface(nullptr)
-{
-}
-
-MirCursorConfiguration::MirCursorConfiguration(MirBufferStream const* stream, int hotspot_x, int hotspot_y) :
-    stream(stream),
-    hotspot_x(hotspot_x),
-    hotspot_y(hotspot_y),
-    surface(nullptr)
-{
-}
-
-
-MirCursorConfiguration::MirCursorConfiguration(MirRenderSurface const* surface, int hotspot_x, int hotspot_y) :
-    stream(nullptr),
-    hotspot_x(hotspot_x),
-    hotspot_y(hotspot_y),
-    surface(surface)
-{
-}
-
-void mir_cursor_configuration_destroy(MirCursorConfiguration *cursor)
-{
-    delete cursor;
-}
-
-MirCursorConfiguration* mir_cursor_configuration_from_name(char const* name)
-{
-    try 
-    {
-        return new MirCursorConfiguration(name);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
-    }
-}
-
-MirCursorConfiguration* mir_cursor_configuration_from_buffer_stream(MirBufferStream const* stream, int hotspot_x,
-    int hotspot_y)
-{
-    try 
-    {
-        return new MirCursorConfiguration(stream, hotspot_x, hotspot_y);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
-    }
-}
-#pragma GCC diagnostic pop
