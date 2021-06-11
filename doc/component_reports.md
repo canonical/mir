@@ -71,8 +71,3 @@ version of LTTng affected by this bug, you need to pre-load the server
 tracepoint provider library:
 
     $ LD_PRELOAD=libmirserverlttng.so mir_demo_server --msg-processor-report=lttng
-
-The bug also affects client-side LTTng tracing, in which case you need to
-pre-load the client tracepoint provider library:
-
-    $ LD_PRELOAD=libmirclientlttng.so MIR_CLIENT_RPC_REPORT=lttng myclient
