@@ -34,9 +34,6 @@ add_library(mirclientobjects OBJECT
   mir_cookie.cpp
   mir_cursor_api.cpp
   ${MIR_CLIENT_SOURCES}
-#  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_error.h
-#  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_extension_core.h
-#  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/extensions/drag_and_drop.h
 #  ${CMAKE_SOURCE_DIR}/include/client/mir/client/blob.h
 #  ${CMAKE_SOURCE_DIR}/include/client/mir/client/cookie.h
 #  ${CMAKE_SOURCE_DIR}/include/client/mir/client/window_spec.h
