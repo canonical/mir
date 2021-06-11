@@ -42,7 +42,6 @@ namespace options { class Option; }
 namespace frontend
 {
 class SessionAuthorizer;
-class SessionMediatorObserver;
 }
 namespace cookie
 {

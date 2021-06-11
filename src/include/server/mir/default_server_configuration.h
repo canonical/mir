@@ -60,8 +60,6 @@ class CompositorReport;
 namespace frontend
 {
 class Connector;
-class ConnectorReport;
-class SessionMediatorObserver;
 class SessionAuthorizer;
 class EventSink;
 class DisplayChanger;
@@ -73,7 +71,6 @@ namespace shell
 {
 class DisplayConfigurationController;
 class InputTargeter;
-class FocusSetter;
 class FocusController;
 class DisplayLayout;
 class HostLifecycleEventListener;
@@ -400,7 +397,6 @@ protected:
     CachedPtr<graphics::CursorImage>  default_cursor_image;
     CachedPtr<input::CursorImages> cursor_images;
 
-    CachedPtr<frontend::ConnectorReport>   connector_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<renderer::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
@@ -450,8 +446,6 @@ private:
         display_configuration_observer_multiplexer;
     CachedPtr<ObserverMultiplexer<input::SeatObserver>>
         seat_observer_multiplexer;
-    CachedPtr<ObserverMultiplexer<frontend::SessionMediatorObserver>>
-        session_mediator_observer_multiplexer;
 
     // The following caches and factory functions are internal to the
     // default implementations of corresponding the Mir components

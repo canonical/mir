@@ -46,7 +46,6 @@ MIR_SERVER_1.6.0 {
     mir::frontend::SessionCredentials::pid*;
     mir::frontend::SessionCredentials::SessionCredentials*;
     mir::frontend::SessionCredentials::uid*;
-    mir::frontend::SessionMediatorObserver::?SessionMediatorObserver*;
     mir::frontend::Session::operator*;
     mir::frontend::Session::?Session*;
     mir::frontend::Session::Session*;
@@ -439,7 +438,6 @@ MIR_SERVER_1.6.0 {
     non-virtual?thunk?to?mir::frontend::BufferStream::?BufferStream*;
     non-virtual?thunk?to?mir::frontend::PromptSession::?PromptSession*;
     non-virtual?thunk?to?mir::frontend::SessionAuthorizer::?SessionAuthorizer*;
-    non-virtual?thunk?to?mir::frontend::SessionMediatorObserver::?SessionMediatorObserver*;
     non-virtual?thunk?to?mir::frontend::Session::?Session*;
     non-virtual?thunk?to?mir::frontend::Surface::?Surface*;
     non-virtual?thunk?to?mir::graphics::CloneDisplayConfigurationPolicy::apply_to*;
@@ -632,7 +630,6 @@ MIR_SERVER_1.6.0 {
     typeinfo?for?mir::frontend::Session;
     typeinfo?for?mir::frontend::SessionAuthorizer;
     typeinfo?for?mir::frontend::SessionCredentials;
-    typeinfo?for?mir::frontend::SessionMediatorObserver;
     typeinfo?for?mir::frontend::Surface;
     typeinfo?for?mir::graphics::CloneDisplayConfigurationPolicy;
     typeinfo?for?mir::graphics::DisplayConfigurationObserver;
@@ -755,7 +752,6 @@ MIR_SERVER_1.6.0 {
     vtable?for?mir::frontend::Session;
     vtable?for?mir::frontend::SessionAuthorizer;
     vtable?for?mir::frontend::SessionCredentials;
-    vtable?for?mir::frontend::SessionMediatorObserver;
     vtable?for?mir::frontend::Surface;
     vtable?for?mir::graphics::CloneDisplayConfigurationPolicy;
     vtable?for?mir::graphics::DisplayConfigurationObserver;

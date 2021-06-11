@@ -32,11 +32,9 @@ set(
   LTTNG_SOURCES
 
   compositor_report.cpp
-  connector_report.cpp
   display_report.cpp
   input_report.cpp
   lttng_report_factory.cpp
-  session_mediator_report.cpp
   scene_report.cpp
   server_tracepoint_provider.cpp
   shared_library_prober_report.cpp

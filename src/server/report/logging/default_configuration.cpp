@@ -21,7 +21,6 @@
 
 #include "connector_report.h"
 #include "display_report.h"
-#include "session_mediator_report.h"
 
 #include "mir/graphics/null_display_report.h"
 #include "compositor_report.h"

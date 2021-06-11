@@ -41,11 +41,6 @@ namespace options
 class Option;
 }
 
-namespace frontend
-{
-class SessionMediatorObserver;
-}
-
 namespace report
 {
 namespace logging
