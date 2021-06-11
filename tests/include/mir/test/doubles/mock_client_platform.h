@@ -64,10 +64,6 @@ struct MockClientPlatform : public client::ClientPlatform
     MOCK_CONST_METHOD2(get_egl_pixel_format, MirPixelFormat(EGLDisplay, EGLConfig));
     MOCK_METHOD2(request_interface, void*(char const*, int));
     MOCK_CONST_METHOD1(native_format_for, uint32_t(MirPixelFormat));
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    MOCK_CONST_METHOD2(native_flags_for, uint32_t(MirBufferUsage, mir::geometry::Size));
-#pragma GCC diagnostic pop
     client::ClientContext* client_context = nullptr;
 };
 

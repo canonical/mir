@@ -40,7 +40,6 @@ add_library(mir-public-test-framework OBJECT
   process.cpp
   server_runner.cpp
   socket_detect_server.cpp
-  ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/stub_client_platform_factory.h
         stub_server_platform_factory.cpp
   stub_session.cpp
   stub_surface.cpp
