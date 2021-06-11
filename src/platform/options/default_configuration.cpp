@@ -27,11 +27,9 @@ namespace mo = mir::options;
 
 char const* const mo::arw_server_socket_opt       = "arw-file";
 char const* const mo::enable_input_opt            = "enable-input,i";
-char const* const mo::session_mediator_report_opt = "session-mediator-report";
 char const* const mo::compositor_report_opt       = "compositor-report";
 char const* const mo::display_report_opt          = "display-report";
 char const* const mo::legacy_input_report_opt     = "legacy-input-report";
-char const* const mo::connector_report_opt        = "connector-report";
 char const* const mo::scene_report_opt            = "scene-report";
 char const* const mo::input_report_opt            = "input-report";
 char const* const mo::seat_report_opt            = "seat-report";
@@ -156,8 +154,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Enable input.")
         (compositor_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "Compositor reporting [{log,lttng,off}]")
-        (connector_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the Connector report. [{log,lttng,off}]")
         (display_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the Display report. [{log,lttng,off}]")
         (input_report_opt, po::value<std::string>()->default_value(off_opt_value),
@@ -166,8 +162,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the Legacy Input report. [{log,off}]")
         (seat_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle to Seat report. [{log,off}]")
-        (session_mediator_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the SessionMediator report. [{log,lttng,off}]")
         (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the scene report. [{log,lttng,off}]")
         (shared_library_prober_report_opt, po::value<std::string>()->default_value(log_opt_value),

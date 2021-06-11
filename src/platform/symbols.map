@@ -96,7 +96,6 @@ MIRPLATFORM_2.4 {
     mir::options::auto_console;
     mir::options::composite_delay_opt*;
     mir::options::compositor_report_opt*;
-    mir::options::connector_report_opt*;
     mir::options::console_provider;
     mir::options::cursor_opt*;
     mir::options::debug_opt*;
@@ -129,7 +128,6 @@ MIRPLATFORM_2.4 {
     mir::options::scene_report_opt*;
     mir::options::seat_report_opt*;
     mir::options::server_socket_opt*;
-    mir::options::session_mediator_report_opt*;
     mir::options::shared_library_prober_report_opt*;
     mir::options::shell_report_opt;
     mir::options::touchspots_opt*;
