@@ -22,8 +22,6 @@
 #include <miral/minimal_window_manager.h>
 #include <miral/set_window_management_policy.h>
 
-#include <mir/client/connection.h>
-
 #include <mir_test_framework/executable_path.h>
 #include <mir_test_framework/headless_display_buffer_compositor_factory.h>
 #include <mir/test/doubles/null_logger.h>

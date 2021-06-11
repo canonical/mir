@@ -18,8 +18,6 @@
 
 #include <miral/test_server.h>
 
-#include <mir/client/connection.h>
-
 using namespace testing;
 using namespace std::chrono_literals;
 

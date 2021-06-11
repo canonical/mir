@@ -34,7 +34,6 @@ class InputDevices
 {
 public:
     InputDevices(std::shared_ptr<client::SurfaceMap> const& windows);
-    void update_devices(std::string const& device_buffer);
     MirInputConfig devices();
     void set_change_callback(std::function<void()> const& callback);
 private:

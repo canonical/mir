@@ -267,7 +267,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     EXPECT_THAT(loaded_descriptors, Contains(HasSubstr("mir:stub-graphics")));
 }
 
-TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
+TEST_F(ServerPlatformProbeMockDRM, DISABLED_IgnoresNonPlatformModules)
 {
     using namespace testing;
     mir::options::ProgramOption options;
@@ -278,7 +278,7 @@ TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
 
     // NOTE: We want to load something that doesn't link with libmirplatform,
     // due to protobuf throwing a screaming hissy fit if it gets loaded twice.
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("dummy.so")));
+    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::library_path() + "/libmircore.so"));
 
     auto selected_modules = mir::graphics::display_modules_for_device(
         modules,
