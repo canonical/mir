@@ -174,7 +174,6 @@ target_link_libraries(
 
   mircommon
 
-  ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -212,7 +211,6 @@ target_link_libraries(
   mir-test-static
   mir-test-framework-static
 
-  ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
   ${Boost_LIBRARIES}

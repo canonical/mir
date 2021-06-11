@@ -53,7 +53,6 @@ struct MockMirBufferStream : public MirBufferStream
     MOCK_METHOD0(get_create_wait_handle, MirWaitHandle*(void));
     MOCK_CONST_METHOD0(rpc_id, frontend::BufferStreamId(void));
     MOCK_CONST_METHOD0(valid, bool(void));
-    MOCK_METHOD1(buffer_available, void(mir::protobuf::Buffer const&));
     MOCK_METHOD0(buffer_unavailable, void());
     MOCK_METHOD1(set_size, void(geometry::Size));
     MOCK_CONST_METHOD0(size, geometry::Size());

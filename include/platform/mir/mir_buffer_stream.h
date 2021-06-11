@@ -62,10 +62,6 @@ struct MirWaitHandle;
 
 namespace mir
 {
-namespace protobuf
-{
-class Buffer;
-}
 namespace client
 {
 class ClientBuffer;
@@ -108,7 +104,6 @@ public:
     virtual MirRenderSurface* render_surface() const = 0;
 #pragma GCC diagnostic pop
 
-    virtual void buffer_available(mir::protobuf::Buffer const& buffer) = 0;
     virtual void buffer_unavailable() = 0;
 protected:
     MirBufferStream() = default;

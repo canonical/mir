@@ -21,15 +21,6 @@ set(
   test_seat_report.cpp
 )
 
-# BEGIN "throwbacks"
-# The following tests use still files we have chosen not to support in the public API
-# TODO update these "throwback" tests to rely only on the public APIs
-
-  # uses src/include/common/mir/protobuf/protocol_version.h
-  set_source_files_properties(test_client_library.cpp PROPERTIES COMPILE_FLAGS
-          "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
-# END "throwbacks"
-
 mir_add_wrapped_executable(mir_acceptance_tests NOINSTALL
 
   ${SOURCES}

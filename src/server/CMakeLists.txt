@@ -120,7 +120,6 @@ target_link_libraries(mirserver LINK_PUBLIC
   mirclient
   mirplatform
   mircommon
-  mirprotobuf
   mircookie
   mirwayland
 

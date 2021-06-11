@@ -59,11 +59,8 @@ class CompositorReport;
 }
 namespace frontend
 {
-class Shell;
 class Connector;
 class ConnectorReport;
-class ProtobufIpcFactory;
-class ConnectionCreator;
 class SessionMediatorObserver;
 class MessageProcessorReport;
 class SessionAuthorizer;
@@ -398,7 +395,6 @@ protected:
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<input::TouchVisualizer> touch_visualizer;
     CachedPtr<input::Seat> seat;
-    CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::Display>      display;
     CachedPtr<graphics::Cursor>       cursor;
@@ -406,12 +402,7 @@ protected:
     CachedPtr<input::CursorImages> cursor_images;
 
     CachedPtr<frontend::ConnectorReport>   connector_report;
-    CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
-    CachedPtr<frontend::EventSink> global_event_sink;
-    CachedPtr<frontend::ConnectionCreator> connection_creator;
-    CachedPtr<frontend::ConnectionCreator> prompt_connection_creator;
-    CachedPtr<frontend::InputConfigurationChanger> input_configuration_changer;
     CachedPtr<renderer::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<scene::SurfaceStack> scene_surface_stack;

@@ -277,7 +277,6 @@ TEST_F(ServerPlatformProbeMockDRM, DISABLED_IgnoresNonPlatformModules)
     add_dummy_platform(modules);
 
     // NOTE: We want to load something that doesn't link with libmirplatform,
-    // due to protobuf throwing a screaming hissy fit if it gets loaded twice.
     modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::library_path() + "/libmircore.so"));
 
     auto selected_modules = mir::graphics::display_modules_for_device(

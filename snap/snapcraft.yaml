@@ -38,7 +38,6 @@ parts:
     - libinput-dev
     - liblttng-ust-dev
     - libnvidia-egl-wayland-dev
-    - libprotobuf-dev
     - libudev-dev
     - libwayland-dev
     - libxcb-composite0-dev
@@ -49,7 +48,6 @@ parts:
     - libxml++2.6-dev
     - libyaml-cpp-dev
     - nettle-dev
-    - protobuf-compiler
     - python3-pil
     - systemtap-sdt-dev
     stage-packages:

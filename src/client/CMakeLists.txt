@@ -6,7 +6,6 @@ configure_file(
 )
 
 include_directories(
-  ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/client
@@ -48,11 +47,6 @@ add_library(mirclientobjects OBJECT
   ${CMAKE_SOURCE_DIR}/include/client/mir/client/event.h
 )
 
-# Ensure protobuf C++ headers have been produced before
-# trying to compile mirclientobjects
-add_dependencies(mirclientobjects mirprotobuf)
-add_dependencies(mirclientobjects mircapnproto)
-
 add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
 
 set_target_properties(mirclient
@@ -65,7 +59,6 @@ set_target_properties(mirclient
 
 set(LINKS
   mircommon
-  mirprotobuf
   mircookie
 
   ${XKBCOMMON_LIBRARIES}
