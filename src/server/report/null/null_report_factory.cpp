@@ -91,14 +91,6 @@ std::shared_ptr<mir::scene::SceneReport> mir::report::null_scene_report()
 {
     return NullReportFactory{}.create_scene_report();
 }
-std::shared_ptr<mir::frontend::ConnectorReport> mir::report::null_connector_report()
-{
-    return NullReportFactory{}.create_connector_report();
-}
-std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::null_session_mediator_report()
-{
-    return NullReportFactory{}.create_session_mediator_report();
-}
 std::shared_ptr<mir::input::InputReport> mir::report::null_input_report()
 {
     return NullReportFactory{}.create_input_report();

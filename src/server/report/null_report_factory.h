@@ -42,9 +42,6 @@ public:
 std::shared_ptr<compositor::CompositorReport> null_compositor_report();
 std::shared_ptr<graphics::DisplayReport> null_display_report();
 std::shared_ptr<scene::SceneReport> null_scene_report();
-std::shared_ptr<frontend::ConnectorReport> null_connector_report();
-std::shared_ptr<frontend::SessionMediatorObserver> null_session_mediator_report();
-std::shared_ptr<frontend::MessageProcessorReport> null_message_processor_report();
 std::shared_ptr<input::InputReport> null_input_report();
 std::shared_ptr<input::SeatObserver> null_seat_report();
 std::shared_ptr<mir::SharedLibraryProberReport> null_shared_library_prober_report();

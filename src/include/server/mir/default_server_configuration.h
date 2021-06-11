@@ -62,7 +62,6 @@ namespace frontend
 class Connector;
 class ConnectorReport;
 class SessionMediatorObserver;
-class MessageProcessorReport;
 class SessionAuthorizer;
 class EventSink;
 class DisplayChanger;

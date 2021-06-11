@@ -32,7 +32,6 @@ namespace frontend
 {
 class ConnectorReport;
 class SessionMediatorObserver;
-class MessageProcessorReport;
 }
 namespace graphics
 {
