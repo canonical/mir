@@ -25,14 +25,7 @@
 #include <vector>
 #include <functional>
 
-// from "mir_toolkit/events/event.h"
-struct MirInputEvent;
-struct MirKeyboardEvent;
-struct MirPointerEvent;
-struct MirTouchEvent;
-struct MirSurfaceEvent;
-typedef struct MirSurfaceEvent MirWindowEvent;
-struct MirKeymapEvent;
+# include <mir_toolkit/events/event.h>
 
 namespace mir
 {
