@@ -267,7 +267,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     EXPECT_THAT(loaded_descriptors, Contains(HasSubstr("mir:stub-graphics")));
 }
 
-TEST_F(ServerPlatformProbeMockDRM, DISABLED_IgnoresNonPlatformModules)
+TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
 {
     using namespace testing;
     mir::options::ProgramOption options;
