@@ -445,23 +445,6 @@ Description: Produce and verify spoof-resistant timestamps - development headers
  This package contains the development headers for building programs that
  generate or verify the attestable timestamps.
 
-Package: python3-mir-perf-framework
-Section: python
-Architecture: all
-Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends},
-         ${python3:Depends},
-         python3-evdev,
-         python3-babeltrace,
-         mir-demos
-Description: Display server for Ubuntu - performance testing framework
- Mir is a display server running on linux systems, with a focus on efficiency,
- robust operation and a well-defined driver model.
- .
- This package contains a python3 framework to facilitate writing performance
- tests for Mir. It also contains a few interesting performance tests written
- using the framework.
-
 Package: libmirrenderer-dev
 Section: libdevel
 Architecture: linux-any

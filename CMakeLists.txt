@@ -360,7 +360,6 @@ if (MIR_ENABLE_TESTS)
   pkg_check_modules(LIBEVDEV REQUIRED libevdev)
   include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
   add_subdirectory(tests/)
-  add_subdirectory(benchmarks/)
 
   # There's no nice way to format this. Thanks CMake.
   mir_add_test(NAME LGPL-required
