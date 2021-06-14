@@ -30,8 +30,7 @@ Mir uses the ELF symbol versioning support. This provides three advantages:
    resolution time whether the library exposes all the symbols they expect.
  - We can drop or change the behaviour of symbols without breaking ABI by
    exposing multiple different implementations under different versions, and
- - We can (modulo protobuf singletons in our current implementation, and with
-   some care) safely load multiple different versions of Mir libraries into the
+ - We can safely load multiple different versions of Mir libraries into the
    same process.
 
 When should I bump SONAME?
