@@ -65,7 +65,7 @@ public:
     
 public:
     EventBuilder();
-    virtual ~EventBuilder() {};    
+    virtual ~EventBuilder();
     
     // add Touch event
     void add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,

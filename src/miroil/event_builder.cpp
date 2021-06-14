@@ -25,6 +25,8 @@ EventBuilder::EventBuilder()
 : event_info_vector(10)    
 {
 }
+
+EventBuilder::~EventBuilder() = default;
     
 void EventBuilder::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,

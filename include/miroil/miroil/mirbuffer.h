@@ -18,7 +18,7 @@
 #define MIROIL_GLBUFFER_H
 
 #include <mir/geometry/size.h>
-
+#include <mir/version.h>
 #include <memory>
 
 #include <GL/gl.h>
@@ -35,13 +35,17 @@ public:
     explicit GLBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer);
 
     operator bool() const;
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
     bool has_alpha_channel() const;
+#endif
     mir::geometry::Size size() const;
 
     void reset();
     void reset(std::shared_ptr<mir::graphics::Buffer> const& buffer);
     void bind();
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
     void gl_bind_tex();
+#endif
 
 private:
     void init();
@@ -49,8 +53,10 @@ private:
 
     std::shared_ptr<mir::graphics::Buffer> wrapped;
     GLuint m_textureId;
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
     bool m_isOldTex = false;
     bool m_inited = false;
+#endif
 };
 }
 
