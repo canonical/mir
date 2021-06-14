@@ -23,10 +23,6 @@
 #include <mir_toolkit/events/event.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -77,7 +73,6 @@ uint32_t mir_window_output_event_get_output_id(MirWindowOutputEvent const *ev);
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif //MIR_TOOLKIT_WINDOW_OUTPUT_EVENT_H_

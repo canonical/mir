@@ -27,10 +27,6 @@
 #include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -51,7 +47,6 @@ typedef struct MirEvent MirEvent;
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #include "mir_toolkit/events/input/input_event.h"
@@ -64,10 +59,6 @@ typedef struct MirEvent MirEvent;
 #include "mir_toolkit/events/input_device_state_event.h"
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -211,7 +202,6 @@ void mir_event_unref(MirEvent const* event);
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_EVENT_H_ */

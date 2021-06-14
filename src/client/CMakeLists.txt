@@ -1,10 +1,5 @@
 find_package(XKBCOMMON REQUIRED)
 
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
-  ${PROJECT_SOURCE_DIR}/include/client/mir_toolkit/version.h
-)
-
 include_directories(
   ${CMAKE_CURRENT_BINARY_DIR}
   ${PROJECT_SOURCE_DIR}/include/platform

@@ -24,10 +24,6 @@
 #include <xkbcommon/xkbcommon.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -52,7 +48,6 @@ MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev);
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_KEYMAP_EVENT_H_ */

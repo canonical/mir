@@ -20,10 +20,6 @@
 #define MIR_TOOLKIT_TOUCH_EVENT_H_
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -106,7 +102,6 @@ MirInputEvent const* mir_touch_event_input_event(MirTouchEvent const* event);
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_TOUCH_EVENT_H_ */

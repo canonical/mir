@@ -23,11 +23,6 @@
 #ifndef MIR_CURSORS_H_
 #define MIR_CURSORS_H_
 
-/**
- * \addtogroup mir_toolkit
- * @{
- */
-
 /* This is C code. Not C++. */
 #ifdef __cplusplus
 extern "C" {
@@ -124,6 +119,5 @@ extern char const* const mir_crosshair_cursor_name;
 #ifdef __cplusplus
 }
 #endif
-/**@}*/
 
 #endif

@@ -788,7 +788,6 @@ INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/README.md \
                          @CMAKE_CURRENT_SOURCE_DIR@/examples/miral-shell \
                          @CMAKE_CURRENT_SOURCE_DIR@/examples/example-server-lib \
                          @CMAKE_CURRENT_SOURCE_DIR@/include/core \
-                         @CMAKE_CURRENT_SOURCE_DIR@/include/client \
                          @CMAKE_CURRENT_SOURCE_DIR@/include/miral \
                          @MIR_GENERATED_INCLUDE_DIRECTORIES_FLATTENED@
 
@@ -883,9 +882,7 @@ EXCLUDE_SYMLINKS       = NO
 
 EXCLUDE_PATTERNS       = *.capnp.c++ \
                          */detail/* \
-                         @CMAKE_CURRENT_SOURCE_DIR@/examples/multi_stream.cpp \
-                         @CMAKE_CURRENT_SOURCE_DIR@/examples/uses_non_client_symbol.cpp \
-                         @CMAKE_CURRENT_SOURCE_DIR@/examples/miral-shell/titlebar_config.*
+                         *.py
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the

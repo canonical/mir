@@ -22,10 +22,6 @@
 #include <mir_toolkit/events/event.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -39,7 +35,6 @@ MirPromptSessionState mir_prompt_session_event_get_state(MirPromptSessionEvent c
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_PROMPT_SESSION_EVENT_H_ */

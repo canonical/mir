@@ -22,10 +22,6 @@
 #include <mir_toolkit/events/event.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -39,7 +35,6 @@ MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_ORIENTATION_EVENT_H_ */

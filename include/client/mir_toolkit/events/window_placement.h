@@ -23,10 +23,6 @@
 #include <mir_toolkit/client_types.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -40,7 +36,6 @@ MirRectangle mir_window_placement_get_relative_position(MirWindowPlacementEvent 
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif //MIR_TOOLKIT_WINDOW_PLACEMENT_H_

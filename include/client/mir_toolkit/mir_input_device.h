@@ -21,10 +21,6 @@
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_input_device_types.h"
 
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -643,5 +639,4 @@ void mir_touchscreen_config_set_mapping_mode(MirTouchscreenConfig* config, enum 
 #ifdef __cplusplus
 }
 #endif
-/**@}*/
 #endif
