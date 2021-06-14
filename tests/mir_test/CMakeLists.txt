@@ -6,13 +6,14 @@ add_library(mir-public-test OBJECT
   cross_process_action.cpp
   cross_process_sync.cpp
   current_thread_name.cpp
-        event_factory.cpp
+  display_config_matchers.cpp
+  event_factory.cpp
   event_matchers.cpp
   pipe.cpp
   popen.cpp
   signal.cpp
   spin_wait.cpp
-        )
+)
 
 add_library(mir-test-static STATIC
   fake_clock.cpp

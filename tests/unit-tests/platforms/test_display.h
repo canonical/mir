@@ -22,6 +22,7 @@
 #include "mir/test/doubles/mock_display_configuration.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/renderer/gl/context_source.h"
+#include "mir/test/display_config_matchers.h"
 
 namespace
 {
@@ -161,7 +162,7 @@ TEST_F(DisplayTestGeneric,
     auto config = display->configuration();
     auto cloned_config = config->clone();
 
-    // TODO replace EXPECT_THAT(*cloned_config, mir::test::DisplayConfigMatches(std::cref(*config)));
+    EXPECT_THAT(*cloned_config, mir::test::DisplayConfigMatches(std::cref(*config)));
 }
 
 TEST_F(DisplayTestGeneric,

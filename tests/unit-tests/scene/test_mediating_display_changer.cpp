@@ -30,7 +30,7 @@
 #include "mir/test/doubles/mock_scene_session.h"
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/fake_shared.h"
-// TODO replace #include "mir/test/display_config_matchers.h"
+#include "mir/test/display_config_matchers.h"
 #include "mir/test/doubles/fake_alarm_factory.h"
 #include "mir/test/doubles/mock_display_configuration_observer.h"
 
@@ -49,7 +49,6 @@ namespace geom = mir::geometry;
 
 using namespace testing;
 
-#ifdef TODO_REPLACE_DisplayConfigMatches
 namespace
 {
 
@@ -1043,5 +1042,3 @@ TEST_F(MediatingDisplayChangerTest, all_sessions_get_notified_on_configuration_c
     ASSERT_THAT(received_configuration, Not(Eq(nullptr)));
     EXPECT_THAT(*received_configuration, mt::DisplayConfigMatches(std::cref(*new_config)));
 }
-
-#endif
