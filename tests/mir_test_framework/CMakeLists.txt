@@ -24,24 +24,24 @@ string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 add_library(mir-public-test-framework OBJECT
-        async_server_runner.cpp
+  async_server_runner.cpp
   command_line_server_configuration.cpp
-        executable_path.cpp
+  executable_path.cpp
   headless_in_process_server.cpp
   headless_display_buffer_compositor_factory.cpp
   headless_test.cpp
   main.cpp
-        passthrough_tracker.cpp       ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/passthrough_tracker.h
-        process.cpp
+  passthrough_tracker.cpp       ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/passthrough_tracker.h
+  process.cpp
   server_runner.cpp
-        stub_server_platform_factory.cpp
+  stub_server_platform_factory.cpp
   stub_session.cpp
   stub_surface.cpp
   ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/stubbed_server_configuration.h
   stubbed_server_configuration.cpp
-        testing_server_options.cpp
+  testing_server_options.cpp
   temporary_environment_value.cpp
-        basic_window_manager.cpp  ${PROJECT_SOURCE_DIR}/tests/include/mir/shell/basic_window_manager.h
+  basic_window_manager.cpp  ${PROJECT_SOURCE_DIR}/tests/include/mir/shell/basic_window_manager.h
   canonical_window_manager.cpp  ${PROJECT_SOURCE_DIR}/tests/include/mir/shell/canonical_window_manager.h
   input_device_faker.cpp ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/input_device_faker.h
   open_wrapper.cpp
