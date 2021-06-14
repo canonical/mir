@@ -162,7 +162,7 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to build Mir servers.
 
-Package: libmirclient10
+Package: libmirclient11
 Section: libs
 Architecture: linux-any
 Breaks: libmirclient-dev
