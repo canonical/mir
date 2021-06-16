@@ -1078,6 +1078,18 @@ void mir::scene::BasicSurface::set_window_margins(
     }
 }
 
+auto mir::scene::BasicSurface::focus_mode() const -> MirFocusMode
+{
+    std::lock_guard<std::mutex> lock(guard);
+    return focus_mode_;
+}
+
+void mir::scene::BasicSurface::set_focus_mode(MirFocusMode focus_mode)
+{
+    std::lock_guard<std::mutex> lock(guard);
+    focus_mode_ = focus_mode;
+}
+
 auto mir::scene::BasicSurface::content_size(ProofOfMutexLock const&) const -> geometry::Size
 {
     return geom::Size{

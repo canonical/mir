@@ -89,6 +89,8 @@ struct StubSurface : scene::Surface
         geometry::DeltaX,
         geometry::DeltaY,
         geometry::DeltaX) override {}
+    auto focus_mode() const -> MirFocusMode override { return mir_focus_mode_focusable; }
+    void set_focus_mode(MirFocusMode) override {}
 };
 }
 }

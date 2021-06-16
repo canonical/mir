@@ -153,6 +153,12 @@ public:
         geometry::DeltaX left,
         geometry::DeltaY bottom,
         geometry::DeltaX right) = 0;
+
+    /// How the window should gain and lose focus
+    ///@{
+    virtual auto focus_mode() const -> MirFocusMode = 0;
+    virtual void set_focus_mode(MirFocusMode focus_mode) = 0;
+    ///@}
 };
 }
 }
