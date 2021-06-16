@@ -1015,6 +1015,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     COPY_IF_SET(attached_edges);
     COPY_IF_SET(exclusive_rect);
     COPY_IF_SET(application_id);
+    COPY_IF_SET(focus_mode);
 
 #undef COPY_IF_SET
 

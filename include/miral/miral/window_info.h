@@ -129,6 +129,10 @@ struct WindowInfo
     auto application_id() const -> std::string;
     ///@}
 
+    /// How the window should gain and lose focus
+    /// \remark Since MirAL 3.3
+    auto focus_mode() const -> MirFocusMode;
+
 private:
     friend class BasicWindowManager;
     void name(std::string const& name);
@@ -154,6 +158,7 @@ private:
     void attached_edges(MirPlacementGravity edges);
     void exclusive_rect(mir::optional_value<mir::geometry::Rectangle> const& rect);
     void application_id(std::string const& application_id);
+    void focus_mode(MirFocusMode focus_mode);
 
     struct Self;
     std::unique_ptr<Self> self;
