@@ -25,6 +25,7 @@
 #include <mir/geometry/size.h>
 
 #include <memory>
+#include <iosfwd>
 
 namespace mir
 {
@@ -78,6 +79,7 @@ bool operator==(Window const& lhs, Window const& rhs);
 bool operator==(std::shared_ptr<mir::scene::Surface> const& lhs, Window const& rhs);
 bool operator==(Window const& lhs, std::shared_ptr<mir::scene::Surface> const& rhs);
 bool operator<(Window const& lhs, Window const& rhs);
+auto operator<<(std::ostream& stream, const miral::Window& window) -> std::ostream&;
 
 inline bool operator!=(Window const& lhs, Window const& rhs) { return !(lhs == rhs); }
 inline bool operator!=(std::shared_ptr<mir::scene::Surface> const& lhs, Window const& rhs) { return !(lhs == rhs); }
