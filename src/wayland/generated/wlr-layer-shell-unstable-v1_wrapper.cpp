@@ -123,9 +123,9 @@ struct mw::LayerShellV1::Thunks
     static void const* request_vtable[];
 };
 
-int const mw::LayerShellV1::Thunks::supported_version = 3;
+int const mw::LayerShellV1::Thunks::supported_version = 4;
 
-mw::LayerShellV1::LayerShellV1(struct wl_resource* resource, Version<3>)
+mw::LayerShellV1::LayerShellV1(struct wl_resource* resource, Version<4>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -146,7 +146,7 @@ bool mw::LayerShellV1::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zwlr_layer_shell_v1_interface_data, Thunks::request_vtable);
 }
 
-mw::LayerShellV1::Global::Global(wl_display* display, Version<3>)
+mw::LayerShellV1::Global::Global(wl_display* display, Version<4>)
     : wayland::Global{
           wl_global_create(
               display,
@@ -355,9 +355,9 @@ struct mw::LayerSurfaceV1::Thunks
     static void const* request_vtable[];
 };
 
-int const mw::LayerSurfaceV1::Thunks::supported_version = 3;
+int const mw::LayerSurfaceV1::Thunks::supported_version = 4;
 
-mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_resource* resource, Version<3>)
+mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_resource* resource, Version<4>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
