@@ -278,7 +278,7 @@ void miral::BasicWindowManager::refocus(
     std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window)
 {
     // Try to make the parent active
-    if (parent && select_active_window(parent))
+    if (parent && parent == select_active_window(parent))
         return;
 
     if (can_activate_window_for_session_in_workspace(application, workspaces_containing_window))
@@ -1165,6 +1165,24 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
         }
     }
 
+    if (modifications.focus_mode().is_set())
+    {
+        switch (modifications.focus_mode().value())
+        {
+        case mir_focus_mode_grabbing:
+            select_active_window(window);
+            break;
+
+        case mir_focus_mode_disabled:
+            if (window == active_window())
+            {
+                refocus(window.application(), window_info.parent(), workspaces_containing(window));
+            }
+
+        default:;
+        }
+    }
+
     if (modifications.state().is_set())
     {
         set_state(window_info, modifications.state().value());
@@ -1582,7 +1600,25 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
         return hint;
     }
 
+    auto const prev_windows_focus_mode = prev_window ? info_for(prev_window).focus_mode() : mir_focus_mode_focusable;
+    if (prev_windows_focus_mode == mir_focus_mode_grabbing)
+    {
+        return prev_window;
+    }
+
     auto& info_for_hint = info_for(hint);
+
+    if (info_for_hint.focus_mode() == mir_focus_mode_disabled)
+    {
+        if (prev_windows_focus_mode == mir_focus_mode_disabled)
+        {
+            return {};
+        }
+        else
+        {
+            return prev_window;
+        }
+    }
 
     for (auto const& child : info_for_hint.children())
     {
