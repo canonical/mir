@@ -25,8 +25,6 @@
 #include <vector>
 #include <functional>
 
-# include <mir_toolkit/events/event.h>
-
 namespace mir
 {
 namespace input

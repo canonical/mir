@@ -166,9 +166,7 @@ struct mir::DisplayServer::Private
                 [this] { input_dispatcher->start(); },
                 [&, this] { input_dispatcher->stop(); });
 
-            auto wayland = try_but_revert_if_unwinding(
-                [this] { wayland_connector->start(); },
-                [&, this] { wayland_connector->stop(); });
+            wayland_connector->start();
         }
         catch(std::runtime_error const&)
         {
