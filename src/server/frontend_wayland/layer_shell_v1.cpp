@@ -517,7 +517,29 @@ void mf::LayerSurfaceV1::set_margin(int32_t top, int32_t right, int32_t bottom, 
 
 void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactivity)
 {
-    (void)keyboard_interactivity;
+    msh::SurfaceSpecification spec;
+    switch (keyboard_interactivity)
+    {
+    case KeyboardInteractivity::none:
+        spec.focus_mode = mir_focus_mode_disabled;
+        break;
+
+    case KeyboardInteractivity::exclusive:
+        spec.focus_mode = mir_focus_mode_grabbing;
+        break;
+
+    case KeyboardInteractivity::on_demand:
+        spec.focus_mode = mir_focus_mode_focusable;
+        break;
+
+    default:
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_keyboard_interactivity,
+            "Invalid keyboard interactivity %d",
+            keyboard_interactivity));
+    }
+    apply_spec(spec);
 }
 
 void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
