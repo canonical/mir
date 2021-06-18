@@ -51,7 +51,6 @@ public:
 
     std::shared_ptr<mir::ServerStatusListener> the_server_status_listener() override;
 
-    virtual std::string the_socket_file() const override;
     using DefaultServerConfiguration::the_options;
 
     virtual void wait_for_server_start();
@@ -61,8 +60,6 @@ private:
     bool using_server_started_sync;
     std::vector<std::unique_ptr<TemporaryEnvironmentValue>> environment;
 };
-
-std::string const& test_socket_file();
 }
 
 #endif /* MIR_TEST_TESTING_SERVER_CONFIGURATION_H_ */

@@ -234,14 +234,6 @@ public:
         return mock_compositor;
     }
 
-    std::shared_ptr<mf::Connector> the_connector() override
-    {
-        if (!mock_connector)
-            mock_connector = std::make_shared<MockConnector>();
-
-        return mock_connector;
-    }
-
     std::shared_ptr<mi::InputManager> the_input_manager() override
     {
         if (!mock_input_manager)
@@ -268,12 +260,6 @@ public:
     {
         the_compositor();
         return mock_compositor;
-    }
-
-    std::shared_ptr<MockConnector> the_mock_connector()
-    {
-        the_connector();
-        return mock_connector;
     }
 
     std::shared_ptr<mtd::MockInputManager> the_mock_input_manager()
@@ -357,7 +343,6 @@ struct DisplayServerMainLoopEvents : testing::Test
     {
         mock_compositor = server_config.the_mock_compositor();
         mock_display = server_config.the_mock_display();
-        mock_connector = server_config.the_mock_connector();
         mock_input_manager = server_config.the_mock_input_manager();
         mock_input_dispatcher = server_config.the_mock_input_dispatcher();
     }
@@ -367,12 +352,10 @@ struct DisplayServerMainLoopEvents : testing::Test
         EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
-        EXPECT_CALL(*mock_connector, start()).Times(1);
     }
 
     void expect_pause()
     {
-        EXPECT_CALL(*mock_connector, stop()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
@@ -385,12 +368,10 @@ struct DisplayServerMainLoopEvents : testing::Test
         EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
-        EXPECT_CALL(*mock_connector, start()).Times(1);
     }
 
     void expect_stop()
     {
-        EXPECT_CALL(*mock_connector, stop()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
@@ -405,7 +386,6 @@ struct DisplayServerMainLoopEvents : testing::Test
 
     std::shared_ptr<MockDisplay> mock_display;
     std::shared_ptr<mtd::MockCompositor> mock_compositor;
-    std::shared_ptr<MockConnector> mock_connector;
     std::shared_ptr<mtd::MockInputManager> mock_input_manager;
     std::shared_ptr<mtd::MockInputDispatcher> mock_input_dispatcher;
 };
@@ -506,7 +486,6 @@ TEST_F(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause
         expect_start();
 
         /* Pause failure */
-        EXPECT_CALL(*mock_connector, stop()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
@@ -517,7 +496,6 @@ TEST_F(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause
         EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
-        EXPECT_CALL(*mock_connector, start()).Times(1);
 
         expect_stop();
     }

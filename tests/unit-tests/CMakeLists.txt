@@ -4,7 +4,6 @@ add_library(mirdraw STATIC graphics_utils.cpp graphics.h)
 target_include_directories(mirdraw PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_definitions(
-  -DMIR_CLIENT_PLATFORM_VERSION="${MIR_CLIENT_PLATFORM_VERSION}"
   -DMIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
 )
 
@@ -166,7 +165,6 @@ target_link_libraries(
   exampleserverconfig
   mirdraw
   mircommon
-  client_platform_common
   server_platform_common
 
   mir-test-static
@@ -174,7 +172,6 @@ target_link_libraries(
 
   mircommon
 
-  ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -207,12 +204,10 @@ target_link_libraries(
   mirdraw
   mircommon
   mirclient
-  client_platform_common
 
   mir-test-static
   mir-test-framework-static
 
-  ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
   ${Boost_LIBRARIES}

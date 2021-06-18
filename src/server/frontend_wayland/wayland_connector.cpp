@@ -34,7 +34,6 @@
 
 #include "wayland_wrapper.h"
 
-#include "mir/frontend/surface.h"
 #include "mir/frontend/wayland.h"
 
 #include "mir/main_loop.h"
@@ -52,8 +51,6 @@
 
 #include "mir/renderer/gl/texture_target.h"
 #include "mir/frontend/buffer_stream_id.h"
-
-#include "mir/client/event.h"
 
 #include "mir/input/seat.h"
 #include "mir/input/device.h"
@@ -89,7 +86,6 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
-namespace mcl = mir::client;
 namespace mi = mir::input;
 namespace mw = mir::wayland;
 

@@ -33,19 +33,9 @@
 
 namespace mtf = mir_test_framework;
 
-namespace
-{
-char const* const env_no_file = "MIR_SERVER_NO_FILE";
-}
-
 mtf::ServerRunner::ServerRunner()
 {
     unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing server
-    if (!getenv(env_no_file))
-    {
-        env.emplace_back(env_no_file, "");
-    }
-    env.emplace_back("MIR_SERVER_ENABLE_MIRCLIENT", "");
 }
 
 void mtf::ServerRunner::start_server()
@@ -58,20 +48,6 @@ void mtf::ServerRunner::start_server()
 
     std::lock_guard<std::mutex> main_loop_lock{main_loop_mutex};
     std::swap(ml, main_loop);
-}
-
-std::string mtf::ServerRunner::new_connection()
-{
-    char connect_string[64] = {0};
-    sprintf(connect_string, "fd://%d", server_config().the_connector()->client_socket_fd());
-    return connect_string;
-}
-
-std::string mtf::ServerRunner::new_prompt_connection()
-{
-    char connect_string[64] = {0};
-    sprintf(connect_string, "fd://%d", server_config().the_prompt_connector()->client_socket_fd());
-    return connect_string;
 }
 
 void mtf::ServerRunner::stop_server()

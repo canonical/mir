@@ -1042,4 +1042,3 @@ TEST_F(MediatingDisplayChangerTest, all_sessions_get_notified_on_configuration_c
     ASSERT_THAT(received_configuration, Not(Eq(nullptr)));
     EXPECT_THAT(*received_configuration, mt::DisplayConfigMatches(std::cref(*new_config)));
 }
-

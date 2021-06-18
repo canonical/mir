@@ -22,10 +22,6 @@
 #include <mir_toolkit/events/event.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -47,7 +43,6 @@ int mir_resize_event_get_height(MirResizeEvent const* ev);
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_RESIZE_EVENT_H_ */

@@ -1,5 +1,0 @@
-MIR_CLIENT_DEBUG_9 {
- global: 
-   mir_debug_*;
- local: *;
-};

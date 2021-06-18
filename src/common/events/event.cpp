@@ -53,7 +53,6 @@ MirEvent& MirEvent::operator=(MirEvent const& e)
     return *this;
 }
 
-// TODO Look at replacing the surface event serializer with a capnproto layer
 mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
 {
     auto e = mir::EventUPtr(new MirEvent, [](MirEvent* ev) { delete ev; });

@@ -22,10 +22,6 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -70,7 +66,6 @@ void mir_cookie_release(MirCookie const* cookie);
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif // MIR_TOOLKIT_MIR_COOKIE_H_

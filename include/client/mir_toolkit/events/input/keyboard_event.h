@@ -22,10 +22,6 @@
 #include <xkbcommon/xkbcommon.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -96,7 +92,6 @@ MirInputEvent const* mir_keyboard_event_input_event(MirKeyboardEvent const* even
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_KEYBOARD_EVENT_H_ */

@@ -71,10 +71,8 @@ struct mir::DisplayServer::Private
           display{config.the_display()},
           input_dispatcher{config.the_input_dispatcher()},
           compositor{config.the_compositor()},
-          connector{config.the_connector()},
           wayland_connector{config.the_wayland_connector()},
           xwayland_connector{config.the_xwayland_connector()},
-          prompt_connector{config.the_prompt_connector()},
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()},
           server_status_listener{config.the_server_status_listener()},
@@ -95,17 +93,9 @@ struct mir::DisplayServer::Private
     {
         try
         {
-            auto comm = try_but_revert_if_unwinding(
-                [this] { connector->stop(); },
-                [this] { connector->start(); });
-
             auto wayland = try_but_revert_if_unwinding(
                 [this] { wayland_connector->stop(); },
                 [this] { wayland_connector->start(); });
-
-            auto prompt = try_but_revert_if_unwinding(
-                [this] { prompt_connector->stop(); },
-                [&, this] { prompt_connector->start(); });
 
             auto dispatcher = try_but_revert_if_unwinding(
                 [this] { input_dispatcher->stop(); },
@@ -176,15 +166,7 @@ struct mir::DisplayServer::Private
                 [this] { input_dispatcher->start(); },
                 [&, this] { input_dispatcher->stop(); });
 
-            auto prompt = try_but_revert_if_unwinding(
-                [this] { prompt_connector->start(); },
-                [&, this] { prompt_connector->stop(); });
-
-            auto wayland = try_but_revert_if_unwinding(
-                [this] { wayland_connector->start(); },
-                [&, this] { wayland_connector->stop(); });
-
-            connector->start();
+            wayland_connector->start();
         }
         catch(std::runtime_error const&)
         {
@@ -209,10 +191,8 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mg::Display> const display;
     std::shared_ptr<mi::InputDispatcher> const input_dispatcher;
     std::shared_ptr<mc::Compositor> const compositor;
-    std::shared_ptr<mf::Connector> const connector;
     std::shared_ptr<mf::Connector> const wayland_connector;
     std::shared_ptr<mf::Connector> const xwayland_connector;
-    std::shared_ptr<mf::Connector> const prompt_connector;
     std::shared_ptr<mi::InputManager> const input_manager;
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::ServerStatusListener> const server_status_listener;
@@ -245,8 +225,6 @@ void mir::DisplayServer::run()
     server.compositor->start();
     server.input_manager->start();
     server.input_dispatcher->start();
-    server.prompt_connector->start();
-    server.connector->start();
     server.wayland_connector->start();
     server.xwayland_connector->start();
 
@@ -256,8 +234,6 @@ void mir::DisplayServer::run()
 
     server.xwayland_connector->stop();
     server.wayland_connector->stop();
-    server.connector->stop();
-    server.prompt_connector->stop();
     server.input_dispatcher->stop();
     server.input_manager->stop();
     server.compositor->stop();

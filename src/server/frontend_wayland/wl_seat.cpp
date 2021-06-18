@@ -26,8 +26,6 @@
 #include "wl_pointer.h"
 #include "wl_touch.h"
 
-#include "mir/client/event.h"
-
 #include "mir/input/input_device_observer.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/seat.h"

@@ -23,7 +23,7 @@
 #include "wl_seat.h"
 
 #include "mir/executor.h"
-#include "mir/client/event.h"
+#include "mir_toolkit/events/event.h"
 #include "mir/log.h"
 
 #include <chrono>

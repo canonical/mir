@@ -36,10 +36,10 @@ class SharedLibrary : public testing::Test
 public:
     SharedLibrary()
         : nonexistent_library{"imma_totally_not_a_library"},
-          existing_library{mtf::client_platform("dummy.so")},
+          existing_library{mtf::library_path() + "/libmircore.so"},
           nonexistent_function{"yo_dawg"},
-          existing_function{"create_client_platform"},
-          existent_version{MIR_CLIENT_PLATFORM_VERSION},
+          existing_function{"_ZN3mir17fatal_error_abortEPKcz"},
+          existent_version{"MIR_CORE_0.25"},
           nonexistent_version{"GOATS_ON_THE_GREEN"}
     {
     }

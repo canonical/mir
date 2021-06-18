@@ -20,7 +20,6 @@
 #include "mir_test_framework/command_line_server_configuration.h"
 #include "mir_test_framework/canonical_window_manager_policy.h"
 
-#include "mir/default_configuration.h"
 #include "mir/fd.h"
 #include "mir/main_loop.h"
 #include "mir/geometry/rectangle.h"
@@ -52,18 +51,7 @@ std::chrono::seconds const timeout{20};
 mtf::AsyncServerRunner::AsyncServerRunner() :
     set_window_management_policy{[](auto&){}}
 {
-    // These options are needed to test through the legacy mirclient API
-    server.add_configuration_option(mo::enable_mirclient_opt, "Enable deprecated mirclient socket", mir::OptionType::null);
-    server.add_configuration_option(mo::no_server_socket_opt,
-                                    "Do not provide a socket filename for client connections", mir::OptionType::null);
-    server.add_configuration_option(mo::prompt_socket_opt,
-                                    "Provide a \"..._trusted\" filename for prompt helper connections", mir::OptionType::null);
-    server.add_configuration_option(mo::server_socket_opt,
-                                    "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]",
-                                    mir::default_server_socket);
-
     unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing Wayland server
-    add_to_environment("MIR_SERVER_ENABLE_MIRCLIENT", "");
     configure_from_commandline(server);
 
     server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
@@ -165,19 +153,4 @@ void mtf::AsyncServerRunner::wait_for_server_exit()
 
 mtf::AsyncServerRunner::~AsyncServerRunner() noexcept
 {
-}
-
-auto mtf::AsyncServerRunner::new_connection() -> std::string
-{
-    return connection(server.open_client_socket());
-}
-
-auto mtf::AsyncServerRunner::connection(int fd) -> std::string
-{
-    char connect_string[64] = {0};
-    // We can't have both the server and the client owning the same fd, since
-    // that will result in a double-close(). We give the client a duplicate which
-    // the client can safely own (and should close when done).
-    sprintf(connect_string, "fd://%d", dup(fd));
-    return connect_string;
 }

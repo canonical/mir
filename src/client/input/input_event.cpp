@@ -19,7 +19,6 @@
 #define MIR_LOG_COMPONENT "input-event-access"
 
 
-// TODO Remove me once we use capnproto for input platform serialization
 #include "mir/cookie/blob.h"
 
 #include "mir/cookie/cookie.h"

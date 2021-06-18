@@ -12,9 +12,7 @@ include_directories(
 )
 
 add_definitions(
-    -DMIR_CLIENT_PLATFORM_PATH="${MIR_CLIENT_PLATFORM_PATH}"
     -DMIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}"
-    -DMIR_CLIENT_PLATFORM_ABI_STRING="${MIR_CLIENT_PLATFORM_ABI}"
     -DMIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
     -DMIR_SERVER_INPUT_PLATFORM_ABI_STRING="${MIR_SERVER_INPUT_PLATFORM_ABI}"
     -DMIR_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
@@ -26,38 +24,23 @@ string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 add_library(mir-public-test-framework OBJECT
-  ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/any_surface.h
-  any_surface.cpp
   async_server_runner.cpp
   command_line_server_configuration.cpp
-  connected_client_headless_server.cpp
-  connected_client_with_a_window.cpp
-  declarative_placement_window_manage_policy.cpp
   executable_path.cpp
   headless_in_process_server.cpp
   headless_display_buffer_compositor_factory.cpp
   headless_test.cpp
-  interprocess_client_server_test.cpp
   main.cpp
-  observant_shell.cpp
   passthrough_tracker.cpp       ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/passthrough_tracker.h
-  placement_applying_shell.cpp
   process.cpp
   server_runner.cpp
-  socket_detect_server.cpp
-  ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/stub_client_platform_factory.h
-  stub_client_platform_factory.cpp
   stub_server_platform_factory.cpp
   stub_session.cpp
   stub_surface.cpp
   ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/stubbed_server_configuration.h
   stubbed_server_configuration.cpp
-  testing_client_options.cpp
   testing_server_options.cpp
   temporary_environment_value.cpp
-  visible_surface.cpp
-  stub_client_platform_options.cpp
-  ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/stub_client_platform_options.h
   basic_window_manager.cpp  ${PROJECT_SOURCE_DIR}/tests/include/mir/shell/basic_window_manager.h
   canonical_window_manager.cpp  ${PROJECT_SOURCE_DIR}/tests/include/mir/shell/canonical_window_manager.h
   input_device_faker.cpp ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/input_device_faker.h
@@ -104,28 +87,6 @@ target_link_libraries(mir-test-framework-static
 )
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-client.map)
-
-add_library(
-  mirclientplatformstub MODULE
-
-  stub_client_platform_module.cpp
-)
-
-target_link_libraries(
-  mirclientplatformstub
-
-  mir-test-framework-static
-  mircommon
-  ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
-)
-
-set_target_properties(
-  mirclientplatformstub PROPERTIES;
-  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/client-modules
-  OUTPUT_NAME dummy
-  PREFIX ""
-  LINK_FLAGS "-Wl,--version-script,${symbol_map}"
-)
 
 add_library(
   mir-test-input-framework OBJECT

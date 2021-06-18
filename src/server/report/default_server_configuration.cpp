@@ -70,24 +70,6 @@ auto mir::DefaultServerConfiguration::the_compositor_report() -> std::shared_ptr
         });
 }
 
-auto mir::DefaultServerConfiguration::the_connector_report() -> std::shared_ptr<mf::ConnectorReport>
-{
-    return connector_report(
-        [this]()->std::shared_ptr<mf::ConnectorReport>
-        {
-            return report_factory(options::connector_report_opt)->create_connector_report();
-        });
-}
-
-auto mir::DefaultServerConfiguration::the_message_processor_report() -> std::shared_ptr<mf::MessageProcessorReport>
-{
-    return message_processor_report(
-        [this]()->std::shared_ptr<mf::MessageProcessorReport>
-        {
-            return report_factory(options::msg_processor_report_opt)->create_message_processor_report();
-        });
-}
-
 auto mir::DefaultServerConfiguration::the_display_report() -> std::shared_ptr<mg::DisplayReport>
 {
     return display_report(

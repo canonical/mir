@@ -18,8 +18,6 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/client/egl_native_surface.h"
-
 #include "mir/test/doubles/mock_egl.h"
 #include <gtest/gtest.h>
 
@@ -220,13 +218,7 @@ void mtd::MockEGL::provide_stub_platform_buffer_swapping()
             }));
 
     ON_CALL(*this, eglSwapBuffers(_,_))
-        .WillByDefault(Invoke(
-            [&](EGLDisplay,EGLSurface surface) -> EGLBoolean
-            {
-                auto mir_surf = reinterpret_cast<mir::client::EGLNativeSurface*>(surface);
-                mir_surf->swap_buffers_sync();
-                return true;
-            }));
+        .WillByDefault(Return(EGL_TRUE));
 }
 
 mtd::MockEGL::~MockEGL()

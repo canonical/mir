@@ -27,19 +27,13 @@ namespace mir
 {
 namespace options
 {
-extern char const* const server_socket_opt;
-extern char const* const prompt_socket_opt;
-extern char const* const no_server_socket_opt;
 extern char const* const arw_server_socket_opt;
 extern char const* const enable_input_opt;
-extern char const* const session_mediator_report_opt;
-extern char const* const msg_processor_report_opt;
 extern char const* const shared_library_prober_report_opt;
 extern char const* const shell_report_opt;
 extern char const* const compositor_report_opt;
 extern char const* const display_report_opt;
 extern char const* const legacy_input_report_opt;
-extern char const* const connector_report_opt;
 extern char const* const scene_report_opt;
 extern char const* const input_report_opt;
 extern char const* const seat_report_opt;
@@ -54,7 +48,6 @@ extern char const* const x11_scale_opt;
 extern char const* const wayland_extensions_opt;
 extern char const* const add_wayland_extensions_opt;
 extern char const* const drop_wayland_extensions_opt;
-extern char const* const enable_mirclient_opt;
 
 extern char const* const enable_key_repeat_opt;
 

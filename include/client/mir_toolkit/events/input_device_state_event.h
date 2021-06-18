@@ -22,10 +22,6 @@
 #include <mir_toolkit/events/event.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -130,7 +126,6 @@ MirPointerButtons mir_input_device_state_event_device_pointer_buttons(
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_EVENTS_INPUT_DEVICE_STATE_EVENT_H_ */

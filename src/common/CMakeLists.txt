@@ -5,11 +5,9 @@ set(MIR_COMMON_REFERENCES)
 
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
-add_subdirectory(fd)
 add_subdirectory(events)
 add_subdirectory(logging)
 add_subdirectory(report/lttng)
-add_subdirectory(env)
 add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 add_subdirectory(time)

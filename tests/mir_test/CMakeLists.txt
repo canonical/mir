@@ -13,7 +13,6 @@ add_library(mir-public-test OBJECT
   popen.cpp
   signal.cpp
   spin_wait.cpp
-  validity_matchers.cpp
 )
 
 add_library(mir-test-static STATIC

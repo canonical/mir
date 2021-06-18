@@ -37,7 +37,6 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     display_reconfiguration.cpp
     raise_tree.cpp
     static_display_config.cpp
-    client_mediated_gestures.cpp
     test_window_manager_tools.cpp           test_window_manager_tools.h
     depth_layer.cpp
     output_updates.cpp
@@ -68,12 +67,8 @@ add_subdirectory(generated/)
 
 mir_add_wrapped_executable(miral-test NOINSTALL
     external_client.cpp
-    window_id.cpp
     runner.cpp
-    window_placement_client_api.cpp
-    window_properties.cpp
     wayland_extensions.cpp
-    workspaces.cpp
     zone.cpp
     server_example_decoration.cpp server_example_decoration.h
     org_kde_kwin_server_decoration.c org_kde_kwin_server_decoration.h

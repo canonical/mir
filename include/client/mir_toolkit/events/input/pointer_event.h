@@ -22,10 +22,6 @@
 #include <stdbool.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -90,7 +86,6 @@ MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event)
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_POINTER_EVENT_H_ */

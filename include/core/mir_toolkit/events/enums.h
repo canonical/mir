@@ -21,10 +21,6 @@
 #include <mir_toolkit/common.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -209,7 +205,6 @@ typedef unsigned int MirPointerButtons;
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_EVENT_ENUMS_H_ */

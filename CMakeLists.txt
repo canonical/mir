@@ -282,7 +282,6 @@ endforeach(platform)
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(GLM REQUIRED)
-find_package(Protobuf REQUIRED )
 find_package(CapnProto REQUIRED)
 find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
@@ -361,7 +360,6 @@ if (MIR_ENABLE_TESTS)
   pkg_check_modules(LIBEVDEV REQUIRED libevdev)
   include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
   add_subdirectory(tests/)
-  add_subdirectory(benchmarks/)
 
   # There's no nice way to format this. Thanks CMake.
   mir_add_test(NAME LGPL-required
@@ -387,7 +385,6 @@ mir_check_no_unreleased_symbols(mirclient release-checks)
 mir_check_no_unreleased_symbols(mircommon release-checks)
 mir_check_no_unreleased_symbols(mircookie release-checks)
 mir_check_no_unreleased_symbols(mirplatform release-checks)
-mir_check_no_unreleased_symbols(mirprotobuf release-checks)
 mir_check_no_unreleased_symbols(mirserver release-checks)
 
 if (TARGET doc)

@@ -20,10 +20,6 @@
 
 #include <stdint.h>
 
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -129,5 +125,4 @@ typedef enum MirTouchscreenMappingMode
 #ifdef __cplusplus
 }
 #endif
-/**@}*/
 #endif

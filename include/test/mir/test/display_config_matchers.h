@@ -25,28 +25,9 @@
 #include <gmock/gmock.h>
 
 
-//avoid a valgrind complaint by defining printer for this type
-static void PrintTo(MirDisplayConfiguration const&, ::std::ostream*) __attribute__ ((unused));
-void PrintTo(MirDisplayConfiguration const&, ::std::ostream*)
-{
-}
 
 namespace mir
 {
-namespace protobuf
-{
-
-class DisplayConfiguration;
-class Connection;
-static void PrintTo(mir::protobuf::DisplayConfiguration const&, ::std::ostream*) __attribute__ ((unused));
-void PrintTo(mir::protobuf::DisplayConfiguration const&, ::std::ostream*) {}
-
-static void PrintTo(mir::protobuf::Connection const&, ::std::ostream*) __attribute__ ((unused));
-void PrintTo(mir::protobuf::Connection const&, ::std::ostream*)
-{
-}
-
-}
 
 namespace graphics
 {
@@ -63,63 +44,8 @@ bool compare_display_configurations(
 
 bool compare_display_configurations(
     testing::MatchResultListener* listener,
-    MirDisplayConfiguration const& client_config,
-    graphics::DisplayConfiguration const& display_config);
-
-bool compare_display_configurations(
-    testing::MatchResultListener* listener,
-    protobuf::DisplayConfiguration const& protobuf_config,
-    graphics::DisplayConfiguration const& display_config);
-
-bool compare_display_configurations(
-    testing::MatchResultListener* listener,
-    MirDisplayConfiguration const* client_config1,
-    MirDisplayConfiguration const* client_config2);
-
-bool compare_display_configurations(
-    testing::MatchResultListener* listener,
-    MirDisplayConfiguration const& client_config,
-    protobuf::DisplayConfiguration const& protobuf_config);
-
-bool compare_display_configurations(
-    testing::MatchResultListener* listener,
-    graphics::DisplayConfiguration const& display_config1,
-    MirDisplayConfiguration const* display_config2);
-
-bool compare_display_configurations(
-    testing::MatchResultListener* listener,
-    std::shared_ptr<graphics::DisplayConfiguration const> & display_config1,
-    MirDisplayConfiguration const* display_config2);
-
-bool compare_display_configurations(
-    testing::MatchResultListener* listener,
     std::shared_ptr<graphics::DisplayConfiguration const> const& display_config1,
     graphics::DisplayConfiguration const& display_config2);
-
-bool compare_display_configurations(
-    testing::MatchResultListener* listener,
-    MirDisplayConfiguration const* display_config2,
-    graphics::DisplayConfiguration const& display_config1);
-
-bool compare_display_configurations(
-    testing::MatchResultListener* listener,
-    MirDisplayConfig const* client_config,
-    graphics::DisplayConfiguration const& server_config);
-
-bool compare_display_configurations(
-    testing::MatchResultListener* listener,
-    graphics::DisplayConfiguration const& server_config,
-    MirDisplayConfig const* client_config);
-
-bool compare_display_configurations(
-    testing::MatchResultListener* listener,
-    MirDisplayConfig const* config1,
-    MirDisplayConfig const* config2);
-
-bool compare_display_configurations(
-    testing::MatchResultListener* listener,
-    std::shared_ptr<graphics::DisplayConfiguration> const& config1,
-    MirDisplayConfig const* config2);
 
 MATCHER_P(DisplayConfigMatches, config, "")
 {

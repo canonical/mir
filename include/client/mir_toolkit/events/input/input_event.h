@@ -30,10 +30,6 @@
 #include "mir_toolkit/events/input/pointer_event.h"
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -124,7 +120,6 @@ MirEvent const* mir_input_event_get_event(MirInputEvent const* event);
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif // MIR_TOOLKIT_INPUT_EVENT_H_

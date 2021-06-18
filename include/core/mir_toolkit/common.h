@@ -42,10 +42,7 @@
   #define MIR_DEPRECATED_ENUM(ENUM, INSTEAD) \
       ENUM
 #endif
-/**
- * \addtogroup mir_toolkit
- * @{
- */
+
 /* This is C code. Not C++. */
 
 /**
@@ -435,8 +432,5 @@ typedef enum MirDepthLayer
     mir_depth_layer_above,              /**< For panels or notifications that want to be above normal windows */
     mir_depth_layer_overlay,            /**< For overlays such as lock screens (heighest layer) */
 } MirDepthLayer;
-
-
-/**@}*/
 
 #endif
