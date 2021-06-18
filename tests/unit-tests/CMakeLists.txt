@@ -3,20 +3,20 @@ include(CMakeDependentOption)
 add_library(mirdraw STATIC graphics_utils.cpp graphics.h)
 target_include_directories(mirdraw PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_definitions(
-  -DMIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
+add_compile_definitions(
+  MIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
 )
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)
-  add_definitions(-DMIR_BUILD_PLATFORM_GBM_KMS)
+  add_compile_definitions(MIR_BUILD_PLATFORM_GBM_KMS)
 endif()
 
 if (MIR_BUILD_PLATFORM_X11)
-  add_definitions(-DMIR_BUILD_PLATFORM_X11)
+  add_compile_definitions(MIR_BUILD_PLATFORM_X11)
 endif()
 
 if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-  add_definitions(-DMIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+  add_compile_definitions(MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
 endif()
 
 include_directories(

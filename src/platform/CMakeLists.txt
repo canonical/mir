@@ -1,4 +1,4 @@
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mirplatform")
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirplatform")
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
@@ -7,8 +7,8 @@ include_directories(
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
-add_definitions(-DMIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
-add_definitions(-DMIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
+add_compile_definitions(MIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
+add_compile_definitions(MIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
 
 set(MIR_PLATFORM_OBJECTS
   $<TARGET_OBJECTS:mirplatformgraphicscommon>

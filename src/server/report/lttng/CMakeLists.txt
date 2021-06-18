@@ -10,7 +10,7 @@ add_compile_options(
 )
 
 if (LTTNG_UST_VERSION VERSION_GREATER 2.9)
-    add_definitions(-DMIR_LTTNG_HAS_VOID_TRACEPOINTS)
+    add_compile_definitions(MIR_LTTNG_HAS_VOID_TRACEPOINTS)
 endif()
 
 # lttng relies on a gcc extension to support backward-compatible code, So...

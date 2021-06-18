@@ -1,4 +1,4 @@
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mircommon")
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
 
 set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)

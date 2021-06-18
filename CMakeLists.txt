@@ -31,11 +31,11 @@ set(MIR_VERSION_MAJOR 2)
 set(MIR_VERSION_MINOR 4)
 set(MIR_VERSION_PATCH 0)
 
-add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
-add_definitions(-DMIR_VERSION_MINOR=${MIR_VERSION_MINOR})
-add_definitions(-DMIR_VERSION_MICRO=${MIR_VERSION_PATCH})
-add_definitions(-D_GNU_SOURCE)
-add_definitions(-D_FILE_OFFSET_BITS=64)
+add_compile_definitions(MIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
+add_compile_definitions(MIR_VERSION_MINOR=${MIR_VERSION_MINOR})
+add_compile_definitions(MIR_VERSION_MICRO=${MIR_VERSION_PATCH})
+add_compile_definitions(_GNU_SOURCE)
+add_compile_definitions(_FILE_OFFSET_BITS=64)
 
 set(MIR_VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH})
 
@@ -190,7 +190,7 @@ endif()
 
 # Define LOG_NDEBUG=1 to ensure Android ALOGV calls are not compiled in to
 # consume CPU time...
-add_definitions(-DLOG_NDEBUG=1)
+add_compile_definitions(LOG_NDEBUG=1)
 
 enable_testing()
 find_package(PkgConfig)
@@ -211,13 +211,13 @@ option(
   OFF
 )
 if(MIR_DISABLE_EPOLL_REACTOR)
-add_definitions(
-  -DBOOST_ASIO_DISABLE_EPOLL -DBOOST_ASIO_DISABLE_KQUEUE -DBOOST_ASIO_DISABLE_DEV_POLL
+add_compile_definitions(
+  BOOST_ASIO_DISABLE_EPOLL BOOST_ASIO_DISABLE_KQUEUE BOOST_ASIO_DISABLE_DEV_POLL
 )
 endif(MIR_DISABLE_EPOLL_REACTOR)
 
-add_definitions(-DEGL_NO_X11)
-add_definitions(-DMESA_EGL_NO_X11_HEADERS) # Can be removed when all platforms support EGL_NO_X11
+add_compile_definitions(EGL_NO_X11)
+add_compile_definitions(MESA_EGL_NO_X11_HEADERS) # Can be removed when all platforms support EGL_NO_X11
 
 pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream)
 
@@ -316,9 +316,7 @@ list(APPEND CMAKE_REQUIRED_LIBRARIES ${DRM_LIBRARIES})
 include(CheckIncludeFile)
 CHECK_INCLUDE_FILE(sys/sdt.h HAVE_SYS_SDT_H)
 if (HAVE_SYS_SDT_H)
-  add_definitions(  # Drop in favour of add_compile_definitions when we drop 16.04
-    -DLTTNG_UST_HAVE_SDT_INTEGRATION
-  )
+  add_compile_definitions(LTTNG_UST_HAVE_SDT_INTEGRATION)
 endif()
 
 pkg_check_modules(GL REQUIRED glesv2)
@@ -327,10 +325,10 @@ if (MIR_BUILD_PLATFORM_GBM_KMS)
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   if (GBM_VERSION VERSION_LESS 11)
     message(WARNING "Hybrid support requires libgbm from GBM 11.0 or greater. Hybrid setups will not work")
-    add_definitions(-DMIR_NO_HYBRID_SUPPORT)
+    add_compile_definitions(MIR_NO_HYBRID_SUPPORT)
   endif()
   if (DRM_VERSION VERSION_GREATER 2.4.84)
-    add_definitions(-DMIR_DRMMODEADDFB_HAS_CONST_SIGNATURE)
+    add_compile_definitions(MIR_DRMMODEADDFB_HAS_CONST_SIGNATURE)
   endif()
 endif()
 
@@ -350,9 +348,9 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 # This copy is used by users of mirplatforminputevdev
 if ("${LIBINPUT_VERSION}" VERSION_LESS "1.1")
-  add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=0)
+  add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=0)
 else ()
-  add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
+  add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
 endif ()
 
 add_subdirectory(examples/)

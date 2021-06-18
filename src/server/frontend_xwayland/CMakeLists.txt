@@ -20,7 +20,7 @@ set(
   scaled_buffer_stream.cpp scaled_buffer_stream.h
 )
 
-add_definitions(-DMIR_LOG_COMPONENT="xwayland")
+add_compile_definitions(MIR_LOG_COMPONENT="xwayland")
 include_directories(../frontend_wayland)
 
 # One day, maybe, we can add include dependences to an OBJECT library. Until then...

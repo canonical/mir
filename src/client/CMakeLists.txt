@@ -12,7 +12,7 @@ include_directories(
 set(MIRCLIENT_ABI 11)
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/client/symbols.map)
 
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mirclient")
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirclient")
 
 set(MIR_CLIENT_SOURCES)
 set(MIR_CLIENT_REFERENCES mircommon)

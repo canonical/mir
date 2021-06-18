@@ -20,9 +20,9 @@ include_directories(
 # This is valid C99, but g++ 4.4 flags it as an error with -pedantic
 string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-add_definitions(
-  -D__GBM__
-  -DMIR_LOG_COMPONENT_FALLBACK="gbm-kms"
+add_compile_definitions(
+  __GBM__
+  MIR_LOG_COMPONENT_FALLBACK="gbm-kms"
 )
 
 add_library(
