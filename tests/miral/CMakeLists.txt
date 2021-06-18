@@ -22,7 +22,7 @@ if (MIR_BUILD_INTERPROCESS_TESTS)
     list(APPEND MIRAL_TEST_SOURCES window_info.cpp)
 endif()
 
-add_definitions(-DMIRAL_ENABLE_DEPRECATIONS=0)
+add_compile_definitions(MIRAL_ENABLE_DEPRECATIONS=0)
 
 mir_add_wrapped_executable(miral-test-internal NOINSTALL
     mru_window_list.cpp

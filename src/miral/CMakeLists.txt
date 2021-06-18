@@ -13,7 +13,7 @@ pkg_check_modules(GIO REQUIRED gio-2.0 gio-unix-2.0)
 
 add_library(mirclientcpp INTERFACE)
 
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miral" -DMIRAL_ENABLE_DEPRECATIONS=0)
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="miral" MIRAL_ENABLE_DEPRECATIONS=0)
 
 add_library(miral-internal STATIC
     active_outputs.cpp                  active_outputs.h

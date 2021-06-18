@@ -1,9 +1,9 @@
 pkg_check_modules(UUID REQUIRED uuid)
 pkg_check_modules(FREETYPE freetype2 REQUIRED) # For rendering decorated window titles
 
-add_definitions(
-  -DMIR_LOG_COMPONENT_FALLBACK="mirserver"
-  -DMIR_VERSION="${MIR_VERSION}"
+add_compile_definitions(
+  MIR_LOG_COMPONENT_FALLBACK="mirserver"
+  MIR_VERSION="${MIR_VERSION}"
 )
 
 include_directories(
@@ -21,10 +21,10 @@ include_directories(
   ${GLIB_INCLUDE_DIRS}
   ${GIO_INCLUDE_DIRS}
 )
-add_definitions(-DMIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
+add_compile_definitions(MIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
 
-add_definitions(-DMIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
-add_definitions(-DMIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
+add_compile_definitions(MIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
+add_compile_definitions(MIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
 
 add_subdirectory(compositor/)
 add_subdirectory(graphics/)
