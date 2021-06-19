@@ -55,6 +55,11 @@ miral::WindowInfo& miral::WindowInfo::operator=(WindowInfo const& that)
 
 bool miral::WindowInfo::can_be_active() const
 {
+    if (focus_mode() == mir_focus_mode_disabled)
+    {
+        return false;
+    }
+
     switch (type())
     {
     case mir_window_type_normal:       /**< AKA "regular"                       */
