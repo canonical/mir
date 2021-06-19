@@ -199,6 +199,7 @@ private:
     DoubleBuffered<geometry::Size> client_size;
     DoubleBuffered<geometry::Displacement> offset;
     bool configure_on_next_commit{true}; ///< If to send a .configure event at the end of the next or current commit
+    MirFocusMode current_focus_mode{mir_focus_mode_disabled};
     std::deque<std::pair<uint32_t, OptionalSize>> inflight_configures;
     std::vector<wayland::Weak<XdgPopupStable>> popups; ///< We have to keep track of popups to adjust their offset
 };
@@ -289,6 +290,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     shell::SurfaceSpecification spec;
     spec.state = mir_window_state_attached;
     spec.depth_layer = layer;
+    spec.focus_mode = current_focus_mode;
     if (output_id)
         spec.output_id = output_id.value();
     apply_spec(spec);
@@ -517,19 +519,18 @@ void mf::LayerSurfaceV1::set_margin(int32_t top, int32_t right, int32_t bottom, 
 
 void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactivity)
 {
-    msh::SurfaceSpecification spec;
     switch (keyboard_interactivity)
     {
     case KeyboardInteractivity::none:
-        spec.focus_mode = mir_focus_mode_disabled;
+        current_focus_mode = mir_focus_mode_disabled;
         break;
 
     case KeyboardInteractivity::exclusive:
-        spec.focus_mode = mir_focus_mode_grabbing;
+        current_focus_mode = mir_focus_mode_grabbing;
         break;
 
     case KeyboardInteractivity::on_demand:
-        spec.focus_mode = mir_focus_mode_focusable;
+        current_focus_mode = mir_focus_mode_focusable;
         break;
 
     default:
@@ -539,7 +540,16 @@ void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactiv
             "Invalid keyboard interactivity %d",
             keyboard_interactivity));
     }
+    msh::SurfaceSpecification spec;
+    spec.focus_mode = current_focus_mode;
     apply_spec(spec);
+    for (auto const& popup : popups)
+    {
+        if (popup)
+        {
+            popup.value().apply_spec(spec);
+        }
+    }
 }
 
 void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
@@ -557,6 +567,7 @@ void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
 
     mir::shell::SurfaceSpecification spec;
     spec.parent = scene_surface_.value();
+    spec.focus_mode = current_focus_mode;
     popup_window_role->apply_spec(spec);
 
     // Ideally we'd do this in a callback when popups are destroyed, but in practice waiting until a new popup is
