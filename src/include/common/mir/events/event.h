@@ -21,9 +21,6 @@
 
 #include "mir_toolkit/event.h"
 #include "mir/events/event_builders.h"
-#include "mir_event.capnp.h"
-
-#include <capnp/message.h>
 
 #include <cstring>
 

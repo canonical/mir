@@ -11,8 +11,6 @@ execute: |
         mesa-libEGL-devel \
         mesa-libGLES-devel \
         glm-devel \
-        capnproto-devel \
-        capnproto \
         glog-devel \
         gflags-devel \
         systemd-devel \

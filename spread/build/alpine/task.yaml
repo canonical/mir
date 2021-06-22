@@ -5,7 +5,6 @@ variants: [amd64]
 execute: |
     apk add \
         boost-dev \
-        capnproto-dev \
         cmake \
         coreutils \
         elogind \

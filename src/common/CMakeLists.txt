@@ -49,12 +49,10 @@ add_library(mircommon SHARED
 )
 
 target_link_libraries(mircommon
-  mircapnproto
   mircore
   ${MIR_COMMON_REFERENCES}
 )
 
-add_dependencies(mircommon mircapnproto)
 
 set_target_properties(mircommon
 

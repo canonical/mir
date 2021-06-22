@@ -30,8 +30,7 @@ With these installed you can checkout Mir and get the remaining dependencies:
 You’ll need some development tools and packages installed:
 
     sudo dnf install git cmake make gcc-c++ boost-devel mesa-libEGL-devel \
-    mesa-libGLES-devel glm-devel \
-    capnproto-devel capnproto glog-devel gflags-devel systemd-devel \
+    mesa-libGLES-devel glm-devel glog-devel gflags-devel systemd-devel \
     glib2-devel wayland-devel mesa-libgbm-devel libepoxy-devel nettle-devel \
     libinput-devel libxml++-devel libuuid-devel libxkbcommon-devel \
     freetype-devel lttng-ust-devel libatomic qterminal qt5-qtwayland \
