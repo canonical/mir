@@ -439,3 +439,18 @@ MIR_COMMON_UBSAN {
       typeinfo?for?mir::logging::SharedLibraryProberReport;
   };
 } MIR_COMMON_0.26;
+
+MIR_COMMON_2.5 {
+ global:
+  extern "C++" {
+    ?MirKeyboardEvent*;
+    ?MirTouchEvent*;
+    ?MirPointerEvent*;
+    ?MirCloseSurfaceEvent*;
+    vtable?for?MirKeyboardEvent;
+    vtable?for?MirTouchEvent;
+    vtable?for?MirPointerEvent;
+    vtable?for?MirCloseSurfaceEvent;
+  };
+
+} MIR_COMMON_0.26;

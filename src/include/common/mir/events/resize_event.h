@@ -25,6 +25,8 @@ struct MirResizeEvent : MirEvent
 {
     MirResizeEvent();
 
+    auto clone() const -> MirResizeEvent* override;
+
     int surface_id() const;
     void set_surface_id(int id);
 
@@ -33,6 +35,11 @@ struct MirResizeEvent : MirEvent
 
     int height() const;
     void set_height(int height);
+
+private:
+    int surface_id_ = 0;
+    int width_ = 0;
+    int height_ = 0;
 };
 
 #endif /* MIR_COMMON_RESIZE_EVENT_H_ */

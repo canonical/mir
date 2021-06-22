@@ -330,10 +330,10 @@ MirRectangle mir_window_placement_get_relative_position(MirWindowPlacementEvent 
 // a ref count ref is implemented as copy.
 MirEvent const* mir_event_ref(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    return new MirEvent(*ev);
+    return ev->clone();
 })
 
 void mir_event_unref(MirEvent const* ev)
 {
-    delete const_cast<MirEvent*>(ev);
+    delete ev;
 }

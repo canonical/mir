@@ -22,45 +22,48 @@
 // MirSurfaceEvent is a deprecated type, but we need to implement it
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-MirSurfaceEvent::MirSurfaceEvent()
+MirSurfaceEvent::MirSurfaceEvent() : MirEvent{mir_event_type_window}
 {
-    event.initSurface();
+}
+
+auto MirSurfaceEvent::clone() const -> MirSurfaceEvent*
+{
+    return new MirSurfaceEvent{*this};
 }
 
 int MirSurfaceEvent::id() const
 {
-    return event.asReader().getSurface().getId();
+    return id_;
 }
 
 void MirSurfaceEvent::set_id(int id)
 {
-    event.getSurface().setId(id);
+    id_ = id;
 }
 
 MirWindowAttrib MirSurfaceEvent::attrib() const
 {
-    return static_cast<MirWindowAttrib>(event.asReader().getSurface().getAttrib());
+    return attrib_;
 }
 
 void MirSurfaceEvent::set_attrib(MirWindowAttrib attrib)
 {
-    event.getSurface().setAttrib(static_cast<mir::capnp::SurfaceEvent::Attrib>(attrib));
+    attrib_ = attrib;
 }
 
 int MirSurfaceEvent::value() const
 {
-    return event.asReader().getSurface().getValue();
+    return value_;
 }
 
 void MirSurfaceEvent::set_value(int value)
 {
-    event.getSurface().setValue(value);
+    value_ = value;
 }
 
 void MirSurfaceEvent::set_dnd_handle(std::vector<uint8_t> const& handle)
 {
-    event.getSurface().initDndHandle(handle.size());
-    event.getSurface().setDndHandle(::kj::ArrayPtr<uint8_t const>{&*begin(handle), &*end(handle)});
+    dnd_handle_ = handle;
 }
 
 namespace
@@ -77,12 +80,12 @@ struct MyMirBlob : MirBlob
 
 MirBlob* MirSurfaceEvent::dnd_handle() const
 {
-    if (!event.asReader().getSurface().hasDndHandle())
+    if (!dnd_handle_)
         return nullptr;
 
     auto blob = std::make_unique<MyMirBlob>();
 
-    auto reader = event.asReader().getSurface().getDndHandle();
+    auto reader = *dnd_handle_;
 
     blob->data_.reserve(reader.size());
 

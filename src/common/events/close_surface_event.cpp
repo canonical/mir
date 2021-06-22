@@ -21,17 +21,22 @@
 // MirCloseSurfaceEvent is a deprecated type, but we need to implement it
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-MirCloseSurfaceEvent::MirCloseSurfaceEvent()
+MirCloseSurfaceEvent::MirCloseSurfaceEvent() :
+    MirEvent{mir_event_type_close_window}
 {
-    event.initCloseSurface();
+}
+
+auto MirCloseSurfaceEvent::clone() const -> MirCloseSurfaceEvent*
+{
+    return new MirCloseSurfaceEvent{*this};
 }
 
 int MirCloseSurfaceEvent::surface_id() const
 {
-    return event.asReader().getCloseSurface().getSurfaceId();
+    return surface_id_;
 }
 
 void MirCloseSurfaceEvent::set_surface_id(int id)
 {
-    event.getCloseSurface().setSurfaceId(id);
+    surface_id_ = id;
 }

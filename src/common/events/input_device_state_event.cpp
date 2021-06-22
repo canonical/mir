@@ -20,19 +20,18 @@
 
 #include <boost/throw_exception.hpp>
 
-MirInputDeviceStateEvent::MirInputDeviceStateEvent()
+MirInputDeviceStateEvent::MirInputDeviceStateEvent() : MirEvent(mir_event_type_input_device_state)
 {
-    event.initInputDevice();
 }
 
 MirPointerButtons MirInputDeviceStateEvent::pointer_buttons() const
 {
-    return static_cast<MirPointerButtons>(event.asReader().getInputDevice().getButtons());
+    return pointer_buttons_;
 }
 
 void MirInputDeviceStateEvent::set_pointer_buttons(MirPointerButtons new_pointer_buttons)
 {
-    event.getInputDevice().setButtons(new_pointer_buttons);
+    pointer_buttons_ = new_pointer_buttons;
 }
 
 float MirInputDeviceStateEvent::pointer_axis(MirPointerAxis axis) const
@@ -40,9 +39,9 @@ float MirInputDeviceStateEvent::pointer_axis(MirPointerAxis axis) const
     switch(axis)
     {
     case mir_pointer_axis_x:
-        return event.asReader().getInputDevice().getPointerX();
+        return pointer_axis_x;
     case mir_pointer_axis_y:
-        return event.asReader().getInputDevice().getPointerY();
+        return pointer_axis_y;
     default:
         return 0.0f;
     }
@@ -53,10 +52,10 @@ void MirInputDeviceStateEvent::set_pointer_axis(MirPointerButtons axis, float va
     switch(axis)
     {
     case mir_pointer_axis_x:
-        event.getInputDevice().setPointerX(value);
+        pointer_axis_x = value;
         break;
     case mir_pointer_axis_y:
-        event.getInputDevice().setPointerY(value);
+        pointer_axis_y = value;
         break;
     default:
         break;
@@ -65,72 +64,65 @@ void MirInputDeviceStateEvent::set_pointer_axis(MirPointerButtons axis, float va
 
 std::chrono::nanoseconds MirInputDeviceStateEvent::when() const
 {
-    return std::chrono::nanoseconds{event.asReader().getInputDevice().getWhen().getCount()};
+    return when_;
 }
 
 void MirInputDeviceStateEvent::set_when(std::chrono::nanoseconds const& when)
 {
-    event.getInputDevice().getWhen().setCount(when.count());
+    when_ = when;
 }
 
 MirInputEventModifiers MirInputDeviceStateEvent::modifiers() const
 {
-    return static_cast<MirInputEventModifiers>(event.asReader().getInputDevice().getModifiers());
+    return modifiers_;
 }
 
 void MirInputDeviceStateEvent::set_modifiers(MirInputEventModifiers modifiers)
 {
-    event.getInputDevice().setModifiers(modifiers);
+    modifiers_ = modifiers;
 }
 
 void MirInputDeviceStateEvent::set_device_states(std::vector<mir::events::InputDeviceState> const& device_states)
 {
-    event.getInputDevice().initDevices(device_states.size());
-
-    for (size_t i = 0; i < device_states.size(); i++)
-    {
-        auto const& state = device_states[i];
-        event.getInputDevice().getDevices()[i].getDeviceId().setId(state.id);
-        event.getInputDevice().getDevices()[i].setButtons(state.buttons);
-        event.getInputDevice().getDevices()[i].initPressedKeys(state.pressed_keys.size());
-        for (size_t j = 0; j < state.pressed_keys.size(); j++)
-        {
-            event.getInputDevice().getDevices()[i].getPressedKeys().set(j, state.pressed_keys[j]);
-        }
-    }
+    this->device_states = device_states; 
 }
 
 uint32_t MirInputDeviceStateEvent::device_count() const
 {
-    return event.asReader().getInputDevice().getDevices().size();
+    return device_states.size();
 }
 
 MirInputDeviceId MirInputDeviceStateEvent::device_id(size_t index) const
 {
-    return event.asReader().getInputDevice().getDevices()[index].getDeviceId().getId();
+    return device_states[index].id;
 }
 
 uint32_t MirInputDeviceStateEvent::device_pressed_keys_for_index(size_t index, size_t pressed_index) const
 {
-    return event.asReader().getInputDevice().getDevices()[index].getPressedKeys()[pressed_index];
+    return device_states[index].pressed_keys[pressed_index];
 }
 
 uint32_t MirInputDeviceStateEvent::device_pressed_keys_count(size_t index) const
 {
-    return event.asReader().getInputDevice().getDevices()[index].getPressedKeys().size();
+    return device_states[index].pressed_keys.size();
 }
 
 MirPointerButtons MirInputDeviceStateEvent::device_pointer_buttons(size_t index) const
 {
-    return event.asReader().getInputDevice().getDevices()[index].getButtons();
+    return device_states[index].buttons;
 }
 
 void MirInputDeviceStateEvent::set_window_id(int id)
 {
-    event.getInputDevice().setWindowId(id);
+    window_id_ = id;
 }
 
 int MirInputDeviceStateEvent::window_id() const
 {
-    return event.asReader().getInputDevice().getWindowId();
+    return window_id_;
+}
+
+auto MirInputDeviceStateEvent::clone() const -> MirInputDeviceStateEvent*
+{
+    return new MirInputDeviceStateEvent{*this};
 }

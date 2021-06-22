@@ -29,8 +29,8 @@
 
 struct MirEvent
 {
-    MirEvent(MirEvent const& event);
-    MirEvent& operator=(MirEvent const& event);
+    virtual auto clone() const -> MirEvent* = 0;
+    virtual ~MirEvent() = default;
 
     MirEventType type() const;
 
@@ -65,10 +65,13 @@ struct MirEvent
     MirWindowPlacementEvent const* to_window_placement() const;
 
 protected:
-    MirEvent() = default;
+    MirEvent(MirEventType type);
+    MirEvent(MirEvent const& event);
 
-    ::capnp::MallocMessageBuilder message;
-    mir::capnp::Event::Builder event{message.initRoot<mir::capnp::Event>()};
+private:
+    MirEvent& operator=(MirEvent const& event) = delete;
+
+    MirEventType const type_;
 };
 
 #endif /* MIR_COMMON_EVENT_H_ */

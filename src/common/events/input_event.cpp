@@ -24,54 +24,43 @@
 
 #include <stdlib.h>
 
-MirInputEvent::MirInputEvent(MirInputDeviceId dev,
+MirInputEvent::MirInputEvent(MirInputEventType input_type,
+                             MirInputDeviceId dev,
                              std::chrono::nanoseconds et,
                              MirInputEventModifiers mods,
-                             std::vector<uint8_t> const& cookie)
+                             std::vector<uint8_t> const& cookie) :
+    MirEvent{mir_event_type_input},
+    input_type_{input_type},
+    device_id_{dev},
+    event_time_{et},
+    cookie_{cookie},
+    modifiers_{mods}
 {
-    event.initInput();
-    auto input = event.getInput();
-    input.getDeviceId().setId(dev);
-    input.getEventTime().setCount(et.count());
-    input.setModifiers(mods);
-
-    ::capnp::Data::Reader cookie_data(cookie.data(), cookie.size());
-    input.setCookie(cookie_data);
 }
 
 MirInputEventType MirInputEvent::input_type() const
 {
-    switch (event.asReader().getInput().which())
-    {
-    case mir::capnp::InputEvent::Which::KEY:
-        return mir_input_event_type_key;
-    case mir::capnp::InputEvent::Which::TOUCH:
-        return mir_input_event_type_touch;
-    case mir::capnp::InputEvent::Which::POINTER:
-        return mir_input_event_type_pointer;
-    default:
-        abort();
-    }
+    return input_type_;
 }
 
 int MirInputEvent::window_id() const
 {
-    return event.asReader().getInput().getWindowId();
+    return window_id_;
 }
 
 void MirInputEvent::set_window_id(int id)
 {
-    event.getInput().setWindowId(id);
+    window_id_ = id;
 }
 
 MirInputDeviceId MirInputEvent::device_id() const
 {
-    return event.asReader().getInput().getDeviceId().getId();
+    return device_id_;
 }
 
 void MirInputEvent::set_device_id(MirInputDeviceId id)
 {
-    event.getInput().getDeviceId().setId(id);
+    device_id_ = id;
 }
 
 MirKeyboardEvent* MirInputEvent::to_keyboard()
@@ -106,35 +95,36 @@ MirTouchEvent const* MirInputEvent::to_touch() const
 
 std::chrono::nanoseconds MirInputEvent::event_time() const
 {
-    return std::chrono::nanoseconds{event.asReader().getInput().getEventTime().getCount()};
+    return event_time_;
 }
 
 void MirInputEvent::set_event_time(std::chrono::nanoseconds const& event_time)
 {
-    event.getInput().getEventTime().setCount(event_time.count());
+    event_time_ = event_time;
 }
 
 std::vector<uint8_t> MirInputEvent::cookie() const
 {
-    auto cookie = event.asReader().getInput().getCookie();
-    std::vector<uint8_t> vec_cookie(cookie.size());
-    std::copy(std::begin(cookie), std::end(cookie), std::begin(vec_cookie));
-
-    return vec_cookie;
+    return cookie_;
 }
 
 void MirInputEvent::set_cookie(std::vector<uint8_t> const& cookie)
 {
-    ::capnp::Data::Reader cookie_data(cookie.data(), cookie.size());
-    event.getInput().setCookie(cookie_data);
+    cookie_ = cookie;
 }
 
 MirInputEventModifiers MirInputEvent::modifiers() const
 {
-    return event.asReader().getInput().getModifiers();
+    return modifiers_;
 }
 
 void MirInputEvent::set_modifiers(MirInputEventModifiers modifiers)
 {
-    event.getInput().setModifiers(modifiers);
+    modifiers_ = modifiers;
+}
+
+MirInputEvent::MirInputEvent(MirInputEventType input_type) :
+    MirEvent{mir_event_type_input},
+    input_type_{input_type}
+{
 }
