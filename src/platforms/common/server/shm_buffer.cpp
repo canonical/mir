@@ -39,6 +39,7 @@
 namespace mg=mir::graphics;
 namespace mgc = mir::graphics::common;
 namespace geom = mir::geometry;
+namespace mrs = mir::renderer::software;
 
 bool mg::get_gl_pixel_format(MirPixelFormat mir_format,
                          GLenum& gl_format, GLenum& gl_type)
@@ -131,11 +132,6 @@ geom::Size mgc::ShmBuffer::size() const
     return size_;
 }
 
-geom::Stride mgc::MemoryBackedShmBuffer::stride() const
-{
-    return stride_;
-}
-
 MirPixelFormat mgc::ShmBuffer::pixel_format() const
 {
     return pixel_format_;
@@ -184,18 +180,6 @@ void mgc::ShmBuffer::upload_to_texture(void const* pixels, geom::Stride const& s
     }
 }
 
-void mgc::MemoryBackedShmBuffer::write(unsigned char const* data, size_t data_size)
-{
-    if (data_size != stride_.as_uint32_t()*size().height.as_uint32_t())
-        BOOST_THROW_EXCEPTION(std::logic_error("Size is not equal to number of pixels in buffer"));
-    memcpy(pixels.get(), data, data_size);
-}
-
-void mgc::MemoryBackedShmBuffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
-{
-    do_with_pixels(static_cast<unsigned char const*>(pixels.get()));
-}
-
 mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
 {
     return this;
@@ -229,6 +213,59 @@ void mgc::MemoryBackedShmBuffer::bind()
         upload_to_texture(pixels.get(), stride_);
         uploaded = true;
     }
+}
+
+template<typename T>
+class mgc::MemoryBackedShmBuffer::Mapping : public mir::renderer::software::Mapping<T>
+{
+public:
+    Mapping(std::conditional_t<std::is_const_v<T>, MemoryBackedShmBuffer const*, MemoryBackedShmBuffer*> buffer)
+        : buffer{buffer}
+    {
+    }
+
+    auto format() const -> MirPixelFormat override
+    {
+        return buffer->pixel_format();
+    }
+
+    auto stride() const -> geom::Stride override
+    {
+        return buffer->stride_;
+    }
+
+    auto size() const -> geom::Size override
+    {
+        return buffer->size();
+    }
+
+    auto data() -> T* override
+    {
+        return buffer->pixels.get();
+    }
+
+    auto len() const -> size_t override
+    {
+        return stride().as_uint32_t() * size().height.as_uint32_t();
+    }
+
+private:
+    std::conditional_t<std::is_const_v<T>, MemoryBackedShmBuffer const*, MemoryBackedShmBuffer*> buffer;
+};
+
+auto mgc::MemoryBackedShmBuffer::map_writeable() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+{
+    return std::make_unique<Mapping<unsigned char>>(this);
+}
+
+auto mgc::MemoryBackedShmBuffer::map_readable() -> std::unique_ptr<mrs::Mapping<unsigned char const>>
+{
+    return std::make_unique<Mapping<unsigned char const>>(this);
+}
+
+auto mgc::MemoryBackedShmBuffer::map_rw() -> std::unique_ptr<mrs::Mapping<unsigned char>>
+{
+    return std::make_unique<Mapping<unsigned char>>(this);
 }
 
 mg::gl::Program const& mgc::ShmBuffer::shader(mg::gl::ProgramFactory& cache) const

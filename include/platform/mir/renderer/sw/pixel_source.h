@@ -153,27 +153,6 @@ auto alloc_buffer_with_content(
     geometry::Size const& size,
     geometry::Stride const& src_stride,
     MirPixelFormat src_format) -> std::shared_ptr<graphics::Buffer>;
-
-class PixelSource
-{
-public:
-    virtual ~PixelSource() = default;
-
-    //functions have legacy issues with their signatures. 
-    //FIXME: correct write, it requires that the user does too much to use it correctly,
-    //       (ie, it forces them to figure out what size is proper, alloc a buffer, fill it, and then
-    //       copy the data into the buffer)
-    virtual void write(unsigned char const* pixels, size_t size) = 0;
-    //FIXME: correct read, it doesn't give size or format information about the pixels.
-    virtual void read(std::function<void(unsigned char const*)> const& do_with_pixels) = 0;
-    virtual geometry::Stride stride() const = 0;
-
-protected:
-    PixelSource() = default;
-    PixelSource(PixelSource const&) = delete;
-    PixelSource& operator=(PixelSource const&) = delete;
-};
-
 }
 }
 }
