@@ -33,8 +33,6 @@
 #include "mir/events/input_device_state_event.h"
 #include "mir/events/surface_placement_event.h"
 
-#include <capnp/serialize.h>
-
 
 namespace ml = mir::logging;
 
@@ -51,26 +49,6 @@ MirEvent& MirEvent::operator=(MirEvent const& e)
     message.setRoot(reader);
     event = message.getRoot<mir::capnp::Event>();
     return *this;
-}
-
-mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
-{
-    auto e = mir::EventUPtr(new MirEvent, [](MirEvent* ev) { delete ev; });
-    kj::ArrayPtr<::capnp::word const> words(reinterpret_cast<::capnp::word const*>(
-        bytes.data()), bytes.size() / sizeof(::capnp::word));
-
-    initMessageBuilderFromFlatArrayCopy(words, e->message);
-    e->event = e->message.getRoot<mir::capnp::Event>();
-
-    return e;
-}
-
-std::string MirEvent::serialize(MirEvent const* event)
-{
-    std::string output;
-    auto flat_event = ::capnp::messageToFlatArray(const_cast<MirEvent*>(event)->message);
-
-    return {reinterpret_cast<char*>(flat_event.asBytes().begin()), flat_event.asBytes().size()};
 }
 
 MirEventType MirEvent::type() const

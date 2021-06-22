@@ -36,7 +36,6 @@ set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mircommon SHARED
   input/mir_input_config.cpp
-  input/mir_input_config_serialization.cpp
   input/mir_touchpad_config.cpp
   input/mir_pointer_config.cpp
   input/mir_keyboard_config.cpp
@@ -46,7 +45,6 @@ add_library(mircommon SHARED
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchpad_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchscreen_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_keyboard_config.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_input_config_serialization.h
   ${MIR_COMMON_SOURCES}
 )
 

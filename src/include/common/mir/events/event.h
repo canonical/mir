@@ -64,9 +64,6 @@ struct MirEvent
     MirWindowPlacementEvent* to_window_placement();
     MirWindowPlacementEvent const* to_window_placement() const;
 
-    static mir::EventUPtr deserialize(std::string const& bytes);
-    static std::string serialize(MirEvent const* event);
-
 protected:
     MirEvent() = default;
 

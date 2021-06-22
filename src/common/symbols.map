@@ -169,8 +169,6 @@ MIR_COMMON_0.27_PRIVATE {
        MirEvent::to_keymap*;
        MirEvent::to_input*;
        MirEvent::to_prompt_session*;
-       MirEvent::serialize*;
-       MirEvent::deserialize*;
        MirEvent::clone*;
        MirEvent::type*;
        MirCloseSurfaceEvent::MirCloseSurfaceEvent*;
