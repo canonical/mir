@@ -321,11 +321,28 @@ void mf::WlPointer::maybe_frame()
 
 namespace
 {
+struct CursorSurfaceRole : mf::NullWlSurfaceRole
+{
+    mf::WlSurface* const surface;
+    std::function<void(mf::WlSurface*)> on_commit;
+    explicit CursorSurfaceRole(mf::WlSurface* surface, std::function<void(mf::WlSurface*)>&& on_commit) :
+        NullWlSurfaceRole(surface),
+        surface{surface},
+        on_commit{on_commit} {}
+
+    void commit(mir::frontend::WlSurfaceState const& state) override
+    {
+        NullWlSurfaceRole::commit(state);
+        on_commit(surface);
+    }
+};
+
 struct WlSurfaceCursor : mf::WlPointer::Cursor
 {
     WlSurfaceCursor(
         mf::WlSurface* surface,
-        geom::Displacement hotspot);
+        geom::Displacement hotspot,
+        std::function<void(mf::WlSurface*)>&& on_commit);
     ~WlSurfaceCursor();
 
     void apply_to(mf::WlSurface* surface) override;
@@ -337,7 +354,7 @@ private:
 
     mw::Weak<mf::WlSurface> const surface;
     std::shared_ptr<mc::BufferStream> const stream;
-    mf::NullWlSurfaceRole surface_role; // Used only to assert unique ownership
+    CursorSurfaceRole surface_role; // Used only to assert unique ownership
 
     std::weak_ptr<ms::Surface> surface_under_cursor;
     geom::Displacement hotspot;
@@ -345,9 +362,15 @@ private:
 
 struct WlHiddenCursor : mf::WlPointer::Cursor
 {
+    WlHiddenCursor(
+        mf::WlSurface* surface,
+        std::function<void(mf::WlSurface*)>&& on_commit);
+
     void apply_to(mf::WlSurface* surface) override;
     void set_hotspot(geom::Displacement const&) override {};
     auto cursor_surface() const -> std::experimental::optional<mf::WlSurface*> override { return {}; };
+private:
+    CursorSurfaceRole surface_role; // Used only to assert unique ownership
 };
 }
 
@@ -359,22 +382,25 @@ void mf::WlPointer::set_cursor(
     if (surface)
     {
         auto const wl_surface = WlSurface::from(*surface);
-        geom::Displacement const cursor_hotspot{hotspot_x, hotspot_y};
-        if (wl_surface == cursor->cursor_surface())
+        cursor_hotspot = geom::Displacement{hotspot_x, hotspot_y};
+        if (cursor->cursor_surface() && wl_surface == *cursor->cursor_surface())
         {
             cursor->set_hotspot(cursor_hotspot);
         }
         else
         {
             cursor.reset(); // clean up old cursor before creating new one
-            cursor = std::make_unique<WlSurfaceCursor>(wl_surface, cursor_hotspot);
+            cursor = std::make_unique<WlSurfaceCursor>(
+                wl_surface,
+                cursor_hotspot,
+                [this](WlSurface* surface){ on_commit(surface); });
             if (surface_under_cursor)
                 cursor->apply_to(&surface_under_cursor.value());
         }
     }
     else
     {
-        cursor = std::make_unique<WlHiddenCursor>();
+        cursor = std::make_unique<WlHiddenCursor>(nullptr, [this](WlSurface* surface){ on_commit(surface); });
         if (surface_under_cursor)
             cursor->apply_to(&surface_under_cursor.value());
     }
@@ -382,10 +408,40 @@ void mf::WlPointer::set_cursor(
     (void)serial;
 }
 
-WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot)
+
+void mf::WlPointer::on_commit(WlSurface* surface)
+{
+    if (!surface->buffer_size())
+    {
+        // No buffer: We should be unmapping the cursor
+
+        cursor = std::make_unique<WlHiddenCursor>(surface, [this](WlSurface* surface){ on_commit(surface); });
+        if (surface_under_cursor)
+            cursor->apply_to(&surface_under_cursor.value());
+    }
+    else
+    {
+        if (cursor->cursor_surface() && surface == *cursor->cursor_surface())
+        {
+            cursor->set_hotspot(cursor_hotspot);
+        }
+        else
+        {
+            cursor.reset(); // clean up old cursor before creating new one
+            cursor = std::make_unique<WlSurfaceCursor>(
+                surface,
+                cursor_hotspot,
+                [this](WlSurface* surface){ on_commit(surface); });
+            if (surface_under_cursor)
+                cursor->apply_to(&surface_under_cursor.value());
+        }
+    }
+}
+
+WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot, std::function<void(mf::WlSurface*)>&& on_commit)
     : surface{surface},
       stream{surface->stream},
-      surface_role{surface},
+      surface_role{surface, std::move(on_commit)},
       hotspot{hotspot}
 {
     surface->set_role(&surface_role);
@@ -463,4 +519,9 @@ void WlHiddenCursor::apply_to(mf::WlSurface* surface)
     {
         scene_surface.value()->set_cursor_image({});
     }
+}
+
+WlHiddenCursor::WlHiddenCursor(mf::WlSurface* surface, std::function<void(mf::WlSurface*)>&& on_commit) :
+    surface_role{surface, std::move(on_commit)}
+{
 }

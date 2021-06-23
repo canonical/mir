@@ -74,6 +74,8 @@ private:
     void relative_motion(MirPointerEvent const* event);
     /// Sends a frame event only if needed, leaves needs_frame false
     void maybe_frame();
+    /// The cursor surface has committed
+    void on_commit(WlSurface* surface);
 
     /// Wayland request handlers
     ///@{
@@ -91,6 +93,7 @@ private:
     std::experimental::optional<std::pair<float, float>> current_position;
     std::unique_ptr<Cursor> cursor;
     wayland::Weak<wayland::RelativePointerV1> relative_pointer;
+    geometry::Displacement cursor_hotspot;
 };
 
 }
