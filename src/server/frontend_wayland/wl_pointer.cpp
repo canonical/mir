@@ -444,7 +444,8 @@ WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hots
       surface_role{surface, std::move(on_commit)},
       hotspot{hotspot}
 {
-    surface->set_role(&surface_role);
+    if (surface)
+        surface->set_role(&surface_role);
 
     stream->set_frame_posted_callback(
         [this](auto)
