@@ -360,7 +360,7 @@ void mf::WlPointer::set_cursor(
     {
         auto const wl_surface = WlSurface::from(*surface);
         geom::Displacement const cursor_hotspot{hotspot_x, hotspot_y};
-        if (wl_surface == cursor->cursor_surface())
+        if (cursor->cursor_surface() && wl_surface == *cursor->cursor_surface())
         {
             cursor->set_hotspot(cursor_hotspot);
         }
