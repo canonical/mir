@@ -50,14 +50,23 @@ struct MirInputEvent : MirEvent
     MirTouchEvent const* to_touch() const;
 
 protected:
-    MirInputEvent(MirInputDeviceId dev,
+    MirInputEvent(MirInputEventType input_type,
+                  MirInputDeviceId dev,
                   std::chrono::nanoseconds et,
                   MirInputEventModifiers mods,
                   std::vector<uint8_t> const& cookie);
 
-    MirInputEvent() = default;
+    MirInputEvent(MirInputEventType input_type);
     MirInputEvent(MirInputEvent const& event) = default;
-    MirInputEvent& operator=(MirInputEvent const& event) = default;
+    MirInputEvent& operator=(MirInputEvent const& event) = delete;
+
+private:
+    MirInputEventType const input_type_;
+    int window_id_ = 0;
+    MirInputDeviceId device_id_ = 0;
+    std::chrono::nanoseconds event_time_ = {};
+    std::vector<uint8_t> cookie_;
+    MirInputEventModifiers modifiers_ = 0;
 };
 
 #endif /* MIR_COMMON_INPUT_EVENT_H_ */

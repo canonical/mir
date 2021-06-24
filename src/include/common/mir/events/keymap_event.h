@@ -26,6 +26,7 @@
 struct MirKeymapEvent : MirEvent
 {
     MirKeymapEvent();
+    auto clone() const -> MirKeymapEvent* override;
 
     int surface_id() const;
     void set_surface_id(int id);
@@ -37,6 +38,11 @@ struct MirKeymapEvent : MirEvent
     void set_buffer(char const* buffer);
 
     size_t size() const;
+
+private:
+    int surface_id_ = 0;
+    MirInputDeviceId device_id_ = 0;
+    std::string buffer_;
 };
 
 #endif /* MIR_COMMON_KEYMAP_EVENT_H_ */

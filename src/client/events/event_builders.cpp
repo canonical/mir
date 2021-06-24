@@ -287,7 +287,7 @@ mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
 
 mir::EventUPtr mev::clone_event(MirEvent const& event)
 {
-    return make_uptr_event(new MirEvent(event));
+    return make_uptr_event(event.clone());
 }
 
 void mev::transform_positions(MirEvent& event, mir::geometry::Displacement const& movement)

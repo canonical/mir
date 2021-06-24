@@ -19,15 +19,15 @@
 #ifndef MIR_COMMON_KEYBOARD_EVENT_H_
 #define MIR_COMMON_KEYBOARD_EVENT_H_
 
-#include <chrono>
 #include <cstdint>
-#include <vector>
+#include <string>
 
 #include "mir/events/input_event.h"
 
 struct MirKeyboardEvent : MirInputEvent
 {
     MirKeyboardEvent();
+    auto clone() const -> MirKeyboardEvent* override;
 
     MirKeyboardAction action() const;
     void set_action(MirKeyboardAction action);
@@ -40,6 +40,12 @@ struct MirKeyboardEvent : MirInputEvent
 
     char const* text() const;
     void set_text(char const* str);
+
+private:
+    MirKeyboardAction action_ = {};
+    int32_t key_code_ = 0;
+    int32_t scan_code_ = 0;
+    std::string text_ = {};
 };
 
 #endif /* MIR_COMMON_KEYBOARD_EVENT_H_ */

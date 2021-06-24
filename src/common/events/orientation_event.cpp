@@ -18,27 +18,31 @@
 
 #include "mir/events/orientation_event.h"
 
-MirOrientationEvent::MirOrientationEvent()
+MirOrientationEvent::MirOrientationEvent() : MirEvent(mir_event_type_orientation)
 {
-    event.initOrientation();
 }
 
 int MirOrientationEvent::surface_id() const
 {
-    return event.asReader().getOrientation().getSurfaceId();
+    return surface_id_;
 }
 
 void MirOrientationEvent::set_surface_id(int id)
 {
-    event.getOrientation().setSurfaceId(id);
+    surface_id_ = id;
 }
 
 MirOrientation MirOrientationEvent::direction() const
 {
-    return static_cast<MirOrientation>(event.asReader().getOrientation().getDirection());
+    return direction_;
 }
 
 void MirOrientationEvent::set_direction(MirOrientation orientation)
 {
-    event.getOrientation().setDirection(orientation);
+    direction_ = orientation;
+}
+
+auto MirOrientationEvent::clone() const -> MirOrientationEvent*
+{
+    return new MirOrientationEvent(*this);
 }

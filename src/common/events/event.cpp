@@ -33,79 +33,19 @@
 #include "mir/events/input_device_state_event.h"
 #include "mir/events/surface_placement_event.h"
 
-#include <capnp/serialize.h>
-
 
 namespace ml = mir::logging;
 
-MirEvent::MirEvent(MirEvent const& e)
+MirEvent::MirEvent(MirEventType type) :
+    type_{type}
 {
-    auto reader = e.event.asReader();
-    message.setRoot(reader);
-    event = message.getRoot<mir::capnp::Event>();
 }
 
-MirEvent& MirEvent::operator=(MirEvent const& e)
-{
-    auto reader = e.event.asReader();
-    message.setRoot(reader);
-    event = message.getRoot<mir::capnp::Event>();
-    return *this;
-}
-
-mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
-{
-    auto e = mir::EventUPtr(new MirEvent, [](MirEvent* ev) { delete ev; });
-    kj::ArrayPtr<::capnp::word const> words(reinterpret_cast<::capnp::word const*>(
-        bytes.data()), bytes.size() / sizeof(::capnp::word));
-
-    initMessageBuilderFromFlatArrayCopy(words, e->message);
-    e->event = e->message.getRoot<mir::capnp::Event>();
-
-    return e;
-}
-
-std::string MirEvent::serialize(MirEvent const* event)
-{
-    std::string output;
-    auto flat_event = ::capnp::messageToFlatArray(const_cast<MirEvent*>(event)->message);
-
-    return {reinterpret_cast<char*>(flat_event.asBytes().begin()), flat_event.asBytes().size()};
-}
+MirEvent::MirEvent(MirEvent const& e) = default;
 
 MirEventType MirEvent::type() const
 {
-    switch (event.asReader().which())
-    {
-    case mir::capnp::Event::Which::INPUT:
-        return mir_event_type_input;
-    case mir::capnp::Event::Which::SURFACE:
-        return mir_event_type_window;
-    case mir::capnp::Event::Which::RESIZE:
-        return mir_event_type_resize;
-    case mir::capnp::Event::Which::PROMPT_SESSION:
-        return mir_event_type_prompt_session_state_change;
-    case mir::capnp::Event::Which::ORIENTATION:
-        return mir_event_type_orientation;
-    case mir::capnp::Event::Which::CLOSE_SURFACE:
-        return mir_event_type_close_window;
-    case mir::capnp::Event::Which::KEYMAP:
-        return mir_event_type_keymap;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    case mir::capnp::Event::Which::INPUT_CONFIGURATION:
-        return mir_event_type_input_configuration;
-#pragma GCC diagnostic pop
-    case mir::capnp::Event::Which::SURFACE_OUTPUT:
-        return mir_event_type_window_output;
-    case mir::capnp::Event::Which::INPUT_DEVICE:
-        return mir_event_type_input_device_state;
-    case mir::capnp::Event::Which::SURFACE_PLACEMENT:
-        return mir_event_type_window_placement;
-    default:
-        mir::log_critical("unknown event type.");
-        abort();
-    }
+    return type_;
 }
 
 MirInputEvent* MirEvent::to_input()

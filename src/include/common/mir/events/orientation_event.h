@@ -23,6 +23,8 @@
 
 struct MirOrientationEvent : MirEvent
 {
+    auto clone() const -> MirOrientationEvent* override;
+
     MirOrientationEvent();
 
     int surface_id() const;
@@ -30,6 +32,10 @@ struct MirOrientationEvent : MirEvent
 
     MirOrientation direction() const;
     void set_direction(MirOrientation orientation);
+
+private:
+    int surface_id_ = 0;
+    MirOrientation direction_ = mir_orientation_normal;
 };
 
 #endif /* MIR_COMMON_ORIENTATION_EVENT_H_ */

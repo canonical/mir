@@ -24,9 +24,13 @@
 struct MirPromptSessionEvent : MirEvent
 {
     MirPromptSessionEvent();
+    auto clone() const -> MirPromptSessionEvent* override;
 
     MirPromptSessionState new_state() const;
     void set_new_state(MirPromptSessionState state);
+
+private:
+    MirPromptSessionState state = mir_prompt_session_state_stopped;
 };
 
 #endif /* MIR_COMMON_PROMPT_SESSION_EVENT_H_ */

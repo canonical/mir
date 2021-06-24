@@ -26,6 +26,7 @@
 struct MirSurfaceOutputEvent : MirEvent
 {
     MirSurfaceOutputEvent();
+    auto clone() const -> MirSurfaceOutputEvent* override;
 
     int surface_id() const;
     void set_surface_id(int id);
@@ -44,6 +45,14 @@ struct MirSurfaceOutputEvent : MirEvent
 
     uint32_t output_id() const;
     void set_output_id(uint32_t id);
+
+private:
+    int surface_id_ = 0;
+    int dpi_ = 0;
+    float scale_ = 0.0;
+    double refresh_rate_ = 0.0;
+    MirFormFactor form_factor_ = mir_form_factor_unknown;
+    uint32_t output_id_ = 0;
 };
 
 #endif /* MIR_COMMON_SURFACE_OUTPUT_EVENT_H_ */

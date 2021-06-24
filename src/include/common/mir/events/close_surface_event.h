@@ -24,9 +24,13 @@
 struct MirCloseSurfaceEvent : MirEvent
 {
     MirCloseSurfaceEvent();
+    auto clone() const -> MirCloseSurfaceEvent* override;
 
     int surface_id() const;
     void set_surface_id(int id);
+
+private:
+    int surface_id_ = 0;
 };
 
 #endif /* MIR_COMMON_CLOSE_SURFACE_EVENT_H_ */

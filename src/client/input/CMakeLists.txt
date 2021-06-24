@@ -19,7 +19,6 @@ add_library(mirsharedinput OBJECT
   input_event.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp
 )
-add_dependencies(mirsharedinput mircapnproto)
 
 list(APPEND MIR_CLIENT_REFERENCES ${XKBCOMMON_LIBRARIES})
 

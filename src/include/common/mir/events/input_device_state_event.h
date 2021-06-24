@@ -29,6 +29,7 @@
 struct MirInputDeviceStateEvent : MirEvent
 {
     MirInputDeviceStateEvent();
+    auto clone() const -> MirInputDeviceStateEvent* override;
 
     MirPointerButtons pointer_buttons() const;
     void set_pointer_buttons(MirPointerButtons buttons);
@@ -52,6 +53,17 @@ struct MirInputDeviceStateEvent : MirEvent
     void set_device_states(std::vector<mir::events::InputDeviceState> const& device_states);
     void set_window_id(int id);
     int window_id() const;
+
+private:
+    MirInputDeviceStateEvent(MirInputDeviceStateEvent const&) = default;
+
+    MirPointerButtons pointer_buttons_ = 0;
+    float pointer_axis_x = 0.0;
+    float pointer_axis_y = 0.0;
+    std::chrono::nanoseconds when_ = {};
+    MirInputEventModifiers modifiers_ = mir_input_event_modifier_none;
+    std::vector<mir::events::InputDeviceState> device_states;
+    int window_id_ = 0;
 };
 
 #endif /* MIR_COMMON_INPUT_DEVICE_STATE_EVENT_H_*/

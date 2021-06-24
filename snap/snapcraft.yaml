@@ -20,7 +20,6 @@ parts:
     - -DMIR_PLATFORM='gbm-kms;eglstream-kms;x11;wayland'
     build-packages:
     - build-essential
-    - capnproto
     - eglexternalplatform-dev
     - git
     - libboost-date-time-dev

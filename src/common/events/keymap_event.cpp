@@ -20,43 +20,46 @@
 
 #include "mir/events/keymap_event.h"
 
-MirKeymapEvent::MirKeymapEvent()
+MirKeymapEvent::MirKeymapEvent() : MirEvent{mir_event_type_keymap}
 {
-    event.initKeymap();
 }
 
 int MirKeymapEvent::surface_id() const
 {
-    return event.asReader().getKeymap().getSurfaceId();
+    return surface_id_;
+}
+
+auto MirKeymapEvent::clone() const -> MirKeymapEvent*
+{
+    return new MirKeymapEvent{*this};
 }
 
 void MirKeymapEvent::set_surface_id(int id)
 {
-    event.getKeymap().setSurfaceId(id);
+    surface_id_ = id;
 }
 
 MirInputDeviceId MirKeymapEvent::device_id() const
 {
-    return event.asReader().getKeymap().getDeviceId().getId();
+    return device_id_;
 }
 
 void MirKeymapEvent::set_device_id(MirInputDeviceId id)
 {
-    event.getKeymap().getDeviceId().setId(id);
+    device_id_ = id;
 }
 
 char const* MirKeymapEvent::buffer() const
 {
-    return event.asReader().getKeymap().getBuffer().cStr();
+    return buffer_.c_str();
 }
 
 void MirKeymapEvent::set_buffer(char const* buffer)
 {
-    ::capnp::Text::Reader capnp_text(buffer, strlen(buffer));
-    event.getKeymap().setBuffer(capnp_text);
+    buffer_ = buffer;
 }
 
 size_t MirKeymapEvent::size() const
 {
-    return event.asReader().getKeymap().getBuffer().size();
+    return buffer_.size();
 }
