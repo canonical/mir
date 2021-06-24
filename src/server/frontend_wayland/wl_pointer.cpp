@@ -395,17 +395,14 @@ void mf::WlPointer::set_cursor(
     {
         auto const wl_surface = WlSurface::from(*surface);
         cursor_hotspot = {hotspot_x, hotspot_y};
-        if (cursor->cursor_surface() && wl_surface == *cursor->cursor_surface())
-        {
-            cursor->set_hotspot(cursor_hotspot);
-        }
-        else
+        if (!cursor->cursor_surface() || wl_surface != *cursor->cursor_surface())
         {
             cursor.reset(); // clean up old cursor before creating new one
             cursor = std::make_unique<WlSurfaceCursor>(wl_surface, cursor_hotspot, commit_handler);
             if (surface_under_cursor)
                 cursor->apply_to(&surface_under_cursor.value());
         }
+        // If surface is unchanged hotspot will be applied on next commit
     }
     else
     {
