@@ -354,7 +354,7 @@ private:
 
     mw::Weak<mf::WlSurface> const surface;
     std::shared_ptr<mc::BufferStream> const stream;
-    CursorSurfaceRole surface_role; // Used only to assert unique ownership
+    CursorSurfaceRole surface_role;
 
     std::weak_ptr<ms::Surface> surface_under_cursor;
     geom::Displacement hotspot;
@@ -370,7 +370,7 @@ struct WlHiddenCursor : mf::WlPointer::Cursor
     void set_hotspot(geom::Displacement const&) override {};
     auto cursor_surface() const -> std::experimental::optional<mf::WlSurface*> override { return {}; };
 private:
-    CursorSurfaceRole surface_role; // Used only to assert unique ownership
+    CursorSurfaceRole surface_role;
 };
 }
 
@@ -407,7 +407,6 @@ void mf::WlPointer::set_cursor(
 
     (void)serial;
 }
-
 
 void mf::WlPointer::on_commit(WlSurface* surface)
 {
