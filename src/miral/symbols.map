@@ -446,10 +446,3 @@ global:
     miral::Output::logical_group_id*;
   };
 } MIRAL_3.1;
-
-MIRAL_3.3 {
-global:
-  extern "C++" {
-    miral::operator<<(std::basic_ostream<char, std::char_traits<char> >&, miral::Window const&);
-  };
-} MIRAL_3.2;

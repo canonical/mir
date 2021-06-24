@@ -395,3 +395,4 @@ libmiral.so.4 libmiral4 #MINVER#
  MIRAL_3.2@MIRAL_3.2 3.2.0
  (c++)"miral::Output::logical_group_id()@MIRAL_3.2" 3.2.0
  (c++)"miral::Output::logical_group_id() const@MIRAL_3.2" 3.2.0
+ (c++)"miral::operator<<(std::basic_ostream<char, std::char_traits<char> >&, miral::Window const&)@MIRAL_3.3" 3.3.0
