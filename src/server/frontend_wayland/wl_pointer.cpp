@@ -323,17 +323,25 @@ namespace
 {
 struct CursorSurfaceRole : mf::NullWlSurfaceRole
 {
-    mf::WlSurface* const surface;
+    mw::Weak<mf::WlSurface> const surface;
     mf::CommitHandler* const commit_handler;
     explicit CursorSurfaceRole(mf::WlSurface* surface, mf::CommitHandler* commit_handler) :
         NullWlSurfaceRole(surface),
         surface{surface},
         commit_handler{commit_handler} {}
 
+    ~CursorSurfaceRole()
+    {
+        if (surface)
+        {
+            surface.value().clear_role();
+        }
+    }
+
     void commit(mir::frontend::WlSurfaceState const& state) override
     {
         NullWlSurfaceRole::commit(state);
-        commit_handler->on_commit(surface);
+        commit_handler->on_commit(&surface.value());
     }
 };
 
