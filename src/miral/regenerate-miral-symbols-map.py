@@ -524,9 +524,16 @@ global:
 } MIRAL_3.0;
 
 MIRAL_3.2 {
+global:
+  extern "C++" {
+    miral::Output::logical_group_id*;
+  };
+} MIRAL_3.1;
+
+MIRAL_3.3 {
 global:'''
 
-END_NEW_STANZA = '} MIRAL_3.1;'
+END_NEW_STANZA = '} MIRAL_3.2;'
 
 def _print_report():
     print(OLD_STANZAS)
