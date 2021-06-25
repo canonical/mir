@@ -41,11 +41,11 @@ struct InputEventBuilder : public Test
 TEST_F(InputEventBuilder, makes_valid_key_event)
 {
     MirKeyboardAction const action = mir_keyboard_action_down;
-    xkb_keysym_t const key_code = 34;
+    xkb_keysym_t const keysym = 34;
     int const scan_code = 17;
 
    auto ev = mev::make_event(device_id, timestamp,
-       cookie, action, key_code, scan_code, modifiers);
+       cookie, action, keysym, scan_code, modifiers);
    auto e = ev.get();
 
    EXPECT_EQ(mir_event_type_input, mir_event_get_type(e));
@@ -53,7 +53,7 @@ TEST_F(InputEventBuilder, makes_valid_key_event)
    EXPECT_EQ(mir_input_event_type_key, mir_input_event_get_type(ie));
    auto kev = mir_input_event_get_keyboard_event(ie);
    EXPECT_EQ(action, mir_keyboard_event_action(kev));
-   EXPECT_EQ(key_code, mir_keyboard_event_key_code(kev));
+   EXPECT_EQ(keysym, mir_keyboard_event_keysym(kev));
    EXPECT_EQ(scan_code, mir_keyboard_event_scan_code(kev));
    EXPECT_EQ(modifiers, mir_keyboard_event_modifiers(kev));
 }

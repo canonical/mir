@@ -36,8 +36,8 @@ namespace wayland
 class KeyboardInput
 {
 public:
-    virtual void key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code) = 0;
-    virtual void key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code) = 0;
+    virtual void key_press(std::chrono::nanoseconds event_time, xkb_keysym_t keysym, int32_t scan_code) = 0;
+    virtual void key_release(std::chrono::nanoseconds event_time, xkb_keysym_t keysym, int32_t scan_code) = 0;
 
     KeyboardInput() = default;
     virtual ~KeyboardInput() = default;

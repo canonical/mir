@@ -157,7 +157,7 @@ MATCHER_P(KeyOfSymbol, keysym, "")
     if (kev == nullptr)
         return false;
 
-    if(mir_keyboard_event_key_code(kev) != static_cast<xkb_keysym_t>(keysym))
+    if(mir_keyboard_event_keysym(kev) != static_cast<xkb_keysym_t>(keysym))
         return false;
 
     return true;
@@ -196,7 +196,7 @@ MATCHER_P(MirKeyboardEventMatches, event, "")
         return false;
 
     return mir_keyboard_event_action(expected) == mir_keyboard_event_action(actual) &&
-        mir_keyboard_event_key_code(expected) == mir_keyboard_event_key_code(actual) &&
+        mir_keyboard_event_keysym(expected) == mir_keyboard_event_keysym(actual) &&
         mir_keyboard_event_scan_code(expected) == mir_keyboard_event_scan_code(actual) &&
         mir_keyboard_event_modifiers(expected) == mir_keyboard_event_modifiers(actual);
 }

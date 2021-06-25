@@ -451,6 +451,7 @@ MIR_COMMON_2.5 {
     vtable?for?MirTouchEvent;
     vtable?for?MirPointerEvent;
     vtable?for?MirCloseSurfaceEvent;
+    MirKeyboardEvent::keysym*;
+    MirKeyboardEvent::set_keysym*;
   };
-
 } MIR_COMMON_0.26;

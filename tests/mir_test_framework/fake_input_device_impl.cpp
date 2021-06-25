@@ -144,7 +144,7 @@ mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& in
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyParameters const& key_params)
 {
-    xkb_keysym_t key_code = 0;
+    xkb_keysym_t keysym = 0;
 
     auto event_time = key_params.event_time.value_or(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -153,7 +153,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
     auto input_action =
         (key_params.action == synthesis::EventAction::Down) ? mir_keyboard_action_down : mir_keyboard_action_up;
 
-    auto key_event = builder->key_event(event_time, input_action, key_code, key_params.scancode);
+    auto key_event = builder->key_event(event_time, input_action, keysym, key_params.scancode);
 
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));

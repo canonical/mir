@@ -67,7 +67,7 @@ EventUPtr make_event(frontend::SurfaceId const& surface_id, geometry::Rectangle 
 
 // Key event
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t key_code,
+    std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t keysym,
     int scan_code, MirInputEventModifiers modifiers);
 
 void set_modifier(MirEvent& event, MirInputEventModifiers modifiers);

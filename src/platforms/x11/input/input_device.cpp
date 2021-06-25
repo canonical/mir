@@ -137,29 +137,23 @@ bool mix::XInputDevice::started() const
     return sink && builder;
 }
 
-void mix::XInputDevice::key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code)
+void mix::XInputDevice::key_press(std::chrono::nanoseconds event_time, xkb_keysym_t keysym, int scan_code)
 {
-    sink->handle_input(
-        builder->key_event(
-            event_time,
-            mir_keyboard_action_down,
-            key_sym,
-            key_code
-            )
-        );
+    sink->handle_input(builder->key_event(
+        event_time,
+        mir_keyboard_action_down,
+        keysym,
+        scan_code));
 
 }
 
-void mix::XInputDevice::key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code)
+void mix::XInputDevice::key_release(std::chrono::nanoseconds event_time, xkb_keysym_t keysym, int scan_code)
 {
-    sink->handle_input(
-        builder->key_event(
-            event_time,
-            mir_keyboard_action_up,
-            key_sym,
-            key_code
-            )
-        );
+    sink->handle_input(builder->key_event(
+        event_time,
+        mir_keyboard_action_up,
+        keysym,
+        scan_code));
 }
 
 void mix::XInputDevice::update_button_state(int button)

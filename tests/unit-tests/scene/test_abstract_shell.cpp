@@ -391,7 +391,7 @@ TEST_F(AbstractShell, remove_display_adds_display_to_window_manager)
 TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 {
     MirKeyboardAction const action{mir_keyboard_action_down};
-    xkb_keysym_t const key_code{0};
+    xkb_keysym_t const keysym{0};
     int const scan_code{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
 
@@ -400,7 +400,7 @@ TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
         event_timestamp,
         cookie,
         action,
-        key_code,
+        keysym,
         scan_code,
         modifiers);
 
