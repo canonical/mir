@@ -138,9 +138,15 @@ auto miral::BasicWindowManager::add_surface(
 
     WindowSpecification spec = policy->place_new_window(session_info, place_new_surface(params));
 
-    if (!spec.depth_layer().is_set() && spec.parent().is_set())
-        if (auto parent_surface = spec.parent().value().lock())
+    auto const parent_surface = spec.parent().is_set() ? spec.parent().value().lock() : nullptr;
+
+    if (parent_surface)
+    {
+        if (!spec.depth_layer().is_set())
+        {
             spec.depth_layer() = parent_surface->depth_layer();
+        }
+    }
 
     scene::SurfaceCreationParameters parameters;
     spec.update(parameters);
@@ -148,18 +154,17 @@ auto miral::BasicWindowManager::add_surface(
     Window const window{session, surface};
     auto& window_info = this->window_info.emplace(window, WindowInfo{window, spec}).first->second;
 
-    if (spec.parent().is_set() && spec.parent().value().lock())
-        window_info.parent(info_for(spec.parent().value()).window());
+    session_info.add_window(window);
+
+    auto const parent = parent_surface ? info_for(parent_surface).window() : Window{};
+    window_info.parent(parent);
+    if (parent)
+    {
+        info_for(parent).add_child(window);
+    }
 
     if (spec.userdata().is_set())
         window_info.userdata() = spec.userdata().value();
-
-    session_info.add_window(window);
-
-    auto const parent = window_info.parent();
-
-    if (parent)
-        info_for(parent).add_child(window);
 
     for_each_workspace_containing(parent,
         [&](std::shared_ptr<miral::Workspace> const& workspace) { add_tree_to_workspace(window, workspace); });
