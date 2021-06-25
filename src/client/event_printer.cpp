@@ -220,7 +220,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
             auto key_event = mir_input_event_get_keyboard_event(&event);
             return out << "key_event(when=" << event_time << ", from=" << device_id << ", window_id=" << window_id << ", "
                 << mir_keyboard_event_action(key_event)
-                << ", code=" << mir_keyboard_event_key_code(key_event)
+                << ", code=" << mir_keyboard_event_keysym(key_event)
                 << ", scan=" << mir_keyboard_event_scan_code(key_event) << ", modifiers=" << std::hex
                 << static_cast<MirInputEventModifier>(mir_keyboard_event_modifiers(key_event)) << std::dec << ')';
         }

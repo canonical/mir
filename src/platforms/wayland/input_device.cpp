@@ -146,14 +146,14 @@ miw::KeyboardInputDevice::KeyboardInputDevice(std::shared_ptr<dispatch::ActionQu
 {
 }
 
-void miw::KeyboardInputDevice::key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code)
+void miw::KeyboardInputDevice::key_press(std::chrono::nanoseconds event_time, xkb_keysym_t keysym, int32_t scan_code)
 {
-    enqueue([=](EventBuilder* b) { return b->key_event(event_time, mir_keyboard_action_down, key_sym, key_code); });
+    enqueue([=](EventBuilder* b) { return b->key_event(event_time, mir_keyboard_action_down, keysym, scan_code); });
 }
 
-void miw::KeyboardInputDevice::key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code)
+void miw::KeyboardInputDevice::key_release(std::chrono::nanoseconds event_time, xkb_keysym_t keysym, int32_t scan_code)
 {
-    enqueue([=](EventBuilder* b) { return b->key_event(event_time, mir_keyboard_action_up, key_sym, key_code); });
+    enqueue([=](EventBuilder* b) { return b->key_event(event_time, mir_keyboard_action_up, keysym, scan_code); });
 }
 
 miw::PointerInputDevice::PointerInputDevice(std::shared_ptr<dispatch::ActionQueue> const& action_queue) :

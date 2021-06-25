@@ -40,7 +40,7 @@ public:
                                  std::shared_ptr<cookie::Authority> const& cookie_authority,
                                  std::shared_ptr<Seat> const& seat);
 
-    EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code, int scan_code) override;
+    EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t keysym, int scan_code) override;
 
     EventUPtr touch_event(Timestamp timestamp, std::vector<events::ContactState> const& contacts) override;
 

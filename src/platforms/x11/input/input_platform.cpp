@@ -152,6 +152,11 @@ void window_resized(mir::X::X11Resources* x11_resources, xcb_window_t x11_window
             }
         });
 }
+
+auto x11_keycode_get_scan_code(xcb_keycode_t x11_keycode) -> int
+{
+    return x11_keycode - 8;
+}
 }
 
 mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
@@ -389,19 +394,19 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
         // Key repeats look like a release and an immediate press with the same timestamp. The only way to detect and
         // discard them is by peaking at the next event.
 
-        next_pending_event_callback = [this, keycode = release_ev->detail, time = release_ev->time](auto next_event)
+        next_pending_event_callback = [this, x11_keycode = release_ev->detail, time = release_ev->time](auto next_event)
             {
                 if (next_event && (next_event.value()->response_type & ~0x80) == XCB_KEY_PRESS)
                 {
                     auto const press_ev = reinterpret_cast<xcb_key_press_event_t*>(next_event.value());
-                    if (press_ev->detail == keycode && press_ev->time == time)
+                    if (press_ev->detail == x11_keycode && press_ev->time == time)
                     {
                         // This event is a key repeat, so ignore it. Also consume the next event by returning true.
                         return true;
                     }
                 }
 
-                key_released(keycode, time);
+                key_released(x11_keycode, time);
                 return false; // do not consume next event, process it normally
             };
     }   break;
@@ -564,27 +569,27 @@ void mix::XInputPlatform::process_xkb_event(xcb_generic_event_t* event)
     }
 }
 
-void mix::XInputPlatform::key_pressed(xcb_keycode_t keycode, xcb_timestamp_t timestamp)
+void mix::XInputPlatform::key_pressed(xcb_keycode_t x11_keycode, xcb_timestamp_t timestamp)
 {
-    if (pressed_keys.insert(keycode).second)
+    if (pressed_keys.insert(x11_keycode).second)
     {
         auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::milliseconds{timestamp});
-        xkb_keysym_t keysym = xkb_state_key_get_one_sym(key_state, keycode);
-        // Why keycode - 8? Unclear.
-        core_keyboard->key_press(event_time, keysym, keycode - 8);
+        xkb_keysym_t const keysym = xkb_state_key_get_one_sym(key_state, x11_keycode);
+        auto const scan_code = x11_keycode_get_scan_code(x11_keycode);
+        core_keyboard->key_press(event_time, keysym, scan_code);
     }
 }
 
-void mix::XInputPlatform::key_released(xcb_keycode_t keycode, xcb_timestamp_t timestamp)
+void mix::XInputPlatform::key_released(xcb_keycode_t x11_keycode, xcb_timestamp_t timestamp)
 {
-    if (pressed_keys.erase(keycode))
+    if (pressed_keys.erase(x11_keycode))
     {
         auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::milliseconds{timestamp});
-        xkb_keysym_t keysym = xkb_state_key_get_one_sym(key_state, keycode);
-        // Why keycode - 8? Unclear.
-        core_keyboard->key_release(event_time, keysym, keycode - 8);
+        xkb_keysym_t keysym = xkb_state_key_get_one_sym(key_state, x11_keycode);
+        auto const scan_code = x11_keycode_get_scan_code(x11_keycode);
+        core_keyboard->key_release(event_time, keysym, scan_code);
     }
 }
 

@@ -45,13 +45,13 @@ typedef struct MirKeyboardEvent MirKeyboardEvent;
 MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* event);
 
 /**
- * Retrieve the xkb mapped keycode associated with the key acted on.. May
+ * Retrieve the xkb mapped keysym associated with the key acted on.. May
  * be interpreted as per <xkbcommon/xkb-keysyms.h>
  *
  *   \param [in] event The key event
  *   \return           The xkb_keysym
  */
-xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* event);
+xkb_keysym_t mir_keyboard_event_keysym(MirKeyboardEvent const* event);
 
 /**
  * Retrieve the raw hardware scan code associated with the key acted on. May

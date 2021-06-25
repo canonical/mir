@@ -245,7 +245,7 @@ auto dump_of(MirKeyboardEvent const* event) -> std::string
 
         bout.append("from", device_id)
             .append("action", mir_keyboard_event_action(event))
-            .append("code", mir_keyboard_event_key_code(event))
+            .append("sym", mir_keyboard_event_keysym(event))
             .append("scan", mir_keyboard_event_scan_code(event));
 
         out.setf(std::ios_base::hex, std::ios_base::basefield);

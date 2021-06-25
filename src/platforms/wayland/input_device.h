@@ -86,8 +86,8 @@ public:
     explicit KeyboardInputDevice(std::shared_ptr<dispatch::ActionQueue> const& action_queue);
 
 private:
-    void key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code) override;
-    void key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code) override;
+    void key_press(std::chrono::nanoseconds event_time, xkb_keysym_t keysym, int32_t scan_code) override;
+    void key_release(std::chrono::nanoseconds event_time, xkb_keysym_t keysym, int32_t scan_code) override;
 };
 
 class PointerInputDevice : public GenericInputDevice, public PointerInput

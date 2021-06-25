@@ -454,3 +454,11 @@ MIR_COMMON_2.5 {
   };
 
 } MIR_COMMON_0.26;
+
+MIR_COMMON_2.6 {
+ global:
+  extern "C++" {
+    MirKeyboardEvent::keysym*;
+    MirKeyboardEvent::set_keysym*;
+  };
+} MIR_COMMON_2.5;

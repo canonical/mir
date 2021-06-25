@@ -32,8 +32,8 @@ struct MirKeyboardEvent : MirInputEvent
     MirKeyboardAction action() const;
     void set_action(MirKeyboardAction action);
 
-    int32_t key_code() const;
-    void set_key_code(int32_t key_code);
+    int32_t keysym() const;
+    void set_keysym(int32_t keysym);
 
     int32_t scan_code() const;
     void set_scan_code(int32_t scan_code);
@@ -43,7 +43,7 @@ struct MirKeyboardEvent : MirInputEvent
 
 private:
     MirKeyboardAction action_ = {};
-    int32_t key_code_ = 0;
+    int32_t keysym_ = 0;
     int32_t scan_code_ = 0;
     std::string text_ = {};
 };

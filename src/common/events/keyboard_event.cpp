@@ -39,14 +39,14 @@ void MirKeyboardEvent::set_action(MirKeyboardAction action)
     action_ = action;
 }
 
-int32_t MirKeyboardEvent::key_code() const
+int32_t MirKeyboardEvent::keysym() const
 {
-    return key_code_;
+    return keysym_;
 }
 
-void MirKeyboardEvent::set_key_code(int32_t key_code)
+void MirKeyboardEvent::set_keysym(int32_t keysym)
 {
-    key_code_ = key_code;
+    keysym_ = keysym;
 }
 
 int32_t MirKeyboardEvent::scan_code() const
