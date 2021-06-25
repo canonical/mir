@@ -85,6 +85,11 @@ inline bool operator!=(Window const& lhs, std::shared_ptr<mir::scene::Surface> c
 inline bool operator>(Window const& lhs, Window const& rhs) { return rhs < lhs; }
 inline bool operator<=(Window const& lhs, Window const& rhs) { return !(lhs > rhs); }
 inline bool operator>=(Window const& lhs, Window const& rhs) { return !(lhs < rhs); }
+
+/// Customization for Google test (to print surface name in errors)
+/// \see https://github.com/google/googletest/blob/master/docs/advanced.md#teaching-googletest-how-to-print-your-values
+/// \remark Since MirAL 3.3
+void PrintTo(Window const& bar, std::ostream* os);
 }
 
 #endif //MIRAL_WINDOW_H

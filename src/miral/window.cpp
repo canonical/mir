@@ -125,3 +125,11 @@ bool miral::operator<(Window const& lhs, Window const& rhs)
 {
     return lhs.self.owner_before(rhs.self);
 }
+
+void miral::PrintTo(Window const& window, std::ostream* out)
+{
+    if (std::shared_ptr<mir::scene::Surface> surface = window)
+        *out << surface->name();
+    else
+        *out << "(nul)";
+}

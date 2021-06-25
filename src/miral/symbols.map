@@ -446,3 +446,10 @@ global:
     miral::Output::logical_group_id*;
   };
 } MIRAL_3.1;
+
+MIRAL_3.3 {
+global:
+  extern "C++" {
+    miral::PrintTo*;
+  };
+} MIRAL_3.2;
