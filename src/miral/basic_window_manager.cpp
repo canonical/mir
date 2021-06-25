@@ -146,6 +146,10 @@ auto miral::BasicWindowManager::add_surface(
         {
             spec.depth_layer() = parent_surface->depth_layer();
         }
+        if (!spec.focus_mode().is_set())
+        {
+            spec.focus_mode() = parent_surface->focus_mode();
+        }
     }
 
     scene::SurfaceCreationParameters parameters;

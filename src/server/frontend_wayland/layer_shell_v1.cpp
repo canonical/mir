@@ -543,13 +543,6 @@ void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactiv
     msh::SurfaceSpecification spec;
     spec.focus_mode = current_focus_mode;
     apply_spec(spec);
-    for (auto const& popup : popups)
-    {
-        if (popup)
-        {
-            popup.value().apply_spec(spec);
-        }
-    }
 }
 
 void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
@@ -567,7 +560,6 @@ void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
 
     mir::shell::SurfaceSpecification spec;
     spec.parent = scene_surface_.value();
-    spec.focus_mode = current_focus_mode;
     popup_window_role->apply_spec(spec);
 
     // Ideally we'd do this in a callback when popups are destroyed, but in practice waiting until a new popup is
