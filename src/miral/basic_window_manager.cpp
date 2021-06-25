@@ -274,11 +274,11 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
 }
 
 void miral::BasicWindowManager::refocus(
-    miral::Application const& application, miral::Window const& parent,
+    miral::Application const& application, miral::Window const& hint,
     std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window)
 {
-    // Try to make the parent active
-    if (parent && parent == select_active_window(parent))
+    // If there's a hint, try using that first
+    if (hint && hint == select_active_window(hint))
         return;
 
     if (can_activate_window_for_session_in_workspace(application, workspaces_containing_window))
