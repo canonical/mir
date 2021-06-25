@@ -41,7 +41,6 @@ set_target_properties(mirclient
 
 set(LINKS
   mircommon
-  mircookie
 
   ${XKBCOMMON_LIBRARIES}
 )
