@@ -99,19 +99,19 @@ TEST(KeyInputEventProperties, up_and_down_actions_copied_from_old_style_event)
     EXPECT_EQ(mir_keyboard_action_up, mir_keyboard_event_action(new_kev));
 }
 
-TEST(KeyInputEventProperties, keycode_scancode_and_modifiers_taken_from_old_style_event)
+TEST(KeyInputEventProperties, keysym_scancode_and_modifiers_taken_from_old_style_event)
 {
-    xkb_keysym_t key_code = 171;
+    xkb_keysym_t keysym = 171;
     int scan_code = 31;
     MirInputEventModifiers modifiers = mir_input_event_modifier_shift;
 
     MirKeyboardEvent old_ev;
-    old_ev.set_key_code(key_code);
+    old_ev.set_keysym(keysym);
     old_ev.set_scan_code(scan_code);
     old_ev.set_modifiers(modifiers);
 
     auto new_kev = mir_input_event_get_keyboard_event(mir_event_get_input_event(&old_ev));
-    EXPECT_EQ(key_code, mir_keyboard_event_key_code(new_kev));
+    EXPECT_EQ(keysym, mir_keyboard_event_keysym(new_kev));
     EXPECT_EQ(scan_code, mir_keyboard_event_scan_code(new_kev));
     EXPECT_EQ(modifiers, mir_keyboard_event_modifiers(new_kev));
 }

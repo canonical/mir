@@ -36,11 +36,11 @@ mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id,
 {
 }
 
-mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code,
+mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t keysym,
                                                   int scan_code)
 {
     auto const cookie = cookie_authority->make_cookie(timestamp.count());
-    return me::make_event(device_id, timestamp, cookie->serialize(), action, key_code, scan_code, mir_input_event_modifier_none);
+    return me::make_event(device_id, timestamp, cookie->serialize(), action, keysym, scan_code, mir_input_event_modifier_none);
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirPointerAction action,

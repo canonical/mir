@@ -154,7 +154,7 @@ mir::EventUPtr mev::make_event(frontend::SurfaceId const& surface_id, geometry::
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t key_code,
+    std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t keysym,
     int scan_code, MirInputEventModifiers modifiers)
 {
     auto e = new_event<MirKeyboardEvent>();
@@ -163,7 +163,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     e->set_event_time(timestamp);
     e->set_cookie(cookie);
     e->set_action(action);
-    e->set_key_code(key_code);
+    e->set_keysym(keysym);
     e->set_scan_code(scan_code);
     e->set_modifiers(modifiers);
 

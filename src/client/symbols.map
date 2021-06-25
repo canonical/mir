@@ -40,7 +40,7 @@ MIR_CLIENT_2.5 {
   mir_input_event_has_cookie;
   mir_keyboard_event_action;
   mir_keyboard_event_input_event;
-  mir_keyboard_event_key_code;
+  mir_keyboard_event_keysym;
   mir_keyboard_event_key_text;
   mir_keyboard_event_modifiers;
   mir_keyboard_event_scan_code;

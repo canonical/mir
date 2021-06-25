@@ -129,9 +129,9 @@ MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* kev) MIR_HAN
     return kev->action();
 })
 
-xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_EXCEPTION(
+xkb_keysym_t mir_keyboard_event_keysym(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_EXCEPTION(
 {
-    return kev->key_code();
+    return kev->keysym();
 })
 
 int mir_keyboard_event_scan_code(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_EXCEPTION(
