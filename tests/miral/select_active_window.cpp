@@ -62,17 +62,6 @@ struct SelectActiveWindow : mt::TestWindowManagerTools
 };
 }
 
-namespace std
-{
-auto operator<<(std::ostream& out, miral::Window const& window) -> std::ostream&
-{
-    if (std::shared_ptr<mir::scene::Surface> surface = window)
-        return out << surface->name();
-    else
-        return out << "(nul)";
-}
-}
-
 // lp:1626659
 // "If the surface has a child dialog, the deepest descendant
 // dialog should receive input focus."
@@ -92,8 +81,7 @@ TEST_F(SelectActiveWindow, given_a_child_dialog_when_selecting_the_parent_the_di
     auto dialog = create_window(creation_parameters);
 
     auto actual = basic_window_manager.select_active_window(parent);
-    EXPECT_THAT(actual, Eq(dialog))
-        << "actual=" << actual << ", expected=" << dialog;
+    EXPECT_THAT(actual, Eq(dialog));
 }
 
 TEST_F(SelectActiveWindow, given_a_hidden_child_dialog_when_selecting_the_parent_the_parent_receives_focus)
@@ -116,6 +104,5 @@ TEST_F(SelectActiveWindow, given_a_hidden_child_dialog_when_selecting_the_parent
     basic_window_manager.modify_window(basic_window_manager.info_for(dialog), mods);
 
     auto actual = basic_window_manager.select_active_window(parent);
-    EXPECT_THAT(actual, Eq(parent))
-                << "actual=" << actual << ", expected=" << parent;
+    EXPECT_THAT(actual, Eq(parent));
 }
