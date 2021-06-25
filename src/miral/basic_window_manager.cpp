@@ -287,7 +287,7 @@ void miral::BasicWindowManager::refocus(
     std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window)
 {
     // If there's a hint, try using that first
-    if (hint && hint == select_active_window(hint))
+    if (hint && select_active_window(hint))
         return;
 
     if (can_activate_window_for_session_in_workspace(application, workspaces_containing_window))
