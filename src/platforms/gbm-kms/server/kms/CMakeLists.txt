@@ -1,6 +1,5 @@
 include_directories(
     ${server_common_include_dirs}
-    ${PROJECT_SOURCE_DIR}/include/client
     ..
 )
 
@@ -11,7 +10,6 @@ include_directories(
     ${GL_INCLUDE_DIRS}
     ${WAYLAND_SERVER_INCLUDE_DIRS}
     ${UDEV_INCLUDE_DIRS}
-    ${PROJECT_SOURCE_DIR}/include/client
     ${CMAKE_CURRENT_BINARY_DIR}/../
     ${PROJECT_SOURCE_DIR}/include/wayland
 )

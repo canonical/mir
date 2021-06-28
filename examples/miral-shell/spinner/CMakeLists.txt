@@ -43,7 +43,6 @@ png2header(
 )
 
 include_directories(
-  ${PROJECT_SOURCE_DIR}/include/client
   ${GLIB_INCLUDE_DIRS}
   ${GLESv2_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}

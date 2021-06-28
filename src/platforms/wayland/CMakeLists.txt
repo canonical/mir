@@ -18,7 +18,6 @@ target_include_directories(mirplatformwayland-graphics
 PUBLIC
     ${server_common_include_dirs}
     ${PROJECT_SOURCE_DIR}/include/common
-    ${PROJECT_SOURCE_DIR}/include/client
     ${GBM_INCLUDE_DIRS}
     ${DRM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
@@ -58,7 +57,6 @@ target_include_directories(mirplatformwayland-input
 PUBLIC
     ${server_common_include_dirs}
     ${PROJECT_SOURCE_DIR}/include/common
-    ${PROJECT_SOURCE_DIR}/include/client
 )
 
 add_library(mirplatformwayland MODULE
