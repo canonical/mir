@@ -15,7 +15,10 @@ add_library(mir-public-test OBJECT
   spin_wait.cpp
 )
 
-target_link_libraries(mir-public-test mircore)
+target_link_libraries(mir-public-test
+  LINK_PUBLIC
+    mircore
+)
 
 add_library(mir-test-static STATIC
   fake_clock.cpp
@@ -25,7 +28,10 @@ add_library(mir-test-static STATIC
   $<TARGET_OBJECTS:mir-public-test>
 )
 
-target_link_libraries(mir-test-static mircore)
+target_link_libraries(mir-test-static
+  LINK_PUBLIC
+    mircore
+)
 
 if (NOT HAVE_PTHREAD_GETNAME_NP)
     set_source_files_properties (current_thread_name.cpp PROPERTIES COMPILE_DEFINITIONS MIR_DONT_USE_PTHREAD_GETNAME_NP

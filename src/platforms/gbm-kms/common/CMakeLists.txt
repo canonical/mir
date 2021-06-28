@@ -9,4 +9,7 @@ add_library(
   gbm_format_conversions.cpp
 )
 
-target_link_libraries(mirsharedgbm-static mircore)
+target_link_libraries(mirsharedgbm-static
+  LINK_PUBLIC
+    mircore
+)

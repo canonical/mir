@@ -29,7 +29,10 @@ add_library(mirclientobjects OBJECT
   ${MIR_CLIENT_SOURCES}
 )
 
-target_link_libraries(mirclientobjects mircore)
+target_link_libraries(mirclientobjects
+  LINK_PUBLIC
+    mircore
+)
 
 add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
 

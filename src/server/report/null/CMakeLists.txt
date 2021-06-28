@@ -11,4 +11,7 @@ add_library(
     shell_report.h
 )
 
-target_link_libraries(mirnullreport mircore)
+target_link_libraries(mirnullreport
+  LINK_PUBLIC
+    mircore
+)

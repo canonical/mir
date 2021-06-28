@@ -18,4 +18,7 @@ add_library(
   ${DECORATION_SOURCES}
 )
 
-target_link_libraries(mirshelldecoration mircore)
+target_link_libraries(mirshelldecoration
+  LINK_PUBLIC
+    mircore
+)

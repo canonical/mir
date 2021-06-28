@@ -20,7 +20,11 @@ add_library(mirsharedinput OBJECT
   ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp
 )
 
-target_link_libraries(mirsharedinput mircookie mircore)
+target_link_libraries(mirsharedinput
+  LINK_PUBLIC
+    mircore
+    mircookie
+)
 
 list(APPEND MIR_CLIENT_REFERENCES ${XKBCOMMON_LIBRARIES})
 

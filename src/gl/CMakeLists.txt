@@ -12,5 +12,6 @@ ADD_LIBRARY(
 
 
 target_link_libraries(mirgl
+  LINK_PUBLIC
     mircore
 )

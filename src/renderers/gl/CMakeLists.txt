@@ -32,4 +32,8 @@ ADD_LIBRARY(
   renderer_factory.cpp
 )
 
-target_link_libraries(mirrenderergl mircore)
+target_link_libraries(mirrenderergl
+  LINK_PUBLIC
+    mircore
+)
+

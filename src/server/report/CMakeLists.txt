@@ -9,4 +9,7 @@ add_library(
     reports.h
 )
 
-target_link_libraries(mirreport mircore)
+target_link_libraries(mirreport
+  LINK_PUBLIC
+    mircore
+)

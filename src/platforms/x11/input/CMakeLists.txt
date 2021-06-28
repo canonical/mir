@@ -10,7 +10,10 @@ add_library(
   input_device.cpp
 )
 
-target_link_libraries(mirplatforminputx11objects mircore)
+target_link_libraries(mirplatforminputx11objects
+  LINK_PUBLIC
+    mircore
+)
 
 add_library(
   mirplatforminputx11objects-symbols OBJECT

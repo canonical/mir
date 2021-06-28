@@ -50,7 +50,8 @@ add_library(mirplatformwayland-input STATIC
 )
 
 target_link_libraries(mirplatformwayland-input
-  mircore
+  LINK_PUBLIC
+    mircore
 )
 
 target_include_directories(mirplatformwayland-input

@@ -36,10 +36,9 @@ target_include_directories(mircore
 )
 
 
-target_link_libraries(
-  mircore
-
-  ${Boost_SYSTEM_LIBRARY}
+target_link_libraries(mircore
+  LINK_PRIVATE
+    ${Boost_SYSTEM_LIBRARY}
 )
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)

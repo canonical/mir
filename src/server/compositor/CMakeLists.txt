@@ -25,4 +25,8 @@ ADD_LIBRARY(
   ${MIR_COMPOSITOR_SRCS}
 )
 
-target_link_libraries(mircompositor mircore)
+target_link_libraries(mircompositor
+  LINK_PUBLIC
+    mircore
+)
+

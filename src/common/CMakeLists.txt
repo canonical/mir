@@ -49,8 +49,9 @@ add_library(mircommon SHARED
 )
 
 target_link_libraries(mircommon
-  mircore
-  ${MIR_COMMON_REFERENCES}
+  LINK_PUBLIC
+    mircore
+    ${MIR_COMMON_REFERENCES}
 )
 
 
