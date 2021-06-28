@@ -114,7 +114,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon7 (= ${binary:Version}),
+Depends: libmircommon8 (= ${binary:Version}),
          libmircore-dev (= ${binary:Version}),
          libprotobuf-dev (>= 2.4.1),
          libxkbcommon-dev,
@@ -243,7 +243,7 @@ Description: Display server for Ubuntu - shared library
  .
  Contains the shared libraries required for the Mir server and client.
 
-Package: libmircommon7
+Package: libmircommon8
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
