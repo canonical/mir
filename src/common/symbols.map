@@ -95,10 +95,7 @@ MIR_COMMON_2.5 {
     MirKeyboardConfig::operator*;
     MirKeyboardEvent::MirKeyboardEvent*;
     MirKeyboardEvent::action*;
-    MirKeyboardEvent::cookie*;
-    MirKeyboardEvent::device_id*;
-    MirKeyboardEvent::event_time*;
-    MirKeyboardEvent::key_code*;
+    MirKeyboardEvent::keysym*;
     MirKeyboardEvent::modifiers*;
     MirKeyboardEvent::scan_code*;
     MirKeyboardEvent::set_action*;
@@ -106,6 +103,7 @@ MIR_COMMON_2.5 {
     MirKeyboardEvent::set_device_id*;
     MirKeyboardEvent::set_event_time*;
     MirKeyboardEvent::set_key_code*;
+    MirKeyboardEvent::set_keysym*;
     MirKeyboardEvent::set_modifiers*;
     MirKeyboardEvent::set_scan_code*;
     MirKeyboardEvent::set_source_id*;
