@@ -30,6 +30,12 @@ add_library(mircore SHARED
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/mir_version_number.h
 )
 
+target_include_directories(mircore
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/core
+)
+
+
 target_link_libraries(
   mircore
 

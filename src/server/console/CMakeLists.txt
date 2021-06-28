@@ -23,6 +23,8 @@ set_source_files_properties(
     "${CMAKE_C_FLAGS} -Wno-pedantic -Wno-unused-parameter -Wno-unused-function"
 )
 
+target_link_libraries(mirconsole mircore)
+
 set_property(
     SOURCE logind_console_services.cpp default_configuration.cpp
     PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)

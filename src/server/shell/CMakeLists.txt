@@ -24,3 +24,6 @@ add_library(
 
   ${SHELL_SOURCES}
 )
+
+target_link_libraries(mirshell mircore)
+

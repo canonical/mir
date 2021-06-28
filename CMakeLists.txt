@@ -195,7 +195,6 @@ add_compile_definitions(LOG_NDEBUG=1)
 enable_testing()
 find_package(PkgConfig)
 
-include_directories(include/core)
 include_directories(include/common)
 
 # Check for boost

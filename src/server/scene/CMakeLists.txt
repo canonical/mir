@@ -34,3 +34,5 @@ ADD_LIBRARY(
   surface_state_tracker.cpp
   ${CMAKE_SOURCE_DIR}/src/include/server/mir/scene/surface_observer.h
 )
+
+target_link_libraries(mirscene mircore)

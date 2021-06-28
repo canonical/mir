@@ -69,7 +69,7 @@ add_library(mirserverobjects OBJECT
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/synchronised.h
 )
 
-target_link_libraries(mirserverobjects mircookie)
+target_link_libraries(mirserverobjects mircookie mircore)
 
 set_property(
     SOURCE glib_main_loop.cpp glib_main_loop_sources.cpp default_server_configuration.cpp

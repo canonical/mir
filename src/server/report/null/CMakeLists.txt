@@ -10,3 +10,5 @@ add_library(
     shell_report.cpp
     shell_report.h
 )
+
+target_link_libraries(mirnullreport mircore)

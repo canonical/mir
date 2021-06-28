@@ -46,6 +46,8 @@ add_library(
   ${LTTNG_SOURCES}
 )
 
+target_link_libraries(mirlttng mircore)
+
 add_library(mirserverlttng SHARED tracepoints.c)
 
 target_link_libraries(

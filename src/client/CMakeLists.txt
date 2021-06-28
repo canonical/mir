@@ -15,7 +15,7 @@ set(symbol_map ${CMAKE_SOURCE_DIR}/src/client/symbols.map)
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirclient")
 
 set(MIR_CLIENT_SOURCES)
-set(MIR_CLIENT_REFERENCES mircommon)
+set(MIR_CLIENT_REFERENCES mircommon mircore)
 
 add_subdirectory(events)
 add_subdirectory(input)
@@ -28,6 +28,8 @@ add_library(mirclientobjects OBJECT
   mir_cursor_api.cpp
   ${MIR_CLIENT_SOURCES}
 )
+
+target_link_libraries(mirclientobjects mircore)
 
 add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
 

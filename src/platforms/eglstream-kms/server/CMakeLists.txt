@@ -31,6 +31,10 @@ add_library(mirplatformgraphicseglstreamkmsobjects OBJECT
   threaded_drm_event_handler.cpp
 )
 
+target_link_libraries(mirplatformgraphicseglstreamkmsobjects
+  mircore
+)
+
 add_library(mirplatformgraphicseglstreamkms MODULE
   $<TARGET_OBJECTS:mirplatformgraphicseglstreamkmsobjects>
 )

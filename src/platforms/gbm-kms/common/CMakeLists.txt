@@ -8,3 +8,5 @@ add_library(
   mirsharedgbm-static STATIC
   gbm_format_conversions.cpp
 )
+
+target_link_libraries(mirsharedgbm-static mircore)
