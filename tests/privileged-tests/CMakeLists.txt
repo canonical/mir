@@ -21,6 +21,6 @@ target_link_libraries(
 
   mir-test-static
   mir-test-framework-static
-  mirclient
+  mircommon
 )
 

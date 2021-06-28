@@ -72,7 +72,6 @@ target_link_libraries(miral-spinner
   ${WAYLAND_EGL_LDFLAGS} ${WAYLAND_EGL_LIBRARIES}
   ${GLIB_LDFLAGS}
   ${GLESv2_LIBRARIES}
-  ${MIRCLIENT_LDFLAGS}
 )
 
 target_include_directories(miral-spinner

@@ -123,7 +123,7 @@ add_library(mirserver SHARED
 target_link_libraries(mirserver
   PUBLIC
 
-    mirclient
+
     mirplatform
     mircommon
     mircookie

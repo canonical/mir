@@ -17,6 +17,7 @@
 set(EVENT_SOURCES
   close_surface_event.cpp
   event.cpp
+  event_builders.cpp
   keyboard_event.cpp
   touch_event.cpp
   pointer_event.cpp

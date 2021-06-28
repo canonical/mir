@@ -187,7 +187,6 @@ add_library(mir-test-assist STATIC
 
 target_link_libraries(mir-test-assist
 PUBLIC
-  mirclient
   miral
   mirserver
 

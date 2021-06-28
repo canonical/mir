@@ -93,7 +93,6 @@ add_dependencies(mir-test-framework-static GMock)
 target_link_libraries(mir-test-framework-static
 
   mirserver
-  mirclient
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
