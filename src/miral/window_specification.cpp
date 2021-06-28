@@ -73,6 +73,7 @@ struct miral::WindowSpecification::Self
     mir::optional_value<mir::optional_value<mir::geometry::Rectangle>> exclusive_rect;
     mir::optional_value<std::string> application_id;
     mir::optional_value<bool> server_side_decorated;
+    mir::optional_value<MirFocusMode> focus_mode;
     mir::optional_value<std::shared_ptr<void>> userdata;
 };
 
@@ -108,7 +109,8 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     attached_edges(spec.attached_edges),
     exclusive_rect(spec.exclusive_rect),
     application_id(spec.application_id),
-    server_side_decorated() // Not currently on SurfaceSpecification
+    server_side_decorated(), // Not currently on SurfaceSpecification
+    focus_mode(spec.focus_mode)
 {
     if (spec.aux_rect_placement_offset_x.is_set() && spec.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{spec.aux_rect_placement_offset_x.value(), spec.aux_rect_placement_offset_y.value()};
@@ -245,7 +247,8 @@ miral::WindowSpecification::Self::Self(mir::scene::SurfaceCreationParameters con
     attached_edges(params.attached_edges),
     exclusive_rect(params.exclusive_rect),
     application_id(params.application_id),
-    server_side_decorated(params.server_side_decorated)
+    server_side_decorated(params.server_side_decorated),
+    focus_mode(params.focus_mode)
 {
     if (params.aux_rect_placement_offset_x.is_set() && params.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{params.aux_rect_placement_offset_x.value(), params.aux_rect_placement_offset_y.value()};
@@ -316,6 +319,7 @@ void miral::WindowSpecification::Self::update(mir::scene::SurfaceCreationParamet
     copy_if_set(params.exclusive_rect, exclusive_rect.value());
     copy_if_set(params.application_id, application_id);
     copy_if_set(params.server_side_decorated, server_side_decorated);
+    copy_if_set(params.focus_mode, focus_mode);
 
     if (aux_rect_placement_offset.is_set())
     {
@@ -663,6 +667,16 @@ auto miral::WindowSpecification::server_side_decorated() const -> mir::optional_
 auto miral::WindowSpecification::server_side_decorated() -> mir::optional_value<bool>&
 {
     return self->server_side_decorated;
+}
+
+auto miral::WindowSpecification::focus_mode() const -> mir::optional_value<MirFocusMode> const&
+{
+    return self->focus_mode;
+}
+
+auto miral::WindowSpecification::focus_mode() -> mir::optional_value<MirFocusMode>&
+{
+    return self->focus_mode;
 }
 
 auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_ptr<void>>&

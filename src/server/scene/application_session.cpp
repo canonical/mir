@@ -147,6 +147,8 @@ auto ms::ApplicationSession::create_surface(
         surface->set_depth_layer(params.depth_layer.value());
     if (params.application_id.is_set())
         surface->set_application_id(params.application_id.value());
+    if (params.focus_mode.is_set())
+        surface->set_focus_mode(params.focus_mode.value());
 
     return surface;
 }

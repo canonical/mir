@@ -451,5 +451,7 @@ MIRAL_3.3 {
 global:
   extern "C++" {
     miral::PrintTo*;
+    miral::WindowInfo::focus_mode*;
+    miral::WindowSpecification::focus_mode*;
   };
 } MIRAL_3.2;

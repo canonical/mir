@@ -433,4 +433,15 @@ typedef enum MirDepthLayer
     mir_depth_layer_overlay,            /**< For overlays such as lock screens (heighest layer) */
 } MirDepthLayer;
 
+/**
+ * Focus mode controls how a surface gains and loses focus.
+ */
+typedef enum MirFocusMode
+{
+    mir_focus_mode_focusable,    /**< The surface can gain and lose focus normally */
+    mir_focus_mode_disabled,     /**< The surface will never be given focus */
+    mir_focus_mode_grabbing,     /**< This mode causes the surface to take focus if possible, and prevents focus from
+                                      leaving it as long as it has this mode */
+} MirFocusMode;
+
 #endif

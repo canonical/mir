@@ -47,6 +47,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     window_placement_maximized.cpp
     resize_and_move.cpp
     ignored_requests.cpp
+    focus_mode.cpp
     ${MIRAL_TEST_SOURCES}
 )
 

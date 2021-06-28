@@ -114,6 +114,9 @@ struct SurfaceSpecification
     optional_value<MirPlacementGravity> attached_edges;
     optional_value<optional_value<geometry::Rectangle>> exclusive_rect;
     optional_value<std::string> application_id;
+
+    /// How the surface should gain and lose focus
+    optional_value<MirFocusMode> focus_mode;
 };
 }
 }

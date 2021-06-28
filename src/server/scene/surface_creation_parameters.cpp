@@ -209,6 +209,8 @@ void ms::SurfaceCreationParameters::update_from(msh::SurfaceSpecification const&
     if (that.application_id.is_set())
         application_id = that.application_id.value();
     // server_side_decorated not a property of SurfaceSpecification
+    if (that.focus_mode.is_set())
+        focus_mode = that.focus_mode;
     // TODO: should SurfaceCreationParameters support cursors?
 //     if (that.cursor_image.is_set())
 //         cursor_image = that.cursor_image;
@@ -257,7 +259,8 @@ bool ms::operator==(
         lhs.attached_edges == rhs.attached_edges &&
         lhs.exclusive_rect == rhs.exclusive_rect &&
         lhs.application_id == rhs.application_id &&
-        lhs.server_side_decorated == rhs.server_side_decorated;
+        lhs.server_side_decorated == rhs.server_side_decorated &&
+        lhs.focus_mode == rhs.focus_mode;
 }
 
 bool ms::operator!=(

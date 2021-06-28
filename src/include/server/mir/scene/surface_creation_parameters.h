@@ -135,6 +135,9 @@ struct SurfaceCreationParameters
 
     /// If to enable server-side decorations for this surface
     optional_value<bool> server_side_decorated;
+
+    /// How the surface should gain and lose focus
+    optional_value<MirFocusMode> focus_mode;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);

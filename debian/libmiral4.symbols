@@ -396,3 +396,6 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::Output::logical_group_id() const@MIRAL_3.2" 3.2.0
  MIRAL_3.3@MIRAL_3.3 3.3.0
  (c++)"miral::PrintTo(miral::Window const&, std::basic_ostream<char, std::char_traits<char> >*)@MIRAL_3.3" 3.3.0
+ (c++)"miral::WindowInfo::focus_mode() const@MIRAL_3.3" 3.3.0
+ (c++)"miral::WindowSpecification::focus_mode() const@MIRAL_3.3" 3.3.0
+ (c++)"miral::WindowSpecification::focus_mode()@MIRAL_3.3" 3.3.0
