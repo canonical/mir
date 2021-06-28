@@ -16,7 +16,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${GLIB_INCLUDE_DIRS}
   ${GIO_INCLUDE_DIRS}
@@ -69,6 +68,8 @@ add_library(mirserverobjects OBJECT
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop_sources.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/synchronised.h
 )
+
+target_link_libraries(mirserverobjects mircookie)
 
 set_property(
     SOURCE glib_main_loop.cpp glib_main_loop_sources.cpp default_server_configuration.cpp
