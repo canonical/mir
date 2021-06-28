@@ -270,7 +270,7 @@ bool dispatch_scene_change_enter_exit_events(
                 mir_pointer_event_axis_value(ctx.pev, mir_pointer_axis_y),
                 0, 0, // No scrolling
                 0, 0  // No relative motion
-                                                      );
+            );
 
             auto const synth_iev = mir_event_get_input_event(event.get());
             auto const synth_pev = mir_input_event_get_pointer_event(synth_iev);
@@ -292,7 +292,7 @@ bool dispatch_scene_change_enter_exit_events(
                 mir_pointer_event_axis_value(ctx.pev, mir_pointer_axis_y),
                 0, 0, // No scrolling
                 0, 0  // No relative motion
-                                                      );
+            );
 
             auto const synth_iev = mir_event_get_input_event(event.get());
             auto const synth_pev = mir_input_event_get_pointer_event(synth_iev);
@@ -326,7 +326,7 @@ void send_motion_event_to_moved_surface(
             mir_pointer_event_axis_value(ctx.pev, mir_pointer_axis_y),
             0, 0, // No scrolling
             0, 0  // No relative motion
-                                                  );
+        );
 
         send_motion(ctx.target_surface, event.get());
     }
