@@ -9,3 +9,8 @@ add_library(miroptions OBJECT
 
   ${CHOICE_SOURCES}
 )
+
+target_link_libraries(miroptions
+  LINK_PUBLIC
+    mircore
+)

@@ -50,6 +50,11 @@ add_library(mir-public-test-framework OBJECT
   test_display_server.cpp  ${PROJECT_SOURCE_DIR}/include/test/miral/test_display_server.h
 )
 
+target_link_libraries(mir-public-test-framework
+  LINK_PUBLIC
+    mircore
+)
+
 set_property(
     SOURCE udev_environment.cpp
     PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
@@ -63,7 +68,17 @@ add_library(mir-protected-test-framework OBJECT
   input_testing_server_options.cpp
 )
 
+target_link_libraries(mir-protected-test-framework
+  LINK_PUBLIC
+    mircore
+)
+
 add_library(mir-libinput-test-framework OBJECT libinput_environment.cpp)
+target_link_libraries(mir-libinput-test-framework
+  LINK_PUBLIC
+    mircore
+)
+
 add_library(mir-umock-test-framework OBJECT udev_environment.cpp)
 
 
@@ -95,6 +110,11 @@ add_library(
   fake_input_device_impl.cpp
   stub_input_platform.cpp
   )
+
+target_link_libraries(mir-test-input-framework
+  LINK_PUBLIC
+    mircore
+)
 
 add_library(
   mirplatforminputstub MODULE

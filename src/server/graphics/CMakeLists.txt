@@ -17,3 +17,8 @@ add_library(
   platform_probe.cpp
   platform_probe.h
 )
+
+target_link_libraries(mirgraphics
+  LINK_PUBLIC
+    mircore
+)

@@ -9,3 +9,9 @@ ADD_LIBRARY(
 
   tessellation_helpers.cpp
 )
+
+
+target_link_libraries(mirgl
+  LINK_PUBLIC
+    mircore
+)

@@ -74,6 +74,11 @@ add_library(mir-public-test-doubles OBJECT
   fake_display.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/fake_display.h
 )
 
+target_link_libraries(mir-public-test-doubles
+  LINK_PUBLIC
+    mircore
+)
+
 add_library(mir-test-doubles-static STATIC
   $<TARGET_OBJECTS:mir-public-test-doubles>
   ${TEST_UTILS_SRCS}
@@ -95,6 +100,11 @@ target_link_libraries(mir-test-doubles-static
 
 add_library(mir-public-test-doubles-platform OBJECT
   ${MIR_TEST_DOUBLES_PLATFORM_SRCS}
+)
+
+target_link_libraries(mir-public-test-doubles-platform
+  LINK_PUBLIC
+    mircore
 )
 
 add_library(

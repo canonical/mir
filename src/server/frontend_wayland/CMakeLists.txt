@@ -80,3 +80,9 @@ add_library(mirfrontend-wayland OBJECT
 
   ${WAYLAND_SOURCES}
 )
+
+target_link_libraries(mirfrontend-wayland
+  LINK_PUBLIC
+    mircore
+)
+

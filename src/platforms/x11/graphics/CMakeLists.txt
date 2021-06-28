@@ -28,6 +28,11 @@ add_library(
   graphics.cpp
 )
 
+target_link_libraries(mirplatformgraphicsx11objects-symbols
+  LINK_PUBLIC
+    mircore
+)
+
 target_link_libraries(
   mirplatformgraphicsx11objects
 

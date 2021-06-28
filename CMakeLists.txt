@@ -195,9 +195,7 @@ add_compile_definitions(LOG_NDEBUG=1)
 enable_testing()
 find_package(PkgConfig)
 
-include_directories(include/core)
 include_directories(include/common)
-include_directories(include/cookie)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem iostreams REQUIRED)

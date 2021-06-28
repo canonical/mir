@@ -19,12 +19,22 @@ add_library(mirevdevutilsobjects OBJECT
     button_utils.cpp
 )
 
+target_link_libraries(mirevdevutilsobjects
+  LINK_PUBLIC
+    mircore
+)
+
 add_library(mirplatforminputevdevobjects OBJECT
     libinput_device.cpp
     libinput_device_ptr.cpp
     libinput_ptr.cpp
     platform.cpp
         fd_store.cpp fd_store.h)
+
+target_link_libraries(mirplatforminputevdevobjects
+  LINK_PUBLIC
+    mircore
+)
 
 add_library(mirplatforminputevdev MODULE
   platform_factory.cpp

@@ -36,6 +36,11 @@ add_library(
   ${EVENT_SOURCES}
 )
 
+target_link_libraries(mirevents
+  LINK_PUBLIC
+    mircore
+)
+
 include_directories(
     ${PROJECT_SOURCE_DIR}/include/client
     ${PROJECT_SOURCE_DIR}/src/include/cookie

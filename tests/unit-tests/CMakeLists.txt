@@ -26,7 +26,6 @@ include_directories(
   ${GBM_INCLUDE_DIRS}
   ${UMOCKDEV_INCLUDE_DIRS}
 
-  ${PROJECT_SOURCE_DIR}/include/cookie
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/platform

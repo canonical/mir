@@ -31,3 +31,9 @@ add_library(mirfrontend-xwayland OBJECT
 
   ${XWAYLAND_SOURCES}
 )
+
+target_link_libraries(mirfrontend-xwayland
+  LINK_PUBLIC
+    mircore
+)
+

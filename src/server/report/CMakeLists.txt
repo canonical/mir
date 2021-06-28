@@ -8,3 +8,8 @@ add_library(
     reports.cpp
     reports.h
 )
+
+target_link_libraries(mirreport
+  LINK_PUBLIC
+    mircore
+)
