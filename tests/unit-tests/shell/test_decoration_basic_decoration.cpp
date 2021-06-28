@@ -244,7 +244,7 @@ auto pointer_event(
     geom::Point position,
     std::chrono::nanoseconds timestamp = 0ns) -> mir::EventUPtr
 {
-    return mev::make_event(
+    return mev::make_pointer_event(
         (MirInputDeviceId)1,
         timestamp + 1s,
         std::vector<uint8_t>{},
@@ -262,7 +262,7 @@ auto touch_event(
     geom::Point position,
     std::chrono::nanoseconds timestamp = 0ns) -> mir::EventUPtr
 {
-    auto ev = mev::make_event(
+    auto ev = mev::make_touch_event(
         (MirInputDeviceId)1,
         timestamp + 1s,
         std::vector<uint8_t>{},
