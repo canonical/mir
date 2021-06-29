@@ -68,8 +68,19 @@ MIR_CLIENT_2.5 {
   extern "C++" {
     mir::events::add_touch*;
     mir::events::clone_event*;
-    mir::events::make_event*;
+    mir::events::make_input_configure_event*;
+    mir::events::make_key_event_event*;
+    mir::events::make_keymap_event*;
+    mir::events::make_pointer_event*;
+    mir::events::make_prompt_session_state_event*;
     mir::events::make_start_drag_and_drop_event*;
+    mir::events::make_surface_orientation_event*;
+    mir::events::make_touch_event*;
+    mir::events::make_window_close_event*;
+    mir::events::make_window_configure_event*;
+    mir::events::make_window_output_event*;
+    mir::events::make_window_placement_event*;
+    mir::events::make_window_resize_event*;
     mir::events::scale_positions*;
     mir::events::set_button_state*;
     mir::events::set_cursor_position*;

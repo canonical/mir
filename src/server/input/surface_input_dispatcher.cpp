@@ -111,18 +111,19 @@ void deliver_without_relative_motion(
     }
     auto const& bounds = surface->input_bounds();
 
-    auto to_deliver = mev::make_event(mir_input_event_get_device_id(input_ev),
-                                      std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)},
-                                      cookie_data,
-                                      mir_pointer_event_modifiers(pev),
-                                      mir_pointer_event_action(pev),
-                                      mir_pointer_event_buttons(pev),
-                                      mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
-                                      mir_pointer_event_axis_value(pev, mir_pointer_axis_y),
-                                      0.0f,
-                                      0.0f,
-                                      0.0f,
-                                      0.0f);
+    auto to_deliver = mev::make_pointer_event(
+        mir_input_event_get_device_id(input_ev),
+        std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)},
+        cookie_data,
+        mir_pointer_event_modifiers(pev),
+        mir_pointer_event_action(pev),
+        mir_pointer_event_buttons(pev),
+        mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
+        mir_pointer_event_axis_value(pev, mir_pointer_axis_y),
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f);
 
     mev::transform_positions(*to_deliver, geom::Displacement{bounds.top_left.x.as_int(), bounds.top_left.y.as_int()});
     if (!drag_and_drop_handle.empty())
@@ -258,7 +259,7 @@ bool dispatch_scene_change_enter_exit_events(
              * We have been sending pointer events to a surface, but it's no longer
              * top-most under the cursor; we need to send a leave event.
              */
-            auto const event = mev::make_event(
+            auto const event = mev::make_pointer_event(
                 mir_input_event_get_device_id(ctx.iev),
                 std::chrono::nanoseconds{std::chrono::steady_clock::now().time_since_epoch()},
                 std::vector<uint8_t>{},
@@ -280,7 +281,7 @@ bool dispatch_scene_change_enter_exit_events(
             /*
              * A new surface is top-most underneath the cursor; send a pointer enter event
              */
-            auto const event = mev::make_event(
+            auto const event = mev::make_pointer_event(
                 mir_input_event_get_device_id(ctx.iev),
                 std::chrono::nanoseconds{std::chrono::steady_clock::now().time_since_epoch()},
                 std::vector<uint8_t>{},
@@ -314,7 +315,7 @@ void send_motion_event_to_moved_surface(
          * it has already received a pointer_enter event, so we need to send
          * a motion event for the movement
          */
-        auto const event = mev::make_event(
+        auto const event = mev::make_pointer_event(
             mir_input_event_get_device_id(ctx.iev),
             std::chrono::nanoseconds{std::chrono::steady_clock::now().time_since_epoch()},
             std::vector<uint8_t>{},
@@ -457,7 +458,8 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
     auto surface_displacement = surface->input_bounds().top_left;
     auto const* input_ev = mir_pointer_event_input_event(pev);
 
-    auto event = mev::make_event(mir_input_event_get_device_id(input_ev),
+    auto event = mev::make_pointer_event(
+        mir_input_event_get_device_id(input_ev),
         std::chrono::nanoseconds(mir_input_event_get_event_time(input_ev)),
         std::vector<uint8_t>{},
         mir_pointer_event_modifiers(pev),

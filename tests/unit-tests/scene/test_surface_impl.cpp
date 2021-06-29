@@ -188,7 +188,7 @@ TEST_F(Surface, emits_resize_events)
 
     surface->add_observer(observer);
 
-    auto e = mev::make_event(stub_id, new_size);
+    auto e = mev::make_window_resize_event(stub_id, new_size);
     EXPECT_CALL(*sink, handle_event(MirResizeEventEq(e.get())))
         .Times(1);
 
@@ -208,11 +208,11 @@ TEST_F(Surface, emits_resize_events_only_on_change)
 
     surface->add_observer(observer);
 
-    auto e = mev::make_event(stub_id, new_size);
+    auto e = mev::make_window_resize_event(stub_id, new_size);
     EXPECT_CALL(*sink, handle_event(MirResizeEventEq(e.get())))
         .Times(1);
 
-    auto e2 = mev::make_event(stub_id, new_size2);
+    auto e2 = mev::make_window_resize_event(stub_id, new_size2);
     EXPECT_CALL(*sink, handle_event(MirResizeEventEq(e2.get())))
         .Times(1);
 

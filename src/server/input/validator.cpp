@@ -160,13 +160,13 @@ void mi::Validator::handle_touch_event(MirEvent const& event)
         last_event_by_device[id],
         [this, touch_event, id](std::vector<events::ContactState> const& contacts)
         {
-            dispatch_valid_event(*mev::make_event(
-                    id,
-                    std::chrono::nanoseconds{mir_touch_event_modifiers(touch_event)},
-                    std::vector<uint8_t>{},
-                    mir_touch_event_modifiers(touch_event),
-                    contacts
-                    ));
+            dispatch_valid_event(*mev::make_touch_event(
+                id,
+                std::chrono::nanoseconds{mir_touch_event_modifiers(touch_event)},
+                std::vector<uint8_t>{},
+                mir_touch_event_modifiers(touch_event),
+                contacts
+            ));
         });
 
     dispatch_valid_event(event);
