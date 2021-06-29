@@ -46,13 +46,6 @@ public:
     void moved_to(Surface const* surf, geometry::Point const& top_left) override;
     void orientation_set_to(Surface const* surf, MirOrientation orientation) override;
     void client_surface_close_requested(Surface const* surf) override;
-    void keymap_changed(
-        Surface const* surf,
-        MirInputDeviceId id,
-        std::string const& model,
-        std::string const& layout,
-        std::string const& variant,
-        std::string const& options) override;
     void placed_relative(Surface const* surf, geometry::Rectangle const& placement) override;
     void input_consumed(Surface const* surf, MirEvent const* event) override;
     void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) override;

@@ -119,16 +119,6 @@ void ms::SurfaceObservers::client_surface_close_requested(Surface const* surf)
         { observer->client_surface_close_requested(surf); });
 }
 
-void ms::SurfaceObservers::keymap_changed(
-    Surface const* surf, MirInputDeviceId id, std::string const& model,
-    std::string const& layout,
-    std::string const& variant,
-    std::string const& options)
-{
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->keymap_changed(surf, id, model, layout, variant, options); });
-}
-
 void ms::SurfaceObservers::renamed(Surface const* surf, char const* name)
 {
     for_each([&surf, name](std::shared_ptr<SurfaceObserver> const& observer)

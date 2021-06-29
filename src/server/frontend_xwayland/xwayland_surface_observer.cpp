@@ -27,7 +27,6 @@
 #include <mir/executor.h>
 #include <mir/events/event_builders.h>
 
-#include <mir/input/keymap.h>
 #include <mir/log.h>
 
 namespace mf = mir::frontend;
@@ -94,24 +93,6 @@ void mf::XWaylandSurfaceObserver::moved_to(ms::Surface const*, geom::Point const
 void mf::XWaylandSurfaceObserver::client_surface_close_requested(ms::Surface const*)
 {
     wm_surface->scene_surface_close_requested();
-}
-
-void mf::XWaylandSurfaceObserver::keymap_changed(
-        ms::Surface const*,
-        MirInputDeviceId /* id */,
-        std::string const& model,
-        std::string const& layout,
-        std::string const& variant,
-        std::string const& options)
-{
-    // shared pointer instead of unique so it can be owned by the lambda
-    auto const keymap = std::make_shared<mi::Keymap>(model, layout, variant, options);
-
-    aquire_input_dispatcher(
-        [keymap](auto input_dispatcher)
-        {
-            input_dispatcher->set_keymap(*keymap);
-        });
 }
 
 void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, MirEvent const* event)
