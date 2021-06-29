@@ -1,3 +1,25 @@
+mir (2.4.1) UNRELEASED; urgency=medium
+
+  [ William Wold ]
+  * New upstream release 2.4.1
+
+    - ABI summary:
+      . mirclient ABI unchanged at 10
+      . miral ABI unchanged at 4
+      . mirserver ABI unchanged at 55
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 22
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 18
+      . mirinputplatform ABI unchanged at 8
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+      . mirwayland ABI unchanged at 2
+    - Bugs fixed:
+      . [udev] Handle the first entry of an udev iterator being invalid
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 29 Jun 2021 15:15:00 +0100
+
 mir (2.4.0) UNRELEASED; urgency=medium
 
   [ William Wold ]
