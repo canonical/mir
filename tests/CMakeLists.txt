@@ -124,7 +124,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/miral
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${MIRSERVER_INCLUDE_DIRS}
-  ${PROJECT_SOURCE_DIR}/include/common
   ${PROJECT_SOURCE_DIR}/include/test
   ${PROJECT_SOURCE_DIR}/include/renderer
   ${PROJECT_SOURCE_DIR}/include/renderers/gl

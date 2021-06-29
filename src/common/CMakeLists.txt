@@ -5,7 +5,10 @@ add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
 set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
 
-include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
+include_directories(
+  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
+  ${PROJECT_SOURCE_DIR}/include/common
+)
 
 add_subdirectory(events)
 add_subdirectory(logging)
@@ -56,6 +59,10 @@ add_library(mircommon SHARED
   ${MIR_COMMON_SOURCES}
 )
 
+target_include_directories(mircommon
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/common
+)
 
 set_source_files_properties(event.cpp PROPERTIES COMPILE_FLAGS
   "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/cookie")
@@ -64,10 +71,11 @@ set_source_files_properties(input/input_event.cpp PROPERTIES COMPILE_FLAGS
   "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/cookie")
 
 target_link_libraries(mircommon
-  mircookie
-  mircore
-  ${MIR_COMMON_REFERENCES}
-  ${XKBCOMMON_LIBRARIES}
+  PUBLIC
+    mircookie
+    mircore
+    ${MIR_COMMON_REFERENCES}
+    ${XKBCOMMON_LIBRARIES}
 )
 
 

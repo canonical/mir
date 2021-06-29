@@ -70,6 +70,7 @@ add_library(mirserverobjects OBJECT
 
 target_link_libraries(mirserverobjects
   PUBLIC
+    mircommon
     mircookie
     mircore
 )

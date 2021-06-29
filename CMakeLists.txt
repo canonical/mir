@@ -195,8 +195,6 @@ add_compile_definitions(LOG_NDEBUG=1)
 enable_testing()
 find_package(PkgConfig)
 
-include_directories(include/common)
-
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem iostreams REQUIRED)
 include_directories (SYSTEM

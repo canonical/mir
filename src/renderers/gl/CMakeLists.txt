@@ -15,7 +15,6 @@ install(
 )
 
 include_directories(
-  ${PROJECT_SOURCE_DIR}/include/common
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/renderer
@@ -34,6 +33,7 @@ ADD_LIBRARY(
 
 target_link_libraries(mirrenderergl
   PUBLIC
+    mircommon
     mircore
 )
 

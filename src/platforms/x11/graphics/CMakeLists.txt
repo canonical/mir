@@ -30,6 +30,7 @@ add_library(
 
 target_link_libraries(mirplatformgraphicsx11objects-symbols
   PUBLIC
+    mircommon
     mircore
 )
 
