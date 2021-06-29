@@ -879,12 +879,6 @@ void ms::BasicSurface::consume(MirEvent const* event)
     observers->input_consumed(this, event);
 }
 
-void ms::BasicSurface::set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
-                                  std::string const& variant, std::string const& options)
-{
-    observers->keymap_changed(this, id, model, layout, variant, options);
-}
-
 void ms::BasicSurface::rename(std::string const& title)
 {
     std::unique_lock<std::mutex> lock(guard);
