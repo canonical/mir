@@ -282,11 +282,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirOrientationEvent const& even
     return out << "orientation_event(" << mir_orientation_event_get_direction(&event) << ")";
 }
 
-std::ostream& mir::operator<<(std::ostream& out, MirKeymapEvent const& event)
-{
-    return out << "keymap_event(blob, device_id=" << mir_keymap_event_get_device_id(&event) << ")";
-}
-
 std::ostream& mir::operator<<(std::ostream& out, MirCloseWindowEvent const&)
 {
     return out << "close_window_event()";
@@ -392,7 +387,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
         PRINT_EVENT(orientation);
         PRINT_EVENT(input);
         PRINT_EVENT(input_device_state);
-        PRINT_EVENT(keymap);
         PRINT_EVENT(window_placement);
         PRINT_EVENT(window_output);
     case mir_event_type_close_surface :

@@ -50,14 +50,6 @@ EventUPtr make_window_resize_event(frontend::SurfaceId const& surface_id, geomet
 EventUPtr make_window_configure_event(frontend::SurfaceId const& surface_id, MirWindowAttrib attribute, int value);
 // Close surface event
 EventUPtr make_window_close_event(frontend::SurfaceId const& surface_id);
-// Keymap event
-EventUPtr make_keymap_event(
-    frontend::SurfaceId const& surface_id,
-    MirInputDeviceId id,
-    std::string const& model,
-    std::string const& layout,
-    std::string const& variant,
-    std::string const& options);
 
 // Surface output event
 EventUPtr make_window_output_event(

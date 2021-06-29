@@ -521,15 +521,6 @@ MATCHER_P2(WindowEvent, attrib, value, "")
     return true;
 }
 
-MATCHER_P(KeymapEventForDevice, device_id, "")
-{
-    auto as_address = to_address(arg);
-    if (mir_event_get_type(as_address) != mir_event_type_keymap)
-        return false;
-    auto kmev = mir_event_get_keymap_event(as_address);
-    return device_id == mir_keymap_event_get_device_id(kmev);
-}
-
 MATCHER_P(OrientationEvent, direction, "")
 {
     auto as_address = to_address(arg);
@@ -540,7 +531,6 @@ MATCHER_P(OrientationEvent, direction, "")
         return false;
     return true;
 }
-
 
 MATCHER_P(InputDeviceIdMatches, device_id, "")
 {

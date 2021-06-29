@@ -29,7 +29,6 @@
 #include "mir/events/close_surface_event.h"
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
-#include "mir/events/keymap_event.h"
 #include "mir/events/touch_event.h"
 #include "mir/events/pointer_event.h"
 #include "mir/events/orientation_event.h"

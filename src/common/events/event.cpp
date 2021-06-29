@@ -23,7 +23,6 @@
 #include "mir/events/close_surface_event.h"
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
-#include "mir/events/keymap_event.h"
 #include "mir/events/touch_event.h"
 #include "mir/events/orientation_event.h"
 #include "mir/events/prompt_session_event.h"
@@ -106,16 +105,6 @@ MirCloseWindowEvent* MirEvent::to_close_window()
 MirCloseWindowEvent const* MirEvent::to_close_window() const
 {
     return static_cast<MirCloseWindowEvent const*>(this);
-}
-
-MirKeymapEvent* MirEvent::to_keymap()
-{
-    return static_cast<MirKeymapEvent*>(this);
-}
-
-MirKeymapEvent const* MirEvent::to_keymap() const
-{
-    return static_cast<MirKeymapEvent const*>(this);
 }
 
 MirWindowOutputEvent* MirEvent::to_window_output()
