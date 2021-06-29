@@ -80,6 +80,7 @@ jobs:
         set -e
         if ${{ !startsWith(matrix.spread-task, 'lxd:') }}; then
           sudo snap install spread
+          sudo snap connect spread:home
         else
           curl -s -O https://people.canonical.com/~chrishr/spread.snap
           sudo snap install --dangerous spread.snap
