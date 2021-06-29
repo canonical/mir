@@ -27,7 +27,7 @@
 #include <mir/executor.h>
 #include <mir/events/event_builders.h>
 
-#include <mir/input/keymap.h>
+#include <mir/input/parameter_keymap.h>
 #include <mir/log.h>
 
 namespace mf = mir::frontend;
@@ -105,7 +105,7 @@ void mf::XWaylandSurfaceObserver::keymap_changed(
         std::string const& options)
 {
     // shared pointer instead of unique so it can be owned by the lambda
-    auto const keymap = std::make_shared<mi::Keymap>(model, layout, variant, options);
+    auto const keymap = std::make_shared<mi::ParameterKeymap>(model, layout, variant, options);
 
     aquire_input_dispatcher(
         [keymap](auto input_dispatcher)

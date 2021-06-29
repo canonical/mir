@@ -20,56 +20,36 @@
 #ifndef MIR_INPUT_KEYMAP_H_
 #define MIR_INPUT_KEYMAP_H_
 
+#include <memory>
 #include <string>
-#include <ostream>
+
+struct xkb_keymap;
+struct xkb_context;
 
 namespace mir
 {
 namespace input
 {
+using XKBKeymapPtr = std::unique_ptr<xkb_keymap, void(*)(xkb_keymap*)>;
 
-struct Keymap
+class Keymap
 {
+public:
     Keymap() = default;
-    Keymap(std::string&& model,
-           std::string&& layout,
-           std::string&& variant,
-           std::string&& options)
-        : model{model}, layout{layout}, variant{variant}, options{options}
-    {
-    }
+    virtual ~Keymap() = default;
 
-    Keymap(std::string const& model,
-           std::string const& layout,
-           std::string const& variant,
-           std::string const& options)
-        : model{model}, layout{layout}, variant{variant}, options{options}
-    {
-    }
+    virtual auto operator==(Keymap const& other) const -> bool = 0;
+    virtual auto model() const -> std::string = 0;
+    virtual auto make_unique_xkb_keymap(xkb_context* context) const -> XKBKeymapPtr = 0;
 
-    std::string model{"pc105+inet"};
-    std::string layout{"us"};
-    std::string variant;
-    std::string options;
-
+private:
+    Keymap(Keymap const&) = delete;
+    Keymap& operator=(Keymap const&) = delete;
 };
 
-inline bool operator==(Keymap const& lhs, Keymap const& rhs)
-{
-    return lhs.model == rhs.model &&
-        lhs.layout == rhs.layout &&
-        lhs.variant == rhs.variant &&
-        lhs.options == rhs.options;
-}
-
-inline bool operator!=(Keymap const& lhs, Keymap const& rhs)
+inline auto operator!=(Keymap const& lhs, Keymap const& rhs) -> bool
 {
     return !(lhs == rhs);
-}
-
-inline std::ostream& operator<<(std::ostream &out, Keymap const& rhs)
-{
-    return out << rhs.model << "-" << rhs.layout << "-"<< rhs.variant << "-" << rhs.options;
 }
 
 }
