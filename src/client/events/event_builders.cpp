@@ -153,9 +153,14 @@ mir::EventUPtr mev::make_window_placement_event(frontend::SurfaceId const& surfa
     return make_uptr_event(e);
 }
 
-mir::EventUPtr mev::make_key_event_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-                                         std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t keysym,
-                                         int scan_code, MirInputEventModifiers modifiers)
+mir::EventUPtr mev::make_key_event_event(
+    MirInputDeviceId device_id,
+    std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& cookie,
+    MirKeyboardAction action,
+    xkb_keysym_t keysym,
+    int scan_code,
+    MirInputEventModifiers modifiers)
 {
     auto e = new_event<MirKeyboardEvent>();
 
@@ -202,8 +207,11 @@ void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
     event.to_input()->to_pointer()->set_buttons(button_state);
 }
 
-mir::EventUPtr mev::make_touch_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-                                     std::vector<uint8_t> const& cookie, MirInputEventModifiers modifiers)
+mir::EventUPtr mev::make_touch_event(
+    MirInputDeviceId device_id,
+    std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& cookie,
+    MirInputEventModifiers modifiers)
 {
     auto e = new_event<MirTouchEvent>();
 
@@ -215,9 +223,17 @@ mir::EventUPtr mev::make_touch_event(MirInputDeviceId device_id, std::chrono::na
     return make_uptr_event(e);
 }
 
-void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
-    MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
-    float pressure_value, float touch_major_value, float touch_minor_value, float)
+void mev::add_touch(
+    MirEvent &event,
+    MirTouchId touch_id,
+    MirTouchAction action,
+    MirTouchTooltype tooltype,
+    float x_axis_value,
+    float y_axis_value,
+    float pressure_value,
+    float touch_major_value,
+    float touch_minor_value,
+    float)
 {
     auto tev = event.to_input()->to_touch();
     auto current_index = tev->pointer_count();
@@ -233,20 +249,32 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     tev->set_action(current_index, action);
 }
 
-mir::EventUPtr mev::make_pointer_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-                                       std::vector<uint8_t> const& cookie, MirInputEventModifiers modifiers, MirPointerAction action,
-                                       MirPointerButtons buttons_pressed,
-                                       float x_axis_value, float y_axis_value,
-                                       float hscroll_value, float vscroll_value,
-                                       float relative_x_value, float relative_y_value)
+mir::EventUPtr mev::make_pointer_event(
+    MirInputDeviceId device_id,
+    std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& cookie,
+    MirInputEventModifiers modifiers,
+    MirPointerAction action,
+    MirPointerButtons buttons_pressed,
+    float x_axis_value,
+    float y_axis_value,
+    float hscroll_value,
+    float vscroll_value,
+    float relative_x_value,
+    float relative_y_value)
 {
     auto e = new_event<MirPointerEvent>(device_id, timestamp, modifiers, cookie, action, buttons_pressed, x_axis_value,
                                         y_axis_value, relative_x_value, relative_y_value, vscroll_value, hscroll_value);
     return make_uptr_event(e);
 }
 
-mir::EventUPtr mev::make_keymap_event(mf::SurfaceId const& surface_id, MirInputDeviceId id, std::string const& model,
-                                      std::string const& layout, std::string const& variant, std::string const& options)
+mir::EventUPtr mev::make_keymap_event(
+    mf::SurfaceId const& surface_id,
+    MirInputDeviceId id,
+    std::string const& model,
+    std::string const& layout,
+    std::string const& variant,
+    std::string const& options)
 {
     auto e = new_event<MirKeymapEvent>();
     auto ep = make_uptr_event(e);
@@ -267,12 +295,13 @@ mir::EventUPtr mev::make_keymap_event(mf::SurfaceId const& surface_id, MirInputD
     return ep;
 }
 
-mir::EventUPtr mev::make_input_configure_event(std::chrono::nanoseconds timestamp,
-                                               MirPointerButtons pointer_buttons,
-                                               MirInputEventModifiers modifiers,
-                                               float x_axis_value,
-                                               float y_axis_value,
-                                               std::vector<InputDeviceState>&& device_states)
+mir::EventUPtr mev::make_input_configure_event(
+    std::chrono::nanoseconds timestamp,
+    MirPointerButtons pointer_buttons,
+    MirInputEventModifiers modifiers,
+    float x_axis_value,
+    float y_axis_value,
+    std::vector<InputDeviceState>&& device_states)
 {
     auto e = new_event<MirInputDeviceStateEvent>();
     e->set_when(timestamp);
@@ -338,9 +367,12 @@ void mev::scale_positions(MirEvent& event, float scale)
     }
 }
 
-mir::EventUPtr mev::make_touch_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-                                     std::vector<uint8_t> const& cookie, MirInputEventModifiers modifiers,
-                                     std::vector<mev::ContactState> const& contacts)
+mir::EventUPtr mev::make_touch_event(
+    MirInputDeviceId device_id,
+    std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& cookie,
+    MirInputEventModifiers modifiers,
+    std::vector<mev::ContactState> const& contacts)
 {
     auto e = new_event<MirTouchEvent>(device_id, timestamp, cookie, modifiers, contacts);
     return make_uptr_event(e);

@@ -51,15 +51,14 @@ void ms::SurfaceEventSource::moved_to(Surface const* surface, geometry::Point co
     auto new_output_properties = outputs.properties_for(geom::Rectangle{top_left, surface->window_size()});
     if (new_output_properties && (new_output_properties != last_output.lock()))
     {
-        event_sink->handle_event(
-            mev::make_window_output_event(
-                id,
-                new_output_properties->dpi,
-                new_output_properties->scale,
-                new_output_properties->refresh_rate,
-                new_output_properties->form_factor,
-                static_cast<uint32_t>(new_output_properties->id.as_value())
-                                         ));
+        event_sink->handle_event(mev::make_window_output_event(
+            id,
+            new_output_properties->dpi,
+            new_output_properties->scale,
+            new_output_properties->refresh_rate,
+            new_output_properties->form_factor,
+            static_cast<uint32_t>(new_output_properties->id.as_value())
+        ));
         last_output = new_output_properties;
     }
 }

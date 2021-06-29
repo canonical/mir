@@ -166,7 +166,7 @@ void mi::Validator::handle_touch_event(MirEvent const& event)
                 std::vector<uint8_t>{},
                 mir_touch_event_modifiers(touch_event),
                 contacts
-                                                       ));
+            ));
         });
 
     dispatch_valid_event(event);
