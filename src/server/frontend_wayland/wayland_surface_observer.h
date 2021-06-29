@@ -51,13 +51,6 @@ public:
     void attrib_changed(scene::Surface const*, MirWindowAttrib attrib, int value) override;
     void content_resized_to(scene::Surface const*, geometry::Size const& content_size) override;
     void client_surface_close_requested(scene::Surface const*) override;
-    void keymap_changed(
-        scene::Surface const*,
-        MirInputDeviceId id,
-        std::string const& model,
-        std::string const& layout,
-        std::string const& variant,
-        std::string const& options) override;
     void placed_relative(scene::Surface const*, geometry::Rectangle const& placement) override;
     void input_consumed(scene::Surface const*, MirEvent const* event) override;
     ///@}
