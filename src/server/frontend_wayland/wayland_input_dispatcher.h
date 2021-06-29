@@ -51,7 +51,6 @@ public:
         WlSurface* wl_surface);
     ~WaylandInputDispatcher() = default;
 
-    void set_keymap(input::Keymap const& keymap);
     void set_focus(bool has_focus);
     void handle_event(MirInputEvent const* event);
 
