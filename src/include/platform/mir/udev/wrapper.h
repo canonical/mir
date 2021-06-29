@@ -113,7 +113,7 @@ public:
         iterator ();
         iterator (std::shared_ptr<Context> const& ctx, udev_list_entry* entry);
 
-        void increment();
+        void increment(udev_list_entry* start_from);
 
         std::shared_ptr<Context> ctx;
         udev_list_entry* entry;
