@@ -9,9 +9,6 @@ include_directories(
   ${DRM_INCLUDE_DIRS}
 )
 
-set(MIRCLIENT_ABI 11)
-set(symbol_map ${CMAKE_SOURCE_DIR}/src/client/symbols.map)
-
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirclient")
 
 set(MIR_CLIENT_SOURCES)
@@ -20,28 +17,13 @@ set(MIR_CLIENT_REFERENCES mircommon mircore)
 add_subdirectory(events)
 add_subdirectory(input)
 
-add_library(mirclientobjects OBJECT
-
+add_library(mirclient STATIC
   event.cpp
   event_printer.cpp
   mir_cookie.cpp
   mir_cursor_api.cpp
   ${MIR_CLIENT_SOURCES}
-)
-
-target_link_libraries(mirclientobjects
-  PUBLIC
-    mircore
-)
-
-add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
-
-set_target_properties(mirclient
-
-  PROPERTIES
-  SOVERSION ${MIRCLIENT_ABI}
-  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
-  LINK_DEPENDS ${symbol_map}
+  $<TARGET_OBJECTS:mirsharedinput>
 )
 
 set(LINKS
@@ -52,11 +34,7 @@ set(LINKS
 
 target_link_libraries(mirclient
   PUBLIC
+    mircore
     ${MIR_CLIENT_REFERENCES}
     ${LINKS}
 )
-
-install(
-  TARGETS mirclient
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})

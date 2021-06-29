@@ -12,7 +12,6 @@ fi
 packages="\
     libmiral:MIRAL_ABI \
     libmircore:MIRCORE_ABI \
-    libmirclient:MIRCLIENT_ABI \
     libmircommon:MIRCOMMON_ABI \
     libmirplatform:MIRPLATFORM_ABI \
     libmirserver:MIRSERVER_ABI \
