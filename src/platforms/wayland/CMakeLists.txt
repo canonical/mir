@@ -17,8 +17,6 @@ add_library(mirplatformwayland-graphics STATIC
 target_include_directories(mirplatformwayland-graphics
 PUBLIC
     ${server_common_include_dirs}
-    ${PROJECT_SOURCE_DIR}/include/common
-    ${PROJECT_SOURCE_DIR}/include/client
     ${GBM_INCLUDE_DIRS}
     ${DRM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
@@ -51,14 +49,13 @@ add_library(mirplatformwayland-input STATIC
 
 target_link_libraries(mirplatformwayland-input
   PUBLIC
+    mircommon
     mircore
 )
 
 target_include_directories(mirplatformwayland-input
 PUBLIC
     ${server_common_include_dirs}
-    ${PROJECT_SOURCE_DIR}/include/common
-    ${PROJECT_SOURCE_DIR}/include/client
 )
 
 add_library(mirplatformwayland MODULE

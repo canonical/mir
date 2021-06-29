@@ -11,8 +11,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/platform # udev Context
   ${PROJECT_SOURCE_DIR}/src/include/common # raii.h
-  ${PROJECT_SOURCE_DIR}/include/common
-  ${PROJECT_SOURCE_DIR}/include/client
   )
 
 add_library(mirevdevutilsobjects OBJECT
@@ -21,6 +19,7 @@ add_library(mirevdevutilsobjects OBJECT
 
 target_link_libraries(mirevdevutilsobjects
   PUBLIC
+    mircommon
     mircore
 )
 
@@ -33,6 +32,7 @@ add_library(mirplatforminputevdevobjects OBJECT
 
 target_link_libraries(mirplatforminputevdevobjects
   PUBLIC
+    mircommon
     mircore
 )
 

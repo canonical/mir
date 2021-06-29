@@ -12,5 +12,6 @@ add_library(miroptions OBJECT
 
 target_link_libraries(miroptions
   PUBLIC
+    mircommon
     mircore
 )

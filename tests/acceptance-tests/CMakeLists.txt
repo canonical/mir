@@ -51,7 +51,6 @@ target_link_libraries(mir_acceptance_tests
   mir-test-assist
   mir-test-doubles-platform-static
 
-  mirclient
   mirserver
 
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.

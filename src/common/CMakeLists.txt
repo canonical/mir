@@ -1,9 +1,14 @@
+find_package(XKBCOMMON REQUIRED)
+
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
 
 set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
 
-include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
+include_directories(
+  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
+  ${PROJECT_SOURCE_DIR}/include/common
+)
 
 add_subdirectory(events)
 add_subdirectory(logging)
@@ -23,6 +28,10 @@ list(APPEND MIR_COMMON_SOURCES
   ${PROJECT_SOURCE_DIR}/include/common/mir/posix_rw_mutex.h
   posix_rw_mutex.cpp
   edid.cpp
+  event.cpp
+  event_printer.cpp
+  mir_cookie.cpp
+  mir_cursor_api.cpp
 )
 
 set(
@@ -40,6 +49,8 @@ add_library(mircommon SHARED
   input/mir_pointer_config.cpp
   input/mir_keyboard_config.cpp
   input/mir_touchscreen_config.cpp
+  input/input_event.cpp
+  input/xkb_mapper.cpp
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_input_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_pointer_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchpad_config.h
@@ -48,10 +59,23 @@ add_library(mircommon SHARED
   ${MIR_COMMON_SOURCES}
 )
 
+target_include_directories(mircommon
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/common
+)
+
+set_source_files_properties(event.cpp PROPERTIES COMPILE_FLAGS
+  "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/cookie")
+
+set_source_files_properties(input/input_event.cpp PROPERTIES COMPILE_FLAGS
+  "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/cookie")
+
 target_link_libraries(mircommon
   PUBLIC
+    mircookie
     mircore
     ${MIR_COMMON_REFERENCES}
+    ${XKBCOMMON_LIBRARIES}
 )
 
 

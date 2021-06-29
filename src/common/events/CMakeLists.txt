@@ -17,6 +17,7 @@
 set(EVENT_SOURCES
   close_surface_event.cpp
   event.cpp
+  event_builders.cpp
   keyboard_event.cpp
   touch_event.cpp
   pointer_event.cpp
@@ -41,8 +42,7 @@ target_link_libraries(mirevents
     mircore
 )
 
-include_directories(
-    ${PROJECT_SOURCE_DIR}/include/client
+target_include_directories(mirevents
+  PRIVATE
     ${PROJECT_SOURCE_DIR}/src/include/cookie
-    ${MIR_GENERATED_INCLUDE_DIRECTORIES}
 )

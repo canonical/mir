@@ -37,5 +37,6 @@ ADD_LIBRARY(
 
 target_link_libraries(mirscene
   PUBLIC
+    mircommon
     mircore
 )

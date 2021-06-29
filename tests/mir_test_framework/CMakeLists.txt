@@ -52,6 +52,7 @@ add_library(mir-public-test-framework OBJECT
 
 target_link_libraries(mir-public-test-framework
   PUBLIC
+    mircommon
     mircore
 )
 
@@ -70,12 +71,14 @@ add_library(mir-protected-test-framework OBJECT
 
 target_link_libraries(mir-protected-test-framework
   PUBLIC
+    mircommon
     mircore
 )
 
 add_library(mir-libinput-test-framework OBJECT libinput_environment.cpp)
 target_link_libraries(mir-libinput-test-framework
   PUBLIC
+    mircommon
     mircore
 )
 
@@ -93,7 +96,6 @@ add_dependencies(mir-test-framework-static GMock)
 target_link_libraries(mir-test-framework-static
 
   mirserver
-  mirclient
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
@@ -113,6 +115,7 @@ add_library(
 
 target_link_libraries(mir-test-input-framework
   PUBLIC
+    mircommon
     mircore
 )
 

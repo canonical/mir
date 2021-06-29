@@ -16,7 +16,6 @@ add_library(example-shell-lib STATIC
 target_include_directories(example-shell-lib
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${PROJECT_SOURCE_DIR}/include/client
     PRIVATE
         ${FREETYPE_INCLUDE_DIRS}
 )

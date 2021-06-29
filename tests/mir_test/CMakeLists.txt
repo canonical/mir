@@ -17,6 +17,7 @@ add_library(mir-public-test OBJECT
 
 target_link_libraries(mir-public-test
   PUBLIC
+    mircommon
     mircore
 )
 
@@ -30,6 +31,7 @@ add_library(mir-test-static STATIC
 
 target_link_libraries(mir-test-static
   PUBLIC
+    mircommon
     mircore
 )
 
