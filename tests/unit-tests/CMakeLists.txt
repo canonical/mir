@@ -158,6 +158,12 @@ endif()
 
 add_dependencies(mir_unit_tests GMock)
 
+set_target_properties(
+  mir_unit_tests
+  PROPERTIES
+    ENABLE_EXPORTS TRUE
+)
+
 target_link_libraries(
   mir_unit_tests
 
@@ -195,6 +201,12 @@ mir_add_wrapped_executable(mir_umock_unit_tests NOINSTALL
 )
 
 add_dependencies(mir_umock_unit_tests GMock)
+
+set_target_properties(
+  mir_umock_unit_tests
+  PROPERTIES
+    ENABLE_EXPORTS TRUE
+)
 
 target_link_libraries(
   mir_umock_unit_tests
