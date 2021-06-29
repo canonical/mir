@@ -80,7 +80,7 @@ jobs:
         set -e
         if ${{ !startsWith(matrix.spread-task, 'lxd:') }}; then
           sudo snap install spread
-          timeout 60 sh -c 'while snap changes | grep Doing; do sleep 5; done'
+          timeout 600 sh -c 'while snap changes | grep Doing; do sleep 5; done'
           sudo snap connect spread:home
         else
           curl -s -O https://people.canonical.com/~chrishr/spread.snap
