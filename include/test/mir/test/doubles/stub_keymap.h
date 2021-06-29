@@ -30,7 +30,7 @@ namespace doubles
 
 struct StubKeymap : public mir::input::Keymap
 {
-    auto operator==(Keymap const&) const -> bool override { return false; }
+    auto operator==(Keymap const& other) const -> bool override { return &other == this; }
     auto model() const -> std::string override { return "stub_keymap_model"; }
     auto make_unique_xkb_keymap(xkb_context*) const -> mir::input::XKBKeymapPtr override
     {
