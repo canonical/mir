@@ -164,25 +164,25 @@ mu::Enumerator::iterator::iterator (std::shared_ptr<Context> const& ctx, udev_li
     ctx(ctx),
     entry(entry)
 {
-    if (entry)
-        current = ctx->device_from_syspath(udev_list_entry_get_name(entry));
+    // Start the iterator from the first valid entry
+    increment(entry);
 }
 
-void mu::Enumerator::iterator::increment()
+void mu::Enumerator::iterator::increment(udev_list_entry* start_from)
 {
-    entry = udev_list_entry_get_next(entry);
-    if (entry)
+    entry = start_from;
+    if (start_from)
     {
         try
         {
-            current = ctx->device_from_syspath(udev_list_entry_get_name(entry));
+            current = ctx->device_from_syspath(udev_list_entry_get_name(start_from));
         }
         catch (std::runtime_error const&)
         {
             // The Device throws a runtime_error if the device does not exist
             // This can happen if it has been removed since the iterator was created.
             // If this happens, move on to the next device.
-            increment();
+            increment(udev_list_entry_get_next(start_from));
         }
     }
     else
@@ -193,14 +193,14 @@ void mu::Enumerator::iterator::increment()
 
 mu::Enumerator::iterator& mu::Enumerator::iterator::operator++()
 {
-    increment();
+    increment(udev_list_entry_get_next(entry));
     return *this;
 }
 
 mu::Enumerator::iterator mu::Enumerator::iterator::operator++(int)
 {
     auto tmp = *this;
-    increment();
+    increment(udev_list_entry_get_next(entry));
     return tmp;
 }
 
