@@ -12,6 +12,6 @@ add_library(
 )
 
 target_link_libraries(mirnullreport
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )

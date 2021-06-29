@@ -27,6 +27,12 @@ set_property(
 
 add_dependencies(mir_unit_tests_gbm-kms GMock)
 
+set_target_properties(
+  mir_unit_tests_gbm-kms
+  PROPERTIES
+    ENABLE_EXPORTS TRUE
+)
+
 target_link_libraries(
   mir_unit_tests_gbm-kms
 

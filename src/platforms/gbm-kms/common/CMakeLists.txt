@@ -10,6 +10,6 @@ add_library(
 )
 
 target_link_libraries(mirsharedgbm-static
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )

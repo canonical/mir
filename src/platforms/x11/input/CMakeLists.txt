@@ -11,7 +11,7 @@ add_library(
 )
 
 target_link_libraries(mirplatforminputx11objects
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 

@@ -41,7 +41,7 @@ add_library(
 )
 
 target_link_libraries(mirinput
-  LINK_PUBLIC
+  PUBLIC
     mircookie
     mircore
 )

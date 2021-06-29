@@ -37,7 +37,7 @@ target_include_directories(mircore
 
 
 target_link_libraries(mircore
-  LINK_PRIVATE
+  PRIVATE
     ${Boost_SYSTEM_LIBRARY}
 )
 

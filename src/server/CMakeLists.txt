@@ -70,7 +70,7 @@ add_library(mirserverobjects OBJECT
 )
 
 target_link_libraries(mirserverobjects
-  LINK_PUBLIC
+  PUBLIC
     mircookie
     mircore
 )
@@ -120,31 +120,32 @@ add_library(mirserver SHARED
   ${MIR_SERVER_OBJECTS}
 )
 
-target_link_libraries(mirserver LINK_PUBLIC
+target_link_libraries(mirserver
+  PUBLIC
 
-  mirclient
-  mirplatform
-  mircommon
-  mircookie
-  mirwayland
+    mirclient
+    mirplatform
+    mircommon
+    mircookie
+    mirwayland
 
-  server_platform_common
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
-  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-  ${GL_LDFLAGS} ${GL_LIBRARIES}
-  ${EPOXY_LDFLAGS} ${EPOXY_LIBRARIES}
-  ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
-  ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
-  ${GIO_LDFLAGS} ${GIO_LIBRARIES}
-  ${UUID_LDFLAGS} ${UUID_LIBRARIES}
-  ${XCB_LDFLAGS} ${XCB_LIBRARIES}
-  ${XCB_COMPOSITE_LDFLAGS} ${XCB_COMPOSITE_LIBRARIES}
-  ${XCB_XFIXES_LDFLAGS} ${XCB_XFIXES_LIBRARIES}
-  ${XCB_RENDER_LDFLAGS} ${XCB_RENDER_LIBRARIES}
-  ${X11_XCURSOR_LDFLAGS} ${X11_XCURSOR_LIBRARIES}
-  ${LTTNG_UST_LDFLAGS} ${LTTNG_UST_LIBRARIES}
-  ${FREETYPE_LDFLAGS} ${FREETYPE_LIBRARIES}
-  atomic
+    server_platform_common
+    ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+    ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+    ${GL_LDFLAGS} ${GL_LIBRARIES}
+    ${EPOXY_LDFLAGS} ${EPOXY_LIBRARIES}
+    ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
+    ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
+    ${GIO_LDFLAGS} ${GIO_LIBRARIES}
+    ${UUID_LDFLAGS} ${UUID_LIBRARIES}
+    ${XCB_LDFLAGS} ${XCB_LIBRARIES}
+    ${XCB_COMPOSITE_LDFLAGS} ${XCB_COMPOSITE_LIBRARIES}
+    ${XCB_XFIXES_LDFLAGS} ${XCB_XFIXES_LIBRARIES}
+    ${XCB_RENDER_LDFLAGS} ${XCB_RENDER_LIBRARIES}
+    ${X11_XCURSOR_LDFLAGS} ${X11_XCURSOR_LIBRARIES}
+    ${LTTNG_UST_LDFLAGS} ${LTTNG_UST_LIBRARIES}
+    ${FREETYPE_LDFLAGS} ${FREETYPE_LIBRARIES}
+    atomic
 )
 
 target_include_directories(mirshelldecoration

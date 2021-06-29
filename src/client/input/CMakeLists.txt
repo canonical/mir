@@ -21,7 +21,7 @@ add_library(mirsharedinput OBJECT
 )
 
 target_link_libraries(mirsharedinput
-  LINK_PUBLIC
+  PUBLIC
     mircore
     mircookie
 )

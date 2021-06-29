@@ -82,7 +82,7 @@ add_library(mirfrontend-wayland OBJECT
 )
 
 target_link_libraries(mirfrontend-wayland
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 

@@ -20,7 +20,7 @@ add_library(mirevdevutilsobjects OBJECT
 )
 
 target_link_libraries(mirevdevutilsobjects
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 
@@ -32,7 +32,7 @@ add_library(mirplatforminputevdevobjects OBJECT
         fd_store.cpp fd_store.h)
 
 target_link_libraries(mirplatforminputevdevobjects
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 
