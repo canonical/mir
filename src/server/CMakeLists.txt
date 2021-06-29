@@ -70,7 +70,7 @@ add_library(mirserverobjects OBJECT
 )
 
 target_link_libraries(mirserverobjects
-  LINK_PUBLIC
+  PUBLIC
     mircookie
     mircore
 )
@@ -120,7 +120,7 @@ add_library(mirserver SHARED
   ${MIR_SERVER_OBJECTS}
 )
 
-target_link_libraries(mirserver LINK_PUBLIC
+target_link_libraries(mirserver PUBLIC
 
   mirclient
   mirplatform

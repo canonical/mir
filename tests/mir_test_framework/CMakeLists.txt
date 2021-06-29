@@ -51,7 +51,7 @@ add_library(mir-public-test-framework OBJECT
 )
 
 target_link_libraries(mir-public-test-framework
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 
@@ -69,13 +69,13 @@ add_library(mir-protected-test-framework OBJECT
 )
 
 target_link_libraries(mir-protected-test-framework
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 
 add_library(mir-libinput-test-framework OBJECT libinput_environment.cpp)
 target_link_libraries(mir-libinput-test-framework
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 
@@ -112,7 +112,7 @@ add_library(
   )
 
 target_link_libraries(mir-test-input-framework
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 

@@ -18,7 +18,7 @@ add_library(server_platform_common STATIC
 )
 
 target_link_libraries(server_platform_common
-  LINK_PUBLIC
+  PUBLIC
     mircore
     ${KMS_UTILS_STATIC_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}

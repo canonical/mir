@@ -19,6 +19,6 @@ add_library(
 )
 
 target_link_libraries(mirlogging
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )

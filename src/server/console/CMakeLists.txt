@@ -24,7 +24,7 @@ set_source_files_properties(
 )
 
 target_link_libraries(mirconsole
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 

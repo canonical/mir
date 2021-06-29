@@ -33,7 +33,7 @@ ADD_LIBRARY(
 )
 
 target_link_libraries(mirrenderergl
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 

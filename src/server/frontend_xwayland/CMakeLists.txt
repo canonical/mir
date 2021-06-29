@@ -33,7 +33,7 @@ add_library(mirfrontend-xwayland OBJECT
 )
 
 target_link_libraries(mirfrontend-xwayland
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 

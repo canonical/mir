@@ -30,7 +30,7 @@ add_library(mirclientobjects OBJECT
 )
 
 target_link_libraries(mirclientobjects
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 
@@ -51,10 +51,9 @@ set(LINKS
 )
 
 target_link_libraries(mirclient
-  LINK_PRIVATE
-  LINK_PUBLIC
-  ${MIR_CLIENT_REFERENCES}
-  ${LINKS}
+  PUBLIC
+    ${MIR_CLIENT_REFERENCES}
+    ${LINKS}
 )
 
 install(

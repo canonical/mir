@@ -10,6 +10,6 @@ add_library(
 )
 
 target_link_libraries(mirreport
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )

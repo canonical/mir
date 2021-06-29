@@ -32,7 +32,7 @@ add_library(mirplatformgraphicseglstreamkmsobjects OBJECT
 )
 
 target_link_libraries(mirplatformgraphicseglstreamkmsobjects
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 

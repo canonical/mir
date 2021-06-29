@@ -29,7 +29,7 @@ add_library(
 )
 
 target_link_libraries(mirplatformgraphicsx11objects-symbols
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 

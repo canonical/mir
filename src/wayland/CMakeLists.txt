@@ -15,10 +15,10 @@ add_library(mirwayland SHARED
 )
 
 target_link_libraries(mirwayland
-  LINK_PUBLIC
+  PUBLIC
     mircore
     ${WAYLAND_SERVER_LIBRARIES}
-  LINK_PRIVATE
+  PRIVATE
     mircommon
 )
 

@@ -26,7 +26,7 @@ add_library(
 )
 
 target_link_libraries(mirshell
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
 

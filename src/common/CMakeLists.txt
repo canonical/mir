@@ -49,7 +49,7 @@ add_library(mircommon SHARED
 )
 
 target_link_libraries(mircommon
-  LINK_PUBLIC
+  PUBLIC
     mircore
     ${MIR_COMMON_REFERENCES}
 )

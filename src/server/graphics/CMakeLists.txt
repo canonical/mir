@@ -19,6 +19,6 @@ add_library(
 )
 
 target_link_libraries(mirgraphics
-  LINK_PUBLIC
+  PUBLIC
     mircore
 )
