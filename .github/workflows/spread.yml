@@ -93,7 +93,11 @@ jobs:
     - name: Run Spread task
       env:
         SPREAD_GOOGLE_KEY: ${{ secrets.SPREAD_GOOGLE_KEY }}
-      run: snap run spread -v ${{ matrix.spread-task }}
+      run: |
+        ls -l spread.yaml
+        snap info spread
+        snap connections spread
+        snap run spread -v ${{ matrix.spread-task }}
       continue-on-error: ${{ matrix.allow-fail }}
 
   # Report result to Bors on `staging` and `trying` branches.
