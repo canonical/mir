@@ -151,6 +151,7 @@ MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* event);
  *
  *   \param [in] event The key event
  *   \return           The xkb_keysym
+ *   \remark Since MirAL 3.3
  */
 xkb_keysym_t mir_keyboard_event_keysym(MirKeyboardEvent const* event);
 
