@@ -44,19 +44,6 @@ mf::WaylandInputDispatcher::WaylandInputDispatcher(
 {
 }
 
-void mf::WaylandInputDispatcher::set_keymap(mi::Keymap const& keymap)
-{
-    if (!wl_surface)
-    {
-        return;
-    }
-
-    seat->for_each_listener(client, [&](WlKeyboard* keyboard)
-        {
-            keyboard->set_keymap(keymap);
-        });
-}
-
 void mf::WaylandInputDispatcher::set_focus(bool has_focus)
 {
     if (!wl_surface)

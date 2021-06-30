@@ -111,8 +111,6 @@ public:
     // TODO a legacy of old interactions and needs removing
     virtual int query(MirWindowAttrib attrib) const = 0;
 
-    virtual void set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
-                            std::string const& variant, std::string const& options) = 0;
     virtual void rename(std::string const& title) = 0;
     virtual void set_streams(std::list<StreamInfo> const& streams) = 0;
 

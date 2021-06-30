@@ -36,7 +36,6 @@ typedef struct MirPromptSessionEvent MirPromptSessionEvent;
 typedef struct MirOrientationEvent MirOrientationEvent;
 typedef struct MirCloseSurfaceEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
-typedef struct MirKeymapEvent MirKeymapEvent;
 typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
 typedef struct MirSurfacePlacementEvent MirWindowPlacementEvent;
@@ -54,7 +53,6 @@ typedef struct MirEvent MirEvent;
 #include "mir_toolkit/events/window_event.h"
 #include "mir_toolkit/events/orientation_event.h"
 #include "mir_toolkit/events/prompt_session_event.h"
-#include "mir_toolkit/events/keymap_event.h"
 #include "mir_toolkit/events/window_output_event.h"
 #include "mir_toolkit/events/input_device_state_event.h"
 
@@ -121,16 +119,6 @@ MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* 
  * \return           The associated MirOrientationEvent
  */
 MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* event);
-
-/**
- * Retrieve the MirKeymapEvent associated with a MirEvent of
- * type mir_event_type_keymap. The event signifies that the keymap
- * applied for the relevant surface has changed.
- *
- * \param [in] event The event
- * \return           The associated MirKeymapEvent
- */
-MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
 
 /**
  * Retrieve the MirWindowOutputEvent associated with a MirEvent of type
