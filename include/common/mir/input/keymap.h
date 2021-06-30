@@ -38,7 +38,9 @@ public:
     Keymap() = default;
     virtual ~Keymap() = default;
 
-    virtual auto operator==(Keymap const& other) const -> bool = 0;
+    /// If other's type is the same as or derived from this's type, and it's values are equal
+    virtual auto matches(Keymap const& other) const -> bool = 0;
+    /// The model name of the keyboard this keymap is for
     virtual auto model() const -> std::string = 0;
     virtual auto make_unique_xkb_keymap(xkb_context* context) const -> XKBKeymapPtr = 0;
 
@@ -46,6 +48,11 @@ private:
     Keymap(Keymap const&) = delete;
     Keymap& operator=(Keymap const&) = delete;
 };
+
+inline auto operator==(Keymap const& lhs, Keymap const& rhs) -> bool
+{
+    return lhs.matches(rhs) && rhs.matches(lhs);
+}
 
 inline auto operator!=(Keymap const& lhs, Keymap const& rhs) -> bool
 {

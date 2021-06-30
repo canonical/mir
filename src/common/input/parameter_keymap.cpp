@@ -24,7 +24,7 @@
 
 namespace mi = mir::input;
 
-auto mi::ParameterKeymap::operator==(Keymap const& other) const -> bool
+auto mi::ParameterKeymap::matches(Keymap const& other) const -> bool
 {
     auto const params = dynamic_cast<ParameterKeymap const*>(&other);
     return params &&

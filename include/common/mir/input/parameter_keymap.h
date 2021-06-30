@@ -51,7 +51,7 @@ public:
     {
     }
 
-    auto operator==(Keymap const& other) const -> bool override;
+    auto matches(Keymap const& other) const -> bool override;
     auto model() const -> std::string override;
     auto make_unique_xkb_keymap(xkb_context* context) const -> XKBKeymapPtr override;
 
