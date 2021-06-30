@@ -399,3 +399,4 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WindowInfo::focus_mode() const@MIRAL_3.3" 3.3.0
  (c++)"miral::WindowSpecification::focus_mode() const@MIRAL_3.3" 3.3.0
  (c++)"miral::WindowSpecification::focus_mode()@MIRAL_3.3" 3.3.0
+ (c++)"miral::toolkit::mir_keyboard_event_keysym(MirKeyboardEvent const*)@MIRAL_3.3" 3.3.0
