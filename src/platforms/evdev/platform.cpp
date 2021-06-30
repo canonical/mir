@@ -291,14 +291,14 @@ void mie::Platform::start()
             [this](auto type, auto const& device)
         {
             using namespace std::string_literals;
-            auto type_name = "unknown"s;
+            auto event_type= "unknown"s;
             try
             {
                 switch (type)
                 {
                 case mu::Monitor::ADDED:
                 {
-                    type_name = "ADDED"s;
+                    event_type = "ADDED"s;
                     if (device.devnode())
                     {
                         /*
@@ -346,7 +346,7 @@ void mie::Platform::start()
                 }
                 case mu::Monitor::REMOVED:
                 {
-                    type_name = "REMOVED"s;
+                    event_type = "REMOVED"s;
                     for (auto const& input_device : this->devices)
                     {
                         auto device_udev = libinput_device_get_udev_device(input_device->device());
@@ -368,9 +368,10 @@ void mie::Platform::start()
             }
             catch (std::exception const& e)
             {
-                auto const message = "Failed to handle UDev " + type_name + " event for " + device.syspath();
+                auto const message = "Failed to handle UDev " + event_type + " event for " + device.syspath();
                 log(logging::Severity::warning, MIR_LOG_COMPONENT, std::make_exception_ptr(e), message);
-        }});
+            }
+        });
 
     platform_dispatchable->add_watch(udev_dispatchable);
     platform_dispatchable->add_watch(libinput_dispatchable);
