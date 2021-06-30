@@ -289,11 +289,16 @@ void mie::Platform::start()
         std::make_shared<DispatchableUDevMonitor>(
             *udev_context,
             [this](auto type, auto const& device)
+        {
+            using namespace std::string_literals;
+            auto type_name = "unknown"s;
+            try
             {
-                switch(type)
+                switch (type)
                 {
                 case mu::Monitor::ADDED:
                 {
+                    type_name = "ADDED"s;
                     if (device.devnode())
                     {
                         /*
@@ -341,6 +346,7 @@ void mie::Platform::start()
                 }
                 case mu::Monitor::REMOVED:
                 {
+                    type_name = "REMOVED"s;
                     for (auto const& input_device : this->devices)
                     {
                         auto device_udev = libinput_device_get_udev_device(input_device->device());
@@ -359,7 +365,12 @@ void mie::Platform::start()
                 default:
                     break;
                 }
-            });
+            }
+            catch (std::exception const& e)
+            {
+                auto const message = "Failed to handle UDev " + type_name + " event for " + device.syspath();
+                log(logging::Severity::warning, MIR_LOG_COMPONENT, std::make_exception_ptr(e), message);
+        }});
 
     platform_dispatchable->add_watch(udev_dispatchable);
     platform_dispatchable->add_watch(libinput_dispatchable);
