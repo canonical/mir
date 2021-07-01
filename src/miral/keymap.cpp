@@ -26,7 +26,7 @@
 #include <mir/server.h>
 #include <mir/udev/wrapper.h>
 
-#include <mir/input/keymap.h>
+#include <mir/input/parameter_keymap.h>
 #include <mir/input/mir_keyboard_config.h>
 
 #define MIR_LOG_COMPONENT "miral::Keymap"
@@ -36,6 +36,8 @@
 #include <mutex>
 #include <string>
 #include <vector>
+
+namespace mi = mir::input;
 
 namespace
 {
@@ -147,17 +149,13 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
 
     void apply_keymap(std::shared_ptr<mir::input::Device> const& keyboard)
     {
+        std::string model = mi::ParameterKeymap::default_model;
         auto const keyboard_config = keyboard->keyboard_configuration();
-        mir::input::Keymap keymap;
-
         if (keyboard_config.is_set())
         {
-            keymap = keyboard_config.value().device_keymap();
+            model = keyboard_config.value().device_keymap().model();
         }
-
-        keymap.layout = layout;
-        keymap.variant = variant;
-        keymap.options = options;
+        std::shared_ptr<mi::Keymap> keymap{std::make_shared<mi::ParameterKeymap>(model, layout, variant, options)};
         keyboard->apply_keyboard_configuration(std::move(keymap));
     }
 

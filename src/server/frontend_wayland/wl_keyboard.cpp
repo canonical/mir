@@ -199,19 +199,7 @@ void mf::WlKeyboard::update_keyboard_state(std::vector<uint32_t> const& keyboard
 
 void mf::WlKeyboard::set_keymap(mi::Keymap const& new_keymap)
 {
-    xkb_rule_names const names = {
-        "evdev",
-        new_keymap.model.c_str(),
-        new_keymap.layout.c_str(),
-        new_keymap.variant.c_str(),
-        new_keymap.options.c_str()
-    };
-    keymap = decltype(keymap){
-        xkb_keymap_new_from_names(
-            context.get(),
-            &names,
-            XKB_KEYMAP_COMPILE_NO_FLAGS),
-        &xkb_keymap_unref};
+    keymap = new_keymap.make_unique_xkb_keymap(context.get());
 
     // TODO: We might need to copy across the existing depressed keys?
     state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);

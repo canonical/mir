@@ -23,6 +23,7 @@
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchscreen_config.h"
 #include "mir/test/doubles/mock_key_mapper.h"
+#include "mir/test/doubles/stub_keymap.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/test/fake_shared.h"
 #include "mir/events/event_private.h"
@@ -167,23 +168,6 @@ TEST_F(DefaultDevice, ensures_cursor_accleration_bias_is_in_range)
     EXPECT_NO_THROW(dev.apply_pointer_configuration(pointer_conf));
 }
 
-namespace
-{
-MATCHER_P(KeymapLayout, layout, "")
-{
-    return arg.layout == layout;
-}
-}
-
-TEST_F(DefaultDevice, when_managing_a_keyboard_us_layout_is_set_by_default)
-{
-    auto const device_id = MirInputDeviceId{12};
-    EXPECT_CALL(key_mapper, set_keymap_for_device(device_id, KeymapLayout("us")));
-    mi::DefaultDevice dev(device_id, queue, keyboard, mt::fake_shared(key_mapper));
-
-    queue->dispatch(md::FdEvent::readable);
-}
-
 TEST_F(DefaultDevice, touchpad_device_can_be_constructed_from_input_config)
 {
     MirTouchpadConfig const tpd_conf{mir_touchpad_click_mode_finger_count, mir_touchpad_scroll_mode_edge_scroll, 0, false, true, true, true};
@@ -209,7 +193,8 @@ TEST_F(DefaultDevice, pointer_device_can_be_constructed_from_input_config)
 
 TEST_F(DefaultDevice, keyboard_device_can_be_constructed_from_input_config)
 {
-    MirKeyboardConfig const kbd_config{mi::Keymap{"pc104", "dvorak", "", ""}};
+    std::shared_ptr<mi::Keymap> keymap{std::make_shared<mtd::StubKeymap>()};
+    MirKeyboardConfig const kbd_config{std::move(keymap)};
     MirInputDevice conf(MirInputDeviceId{3}, mi::DeviceCapability::keyboard, "keyboard", "keyboard-event3c");
     conf.set_keyboard_config(kbd_config);
     mi::DefaultDevice dev(conf, queue, keyboard, mt::fake_shared(key_mapper), change_callback);
@@ -286,7 +271,8 @@ TEST_F(DefaultDevice, device_config_can_be_queried_from_keyboard_device)
 
     auto dev_info = keyboard.get_device_info();
     MirInputDevice conf(device_id, dev_info.capabilities, dev_info.name, dev_info.unique_id);
-    MirKeyboardConfig const kbd_config{mi::Keymap{"pc104", "dvorak", "", ""}};
+    std::shared_ptr<mi::Keymap> keymap{std::make_shared<mtd::StubKeymap>()};
+    MirKeyboardConfig const kbd_config{std::move(keymap)};
 
     conf.set_keyboard_config(kbd_config);
     dev.apply_keyboard_configuration(kbd_config);
@@ -334,7 +320,8 @@ TEST_F(DefaultDevice, disable_queue_removes_reference_to_queue)
 
 TEST_F(DefaultDevice, keyboard_device_can_be_constructed_from_input_config_with_broken_config)
 {
-    MirKeyboardConfig const kbd_config{mi::Keymap{"pc104", "trial", "error", ""}};
+    std::shared_ptr<mi::Keymap> keymap{std::make_shared<mtd::StubKeymap>()};
+    MirKeyboardConfig const kbd_config{std::move(keymap)};
     MirInputDevice conf(MirInputDeviceId{3}, mi::DeviceCapability::keyboard, "keyboard", "keyboard-event3c");
     conf.set_keyboard_config(kbd_config);
     EXPECT_NO_THROW(mi::DefaultDevice dev(conf, queue, keyboard, mt::fake_shared(key_mapper), change_callback));
