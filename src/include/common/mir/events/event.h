@@ -49,9 +49,6 @@ struct MirEvent
     MirCloseWindowEvent* to_close_window();
     MirCloseWindowEvent const* to_close_window() const;
 
-    MirKeymapEvent* to_keymap();
-    MirKeymapEvent const* to_keymap() const;
-
     MirWindowOutputEvent* to_window_output();
     MirWindowOutputEvent const* to_window_output() const;
 

@@ -79,7 +79,7 @@ int main(int argc, char const* argv[])
             if (!(mods & mir_input_event_modifier_alt) || !(mods & mir_input_event_modifier_ctrl))
                 return false;
 
-            switch (mir_keyboard_event_key_code(kev))
+            switch (mir_keyboard_event_keysym(kev))
             {
             case XKB_KEY_BackSpace:
                 runner.stop();

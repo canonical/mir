@@ -78,17 +78,6 @@ void ms::SurfaceEventSource::client_surface_close_requested(Surface const*)
     event_sink->handle_event(mev::make_window_close_event(id));
 }
 
-void ms::SurfaceEventSource::keymap_changed(
-    Surface const*,
-    MirInputDeviceId device_id,
-    std::string const& model,
-    std::string const& layout,
-    std::string const& variant,
-    std::string const& options)
-{
-    event_sink->handle_event(mev::make_keymap_event(id, device_id, model, layout, variant, options));
-}
-
 void ms::SurfaceEventSource::placed_relative(Surface const*, geometry::Rectangle const& placement)
 {
     event_sink->handle_event(mev::make_window_placement_event(id, placement));

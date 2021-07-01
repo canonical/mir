@@ -25,7 +25,6 @@
 #include "mir/events/surface_placement_event.h"
 #include "mir/cookie/blob.h"
 #include "mir/input/xkb_mapper.h"
-#include "mir/input/parameter_keymap.h"
 
 #include <string.h>
 
@@ -268,33 +267,6 @@ mir::EventUPtr mev::make_pointer_event(
     return make_uptr_event(e);
 }
 
-mir::EventUPtr mev::make_keymap_event(
-    mf::SurfaceId const& surface_id,
-    MirInputDeviceId id,
-    std::string const& model,
-    std::string const& layout,
-    std::string const& variant,
-    std::string const& options)
-{
-    auto e = new_event<MirKeymapEvent>();
-    auto ep = make_uptr_event(e);
-
-    auto ctx = mi::make_unique_context();
-    auto map = mi::ParameterKeymap{model, layout, variant, options}.make_unique_xkb_keymap(ctx.get());
-
-    if (!map.get())
-        BOOST_THROW_EXCEPTION(std::runtime_error("failed to assemble keymap from given parameters"));
-
-    e->set_surface_id(surface_id.as_value());
-    e->set_device_id(id);
-    // TODO consider caching compiled keymaps
-    auto buffer = xkb_keymap_get_as_string(map.get(), XKB_KEYMAP_FORMAT_TEXT_V1);
-    e->set_buffer(buffer);
-    std::free(buffer);
-
-    return ep;
-}
-
 mir::EventUPtr mev::make_input_configure_event(
     std::chrono::nanoseconds timestamp,
     MirPointerButtons pointer_buttons,
@@ -399,9 +371,6 @@ void mev::set_window_id(MirEvent& event, int window_id)
         break;
     case mir_event_type_close_window:
         event.to_close_window()->set_surface_id(window_id);
-        break;
-    case mir_event_type_keymap:
-        event.to_keymap()->set_surface_id(window_id);
         break;
     case mir_event_type_window_output:
         event.to_window_output()->set_surface_id(window_id);

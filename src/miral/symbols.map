@@ -453,5 +453,6 @@ global:
     miral::PrintTo*;
     miral::WindowInfo::focus_mode*;
     miral::WindowSpecification::focus_mode*;
+    miral::toolkit::mir_keyboard_event_keysym*;
   };
 } MIRAL_3.2;

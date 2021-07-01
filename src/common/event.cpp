@@ -134,14 +134,7 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev) M
     return ev->to_orientation();
 })
 
-            MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    expect_event_type(ev, mir_event_type_keymap);
-
-    return ev->to_keymap();
-})
-
-                MirWindowOutputEvent const* mir_event_get_window_output_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+MirWindowOutputEvent const* mir_event_get_window_output_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_window_output);
 
@@ -207,24 +200,7 @@ MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev
     return ev->direction();
 })
 
-/* Keymap event accessors */
-
-void mir_keymap_event_get_keymap_buffer(MirKeymapEvent const* ev, char const** buffer, size_t* length) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    expect_event_type(ev, mir_event_type_keymap);
-
-    *buffer = ev->buffer();
-    *length = ev->size();
-})
-
-MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    expect_event_type(ev, mir_event_type_keymap);
-
-    return ev->device_id();
-})
-
-    /* Window output event accessors */
+/* Window output event accessors */
 
 int mir_window_output_event_get_dpi(MirWindowOutputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
