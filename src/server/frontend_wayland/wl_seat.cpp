@@ -106,7 +106,7 @@ void mf::WlSeat::ConfigObserver::device_added(std::shared_ptr<input::Device> con
 {
     if (auto keyboard_config = device->keyboard_configuration())
     {
-        if (*current_keymap != keyboard_config.value().device_keymap())
+        if (!current_keymap->matches(keyboard_config.value().device_keymap()))
         {
             pending_keymap = keyboard_config.value().device_keymap_shared();
         }
@@ -117,7 +117,7 @@ void mf::WlSeat::ConfigObserver::device_changed(std::shared_ptr<input::Device> c
 {
     if (auto keyboard_config = device->keyboard_configuration())
     {
-        if (*current_keymap != keyboard_config.value().device_keymap())
+        if (!current_keymap->matches(keyboard_config.value().device_keymap()))
         {
             pending_keymap = keyboard_config.value().device_keymap_shared();
         }

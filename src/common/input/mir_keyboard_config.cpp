@@ -88,7 +88,7 @@ auto MirKeyboardConfig::device_keymap_shared() -> std::shared_ptr<mir::input::Ke
 
 bool MirKeyboardConfig::operator==(MirKeyboardConfig const& rhs) const
 {
-    return device_keymap() == rhs.device_keymap();
+    return device_keymap().matches(rhs.device_keymap());
 }
 
 bool MirKeyboardConfig::operator!=(MirKeyboardConfig const& rhs) const
