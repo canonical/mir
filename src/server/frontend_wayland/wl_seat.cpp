@@ -86,7 +86,7 @@ public:
         std::shared_ptr<mi::Keymap> const& keymap,
         std::function<void(std::shared_ptr<mi::Keymap> const&)> const& on_keymap_commit)
         : current_keymap{keymap},
-          pending_keymap{current_keymap},
+          pending_keymap{nullptr},
           on_keymap_commit{on_keymap_commit}
     {
     }
@@ -106,10 +106,7 @@ void mf::WlSeat::ConfigObserver::device_added(std::shared_ptr<input::Device> con
 {
     if (auto keyboard_config = device->keyboard_configuration())
     {
-        if (!current_keymap->matches(keyboard_config.value().device_keymap()))
-        {
-            pending_keymap = keyboard_config.value().device_keymap_shared();
-        }
+        pending_keymap = keyboard_config.value().device_keymap_shared();
     }
 }
 
@@ -117,10 +114,7 @@ void mf::WlSeat::ConfigObserver::device_changed(std::shared_ptr<input::Device> c
 {
     if (auto keyboard_config = device->keyboard_configuration())
     {
-        if (!current_keymap->matches(keyboard_config.value().device_keymap()))
-        {
-            pending_keymap = keyboard_config.value().device_keymap_shared();
-        }
+        pending_keymap = keyboard_config.value().device_keymap_shared();
     }
 }
 
@@ -130,11 +124,13 @@ void mf::WlSeat::ConfigObserver::device_removed(std::shared_ptr<input::Device> c
 
 void mf::WlSeat::ConfigObserver::changes_complete()
 {
-    if (current_keymap != pending_keymap)
+    if (pending_keymap && !pending_keymap->matches(*current_keymap))
     {
-        current_keymap = pending_keymap;
+        current_keymap = std::move(pending_keymap);
         on_keymap_commit(pending_keymap);
     }
+
+    pending_keymap.reset();
 }
 
 class mf::WlSeat::Instance : public wayland::Seat
