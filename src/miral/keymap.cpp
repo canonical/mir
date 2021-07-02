@@ -156,7 +156,18 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
             model = keyboard_config.value().device_keymap().model();
         }
         std::shared_ptr<mi::Keymap> keymap{std::make_shared<mi::ParameterKeymap>(model, layout, variant, options)};
-        keyboard->apply_keyboard_configuration(std::move(keymap));
+        try
+        {
+            keyboard->apply_keyboard_configuration(std::move(keymap));
+        }
+        catch (std::invalid_argument const&)
+        {
+            mir::log(
+                mir::logging::Severity::informational,
+                MIR_LOG_COMPONENT,
+                std::current_exception(),
+                "failed to apply keymap");
+        }
     }
 
     void device_removed(std::shared_ptr<mir::input::Device> const& device) override
