@@ -54,7 +54,8 @@ struct mi::ExternalInputDeviceHub::Internal : InputDeviceObserver
     std::shared_ptr<ServerActionQueue> const observer_queue;
     ThreadSafeList<std::shared_ptr<InputDeviceObserver>> observers;
 
-    std::mutex mutex;
+    // Needs to be a recursive mutex so that initial device notifications can be sent under lock in add_observer()
+    std::recursive_mutex mutex;
     std::vector<std::shared_ptr<Device>> devices_added;
     std::vector<std::shared_ptr<Device>> devices_changed;
     std::vector<std::shared_ptr<Device>> devices_removed;
@@ -78,10 +79,12 @@ void mi::ExternalInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserve
         data.get(),
         [observer, data = this->data]
         {
-            std::lock_guard<std::mutex> lock{data->mutex};
+            std::lock_guard<std::recursive_mutex> lock{data->mutex};
             for (auto const& item : data->handles)
                 observer->device_added(item);
             observer->changes_complete();
+            // Need to add observer under lock so that new handles can not be added between sending off initial
+            // observations and when the observer is added
             data->observers.add(observer);
         });
 }
@@ -98,7 +101,7 @@ void mi::ExternalInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserv
         data->observer_queue->enqueue_with_guaranteed_execution(
             [&,this]
             {
-                std::lock_guard<std::mutex> lock{data->mutex};
+                std::lock_guard<std::recursive_mutex> lock{data->mutex};
                 data->observers.remove(observer);
 
                 std::lock_guard<decltype(mutex)> vc_lock{mutex};
