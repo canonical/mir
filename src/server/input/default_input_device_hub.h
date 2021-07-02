@@ -99,18 +99,18 @@ public:
     void for_each_input_device(std::function<void(Device const& device)> const& callback) override;
     void for_each_mutable_input_device(std::function<void(Device& device)> const& callback) override;
 private:
-    void add_device_handle(std::lock_guard<std::mutex> const&, std::shared_ptr<DefaultDevice> const& handle);
-    void remove_device_handle(std::lock_guard<std::mutex> const&, MirInputDeviceId id);
+    void add_device_handle(std::lock_guard<std::recursive_mutex> const&, std::shared_ptr<DefaultDevice> const& handle);
+    void remove_device_handle(std::lock_guard<std::recursive_mutex> const&, MirInputDeviceId id);
     void device_changed(Device* dev);
     void complete_transaction();
-    MirInputDeviceId create_new_device_id(std::lock_guard<std::mutex> const&);
-    void store_device_config(std::lock_guard<std::mutex> const&, DefaultDevice const& dev);
+    MirInputDeviceId create_new_device_id(std::lock_guard<std::recursive_mutex> const&);
+    void store_device_config(std::lock_guard<std::recursive_mutex> const&, DefaultDevice const& dev);
     auto restore_or_create_device(
-        std::lock_guard<std::mutex> const& lock,
+        std::lock_guard<std::recursive_mutex> const& lock,
         InputDevice& dev,
         std::shared_ptr<dispatch::ActionQueue> const& queue) -> std::shared_ptr<DefaultDevice>;
     auto get_stored_device_config(
-        std::lock_guard<std::mutex> const&,
+        std::lock_guard<std::recursive_mutex> const&,
         std::string const& id) -> std::optional<MirInputDevice>;
 
     std::shared_ptr<Seat> const seat;
@@ -150,7 +150,8 @@ private:
         std::shared_ptr<dispatch::ActionQueue> queue;
     };
 
-    std::mutex mutex;
+    // Needs to be a recursive mutex so that initial device notifications can be sent under lock in add_observer()
+    std::recursive_mutex mutex;
     std::vector<std::shared_ptr<Device>> handles;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
     /// Nullopt when no transaction is in progress. Set to an empty vector when a transaction starts, and change
