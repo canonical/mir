@@ -50,12 +50,12 @@ bool mir::input::VTFilter::handle(MirEvent const& event)
         {
             switcher->switch_to(
                 vtno,
-                [](std::exception const& err)
+                [](std::exception const&)
                 {
                     mir::log(
                         mir::logging::Severity::error,
                         "VT switch key handler",
-                        std::make_exception_ptr(err),
+                        std::current_exception(),
                         "Failed to switch to requested VT");
                 });
         };

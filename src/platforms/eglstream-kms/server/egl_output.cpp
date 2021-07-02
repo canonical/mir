@@ -166,11 +166,11 @@ mgek::EGLOutput::~EGLOutput()
     {
         restore_saved_crtc();
     }
-    catch(std::exception const& e)
+    catch(std::exception const&)
     {
         log(logging::Severity::error,
             MIR_LOG_COMPONENT_FALLBACK,
-            std::make_exception_ptr(e),
+            std::current_exception(),
             "Failed to restore saved crtc");
     }
 }
