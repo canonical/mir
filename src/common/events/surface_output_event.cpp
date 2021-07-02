@@ -21,7 +21,7 @@
 // MirSurfaceOutputEvent is a deprecated type, but we need to implement it
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-MirSurfaceOutputEvent::MirSurfaceOutputEvent() : MirEvent(mir_event_type_surface_output)
+MirSurfaceOutputEvent::MirSurfaceOutputEvent() : MirEvent(mir_event_type_window_output)
 {
 }
 

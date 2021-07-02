@@ -238,7 +238,7 @@ private:
     void update_event_timestamp(MirPointerEvent const* pev);
     void update_event_timestamp(MirTouchEvent const* tev);
     void update_event_timestamp(MirInputEvent const* iev);
-} MIR_FOR_REMOVAL_IN_VERSION_1("Use libmiral instead");
+} __attribute__((deprecated("Use libmiral instead")));
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -268,7 +268,7 @@ private:
         return std::unique_ptr<WMPolicy>(
             new WMPolicy(this, std::forward<PolicyArgs>(policy_args)...));
     }
-} MIR_FOR_REMOVAL_IN_VERSION_1("Use libmiral instead");
+} __attribute__((deprecated("Use libmiral instead")));
 #pragma GCC diagnostic pop
 }
 }

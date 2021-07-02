@@ -23,7 +23,6 @@
 
 #include <mir_toolkit/events/event.h>
 #include <mir_toolkit/common.h>
-#include <mir_toolkit/deprecations.h>
 
 #include <stddef.h>
 
