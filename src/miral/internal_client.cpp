@@ -131,10 +131,10 @@ void WlInternalClientRunner<Base>::run(mir::Server& server)
                     wl_display_roundtrip(display);
                 }
             }
-            catch (std::exception const& e)
+            catch (std::exception const&)
             {
                 mir::log(mir::logging::Severity::informational, MIR_LOG_COMPONENT,
-                         std::make_exception_ptr(e), e.what());
+                         std::current_exception(), "internal client failed to connect to server");
             }
         }};
 }
