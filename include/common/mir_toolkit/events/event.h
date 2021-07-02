@@ -24,7 +24,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "mir_toolkit/common.h"
-#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -21,8 +21,6 @@
 #ifndef MIR_COMMON_H_
 #define MIR_COMMON_H_
 
-#include <mir_toolkit/deprecations.h>
-
 //for clang
 #ifndef __has_feature
   #define __has_feature(x) 0  // Compatibility with non-clang
@@ -31,16 +29,6 @@
 //for clang
 #ifndef __has_extension
   #define __has_extension __has_feature // Compatibility with pre-3.0
-#endif
-
-#if __GNUC__ >= 6 || \
-    (__has_extension(attribute_deprecated_with_message) && \
-     __has_extension(enumerator_attributes))
-  #define MIR_DEPRECATED_ENUM(ENUM, INSTEAD) \
-      ENUM MIR_FOR_REMOVAL_IN_VERSION_1("Use " #INSTEAD " instead")
-#else
-  #define MIR_DEPRECATED_ENUM(ENUM, INSTEAD) \
-      ENUM
 #endif
 
 /* This is C code. Not C++. */
