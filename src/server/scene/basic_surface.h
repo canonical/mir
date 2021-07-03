@@ -138,9 +138,6 @@ public:
 
     int dpi() const;
 
-    void set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
-                    std::string const& variant, std::string const& options) override;
-
     void rename(std::string const& title) override;
 
     void set_confine_pointer_state(MirPointerConfinementState state) override;
@@ -167,6 +164,9 @@ public:
         geometry::DeltaX left,
         geometry::DeltaY bottom,
         geometry::DeltaX right) override;
+
+    auto focus_mode() const -> MirFocusMode override;
+    void set_focus_mode(MirFocusMode focus_mode) override;
 
 private:
     struct ProofOfMutexLock
@@ -227,6 +227,8 @@ private:
         geometry::DeltaY bottom;
         geometry::DeltaX right;
     } margins;
+
+    MirFocusMode focus_mode_ = mir_focus_mode_focusable;
 };
 
 }

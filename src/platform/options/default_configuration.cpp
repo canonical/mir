@@ -19,24 +19,17 @@
 #include "mir/shared_library.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/platform.h"
-#include "mir/default_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/shared_library_prober.h"
 #include "mir/logging/null_shared_library_prober_report.h"
 
 namespace mo = mir::options;
 
-char const* const mo::server_socket_opt           = "file,f";
-char const* const mo::prompt_socket_opt           = "prompt-file,p";
-char const* const mo::no_server_socket_opt        = "no-file";
 char const* const mo::arw_server_socket_opt       = "arw-file";
 char const* const mo::enable_input_opt            = "enable-input,i";
-char const* const mo::session_mediator_report_opt = "session-mediator-report";
-char const* const mo::msg_processor_report_opt    = "msg-processor-report";
 char const* const mo::compositor_report_opt       = "compositor-report";
 char const* const mo::display_report_opt          = "display-report";
 char const* const mo::legacy_input_report_opt     = "legacy-input-report";
-char const* const mo::connector_report_opt        = "connector-report";
 char const* const mo::scene_report_opt            = "scene-report";
 char const* const mo::input_report_opt            = "input-report";
 char const* const mo::seat_report_opt            = "seat-report";
@@ -53,7 +46,6 @@ char const* const mo::x11_scale_opt               = "x11-scale";
 char const* const mo::wayland_extensions_opt      = "wayland-extensions";
 char const* const mo::add_wayland_extensions_opt  = "add-wayland-extensions";
 char const* const mo::drop_wayland_extensions_opt = "drop-wayland-extensions";
-char const* const mo::enable_mirclient_opt        = "enable-mirclient";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
@@ -162,8 +154,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Enable input.")
         (compositor_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "Compositor reporting [{log,lttng,off}]")
-        (connector_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the Connector report. [{log,lttng,off}]")
         (display_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the Display report. [{log,lttng,off}]")
         (input_report_opt, po::value<std::string>()->default_value(off_opt_value),
@@ -172,10 +162,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the Legacy Input report. [{log,off}]")
         (seat_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle to Seat report. [{log,off}]")
-        (session_mediator_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the SessionMediator report. [{log,lttng,off}]")
-        (msg_processor_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the MessageProcessor report. [{log,lttng,off}]")
         (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the scene report. [{log,lttng,off}]")
         (shared_library_prober_report_opt, po::value<std::string>()->default_value(log_opt_value),

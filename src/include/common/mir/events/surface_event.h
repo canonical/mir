@@ -21,11 +21,15 @@
 
 #include "mir/events/event.h"
 
+#include <optional>
+#include <vector>
+
 typedef struct MirBlob MirBlob;
 
 struct MirSurfaceEvent : MirEvent
 {
     MirSurfaceEvent();
+    auto clone() const -> MirSurfaceEvent* override;
 
     int id() const;
     void set_id(int id);
@@ -38,6 +42,12 @@ struct MirSurfaceEvent : MirEvent
 
     void set_dnd_handle(std::vector<uint8_t> const& handle);
     MirBlob* dnd_handle() const;
+
+private:
+    int id_ = 0;
+    MirWindowAttrib attrib_ = {};
+    int value_ = 0;
+    std::optional<std::vector<uint8_t>> dnd_handle_;
 };
 
 #endif /* MIR_COMMON_SURFACE_EVENT_H_ */

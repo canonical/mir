@@ -234,3 +234,9 @@ void miral::WindowInfo::application_id(std::string const& application_id)
     if (surface)
         return surface->set_application_id(application_id);
 }
+
+void miral::WindowInfo::focus_mode(MirFocusMode focus_mode)
+{
+    if (std::shared_ptr<mir::scene::Surface> const surface = self->window)
+        surface->set_focus_mode(focus_mode);
+}

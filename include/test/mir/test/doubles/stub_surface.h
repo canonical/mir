@@ -68,8 +68,6 @@ struct StubSurface : scene::Surface
     std::shared_ptr<Surface> parent() const override { return nullptr; }
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) override {}
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) override {}
-    void set_keymap(MirInputDeviceId, std::string const&, std::string const&, std::string const&,
-                    std::string const&) override {}
     void rename(std::string const&) override {}
     void set_confine_pointer_state(MirPointerConfinementState) override {}
     MirPointerConfinementState confine_pointer_state() const override { return mir_pointer_unconfined; }
@@ -89,6 +87,8 @@ struct StubSurface : scene::Surface
         geometry::DeltaX,
         geometry::DeltaY,
         geometry::DeltaX) override {}
+    auto focus_mode() const -> MirFocusMode override { return mir_focus_mode_focusable; }
+    void set_focus_mode(MirFocusMode) override {}
 };
 }
 }

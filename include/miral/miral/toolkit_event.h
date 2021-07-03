@@ -146,11 +146,17 @@ MirEvent const* mir_input_event_get_event(MirInputEvent const* event);
 MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* event);
 
 /**
- * Retrieve the xkb mapped keycode associated with the key acted on.. May
+ * Retrieve the xkb mapped keysym associated with the key acted on.. May
  * be interpreted as per <xkbcommon/xkbcommon-keysyms.h>
  *
  *   \param [in] event The key event
  *   \return           The xkb_keysym
+ *   \remark Since MirAL 3.3
+ */
+xkb_keysym_t mir_keyboard_event_keysym(MirKeyboardEvent const* event);
+
+/**
+ *   \deprecated       Returns the same thing as mir_keyboard_event_keysym(), which should be used instead.
  */
 xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* event);
 

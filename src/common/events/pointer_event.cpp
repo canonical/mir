@@ -21,10 +21,9 @@
 
 #include <boost/throw_exception.hpp>
 
-MirPointerEvent::MirPointerEvent()
+MirPointerEvent::MirPointerEvent() :
+    MirInputEvent{mir_input_event_type_pointer}
 {
-    event.initInput();
-    event.getInput().initPointer();
 }
 
 MirPointerEvent::MirPointerEvent(MirInputDeviceId dev,
@@ -38,106 +37,107 @@ MirPointerEvent::MirPointerEvent(MirInputDeviceId dev,
                     float dx,
                     float dy,
                     float vscroll,
-                    float hscroll)
-    : MirInputEvent(dev, et, mods, cookie)
+                    float hscroll) :
+    MirInputEvent(mir_input_event_type_pointer, dev, et, mods, cookie),
+    x_{x},
+    y_{y},
+    dx_{dx},
+    dy_{dy},
+    vscroll_{vscroll},
+    hscroll_{hscroll},
+    action_{action},
+    buttons_{buttons}
 {
-    auto input = event.getInput();
-    input.initPointer();
-    auto ptr = event.getInput().getPointer();
-    ptr.setX(x);
-    ptr.setY(y);
-    ptr.setDx(dx);
-    ptr.setDy(dy);
-    ptr.setVscroll(vscroll);
-    ptr.setHscroll(hscroll);
-    ptr.setButtons(buttons);
-    ptr.setAction(static_cast<mir::capnp::PointerEvent::PointerAction>(action));
+}
+
+auto MirPointerEvent::clone() const -> MirPointerEvent*
+{
+    return new MirPointerEvent{*this};
 }
 
 MirPointerButtons MirPointerEvent::buttons() const
 {
-    return event.asReader().getInput().getPointer().getButtons();
+    return buttons_;
 }
 
 void MirPointerEvent::set_buttons(MirPointerButtons buttons)
 {
-    event.getInput().getPointer().setButtons(buttons);
+    buttons_ = buttons;
 }
 
 float MirPointerEvent::x() const
 {
-    return event.asReader().getInput().getPointer().getX();
+    return x_;
 }
 
 void MirPointerEvent::set_x(float x)
 {
-    event.getInput().getPointer().setX(x);
+    x_ = x;
 }
 
 float MirPointerEvent::y() const
 {
-    return event.asReader().getInput().getPointer().getY();
+    return y_;
 }
 
 void MirPointerEvent::set_y(float y)
 {
-    event.getInput().getPointer().setY(y);
+    y_ = y;
 }
 
 float MirPointerEvent::dx() const
 {
-    return event.asReader().getInput().getPointer().getDx();
+    return dx_;
 }
 
 void MirPointerEvent::set_dx(float dx)
 {
-    event.getInput().getPointer().setDx(dx);
+    dx_ = dx;
 }
 
 float MirPointerEvent::dy() const
 {
-    return event.asReader().getInput().getPointer().getDy();
+    return dy_;
 }
 
 void MirPointerEvent::set_dy(float dy)
 {
-    event.getInput().getPointer().setDy(dy);
+    dy_ = dy;
 }
 
 float MirPointerEvent::vscroll() const
 {
-    return event.asReader().getInput().getPointer().getVscroll();
+    return vscroll_;
 }
 
 void MirPointerEvent::set_vscroll(float vs)
 {
-    event.getInput().getPointer().setVscroll(vs);
+    vscroll_ = vs;
 }
 
 float MirPointerEvent::hscroll() const
 {
-    return event.asReader().getInput().getPointer().getHscroll();
+    return hscroll_;
 }
 
 void MirPointerEvent::set_hscroll(float hs)
 {
-    event.getInput().getPointer().setHscroll(hs);
+    hscroll_ = hs;
 }
 
 MirPointerAction MirPointerEvent::action() const
 {
-    return static_cast<MirPointerAction>(event.asReader().getInput().getPointer().getAction());
+    return action_;
 }
 
 void MirPointerEvent::set_action(MirPointerAction action)
 {
-    event.getInput().getPointer().setAction(static_cast<mir::capnp::PointerEvent::PointerAction>(action));
+    action_ = action;
 }
 
 void MirPointerEvent::set_dnd_handle(std::vector<uint8_t> const& handle)
 {
-    event.getInput().getPointer().initDndHandle(handle.size());
-    event.getInput().getPointer().setDndHandle(::kj::ArrayPtr<uint8_t const>{&*begin(handle), &*end(handle)});
+    dnd_handle_ = handle;
 }
 
 namespace
@@ -154,12 +154,10 @@ struct MyMirBlob : MirBlob
 
 MirBlob* MirPointerEvent::dnd_handle() const
 {
-    auto const reader = event.asReader().getInput().getPointer();
-
-    if (!reader.hasDndHandle())
+    if (!dnd_handle_)
         return nullptr;
 
-    auto const dnd_handle = reader.getDndHandle();
+    auto const dnd_handle = *dnd_handle_;
 
     auto blob = std::make_unique<MyMirBlob>();
     blob->data_.reserve(dnd_handle.size());

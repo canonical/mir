@@ -14,6 +14,12 @@ add_library(mirplatformgraphicsrpidispmanxobjects OBJECT
   helpers.cpp
 )
 
+target_link_libraries(mirplatformgraphicsrpidispmanxobjects
+  PUBLIC
+    mircommon
+    mircore
+)
+
 target_include_directories(
   mirplatformgraphicsrpidispmanxobjects
     PRIVATE

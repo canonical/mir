@@ -30,6 +30,5 @@ std::string server_platform_path();
 std::string test_data_path();
 std::string server_platform(std::string const& name);
 std::string server_input_platform(std::string const& name);
-std::string client_platform(std::string const& name);
 }
 #endif /* MIR_TEST_FRAMEWORK_EXECUTABLE_PATH_H_ */

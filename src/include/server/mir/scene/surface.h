@@ -111,8 +111,6 @@ public:
     // TODO a legacy of old interactions and needs removing
     virtual int query(MirWindowAttrib attrib) const = 0;
 
-    virtual void set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
-                            std::string const& variant, std::string const& options) = 0;
     virtual void rename(std::string const& title) = 0;
     virtual void set_streams(std::list<StreamInfo> const& streams) = 0;
 
@@ -153,6 +151,12 @@ public:
         geometry::DeltaX left,
         geometry::DeltaY bottom,
         geometry::DeltaX right) = 0;
+
+    /// How the window should gain and lose focus
+    ///@{
+    virtual auto focus_mode() const -> MirFocusMode = 0;
+    virtual void set_focus_mode(MirFocusMode focus_mode) = 0;
+    ///@}
 };
 }
 }

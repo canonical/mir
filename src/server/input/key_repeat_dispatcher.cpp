@@ -69,8 +69,8 @@ struct DeviceRemovalFilter : mi::InputDeviceObserver
 
 auto is_meta_key(MirKeyboardEvent const* event) -> bool
 {
-    auto const key_code = mir_keyboard_event_key_code(event);
-    switch(key_code)
+    auto const keysym = mir_keyboard_event_keysym(event);
+    switch(keysym)
     {
     case XKB_KEY_Shift_R:
     case XKB_KEY_Shift_L:
@@ -83,7 +83,7 @@ auto is_meta_key(MirKeyboardEvent const* event) -> bool
     case XKB_KEY_Caps_Lock:
     case XKB_KEY_Scroll_Lock:
     case XKB_KEY_Num_Lock: return true;
-    default: return ((XKB_KEY_Shift_L <= key_code) && (key_code <= XKB_KEY_Hyper_R));
+    default: return ((XKB_KEY_Shift_L <= keysym) && (keysym <= XKB_KEY_Hyper_R));
     }
 }
 }
@@ -192,17 +192,17 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
         auto clone_event = [scan_code, id,
              cookie_authority=cookie_authority,
              next_dispatcher=next_dispatcher,
-             key_code = mir_keyboard_event_key_code(kev),
+             keysym = mir_keyboard_event_keysym(kev),
              modifiers = mir_keyboard_event_modifiers(kev)]()
              {
                  auto const now = std::chrono::steady_clock::now().time_since_epoch();
                  auto const cookie = cookie_authority->make_cookie(now.count());
-                 auto new_event = mev::make_event(
+                 auto new_event = mev::make_key_event_event(
                      id,
                      now,
                      cookie->serialize(),
                      mir_keyboard_action_repeat,
-                     key_code,
+                     keysym,
                      scan_code,
                      modifiers);
                  next_dispatcher->dispatch(std::move(new_event));

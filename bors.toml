@@ -1,5 +1,5 @@
 status = [ "Bors" ]
 block-labels = [ "no-merge" ]
-timeout-sec = 1800
+timeout-sec = 2400
 delete-merged-branches = true
 update_base_for_deletes = true

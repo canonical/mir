@@ -43,7 +43,6 @@ png2header(
 )
 
 include_directories(
-  ${PROJECT_SOURCE_DIR}/include/client
   ${GLIB_INCLUDE_DIRS}
   ${GLESv2_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
@@ -72,7 +71,6 @@ target_link_libraries(miral-spinner
   ${WAYLAND_EGL_LDFLAGS} ${WAYLAND_EGL_LIBRARIES}
   ${GLIB_LDFLAGS}
   ${GLESv2_LIBRARIES}
-  ${MIRCLIENT_LDFLAGS}
 )
 
 target_include_directories(miral-spinner

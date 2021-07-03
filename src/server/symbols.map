@@ -1,4 +1,4 @@
-MIR_SERVER_1.6.0 {
+MIR_SERVER_2.5 {
  global:
   extern "C++" {
     mir::check_for_termination_exception*;
@@ -23,8 +23,100 @@ MIR_SERVER_1.6.0 {
     mir::compositor::Scene::Scene*;
     mir::DefaultServerConfiguration::add_wayland_extension*;
     mir::DefaultServerConfiguration::default_reports*;
+    mir::DefaultServerConfiguration::DefaultServerConfiguration*;
+    mir::DefaultServerConfiguration::new_ipc_factory*;
     mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
     mir::DefaultServerConfiguration::set_wayland_extension_filter*;
+    mir::DefaultServerConfiguration::the_application_not_responding_detector*;
+    mir::DefaultServerConfiguration::the_buffer_allocator*;
+    mir::DefaultServerConfiguration::the_buffer_stream_factory*;
+    mir::DefaultServerConfiguration::the_clipboard*;
+    mir::DefaultServerConfiguration::the_clock*;
+    mir::DefaultServerConfiguration::the_composite_event_filter*;
+    mir::DefaultServerConfiguration::the_compositor*;
+    mir::DefaultServerConfiguration::the_compositor_report*;
+    mir::DefaultServerConfiguration::the_connection_creator*;
+    mir::DefaultServerConfiguration::the_connector*;
+    mir::DefaultServerConfiguration::the_connector_report*;
+    mir::DefaultServerConfiguration::the_console_services*;
+    mir::DefaultServerConfiguration::the_cookie_authority*;
+    mir::DefaultServerConfiguration::the_coordinate_translator*;
+    mir::DefaultServerConfiguration::the_cursor*;
+    mir::DefaultServerConfiguration::the_cursor_images*;
+    mir::DefaultServerConfiguration::the_cursor_listener*;
+    mir::DefaultServerConfiguration::the_decoration_manager*;
+    mir::DefaultServerConfiguration::the_default_cursor_image*;
+    mir::DefaultServerConfiguration::the_display*;
+    mir::DefaultServerConfiguration::the_display_buffer_compositor_factory*;
+    mir::DefaultServerConfiguration::the_display_changer*;
+    mir::DefaultServerConfiguration::the_display_configuration_controller*;
+    mir::DefaultServerConfiguration::the_display_configuration_policy*;
+    mir::DefaultServerConfiguration::the_display_platforms*;
+    mir::DefaultServerConfiguration::the_display_report*;
+    mir::DefaultServerConfiguration::the_emergency_cleanup*;
+    mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
+    mir::DefaultServerConfiguration::the_fatal_error_strategy*;
+    mir::DefaultServerConfiguration::the_frontend_display_changer*;
+    mir::DefaultServerConfiguration::the_frontend_surface_stack*;
+    mir::DefaultServerConfiguration::the_gl_config*;
+    mir::DefaultServerConfiguration::the_host_connection*;
+    mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
+    mir::DefaultServerConfiguration::the_input_device_hub*;
+    mir::DefaultServerConfiguration::the_input_device_registry*;
+    mir::DefaultServerConfiguration::the_input_dispatcher*;
+    mir::DefaultServerConfiguration::the_input_manager*;
+    mir::DefaultServerConfiguration::the_input_reading_multiplexer*;
+    mir::DefaultServerConfiguration::the_input_report*;
+    mir::DefaultServerConfiguration::the_input_scene*;
+    mir::DefaultServerConfiguration::the_input_targeter*;
+    mir::DefaultServerConfiguration::the_key_mapper*;
+    mir::DefaultServerConfiguration::the_logger*;
+    mir::DefaultServerConfiguration::the_main_loop*;
+    mir::DefaultServerConfiguration::the_mediating_display_changer*;
+    mir::DefaultServerConfiguration::the_message_processor_report*;
+    mir::DefaultServerConfiguration::the_options*;
+    mir::DefaultServerConfiguration::the_persistent_surface_store*;
+    mir::DefaultServerConfiguration::the_pixel_buffer*;
+    mir::DefaultServerConfiguration::the_prompt_connection_creator*;
+    mir::DefaultServerConfiguration::the_prompt_connector*;
+    mir::DefaultServerConfiguration::the_prompt_session_listener*;
+    mir::DefaultServerConfiguration::the_prompt_session_manager*;
+    mir::DefaultServerConfiguration::the_renderer_factory*;
+    mir::DefaultServerConfiguration::the_rendering_platforms*;
+    mir::DefaultServerConfiguration::the_scene*;
+    mir::DefaultServerConfiguration::the_scene_report*;
+    mir::DefaultServerConfiguration::the_screencast*;
+    mir::DefaultServerConfiguration::the_seat*;
+    mir::DefaultServerConfiguration::the_seat_observer_registrar*;
+    mir::DefaultServerConfiguration::the_server_action_queue*;
+    mir::DefaultServerConfiguration::the_server_status_listener*;
+    mir::DefaultServerConfiguration::the_session_authorizer*;
+    mir::DefaultServerConfiguration::the_session_container*;
+    mir::DefaultServerConfiguration::the_session_coordinator*;
+    mir::DefaultServerConfiguration::the_session_event_handler_register*;
+    mir::DefaultServerConfiguration::the_session_event_sink*;
+    mir::DefaultServerConfiguration::the_session_listener*;
+    mir::DefaultServerConfiguration::the_session_mediator_observer_registrar*;
+    mir::DefaultServerConfiguration::the_shared_library_prober_report*;
+    mir::DefaultServerConfiguration::the_shell*;
+    mir::DefaultServerConfiguration::the_shell_display_layout*;
+    mir::DefaultServerConfiguration::the_shell_report*;
+    mir::DefaultServerConfiguration::the_snapshot_strategy*;
+    mir::DefaultServerConfiguration::the_stop_callback*;
+    mir::DefaultServerConfiguration::the_surface_factory*;
+    mir::DefaultServerConfiguration::the_surface_input_dispatcher*;
+    mir::DefaultServerConfiguration::the_surface_stack*;
+    mir::DefaultServerConfiguration::the_touch_visualizer*;
+    mir::DefaultServerConfiguration::the_wayland_connector*;
+    mir::DefaultServerConfiguration::the_window_manager_builder*;
+    mir::DefaultServerConfiguration::the_xwayland_connector*;
+    mir::DefaultServerConfiguration::wrap_application_not_responding_detector*;
+    mir::DefaultServerConfiguration::wrap_cursor*;
+    mir::DefaultServerConfiguration::wrap_cursor_listener*;
+    mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
+    mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
+    mir::DefaultServerConfiguration::wrap_shell*;
+    mir::DefaultServerConfiguration::wrap_surface_stack*;
     mir::Executor::?Executor*;
     mir::frontend::BufferSink::?BufferSink*;
     mir::frontend::BufferSink::BufferSink*;
@@ -46,7 +138,6 @@ MIR_SERVER_1.6.0 {
     mir::frontend::SessionCredentials::pid*;
     mir::frontend::SessionCredentials::SessionCredentials*;
     mir::frontend::SessionCredentials::uid*;
-    mir::frontend::SessionMediatorObserver::?SessionMediatorObserver*;
     mir::frontend::Session::operator*;
     mir::frontend::Session::?Session*;
     mir::frontend::Session::Session*;
@@ -91,6 +182,7 @@ MIR_SERVER_1.6.0 {
     mir::LockableCallback::LockableCallback*;
     mir::LockableCallback::operator*;
     mir::report_exception*;
+    mir::run_mir*;
     mir::scene::ApplicationNotRespondingDetector::?ApplicationNotRespondingDetector*;
     mir::scene::ApplicationNotRespondingDetector::ApplicationNotRespondingDetector*;
     mir::scene::ApplicationNotRespondingDetector::Observer::?Observer*;
@@ -114,6 +206,7 @@ MIR_SERVER_1.6.0 {
     mir::scene::NullSurfaceObserver::application_id_set_to*;
     mir::scene::NullSurfaceObserver::attrib_changed*;
     mir::scene::NullSurfaceObserver::client_surface_close_requested*;
+    mir::scene::NullSurfaceObserver::content_resized_to*;
     mir::scene::NullSurfaceObserver::cursor_image_removed*;
     mir::scene::NullSurfaceObserver::cursor_image_set_to*;
     mir::scene::NullSurfaceObserver::depth_layer_set_to*;
@@ -129,10 +222,9 @@ MIR_SERVER_1.6.0 {
     mir::scene::NullSurfaceObserver::placed_relative*;
     mir::scene::NullSurfaceObserver::reception_mode_set_to*;
     mir::scene::NullSurfaceObserver::renamed*;
-    mir::scene::NullSurfaceObserver::window_resized_to*;
-    mir::scene::NullSurfaceObserver::content_resized_to*;
     mir::scene::NullSurfaceObserver::start_drag_and_drop*;
     mir::scene::NullSurfaceObserver::transformation_set_to*;
+    mir::scene::NullSurfaceObserver::window_resized_to*;
     mir::scene::Observer::?Observer*;
     mir::scene::Observer::Observer*;
     mir::scene::Observer::operator*;
@@ -169,6 +261,13 @@ MIR_SERVER_1.6.0 {
     mir::scene::SurfaceObserver::operator*;
     mir::scene::SurfaceObserver::?SurfaceObserver*;
     mir::scene::SurfaceObserver::SurfaceObserver*;
+    mir::scene::SurfaceStateTracker::active_state*;
+    mir::scene::SurfaceStateTracker::has*;
+    mir::scene::SurfaceStateTracker::has_any*;
+    mir::scene::SurfaceStateTracker::SurfaceStateTracker*;
+    mir::scene::SurfaceStateTracker::with*;
+    mir::scene::SurfaceStateTracker::with_active_state*;
+    mir::scene::SurfaceStateTracker::without*;
     mir::ServerActionQueue::operator*;
     mir::ServerActionQueue::?ServerActionQueue*;
     mir::ServerActionQueue::ServerActionQueue*;
@@ -229,6 +328,7 @@ MIR_SERVER_1.6.0 {
     mir::Server::the_display*;
     mir::Server::the_display_configuration_controller*;
     mir::Server::the_display_configuration_observer_registrar*;
+    mir::Server::the_display_platforms*;
     mir::Server::the_focus_controller*;
     mir::Server::the_gl_config*;
     mir::Server::the_graphics_platform*;
@@ -239,6 +339,7 @@ MIR_SERVER_1.6.0 {
     mir::Server::the_persistent_surface_store*;
     mir::Server::the_prompt_session_listener*;
     mir::Server::the_prompt_session_manager*;
+    mir::Server::the_rendering_platforms*;
     mir::Server::the_seat_observer_registrar*;
     mir::Server::the_session_authorizer*;
     mir::Server::the_session_coordinator*;
@@ -257,6 +358,7 @@ MIR_SERVER_1.6.0 {
     mir::Server::wrap_display_configuration_policy*;
     mir::Server::wrap_shell*;
     mir::Server::wrap_surface_stack*;
+    mir::Server::x11_display*;
     mir::shell::AbstractShell::?AbstractShell*;
     mir::shell::AbstractShell::AbstractShell*;
     mir::shell::AbstractShell::add_display*;
@@ -439,7 +541,6 @@ MIR_SERVER_1.6.0 {
     non-virtual?thunk?to?mir::frontend::BufferStream::?BufferStream*;
     non-virtual?thunk?to?mir::frontend::PromptSession::?PromptSession*;
     non-virtual?thunk?to?mir::frontend::SessionAuthorizer::?SessionAuthorizer*;
-    non-virtual?thunk?to?mir::frontend::SessionMediatorObserver::?SessionMediatorObserver*;
     non-virtual?thunk?to?mir::frontend::Session::?Session*;
     non-virtual?thunk?to?mir::frontend::Surface::?Surface*;
     non-virtual?thunk?to?mir::graphics::CloneDisplayConfigurationPolicy::apply_to*;
@@ -472,13 +573,13 @@ MIR_SERVER_1.6.0 {
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::client_surface_close_requested*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::cursor_image_removed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::cursor_image_set_to*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::depth_layer_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::frame_posted*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::hidden_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::input_consumed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::keymap_changed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::moved_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::?NullSurfaceObserver*;
-    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::depth_layer_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::orientation_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::placed_relative*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::reception_mode_set_to*;
@@ -625,6 +726,7 @@ MIR_SERVER_1.6.0 {
     typeinfo?for?mir::compositor::DisplayListener;
     typeinfo?for?mir::compositor::Scene;
     typeinfo?for?mir::compositor::SceneElement;
+    typeinfo?for?mir::DefaultServerConfiguration;
     typeinfo?for?mir::Executor;
     typeinfo?for?mir::frontend::BufferSink;
     typeinfo?for?mir::frontend::BufferStream;
@@ -632,7 +734,6 @@ MIR_SERVER_1.6.0 {
     typeinfo?for?mir::frontend::Session;
     typeinfo?for?mir::frontend::SessionAuthorizer;
     typeinfo?for?mir::frontend::SessionCredentials;
-    typeinfo?for?mir::frontend::SessionMediatorObserver;
     typeinfo?for?mir::frontend::Surface;
     typeinfo?for?mir::graphics::CloneDisplayConfigurationPolicy;
     typeinfo?for?mir::graphics::DisplayConfigurationObserver;
@@ -748,14 +849,13 @@ MIR_SERVER_1.6.0 {
     vtable?for?mir::compositor::DisplayListener;
     vtable?for?mir::compositor::Scene;
     vtable?for?mir::compositor::SceneElement;
+    vtable?for?mir::DefaultServerConfiguration;
     vtable?for?mir::Executor;
     vtable?for?mir::frontend::BufferSink;
-    vtable?for?mir::frontend::BufferStream;
     vtable?for?mir::frontend::PromptSession;
     vtable?for?mir::frontend::Session;
     vtable?for?mir::frontend::SessionAuthorizer;
     vtable?for?mir::frontend::SessionCredentials;
-    vtable?for?mir::frontend::SessionMediatorObserver;
     vtable?for?mir::frontend::Surface;
     vtable?for?mir::graphics::CloneDisplayConfigurationPolicy;
     vtable?for?mir::graphics::DisplayConfigurationObserver;
@@ -828,146 +928,10 @@ MIR_SERVER_1.6.0 {
     vtable?for?mir::shell::WindowManagerTools;
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::AlarmFactory;
+    VTT?for?mir::DefaultServerConfiguration;
     VTT?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
     VTT?for?mir::shell::ShellWrapper;
     VTT?for?mir::shell::SystemCompositorWindowManager;
   };
  local: *;
 };
-
-MIR_SERVER_1.7.0 {
- global:
-  extern "C++" {
-    mir::DefaultServerConfiguration::the_frontend_surface_stack*;
-  };
-} MIR_SERVER_1.6.0;
-
-MIR_SERVER_1.7.1 {
- global:
-  extern "C++" {
-    mir::Server::x11_display*;
-  };
-} MIR_SERVER_1.7.0;
-
-MIR_SERVER_2.4.0 {
- global:
-  extern "C++" {
-    mir::scene::SurfaceStateTracker::SurfaceStateTracker*;
-    mir::scene::SurfaceStateTracker::active_state*;
-    mir::scene::SurfaceStateTracker::with_active_state*;
-    mir::scene::SurfaceStateTracker::has*;
-    mir::scene::SurfaceStateTracker::has_any*;
-    mir::scene::SurfaceStateTracker::with*;
-    mir::scene::SurfaceStateTracker::without*;
-    mir::Server::the_display_platforms*;
-    mir::Server::the_rendering_platforms*;
-    mir::DefaultServerConfiguration::the_display_platforms*;
-    mir::DefaultServerConfiguration::the_rendering_platforms*;
-  };
-} MIR_SERVER_1.7.1;
-
-# these symbols are needed by the "throwback" tests but are not intended to be public
-MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
- global:
-  extern "C++" {
-    mir::DefaultServerConfiguration::DefaultServerConfiguration*;
-    mir::DefaultServerConfiguration::new_ipc_factory*;
-    mir::DefaultServerConfiguration::the_application_not_responding_detector*;
-    mir::DefaultServerConfiguration::the_buffer_allocator*;
-    mir::DefaultServerConfiguration::the_buffer_stream_factory*;
-    mir::DefaultServerConfiguration::the_clock*;
-    mir::DefaultServerConfiguration::the_composite_event_filter*;
-    mir::DefaultServerConfiguration::the_compositor*;
-    mir::DefaultServerConfiguration::the_compositor_report*;
-    mir::DefaultServerConfiguration::the_connection_creator*;
-    mir::DefaultServerConfiguration::the_connector*;
-    mir::DefaultServerConfiguration::the_connector_report*;
-    mir::DefaultServerConfiguration::the_console_services*;
-    mir::DefaultServerConfiguration::the_cookie_authority*;
-    mir::DefaultServerConfiguration::the_coordinate_translator*;
-    mir::DefaultServerConfiguration::the_cursor*;
-    mir::DefaultServerConfiguration::the_cursor_images*;
-    mir::DefaultServerConfiguration::the_cursor_listener*;
-    mir::DefaultServerConfiguration::the_default_cursor_image*;
-    mir::DefaultServerConfiguration::the_display*;
-    mir::DefaultServerConfiguration::the_display_buffer_compositor_factory*;
-    mir::DefaultServerConfiguration::the_display_changer*;
-    mir::DefaultServerConfiguration::the_display_configuration_controller*;
-    mir::DefaultServerConfiguration::the_display_configuration_policy*;
-    mir::DefaultServerConfiguration::the_display_report*;
-    mir::DefaultServerConfiguration::the_emergency_cleanup*;
-    mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
-    mir::DefaultServerConfiguration::the_fatal_error_strategy*;
-    mir::DefaultServerConfiguration::the_frontend_display_changer*;
-    mir::DefaultServerConfiguration::the_gl_config*;
-    mir::DefaultServerConfiguration::the_display_platforms*;
-    mir::DefaultServerConfiguration::the_host_connection*;
-    mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
-    mir::DefaultServerConfiguration::the_input_configuration_changer*;
-    mir::DefaultServerConfiguration::the_input_device_hub*;
-    mir::DefaultServerConfiguration::the_input_device_registry*;
-    mir::DefaultServerConfiguration::the_input_dispatcher*;
-    mir::DefaultServerConfiguration::the_input_manager*;
-    mir::DefaultServerConfiguration::the_input_reading_multiplexer*;
-    mir::DefaultServerConfiguration::the_input_report*;
-    mir::DefaultServerConfiguration::the_input_scene*;
-    mir::DefaultServerConfiguration::the_input_targeter*;
-    mir::DefaultServerConfiguration::the_key_mapper*;
-    mir::DefaultServerConfiguration::the_logger*;
-    mir::DefaultServerConfiguration::the_main_loop*;
-    mir::DefaultServerConfiguration::the_mediating_display_changer*;
-    mir::DefaultServerConfiguration::the_message_processor_report*;
-    mir::DefaultServerConfiguration::the_options*;
-    mir::DefaultServerConfiguration::the_persistent_surface_store*;
-    mir::DefaultServerConfiguration::the_pixel_buffer*;
-    mir::DefaultServerConfiguration::the_prompt_connection_creator*;
-    mir::DefaultServerConfiguration::the_prompt_connector*;
-    mir::DefaultServerConfiguration::the_prompt_session_listener*;
-    mir::DefaultServerConfiguration::the_prompt_session_manager*;
-    mir::DefaultServerConfiguration::the_renderer_factory*;
-    mir::DefaultServerConfiguration::the_scene*;
-    mir::DefaultServerConfiguration::the_scene_report*;
-    mir::DefaultServerConfiguration::the_screencast*;
-    mir::DefaultServerConfiguration::the_seat*;
-    mir::DefaultServerConfiguration::the_seat_observer_registrar*;
-    mir::DefaultServerConfiguration::the_server_action_queue*;
-    mir::DefaultServerConfiguration::the_server_status_listener*;
-    mir::DefaultServerConfiguration::the_session_authorizer*;
-    mir::DefaultServerConfiguration::the_session_container*;
-    mir::DefaultServerConfiguration::the_session_coordinator*;
-    mir::DefaultServerConfiguration::the_session_event_handler_register*;
-    mir::DefaultServerConfiguration::the_session_event_sink*;
-    mir::DefaultServerConfiguration::the_session_listener*;
-    mir::DefaultServerConfiguration::the_session_mediator_observer_registrar*;
-    mir::DefaultServerConfiguration::the_shared_library_prober_report*;
-    mir::DefaultServerConfiguration::the_shell*;
-    mir::DefaultServerConfiguration::the_shell_display_layout*;
-    mir::DefaultServerConfiguration::the_shell_report*;
-    mir::DefaultServerConfiguration::the_snapshot_strategy*;
-    mir::DefaultServerConfiguration::the_socket_file*;
-    mir::DefaultServerConfiguration::the_stop_callback*;
-    mir::DefaultServerConfiguration::the_surface_factory*;
-    mir::DefaultServerConfiguration::the_surface_input_dispatcher*;
-    mir::DefaultServerConfiguration::the_surface_stack*;
-    mir::DefaultServerConfiguration::the_touch_visualizer*;
-    mir::DefaultServerConfiguration::the_wayland_connector*;
-    mir::DefaultServerConfiguration::the_window_manager_builder*;
-    mir::DefaultServerConfiguration::the_xwayland_connector*;
-    mir::DefaultServerConfiguration::wrap_application_not_responding_detector*;
-    mir::DefaultServerConfiguration::wrap_cursor_listener*;
-    mir::DefaultServerConfiguration::wrap_cursor*;
-    mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
-    mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
-    mir::DefaultServerConfiguration::wrap_shell*;
-    mir::DefaultServerConfiguration::wrap_surface_stack*;
-    mir::DefaultServerConfiguration::the_clipboard*;
-    typeinfo?for?mir::DefaultServerConfiguration;
-    VTT?for?mir::DefaultServerConfiguration;
-    vtable?for?mir::DefaultServerConfiguration;
-
-    mir::run_mir*;
-
-    mir::DefaultServerConfiguration::the_decoration_manager*;
-  };
-} MIR_SERVER_1.6.0;
-

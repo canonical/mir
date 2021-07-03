@@ -3,7 +3,7 @@ pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
 pkg_check_modules(WAYLAND_EGL REQUIRED wayland-egl)
 pkg_check_modules(XKBCOMMON xkbcommon REQUIRED)
 
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="wayland")
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="wayland")
 
 add_library(mirplatformwayland-graphics STATIC
     platform.cpp                platform.h
@@ -17,8 +17,6 @@ add_library(mirplatformwayland-graphics STATIC
 target_include_directories(mirplatformwayland-graphics
 PUBLIC
     ${server_common_include_dirs}
-    ${PROJECT_SOURCE_DIR}/include/common
-    ${PROJECT_SOURCE_DIR}/include/client
     ${GBM_INCLUDE_DIRS}
     ${DRM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
@@ -49,11 +47,15 @@ add_library(mirplatformwayland-input STATIC
   input_device.cpp      input_device.h
 )
 
+target_link_libraries(mirplatformwayland-input
+  PUBLIC
+    mircommon
+    mircore
+)
+
 target_include_directories(mirplatformwayland-input
 PUBLIC
     ${server_common_include_dirs}
-    ${PROJECT_SOURCE_DIR}/include/common
-    ${PROJECT_SOURCE_DIR}/include/client
 )
 
 add_library(mirplatformwayland MODULE

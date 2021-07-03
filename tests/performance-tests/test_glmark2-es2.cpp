@@ -141,11 +141,6 @@ struct HostedGLMark2Wayland : GLMark2Wayland
 
     HostedGLMark2Wayland()
     {
-        // We don't need two (or even one) servers offering mirclient
-        // As AsyncServerRunner already sets this using add_to_environment
-        // we can't do it that way as we'll end up "restoring" the wrong state
-        unsetenv("MIR_SERVER_ENABLE_MIRCLIENT");
-
         if ((pid = fork()))
         {
             EXPECT_THAT(pid, Gt(0));

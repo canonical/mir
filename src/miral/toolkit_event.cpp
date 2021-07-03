@@ -74,9 +74,14 @@ MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* event)
     return ::mir_keyboard_event_action(event);
 }
 
+xkb_keysym_t mir_keyboard_event_keysym(MirKeyboardEvent const* event)
+{
+    return ::mir_keyboard_event_keysym(event);
+}
+
 xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* event)
 {
-    return ::mir_keyboard_event_key_code(event);
+    return ::mir_keyboard_event_keysym(event);
 }
 
 int mir_keyboard_event_scan_code(MirKeyboardEvent const* event)

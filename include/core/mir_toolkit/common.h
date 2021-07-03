@@ -21,8 +21,6 @@
 #ifndef MIR_COMMON_H_
 #define MIR_COMMON_H_
 
-#include <mir_toolkit/deprecations.h>
-
 //for clang
 #ifndef __has_feature
   #define __has_feature(x) 0  // Compatibility with non-clang
@@ -33,19 +31,6 @@
   #define __has_extension __has_feature // Compatibility with pre-3.0
 #endif
 
-#if __GNUC__ >= 6 || \
-    (__has_extension(attribute_deprecated_with_message) && \
-     __has_extension(enumerator_attributes))
-  #define MIR_DEPRECATED_ENUM(ENUM, INSTEAD) \
-      ENUM MIR_FOR_REMOVAL_IN_VERSION_1("Use " #INSTEAD " instead")
-#else
-  #define MIR_DEPRECATED_ENUM(ENUM, INSTEAD) \
-      ENUM
-#endif
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 /* This is C code. Not C++. */
 
 /**
@@ -436,7 +421,15 @@ typedef enum MirDepthLayer
     mir_depth_layer_overlay,            /**< For overlays such as lock screens (heighest layer) */
 } MirDepthLayer;
 
-
-/**@}*/
+/**
+ * Focus mode controls how a surface gains and loses focus.
+ */
+typedef enum MirFocusMode
+{
+    mir_focus_mode_focusable,    /**< The surface can gain and lose focus normally */
+    mir_focus_mode_disabled,     /**< The surface will never be given focus */
+    mir_focus_mode_grabbing,     /**< This mode causes the surface to take focus if possible, and prevents focus from
+                                      leaving it as long as it has this mode */
+} MirFocusMode;
 
 #endif

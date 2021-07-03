@@ -17,6 +17,7 @@
 set(EVENT_SOURCES
   close_surface_event.cpp
   event.cpp
+  event_builders.cpp
   keyboard_event.cpp
   touch_event.cpp
   pointer_event.cpp
@@ -24,7 +25,6 @@ set(EVENT_SOURCES
   surface_event.cpp
   input_event.cpp
   input_device_state_event.cpp
-  keymap_event.cpp
   orientation_event.cpp
   resize_event.cpp
   surface_output_event.cpp
@@ -36,10 +36,12 @@ add_library(
   ${EVENT_SOURCES}
 )
 
-add_dependencies(mirevents mircapnproto)
+target_link_libraries(mirevents
+  PUBLIC
+    mircore
+)
 
-include_directories(
-    ${PROJECT_SOURCE_DIR}/include/client
+target_include_directories(mirevents
+  PRIVATE
     ${PROJECT_SOURCE_DIR}/src/include/cookie
-    ${MIR_GENERATED_INCLUDE_DIRECTORIES}
 )

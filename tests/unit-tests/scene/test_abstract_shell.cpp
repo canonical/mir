@@ -178,8 +178,9 @@ struct AbstractShell : Test
             .WillByDefault(Invoke(
                     []()
                     {
-                        return mev::make_event(0ns, 0, mir_input_event_modifier_none, 0.0f, 0.0f,
-                                               std::vector<mev::InputDeviceState>());
+                        return mev::make_input_configure_event(
+                            0ns, 0, mir_input_event_modifier_none, 0.0f, 0.0f,
+                            std::vector<mev::InputDeviceState>());
                     }));
     }
 
@@ -391,16 +392,16 @@ TEST_F(AbstractShell, remove_display_adds_display_to_window_manager)
 TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 {
     MirKeyboardAction const action{mir_keyboard_action_down};
-    xkb_keysym_t const key_code{0};
+    xkb_keysym_t const keysym{0};
     int const scan_code{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
 
-    auto const event = mir::events::make_event(
+    auto const event = mir::events::make_key_event_event(
         mir_input_event_type_key,
         event_timestamp,
         cookie,
         action,
-        key_code,
+        keysym,
         scan_code,
         modifiers);
 
@@ -416,7 +417,7 @@ TEST_F(AbstractShell, touch_input_events_are_handled_by_window_manager)
 {
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
 
-    auto const event = mir::events::make_event(
+    auto const event = mir::events::make_touch_event(
         mir_input_event_type_touch,
         event_timestamp,
         cookie,
@@ -442,7 +443,7 @@ TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
     float const relative_x_value{0.0};
     float const relative_y_value{0.0};
 
-    auto const event = mir::events::make_event(
+    auto const event = mir::events::make_pointer_event(
         mir_input_event_type_pointer,
         event_timestamp,
         cookie,

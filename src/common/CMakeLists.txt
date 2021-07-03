@@ -1,15 +1,18 @@
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mircommon")
+find_package(XKBCOMMON REQUIRED)
+
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
 
 set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
 
-include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
+include_directories(
+  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
+  ${PROJECT_SOURCE_DIR}/include/common
+)
 
-add_subdirectory(fd)
 add_subdirectory(events)
 add_subdirectory(logging)
 add_subdirectory(report/lttng)
-add_subdirectory(env)
 add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 add_subdirectory(time)
@@ -25,6 +28,10 @@ list(APPEND MIR_COMMON_SOURCES
   ${PROJECT_SOURCE_DIR}/include/common/mir/posix_rw_mutex.h
   posix_rw_mutex.cpp
   edid.cpp
+  event.cpp
+  event_printer.cpp
+  mir_cookie.cpp
+  mir_cursor_api.cpp
 )
 
 set(
@@ -33,32 +40,45 @@ set(
   PARENT_SCOPE)
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 7)
+set(MIRCOMMON_ABI 8)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mircommon SHARED
   input/mir_input_config.cpp
-  input/mir_input_config_serialization.cpp
   input/mir_touchpad_config.cpp
   input/mir_pointer_config.cpp
   input/mir_keyboard_config.cpp
   input/mir_touchscreen_config.cpp
+  input/input_event.cpp
+  input/xkb_mapper.cpp
+  input/parameter_keymap.cpp
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_input_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_pointer_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchpad_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchscreen_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_keyboard_config.h
-  ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_input_config_serialization.h
   ${MIR_COMMON_SOURCES}
 )
 
-target_link_libraries(mircommon
-  mircapnproto
-  mircore
-  ${MIR_COMMON_REFERENCES}
+target_include_directories(mircommon
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/common
 )
 
-add_dependencies(mircommon mircapnproto)
+set_source_files_properties(event.cpp PROPERTIES COMPILE_FLAGS
+  "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/cookie")
+
+set_source_files_properties(input/input_event.cpp PROPERTIES COMPILE_FLAGS
+  "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/cookie")
+
+target_link_libraries(mircommon
+  PUBLIC
+    mircookie
+    mircore
+    ${MIR_COMMON_REFERENCES}
+    ${XKBCOMMON_LIBRARIES}
+)
+
 
 set_target_properties(mircommon
 

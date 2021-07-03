@@ -1,9 +1,9 @@
 pkg_check_modules(LIBINPUT REQUIRED libinput)
 
 if ("${LIBINPUT_VERSION}" VERSION_LESS "1.1")
-  add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=0)
+  add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=0)
 else ()
-  add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
+  add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
 endif ()
 
 include_directories(
@@ -11,12 +11,16 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/platform # udev Context
   ${PROJECT_SOURCE_DIR}/src/include/common # raii.h
-  ${PROJECT_SOURCE_DIR}/include/common
-  ${PROJECT_SOURCE_DIR}/include/client
   )
 
 add_library(mirevdevutilsobjects OBJECT
     button_utils.cpp
+)
+
+target_link_libraries(mirevdevutilsobjects
+  PUBLIC
+    mircommon
+    mircore
 )
 
 add_library(mirplatforminputevdevobjects OBJECT
@@ -25,6 +29,12 @@ add_library(mirplatforminputevdevobjects OBJECT
     libinput_ptr.cpp
     platform.cpp
         fd_store.cpp fd_store.h)
+
+target_link_libraries(mirplatforminputevdevobjects
+  PUBLIC
+    mircommon
+    mircore
+)
 
 add_library(mirplatforminputevdev MODULE
   platform_factory.cpp

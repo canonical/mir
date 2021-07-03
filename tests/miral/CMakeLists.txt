@@ -22,7 +22,7 @@ if (MIR_BUILD_INTERPROCESS_TESTS)
     list(APPEND MIRAL_TEST_SOURCES window_info.cpp)
 endif()
 
-add_definitions(-DMIRAL_ENABLE_DEPRECATIONS=0)
+add_compile_definitions(MIRAL_ENABLE_DEPRECATIONS=0)
 
 mir_add_wrapped_executable(miral-test-internal NOINSTALL
     mru_window_list.cpp
@@ -37,7 +37,6 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     display_reconfiguration.cpp
     raise_tree.cpp
     static_display_config.cpp
-    client_mediated_gestures.cpp
     test_window_manager_tools.cpp           test_window_manager_tools.h
     depth_layer.cpp
     output_updates.cpp
@@ -48,6 +47,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     window_placement_maximized.cpp
     resize_and_move.cpp
     ignored_requests.cpp
+    focus_mode.cpp
     ${MIRAL_TEST_SOURCES}
 )
 
@@ -68,12 +68,8 @@ add_subdirectory(generated/)
 
 mir_add_wrapped_executable(miral-test NOINSTALL
     external_client.cpp
-    window_id.cpp
     runner.cpp
-    window_placement_client_api.cpp
-    window_properties.cpp
     wayland_extensions.cpp
-    workspaces.cpp
     zone.cpp
     server_example_decoration.cpp server_example_decoration.h
     org_kde_kwin_server_decoration.c org_kde_kwin_server_decoration.h

@@ -10,7 +10,7 @@ add_compile_options(
 )
 
 if (LTTNG_UST_VERSION VERSION_GREATER 2.9)
-    add_definitions(-DMIR_LTTNG_HAS_VOID_TRACEPOINTS)
+    add_compile_definitions(MIR_LTTNG_HAS_VOID_TRACEPOINTS)
 endif()
 
 # lttng relies on a gcc extension to support backward-compatible code, So...
@@ -32,12 +32,9 @@ set(
   LTTNG_SOURCES
 
   compositor_report.cpp
-  connector_report.cpp
   display_report.cpp
   input_report.cpp
-  message_processor_report.cpp
   lttng_report_factory.cpp
-  session_mediator_report.cpp
   scene_report.cpp
   server_tracepoint_provider.cpp
   shared_library_prober_report.cpp
@@ -47,6 +44,12 @@ add_library(
   mirlttng OBJECT
 
   ${LTTNG_SOURCES}
+)
+
+target_link_libraries(mirlttng
+  PUBLIC
+    mircommon
+    mircore
 )
 
 add_library(mirserverlttng SHARED tracepoints.c)

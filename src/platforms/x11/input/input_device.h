@@ -54,8 +54,8 @@ public:
     virtual void apply_settings(TouchscreenSettings const&) override;
 
     bool started() const;
-    void key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code);
-    void key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code);
+    void key_press(std::chrono::nanoseconds event_time, xkb_keysym_t keysym, int scan_code);
+    void key_release(std::chrono::nanoseconds event_time, xkb_keysym_t keysym, int scan_code);
     void update_button_state(int button);
     void pointer_press(
         std::chrono::nanoseconds event_time,

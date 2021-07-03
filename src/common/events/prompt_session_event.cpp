@@ -18,17 +18,21 @@
 
 #include "mir/events/prompt_session_event.h"
 
-MirPromptSessionEvent::MirPromptSessionEvent()
+MirPromptSessionEvent::MirPromptSessionEvent() : MirEvent(mir_event_type_prompt_session_state_change)
 {
-    event.initPromptSession();
 }
 
 MirPromptSessionState MirPromptSessionEvent::new_state() const
 {
-    return static_cast<MirPromptSessionState>(event.asReader().getPromptSession().getNewState());
+    return state;
 }
 
 void MirPromptSessionEvent::set_new_state(MirPromptSessionState state)
 {
-    event.getPromptSession().setNewState(static_cast<mir::capnp::PromptSessionEvent::State>(state));
+    this->state = state;
+}
+
+auto MirPromptSessionEvent::clone() const -> MirPromptSessionEvent*
+{
+    return new MirPromptSessionEvent(*this);
 }

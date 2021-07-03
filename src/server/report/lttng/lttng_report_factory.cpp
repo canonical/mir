@@ -19,12 +19,9 @@
 #include "../lttng_report_factory.h"
 
 #include "compositor_report.h"
-#include "connector_report.h"
 #include "display_report.h"
 #include "input_report.h"
-#include "message_processor_report.h"
 #include "scene_report.h"
-#include "session_mediator_report.h"
 #include "shared_library_prober_report.h"
 #include <boost/throw_exception.hpp>
 
@@ -41,21 +38,6 @@ std::shared_ptr<mir::graphics::DisplayReport> mir::report::LttngReportFactory::c
 std::shared_ptr<mir::scene::SceneReport> mir::report::LttngReportFactory::create_scene_report()
 {
     return std::make_shared<lttng::SceneReport>();
-}
-
-std::shared_ptr<mir::frontend::ConnectorReport> mir::report::LttngReportFactory::create_connector_report()
-{
-    return std::make_shared<lttng::ConnectorReport>();
-}
-
-std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::LttngReportFactory::create_session_mediator_report()
-{
-    return std::make_shared<lttng::SessionMediatorReport>();
-}
-
-std::shared_ptr<mir::frontend::MessageProcessorReport> mir::report::LttngReportFactory::create_message_processor_report()
-{
-    return std::make_shared<lttng::MessageProcessorReport>();
 }
 
 std::shared_ptr<mir::input::InputReport> mir::report::LttngReportFactory::create_input_report()

@@ -43,7 +43,7 @@ ms::SurfaceEventSource::SurfaceEventSource(
 
 void ms::SurfaceEventSource::content_resized_to(Surface const*, geometry::Size const& content_size)
 {
-    event_sink->handle_event(mev::make_event(id, content_size));
+    event_sink->handle_event(mev::make_window_resize_event(id, content_size));
 }
 
 void ms::SurfaceEventSource::moved_to(Surface const* surface, geometry::Point const& top_left)
@@ -51,7 +51,7 @@ void ms::SurfaceEventSource::moved_to(Surface const* surface, geometry::Point co
     auto new_output_properties = outputs.properties_for(geom::Rectangle{top_left, surface->window_size()});
     if (new_output_properties && (new_output_properties != last_output.lock()))
     {
-        event_sink->handle_event(mev::make_event(
+        event_sink->handle_event(mev::make_window_output_event(
             id,
             new_output_properties->dpi,
             new_output_properties->scale,
@@ -65,33 +65,22 @@ void ms::SurfaceEventSource::moved_to(Surface const* surface, geometry::Point co
 
 void ms::SurfaceEventSource::attrib_changed(Surface const*, MirWindowAttrib attrib, int value)
 {
-    event_sink->handle_event(mev::make_event(id, attrib, value));
+    event_sink->handle_event(mev::make_window_configure_event(id, attrib, value));
 }
 
 void ms::SurfaceEventSource::orientation_set_to(Surface const*, MirOrientation orientation)
 {
-    event_sink->handle_event(mev::make_event(id, orientation));
+    event_sink->handle_event(mev::make_surface_orientation_event(id, orientation));
 }
 
 void ms::SurfaceEventSource::client_surface_close_requested(Surface const*)
 {
-    event_sink->handle_event(mev::make_event(id));
-}
-
-void ms::SurfaceEventSource::keymap_changed(
-    Surface const*,
-    MirInputDeviceId device_id,
-    std::string const& model,
-    std::string const& layout,
-    std::string const& variant,
-    std::string const& options)
-{
-    event_sink->handle_event(mev::make_event(id, device_id, model, layout, variant, options));
+    event_sink->handle_event(mev::make_window_close_event(id));
 }
 
 void ms::SurfaceEventSource::placed_relative(Surface const*, geometry::Rectangle const& placement)
 {
-    event_sink->handle_event(mev::make_event(id, placement));
+    event_sink->handle_event(mev::make_window_placement_event(id, placement));
 }
 
 void ms::SurfaceEventSource::input_consumed(Surface const*, MirEvent const* event)

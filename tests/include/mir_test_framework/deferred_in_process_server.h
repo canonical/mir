@@ -34,7 +34,6 @@ struct DeferredInProcessServer : testing::Test, private ServerRunner
     void TearDown() override { ServerRunner::stop_server(); }
 
     using ServerRunner::start_server;
-    using ServerRunner::new_connection;
 };
 }
 

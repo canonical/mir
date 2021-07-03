@@ -19,48 +19,52 @@
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
 
-MirKeyboardEvent::MirKeyboardEvent()
+MirKeyboardEvent::MirKeyboardEvent() :
+    MirInputEvent(mir_input_event_type_key)
 {
-    event.initInput();
-    event.getInput().initKey();
+}
+
+auto MirKeyboardEvent::clone() const -> MirKeyboardEvent*
+{
+    return new MirKeyboardEvent{*this};
 }
 
 MirKeyboardAction MirKeyboardEvent::action() const
 {
-    return static_cast<MirKeyboardAction>(event.asReader().getInput().getKey().getAction());
+    return action_;
 }
 
 void MirKeyboardEvent::set_action(MirKeyboardAction action)
 {
-    event.getInput().getKey().setAction(static_cast<mir::capnp::KeyboardEvent::Action>(action));
+    action_ = action;
 }
 
-int32_t MirKeyboardEvent::key_code() const
+int32_t MirKeyboardEvent::keysym() const
 {
-    return event.asReader().getInput().getKey().getKeyCode();
+    return keysym_;
 }
 
-void MirKeyboardEvent::set_key_code(int32_t key_code)
+void MirKeyboardEvent::set_keysym(int32_t keysym)
 {
-    event.getInput().getKey().setKeyCode(key_code);
+    keysym_ = keysym;
 }
 
 int32_t MirKeyboardEvent::scan_code() const
 {
-    return event.asReader().getInput().getKey().getScanCode();
+    return scan_code_;
 }
 
 void MirKeyboardEvent::set_scan_code(int32_t scan_code)
 {
-    event.getInput().getKey().setScanCode(scan_code);
+    scan_code_ = scan_code;
 }
 
 char const* MirKeyboardEvent::text() const
 {
-    return event.asReader().getInput().getKey().getText().cStr();
+    return text_.c_str();
 }
 
 void MirKeyboardEvent::set_text(char const* str)
 {
-    event.getInput().getKey().setText(str);
+    text_ = str;
 }

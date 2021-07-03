@@ -17,16 +17,10 @@ set(
 
   mock_input_device.cpp
   mock_timer.cpp
-  test_protobuf_client.cpp
-  test_protobuf_socket_server.cpp
   triggered_main_loop.cpp
   fake_alarm_factory.cpp
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_message_sender.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_message_sender.h
-  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_event_sink_factory.h
-  null_event_sink_factory.cpp
-  mock_event_sink_factory.cpp
-  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_event_sink_factory.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_console_services.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_device_observer.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/simple_device_observer.h
@@ -80,6 +74,12 @@ add_library(mir-public-test-doubles OBJECT
   fake_display.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/fake_display.h
 )
 
+target_link_libraries(mir-public-test-doubles
+  PUBLIC
+    mircommon
+    mircore
+)
+
 add_library(mir-test-doubles-static STATIC
   $<TARGET_OBJECTS:mir-public-test-doubles>
   ${TEST_UTILS_SRCS}
@@ -101,6 +101,12 @@ target_link_libraries(mir-test-doubles-static
 
 add_library(mir-public-test-doubles-platform OBJECT
   ${MIR_TEST_DOUBLES_PLATFORM_SRCS}
+)
+
+target_link_libraries(mir-public-test-doubles-platform
+  PUBLIC
+    mircommon
+    mircore
 )
 
 add_library(

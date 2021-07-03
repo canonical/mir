@@ -55,6 +55,11 @@ miral::WindowInfo& miral::WindowInfo::operator=(WindowInfo const& that)
 
 bool miral::WindowInfo::can_be_active() const
 {
+    if (focus_mode() == mir_focus_mode_disabled)
+    {
+        return false;
+    }
+
     switch (type())
     {
     case mir_window_type_normal:       /**< AKA "regular"                       */
@@ -466,4 +471,16 @@ auto miral::WindowInfo::application_id() const -> std::string
         return surface->application_id();
     else
         return "";
+}
+
+auto miral::WindowInfo::focus_mode() const -> MirFocusMode
+{
+    if (std::shared_ptr<mir::scene::Surface> const surface = self->window)
+    {
+        return surface->focus_mode();
+    }
+    else
+    {
+        return mir_focus_mode_disabled;
+    }
 }

@@ -21,34 +21,33 @@
 // MirSurfacePlacementEvent is a deprecated type, but we need to implement it
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-MirSurfacePlacementEvent::MirSurfacePlacementEvent()
+MirSurfacePlacementEvent::MirSurfacePlacementEvent() : MirEvent(mir_event_type_window_placement)
 {
-    event.initSurfacePlacement();
+}
+
+auto MirSurfacePlacementEvent::clone() const -> MirSurfacePlacementEvent*
+{
+    return new MirSurfacePlacementEvent{*this};
 }
 
 int MirSurfacePlacementEvent::id() const
 {
-    return event.asReader().getSurfacePlacement().getId();
+    return id_;
 }
 
 void MirSurfacePlacementEvent::set_id(int const id)
 {
-    event.getSurfacePlacement().setId(id);
+    id_ = id;
 }
 
 MirRectangle MirSurfacePlacementEvent::placement() const
 {
-    auto rect = event.asReader().getSurfacePlacement().getRectangle();
-    return {rect.getLeft(), rect.getTop(), rect.getWidth(), rect.getHeight()};
+    return placement_;
 }
 
 void MirSurfacePlacementEvent::set_placement(MirRectangle const& placement)
 {
-    auto rect = event.getSurfacePlacement().getRectangle();
-    rect.setLeft(placement.left);
-    rect.setTop(placement.top);
-    rect.setWidth(placement.width);
-    rect.setHeight(placement.height);
+    placement_ = placement;
 }
 
 MirSurfacePlacementEvent* MirEvent::to_window_placement()

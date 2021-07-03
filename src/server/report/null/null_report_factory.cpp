@@ -19,9 +19,6 @@
 #include "../null_report_factory.h"
 
 #include "compositor_report.h"
-#include "connector_report.h"
-#include "message_processor_report.h"
-#include "session_mediator_report.h"
 #include "display_report.h"
 #include "input_report.h"
 #include "seat_report.h"
@@ -42,21 +39,6 @@ std::shared_ptr<mir::graphics::DisplayReport> mir::report::NullReportFactory::cr
 std::shared_ptr<mir::scene::SceneReport> mir::report::NullReportFactory::create_scene_report()
 {
     return std::make_shared<null::SceneReport>();
-}
-
-std::shared_ptr<mir::frontend::ConnectorReport> mir::report::NullReportFactory::create_connector_report()
-{
-    return std::make_shared<null::ConnectorReport>();
-}
-
-std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::NullReportFactory::create_session_mediator_report()
-{
-    return std::make_shared<null::SessionMediatorReport>();
-}
-
-std::shared_ptr<mir::frontend::MessageProcessorReport> mir::report::NullReportFactory::create_message_processor_report()
-{
-    return std::make_shared<null::MessageProcessorReport>();
 }
 
 std::shared_ptr<mir::input::InputReport> mir::report::NullReportFactory::create_input_report()
@@ -96,18 +78,6 @@ std::shared_ptr<mir::graphics::DisplayReport> mir::report::null_display_report()
 std::shared_ptr<mir::scene::SceneReport> mir::report::null_scene_report()
 {
     return NullReportFactory{}.create_scene_report();
-}
-std::shared_ptr<mir::frontend::ConnectorReport> mir::report::null_connector_report()
-{
-    return NullReportFactory{}.create_connector_report();
-}
-std::shared_ptr<mir::frontend::SessionMediatorObserver> mir::report::null_session_mediator_report()
-{
-    return NullReportFactory{}.create_session_mediator_report();
-}
-std::shared_ptr<mir::frontend::MessageProcessorReport> mir::report::null_message_processor_report()
-{
-    return NullReportFactory{}.create_message_processor_report();
 }
 std::shared_ptr<mir::input::InputReport> mir::report::null_input_report()
 {

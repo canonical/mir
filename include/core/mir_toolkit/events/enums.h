@@ -21,10 +21,6 @@
 #include <mir_toolkit/common.h>
 
 #ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
 extern "C" {
 #endif
 
@@ -32,25 +28,20 @@ extern "C" {
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef enum
 {
-    MIR_DEPRECATED_ENUM(mir_event_type_key, "mir_event_type_input"),     // UNUSED since Mir 0.26
-    MIR_DEPRECATED_ENUM(mir_event_type_motion, "mir_event_type_input"),  // UNUSED since Mir 0.26
-    MIR_DEPRECATED_ENUM(mir_event_type_surface, "mir_event_type_window"),
-    mir_event_type_window = mir_event_type_surface,
+    mir_event_type_key __attribute__((deprecated("UNUSED since Mir 0.26"))),
+    mir_event_type_motion __attribute__((deprecated("UNUSED since Mir 0.26"))),
+    mir_event_type_window,
     mir_event_type_resize,
     mir_event_type_prompt_session_state_change,
     mir_event_type_orientation,
-    MIR_DEPRECATED_ENUM(mir_event_type_close_surface, "mir_event_type_close_window"),
-    mir_event_type_close_window = mir_event_type_close_surface,
+    mir_event_type_close_window,
     /* Type for new style input event will be returned from mir_event_get_type
        when old style event type was mir_event_type_key or mir_event_type_motion */
     mir_event_type_input,
-    mir_event_type_keymap,
-    MIR_DEPRECATED_ENUM(mir_event_type_input_configuration, "mir_connection_set_input_config_change_callback and mir_event_type_input_device_state"),
-    MIR_DEPRECATED_ENUM(mir_event_type_surface_output, "mir_event_type_window_output"),
-    mir_event_type_window_output = mir_event_type_surface_output,
+    mir_event_type_input_configuration __attribute__((deprecated("UNUSED since Mir 0.26"))),
+    mir_event_type_window_output,
     mir_event_type_input_device_state,
-    MIR_DEPRECATED_ENUM(mir_event_type_surface_placement, "mir_event_type_window_placement"),
-    mir_event_type_window_placement = mir_event_type_surface_placement,
+    mir_event_type_window_placement,
 } MirEventType;
 #pragma GCC diagnostic pop
 
@@ -209,7 +200,6 @@ typedef unsigned int MirPointerButtons;
 
 #ifdef __cplusplus
 }
-/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_EVENT_ENUMS_H_ */

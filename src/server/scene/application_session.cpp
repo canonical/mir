@@ -147,6 +147,8 @@ auto ms::ApplicationSession::create_surface(
         surface->set_depth_layer(params.depth_layer.value());
     if (params.application_id.is_set())
         surface->set_application_id(params.application_id.value());
+    if (params.focus_mode.is_set())
+        surface->set_focus_mode(params.focus_mode.value());
 
     return surface;
 }
@@ -267,17 +269,17 @@ void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 void ms::ApplicationSession::start_prompt_session()
 {
     // All sessions which are part of the prompt session get this event.
-    event_sink->handle_event(mev::make_event(mir_prompt_session_state_started));
+    event_sink->handle_event(mev::make_prompt_session_state_event(mir_prompt_session_state_started));
 }
 
 void ms::ApplicationSession::stop_prompt_session()
 {
-    event_sink->handle_event(mev::make_event(mir_prompt_session_state_stopped));
+    event_sink->handle_event(mev::make_prompt_session_state_event(mir_prompt_session_state_stopped));
 }
 
 void ms::ApplicationSession::suspend_prompt_session()
 {
-    event_sink->handle_event(mev::make_event(mir_prompt_session_state_suspended));
+    event_sink->handle_event(mev::make_prompt_session_state_event(mir_prompt_session_state_suspended));
 }
 
 void ms::ApplicationSession::resume_prompt_session()

@@ -18,37 +18,17 @@ are prefixed with `MIR_SERVER_` and contain underscores ('_') instead of dashes
 
 Environment variable                    | Command line option            | Handlers
 --------------------------------------- | ------------------------------ | --------
-MIR_SERVER_CONNECTOR_REPORT             | --connector-report             | log,lttng
 MIR_SERVER_COMPOSITOR_REPORT            | --compositor-report            | log,lttng
 MIR_SERVER_DISPLAY_REPORT               | --display-report               | log,lttng
 MIR_SERVER_INPUT_REPORT                 | --input-report                 | log,lttng
 MIR_SERVER_LEGACY_INPUT_REPORT          | --legacy-input-report          | log
 MIR_SERVER_SEAT_REPORT                  | --seat-report                  | log
-MIR_SERVER_MSG_PROCESSOR_REPORT         | --msg-processor-report         | log,lttng
-MIR_SERVER_SESSION_MEDIATOR_REPORT      | --session-mediator-report      | log,lttng
 MIR_SERVER_SCENE_REPORT                 | --scene-report                 | log,lttng
 MIR_SERVER_SHARED_LIBRARY_PROBER_REPORT | --shared-library-prober-report | log,lttng
 
 For example, to enable the LTTng input report, one could either use the
 `--input-report=lttng` command-line option to the server, or set the
 `MIR_SERVER_INPUT_REPORT=lttng` environment variable.
-
-Client reports
---------------
-
-Client side reports can be configured only using environment variables.  The
-environment variables are prefixed with `MIR_CLIENT_`. The available reports 
-and handlers for the client are:
-
-Environment variable                    | Handlers
---------------------------------------- | --------
-MIR_CLIENT_RPC_REPORT                   | log,lttng
-MIR_CLIENT_INPUT_RECEIVER_REPORT        | log,lttng
-MIR_CLIENT_SHARED_LIBRARY_PROBER_REPORT | log,lttng
-MIR_CLIENT_PERF_REPORT                  | log,lttng
-
-For example, to enable the logging RPC report, one should set the
-`MIR_CLIENT_RPC_REPORT=log` environment variable.
 
 LTTng support
 -------------
@@ -60,7 +40,7 @@ option or environment variable for that component's report:
     $ lttng create mirsession -o /tmp/mirsession
     $ lttng enable-event -u -a
     $ lttng start
-    $ mir_demo_server --msg-processor-report=lttng
+    $ mir_demo_server --compositor-report=lttng
     $ lttng stop
     $ babeltrace /tmp/mirsession/<trace-subdir>
 
@@ -70,9 +50,4 @@ provider is dlopen()-ed at runtime, like in the case of Mir. If you have a
 version of LTTng affected by this bug, you need to pre-load the server
 tracepoint provider library:
 
-    $ LD_PRELOAD=libmirserverlttng.so mir_demo_server --msg-processor-report=lttng
-
-The bug also affects client-side LTTng tracing, in which case you need to
-pre-load the client tracepoint provider library:
-
-    $ LD_PRELOAD=libmirclientlttng.so MIR_CLIENT_RPC_REPORT=lttng myclient
+    $ LD_PRELOAD=libmirserverlttng.so mir_demo_server --compositor-report=lttng

@@ -130,19 +130,23 @@ struct KeyRepeatDispatcher : public testing::Test
 
     mir::EventUPtr a_key_down_event()
     {
-        return mev::make_event(test_device, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_down, 0, 0, mir_input_event_modifier_alt);
+        return mev::make_key_event_event(
+            test_device, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_down, 0, 0,
+            mir_input_event_modifier_alt);
     }
 
     mir::EventUPtr a_meta_key_down_event()
     {
-        return mev::make_event(
+        return mev::make_key_event_event(
             test_device, std::chrono::nanoseconds(0), std::vector<uint8_t>{},
             mir_keyboard_action_down, XKB_KEY_Shift_R, 0, mir_input_event_modifier_alt);
     }
 
     mir::EventUPtr a_key_up_event()
     {
-        return mev::make_event(test_device, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_up, 0, 0, mir_input_event_modifier_alt);
+        return mev::make_key_event_event(
+            test_device, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_up, 0, 0,
+            mir_input_event_modifier_alt);
     }
 };
 
@@ -160,8 +164,9 @@ struct KeyRepeatDispatcherOnArale : KeyRepeatDispatcher
     mir::EventUPtr mtk_key_down_event()
     {
         auto const home_button = 53;
-        return mev::make_event(mtk_id, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_down, 0,
-                               home_button, mir_input_event_modifier_none);
+        return mev::make_key_event_event(
+            mtk_id, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_down, 0,
+            home_button, mir_input_event_modifier_none);
     }
 };
 }

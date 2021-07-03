@@ -59,10 +59,10 @@ public:
 
     void event(MirKeyboardEvent const* event, WlSurface& surface);
     void focussed(WlSurface& surface, bool should_be_focused);
-    void set_keymap(mir::input::Keymap const& new_keymap);
     void resync_keyboard();
 
 private:
+    void set_keymap(mir::input::Keymap const& new_keymap);
     void update_modifier_state();
     void update_keyboard_state(std::vector<uint32_t> const& keyboard_state);
 

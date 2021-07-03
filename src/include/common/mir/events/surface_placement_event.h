@@ -25,12 +25,17 @@
 struct MirSurfacePlacementEvent : MirEvent
 {
     MirSurfacePlacementEvent();
+    auto clone() const -> MirSurfacePlacementEvent* override;
 
     int id() const;
     void set_id(int id);
 
     MirRectangle placement() const;
     void set_placement(MirRectangle const& placement);
+
+private:
+    int id_ = 0;
+    MirRectangle placement_;
 };
 
 #endif //MIR_SURFACE_PLACEMENT_EVENT_H

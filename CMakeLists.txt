@@ -31,11 +31,11 @@ set(MIR_VERSION_MAJOR 2)
 set(MIR_VERSION_MINOR 4)
 set(MIR_VERSION_PATCH 1)
 
-add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
-add_definitions(-DMIR_VERSION_MINOR=${MIR_VERSION_MINOR})
-add_definitions(-DMIR_VERSION_MICRO=${MIR_VERSION_PATCH})
-add_definitions(-D_GNU_SOURCE)
-add_definitions(-D_FILE_OFFSET_BITS=64)
+add_compile_definitions(MIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
+add_compile_definitions(MIR_VERSION_MINOR=${MIR_VERSION_MINOR})
+add_compile_definitions(MIR_VERSION_MICRO=${MIR_VERSION_PATCH})
+add_compile_definitions(_GNU_SOURCE)
+add_compile_definitions(_FILE_OFFSET_BITS=64)
 
 set(MIR_VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH})
 
@@ -190,14 +190,10 @@ endif()
 
 # Define LOG_NDEBUG=1 to ensure Android ALOGV calls are not compiled in to
 # consume CPU time...
-add_definitions(-DLOG_NDEBUG=1)
+add_compile_definitions(LOG_NDEBUG=1)
 
 enable_testing()
 find_package(PkgConfig)
-
-include_directories(include/core)
-include_directories(include/common)
-include_directories(include/cookie)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem iostreams REQUIRED)
@@ -211,13 +207,13 @@ option(
   OFF
 )
 if(MIR_DISABLE_EPOLL_REACTOR)
-add_definitions(
-  -DBOOST_ASIO_DISABLE_EPOLL -DBOOST_ASIO_DISABLE_KQUEUE -DBOOST_ASIO_DISABLE_DEV_POLL
+add_compile_definitions(
+  BOOST_ASIO_DISABLE_EPOLL BOOST_ASIO_DISABLE_KQUEUE BOOST_ASIO_DISABLE_DEV_POLL
 )
 endif(MIR_DISABLE_EPOLL_REACTOR)
 
-add_definitions(-DEGL_NO_X11)
-add_definitions(-DMESA_EGL_NO_X11_HEADERS) # Can be removed when all platforms support EGL_NO_X11
+add_compile_definitions(EGL_NO_X11)
+add_compile_definitions(MESA_EGL_NO_X11_HEADERS) # Can be removed when all platforms support EGL_NO_X11
 
 pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream)
 
@@ -282,8 +278,6 @@ endforeach(platform)
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(GLM REQUIRED)
-find_package(Protobuf REQUIRED )
-find_package(CapnProto REQUIRED)
 find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
 
@@ -314,9 +308,11 @@ list(APPEND CMAKE_REQUIRED_LIBRARIES ${DRM_LIBRARIES})
 # USDT integration. The integration only involves #include-ing a
 # SystemTap header and calling a macro from it in the LTTNG macro,
 # but there aren't guarantees this won't change in future.
-add_definitions(  # Drop in favour of add_compile_definitions when we drop 16.04
-  -DLTTNG_UST_HAVE_SDT_INTEGRATION
-)
+include(CheckIncludeFile)
+CHECK_INCLUDE_FILE(sys/sdt.h HAVE_SYS_SDT_H)
+if (HAVE_SYS_SDT_H)
+  add_compile_definitions(LTTNG_UST_HAVE_SDT_INTEGRATION)
+endif()
 
 pkg_check_modules(GL REQUIRED glesv2)
 
@@ -324,10 +320,10 @@ if (MIR_BUILD_PLATFORM_GBM_KMS)
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   if (GBM_VERSION VERSION_LESS 11)
     message(WARNING "Hybrid support requires libgbm from GBM 11.0 or greater. Hybrid setups will not work")
-    add_definitions(-DMIR_NO_HYBRID_SUPPORT)
+    add_compile_definitions(MIR_NO_HYBRID_SUPPORT)
   endif()
   if (DRM_VERSION VERSION_GREATER 2.4.84)
-    add_definitions(-DMIR_DRMMODEADDFB_HAS_CONST_SIGNATURE)
+    add_compile_definitions(MIR_DRMMODEADDFB_HAS_CONST_SIGNATURE)
   endif()
 endif()
 
@@ -347,9 +343,9 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 # This copy is used by users of mirplatforminputevdev
 if ("${LIBINPUT_VERSION}" VERSION_LESS "1.1")
-  add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=0)
+  add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=0)
 else ()
-  add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
+  add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
 endif ()
 
 add_subdirectory(examples/)
@@ -361,11 +357,10 @@ if (MIR_ENABLE_TESTS)
   pkg_check_modules(LIBEVDEV REQUIRED libevdev)
   include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
   add_subdirectory(tests/)
-  add_subdirectory(benchmarks/)
 
   # There's no nice way to format this. Thanks CMake.
   mir_add_test(NAME LGPL-required
-    COMMAND /bin/sh -c "! grep -rl --exclude-dir=protocol --exclude=org_kde* 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/core ${PROJECT_SOURCE_DIR}/include/core ${PROJECT_SOURCE_DIR}/src/common ${PROJECT_SOURCE_DIR}/include/common ${PROJECT_SOURCE_DIR}/src/include/common ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform ${PROJECT_SOURCE_DIR}/src/include/platform ${PROJECT_SOURCE_DIR}/src/platforms ${PROJECT_SOURCE_DIR}/include/platforms ${PROJECT_SOURCE_DIR}/src/include/platforms ${PROJECT_SOURCE_DIR}/src/renderers ${PROJECT_SOURCE_DIR}/include/renderers ${PROJECT_SOURCE_DIR}/src/include/renderers ${PROJECT_SOURCE_DIR}/src/capnproto"
+    COMMAND /bin/sh -c "! grep -rl --exclude-dir=protocol --exclude=org_kde* 'GNU General' ${PROJECT_SOURCE_DIR}/src/core ${PROJECT_SOURCE_DIR}/include/core ${PROJECT_SOURCE_DIR}/src/common ${PROJECT_SOURCE_DIR}/include/common ${PROJECT_SOURCE_DIR}/src/include/common ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform ${PROJECT_SOURCE_DIR}/src/include/platform ${PROJECT_SOURCE_DIR}/src/platforms ${PROJECT_SOURCE_DIR}/include/platforms ${PROJECT_SOURCE_DIR}/src/include/platforms ${PROJECT_SOURCE_DIR}/src/renderers ${PROJECT_SOURCE_DIR}/include/renderers ${PROJECT_SOURCE_DIR}/src/include/renderers"
   )
   mir_add_test(NAME GPL-required
     COMMAND /bin/sh -c "! grep -rl --exclude-dir=protocol --exclude=org_kde* 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/src/include/server ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
@@ -383,11 +378,9 @@ add_custom_target(ptest
 
 add_custom_target(release-checks)
 
-mir_check_no_unreleased_symbols(mirclient release-checks)
 mir_check_no_unreleased_symbols(mircommon release-checks)
 mir_check_no_unreleased_symbols(mircookie release-checks)
 mir_check_no_unreleased_symbols(mirplatform release-checks)
-mir_check_no_unreleased_symbols(mirprotobuf release-checks)
 mir_check_no_unreleased_symbols(mirserver release-checks)
 
 if (TARGET doc)

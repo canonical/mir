@@ -25,15 +25,6 @@
 #include <vector>
 #include <functional>
 
-// from "mir_toolkit/events/event.h"
-struct MirInputEvent;
-struct MirKeyboardEvent;
-struct MirPointerEvent;
-struct MirTouchEvent;
-struct MirSurfaceEvent;
-typedef struct MirSurfaceEvent MirWindowEvent;
-struct MirKeymapEvent;
-
 namespace mir
 {
 namespace input
@@ -103,7 +94,7 @@ private:
     class ConfigObserver;
     class Instance;
 
-    std::unique_ptr<mir::input::Keymap> const keymap;
+    std::shared_ptr<mir::input::Keymap> keymap;
     std::shared_ptr<ConfigObserver> const config_observer;
 
     // listener list are shared pointers so devices can keep them around long enough to remove themselves

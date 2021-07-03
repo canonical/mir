@@ -6,12 +6,6 @@ configure_file(
   @ONLY
 )
 
-include_directories(
-  ${PROJECT_SOURCE_DIR}/src/include/cookie
-  ${PROJECT_SOURCE_DIR}/include/cookie
-  ${NETTLE_INCLUDE_DIRS}
-)
-
 set(MIRCOOKIE_ABI 2)
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/cookie/symbols.map)
 
@@ -19,6 +13,14 @@ add_library(mircookie SHARED
   authority.cpp
   const_memcmp.cpp
   hmac_cookie.cpp
+)
+
+target_include_directories(mircookie
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/cookie
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/cookie
+    ${NETTLE_INCLUDE_DIRS}
 )
 
 set_target_properties(mircookie

@@ -1,14 +1,13 @@
 pkg_check_modules(UUID REQUIRED uuid)
 pkg_check_modules(FREETYPE freetype2 REQUIRED) # For rendering decorated window titles
 
-add_definitions(
-  -DMIR_LOG_COMPONENT_FALLBACK="mirserver"
-  -DMIR_VERSION="${MIR_VERSION}"
+add_compile_definitions(
+  MIR_LOG_COMPONENT_FALLBACK="mirserver"
+  MIR_VERSION="${MIR_VERSION}"
 )
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/renderer
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
@@ -16,15 +15,14 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/server
-  ${PROJECT_SOURCE_DIR}/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${GLIB_INCLUDE_DIRS}
   ${GIO_INCLUDE_DIRS}
 )
-add_definitions(-DMIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
+add_compile_definitions(MIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
 
-add_definitions(-DMIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
-add_definitions(-DMIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
+add_compile_definitions(MIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
+add_compile_definitions(MIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
 
 add_subdirectory(compositor/)
 add_subdirectory(graphics/)
@@ -68,6 +66,13 @@ add_library(mirserverobjects OBJECT
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop_sources.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/synchronised.h
+)
+
+target_link_libraries(mirserverobjects
+  PUBLIC
+    mircommon
+    mircookie
+    mircore
 )
 
 set_property(
@@ -115,32 +120,32 @@ add_library(mirserver SHARED
   ${MIR_SERVER_OBJECTS}
 )
 
-target_link_libraries(mirserver LINK_PUBLIC
+target_link_libraries(mirserver
+  PUBLIC
 
-  mirclient
-  mirplatform
-  mircommon
-  mirprotobuf
-  mircookie
-  mirwayland
 
-  server_platform_common
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
-  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-  ${GL_LDFLAGS} ${GL_LIBRARIES}
-  ${EPOXY_LDFLAGS} ${EPOXY_LIBRARIES}
-  ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
-  ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
-  ${GIO_LDFLAGS} ${GIO_LIBRARIES}
-  ${UUID_LDFLAGS} ${UUID_LIBRARIES}
-  ${XCB_LDFLAGS} ${XCB_LIBRARIES}
-  ${XCB_COMPOSITE_LDFLAGS} ${XCB_COMPOSITE_LIBRARIES}
-  ${XCB_XFIXES_LDFLAGS} ${XCB_XFIXES_LIBRARIES}
-  ${XCB_RENDER_LDFLAGS} ${XCB_RENDER_LIBRARIES}
-  ${X11_XCURSOR_LDFLAGS} ${X11_XCURSOR_LIBRARIES}
-  ${LTTNG_UST_LDFLAGS} ${LTTNG_UST_LIBRARIES}
-  ${FREETYPE_LDFLAGS} ${FREETYPE_LIBRARIES}
-  atomic
+    mirplatform
+    mircommon
+    mircookie
+    mirwayland
+
+    server_platform_common
+    ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+    ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+    ${GL_LDFLAGS} ${GL_LIBRARIES}
+    ${EPOXY_LDFLAGS} ${EPOXY_LIBRARIES}
+    ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
+    ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
+    ${GIO_LDFLAGS} ${GIO_LIBRARIES}
+    ${UUID_LDFLAGS} ${UUID_LIBRARIES}
+    ${XCB_LDFLAGS} ${XCB_LIBRARIES}
+    ${XCB_COMPOSITE_LDFLAGS} ${XCB_COMPOSITE_LIBRARIES}
+    ${XCB_XFIXES_LDFLAGS} ${XCB_XFIXES_LIBRARIES}
+    ${XCB_RENDER_LDFLAGS} ${XCB_RENDER_LIBRARIES}
+    ${X11_XCURSOR_LDFLAGS} ${X11_XCURSOR_LIBRARIES}
+    ${LTTNG_UST_LDFLAGS} ${LTTNG_UST_LIBRARIES}
+    ${FREETYPE_LDFLAGS} ${FREETYPE_LIBRARIES}
+    atomic
 )
 
 target_include_directories(mirshelldecoration
@@ -165,7 +170,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 55) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 56) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

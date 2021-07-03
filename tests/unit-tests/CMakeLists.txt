@@ -3,21 +3,20 @@ include(CMakeDependentOption)
 add_library(mirdraw STATIC graphics_utils.cpp graphics.h)
 target_include_directories(mirdraw PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_definitions(
-  -DMIR_CLIENT_PLATFORM_VERSION="${MIR_CLIENT_PLATFORM_VERSION}"
-  -DMIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
+add_compile_definitions(
+  MIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
 )
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)
-  add_definitions(-DMIR_BUILD_PLATFORM_GBM_KMS)
+  add_compile_definitions(MIR_BUILD_PLATFORM_GBM_KMS)
 endif()
 
 if (MIR_BUILD_PLATFORM_X11)
-  add_definitions(-DMIR_BUILD_PLATFORM_X11)
+  add_compile_definitions(MIR_BUILD_PLATFORM_X11)
 endif()
 
 if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-  add_definitions(-DMIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+  add_compile_definitions(MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
 endif()
 
 include_directories(
@@ -27,7 +26,6 @@ include_directories(
   ${GBM_INCLUDE_DIRS}
   ${UMOCKDEV_INCLUDE_DIRS}
 
-  ${PROJECT_SOURCE_DIR}/include/cookie
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/platform
@@ -160,13 +158,18 @@ endif()
 
 add_dependencies(mir_unit_tests GMock)
 
+set_target_properties(
+  mir_unit_tests
+  PROPERTIES
+    ENABLE_EXPORTS TRUE
+)
+
 target_link_libraries(
   mir_unit_tests
 
   exampleserverconfig
   mirdraw
   mircommon
-  client_platform_common
   server_platform_common
 
   mir-test-static
@@ -174,7 +177,6 @@ target_link_libraries(
 
   mircommon
 
-  ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -200,19 +202,22 @@ mir_add_wrapped_executable(mir_umock_unit_tests NOINSTALL
 
 add_dependencies(mir_umock_unit_tests GMock)
 
+set_target_properties(
+  mir_umock_unit_tests
+  PROPERTIES
+    ENABLE_EXPORTS TRUE
+)
+
 target_link_libraries(
   mir_umock_unit_tests
 
   exampleserverconfig
   mirdraw
   mircommon
-  mirclient
-  client_platform_common
 
   mir-test-static
   mir-test-framework-static
 
-  ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
   ${Boost_LIBRARIES}

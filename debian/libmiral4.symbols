@@ -393,5 +393,10 @@ libmiral.so.4 libmiral4 #MINVER#
  MIRAL_3.1@MIRAL_3.1 3.1.0
  (c++)"miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1@MIRAL_3.1" 3.1.0
  MIRAL_3.2@MIRAL_3.2 3.2.0
- (c++)"miral::Output::logical_group_id()@MIRAL_3.2" 3.2.0
  (c++)"miral::Output::logical_group_id() const@MIRAL_3.2" 3.2.0
+ MIRAL_3.3@MIRAL_3.3 3.3.0
+ (c++)"miral::PrintTo(miral::Window const&, std::basic_ostream<char, std::char_traits<char> >*)@MIRAL_3.3" 3.3.0
+ (c++)"miral::WindowInfo::focus_mode() const@MIRAL_3.3" 3.3.0
+ (c++)"miral::WindowSpecification::focus_mode() const@MIRAL_3.3" 3.3.0
+ (c++)"miral::WindowSpecification::focus_mode()@MIRAL_3.3" 3.3.0
+ (c++)"miral::toolkit::mir_keyboard_event_keysym(MirKeyboardEvent const*)@MIRAL_3.3" 3.3.0

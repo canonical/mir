@@ -1,6 +1,5 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
@@ -11,9 +10,7 @@ set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 pkg_check_modules(YAML REQUIRED yaml-cpp)
 pkg_check_modules(GIO REQUIRED gio-2.0 gio-unix-2.0)
 
-add_library(mirclientcpp INTERFACE)
-
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miral" -DMIRAL_ENABLE_DEPRECATIONS=0)
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="miral" MIRAL_ENABLE_DEPRECATIONS=0)
 
 add_library(miral-internal STATIC
     active_outputs.cpp                  active_outputs.h
@@ -94,12 +91,8 @@ if(HAS_W_NO_ATTRIBUTE_ALIAS)
             PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} -Wno-attribute-alias")
 endif()
 
-target_include_directories(mirclientcpp
-    INTERFACE "${miral_include}" ${MIRCLIENT_INCLUDE_DIRS}
-)
-
 target_include_directories(miral-internal
-    PRIVATE "${miral_include}" ${MIRCLIENT_INCLUDE_DIRS}
+    PRIVATE "${miral_include}"
     PRIVATE ${MIRSERVER_INCLUDE_DIRS} ${GIO_INCLUDE_DIRS}
 )
 
@@ -112,7 +105,7 @@ target_link_libraries(miral-internal
 )
 
 target_include_directories(miral
-    PUBLIC  "${miral_include}" ${MIRCLIENT_INCLUDE_DIRS}
+    PUBLIC  "${miral_include}"
     PRIVATE ${MIRSERVER_INCLUDE_DIRS}
 )
 
@@ -120,7 +113,6 @@ target_link_libraries(miral
     PUBLIC
         mircommon
     PRIVATE
-        mirclient
         miral-internal
         mirserver
 )

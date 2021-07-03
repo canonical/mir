@@ -24,7 +24,6 @@
 #include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
 #include "default_persistent_surface_store.h"
-#include "frontend_shell.h"
 #include "graphics_display_layout.h"
 #include "decoration/basic_manager.h"
 #include "decoration/basic_decoration.h"
@@ -98,19 +97,6 @@ mir::DefaultServerConfiguration::the_persistent_surface_store()
     {
         return std::make_shared<msh::DefaultPersistentSurfaceStore>();
     });
-}
-
-std::shared_ptr<mf::Shell>
-mir::DefaultServerConfiguration::the_frontend_shell()
-{
-    return frontend_shell([this]
-        {
-            return std::make_shared<msh::detail::FrontendShell>(
-                the_shell(),
-                the_persistent_surface_store(),
-                the_display(),
-                the_display_configuration_observer_registrar());
-        });
 }
 
 std::shared_ptr<msh::FocusController>

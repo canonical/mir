@@ -32,6 +32,7 @@ struct MirTouchEvent : MirInputEvent
                   std::vector<uint8_t> const& cookie,
                   MirInputEventModifiers modifiers,
                   std::vector<mir::events::ContactState> const& contacts);
+    auto clone() const -> MirTouchEvent* override;
 
     size_t pointer_count() const;
     void set_pointer_count(size_t count);
@@ -64,8 +65,8 @@ struct MirTouchEvent : MirInputEvent
     void set_action(size_t index, MirTouchAction action);
 
 private:
+    std::vector<mir::events::ContactState> contacts;
     void throw_if_out_of_bounds(size_t index) const;
-
 };
 
 #endif /* MIR_COMMON_TOUCH_EVENT_H */

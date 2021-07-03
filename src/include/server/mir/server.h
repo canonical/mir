@@ -42,8 +42,6 @@ namespace options { class Option; }
 namespace frontend
 {
 class SessionAuthorizer;
-class SessionMediatorObserver;
-class MirClientSession;
 }
 namespace cookie
 {
@@ -437,10 +435,6 @@ public:
     auto the_seat_observer_registrar() const ->
         std::shared_ptr<ObserverRegistrar<input::SeatObserver>>;
 
-    /// \return a registrar to add and remove SessionMediatorObservers
-    auto the_session_mediator_observer_registrar() const ->
-        std::shared_ptr<ObserverRegistrar<frontend::SessionMediatorObserver>>;
-
 
 /** @} */
 
@@ -450,17 +444,6 @@ public:
  * not exited) otherwise they throw a std::logic_error.
  * @{ */
     using ConnectHandler = std::function<void(std::shared_ptr<scene::Session> const& session)>;
-
-    /// Get a file descriptor that can be used to connect a client
-    /// It can be passed to another process, or used directly with mir_connect()
-    /// using the format "fd://%d".
-    auto open_client_socket() -> Fd;
-
-    /// Get a file descriptor that can be used to connect a client
-    /// It can be passed to another process, or used directly with mir_connect()
-    /// using the format "fd://%d".
-    /// \param connect_handler callback to be invoked when the client connects
-    auto open_client_socket(ConnectHandler const& connect_handler) -> Fd;
 
     /// Get a file descriptor that can be used to connect a Wayland client
     /// \param connect_handler callback to be invoked when the client connects
@@ -484,9 +467,6 @@ public:
 
     void set_wayland_extension_filter(
         std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter);
-
-    /// Get the name of the Mir endpoint (if any) usable as a $MIR_SERVER value
-    auto mir_socket_name() const -> optional_value<std::string>;
 
     /// Get the name of the Wayland endpoint (if any) usable as a $WAYLAND_DISPLAY value
     auto wayland_display() const -> optional_value<std::string>;

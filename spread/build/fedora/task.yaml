@@ -11,10 +11,6 @@ execute: |
         mesa-libEGL-devel \
         mesa-libGLES-devel \
         glm-devel \
-        protobuf-lite-devel \
-        protobuf-compiler \
-        capnproto-devel \
-        capnproto \
         glog-devel \
         gflags-devel \
         systemd-devel \
@@ -48,7 +44,7 @@ execute: |
         libdrm-devel
 
     BUILD_DIR=$(mktemp --directory)
-    cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_USE_LD=gold -DMIR_ENABLE_WLCS_TESTS=OFF
+    cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_ENABLE_WLCS_TESTS=OFF
     # Run cmake again to pick up wlcs?!?!?!?!
     cmake $BUILD_DIR
     export VERBOSE=1

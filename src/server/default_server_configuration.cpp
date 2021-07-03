@@ -23,7 +23,6 @@
 #include "mir/glib_main_loop.h"
 #include "mir/default_server_status_listener.h"
 #include "mir/emergency_cleanup.h"
-#include "mir/default_configuration.h"
 #include "mir/cookie/authority.h"
 #include "mir/frontend/wayland.h"
 
@@ -39,7 +38,6 @@
 #include "mir/input/input_manager.h"
 #include "mir/time/steady_clock.h"
 #include "mir/geometry/rectangles.h"
-#include "mir/default_configuration.h"
 #include "mir/scene/null_prompt_session_listener.h"
 #include "default_emergency_cleanup.h"
 #include "mir/graphics/platform.h"
@@ -78,13 +76,6 @@ auto mir::DefaultServerConfiguration::the_options() const
 ->std::shared_ptr<options::Option>
 {
     return configuration_options->the_options();
-}
-
-std::string mir::DefaultServerConfiguration::the_socket_file() const
-{
-    auto socket_file = the_options()->get<std::string>(options::server_socket_opt);
-
-    return socket_file;
 }
 
 std::shared_ptr<ms::SessionListener>

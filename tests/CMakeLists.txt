@@ -37,7 +37,7 @@ else()
   else()
     message(WARNING "Could not detect GTest version, Assuming v1.8.0 (or compatible) and hoping for the best")
     set(GTEST_VERSION_STR "1.8.0")
-    add_definitions(-DGTEST_VERSION_UNKNOWN)
+    add_compile_definitions(GTEST_VERSION_UNKNOWN)
     set(GTEST_DETECTION_METHOD "best guess, could not detect")
   endif()
 endif()
@@ -55,12 +55,12 @@ else()
   set(GTEST_VERSION_MAJOR 1)
   set(GTEST_VERSION_MINOR 8)
   set(GTEST_VERSION_PATCH 0)
-  add_definitions(-DGTEST_VERSION_UNKNOWN)
+  add_compile_definitions(GTEST_VERSION_UNKNOWN)
 endif()
 
-add_definitions(-DGTEST_VERSION_MAJOR=${GTEST_VERSION_MAJOR})
-add_definitions(-DGTEST_VERSION_MINOR=${GTEST_VERSION_MINOR})
-add_definitions(-DGTEST_VERSION_PATCH=${GTEST_VERSION_PATCH})
+add_compile_definitions(GTEST_VERSION_MAJOR=${GTEST_VERSION_MAJOR})
+add_compile_definitions(GTEST_VERSION_MINOR=${GTEST_VERSION_MINOR})
+add_compile_definitions(GTEST_VERSION_PATCH=${GTEST_VERSION_PATCH})
 
 pkg_check_modules(UMOCKDEV REQUIRED umockdev-1.0>=0.6)
 if (NOT UMOCKDEV_FOUND)
@@ -115,7 +115,7 @@ list(REMOVE_ITEM CMAKE_REQUIRED_LIBRARIES "-lpthread")
 list(APPEND CMAKE_REQUIRED_HEADERS ${GTEST_INCLUDE_DIRECTORIES})
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)
-  add_definitions(-DMIR_BUILD_PLATFORM_GBM_KMS)
+  add_compile_definitions(MIR_BUILD_PLATFORM_GBM_KMS)
 endif()
 
 # public headers (only public headers should be accessed by acceptance tests)
@@ -124,8 +124,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/miral
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${MIRSERVER_INCLUDE_DIRS}
-  ${PROJECT_SOURCE_DIR}/include/client
-  ${PROJECT_SOURCE_DIR}/include/common
   ${PROJECT_SOURCE_DIR}/include/test
   ${PROJECT_SOURCE_DIR}/include/renderer
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
@@ -178,8 +176,6 @@ endif (MIR_BUILD_PLATFORM_TEST_HARNESS)
 add_subdirectory(mir_test/)
 add_subdirectory(mir_test_framework/)
 add_subdirectory(mir_test_doubles/)
-add_subdirectory(client-language/)
-add_subdirectory(loader-tests/)
 
 add_library(mir-test-assist STATIC
   $<TARGET_OBJECTS:mir-public-test>
@@ -189,7 +185,6 @@ add_library(mir-test-assist STATIC
 
 target_link_libraries(mir-test-assist
 PUBLIC
-  mirclient
   miral
   mirserver
 

@@ -305,7 +305,7 @@ mir::EventUPtr mi::SeatInputDeviceTracker::create_device_state() const
             devices.back().pressed_keys.push_back(KEY_SCROLLLOCK);
         }
     }
-    auto out_ev = mev::make_event(
+    auto out_ev = mev::make_input_configure_event(
         clock->now().time_since_epoch(),
         buttons,
         key_mapper->modifiers(),

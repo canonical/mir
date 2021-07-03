@@ -41,11 +41,6 @@ namespace options
 class Option;
 }
 
-namespace frontend
-{
-class SessionMediatorObserver;
-}
-
 namespace report
 {
 namespace logging
@@ -65,9 +60,6 @@ private:
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const display_configuration_multiplexer;
     std::shared_ptr<input::SeatObserver> const seat_report;
     std::shared_ptr<ObserverRegistrar<input::SeatObserver>> const seat_observer_multiplexer;
-    std::shared_ptr<frontend::SessionMediatorObserver> const session_mediator_report;
-    std::shared_ptr<ObserverRegistrar<frontend::SessionMediatorObserver>> const
-        session_mediator_observer_multiplexer;
 };
 }
 }

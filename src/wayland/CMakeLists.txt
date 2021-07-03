@@ -1,6 +1,6 @@
 set(MIRWAYLAND_ABI 2)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mirwayland")
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirwayland")
 
 add_subdirectory(generator/)
 add_subdirectory(generated/)
@@ -15,10 +15,10 @@ add_library(mirwayland SHARED
 )
 
 target_link_libraries(mirwayland
-  LINK_PUBLIC
+  PUBLIC
     mircore
     ${WAYLAND_SERVER_LIBRARIES}
-  LINK_PRIVATE
+  PRIVATE
     mircommon
 )
 

@@ -30,10 +30,15 @@ add_library(mircore SHARED
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/mir_version_number.h
 )
 
-target_link_libraries(
-  mircore
+target_include_directories(mircore
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/core
+)
 
-  ${Boost_SYSTEM_LIBRARY}
+
+target_link_libraries(mircore
+  PRIVATE
+    ${Boost_SYSTEM_LIBRARY}
 )
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)

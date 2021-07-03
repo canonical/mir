@@ -1,4 +1,4 @@
-MIRPLATFORM_2.4 {
+MIRPLATFORM_2.5 {
  global:
   extern "C++" {
     mir::graphics::AtomicFrame::increment*;
@@ -96,7 +96,6 @@ MIRPLATFORM_2.4 {
     mir::options::auto_console;
     mir::options::composite_delay_opt*;
     mir::options::compositor_report_opt*;
-    mir::options::connector_report_opt*;
     mir::options::console_provider;
     mir::options::cursor_opt*;
     mir::options::debug_opt*;
@@ -104,7 +103,6 @@ MIRPLATFORM_2.4 {
     mir::options::drop_wayland_extensions_opt;
     mir::options::enable_input_opt*;
     mir::options::enable_key_repeat_opt*;
-    mir::options::enable_mirclient_opt;
     mir::options::fatal_except_opt*;
     mir::options::glog*;
     mir::options::glog_log_dir*;
@@ -115,9 +113,7 @@ MIRPLATFORM_2.4 {
     mir::options::log_opt_value*;
     mir::options::logind_console;
     mir::options::lttng_opt_value*;
-    mir::options::msg_processor_report_opt*;
     mir::options::nested_passthrough_opt*;
-    mir::options::no_server_socket_opt*;
     mir::options::null_console;
     mir::options::off_opt_value*;
     mir::options::offscreen_opt*;
@@ -125,11 +121,8 @@ MIRPLATFORM_2.4 {
     mir::options::platform_input_lib*;
     mir::options::platform_path*;
     mir::options::platform_rendering_libs*;
-    mir::options::prompt_socket_opt*;
     mir::options::scene_report_opt*;
     mir::options::seat_report_opt*;
-    mir::options::server_socket_opt*;
-    mir::options::session_mediator_report_opt*;
     mir::options::shared_library_prober_report_opt*;
     mir::options::shell_report_opt;
     mir::options::touchspots_opt*;

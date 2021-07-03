@@ -17,11 +17,12 @@ add_library(server_platform_common STATIC
   buffer_from_wl_shm.cpp
 )
 
-target_link_libraries(
-  server_platform_common
-
-  ${KMS_UTILS_STATIC_LIBRARY}
-  ${Boost_SYSTEM_LIBRARY}
-  ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
-  ${GL_LDFLAGS} ${GL_LIBRARIES}
+target_link_libraries(server_platform_common
+  PUBLIC
+    mircommon
+    mircore
+    ${KMS_UTILS_STATIC_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
+    ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
+    ${GL_LDFLAGS} ${GL_LIBRARIES}
 )

@@ -40,7 +40,7 @@ public:
     virtual ~EventBuilder() = default;
     using Timestamp = std::chrono::nanoseconds;
 
-    virtual EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code, int scan_code) = 0;
+    virtual EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t keysym, int scan_code) = 0;
 
     virtual EventUPtr pointer_event(Timestamp timestamp, MirPointerAction action, MirPointerButtons buttons_pressed,
                                     float hscroll_value, float vscroll_value, float relative_x_value,

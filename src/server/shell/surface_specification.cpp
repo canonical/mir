@@ -67,7 +67,8 @@ bool msh::SurfaceSpecification::is_empty() const
         !depth_layer.is_set() &&
         !attached_edges.is_set() &&
         !exclusive_rect.is_set() &&
-        !application_id.is_set();
+        !application_id.is_set() &&
+        !focus_mode.is_set();
 }
 
 void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
@@ -146,4 +147,6 @@ void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
         exclusive_rect = that.exclusive_rect;
     if (that.application_id.is_set())
         application_id = that.application_id;
+    if (that.focus_mode.is_set())
+        focus_mode = that.focus_mode;
 }

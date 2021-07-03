@@ -138,9 +138,19 @@ auto miral::BasicWindowManager::add_surface(
 
     WindowSpecification spec = policy->place_new_window(session_info, place_new_surface(params));
 
-    if (!spec.depth_layer().is_set() && spec.parent().is_set())
-        if (auto parent_surface = spec.parent().value().lock())
+    auto const parent_surface = spec.parent().is_set() ? spec.parent().value().lock() : nullptr;
+
+    if (parent_surface)
+    {
+        if (!spec.depth_layer().is_set())
+        {
             spec.depth_layer() = parent_surface->depth_layer();
+        }
+        if (!spec.focus_mode().is_set())
+        {
+            spec.focus_mode() = parent_surface->focus_mode();
+        }
+    }
 
     scene::SurfaceCreationParameters parameters;
     spec.update(parameters);
@@ -148,18 +158,17 @@ auto miral::BasicWindowManager::add_surface(
     Window const window{session, surface};
     auto& window_info = this->window_info.emplace(window, WindowInfo{window, spec}).first->second;
 
-    if (spec.parent().is_set() && spec.parent().value().lock())
-        window_info.parent(info_for(spec.parent().value()).window());
+    session_info.add_window(window);
+
+    auto const parent = parent_surface ? info_for(parent_surface).window() : Window{};
+    window_info.parent(parent);
+    if (parent)
+    {
+        info_for(parent).add_child(window);
+    }
 
     if (spec.userdata().is_set())
         window_info.userdata() = spec.userdata().value();
-
-    session_info.add_window(window);
-
-    auto const parent = window_info.parent();
-
-    if (parent)
-        info_for(parent).add_child(window);
 
     for_each_workspace_containing(parent,
         [&](std::shared_ptr<miral::Workspace> const& workspace) { add_tree_to_workspace(window, workspace); });
@@ -274,11 +283,11 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
 }
 
 void miral::BasicWindowManager::refocus(
-    miral::Application const& application, miral::Window const& parent,
+    miral::Application const& application, miral::Window const& hint,
     std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window)
 {
-    // Try to make the parent active
-    if (parent && select_active_window(parent))
+    // If there's a hint, try using that first
+    if (hint && select_active_window(hint))
         return;
 
     if (can_activate_window_for_session_in_workspace(application, workspaces_containing_window))
@@ -1015,6 +1024,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     COPY_IF_SET(attached_edges);
     COPY_IF_SET(exclusive_rect);
     COPY_IF_SET(application_id);
+    COPY_IF_SET(focus_mode);
 
 #undef COPY_IF_SET
 
@@ -1161,6 +1171,24 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
                 child_scene_surface->top_left() - as_displacement(parent_content_area.top_left),
                 child_scene_surface->content_size()};
             child_scene_surface->placed_relative(relative_placement);
+        }
+    }
+
+    if (modifications.focus_mode().is_set())
+    {
+        switch (modifications.focus_mode().value())
+        {
+        case mir_focus_mode_grabbing:
+            select_active_window(window);
+            break;
+
+        case mir_focus_mode_disabled:
+            if (window == active_window())
+            {
+                refocus(window.application(), window_info.parent(), workspaces_containing(window));
+            }
+
+        default:;
         }
     }
 
@@ -1581,7 +1609,25 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
         return hint;
     }
 
+    auto const prev_windows_focus_mode = prev_window ? info_for(prev_window).focus_mode() : mir_focus_mode_focusable;
+    if (prev_windows_focus_mode == mir_focus_mode_grabbing)
+    {
+        return prev_window;
+    }
+
     auto& info_for_hint = info_for(hint);
+
+    if (info_for_hint.focus_mode() == mir_focus_mode_disabled)
+    {
+        if (prev_windows_focus_mode == mir_focus_mode_disabled)
+        {
+            return {};
+        }
+        else
+        {
+            return prev_window;
+        }
+    }
 
     for (auto const& child : info_for_hint.children())
     {

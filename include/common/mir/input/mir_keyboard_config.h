@@ -34,14 +34,15 @@ struct MirKeyboardConfig
 {
     MirKeyboardConfig();
     ~MirKeyboardConfig();
-    MirKeyboardConfig(mir::input::Keymap&& keymap);
+    MirKeyboardConfig(std::shared_ptr<mir::input::Keymap> keymap);
     MirKeyboardConfig(MirKeyboardConfig&& other);
     MirKeyboardConfig(MirKeyboardConfig const& other);
     MirKeyboardConfig& operator=(MirKeyboardConfig const& other);
 
     mir::input::Keymap const& device_keymap() const;
     mir::input::Keymap& device_keymap();
-    void device_keymap(mir::input::Keymap const& );
+    void device_keymap(std::shared_ptr<mir::input::Keymap> keymap);
+    auto device_keymap_shared() -> std::shared_ptr<mir::input::Keymap> const&;
 
     bool operator==(MirKeyboardConfig const& rhs) const;
     bool operator!=(MirKeyboardConfig const& rhs) const;

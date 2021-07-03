@@ -39,3 +39,10 @@ add_library(
 
   ${INPUT_SOURCES}
 )
+
+target_link_libraries(mirinput
+  PUBLIC
+    mircommon
+    mircookie
+    mircore
+)

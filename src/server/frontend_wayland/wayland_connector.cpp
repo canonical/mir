@@ -34,7 +34,6 @@
 
 #include "wayland_wrapper.h"
 
-#include "mir/frontend/surface.h"
 #include "mir/frontend/wayland.h"
 
 #include "mir/main_loop.h"
@@ -52,8 +51,6 @@
 
 #include "mir/renderer/gl/texture_target.h"
 #include "mir/frontend/buffer_stream_id.h"
-
-#include "mir/client/event.h"
 
 #include "mir/input/seat.h"
 #include "mir/input/device.h"
@@ -82,11 +79,6 @@
 #include <unordered_set>
 #include "mir/anonymous_shm_file.h"
 
-
-#if (WAYLAND_VERSION_MAJOR == 1) && (WAYLAND_VERSION_MINOR < 14)
-#define MIR_NO_WAYLAND_FILTER
-#endif
-
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -94,7 +86,6 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
-namespace mcl = mir::client;
 namespace mi = mir::input;
 namespace mw = mir::wayland;
 
@@ -533,13 +524,7 @@ mf::WaylandConnector::WaylandConnector(
         BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to create wl_display"});
     }
 
-#ifndef MIR_NO_WAYLAND_FILTER
     wl_display_set_global_filter(display.get(), &wl_display_global_filter_func_thunk, this);
-#else
-    log_warning("Cannot set Wayland protocol filter: "
-        "wl_display_set_global_filter() is unavailable in libwayland-dev "
-        WAYLAND_VERSION);
-#endif
 
     // Run the builders before creating the seat (because that's what GTK3 expects)
     extensions->run_builders(
@@ -780,14 +765,9 @@ bool mf::WaylandConnector::wl_display_global_filter_func_thunk(wl_client const* 
 
 bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client, wl_global const* global) const
 {
-#ifndef MIR_NO_WAYLAND_FILTER
     auto const* const interface = wl_global_get_interface(global);
     auto const session = get_session(const_cast<wl_client*>(client));
     return extension_filter(session, interface->name);
-#else
-    (void)client, (void)global;
-    return true;
-#endif
 }
 
 auto mir::frontend::get_session(wl_client* wl_client) -> std::shared_ptr<scene::Session>

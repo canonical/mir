@@ -68,7 +68,7 @@ class LayerShellV1::Instance : wayland::LayerShellV1
 {
 public:
     Instance(wl_resource* new_resource, mf::LayerShellV1* shell)
-        : LayerShellV1{new_resource, Version<3>()},
+        : LayerShellV1{new_resource, Version<4>()},
           shell{shell}
     {
     }
@@ -199,6 +199,7 @@ private:
     DoubleBuffered<geometry::Size> client_size;
     DoubleBuffered<geometry::Displacement> offset;
     bool configure_on_next_commit{true}; ///< If to send a .configure event at the end of the next or current commit
+    MirFocusMode current_focus_mode{mir_focus_mode_disabled};
     std::deque<std::pair<uint32_t, OptionalSize>> inflight_configures;
     std::vector<wayland::Weak<XdgPopupStable>> popups; ///< We have to keep track of popups to adjust their offset
 };
@@ -214,7 +215,7 @@ mf::LayerShellV1::LayerShellV1(
     std::shared_ptr<msh::Shell> shell,
     WlSeat& seat,
     OutputManager* output_manager)
-    : Global(display, Version<3>()),
+    : Global(display, Version<4>()),
       wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
@@ -276,7 +277,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     std::experimental::optional<graphics::DisplayConfigurationOutputId> output_id,
     LayerShellV1 const& layer_shell,
     MirDepthLayer layer)
-    : mw::LayerSurfaceV1(new_resource, Version<3>()),
+    : mw::LayerSurfaceV1(new_resource, Version<4>()),
       WindowWlSurfaceRole(
           layer_shell.wayland_executor,
           &layer_shell.seat,
@@ -289,6 +290,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     shell::SurfaceSpecification spec;
     spec.state = mir_window_state_attached;
     spec.depth_layer = layer;
+    spec.focus_mode = current_focus_mode;
     if (output_id)
         spec.output_id = output_id.value();
     apply_spec(spec);
@@ -517,7 +519,30 @@ void mf::LayerSurfaceV1::set_margin(int32_t top, int32_t right, int32_t bottom, 
 
 void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactivity)
 {
-    (void)keyboard_interactivity;
+    switch (keyboard_interactivity)
+    {
+    case KeyboardInteractivity::none:
+        current_focus_mode = mir_focus_mode_disabled;
+        break;
+
+    case KeyboardInteractivity::exclusive:
+        current_focus_mode = mir_focus_mode_grabbing;
+        break;
+
+    case KeyboardInteractivity::on_demand:
+        current_focus_mode = mir_focus_mode_focusable;
+        break;
+
+    default:
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_keyboard_interactivity,
+            "Invalid keyboard interactivity %d",
+            keyboard_interactivity));
+    }
+    msh::SurfaceSpecification spec;
+    spec.focus_mode = current_focus_mode;
+    apply_spec(spec);
 }
 
 void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)

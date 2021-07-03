@@ -44,10 +44,10 @@ void print_key_event(MirInputEvent const* ev)
     auto event_time = mir_input_event_get_event_time(ev);
     auto kev = mir_input_event_get_keyboard_event(ev);
     auto scan_code = mir_keyboard_event_scan_code(kev);
-    auto key_code = mir_keyboard_event_key_code(kev);
+    auto keysym = mir_keyboard_event_keysym(kev);
 
     std::cout << "Handling key event (time, scancode, keycode): " << event_time << " " <<
-              scan_code << " " << key_code << std::endl;
+              scan_code << " " << keysym << std::endl;
 }
 
 void print_touch_event(MirInputEvent const* ev)

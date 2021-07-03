@@ -19,60 +19,42 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 
-    # Only run if we have access to secrets.
-    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
-
     steps:
     - id: set-matrix
       name: Determine BuildAndTest matrix
       run: |
         set -euo pipefail
 
-        if [ "${{ github.event_name }}" == "push" -a "${{ github.ref }}" == "refs/heads/master" ]; then
-          cat <<EOF | jq -c . | awk '{ print "::set-output name=matrix::" $0 }'
-        {
-          "spread-task": [
-            "google:ubuntu-20.04-64:spread/build/ubuntu:asan",
-            "google:ubuntu-20.04-64:spread/build/ubuntu:tsan",
-            "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan",
-            "google:ubuntu-20.04-64:spread/build/ubuntu:asan_clang",
-            "google:ubuntu-20.04-64:spread/build/ubuntu:tsan_clang",
-            "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan_clang"
-          ],
-          "allow-fail": [false]
-        }
-        EOF
+        if ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}; then
+          TASKS='"google:ubuntu-20.04-64:spread/build/ubuntu:asan"
+                 "google:ubuntu-20.04-64:spread/build/ubuntu:tsan"
+                 "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan"
+                 "google:ubuntu-20.04-64:spread/build/ubuntu:asan_clang"
+                 "google:ubuntu-20.04-64:spread/build/ubuntu:tsan_clang"
+                 "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan_clang"'
         else
-          cat <<EOF | jq -c . | awk '{ print "::set-output name=matrix::" $0 }'
-        {
-          "spread-task": [
-            "google:ubuntu-20.04-64:spread/build/sbuild:debian_sid",
-            "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_groovy",
-            "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu",
-            "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64",
-            "google:ubuntu-20.04-64:spread/build/ubuntu:rpi",
-            "google:ubuntu-20.04-64:spread/build/ubuntu:clang",
-            "google:fedora-32-64:spread/build/fedora:amd64",
-            "google:fedora-33-64:spread/build/fedora:amd64"
-          ],
-          "allow-fail": [false],
-          "include": [
-            {
-              "spread-task": "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel",
-              "allow-fail": true
-            },
-            {
-              "spread-task": "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed",
-              "allow-fail": true
-            },
-            {
-              "spread-task": "fedora-rawhide-64:spread/build/fedora:amd64",
-              "allow-fail": true
-            }
-          ]
-        }
-        EOF
+          TASKS='"lxd:alpine-3.14:spread/build/alpine:amd64"
+                 "lxd:alpine-edge:spread/build/alpine:amd64"'
+
+          # Only run if we have access to secrets.
+          if ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}; then
+            TASKS+='"google:ubuntu-20.04-64:spread/build/sbuild:debian_sid"
+                    "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_groovy"
+                    "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu"
+                    "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64"
+                    "google:ubuntu-20.04-64:spread/build/ubuntu:rpi"
+                    "google:ubuntu-20.04-64:spread/build/ubuntu:clang"
+                    "google:fedora-33-64:spread/build/fedora:amd64"
+                    "google:fedora-34-64:spread/build/fedora:amd64"'
+            FAILING_TASKS='"google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel"
+                           "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed"
+                           "google:fedora-rawhide-64:spread/build/fedora:amd64"'
+          fi
         fi
+
+        ( echo ${TASKS:-} | jq -s '{ "spread-task": ., "allow-fail": [false] }';
+          echo ${FAILING_TASKS:-} | jq '{ "spread-task": ., "allow-fail": true }' | jq -s '{ "include": . }' ) \
+        | jq -cs add | awk '{ print "::set-output name=matrix::" $0 }'
 
   BuildAndTest:
     needs: GetMatrix
@@ -89,8 +71,23 @@ jobs:
       SPREAD_PATH: "/tmp/spread"
 
     steps:
-    - name: Install Spread
-      run: sudo snap install spread
+    - name: Set up LXD
+      if: ${{ startsWith(matrix.spread-task, 'lxd:') }}
+      uses: whywaita/setup-lxd@v1
+
+    - name: Set up Spread
+      run: |
+        set -e
+        if ${{ !startsWith(matrix.spread-task, 'lxd:') }}; then
+          sudo snap install spread
+          timeout 600 sh -c 'while snap changes | grep Doing; do sleep 5; done'
+          sudo snap connect spread:home
+        else
+          curl -s -O https://people.canonical.com/~chrishr/spread.snap
+          sudo snap install --dangerous spread.snap
+          sudo snap connect spread:lxd lxd:lxd
+          echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV
+        fi
 
     - name: Check out code
       uses: actions/checkout@v2

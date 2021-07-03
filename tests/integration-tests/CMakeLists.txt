@@ -3,7 +3,6 @@ include(CMakeDependentOption)
 include_directories(
   ${CMAKE_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
-  ${PROJECT_SOURCE_DIR}/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/common
@@ -15,24 +14,13 @@ include_directories(
 
 set(
   INTEGRATION_TESTS_SRCS
-  test_focus_selection.cpp
   test_touchspot_visualization.cpp
   test_surface_stack_with_compositor.cpp
-  test_large_messages.cpp
-  test_surfaceloop.cpp
-  test_test_framework.cpp
-  test_error_reporting.cpp
-  test_display_info.cpp
   test_display_server_main_loop_events.cpp
-  test_surface_first_frame_sync.cpp
-  test_swapinterval.cpp
   test_server_client_types.cpp
-  test_server_shutdown.cpp
-  session_management.cpp
 )
 
 add_subdirectory(compositor/)
-add_subdirectory(shell/)
 add_subdirectory(process/)
 add_subdirectory(input/)
 

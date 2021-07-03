@@ -36,11 +36,12 @@ mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id,
 {
 }
 
-mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code,
+mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t keysym,
                                                   int scan_code)
 {
     auto const cookie = cookie_authority->make_cookie(timestamp.count());
-    return me::make_event(device_id, timestamp, cookie->serialize(), action, key_code, scan_code, mir_input_event_modifier_none);
+    return me::make_key_event_event(
+        device_id, timestamp, cookie->serialize(), action, keysym, scan_code, mir_input_event_modifier_none);
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirPointerAction action,
@@ -55,8 +56,10 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirPo
         auto const cookie = cookie_authority->make_cookie(timestamp.count());
         vec_cookie = cookie->serialize();
     }
-    return me::make_event(device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis_value, y_axis_value,
-                          hscroll_value, vscroll_value, relative_x_value, relative_y_value);
+    return me::make_pointer_event(
+        device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis_value,
+        y_axis_value,
+        hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp,
@@ -75,8 +78,9 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp,
         auto const cookie = cookie_authority->make_cookie(timestamp.count());
         vec_cookie = cookie->serialize();
     }
-    return me::make_event(device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis, y_axis,
-                          hscroll_value, vscroll_value, relative_x_value, relative_y_value);
+    return me::make_pointer_event(
+        device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis, y_axis,
+        hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::touch_event(Timestamp timestamp, std::vector<events::ContactState> const& contacts)
@@ -91,5 +95,5 @@ mir::EventUPtr mi::DefaultEventBuilder::touch_event(Timestamp timestamp, std::ve
             break;
         }
     }
-    return me::make_event(device_id, timestamp, vec_cookie, mir_input_event_modifier_none, contacts);
+    return me::make_touch_event(device_id, timestamp, vec_cookie, mir_input_event_modifier_none, contacts);
 }

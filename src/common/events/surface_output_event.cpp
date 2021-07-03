@@ -21,67 +21,71 @@
 // MirSurfaceOutputEvent is a deprecated type, but we need to implement it
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-MirSurfaceOutputEvent::MirSurfaceOutputEvent()
+MirSurfaceOutputEvent::MirSurfaceOutputEvent() : MirEvent(mir_event_type_window_output)
 {
-    event.initSurfaceOutput();
+}
+
+auto MirSurfaceOutputEvent::clone() const -> MirSurfaceOutputEvent*
+{
+    return new MirSurfaceOutputEvent{*this};
 }
 
 int MirSurfaceOutputEvent::surface_id() const
 {
-    return event.asReader().getSurfaceOutput().getSurfaceId();
+    return surface_id_;
 }
 
 void MirSurfaceOutputEvent::set_surface_id(int id)
 {
-    event.getSurfaceOutput().setSurfaceId(id);
+    surface_id_ = id;
 }
 
 int MirSurfaceOutputEvent::dpi() const
 {
-    return event.asReader().getSurfaceOutput().getDpi();
+    return dpi_;
 }
 
 void MirSurfaceOutputEvent::set_dpi(int dpi)
 {
-    event.getSurfaceOutput().setDpi(dpi);
+    dpi_ = dpi;
 }
 
 float MirSurfaceOutputEvent::scale() const
 {
-    return event.asReader().getSurfaceOutput().getScale();
+    return scale_;
 }
 
 void MirSurfaceOutputEvent::set_scale(float scale)
 {
-    event.getSurfaceOutput().setScale(scale);
+    scale_ = scale;
 }
 
 double MirSurfaceOutputEvent::refresh_rate() const
 {
-    return event.asReader().getSurfaceOutput().getRefreshRate();
+    return refresh_rate_;
 }
 
 void MirSurfaceOutputEvent::set_refresh_rate(double rate)
 {
-    event.getSurfaceOutput().setRefreshRate(rate);
+    refresh_rate_ = rate;
 }
 
 MirFormFactor MirSurfaceOutputEvent::form_factor() const
 {
-    return static_cast<MirFormFactor>(event.asReader().getSurfaceOutput().getFormFactor());
+    return form_factor_;
 }
 
 void MirSurfaceOutputEvent::set_form_factor(MirFormFactor factor)
 {
-    event.getSurfaceOutput().setFormFactor(static_cast<mir::capnp::SurfaceOutputEvent::FormFactor>(factor));
+    form_factor_ = factor;
 }
 
 uint32_t MirSurfaceOutputEvent::output_id() const
 {
-    return event.asReader().getSurfaceOutput().getOutputId();
+    return output_id_;
 }
 
 void MirSurfaceOutputEvent::set_output_id(uint32_t id)
 {
-    event.getSurfaceOutput().setOutputId(id);
+    output_id_ = id;
 }

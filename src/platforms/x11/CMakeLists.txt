@@ -6,6 +6,11 @@ add_library(
   x11_resources.cpp
 )
 
+target_link_libraries(mirplatformserverx11sharedresources
+  PUBLIC
+    mircommon
+)
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
     ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)

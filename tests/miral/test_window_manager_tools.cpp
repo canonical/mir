@@ -89,8 +89,9 @@ struct StubSurface : mir::test::doubles::StubSurface
         MirWindowType type,
         mir::geometry::Point top_left,
         mir::geometry::Size size,
-        MirDepthLayer depth_layer)
-        : name_{name}, type_{type}, top_left_{top_left}, size_{size}, depth_layer_{depth_layer}
+        MirDepthLayer depth_layer,
+        MirFocusMode focus_mode)
+        : name_{name}, type_{type}, top_left_{top_left}, size_{size}, depth_layer_{depth_layer}, focus_mode_{focus_mode}
     {
     }
 
@@ -135,6 +136,9 @@ struct StubSurface : mir::test::doubles::StubSurface
         content_size_offset = mir::geometry::Displacement{left + right, top + bottom};
     }
 
+    auto focus_mode() const -> MirFocusMode override { return focus_mode_; }
+    void set_focus_mode(MirFocusMode mode) override { focus_mode_ = mode; }
+
     std::string name_;
     MirWindowType type_;
     mir::geometry::Point top_left_;
@@ -143,6 +147,7 @@ struct StubSurface : mir::test::doubles::StubSurface
     MirDepthLayer depth_layer_;
     mir::geometry::Displacement content_offset_;
     mir::geometry::Displacement content_size_offset;
+    MirFocusMode focus_mode_;
 };
 
 struct StubStubSession : mir::test::doubles::StubSession
@@ -160,7 +165,10 @@ struct StubStubSession : mir::test::doubles::StubSession
             params.size,
             params.depth_layer.is_set() ?
                 params.depth_layer.value()
-                : mir_depth_layer_application);
+                : mir_depth_layer_application,
+            params.focus_mode.is_set() ?
+                params.focus_mode.value()
+                : mir_focus_mode_focusable);
         surfaces[id] = surface;
         return surface;
     }

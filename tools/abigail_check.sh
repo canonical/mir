@@ -4,7 +4,6 @@ set -e
 
 declare -A abi_var_for=(\
     ["mircore"]="MIRCORE_ABI" \
-    ["mirclient"]="MIRCLIENT_ABI" \
     ["mircommon"]="MIRCOMMON_ABI" \
     ["mirplatform"]="MIRPLATFORM_ABI" \
     ["mirserver"]="MIRSERVER_ABI" \
@@ -137,12 +136,6 @@ function header_packages_for()
 
     # Only interested in other mir dev package deps
     local dev_deps=$(apt-cache depends ${pkg} | grep Depends: | grep -o "\<libmir.*-dev\>"|  tr '\n' ' ')
-
-    # Workaround missing dependency
-    if [ ${name} == "mirserver" ] || [ ${name} == "mirplatforminputevdev" ];
-    then
-        dev_deps="${dev_deps} libmirclient-dev"
-    fi
 
     echo "${pkg} ${dev_deps}"
 }

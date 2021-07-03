@@ -39,7 +39,6 @@ using XKBContextPtr = std::unique_ptr<xkb_context, void(*)(xkb_context*)>;
 XKBContextPtr make_unique_context();
 
 using XKBKeymapPtr = std::unique_ptr<xkb_keymap, void(*)(xkb_keymap*)>;
-XKBKeymapPtr make_unique_keymap(xkb_context* context, Keymap const& keymap);
 XKBKeymapPtr make_unique_keymap(xkb_context* context, char const* buffer, size_t size);
 
 using XKBStatePtr = std::unique_ptr<xkb_state, void(*)(xkb_state*)>;

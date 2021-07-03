@@ -446,3 +446,13 @@ global:
     miral::Output::logical_group_id*;
   };
 } MIRAL_3.1;
+
+MIRAL_3.3 {
+global:
+  extern "C++" {
+    miral::PrintTo*;
+    miral::WindowInfo::focus_mode*;
+    miral::WindowSpecification::focus_mode*;
+    miral::toolkit::mir_keyboard_event_keysym*;
+  };
+} MIRAL_3.2;

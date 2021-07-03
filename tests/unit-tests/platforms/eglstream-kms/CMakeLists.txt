@@ -16,7 +16,6 @@ target_link_libraries(
   mir-test-doubles-static
   mir-test-doubles-platform-static
 
-  client_platform_common
   server_platform_common
   ${EPOXY_LDFLAGS} ${EPOXY_LIBRARIES}
   ${WAYLAND_EGLSTREAM_LDFLAGS} ${WAYLAND_EGLSTREAM_LIBRARIES}

@@ -51,12 +51,6 @@ struct ServerRunner
     /// The method is synchronous, i.e., it returns only after the server has stopped
     void stop_server();
 
-    /// \return a connection string for a new client to connect to the server
-    std::string new_connection();
-
-    /// \return a connection string for a new client to connect to the prompt server
-    std::string new_prompt_connection();
-
 private:
     std::shared_ptr<mir::MainLoop> start_mir_server();
     virtual mir::DefaultServerConfiguration& server_config() = 0;

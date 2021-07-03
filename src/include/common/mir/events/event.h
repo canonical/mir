@@ -21,16 +21,13 @@
 
 #include "mir_toolkit/event.h"
 #include "mir/events/event_builders.h"
-#include "mir_event.capnp.h"
-
-#include <capnp/message.h>
 
 #include <cstring>
 
 struct MirEvent
 {
-    MirEvent(MirEvent const& event);
-    MirEvent& operator=(MirEvent const& event);
+    virtual auto clone() const -> MirEvent* = 0;
+    virtual ~MirEvent() = default;
 
     MirEventType type() const;
 
@@ -52,9 +49,6 @@ struct MirEvent
     MirCloseWindowEvent* to_close_window();
     MirCloseWindowEvent const* to_close_window() const;
 
-    MirKeymapEvent* to_keymap();
-    MirKeymapEvent const* to_keymap() const;
-
     MirWindowOutputEvent* to_window_output();
     MirWindowOutputEvent const* to_window_output() const;
 
@@ -64,14 +58,14 @@ struct MirEvent
     MirWindowPlacementEvent* to_window_placement();
     MirWindowPlacementEvent const* to_window_placement() const;
 
-    static mir::EventUPtr deserialize(std::string const& bytes);
-    static std::string serialize(MirEvent const* event);
-
 protected:
-    MirEvent() = default;
+    MirEvent(MirEventType type);
+    MirEvent(MirEvent const& event);
 
-    ::capnp::MallocMessageBuilder message;
-    mir::capnp::Event::Builder event{message.initRoot<mir::capnp::Event>()};
+private:
+    MirEvent& operator=(MirEvent const& event) = delete;
+
+    MirEventType const type_;
 };
 
 #endif /* MIR_COMMON_EVENT_H_ */

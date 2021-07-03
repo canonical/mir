@@ -13,7 +13,12 @@ add_library(mir-public-test OBJECT
   popen.cpp
   signal.cpp
   spin_wait.cpp
-  validity_matchers.cpp
+)
+
+target_link_libraries(mir-public-test
+  PUBLIC
+    mircommon
+    mircore
 )
 
 add_library(mir-test-static STATIC
@@ -22,6 +27,12 @@ add_library(mir-test-static STATIC
   test_dispatchable.cpp
   wait_object.cpp
   $<TARGET_OBJECTS:mir-public-test>
+)
+
+target_link_libraries(mir-test-static
+  PUBLIC
+    mircommon
+    mircore
 )
 
 if (NOT HAVE_PTHREAD_GETNAME_NP)

@@ -21,6 +21,8 @@
 
 #include "mir/events/input_event.h"
 
+#include <optional>
+
 typedef struct MirBlob MirBlob;
 
 struct MirPointerEvent : MirInputEvent
@@ -38,6 +40,8 @@ struct MirPointerEvent : MirInputEvent
                     float dy,
                     float vscroll,
                     float hscroll);
+
+    auto clone() const -> MirPointerEvent* override;
 
     float x() const;
     void set_x(float x);
@@ -65,7 +69,17 @@ struct MirPointerEvent : MirInputEvent
 
     void set_dnd_handle(std::vector<uint8_t> const& handle);
     MirBlob* dnd_handle() const;
+
 private:
+    float x_ = 0.0;
+    float y_ = 0.0;
+    float dx_ = 0.0;
+    float dy_ = 0.0;
+    float vscroll_ = 0.0;
+    float hscroll_ = 0.0;
+    MirPointerAction action_ = {};
+    MirPointerButtons buttons_= {};
+    std::optional<std::vector<uint8_t>> dnd_handle_;
 };
 
 #endif

@@ -14,6 +14,12 @@ set_property(
 
 add_dependencies(mir_unit_tests_x11 GMock)
 
+set_target_properties(
+  mir_unit_tests_x11
+  PROPERTIES
+    ENABLE_EXPORTS TRUE
+)
+
 target_link_libraries(
   mir_unit_tests_x11
 

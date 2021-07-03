@@ -107,21 +107,6 @@ std::shared_ptr<mir::input::SeatObserver> create_seat_reports(
         std::throw_with_nested(mir::AbnormalExit("Failed to create report for "s + mo::seat_report_opt));
     }
 }
-
-std::shared_ptr<mir::frontend::SessionMediatorObserver> create_session_mediator_reports(
-    mir::DefaultServerConfiguration& config,
-    std::string const& opt)
-{
-    using namespace std::string_literals;
-    try
-    {
-        return factory_for_type(config, parse_report_option(opt))->create_session_mediator_report();
-    }
-    catch (...)
-    {
-        std::throw_with_nested(mir::AbnormalExit("Failed to create report for "s + mo::session_mediator_report_opt));
-    }
-}
 }
 
 mir::report::Reports::Reports(
@@ -130,14 +115,8 @@ mir::report::Reports::Reports(
     : display_configuration_report{std::make_shared<logging::DisplayConfigurationReport>(server.the_logger())},
       display_configuration_multiplexer{server.the_display_configuration_observer_registrar()},
       seat_report{create_seat_reports(server, options.get<std::string>(mo::seat_report_opt))},
-      seat_observer_multiplexer{server.the_seat_observer_registrar()},
-      session_mediator_report{
-          create_session_mediator_reports(
-              server,
-              options.get<std::string>(mo::session_mediator_report_opt))},
-      session_mediator_observer_multiplexer{server.the_session_mediator_observer_registrar()}
+      seat_observer_multiplexer{server.the_seat_observer_registrar()}
 {
     display_configuration_multiplexer->register_interest(display_configuration_report);
     seat_observer_multiplexer->register_interest(seat_report);
-    session_mediator_observer_multiplexer->register_interest(session_mediator_report);
 }

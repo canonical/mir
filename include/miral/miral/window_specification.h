@@ -165,6 +165,13 @@ public:
     auto server_side_decorated() -> mir::optional_value<bool>&;
     ///@}
 
+    /// How the window should gain and lose focus
+    /// \remark Since MirAL 3.3
+    ///@{
+    auto focus_mode() const -> mir::optional_value<MirFocusMode> const&;
+    auto focus_mode() -> mir::optional_value<MirFocusMode>&;
+    ///@}
+
 private:
     struct Self;
     std::unique_ptr<Self> self;
