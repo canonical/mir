@@ -69,7 +69,7 @@ MIR_COMMON_2.5 {
     mir::events::add_touch*;
     mir::events::clone_event*;
     mir::events::make_input_configure_event*;
-    mir::events::make_key_event_event*;
+    mir::events::make_key_event*;
     mir::events::make_keymap_event*;
     mir::events::make_pointer_event*;
     mir::events::make_prompt_session_state_event*;

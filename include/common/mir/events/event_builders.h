@@ -64,7 +64,7 @@ EventUPtr make_window_output_event(
 EventUPtr make_window_placement_event(frontend::SurfaceId const& surface_id, geometry::Rectangle placement);
 
 // Key event
-EventUPtr make_key_event_event(
+EventUPtr make_key_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
     std::vector<uint8_t> const& cookie,

@@ -40,7 +40,7 @@ mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboa
                                                   int scan_code)
 {
     auto const cookie = cookie_authority->make_cookie(timestamp.count());
-    return me::make_key_event_event(
+    return me::make_key_event(
         device_id, timestamp, cookie->serialize(), action, keysym, scan_code, mir_input_event_modifier_none);
 }
 

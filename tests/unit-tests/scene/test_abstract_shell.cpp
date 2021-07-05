@@ -396,7 +396,7 @@ TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
     int const scan_code{0};
     MirInputEventModifiers const modifiers{mir_input_event_modifier_none};
 
-    auto const event = mir::events::make_key_event_event(
+    auto const event = mir::events::make_key_event(
         mir_input_event_type_key,
         event_timestamp,
         cookie,

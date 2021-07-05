@@ -320,7 +320,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
         std::shared_ptr<mg::CursorImage>(),
         report);
 
-    auto key_event = mev::make_key_event_event(
+    auto key_event = mev::make_key_event(
         MirInputDeviceId(0), std::chrono::nanoseconds(0), std::vector<uint8_t>{},
         mir_keyboard_action_down, 0, 0, mir_input_event_modifier_none);
     auto touch_event = mev::make_touch_event(
