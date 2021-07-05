@@ -104,7 +104,7 @@ mf::WlSurface::~WlSurface()
 {
     // We can't use a function try block as we want to access `client`:
     // "Before any catch clauses of a function-try-block on a destructor are entered,
-    // all bases and non-variant members have already been destroyed."
+    // all bases and non-variant_ members have already been destroyed."
     try
     {
         // Destroy the buffer stream first, as surface_destroyed() may throw

@@ -42,6 +42,12 @@ public:
     virtual auto matches(Keymap const& other) const -> bool = 0;
     /// The model name of the keyboard this keymap is for
     virtual auto model() const -> std::string = 0;
+    /// The layout name of the keyboard this keymap is for
+    virtual auto layout() const -> std::string = 0;
+    /// The variant_ name of the keyboard this keymap is for
+    virtual auto variant() const -> std::string = 0;
+    /// The options name of the keyboard this keymap is for
+    virtual auto options() const -> std::string = 0;
     virtual auto make_unique_xkb_keymap(xkb_context* context) const -> XKBKeymapPtr = 0;
 
 private:

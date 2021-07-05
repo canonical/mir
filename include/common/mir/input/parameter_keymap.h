@@ -38,7 +38,7 @@ public:
 
     ParameterKeymap() = default;
     ParameterKeymap(std::string&& model, std::string&& layout, std::string&& variant, std::string&& options)
-        : model_{model}, layout{layout}, variant{variant}, options{options}
+        : model_{model}, layout_{layout}, variant_{variant}, options_{options}
     {
     }
 
@@ -47,19 +47,22 @@ public:
         std::string const& layout,
         std::string const& variant,
         std::string const& options)
-        : model_{model}, layout{layout}, variant{variant}, options{options}
+        : model_{model}, layout_{layout}, variant_{variant}, options_{options}
     {
     }
 
     auto matches(Keymap const& other) const -> bool override;
     auto model() const -> std::string override;
+    auto variant() const -> std::string override;
+    auto layout() const -> std::string override;
+    auto options() const -> std::string override;
     auto make_unique_xkb_keymap(xkb_context* context) const -> XKBKeymapPtr override;
 
 private:
     std::string model_{default_model};
-    std::string layout{default_layout};
-    std::string variant;
-    std::string options;
+    std::string layout_{default_layout};
+    std::string variant_;
+    std::string options_;
 };
 
 }

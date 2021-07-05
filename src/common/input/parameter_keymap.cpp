@@ -29,9 +29,9 @@ auto mi::ParameterKeymap::matches(Keymap const& other) const -> bool
     auto const params = dynamic_cast<ParameterKeymap const*>(&other);
     return params &&
         model_ == params->model_ &&
-        layout == params->layout &&
-        variant == params->variant &&
-        options == params->options;
+           layout_ == params->layout_ &&
+           variant_ == params->variant_ &&
+        options_ == params->options_;
 }
 
 auto mi::ParameterKeymap::model() const -> std::string
@@ -45,9 +45,9 @@ auto mi::ParameterKeymap::make_unique_xkb_keymap(xkb_context* context) const -> 
     {
         "evdev",
         model_.c_str(),
-        layout.c_str(),
-        variant.c_str(),
-        options.c_str()
+        layout_.c_str(),
+        variant_.c_str(),
+        options_.c_str()
     };
     auto keymap_ptr = xkb_keymap_new_from_names(context, &keymap_names, xkb_keymap_compile_flags(0));
 
@@ -55,8 +55,23 @@ auto mi::ParameterKeymap::make_unique_xkb_keymap(xkb_context* context) const -> 
     {
         auto const error =
             "Illegal keymap configuration evdev-" +
-            model_ + "-" + layout + "-" + variant + "-" + options;
+            model_ + "-" + layout_ + "-" + variant_ + "-" + options_;
         BOOST_THROW_EXCEPTION(std::invalid_argument(error.c_str()));
     }
     return {keymap_ptr, &xkb_keymap_unref};
+}
+
+auto mi::ParameterKeymap::variant() const -> std::string
+{
+    return variant_;
+}
+
+auto mi::ParameterKeymap::layout() const -> std::string
+{
+    return layout_;
+}
+
+auto mi::ParameterKeymap::options() const -> std::string
+{
+    return options_;
 }

@@ -237,10 +237,10 @@ void mir_keyboard_config_set_keymap_options(
     MirKeyboardConfig* conf, char const* options);
 
 /**
- * Set the variant of the keymap as a null terminated string.
+ * Set the variant_ of the keymap as a null terminated string.
  *
  * \param [in] conf     The keyboard config
- * \param [in] variant  The keymap variant
+ * \param [in] variant  The keymap variant_
  */
 void mir_keyboard_config_set_keymap_variant(
     MirKeyboardConfig* conf, char const* variant);
