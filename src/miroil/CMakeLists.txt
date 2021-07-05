@@ -21,8 +21,13 @@ set_target_properties(miroil-internal
         PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS}  -fvisibility=hidden")
 
 target_include_directories(miroil-internal
-    PRIVATE ${MIRSERVER_INCLUDE_DIRS}  ${MIRCLIENT_INCLUDE_DIRS}
+    PRIVATE ${MIRSERVER_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include/wayland
+)
+
+target_link_libraries(miroil-internal
+    PRIVATE
+        mircommon
 )
 
 add_library(miroil SHARED
@@ -61,7 +66,6 @@ target_link_libraries(miroil
         miroil-internal
         mircommon
         mirserver
-        mirclient
         miral
 )
 
