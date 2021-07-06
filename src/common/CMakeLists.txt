@@ -51,7 +51,6 @@ add_library(mircommon SHARED
   input/mir_touchscreen_config.cpp
   input/input_event.cpp
   input/xkb_mapper.cpp
-  input/parameter_keymap.cpp
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_input_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_pointer_config.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/input/mir_touchpad_config.h

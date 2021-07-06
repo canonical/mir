@@ -126,6 +126,25 @@ mi::XKBContextPtr mi::make_unique_context()
     return {xkb_context_new(xkb_context_flags(0)), &xkb_context_unref};
 }
 
+mi::XKBKeymapPtr mi::make_unique_keymap(xkb_context* context, mi::Keymap const& map)
+{
+    std::stringstream error;
+    error << "Illegal keymap configuration evdev-" << map;
+    xkb_rule_names keymap_names
+    {
+        "evdev",
+        map.model.c_str(),
+        map.layout.c_str(),
+        map.variant.c_str(),
+        map.options.c_str()
+    };
+    auto keymap_ptr = xkb_keymap_new_from_names(context, &keymap_names, xkb_keymap_compile_flags(0));
+
+    if (!keymap_ptr)
+        BOOST_THROW_EXCEPTION(std::invalid_argument(error.str().c_str()));
+    return {keymap_ptr, &xkb_keymap_unref};
+}
+
 mi::XKBKeymapPtr mi::make_unique_keymap(xkb_context* context, char const* buffer, size_t size)
 {
     auto keymap_ptr = xkb_keymap_new_from_buffer(context, buffer, size, XKB_KEYMAP_FORMAT_TEXT_V1, xkb_keymap_compile_flags(0));
@@ -217,7 +236,7 @@ mircv::XKBMapper::XkbMappingState* mircv::XKBMapper::get_keymapping_state(MirInp
 
 void mircv::XKBMapper::set_keymap_for_all_devices(Keymap const& new_keymap)
 {
-    set_keymap(new_keymap.make_unique_xkb_keymap(context.get()));
+    set_keymap(make_unique_keymap(context.get(), new_keymap));
 }
 
 void mircv::XKBMapper::set_keymap_for_all_devices(char const* buffer, size_t len)
@@ -234,7 +253,7 @@ void mircv::XKBMapper::set_keymap(XKBKeymapPtr new_keymap)
 
 void mircv::XKBMapper::set_keymap_for_device(MirInputDeviceId id, Keymap const& new_keymap)
 {
-    set_keymap(id, new_keymap.make_unique_xkb_keymap(context.get()));
+    set_keymap(id, make_unique_keymap(context.get(), new_keymap));
 }
 
 void mircv::XKBMapper::set_keymap_for_device(MirInputDeviceId id, char const* buffer, size_t len)

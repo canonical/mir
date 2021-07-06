@@ -94,7 +94,7 @@ private:
     class ConfigObserver;
     class Instance;
 
-    std::shared_ptr<mir::input::Keymap> keymap;
+    std::unique_ptr<mir::input::Keymap> const keymap;
     std::shared_ptr<ConfigObserver> const config_observer;
 
     // listener list are shared pointers so devices can keep them around long enough to remove themselves

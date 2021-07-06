@@ -18,7 +18,6 @@
  */
 
 #include "mir/input/mir_keyboard_config.h"
-#include "mir/input/parameter_keymap.h"
 
 #include <ostream>
 
@@ -26,17 +25,10 @@ namespace mi = mir::input;
 
 struct MirKeyboardConfig::Implementation
 {
-    Implementation()
-        : device_keymap{std::make_shared<mi::ParameterKeymap>()}
-    {
-    }
-
-    Implementation(std::shared_ptr<mi::Keymap> && keymap)
-        : device_keymap{std::move(keymap)}
-    {
-    }
-
-    std::shared_ptr<mi::Keymap> device_keymap;
+    Implementation() = default;
+    Implementation(mi::Keymap && keymap)
+        : device_keymap(keymap) {}
+    mi::Keymap device_keymap;
 };
 
 MirKeyboardConfig::MirKeyboardConfig()
@@ -45,7 +37,7 @@ MirKeyboardConfig::MirKeyboardConfig()
 
 MirKeyboardConfig::~MirKeyboardConfig() = default;
 
-MirKeyboardConfig::MirKeyboardConfig(std::shared_ptr<mi::Keymap> keymap)
+MirKeyboardConfig::MirKeyboardConfig(mi::Keymap && keymap)
     : impl{std::make_unique<Implementation>(std::move(keymap))}
 {
 }
@@ -68,27 +60,22 @@ MirKeyboardConfig& MirKeyboardConfig::operator=(MirKeyboardConfig const& other)
 
 mi::Keymap const& MirKeyboardConfig::device_keymap() const
 {
-    return *impl->device_keymap;
+    return impl->device_keymap;
 }
 
 mi::Keymap& MirKeyboardConfig::device_keymap()
 {
-    return *impl->device_keymap;
-}
-
-void MirKeyboardConfig::device_keymap(std::shared_ptr<mi::Keymap> keymap)
-{
-    impl->device_keymap = std::move(keymap);
-}
-
-auto MirKeyboardConfig::device_keymap_shared() -> std::shared_ptr<mir::input::Keymap> const&
-{
     return impl->device_keymap;
+}
+
+void MirKeyboardConfig::device_keymap(mi::Keymap const& keymap)
+{
+    impl->device_keymap = keymap;
 }
 
 bool MirKeyboardConfig::operator==(MirKeyboardConfig const& rhs) const
 {
-    return device_keymap().matches(rhs.device_keymap());
+    return device_keymap() == rhs.device_keymap();
 }
 
 bool MirKeyboardConfig::operator!=(MirKeyboardConfig const& rhs) const
@@ -98,5 +85,5 @@ bool MirKeyboardConfig::operator!=(MirKeyboardConfig const& rhs) const
 
 std::ostream& operator<<(std::ostream& out, MirKeyboardConfig const& keyboard)
 {
-    return out << keyboard.device_keymap().model() << " config";
+    return out << " keymap:" << keyboard.device_keymap();
 }

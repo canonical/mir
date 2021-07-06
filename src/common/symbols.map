@@ -471,11 +471,6 @@ MIR_COMMON_2.5 {
     vtable?for?mir::time::Clock;
     vtable?for?mir::time::PosixTimestamp;
     vtable?for?mir::time::SteadyClock;
-    MirKeyboardConfig::device_keymap_shared*;
-    mir::input::ParameterKeymap::ParameterKeymap*;
-    mir::input::ParameterKeymap::make_unique_xkb_keymap*;
-    vtable?for?mir::input::ParameterKeymap;
-    vtable?for?mir::input::ParameterKeymap;
   };
   local: *;
 };
