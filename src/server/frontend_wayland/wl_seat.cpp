@@ -127,7 +127,7 @@ void mf::WlSeat::ConfigObserver::changes_complete()
     if (pending_keymap && !pending_keymap->matches(*current_keymap))
     {
         current_keymap = std::move(pending_keymap);
-        on_keymap_commit(pending_keymap);
+        on_keymap_commit(current_keymap);
     }
 
     pending_keymap.reset();
