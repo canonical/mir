@@ -16,6 +16,7 @@ add_library(mirplatformgraphicsrpidispmanxobjects OBJECT
 
 target_link_libraries(mirplatformgraphicsrpidispmanxobjects
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )
