@@ -152,7 +152,7 @@ mir::EventUPtr mev::make_window_placement_event(frontend::SurfaceId const& surfa
     return make_uptr_event(e);
 }
 
-mir::EventUPtr mev::make_key_event_event(
+mir::EventUPtr mev::make_key_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
     std::vector<uint8_t> const& cookie,

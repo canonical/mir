@@ -44,7 +44,7 @@ TEST_F(InputEventBuilder, makes_valid_key_event)
     xkb_keysym_t const keysym = 34;
     int const scan_code = 17;
 
-   auto ev = mev::make_key_event_event(
+   auto ev = mev::make_key_event(
        device_id, timestamp,
        cookie, action, keysym, scan_code, modifiers);
    auto e = ev.get();

@@ -197,7 +197,7 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
              {
                  auto const now = std::chrono::steady_clock::now().time_since_epoch();
                  auto const cookie = cookie_authority->make_cookie(now.count());
-                 auto new_event = mev::make_key_event_event(
+                 auto new_event = mev::make_key_event(
                      id,
                      now,
                      cookie->serialize(),

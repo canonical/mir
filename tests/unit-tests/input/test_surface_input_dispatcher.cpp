@@ -138,13 +138,13 @@ struct FakeKeyboard
     }
     mir::EventUPtr press(int scan_code = 7)
     {
-        return mev::make_key_event_event(
+        return mev::make_key_event(
             id, std::chrono::nanoseconds(0), std::vector<uint8_t>{},
             mir_keyboard_action_down, 0, scan_code, mir_input_event_modifier_alt);
     }
     mir::EventUPtr release(int scan_code = 7)
     {
-        return mev::make_key_event_event(
+        return mev::make_key_event(
             id, std::chrono::nanoseconds(0), std::vector<uint8_t>{},
             mir_keyboard_action_up, 0, scan_code, mir_input_event_modifier_alt);
     }
