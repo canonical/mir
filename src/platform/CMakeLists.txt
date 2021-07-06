@@ -1,7 +1,6 @@
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirplatform")
 
 include_directories(
-  ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/platform
 )
 
@@ -62,6 +61,11 @@ add_object_libraries_to_target(
   mirplatformgraphicscommon
   miroptions
   mirudev
+)
+
+target_include_directories(mirplatform
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/platform
 )
 
 target_link_libraries(mirplatform

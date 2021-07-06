@@ -17,6 +17,7 @@ add_library(mir-public-test OBJECT
 
 target_link_libraries(mir-public-test
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )

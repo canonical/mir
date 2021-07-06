@@ -19,6 +19,7 @@ add_library(server_platform_common STATIC
 
 target_link_libraries(server_platform_common
   PUBLIC
+    mirplatform
     mircommon
     mircore
     ${KMS_UTILS_STATIC_LIBRARY}

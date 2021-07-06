@@ -40,4 +40,9 @@ target_compile_definitions(
   mirplatformtest
   PRIVATE
     MIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
-target_link_libraries(mirplatformtest mircommon)
+
+target_link_libraries(mirplatformtest
+  PUBLIC
+    mirplatform
+    mircommon
+)

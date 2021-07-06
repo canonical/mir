@@ -49,6 +49,7 @@ add_library(mirplatformwayland-input STATIC
 
 target_link_libraries(mirplatformwayland-input
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )

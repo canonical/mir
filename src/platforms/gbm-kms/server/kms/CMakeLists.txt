@@ -11,7 +11,6 @@ include_directories(
     ${WAYLAND_SERVER_INCLUDE_DIRS}
     ${UDEV_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}/../
-    ${PROJECT_SOURCE_DIR}/include/wayland
 )
 
 # gbm-kms.h and drm.h have trailing commas at the end of enum definitions

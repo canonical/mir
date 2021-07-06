@@ -76,6 +76,7 @@ add_library(mir-public-test-doubles OBJECT
 
 target_link_libraries(mir-public-test-doubles
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )

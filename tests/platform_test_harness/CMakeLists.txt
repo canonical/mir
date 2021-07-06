@@ -7,7 +7,6 @@ mir_add_wrapped_executable(
 target_include_directories(
   mir_platform_graphics_test_harness
     PRIVATE
-      ${PROJECT_SOURCE_DIR}/include/platform
       ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
