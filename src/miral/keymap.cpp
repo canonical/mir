@@ -116,11 +116,17 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     }
 
     void device_added(std::shared_ptr<mir::input::Device> const& device) override
+    try
     {
         std::lock_guard<decltype(mutex)> lock{mutex};
 
         if (mir::contains(device->capabilities(), mir::input::DeviceCapability::keyboard))
             add_keyboard(device);
+    }
+    catch (...)
+    {
+        mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(),
+                 "problem adding device (" + device->name() + ")");
     }
 
     void device_changed(std::shared_ptr<mir::input::Device> const& device) override
@@ -160,11 +166,17 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     }
 
     void device_removed(std::shared_ptr<mir::input::Device> const& device) override
+    try
     {
         std::lock_guard<decltype(mutex)> lock{mutex};
 
         if (mir::contains(device->capabilities(), mir::input::DeviceCapability::keyboard))
             keyboards.erase(std::find(begin(keyboards), end(keyboards), device));
+    }
+    catch (...)
+    {
+        mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(),
+            "problem removing device (" + device->name() + ")");
     }
 
     void changes_complete() override
