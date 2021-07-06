@@ -29,7 +29,6 @@ set(MIR_SERVER_PLATFORM_PATH
 )
 
 set(server_common_include_dirs
-  ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
 )
@@ -45,7 +44,6 @@ set(server_common_include_dirs
 set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/common/server/symbols.map)
 
 set(client_common_include_dirs
-  ${PROJECT_SOURCE_DIR}/include/platform
   ${CMAKE_CURRENT_SOURCE_DIR}/common/client
 )
 

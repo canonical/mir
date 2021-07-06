@@ -11,6 +11,7 @@ add_library(
 
 target_link_libraries(mirreport
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )

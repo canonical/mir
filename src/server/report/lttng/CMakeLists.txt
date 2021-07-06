@@ -48,6 +48,7 @@ add_library(
 
 target_link_libraries(mirlttng
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )

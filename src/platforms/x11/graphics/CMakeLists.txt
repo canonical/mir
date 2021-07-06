@@ -1,6 +1,5 @@
 include_directories(
   ${server_common_include_dirs}
-  ${PROJECT_SOURCE_DIR}/include/platform
 )
 
 include_directories(
@@ -30,6 +29,7 @@ add_library(
 
 target_link_libraries(mirplatformgraphicsx11objects-symbols
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )

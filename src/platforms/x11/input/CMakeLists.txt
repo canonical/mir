@@ -11,6 +11,7 @@ add_library(
 
 target_link_libraries(mirplatforminputx11objects
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )
@@ -23,5 +24,6 @@ add_library(
 
 target_link_libraries(mirplatforminputx11objects-symbols
   PUBLIC
+    mirplatform
     mircommon
 )

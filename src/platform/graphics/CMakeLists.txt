@@ -113,6 +113,7 @@ target_include_directories(
 
   PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${PROJECT_SOURCE_DIR}/include/platform
   PRIVATE
     ${GL_INCLUDE_DIRS}
     ${DRM_INCLUDE_DIRS}

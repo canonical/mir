@@ -20,6 +20,7 @@ add_library(
 
 target_link_libraries(mirgraphics
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )

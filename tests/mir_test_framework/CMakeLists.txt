@@ -52,6 +52,7 @@ add_library(mir-public-test-framework OBJECT
 
 target_link_libraries(mir-public-test-framework
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )
@@ -71,6 +72,7 @@ add_library(mir-protected-test-framework OBJECT
 
 target_link_libraries(mir-protected-test-framework
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )
@@ -115,6 +117,7 @@ add_library(
 
 target_link_libraries(mir-test-input-framework
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )

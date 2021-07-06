@@ -27,6 +27,7 @@ ADD_LIBRARY(
 
 target_link_libraries(mircompositor
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )

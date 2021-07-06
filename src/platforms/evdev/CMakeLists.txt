@@ -8,7 +8,6 @@ endif ()
 
 include_directories(
   ${LIBINPUT_CFLAGS} 
-  ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/platform # udev Context
   ${PROJECT_SOURCE_DIR}/src/include/common # raii.h
   )
@@ -32,6 +31,7 @@ add_library(mirplatforminputevdevobjects OBJECT
 
 target_link_libraries(mirplatforminputevdevobjects
   PUBLIC
+    mirplatform
     mircommon
     mircore
 )
