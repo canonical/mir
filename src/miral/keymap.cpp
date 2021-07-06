@@ -176,7 +176,7 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     catch (...)
     {
         mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(),
-            "problem remove device (" + device->name() + ")");
+            "problem removing device (" + device->name() + ")");
     }
 
     void changes_complete() override
