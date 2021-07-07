@@ -36,11 +36,6 @@ struct StubKeymap : public mir::input::Keymap
     {
         return {nullptr, [](auto){}};
     }
-
-    auto with_layout(std::string const&, std::string const&) const -> std::unique_ptr<Keymap> override
-    {
-        return std::make_unique<StubKeymap>();
-    }
 };
 
 }

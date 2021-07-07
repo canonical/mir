@@ -44,9 +44,6 @@ public:
     virtual auto model() const -> std::string = 0;
     virtual auto make_unique_xkb_keymap(xkb_context* context) const -> XKBKeymapPtr = 0;
 
-    /// Create a new keymap with the updated layout
-    virtual auto with_layout(std::string const& layout, std::string const& variant) const -> std::unique_ptr<Keymap> = 0;
-
 private:
     Keymap(Keymap const&) = delete;
     Keymap& operator=(Keymap const&) = delete;
