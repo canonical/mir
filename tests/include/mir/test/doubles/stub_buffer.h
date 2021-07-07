@@ -41,7 +41,7 @@ namespace doubles
 class StubBuffer :
     public graphics::BufferBasic,
     public graphics::NativeBufferBase,
-    public renderer::software::RWMappableBuffer
+    public renderer::software::PixelSource
 {
 public:
     StubBuffer()
@@ -88,8 +88,6 @@ public:
     StubBuffer(graphics::BufferProperties const& properties)
         : StubBuffer{nullptr, properties, geometry::Stride{properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)}}
     {
-        written_pixels.resize(buf_size.height.as_uint32_t() * buf_stride.as_uint32_t());
-        ::memset(written_pixels.data(), 0, written_pixels.size());
     }
 
     StubBuffer(graphics::BufferID id)
@@ -110,69 +108,29 @@ public:
           buf_stride{stride},
           buf_id{graphics::BufferBasic::id()}
     {
-        written_pixels.resize(buf_size.height.as_uint32_t() * buf_stride.as_uint32_t());
-        ::memset(written_pixels.data(), 0, written_pixels.size());
     }
 
     virtual graphics::BufferID id() const override { return buf_id; }
 
     virtual geometry::Size size() const override { return buf_size; }
 
+    virtual geometry::Stride stride() const override { return buf_stride; }
+
     virtual MirPixelFormat pixel_format() const override { return buf_pixel_format; }
 
-    template<typename T>
-    class Mapping : public mir::renderer::software::Mapping<T>
+    void write(unsigned char const* pixels, size_t len) override
     {
-    public:
-        Mapping(StubBuffer* buffer)
-            : buffer{buffer}
-        {
-        }
-
-        auto format() const -> MirPixelFormat override
-        {
-            return buffer->buf_pixel_format;
-        }
-
-        auto stride() const -> geometry::Stride override
-        {
-            return buffer->buf_stride;
-        }
-
-        auto size() const -> geometry::Size override
-        {
-            return buffer->buf_size;
-        }
-
-        auto data() -> T* override
-        {
-            return buffer->written_pixels.data();
-        }
-
-        auto len() const -> size_t override
-        {
-            return buffer->written_pixels.size();
-        }
-    private:
-        StubBuffer* const buffer;
-    };
-
-    template<typename T>
-    friend class Mapping;
-
-    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override
-    {
-        return std::make_unique<Mapping<unsigned char>>(this);
+        if (pixels) written_pixels.assign(pixels, pixels + len);
     }
-
-    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<unsigned char const>> override
+    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override
     {
-        return std::make_unique<Mapping<unsigned char const>>(this);
-    }
-
-    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override
-    {
-        return std::make_unique<Mapping<unsigned char>>(this);
+        if (written_pixels.size() == 0)
+        {
+            auto length = buf_stride.as_int()*buf_size.height.as_int();
+            written_pixels.resize(length);
+            memset(written_pixels.data(), 0, length);
+        }
+        do_with_pixels(written_pixels.data());
     }
 
     NativeBufferBase* native_buffer_base() override

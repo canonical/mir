@@ -79,7 +79,7 @@ private:
 
 class MemoryBackedShmBuffer :
     public ShmBuffer,
-    public renderer::software::RWMappableBuffer
+    public renderer::software::PixelSource
 {
 public:
     MemoryBackedShmBuffer(
@@ -87,22 +87,15 @@ public:
         MirPixelFormat const& pixel_format,
         std::shared_ptr<EGLContextExecutor> egl_delegate);
 
-    auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
-    auto map_readable() -> std::unique_ptr<renderer::software::Mapping<unsigned char const>> override;
-
-    auto map_rw() -> std::unique_ptr<renderer::software::Mapping<unsigned char>> override;
+    void write(unsigned char const* data, size_t size) override;
+    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
+    geometry::Stride stride() const override;
 
     void bind() override;
 
     MemoryBackedShmBuffer(MemoryBackedShmBuffer const&) = delete;
     MemoryBackedShmBuffer& operator=(MemoryBackedShmBuffer const&) = delete;
 private:
-    template<typename T>
-    class Mapping;
-
-    template<typename T>
-    friend class Mapping;
-
     geometry::Stride const stride_;
     std::unique_ptr<unsigned char[]> const pixels;
     std::mutex uploaded_mutex;

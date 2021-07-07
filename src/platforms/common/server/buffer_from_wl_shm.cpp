@@ -37,7 +37,6 @@
 #include <wayland-server-core.h>
 #include <wayland-server-protocol.h>
 #include <cassert>
-#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
@@ -305,7 +304,7 @@ private:
 
 class WlShmBuffer :
     public mg::common::ShmBuffer,
-    public mir::renderer::software::ReadMappableBuffer
+    public mir::renderer::software::PixelSource
 {
 public:
     WlShmBuffer(
@@ -325,140 +324,61 @@ public:
     void bind() override
     {
         ShmBuffer::bind();
-        std::lock_guard<std::mutex> lock{upload_mutex};
+        std::lock_guard<std::mutex> lock{consumption_mutex};
         if (!uploaded)
         {
-            auto const mapping = map_readable();
-            upload_to_texture(mapping->data(), mapping->stride());
+            read_internal(
+                [this](unsigned char const* pixels)
+                {
+                    upload_to_texture(pixels, stride());
+                });
+            on_consumed();
+            on_consumed = [](){};
             uploaded = true;
         }
     }
 
-    auto map_readable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char const>> override
+    void write(unsigned char const* /*pixels*/, size_t /*size*/) override
     {
-        notify_consumed();
+        // Pixel*Source* really should only be concerned with *reading* pixels.
+        BOOST_THROW_EXCEPTION((std::runtime_error{"PixelSource::write() is unimplemented"}));
+    }
 
-        class Mapping : public mir::renderer::software::Mapping<unsigned char const>
+    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override
+    {
+        read_internal(do_with_pixels);
         {
-        public:
-            Mapping(
-                SharedWlBuffer::LockedHandle&& buffer,
-                WlShmBuffer* parent)
-                : buffer{std::move(buffer)},
-                  shm_buffer{wl_shm_buffer_get(this->buffer)},
-                  parent{parent}
-            {
-                wl_shm_buffer_begin_access(shm_buffer);
-            }
+            std::lock_guard<std::mutex> lock{consumption_mutex};
+            on_consumed();
+            on_consumed = [](){};
+        }
+    }
 
-            ~Mapping()
-            {
-                wl_shm_buffer_end_access(shm_buffer);
-            }
+    mir::geometry::Stride stride() const override
+    {
+        return stride_;
+    }
 
-            auto format() const -> MirPixelFormat override
-            {
-                return parent->pixel_format();
-            }
-
-            auto stride() const -> mir::geometry::Stride override
-            {
-                return parent->stride_;
-            }
-
-            auto size() const -> mir::geometry::Size override
-            {
-                return parent->size();
-            }
-
-            auto data() -> unsigned char const* override
-            {
-                return static_cast<unsigned char const*>(wl_shm_buffer_get_data(shm_buffer));
-            }
-
-            auto len() const -> size_t override
-            {
-                return stride().as_uint32_t() * size().height.as_uint32_t();
-            }
-
-        private:
-            SharedWlBuffer::LockedHandle const buffer;
-            wl_shm_buffer* const shm_buffer;
-            WlShmBuffer* const parent;
-        };
-
-        if (auto locked_buffer = buffer.lock())
+private:
+    void read_internal(std::function<void(unsigned char const*)> const& do_with_pixels)
+    {
+        if (auto const locked_buffer = buffer.lock())
         {
-            return std::make_unique<Mapping>(std::move(locked_buffer), this);
+            auto const shm_buffer = wl_shm_buffer_get(locked_buffer);
+            wl_shm_buffer_begin_access(shm_buffer);
+            do_with_pixels(
+                static_cast<unsigned char*>(wl_shm_buffer_get_data(shm_buffer)));
+            wl_shm_buffer_end_access(shm_buffer);
         }
         else
         {
             mir::log_debug("Wayland buffer destroyed before use; rendering will be incomplete");
-            class FallbackMapping : public mir::renderer::software::Mapping<unsigned char const>
-            {
-            public:
-                FallbackMapping(
-                    MirPixelFormat format,
-                    mir::geometry::Size size,
-                    mir::geometry::Stride stride)
-                    : buffer{std::make_unique<unsigned char[]>(size.height.as_uint32_t() * stride.as_uint32_t())},
-                      format_{format},
-                      size_{size},
-                      stride_{stride}
-                {
-                    ::memset(buffer.get(), 0, len());
-                }
-
-                auto format() const -> MirPixelFormat override
-                {
-                    return format_;
-                }
-
-                auto stride() const -> mir::geometry::Stride override
-                {
-                    return stride_;
-                }
-
-                auto size() const -> mir::geometry::Size override
-                {
-                    return size_;
-                }
-
-                auto data() -> unsigned char const* override
-                {
-                    return buffer.get();
-                }
-
-                auto len() const -> size_t override
-                {
-                    return size().height.as_uint32_t() * stride().as_uint32_t();
-                }
-            private:
-                std::unique_ptr<unsigned char[]> const buffer;
-                MirPixelFormat format_;
-                mir::geometry::Size size_;
-                mir::geometry::Stride stride_;
-            };
-
-            return std::make_unique<FallbackMapping>(pixel_format(), size(), stride_);
         }
     }
 
-private:
-    void notify_consumed()
-    {
-        bool has_not_been_consumed{false};
-        if (consumed.compare_exchange_strong(has_not_been_consumed, true))
-        {
-            on_consumed();
-        }
-    }
-
-    std::atomic<bool> consumed{false};
-    std::function<void()> on_consumed;
-
-    std::mutex upload_mutex;
+    std::mutex consumption_mutex;
     bool uploaded{false};
+    std::function<void()> on_consumed;
     SharedWlBuffer const buffer;
     mir::geometry::Stride const stride_;
 };
