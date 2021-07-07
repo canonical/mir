@@ -60,3 +60,9 @@ auto mi::ParameterKeymap::make_unique_xkb_keymap(xkb_context* context) const -> 
     }
     return {keymap_ptr, &xkb_keymap_unref};
 }
+
+auto mi::ParameterKeymap::with_layout(std::string const& layout, std::string const& variant) const
+-> std::unique_ptr<Keymap>
+{
+    return std::make_unique<ParameterKeymap>(model_, layout, variant, options);
+}

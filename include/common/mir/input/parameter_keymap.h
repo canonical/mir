@@ -23,6 +23,7 @@
 #include "keymap.h"
 
 #include <string>
+#include <memory>
 
 namespace mir
 {
@@ -54,12 +55,13 @@ public:
     auto matches(Keymap const& other) const -> bool override;
     auto model() const -> std::string override;
     auto make_unique_xkb_keymap(xkb_context* context) const -> XKBKeymapPtr override;
+    auto with_layout(std::string const& layout, std::string const& variant) const -> std::unique_ptr<Keymap>;
 
 private:
-    std::string model_{default_model};
-    std::string layout{default_layout};
-    std::string variant;
-    std::string options;
+    std::string const model_{default_model};
+    std::string const layout{default_layout};
+    std::string const variant;
+    std::string const options;
 };
 
 }
