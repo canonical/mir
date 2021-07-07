@@ -34,7 +34,8 @@ namespace test
 namespace doubles
 {
 
-struct MockBuffer : public graphics::Buffer, public graphics::NativeBufferBase
+struct MockBuffer : public graphics::Buffer, public graphics::NativeBufferBase,
+    public renderer::software::PixelSource
 {
  public:
     MockBuffer()
@@ -45,13 +46,15 @@ struct MockBuffer : public graphics::Buffer, public graphics::NativeBufferBase
     }
 
     MockBuffer(geometry::Size size,
-               geometry::Stride /*s*/,
+               geometry::Stride s,
                MirPixelFormat pf)
         : MockBuffer{}
     {
         using namespace testing;
         ON_CALL(*this, size())
                 .WillByDefault(Return(size));
+        ON_CALL(*this, stride())
+                .WillByDefault(Return(s));
         ON_CALL(*this, pixel_format())
                 .WillByDefault(Return(pf));
 
@@ -62,11 +65,14 @@ struct MockBuffer : public graphics::Buffer, public graphics::NativeBufferBase
     }
 
     MOCK_CONST_METHOD0(size, geometry::Size());
+    MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<graphics::NativeBuffer>());
 
     MOCK_CONST_METHOD0(id, graphics::BufferID());
 
+    MOCK_METHOD2(write, void(unsigned char const*, size_t));
+    MOCK_METHOD1(read, void(std::function<void(unsigned char const*)> const&));
     MOCK_METHOD0(native_buffer_base, graphics::NativeBufferBase*());
     MOCK_METHOD0(used_as_texture, void());
 };
