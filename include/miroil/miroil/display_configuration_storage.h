@@ -25,6 +25,8 @@
 #include <mir/optional_value.h>
 #include <mir_toolkit/common.h>
 
+#include <sys/types.h>
+
 namespace miroil
 {
 
