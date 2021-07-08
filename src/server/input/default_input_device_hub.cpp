@@ -387,7 +387,7 @@ void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(Device 
 void mi::DefaultInputDeviceHub::for_each_mutable_input_device(std::function<void(Device&)> const& callback)
 {
     std::unique_lock<std::recursive_mutex> lock{mutex};
-    // make_transaction is false if a transaction is already in-progress
+    // perform_transaction is true if no transaction is already in-progress
     bool const perform_transaction = !pending_changes;
     if (perform_transaction)
     {
