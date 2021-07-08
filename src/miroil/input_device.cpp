@@ -19,6 +19,7 @@
 #include "mir/flags.h"
 #include "mir/input/device.h"
 #include "mir/input/mir_keyboard_config.h"
+#include "mir/input/parameter_keymap.h"
 
 miroil::InputDevice::InputDevice(std::shared_ptr<mir::input::Device> const& device)
 : device(device)
@@ -38,18 +39,17 @@ bool miroil::InputDevice::operator==(InputDevice const& other)
         
 void miroil::InputDevice::apply_keymap(std::string const& layout, std::string const& variant)
 {
-    MirKeyboardConfig oldConfig;
-    
-    mir::input::Keymap keymap;
-    if (device->keyboard_configuration().is_set()) { // preserve the model and options
-        oldConfig = device->keyboard_configuration().value();
-        keymap.model = oldConfig.device_keymap().model;
-        keymap.options = oldConfig.device_keymap().options;
-    }
-    keymap.layout  = layout;
-    keymap.variant = variant;
+    using namespace mir::input;
 
-    device->apply_keyboard_configuration(std::move(keymap));
+    if (auto const kbd_conf = device->keyboard_configuration())
+    {
+        // TODO work out how to support this functionality on OSK etc.
+        if (auto const* const old_keymap = dynamic_cast<ParameterKeymap const*>(&kbd_conf.value().device_keymap()))
+        {
+            // preserve the model and options
+            device->apply_keyboard_configuration(MirKeyboardConfig{old_keymap->with_layout(layout, variant)});
+        }
+    }
 }
     
 
