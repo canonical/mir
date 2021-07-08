@@ -104,7 +104,7 @@ void mi::ExternalInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserv
                 std::lock_guard<std::recursive_mutex> lock{data->mutex};
                 data->observers.remove(observer);
 
-                std::lock_guard<decltype(mutex)> vc_lock{mutex};
+                std::lock_guard<decltype(mutex)> cond_var_lock{mutex};
                 removed = true;
                 cv.notify_one();
             });
