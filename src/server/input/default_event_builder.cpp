@@ -18,6 +18,7 @@
  */
 
 #include "default_event_builder.h"
+#include "mir/time/clock.h"
 #include "mir/input/seat.h"
 #include "mir/events/event_builders.h"
 #include "mir/cookie/authority.h"
@@ -27,10 +28,13 @@
 namespace me = mir::events;
 namespace mi = mir::input;
 
-mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id,
-                                             std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
-                                             std::shared_ptr<mi::Seat> const& seat)
+mi::DefaultEventBuilder::DefaultEventBuilder(
+    MirInputDeviceId device_id,
+    std::shared_ptr<time::Clock> const& clock,
+    std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
+    std::shared_ptr<mi::Seat> const& seat)
     : device_id(device_id),
+      clock(clock),
       cookie_authority(cookie_authority),
       seat(seat)
 {
