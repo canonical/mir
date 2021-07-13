@@ -22,6 +22,7 @@
 
 #include "mir/input/event_builder.h"
 #include <memory>
+#include <atomic>
 
 namespace mir
 {
@@ -46,22 +47,36 @@ public:
         std::shared_ptr<cookie::Authority> const& cookie_authority,
         std::shared_ptr<Seat> const& seat);
 
-    EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t keysym, int scan_code) override;
+    EventUPtr key_event(
+        Timestamp source_timestamp,
+        MirKeyboardAction action,
+        xkb_keysym_t keysym,
+        int scan_code) override;
 
-    EventUPtr touch_event(Timestamp timestamp, std::vector<events::ContactState> const& contacts) override;
+    EventUPtr touch_event(Timestamp source_timestamp, std::vector<events::ContactState> const& contacts) override;
 
-    EventUPtr pointer_event(Timestamp timestamp, MirPointerAction action, MirPointerButtons buttons_pressed,
-                            float hscroll_value, float vscroll_value, float relative_x_value,
-                            float relative_y_value) override;
+    EventUPtr pointer_event(
+        Timestamp source_timestamp,
+        MirPointerAction action,
+        MirPointerButtons buttons_pressed,
+        float hscroll_value, float vscroll_value,
+        float relative_x_value, float relative_y_value) override;
 
-    EventUPtr pointer_event(Timestamp timestamp, MirPointerAction action, MirPointerButtons buttons_pressed,
-                            float x, float y, float hscroll_value, float vscroll_value, float relative_x_value,
-                            float relative_y_value) override;
-
+    EventUPtr pointer_event(
+        Timestamp source_timestamp,
+        MirPointerAction action,
+        MirPointerButtons buttons_pressed,
+        float x, float y,
+        float hscroll_value, float vscroll_value,
+        float relative_x_value, float relative_y_value) override;
 
 private:
+    auto calibrate_timestamp(Timestamp source_timestamp) -> Timestamp;
+
     MirInputDeviceId const device_id;
     std::shared_ptr<time::Clock> const clock;
+    /// Added to input timestams to get calibrated timestamps for events. Is Timestamp::max() until initial event.
+    std::atomic<Timestamp> timestamp_offset;
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<Seat> const seat;
 };
