@@ -41,6 +41,20 @@ mi::DefaultEventBuilder::DefaultEventBuilder(
 {
 }
 
+void mi::DefaultEventBuilder::calibrate_timestamps(bool enable)
+{
+    if (enable)
+    {
+        // Reset calibration
+        timestamp_offset = Timestamp::max();
+    }
+    else
+    {
+        // Disable calibration
+        timestamp_offset = Timestamp{0};
+    }
+}
+
 mir::EventUPtr mi::DefaultEventBuilder::key_event(
     Timestamp source_timestamp,
     MirKeyboardAction action,
