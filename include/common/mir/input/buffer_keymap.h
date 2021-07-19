@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2021 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -13,8 +13,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *   Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #ifndef MIR_INPUT_BUFFER_KEYMAP_H_
