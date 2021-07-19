@@ -36,6 +36,7 @@ auto mi::BufferKeymap::matches(Keymap const& other) const -> bool
 {
     auto const keymap = dynamic_cast<BufferKeymap const*>(&other);
     return keymap &&
+        format == keymap->format &&
         buffer.size() == keymap->buffer.size() &&
         memcmp(buffer.data(), keymap->buffer.data(), buffer.size()) == 0;
 }
