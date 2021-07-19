@@ -47,7 +47,7 @@ public:
         std::shared_ptr<cookie::Authority> const& cookie_authority,
         std::shared_ptr<Seat> const& seat);
 
-    void calibrate_timestamps(bool enable) override;
+    void disable_timestamp_calibration() override;
 
     EventUPtr key_event(
         Timestamp source_timestamp,
