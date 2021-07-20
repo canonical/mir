@@ -476,9 +476,14 @@ MIR_COMMON_2.5 {
     MirKeyboardConfig::device_keymap_shared*;
     mir::input::ParameterKeymap::ParameterKeymap*;
     mir::input::ParameterKeymap::make_unique_xkb_keymap*;
+    mir::input::ParameterKeymap::matches*;
     mir::input::ParameterKeymap::with_layout*;
     typeinfo?for?mir::input::ParameterKeymap;
     vtable?for?mir::input::ParameterKeymap;
+    mir::input::BufferKeymap::BufferKeymap*;
+    mir::input::BufferKeymap::matches*;
+    typeinfo?for?mir::input::BufferKeymap;
+    vtable?for?mir::input::BufferKeymap;
   };
   local: *;
 };
