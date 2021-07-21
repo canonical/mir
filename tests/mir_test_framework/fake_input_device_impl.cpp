@@ -25,6 +25,7 @@
 #include "mir/input/pointer_settings.h"
 #include "mir/input/touchpad_settings.h"
 #include "mir/input/event_builder.h"
+#include "mir/events/input_event.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/geometry/displacement.h"
 #include "src/platforms/evdev/button_utils.h"
@@ -173,6 +174,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
                                                scroll.y.as_int(),
                                                0.0f,
                                                0.0f);
+    button_event->to_input()->set_event_time(event_time);
 
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
@@ -215,6 +217,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
                                                 scroll.y.as_int(),
                                                 rel_x,
                                                 rel_y);
+    pointer_event->to_input()->set_event_time(event_time);
 
     sink->handle_input(std::move(pointer_event));
 }
@@ -243,6 +246,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
         auto touch_event = builder->touch_event(
             event_time,
             {{MirTouchId{1}, touch_action, mir_touch_tooltype_finger, abs_x, abs_y, 1.0f, 8.0f, 5.0f, 0.0f}});
+        touch_event->to_input()->set_event_time(event_time);
 
         sink->handle_input(std::move(touch_event));
     }

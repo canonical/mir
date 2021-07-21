@@ -38,6 +38,7 @@ class EventBuilder
 public:
     EventBuilder() = default;
     virtual ~EventBuilder() = default;
+    /// Timestamps in returned events are automatically calibrated to the Mir clock
     using Timestamp = std::chrono::nanoseconds;
 
     virtual EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t keysym, int scan_code) = 0;
