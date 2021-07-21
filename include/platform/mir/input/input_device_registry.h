@@ -35,7 +35,7 @@ public:
     InputDeviceRegistry() = default;
     virtual ~InputDeviceRegistry() = default;
 
-    virtual auto add_device(std::shared_ptr<InputDevice> const& device) -> std::shared_ptr<Device> = 0;
+    virtual auto add_device(std::shared_ptr<InputDevice> const& device) -> std::weak_ptr<Device> = 0;
     virtual void remove_device(std::shared_ptr<InputDevice> const& device) = 0;
 protected:
     InputDeviceRegistry(InputDeviceRegistry const&) = delete;

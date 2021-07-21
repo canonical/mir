@@ -196,7 +196,7 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     input_dispatchable->add_watch(device_queue);
 }
 
-auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& device) -> std::shared_ptr<Device>
+auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& device) -> std::weak_ptr<Device>
 {
     if (!device)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input device"));

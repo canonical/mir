@@ -68,7 +68,7 @@ struct X11PlatformTest : ::testing::Test
     void capture_devices()
     {
         ON_CALL(mock_registry, add_device(_))
-            .WillByDefault(Invoke([this](auto const& dev)
+            .WillByDefault(Invoke([this](auto const& dev) -> std::weak_ptr<mi::Device>
                                   {
                                       devices.push_back(dev);
                                       auto const info = dev->get_device_info();
@@ -76,7 +76,7 @@ struct X11PlatformTest : ::testing::Test
                                           dev->start(&mock_pointer_sink, &builder);
                                       else if (contains(info.capabilities, mi::DeviceCapability::keyboard))
                                           dev->start(&mock_keyboard_sink, &builder);
-                                      return nullptr;
+                                      return {};
                                   })
                           );
     }
