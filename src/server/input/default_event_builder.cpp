@@ -41,9 +41,18 @@ mi::DefaultEventBuilder::DefaultEventBuilder(
 {
 }
 
-void mi::DefaultEventBuilder::disable_timestamp_calibration()
+void mi::DefaultEventBuilder::calibrate_timestamps(bool enable)
 {
-    timestamp_offset = Timestamp{0};
+    if (enable)
+    {
+        // Reset calibration
+        timestamp_offset = Timestamp::max();
+    }
+    else
+    {
+        // Disable calibration
+        timestamp_offset = Timestamp{0};
+    }
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::key_event(

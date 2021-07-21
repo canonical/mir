@@ -105,7 +105,7 @@ struct MockEventBuilder : mi::EventBuilder
                                   }));
     }
     using EventBuilder::Timestamp;
-    MOCK_METHOD0(disable_timestamp_calibration, void());
+    MOCK_METHOD1(calibrate_timestamps, void(bool enable));
 
     MOCK_METHOD4(key_event, mir::EventUPtr(Timestamp, MirKeyboardAction, xkb_keysym_t, int));
 
