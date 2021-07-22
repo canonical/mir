@@ -126,6 +126,12 @@ public:
     /// so malicious clients could use it to take actions without user input.
     /// \remark Since MirAL 3.3
     static char const* const zwp_virtual_keyboard_v1;
+
+    /// Allows clients (such as on-screen keyboards) to act as a source of text input for other clients.
+    /// Clients are not required to display anything to send input using this extension, so malicious
+    /// clients could use it to take actions without user input.
+    /// \remark Since MirAL 3.3
+    static char const* const zwp_input_method_v2;
     /** @} */
 
     /// Add a bespoke Wayland extension both to "supported" and "enabled by default".

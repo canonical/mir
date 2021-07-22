@@ -452,6 +452,7 @@ global:
   extern "C++" {
     miral::PrintTo*;
     miral::WaylandExtensions::zwp_virtual_keyboard_v1*;
+    miral::WaylandExtensions::zwp_input_method_v2*;
     miral::WindowInfo::focus_mode*;
     miral::WindowSpecification::focus_mode*;
     miral::toolkit::mir_keyboard_event_keysym*;
