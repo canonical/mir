@@ -42,6 +42,7 @@ GENERATE_PROTOCOL("zwp_" "pointer-constraints-unstable-v1")
 GENERATE_PROTOCOL("zwp_" "relative-pointer-unstable-v1")
 GENERATE_PROTOCOL("zwp_" "virtual-keyboard-unstable-v1")
 GENERATE_PROTOCOL("zwp_" "text-input-unstable-v3")
+GENERATE_PROTOCOL("zwp_" "input-method-unstable-v2")
 
 add_custom_target(refresh-wayland-wrapper
     DEPENDS ${GENERATED_FILES}
