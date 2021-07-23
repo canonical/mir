@@ -179,7 +179,7 @@ if __name__ == '__main__':
                 snap_recipe = lp.snaps.getByName(owner=team, name=snap_map["recipe"])
                 logger.debug("Got snap: %s", snap_recipe)
             except lp_errors.NotFound as ex:
-                logger.error("Snap not found: %s", snap_map["recipe"])
+                logger.error("Snap recipe not found: %s", snap_map["recipe"])
                 errors.append(ex)
                 continue
 
