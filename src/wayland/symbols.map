@@ -402,7 +402,7 @@ global:
   };
 } MIRWAYLAND_2.1;
 
-MIRWAYLAND_2.2.2 {
+MIRWAYLAND_2.5 {
 global:
   extern "C++" {
     mir::wayland::VirtualKeyboardManagerV1::*;
