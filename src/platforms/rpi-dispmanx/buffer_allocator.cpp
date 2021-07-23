@@ -100,7 +100,8 @@ namespace
 
 class DispmanxShmBuffer
     : public mg::common::ShmBuffer,
-      public mir::renderer::software::PixelSource,
+      public mir::renderer::software::ReadTransferableBuffer,
+      public mir::renderer::software::WriteTransferableBuffer,
       public mg::rpi::DispmanXBuffer
 {
 public:
@@ -120,7 +121,31 @@ public:
         vc_dispmanx_resource_delete(handle);
     }
 
-    void write(unsigned char const* pixels, size_t /*size*/) override
+    auto format() const -> MirPixelFormat override
+    {
+        return pixel_format();
+    }
+
+    auto size() const -> mir::geometry::Size override
+    {
+        return ShmBuffer::size();
+    }
+
+    void transfer_from_buffer(unsigned char* destination) const override
+    {
+        auto const width = size().width.as_int();
+        auto const height = size().height.as_int();
+
+        VC_RECT_T const rect{0, 0, width, height};
+
+        vc_dispmanx_resource_read_data(
+            static_cast<DISPMANX_RESOURCE_HANDLE_T>(*this),
+            &rect,
+            destination,
+            stride().as_uint32_t());
+    }
+
+    void transfer_into_buffer(unsigned char const* source) override
     {
         auto const vc_format = mg::rpi::vc_image_type_from_mir_pf(pixel_format());
 
@@ -134,27 +159,8 @@ public:
             handle,
             vc_format,
             stride().as_uint32_t(),
-            const_cast<unsigned char*>(pixels),
+            const_cast<unsigned char*>(source),
             &rect);
-    }
-
-    void read(std::function<void(unsigned char const*)> const& do_with_pixels) override
-    {
-        auto const width = size().width.as_int();
-        auto const height = size().height.as_int();
-
-        VC_RECT_T const rect{0, 0, width, height};
-
-        auto const bounce_buffer = std::make_unique<unsigned char[]>(
-            stride().as_uint32_t() * height);
-
-        vc_dispmanx_resource_read_data(
-            static_cast<DISPMANX_RESOURCE_HANDLE_T>(*this),
-            &rect,
-            bounce_buffer.get(),
-            stride().as_uint32_t());
-
-        do_with_pixels(bounce_buffer.get());
     }
 
     mir::geometry::Stride stride() const override
@@ -166,10 +172,10 @@ public:
     {
         ShmBuffer::bind();
 
-        /*
-         * Slowpath: we download from VideoCore memory before uploading again
-         */
-        read([this](auto pixels) { upload_to_texture(pixels, stride()); });
+        auto const pixels = std::make_unique<unsigned char[]>(stride().as_uint32_t() * size().height.as_uint32_t());
+        transfer_from_buffer(pixels.get());
+
+        upload_to_texture(pixels.get(), stride());
     }
 
     explicit operator DISPMANX_RESOURCE_HANDLE_T() const override
@@ -457,9 +463,7 @@ public:
           on_consumed(std::move(on_consumed))
     {
         wl_shm_buffer_begin_access(buffer);
-        write(
-            static_cast<unsigned char*>(wl_shm_buffer_get_data(buffer)),
-            stride().as_uint32_t() * size().height.as_uint32_t());
+        transfer_into_buffer(static_cast<unsigned char*>(wl_shm_buffer_get_data(buffer)));
         wl_shm_buffer_end_access(buffer);
     }
 
@@ -470,7 +474,10 @@ public:
         std::lock_guard<std::mutex> lock{consumption_mutex};
         if (on_consumed)
         {
-            read([this](auto pixels) { upload_to_texture(pixels, stride()); });
+            auto const pixels = std::make_unique<unsigned char[]>(stride().as_uint32_t() * size().height.as_uint32_t());
+            transfer_from_buffer(pixels.get());
+
+            upload_to_texture(pixels.get(), stride());
             on_consumed();
             on_consumed = nullptr;
         }

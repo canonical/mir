@@ -79,13 +79,9 @@ struct PlatformlessShmBuffer : mgc::MemoryBackedShmBuffer
 
     auto pixel_buffer() -> unsigned char const*
     {
-        unsigned char const* buffer{nullptr};
-        read(
-            [&buffer](unsigned char const* pixels)
-            {
-                buffer = pixels;
-            });
-        return buffer;
+        // This uses the fact that MemoryBackedShmBuffer always returns the same backing store when mapping
+        auto const read_mapping = map_readable();
+        return read_mapping->data();
     }
 };
 
@@ -124,7 +120,7 @@ TEST_F(ShmBufferTest, has_correct_properties)
     size_t const expected_stride{bytes_per_pixel * size.width.as_uint32_t()};
 
     EXPECT_EQ(size, shm_buffer.size());
-    EXPECT_EQ(geom::Stride{expected_stride}, shm_buffer.stride());
+    EXPECT_EQ(geom::Stride{expected_stride}, shm_buffer.map_readable()->stride());
     EXPECT_EQ(pixel_format, shm_buffer.pixel_format());
 }
 

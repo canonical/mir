@@ -133,52 +133,6 @@ auto mrs::as_read_mappable_buffer(
     {
         return std::make_shared<CopyingWrapper>(
             std::shared_ptr<ReadTransferableBuffer>{buffer, transferable_buffer});
-    } else if (dynamic_cast<PixelSource*>(buffer->native_buffer_base()))
-    {
-        class PixelSourceAdaptor : public ReadTransferableBuffer
-        {
-        public:
-            explicit PixelSourceAdaptor(std::shared_ptr<mg::Buffer> buffer)
-                : buffer{std::move(buffer)}
-            {
-                if (!dynamic_cast<PixelSource*>(this->buffer->native_buffer_base()))
-                {
-                    BOOST_THROW_EXCEPTION((
-                        std::logic_error{
-                            "Attempt to create a PixelSourceAdaptor for a non-PixelSource buffer!"}));
-                }
-            }
-
-            MirPixelFormat format() const override
-            {
-                return buffer->pixel_format();
-            }
-
-            geometry::Stride stride() const override
-            {
-                return dynamic_cast<PixelSource const&>(*buffer->native_buffer_base()).stride();
-            }
-
-            geometry::Size size() const override
-            {
-                return buffer->size();
-            }
-
-            void transfer_from_buffer(unsigned char* destination) const override
-            {
-                dynamic_cast<PixelSource&>(*buffer->native_buffer_base()).read(
-                    [length = stride().as_uint32_t() * size().height.as_uint32_t(), destination](auto pixels)
-                    {
-                        ::memcpy(destination, pixels, length);
-                    });
-            }
-        private:
-            std::shared_ptr<mg::Buffer> const buffer;
-        };
-
-        return std::make_shared<CopyingWrapper>(
-            std::make_shared<PixelSourceAdaptor>(buffer));
-
     }
 
     BOOST_THROW_EXCEPTION((std::runtime_error{"Buffer does not support CPU access"}));
@@ -220,49 +174,6 @@ auto as_write_mappable_buffer(
         return std::make_shared<CopyingWrapper>(
             std::shared_ptr<mrs::WriteTransferableBuffer>{buffer, transferable_buffer});
     }
-    else if (dynamic_cast<mrs::PixelSource*>(buffer->native_buffer_base()))
-    {
-        class PixelSourceAdaptor : public mrs::WriteTransferableBuffer
-        {
-        public:
-            explicit PixelSourceAdaptor(std::shared_ptr<mg::Buffer> buffer)
-                : buffer{std::move(buffer)}
-            {
-                if (!dynamic_cast<mrs::PixelSource*>(this->buffer->native_buffer_base()))
-                {
-                    BOOST_THROW_EXCEPTION(
-                        (std::logic_error{"Attempt to create a PixelSourceAdaptor for a non-PixelSource buffer!"}));
-                }
-            }
-
-            MirPixelFormat format() const override
-            {
-                return buffer->pixel_format();
-            }
-
-            geom::Stride stride() const override
-            {
-                return dynamic_cast<mrs::PixelSource const&>(*buffer->native_buffer_base()).stride();
-            }
-
-            geom::Size size() const override
-            {
-                return buffer->size();
-            }
-
-            void transfer_into_buffer(unsigned char const* source) override
-            {
-                dynamic_cast<mrs::PixelSource&>(*buffer->native_buffer_base())
-                    .write(source, stride().as_uint32_t() * size().height.as_uint32_t());
-            }
-
-        private:
-            std::shared_ptr<mg::Buffer> const buffer;
-        };
-
-        return std::make_shared<CopyingWrapper>(std::make_shared<PixelSourceAdaptor>(buffer));
-    }
-
     BOOST_THROW_EXCEPTION((std::runtime_error{"Buffer does not support CPU access"}));
 }
 }
