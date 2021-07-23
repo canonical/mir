@@ -36,6 +36,7 @@
 #include "mir/log.h"
 
 #include <mutex>
+#include <atomic>
 #include <cstring>
 
 namespace mf = mir::frontend;
@@ -46,11 +47,9 @@ namespace
 {
 auto unique_keyboard_name() -> std::string
 {
-    static std::mutex mutex;
-    static int id = 0;
-    std::lock_guard<std::mutex> lock{mutex};
+    static std::atomic<int> next_id = 0;
+    auto const id = next_id.fetch_add(1);
     auto const result = "virt-key-" + std::to_string(id);
-    id++;
     return result;
 }
 
