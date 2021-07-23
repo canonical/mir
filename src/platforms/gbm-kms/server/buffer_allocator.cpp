@@ -331,10 +331,15 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
                 });
         mir::log_info("Enabled linux-dmabuf import support");
     }
-    catch (std::runtime_error const&)
+    catch (std::runtime_error const& error)
     {
         mir::log_info(
-            "No EGL_EXT_image_dma_buf_import_modifiers support, disabling linux-dmabuf import");
+            "Cannot enable linux-dmabuf import support: %s", error.what());
+        mir::log(
+            mir::logging::Severity::debug,
+            MIR_LOG_COMPONENT,
+            std::current_exception(),
+            "Detailed error: ");
     }
 
     this->wayland_executor = std::move(wayland_executor);
