@@ -38,6 +38,8 @@
 #include "virtual_keyboard_v1.h"
 #include "text-input-unstable-v3_wrapper.h"
 #include "text_input_v3.h"
+#include "input-method-unstable-v2_wrapper.h"
+#include "input_method_v2.h"
 
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
@@ -134,6 +136,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     {
         mw::TextInputV3::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
             { return mf::create_text_input_manager_v3(ctx.display); }
+    },
+    {
+        mw::InputMethodV2::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
+            { return mf::create_input_method_manager_v2(ctx.display); }
     },
 };
 

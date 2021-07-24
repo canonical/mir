@@ -39,6 +39,7 @@ set(
   frame_executor.cpp            frame_executor.h
   virtual_keyboard_v1.cpp       virtual_keyboard_v1.h
   text_input_v3.cpp             text_input_v3.cpp
+  input_method_v2.cpp           input_method_v2.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/wayland.h
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
