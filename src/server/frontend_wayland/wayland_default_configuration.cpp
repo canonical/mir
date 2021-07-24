@@ -126,7 +126,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
             { return mf::create_pointer_constraints_unstable_v1(ctx.display, *ctx.wayland_executor, ctx.shell); }
     },
     {
-        mw::VirtualKeyboardManagerV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
+        mw::VirtualKeyboardV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
             { return mf::create_virtual_keyboard_manager_v1(ctx.display, ctx.input_device_registry); }
     },
 };
