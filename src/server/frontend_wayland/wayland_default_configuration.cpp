@@ -36,6 +36,8 @@
 #include "relative_pointer_unstable_v1.h"
 #include "virtual-keyboard-unstable-v1_wrapper.h"
 #include "virtual_keyboard_v1.h"
+#include "text-input-unstable-v3_wrapper.h"
+#include "text_input_v3.h"
 
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
@@ -128,6 +130,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     {
         mw::VirtualKeyboardV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
             { return mf::create_virtual_keyboard_manager_v1(ctx.display, ctx.input_device_registry); }
+    },
+    {
+        mw::TextInputV3::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
+            { return mf::create_text_input_manager_v3(ctx.display); }
     },
 };
 
