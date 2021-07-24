@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018-2019 Canonical Ltd.
+ * Copyright © 2021 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -18,7 +18,6 @@
 
 #include "virtual_keyboard_v1.h"
 #include "virtual-keyboard-unstable-v1_wrapper.h"
-#include "wayland_wrapper.h"
 #include "wayland_wrapper.h"
 
 #include "mir/input/event_builder.h"

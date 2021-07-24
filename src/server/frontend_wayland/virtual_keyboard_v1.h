@@ -26,9 +26,6 @@ namespace mir
 {
 namespace input
 {
-class InputDeviceHub;
-class Seat;
-class Keymap;
 class InputDeviceRegistry;
 }
 namespace frontend
