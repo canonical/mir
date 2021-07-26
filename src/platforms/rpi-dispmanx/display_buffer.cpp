@@ -152,7 +152,7 @@ bool is_dispmanx_capable_buffer(mg::Buffer const& buffer)
 {
     return
         dynamic_cast<mg::rpi::DispmanXBuffer const*>(&buffer) ||
-        dynamic_cast<mir::renderer::software::PixelSource const*>(&buffer);
+        dynamic_cast<mir::renderer::software::ReadTransferableBuffer const*>(&buffer);
 }
 
 bool transform_is_representable(glm::mat4 const& transform)
@@ -177,33 +177,32 @@ auto dispmanx_handle_for_renderable(mg::Renderable const& renderable)
     {
         return static_cast<DISPMANX_RESOURCE_HANDLE_T>(*dispmanx_buffer);
     }
-    else if (auto const pixel_source = dynamic_cast<mir::renderer::software::PixelSource*>(buffer))
+    else if (auto const pixel_source = dynamic_cast<mir::renderer::software::ReadTransferableBuffer*>(buffer))
     {
         uint32_t dummy;
         auto const vc_format = mg::rpi::vc_image_type_from_mir_pf(buffer->pixel_format());
         auto const width = buffer->size().width.as_uint32_t();
         auto const height = buffer->size().height.as_uint32_t();
+        auto const stride = pixel_source->stride().as_uint32_t();
         auto handle = vc_dispmanx_resource_create(
             vc_format,
-            width | (pixel_source->stride().as_uint32_t() << 16),
+            width | (stride << 16),
             height | (height << 16),
             &dummy);
 
 
-        pixel_source->read(
-            [handle, vc_format, stride = pixel_source->stride().as_uint32_t(), width, height]
-            (unsigned char const* data)
-            {
-                VC_RECT_T rect;
-                vc_dispmanx_rect_set(&rect, 0, 0, width, height);
+        auto const bounce_buffer = std::make_unique<unsigned char[]>(stride * height);
+        pixel_source->transfer_from_buffer(bounce_buffer.get());
 
-                vc_dispmanx_resource_write_data(
-                    handle,
-                    vc_format,
-                    stride,
-                    const_cast<unsigned char*>(data),
-                    &rect);
-            });
+        VC_RECT_T rect;
+        vc_dispmanx_rect_set(&rect, 0, 0, width, height);
+
+        vc_dispmanx_resource_write_data(
+            handle,
+            vc_format,
+            stride,
+            bounce_buffer.get(),
+            &rect);
 
         return handle;
     }

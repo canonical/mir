@@ -52,20 +52,18 @@ class BufferCursorImage : public mg::CursorImage
 {
 public:
     BufferCursorImage(std::shared_ptr<mg::Buffer> buffer, geom::Displacement const& hotspot)
-        : buffer{mrs::as_read_mappable_buffer(std::move(buffer))},
-          mapping{this->buffer->map_readable()},
-          hotspot_(hotspot)
+        : BufferCursorImage(buffer_to_mapping_if_possible(buffer), hotspot)
     {
     }
 
     auto as_argb_8888() const -> void const* override
     {
-        return mapping->data();
+        return data.get();
     }
 
     auto size() const -> geom::Size override
     {
-        return mapping->size();
+        return size_;
     }
 
     auto hotspot() const -> geom::Displacement override
@@ -74,8 +72,29 @@ public:
     }
 
 private:
-    std::shared_ptr<mrs::ReadMappableBuffer> const buffer;
-    std::unique_ptr<mrs::Mapping<unsigned char const>> const mapping;
+    BufferCursorImage(std::unique_ptr<mrs::Mapping<unsigned char const>> mapping, geom::Displacement const& hotspot)
+        : size_{mapping->size()},
+          data{std::make_unique<unsigned char[]>(mapping->len())},
+          hotspot_{hotspot}
+    {
+        ::memcpy(data.get(), mapping->data(), mapping->len());
+    }
+
+    static auto buffer_to_mapping_if_possible(std::shared_ptr<mg::Buffer> const& buffer)
+        -> std::unique_ptr<mrs::Mapping<unsigned char const>>
+    {
+        auto const mappable_buffer = mrs::as_read_mappable_buffer(buffer);
+        if (!mappable_buffer)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error{
+                    "Attempt to create cursor from non-CPU-readable buffer. Rendering will be incomplete"});
+        }
+        return mappable_buffer->map_readable();
+    }
+
+    geom::Size const size_;
+    std::unique_ptr<unsigned char[]> const data;
     geom::Displacement const hotspot_;
 };
 
