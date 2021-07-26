@@ -36,6 +36,7 @@ class Executor;
 namespace input
 {
 class InputDeviceHub;
+class InputDeviceRegistry;
 class Seat;
 }
 namespace graphics
@@ -84,6 +85,7 @@ public:
         WlSeat* seat;
         OutputManager* output_manager;
         std::shared_ptr<SurfaceStack> surface_stack;
+        std::shared_ptr<input::InputDeviceRegistry> input_device_registry;
     };
 
     WaylandExtensions() = default;
@@ -117,6 +119,7 @@ public:
         std::shared_ptr<time::Clock> const& clock,
         std::shared_ptr<input::InputDeviceHub> const& input_hub,
         std::shared_ptr<input::Seat> const& seat,
+        std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<SurfaceStack> const& surface_stack,
