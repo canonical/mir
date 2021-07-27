@@ -234,12 +234,16 @@ drmModeModeInfo mtd::FakeDRMResources::create_mode(uint16_t hdisplay, uint16_t v
 
 mtd::MockDRM::MockDRM()
     : open_interposer{mir_test_framework::add_open_handler(
-        [this](char const* path, int flags, mode_t mode) -> std::experimental::optional<int>
+        [this](char const* path, int flags, std::optional<mode_t> mode) -> std::optional<int>
         {
             char const* const drm_prefix = "/dev/dri/";
             if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
             {
-                return this->open(path, flags, mode);
+                if (mode)
+                {
+                    BOOST_THROW_EXCEPTION((std::logic_error{"Attempt to call unimplemented 3-parameter open() version for DRM node"}));
+                }
+                return this->open(path, flags);
             }
             return {};
         })}
@@ -251,7 +255,7 @@ mtd::MockDRM::MockDRM()
 
     memset(&empty_object_props, 0, sizeof(empty_object_props));
 
-    ON_CALL(*this, open(_,_,_))
+    ON_CALL(*this, open(_,_))
         .WillByDefault(
             WithArg<0>(
                 Invoke(

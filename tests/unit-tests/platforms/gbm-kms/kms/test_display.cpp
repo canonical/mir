@@ -344,7 +344,7 @@ TEST_F(MesaDisplayTest, create_display_drm_failure)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_drm, open(_,_,_))
+    EXPECT_CALL(mock_drm, open(_,_))
         .Times(AtLeast(1))
         .WillRepeatedly(
             DoAll(
@@ -409,8 +409,8 @@ TEST_F(MesaDisplayTest, ignores_non_modesetting_nodes)
     using namespace testing;
 
     // The platform should open all DRM nodes. In particular, it should open the second one…
-    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card0"), _, _)).Times(AtLeast(1));
-    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card1"), _, _)).Times(AtLeast(1));
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card0"), _)).Times(AtLeast(1));
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card1"), _)).Times(AtLeast(1));
 
     // …mark the second DRM node as not supporting modesetting…
     char const busid[] = "pci:00:01:02:03";
@@ -436,8 +436,8 @@ TEST_F(MesaDisplayTest, handles_first_card_not_supporting_modeset)
     using namespace testing;
 
     // The platform should open all DRM nodes.
-    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card0"), _, _)).Times(AtLeast(1));
-    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card1"), _, _)).Times(AtLeast(1));
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card0"), _)).Times(AtLeast(1));
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card1"), _)).Times(AtLeast(1));
 
     // First device is rendering only…
     mock_drm.reset("/dev/dri/card0");
