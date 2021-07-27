@@ -29,7 +29,6 @@ environment:
     RELEASE: focal
     RELEASE/ubuntu: focal
     RELEASE/ubuntu_devel: hirsute
-    RELEASE/ubuntu_groovy: groovy
     RELEASE/debian_sid: sid
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true

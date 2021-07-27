@@ -39,7 +39,6 @@ jobs:
           # Only run if we have access to secrets.
           if ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}; then
             TASKS+='"google:ubuntu-20.04-64:spread/build/sbuild:debian_sid"
-                    "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_groovy"
                     "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu"
                     "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64"
                     "google:ubuntu-20.04-64:spread/build/ubuntu:rpi"
