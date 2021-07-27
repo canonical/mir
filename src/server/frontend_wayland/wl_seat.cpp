@@ -171,7 +171,6 @@ mf::WlSeat::WlSeat(
         enable_key_repeat{enable_key_repeat}
 {
     input_hub->add_observer(config_observer);
-    add_focus_listener(&focus);
 }
 
 mf::WlSeat::~WlSeat()
@@ -306,6 +305,8 @@ void mf::WlSeat::remove_focus_listener(ListenerTracker* listener)
 
 void mf::WlSeat::server_restart()
 {
-    if (focus.client)
-        for_each_listener(focus.client, [](WlKeyboard* keyboard) { keyboard->resync_keyboard(); });
+    if (focused_client)
+    {
+        for_each_listener(focused_client, [](WlKeyboard* keyboard) { keyboard->resync_keyboard(); });
+    }
 }

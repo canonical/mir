@@ -83,16 +83,6 @@ private:
     wl_client* focused_client{nullptr}; ///< Can be null
     std::vector<ListenerTracker*> focus_listeners;
 
-    struct FocusClient : ListenerTracker
-    {
-        wl_client* client = nullptr;
-
-        void focus_on(wl_client* client) override
-        {
-            this->client = client;
-        }
-    } focus;
-
     template<class T>
     class ListenerList;
 
