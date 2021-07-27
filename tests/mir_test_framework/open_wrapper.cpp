@@ -123,6 +123,7 @@ int open(char const* path, int flags, ...)
     return (*real_open)(path, flags);
 }
 
+#ifndef open64 // Alpine does weird stuff
 int open64(char const* path, int flags, ...)
 {
     std::optional<mode_t> mode_parameter = std::nullopt;
@@ -152,6 +153,7 @@ int open64(char const* path, int flags, ...)
     }
     return (*real_open64)(path, flags);
 }
+#endif
 
 int __open(char const* path, int flags, ...)
 {
