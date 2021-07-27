@@ -234,15 +234,13 @@ drmModeModeInfo mtd::FakeDRMResources::create_mode(uint16_t hdisplay, uint16_t v
 
 mtd::MockDRM::MockDRM()
     : open_interposer{mir_test_framework::add_open_handler(
-        [this](char const* path, int flags, std::optional<mode_t> mode) -> std::optional<int>
+        [this](char const* path, int flags, std::optional<mode_t>) -> std::optional<int>
         {
             char const* const drm_prefix = "/dev/dri/";
             if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
             {
-                if (mode)
-                {
-                    BOOST_THROW_EXCEPTION((std::logic_error{"Attempt to call unimplemented 3-parameter open() version for DRM node"}));
-                }
+                // I don't think we need to be able to distinguish based on mode. ppc64el (at least) *does*
+                // call the 3-parameter open()
                 return this->open(path, flags);
             }
             return {};
