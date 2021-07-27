@@ -16,6 +16,13 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+/* As suggested by umockdev, _FILE_OFFSET_BITS breaks our open() interposing,
+ * as it results in a (platform dependent!) subset of {__open64, __open64_2,
+ * __open, __open_2} being defined (not just declared) in the header, causing
+ * the build to fail with duplicate definitions.
+ */
+#undef _FILE_OFFSET_BITS
+
 #include "mir_test_framework/open_wrapper.h"
 
 #include <list>
