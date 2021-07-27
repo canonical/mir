@@ -84,7 +84,7 @@ public:
                     {
                         return static_cast<int>(stub_fd);
                     }
-                    return {};
+                    return std::nullopt;
                 }));
         return stub_fd;
     }
@@ -125,7 +125,7 @@ private:
                             return uevent->fd();
                         }
                     }
-                    return {};
+                    return std::nullopt;
                 }));
     }
 
@@ -242,7 +242,7 @@ TEST_F(MinimalConsoleServicesTest, failure_to_open_device_node_returns_exception
                 errno = ENODEV;
                 return {-1};
             }
-            return {};
+            return std::nullopt;
         });
 
     mir::MinimalConsoleServices services;
@@ -284,8 +284,8 @@ TEST_F(MinimalConsoleServicesTest, failure_to_open_sys_file_results_in_immediate
                 errno = EINVAL;
                 return {-1};
             }
-            return {};
-        });
+            return std::nullopt;
+            });
 
     mir::MinimalConsoleServices services;
     bool activated{false};
@@ -333,7 +333,7 @@ TEST_F(MinimalConsoleServicesTest, opens_input_devices_in_nonblocking_mode)
         {
             if (strcmp(path, device_path))
             {
-                return {};
+                return std::nullopt;
             }
 
             EXPECT_THAT(flags, FlagIsSet(O_RDWR));
@@ -372,7 +372,7 @@ TEST_F(MinimalConsoleServicesTest, does_not_open_drm_devices_in_nonblocking_mode
         {
             if (strcmp(path, device_path))
             {
-                return {};
+                return std::nullopt;
             }
 
             EXPECT_THAT(flags, FlagIsSet(O_RDWR));

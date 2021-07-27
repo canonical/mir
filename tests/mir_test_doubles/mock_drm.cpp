@@ -243,7 +243,7 @@ mtd::MockDRM::MockDRM()
                 // call the 3-parameter open()
                 return this->open(path, flags);
             }
-            return {};
+            return std::nullopt;
         })}
 {
     using namespace testing;
