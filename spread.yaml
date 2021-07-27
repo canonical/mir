@@ -28,8 +28,8 @@ environment:
     ARCH/rpi: armhf
     RELEASE: focal
     RELEASE/ubuntu: focal
-    RELEASE/ubuntu_devel: hirsute
-    RELEASE/ubuntu_groovy: groovy
+    RELEASE/ubuntu_hirsute: hirsute
+    RELEASE/ubuntu_devel: impish
     RELEASE/debian_sid: sid
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
