@@ -33,7 +33,7 @@ class ClipboardSource;
 
 namespace frontend
 {
-class WlDataDevice : public wayland::DataDevice, public WlSeat::ListenerTracker
+class WlDataDevice : public wayland::DataDevice, public WlSeat::FocusListener
 {
 public:
     WlDataDevice(
@@ -58,7 +58,7 @@ private:
     class ClipboardObserver;
     class Offer;
 
-    /// Override from WlSeat::ListenerTracker
+    /// Override from WlSeat::FocusListener
     void focus_on(wl_client *client) override;
 
     /// Called by the clipboard observer

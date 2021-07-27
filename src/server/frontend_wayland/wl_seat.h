@@ -61,27 +61,27 @@ public:
     void for_each_listener(wl_client* client, std::function<void(WlKeyboard*)> func);
     void for_each_listener(wl_client* client, std::function<void(WlTouch*)> func);
 
-    class ListenerTracker
+    class FocusListener
     {
     public:
         virtual void focus_on(wl_client* client) = 0;
 
-        ListenerTracker() = default;
-        virtual ~ListenerTracker() = default;
-        ListenerTracker(ListenerTracker const&) = delete;
-        ListenerTracker& operator=(ListenerTracker const&) = delete;
+        FocusListener() = default;
+        virtual ~FocusListener() = default;
+        FocusListener(FocusListener const&) = delete;
+        FocusListener& operator=(FocusListener const&) = delete;
     };
 
     auto current_focused_client() const -> wl_client*;
-    void add_focus_listener(ListenerTracker* listener);
-    void remove_focus_listener(ListenerTracker* listener);
+    void add_focus_listener(FocusListener* listener);
+    void remove_focus_listener(FocusListener* listener);
     void notify_focus(wl_client* focus);
 
     void server_restart();
 
 private:
     wl_client* focused_client{nullptr}; ///< Can be null
-    std::vector<ListenerTracker*> focus_listeners;
+    std::vector<FocusListener*> focus_listeners;
 
     template<class T>
     class ListenerList;

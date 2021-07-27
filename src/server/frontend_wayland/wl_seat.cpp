@@ -293,12 +293,12 @@ auto mf::WlSeat::current_focused_client() const -> wl_client*
     return focused_client;
 }
 
-void mf::WlSeat::add_focus_listener(ListenerTracker* listener)
+void mf::WlSeat::add_focus_listener(FocusListener* listener)
 {
     focus_listeners.push_back(listener);
 }
 
-void mf::WlSeat::remove_focus_listener(ListenerTracker* listener)
+void mf::WlSeat::remove_focus_listener(FocusListener* listener)
 {
     focus_listeners.erase(remove(begin(focus_listeners), end(focus_listeners), listener), end(focus_listeners));
 }
