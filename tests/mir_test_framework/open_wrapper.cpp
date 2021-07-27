@@ -64,7 +64,7 @@ public:
                 return val;
             }
         }
-        return {};
+        return std::nullopt;
     }
 
 private:
