@@ -77,8 +77,8 @@ public:
         mir::Fd stub_fd{::open("/dev/null", O_RDWR | O_CLOEXEC)};
         expectations.emplace_back(
             mtf::add_open_handler(
-                [stub_fd, device_path = std::string{device_name}](char const* path, int, mode_t)
-                    -> std::experimental::optional<int>
+                [stub_fd, device_path = std::string{device_name}](char const* path, int, std::optional<mode_t>)
+                    -> std::optional<int>
                 {
                     if (device_path == path)
                     {
@@ -98,7 +98,7 @@ public:
         set_expectations_for_uevent_probe(226, minor, uevent_content.c_str());
 
         mir::Fd stub_fd{::open("/dev/null", O_RDWR | O_CLOEXEC)};
-        ON_CALL(drm, open(StrEq(device_name), _, _)).WillByDefault(
+        ON_CALL(drm, open(StrEq(device_name), _)).WillByDefault(
             InvokeWithoutArgs([stub_fd]() { return stub_fd; }));
         return stub_fd;
     }
@@ -115,8 +115,8 @@ private:
 
         expectations.emplace_back(
             mtf::add_open_handler(
-                [expected_filename = expected_filename.str(), uevent](char const* path, int flags, mode_t)
-                    -> std::experimental::optional<int>
+                [expected_filename = expected_filename.str(), uevent](char const* path, int flags, std::optional<mode_t>)
+                    -> std::optional<int>
                 {
                     if (expected_filename == path)
                     {
@@ -235,7 +235,7 @@ TEST_F(MinimalConsoleServicesTest, failure_to_open_device_node_returns_exception
     set_expectations_for_uevent_probe_of_device(33, 5, device_path);
 
     auto error_on_device_open = mtf::add_open_handler(
-        [device_path](char const* path, int, mode_t) -> std::experimental::optional<int>
+        [device_path](char const* path, int, std::optional<mode_t>) -> std::optional<int>
         {
             if (!strcmp(device_path, path))
             {
@@ -277,7 +277,7 @@ TEST_F(MinimalConsoleServicesTest, failure_to_open_sys_file_results_in_immediate
     set_expectations_for_uevent_probe_of_device(33, 5, "/dev/input/event2");
 
     auto error_on_device_open = mtf::add_open_handler(
-        [](char const* path, int, mode_t) -> std::experimental::optional<int>
+        [](char const* path, int, std::optional<mode_t>) -> std::optional<int>
         {
             if (!strncmp("/sys", path, strlen("/sys")))
             {
@@ -329,7 +329,7 @@ TEST_F(MinimalConsoleServicesTest, opens_input_devices_in_nonblocking_mode)
         [device_path, fd = mir::Fd{::open("/dev/null", O_RDWR)}](
             char const* path,
             int flags,
-            mode_t) -> std::experimental::optional<int>
+            std::optional<mode_t>) -> std::optional<int>
         {
             if (strcmp(path, device_path))
             {
@@ -368,7 +368,7 @@ TEST_F(MinimalConsoleServicesTest, does_not_open_drm_devices_in_nonblocking_mode
         [device_path, fd = mir::Fd{::open("/dev/null", O_RDWR)}](
             char const* path,
             int flags,
-            mode_t) -> std::experimental::optional<int>
+            std::optional<mode_t>) -> std::optional<int>
         {
             if (strcmp(path, device_path))
             {

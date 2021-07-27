@@ -20,14 +20,14 @@
 
 #include <functional>
 #include <memory>
-#include <experimental/optional>
+#include <optional>
 #include <sys/stat.h>
 
 namespace mir_test_framework
 {
 using OpenHandlerHandle = std::unique_ptr<void, void(*)(void*)>;
 using OpenHandler =
-    std::function<std::experimental::optional<int>(char const* path, int flags, mode_t mode)>;
+    std::function<std::optional<int>(char const* path, int flags, std::optional<mode_t> mode)>;
 /**
  * Add a function to the open() interposer.
  *
@@ -38,7 +38,9 @@ using OpenHandler =
  *          before any existing handler on open().
  *
  * \param handler [in]  Handler to call when open() is called. The handler should return an
- *                          occupied optional<int> only when it wants to claim this invocation.
+ *                      occupied optional<int> only when it wants to claim this invocation.
+ *                      ::open() is a variadic C function; to simplify implementations of
+ *                      OpenHandlers, the handler is passed an optional<mode_t> instead.
  * \return  An opaque handle to this instance of the handler. Dropping the handle unregisters the
  *          open() handler.
  */

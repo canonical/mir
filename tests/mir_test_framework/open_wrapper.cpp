@@ -16,12 +16,20 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+/* As suggested by umockdev, _FILE_OFFSET_BITS breaks our open() interposing,
+ * as it results in a (platform dependent!) subset of {__open64, __open64_2,
+ * __open, __open_2} being defined (not just declared) in the header, causing
+ * the build to fail with duplicate definitions.
+ */
+#undef _FILE_OFFSET_BITS
+
 #include "mir_test_framework/open_wrapper.h"
 
 #include <list>
 #include <mutex>
-#include <unistd.h>
 #include <dlfcn.h>
+#include <cstdarg>
+#include <fcntl.h>
 
 namespace mtf = mir_test_framework;
 
@@ -35,7 +43,7 @@ public:
         auto& me = instance();
         std::lock_guard<std::mutex> lock{me.mutex};
         auto iterator = me.handlers.emplace(me.handlers.begin(), std::move(handler));
-        auto remove_callback = +[](void* iterator)
+        auto remove_callback = [](void* iterator)
             {
                 auto to_remove = static_cast<std::list<mtf::OpenHandler>::iterator*>(iterator);
                 remove(to_remove);
@@ -45,7 +53,7 @@ public:
             remove_callback};
     }
 
-    static auto run(char const* path, int flags, mode_t mode) -> std::experimental::optional<int>
+    static auto run(char const* path, int flags, std::optional<mode_t> mode) -> std::optional<int>
     {
         auto& me = instance();
         std::lock_guard<std::mutex> lock{me.mutex};
@@ -56,7 +64,7 @@ public:
                 return val;
             }
         }
-        return {};
+        return std::nullopt;
     }
 
 private:
@@ -85,60 +93,126 @@ mtf::OpenHandlerHandle mtf::add_open_handler(OpenHandler handler)
     return OpenHandlers::add(std::move(handler));
 }
 
-// We need to explicitly mark this as C because we don't match the
-// libc header; we only care about the three-parameter version
-extern "C"
+int open(char const* path, int flags, ...)
 {
-int open(char const* path, int flags, mode_t mode)
-{
-    if (auto val = OpenHandlers::run(path, flags, mode))
+    std::optional<mode_t> mode_parameter = std::nullopt;
+
+    /* The open() family of functions take a 3rd, mode, parameter iff it might create a file - O_CREAT (which
+     * will create the file if it doesn't exist) or O_TMPFILE (which will create a temporary file)
+     */
+    if (flags & (O_CREAT | O_TMPFILE))
+    {
+        std::va_list args;
+        va_start(args, flags);
+        mode_parameter = va_arg(args, mode_t);
+        va_end(args);
+    }
+
+    if (auto val = OpenHandlers::run(path, flags, mode_parameter))
     {
         return *val;
     }
 
-    int (*real_open)(char const *path, int flags, mode_t mode);
+    int (*real_open)(char const *path, int flags, ...);
     *(void **)(&real_open) = dlsym(RTLD_NEXT, "open");
 
-    return (*real_open)(path, flags, mode);
+    if (mode_parameter)
+    {
+        return (*real_open)(path, flags, *mode_parameter);
+    }
+    return (*real_open)(path, flags);
 }
 
-int open64(char const* path, int flags, mode_t mode)
+#ifndef open64 // Alpine does weird stuff
+int open64(char const* path, int flags, ...)
 {
-    if (auto val = OpenHandlers::run(path, flags, mode))
+    std::optional<mode_t> mode_parameter = std::nullopt;
+
+    /* The open() family of functions take a 3rd, mode, parameter iff it might create a file - O_CREAT (which
+     * will create the file if it doesn't exist) or O_TMPFILE (which will create a temporary file)
+     */
+    if (flags & (O_CREAT | O_TMPFILE))
+    {
+        std::va_list args;
+        va_start(args, flags);
+        mode_parameter = va_arg(args, mode_t);
+        va_end(args);
+    }
+
+    if (auto val = OpenHandlers::run(path, flags, mode_parameter))
     {
         return *val;
     }
 
-    int (*real_open64)(char const *path, int flags, mode_t mode);
+    int (*real_open64)(char const *path, int flags, ...);
     *(void **)(&real_open64) = dlsym(RTLD_NEXT, "open64");
 
-    return (*real_open64)(path, flags, mode);
+    if (mode_parameter)
+    {
+        return (*real_open64)(path, flags, *mode_parameter);
+    }
+    return (*real_open64)(path, flags);
 }
+#endif
 
-int __open(char const* path, int flags, mode_t mode)
+int __open(char const* path, int flags, ...)
 {
-    if (auto val = OpenHandlers::run(path, flags, mode))
+    std::optional<mode_t> mode_parameter = std::nullopt;
+
+    /* The open() family of functions take a 3rd, mode, parameter iff it might create a file - O_CREAT (which
+     * will create the file if it doesn't exist) or O_TMPFILE (which will create a temporary file)
+     */
+    if (flags & (O_CREAT | O_TMPFILE))
+    {
+        std::va_list args;
+        va_start(args, flags);
+        mode_parameter = va_arg(args, mode_t);
+        va_end(args);
+    }
+
+    if (auto val = OpenHandlers::run(path, flags, mode_parameter))
     {
         return *val;
     }
 
-    int (*real_open)(char const *path, int flags, mode_t mode);
+    int (*real_open)(char const *path, int flags, ...);
     *(void **)(&real_open) = dlsym(RTLD_NEXT, "__open");
 
-    return (*real_open)(path, flags, mode);
+    if (mode_parameter)
+    {
+        return (*real_open)(path, flags, *mode_parameter);
+    }
+    return (*real_open)(path, flags);
 }
 
-int __open64(char const* path, int flags, mode_t mode)
+int __open64(char const* path, int flags, ...)
 {
-    if (auto val = OpenHandlers::run(path, flags, mode))
+    std::optional<mode_t> mode_parameter = std::nullopt;
+
+    /* The open() family of functions take a 3rd, mode, parameter iff it might create a file - O_CREAT (which
+     * will create the file if it doesn't exist) or O_TMPFILE (which will create a temporary file)
+     */
+    if (flags & (O_CREAT | O_TMPFILE))
+    {
+        std::va_list args;
+        va_start(args, flags);
+        mode_parameter = va_arg(args, mode_t);
+        va_end(args);
+    }
+
+    if (auto val = OpenHandlers::run(path, flags, mode_parameter))
     {
         return *val;
     }
 
-    int (*real_open64)(char const *path, int flags, mode_t mode);
+    int (*real_open64)(char const *path, int flags, ...);
     *(void **)(&real_open64) = dlsym(RTLD_NEXT, "__open64");
 
-    return (*real_open64)(path, flags, mode);
+    if (mode_parameter)
+    {
+        return (*real_open64)(path, flags, *mode_parameter);
+    }
+    return (*real_open64)(path, flags);
 }
 
 int __open_2(char const* path, int flags)
@@ -166,6 +240,5 @@ int __open64_2(char const* path, int flags)
 
     return (*real_open64_2)(path, flags);
 
-}
 }
 

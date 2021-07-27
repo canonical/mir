@@ -57,7 +57,7 @@ TEST_F(DRMHelperTest, closes_drm_fd_on_exec)
 
     fake_devices.add_standard_device("standard-drm-render-nodes");
 
-    EXPECT_CALL(mock_drm, open(_, FlagSet(O_CLOEXEC), _));
+    EXPECT_CALL(mock_drm, open(_, FlagSet(O_CLOEXEC)));
 
     auto helper = mgg::helpers::DRMHelper::open_any_render_node(
         std::make_shared<mir::udev::Context>());

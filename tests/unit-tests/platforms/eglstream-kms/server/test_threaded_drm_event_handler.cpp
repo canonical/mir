@@ -45,7 +45,7 @@ private:
 
 public:
     ThreadedDRMEventHandlerTest()
-        : mock_drm_fd{mock_drm.open(device_node, 0, 0)}
+        : mock_drm_fd{mock_drm.open(device_node, 0)}
     {
         ON_CALL(mock_drm, drmHandleEvent(static_cast<int>(mock_drm_fd), _))
             .WillByDefault(
