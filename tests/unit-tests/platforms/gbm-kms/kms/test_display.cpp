@@ -707,8 +707,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_
     reporter->report_successful_drm_mode_set_crtc_on_construction();
 }
 
-// Disabled until gbm-kms drm platform and mir platform properly shows support for those extensions
-TEST_F(MesaDisplayTest, DISABLED_constructor_throws_if_egl_khr_image_pixmap_not_supported)
+TEST_F(MesaDisplayTest, constructor_throws_if_egl_khr_image_pixmap_not_supported)
 {
     using namespace ::testing;
 
@@ -851,43 +850,6 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         platform->bypass_option(),
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         mir::test::fake_shared(mock_gl_config),
-        null_report};
-}
-
-/*
- * It *would* be nice to support 15bit colour, but the gbm-kms platform
- * has, from the first commit, unconditonally allocated 24-bit framebuffers.
- *
- * It's not clear to me that Mir has ever been successfully tested on a platform
- * that doesn't support 24-bit rendering.
- */
-TEST_F(MesaDisplayTest, DISABLED_supports_as_low_as_15bit_colour)
-{  // Regression test for LP: #1212753
-    using namespace testing;
-
-    mtd::StubGLConfig stub_gl_config;
-
-    EXPECT_CALL(mock_egl,
-                eglChooseConfig(
-                    _,
-                    AllOf(mtd::EGLConfigContainsAttrib(EGL_RED_SIZE, 5),
-                          mtd::EGLConfigContainsAttrib(EGL_GREEN_SIZE, 5),
-                          mtd::EGLConfigContainsAttrib(EGL_BLUE_SIZE, 5),
-                          mtd::EGLConfigContainsAttrib(EGL_ALPHA_SIZE, 0)),
-                    _,_,_))
-        .Times(AtLeast(1))
-        .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
-                        SetArgPointee<4>(1),
-                        Return(EGL_TRUE)));
-
-    auto platform = create_platform();
-    mgg::Display display{
-        platform->drm,
-        platform->gbm,
-        platform->vt,
-        platform->bypass_option(),
-        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-        mir::test::fake_shared(stub_gl_config),
         null_report};
 }
 
