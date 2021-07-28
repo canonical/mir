@@ -162,6 +162,7 @@ mf::WlSeat::WlSeat(
                 {
                     keymap = new_keymap;
                 })},
+        focus_listeners{std::make_shared<ListenerList<FocusListener>>()},
         pointer_listeners{std::make_shared<ListenerList<WlPointer>>()},
         keyboard_listeners{std::make_shared<ListenerList<WlKeyboard>>()},
         touch_listeners{std::make_shared<ListenerList<WlTouch>>()},
@@ -198,19 +199,41 @@ void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlTouch
     touch_listeners->for_each(client, func);
 }
 
-void mf::WlSeat::notify_focus(wl_client *focus)
+void mf::WlSeat::notify_focus(WlSurface& surface, bool has_focus)
 {
-    if (focus != focused_client)
+    if (has_focus && focused_surface != surface)
     {
-        focused_client = focus;
-        for (auto const listener : focus_listeners)
-            listener->focus_on(focus);
+        // give focus to any surface other than the current one
+        set_focus_to(&surface);
+    }
+    else if (!has_focus && focused_surface == surface)
+    {
+        // only take focus away if the newly unfocused surface is the current one
+        set_focus_to(nullptr);
     }
 }
 
 void mf::WlSeat::bind(wl_resource* new_wl_seat)
 {
     new Instance{new_wl_seat, this, enable_key_repeat};
+}
+
+void mf::WlSeat::set_focus_to(WlSurface* new_surface)
+{
+    auto const new_client = new_surface ? new_surface->client : nullptr;
+    if (new_client != focused_client)
+    {
+        focus_listeners->for_each(focused_client, [](FocusListener* listener)
+            {
+                listener->focus_on(nullptr);
+            });
+    }
+    focused_client = new_client;
+    focused_surface = mw::make_weak(new_surface);
+    focus_listeners->for_each(new_client, [&](FocusListener* listener)
+        {
+            listener->focus_on(new_surface);
+        });
 }
 
 mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat, bool enable_key_repeat)
@@ -288,19 +311,22 @@ void mf::WlSeat::Instance::get_touch(wl_resource* new_touch)
         });
 }
 
-auto mf::WlSeat::current_focused_client() const -> wl_client*
+void mf::WlSeat::add_focus_listener(wl_client* client, FocusListener* listener)
 {
-    return focused_client;
+    focus_listeners->register_listener(client, listener);
+    if (focused_client == client)
+    {
+        listener->focus_on(mw::as_nullable_ptr(focused_surface));
+    }
+    else
+    {
+        listener->focus_on(nullptr);
+    }
 }
 
-void mf::WlSeat::add_focus_listener(FocusListener* listener)
+void mf::WlSeat::remove_focus_listener(wl_client* client, FocusListener* listener)
 {
-    focus_listeners.push_back(listener);
-}
-
-void mf::WlSeat::remove_focus_listener(FocusListener* listener)
-{
-    focus_listeners.erase(remove(begin(focus_listeners), end(focus_listeners), listener), end(focus_listeners));
+    focus_listeners->unregister_listener(client, listener);
 }
 
 void mf::WlSeat::server_restart()

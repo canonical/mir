@@ -59,7 +59,7 @@ private:
     class Offer;
 
     /// Override from WlSeat::FocusListener
-    void focus_on(wl_client *client) override;
+    void focus_on(WlSurface* surface) override;
 
     /// Called by the clipboard observer
     void paste_source_set(std::shared_ptr<scene::ClipboardSource> const& source);
