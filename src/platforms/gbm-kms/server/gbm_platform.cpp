@@ -17,45 +17,12 @@
  */
 
 #include "gbm_platform.h"
-#include "mir/graphics/platform_authentication.h"
 #include "buffer_allocator.h"
 #include "nested_authentication.h"
 #include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
-
-namespace
-{
-mir::Fd drm_fd_from_authentication(mg::PlatformAuthentication& authenticator)
-{
-    auto master = authenticator.drm_fd();
-    auto auth = authenticator.auth_extension();
-    if (master.is_set())
-    {
-        return master.value();
-    }
-    else if (auth.is_set())
-    {
-        return auth.value()->auth_fd();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("no authentication fd to make gbm-kms buffers"));
-    }
-}
-}
-
-mgg::GBMPlatform::GBMPlatform(
-    std::shared_ptr<mg::PlatformAuthentication> const& platform_authentication) :
-    platform_authentication(platform_authentication),
-    gbm{std::make_shared<mgg::helpers::GBMHelper>(drm_fd_from_authentication(*platform_authentication))},
-    auth{std::make_shared<mgg::NestedAuthentication>(platform_authentication)}
-{
-    auto gbm_extension = platform_authentication->set_gbm_extension();
-    if (gbm_extension.is_set())
-        gbm_extension.value()->set_gbm_device(gbm->device);
-}
 
 mgg::GBMPlatform::GBMPlatform(
     std::shared_ptr<mir::udev::Context> const& udev,
