@@ -62,33 +62,3 @@ TEST_F(DRMHelperTest, closes_drm_fd_on_exec)
     auto helper = mgg::helpers::DRMHelper::open_any_render_node(
         std::make_shared<mir::udev::Context>());
 }   
-
-TEST_F(DRMHelperTest, throws_if_drm_auth_magic_fails)
-{
-    using namespace testing;
-
-    fake_devices.add_standard_device("standard-drm-devices");
-    drm_magic_t const magic{0x10111213};
-
-    EXPECT_CALL(
-        mock_drm,
-        drmAuthMagic(
-            AnyOf(
-                mtd::IsFdOfDevice("/dev/dri/card0"),
-                mtd::IsFdOfDevice("/dev/dri/card1")),
-            magic))
-            .WillOnce(Return(-1));
-
-    mtd::StubConsoleServices console;
-
-    auto helpers = mgg::helpers::DRMHelper::open_all_devices(
-        std::make_shared<mir::udev::Context>(),
-        console,
-        mgg::Quirks{mtd::MockOption{}});
-
-    ASSERT_THAT(helpers, Not(IsEmpty()));
-
-    EXPECT_THROW({
-        helpers[0]->auth_magic(magic);
-    }, std::runtime_error);
-}

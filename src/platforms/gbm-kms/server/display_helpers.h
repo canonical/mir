@@ -19,8 +19,8 @@
 #ifndef MIR_GRAPHICS_GBM_DISPLAY_HELPERS_H_
 #define MIR_GRAPHICS_GBM_DISPLAY_HELPERS_H_
 
-#include "drm_authentication.h"
 #include "mir/udev/wrapper.h"
+#include "mir/fd.h"
 
 #include <cstddef>
 #include <memory>
@@ -55,7 +55,7 @@ enum class DRMNodeToUse
     card
 };
 
-class DRMHelper : public DRMAuthentication
+class DRMHelper
 {
 public:
     ~DRMHelper();
@@ -70,9 +70,6 @@ public:
 
     static std::unique_ptr<DRMHelper> open_any_render_node(
         std::shared_ptr<mir::udev::Context> const& udev);
-
-    mir::Fd authenticated_fd();
-    void auth_magic(drm_magic_t magic);
 
     void drop_master() const;
     void set_master() const;

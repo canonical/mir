@@ -18,7 +18,6 @@
 
 #include "gbm_platform.h"
 #include "buffer_allocator.h"
-#include "nested_authentication.h"
 #include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
@@ -29,8 +28,7 @@ mgg::GBMPlatform::GBMPlatform(
     std::shared_ptr<mgg::helpers::DRMHelper> const& drm) :
     udev(udev),
     drm(drm),
-    gbm{std::make_shared<mgg::helpers::GBMHelper>(drm->fd)},
-    auth{drm}
+    gbm{std::make_shared<mgg::helpers::GBMHelper>(drm->fd)}
 {
 }
 
