@@ -51,12 +51,11 @@ void mf::WaylandInputDispatcher::set_focus(bool has_focus)
         return;
     }
 
-    if (has_focus)
-        seat->notify_focus(client);
-
+    auto const surface = &wl_surface.value();
+    seat->notify_focus(*surface, has_focus);
     seat->for_each_listener(client, [&](WlKeyboard* keyboard)
         {
-            keyboard->focussed(wl_surface.value(), has_focus);
+            keyboard->focussed(*surface, has_focus);
         });
 }
 

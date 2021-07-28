@@ -98,14 +98,14 @@ mf::WlDataDevice::WlDataDevice(
       clipboard_observer{std::make_shared<ClipboardObserver>(this)}
 {
     clipboard.register_interest(clipboard_observer, wayland_executor);
-    seat.add_focus_listener(this);
-    focus_on(seat.current_focused_client());
+    // this will call focus_on() with the initial state
+    seat.add_focus_listener(client, this);
 }
 
 mf::WlDataDevice::~WlDataDevice()
 {
     clipboard.unregister_interest(*clipboard_observer);
-    seat.remove_focus_listener(this);
+    seat.remove_focus_listener(client, this);
 }
 
 void mf::WlDataDevice::set_selection(std::experimental::optional<struct wl_resource*> const& source, uint32_t serial)
@@ -123,9 +123,9 @@ void mf::WlDataDevice::set_selection(std::experimental::optional<struct wl_resou
     }
 }
 
-void mf::WlDataDevice::focus_on(wl_client* focus)
+void mf::WlDataDevice::focus_on(WlSurface* surface)
 {
-    has_focus = client == focus;
+    has_focus = static_cast<bool>(surface);
     auto const paste_source = clipboard.paste_source();
     if (has_focus && paste_source && !current_offer)
     {

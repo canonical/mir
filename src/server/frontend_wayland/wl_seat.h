@@ -42,6 +42,7 @@ namespace frontend
 class WlPointer;
 class WlKeyboard;
 class WlTouch;
+class WlSurface;
 
 class WlSeat : public wayland::Seat::Global
 {
@@ -61,37 +62,31 @@ public:
     void for_each_listener(wl_client* client, std::function<void(WlKeyboard*)> func);
     void for_each_listener(wl_client* client, std::function<void(WlTouch*)> func);
 
-    class ListenerTracker
+    class FocusListener
     {
     public:
-        virtual void focus_on(wl_client* client) = 0;
+        /// The surface that has focus if the currently focused surface belongs to the relevant client. nullptr if there
+        /// is no focused surface or it belongs to a different client.
+        virtual void focus_on(WlSurface* surface) = 0;
 
-        ListenerTracker() = default;
-        virtual ~ListenerTracker() = default;
-        ListenerTracker(ListenerTracker const&) = delete;
-        ListenerTracker& operator=(ListenerTracker const&) = delete;
+        FocusListener() = default;
+        virtual ~FocusListener() = default;
+        FocusListener(FocusListener const&) = delete;
+        FocusListener& operator=(FocusListener const&) = delete;
     };
 
-    auto current_focused_client() const -> wl_client*;
-    void add_focus_listener(ListenerTracker* listener);
-    void remove_focus_listener(ListenerTracker* listener);
-    void notify_focus(wl_client* focus);
+    /// Adds the listener for future use, and makes a call into it to inform of initial state
+    void add_focus_listener(wl_client* client, FocusListener* listener);
+    void remove_focus_listener(wl_client* client, FocusListener* listener);
+    void notify_focus(WlSurface& surface, bool has_focus);
 
     void server_restart();
 
 private:
+    void set_focus_to(WlSurface* surface);
+
     wl_client* focused_client{nullptr}; ///< Can be null
-    std::vector<ListenerTracker*> focus_listeners;
-
-    struct FocusClient : ListenerTracker
-    {
-        wl_client* client = nullptr;
-
-        void focus_on(wl_client* client) override
-        {
-            this->client = client;
-        }
-    } focus;
+    wayland::Weak<WlSurface> focused_surface;
 
     template<class T>
     class ListenerList;
@@ -103,6 +98,7 @@ private:
     std::shared_ptr<ConfigObserver> const config_observer;
 
     // listener list are shared pointers so devices can keep them around long enough to remove themselves
+    std::shared_ptr<ListenerList<FocusListener>> const focus_listeners;
     std::shared_ptr<ListenerList<WlPointer>> const pointer_listeners;
     std::shared_ptr<ListenerList<WlKeyboard>> const keyboard_listeners;
     std::shared_ptr<ListenerList<WlTouch>> const touch_listeners;
