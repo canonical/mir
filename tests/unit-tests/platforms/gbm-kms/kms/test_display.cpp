@@ -707,8 +707,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_
     reporter->report_successful_drm_mode_set_crtc_on_construction();
 }
 
-// Disabled until gbm-kms drm platform and mir platform properly shows support for those extensions
-TEST_F(MesaDisplayTest, DISABLED_constructor_throws_if_egl_khr_image_pixmap_not_supported)
+TEST_F(MesaDisplayTest, constructor_throws_if_egl_khr_image_pixmap_not_supported)
 {
     using namespace ::testing;
 
