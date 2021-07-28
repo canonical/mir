@@ -52,8 +52,6 @@ class DisplayReport;
 class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
 class GLConfig;
-class PlatformIpcOperations;
-class PlatformAuthentication;
 
 /**
  * \defgroup platform_enablement Mir platform enablement

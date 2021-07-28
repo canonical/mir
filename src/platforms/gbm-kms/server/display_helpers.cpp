@@ -167,8 +167,7 @@ mgmh::DRMHelper::open_all_devices(
             std::shared_ptr<DRMHelper>{
                 new DRMHelper{
                     std::move(tmp_fd),
-                    std::move(device_handle),
-                    DRMNodeToUse::card}});
+                    std::move(device_handle)}});
         mir::log_info("Using DRM device %s", device.devnode());
     }
 
@@ -216,78 +215,7 @@ std::unique_ptr<mgmh::DRMHelper> mgmh::DRMHelper::open_any_render_node(
     }
 
     return std::unique_ptr<mgmh::DRMHelper>{
-        new mgmh::DRMHelper{std::move(tmp_fd), nullptr, DRMNodeToUse::render}};
-}
-
-mir::Fd mgmh::DRMHelper::authenticated_fd()
-{
-    /* We must have our own device fd first, so that it has become the DRM master */
-    if (fd < 0)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error(
-                "Tried to get authenticated DRM fd before setting up the DRM master"));
-
-    if (node_to_use == DRMNodeToUse::render)
-        return fd;
-
-    char* busid = drmGetBusid(fd);
-    if (!busid)
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to get BusID of DRM device")) << boost::errinfo_errno(errno));
-    int auth_fd = drmOpen(NULL, busid);
-    drmFreeBusid(busid);
-
-    if (auth_fd < 0)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Failed to open DRM device for authenticated fd"));
-
-    if (fcntl(auth_fd, F_SETFD, fcntl(auth_fd, F_GETFD) | FD_CLOEXEC) == -1)
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to set FD_CLOEXEC for authenticated drm fd")));
-    }
-
-    drm_magic_t magic;
-    int ret = -1;
-    if ((ret = drmGetMagic(auth_fd, &magic)) < 0)
-    {
-        close(auth_fd);
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
-    }
-
-    if ((ret = drmAuthMagic(fd, magic)) < 0)
-    {
-        close(auth_fd);
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to authenticate DRM device magic cookie")) << boost::errinfo_errno(-ret));
-    }
-
-    return mir::Fd{auth_fd};
-}
-
-void mgmh::DRMHelper::auth_magic(drm_magic_t magic)
-{
-    /* We must have our own device fd first, so that it has become the DRM master */
-    if (fd < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error(
-                "Tried to authenticate magic cookie before setting up the DRM master"));
-    }
-
-    int ret = drmAuthMagic(fd, magic);
-
-    if (ret < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to authenticate DRM device magic cookie")) << boost::errinfo_errno(-ret));
-    }
+        new mgmh::DRMHelper{std::move(tmp_fd), nullptr}};
 }
 
 void mgmh::DRMHelper::drop_master() const
@@ -330,9 +258,8 @@ void mgmh::DRMHelper::set_master() const
     }
 }
 
-mgmh::DRMHelper::DRMHelper(mir::Fd&& fd, std::unique_ptr<mir::Device> device, DRMNodeToUse node_to_use)
+mgmh::DRMHelper::DRMHelper(mir::Fd&& fd, std::unique_ptr<mir::Device> device)
     : fd{std::move(fd)},
-      node_to_use{node_to_use},
       device_handle{std::move(device)}
 {
 }

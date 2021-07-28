@@ -11,7 +11,6 @@ mir_add_wrapped_executable(mir_unit_tests_gbm-kms NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_kms_page_flipper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_cursor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_bypass.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_nested_authentication.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_drm_helper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_quirks.cpp
   ${MIR_SERVER_OBJECTS}

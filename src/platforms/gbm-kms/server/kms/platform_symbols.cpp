@@ -41,7 +41,7 @@
 #include <GLES2/gl2.h>
 #include "egl_helper.h"
 #include <fcntl.h>
-#include <sys/ioctl.h>
+#include <xf86drm.h>
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;

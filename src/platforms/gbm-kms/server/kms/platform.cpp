@@ -20,9 +20,7 @@
 #include "buffer_allocator.h"
 #include "display.h"
 #include "mir/console_services.h"
-#include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/native_buffer.h"
-#include "mir/graphics/platform_authentication.h"
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/udev/wrapper.h"
 #include "mir/renderer/gl/texture_target.h"
@@ -62,7 +60,6 @@ mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
       vt{vt},
       bypass_option_{bypass_option}
 {
-    auth_factory = std::make_unique<DRMNativePlatformAuthFactory>(*drm.front());
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::RenderingPlatform::create_buffer_allocator(

@@ -20,8 +20,6 @@
 #define MIR_GRAPHICS_GBM_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/platform_authentication.h"
-#include "drm_native_platform.h"
 #include "platform_common.h"
 #include "display_helpers.h"
 
@@ -61,7 +59,6 @@ public:
     BypassOption bypass_option() const;
 private:
     BypassOption const bypass_option_;
-    std::unique_ptr<DRMNativePlatformAuthFactory> auth_factory;
 };
 
 class RenderingPlatform : public graphics::RenderingPlatform

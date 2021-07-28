@@ -50,6 +50,7 @@
 #include <gbm.h>
 #include <cassert>
 #include <fcntl.h>
+#include <xf86drm.h>
 
 #include <wayland-server.h>
 

@@ -20,7 +20,6 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/platform_authentication.h"
 #include "mir/options/program_option.h"
 #include "mir/shared_library.h"
 #include "mir/renderer/gl/context_source.h"
@@ -111,27 +110,6 @@ public:
         return the_renderer_factory();
     }
 
-    auto null_platform_authentication() -> std::shared_ptr<mg::PlatformAuthentication>
-    {
-        class NullPlatformAuthentication : public mg::PlatformAuthentication
-        {
-        public:
-            mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> auth_extension() override
-            {
-                return {};
-            }
-            mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> set_gbm_extension() override
-            {
-                return {};
-            }
-            mir::optional_value<mir::Fd> drm_fd() override
-            {
-                return {};
-            }
-        };
-
-        return std::make_shared<NullPlatformAuthentication>();
-    }
 private:
     std::thread main_loop_thread;
     static char const* argv[];

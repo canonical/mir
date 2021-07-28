@@ -33,8 +33,6 @@ namespace gbm
 class GBMPlatform : public graphics::RenderingPlatform
 {
 public:
-    explicit GBMPlatform(
-        std::shared_ptr<PlatformAuthentication> const& platform_authentication);
     GBMPlatform(
         std::shared_ptr<mir::udev::Context> const& udev,
         std::shared_ptr<helpers::DRMHelper> const& drm);
@@ -42,11 +40,9 @@ public:
     UniqueModulePtr<GraphicBufferAllocator>
         create_buffer_allocator(Display const& output) override;
 private:
-    std::shared_ptr<graphics::PlatformAuthentication> const platform_authentication;
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<graphics::gbm::helpers::DRMHelper> drm;
     std::shared_ptr<helpers::GBMHelper> const gbm;
-    std::shared_ptr<DRMAuthentication> const auth;
 };
 }
 }
