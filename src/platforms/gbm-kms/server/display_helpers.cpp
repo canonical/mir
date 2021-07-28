@@ -167,8 +167,7 @@ mgmh::DRMHelper::open_all_devices(
             std::shared_ptr<DRMHelper>{
                 new DRMHelper{
                     std::move(tmp_fd),
-                    std::move(device_handle),
-                    DRMNodeToUse::card}});
+                    std::move(device_handle)}});
         mir::log_info("Using DRM device %s", device.devnode());
     }
 
@@ -216,7 +215,7 @@ std::unique_ptr<mgmh::DRMHelper> mgmh::DRMHelper::open_any_render_node(
     }
 
     return std::unique_ptr<mgmh::DRMHelper>{
-        new mgmh::DRMHelper{std::move(tmp_fd), nullptr, DRMNodeToUse::render}};
+        new mgmh::DRMHelper{std::move(tmp_fd), nullptr}};
 }
 
 void mgmh::DRMHelper::drop_master() const
@@ -259,9 +258,8 @@ void mgmh::DRMHelper::set_master() const
     }
 }
 
-mgmh::DRMHelper::DRMHelper(mir::Fd&& fd, std::unique_ptr<mir::Device> device, DRMNodeToUse node_to_use)
+mgmh::DRMHelper::DRMHelper(mir::Fd&& fd, std::unique_ptr<mir::Device> device)
     : fd{std::move(fd)},
-      node_to_use{node_to_use},
       device_handle{std::move(device)}
 {
 }

@@ -49,12 +49,6 @@ typedef std::unique_ptr<gbm_surface,std::function<void(gbm_surface*)>> GBMSurfac
 namespace helpers
 {
 
-enum class DRMNodeToUse
-{
-    render,
-    card
-};
-
 class DRMHelper
 {
 public:
@@ -76,10 +70,9 @@ public:
 
     mir::Fd fd;
 private:
-    DRMNodeToUse node_to_use;
     std::unique_ptr<Device> const device_handle;
 
-    explicit DRMHelper(mir::Fd&& fd, std::unique_ptr<mir::Device> device, DRMNodeToUse node_to_use);
+    explicit DRMHelper(mir::Fd&& fd, std::unique_ptr<mir::Device> device);
 };
 
 class GBMHelper
