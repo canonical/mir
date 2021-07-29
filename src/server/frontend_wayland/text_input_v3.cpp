@@ -19,6 +19,9 @@
 #include "text_input_v3.h"
 #include "text-input-unstable-v3_wrapper.h"
 
+#include "wl_seat.h"
+#include "wl_surface.h"
+
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
@@ -55,14 +58,23 @@ private:
 };
 
 class TextInputV3
-    : public wayland::TextInputV3
+    : public wayland::TextInputV3,
+      private WlSeat::FocusListener
 {
 public:
-    TextInputV3(wl_resource* resource, std::shared_ptr<TextInputV3Ctx> const& ctx);
+    TextInputV3(wl_resource* resource, std::shared_ptr<TextInputV3Ctx> const& ctx, WlSeat& seat);
+    ~TextInputV3();
 
 private:
     std::shared_ptr<TextInputV3Ctx> const ctx;
+    WlSeat& seat;
+    wayland::Weak<WlSurface> current_surface;
 
+    /// From WlSeat::FocusListener
+    void focus_on(WlSurface* surface) override;
+
+    /// From wayland::TextInputV3
+    /// @{
     void enable() override;
     void disable() override;
     void set_surrounding_text(std::string const& text, int32_t cursor, int32_t anchor) override;
@@ -70,6 +82,7 @@ private:
     void set_content_type(uint32_t hint, uint32_t purpose) override;
     void set_cursor_rectangle(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void commit() override;
+    /// @}
 };
 }
 }
@@ -103,16 +116,41 @@ mf::TextInputManagerV3::TextInputManagerV3(
 
 void mf::TextInputManagerV3::get_text_input(struct wl_resource* id, struct wl_resource* seat)
 {
-    (void)seat;
-    new TextInputV3{id, ctx};
+    auto const wl_seat = WlSeat::from(seat);
+    if (!wl_seat)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("failed to resolve WlSeat creating TextInputV3"));
+    }
+    new TextInputV3{id, ctx, *wl_seat};
 }
 
 mf::TextInputV3::TextInputV3(
     wl_resource* resource,
-    std::shared_ptr<TextInputV3Ctx> const& ctx)
+    std::shared_ptr<TextInputV3Ctx> const& ctx,
+    WlSeat& seat)
     : wayland::TextInputV3{resource, Version<1>()},
-      ctx{ctx}
+      ctx{ctx},
+      seat{seat}
 {
+    seat.add_focus_listener(client, this);
+}
+
+mf::TextInputV3::~TextInputV3()
+{
+    seat.remove_focus_listener(client, this);
+}
+
+void mf::TextInputV3::focus_on(WlSurface* surface)
+{
+    if (current_surface)
+    {
+        send_leave_event(current_surface.value().resource);
+    }
+    current_surface = mw::make_weak(surface);
+    if (surface)
+    {
+        send_enter_event(surface->resource);
+    }
 }
 
 void mf::TextInputV3::enable()
