@@ -87,6 +87,7 @@ private:
 
     wl_client* focused_client{nullptr}; ///< Can be null
     wayland::Weak<WlSurface> focused_surface;
+    wayland::DestroyListenerId focused_surface_destroy_listener_id{};
 
     template<class T>
     class ListenerList;
