@@ -183,9 +183,10 @@ mf::WlSeat::~WlSeat()
     }
 }
 
-auto mf::WlSeat::from(struct wl_resource* seat) -> WlSeat*
+auto mf::WlSeat::from(struct wl_resource* resource) -> WlSeat*
 {
-    return static_cast<mf::WlSeat::Instance*>(wayland::Seat::from(seat))->seat;
+    auto const instance = static_cast<mf::WlSeat::Instance*>(wayland::Seat::from(resource));
+    return instance ? instance->seat : nullptr;
 }
 
 void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlPointer*)> func)

@@ -56,7 +56,7 @@ public:
 
     ~WlSeat();
 
-    static auto from(struct wl_resource* seat) -> WlSeat*;
+    static auto from(struct wl_resource* resource) -> WlSeat*;
 
     void for_each_listener(wl_client* client, std::function<void(WlPointer*)> func);
     void for_each_listener(wl_client* client, std::function<void(WlKeyboard*)> func);
