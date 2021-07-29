@@ -100,41 +100,23 @@ mir::UniqueModulePtr<mg::Display> mge::DisplayPlatform::create_display(
     return retval;
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_buffer_allocator(
-    mg::Display const& output)
-{
-    return mir::make_module_ptr<mge::BufferAllocator>(output);
-}
-
 namespace
 {
 const auto mir_xwayland_option = "MIR_XWAYLAND_OPTION";
 }
 
-mge::Platform::Platform(
-    std::shared_ptr<RenderingPlatform> const& rendering,
-    std::shared_ptr<DisplayPlatform> const& display) :
-    rendering(rendering),
-    display(display)
+mge::RenderingPlatform::RenderingPlatform()
 {
     setenv(mir_xwayland_option, "-eglstream", 1);
 }
 
-mir::graphics::eglstream::Platform::~Platform()
+mge::RenderingPlatform::~RenderingPlatform()
 {
     unsetenv(mir_xwayland_option);
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator>
-    mge::Platform::create_buffer_allocator(mg::Display const& output)
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_buffer_allocator(
+    mg::Display const& output)
 {
-    return rendering->create_buffer_allocator(output);
+    return mir::make_module_ptr<mge::BufferAllocator>(output);
 }
-
-mir::UniqueModulePtr<mg::Display> mge::Platform::create_display(
-    std::shared_ptr<DisplayConfigurationPolicy> const& policy,
-    std::shared_ptr<GLConfig> const& config)
-{
-    return display->create_display(policy, config);
-}
-
