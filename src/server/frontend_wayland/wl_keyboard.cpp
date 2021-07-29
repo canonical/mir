@@ -73,8 +73,6 @@ mf::WlKeyboard::~WlKeyboard()
 
 void mf::WlKeyboard::event(MirKeyboardEvent const* event, WlSurface& surface)
 {
-    set_keymap(event->keymap());
-
     bool down;
     switch (mir_keyboard_event_action(event))
     {
@@ -94,20 +92,8 @@ void mf::WlKeyboard::event(MirKeyboardEvent const* event, WlSurface& surface)
     auto const timestamp = mir_input_event_get_wayland_timestamp(mir_keyboard_event_input_event(event));
     int const scancode = mir_keyboard_event_scan_code(event);
     uint32_t const wayland_state = down ? KeyState::pressed : KeyState::released;
-    send_key_event(serial, timestamp, scancode, wayland_state);
 
-    if (as_nullable_ptr(focused_surface) == &surface)
-    {
-        /*
-         * HACK! Maintain our own XKB state, so we can serialise it for
-         * wl_keyboard_send_modifiers
-         */
-        xkb_key_direction const xkb_state = down ? XKB_KEY_DOWN : XKB_KEY_UP;
-        xkb_state_update_key(state.get(), scancode + 8, xkb_state);
-
-        update_modifier_state();
-    }
-    else
+    if (focused_surface != surface)
     {
         log_warning(
             "Sending key 0x%2.2x %s to wl_surface@%u even though it was not explicitly given keyboard focus",
@@ -115,6 +101,16 @@ void mf::WlKeyboard::event(MirKeyboardEvent const* event, WlSurface& surface)
 
         focussed(surface, true);
     }
+
+    set_keymap(event->keymap());
+    send_key_event(serial, timestamp, scancode, wayland_state);
+    /*
+    * HACK! Maintain our own XKB state, so we can serialise it for
+    * wl_keyboard_send_modifiers
+    */
+    xkb_key_direction const xkb_state = down ? XKB_KEY_DOWN : XKB_KEY_UP;
+    xkb_state_update_key(state.get(), scancode + 8, xkb_state);
+    update_modifier_state();
 }
 
 void mf::WlKeyboard::focussed(WlSurface& surface, bool should_be_focused)
