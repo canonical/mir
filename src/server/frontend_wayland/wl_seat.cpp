@@ -241,6 +241,7 @@ void mf::WlSeat::set_focus_to(WlSurface* new_surface)
     focused_surface = mw::make_weak(new_surface);
     if (new_surface)
     {
+        // This listener will be removed when either the focus changes or the seat is destroyed
         focused_surface_destroy_listener_id = new_surface->add_destroy_listener([this]()
             {
                 set_focus_to(nullptr);
