@@ -93,7 +93,7 @@ void mf::WlKeyboard::event(MirKeyboardEvent const* event, WlSurface& surface)
     int const scancode = mir_keyboard_event_scan_code(event);
     uint32_t const wayland_state = down ? KeyState::pressed : KeyState::released;
 
-    if (focused_surface != surface)
+    if (!focused_surface.is(surface))
     {
         log_warning(
             "Sending key 0x%2.2x %s to wl_surface@%u even though it was not explicitly given keyboard focus",

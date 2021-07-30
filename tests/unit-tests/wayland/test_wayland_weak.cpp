@@ -169,20 +169,18 @@ TEST_F(WaylandWeakTest, weak_not_equal_to_weak_of_new_resource_with_same_address
     EXPECT_THAT(weak_a, Not(FullyCheckedEq(weak_b)));
 }
 
-TEST_F(WaylandWeakTest, is_equal_to_raw_resource)
+TEST_F(WaylandWeakTest, is_raw_resource)
 {
     mw::Weak<MockResource> const weak{&resource.value()};
     // GTest's Eq() assertion doesn't seem to work with uncopyable types
-    EXPECT_THAT(weak == resource.value(), Eq(true));
-    EXPECT_THAT(weak != resource.value(), Eq(false));
+    EXPECT_THAT(weak.is(resource.value()), Eq(true));
 }
 
-TEST_F(WaylandWeakTest, not_equal_to_different_raw_resource)
+TEST_F(WaylandWeakTest, is_not_different_raw_resource)
 {
     mw::Weak<MockResource> const weak_a{&resource_a.value()};
     // GTest's Eq() assertion doesn't seem to work with uncopyable types
-    EXPECT_THAT(weak_a == resource_b.value(), Eq(false));
-    EXPECT_THAT(weak_a != resource_b.value(), Eq(true));
+    EXPECT_THAT(weak_a.is(resource_b.value()), Eq(false));
 }
 
 TEST_F(WaylandWeakTest, weak_cleared_when_resource_marked_as_destroyed)

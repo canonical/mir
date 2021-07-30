@@ -201,12 +201,12 @@ void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlTouch
 
 void mf::WlSeat::notify_focus(WlSurface& surface, bool has_focus)
 {
-    if (has_focus && focused_surface != surface)
+    if (has_focus && !focused_surface.is(surface))
     {
         // give focus to any surface other than the current one
         set_focus_to(&surface);
     }
-    else if (!has_focus && focused_surface == surface)
+    else if (!has_focus && focused_surface.is(surface))
     {
         // only take focus away if the newly unfocused surface is the current one
         set_focus_to(nullptr);
