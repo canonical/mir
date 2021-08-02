@@ -56,7 +56,7 @@ public:
 
     ~WlSeat();
 
-    static auto from(struct wl_resource* seat) -> WlSeat*;
+    static auto from(struct wl_resource* resource) -> WlSeat*;
 
     void for_each_listener(wl_client* client, std::function<void(WlPointer*)> func);
     void for_each_listener(wl_client* client, std::function<void(WlKeyboard*)> func);
@@ -87,6 +87,7 @@ private:
 
     wl_client* focused_client{nullptr}; ///< Can be null
     wayland::Weak<WlSurface> focused_surface;
+    wayland::DestroyListenerId focused_surface_destroy_listener_id{};
 
     template<class T>
     class ListenerList;

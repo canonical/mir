@@ -177,11 +177,16 @@ mf::WlSeat::WlSeat(
 mf::WlSeat::~WlSeat()
 {
     input_hub->remove_observer(config_observer);
+    if (focused_surface)
+    {
+        focused_surface.value().remove_destroy_listener(focused_surface_destroy_listener_id);
+    }
 }
 
-auto mf::WlSeat::from(struct wl_resource* seat) -> WlSeat*
+auto mf::WlSeat::from(struct wl_resource* resource) -> WlSeat*
 {
-    return static_cast<mf::WlSeat::Instance*>(wayland::Seat::from(seat))->seat;
+    auto const instance = static_cast<mf::WlSeat::Instance*>(wayland::Seat::from(resource));
+    return instance ? instance->seat : nullptr;
 }
 
 void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlPointer*)> func)
@@ -228,8 +233,24 @@ void mf::WlSeat::set_focus_to(WlSurface* new_surface)
                 listener->focus_on(nullptr);
             });
     }
+    if (focused_surface)
+    {
+        focused_surface.value().remove_destroy_listener(focused_surface_destroy_listener_id);
+    }
     focused_client = new_client;
     focused_surface = mw::make_weak(new_surface);
+    if (new_surface)
+    {
+        // This listener will be removed when either the focus changes or the seat is destroyed
+        focused_surface_destroy_listener_id = new_surface->add_destroy_listener([this]()
+            {
+                set_focus_to(nullptr);
+            });
+    }
+    else
+    {
+        focused_surface_destroy_listener_id = {};
+    }
     focus_listeners->for_each(new_client, [&](FocusListener* listener)
         {
             listener->focus_on(new_surface);
