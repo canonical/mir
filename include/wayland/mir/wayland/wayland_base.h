@@ -142,7 +142,12 @@ public:
         }
     }
 
-    auto operator==(T const& other) const -> bool
+    auto operator!=(Weak<T> const& other) const -> bool
+    {
+        return !(*this == other);
+    }
+
+    auto is(T const& other) const -> bool
     {
         if (*this)
         {
@@ -152,12 +157,6 @@ public:
         {
             return false;
         }
-    }
-
-    template<typename U>
-    auto operator!=(U const& other) const -> bool
-    {
-        return !(*this == other);
     }
 
     operator bool() const
