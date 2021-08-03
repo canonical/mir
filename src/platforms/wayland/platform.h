@@ -19,7 +19,6 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/options/option.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
 #include "mir/fd.h"
 
@@ -50,12 +49,6 @@ public:
 private:
     struct wl_display* const wl_display;
     std::shared_ptr<DisplayReport> const report;
-};
-
-class RenderingPlatform : public graphics::RenderingPlatform
-{
-public:
-    auto create_buffer_allocator(Display const& output) -> UniqueModulePtr<GraphicBufferAllocator> override;
 };
 }
 }

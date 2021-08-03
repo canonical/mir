@@ -8,8 +8,7 @@ add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="wayland")
 add_library(mirplatformwayland-graphics STATIC
     platform.cpp                platform.h
     display.cpp                 display.h
-    buffer_allocator.cpp        buffer_allocator.h
-        displayclient.cpp displayclient.h
+    displayclient.cpp           displayclient.h
     wayland_display.cpp         wayland_display.h
     cursor.cpp                  cursor.h
 )
