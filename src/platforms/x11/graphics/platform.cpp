@@ -16,7 +16,6 @@
 
 #include "platform.h"
 #include "display.h"
-#include "buffer_allocator.h"
 #include "mir/options/option.h"
 
 
@@ -116,12 +115,6 @@ mgx::Platform::Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resourc
 {
     if (!x11_resources)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
-}
-
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgx::RenderingPlatform::create_buffer_allocator(
-    mg::Display const& output)
-{
-    return make_module_ptr<mgx::BufferAllocator>(output);
 }
 
 mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
