@@ -74,11 +74,6 @@ private:
     std::shared_ptr<DisplayReport> const report;
     std::vector<X11OutputConfig> const output_sizes;
 };
-
-class RenderingPlatform : public graphics::RenderingPlatform
-{
-    auto create_buffer_allocator(graphics::Display const& output) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
-};
 }
 }
 }

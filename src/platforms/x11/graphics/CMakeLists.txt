@@ -17,8 +17,6 @@ add_library(
   display_configuration.cpp
   display_buffer.cpp
   egl_helper.cpp
-  buffer_allocator.h
-  buffer_allocator.cpp
 )
 
 add_library(

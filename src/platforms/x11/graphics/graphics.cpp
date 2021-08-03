@@ -68,16 +68,6 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     );
 }
 
-auto create_rendering_platform(
-    mo::Option const&,
-    mir::EmergencyCleanupRegistry&,
-    std::shared_ptr<mir::logging::Logger> const&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
-{
-    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
-
-    return mir::make_module_ptr<mgx::RenderingPlatform>();
-}
-
 void add_graphics_platform_options(boost::program_options::options_description& config)
 {
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
@@ -102,14 +92,6 @@ auto probe_display_platform(
     mo::ProgramOption const&) -> mg::PlatformPriority
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
-    return probe_graphics_platform();
-}
-
-auto probe_rendering_platform(
-    std::shared_ptr<mir::ConsoleServices> const&,
-    mo::ProgramOption const&) -> mg::PlatformPriority
-{
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
     return probe_graphics_platform();
 }
 
