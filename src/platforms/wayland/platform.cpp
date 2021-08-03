@@ -15,10 +15,7 @@
  */
 
 #include "platform.h"
-#include "buffer_allocator.h"
 #include "display.h"
-
-#include "mir/graphics/egl_error.h"
 
 namespace mg = mir::graphics;
 namespace mgw = mir::graphics::wayland;
@@ -36,9 +33,3 @@ mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
 {
   return mir::make_module_ptr<mgw::Display>(wl_display, gl_config, report);
 }
-
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgw::RenderingPlatform::create_buffer_allocator(mg::Display const& output)
-{
-    return mir::make_module_ptr<mgw::BufferAllocator>(output);
-}
-

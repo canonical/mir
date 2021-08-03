@@ -51,16 +51,6 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report);
 }
 
-auto create_rendering_platform(
-    mg::SupportedDevice const&,
-    std::vector<std::shared_ptr<mg::DisplayPlatform>> const&,
-    mo::Option const&,
-    mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
-{
-    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
-    return mir::make_module_ptr<mgw::RenderingPlatform>();
-}
-
 void add_graphics_platform_options(boost::program_options::options_description& config)
 {
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
@@ -77,21 +67,6 @@ auto probe_graphics_platform(
             mg::PlatformPriority::hosted,
             nullptr
         };
-    }
-    return {};
-}
-
-auto probe_rendering_platform(
-    std::shared_ptr<mir::ConsoleServices> const&,
-    std::shared_ptr<mir::udev::Context> const&,
-    mo::ProgramOption const& options) -> std::vector<mg::SupportedDevice>
-{
-    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
-    if (auto probe = probe_graphics_platform(options))
-    {
-        std::vector<mg::SupportedDevice> result;
-        result.emplace_back(std::move(probe.value()));
-        return result;
     }
     return {};
 }

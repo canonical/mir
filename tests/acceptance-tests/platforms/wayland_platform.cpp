@@ -43,5 +43,4 @@ public:
 WaylandPlatformEnv platform_harness;
 }
 
-INSTANTIATE_TEST_SUITE_P(Wayland, RenderingPlatformTest, testing::Values(&platform_harness));
 INSTANTIATE_TEST_SUITE_P(Wayland, DisplayPlatformTest, testing::Values(&platform_harness));
