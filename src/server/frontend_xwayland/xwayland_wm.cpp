@@ -298,18 +298,18 @@ void mf::XWaylandWM::handle_events()
 }
 
 auto mf::XWaylandWM::get_wm_surface(
-    xcb_window_t xcb_window) -> std::experimental::optional<std::shared_ptr<XWaylandSurface>>
+    xcb_window_t xcb_window) -> std::optional<std::shared_ptr<XWaylandSurface>>
 {
     std::lock_guard<std::mutex> lock{mutex};
 
     auto const surface = surfaces.find(xcb_window);
     if (surface == surfaces.end())
-        return std::experimental::nullopt;
+        return std::nullopt;
     else
         return surface->second;
 }
 
-auto mf::XWaylandWM::get_focused_window() -> std::experimental::optional<xcb_window_t>
+auto mf::XWaylandWM::get_focused_window() -> std::optional<xcb_window_t>
 {
     std::lock_guard<std::mutex> lock{mutex};
     return focused_window;
@@ -336,7 +336,7 @@ void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
         if (should_be_focused)
             focused_window = xcb_window;
         else
-            focused_window = std::experimental::nullopt;
+            focused_window = std::nullopt;
     }
 
     if (should_be_focused)
@@ -436,8 +436,8 @@ void mf::XWaylandWM::restack_surfaces()
 
             connection->configure_window(
                 window,
-                std::experimental::nullopt,
-                std::experimental::nullopt,
+                std::nullopt,
+                std::nullopt,
                 window_below,
                 XCB_STACK_MODE_ABOVE);
         }

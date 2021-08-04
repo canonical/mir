@@ -32,7 +32,7 @@
 #include <functional>
 #include <mutex>
 #include <atomic>
-#include <experimental/optional>
+#include <optional>
 
 namespace mir
 {
@@ -237,10 +237,10 @@ public:
     /// Wrapper around xcb_configure_window
     void configure_window(
         xcb_window_t window,
-        std::experimental::optional<geometry::Point> position,
-        std::experimental::optional<geometry::Size> size,
-        std::experimental::optional<xcb_window_t> sibling,
-        std::experimental::optional<xcb_stack_mode_t> stack_mode) const;
+        std::optional<geometry::Point> position,
+        std::optional<geometry::Size> size,
+        std::optional<xcb_window_t> sibling,
+        std::optional<xcb_stack_mode_t> stack_mode) const;
 
     /// Send client message
     /// @{

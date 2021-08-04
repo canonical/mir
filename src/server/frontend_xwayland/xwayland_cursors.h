@@ -21,7 +21,7 @@
 
 #include <memory>
 #include <vector>
-#include <experimental/optional>
+#include <optional>
 #include <X11/Xcursor/Xcursor.h>
 #include <xcb/composite.h>
 #include <xcb/xcb.h>
@@ -59,7 +59,7 @@ private:
     struct Loader
     {
         struct Formats {
-            std::experimental::optional<xcb_render_pictforminfo_t> rgba;
+            std::optional<xcb_render_pictforminfo_t> rgba;
         };
 
         Loader(std::shared_ptr<XCBConnection> const& connection);

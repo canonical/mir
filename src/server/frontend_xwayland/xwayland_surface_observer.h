@@ -25,7 +25,7 @@
 #include <mutex>
 #include <chrono>
 #include <functional>
-#include <experimental/optional>
+#include <optional>
 
 struct wl_client;
 
@@ -74,7 +74,7 @@ private:
 
         // Innter value should only be used from the Wayland thread and while the mutex is locked
         // Can be nullified from any thread as long as the mutex is locked
-        std::experimental::optional<std::unique_ptr<WaylandInputDispatcher>> dispatcher;
+        std::optional<std::unique_ptr<WaylandInputDispatcher>> dispatcher;
     };
 
     XWaylandSurfaceObserverSurface* const wm_surface;
