@@ -71,7 +71,7 @@ Emitter string_mir2wl(Argument const* me)
 Emitter optional_object_wl2mir(Argument const* me)
 {
     return Lines{
-        {"std::experimental::optional<struct wl_resource*> ", me->name, "_resolved;"},
+        {"std::optional<struct wl_resource*> ", me->name, "_resolved;"},
         {"if (", me->name, " != nullptr)"},
         Block{
             {me->name, "_resolved = {", me->name, "};"}
@@ -93,7 +93,7 @@ Emitter optional_object_mir2wl(Argument const* me)
 Emitter optional_string_wl2mir(Argument const* me)
 {
     return Lines{
-        {"std::experimental::optional<std::string> ", me->name, "_resolved;"},
+        {"std::optional<std::string> ", me->name, "_resolved;"},
         {"if (", me->name, " != nullptr)"},
         Block{
             {me->name, "_resolved = {", me->name, "};"}
@@ -124,8 +124,8 @@ std::unordered_map<std::string, Argument::TypeDescriptor const> const request_ty
 };
 
 std::unordered_map<std::string, Argument::TypeDescriptor const> const request_optional_type_map = {
-    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", "?o", { optional_object_wl2mir } }},
-    { "string", { "std::experimental::optional<std::string> const&", "char const*",  "?s",{ optional_string_wl2mir } }},
+    { "object", { "std::optional<struct wl_resource*> const&", "struct wl_resource*", "?o", { optional_object_wl2mir } }},
+    { "string", { "std::optional<std::string> const&", "char const*",  "?s",{ optional_string_wl2mir } }},
 };
 
 std::unordered_map<std::string, Argument::TypeDescriptor const> const event_type_map = {
@@ -140,8 +140,8 @@ std::unordered_map<std::string, Argument::TypeDescriptor const> const event_type
 };
 
 std::unordered_map<std::string, Argument::TypeDescriptor const> const event_optional_type_map = {
-    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", "?o", {optional_object_mir2wl} }},
-    { "string", { "std::experimental::optional<std::string> const&", "char const*", "?s", { optional_string_mir2wl } }},
+    { "object", { "std::optional<struct wl_resource*> const&", "struct wl_resource*", "?o", {optional_object_mir2wl} }},
+    { "string", { "std::optional<std::string> const&", "char const*", "?s", { optional_string_mir2wl } }},
 };
 }
 
