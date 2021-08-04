@@ -82,6 +82,7 @@ public:
         std::shared_ptr<Executor> wayland_executor;
         std::shared_ptr<shell::Shell> shell;
         std::shared_ptr<scene::Clipboard> clipboard;
+        std::shared_ptr<scene::TextInputHub> text_input_hub;
         WlSeat* seat;
         OutputManager* output_manager;
         std::shared_ptr<SurfaceStack> surface_stack;
@@ -124,6 +125,7 @@ public:
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<SurfaceStack> const& surface_stack,
         std::shared_ptr<scene::Clipboard> const& clipboard,
+        std::shared_ptr<scene::TextInputHub> const& text_input_hub,
         std::shared_ptr<MainLoop> const& main_loop,
         bool arw_socket,
         std::unique_ptr<WaylandExtensions> extensions,
