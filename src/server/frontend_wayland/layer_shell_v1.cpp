@@ -77,7 +77,7 @@ private:
     void get_layer_surface(
         wl_resource* new_layer_surface,
         wl_resource* surface,
-        std::experimental::optional<wl_resource*> const& output,
+        std::optional<wl_resource*> const& output,
         uint32_t layer,
         std::string const& namespace_) override;
 
@@ -251,7 +251,7 @@ void mf::LayerShellV1::bind(wl_resource* new_resource)
 void mf::LayerShellV1::Instance::get_layer_surface(
     wl_resource* new_layer_surface,
     wl_resource* surface,
-    std::experimental::optional<wl_resource*> const& output,
+    std::optional<wl_resource*> const& output,
     uint32_t layer,
     std::string const& namespace_)
 {

@@ -621,7 +621,7 @@ struct mw::DataOffer::Thunks
 
     static void accept_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial, char const* mime_type)
     {
-        std::experimental::optional<std::string> mime_type_resolved;
+        std::optional<std::string> mime_type_resolved;
         if (mime_type != nullptr)
         {
             mime_type_resolved = {mime_type};
@@ -880,7 +880,7 @@ mw::DataSource::~DataSource()
     wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
 }
 
-void mw::DataSource::send_target_event(std::experimental::optional<std::string> const& mime_type) const
+void mw::DataSource::send_target_event(std::optional<std::string> const& mime_type) const
 {
     const char* mime_type_resolved = nullptr;
     if (mime_type)
@@ -972,12 +972,12 @@ struct mw::DataDevice::Thunks
 
     static void start_drag_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* source, struct wl_resource* origin, struct wl_resource* icon, uint32_t serial)
     {
-        std::experimental::optional<struct wl_resource*> source_resolved;
+        std::optional<struct wl_resource*> source_resolved;
         if (source != nullptr)
         {
             source_resolved = {source};
         }
-        std::experimental::optional<struct wl_resource*> icon_resolved;
+        std::optional<struct wl_resource*> icon_resolved;
         if (icon != nullptr)
         {
             icon_resolved = {icon};
@@ -999,7 +999,7 @@ struct mw::DataDevice::Thunks
 
     static void set_selection_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* source, uint32_t serial)
     {
-        std::experimental::optional<struct wl_resource*> source_resolved;
+        std::optional<struct wl_resource*> source_resolved;
         if (source != nullptr)
         {
             source_resolved = {source};
@@ -1073,7 +1073,7 @@ void mw::DataDevice::send_data_offer_event(struct wl_resource* id) const
     wl_resource_post_event(resource, Opcode::data_offer, id);
 }
 
-void mw::DataDevice::send_enter_event(uint32_t serial, struct wl_resource* surface, double x, double y, std::experimental::optional<struct wl_resource*> const& id) const
+void mw::DataDevice::send_enter_event(uint32_t serial, struct wl_resource* surface, double x, double y, std::optional<struct wl_resource*> const& id) const
 {
     wl_fixed_t x_resolved{wl_fixed_from_double(x)};
     wl_fixed_t y_resolved{wl_fixed_from_double(y)};
@@ -1102,7 +1102,7 @@ void mw::DataDevice::send_drop_event() const
     wl_resource_post_event(resource, Opcode::drop);
 }
 
-void mw::DataDevice::send_selection_event(std::experimental::optional<struct wl_resource*> const& id) const
+void mw::DataDevice::send_selection_event(std::optional<struct wl_resource*> const& id) const
 {
     struct wl_resource* id_resolved = nullptr;
     if (id)
@@ -1544,7 +1544,7 @@ struct mw::ShellSurface::Thunks
 
     static void set_fullscreen_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t method, uint32_t framerate, struct wl_resource* output)
     {
-        std::experimental::optional<struct wl_resource*> output_resolved;
+        std::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
             output_resolved = {output};
@@ -1583,7 +1583,7 @@ struct mw::ShellSurface::Thunks
 
     static void set_maximized_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* output)
     {
-        std::experimental::optional<struct wl_resource*> output_resolved;
+        std::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
             output_resolved = {output};
@@ -1790,7 +1790,7 @@ struct mw::Surface::Thunks
 
     static void attach_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* buffer, int32_t x, int32_t y)
     {
-        std::experimental::optional<struct wl_resource*> buffer_resolved;
+        std::optional<struct wl_resource*> buffer_resolved;
         if (buffer != nullptr)
         {
             buffer_resolved = {buffer};
@@ -1853,7 +1853,7 @@ struct mw::Surface::Thunks
 
     static void set_opaque_region_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* region)
     {
-        std::experimental::optional<struct wl_resource*> region_resolved;
+        std::optional<struct wl_resource*> region_resolved;
         if (region != nullptr)
         {
             region_resolved = {region};
@@ -1875,7 +1875,7 @@ struct mw::Surface::Thunks
 
     static void set_input_region_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* region)
     {
-        std::experimental::optional<struct wl_resource*> region_resolved;
+        std::optional<struct wl_resource*> region_resolved;
         if (region != nullptr)
         {
             region_resolved = {region};
@@ -2296,7 +2296,7 @@ struct mw::Pointer::Thunks
 
     static void set_cursor_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial, struct wl_resource* surface, int32_t hotspot_x, int32_t hotspot_y)
     {
-        std::experimental::optional<struct wl_resource*> surface_resolved;
+        std::optional<struct wl_resource*> surface_resolved;
         if (surface != nullptr)
         {
             surface_resolved = {surface};

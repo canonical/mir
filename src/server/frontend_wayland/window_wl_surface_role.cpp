@@ -256,7 +256,7 @@ void mf::WindowWlSurfaceRole::set_min_size(int32_t width, int32_t height)
     }
 }
 
-void mf::WindowWlSurfaceRole::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
+void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<struct wl_resource*> const& output)
 {
     // We must process this request immediately (i.e. don't defer until commit())
     if (auto const scene_surface = weak_scene_surface.lock())

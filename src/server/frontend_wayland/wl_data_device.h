@@ -46,12 +46,12 @@ public:
     /// Wayland requests
     /// @{
     void start_drag(
-        std::experimental::optional<struct wl_resource*> const& source, struct wl_resource* origin,
-        std::experimental::optional<struct wl_resource*> const& icon, uint32_t serial) override
+        std::optional<wl_resource*> const& source, wl_resource* origin,
+        std::optional<wl_resource*> const& icon, uint32_t serial) override
     {
         (void)source, (void)origin, (void)icon, (void)serial;
     }
-    void set_selection(std::experimental::optional<struct wl_resource*> const& source, uint32_t serial) override;
+    void set_selection(std::optional<wl_resource*> const& source, uint32_t serial) override;
     /// @}
 
 private:

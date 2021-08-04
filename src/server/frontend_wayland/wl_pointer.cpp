@@ -193,7 +193,7 @@ void mf::WlPointer::leave(std::optional<MirPointerEvent const*> event)
     send_leave_event(
         serial,
         surface_under_cursor.value().raw_resource());
-    current_position = std::experimental::nullopt;
+    current_position = std::nullopt;
     // Don't clear current_buttons, their state can survive leaving and entering surfaces (note we currently have logic
     // to prevent changing surfaces while buttons are pressed, we wouln't need to clear current_buttons regardless)
     needs_frame = true;
@@ -403,7 +403,7 @@ private:
 
 void mf::WlPointer::set_cursor(
     uint32_t serial,
-    std::experimental::optional<wl_resource*> const& surface,
+    std::optional<wl_resource*> const& surface,
     int32_t hotspot_x, int32_t hotspot_y)
 {
     // We need an explicit conversion before calling make_unique

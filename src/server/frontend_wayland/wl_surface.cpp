@@ -251,7 +251,7 @@ void mf::WlSurface::send_frame_callbacks()
     frame_callbacks.clear();
 }
 
-void mf::WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
+void mf::WlSurface::attach(std::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
 {
     if (x != 0 || y != 0)
     {
@@ -285,13 +285,13 @@ void mf::WlSurface::frame(wl_resource* new_callback)
     pending.frame_callbacks.push_back(wayland::make_weak(callback));
 }
 
-void mf::WlSurface::set_opaque_region(std::experimental::optional<wl_resource*> const& region)
+void mf::WlSurface::set_opaque_region(std::optional<wl_resource*> const& region)
 {
     (void)region;
     // This isn't essential, but could enable optimizations
 }
 
-void mf::WlSurface::set_input_region(std::experimental::optional<wl_resource*> const& region)
+void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
 {
     if (region)
     {

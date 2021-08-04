@@ -8,7 +8,7 @@
 #ifndef MIR_FRONTEND_WAYLAND_XDG_SHELL_XML_WRAPPER
 #define MIR_FRONTEND_WAYLAND_XDG_SHELL_XML_WRAPPER
 
-#include <experimental/optional>
+#include <optional>
 
 #include "mir/fd.h"
 #include <wayland-server-core.h>
@@ -179,7 +179,7 @@ public:
 
 private:
     virtual void get_toplevel(struct wl_resource* id) = 0;
-    virtual void get_popup(struct wl_resource* id, std::experimental::optional<struct wl_resource*> const& parent, struct wl_resource* positioner) = 0;
+    virtual void get_popup(struct wl_resource* id, std::optional<struct wl_resource*> const& parent, struct wl_resource* positioner) = 0;
     virtual void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
     virtual void ack_configure(uint32_t serial) = 0;
 };
@@ -232,7 +232,7 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void set_parent(std::experimental::optional<struct wl_resource*> const& parent) = 0;
+    virtual void set_parent(std::optional<struct wl_resource*> const& parent) = 0;
     virtual void set_title(std::string const& title) = 0;
     virtual void set_app_id(std::string const& app_id) = 0;
     virtual void show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y) = 0;
@@ -242,7 +242,7 @@ private:
     virtual void set_min_size(int32_t width, int32_t height) = 0;
     virtual void set_maximized() = 0;
     virtual void unset_maximized() = 0;
-    virtual void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output) = 0;
+    virtual void set_fullscreen(std::optional<struct wl_resource*> const& output) = 0;
     virtual void unset_fullscreen() = 0;
     virtual void set_minimized() = 0;
 };

@@ -316,7 +316,7 @@ struct mw::ForeignToplevelHandleV1::Thunks
 
     static void set_fullscreen_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* output)
     {
-        std::experimental::optional<struct wl_resource*> output_resolved;
+        std::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
             output_resolved = {output};

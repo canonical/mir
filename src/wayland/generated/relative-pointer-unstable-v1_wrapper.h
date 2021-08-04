@@ -8,7 +8,7 @@
 #ifndef MIR_FRONTEND_WAYLAND_RELATIVE_POINTER_UNSTABLE_V1_XML_WRAPPER
 #define MIR_FRONTEND_WAYLAND_RELATIVE_POINTER_UNSTABLE_V1_XML_WRAPPER
 
-#include <experimental/optional>
+#include <optional>
 
 #include "mir/fd.h"
 #include <wayland-server-core.h>

@@ -100,7 +100,7 @@ class XdgToplevelV6 : mw::XdgToplevelV6, public WindowWlSurfaceRole
 public:
     XdgToplevelV6(wl_resource* new_resource, XdgSurfaceV6* xdg_surface, WlSurface* surface);
 
-    void set_parent(std::experimental::optional<struct wl_resource*> const& parent) override;
+    void set_parent(std::optional<struct wl_resource*> const& parent) override;
     void set_title(std::string const& title) override;
     void set_app_id(std::string const& app_id) override;
     void show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y) override;
@@ -110,7 +110,7 @@ public:
     void set_min_size(int32_t width, int32_t height) override;
     void set_maximized() override;
     void unset_maximized() override;
-    void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output) override;
+    void set_fullscreen(std::optional<struct wl_resource*> const& output) override;
     void unset_fullscreen() override;
     void set_minimized() override;
 
@@ -354,7 +354,7 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_resource* new_resource, XdgSurfaceV6*
     xdg_surface->send_configure();
 }
 
-void mf::XdgToplevelV6::set_parent(std::experimental::optional<struct wl_resource*> const& parent)
+void mf::XdgToplevelV6::set_parent(std::optional<struct wl_resource*> const& parent)
 {
     if (parent && parent.value())
     {
@@ -453,7 +453,7 @@ void mf::XdgToplevelV6::unset_maximized()
     remove_state_now(mir_window_state_maximized);
 }
 
-void mf::XdgToplevelV6::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
+void mf::XdgToplevelV6::set_fullscreen(std::optional<struct wl_resource*> const& output)
 {
     WindowWlSurfaceRole::set_fullscreen(output);
 }

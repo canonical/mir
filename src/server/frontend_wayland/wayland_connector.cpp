@@ -250,7 +250,7 @@ protected:
     void set_fullscreen(
         uint32_t /*method*/,
         uint32_t /*framerate*/,
-        std::experimental::optional<struct wl_resource*> const& output) override
+        std::optional<struct wl_resource*> const& output) override
     {
         WindowWlSurfaceRole::set_fullscreen(output);
     }
@@ -281,7 +281,7 @@ protected:
         apply_spec(mods);
     }
 
-    void set_maximized(std::experimental::optional<struct wl_resource*> const& output) override
+    void set_maximized(std::optional<struct wl_resource*> const& output) override
     {
         (void)output;
         WindowWlSurfaceRole::add_state_now(mir_window_state_maximized);

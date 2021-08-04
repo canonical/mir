@@ -8,7 +8,7 @@
 #ifndef MIR_FRONTEND_WAYLAND_WLR_LAYER_SHELL_UNSTABLE_V1_XML_WRAPPER
 #define MIR_FRONTEND_WAYLAND_WLR_LAYER_SHELL_UNSTABLE_V1_XML_WRAPPER
 
-#include <experimental/optional>
+#include <optional>
 
 #include "mir/fd.h"
 #include <wayland-server-core.h>
@@ -68,7 +68,7 @@ public:
     };
 
 private:
-    virtual void get_layer_surface(struct wl_resource* id, struct wl_resource* surface, std::experimental::optional<struct wl_resource*> const& output, uint32_t layer, std::string const& namespace_) = 0;
+    virtual void get_layer_surface(struct wl_resource* id, struct wl_resource* surface, std::optional<struct wl_resource*> const& output, uint32_t layer, std::string const& namespace_) = 0;
 };
 
 class LayerSurfaceV1 : public Resource

@@ -158,11 +158,11 @@ private:
 
     void send_frame_callbacks();
 
-    void attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y) override;
+    void attach(std::optional<wl_resource*> const& buffer, int32_t x, int32_t y) override;
     void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void frame(wl_resource* callback) override;
-    void set_opaque_region(std::experimental::optional<wl_resource*> const& region) override;
-    void set_input_region(std::experimental::optional<wl_resource*> const& region) override;
+    void set_opaque_region(std::optional<wl_resource*> const& region) override;
+    void set_input_region(std::optional<wl_resource*> const& region) override;
     void commit() override;
     void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void set_buffer_transform(int32_t transform) override;

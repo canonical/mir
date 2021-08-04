@@ -30,6 +30,7 @@
 #include <mir_toolkit/common.h>
 
 #include <experimental/optional>
+#include <optional>
 #include <chrono>
 
 struct wl_client;
@@ -87,7 +88,7 @@ public:
     void set_parent(std::experimental::optional<std::shared_ptr<scene::Surface>> const& parent);
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
-    void set_fullscreen(std::experimental::optional<wl_resource*> const& output);
+    void set_fullscreen(std::optional<wl_resource*> const& output);
     void set_server_side_decorated(bool server_side_decorated);
     void set_type(MirWindowType type);
 

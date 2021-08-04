@@ -51,7 +51,7 @@ public:
     void get_toplevel(wl_resource* new_toplevel) override;
     void get_popup(
         wl_resource* new_popup,
-        std::experimental::optional<wl_resource*> const& parent_surface,
+        std::optional<wl_resource*> const& parent_surface,
         wl_resource* positioner) override;
     void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void ack_configure(uint32_t serial) override;
@@ -81,7 +81,7 @@ public:
         XdgSurfaceStable* xdg_surface,
         WlSurface* surface);
 
-    void set_parent(std::experimental::optional<struct wl_resource*> const& parent) override;
+    void set_parent(std::optional<struct wl_resource*> const& parent) override;
     void set_title(std::string const& title) override;
     void set_app_id(std::string const& app_id) override;
     void show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y) override;
@@ -91,7 +91,7 @@ public:
     void set_min_size(int32_t width, int32_t height) override;
     void set_maximized() override;
     void unset_maximized() override;
-    void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output) override;
+    void set_fullscreen(std::optional<struct wl_resource*> const& output) override;
     void unset_fullscreen() override;
     void set_minimized() override;
 
@@ -206,7 +206,7 @@ void mf::XdgSurfaceStable::get_toplevel(wl_resource* new_toplevel)
 
 void mf::XdgSurfaceStable::get_popup(
     wl_resource* new_popup,
-    std::experimental::optional<struct wl_resource*> const& parent_surface,
+    std::optional<struct wl_resource*> const& parent_surface,
     wl_resource* positioner)
 {
     std::experimental::optional<WlSurfaceRole*> parent_role;
@@ -399,7 +399,7 @@ mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceSt
     xdg_surface->send_configure();
 }
 
-void mf::XdgToplevelStable::set_parent(std::experimental::optional<struct wl_resource*> const& parent)
+void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const& parent)
 {
     if (parent && parent.value())
     {
@@ -498,7 +498,7 @@ void mf::XdgToplevelStable::unset_maximized()
     remove_state_now(mir_window_state_maximized);
 }
 
-void mf::XdgToplevelStable::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
+void mf::XdgToplevelStable::set_fullscreen(std::optional<struct wl_resource*> const& output)
 {
     WindowWlSurfaceRole::set_fullscreen(output);
 }
