@@ -96,7 +96,7 @@ public:
 
     ~LayerSurfaceV1() = default;
 
-    static auto from(wl_resource* surface) -> std::experimental::optional<LayerSurfaceV1*>;
+    static auto from(wl_resource* surface) -> std::optional<LayerSurfaceV1*>;
 
 private:
     template<typename T>
@@ -118,18 +118,18 @@ private:
             {
                 _committed = _pending.value();
             }
-            _pending = std::experimental::nullopt;
+            _pending = std::nullopt;
         }
 
     private:
-        std::experimental::optional<T> _pending;
+        std::optional<T> _pending;
         T _committed;
     };
 
     struct OptionalSize
     {
-        std::experimental::optional<geom::Width> width;
-        std::experimental::optional<geom::Height> height;
+        std::optional<geom::Width> width;
+        std::optional<geom::Height> height;
     };
 
     struct Margin
@@ -156,7 +156,7 @@ private:
     auto get_anchored_edge() const -> MirPlacementGravity;
 
     /// Returns the rectangele in surface coords that this surface is exclusive for (if any)
-    auto get_exclusive_rect() const -> std::experimental::optional<geom::Rectangle>;
+    auto get_exclusive_rect() const -> std::optional<geom::Rectangle>;
 
     static auto horiz_padding(Anchors const& anchors, Margin const& margin) -> geom::DeltaX;
     static auto vert_padding(Anchors const& anchors, Margin const& margin) -> geom::DeltaY;
@@ -292,16 +292,16 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     apply_spec(spec);
 }
 
-auto mf::LayerSurfaceV1::from(wl_resource* surface) -> std::experimental::optional<LayerSurfaceV1*>
+auto mf::LayerSurfaceV1::from(wl_resource* surface) -> std::optional<LayerSurfaceV1*>
 {
     if (!mw::LayerSurfaceV1::is_instance(surface))
-        return std::experimental::nullopt;
+        return std::nullopt;
     auto const mw_surface = mw::LayerSurfaceV1::from(surface);
     auto const mf_surface = dynamic_cast<mf::LayerSurfaceV1*>(mw_surface);
     if (mf_surface)
         return mf_surface;
     else
-        return std::experimental::nullopt;
+        return std::nullopt;
 }
 
 auto mf::LayerSurfaceV1::get_placement_gravity() const -> MirPlacementGravity
@@ -352,11 +352,11 @@ auto mf::LayerSurfaceV1::get_anchored_edge() const -> MirPlacementGravity
         return mir_placement_gravity_center;
 }
 
-auto mf::LayerSurfaceV1::get_exclusive_rect() const -> std::experimental::optional<geom::Rectangle>
+auto mf::LayerSurfaceV1::get_exclusive_rect() const -> std::optional<geom::Rectangle>
 {
     auto zone = exclusive_zone.pending();
     if (zone <= 0)
-        return std::experimental::nullopt;
+        return std::nullopt;
 
     auto edge = get_anchored_edge();
     auto size = pending_size(); // includes margin padding
@@ -384,7 +384,7 @@ auto mf::LayerSurfaceV1::get_exclusive_rect() const -> std::experimental::option
             {size.width, geom::Height{zone} + margin.pending().bottom}};
 
     default:
-        return std::experimental::nullopt;
+        return std::nullopt;
     }
 }
 
@@ -435,7 +435,7 @@ void mf::LayerSurfaceV1::configure()
 {
     // TODO: Error if told to configure on an axis the window is not streatched along
 
-    OptionalSize configure_size{std::experimental::nullopt, std::experimental::nullopt};
+    OptionalSize configure_size{std::nullopt, std::nullopt};
     auto requested = unpadded_requested_size();
 
     if (anchors.committed().left && anchors.committed().right)
