@@ -20,7 +20,6 @@
 #include <epoxy/egl.h>
 
 #include "buffer_allocator.h"
-#include "buffer_texture_binder.h"
 #include "mir/anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "buffer_from_wl_shm.h"
