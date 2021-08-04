@@ -69,6 +69,7 @@ public:
     OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config, std::shared_ptr<Executor> const& executor);
     ~OutputManager();
 
+    /// Returns the output ID (if any) associated with the given output resource. Output resource may be nullptr.
     auto output_id_for(wl_client* client, wl_resource* output) const
         -> std::optional<graphics::DisplayConfigurationOutputId>;
 

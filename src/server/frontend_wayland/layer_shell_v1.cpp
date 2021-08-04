@@ -255,16 +255,12 @@ void mf::LayerShellV1::Instance::get_layer_surface(
     uint32_t layer,
     std::string const& namespace_)
 {
-    (void)namespace_; // Can be ignored if no special behavior is required
-
-    auto const output_id = output ?
-        shell->output_manager->output_id_for(client, output.value()) :
-        std::nullopt;
+    (void)namespace_; // Can be ignored if no special behavior is required;
 
     new LayerSurfaceV1(
         new_layer_surface,
         WlSurface::from(surface),
-        output_id,
+        shell->output_manager->output_id_for(client, output.value_or(nullptr)),
         *shell,
         layer_shell_layer_to_mir_depth_layer(layer));
 }

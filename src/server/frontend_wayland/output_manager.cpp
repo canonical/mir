@@ -231,6 +231,11 @@ mf::OutputManager::~OutputManager()
 auto mf::OutputManager::output_id_for(wl_client* client, wl_resource* output) const
     -> std::optional<graphics::DisplayConfigurationOutputId>
 {
+    if (!output)
+    {
+        return std::nullopt;
+    }
+
     for (auto const& dd : outputs)
     {
         bool found{false};
