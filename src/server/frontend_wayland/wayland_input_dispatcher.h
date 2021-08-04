@@ -26,7 +26,6 @@
 
 #include <memory>
 #include <chrono>
-#include <experimental/optional>
 
 struct wl_client;
 

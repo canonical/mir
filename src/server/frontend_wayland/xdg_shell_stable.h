@@ -22,8 +22,6 @@
 #include "xdg-shell_wrapper.h"
 #include "window_wl_surface_role.h"
 
-#include <experimental/optional>
-
 namespace mir
 {
 namespace scene
@@ -66,7 +64,7 @@ public:
     XdgPopupStable(
         wl_resource* new_resource,
         XdgSurfaceStable* xdg_surface,
-        std::experimental::optional<WlSurfaceRole*> parent_role,
+        std::optional<WlSurfaceRole*> parent_role,
         wl_resource* positioner,
         WlSurface* surface);
 

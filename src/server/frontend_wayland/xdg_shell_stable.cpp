@@ -208,7 +208,7 @@ void mf::XdgSurfaceStable::get_popup(
     std::optional<struct wl_resource*> const& parent_surface,
     wl_resource* positioner)
 {
-    std::experimental::optional<WlSurfaceRole*> parent_role;
+    std::optional<WlSurfaceRole*> parent_role;
     if (parent_surface)
     {
         XdgSurfaceStable* parent_xdg_surface = XdgSurfaceStable::from(parent_surface.value());
@@ -269,7 +269,7 @@ void mf::XdgSurfaceStable::set_window_role(WindowWlSurfaceRole* role)
 mf::XdgPopupStable::XdgPopupStable(
     wl_resource* new_resource,
     XdgSurfaceStable* xdg_surface,
-    std::experimental::optional<WlSurfaceRole*> parent_role,
+    std::optional<WlSurfaceRole*> parent_role,
     struct wl_resource* positioner,
     WlSurface* surface)
     : mw::XdgPopup(new_resource, Version<1>()),
