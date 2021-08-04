@@ -26,8 +26,7 @@
 #include <wayland-server-core.h>
 #include <wayland-server-protocol.h>
 
-#include <experimental/optional>
-
+#include <optional>
 #include <memory>
 #include <vector>
 #include <unordered_map>
@@ -71,9 +70,9 @@ public:
     ~OutputManager();
 
     auto output_id_for(wl_client* client, wl_resource* output) const
-        -> std::experimental::optional<graphics::DisplayConfigurationOutputId>;
+        -> std::optional<graphics::DisplayConfigurationOutputId>;
 
-    auto output_for(graphics::DisplayConfigurationOutputId id) -> std::experimental::optional<Output*>;
+    auto output_for(graphics::DisplayConfigurationOutputId id) -> std::optional<Output*>;
 
     auto display_config() const -> std::shared_ptr<MirDisplay> {return display_config_;}
 

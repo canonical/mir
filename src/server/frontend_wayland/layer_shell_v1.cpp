@@ -90,7 +90,7 @@ public:
     LayerSurfaceV1(
         wl_resource* new_resource,
         WlSurface* surface,
-        std::experimental::optional<graphics::DisplayConfigurationOutputId> output_id,
+        std::optional<graphics::DisplayConfigurationOutputId> output_id,
         LayerShellV1 const& layer_shell,
         MirDepthLayer layer);
 
@@ -259,7 +259,7 @@ void mf::LayerShellV1::Instance::get_layer_surface(
 
     auto const output_id = output ?
         shell->output_manager->output_id_for(client, output.value()) :
-        std::experimental::nullopt;
+        std::nullopt;
 
     new LayerSurfaceV1(
         new_layer_surface,
@@ -274,7 +274,7 @@ void mf::LayerShellV1::Instance::get_layer_surface(
 mf::LayerSurfaceV1::LayerSurfaceV1(
     wl_resource* new_resource,
     WlSurface* surface,
-    std::experimental::optional<graphics::DisplayConfigurationOutputId> output_id,
+    std::optional<graphics::DisplayConfigurationOutputId> output_id,
     LayerShellV1 const& layer_shell,
     MirDepthLayer layer)
     : mw::LayerSurfaceV1(new_resource, Version<4>()),

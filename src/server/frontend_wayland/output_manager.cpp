@@ -229,7 +229,7 @@ mf::OutputManager::~OutputManager()
 }
 
 auto mf::OutputManager::output_id_for(wl_client* client, wl_resource* output) const
-    -> std::experimental::optional<graphics::DisplayConfigurationOutputId>
+    -> std::optional<graphics::DisplayConfigurationOutputId>
 {
     for (auto const& dd : outputs)
     {
@@ -243,16 +243,16 @@ auto mf::OutputManager::output_id_for(wl_client* client, wl_resource* output) co
             return dd.first;
     }
 
-    return std::experimental::nullopt;
+    return std::nullopt;
 }
 
-auto mf::OutputManager::output_for(graphics::DisplayConfigurationOutputId id) -> std::experimental::optional<Output*>
+auto mf::OutputManager::output_for(graphics::DisplayConfigurationOutputId id) -> std::optional<Output*>
 {
     auto const result = outputs.find(id);
     if (result != outputs.end())
         return result->second.get();
     else
-        return std::experimental::nullopt;
+        return std::nullopt;
 }
 
 void mf::OutputManager::create_output(mg::DisplayConfigurationOutput const& initial_config)
