@@ -84,13 +84,13 @@ public:
     void handle_state_change(MirWindowState /*new_state*/) override {};
     void handle_active_change(bool /*is_now_active*/) override {};
     void handle_resize(
-        std::experimental::optional<geometry::Point> const& new_top_left,
+        std::optional<geometry::Point> const& new_top_left,
         geometry::Size const& new_size) override;
     void handle_close_request() override;
 
 private:
-    std::experimental::optional<geom::Point> cached_top_left;
-    std::experimental::optional<geom::Size> cached_size;
+    std::optional<geom::Point> cached_top_left;
+    std::optional<geom::Size> cached_size;
 
     XdgSurfaceV6* const xdg_surface;
 };
@@ -117,8 +117,9 @@ public:
     void handle_commit() override {};
     void handle_state_change(MirWindowState /*new_state*/) override;
     void handle_active_change(bool /*is_now_active*/) override;
-    void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
-                       geometry::Size const& new_size) override;
+    void handle_resize(
+        std::optional<geometry::Point> const& new_top_left,
+        geometry::Size const& new_size) override;
     void handle_close_request() override;
 
 private:
@@ -291,7 +292,7 @@ mf::XdgPopupV6::XdgPopupV6(
                                         wl_resource_get_user_data(positioner))));
 
     auto const& parent_role = parent_surface->window_role();
-    auto parent_scene_surface = parent_role ? parent_role.value().scene_surface() : std::experimental::nullopt;
+    auto parent_scene_surface = parent_role ? parent_role.value().scene_surface() : std::nullopt;
 
     specification->type = mir_window_type_gloss;
     specification->placement_hints = mir_placement_hints_slide_any;
@@ -309,8 +310,9 @@ void mf::XdgPopupV6::grab(struct wl_resource* seat, uint32_t serial)
     set_type(mir_window_type_menu);
 }
 
-void mf::XdgPopupV6::handle_resize(const std::experimental::optional<geometry::Point>& new_top_left,
-                                   const geometry::Size& new_size)
+void mf::XdgPopupV6::handle_resize(
+    std::optional<geometry::Point> const& new_top_left,
+    geometry::Size const& new_size)
 {
     bool const needs_configure = (new_top_left != cached_top_left) || (new_size != cached_size);
 
@@ -480,8 +482,9 @@ void mf::XdgToplevelV6::handle_active_change(bool /*is_now_active*/)
     send_toplevel_configure();
 }
 
-void mf::XdgToplevelV6::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
-                       geometry::Size const& /*new_size*/)
+void mf::XdgToplevelV6::handle_resize(
+    std::optional<geometry::Point> const& /*new_top_left*/,
+    geometry::Size const& /*new_size*/)
 {
     send_toplevel_configure();
 }

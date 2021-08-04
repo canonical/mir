@@ -61,7 +61,7 @@ public:
 
     auto total_offset() const -> geometry::Displacement override;
     auto synchronized() const -> bool override;
-    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
+    auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
 
     void parent_has_committed();
 

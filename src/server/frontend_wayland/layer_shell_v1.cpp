@@ -185,7 +185,7 @@ private:
     void handle_state_change(MirWindowState /*new_state*/) override {};
     void handle_active_change(bool /*is_now_active*/) override {};
     void handle_resize(
-        std::experimental::optional<geometry::Point> const& /*new_top_left*/,
+        std::optional<geometry::Point> const& /*new_top_left*/,
         geometry::Size const& /*new_size*/) override;
     void handle_close_request() override;
 
@@ -654,7 +654,7 @@ void mf::LayerSurfaceV1::handle_commit()
 }
 
 void mf::LayerSurfaceV1::handle_resize(
-    std::experimental::optional<geom::Point> const& /*new_top_left*/,
+    std::optional<geom::Point> const& /*new_top_left*/,
     geom::Size const& /*new_size*/)
 {
     configure();

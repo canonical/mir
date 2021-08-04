@@ -27,6 +27,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 
+#include <experimental/optional>
 #include <vector>
 #include <map>
 
@@ -96,7 +97,7 @@ class NullWlSurfaceRole : public WlSurfaceRole
 {
 public:
     NullWlSurfaceRole(WlSurface* surface);
-    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
+    auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
     void refresh_surface_data_now() override;
     void commit(WlSurfaceState const& state) override;
     void surface_destroyed() override;
@@ -121,11 +122,11 @@ public:
     bool synchronized() const;
     auto subsurface_at(geometry::Point point) -> std::experimental::optional<WlSurface*>;
     wl_resource* raw_resource() const { return resource; }
-    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>;
+    auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;
 
     void set_role(WlSurfaceRole* role_);
     void clear_role();
-    void set_pending_offset(std::experimental::optional<geometry::Displacement> const& offset);
+    void set_pending_offset(std::optional<geometry::Displacement> const& offset);
     void add_subsurface(WlSubsurface* child);
     void remove_subsurface(WlSubsurface* child);
     void refresh_surface_data_now();

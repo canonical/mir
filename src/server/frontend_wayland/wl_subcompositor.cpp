@@ -111,11 +111,11 @@ auto mf::WlSubsurface::synchronized() const -> bool
     return synchronized_ || parent_synchronized;
 }
 
-auto mf::WlSubsurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
+auto mf::WlSubsurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
 {
     return parent ?
         parent.value().scene_surface() :
-        std::experimental::nullopt;
+        std::nullopt;
 }
 
 void mf::WlSubsurface::parent_has_committed()

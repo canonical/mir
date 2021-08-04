@@ -145,7 +145,7 @@ auto mf::WlSurface::subsurface_at(geom::Point point) -> std::experimental::optio
     return std::experimental::nullopt;
 }
 
-auto mf::WlSurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
+auto mf::WlSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
 {
     return role->scene_surface();
 }
@@ -162,9 +162,16 @@ void mf::WlSurface::clear_role()
     role = &null_role;
 }
 
-void mf::WlSurface::set_pending_offset(std::experimental::optional<geom::Displacement> const& offset)
+void mf::WlSurface::set_pending_offset(std::optional<geom::Displacement> const& offset)
 {
-    pending.offset = offset;
+    if (offset)
+    {
+        pending.offset = *offset;
+    }
+    else
+    {
+        pending.offset = std::experimental::nullopt;
+    }
 }
 
 void mf::WlSurface::add_subsurface(WlSubsurface* child)
@@ -493,9 +500,9 @@ mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :
 {
 }
 
-auto mf::NullWlSurfaceRole::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
+auto mf::NullWlSurfaceRole::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
 {
-    return std::experimental::nullopt;
+    return std::nullopt;
 }
 void mf::NullWlSurfaceRole::refresh_surface_data_now() {}
 void mf::NullWlSurfaceRole::commit(WlSurfaceState const& state) { surface->commit(state); }

@@ -97,12 +97,12 @@ void mf::XWaylandSurfaceRole::populate_surface_data_scaled(
     }
 }
 
-auto mf::XWaylandSurfaceRole::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
+auto mf::XWaylandSurfaceRole::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
 {
     if (auto const wm_surface = weak_wm_surface.lock())
         return wm_surface->scene_surface();
     else
-        return std::experimental::nullopt;
+        return std::nullopt;
 }
 
 void mf::XWaylandSurfaceRole::refresh_surface_data_now()

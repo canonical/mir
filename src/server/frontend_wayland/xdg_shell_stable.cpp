@@ -98,8 +98,7 @@ public:
     void handle_commit() override {};
     void handle_state_change(MirWindowState /*new_state*/) override;
     void handle_active_change(bool /*is_now_active*/) override;
-    void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
-                       geometry::Size const& new_size) override;
+    void handle_resize(std::optional<geometry::Point> const& new_top_left, geometry::Size const& new_size) override;
     void handle_close_request() override;
 
 private:
@@ -340,8 +339,9 @@ void mf::XdgPopupStable::grab(struct wl_resource* seat, uint32_t serial)
     set_type(mir_window_type_menu);
 }
 
-void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometry::Point>& new_top_left_,
-                                       const geometry::Size& new_size)
+void mf::XdgPopupStable::handle_resize(
+    std::optional<geometry::Point> const& new_top_left_,
+    geometry::Size const& new_size)
 {
     auto new_top_left{new_top_left_};
     if (new_top_left)
@@ -526,8 +526,9 @@ void mf::XdgToplevelStable::handle_active_change(bool /*is_now_active*/)
     send_toplevel_configure();
 }
 
-void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
-                                          geometry::Size const& /*new_size*/)
+void mf::XdgToplevelStable::handle_resize(
+    std::optional<geometry::Point> const& /*new_top_left*/,
+    geometry::Size const& /*new_size*/)
 {
     send_toplevel_configure();
 }

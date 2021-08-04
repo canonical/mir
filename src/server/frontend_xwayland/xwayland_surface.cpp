@@ -931,13 +931,13 @@ void mf::XWaylandSurface::wl_surface_destroyed()
     close();
 }
 
-auto mf::XWaylandSurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
+auto mf::XWaylandSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
 {
     std::lock_guard<std::mutex> lock{mutex};
     if (auto const scene_surface = weak_scene_surface.lock())
         return scene_surface;
     else
-        return std::experimental::nullopt;
+        return std::nullopt;
 }
 
 auto mf::XWaylandSurface::pending_spec(std::lock_guard<std::mutex> const&) -> msh::SurfaceSpecification&
