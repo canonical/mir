@@ -135,7 +135,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     },
     {
         mw::TextInputV3::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return mf::create_text_input_manager_v3(ctx.display); }
+            { return mf::create_text_input_manager_v3(ctx.display, ctx.wayland_executor, ctx.text_input_hub); }
     },
     {
         mw::InputMethodV2::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
