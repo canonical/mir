@@ -27,7 +27,6 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 
-#include <experimental/optional>
 #include <vector>
 #include <map>
 
@@ -78,11 +77,11 @@ struct WlSurfaceState
     // NOTE: buffer can be both nullopt and nullptr (I know, sounds dumb, but bare with me)
     // if it's nullopt, there is not a new buffer and no value should be copied to current state
     // if it's nullptr, there is a new buffer and it is a null buffer, which should replace the current buffer
-    std::experimental::optional<wl_resource*> buffer;
+    std::optional<wl_resource*> buffer;
 
-    std::experimental::optional<int> scale;
-    std::experimental::optional<geometry::Displacement> offset;
-    std::experimental::optional<std::experimental::optional<std::vector<geometry::Rectangle>>> input_shape;
+    std::optional<int> scale;
+    std::optional<geometry::Displacement> offset;
+    std::optional<std::optional<std::vector<geometry::Rectangle>>> input_shape;
     std::vector<wayland::Weak<Callback>> frame_callbacks;
 
 private:
@@ -118,9 +117,9 @@ public:
 
     geometry::Displacement offset() const { return offset_; }
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
-    std::experimental::optional<geometry::Size> buffer_size() const { return buffer_size_; }
+    std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
     bool synchronized() const;
-    auto subsurface_at(geometry::Point point) -> std::experimental::optional<WlSurface*>;
+    auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
     wl_resource* raw_resource() const { return resource; }
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;
 
@@ -153,9 +152,9 @@ private:
 
     WlSurfaceState pending;
     geometry::Displacement offset_;
-    std::experimental::optional<geometry::Size> buffer_size_;
+    std::optional<geometry::Size> buffer_size_;
     std::vector<wayland::Weak<WlSurfaceState::Callback>> frame_callbacks;
-    std::experimental::optional<std::vector<mir::geometry::Rectangle>> input_shape;
+    std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
 
     void send_frame_callbacks();
 

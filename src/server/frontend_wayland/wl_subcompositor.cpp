@@ -123,11 +123,11 @@ void mf::WlSubsurface::parent_has_committed()
     if (cached_state && synchronized())
     {
         surface->commit(cached_state.value());
-        cached_state = std::experimental::nullopt;
+        cached_state = std::nullopt;
     }
 }
 
-auto mf::WlSubsurface::subsurface_at(geom::Point point) -> std::experimental::optional<WlSurface*>
+auto mf::WlSubsurface::subsurface_at(geom::Point point) -> std::optional<WlSurface*>
 {
     return surface->subsurface_at(point);
 }
@@ -196,7 +196,7 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
         surface->commit(cached_state.value());
         if (cached_state.value().surface_data_needs_refresh())
             refresh_surface_data_now();
-        cached_state = std::experimental::nullopt;
+        cached_state = std::nullopt;
     }
 }
 

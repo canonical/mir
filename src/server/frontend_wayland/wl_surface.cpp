@@ -122,12 +122,12 @@ bool mf::WlSurface::synchronized() const
     return role->synchronized();
 }
 
-auto mf::WlSurface::subsurface_at(geom::Point point) -> std::experimental::optional<WlSurface*>
+auto mf::WlSurface::subsurface_at(geom::Point point) -> std::optional<WlSurface*>
 {
     if (!buffer_size_)
     {
         // surface not mapped
-        return std::experimental::nullopt;
+        return std::nullopt;
     }
     point = point - offset_;
     // loop backwards so the first subsurface we find that accepts the input is the topmost one
@@ -142,7 +142,7 @@ auto mf::WlSurface::subsurface_at(geom::Point point) -> std::experimental::optio
         if (rect.intersection_with(surface_rect).contains(point))
             return this;
     }
-    return std::experimental::nullopt;
+    return std::nullopt;
 }
 
 auto mf::WlSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
@@ -164,14 +164,7 @@ void mf::WlSurface::clear_role()
 
 void mf::WlSurface::set_pending_offset(std::optional<geom::Displacement> const& offset)
 {
-    if (offset)
-    {
-        pending.offset = *offset;
-    }
-    else
-    {
-        pending.offset = std::experimental::nullopt;
-    }
+    pending.offset = offset;
 }
 
 void mf::WlSurface::add_subsurface(WlSubsurface* child)
@@ -377,7 +370,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         if (buffer == nullptr)
         {
             // TODO: unmap surface, and unmap all subsurfaces
-            buffer_size_ = std::experimental::nullopt;
+            buffer_size_ = std::nullopt;
             send_frame_callbacks();
         }
         else
@@ -435,7 +428,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             stream->submit_buffer(mir_buffer);
             auto const new_buffer_size = stream->stream_size();
 
-            if (!input_shape && std::experimental::make_optional(new_buffer_size) != buffer_size_)
+            if (!input_shape && std::make_optional(new_buffer_size) != buffer_size_)
             {
                 state.invalidate_surface_data(); // input shape needs to be recalculated for the new size
             }
@@ -457,13 +450,13 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 void mf::WlSurface::commit()
 {
     if (pending.offset && *pending.offset == offset_)
-        pending.offset = std::experimental::nullopt;
+        pending.offset = std::nullopt;
 
     // The same input shape could be represented by the same rectangles in a different order, or even
     // different rectangles. We don't check for that, however, because it would only cause an unnecessary
     // update and not do any real harm. Checking for identical vectors should cover most cases.
     if (pending.input_shape && *pending.input_shape == input_shape)
-        pending.input_shape = std::experimental::nullopt;
+        pending.input_shape = std::nullopt;
 
     // order is important
     auto const state = std::move(pending);
