@@ -34,7 +34,7 @@ auto ms::BasicTextInputHub::set_handler_state(
     last_serial = TextInputStateSerial{last_serial.as_value() + 1};
     auto const serial = last_serial;
     lock.unlock();
-    multiplexer.activated(new_input_field, state);
+    multiplexer.activated(serial, new_input_field, state);
     return serial;
 }
 

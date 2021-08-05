@@ -121,7 +121,7 @@ public:
     TextInputStateObserver() = default;
     virtual ~TextInputStateObserver() = default;
 
-    virtual void activated(bool new_input_field, TextInputState const& state) = 0;
+    virtual void activated(TextInputStateSerial serial, bool new_input_field, TextInputState const& state) = 0;
     virtual void deactivated() = 0;
 
 private:

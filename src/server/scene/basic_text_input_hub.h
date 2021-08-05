@@ -42,9 +42,9 @@ public:
         work();
     }
 
-    void activated(bool new_input_field, TextInputState const& state) override
+    void activated(TextInputStateSerial serial, bool new_input_field, TextInputState const& state) override
     {
-        for_each_observer(&TextInputStateObserver::activated, new_input_field, state);
+        for_each_observer(&TextInputStateObserver::activated, serial, new_input_field, state);
     }
 
     void deactivated() override
