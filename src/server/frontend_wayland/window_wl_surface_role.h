@@ -29,7 +29,7 @@
 
 #include <mir_toolkit/common.h>
 
-#include <experimental/optional>
+#include <optional>
 #include <chrono>
 
 struct wl_client;
@@ -71,23 +71,23 @@ public:
 
     ~WindowWlSurfaceRole() override;
 
-    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
+    auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
 
     void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
     void refresh_surface_data_now() override;
 
     void apply_spec(shell::SurfaceSpecification const& new_spec);
-    void set_pending_offset(std::experimental::optional<geometry::Displacement> const& offset);
-    void set_pending_width(std::experimental::optional<geometry::Width> const& width);
-    void set_pending_height(std::experimental::optional<geometry::Height> const& height);
+    void set_pending_offset(std::optional<geometry::Displacement> const& offset);
+    void set_pending_width(std::optional<geometry::Width> const& width);
+    void set_pending_height(std::optional<geometry::Height> const& height);
     void set_title(std::string const& title);
     void set_application_id(std::string const& application_id);
     void initiate_interactive_move();
     void initiate_interactive_resize(MirResizeEdge edge);
-    void set_parent(std::experimental::optional<std::shared_ptr<scene::Surface>> const& parent);
+    void set_parent(std::optional<std::shared_ptr<scene::Surface>> const& parent);
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
-    void set_fullscreen(std::experimental::optional<wl_resource*> const& output);
+    void set_fullscreen(std::optional<wl_resource*> const& output);
     void set_server_side_decorated(bool server_side_decorated);
     void set_type(MirWindowType type);
 
@@ -101,8 +101,9 @@ public:
 
     virtual void handle_state_change(MirWindowState new_state) = 0;
     virtual void handle_active_change(bool is_now_active) = 0;
-    virtual void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
-                               geometry::Size const& new_size) = 0;
+    virtual void handle_resize(
+        std::optional<geometry::Point> const& new_top_left,
+        geometry::Size const& new_size) = 0;
     virtual void handle_close_request() = 0;
 
 protected:
@@ -113,7 +114,7 @@ protected:
     auto current_size() const -> geometry::Size;
 
     /// Window size requested by Mir
-    auto requested_window_size() const -> std::experimental::optional<geometry::Size>;
+    auto requested_window_size() const -> std::optional<geometry::Size>;
 
     auto window_state() const -> MirWindowState;
     auto is_active() const -> bool;
@@ -134,8 +135,8 @@ private:
 
     /// The explicitly set (not taken from the surface buffer size) uncommitted window size
     /// @{
-    std::experimental::optional<geometry::Width> pending_explicit_width;
-    std::experimental::optional<geometry::Height> pending_explicit_height;
+    std::optional<geometry::Width> pending_explicit_width;
+    std::optional<geometry::Height> pending_explicit_height;
     /// @}
 
     /// If the committed window size was set explicitly, rather than being taken from the buffer size
@@ -145,7 +146,7 @@ private:
     /// @}
 
     /// The last committed window size (either explicitly set or taken from the surface buffer size)
-    std::experimental::optional<geometry::Size> committed_size;
+    std::optional<geometry::Size> committed_size;
 
     /// The min and max size of the window as of last commit
     /// @{

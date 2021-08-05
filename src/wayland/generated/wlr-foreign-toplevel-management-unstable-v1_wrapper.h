@@ -8,7 +8,7 @@
 #ifndef MIR_FRONTEND_WAYLAND_WLR_FOREIGN_TOPLEVEL_MANAGEMENT_UNSTABLE_V1_XML_WRAPPER
 #define MIR_FRONTEND_WAYLAND_WLR_FOREIGN_TOPLEVEL_MANAGEMENT_UNSTABLE_V1_XML_WRAPPER
 
-#include <experimental/optional>
+#include <optional>
 
 #include "mir/fd.h"
 #include <wayland-server-core.h>
@@ -124,7 +124,7 @@ private:
     virtual void activate(struct wl_resource* seat) = 0;
     virtual void close() = 0;
     virtual void set_rectangle(struct wl_resource* surface, int32_t x, int32_t y, int32_t width, int32_t height) = 0;
-    virtual void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output) = 0;
+    virtual void set_fullscreen(std::optional<struct wl_resource*> const& output) = 0;
     virtual void unset_fullscreen() = 0;
 };
 

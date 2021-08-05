@@ -54,7 +54,7 @@ struct mw::LayerShellV1::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        std::experimental::optional<struct wl_resource*> output_resolved;
+        std::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
             output_resolved = {output};

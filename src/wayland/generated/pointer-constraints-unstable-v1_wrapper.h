@@ -8,7 +8,7 @@
 #ifndef MIR_FRONTEND_WAYLAND_POINTER_CONSTRAINTS_UNSTABLE_V1_XML_WRAPPER
 #define MIR_FRONTEND_WAYLAND_POINTER_CONSTRAINTS_UNSTABLE_V1_XML_WRAPPER
 
-#include <experimental/optional>
+#include <optional>
 
 #include "mir/fd.h"
 #include <wayland-server-core.h>
@@ -65,8 +65,8 @@ public:
     };
 
 private:
-    virtual void lock_pointer(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* pointer, std::experimental::optional<struct wl_resource*> const& region, uint32_t lifetime) = 0;
-    virtual void confine_pointer(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* pointer, std::experimental::optional<struct wl_resource*> const& region, uint32_t lifetime) = 0;
+    virtual void lock_pointer(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* pointer, std::optional<struct wl_resource*> const& region, uint32_t lifetime) = 0;
+    virtual void confine_pointer(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* pointer, std::optional<struct wl_resource*> const& region, uint32_t lifetime) = 0;
 };
 
 class LockedPointerV1 : public Resource
@@ -97,7 +97,7 @@ public:
 
 private:
     virtual void set_cursor_position_hint(double surface_x, double surface_y) = 0;
-    virtual void set_region(std::experimental::optional<struct wl_resource*> const& region) = 0;
+    virtual void set_region(std::optional<struct wl_resource*> const& region) = 0;
 };
 
 class ConfinedPointerV1 : public Resource
@@ -127,7 +127,7 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void set_region(std::experimental::optional<struct wl_resource*> const& region) = 0;
+    virtual void set_region(std::optional<struct wl_resource*> const& region) = 0;
 };
 
 }

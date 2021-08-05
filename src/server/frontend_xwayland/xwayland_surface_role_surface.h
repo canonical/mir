@@ -20,7 +20,7 @@
 #define MIR_FRONTEND_XWAYLAND_SURFACE_ROLE_SURFACE_H
 
 #include <memory>
-#include <experimental/optional>
+#include <optional>
 
 namespace mir
 {
@@ -40,7 +40,7 @@ public:
     virtual ~XWaylandSurfaceRoleSurface() = default;
 
     virtual void wl_surface_destroyed() = 0;
-    virtual auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> = 0;
+    virtual auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> = 0;
 
 private:
     XWaylandSurfaceRoleSurface(XWaylandSurfaceRoleSurface const&) = delete;

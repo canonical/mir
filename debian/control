@@ -486,7 +486,7 @@ Description: Developer files for the Mir ABI-stable abstraction layer
  Contains header files required for development using the MirAL abstraction
  layer.
 
-Package: libmirwayland2
+Package: libmirwayland3
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -504,7 +504,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirwayland2 (= ${binary:Version}),
+Depends: libmirwayland3 (= ${binary:Version}),
          libmircore-dev (= ${binary:Version}),
          ${misc:Depends},
          libmirwayland-bin (= ${binary:Version})

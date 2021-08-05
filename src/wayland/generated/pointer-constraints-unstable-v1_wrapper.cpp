@@ -71,7 +71,7 @@ struct mw::PointerConstraintsV1::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        std::experimental::optional<struct wl_resource*> region_resolved;
+        std::optional<struct wl_resource*> region_resolved;
         if (region != nullptr)
         {
             region_resolved = {region};
@@ -100,7 +100,7 @@ struct mw::PointerConstraintsV1::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        std::experimental::optional<struct wl_resource*> region_resolved;
+        std::optional<struct wl_resource*> region_resolved;
         if (region != nullptr)
         {
             region_resolved = {region};
@@ -269,7 +269,7 @@ struct mw::LockedPointerV1::Thunks
 
     static void set_region_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* region)
     {
-        std::experimental::optional<struct wl_resource*> region_resolved;
+        std::optional<struct wl_resource*> region_resolved;
         if (region != nullptr)
         {
             region_resolved = {region};
@@ -383,7 +383,7 @@ struct mw::ConfinedPointerV1::Thunks
 
     static void set_region_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* region)
     {
-        std::experimental::optional<struct wl_resource*> region_resolved;
+        std::optional<struct wl_resource*> region_resolved;
         if (region != nullptr)
         {
             region_resolved = {region};

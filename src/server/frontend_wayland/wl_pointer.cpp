@@ -119,7 +119,7 @@ struct mf::WlPointer::Cursor
 {
     virtual void apply_to(WlSurface* surface) = 0;
     virtual void set_hotspot(geom::Displacement const& new_hotspot) = 0;
-    virtual auto cursor_surface() const -> std::experimental::optional<WlSurface*> = 0;
+    virtual auto cursor_surface() const -> std::optional<WlSurface*> = 0;
 
     virtual ~Cursor() = default;
     Cursor() = default;
@@ -134,7 +134,7 @@ struct NullCursor : mf::WlPointer::Cursor
 {
     void apply_to(mf::WlSurface*) override {}
     void set_hotspot(geom::Displacement const&) override {};
-    auto cursor_surface() const -> std::experimental::optional<mf::WlSurface*> override { return {}; };
+    auto cursor_surface() const -> std::optional<mf::WlSurface*> override { return {}; };
 };
 }
 
@@ -193,7 +193,7 @@ void mf::WlPointer::leave(std::optional<MirPointerEvent const*> event)
     send_leave_event(
         serial,
         surface_under_cursor.value().raw_resource());
-    current_position = std::experimental::nullopt;
+    current_position = std::nullopt;
     // Don't clear current_buttons, their state can survive leaving and entering surfaces (note we currently have logic
     // to prevent changing surfaces while buttons are pressed, we wouln't need to clear current_buttons regardless)
     needs_frame = true;
@@ -374,7 +374,7 @@ struct WlSurfaceCursor : mf::WlPointer::Cursor
 
     void apply_to(mf::WlSurface* surface) override;
     void set_hotspot(geom::Displacement const& new_hotspot) override;
-    auto cursor_surface() const -> std::experimental::optional<mf::WlSurface*> override;
+    auto cursor_surface() const -> std::optional<mf::WlSurface*> override;
 
 private:
     void apply_latest_buffer();
@@ -394,7 +394,7 @@ struct WlHiddenCursor : mf::WlPointer::Cursor
         mf::CommitHandler* commit_handler);
     void apply_to(mf::WlSurface* surface) override;
     void set_hotspot(geom::Displacement const&) override {};
-    auto cursor_surface() const -> std::experimental::optional<mf::WlSurface*> override { return {}; };
+    auto cursor_surface() const -> std::optional<mf::WlSurface*> override { return {}; };
 
 private:
     CursorSurfaceRole surface_role;
@@ -403,7 +403,7 @@ private:
 
 void mf::WlPointer::set_cursor(
     uint32_t serial,
-    std::experimental::optional<wl_resource*> const& surface,
+    std::optional<wl_resource*> const& surface,
     int32_t hotspot_x, int32_t hotspot_y)
 {
     // We need an explicit conversion before calling make_unique
@@ -508,7 +508,7 @@ void WlSurfaceCursor::set_hotspot(geom::Displacement const& new_hotspot)
     apply_latest_buffer();
 }
 
-auto WlSurfaceCursor::cursor_surface() const -> std::experimental::optional<mf::WlSurface*>
+auto WlSurfaceCursor::cursor_surface() const -> std::optional<mf::WlSurface*>
 {
     if (surface)
     {

@@ -62,14 +62,14 @@ private:
         wl_resource* id,
         wl_resource* surface,
         wl_resource* pointer,
-        const std::experimental::optional<wl_resource*>& region,
+        const std::optional<wl_resource*>& region,
         uint32_t lifetime) override;
 
     void confine_pointer(
         wl_resource* id,
         wl_resource* surface,
         wl_resource* pointer,
-        const std::experimental::optional<wl_resource*>& region,
+        const std::optional<wl_resource*>& region,
         uint32_t lifetime) override;
 };
 
@@ -81,7 +81,7 @@ public:
         Executor& wayland_executor,
         std::shared_ptr<shell::Shell> shell,
         std::shared_ptr<scene::Surface> const& scene_surface,
-        std::experimental::optional<wl_resource*> const& region,
+        std::optional<wl_resource*> const& region,
         PointerConstraintsV1::Lifetime lifetime);
     ~LockedPointerV1();
 
@@ -94,7 +94,7 @@ private:
     std::shared_ptr<MyWaylandSurfaceObserver> const my_surface_observer;
 
     void set_cursor_position_hint(double /*surface_x*/, double /*surface_y*/) override;
-    void set_region(const std::experimental::optional<wl_resource*>& /*region*/) override;
+    void set_region(const std::optional<wl_resource*>& /*region*/) override;
 };
 
 class ConfinedPointerV1 : public wayland::ConfinedPointerV1
@@ -105,7 +105,7 @@ public:
         Executor& wayland_executor,
         std::shared_ptr<shell::Shell> shell,
         std::shared_ptr<scene::Surface> const& scene_surface,
-        std::experimental::optional<wl_resource*> const& region,
+        std::optional<wl_resource*> const& region,
         PointerConstraintsV1::Lifetime lifetime);
     ~ConfinedPointerV1();
 
@@ -117,7 +117,7 @@ private:
 
     std::shared_ptr<SurfaceObserver> const my_surface_observer;
 
-    void set_region(const std::experimental::optional<wl_resource*>& /*region*/) override;
+    void set_region(const std::optional<wl_resource*>& /*region*/) override;
 };
 
 struct LockedPointerV1::MyWaylandSurfaceObserver : ms::NullSurfaceObserver
@@ -253,7 +253,7 @@ void mir::frontend::PointerConstraintsV1::lock_pointer(
     wl_resource* id,
     wl_resource* surface,
     wl_resource* /*pointer*/,
-    std::experimental::optional<wl_resource*> const& region,
+    std::optional<wl_resource*> const& region,
     uint32_t lifetime)
 {
     if (auto const s = WlSurface::from(surface)->scene_surface())
@@ -270,7 +270,7 @@ void mir::frontend::PointerConstraintsV1::confine_pointer(
     wl_resource* id,
     wl_resource* surface,
     wl_resource* /*pointer*/,
-    std::experimental::optional<wl_resource*> const& region,
+    std::optional<wl_resource*> const& region,
     uint32_t lifetime)
 {
     if (auto const s = WlSurface::from(surface)->scene_surface())
@@ -288,7 +288,7 @@ mir::frontend::LockedPointerV1::LockedPointerV1(
     Executor& wayland_executor,
     std::shared_ptr<shell::Shell> shell,
     std::shared_ptr<scene::Surface> const& scene_surface,
-    std::experimental::optional<wl_resource*> const& region,
+    std::optional<wl_resource*> const& region,
     PointerConstraintsV1::Lifetime lifetime) :
     wayland::LockedPointerV1{id, Version<1>{}},
     shell{std::move(shell)},
@@ -346,7 +346,7 @@ void mir::frontend::LockedPointerV1::set_cursor_position_hint(double /*surface_x
 {
 }
 
-void mir::frontend::LockedPointerV1::set_region(const std::experimental::optional<wl_resource*>& /*region*/)
+void mir::frontend::LockedPointerV1::set_region(const std::optional<wl_resource*>& /*region*/)
 {
 }
 
@@ -355,7 +355,7 @@ mir::frontend::ConfinedPointerV1::ConfinedPointerV1(
     Executor& wayland_executor,
     std::shared_ptr<shell::Shell> shell,
     std::shared_ptr<scene::Surface> const& scene_surface,
-    std::experimental::optional<wl_resource*> const& region,
+    std::optional<wl_resource*> const& region,
     PointerConstraintsV1::Lifetime lifetime) :
     wayland::ConfinedPointerV1{id, Version<1>{}},
     shell{std::move(shell)},
@@ -408,6 +408,6 @@ mir::frontend::ConfinedPointerV1::~ConfinedPointerV1()
     }
 }
 
-void mir::frontend::ConfinedPointerV1::set_region(const std::experimental::optional<wl_resource*>& /*region*/)
+void mir::frontend::ConfinedPointerV1::set_region(const std::optional<wl_resource*>& /*region*/)
 {
 }

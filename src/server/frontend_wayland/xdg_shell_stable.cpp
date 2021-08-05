@@ -51,7 +51,7 @@ public:
     void get_toplevel(wl_resource* new_toplevel) override;
     void get_popup(
         wl_resource* new_popup,
-        std::experimental::optional<wl_resource*> const& parent_surface,
+        std::optional<wl_resource*> const& parent_surface,
         wl_resource* positioner) override;
     void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void ack_configure(uint32_t serial) override;
@@ -81,7 +81,7 @@ public:
         XdgSurfaceStable* xdg_surface,
         WlSurface* surface);
 
-    void set_parent(std::experimental::optional<struct wl_resource*> const& parent) override;
+    void set_parent(std::optional<struct wl_resource*> const& parent) override;
     void set_title(std::string const& title) override;
     void set_app_id(std::string const& app_id) override;
     void show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y) override;
@@ -91,15 +91,14 @@ public:
     void set_min_size(int32_t width, int32_t height) override;
     void set_maximized() override;
     void unset_maximized() override;
-    void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output) override;
+    void set_fullscreen(std::optional<struct wl_resource*> const& output) override;
     void unset_fullscreen() override;
     void set_minimized() override;
 
     void handle_commit() override {};
     void handle_state_change(MirWindowState /*new_state*/) override;
     void handle_active_change(bool /*is_now_active*/) override;
-    void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
-                       geometry::Size const& new_size) override;
+    void handle_resize(std::optional<geometry::Point> const& new_top_left, geometry::Size const& new_size) override;
     void handle_close_request() override;
 
 private:
@@ -206,10 +205,10 @@ void mf::XdgSurfaceStable::get_toplevel(wl_resource* new_toplevel)
 
 void mf::XdgSurfaceStable::get_popup(
     wl_resource* new_popup,
-    std::experimental::optional<struct wl_resource*> const& parent_surface,
+    std::optional<struct wl_resource*> const& parent_surface,
     wl_resource* positioner)
 {
-    std::experimental::optional<WlSurfaceRole*> parent_role;
+    std::optional<WlSurfaceRole*> parent_role;
     if (parent_surface)
     {
         XdgSurfaceStable* parent_xdg_surface = XdgSurfaceStable::from(parent_surface.value());
@@ -270,7 +269,7 @@ void mf::XdgSurfaceStable::set_window_role(WindowWlSurfaceRole* role)
 mf::XdgPopupStable::XdgPopupStable(
     wl_resource* new_resource,
     XdgSurfaceStable* xdg_surface,
-    std::experimental::optional<WlSurfaceRole*> parent_role,
+    std::optional<WlSurfaceRole*> parent_role,
     struct wl_resource* positioner,
     WlSurface* surface)
     : mw::XdgPopup(new_resource, Version<1>()),
@@ -340,8 +339,9 @@ void mf::XdgPopupStable::grab(struct wl_resource* seat, uint32_t serial)
     set_type(mir_window_type_menu);
 }
 
-void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometry::Point>& new_top_left_,
-                                       const geometry::Size& new_size)
+void mf::XdgPopupStable::handle_resize(
+    std::optional<geometry::Point> const& new_top_left_,
+    geometry::Size const& new_size)
 {
     auto new_top_left{new_top_left_};
     if (new_top_left)
@@ -399,7 +399,7 @@ mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceSt
     xdg_surface->send_configure();
 }
 
-void mf::XdgToplevelStable::set_parent(std::experimental::optional<struct wl_resource*> const& parent)
+void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const& parent)
 {
     if (parent && parent.value())
     {
@@ -498,7 +498,7 @@ void mf::XdgToplevelStable::unset_maximized()
     remove_state_now(mir_window_state_maximized);
 }
 
-void mf::XdgToplevelStable::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
+void mf::XdgToplevelStable::set_fullscreen(std::optional<struct wl_resource*> const& output)
 {
     WindowWlSurfaceRole::set_fullscreen(output);
 }
@@ -526,8 +526,9 @@ void mf::XdgToplevelStable::handle_active_change(bool /*is_now_active*/)
     send_toplevel_configure();
 }
 
-void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
-                                          geometry::Size const& /*new_size*/)
+void mf::XdgToplevelStable::handle_resize(
+    std::optional<geometry::Point> const& /*new_top_left*/,
+    geometry::Size const& /*new_size*/)
 {
     send_toplevel_configure();
 }

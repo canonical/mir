@@ -32,7 +32,6 @@
 
 #include <string.h>
 #include <algorithm>
-#include <experimental/optional>
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
@@ -139,7 +138,7 @@ enum MotifWmHintsFlags: uint32_t
 };
 }
 
-auto wm_resize_edge_to_mir_resize_edge(NetWmMoveresize wm_resize_edge) -> std::experimental::optional<MirResizeEdge>
+auto wm_resize_edge_to_mir_resize_edge(NetWmMoveresize wm_resize_edge) -> std::optional<MirResizeEdge>
 {
     switch (wm_resize_edge)
     {
@@ -157,7 +156,7 @@ auto wm_resize_edge_to_mir_resize_edge(NetWmMoveresize wm_resize_edge) -> std::e
     case NetWmMoveresize::CANCEL:               break;
     }
 
-    return std::experimental::nullopt;
+    return std::nullopt;
 }
 
 template<typename T>
@@ -359,7 +358,7 @@ void mf::XWaylandSurface::close()
         {
             observer = surface_observer.value();
         }
-        surface_observer = std::experimental::nullopt;
+        surface_observer = std::nullopt;
     }
 
     if (scene_surface)
@@ -499,8 +498,8 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
             window,
             top_left,
             size,
-            std::experimental::nullopt,
-            std::experimental::nullopt);
+            std::nullopt,
+            std::nullopt);
 
         connection->flush();
     }
@@ -697,7 +696,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         window,
         scaled_top_left_of(*surface) + scaled_content_offset_of(*surface),
         scaled_content_size_of(*surface),
-        std::experimental::nullopt,
+        std::nullopt,
         XCB_STACK_MODE_ABOVE);
 
     {
@@ -850,9 +849,9 @@ void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
     {
         connection->configure_window(
             window,
-            std::experimental::nullopt,
-            std::experimental::nullopt,
-            std::experimental::nullopt,
+            std::nullopt,
+            std::nullopt,
+            std::nullopt,
             XCB_STACK_MODE_BELOW);
     }
 }
@@ -861,10 +860,10 @@ void mf::XWaylandSurface::scene_surface_resized(geometry::Size const& new_size)
 {
     connection->configure_window(
         window,
-        std::experimental::nullopt,
+        std::nullopt,
         new_size,
-        std::experimental::nullopt,
-        std::experimental::nullopt);
+        std::nullopt,
+        std::nullopt);
     connection->flush();
 }
 
@@ -879,9 +878,9 @@ void mf::XWaylandSurface::scene_surface_moved_to(geometry::Point const& new_top_
     connection->configure_window(
         window,
         new_top_left + content_offset,
-        std::experimental::nullopt,
-        std::experimental::nullopt,
-        std::experimental::nullopt);
+        std::nullopt,
+        std::nullopt,
+        std::nullopt);
     connection->flush();
 }
 
@@ -931,13 +930,13 @@ void mf::XWaylandSurface::wl_surface_destroyed()
     close();
 }
 
-auto mf::XWaylandSurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
+auto mf::XWaylandSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
 {
     std::lock_guard<std::mutex> lock{mutex};
     if (auto const scene_surface = weak_scene_surface.lock())
         return scene_surface;
     else
-        return std::experimental::nullopt;
+        return std::nullopt;
 }
 
 auto mf::XWaylandSurface::pending_spec(std::lock_guard<std::mutex> const&) -> msh::SurfaceSpecification&
@@ -948,12 +947,12 @@ auto mf::XWaylandSurface::pending_spec(std::lock_guard<std::mutex> const&) -> ms
 }
 
 auto mf::XWaylandSurface::consume_pending_spec(
-    std::lock_guard<std::mutex> const&) -> std::experimental::optional<std::unique_ptr<msh::SurfaceSpecification>>
+    std::lock_guard<std::mutex> const&) -> std::optional<std::unique_ptr<msh::SurfaceSpecification>>
 {
     if (nullable_pending_spec)
         return move(nullable_pending_spec);
     else
-        return std::experimental::nullopt;
+        return std::nullopt;
 }
 
 void mf::XWaylandSurface::is_transient_for(xcb_window_t transient_for)
@@ -1080,7 +1079,7 @@ auto mf::XWaylandSurface::latest_input_timestamp(std::lock_guard<std::mutex> con
 void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
 {
     std::shared_ptr<mir::scene::Surface> scene_surface;
-    std::experimental::fundamentals_v1::optional<std::unique_ptr<mir::shell::SurfaceSpecification>> spec;
+    std::optional<std::unique_ptr<mir::shell::SurfaceSpecification>> spec;
 
     {
         std::lock_guard<std::mutex> lock{mutex};

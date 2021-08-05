@@ -61,11 +61,11 @@ public:
 
     auto total_offset() const -> geometry::Displacement override;
     auto synchronized() const -> bool override;
-    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
+    auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
 
     void parent_has_committed();
 
-    auto subsurface_at(geometry::Point point) -> std::experimental::optional<WlSurface*>;
+    auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
 
 private:
     void set_position(int32_t x, int32_t y) override;
@@ -83,7 +83,7 @@ private:
     wayland::Weak<WlSurface> const parent;
     wayland::Weak<WlClient> const weak_client;
     bool synchronized_;
-    std::experimental::optional<WlSurfaceState> cached_state;
+    std::optional<WlSurfaceState> cached_state;
 };
 
 }

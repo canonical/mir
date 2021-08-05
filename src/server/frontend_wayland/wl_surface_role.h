@@ -25,7 +25,7 @@
 #include <mir_toolkit/common.h>
 
 #include <memory>
-#include <experimental/optional>
+#include <optional>
 
 namespace mir
 {
@@ -42,7 +42,7 @@ class WlSurfaceRole
 public:
     virtual bool synchronized() const { return false; }
     virtual auto total_offset() const -> geometry::Displacement { return {}; }
-    virtual auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> = 0;
+    virtual auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> = 0;
     virtual void refresh_surface_data_now() = 0;
     virtual void commit(WlSurfaceState const& state) = 0;
     virtual void surface_destroyed() = 0;

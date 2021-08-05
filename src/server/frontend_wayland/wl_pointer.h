@@ -93,7 +93,7 @@ private:
     ///@{
     void set_cursor(
         uint32_t serial,
-        std::experimental::optional<wl_resource*> const& surface,
+        std::optional<wl_resource*> const& surface,
         int32_t hotspot_x,
         int32_t hotspot_y) override;
     ///@}
@@ -102,7 +102,7 @@ private:
     wayland::DestroyListenerId destroy_listener_id; ///< ID of this pointer's destroy listener on surface_under_cursor
     bool needs_frame{false};
     MirPointerButtons current_buttons{0};
-    std::experimental::optional<std::pair<float, float>> current_position;
+    std::optional<std::pair<float, float>> current_position;
     std::unique_ptr<Cursor> cursor;
     wayland::Weak<wayland::RelativePointerV1> relative_pointer;
     geometry::Displacement cursor_hotspot;

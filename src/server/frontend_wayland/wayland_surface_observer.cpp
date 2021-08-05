@@ -83,7 +83,7 @@ void mf::WaylandSurfaceObserver::content_resized_to(ms::Surface const*, geom::Si
             if (content_size != impl->window_size)
             {
                 impl->requested_size = content_size;
-                window->handle_resize(std::experimental::nullopt, content_size);
+                window->handle_resize(std::nullopt, content_size);
             }
         });
 }

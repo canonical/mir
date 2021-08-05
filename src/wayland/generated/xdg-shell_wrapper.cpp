@@ -477,7 +477,7 @@ struct mw::XdgSurface::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        std::experimental::optional<struct wl_resource*> parent_resolved;
+        std::optional<struct wl_resource*> parent_resolved;
         if (parent != nullptr)
         {
             parent_resolved = {parent};
@@ -629,7 +629,7 @@ struct mw::XdgToplevel::Thunks
 
     static void set_parent_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* parent)
     {
-        std::experimental::optional<struct wl_resource*> parent_resolved;
+        std::optional<struct wl_resource*> parent_resolved;
         if (parent != nullptr)
         {
             parent_resolved = {parent};
@@ -804,7 +804,7 @@ struct mw::XdgToplevel::Thunks
 
     static void set_fullscreen_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* output)
     {
-        std::experimental::optional<struct wl_resource*> output_resolved;
+        std::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
             output_resolved = {output};

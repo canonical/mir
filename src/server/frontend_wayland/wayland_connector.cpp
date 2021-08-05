@@ -235,8 +235,9 @@ protected:
     void handle_state_change(MirWindowState /*new_state*/) override {};
     void handle_active_change(bool /*is_now_active*/) override {};
 
-    void handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
-                       geometry::Size const& new_size) override
+    void handle_resize(
+        std::optional<geometry::Point> const& /*new_top_left*/,
+        geometry::Size const& new_size) override
     {
         wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, new_size.width.as_int(),
                                         new_size.height.as_int());
@@ -250,7 +251,7 @@ protected:
     void set_fullscreen(
         uint32_t /*method*/,
         uint32_t /*framerate*/,
-        std::experimental::optional<struct wl_resource*> const& output) override
+        std::optional<struct wl_resource*> const& output) override
     {
         WindowWlSurfaceRole::set_fullscreen(output);
     }
@@ -281,7 +282,7 @@ protected:
         apply_spec(mods);
     }
 
-    void set_maximized(std::experimental::optional<struct wl_resource*> const& output) override
+    void set_maximized(std::optional<struct wl_resource*> const& output) override
     {
         (void)output;
         WindowWlSurfaceRole::add_state_now(mir_window_state_maximized);

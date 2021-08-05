@@ -64,7 +64,7 @@ public:
     XdgPopupStable(
         wl_resource* new_resource,
         XdgSurfaceStable* xdg_surface,
-        std::experimental::optional<WlSurfaceRole*> parent_role,
+        std::optional<WlSurfaceRole*> parent_role,
         wl_resource* positioner,
         WlSurface* surface);
 
@@ -78,15 +78,15 @@ public:
     void handle_state_change(MirWindowState /*new_state*/) override {};
     void handle_active_change(bool /*is_now_active*/) override {};
     void handle_resize(
-        std::experimental::optional<geometry::Point> const& new_top_left,
+        std::optional<geometry::Point> const& new_top_left,
         geometry::Size const& new_size) override;
     void handle_close_request() override;
 
     static auto from(wl_resource* resource) -> XdgPopupStable*;
 
 private:
-    std::experimental::optional<geometry::Point> cached_top_left;
-    std::experimental::optional<geometry::Size> cached_size;
+    std::optional<geometry::Point> cached_top_left;
+    std::optional<geometry::Size> cached_size;
 
     std::shared_ptr<shell::Shell> const shell;
     XdgSurfaceStable* const xdg_surface;

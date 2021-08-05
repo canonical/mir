@@ -177,7 +177,7 @@ private:
     void activate(struct wl_resource* seat) override;
     void close() override;
     void set_rectangle(struct wl_resource* surface, int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output) override;
+    void set_fullscreen(std::optional<struct wl_resource*> const& output) override;
     void unset_fullscreen() override;
     ///@}
 
@@ -679,10 +679,11 @@ void mf::ForeignToplevelHandleV1::set_rectangle(
     // Nothing must be done with this info. It is not a protocol violation to ignore it
 }
 
-void mf::ForeignToplevelHandleV1::set_fullscreen(std::experimental::optional<struct wl_resource*> const& /*output*/)
+void mf::ForeignToplevelHandleV1::set_fullscreen(std::optional<struct wl_resource*> const& /*output*/)
 {
     shell::SurfaceSpecification spec;
     spec.state = mir_window_state_fullscreen;
+    // TODO: respect output
     attempt_modify_surface(spec);
 }
 

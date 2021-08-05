@@ -24,7 +24,7 @@
 #include <mir/scene/null_surface_observer.h>
 
 #include <memory>
-#include <experimental/optional>
+#include <optional>
 #include <chrono>
 #include <functional>
 
@@ -62,7 +62,7 @@ public:
     }
 
     /// Should only be called from the Wayland thread
-    std::experimental::optional<geometry::Size> requested_window_size()
+    std::optional<geometry::Size> requested_window_size()
     {
         return impl->requested_size;
     }
@@ -91,7 +91,7 @@ private:
         std::unique_ptr<WaylandInputDispatcher> const input_dispatcher;
 
         geometry::Size window_size{};
-        std::experimental::optional<geometry::Size> requested_size{};
+        std::optional<geometry::Size> requested_size{};
         MirWindowState current_state{mir_window_state_unknown};
     };
 

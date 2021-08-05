@@ -48,7 +48,7 @@ class mf::WlDataDevice::Offer : public wayland::DataOffer
 public:
     Offer(WlDataDevice* device, std::shared_ptr<scene::ClipboardSource> const& source);
 
-    void accept(uint32_t serial, std::experimental::optional<std::string> const& mime_type) override
+    void accept(uint32_t serial, std::optional<std::string> const& mime_type) override
     {
         (void)serial, (void)mime_type;
     }
@@ -108,7 +108,7 @@ mf::WlDataDevice::~WlDataDevice()
     seat.remove_focus_listener(client, this);
 }
 
-void mf::WlDataDevice::set_selection(std::experimental::optional<struct wl_resource*> const& source, uint32_t serial)
+void mf::WlDataDevice::set_selection(std::optional<wl_resource*> const& source, uint32_t serial)
 {
     // TODO: verify serial
     (void)serial;
@@ -142,6 +142,6 @@ void mf::WlDataDevice::paste_source_set(std::shared_ptr<scene::ClipboardSource> 
     else
     {
         current_offer = {};
-        send_selection_event(std::experimental::nullopt);
+        send_selection_event(std::nullopt);
     }
 }

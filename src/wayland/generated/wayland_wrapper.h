@@ -8,7 +8,7 @@
 #ifndef MIR_FRONTEND_WAYLAND_WAYLAND_XML_WRAPPER
 #define MIR_FRONTEND_WAYLAND_WAYLAND_XML_WRAPPER
 
-#include <experimental/optional>
+#include <optional>
 
 #include "mir/fd.h"
 #include <wayland-server-core.h>
@@ -305,7 +305,7 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void accept(uint32_t serial, std::experimental::optional<std::string> const& mime_type) = 0;
+    virtual void accept(uint32_t serial, std::optional<std::string> const& mime_type) = 0;
     virtual void receive(std::string const& mime_type, mir::Fd fd) = 0;
     virtual void finish() = 0;
     virtual void set_actions(uint32_t dnd_actions, uint32_t preferred_action) = 0;
@@ -321,7 +321,7 @@ public:
     DataSource(struct wl_resource* resource, Version<3>);
     virtual ~DataSource();
 
-    void send_target_event(std::experimental::optional<std::string> const& mime_type) const;
+    void send_target_event(std::optional<std::string> const& mime_type) const;
     void send_send_event(std::string const& mime_type, mir::Fd fd) const;
     void send_cancelled_event() const;
     bool version_supports_dnd_drop_performed();
@@ -370,11 +370,11 @@ public:
     virtual ~DataDevice();
 
     void send_data_offer_event(struct wl_resource* id) const;
-    void send_enter_event(uint32_t serial, struct wl_resource* surface, double x, double y, std::experimental::optional<struct wl_resource*> const& id) const;
+    void send_enter_event(uint32_t serial, struct wl_resource* surface, double x, double y, std::optional<struct wl_resource*> const& id) const;
     void send_leave_event() const;
     void send_motion_event(uint32_t time, double x, double y) const;
     void send_drop_event() const;
-    void send_selection_event(std::experimental::optional<struct wl_resource*> const& id) const;
+    void send_selection_event(std::optional<struct wl_resource*> const& id) const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -399,8 +399,8 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void start_drag(std::experimental::optional<struct wl_resource*> const& source, struct wl_resource* origin, std::experimental::optional<struct wl_resource*> const& icon, uint32_t serial) = 0;
-    virtual void set_selection(std::experimental::optional<struct wl_resource*> const& source, uint32_t serial) = 0;
+    virtual void start_drag(std::optional<struct wl_resource*> const& source, struct wl_resource* origin, std::optional<struct wl_resource*> const& icon, uint32_t serial) = 0;
+    virtual void set_selection(std::optional<struct wl_resource*> const& source, uint32_t serial) = 0;
 };
 
 class DataDeviceManager : public Resource
@@ -549,9 +549,9 @@ private:
     virtual void resize(struct wl_resource* seat, uint32_t serial, uint32_t edges) = 0;
     virtual void set_toplevel() = 0;
     virtual void set_transient(struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags) = 0;
-    virtual void set_fullscreen(uint32_t method, uint32_t framerate, std::experimental::optional<struct wl_resource*> const& output) = 0;
+    virtual void set_fullscreen(uint32_t method, uint32_t framerate, std::optional<struct wl_resource*> const& output) = 0;
     virtual void set_popup(struct wl_resource* seat, uint32_t serial, struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags) = 0;
-    virtual void set_maximized(std::experimental::optional<struct wl_resource*> const& output) = 0;
+    virtual void set_maximized(std::optional<struct wl_resource*> const& output) = 0;
     virtual void set_title(std::string const& title) = 0;
     virtual void set_class(std::string const& class_) = 0;
 };
@@ -589,11 +589,11 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void attach(std::experimental::optional<struct wl_resource*> const& buffer, int32_t x, int32_t y) = 0;
+    virtual void attach(std::optional<struct wl_resource*> const& buffer, int32_t x, int32_t y) = 0;
     virtual void damage(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
     virtual void frame(struct wl_resource* callback) = 0;
-    virtual void set_opaque_region(std::experimental::optional<struct wl_resource*> const& region) = 0;
-    virtual void set_input_region(std::experimental::optional<struct wl_resource*> const& region) = 0;
+    virtual void set_opaque_region(std::optional<struct wl_resource*> const& region) = 0;
+    virtual void set_input_region(std::optional<struct wl_resource*> const& region) = 0;
     virtual void commit() = 0;
     virtual void set_buffer_transform(int32_t transform) = 0;
     virtual void set_buffer_scale(int32_t scale) = 0;
@@ -722,7 +722,7 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void set_cursor(uint32_t serial, std::experimental::optional<struct wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) = 0;
+    virtual void set_cursor(uint32_t serial, std::optional<struct wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) = 0;
 };
 
 class Keyboard : public Resource

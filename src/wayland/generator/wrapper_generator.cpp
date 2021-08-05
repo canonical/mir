@@ -46,7 +46,7 @@ Emitter include_guard_top(std::string const& macro)
 Emitter header_includes()
 {
     return Lines{
-        "#include <experimental/optional>",
+        "#include <optional>",
         empty_line,
         "#include \"mir/fd.h\"",
         "#include <wayland-server-core.h>",

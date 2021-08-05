@@ -113,7 +113,7 @@ private:
     /// Should only be called on the Wayland thread
     /// @{
     void wl_surface_destroyed() override;
-    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
+    auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
     /// @}
 
     /// Creates a pending spec if needed and returns a reference
@@ -122,7 +122,7 @@ private:
 
     /// Clears the pending spec and returns what it was
     auto consume_pending_spec(
-        std::lock_guard<std::mutex> const&) -> std::experimental::optional<std::unique_ptr<shell::SurfaceSpecification>>;
+        std::lock_guard<std::mutex> const&) -> std::optional<std::unique_ptr<shell::SurfaceSpecification>>;
 
     /// Updates the pending spec
     void is_transient_for(xcb_window_t transient_for);
@@ -199,7 +199,7 @@ private:
     } cached;
 
     /// Set in set_wl_surface and cleared when a scene surface is created from it
-    std::experimental::optional<std::shared_ptr<XWaylandSurfaceObserver>> surface_observer;
+    std::optional<std::shared_ptr<XWaylandSurfaceObserver>> surface_observer;
     std::unique_ptr<shell::SurfaceSpecification> nullable_pending_spec;
     std::shared_ptr<XWaylandClientManager::Session> client_session;
     std::weak_ptr<scene::Surface> weak_scene_surface;

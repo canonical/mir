@@ -52,7 +52,7 @@ mf::XWaylandSurfaceObserver::XWaylandSurfaceObserver(
 mf::XWaylandSurfaceObserver::~XWaylandSurfaceObserver()
 {
     std::lock_guard<std::mutex> lock{input_dispatcher->mutex};
-    input_dispatcher->dispatcher = std::experimental::nullopt;
+    input_dispatcher->dispatcher = std::nullopt;
 }
 
 void mf::XWaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAttrib attrib, int value)

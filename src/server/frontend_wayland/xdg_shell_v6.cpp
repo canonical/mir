@@ -84,13 +84,13 @@ public:
     void handle_state_change(MirWindowState /*new_state*/) override {};
     void handle_active_change(bool /*is_now_active*/) override {};
     void handle_resize(
-        std::experimental::optional<geometry::Point> const& new_top_left,
+        std::optional<geometry::Point> const& new_top_left,
         geometry::Size const& new_size) override;
     void handle_close_request() override;
 
 private:
-    std::experimental::optional<geom::Point> cached_top_left;
-    std::experimental::optional<geom::Size> cached_size;
+    std::optional<geom::Point> cached_top_left;
+    std::optional<geom::Size> cached_size;
 
     XdgSurfaceV6* const xdg_surface;
 };
@@ -100,7 +100,7 @@ class XdgToplevelV6 : mw::XdgToplevelV6, public WindowWlSurfaceRole
 public:
     XdgToplevelV6(wl_resource* new_resource, XdgSurfaceV6* xdg_surface, WlSurface* surface);
 
-    void set_parent(std::experimental::optional<struct wl_resource*> const& parent) override;
+    void set_parent(std::optional<struct wl_resource*> const& parent) override;
     void set_title(std::string const& title) override;
     void set_app_id(std::string const& app_id) override;
     void show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y) override;
@@ -110,15 +110,16 @@ public:
     void set_min_size(int32_t width, int32_t height) override;
     void set_maximized() override;
     void unset_maximized() override;
-    void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output) override;
+    void set_fullscreen(std::optional<struct wl_resource*> const& output) override;
     void unset_fullscreen() override;
     void set_minimized() override;
 
     void handle_commit() override {};
     void handle_state_change(MirWindowState /*new_state*/) override;
     void handle_active_change(bool /*is_now_active*/) override;
-    void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
-                       geometry::Size const& new_size) override;
+    void handle_resize(
+        std::optional<geometry::Point> const& new_top_left,
+        geometry::Size const& new_size) override;
     void handle_close_request() override;
 
 private:
@@ -291,7 +292,7 @@ mf::XdgPopupV6::XdgPopupV6(
                                         wl_resource_get_user_data(positioner))));
 
     auto const& parent_role = parent_surface->window_role();
-    auto parent_scene_surface = parent_role ? parent_role.value().scene_surface() : std::experimental::nullopt;
+    auto parent_scene_surface = parent_role ? parent_role.value().scene_surface() : std::nullopt;
 
     specification->type = mir_window_type_gloss;
     specification->placement_hints = mir_placement_hints_slide_any;
@@ -309,8 +310,9 @@ void mf::XdgPopupV6::grab(struct wl_resource* seat, uint32_t serial)
     set_type(mir_window_type_menu);
 }
 
-void mf::XdgPopupV6::handle_resize(const std::experimental::optional<geometry::Point>& new_top_left,
-                                   const geometry::Size& new_size)
+void mf::XdgPopupV6::handle_resize(
+    std::optional<geometry::Point> const& new_top_left,
+    geometry::Size const& new_size)
 {
     bool const needs_configure = (new_top_left != cached_top_left) || (new_size != cached_size);
 
@@ -354,7 +356,7 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_resource* new_resource, XdgSurfaceV6*
     xdg_surface->send_configure();
 }
 
-void mf::XdgToplevelV6::set_parent(std::experimental::optional<struct wl_resource*> const& parent)
+void mf::XdgToplevelV6::set_parent(std::optional<struct wl_resource*> const& parent)
 {
     if (parent && parent.value())
     {
@@ -453,7 +455,7 @@ void mf::XdgToplevelV6::unset_maximized()
     remove_state_now(mir_window_state_maximized);
 }
 
-void mf::XdgToplevelV6::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
+void mf::XdgToplevelV6::set_fullscreen(std::optional<struct wl_resource*> const& output)
 {
     WindowWlSurfaceRole::set_fullscreen(output);
 }
@@ -480,8 +482,9 @@ void mf::XdgToplevelV6::handle_active_change(bool /*is_now_active*/)
     send_toplevel_configure();
 }
 
-void mf::XdgToplevelV6::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
-                       geometry::Size const& /*new_size*/)
+void mf::XdgToplevelV6::handle_resize(
+    std::optional<geometry::Point> const& /*new_top_left*/,
+    geometry::Size const& /*new_size*/)
 {
     send_toplevel_configure();
 }

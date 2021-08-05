@@ -77,11 +77,11 @@ struct WlSurfaceState
     // NOTE: buffer can be both nullopt and nullptr (I know, sounds dumb, but bare with me)
     // if it's nullopt, there is not a new buffer and no value should be copied to current state
     // if it's nullptr, there is a new buffer and it is a null buffer, which should replace the current buffer
-    std::experimental::optional<wl_resource*> buffer;
+    std::optional<wl_resource*> buffer;
 
-    std::experimental::optional<int> scale;
-    std::experimental::optional<geometry::Displacement> offset;
-    std::experimental::optional<std::experimental::optional<std::vector<geometry::Rectangle>>> input_shape;
+    std::optional<int> scale;
+    std::optional<geometry::Displacement> offset;
+    std::optional<std::optional<std::vector<geometry::Rectangle>>> input_shape;
     std::vector<wayland::Weak<Callback>> frame_callbacks;
 
 private:
@@ -96,7 +96,7 @@ class NullWlSurfaceRole : public WlSurfaceRole
 {
 public:
     NullWlSurfaceRole(WlSurface* surface);
-    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
+    auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
     void refresh_surface_data_now() override;
     void commit(WlSurfaceState const& state) override;
     void surface_destroyed() override;
@@ -117,15 +117,15 @@ public:
 
     geometry::Displacement offset() const { return offset_; }
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
-    std::experimental::optional<geometry::Size> buffer_size() const { return buffer_size_; }
+    std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
     bool synchronized() const;
-    auto subsurface_at(geometry::Point point) -> std::experimental::optional<WlSurface*>;
+    auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
     wl_resource* raw_resource() const { return resource; }
-    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>;
+    auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;
 
     void set_role(WlSurfaceRole* role_);
     void clear_role();
-    void set_pending_offset(std::experimental::optional<geometry::Displacement> const& offset);
+    void set_pending_offset(std::optional<geometry::Displacement> const& offset);
     void add_subsurface(WlSubsurface* child);
     void remove_subsurface(WlSubsurface* child);
     void refresh_surface_data_now();
@@ -152,17 +152,17 @@ private:
 
     WlSurfaceState pending;
     geometry::Displacement offset_;
-    std::experimental::optional<geometry::Size> buffer_size_;
+    std::optional<geometry::Size> buffer_size_;
     std::vector<wayland::Weak<WlSurfaceState::Callback>> frame_callbacks;
-    std::experimental::optional<std::vector<mir::geometry::Rectangle>> input_shape;
+    std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
 
     void send_frame_callbacks();
 
-    void attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y) override;
+    void attach(std::optional<wl_resource*> const& buffer, int32_t x, int32_t y) override;
     void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void frame(wl_resource* callback) override;
-    void set_opaque_region(std::experimental::optional<wl_resource*> const& region) override;
-    void set_input_region(std::experimental::optional<wl_resource*> const& region) override;
+    void set_opaque_region(std::optional<wl_resource*> const& region) override;
+    void set_input_region(std::optional<wl_resource*> const& region) override;
     void commit() override;
     void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void set_buffer_transform(int32_t transform) override;
