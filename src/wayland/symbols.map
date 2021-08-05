@@ -1,4 +1,4 @@
-MIRWAYLAND_2.0 {
+MIRWAYLAND_2.5 {
 global:
   extern "C++" {
     mir::wayland::Buffer::*;
@@ -329,13 +329,7 @@ global:
     virtual?thunk?to?mir::wayland::XdgToplevelV6::?XdgToplevelV6*;
     virtual?thunk?to?mir::wayland::XdgToplevel::?XdgToplevel*;
     virtual?thunk?to?mir::wayland::XdgWmBase::?XdgWmBase*;
-  };
-  local: *;
-};
 
-MIRWAYLAND_2.1 {
-global:
-  extern "C++" {
     mir::wayland::ForeignToplevelManagerV1::*;
     non-virtual?thunk?to?mir::wayland::ForeignToplevelManagerV1::*;
     virtual?thunk?to?mir::wayland::ForeignToplevelManagerV1::?ForeignToplevelManagerV1*;
@@ -360,12 +354,7 @@ global:
     mir::wayland::ProtocolError::resource*;
     typeinfo?for?mir::wayland::ProtocolError;
     vtable?for?mir::wayland::ProtocolError;
-  };
-} MIRWAYLAND_2.0;
 
-MIRWAYLAND_2.2.1 {
-global:
-  extern "C++" {
     mir::wayland::PointerConstraintsV1::*;
     non-virtual?thunk?to?mir::wayland::PointerConstraintsV1::*;
     typeinfo?for?mir::wayland::PointerConstraintsV1;
@@ -399,12 +388,7 @@ global:
     typeinfo?for?mir::wayland::RelativePointerV1;
     vtable?for?mir::wayland::RelativePointerV1;
     virtual?thunk?to?mir::wayland::RelativePointerV1::?RelativePointerV1*;
-  };
-} MIRWAYLAND_2.1;
 
-MIRWAYLAND_2.5 {
-global:
-  extern "C++" {
     mir::wayland::VirtualKeyboardManagerV1::*;
     non-virtual?thunk?to?mir::wayland::VirtualKeyboardManagerV1::*;
     typeinfo?for?mir::wayland::VirtualKeyboardManagerV1;
@@ -419,4 +403,5 @@ global:
     vtable?for?mir::wayland::VirtualKeyboardV1;
     virtual?thunk?to?mir::wayland::VirtualKeyboardV1::?VirtualKeyboardV1*;
   };
-} MIRWAYLAND_2.2.1;
+  local: *;
+};
