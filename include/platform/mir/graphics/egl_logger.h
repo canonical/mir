@@ -31,13 +31,11 @@ class Logger;
 namespace graphics
 {
 /**
- * Install a EGL_KHR_debug callback that prints messages using \p logger
+ * Install a EGL_KHR_debug callback that prints messages to the Mir log
  *
  * This will override any previous EGL_KHR_debug callback set; it does not attempt to stack callbacks.
- *
- * \param logger [in]   The logger to print to.
  */
-void initialise_egl_logger(std::shared_ptr<mir::logging::Logger> logger);
+void initialise_egl_logger();
 }
 }
 

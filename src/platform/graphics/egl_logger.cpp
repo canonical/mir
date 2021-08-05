@@ -23,6 +23,7 @@
 
 #include "mir/graphics/egl_logger.h"
 
+#define MIR_LOG_COMPONENT "EGL"
 #include "mir/log.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
@@ -31,8 +32,6 @@ namespace mg = mir::graphics;
 
 namespace
 {
-std::shared_ptr<mir::logging::Logger> egl_logger;
-
 void egl_debug_logger(
     EGLenum error,
     char const* command,
@@ -58,9 +57,7 @@ void egl_debug_logger(
                 case EGL_DEBUG_MSG_CRITICAL_KHR:
                 return mir::logging::Severity::critical;
                 default:
-                egl_logger->log(
-                    "EGL",
-                    mir::logging::Severity::error,
+                mir::log_error(
                     "Unexpected EGL log level encountered: %i. This is a Mir programming error.",
                     egl_severity);
                 // Shrug. Let's pick error?
@@ -68,9 +65,9 @@ void egl_debug_logger(
             }
         }(message_type);
 
-    egl_logger->log(
-        "EGL",
+    mir::log(
         severity,
+        MIR_LOG_COMPONENT,
         "[%s] on [%s]: %s (%s): %s",
         thread_id,
         object_id,
@@ -81,9 +78,8 @@ void egl_debug_logger(
 
 }
 
-void mg::initialise_egl_logger(std::shared_ptr<mir::logging::Logger> logger)
+void mg::initialise_egl_logger()
 {
-    egl_logger = std::move(logger);
     if (auto debug_khr = mg::EGLExtensions::DebugKHR::maybe_debug_khr())
     {
         EGLAttrib enable_all_logging[] = {
@@ -94,16 +90,10 @@ void mg::initialise_egl_logger(std::shared_ptr<mir::logging::Logger> logger)
             EGL_NONE
         };
         debug_khr->eglDebugMessageControlKHR(&egl_debug_logger, enable_all_logging);
-        egl_logger->log(
-            "EGL",
-            mir::logging::Severity::informational,
-            "EGL_KHR_debug logging enabled at maximum verbosity");
+        mir::log_info("EGL_KHR_debug logging enabled at maximum verbosity");
     }
     else
     {
-        egl_logger->log(
-            "EGL",
-            mir::logging::Severity::informational,
-            "No EGL_KHR_debug support detected");
+        mir::log_warning("Debug logging requested, but no EGL_KHR_debug support detected");
     }
 }

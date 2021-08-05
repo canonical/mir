@@ -30,8 +30,6 @@ namespace mir
 class EmergencyCleanupRegistry;
 class ConsoleServices;
 
-namespace logging { class Logger; }
-
 namespace frontend
 {
 class Surface;
@@ -124,13 +122,11 @@ typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatf
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const& logger);
+    std::shared_ptr<mir::graphics::DisplayReport> const& report);
 
 typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderPlatform)(
     mir::options::Option const& options,
-    mir::EmergencyCleanupRegistry& emergency_cleanup_registry,
-    std::shared_ptr<mir::logging::Logger> const& logger);
+    mir::EmergencyCleanupRegistry& emergency_cleanup_registry);
 
 typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
@@ -170,13 +166,11 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const& logger);
+    std::shared_ptr<mir::graphics::DisplayReport> const& report);
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
     mir::options::Option const& options,
-    mir::EmergencyCleanupRegistry& emergency_cleanup_registry,
-    std::shared_ptr<mir::logging::Logger> const& logger);
+    mir::EmergencyCleanupRegistry& emergency_cleanup_registry);
 
 /**
  * Function prototype used to add platform specific options to the platform-independent server options.

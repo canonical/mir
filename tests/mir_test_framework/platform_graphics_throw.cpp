@@ -53,8 +53,8 @@ public:
         auto create_stub_render_platform = stub_platform_library.load_function<mg::CreateRenderPlatform>("create_rendering_platform");
 
         mtd::NullEmergencyCleanup null_cleanup;
-        stub_render_platform = create_stub_render_platform(mo::ProgramOption{}, null_cleanup, nullptr);
-        stub_display_platform = create_stub_display_platform(nullptr, nullptr, nullptr, nullptr, nullptr);
+        stub_render_platform = create_stub_render_platform(mo::ProgramOption{}, null_cleanup);
+        stub_display_platform = create_stub_display_platform(nullptr, nullptr, nullptr, nullptr);
     }
 
     mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator>
@@ -147,8 +147,7 @@ void add_graphics_platform_options(boost::program_options::options_description&)
 
 mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
     mo::Option const&,
-    mir::EmergencyCleanupRegistry&,
-    std::shared_ptr<mir::logging::Logger> const&)
+    mir::EmergencyCleanupRegistry&)
 {
     mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
     return mir::make_module_ptr<ExceptionThrowingPlatform>();
@@ -158,8 +157,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const&,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const&,
-    std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mir::logging::Logger> const&)
+    std::shared_ptr<mg::DisplayReport> const&)
 {
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
     return mir::make_module_ptr<ExceptionThrowingPlatform>();
