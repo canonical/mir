@@ -24,11 +24,19 @@ struct wl_display;
 
 namespace mir
 {
+class Executor;
+namespace scene
+{
+class TextInputHub;
+}
 namespace frontend
 {
 class InputMethodManagerV2Global;
 
-auto create_input_method_manager_v2(wl_display* display) -> std::shared_ptr<InputMethodManagerV2Global>;
+auto create_input_method_manager_v2(
+    wl_display* display,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<scene::TextInputHub> const& text_input_hub) -> std::shared_ptr<InputMethodManagerV2Global>;
 }
 }
 
