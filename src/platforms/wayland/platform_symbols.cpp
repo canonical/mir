@@ -45,8 +45,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const& /*console*/,
-    std::shared_ptr<mg::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const&)
+    std::shared_ptr<mg::DisplayReport> const& report)
 {
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
     return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report);
@@ -54,8 +53,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 
 auto create_rendering_platform(
     mo::Option const&,
-    mir::EmergencyCleanupRegistry&,
-    std::shared_ptr<mir::logging::Logger> const&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
+    mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
     mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
     return mir::make_module_ptr<mgw::RenderingPlatform>();

@@ -178,8 +178,7 @@ auto test_platform_construction(mir::SharedLibrary const& dso, MinimalServerEnvi
             env.options(),
             env.emergency_cleanup_registry(),
             env.console_services(),
-            env.display_report(),
-            env.logger());
+            env.display_report());
 
         std::cout << "Successfully constructed DisplayPlatform" << std::endl;
 

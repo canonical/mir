@@ -214,8 +214,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                         the_options(),
                         the_emergency_cleanup(),
                         the_console_services(),
-                        the_display_report(),
-                        the_logger()));
+                        the_display_report()));
                 // Add this module to the list searched by the input stack later
                 // TODO: Come up with a more principled solution for combined input/rendering/output platforms
                 platform_libraries.push_back(platform);
@@ -305,8 +304,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 rendering_platforms.push_back(
                     create_rendering_platform(
                         *the_options(),
-                        *the_emergency_cleanup(),
-                        the_logger()));
+                        *the_emergency_cleanup()));
                 // Add this module to the list searched by the input stack later
                 // TODO: Come up with a more principled solution for combined input/rendering/output platforms
                 platform_libraries.push_back(platform);

@@ -46,8 +46,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const&,
-    std::shared_ptr<mg::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const& logger)
+    std::shared_ptr<mg::DisplayReport> const& report)
 {
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
     auto const x11_resources = mx::X11Resources::instance();
@@ -56,7 +55,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 
     if (options->is_set(mir::options::debug_opt))
     {
-        mg::initialise_egl_logger(logger);
+        mg::initialise_egl_logger();
     }
 
     auto output_sizes = mgx::Platform::parse_output_sizes(options->get<std::string>(x11_displays_option_name));
@@ -70,8 +69,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 
 auto create_rendering_platform(
     mo::Option const&,
-    mir::EmergencyCleanupRegistry&,
-    std::shared_ptr<mir::logging::Logger> const&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
+    mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
     mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
