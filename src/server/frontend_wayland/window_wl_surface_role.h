@@ -124,7 +124,7 @@ protected:
     void surface_destroyed() override;
 
 private:
-    WlSurface* const surface;
+    wayland::Weak<WlSurface> const surface;
     wayland::Weak<WlClient> const weak_client;
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<scene::Session> const session;

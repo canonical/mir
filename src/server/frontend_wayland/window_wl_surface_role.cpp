@@ -86,7 +86,10 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
 mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
 {
     mark_destroyed();
-    surface->clear_role();
+    if (surface)
+    {
+        surface.value().clear_role();
+    }
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         shell->destroy_surface(session, scene_surface);
@@ -107,7 +110,10 @@ void mf::WindowWlSurfaceRole::populate_spec_with_surface_data(shell::SurfaceSpec
 {
     spec.streams = std::vector<shell::StreamSpecification>();
     spec.input_shape = std::vector<geom::Rectangle>();
-    surface->populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+    if (surface)
+    {
+        surface.value().populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+    }
 }
 
 void mf::WindowWlSurfaceRole::refresh_surface_data_now()
@@ -139,7 +145,10 @@ void mf::WindowWlSurfaceRole::apply_spec(mir::shell::SurfaceSpecification const&
 
 void mf::WindowWlSurfaceRole::set_pending_offset(std::optional<geom::Displacement> const& offset)
 {
-    surface->set_pending_offset(offset);
+    if (surface)
+    {
+        surface.value().set_pending_offset(offset);
+    }
 }
 
 void mf::WindowWlSurfaceRole::set_pending_width(std::optional<geometry::Width> const& width)
@@ -352,12 +361,19 @@ auto mf::WindowWlSurfaceRole::pending_size() const -> geom::Size
 auto mf::WindowWlSurfaceRole::current_size() const -> geom::Size
 {
     auto size = committed_size.value_or(geom::Size{640, 480});
-    if (surface->buffer_size())
+    if ((!committed_width_set_explicitly || !committed_height_set_explicitly) && surface)
     {
-        if (!committed_width_set_explicitly)
-            size.width = surface->buffer_size().value().width;
-        if (!committed_height_set_explicitly)
-            size.height = surface->buffer_size().value().height;
+        if (auto const buffer_size = surface.value().buffer_size())
+        {
+            if (!committed_width_set_explicitly)
+            {
+                size.width = buffer_size->width;
+            }
+            if (!committed_height_set_explicitly)
+            {
+                size.height = buffer_size->height;
+            }
+        }
     }
     return size;
 }
@@ -387,7 +403,10 @@ auto mf::WindowWlSurfaceRole::latest_timestamp() const -> std::chrono::nanosecon
 
 void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 {
-    surface->commit(state);
+    if (surface)
+    {
+        surface.value().commit(state);
+    }
 
     handle_commit();
 
@@ -397,7 +416,7 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         bool const is_mapped = scene_surface->visible();
-        bool const should_be_mapped = static_cast<bool>(surface->buffer_size());
+        bool const should_be_mapped = surface && static_cast<bool>(surface.value().buffer_size());
         if (!is_mapped && should_be_mapped && scene_surface->state() == mir_window_state_hidden)
         {
             spec().state = mir_window_state_restored;
@@ -449,10 +468,11 @@ void mf::WindowWlSurfaceRole::surface_destroyed()
 {
     if (weak_client)
     {
-        // "When a client wants to destroy a wl_surface, they must destroy this 'role object' wl_surface"
+        // "When a client wants to destroy a wl_surface, they must destroy this 'role object' before the wl_surface"
         // NOTE: the wl_shell_surface specification seems contradictory, so this method is overridden in it's implementation
         BOOST_THROW_EXCEPTION(std::runtime_error{
-            "wl_surface@" + std::to_string(wl_resource_get_id(surface->resource)) +
+            "wl_surface@" +
+            (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?") +
             " destroyed before associated role"});
     }
     else
@@ -473,13 +493,13 @@ mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
 
 void mf::WindowWlSurfaceRole::create_scene_surface()
 {
-    if (weak_scene_surface.lock())
+    if (weak_scene_surface.lock() || !surface)
         return;
 
     params->size = pending_size();
     params->streams = std::vector<shell::StreamSpecification>{};
     params->input_shape = std::vector<geom::Rectangle>{};
-    surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
+    surface.value().populate_surface_data(params->streams.value(), params->input_shape.value(), {});
 
     auto const scene_surface = shell->create_surface(session, *params, observer);
     weak_scene_surface = scene_surface;
@@ -508,7 +528,7 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
                     weak_client.value().raw_client(),
                     [&](wl_resource* resource)
                     {
-                        surface->send_enter_event(resource);
+                        surface.value().send_enter_event(resource);
                     });
             }
         });
