@@ -70,10 +70,12 @@ public:
     void register_interest(std::weak_ptr<TextInputStateObserver> const& observer) override
     {
         multiplexer.register_interest(observer);
+        send_initial_state(observer);
     }
     void register_interest(std::weak_ptr<TextInputStateObserver> const& observer, Executor& executor) override
     {
         multiplexer.register_interest(observer, executor);
+        send_initial_state(observer);
     }
     void unregister_interest(TextInputStateObserver const& observer) override
     {
@@ -84,9 +86,12 @@ public:
 private:
     TextInputStateObserverMultiplexer multiplexer;
 
+    void send_initial_state(std::weak_ptr<TextInputStateObserver> const& observer);
+
     std::mutex mutex;
     std::shared_ptr<TextInputChangeHandler> active_handler;
     TextInputStateSerial last_serial{0};
+    std::optional<TextInputState> cached_state;
 };
 }
 }

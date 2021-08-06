@@ -143,7 +143,8 @@ private:
     TextInputChangeHandler& operator=(TextInputChangeHandler const&) = delete;
 };
 
-/// Interface allowing for input methods to get state from and send text input to clients
+/// Interface allowing for input methods to get state from and send text input to clients. When a new observer is
+/// registered, it is immediately given the initial state on the current thread.
 class TextInputHub : public ObserverRegistrar<TextInputStateObserver>
 {
 public:

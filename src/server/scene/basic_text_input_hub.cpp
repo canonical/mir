@@ -31,6 +31,7 @@ auto ms::BasicTextInputHub::set_handler_state(
         new_input_field = true;
         active_handler = handler;
     }
+    cached_state = state;
     last_serial = TextInputStateSerial{last_serial.as_value() + 1};
     auto const serial = last_serial;
     lock.unlock();
@@ -46,6 +47,7 @@ void ms::BasicTextInputHub::deactivate_handler(std::shared_ptr<TextInputChangeHa
         return;
     }
     active_handler = {};
+    cached_state = std::nullopt;
     lock.unlock();
     multiplexer.deactivated();
 }
@@ -58,5 +60,24 @@ void ms::BasicTextInputHub::send_change(TextInputChange const& change)
     if (local_handler)
     {
         local_handler->change(change);
+    }
+}
+
+void ms::BasicTextInputHub::send_initial_state(std::weak_ptr<TextInputStateObserver> const& observer)
+{
+    std::unique_lock<std::mutex> lock{mutex};
+    auto const state = cached_state;
+    auto const serial = last_serial;
+    lock.unlock();
+    if (auto const target = observer.lock())
+    {
+        if (state)
+        {
+            target->activated(serial, true, *state);
+        }
+        else
+        {
+            target->deactivated();
+        }
     }
 }
