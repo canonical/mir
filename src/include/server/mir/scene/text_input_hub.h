@@ -86,7 +86,7 @@ inline auto operator&(TextInputContentHint a, TextInputContentHint b) -> TextInp
     return static_cast<TextInputContentHint>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
 }
 
-/// TODO: document (see text-input-unstable-v3.xml)
+/// See text-input-unstable-v3.xml for details
 struct TextInputState
 {
     std::optional<std::string> surrounding_text;
@@ -97,7 +97,7 @@ struct TextInputState
     std::optional<TextInputContentPurpose> content_purpose;
 };
 
-/// TODO: document (see text-input-unstable-v3.xml)
+/// See text-input-unstable-v3.xml for details
 struct TextInputChange
 {
     TextInputChange(TextInputStateSerial serial)

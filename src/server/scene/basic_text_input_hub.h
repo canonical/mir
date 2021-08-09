@@ -90,8 +90,8 @@ private:
 
     std::mutex mutex;
     std::shared_ptr<TextInputChangeHandler> active_handler;
-    TextInputStateSerial last_serial{0};
-    std::optional<TextInputState> cached_state;
+    TextInputStateSerial current_serial{0};
+    std::optional<TextInputState> current_state;
 };
 }
 }
