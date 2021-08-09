@@ -19,6 +19,7 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_timeout_application_not_responding_detector.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_basic_clipboard.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_state_tracker.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_basic_text_input_hub.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
