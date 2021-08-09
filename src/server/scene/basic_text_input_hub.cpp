@@ -52,14 +52,14 @@ void ms::BasicTextInputHub::deactivate_handler(std::shared_ptr<TextInputChangeHa
     multiplexer.deactivated();
 }
 
-void ms::BasicTextInputHub::send_change(TextInputChange const& change)
+void ms::BasicTextInputHub::text_changed(TextInputChange const& change)
 {
     std::unique_lock<std::mutex> lock{mutex};
     auto const local_handler = active_handler;
     lock.unlock();
     if (local_handler)
     {
-        local_handler->change(change);
+        local_handler->text_changed(change);
     }
 }
 

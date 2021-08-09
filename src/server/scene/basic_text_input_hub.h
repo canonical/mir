@@ -63,7 +63,7 @@ public:
 
     void deactivate_handler(std::shared_ptr<TextInputChangeHandler> const& handler) override;
 
-    void send_change(TextInputChange const& change) override;
+    void text_changed(TextInputChange const& change) override;
 
     /// Implement ObserverRegistrar<TextInputStateObserver>
     /// @{

@@ -136,7 +136,7 @@ public:
     TextInputChangeHandler() = default;
     virtual ~TextInputChangeHandler() = default;
 
-    virtual void change(TextInputChange const& change) = 0;
+    virtual void text_changed(TextInputChange const& change) = 0;
 
 private:
     TextInputChangeHandler(TextInputChangeHandler const&) = delete;
@@ -161,7 +161,7 @@ public:
     virtual void deactivate_handler(std::shared_ptr<TextInputChangeHandler> const& handler) = 0;
 
     /// Used by the input method to dispatch entered text to the handler
-    virtual void send_change(TextInputChange const& change) = 0;
+    virtual void text_changed(TextInputChange const& change) = 0;
 };
 }
 }
