@@ -403,11 +403,12 @@ auto mf::WindowWlSurfaceRole::latest_timestamp() const -> std::chrono::nanosecon
 
 void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 {
-    if (surface)
+    if (!surface)
     {
-        surface.value().commit(state);
+        return;
     }
 
+    surface.value().commit(state);
     handle_commit();
 
     auto size = pending_size();
@@ -416,7 +417,7 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         bool const is_mapped = scene_surface->visible();
-        bool const should_be_mapped = surface && static_cast<bool>(surface.value().buffer_size());
+        bool const should_be_mapped = static_cast<bool>(surface.value().buffer_size());
         if (!is_mapped && should_be_mapped && scene_surface->state() == mir_window_state_hidden)
         {
             spec().state = mir_window_state_restored;
