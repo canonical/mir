@@ -40,6 +40,7 @@
 #include "unsupported_coordinate_translator.h"
 #include "timeout_application_not_responding_detector.h"
 #include "basic_clipboard.h"
+#include "basic_text_input_hub.h"
 #include "mir/options/program_option.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/display_configuration.h"
@@ -217,6 +218,16 @@ auto mir::DefaultServerConfiguration::the_clipboard()
         []()
         {
             return std::make_shared<ms::BasicClipboard>();
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_text_input_hub()
+-> std::shared_ptr<scene::TextInputHub>
+{
+    return text_input_hub(
+        []()
+        {
+            return std::make_shared<ms::BasicTextInputHub>();
         });
 }
 

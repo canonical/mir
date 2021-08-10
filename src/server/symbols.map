@@ -932,6 +932,7 @@ MIR_SERVER_2.5 {
     VTT?for?mir::scene::ApplicationNotRespondingDetectorWrapper;
     VTT?for?mir::shell::ShellWrapper;
     VTT?for?mir::shell::SystemCompositorWindowManager;
+    mir::DefaultServerConfiguration::the_text_input_hub*;
   };
  local: *;
 };
