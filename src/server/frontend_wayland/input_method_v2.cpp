@@ -348,9 +348,12 @@ void mf::InputMethodV2::activated(
 
 void mf::InputMethodV2::deactivated()
 {
-    is_activated = false;
-    send_deactivate_event();
-    send_done_event();
+    if (is_activated)
+    {
+        is_activated = false;
+        send_deactivate_event();
+        send_done_event();
+    }
 }
 
 auto mf::InputMethodV2::find_serial(uint32_t done_event_count) const -> std::optional<ms::TextInputStateSerial>
