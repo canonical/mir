@@ -28,7 +28,6 @@
 
 #include "mir/input/input_device_observer.h"
 #include "mir/input/input_device_hub.h"
-#include "mir/input/seat.h"
 #include "mir/input/device.h"
 #include "mir/input/parameter_keymap.h"
 #include "mir/input/mir_keyboard_config.h"
@@ -284,34 +283,8 @@ void mf::WlSeat::Instance::get_keyboard(wl_resource* new_keyboard)
     auto const keyboard = new WlKeyboard{
         new_keyboard,
         seat->keymap,
-        [seat = seat->seat]()
-        {
-            std::unordered_set<uint32_t> pressed_keys;
-
-            auto const ev = seat->create_device_state();
-            auto const state_event = mir_event_get_input_device_state_event(ev.get());
-            for (
-                auto dev = 0u;
-                dev < mir_input_device_state_event_device_count(state_event);
-                ++dev)
-            {
-                for (
-                    auto idx = 0u;
-                    idx < mir_input_device_state_event_device_pressed_keys_count(state_event, dev);
-                    ++idx)
-                {
-                    pressed_keys.insert(
-                        mir_input_device_state_event_device_pressed_keys_for_index(
-                            state_event,
-                            dev,
-                            idx));
-                }
-            }
-
-            return std::vector<uint32_t>{pressed_keys.begin(), pressed_keys.end()};
-        },
-        enable_key_repeat
-    };
+        seat->seat,
+        enable_key_repeat};
 
     seat->keyboard_listeners->register_listener(client, keyboard);
     keyboard->add_destroy_listener(
