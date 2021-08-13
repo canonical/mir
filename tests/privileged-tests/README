@@ -1,2 +1,0 @@
-mir_privileged_tests are tests that, depending on system configuration, may
-require special privileges to run properly.
