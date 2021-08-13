@@ -56,7 +56,6 @@ set(UMOCK_UNIT_TEST_SOURCES test_udev_wrapper.cpp)
 set(
   UNIT_TEST_SOURCES
 
-  test_gmock_fixes.cpp
   test_recursive_read_write_mutex.cpp
   test_glib_main_loop.cpp
   shared_library_test.cpp

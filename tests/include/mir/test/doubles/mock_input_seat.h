@@ -22,7 +22,6 @@
 #include "mir/input/seat.h"
 #include "mir/input/device.h"
 #include "mir/input/input_sink.h"
-#include "mir/test/gmock_fixes.h"
 
 #include <gmock/gmock.h>
 

@@ -20,7 +20,6 @@
 #define MIR_TEST_DOUBLES_MOCK_MAIN_LOOP_H_
 
 #include "mir/main_loop.h"
-#include "mir/test/gmock_fixes.h"
 
 #include <gmock/gmock.h>
 
