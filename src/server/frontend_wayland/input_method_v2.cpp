@@ -19,7 +19,6 @@
 #include "input_method_v2.h"
 #include "input-method-unstable-v2_wrapper.h"
 #include "text-input-unstable-v3_wrapper.h"
-#include "wayland_wrapper.h"
 
 #include "mir/scene/text_input_hub.h"
 #include "mir/log.h"
@@ -213,7 +212,7 @@ private:
     /// Wayland requests
     /// @{
     void commit_string(std::string const& text) override;
-    void preedit_string(std::string const& text, int32_t cursor_begin, int32_t cursor_end) override;
+    void set_preedit_string(std::string const& text, int32_t cursor_begin, int32_t cursor_end) override;
     void delete_surrounding_text(uint32_t before_length, uint32_t after_length) override;
     void commit(uint32_t serial) override;
     void get_input_popup_surface(struct wl_resource* id, struct wl_resource* surface) override;
@@ -231,7 +230,7 @@ public:
 
 // TODO: correctly implement keyboard grab
 class InputMethodGrabKeyboard
-    : public wayland::Keyboard
+    : public wayland::InputMethodKeyboardGrabV2
 {
 public:
     InputMethodGrabKeyboard(wl_resource* resource);
@@ -380,7 +379,7 @@ void mf::InputMethodV2::commit_string(std::string const& text)
     pending_change.commit_text = text;
 }
 
-void mf::InputMethodV2::preedit_string(std::string const& text, int32_t cursor_begin, int32_t cursor_end)
+void mf::InputMethodV2::set_preedit_string(std::string const& text, int32_t cursor_begin, int32_t cursor_end)
 {
     pending_change.preedit_text = text;
     pending_change.preedit_cursor_begin = cursor_begin;
@@ -429,6 +428,6 @@ mf::InputPopupSurfaceV2::InputPopupSurfaceV2(wl_resource* resource)
 // InputMethodGrabKeyboard
 
 mf::InputMethodGrabKeyboard::InputMethodGrabKeyboard(wl_resource* resource)
-    : mw::Keyboard{resource, Version<6>()}
+    : mw::InputMethodKeyboardGrabV2{resource, Version<1>()}
 {
 }

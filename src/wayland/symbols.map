@@ -436,6 +436,12 @@ global:
     typeinfo?for?mir::wayland::InputPopupSurfaceV2;
     vtable?for?mir::wayland::InputPopupSurfaceV2;
     virtual?thunk?to?mir::wayland::InputPopupSurfaceV2::?InputPopupSurfaceV2*;
+
+    mir::wayland::InputMethodKeyboardGrabV2::*;
+    non-virtual?thunk?to?mir::wayland::InputMethodKeyboardGrabV2::*;
+    typeinfo?for?mir::wayland::InputMethodKeyboardGrabV2;
+    vtable?for?mir::wayland::InputMethodKeyboardGrabV2;
+    virtual?thunk?to?mir::wayland::InputMethodKeyboardGrabV2::?InputMethodKeyboardGrabV2*;
   };
   local: *;
 };
