@@ -596,6 +596,9 @@ bool msh::AbstractShell::handle(MirEvent const& event)
 
     case mir_input_event_type_pointer:
         return window_manager->handle_pointer_event(mir_input_event_get_pointer_event(input_event));
+
+    case mir_input_event_type_resync_keyboard:
+        return false;
     
     case mir_input_event_types:
         abort();

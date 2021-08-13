@@ -487,3 +487,10 @@ MIR_COMMON_2.5 {
   };
   local: *;
 };
+
+MIR_COMMON_2.6 {
+global:
+  extern "C++" {
+    MirResyncKeyboardEvent::MirResyncKeyboardEvent*;
+  };
+} MIR_COMMON_2.5;
