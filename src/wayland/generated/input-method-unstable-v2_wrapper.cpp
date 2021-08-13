@@ -18,9 +18,9 @@ namespace mir
 {
 namespace wayland
 {
-extern struct wl_interface const wl_keyboard_interface_data;
 extern struct wl_interface const wl_seat_interface_data;
 extern struct wl_interface const wl_surface_interface_data;
+extern struct wl_interface const zwp_input_method_keyboard_grab_v2_interface_data;
 extern struct wl_interface const zwp_input_method_manager_v2_interface_data;
 extern struct wl_interface const zwp_input_method_v2_interface_data;
 extern struct wl_interface const zwp_input_popup_surface_v2_interface_data;
@@ -63,12 +63,12 @@ struct mw::InputMethodV2::Thunks
         }
     }
 
-    static void preedit_string_thunk(struct wl_client* client, struct wl_resource* resource, char const* text, int32_t cursor_begin, int32_t cursor_end)
+    static void set_preedit_string_thunk(struct wl_client* client, struct wl_resource* resource, char const* text, int32_t cursor_begin, int32_t cursor_end)
     {
         try
         {
             auto me = static_cast<InputMethodV2*>(wl_resource_get_user_data(resource));
-            me->preedit_string(text, cursor_begin, cursor_end);
+            me->set_preedit_string(text, cursor_begin, cursor_end);
         }
         catch(ProtocolError const& err)
         {
@@ -76,7 +76,7 @@ struct mw::InputMethodV2::Thunks
         }
         catch(...)
         {
-            internal_error_processing_request(client, "InputMethodV2::preedit_string()");
+            internal_error_processing_request(client, "InputMethodV2::set_preedit_string()");
         }
     }
 
@@ -141,7 +141,7 @@ struct mw::InputMethodV2::Thunks
     static void grab_keyboard_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t keyboard)
     {
         wl_resource* keyboard_resolved{
-            wl_resource_create(client, &wl_keyboard_interface_data, wl_resource_get_version(resource), keyboard)};
+            wl_resource_create(client, &zwp_input_method_keyboard_grab_v2_interface_data, wl_resource_get_version(resource), keyboard)};
         if (keyboard_resolved == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -254,11 +254,11 @@ struct wl_interface const* mw::InputMethodV2::Thunks::get_input_popup_surface_ty
     &wl_surface_interface_data};
 
 struct wl_interface const* mw::InputMethodV2::Thunks::grab_keyboard_types[] {
-    &wl_keyboard_interface_data};
+    &zwp_input_method_keyboard_grab_v2_interface_data};
 
 struct wl_message const mw::InputMethodV2::Thunks::request_messages[] {
     {"commit_string", "s", all_null_types},
-    {"preedit_string", "sii", all_null_types},
+    {"set_preedit_string", "sii", all_null_types},
     {"delete_surrounding_text", "uu", all_null_types},
     {"commit", "u", all_null_types},
     {"get_input_popup_surface", "no", get_input_popup_surface_types},
@@ -276,7 +276,7 @@ struct wl_message const mw::InputMethodV2::Thunks::event_messages[] {
 
 void const* mw::InputMethodV2::Thunks::request_vtable[] {
     (void*)Thunks::commit_string_thunk,
-    (void*)Thunks::preedit_string_thunk,
+    (void*)Thunks::set_preedit_string_thunk,
     (void*)Thunks::delete_surrounding_text_thunk,
     (void*)Thunks::commit_thunk,
     (void*)Thunks::get_input_popup_surface_thunk,
@@ -366,6 +366,103 @@ mw::InputPopupSurfaceV2* mw::InputPopupSurfaceV2::from(struct wl_resource* resou
     if (wl_resource_instance_of(resource, &zwp_input_popup_surface_v2_interface_data, InputPopupSurfaceV2::Thunks::request_vtable))
     {
         return static_cast<InputPopupSurfaceV2*>(wl_resource_get_user_data(resource));
+    }
+    return nullptr;
+}
+
+// InputMethodKeyboardGrabV2
+
+struct mw::InputMethodKeyboardGrabV2::Thunks
+{
+    static int const supported_version;
+
+    static void release_thunk(struct wl_client* client, struct wl_resource* resource)
+    {
+        try
+        {
+            wl_resource_destroy(resource);
+        }
+        catch(ProtocolError const& err)
+        {
+            wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
+        }
+        catch(...)
+        {
+            internal_error_processing_request(client, "InputMethodKeyboardGrabV2::release()");
+        }
+    }
+
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<InputMethodKeyboardGrabV2*>(wl_resource_get_user_data(resource));
+    }
+
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
+};
+
+int const mw::InputMethodKeyboardGrabV2::Thunks::supported_version = 1;
+
+mw::InputMethodKeyboardGrabV2::InputMethodKeyboardGrabV2(struct wl_resource* resource, Version<1>)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
+{
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+mw::InputMethodKeyboardGrabV2::~InputMethodKeyboardGrabV2()
+{
+    wl_resource_set_implementation(resource, nullptr, nullptr, nullptr);
+}
+
+void mw::InputMethodKeyboardGrabV2::send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const
+{
+    int32_t fd_resolved{fd};
+    wl_resource_post_event(resource, Opcode::keymap, format, fd_resolved, size);
+}
+
+void mw::InputMethodKeyboardGrabV2::send_key_event(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const
+{
+    wl_resource_post_event(resource, Opcode::key, serial, time, key, state);
+}
+
+void mw::InputMethodKeyboardGrabV2::send_modifiers_event(uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) const
+{
+    wl_resource_post_event(resource, Opcode::modifiers, serial, mods_depressed, mods_latched, mods_locked, group);
+}
+
+void mw::InputMethodKeyboardGrabV2::send_repeat_info_event(int32_t rate, int32_t delay) const
+{
+    wl_resource_post_event(resource, Opcode::repeat_info, rate, delay);
+}
+
+bool mw::InputMethodKeyboardGrabV2::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &zwp_input_method_keyboard_grab_v2_interface_data, Thunks::request_vtable);
+}
+
+struct wl_message const mw::InputMethodKeyboardGrabV2::Thunks::request_messages[] {
+    {"release", "", all_null_types}};
+
+struct wl_message const mw::InputMethodKeyboardGrabV2::Thunks::event_messages[] {
+    {"keymap", "uhu", all_null_types},
+    {"key", "uuuu", all_null_types},
+    {"modifiers", "uuuuu", all_null_types},
+    {"repeat_info", "ii", all_null_types}};
+
+void const* mw::InputMethodKeyboardGrabV2::Thunks::request_vtable[] {
+    (void*)Thunks::release_thunk};
+
+mw::InputMethodKeyboardGrabV2* mw::InputMethodKeyboardGrabV2::from(struct wl_resource* resource)
+{
+    if (wl_resource_instance_of(resource, &zwp_input_method_keyboard_grab_v2_interface_data, InputMethodKeyboardGrabV2::Thunks::request_vtable))
+    {
+        return static_cast<InputMethodKeyboardGrabV2*>(wl_resource_get_user_data(resource));
     }
     return nullptr;
 }
@@ -525,6 +622,12 @@ struct wl_interface const zwp_input_popup_surface_v2_interface_data {
     mw::InputPopupSurfaceV2::Thunks::supported_version,
     1, mw::InputPopupSurfaceV2::Thunks::request_messages,
     1, mw::InputPopupSurfaceV2::Thunks::event_messages};
+
+struct wl_interface const zwp_input_method_keyboard_grab_v2_interface_data {
+    mw::InputMethodKeyboardGrabV2::interface_name,
+    mw::InputMethodKeyboardGrabV2::Thunks::supported_version,
+    1, mw::InputMethodKeyboardGrabV2::Thunks::request_messages,
+    4, mw::InputMethodKeyboardGrabV2::Thunks::event_messages};
 
 struct wl_interface const zwp_input_method_manager_v2_interface_data {
     mw::InputMethodManagerV2::interface_name,

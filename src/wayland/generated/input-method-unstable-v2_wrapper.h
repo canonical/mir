@@ -22,6 +22,7 @@ namespace wayland
 
 class InputMethodV2;
 class InputPopupSurfaceV2;
+class InputMethodKeyboardGrabV2;
 class InputMethodManagerV2;
 
 class InputMethodV2 : public Resource
@@ -62,7 +63,7 @@ public:
 
 private:
     virtual void commit_string(std::string const& text) = 0;
-    virtual void preedit_string(std::string const& text, int32_t cursor_begin, int32_t cursor_end) = 0;
+    virtual void set_preedit_string(std::string const& text, int32_t cursor_begin, int32_t cursor_end) = 0;
     virtual void delete_surrounding_text(uint32_t before_length, uint32_t after_length) = 0;
     virtual void commit(uint32_t serial) = 0;
     virtual void get_input_popup_surface(struct wl_resource* id, struct wl_resource* surface) = 0;
@@ -87,6 +88,39 @@ public:
     struct Opcode
     {
         static uint32_t const text_input_rectangle = 0;
+    };
+
+    struct Thunks;
+
+    static bool is_instance(wl_resource* resource);
+
+private:
+};
+
+class InputMethodKeyboardGrabV2 : public Resource
+{
+public:
+    static char const constexpr* interface_name = "zwp_input_method_keyboard_grab_v2";
+
+    static InputMethodKeyboardGrabV2* from(struct wl_resource*);
+
+    InputMethodKeyboardGrabV2(struct wl_resource* resource, Version<1>);
+    virtual ~InputMethodKeyboardGrabV2();
+
+    void send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const;
+    void send_key_event(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const;
+    void send_modifiers_event(uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) const;
+    void send_repeat_info_event(int32_t rate, int32_t delay) const;
+
+    struct wl_client* const client;
+    struct wl_resource* const resource;
+
+    struct Opcode
+    {
+        static uint32_t const keymap = 0;
+        static uint32_t const key = 1;
+        static uint32_t const modifiers = 2;
+        static uint32_t const repeat_info = 3;
     };
 
     struct Thunks;
