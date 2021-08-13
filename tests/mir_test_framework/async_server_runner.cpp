@@ -29,7 +29,6 @@
 #include <mir/thread_name.h>
 #include "mir/test/doubles/null_logger.h"
 #include <miral/set_window_management_policy.h>
-#include <mir/shell/canonical_window_manager.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -63,18 +62,6 @@ mtf::AsyncServerRunner::AsyncServerRunner() :
                 result = std::make_shared<mtd::NullLogger>();
 
             return result;
-        });
-    // TODO This is here to support tests that rely on the legacy window management code
-    // once they go, then we can set set_window_management_policy appropriately, kill this
-    // and remove msh::CanonicalWindowManager
-    server.override_the_window_manager_builder([this](msh::FocusController* focus_controller)
-        {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-            return std::make_shared<msh::CanonicalWindowManager>(
-                    focus_controller,
-                    server.the_shell_display_layout());
-#pragma GCC diagnostic pop
         });
 }
 
