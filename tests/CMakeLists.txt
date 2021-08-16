@@ -131,7 +131,6 @@ include_directories(
 option(MIR_BUILD_ACCEPTANCE_TESTS "Build acceptance tests" ON)
 option(MIR_BUILD_INTEGRATION_TESTS "Build integration tests" ON)
 option(MIR_BUILD_PERFORMANCE_TESTS "Build performance tests" ON)
-option(MIR_BUILD_PRIVILEGED_TESTS "Build privileged tests" ON)
 option(MIR_BUILD_UNIT_TESTS "Build unit tests" ON)
 option(MIR_BUILD_PLATFORM_TEST_HARNESS "Build platform test harness" ON)
 
@@ -148,10 +147,6 @@ endif (MIR_BUILD_ACCEPTANCE_TESTS)
 if (MIR_BUILD_PERFORMANCE_TESTS)
     add_subdirectory(performance-tests/)
 endif(MIR_BUILD_PERFORMANCE_TESTS)
-
-if (MIR_BUILD_PRIVILEGED_TESTS)
-    add_subdirectory(privileged-tests/)
-endif(MIR_BUILD_PRIVILEGED_TESTS)
 
 add_subdirectory(miral)
 

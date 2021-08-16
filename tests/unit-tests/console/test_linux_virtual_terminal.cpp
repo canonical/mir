@@ -29,11 +29,9 @@
 #include "mir/test/doubles/null_device_observer.h"
 #include "mir/test/doubles/simple_device_observer.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
-#include "mir/test/gmock_fixes.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "mir/test/gmock_fixes.h"
 
 #include <stdexcept>
 

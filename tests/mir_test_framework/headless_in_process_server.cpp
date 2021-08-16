@@ -19,23 +19,11 @@
 #include "mir/graphics/display.h"
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
-#include <mir/shell/canonical_window_manager.h>
 
 namespace mtf = mir_test_framework;
 namespace msh = mir::shell;
 
-mtf::HeadlessInProcessServer::HeadlessInProcessServer()
-{
-    server.override_the_window_manager_builder([this](msh::FocusController* focus_controller)
-        {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-            return std::make_shared<msh::CanonicalWindowManager>(
-                    focus_controller,
-                    server.the_shell_display_layout());
-#pragma GCC diagnostic pop
-        });
-}
+mtf::HeadlessInProcessServer::HeadlessInProcessServer() = default;
 
 void mtf::HeadlessInProcessServer::SetUp()
 {

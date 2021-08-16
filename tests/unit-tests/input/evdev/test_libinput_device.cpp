@@ -33,7 +33,6 @@
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_input_sink.h"
 #include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/gmock_fixes.h"
 #include "mir/test/fake_shared.h"
 #include "mir/udev/wrapper.h"
 #include "mir/cookie/authority.h"

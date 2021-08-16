@@ -25,7 +25,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "mir/test/gmock_fixes.h"
+
 using namespace testing;
 namespace mf = mir::frontend;
 namespace mt = mir::test;

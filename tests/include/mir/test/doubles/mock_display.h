@@ -23,7 +23,6 @@
 #include "mir/graphics/virtual_output.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/main_loop.h"
-#include "mir/test/gmock_fixes.h"
 #include <gmock/gmock.h>
 
 namespace mir
