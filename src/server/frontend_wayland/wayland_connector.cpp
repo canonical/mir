@@ -649,8 +649,6 @@ void mf::WaylandConnector::start()
             wl_display_run(d);
         },
         display.get()};
-
-    executor->spawn([this]{ seat_global->server_restart(); });
 }
 
 void mf::WaylandConnector::stop()
