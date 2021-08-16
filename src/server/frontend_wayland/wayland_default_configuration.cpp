@@ -36,6 +36,10 @@
 #include "relative_pointer_unstable_v1.h"
 #include "virtual-keyboard-unstable-v1_wrapper.h"
 #include "virtual_keyboard_v1.h"
+#include "text-input-unstable-v3_wrapper.h"
+#include "text_input_v3.h"
+#include "input-method-unstable-v2_wrapper.h"
+#include "input_method_v2.h"
 
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
@@ -128,6 +132,14 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     {
         mw::VirtualKeyboardV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
             { return mf::create_virtual_keyboard_manager_v1(ctx.display, ctx.input_device_registry); }
+    },
+    {
+        mw::TextInputV3::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
+            { return mf::create_text_input_manager_v3(ctx.display, ctx.wayland_executor, ctx.text_input_hub); }
+    },
+    {
+        mw::InputMethodV2::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
+            { return mf::create_input_method_manager_v2(ctx.display, ctx.wayland_executor, ctx.text_input_hub); }
     },
 };
 
@@ -223,7 +235,8 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::Shell::interface_name,
         mw::XdgWmBase::interface_name,
         mw::XdgShellV6::interface_name,
-        mw::XdgOutputManagerV1::interface_name};
+        mw::XdgOutputManagerV1::interface_name,
+        mw::TextInputV3::interface_name};
 }
 
 auto mf::get_supported_extensions() -> std::vector<std::string>

@@ -271,9 +271,24 @@ TEST_F(WaylandExtensions, client_sees_default_extensions)
 
     auto const available_extensions = miral::WaylandExtensions::recommended();
 
+    // Some extension names to not include the *_manager like the their globals's name does.
+    // Fix by adding a non-manager version to the available list for each interface that contains "_manager".
+    std::vector<std::string> available = *enumerator_client.interfaces;
+    std::string const to_remove = "_manager";
+    for (unsigned i = 0; i < available.size(); i++)
+    {
+        auto const pos = available[i].find(to_remove);
+        if (pos != std::string::npos)
+        {
+            auto str = available[i];
+            str.erase(pos, to_remove.size());
+            available.push_back(str);
+        }
+    }
+
     for (auto const& extension : available_extensions)
     {
-        EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(extension)));
+        EXPECT_THAT(available, Contains(Eq(extension)));
     }
 }
 

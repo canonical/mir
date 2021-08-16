@@ -402,6 +402,46 @@ global:
     typeinfo?for?mir::wayland::VirtualKeyboardV1;
     vtable?for?mir::wayland::VirtualKeyboardV1;
     virtual?thunk?to?mir::wayland::VirtualKeyboardV1::?VirtualKeyboardV1*;
+
+    mir::wayland::TextInputManagerV3::*;
+    non-virtual?thunk?to?mir::wayland::TextInputManagerV3::*;
+    typeinfo?for?mir::wayland::TextInputManagerV3;
+    vtable?for?mir::wayland::TextInputManagerV3;
+    typeinfo?for?mir::wayland::TextInputManagerV3::Global;
+    vtable?for?mir::wayland::TextInputManagerV3::Global;
+    virtual?thunk?to?mir::wayland::TextInputManagerV3::?TextInputManagerV3*;
+
+    mir::wayland::TextInputV3::*;
+    non-virtual?thunk?to?mir::wayland::TextInputV3::*;
+    typeinfo?for?mir::wayland::TextInputV3;
+    vtable?for?mir::wayland::TextInputV3;
+    virtual?thunk?to?mir::wayland::TextInputV3::?TextInputV3*;
+
+    mir::wayland::InputMethodManagerV2::*;
+    non-virtual?thunk?to?mir::wayland::InputMethodManagerV2::*;
+    typeinfo?for?mir::wayland::InputMethodManagerV2;
+    vtable?for?mir::wayland::InputMethodManagerV2;
+    typeinfo?for?mir::wayland::InputMethodManagerV2::Global;
+    vtable?for?mir::wayland::InputMethodManagerV2::Global;
+    virtual?thunk?to?mir::wayland::InputMethodManagerV2::?InputMethodManagerV2*;
+
+    mir::wayland::InputMethodV2::*;
+    non-virtual?thunk?to?mir::wayland::InputMethodV2::*;
+    typeinfo?for?mir::wayland::InputMethodV2;
+    vtable?for?mir::wayland::InputMethodV2;
+    virtual?thunk?to?mir::wayland::InputMethodV2::?InputMethodV2*;
+
+    mir::wayland::InputPopupSurfaceV2::*;
+    non-virtual?thunk?to?mir::wayland::InputPopupSurfaceV2::*;
+    typeinfo?for?mir::wayland::InputPopupSurfaceV2;
+    vtable?for?mir::wayland::InputPopupSurfaceV2;
+    virtual?thunk?to?mir::wayland::InputPopupSurfaceV2::?InputPopupSurfaceV2*;
+
+    mir::wayland::InputMethodKeyboardGrabV2::*;
+    non-virtual?thunk?to?mir::wayland::InputMethodKeyboardGrabV2::*;
+    typeinfo?for?mir::wayland::InputMethodKeyboardGrabV2;
+    vtable?for?mir::wayland::InputMethodKeyboardGrabV2;
+    virtual?thunk?to?mir::wayland::InputMethodKeyboardGrabV2::?InputMethodKeyboardGrabV2*;
   };
   local: *;
 };
