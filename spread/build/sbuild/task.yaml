@@ -54,6 +54,19 @@ execute: |
         --extra-repository="deb http://ppa.launchpad.net/mir-team/dev/ubuntu ${RELEASE} main"
         --extra-repository-key=${SPREAD_PATH}/${SPREAD_TASK}/mir-team.asc
       )
+
+      # if not cross-building
+      if [ "${DEB_BUILD_ARCH}" = "${DEB_HOST_ARCH}" ]; then
+        # Add mir-smoke-test-runner dependencies
+        apt-get install \
+          --yes \
+          --no-install-recommends \
+          xvfb \
+          xauth \
+          xwayland \
+          dmz-cursor-theme \
+          glmark2-es2-wayland
+      fi
     fi
 
     # Cross building

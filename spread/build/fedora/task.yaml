@@ -43,6 +43,15 @@ execute: |
         systemtap-sdt-devel \
         libdrm-devel
 
+    ## Would enables mir_performance_tests and mir-smoke-test-runner tests - but they fail weirdly
+    # dnf install --assumeyes --allowerasing \
+    #    xorg-x11-server-Xvfb \
+    #    xorg-x11-xauth \
+    #    xorg-x11-server-Xwayland \
+    #    glmark2 \
+    #    dmz-cursor-themes \
+    #    mesa-dri-drivers
+
     BUILD_DIR=$(mktemp --directory)
     cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_ENABLE_WLCS_TESTS=OFF
     # Run cmake again to pick up wlcs?!?!?!?!
