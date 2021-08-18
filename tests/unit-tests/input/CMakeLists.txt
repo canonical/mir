@@ -14,6 +14,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_input_dispatcher.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_seat_input_device_tracker.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_key_repeat_dispatcher.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_keyboard_resync_dispatcher.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_validator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_keymap.cpp
 )

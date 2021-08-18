@@ -187,6 +187,15 @@ MATCHER_P(KeyOfScanCode, code, "")
     return true;
 }
 
+MATCHER(KeybaordResyncEvent, "")
+{
+    if (mir_event_get_type(arg.get()) != mir_event_type_input)
+    {
+        return false;
+    }
+    return mir_input_event_get_type(mir_event_get_input_event(arg.get())) == mir_input_event_type_keyboard_resync;
+}
+
 MATCHER_P(MirKeyboardEventMatches, event, "")
 {
     auto expected = maybe_key_event(to_address(event));

@@ -49,6 +49,7 @@ typedef enum {
     mir_input_event_type_key = 0,
     mir_input_event_type_touch = 1,
     mir_input_event_type_pointer = 2,
+    mir_input_event_type_keyboard_resync = 3,
 
     mir_input_event_types
 } MirInputEventType;
