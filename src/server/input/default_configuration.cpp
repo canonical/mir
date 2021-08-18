@@ -19,7 +19,7 @@
 #include "mir/default_server_configuration.h"
 
 #include "key_repeat_dispatcher.h"
-#include "resync_keyboard_dispatcher.h"
+#include "keyboard_resync_dispatcher.h"
 #include "event_filter_chain_dispatcher.h"
 #include "config_changer.h"
 #include "cursor_controller.h"
@@ -141,11 +141,11 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
             // lp:1675357: Disable generation of key repeat events on nested servers
             auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
 
-            auto const resync_keyboard_dispatcher =
-                std::make_shared<mi::ResyncKeyboardDispatcher>(the_event_filter_chain_dispatcher());
+            auto const keyboard_resync_dispatcher =
+                std::make_shared<mi::KeyboardResyncDispatcher>(the_event_filter_chain_dispatcher());
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
-                resync_keyboard_dispatcher, the_main_loop(), the_cookie_authority(),
+                keyboard_resync_dispatcher, the_main_loop(), the_cookie_authority(),
                 enable_repeat, key_repeat_timeout, key_repeat_delay, false);
         });
 }

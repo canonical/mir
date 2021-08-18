@@ -19,7 +19,7 @@ set(EVENT_SOURCES
   event.cpp
   event_builders.cpp
   keyboard_event.cpp
-  resync_keyboard_event.cpp
+  keyboard_resync_event.cpp
   touch_event.cpp
   pointer_event.cpp
   prompt_session_event.cpp

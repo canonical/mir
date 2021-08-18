@@ -16,8 +16,8 @@
  * Authored by: William Wold <william.wold@canonical.com>
  */
 
-#ifndef MIR_INPUT_RESYNC_KEYBOARD_DISPATCHER_H_
-#define MIR_INPUT_RESYNC_KEYBOARD_DISPATCHER_H_
+#ifndef MIR_INPUT_KEYBOARD_RESYNC_DISPATCHER_H_
+#define MIR_INPUT_KEYBOARD_RESYNC_DISPATCHER_H_
 
 #include "mir/input/input_dispatcher.h"
 
@@ -29,10 +29,10 @@ namespace input
 {
 class Seat;
 
-class ResyncKeyboardDispatcher : public InputDispatcher
+class KeyboardResyncDispatcher : public InputDispatcher
 {
 public:
-    ResyncKeyboardDispatcher(std::shared_ptr<InputDispatcher> const& next_dispatcher);
+    KeyboardResyncDispatcher(std::shared_ptr<InputDispatcher> const& next_dispatcher);
 
     /// InputDispatcher overrides
     /// @{
@@ -48,4 +48,4 @@ private:
 }
 }
 
-#endif // MIR_INPUT_RESYNC_KEYBOARD_DISPATCHER_H_
+#endif // MIR_INPUT_KEYBOARD_RESYNC_DISPATCHER_H_

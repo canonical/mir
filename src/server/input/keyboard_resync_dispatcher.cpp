@@ -16,33 +16,33 @@
  * Authored by: William Wold <william.wold@canonical.com>
  */
 
-#include "resync_keyboard_dispatcher.h"
+#include "keyboard_resync_dispatcher.h"
 
 #include "mir/input/seat.h"
-#include "mir/events/resync_keyboard_event.h"
+#include "mir/events/keyboard_resync_event.h"
 
 #include <unordered_set>
 
 namespace mi = mir::input;
 
-mi::ResyncKeyboardDispatcher::ResyncKeyboardDispatcher(std::shared_ptr<InputDispatcher> const& next_dispatcher)
+mi::KeyboardResyncDispatcher::KeyboardResyncDispatcher(std::shared_ptr<InputDispatcher> const& next_dispatcher)
     : next_dispatcher{next_dispatcher}
 {
 }
 
-bool mi::ResyncKeyboardDispatcher::dispatch(std::shared_ptr<MirEvent const> const& event)
+bool mi::KeyboardResyncDispatcher::dispatch(std::shared_ptr<MirEvent const> const& event)
 {
     return next_dispatcher->dispatch(event);
 }
 
-void mi::ResyncKeyboardDispatcher::start()
+void mi::KeyboardResyncDispatcher::start()
 {
     next_dispatcher->start();
-    auto const ev = std::make_shared<MirResyncKeyboardEvent>();
+    auto const ev = std::make_shared<MirKeyboardResyncEvent>();
     next_dispatcher->dispatch(ev);
 }
 
-void mi::ResyncKeyboardDispatcher::stop()
+void mi::KeyboardResyncDispatcher::stop()
 {
     next_dispatcher->stop();
 }

@@ -16,7 +16,7 @@ set(
   input_modifier_utils.cpp
   input_probe.cpp
   key_repeat_dispatcher.cpp
-  resync_keyboard_dispatcher.cpp
+  keyboard_resync_dispatcher.cpp
   null_input_dispatcher.cpp
   seat_input_device_tracker.cpp
   surface_input_dispatcher.cpp

@@ -644,7 +644,7 @@ bool mi::SurfaceInputDispatcher::dispatch(std::shared_ptr<MirEvent const> const&
     switch (mir_input_event_get_type(iev))
     {
     case mir_input_event_type_key:
-    case mir_input_event_type_resync_keyboard:
+    case mir_input_event_type_keyboard_resync:
         return dispatch_key(event.get());
     case mir_input_event_type_touch:
         return dispatch_touch(id, event.get());

@@ -327,7 +327,7 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPT
             }
             break;
         }
-        case mir_input_event_type_resync_keyboard:
+        case mir_input_event_type_keyboard_resync:
             return false;
         case mir_input_event_types:
             abort();

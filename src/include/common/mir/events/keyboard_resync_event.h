@@ -16,15 +16,20 @@
  * Authored by: William Wold <william.wold@canonical.com>
  */
 
+#ifndef MIR_COMMON_KEYBOARD_RESYNC_EVENT_H_
+#define MIR_COMMON_KEYBOARD_RESYNC_EVENT_H_
+
+#include <vector>
+
 #include "mir/events/input_event.h"
-#include "mir/events/resync_keyboard_event.h"
 
-MirResyncKeyboardEvent::MirResyncKeyboardEvent() :
-    MirInputEvent(mir_input_event_type_resync_keyboard)
+/// Sent when the server restarts and the keyboard needs to be resynced
+struct MirKeyboardResyncEvent : MirInputEvent
 {
-}
+    MirKeyboardResyncEvent();
+    auto clone() const -> MirKeyboardResyncEvent* override;
 
-auto MirResyncKeyboardEvent::clone() const -> MirResyncKeyboardEvent*
-{
-    return new MirResyncKeyboardEvent{*this};
-}
+private:
+};
+
+#endif /* MIR_COMMON_KEYBOARD_RESYNC_EVENT_H_ */
