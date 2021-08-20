@@ -24,8 +24,6 @@
 extern "C" {
 #endif
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef enum
 {
     mir_event_type_key __attribute__((deprecated("UNUSED since Mir 0.26"))),
@@ -43,7 +41,6 @@ typedef enum
     mir_event_type_input_device_state,
     mir_event_type_window_placement,
 } MirEventType;
-#pragma GCC diagnostic pop
 
 typedef enum {
     mir_input_event_type_key = 0,
