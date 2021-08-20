@@ -16,8 +16,8 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_COMMON_SURFACE_EVENT_H_
-#define MIR_COMMON_SURFACE_EVENT_H_
+#ifndef MIR_COMMON_WINDOW_EVENT_H_
+#define MIR_COMMON_WINDOW_EVENT_H_
 
 #include "mir/events/event.h"
 
@@ -26,10 +26,10 @@
 
 typedef struct MirBlob MirBlob;
 
-struct MirSurfaceEvent : MirEvent
+struct MirWindowEvent : MirEvent
 {
-    MirSurfaceEvent();
-    auto clone() const -> MirSurfaceEvent* override;
+    MirWindowEvent();
+    auto clone() const -> MirWindowEvent* override;
 
     int id() const;
     void set_id(int id);
@@ -50,4 +50,4 @@ private:
     std::optional<std::vector<uint8_t>> dnd_handle_;
 };
 
-#endif /* MIR_COMMON_SURFACE_EVENT_H_ */
+#endif /* MIR_COMMON_WINDOW_EVENT_H_ */

@@ -23,7 +23,7 @@ set(EVENT_SOURCES
   touch_event.cpp
   pointer_event.cpp
   prompt_session_event.cpp
-  surface_event.cpp
+  window_event.cpp
   input_event.cpp
   input_device_state_event.cpp
   orientation_event.cpp

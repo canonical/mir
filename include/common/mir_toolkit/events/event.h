@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-typedef struct MirSurfaceEvent MirWindowEvent;
+typedef struct MirWindowEvent MirWindowEvent;
 typedef struct MirResizeEvent MirResizeEvent;
 typedef struct MirPromptSessionEvent MirPromptSessionEvent;
 typedef struct MirOrientationEvent MirOrientationEvent;
