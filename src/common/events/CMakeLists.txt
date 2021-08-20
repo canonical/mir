@@ -29,7 +29,7 @@ set(EVENT_SOURCES
   orientation_event.cpp
   resize_event.cpp
   window_output_event.cpp
-  surface_placement_event.cpp       ${PROJECT_SOURCE_DIR}/src/include/common/mir/events/surface_placement_event.h
+  window_placement_event.cpp ${PROJECT_SOURCE_DIR}/src/include/common/mir/events/window_placement_event.h
 )
 
 add_library(

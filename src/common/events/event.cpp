@@ -30,7 +30,7 @@
 #include "mir/events/window_event.h"
 #include "mir/events/window_output_event.h"
 #include "mir/events/input_device_state_event.h"
-#include "mir/events/surface_placement_event.h"
+#include "mir/events/window_placement_event.h"
 
 
 namespace ml = mir::logging;

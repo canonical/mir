@@ -16,16 +16,16 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SURFACE_PLACEMENT_EVENT_H
-#define MIR_SURFACE_PLACEMENT_EVENT_H
+#ifndef MIR_WINDOW_PLACEMENT_EVENT_H
+#define MIR_WINDOW_PLACEMENT_EVENT_H
 
 #include "mir/events/event.h"
 #include "mir_toolkit/client_types.h"
 
-struct MirSurfacePlacementEvent : MirEvent
+struct MirWindowPlacementEvent : MirEvent
 {
-    MirSurfacePlacementEvent();
-    auto clone() const -> MirSurfacePlacementEvent* override;
+    MirWindowPlacementEvent();
+    auto clone() const -> MirWindowPlacementEvent* override;
 
     int id() const;
     void set_id(int id);
@@ -38,4 +38,4 @@ private:
     MirRectangle placement_;
 };
 
-#endif //MIR_SURFACE_PLACEMENT_EVENT_H
+#endif //MIR_WINDOW_PLACEMENT_EVENT_H

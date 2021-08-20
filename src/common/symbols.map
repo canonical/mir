@@ -276,11 +276,11 @@ MIR_COMMON_2.5 {
     MirWindowOutputEvent::set_scale*;
     MirWindowOutputEvent::set_surface_id*;
     MirWindowOutputEvent::surface_id*;
-    MirSurfacePlacementEvent::MirSurfacePlacementEvent*;
-    MirSurfacePlacementEvent::id*;
-    MirSurfacePlacementEvent::placement*;
-    MirSurfacePlacementEvent::set_id*;
-    MirSurfacePlacementEvent::set_placement*;
+    MirWindowPlacementEvent::MirWindowPlacementEvent*;
+    MirWindowPlacementEvent::id*;
+    MirWindowPlacementEvent::placement*;
+    MirWindowPlacementEvent::set_id*;
+    MirWindowPlacementEvent::set_placement*;
     MirTouchEvent::MirTouchEvent*;
     MirTouchEvent::action*;
     MirTouchEvent::id*;

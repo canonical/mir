@@ -22,7 +22,7 @@
 #include "mir/log.h"
 
 #include "mir/events/event_private.h"
-#include "mir/events/surface_placement_event.h"
+#include "mir/events/window_placement_event.h"
 #include "mir/cookie/blob.h"
 #include "mir/input/xkb_mapper.h"
 

@@ -25,7 +25,7 @@
 
 #include "mir_toolkit/events/event.h"
 #include "mir/events/event_private.h"
-#include "mir/events/surface_placement_event.h"
+#include "mir/events/window_placement_event.h"
 
 #include "mir_toolkit/events/resize_event.h"
 #include "mir_toolkit/events/prompt_session_event.h"

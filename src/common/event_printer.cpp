@@ -19,7 +19,7 @@
 #include "mir/event_printer.h"
 
 #include "mir/events/event_private.h"
-#include "mir/events/surface_placement_event.h"
+#include "mir/events/window_placement_event.h"
 #include "mir/logging/input_timestamp.h"
 
 std::ostream& mir::operator<<(std::ostream& out, MirInputEventModifier modifier)
