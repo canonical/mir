@@ -139,7 +139,13 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     },
     {
         mw::InputMethodV2::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return mf::create_input_method_manager_v2(ctx.display, ctx.wayland_executor, ctx.text_input_hub); }
+            {
+                return mf::create_input_method_manager_v2(
+                    ctx.display,
+                    ctx.wayland_executor,
+                    ctx.text_input_hub,
+                    ctx.composite_event_filter);
+            }
     },
 };
 
@@ -275,6 +281,7 @@ std::shared_ptr<mf::Connector>
                 the_input_device_hub(),
                 the_seat(),
                 the_input_device_registry(),
+                the_composite_event_filter(),
                 the_buffer_allocator(),
                 the_session_authorizer(),
                 the_frontend_surface_stack(),
