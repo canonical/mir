@@ -16,52 +16,49 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include "mir/events/surface_event.h"
+#include "mir/events/window_event.h"
 #include "mir_blob.h"
 
-// MirSurfaceEvent is a deprecated type, but we need to implement it
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
-MirSurfaceEvent::MirSurfaceEvent() : MirEvent{mir_event_type_window}
+MirWindowEvent::MirWindowEvent() : MirEvent{mir_event_type_window}
 {
 }
 
-auto MirSurfaceEvent::clone() const -> MirSurfaceEvent*
+auto MirWindowEvent::clone() const -> MirWindowEvent*
 {
-    return new MirSurfaceEvent{*this};
+    return new MirWindowEvent{*this};
 }
 
-int MirSurfaceEvent::id() const
+int MirWindowEvent::id() const
 {
     return id_;
 }
 
-void MirSurfaceEvent::set_id(int id)
+void MirWindowEvent::set_id(int id)
 {
     id_ = id;
 }
 
-MirWindowAttrib MirSurfaceEvent::attrib() const
+MirWindowAttrib MirWindowEvent::attrib() const
 {
     return attrib_;
 }
 
-void MirSurfaceEvent::set_attrib(MirWindowAttrib attrib)
+void MirWindowEvent::set_attrib(MirWindowAttrib attrib)
 {
     attrib_ = attrib;
 }
 
-int MirSurfaceEvent::value() const
+int MirWindowEvent::value() const
 {
     return value_;
 }
 
-void MirSurfaceEvent::set_value(int value)
+void MirWindowEvent::set_value(int value)
 {
     value_ = value;
 }
 
-void MirSurfaceEvent::set_dnd_handle(std::vector<uint8_t> const& handle)
+void MirWindowEvent::set_dnd_handle(std::vector<uint8_t> const& handle)
 {
     dnd_handle_ = handle;
 }
@@ -78,7 +75,7 @@ struct MyMirBlob : MirBlob
 };
 }
 
-MirBlob* MirSurfaceEvent::dnd_handle() const
+MirBlob* MirWindowEvent::dnd_handle() const
 {
     if (!dnd_handle_)
         return nullptr;

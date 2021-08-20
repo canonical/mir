@@ -25,7 +25,7 @@
 
 #include "mir_toolkit/events/event.h"
 #include "mir/events/event_private.h"
-#include "mir/events/surface_placement_event.h"
+#include "mir/events/window_placement_event.h"
 
 #include "mir_toolkit/events/resize_event.h"
 #include "mir_toolkit/events/prompt_session_event.h"
@@ -148,13 +148,8 @@ MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent 
     return ev->to_input_device_state();
 })
 
-/* Surface event accessors */
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#pragma GCC diagnostic pop
-
-    /* Window event accessors */
+/* Window event accessors */
 
 MirWindowAttrib mir_window_event_get_attribute(MirWindowEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {

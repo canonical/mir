@@ -19,7 +19,7 @@
 #include "mir/event_printer.h"
 
 #include "mir/events/event_private.h"
-#include "mir/events/surface_placement_event.h"
+#include "mir/events/window_placement_event.h"
 #include "mir/logging/input_timestamp.h"
 
 std::ostream& mir::operator<<(std::ostream& out, MirInputEventModifier modifier)
@@ -377,8 +377,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputDeviceStateEvent const&
 
 std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto type = mir_event_get_type(&event);
     switch (type)
     {
@@ -396,6 +394,5 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
     default:
         return out << static_cast<int>(type) << "<INVALID>";
     }
-#pragma GCC diagnostic pop
 }
 

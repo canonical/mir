@@ -13,30 +13,29 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/events/close_surface_event.h"
+#ifndef MIR_WINDOW_PLACEMENT_EVENT_H
+#define MIR_WINDOW_PLACEMENT_EVENT_H
 
-// MirCloseSurfaceEvent is a deprecated type, but we need to implement it
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#include "mir/events/event.h"
+#include "mir_toolkit/client_types.h"
 
-MirCloseSurfaceEvent::MirCloseSurfaceEvent() :
-    MirEvent{mir_event_type_close_window}
+struct MirWindowPlacementEvent : MirEvent
 {
-}
+    MirWindowPlacementEvent();
+    auto clone() const -> MirWindowPlacementEvent* override;
 
-auto MirCloseSurfaceEvent::clone() const -> MirCloseSurfaceEvent*
-{
-    return new MirCloseSurfaceEvent{*this};
-}
+    int id() const;
+    void set_id(int id);
 
-int MirCloseSurfaceEvent::surface_id() const
-{
-    return surface_id_;
-}
+    MirRectangle placement() const;
+    void set_placement(MirRectangle const& placement);
 
-void MirCloseSurfaceEvent::set_surface_id(int id)
-{
-    surface_id_ = id;
-}
+private:
+    int id_ = 0;
+    MirRectangle placement_;
+};
+
+#endif //MIR_WINDOW_PLACEMENT_EVENT_H

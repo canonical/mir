@@ -20,17 +20,17 @@
 
 #include "mir/log.h"
 #include "mir/events/event.h"
-#include "mir/events/close_surface_event.h"
+#include "mir/events/close_window_event.h"
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
 #include "mir/events/touch_event.h"
 #include "mir/events/orientation_event.h"
 #include "mir/events/prompt_session_event.h"
 #include "mir/events/resize_event.h"
-#include "mir/events/surface_event.h"
-#include "mir/events/surface_output_event.h"
+#include "mir/events/window_event.h"
+#include "mir/events/window_output_event.h"
 #include "mir/events/input_device_state_event.h"
-#include "mir/events/surface_placement_event.h"
+#include "mir/events/window_placement_event.h"
 
 
 namespace ml = mir::logging;

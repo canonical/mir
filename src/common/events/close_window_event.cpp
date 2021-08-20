@@ -13,29 +13,27 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_SURFACE_PLACEMENT_EVENT_H
-#define MIR_SURFACE_PLACEMENT_EVENT_H
+#include "mir/events/close_window_event.h"
 
-#include "mir/events/event.h"
-#include "mir_toolkit/client_types.h"
-
-struct MirSurfacePlacementEvent : MirEvent
+MirCloseWindowEvent::MirCloseWindowEvent() :
+    MirEvent{mir_event_type_close_window}
 {
-    MirSurfacePlacementEvent();
-    auto clone() const -> MirSurfacePlacementEvent* override;
+}
 
-    int id() const;
-    void set_id(int id);
+auto MirCloseWindowEvent::clone() const -> MirCloseWindowEvent*
+{
+    return new MirCloseWindowEvent{*this};
+}
 
-    MirRectangle placement() const;
-    void set_placement(MirRectangle const& placement);
+int MirCloseWindowEvent::surface_id() const
+{
+    return surface_id_;
+}
 
-private:
-    int id_ = 0;
-    MirRectangle placement_;
-};
-
-#endif //MIR_SURFACE_PLACEMENT_EVENT_H
+void MirCloseWindowEvent::set_surface_id(int id)
+{
+    surface_id_ = id;
+}
