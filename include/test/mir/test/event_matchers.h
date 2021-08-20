@@ -549,17 +549,6 @@ MATCHER_P(InputDeviceIdMatches, device_id, "")
     return mir_input_event_get_device_id(input_event) == device_id;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-MATCHER(InputConfigurationEvent, "")
-{
-    auto as_address = to_address(arg);
-    if (mir_event_get_type(as_address) != mir_event_type_input_configuration)
-        return true;
-    return false;
-}
-#pragma GCC diagnostic pop
-
 MATCHER(InputDeviceStateEvent, "")
 {
     auto as_address = to_address(arg);

@@ -15,7 +15,7 @@
 # Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
 
 set(EVENT_SOURCES
-  close_surface_event.cpp
+  close_window_event.cpp
   event.cpp
   event_builders.cpp
   keyboard_event.cpp

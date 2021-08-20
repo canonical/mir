@@ -91,13 +91,13 @@ MIR_COMMON_2.5 {
     mir::input::receiver::XKBMapper::?XKBMapper*;
     mir::operator*;
     vtable?for?mir::input::receiver::XKBMapper;
-    ?MirCloseSurfaceEvent*;
+    ?MirCloseWindowEvent*;
     ?MirKeyboardEvent*;
     ?MirPointerEvent*;
     ?MirTouchEvent*;
-    MirCloseSurfaceEvent::MirCloseSurfaceEvent*;
-    MirCloseSurfaceEvent::set_surface_id*;
-    MirCloseSurfaceEvent::surface_id*;
+    MirCloseWindowEvent::MirCloseWindowEvent*;
+    MirCloseWindowEvent::set_surface_id*;
+    MirCloseWindowEvent::surface_id*;
     MirEvent::MirEvent*;
     MirEvent::clone*;
     MirEvent::operator*;
@@ -450,7 +450,7 @@ MIR_COMMON_2.5 {
     typeinfo?for?mir::socket_error;
     typeinfo?for?mir::time::PosixTimestamp;
     typeinfo?for?mir::time::SteadyClock;
-    vtable?for?MirCloseSurfaceEvent;
+    vtable?for?MirCloseWindowEvent;
     vtable?for?MirKeyboardEvent;
     vtable?for?MirPointerEvent;
     vtable?for?MirTouchEvent;

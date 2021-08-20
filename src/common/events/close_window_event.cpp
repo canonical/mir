@@ -7,30 +7,33 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_COMMON_CLOSE_SURFACE_EVENT_H_
-#define MIR_COMMON_CLOSE_SURFACE_EVENT_H_
+#include "mir/events/close_window_event.h"
 
-#include "mir/events/event.h"
-
-struct MirCloseSurfaceEvent : MirEvent
+MirCloseWindowEvent::MirCloseWindowEvent() :
+    MirEvent{mir_event_type_close_window}
 {
-    MirCloseSurfaceEvent();
-    auto clone() const -> MirCloseSurfaceEvent* override;
+}
 
-    int surface_id() const;
-    void set_surface_id(int id);
+auto MirCloseWindowEvent::clone() const -> MirCloseWindowEvent*
+{
+    return new MirCloseWindowEvent{*this};
+}
 
-private:
-    int surface_id_ = 0;
-};
+int MirCloseWindowEvent::surface_id() const
+{
+    return surface_id_;
+}
 
-#endif /* MIR_COMMON_CLOSE_SURFACE_EVENT_H_ */
+void MirCloseWindowEvent::set_surface_id(int id)
+{
+    surface_id_ = id;
+}

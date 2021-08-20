@@ -382,9 +382,6 @@ typedef enum MirShellChrome
 /**
  * Pointer Confinement
  */
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef enum MirPointerConfinementState
 {
     mir_pointer_unconfined,
@@ -393,7 +390,6 @@ typedef enum MirPointerConfinementState
     mir_pointer_locked_oneshot,
     mir_pointer_locked_persistent,
 } MirPointerConfinementState;
-#pragma GCC diagnostic pop
 
 /**
  * Supports gamma correction

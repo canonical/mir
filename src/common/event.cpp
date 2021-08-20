@@ -148,13 +148,8 @@ MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent 
     return ev->to_input_device_state();
 })
 
-/* Surface event accessors */
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#pragma GCC diagnostic pop
-
-    /* Window event accessors */
+/* Window event accessors */
 
 MirWindowAttrib mir_window_event_get_attribute(MirWindowEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
