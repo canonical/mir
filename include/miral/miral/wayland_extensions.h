@@ -127,9 +127,10 @@ public:
     /// \remark Since MirAL 3.3
     static char const* const zwp_virtual_keyboard_v1;
 
-    /// Allows clients (such as on-screen keyboards) to act as a source of text input for other clients.
-    /// Clients are not required to display anything to send input using this extension, so malicious
-    /// clients could use it to take actions without user input.
+    /// Allows clients (such as on-screen keyboards) to intercept physical key events and act as a
+    /// source of text input for other clients. Input methods are not required to display anything
+    /// to use this extension, so malicious clients could use it to intercept keys events or take
+    /// actions without user input.
     /// \remark Since MirAL 3.3
     static char const* const zwp_input_method_v2;
     /** @} */
