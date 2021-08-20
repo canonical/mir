@@ -27,17 +27,14 @@ namespace mir
 namespace frontend
 {
 class WlSurface;
+class WlSeat;
 
 class WlKeyboard
     : public wayland::Keyboard,
       public KeyboardImpl
 {
 public:
-    WlKeyboard(
-        wl_resource* new_resource,
-        std::shared_ptr<mir::input::Keymap> const& initial_keymap,
-        std::shared_ptr<input::Seat> const& seat,
-        bool enable_key_repeat);
+    WlKeyboard(wl_resource* new_resource, WlSeat& seat);
 
     ~WlKeyboard();
 

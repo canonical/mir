@@ -285,11 +285,7 @@ void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
 
 void mf::WlSeat::Instance::get_keyboard(wl_resource* new_keyboard)
 {
-    auto const keyboard = new WlKeyboard{
-        new_keyboard,
-        seat->keymap,
-        seat->seat,
-        enable_key_repeat};
+    auto const keyboard = new WlKeyboard{new_keyboard, *seat};
 
     seat->keyboard_listeners->register_listener(client, keyboard);
     keyboard->add_destroy_listener(

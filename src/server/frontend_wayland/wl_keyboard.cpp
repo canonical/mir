@@ -19,6 +19,7 @@
 #include "wl_keyboard.h"
 
 #include "wl_surface.h"
+#include "wl_seat.h"
 #include "mir/log.h"
 #include "mir/fatal.h"
 
@@ -29,13 +30,9 @@ namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace mi = mir::input;
 
-mf::WlKeyboard::WlKeyboard(
-    wl_resource* new_resource,
-    std::shared_ptr<mir::input::Keymap> const& initial_keymap,
-    std::shared_ptr<input::Seat> const& seat,
-    bool enable_key_repeat)
+mf::WlKeyboard::WlKeyboard(wl_resource* new_resource, WlSeat& seat)
     : wayland::Keyboard{new_resource, Version<6>()},
-      helper{std::make_unique<KeyboardHelper>(this, initial_keymap, seat, enable_key_repeat)}
+      helper{seat.make_keyboard_helper(this)}
 {
 }
 
