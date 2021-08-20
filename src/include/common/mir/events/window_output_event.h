@@ -23,10 +23,10 @@
 
 #include "mir/events/event.h"
 
-struct MirSurfaceOutputEvent : MirEvent
+struct MirWindowOutputEvent : MirEvent
 {
-    MirSurfaceOutputEvent();
-    auto clone() const -> MirSurfaceOutputEvent* override;
+    MirWindowOutputEvent();
+    auto clone() const -> MirWindowOutputEvent* override;
 
     int surface_id() const;
     void set_surface_id(int id);

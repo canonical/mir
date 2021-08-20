@@ -35,7 +35,7 @@ typedef struct MirPromptSessionEvent MirPromptSessionEvent;
 typedef struct MirOrientationEvent MirOrientationEvent;
 typedef struct MirCloseWindowEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
-typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
+typedef struct MirWindowOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
 typedef struct MirSurfacePlacementEvent MirWindowPlacementEvent;
 

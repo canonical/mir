@@ -16,76 +16,73 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include "mir/events/surface_output_event.h"
+#include "mir/events/window_output_event.h"
 
-// MirSurfaceOutputEvent is a deprecated type, but we need to implement it
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
-MirSurfaceOutputEvent::MirSurfaceOutputEvent() : MirEvent(mir_event_type_window_output)
+MirWindowOutputEvent::MirWindowOutputEvent() : MirEvent(mir_event_type_window_output)
 {
 }
 
-auto MirSurfaceOutputEvent::clone() const -> MirSurfaceOutputEvent*
+auto MirWindowOutputEvent::clone() const -> MirWindowOutputEvent*
 {
-    return new MirSurfaceOutputEvent{*this};
+    return new MirWindowOutputEvent{*this};
 }
 
-int MirSurfaceOutputEvent::surface_id() const
+int MirWindowOutputEvent::surface_id() const
 {
     return surface_id_;
 }
 
-void MirSurfaceOutputEvent::set_surface_id(int id)
+void MirWindowOutputEvent::set_surface_id(int id)
 {
     surface_id_ = id;
 }
 
-int MirSurfaceOutputEvent::dpi() const
+int MirWindowOutputEvent::dpi() const
 {
     return dpi_;
 }
 
-void MirSurfaceOutputEvent::set_dpi(int dpi)
+void MirWindowOutputEvent::set_dpi(int dpi)
 {
     dpi_ = dpi;
 }
 
-float MirSurfaceOutputEvent::scale() const
+float MirWindowOutputEvent::scale() const
 {
     return scale_;
 }
 
-void MirSurfaceOutputEvent::set_scale(float scale)
+void MirWindowOutputEvent::set_scale(float scale)
 {
     scale_ = scale;
 }
 
-double MirSurfaceOutputEvent::refresh_rate() const
+double MirWindowOutputEvent::refresh_rate() const
 {
     return refresh_rate_;
 }
 
-void MirSurfaceOutputEvent::set_refresh_rate(double rate)
+void MirWindowOutputEvent::set_refresh_rate(double rate)
 {
     refresh_rate_ = rate;
 }
 
-MirFormFactor MirSurfaceOutputEvent::form_factor() const
+MirFormFactor MirWindowOutputEvent::form_factor() const
 {
     return form_factor_;
 }
 
-void MirSurfaceOutputEvent::set_form_factor(MirFormFactor factor)
+void MirWindowOutputEvent::set_form_factor(MirFormFactor factor)
 {
     form_factor_ = factor;
 }
 
-uint32_t MirSurfaceOutputEvent::output_id() const
+uint32_t MirWindowOutputEvent::output_id() const
 {
     return output_id_;
 }
 
-void MirSurfaceOutputEvent::set_output_id(uint32_t id)
+void MirWindowOutputEvent::set_output_id(uint32_t id)
 {
     output_id_ = id;
 }

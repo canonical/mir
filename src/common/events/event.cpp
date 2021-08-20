@@ -28,7 +28,7 @@
 #include "mir/events/prompt_session_event.h"
 #include "mir/events/resize_event.h"
 #include "mir/events/window_event.h"
-#include "mir/events/surface_output_event.h"
+#include "mir/events/window_output_event.h"
 #include "mir/events/input_device_state_event.h"
 #include "mir/events/surface_placement_event.h"
 
