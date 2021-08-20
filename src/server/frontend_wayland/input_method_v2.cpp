@@ -17,8 +17,10 @@
  */
 
 #include "input_method_v2.h"
+#include "input_method_grab_keyboard_v2.h"
 #include "input-method-unstable-v2_wrapper.h"
 #include "text-input-unstable-v3_wrapper.h"
+#include "wl_seat.h"
 
 #include "mir/scene/text_input_hub.h"
 #include "mir/log.h"
@@ -159,7 +161,7 @@ class InputMethodV2
     : public wayland::InputMethodV2
 {
 public:
-    InputMethodV2(wl_resource* resource, std::shared_ptr<InputMethodV2Ctx> const& ctx);
+    InputMethodV2(wl_resource* resource, WlSeat* seat, std::shared_ptr<InputMethodV2Ctx> const& ctx);
     ~InputMethodV2();
 
 private:
@@ -188,9 +190,11 @@ private:
 
     static size_t constexpr max_remembered_serials{10};
 
+    WlSeat* const seat;
     std::shared_ptr<InputMethodV2Ctx> const ctx;
     std::shared_ptr<StateObserver> const state_observer;
     bool is_activated{false};
+    wayland::Weak<wayland::InputMethodKeyboardGrabV2> current_grab_keyboard;
     scene::TextInputState cached_state{};
     scene::TextInputChange pending_change{{}};
     /// The first value is the number of the done event that corresponds to the second value. When we get a commit it
@@ -268,16 +272,18 @@ mf::InputMethodManagerV2::InputMethodManagerV2(
 
 void mf::InputMethodManagerV2::get_input_method(struct wl_resource* seat, struct wl_resource* input_method)
 {
-    (void)seat;
-    new InputMethodV2{input_method, ctx};
+    auto const wl_seat = WlSeat::from(seat);
+    new InputMethodV2{input_method, wl_seat, ctx};
 }
 
 // InputMethodV2
 
 mf::InputMethodV2::InputMethodV2(
     wl_resource* resource,
+    WlSeat* seat,
     std::shared_ptr<InputMethodV2Ctx> const& ctx)
     : mw::InputMethodV2{resource, Version<1>()},
+      seat{seat},
       ctx{ctx},
       state_observer{std::make_shared<StateObserver>(this)}
 {
@@ -409,19 +415,22 @@ void mf::InputMethodV2::get_input_popup_surface(struct wl_resource* id, struct w
 
 void mf::InputMethodV2::grab_keyboard(struct wl_resource* keyboard)
 {
-    new InputMethodGrabKeyboard{keyboard};
+    if (!is_activated)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            std::string{} + "got " + interface_name + ".grab_keyboard when input method was not active"));
+    }
+    if (current_grab_keyboard)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("tried to grab the keyboard multiple times"));
+    }
+    current_grab_keyboard = mw::make_weak<wayland::InputMethodKeyboardGrabV2>(
+        new InputMethodGrabKeyboardV2{keyboard, *seat, ctx->wayland_executor, ctx->event_filter});
 }
 
 // InputPopupSurfaceV2
 
 mf::InputPopupSurfaceV2::InputPopupSurfaceV2(wl_resource* resource)
     : mw::InputPopupSurfaceV2{resource, Version<1>()}
-{
-}
-
-// InputMethodGrabKeyboard
-
-mf::InputMethodGrabKeyboard::InputMethodGrabKeyboard(wl_resource* resource)
-    : mw::InputMethodKeyboardGrabV2{resource, Version<1>()}
 {
 }
