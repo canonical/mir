@@ -135,12 +135,11 @@ void mf::WlSeat::ConfigObserver::changes_complete()
 class mf::WlSeat::Instance : public wayland::Seat
 {
 public:
-    Instance(wl_resource* new_resource, mf::WlSeat* seat, bool enable_key_repeat);
+    Instance(wl_resource* new_resource, mf::WlSeat* seat);
 
     mf::WlSeat* const seat;
 
 private:
-    bool const enable_key_repeat;
     void get_pointer(wl_resource* new_pointer) override;
     void get_keyboard(wl_resource* new_keyboard) override;
     void get_touch(wl_resource* new_touch) override;
@@ -224,7 +223,7 @@ void mf::WlSeat::notify_focus(WlSurface& surface, bool has_focus)
 
 void mf::WlSeat::bind(wl_resource* new_wl_seat)
 {
-    new Instance{new_wl_seat, this, enable_key_repeat};
+    new Instance{new_wl_seat, this};
 }
 
 void mf::WlSeat::set_focus_to(WlSurface* new_surface)
@@ -261,10 +260,9 @@ void mf::WlSeat::set_focus_to(WlSurface* new_surface)
         });
 }
 
-mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat, bool enable_key_repeat)
+mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
     : mw::Seat(new_resource, Version<6>()),
-      seat{seat},
-      enable_key_repeat{enable_key_repeat}
+      seat{seat}
 {
     // TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
     send_capabilities_event(Capability::pointer | Capability::keyboard | Capability::touch);
