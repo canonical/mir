@@ -16,7 +16,7 @@ parts:
     source: .
     cmake-parameters:
     - -DCMAKE_INSTALL_PREFIX=/usr
-    - -DMIR_ENABLE_TESTS=OFF
+    - -DMIR_ENABLE_WLCS_TESTS=OFF
     - -DMIR_PLATFORM='gbm-kms;eglstream-kms;x11;wayland'
     build-packages:
     - build-essential
@@ -34,10 +34,12 @@ parts:
     - libgbm-dev
     - libglm-dev
     - libgoogle-glog-dev
+    - libgtest-dev
     - libinput-dev
     - liblttng-ust-dev
     - libnvidia-egl-wayland-dev
     - libudev-dev
+    - libumockdev-dev
     - libwayland-dev
     - libxcb-composite0-dev
     - libx11-xcb-dev
