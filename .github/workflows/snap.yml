@@ -58,6 +58,7 @@ jobs:
       matrix:
         snap:
         - MirServer/mir-kiosk
+        - MirServer/mir-test-tools
         - MirServer/egmde-confined-desktop
 
     steps:
