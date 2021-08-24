@@ -108,16 +108,16 @@ namespace
 std::string description_text(char const* program, std::string const& config_file)
 {
     std::string result{
-        "Command-line options (e.g. \"--host-socket=/tmp/mir_socket\").\n\n"
+        "Command-line options (e.g. \"--wayland-host=wayland-0\").\n\n"
         "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\".\n"
-        "(E.g. \"MIR_SERVER_HOST_SOCKET=/tmp/mir_socket\")\n\n"};
+        "(E.g. \"MIR_SERVER_WAYLAND_HOST=wayland-0\")\n\n"};
 
     if (program)
         result = std::string{"usage: "} + program + " [options]\n\n" + result;
 
     if (!config_file.empty())
         result +=
-        "Config file entries are long form (e.g. \"host-socket=/tmp/mir_socket\").\n"
+            "Config file entries are long form (e.g. \"wayland-host=wayland-0\").\n"
         "The config file (" + config_file + ") is located via the XDG Base Directory Specification.\n"
         "($XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS)\n\n";
 
