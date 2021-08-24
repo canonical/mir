@@ -108,7 +108,6 @@ struct msd::InputManager::Observer
         }   break;
 
         case mir_input_event_type_key:
-        case mir_input_event_type_keyboard_resync:
         case mir_input_event_types:
             break;
         }

@@ -349,3 +349,11 @@ void mf::WlSeat::remove_focus_listener(wl_client* client, FocusListener* listene
 {
     focus_listeners->unregister_listener(client, listener);
 }
+
+void mf::WlSeat::server_restart()
+{
+    if (focused_client)
+    {
+        for_each_listener(focused_client, [](WlKeyboard* keyboard) { keyboard->resync_keyboard(); });
+    }
+}
