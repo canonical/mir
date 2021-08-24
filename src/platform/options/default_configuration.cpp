@@ -29,7 +29,6 @@ char const* const mo::arw_server_socket_opt       = "arw-file";
 char const* const mo::enable_input_opt            = "enable-input,i";
 char const* const mo::compositor_report_opt       = "compositor-report";
 char const* const mo::display_report_opt          = "display-report";
-char const* const mo::legacy_input_report_opt     = "legacy-input-report";
 char const* const mo::scene_report_opt            = "scene-report";
 char const* const mo::input_report_opt            = "input-report";
 char const* const mo::seat_report_opt            = "seat-report";
@@ -158,8 +157,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the Display report. [{log,lttng,off}]")
         (input_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle to Input report. [{log,lttng,off}]")
-        (legacy_input_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the Legacy Input report. [{log,off}]")
         (seat_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle to Seat report. [{log,off}]")
         (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),
