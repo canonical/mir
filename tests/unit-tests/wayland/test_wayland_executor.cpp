@@ -57,6 +57,13 @@ TEST_F(WaylandExecutorTest, spawning_a_task_makes_event_loop_fd_dispatchable)
 {
     mf::WaylandExecutor executor{the_event_loop};
 
+    // Drain any initialization work
+    while (mt::fd_is_readable(event_loop_fd))
+    {
+        wl_event_loop_dispatch(the_event_loop, 0);
+        wl_event_loop_dispatch_idle(the_event_loop);
+    }
+
     EXPECT_THAT(event_loop_fd, Not(FdIsReadable()));
 
     executor.spawn([](){});
