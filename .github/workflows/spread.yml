@@ -26,31 +26,26 @@ jobs:
         set -euo pipefail
 
         if ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}; then
-          TASKS='"google:ubuntu-20.04-64:spread/build/ubuntu:asan"
-                 "google:ubuntu-20.04-64:spread/build/ubuntu:tsan"
-                 "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan"
-                 "google:ubuntu-20.04-64:spread/build/ubuntu:asan_clang"
-                 "google:ubuntu-20.04-64:spread/build/ubuntu:tsan_clang"
-                 "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan_clang"'
+          TASKS='"lxd:ubuntu-20.04:spread/build/ubuntu:asan"
+                 "lxd:ubuntu-20.04:spread/build/ubuntu:tsan"
+                 "lxd:ubuntu-20.04:spread/build/ubuntu:ubsan"
+                 "lxd:ubuntu-20.04:spread/build/ubuntu:asan_clang"
+                 "lxd:ubuntu-20.04:spread/build/ubuntu:tsan_clang"
+                 "lxd:ubuntu-20.04:spread/build/ubuntu:ubsan_clang"'
         else
           TASKS='"lxd:alpine-3.15:spread/build/alpine:amd64"
-                 "lxd:alpine-edge:spread/build/alpine:amd64"'
-
-          # Only run if we have access to secrets.
-          if ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}; then
-            TASKS+='"google:ubuntu-22.04-64:spread/build/sbuild:debian_sid"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_jammy"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_arm64"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_armhf"
-                    "google:ubuntu-20.04-64:spread/build/ubuntu:rpi"
-                    "google:ubuntu-20.04-64:spread/build/ubuntu:clang"
-                    "google:fedora-35-64:spread/build/fedora:amd64"
-                    "google:fedora-36-64:spread/build/fedora:amd64"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_devel"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_proposed"
-                    "google:fedora-rawhide-64:spread/build/fedora:amd64"'
-          fi
+                 "lxd:alpine-edge:spread/build/alpine:amd64"
+                 "lxd:ubuntu-22.04:spread/build/sbuild:debian_sid"
+                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu"
+                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_jammy"
+                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_arm64"
+                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_armhf"
+                 "lxd:ubuntu-20.04:spread/build/ubuntu:rpi"
+                 "lxd:ubuntu-20.04:spread/build/ubuntu:clang"
+                 "lxd:fedora-35:spread/build/fedora:amd64"
+                 "lxd:fedora-36:spread/build/fedora:amd64"
+                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_devel"
+                 "lxd:ubuntu-22.04:spread/build/sbuild:ubuntu_proposed"'
         fi
 
         echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "::set-output name=matrix::" $0 }'
@@ -71,27 +66,19 @@ jobs:
 
     steps:
     - name: Set up LXD
-      if: ${{ startsWith(matrix.spread-task, 'lxd:') }}
       uses: whywaita/setup-lxd@v1
 
     - name: Set up Spread
       run: |
-        set -e
-        if ${{ !startsWith(matrix.spread-task, 'lxd:') }}; then
-          sudo snap install spread
-          timeout 600 sh -c 'while snap changes | grep Doing; do sleep 5; done'
-          sudo snap connect spread:home
-        else
-          curl -s -O https://people.canonical.com/~chrishr/spread.snap
-          sudo snap install --dangerous spread.snap
-          sudo snap connect spread:lxd lxd:lxd
-          echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV
-        fi
+        curl -s -O https://people.canonical.com/~chrishr/spread.snap
+        sudo snap install --dangerous spread.snap
+        sudo snap connect spread:lxd lxd:lxd
+        lxc profile set default security.privileged=true security.nesting=true
+        sudo apt-get install --yes binfmt-support qemu-user-static
+        echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV
 
     - name: Check out code
       uses: actions/checkout@v3
 
     - name: Run Spread task
-      env:
-        SPREAD_GOOGLE_KEY: ${{ secrets.SPREAD_GOOGLE_KEY }}
       run: snap run spread -v ${{ matrix.spread-task }}
