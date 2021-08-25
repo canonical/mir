@@ -109,7 +109,6 @@ MIRPLATFORM_2.5 {
     mir::options::glog_minloglevel*;
     mir::options::glog_stderrthreshold*;
     mir::options::input_report_opt*;
-    mir::options::legacy_input_report_opt*;
     mir::options::log_opt_value*;
     mir::options::logind_console;
     mir::options::lttng_opt_value*;

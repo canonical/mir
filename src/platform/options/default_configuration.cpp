@@ -29,7 +29,6 @@ char const* const mo::arw_server_socket_opt       = "arw-file";
 char const* const mo::enable_input_opt            = "enable-input,i";
 char const* const mo::compositor_report_opt       = "compositor-report";
 char const* const mo::display_report_opt          = "display-report";
-char const* const mo::legacy_input_report_opt     = "legacy-input-report";
 char const* const mo::scene_report_opt            = "scene-report";
 char const* const mo::input_report_opt            = "input-report";
 char const* const mo::seat_report_opt            = "seat-report";
@@ -108,16 +107,16 @@ namespace
 std::string description_text(char const* program, std::string const& config_file)
 {
     std::string result{
-        "Command-line options (e.g. \"--host-socket=/tmp/mir_socket\").\n\n"
+        "Command-line options (e.g. \"--wayland-host=wayland-0\").\n\n"
         "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\".\n"
-        "(E.g. \"MIR_SERVER_HOST_SOCKET=/tmp/mir_socket\")\n\n"};
+        "(E.g. \"MIR_SERVER_WAYLAND_HOST=wayland-0\")\n\n"};
 
     if (program)
         result = std::string{"usage: "} + program + " [options]\n\n" + result;
 
     if (!config_file.empty())
         result +=
-        "Config file entries are long form (e.g. \"host-socket=/tmp/mir_socket\").\n"
+        "Config file entries are long form (e.g. \"wayland-host=wayland-0\").\n"
         "The config file (" + config_file + ") is located via the XDG Base Directory Specification.\n"
         "($XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS)\n\n";
 
@@ -158,8 +157,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the Display report. [{log,lttng,off}]")
         (input_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle to Input report. [{log,lttng,off}]")
-        (legacy_input_report_opt, po::value<std::string>()->default_value(off_opt_value),
-            "How to handle the Legacy Input report. [{log,off}]")
         (seat_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle to Seat report. [{log,off}]")
         (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),

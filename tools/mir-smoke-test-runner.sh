@@ -8,15 +8,6 @@ timeout=3
 wayland_display="mir-smoke-test"
 options="--test-timeout=${timeout}"
 
-if [ -v MIR_SOCKET ]
-then
-  if [ ! -e "${MIR_SOCKET}" ]
-  then
-    echo "Error: Host endpoint '${MIR_SOCKET}' does not exist"; exit 1
-  fi
-  options="${options} --host-socket ${MIR_SOCKET}"
-fi
-
 root="$( dirname "${BASH_SOURCE[0]}" )"
 
 client_list=`find ${root} -name mir_demo_client_* | grep -v bin$ | sed s?${root}/??`
