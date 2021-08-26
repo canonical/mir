@@ -83,6 +83,14 @@ void mf::WaylandInputDispatcher::handle_event(MirInputEvent const* event)
             });
     }   break;
 
+    case mir_input_event_type_keyboard_resync:
+    {
+        seat->for_each_listener(client, [&](WlKeyboard* keyboard)
+            {
+                keyboard->resync_keyboard();
+            });
+    }   break;
+
     case mir_input_event_type_pointer:
     {
         auto const pointer_event = mir_input_event_get_pointer_event(event);
