@@ -1,3 +1,12 @@
+MIR_STUB_PLATFORM_SYMBOLS {
+  global:
+    create_stub_platform*;
+    create_stub_render_platform*;
+    set_next_display_rects*;
+    set_next_preset_display*;
+    add_fake_input_device*;
+};
+
 @MIR_SERVER_GRAPHICS_PLATFORM_VERSION@ {
   global:
     add_graphics_platform_options;
@@ -8,4 +17,6 @@
     probe_display_platform;
     probe_rendering_platform;
     describe_graphics_module;
+  local:
+    *;
 };
