@@ -89,7 +89,11 @@ public:
         : StubBuffer{nullptr, properties, geometry::Stride{properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)}}
     {
         written_pixels.resize(buf_size.height.as_uint32_t() * buf_stride.as_uint32_t());
-        ::memset(written_pixels.data(), 0, written_pixels.size());
+        if (written_pixels.size())
+        {
+            // vector<>::data() is permitted to return nullptr if size() == 0
+            ::memset(written_pixels.data(), 0, written_pixels.size());
+        }
     }
 
     StubBuffer(graphics::BufferID id)
@@ -111,7 +115,11 @@ public:
           buf_id{graphics::BufferBasic::id()}
     {
         written_pixels.resize(buf_size.height.as_uint32_t() * buf_stride.as_uint32_t());
-        ::memset(written_pixels.data(), 0, written_pixels.size());
+        if (written_pixels.size())
+        {
+            // vector<>::data() is permitted to return nullptr if size() == 0
+            ::memset(written_pixels.data(), 0, written_pixels.size());
+        }
     }
 
     virtual graphics::BufferID id() const override { return buf_id; }
