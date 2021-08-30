@@ -163,19 +163,35 @@ auto wm_window_type_to_mir_window_type(
     mf::XCBConnection* connection,
     std::vector<xcb_atom_t> const& wm_types) -> MirWindowType
 {
+    // See https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46515148839648
     for (auto const& wm_type : wm_types)
     {
-        if (wm_type == connection->_NET_WM_WINDOW_TYPE_NORMAL)
+        if (wm_type == connection->_NET_WM_WINDOW_TYPE_NORMAL ||
+            wm_type == connection->_NET_WM_WINDOW_TYPE_SPLASH ||
+            wm_type == connection->_NET_WM_WINDOW_TYPE_DESKTOP ||
+            wm_type == connection->_NET_WM_WINDOW_TYPE_DOCK)
         {
+            // TODO: perhaps desktop and dock should set the layer as well somehow?
             return mir_window_type_freestyle;
         }
-        else if (wm_type == connection->_NET_WM_WINDOW_TYPE_POPUP_MENU)
+        if (wm_type == connection->_NET_WM_WINDOW_TYPE_DIALOG)
+        {
+            return mir_window_type_dialog;
+        }
+        else if (wm_type == connection->_NET_WM_WINDOW_TYPE_TOOLBAR ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_MENU ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_UTILITY)
+        {
+            return mir_window_type_satellite;
+        }
+        else if (wm_type == connection->_NET_WM_WINDOW_TYPE_POPUP_MENU ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_DROPDOWN_MENU ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_COMBO ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_TOOLTIP ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_NOTIFICATION ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_DND)
         {
             return mir_window_type_gloss;
-        }
-        else if (wm_type == connection->_NET_WM_WINDOW_TYPE_MENU)
-        {
-            return mir_window_type_menu;
         }
         else if (mir::verbose_xwayland_logging_enabled())
         {
@@ -1304,7 +1320,11 @@ void mf::XWaylandSurface::apply_cached_transient_for_and_type(std::lock_guard<st
 {
     auto parent = xcb_window_get_scene_surface(xwm, cached.transient_for);
     auto type = cached.type;
-    if (type == mir_window_type_gloss || type == mir_window_type_menu)
+    if (type == mir_window_type_dialog ||
+        type == mir_window_type_menu ||
+        type == mir_window_type_satellite ||
+        type == mir_window_type_tip ||
+        type == mir_window_type_gloss)
     {
         // Type should have parent
         if (!parent)
