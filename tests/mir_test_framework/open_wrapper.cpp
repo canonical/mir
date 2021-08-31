@@ -30,6 +30,7 @@
 #include <dlfcn.h>
 #include <cstdarg>
 #include <fcntl.h>
+#include <boost/throw_exception.hpp>
 
 namespace mtf = mir_test_framework;
 
@@ -116,6 +117,13 @@ int open(char const* path, int flags, ...)
     int (*real_open)(char const *path, int flags, ...);
     *(void **)(&real_open) = dlsym(RTLD_NEXT, "open");
 
+    if (!real_open)
+    {
+        using namespace std::literals::string_literals;
+        // Oops! What has gone on here?!
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find open() symbol: "s + dlerror()}));
+    }
+
     if (mode_parameter)
     {
         return (*real_open)(path, flags, *mode_parameter);
@@ -146,6 +154,13 @@ int open64(char const* path, int flags, ...)
 
     int (*real_open64)(char const *path, int flags, ...);
     *(void **)(&real_open64) = dlsym(RTLD_NEXT, "open64");
+
+    if (!real_open64)
+    {
+        using namespace std::literals::string_literals;
+        // Oops! What has gone on here?!
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find open64() symbol: "s + dlerror()}));
+    }
 
     if (mode_parameter)
     {
@@ -178,6 +193,12 @@ int __open(char const* path, int flags, ...)
     int (*real_open)(char const *path, int flags, ...);
     *(void **)(&real_open) = dlsym(RTLD_NEXT, "__open");
 
+    if (!real_open)
+    {
+        using namespace std::literals::string_literals;
+        // Oops! What has gone on here?!
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find __open() symbol: "s + dlerror()}));
+    }
     if (mode_parameter)
     {
         return (*real_open)(path, flags, *mode_parameter);
@@ -208,6 +229,12 @@ int __open64(char const* path, int flags, ...)
     int (*real_open64)(char const *path, int flags, ...);
     *(void **)(&real_open64) = dlsym(RTLD_NEXT, "__open64");
 
+    if (!real_open64)
+    {
+        using namespace std::literals::string_literals;
+        // Oops! What has gone on here?!
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find __open64() symbol: "s + dlerror()}));
+    }
     if (mode_parameter)
     {
         return (*real_open64)(path, flags, *mode_parameter);
@@ -225,6 +252,12 @@ int __open_2(char const* path, int flags)
     int (*real_open_2)(char const *path, int flags);
     *(void **)(&real_open_2) = dlsym(RTLD_NEXT, "__open_2");
 
+    if (!real_open_2)
+    {
+        using namespace std::literals::string_literals;
+        // Oops! What has gone on here?!
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find __open_2() symbol: "s + dlerror()}));
+    }
     return (*real_open_2)(path, flags);
 }
 
@@ -238,6 +271,12 @@ int __open64_2(char const* path, int flags)
     int (*real_open64_2)(char const *path, int flags);
     *(void **)(&real_open64_2) = dlsym(RTLD_NEXT, "__open64_2");
 
+    if (!real_open64_2)
+    {
+        using namespace std::literals::string_literals;
+        // Oops! What has gone on here?!
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find __open64_2() symbol: "s + dlerror()}));
+    }
     return (*real_open64_2)(path, flags);
 
 }
