@@ -287,4 +287,9 @@ TEST_F(HostedGLMark2Wayland, windowed)
 {
     EXPECT_GT(run_glmark2(""), 0);
 }
+
+TEST_F(HostedGLMark2Wayland, fail)
+{
+    FAIL() << "intentional fail";
+}
 }
