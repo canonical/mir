@@ -718,11 +718,11 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         {
             spec.update_from(*pending_spec.value());
         }
+        prep_surface_spec(lock, spec);
 
         server_side_decorated = !cached.override_redirect && !cached.motif_decorations_disabled;
     }
 
-    scale_surface_spec(spec);
     ms::SurfaceCreationParameters params;
     params.update_from(spec);
     params.server_side_decorated = server_side_decorated;
@@ -1156,7 +1156,7 @@ void mf::XWaylandSurface::modify_surface_geometry(
 
     if (old_position != new_position)
     {
-        surface_spec_set_position(mods, scene_surface->parent().get(), new_position - content_offset);
+        mods.top_left = new_position;
     }
 
     if (old_size != new_size)
@@ -1168,7 +1168,9 @@ void mf::XWaylandSurface::modify_surface_geometry(
 
     if (!mods.is_empty())
     {
-        scale_surface_spec(mods);
+        std::unique_lock<std::mutex> lock{mutex};
+        prep_surface_spec(lock, mods);
+        lock.unlock();
         shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
     }
 }
@@ -1183,6 +1185,10 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
         if ((scene_surface = weak_scene_surface.lock()))
         {
             spec = consume_pending_spec(lock);
+            if (spec)
+            {
+                prep_surface_spec(lock, *spec.value());
+            }
         }
     }
 
@@ -1206,65 +1212,34 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
 
         if (!spec.value()->is_empty())
         {
-            scale_surface_spec(*spec.value());
             shell->modify_surface(scene_surface->session().lock(), scene_surface, *spec.value());
         }
     }
 }
 
-void mf::XWaylandSurface::surface_spec_set_position(
-        msh::SurfaceSpecification& spec,
-        ms::Surface* parent,
-        geom::Point top_left)
+void mf::XWaylandSurface::prep_surface_spec(ProofOfMutexLock const&, msh::SurfaceSpecification& mods)
 {
-    if (parent)
-    {
-        auto const local_top_left =
-            top_left -
-            as_displacement(scaled_top_left_of(*parent)) -
-            scaled_content_offset_of(*parent);
-        spec.aux_rect = {local_top_left, {1, 1}};
-        spec.placement_hints = MirPlacementHints{};
-        spec.surface_placement_gravity = mir_placement_gravity_northwest;
-        spec.aux_rect_placement_gravity = mir_placement_gravity_northwest;
-    }
-    else
-    {
-        spec.top_left = top_left;
-    }
-}
-
-void mf::XWaylandSurface::scale_surface_spec(msh::SurfaceSpecification& mods)
-{
-    if (scale == 1.0f)
-    {
-        return;
-    }
-
     auto const inv_scale = 1.0f / scale;
 
     if (mods.top_left)
     {
-        mods.top_left = as_point(as_displacement(mods.top_left.value()) * inv_scale);
-    }
-
-    if (mods.aux_rect)
-    {
-        mods.aux_rect.value().top_left = as_point(as_displacement(mods.aux_rect.value().top_left) * inv_scale);
-
-        mods.aux_rect.value().size = mods.aux_rect.value().size * inv_scale;
-        mods.aux_rect.value().size.width = std::max(geom::Width{1}, mods.aux_rect.value().size.width);
-        mods.aux_rect.value().size.height = std::max(geom::Height{1}, mods.aux_rect.value().size.height);
-    }
-
-    if (mods.aux_rect_placement_offset_x)
-    {
-        mods.aux_rect_placement_offset_x = mods.aux_rect_placement_offset_x * inv_scale;
-    }
-
-    if (mods.aux_rect_placement_offset_y)
-    {
-        mods.aux_rect_placement_offset_y = mods.aux_rect_placement_offset_y * inv_scale;
+        auto const surface = weak_scene_surface.lock();
+        auto const content_offset = surface ? surface->content_offset() : geom::Displacement{};
+        if (auto const parent = effective_parent.lock())
+        {
+            auto const parent_content_top_left = parent->top_left() + parent->content_offset();
+            auto const local_top_left = as_point(
+                as_displacement(mods.top_left.value()) * inv_scale - as_displacement(parent_content_top_left));
+            mods.aux_rect = {local_top_left, {1, 1}};
+            mods.placement_hints = MirPlacementHints{};
+            mods.surface_placement_gravity = mir_placement_gravity_northwest;
+            mods.aux_rect_placement_gravity = mir_placement_gravity_northwest;
+            mods.top_left.consume();
+        }
+        else
+        {
+            mods.top_left = as_point(as_displacement(mods.top_left.value()) * inv_scale - content_offset);
+        }
     }
 
 #define SCALE_SIZE(type, prop) \
@@ -1283,6 +1258,7 @@ void mf::XWaylandSurface::scale_surface_spec(msh::SurfaceSpecification& mods)
 #undef SCALE_SIZE
 
     // NOTE: exclusive rect not checked because it is not used by XWayland surfaces
+    // NOTE: aux rect related properties not checks because they are only set in this method
     // NOTE: buffer streams and input shapes are set and thus fixed in XWaylandSurfaceRole
 }
 
@@ -1362,7 +1338,6 @@ void mf::XWaylandSurface::apply_cached_transient_for_and_type(ProofOfMutexLock c
     auto& spec = pending_spec(lock);
     spec.parent = parent;
     spec.type = type;
-    surface_spec_set_position(spec, parent.get(), cached.geometry.top_left);
 }
 
 void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)

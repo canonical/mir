@@ -169,19 +169,11 @@ private:
     /// Appplies any mods in nullable_pending_spec to the scene_surface (if any)
     void apply_any_mods_to_scene_surface();
 
-    /// Sets the position specified by the spec. top_left is always in global XWayland coordinates, even if parent is
-    /// not null. If parent is given, it is set as the parent and an aux rect for relative placement is calculated. if
-    /// parent is null, the location is specified in the global XWayland coordinates given. As always, you should call
-    /// scale_surface_spec() before sending this spec to Mir.
-    void surface_spec_set_position(
-        shell::SurfaceSpecification& spec,
-        scene::Surface* parent,
-        geometry::Point top_left);
-
-    /// One-stop-shop for scaling window modifications. Unlike with scaled Wayland surfaces, all the data going to and
-    /// from the client is in raw pixels, but Mir internally deals with scaled coordinates. This means before punting
-    /// our data off to Mir we need to scale it, which is what this function is for.
-    void scale_surface_spec(shell::SurfaceSpecification& mods);
+    /// Unlike with scaled Wayland surfaces, all the data going to and from the client is in raw pixels. Mir internally
+    /// deals with scaled coordinates. This means before modifying the Mir surface we need to scale the values in our
+    /// surface spec. We also need to convert from global to local coordinates if the surface has a parent. This
+    /// function handles all that.
+    void prep_surface_spec(ProofOfMutexLock const&, shell::SurfaceSpecification& mods);
 
     /// Return data from any surface scaled to XWayland coordinates
     /// @{
