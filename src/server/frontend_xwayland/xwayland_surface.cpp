@@ -540,6 +540,10 @@ void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
                 event->x, event->y,
                 event->width, event->height);
         }
+        else
+        {
+            cached.geometry = geometry;
+        }
     }
     else
     {
