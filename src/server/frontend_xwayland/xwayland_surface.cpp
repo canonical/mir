@@ -525,15 +525,25 @@ void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
 {
     std::unique_lock<std::mutex> lock{mutex};
     cached.override_redirect = event->override_redirect;
-    cached.geometry = {geom::Point{event->x, event->y}, geom::Size{event->width, event->height}};
-    if (auto const scene_surface = weak_scene_surface.lock())
+    // If this configure is in response to a configure we sent we don't want to make a window manager request
+    auto const geometry = geom::Rectangle{geom::Point{event->x, event->y}, geom::Size{event->width, event->height}};
+    auto const it = std::find(inflight_configures.begin(), inflight_configures.end(), geometry);
+    if (it == inflight_configures.end())
     {
-        lock.unlock();
-        modify_surface_geometry(
-            scene_surface,
-            XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
-            event->x, event->y,
-            event->width, event->height);
+        // We didn't initiate this configure, move the scene surface in response
+        if (auto const scene_surface = weak_scene_surface.lock())
+        {
+            lock.unlock();
+            modify_surface_geometry(
+                scene_surface,
+                XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
+                event->x, event->y,
+                event->width, event->height);
+        }
+    }
+    else
+    {
+        inflight_configures.erase(inflight_configures.begin(), it + 1);
     }
 }
 
@@ -1077,6 +1087,7 @@ void mf::XWaylandSurface::inform_client_of_geometry(
         return;
     }
     cached.geometry = geometry;
+    inflight_configures.push_back(geometry);
     lock.unlock();
 
     connection->configure_window(

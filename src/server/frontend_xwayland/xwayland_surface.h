@@ -30,6 +30,7 @@
 #include <mutex>
 #include <chrono>
 #include <set>
+#include <deque>
 
 namespace mir
 {
@@ -220,6 +221,10 @@ private:
         xcb_window_t transient_for{XCB_WINDOW_NONE};
         MirWindowType type{mir_window_type_freestyle};
     } cached;
+
+    /// When we send a configure we push it to the back, when we get notified of a configure we pop it and all the ones
+    /// before it
+    std::deque<geometry::Rectangle> inflight_configures;
 
     /// Set in set_wl_surface and cleared when a scene surface is created from it
     std::optional<std::shared_ptr<XWaylandSurfaceObserver>> surface_observer;
