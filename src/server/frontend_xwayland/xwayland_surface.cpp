@@ -228,6 +228,19 @@ auto property_handler(
 {
     return property_handler<T>(connection, window, property, mf::XCBConnection::Handler<T>{std::move(handler)});
 }
+
+template<typename T>
+auto optional_from(bool return_value, T&& value) -> std::optional<T>
+{
+    if (return_value)
+    {
+        return std::optional<T>(value);
+    }
+    else
+    {
+        return std::nullopt;
+    }
+}
 }
 
 mf::XWaylandSurface::XWaylandSurface(
@@ -331,8 +344,7 @@ mf::XWaylandSurface::XWaylandSurface(
                   motif_wm_hints(hints);
               })}
 {
-    cached.top_left = geometry.top_left;
-    cached.size = geometry.size;
+    cached.geometry = geometry;
     cached.override_redirect = override_redirect;
 
     uint32_t const value = XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE;
@@ -497,21 +509,13 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
     }
     else
     {
-        geom::Point const top_left{
-            event->value_mask & XCB_CONFIG_WINDOW_X ? geom::X{event->x} : cached.top_left.x,
-            event->value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{event->y} : cached.top_left.y};
-
-        geom::Size const size{
-            event->value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{event->width} : cached.size.width,
-            event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{event->height} : cached.size.height};
-
         lock.unlock();
-        connection->configure_window(
-            window,
-            top_left,
-            size,
-            std::nullopt,
-            std::nullopt);
+
+        inform_client_of_geometry(
+            optional_from(event->value_mask & XCB_CONFIG_WINDOW_X, geom::X{event->x}),
+            optional_from(event->value_mask & XCB_CONFIG_WINDOW_Y, geom::Y{event->y}),
+            optional_from(event->value_mask & XCB_CONFIG_WINDOW_WIDTH, geom::Width{event->width}),
+            optional_from(event->value_mask & XCB_CONFIG_WINDOW_HEIGHT, geom::Height{event->height}));
 
         connection->flush();
     }
@@ -521,8 +525,7 @@ void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
 {
     std::unique_lock<std::mutex> lock{mutex};
     cached.override_redirect = event->override_redirect;
-    cached.top_left = geom::Point{event->x, event->y};
-    cached.size = geom::Size{event->width, event->height};
+    cached.geometry = {geom::Point{event->x, event->y}, geom::Size{event->width, event->height}};
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         lock.unlock();
@@ -648,9 +651,9 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
         XWaylandSurfaceRole::populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
 
-        spec.width = cached.size.width;
-        spec.height = cached.size.height;
-        spec.top_left = cached.top_left;
+        spec.width = cached.geometry.size.width;
+        spec.height = cached.geometry.size.height;
+        spec.top_left = cached.geometry.top_left;
         spec.type = mir_window_type_freestyle;
         spec.state = state.mir_window_state();
     }
@@ -711,10 +714,13 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     params.server_side_decorated = server_side_decorated;
     auto const surface = shell->create_surface(session, params, observer);
     inform_client_of_window_state(state);
+    auto const top_left = scaled_top_left_of(*surface) + scaled_content_offset_of(*surface);
+    auto const size = scaled_content_size_of(*surface);
+    inform_client_of_geometry(top_left.x, top_left.y, size.width, size.height);
     connection->configure_window(
         window,
-        scaled_top_left_of(*surface) + scaled_content_offset_of(*surface),
-        scaled_content_size_of(*surface),
+        std::nullopt,
+        std::nullopt,
         std::nullopt,
         XCB_STACK_MODE_ABOVE);
 
@@ -877,21 +883,7 @@ void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
 
 void mf::XWaylandSurface::scene_surface_resized(geometry::Size const& new_size)
 {
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        if (new_size == cached.size)
-        {
-            // If size is same as the cache, the X server already knows the correct size and we should not send a
-            // configure (this happens when the surface is resized in reaction to a configure notify event)
-            return;
-        }
-    }
-    connection->configure_window(
-        window,
-        std::nullopt,
-        new_size,
-        std::nullopt,
-        std::nullopt);
+    inform_client_of_geometry(std::nullopt, std::nullopt, new_size.width, new_size.height);
     connection->flush();
 }
 
@@ -899,23 +891,11 @@ void mf::XWaylandSurface::scene_surface_moved_to(geometry::Point const& new_top_
 {
     std::unique_lock<std::mutex> lock{mutex};
     auto const scene_surface = weak_scene_surface.lock();
-    auto const cached_top_left = cached.top_left;
     lock.unlock();
 
     auto const content_offset = scene_surface ? scaled_content_offset_of(*scene_surface) : geom::Displacement{};
     auto const offset_new_top_left = new_top_left + content_offset;
-    if (offset_new_top_left == cached_top_left)
-    {
-        // If position is same as the cache, the X server already knows the correct position and we should not send
-        // a configure (this happens when the surface is moved in reaction to a configure notify event)
-        return;
-    }
-    connection->configure_window(
-        window,
-        new_top_left + content_offset,
-        std::nullopt,
-        std::nullopt,
-        std::nullopt);
+    inform_client_of_geometry(offset_new_top_left.x, offset_new_top_left.y, std::nullopt, std::nullopt);
     connection->flush();
 }
 
@@ -1080,6 +1060,31 @@ void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_w
     }
 
     connection->flush();
+}
+
+void mf::XWaylandSurface::inform_client_of_geometry(
+    std::optional<geometry::X> x,
+    std::optional<geometry::Y> y,
+    std::optional<geometry::Width> width,
+    std::optional<geometry::Height> height)
+{
+    std::unique_lock<std::mutex> lock{mutex};
+    auto const geometry = geom::Rectangle{
+        {x.value_or(cached.geometry.left()), y.value_or(cached.geometry.top())},
+        {width.value_or(cached.geometry.size.width), height.value_or(cached.geometry.size.height)}};
+    if (geometry == cached.geometry)
+    {
+        return;
+    }
+    cached.geometry = geometry;
+    lock.unlock();
+
+    connection->configure_window(
+        window,
+        geometry.top_left,
+        geometry.size,
+        std::nullopt,
+        std::nullopt);
 }
 
 void mf::XWaylandSurface::request_scene_surface_state(MirWindowState new_state)
@@ -1342,7 +1347,7 @@ void mf::XWaylandSurface::apply_cached_transient_for_and_type(std::lock_guard<st
     auto& spec = pending_spec(lock);
     spec.parent = parent;
     spec.type = type;
-    surface_spec_set_position(spec, parent.get(), cached.top_left);
+    surface_spec_set_position(spec, parent.get(), cached.geometry.top_left);
 }
 
 void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)

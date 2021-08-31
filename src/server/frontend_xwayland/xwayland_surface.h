@@ -131,6 +131,14 @@ private:
     /// Should NOT be called under lock
     void inform_client_of_window_state(WindowState const& state);
 
+    /// Calls connection->configure_window() with the given position and size, as well as tracking the calls made so
+    /// future configure notifies can determine if the source was us or the client
+    void inform_client_of_geometry(
+        std::optional<geometry::X> x,
+        std::optional<geometry::Y> y,
+        std::optional<geometry::Width> width,
+        std::optional<geometry::Height> height);
+
     /// Requests the scene surface be put into the given state
     /// If the request results in an actual surface state change, the observer will be notified
     /// Should NOT be called under lock
@@ -199,8 +207,9 @@ private:
 
         bool override_redirect;
 
-        geometry::Size size;
-        geometry::Point top_left; ///< Always in global coordinates
+        /// The last geometry we've configured the window with. Note that configure notifications we get do not
+        /// immediately change this, as there could be a more recent configure event we've sent still on the wire.
+        geometry::Rectangle geometry;
 
         /// The contents of the _NET_SUPPORTED property set by the client
         std::set<xcb_atom_t> supported_wm_protocols;
