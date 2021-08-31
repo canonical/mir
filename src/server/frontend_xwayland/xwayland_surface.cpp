@@ -501,13 +501,25 @@ void mf::XWaylandSurface::take_focus()
 void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event)
 {
     std::unique_lock<std::mutex> lock{mutex};
-    auto const scene_surface = weak_scene_surface.lock();
-    if (scene_surface)
+    if (event->value_mask & XCB_CONFIG_WINDOW_X || event->value_mask & XCB_CONFIG_WINDOW_Y)
     {
-        lock.unlock();
-        modify_surface_geometry(scene_surface, event->value_mask, event->x, event->y, event->width, event->height);
+        pending_spec(lock).top_left = geom::Point{
+            event->value_mask & XCB_CONFIG_WINDOW_X ? geom::X{event->x} : cached.geometry.left(),
+            event->value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{event->y} : cached.geometry.top()};
     }
-    else
+
+    // Mir seems to not like it when only one dimension is specified
+    if (event->value_mask & XCB_CONFIG_WINDOW_WIDTH || event->value_mask & XCB_CONFIG_WINDOW_HEIGHT)
+    {
+        pending_spec(lock).width = event->value_mask & XCB_CONFIG_WINDOW_WIDTH ?
+            geom::Width{event->width} :
+            cached.geometry.size.width;
+        pending_spec(lock).height = event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ?
+            geom::Height{event->height} :
+            cached.geometry.size.height;
+    }
+
+    if (!weak_scene_surface.lock())
     {
         lock.unlock();
 
@@ -519,6 +531,12 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
 
         connection->flush();
     }
+    else
+    {
+        lock.unlock();
+        apply_any_mods_to_scene_surface();
+    }
+
 }
 
 void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
@@ -530,23 +548,23 @@ void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
     auto const it = std::find(inflight_configures.begin(), inflight_configures.end(), geometry);
     if (it == inflight_configures.end())
     {
-        // We didn't initiate this configure, move the scene surface in response
-        if (auto const scene_surface = weak_scene_surface.lock())
+        if (verbose_xwayland_logging_enabled())
         {
-            lock.unlock();
-            modify_surface_geometry(
-                scene_surface,
-                XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
-                event->x, event->y,
-                event->width, event->height);
+            log_debug("Processing configure notify because it came from someone else");
         }
-        else
-        {
-            cached.geometry = geometry;
-        }
+        cached.geometry = geometry;
+        pending_spec(lock).top_left = geometry.top_left;
+        pending_spec(lock).width = geometry.size.width;
+        pending_spec(lock).height = geometry.size.height;
+        lock.unlock();
+        apply_any_mods_to_scene_surface();
     }
     else
     {
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug("Ignoring configure notify because it came from us");
+        }
         inflight_configures.erase(inflight_configures.begin(), it + 1);
     }
 }
@@ -665,6 +683,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
         XWaylandSurfaceRole::populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
 
+        // May be overridden by anything in the pending spec
         spec.width = cached.geometry.size.width;
         spec.height = cached.geometry.size.height;
         spec.top_left = cached.geometry.top_left;
@@ -1094,6 +1113,13 @@ void mf::XWaylandSurface::inform_client_of_geometry(
     inflight_configures.push_back(geometry);
     lock.unlock();
 
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("configuring %s:", connection->window_debug_string(window).c_str());
+        log_debug("            position: %d, %d", geometry.left().as_int(), geometry.top().as_int());
+        log_debug("            size: %dx%d", geometry.size.width.as_int(), geometry.size.height.as_int());
+    }
+
     connection->configure_window(
         window,
         geometry.top_left,
@@ -1133,48 +1159,6 @@ auto mf::XWaylandSurface::latest_input_timestamp(ProofOfMutexLock const&) -> std
     }
 }
 
-void mf::XWaylandSurface::modify_surface_geometry(
-    std::shared_ptr<ms::Surface> const& scene_surface,
-    uint16_t xcb_value_mask,
-    int16_t x, int16_t y,
-    int16_t width, int16_t height)
-{
-    auto const content_offset = scaled_content_offset_of(*scene_surface);
-    geom::Point const old_position{scaled_top_left_of(*scene_surface) + content_offset};
-    geom::Point const new_position{
-        xcb_value_mask & XCB_CONFIG_WINDOW_X ? geom::X{x} : old_position.x,
-        xcb_value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{y} : old_position.y,
-    };
-
-    geom::Size const old_size{scaled_content_size_of(*scene_surface)};
-    geom::Size const new_size{
-        xcb_value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{width} : old_size.width,
-        xcb_value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{height} : old_size.height,
-    };
-
-    shell::SurfaceSpecification mods;
-
-    if (old_position != new_position)
-    {
-        mods.top_left = new_position;
-    }
-
-    if (old_size != new_size)
-    {
-        // Mir appears to not respect size request unless both width and height are set
-        mods.width = new_size.width;
-        mods.height = new_size.height;
-    }
-
-    if (!mods.is_empty())
-    {
-        std::unique_lock<std::mutex> lock{mutex};
-        prep_surface_spec(lock, mods);
-        lock.unlock();
-        shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
-    }
-}
-
 void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
 {
     std::shared_ptr<mir::scene::Surface> scene_surface;
@@ -1209,6 +1193,18 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
         if (spec.value()->type.is_set() &&
             spec.value()->type.value() == scene_surface->type())
             spec.value()->type.consume();
+
+        if (spec.value()->top_left.is_set() &&
+            spec.value()->top_left.value() == scene_surface->top_left())
+            spec.value()->top_left.consume();
+
+        if (spec.value()->width.is_set() &&
+            spec.value()->width.value() == scene_surface->content_size().width)
+            spec.value()->width.consume();
+
+        if (spec.value()->height.is_set() &&
+            spec.value()->height.value() == scene_surface->content_size().height)
+            spec.value()->height.consume();
 
         if (!spec.value()->is_empty())
         {
