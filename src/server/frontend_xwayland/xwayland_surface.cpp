@@ -968,7 +968,7 @@ auto mf::XWaylandSurface::scene_surface() const -> std::optional<std::shared_ptr
         return std::nullopt;
 }
 
-auto mf::XWaylandSurface::pending_spec(std::lock_guard<std::mutex> const&) -> msh::SurfaceSpecification&
+auto mf::XWaylandSurface::pending_spec(ProofOfMutexLock const&) -> msh::SurfaceSpecification&
 {
     if (!nullable_pending_spec)
         nullable_pending_spec = std::make_unique<msh::SurfaceSpecification>();
@@ -976,7 +976,7 @@ auto mf::XWaylandSurface::pending_spec(std::lock_guard<std::mutex> const&) -> ms
 }
 
 auto mf::XWaylandSurface::consume_pending_spec(
-    std::lock_guard<std::mutex> const&) -> std::optional<std::unique_ptr<msh::SurfaceSpecification>>
+    ProofOfMutexLock const&) -> std::optional<std::unique_ptr<msh::SurfaceSpecification>>
 {
     if (nullable_pending_spec)
         return move(nullable_pending_spec);
@@ -1120,7 +1120,7 @@ void mf::XWaylandSurface::request_scene_surface_state(MirWindowState new_state)
     }
 }
 
-auto mf::XWaylandSurface::latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds
+auto mf::XWaylandSurface::latest_input_timestamp(ProofOfMutexLock const&) -> std::chrono::nanoseconds
 {
     if (surface_observer)
     {
@@ -1301,7 +1301,7 @@ auto mf::XWaylandSurface::scaled_content_size_of(ms::Surface const& surface) -> 
     return surface.content_size() * scale;
 }
 
-auto mf::XWaylandSurface::plausible_parent(std::lock_guard<std::mutex> const&) -> std::shared_ptr<ms::Surface>
+auto mf::XWaylandSurface::plausible_parent(ProofOfMutexLock const&) -> std::shared_ptr<ms::Surface>
 {
     if (auto const current_effective = effective_parent.lock())
     {
@@ -1336,7 +1336,7 @@ auto mf::XWaylandSurface::plausible_parent(std::lock_guard<std::mutex> const&) -
     return {};
 }
 
-void mf::XWaylandSurface::apply_cached_transient_for_and_type(std::lock_guard<std::mutex> const& lock)
+void mf::XWaylandSurface::apply_cached_transient_for_and_type(ProofOfMutexLock const& lock)
 {
     auto parent = xcb_window_get_scene_surface(xwm, cached.transient_for);
     auto type = cached.type;

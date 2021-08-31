@@ -101,6 +101,20 @@ private:
         auto updated_from(MirWindowState state) const -> WindowState; ///< Does not change original
     };
 
+    struct ProofOfMutexLock
+    {
+        ProofOfMutexLock(std::lock_guard<std::mutex> const&) {}
+        ProofOfMutexLock(std::unique_lock<std::mutex> const& lock)
+        {
+            if (!lock.owns_lock())
+            {
+                fatal_error("ProofOfMutexLock created with unlocked unique_lock");
+            }
+        }
+        ProofOfMutexLock(ProofOfMutexLock const&) = delete;
+        ProofOfMutexLock operator=(ProofOfMutexLock const&) = delete;
+    };
+
     /// Overrides from XWaylandSurfaceObserverSurface
     /// @{
     void scene_surface_focus_set(bool has_focus) override;
@@ -118,12 +132,10 @@ private:
     /// @}
 
     /// Creates a pending spec if needed and returns a reference
-    auto pending_spec(
-        std::lock_guard<std::mutex> const&) -> shell::SurfaceSpecification&;
+    auto pending_spec(ProofOfMutexLock const&) -> shell::SurfaceSpecification&;
 
     /// Clears the pending spec and returns what it was
-    auto consume_pending_spec(
-        std::lock_guard<std::mutex> const&) -> std::optional<std::unique_ptr<shell::SurfaceSpecification>>;
+    auto consume_pending_spec(ProofOfMutexLock const&) -> std::optional<std::unique_ptr<shell::SurfaceSpecification>>;
 
     /// Updates the pending spec
     void is_transient_for(xcb_window_t transient_for);
@@ -145,7 +157,7 @@ private:
     /// Should NOT be called under lock
     void request_scene_surface_state(MirWindowState new_state);
 
-    auto latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds;
+    auto latest_input_timestamp(ProofOfMutexLock const&) -> std::chrono::nanoseconds;
 
     /// Modifies the scene surface's geometry if needed, should not be called under lock
     void modify_surface_geometry(
@@ -179,9 +191,9 @@ private:
     /// @}
 
     /// Returns a surface that could act as this surface's parent, or nullptr if none
-    auto plausible_parent(std::lock_guard<std::mutex> const&) -> std::shared_ptr<scene::Surface>;
+    auto plausible_parent(ProofOfMutexLock const&) -> std::shared_ptr<scene::Surface>;
     /// Applies cached.transient_for and cached.type to the spec
-    void apply_cached_transient_for_and_type(std::lock_guard<std::mutex> const& lock);
+    void apply_cached_transient_for_and_type(ProofOfMutexLock const& lock);
     void wm_size_hints(std::vector<int32_t> const& hints);
     void motif_wm_hints(std::vector<uint32_t> const& hints);
 
