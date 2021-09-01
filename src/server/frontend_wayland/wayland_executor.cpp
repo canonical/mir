@@ -280,6 +280,13 @@ mf::WaylandExecutor::WaylandExecutor(wl_event_loop* loop)
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create Wayland notify source"}));
     }
     EventLoopDestroyedHandler::setup_destruction_handler_for_loop(loop, source, state);
+
+    // Messy, but although the State ctor queues work it can't "notify" the event loop work is pending
+    if (auto err = eventfd_write(notify_fd, 1))
+    {
+        BOOST_THROW_EXCEPTION(
+            (std::system_error{err, std::system_category(), "eventfd_write failed to notify event loop"}));
+    }
 }
 
 mf::WaylandExecutor::~WaylandExecutor()

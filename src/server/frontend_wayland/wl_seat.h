@@ -80,8 +80,6 @@ public:
     void remove_focus_listener(wl_client* client, FocusListener* listener);
     void notify_focus(WlSurface& surface, bool has_focus);
 
-    void server_restart();
-
 private:
     void set_focus_to(WlSurface* surface);
 

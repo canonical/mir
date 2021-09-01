@@ -933,6 +933,7 @@ MIR_SERVER_2.5 {
     VTT?for?mir::shell::ShellWrapper;
     VTT?for?mir::shell::SystemCompositorWindowManager;
     mir::DefaultServerConfiguration::the_text_input_hub*;
+    mir::input::ResyncKeyboardDispatcher*;
   };
  local: *;
 };
