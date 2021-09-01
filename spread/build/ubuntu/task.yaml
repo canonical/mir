@@ -61,6 +61,9 @@ execute: |
 
         # Quirk for the eglexternalplatform-dev build dependency
         sed -i 's/\(eglexternalplatform-dev\)/\1:all/' debian/control
+    else
+        # Add mir-smoke-test-runner dependencies
+        apt-get install --yes --no-install-recommends xvfb xauth xwayland dmz-cursor-theme glmark2-es2-wayland
     fi
 
     # Mark the "release" in the changelog
