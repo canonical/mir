@@ -5,6 +5,7 @@ variants: [amd64]
 execute: |
     apk add \
         boost-dev \
+        ccache \
         cmake \
         coreutils \
         elogind \
@@ -33,8 +34,14 @@ execute: |
         wayland-dev \
         yaml-cpp-dev
 
-    BUILD_DIR=$(mktemp -d)
-    cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_USE_LD=ld -DMIR_ENABLE_WLCS_TESTS=OFF
+    BUILD_DIR=$PWD/../build
+    cmake \
+        -H$SPREAD_PATH -B$BUILD_DIR \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DMIR_USE_LD=ld \
+        -DMIR_ENABLE_WLCS_TESTS=OFF \
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
     export VERBOSE=1
     cmake --build $BUILD_DIR -- -j`nproc`
 
