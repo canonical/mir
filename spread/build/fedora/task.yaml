@@ -7,6 +7,7 @@ execute: |
         cmake \
         make \
         gcc-c++ \
+        ccache \
         boost-devel \
         mesa-libEGL-devel \
         mesa-libGLES-devel \
@@ -43,8 +44,13 @@ execute: |
         systemtap-sdt-devel \
         libdrm-devel
 
-    BUILD_DIR=$(mktemp --directory)
-    cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_ENABLE_WLCS_TESTS=OFF
+    BUILD_DIR=$PWD/../build
+    cmake \
+        -H$SPREAD_PATH -B$BUILD_DIR \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DMIR_ENABLE_WLCS_TESTS=OFF \
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
     # Run cmake again to pick up wlcs?!?!?!?!
     cmake $BUILD_DIR
     export VERBOSE=1
