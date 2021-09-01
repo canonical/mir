@@ -36,7 +36,7 @@ execute: |
         xvfb-run \
         xauth \
         xwayland \
-        breeze
+        dmz-cursor-theme
 
     BUILD_DIR=$(mktemp -d)
     cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_USE_LD=ld -DMIR_ENABLE_WLCS_TESTS=OFF
