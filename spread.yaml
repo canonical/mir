@@ -49,6 +49,9 @@ environment:
     NOCHECK: ""
     NOCHECK/asan,tsan,ubsan,asan_clang,tsan_clang,ubsan_clang: nocheck
     CTEST_OUTPUT_ON_FAILURE: 1
+    CCACHE_DIR: /root/.ccache
+    # Needed for precompiled headers (https://ccache.dev/manual/latest.html#_precompiled_headers)
+    CCACHE_SLOPPINESS: time_macros,pch_defines,include_file_mtime,include_file_ctime
 
 prepare: |
     # NOTE: This part of the code needs to be in spread.yaml as it runs before

@@ -63,6 +63,7 @@ jobs:
       DEBFULLNAME: "Mir CI Bot"
       DEBEMAIL: "mir-ci-bot@canonical.com"
       SPREAD_PATH: "/tmp/spread"
+      CCACHE_DIR: "/tmp/ccache"
 
     steps:
     - name: Set up LXD
@@ -79,6 +80,27 @@ jobs:
 
     - name: Check out code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up CCache
+      id: setup-ccache
+      run: |
+        mkdir --parents ${CCACHE_DIR}
+        /snap/bin/lxc profile device add default ccache disk source=${CCACHE_DIR} path=/root/.ccache
+
+        # Find the merge base to avoid populating the cache with short lived cache entries
+        # and evicting those we care for - from `main`
+        echo "::set-output name=merge-base::$( git merge-base origin/main ${{ github.sha }} )"
+
+    - name: CCache
+      uses: actions/cache@v2
+      with:
+        key: ccache-${{ matrix.spread-task }}-${{ steps.setup-ccache.outputs.merge-base }}
+        # if exact match isn't found, use the most recent entry for the task
+        restore-keys: |
+          ccache-${{ matrix.spread-task }}-
+        path: ${{ env.CCACHE_DIR }}/**
 
     - name: Run Spread task
       run: snap run spread -v ${{ matrix.spread-task }}
