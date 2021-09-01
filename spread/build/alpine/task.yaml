@@ -33,6 +33,7 @@ execute: |
         wayland-dev \
         yaml-cpp-dev \
         xvfb \
+        xvfb-run \
         xauth \
         xwayland \
         breeze
