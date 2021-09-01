@@ -38,6 +38,7 @@ execute: |
     MKSBUILD_OPTS=(
       mk-sbuild
       --distro ${DISTRO}
+      --debootstrap-include=ccache
       ${RELEASE}
     )
 
@@ -74,6 +75,14 @@ execute: |
     sg sbuild -c "${MKSBUILD_OPTS[*]}"
 
     echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk
+
+    # use ccache
+    echo "export CCACHE_DIR=${CCACHE_DIR}" >> debian/opts.mk
+    echo "export CCACHE_SLOPPINESS=${CCACHE_SLOPPINESS}" >> debian/opts.mk
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache" >> debian/opts.mk
+
+    echo "${CCACHE_DIR} ${CCACHE_DIR} none rw,bind 0 0" >> /etc/schroot/sbuild/fstab
 
     # Running the tests under QEMU fails to entirely correctly support libwayland's SIGSEGV handler
     if [[ ${DEB_HOST_ARCH} == armhf ]]; then

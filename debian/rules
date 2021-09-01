@@ -5,6 +5,10 @@ include debian/opts.mk
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
+# Needed for ccache to work in case the build directory changed
+# (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=810871)
+export CCACHE_BASEDIR = $(shell pwd)
+
 %:
 	dh $@ -Bbuild-$(DEB_HOST_ARCH) --parallel --fail-missing
 
