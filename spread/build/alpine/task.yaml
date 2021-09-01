@@ -36,6 +36,7 @@ execute: |
         xvfb-run \
         xauth \
         xwayland \
+        mesa-dri-swrast \
         capitaine-cursors
 
     BUILD_DIR=$(mktemp -d)
