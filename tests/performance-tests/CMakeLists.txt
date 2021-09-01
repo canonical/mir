@@ -20,7 +20,7 @@ install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-smoke-test-runner
 
 find_program(XVFB_RUN_EXECUTABLE xvfb-run REQUIRED)
 if(XVFB_RUN_EXECUTABLE)
-  find_program(GLMARK2_EXECUTABLE glmark2-es2-wayland REQUIRED)
+  find_program(GLMARK2_EXECUTABLE glmark2-es2-wayland)
   if(GLMARK2_EXECUTABLE)
     mir_add_test(NAME mir_performance_tests
       COMMAND "xvfb-run" "--auto-servernum" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests"
