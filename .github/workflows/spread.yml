@@ -60,7 +60,7 @@ jobs:
     needs: GetMatrix
 
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{ fromJSON(needs.GetMatrix.outputs.matrix) }}
 
     runs-on: ubuntu-latest
