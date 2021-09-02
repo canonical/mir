@@ -159,6 +159,51 @@ auto wm_resize_edge_to_mir_resize_edge(NetWmMoveresize wm_resize_edge) -> std::o
     return std::nullopt;
 }
 
+auto wm_window_type_to_mir_window_type(
+    mf::XCBConnection* connection,
+    std::vector<xcb_atom_t> const& wm_types) -> MirWindowType
+{
+    // See https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46515148839648
+    for (auto const& wm_type : wm_types)
+    {
+        if (wm_type == connection->_NET_WM_WINDOW_TYPE_NORMAL ||
+            wm_type == connection->_NET_WM_WINDOW_TYPE_SPLASH ||
+            wm_type == connection->_NET_WM_WINDOW_TYPE_DESKTOP ||
+            wm_type == connection->_NET_WM_WINDOW_TYPE_DOCK)
+        {
+            // TODO: perhaps desktop and dock should set the layer as well somehow?
+            return mir_window_type_freestyle;
+        }
+        if (wm_type == connection->_NET_WM_WINDOW_TYPE_DIALOG)
+        {
+            return mir_window_type_dialog;
+        }
+        else if (wm_type == connection->_NET_WM_WINDOW_TYPE_TOOLBAR ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_MENU ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_UTILITY)
+        {
+            return mir_window_type_satellite;
+        }
+        else if (wm_type == connection->_NET_WM_WINDOW_TYPE_POPUP_MENU ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_DROPDOWN_MENU ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_COMBO ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_TOOLTIP ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_NOTIFICATION ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_DND)
+        {
+            return mir_window_type_gloss;
+        }
+        else if (mir::verbose_xwayland_logging_enabled())
+        {
+            mir::log_debug(
+                "Ignoring unknown window type %s",
+                connection->query_name(wm_type).c_str());
+        }
+    }
+
+    return mir_window_type_freestyle;
+}
+
 template<typename T>
 auto property_handler(
     std::shared_ptr<mf::XCBConnection> const& connection,
@@ -182,6 +227,19 @@ auto property_handler(
     std::function<void(T const&)> handler) -> std::pair<xcb_atom_t, std::function<std::function<void()>()>>
 {
     return property_handler<T>(connection, window, property, mf::XCBConnection::Handler<T>{std::move(handler)});
+}
+
+template<typename T>
+auto make_optional_if(bool condition, T&& value) -> std::optional<T>
+{
+    if (condition)
+    {
+        return std::optional<T>(std::move(value));
+    }
+    else
+    {
+        return std::nullopt;
+    }
 }
 }
 
@@ -249,7 +307,9 @@ mf::XWaylandSurface::XWaylandSurface(
               connection->_NET_WM_WINDOW_TYPE,
               [this](auto wm_types)
               {
-                  window_type(wm_types);
+                  std::lock_guard<std::mutex> lock{mutex};
+                  this->cached.type = wm_window_type_to_mir_window_type(this->connection.get(), wm_types);
+                  apply_cached_transient_for_and_type(lock);
               }),
           property_handler<std::vector<int32_t>>(
               connection,
@@ -284,8 +344,7 @@ mf::XWaylandSurface::XWaylandSurface(
                   motif_wm_hints(hints);
               })}
 {
-    cached.top_left = geometry.top_left;
-    cached.size = geometry.size;
+    cached.geometry = geometry;
     cached.override_redirect = override_redirect;
 
     uint32_t const value = XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE;
@@ -441,76 +500,73 @@ void mf::XWaylandSurface::take_focus()
 
 void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event)
 {
-    std::shared_ptr<scene::Surface> scene_surface;
-
+    std::unique_lock<std::mutex> lock{mutex};
+    if (event->value_mask & XCB_CONFIG_WINDOW_X || event->value_mask & XCB_CONFIG_WINDOW_Y)
     {
-        std::lock_guard<std::mutex> lock{mutex};
-        scene_surface = weak_scene_surface.lock();
+        pending_spec(lock).top_left = geom::Point{
+            event->value_mask & XCB_CONFIG_WINDOW_X ? geom::X{event->x} : cached.geometry.left(),
+            event->value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{event->y} : cached.geometry.top()};
     }
 
-    if (scene_surface)
+    // Mir seems to not like it when only one dimension is specified
+    if (event->value_mask & XCB_CONFIG_WINDOW_WIDTH || event->value_mask & XCB_CONFIG_WINDOW_HEIGHT)
     {
-        auto const content_offset = scaled_content_offset_of(*scene_surface);
-
-        geom::Point const old_position{scaled_top_left_of(*scene_surface) + content_offset};
-        geom::Point const new_position{
-            event->value_mask & XCB_CONFIG_WINDOW_X ? geom::X{event->x} : old_position.x,
-            event->value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{event->y} : old_position.y,
-        };
-
-        geom::Size const old_size{scaled_content_size_of(*scene_surface)};
-        geom::Size const new_size{
-            event->value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{event->width} : old_size.width,
-            event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{event->height} : old_size.height,
-        };
-
-        shell::SurfaceSpecification mods;
-
-        if (old_position != new_position)
-        {
-            surface_spec_set_position(mods, scene_surface->parent().get(), new_position - content_offset);
-        }
-
-        if (old_size != new_size)
-        {
-            // Mir appears to not respect size request unless both width and height are set
-            mods.width = new_size.width;
-            mods.height = new_size.height;
-        }
-
-        if (!mods.is_empty())
-        {
-            scale_surface_spec(mods);
-            shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
-        }
+        pending_spec(lock).width = event->value_mask & XCB_CONFIG_WINDOW_WIDTH ?
+            geom::Width{event->width} :
+            cached.geometry.size.width;
+        pending_spec(lock).height = event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ?
+            geom::Height{event->height} :
+            cached.geometry.size.height;
     }
-    else
+
+    if (!weak_scene_surface.lock())
     {
-        geom::Point const top_left{
-            event->value_mask & XCB_CONFIG_WINDOW_X ? geom::X{event->x} : cached.top_left.x,
-            event->value_mask & XCB_CONFIG_WINDOW_Y ? geom::Y{event->y} : cached.top_left.y};
+        lock.unlock();
 
-        geom::Size const size{
-            event->value_mask & XCB_CONFIG_WINDOW_WIDTH ? geom::Width{event->width} : cached.size.width,
-            event->value_mask & XCB_CONFIG_WINDOW_HEIGHT ? geom::Height{event->height} : cached.size.height};
-
-        connection->configure_window(
-            window,
-            top_left,
-            size,
-            std::nullopt,
-            std::nullopt);
+        inform_client_of_geometry(
+            make_optional_if(event->value_mask & XCB_CONFIG_WINDOW_X, geom::X{event->x}),
+            make_optional_if(event->value_mask & XCB_CONFIG_WINDOW_Y, geom::Y{event->y}),
+            make_optional_if(event->value_mask & XCB_CONFIG_WINDOW_WIDTH, geom::Width{event->width}),
+            make_optional_if(event->value_mask & XCB_CONFIG_WINDOW_HEIGHT, geom::Height{event->height}));
 
         connection->flush();
     }
+    else
+    {
+        lock.unlock();
+        apply_any_mods_to_scene_surface();
+    }
+
 }
 
 void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::unique_lock<std::mutex> lock{mutex};
     cached.override_redirect = event->override_redirect;
-    cached.top_left = geom::Point{event->x, event->y},
-    cached.size = geom::Size{event->width, event->height};
+    // If this configure is in response to a configure we sent we don't want to make a window manager request
+    auto const geometry = geom::Rectangle{geom::Point{event->x, event->y}, geom::Size{event->width, event->height}};
+    auto const it = std::find(inflight_configures.begin(), inflight_configures.end(), geometry);
+    if (it == inflight_configures.end())
+    {
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug("Processing configure notify because it came from someone else");
+        }
+        cached.geometry = geometry;
+        pending_spec(lock).top_left = geometry.top_left;
+        pending_spec(lock).width = geometry.size.width;
+        pending_spec(lock).height = geometry.size.height;
+        lock.unlock();
+        apply_any_mods_to_scene_surface();
+    }
+    else
+    {
+        if (verbose_xwayland_logging_enabled())
+        {
+            log_debug("Ignoring configure notify because it came from us");
+        }
+        inflight_configures.erase(inflight_configures.begin(), it + 1);
+    }
 }
 
 void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
@@ -627,9 +683,10 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
         XWaylandSurfaceRole::populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
 
-        spec.width = cached.size.width;
-        spec.height = cached.size.height;
-        spec.top_left = cached.top_left;
+        // May be overridden by anything in the pending spec
+        spec.width = cached.geometry.size.width;
+        spec.height = cached.geometry.size.height;
+        spec.top_left = cached.geometry.top_left;
         spec.type = mir_window_type_freestyle;
         spec.state = state.mir_window_state();
     }
@@ -676,26 +733,27 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        fix_parent_if_necessary(lock);
-
         if (auto const pending_spec = consume_pending_spec(lock))
         {
             spec.update_from(*pending_spec.value());
         }
+        prep_surface_spec(lock, spec);
 
         server_side_decorated = !cached.override_redirect && !cached.motif_decorations_disabled;
     }
 
-    scale_surface_spec(spec);
     ms::SurfaceCreationParameters params;
     params.update_from(spec);
     params.server_side_decorated = server_side_decorated;
     auto const surface = shell->create_surface(session, params, observer);
     inform_client_of_window_state(state);
+    auto const top_left = scaled_top_left_of(*surface) + scaled_content_offset_of(*surface);
+    auto const size = scaled_content_size_of(*surface);
+    inform_client_of_geometry(top_left.x, top_left.y, size.width, size.height);
     connection->configure_window(
         window,
-        scaled_top_left_of(*surface) + scaled_content_offset_of(*surface),
-        scaled_content_size_of(*surface),
+        std::nullopt,
+        std::nullopt,
         std::nullopt,
         XCB_STACK_MODE_ABOVE);
 
@@ -858,29 +916,19 @@ void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
 
 void mf::XWaylandSurface::scene_surface_resized(geometry::Size const& new_size)
 {
-    connection->configure_window(
-        window,
-        std::nullopt,
-        new_size,
-        std::nullopt,
-        std::nullopt);
+    inform_client_of_geometry(std::nullopt, std::nullopt, new_size.width, new_size.height);
     connection->flush();
 }
 
 void mf::XWaylandSurface::scene_surface_moved_to(geometry::Point const& new_top_left)
 {
-    std::shared_ptr<scene::Surface> scene_surface;
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        scene_surface = weak_scene_surface.lock();
-    }
+    std::unique_lock<std::mutex> lock{mutex};
+    auto const scene_surface = weak_scene_surface.lock();
+    lock.unlock();
+
     auto const content_offset = scene_surface ? scaled_content_offset_of(*scene_surface) : geom::Displacement{};
-    connection->configure_window(
-        window,
-        new_top_left + content_offset,
-        std::nullopt,
-        std::nullopt,
-        std::nullopt);
+    auto const offset_new_top_left = new_top_left + content_offset;
+    inform_client_of_geometry(offset_new_top_left.x, offset_new_top_left.y, std::nullopt, std::nullopt);
     connection->flush();
 }
 
@@ -939,7 +987,7 @@ auto mf::XWaylandSurface::scene_surface() const -> std::optional<std::shared_ptr
         return std::nullopt;
 }
 
-auto mf::XWaylandSurface::pending_spec(std::lock_guard<std::mutex> const&) -> msh::SurfaceSpecification&
+auto mf::XWaylandSurface::pending_spec(ProofOfMutexLock const&) -> msh::SurfaceSpecification&
 {
     if (!nullable_pending_spec)
         nullable_pending_spec = std::make_unique<msh::SurfaceSpecification>();
@@ -947,7 +995,7 @@ auto mf::XWaylandSurface::pending_spec(std::lock_guard<std::mutex> const&) -> ms
 }
 
 auto mf::XWaylandSurface::consume_pending_spec(
-    std::lock_guard<std::mutex> const&) -> std::optional<std::unique_ptr<msh::SurfaceSpecification>>
+    ProofOfMutexLock const&) -> std::optional<std::unique_ptr<msh::SurfaceSpecification>>
 {
     if (nullable_pending_spec)
         return move(nullable_pending_spec);
@@ -973,7 +1021,9 @@ void mf::XWaylandSurface::is_transient_for(xcb_window_t transient_for)
         }
     }
 
-    set_parent(transient_for, std::lock_guard<std::mutex>{mutex});
+    std::lock_guard<std::mutex> lock{mutex};
+    cached.transient_for = transient_for;
+    apply_cached_transient_for_and_type(lock);
 }
 
 void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_window_state)
@@ -1045,6 +1095,39 @@ void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_w
     connection->flush();
 }
 
+void mf::XWaylandSurface::inform_client_of_geometry(
+    std::optional<geometry::X> x,
+    std::optional<geometry::Y> y,
+    std::optional<geometry::Width> width,
+    std::optional<geometry::Height> height)
+{
+    std::unique_lock<std::mutex> lock{mutex};
+    auto const geometry = geom::Rectangle{
+        {x.value_or(cached.geometry.left()), y.value_or(cached.geometry.top())},
+        {width.value_or(cached.geometry.size.width), height.value_or(cached.geometry.size.height)}};
+    if (geometry == cached.geometry)
+    {
+        return;
+    }
+    cached.geometry = geometry;
+    inflight_configures.push_back(geometry);
+    lock.unlock();
+
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("configuring %s:", connection->window_debug_string(window).c_str());
+        log_debug("            position: %d, %d", geometry.left().as_int(), geometry.top().as_int());
+        log_debug("            size: %dx%d", geometry.size.width.as_int(), geometry.size.height.as_int());
+    }
+
+    connection->configure_window(
+        window,
+        geometry.top_left,
+        geometry.size,
+        std::nullopt,
+        std::nullopt);
+}
+
 void mf::XWaylandSurface::request_scene_surface_state(MirWindowState new_state)
 {
     std::shared_ptr<scene::Surface> scene_surface;
@@ -1063,7 +1146,7 @@ void mf::XWaylandSurface::request_scene_surface_state(MirWindowState new_state)
     }
 }
 
-auto mf::XWaylandSurface::latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds
+auto mf::XWaylandSurface::latest_input_timestamp(ProofOfMutexLock const&) -> std::chrono::nanoseconds
 {
     if (surface_observer)
     {
@@ -1086,6 +1169,10 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
         if ((scene_surface = weak_scene_surface.lock()))
         {
             spec = consume_pending_spec(lock);
+            if (spec)
+            {
+                prep_surface_spec(lock, *spec.value());
+            }
         }
     }
 
@@ -1103,67 +1190,52 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
             spec.value()->parent.value().lock() == scene_surface->parent())
             spec.value()->parent.consume();
 
+        if (spec.value()->type.is_set() &&
+            spec.value()->type.value() == scene_surface->type())
+            spec.value()->type.consume();
+
+        if (spec.value()->top_left.is_set() &&
+            spec.value()->top_left.value() == scene_surface->top_left())
+            spec.value()->top_left.consume();
+
+        if (spec.value()->width.is_set() &&
+            spec.value()->width.value() == scene_surface->content_size().width)
+            spec.value()->width.consume();
+
+        if (spec.value()->height.is_set() &&
+            spec.value()->height.value() == scene_surface->content_size().height)
+            spec.value()->height.consume();
+
         if (!spec.value()->is_empty())
         {
-            scale_surface_spec(*spec.value());
             shell->modify_surface(scene_surface->session().lock(), scene_surface, *spec.value());
         }
     }
 }
 
-void mf::XWaylandSurface::surface_spec_set_position(
-        msh::SurfaceSpecification& spec,
-        ms::Surface* parent,
-        geom::Point top_left)
+void mf::XWaylandSurface::prep_surface_spec(ProofOfMutexLock const&, msh::SurfaceSpecification& mods)
 {
-    if (parent)
-    {
-        auto const local_top_left =
-            top_left -
-            as_displacement(scaled_top_left_of(*parent)) -
-            scaled_content_offset_of(*parent);
-        spec.aux_rect = {local_top_left, {1, 1}};
-        spec.placement_hints = MirPlacementHints{};
-        spec.surface_placement_gravity = mir_placement_gravity_northwest;
-        spec.aux_rect_placement_gravity = mir_placement_gravity_northwest;
-    }
-    else
-    {
-        spec.top_left = top_left;
-    }
-}
-
-void mf::XWaylandSurface::scale_surface_spec(msh::SurfaceSpecification& mods)
-{
-    if (scale == 1.0f)
-    {
-        return;
-    }
-
     auto const inv_scale = 1.0f / scale;
 
     if (mods.top_left)
     {
-        mods.top_left = as_point(as_displacement(mods.top_left.value()) * inv_scale);
-    }
-
-    if (mods.aux_rect)
-    {
-        mods.aux_rect.value().top_left = as_point(as_displacement(mods.aux_rect.value().top_left) * inv_scale);
-
-        mods.aux_rect.value().size = mods.aux_rect.value().size * inv_scale;
-        mods.aux_rect.value().size.width = std::max(geom::Width{1}, mods.aux_rect.value().size.width);
-        mods.aux_rect.value().size.height = std::max(geom::Height{1}, mods.aux_rect.value().size.height);
-    }
-
-    if (mods.aux_rect_placement_offset_x)
-    {
-        mods.aux_rect_placement_offset_x = mods.aux_rect_placement_offset_x * inv_scale;
-    }
-
-    if (mods.aux_rect_placement_offset_y)
-    {
-        mods.aux_rect_placement_offset_y = mods.aux_rect_placement_offset_y * inv_scale;
+        auto const surface = weak_scene_surface.lock();
+        auto const content_offset = surface ? surface->content_offset() : geom::Displacement{};
+        if (auto const parent = effective_parent.lock())
+        {
+            auto const parent_content_top_left = parent->top_left() + parent->content_offset();
+            auto const local_top_left = as_point(
+                as_displacement(mods.top_left.value()) * inv_scale - as_displacement(parent_content_top_left));
+            mods.aux_rect = {local_top_left, {1, 1}};
+            mods.placement_hints = MirPlacementHints{};
+            mods.surface_placement_gravity = mir_placement_gravity_northwest;
+            mods.aux_rect_placement_gravity = mir_placement_gravity_northwest;
+            mods.top_left.consume();
+        }
+        else
+        {
+            mods.top_left = as_point(as_displacement(mods.top_left.value()) * inv_scale - content_offset);
+        }
     }
 
 #define SCALE_SIZE(type, prop) \
@@ -1182,6 +1254,7 @@ void mf::XWaylandSurface::scale_surface_spec(msh::SurfaceSpecification& mods)
 #undef SCALE_SIZE
 
     // NOTE: exclusive rect not checked because it is not used by XWayland surfaces
+    // NOTE: aux rect related properties not checks because they are only set in this method
     // NOTE: buffer streams and input shapes are set and thus fixed in XWaylandSurfaceRole
 }
 
@@ -1200,117 +1273,67 @@ auto mf::XWaylandSurface::scaled_content_size_of(ms::Surface const& surface) -> 
     return surface.content_size() * scale;
 }
 
-void mf::XWaylandSurface::window_type(std::vector<xcb_atom_t> const& wm_types)
+auto mf::XWaylandSurface::plausible_parent(ProofOfMutexLock const&) -> std::shared_ptr<ms::Surface>
 {
-    auto set_type = [this](MirWindowType type)
-        {
-            std::lock_guard<std::mutex> lock{mutex};
-            pending_spec(lock).type = type;
-        };
-
-    for (auto const& wm_type : wm_types)
+    if (auto const current_effective = effective_parent.lock())
     {
-        if (connection->_NET_WM_WINDOW_TYPE_NORMAL == wm_type)
+        return current_effective;
+    }
+
+    // Taking the focussed window is plausible, but it is just a best guess. Having focus means is the most likely one
+    // to be interacting with the user.
+    if (auto const focused_window = xwm->get_focused_window())
+    {
+        // We don't want to be our own parent, that would be weird
+        if (focused_window != window)
         {
-            set_type(mir_window_type_freestyle);
-            return;
-        }
-        else if (connection->_NET_WM_WINDOW_TYPE_POPUP_MENU == wm_type)
-        {
-            set_type(mir_window_type_gloss);
-            return;
-        }
-        else if (connection->_NET_WM_WINDOW_TYPE_MENU == wm_type)
-        {
-            set_type(mir_window_type_menu);
-            return;
-        }
-        else if (verbose_xwayland_logging_enabled())
-        {
-            log_debug(
-                "Ignoring type (%s) of %s",
-                connection->query_name(wm_type).c_str(),
-                connection->window_debug_string(window).c_str());
+            if (auto const parent = xcb_window_get_scene_surface(xwm, focused_window.value()))
+            {
+                if (verbose_xwayland_logging_enabled())
+                {
+                    log_debug(
+                        "Set parent of %s from xwm->get_focused_window() (%s)",
+                        connection->window_debug_string(window).c_str(),
+                        connection->window_debug_string(focused_window.value()).c_str());
+                }
+                return parent;
+            }
         }
     }
 
-    set_type(mir_window_type_freestyle);
+    if (verbose_xwayland_logging_enabled())
+    {
+        log_debug("Unable to find suitable parent for %s", connection->window_debug_string(window).c_str());
+    }
+    return {};
 }
 
-void mf::XWaylandSurface::set_parent(xcb_window_t xcb_window, std::lock_guard<std::mutex> const& lock)
+void mf::XWaylandSurface::apply_cached_transient_for_and_type(ProofOfMutexLock const& lock)
 {
-    char const* debug_message = nullptr;
-    std::shared_ptr<scene::Surface> parent_scene_surface; // May remain nullptr
-
-    if (auto const xwayland_surface = xwm->get_wm_surface(xcb_window))
+    auto parent = xcb_window_get_scene_surface(xwm, cached.transient_for);
+    auto type = cached.type;
+    if (type == mir_window_type_dialog ||
+        type == mir_window_type_menu ||
+        type == mir_window_type_satellite ||
+        type == mir_window_type_tip ||
+        type == mir_window_type_gloss)
     {
-        if (auto const optional_scene_surface = xwayland_surface.value()->scene_surface())
+        // Type should have parent
+        if (!parent)
         {
-            if (auto const scene_surface = optional_scene_surface.value())
+            parent = plausible_parent(lock);
+            if (!parent)
             {
-                parent_scene_surface = scene_surface;
-            }
-            else
-            {
-                debug_message = "has a null scene surface";
+                type = mir_window_type_freestyle;
             }
         }
-        else
-        {
-            debug_message = "does not have a scene surface";
-        }
-    }
-    else
-    {
-        debug_message = "does not have an XWayland surface";
     }
 
-    if (debug_message && verbose_xwayland_logging_enabled())
-    {
-        log_debug("%s can not be transient for %s as the latter %s",
-            connection->window_debug_string(window).c_str(),
-            connection->window_debug_string(xcb_window).c_str(),
-            debug_message);
-    }
+    effective_parent = parent;
 
-    // The "good" path sets parent_scene_surface above, on any error we unparent the window
     auto& spec = pending_spec(lock);
-    spec.parent = parent_scene_surface;
-    surface_spec_set_position(spec, parent_scene_surface.get(), cached.top_left);
-}
-
-namespace
-{
-auto needs_parent(MirWindowType mir_window_type)
-{
-    // We don't use all the Mir types, but for these we should find a parent
-    return mir_window_type == mir_window_type_gloss || mir_window_type == mir_window_type_menu;
-}
-}
-
-// Workaround: Sometimes Mir expects a parent when the client has not set XCB_ATOM_WM_TRANSIENT_FOR.
-// NB Most clients do set XCB_ATOM_WM_TRANSIENT_FOR. (chromium, for one, doesn't #1665)
-void mf::XWaylandSurface::fix_parent_if_necessary(const std::lock_guard<std::mutex>& lock)
-{
-    auto& spec = pending_spec(lock);
-
-    if ((spec.type && needs_parent(spec.type.value())) &&
-        (!spec.parent || !spec.parent.value().lock()))
-    {
-        // Taking the focussed window is plausible, but it is just a best guess.
-        // Having focus means is the most likely one to be interacting with the
-        // user.
-        if (auto const focused_window = xwm->get_focused_window())
-        {
-            if (verbose_xwayland_logging_enabled())
-            {
-                log_debug("Fixup parent of (%s) from xwm->get_focused_window() (%s)",
-                          connection->window_debug_string(window).c_str(),
-                          connection->window_debug_string(focused_window.value()).c_str());
-            }
-            set_parent(focused_window.value(), lock);
-        }
-    }
+    spec.parent = parent;
+    spec.type = type;
 }
 
 void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
@@ -1365,4 +1388,19 @@ void mf::XWaylandSurface::motif_wm_hints(std::vector<uint32_t> const& hints)
         // Disable decorations only if all flags are off
         cached.motif_decorations_disabled = (hints[MotifWmHintsIndices::DECORATIONS] == 0);
     }
+}
+
+auto mf::XWaylandSurface::xcb_window_get_scene_surface(
+    mf::XWaylandWM* xwm,
+    xcb_window_t window) -> std::shared_ptr<ms::Surface>
+{
+    if (auto const xwayland_surface = xwm->get_wm_surface(window))
+    {
+        if (auto const scene_surface = xwayland_surface.value()->scene_surface())
+        {
+            return scene_surface.value();
+        }
+    }
+
+    return {};
 }

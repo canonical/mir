@@ -30,6 +30,7 @@
 #include <mutex>
 #include <chrono>
 #include <set>
+#include <deque>
 
 namespace mir
 {
@@ -100,6 +101,20 @@ private:
         auto updated_from(MirWindowState state) const -> WindowState; ///< Does not change original
     };
 
+    struct ProofOfMutexLock
+    {
+        ProofOfMutexLock(std::lock_guard<std::mutex> const&) {}
+        ProofOfMutexLock(std::unique_lock<std::mutex> const& lock)
+        {
+            if (!lock.owns_lock())
+            {
+                fatal_error("ProofOfMutexLock created with unlocked unique_lock");
+            }
+        }
+        ProofOfMutexLock(ProofOfMutexLock const&) = delete;
+        ProofOfMutexLock operator=(ProofOfMutexLock const&) = delete;
+    };
+
     /// Overrides from XWaylandSurfaceObserverSurface
     /// @{
     void scene_surface_focus_set(bool has_focus) override;
@@ -117,12 +132,10 @@ private:
     /// @}
 
     /// Creates a pending spec if needed and returns a reference
-    auto pending_spec(
-        std::lock_guard<std::mutex> const&) -> shell::SurfaceSpecification&;
+    auto pending_spec(ProofOfMutexLock const&) -> shell::SurfaceSpecification&;
 
     /// Clears the pending spec and returns what it was
-    auto consume_pending_spec(
-        std::lock_guard<std::mutex> const&) -> std::optional<std::unique_ptr<shell::SurfaceSpecification>>;
+    auto consume_pending_spec(ProofOfMutexLock const&) -> std::optional<std::unique_ptr<shell::SurfaceSpecification>>;
 
     /// Updates the pending spec
     void is_transient_for(xcb_window_t transient_for);
@@ -131,29 +144,29 @@ private:
     /// Should NOT be called under lock
     void inform_client_of_window_state(WindowState const& state);
 
+    /// Calls connection->configure_window() with the given position and size, as well as tracking the calls made so
+    /// future configure notifies can determine if the source was us or the client
+    void inform_client_of_geometry(
+        std::optional<geometry::X> x,
+        std::optional<geometry::Y> y,
+        std::optional<geometry::Width> width,
+        std::optional<geometry::Height> height);
+
     /// Requests the scene surface be put into the given state
     /// If the request results in an actual surface state change, the observer will be notified
     /// Should NOT be called under lock
     void request_scene_surface_state(MirWindowState new_state);
 
-    auto latest_input_timestamp(std::lock_guard<std::mutex> const&) -> std::chrono::nanoseconds;
+    auto latest_input_timestamp(ProofOfMutexLock const&) -> std::chrono::nanoseconds;
 
     /// Appplies any mods in nullable_pending_spec to the scene_surface (if any)
     void apply_any_mods_to_scene_surface();
 
-    /// Sets the position specified by the spec. top_left is always in global XWayland coordinates, even if parent is
-    /// not null. If parent is given, it is set as the parent and an aux rect for relative placement is calculated. if
-    /// parent is null, the location is specified in the global XWayland coordinates given. As always, you should call
-    /// scale_surface_spec() before sending this spec to Mir.
-    void surface_spec_set_position(
-        shell::SurfaceSpecification& spec,
-        scene::Surface* parent,
-        geometry::Point top_left);
-
-    /// One-stop-shop for scaling window modifications. Unlike with scaled Wayland surfaces, all the data going to and
-    /// from the client is in raw pixels, but Mir internally deals with scaled coordinates. This means before punting
-    /// our data off to Mir we need to scale it, which is what this function is for.
-    void scale_surface_spec(shell::SurfaceSpecification& mods);
+    /// Unlike with scaled Wayland surfaces, all the data going to and from the client is in raw pixels. Mir internally
+    /// deals with scaled coordinates. This means before modifying the Mir surface we need to scale the values in our
+    /// surface spec. We also need to convert from global to local coordinates if the surface has a parent. This
+    /// function handles all that.
+    void prep_surface_spec(ProofOfMutexLock const&, shell::SurfaceSpecification& mods);
 
     /// Return data from any surface scaled to XWayland coordinates
     /// @{
@@ -162,11 +175,15 @@ private:
     auto scaled_content_size_of(scene::Surface const& surface) -> geometry::Size;
     /// @}
 
-    void window_type(std::vector<xcb_atom_t> const& wm_types);
-    void set_parent(xcb_window_t xcb_window, std::lock_guard<std::mutex> const&);
-    void fix_parent_if_necessary(const std::lock_guard<std::mutex>& lock);
+    /// Returns a surface that could act as this surface's parent, or nullptr if none
+    auto plausible_parent(ProofOfMutexLock const&) -> std::shared_ptr<scene::Surface>;
+    /// Applies cached.transient_for and cached.type to the spec
+    void apply_cached_transient_for_and_type(ProofOfMutexLock const& lock);
     void wm_size_hints(std::vector<int32_t> const& hints);
     void motif_wm_hints(std::vector<uint32_t> const& hints);
+
+    /// Returns the scene surface associated with a given xcb_window, or nullptr if none
+    static auto xcb_window_get_scene_surface(XWaylandWM* xwm, xcb_window_t window) -> std::shared_ptr<scene::Surface>;
 
     XWaylandWM* const xwm;
     std::shared_ptr<XCBConnection> const connection;
@@ -188,21 +205,30 @@ private:
 
         bool override_redirect;
 
-        geometry::Size size;
-        geometry::Point top_left; ///< Always in global coordinates
+        /// The last geometry we've configured the window with. Note that configure notifications we get do not
+        /// immediately change this, as there could be a more recent configure event we've sent still on the wire.
+        geometry::Rectangle geometry;
 
         /// The contents of the _NET_SUPPORTED property set by the client
         std::set<xcb_atom_t> supported_wm_protocols;
 
         /// True if server-side decorations have been explicitly disabled with motif hints
         bool motif_decorations_disabled{false};
+
+        xcb_window_t transient_for{XCB_WINDOW_NONE};
+        MirWindowType type{mir_window_type_freestyle};
     } cached;
+
+    /// When we send a configure we push it to the back, when we get notified of a configure we pop it and all the ones
+    /// before it
+    std::deque<geometry::Rectangle> inflight_configures;
 
     /// Set in set_wl_surface and cleared when a scene surface is created from it
     std::optional<std::shared_ptr<XWaylandSurfaceObserver>> surface_observer;
     std::unique_ptr<shell::SurfaceSpecification> nullable_pending_spec;
     std::shared_ptr<XWaylandClientManager::Session> client_session;
     std::weak_ptr<scene::Surface> weak_scene_surface;
+    std::weak_ptr<scene::Surface> effective_parent;
 };
 } /* frontend */
 } /* mir */
