@@ -45,6 +45,9 @@ namespace eglstream
 class RenderingPlatform : public graphics::RenderingPlatform
 {
 public:
+    RenderingPlatform();
+    ~RenderingPlatform() override;
+
     UniqueModulePtr<GraphicBufferAllocator>
         create_buffer_allocator(Display const& output) override;
 };
@@ -66,27 +69,6 @@ private:
     EGLDisplay display;
     mir::Fd drm_node;
     std::unique_ptr<mir::Device> drm_device;
-};
-
-class Platform : public graphics::DisplayPlatform,
-                 public graphics::RenderingPlatform
-{
-public:
-    Platform(
-        std::shared_ptr<RenderingPlatform> const&,
-        std::shared_ptr<DisplayPlatform> const&);
-    ~Platform();
-
-    UniqueModulePtr<GraphicBufferAllocator>
-        create_buffer_allocator(Display const& output) override;
-
-    UniqueModulePtr<Display> create_display(
-        std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,
-        std::shared_ptr<GLConfig> const& /*gl_config*/) override;
-
-private:
-    std::shared_ptr<RenderingPlatform> const rendering;
-    std::shared_ptr<DisplayPlatform> const display;
 };
 }
 }

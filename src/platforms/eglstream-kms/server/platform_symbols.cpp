@@ -97,9 +97,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
         mg::initialise_egl_logger();
     }
 
-    return mir::make_module_ptr<mge::Platform>(
-        std::make_shared<mge::RenderingPlatform>(),
-        std::make_shared<mge::DisplayPlatform>(*console, find_device(), display_report));
+    return mir::make_module_ptr<mge::DisplayPlatform>(*console, find_device(), display_report);
 }
 
 auto create_rendering_platform(
