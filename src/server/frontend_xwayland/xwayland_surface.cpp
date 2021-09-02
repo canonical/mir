@@ -230,11 +230,11 @@ auto property_handler(
 }
 
 template<typename T>
-auto optional_from(bool return_value, T&& value) -> std::optional<T>
+auto make_optional_if(bool condition, T&& value) -> std::optional<T>
 {
-    if (return_value)
+    if (condition)
     {
-        return std::optional<T>(value);
+        return std::optional<T>(std::move(value));
     }
     else
     {
@@ -524,10 +524,10 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
         lock.unlock();
 
         inform_client_of_geometry(
-            optional_from(event->value_mask & XCB_CONFIG_WINDOW_X, geom::X{event->x}),
-            optional_from(event->value_mask & XCB_CONFIG_WINDOW_Y, geom::Y{event->y}),
-            optional_from(event->value_mask & XCB_CONFIG_WINDOW_WIDTH, geom::Width{event->width}),
-            optional_from(event->value_mask & XCB_CONFIG_WINDOW_HEIGHT, geom::Height{event->height}));
+            make_optional_if(event->value_mask & XCB_CONFIG_WINDOW_X, geom::X{event->x}),
+            make_optional_if(event->value_mask & XCB_CONFIG_WINDOW_Y, geom::Y{event->y}),
+            make_optional_if(event->value_mask & XCB_CONFIG_WINDOW_WIDTH, geom::Width{event->width}),
+            make_optional_if(event->value_mask & XCB_CONFIG_WINDOW_HEIGHT, geom::Height{event->height}));
 
         connection->flush();
     }
