@@ -24,6 +24,7 @@
 #include "xwayland_client_manager.h"
 #include "xwayland_surface_role_surface.h"
 #include "xwayland_surface_observer_surface.h"
+#include "mir/scene/surface_state_tracker.h"
 
 #include <xcb/xcb.h>
 
@@ -73,34 +74,6 @@ public:
     void move_resize(uint32_t detail);
 
 private:
-    // See https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#idm45805407959456
-    enum class NetWmStateAction: uint32_t
-    {
-        REMOVE = 0,
-        ADD = 1,
-        TOGGLE = 2,
-    };
-
-    /// contains more information than just a MirWindowState
-    /// (for example if a minimized window would otherwise be maximized)
-    /// TODO: delete this and use scene::SurfaceStateStack in it's place
-    struct WindowState
-    {
-        bool withdrawn{true};
-        bool minimized{false};
-        bool maximized{false};
-        bool fullscreen{false};
-
-        void apply_change(
-            std::shared_ptr<XCBConnection> const& connection,
-            NetWmStateAction action,
-            xcb_atom_t net_wm_state);
-
-        auto operator==(WindowState const& that) const -> bool;
-        auto mir_window_state() const -> MirWindowState;
-        auto updated_from(MirWindowState state) const -> WindowState; ///< Does not change original
-    };
-
     struct ProofOfMutexLock
     {
         ProofOfMutexLock(std::lock_guard<std::mutex> const&) {}
@@ -140,9 +113,9 @@ private:
     /// Updates the pending spec
     void is_transient_for(xcb_window_t transient_for);
 
-    /// Updates the window's WM_STATE and _NET_WM_STATE properties
-    /// Should NOT be called under lock
-    void inform_client_of_window_state(WindowState const& state);
+    /// Updates the window's WM_STATE and _NET_WM_STATE properties. Should NOT be called under lock. Calling with
+    /// nullopt withdraws the window.
+    void inform_client_of_window_state(std::optional<scene::SurfaceStateTracker> const& state);
 
     /// Calls connection->configure_window() with the given position and size, as well as tracking the calls made so
     /// future configure notifies can determine if the source was us or the client
@@ -199,9 +172,13 @@ private:
     /// Cached version of properties on the X server
     struct
     {
-        /// Reflects the _NET_WM_STATE and WM_STATE we have currently set on the window
-        /// Should only be modified by set_wm_state()
-        WindowState state;
+        /// Reflects the _NET_WM_STATE and WM_STATE we have currently set on the window.
+        /// Should only be modified by inform_client_of_window_state().
+        /// Initially set to hidden, which means withdrawn in X11.
+        scene::SurfaceStateTracker state{mir_window_state_restored};
+
+        /// If the window is withdrawn. Should only be modified by inform_client_of_window_state().
+        bool withdrawn{true};
 
         bool override_redirect;
 

@@ -138,6 +138,14 @@ enum MotifWmHintsFlags: uint32_t
 };
 }
 
+// See https://specifications.freedesktop.org/wm-spec/wm-spec-1.3.html#idm45805407959456
+enum class NetWmStateAction: uint32_t
+{
+    REMOVE = 0,
+    ADD = 1,
+    TOGGLE = 2,
+};
+
 auto wm_resize_edge_to_mir_resize_edge(NetWmMoveresize wm_resize_edge) -> std::optional<MirResizeEdge>
 {
     switch (wm_resize_edge)
@@ -227,6 +235,43 @@ auto property_handler(
     std::function<void(T const&)> handler) -> std::pair<xcb_atom_t, std::function<std::function<void()>()>>
 {
     return property_handler<T>(connection, window, property, mf::XCBConnection::Handler<T>{std::move(handler)});
+}
+
+auto apply_state_change(
+    ms::SurfaceStateTracker initial,
+    std::shared_ptr<mf::XCBConnection> const& connection,
+    NetWmStateAction action,
+    xcb_atom_t net_wm_state) -> ms::SurfaceStateTracker
+{
+    MirWindowState state;
+    if (net_wm_state == connection->_NET_WM_STATE_HIDDEN)
+    {
+        state = mir_window_state_minimized;
+    }
+    else if (net_wm_state == connection->_NET_WM_STATE_MAXIMIZED_HORZ) // assume vert is also set
+    {
+        state = mir_window_state_maximized;
+    }
+    else if (net_wm_state == connection->_NET_WM_STATE_FULLSCREEN)
+    {
+        state = mir_window_state_fullscreen;
+    }
+    else
+    {
+        return initial;
+    }
+
+    if (action == NetWmStateAction::TOGGLE)
+    {
+        action = initial.has(state) ? NetWmStateAction::REMOVE : NetWmStateAction::ADD;
+    }
+
+    switch (action)
+    {
+    case NetWmStateAction::ADD:     return initial.with(state);
+    case NetWmStateAction::REMOVE:  return initial.without(state);
+    default: return initial;
+    }
 }
 
 template<typename T>
@@ -358,11 +403,9 @@ mf::XWaylandSurface::~XWaylandSurface()
 
 void mf::XWaylandSurface::map()
 {
-    WindowState state;
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        state = cached.state;
-    }
+    std::unique_lock<std::mutex> lock{mutex};
+    ms::SurfaceStateTracker state = cached.state;
+    lock.unlock();
 
     // _NET_WM_STATE is not in property_handlers because we only read it on window creation
     // We, the server (not the client) are responsible for updating it after the window has been mapped
@@ -375,7 +418,7 @@ void mf::XWaylandSurface::map()
             {
                 for (auto const& net_wm_state : net_wm_states)
                 {
-                    state.apply_change(connection, NetWmStateAction::ADD, net_wm_state);
+                    state = apply_state_change(state, connection, NetWmStateAction::ADD, net_wm_state);
                 }
             }
         });
@@ -389,24 +432,20 @@ void mf::XWaylandSurface::map()
         connection->_NET_WM_DESKTOP,
         workspace);
 
-    state.withdrawn = false;
     inform_client_of_window_state(state);
-    request_scene_surface_state(state.mir_window_state());
+    request_scene_surface_state(state.active_state());
     xcb_map_window(*connection, window);
     connection->flush();
 }
 
 void mf::XWaylandSurface::close()
 {
-    WindowState state;
     std::shared_ptr<XWaylandClientManager::Session> local_client_session;
     std::shared_ptr<scene::Surface> scene_surface;
     std::shared_ptr<XWaylandSurfaceObserver> observer;
 
     {
         std::lock_guard<std::mutex> lock{mutex};
-
-        state = cached.state;
 
         local_client_session = std::move(client_session);
 
@@ -427,8 +466,7 @@ void mf::XWaylandSurface::close()
 
     connection->delete_property(window, connection->_NET_WM_DESKTOP);
 
-    state.withdrawn = true;
-    inform_client_of_window_state(state);
+    inform_client_of_window_state(std::nullopt);
 
     xcb_unmap_window(*connection, window);
     connection->flush();
@@ -581,24 +619,20 @@ void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
 
     (void)source_indication;
 
-    WindowState new_window_state;
+    std::unique_lock<std::mutex> lock{mutex};
+    ms::SurfaceStateTracker new_window_state{cached.state};
+    lock.unlock();
 
+    for (xcb_atom_t const property : properties)
     {
-        std::lock_guard<std::mutex> lock{mutex};
-
-        new_window_state = cached.state;
-
-        for (xcb_atom_t const property : properties)
+        if (property) // if there is only one property, the 2nd is 0
         {
-            if (property) // if there is only one property, the 2nd is 0
-            {
-                new_window_state.apply_change(connection, action, property);
-            }
+            new_window_state = apply_state_change(new_window_state, connection, action, property);
         }
     }
 
     inform_client_of_window_state(new_window_state);
-    request_scene_surface_state(new_window_state.mir_window_state());
+    request_scene_surface_state(new_window_state.active_state());
 }
 
 void mf::XWaylandSurface::wm_change_state_client_message(uint32_t const (&data)[5])
@@ -607,32 +641,28 @@ void mf::XWaylandSurface::wm_change_state_client_message(uint32_t const (&data)[
 
     WmState const requested_state = static_cast<WmState>(data[0]);
 
-    WindowState new_window_state;
+    std::unique_lock<std::mutex> lock{mutex};
+    ms::SurfaceStateTracker new_window_state{cached.state};
+    lock.unlock();
 
+    switch (requested_state)
     {
-        std::lock_guard<std::mutex> lock{mutex};
+    case WmState::NORMAL:
+        new_window_state = new_window_state.without(mir_window_state_minimized);
+        break;
 
-        new_window_state = cached.state;
+    case WmState::ICONIC:
+        new_window_state = new_window_state.with(mir_window_state_minimized);
+        break;
 
-        switch (requested_state)
-        {
-        case WmState::NORMAL:
-            new_window_state.minimized = false;
-            break;
-
-        case WmState::ICONIC:
-            new_window_state.minimized = true;
-            break;
-
-        default:
-            BOOST_THROW_EXCEPTION(std::runtime_error(
-                "WM_CHANGE_STATE client message sent invalid state " +
-                std::to_string(static_cast<std::underlying_type<WmState>::type>(requested_state))));
-        }
+    default:
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "WM_CHANGE_STATE client message sent invalid state " +
+            std::to_string(static_cast<std::underlying_type<WmState>::type>(requested_state))));
     }
 
     inform_client_of_window_state(new_window_state);
-    request_scene_surface_state(new_window_state.mir_window_state());
+    request_scene_surface_state(new_window_state.active_state());
 }
 
 void mf::XWaylandSurface::property_notify(xcb_atom_t property)
@@ -659,7 +689,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
             connection->window_debug_string(window).c_str());
     }
 
-    WindowState state;
+    ms::SurfaceStateTracker state{mir_window_state_hidden};
     shell::SurfaceSpecification spec;
     std::vector<std::shared_ptr<void>> keep_alive_until_spec_is_used;
 
@@ -679,7 +709,6 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         surface_observer = observer;
 
         state = cached.state;
-        state.withdrawn = false;
 
         XWaylandSurfaceRole::populate_surface_data_scaled(wl_surface, scale, spec, keep_alive_until_spec_is_used);
 
@@ -688,7 +717,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         spec.height = cached.geometry.size.height;
         spec.top_left = cached.geometry.top_left;
         spec.type = mir_window_type_freestyle;
-        spec.state = state.mir_window_state();
+        spec.state = state.active_state();
     }
 
     std::vector<std::function<void()>> reply_functions;
@@ -802,94 +831,6 @@ void mf::XWaylandSurface::move_resize(uint32_t detail)
     }
 }
 
-void mf::XWaylandSurface::WindowState::apply_change(
-    std::shared_ptr<XCBConnection> const& connection,
-    NetWmStateAction action,
-    xcb_atom_t net_wm_state)
-{
-    bool nil{false}, *prop_ptr = &nil;
-
-    if (net_wm_state == connection->_NET_WM_STATE_HIDDEN)
-        prop_ptr = &minimized;
-    else if (net_wm_state == connection->_NET_WM_STATE_MAXIMIZED_HORZ) // assume vert is also set
-        prop_ptr = &maximized;
-    else if (net_wm_state == connection->_NET_WM_STATE_FULLSCREEN)
-        prop_ptr = &fullscreen;
-
-    switch (action)
-    {
-    case NetWmStateAction::REMOVE:  *prop_ptr = false;      break;
-    case NetWmStateAction::ADD:     *prop_ptr = true;       break;
-    case NetWmStateAction::TOGGLE:  *prop_ptr = !*prop_ptr; break;
-    }
-}
-
-auto mf::XWaylandSurface::WindowState::operator==(WindowState const& that) const -> bool
-{
-    return
-        withdrawn == that.withdrawn &&
-        minimized == that.minimized &&
-        maximized == that.maximized &&
-        fullscreen == that.fullscreen;
-}
-
-auto mf::XWaylandSurface::WindowState::mir_window_state() const -> MirWindowState
-{
-    // withdrawn is ignored
-    if (minimized)
-        return mir_window_state_minimized;
-    else if (fullscreen)
-        return mir_window_state_fullscreen;
-    else if (maximized)
-        return mir_window_state_maximized;
-    else
-        return mir_window_state_restored;
-}
-
-auto mf::XWaylandSurface::WindowState::updated_from(MirWindowState state) const -> WindowState
-{
-    auto updated = *this;
-
-    // If there is a MirWindowState to update from, the surface should not be withdrawn
-    updated.withdrawn = false;
-
-    switch (state)
-    {
-    case mir_window_state_hidden:
-    case mir_window_state_minimized:
-        updated.minimized = true;
-        // don't change maximized or fullscreen
-        break;
-
-    case mir_window_state_fullscreen:
-        updated.minimized = false;
-        updated.fullscreen = true;
-        // don't change maximizeds
-        break;
-
-    case mir_window_state_maximized:
-    case mir_window_state_vertmaximized:
-    case mir_window_state_horizmaximized:
-        updated.minimized = false;
-        updated.maximized = true;
-        updated.fullscreen = false;
-        break;
-
-    case mir_window_state_restored:
-    case mir_window_state_unknown:
-    case mir_window_state_attached:
-        updated.minimized = false;
-        updated.maximized = false;
-        updated.fullscreen = false;
-        break;
-
-    case mir_window_states:
-        break;
-    }
-
-    return updated;
-}
-
 void mf::XWaylandSurface::scene_surface_focus_set(bool has_focus)
 {
     xwm->set_focus(window, has_focus);
@@ -897,11 +838,10 @@ void mf::XWaylandSurface::scene_surface_focus_set(bool has_focus)
 
 void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
 {
-    WindowState state;
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        state = cached.state.updated_from(new_state);
-    }
+    std::unique_lock<std::mutex> lock{mutex};
+    ms::SurfaceStateTracker const state{cached.state.with_active_state(new_state)};
+    lock.unlock();
+
     inform_client_of_window_state(state);
     if (new_state == mir_window_state_minimized || new_state == mir_window_state_hidden)
     {
@@ -1026,36 +966,50 @@ void mf::XWaylandSurface::is_transient_for(xcb_window_t transient_for)
     apply_cached_transient_for_and_type(lock);
 }
 
-void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_window_state)
+void mf::XWaylandSurface::inform_client_of_window_state(
+    std::optional<scene::SurfaceStateTracker> const& new_window_state)
 {
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        if (new_window_state == cached.state)
+        if ((!new_window_state && cached.withdrawn) ||
+            (new_window_state && !cached.withdrawn && *new_window_state == cached.state))
+        {
             return;
+        }
 
-        cached.state = new_window_state;
-    }
-
-    if (verbose_xwayland_logging_enabled())
-    {
-        log_debug(
-            "%s state set to %s%s%s%s",
-            connection->window_debug_string(window).c_str(),
-            new_window_state.withdrawn ? "withdrawn, " : "",
-            new_window_state.minimized ? "minimized, " : "",
-            new_window_state.fullscreen ? "fullscreen, " : "",
-            new_window_state.maximized ? "maximized" : "unmaximized");
+        if (new_window_state)
+        {
+            if (!cached.withdrawn && *new_window_state == cached.state)
+            {
+                return;
+            }
+            cached.state = *new_window_state;
+            cached.withdrawn = false;
+        }
+        else
+        {
+            if (cached.withdrawn)
+            {
+                return;
+            }
+            cached.withdrawn = true;
+        }
     }
 
     WmState wm_state;
-
-    if (new_window_state.withdrawn)
+    if (!new_window_state)
+    {
         wm_state = WmState::WITHDRAWN;
-    else if (new_window_state.minimized)
+    }
+    else if (new_window_state->has_any({mir_window_state_hidden, mir_window_state_minimized}))
+    {
         wm_state = WmState::ICONIC;
+    }
     else
+    {
         wm_state = WmState::NORMAL;
+    }
 
     uint32_t const wm_state_properties[]{
         static_cast<uint32_t>(wm_state),
@@ -1063,7 +1017,7 @@ void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_w
     };
     connection->set_property<XCBType::WM_STATE>(window, connection->WM_STATE, wm_state_properties);
 
-    if (new_window_state.withdrawn)
+    if (!new_window_state)
     {
         xcb_delete_property(
             *connection,
@@ -1074,16 +1028,16 @@ void mf::XWaylandSurface::inform_client_of_window_state(WindowState const& new_w
     {
         std::vector<xcb_atom_t> net_wm_states;
 
-        if (new_window_state.minimized)
+        if (new_window_state->has_any({mir_window_state_hidden, mir_window_state_minimized}))
         {
             net_wm_states.push_back(connection->_NET_WM_STATE_HIDDEN);
         }
-        if (new_window_state.maximized)
+        if (new_window_state->has(mir_window_state_maximized))
         {
             net_wm_states.push_back(connection->_NET_WM_STATE_MAXIMIZED_HORZ);
             net_wm_states.push_back(connection->_NET_WM_STATE_MAXIMIZED_VERT);
         }
-        if (new_window_state.fullscreen)
+        if (new_window_state->has(mir_window_state_fullscreen))
         {
             net_wm_states.push_back(connection->_NET_WM_STATE_FULLSCREEN);
         }
