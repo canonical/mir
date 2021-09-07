@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018-2019 Canonical Ltd.
+ * Copyright © 2018-2021 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -32,11 +32,11 @@ namespace mw = mir::wayland;
 namespace mi = mir::input;
 
 mf::KeyboardHelper::KeyboardHelper(
-    KeyboardImpl* keyboard_impl,
+    KeyboardCallbacks* callbacks,
     std::shared_ptr<mi::Keymap> const& initial_keymap,
     std::shared_ptr<input::Seat> const& seat,
     bool enable_key_repeat)
-    : impl{keyboard_impl},
+    : callbacks{callbacks},
       mir_seat{seat},
       current_keymap{nullptr}, // will be set later in the constructor by set_keymap()
       compiled_keymap{nullptr, &xkb_keymap_unref},
@@ -51,7 +51,7 @@ mf::KeyboardHelper::KeyboardHelper(
 
     // 25 rate and 600 delay are the default in Weston and Sway
     // At some point we will want to make this configurable
-    impl->send_repeat_info(enable_key_repeat ? 25 : 0, 600);
+    callbacks->send_repeat_info(enable_key_repeat ? 25 : 0, 600);
 }
 
 void mf::KeyboardHelper::handle_event(MirInputEvent const* event)
@@ -131,7 +131,7 @@ void mf::KeyboardHelper::handle_keyboard_event(MirKeyboardEvent const* event)
     int const scancode = mir_keyboard_event_scan_code(event);
 
     set_keymap(event->keymap());
-    impl->send_key(timestamp, scancode, down);
+    callbacks->send_key(timestamp, scancode, down);
     /*
     * HACK! Maintain our own XKB state, so we can serialise it for
     * wl_keyboard_send_modifiers
@@ -169,7 +169,7 @@ void mf::KeyboardHelper::set_keymap(std::shared_ptr<mi::Keymap> const& new_keyma
     mir::AnonymousShmFile shm_buffer{length};
     memcpy(shm_buffer.base_ptr(), buffer.get(), length);
 
-    impl->send_keymap_xkb_v1(Fd{IntOwnedFd{shm_buffer.fd()}}, length);
+    callbacks->send_keymap_xkb_v1(Fd{IntOwnedFd{shm_buffer.fd()}}, length);
 }
 
 void mf::KeyboardHelper::update_modifier_state()
@@ -200,6 +200,6 @@ void mf::KeyboardHelper::update_modifier_state()
         mods_locked = new_locked_mods;
         group = new_group;
 
-        impl->send_modifiers(mods_depressed, mods_latched, mods_locked, group);
+        callbacks->send_modifiers(mods_depressed, mods_latched, mods_locked, group);
     }
 }

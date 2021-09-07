@@ -17,8 +17,8 @@
  *              William Wold <william.wold@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_BASIC_WL_KEYBOARD_H
-#define MIR_FRONTEND_BASIC_WL_KEYBOARD_H
+#ifndef MIR_FRONTEND_KEYBOARD_HELPER_H
+#define MIR_FRONTEND_KEYBOARD_HELPER_H
 
 #include "wayland_wrapper.h"
 
@@ -43,11 +43,11 @@ class Seat;
 
 namespace frontend
 {
-class KeyboardImpl
+class KeyboardCallbacks
 {
 public:
-    KeyboardImpl() = default;
-    virtual ~KeyboardImpl() = default;
+    KeyboardCallbacks() = default;
+    virtual ~KeyboardCallbacks() = default;
 
     virtual void send_repeat_info(int32_t rate, int32_t delay) = 0;
     virtual void send_keymap_xkb_v1(mir::Fd const& fd, size_t length) = 0;
@@ -55,15 +55,15 @@ public:
     virtual void send_modifiers(uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group) = 0;
 
 private:
-    KeyboardImpl(KeyboardImpl const&) = delete;
-    KeyboardImpl& operator=(KeyboardImpl const&) = delete;
+    KeyboardCallbacks(KeyboardCallbacks const&) = delete;
+    KeyboardCallbacks& operator=(KeyboardCallbacks const&) = delete;
 };
 
 class KeyboardHelper
 {
 public:
     KeyboardHelper(
-        KeyboardImpl* keybaord_impl,
+        KeyboardCallbacks* keybaord_impl,
         std::shared_ptr<mir::input::Keymap> const& initial_keymap,
         std::shared_ptr<input::Seat> const& seat,
         bool enable_key_repeat);
@@ -78,7 +78,7 @@ private:
     void set_keymap(std::shared_ptr<mir::input::Keymap> const& new_keymap);
     void update_modifier_state();
 
-    KeyboardImpl* const impl;
+    KeyboardCallbacks* const callbacks;
     std::shared_ptr<input::Seat> const mir_seat;
     std::shared_ptr<mir::input::Keymap> current_keymap;
     std::unique_ptr<xkb_keymap, void (*)(xkb_keymap *)> compiled_keymap;
@@ -93,4 +93,4 @@ private:
 }
 }
 
-#endif // MIR_FRONTEND_BASIC_WL_KEYBOARD_H
+#endif // MIR_FRONTEND_KEYBOARD_HELPER_H

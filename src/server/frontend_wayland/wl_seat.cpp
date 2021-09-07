@@ -202,9 +202,9 @@ void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlTouch
     touch_listeners->for_each(client, func);
 }
 
-auto mf::WlSeat::make_keyboard_helper(KeyboardImpl* impl) -> std::unique_ptr<KeyboardHelper>
+auto mf::WlSeat::make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::unique_ptr<KeyboardHelper>
 {
-    return std::make_unique<KeyboardHelper>(impl, keymap, seat, enable_key_repeat);
+    return std::make_unique<KeyboardHelper>(callbacks, keymap, seat, enable_key_repeat);
 }
 
 void mf::WlSeat::notify_focus(WlSurface& surface, bool has_focus)

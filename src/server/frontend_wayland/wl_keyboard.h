@@ -31,7 +31,7 @@ class WlSeat;
 
 class WlKeyboard
     : public wayland::Keyboard,
-      public KeyboardImpl
+      private KeyboardCallbacks
 {
 public:
     WlKeyboard(wl_resource* new_resource, WlSeat& seat);
@@ -46,7 +46,7 @@ private:
     wayland::Weak<WlSurface> focused_surface;
     wayland::DestroyListenerId destroy_listener_id;
 
-    /// KeyboardImpl overrides
+    /// KeyboardCallbacks overrides
     /// @{
     void send_repeat_info(int32_t rate, int32_t delay) override;
     void send_keymap_xkb_v1(mir::Fd const& fd, size_t length) override;
