@@ -248,9 +248,13 @@ auto apply_state_change(
     {
         state = mir_window_state_minimized;
     }
-    else if (net_wm_state == connection->_NET_WM_STATE_MAXIMIZED_HORZ) // assume vert is also set
+    else if (net_wm_state == connection->_NET_WM_STATE_MAXIMIZED_HORZ)
     {
-        state = mir_window_state_maximized;
+        state = mir_window_state_horizmaximized;
+    }
+    else if (net_wm_state == connection->_NET_WM_STATE_MAXIMIZED_VERT)
+    {
+        state = mir_window_state_vertmaximized;
     }
     else if (net_wm_state == connection->_NET_WM_STATE_FULLSCREEN)
     {
@@ -1032,9 +1036,12 @@ void mf::XWaylandSurface::inform_client_of_window_state(
         {
             net_wm_states.push_back(connection->_NET_WM_STATE_HIDDEN);
         }
-        if (new_window_state->has(mir_window_state_maximized))
+        if (new_window_state->has(mir_window_state_horizmaximized))
         {
             net_wm_states.push_back(connection->_NET_WM_STATE_MAXIMIZED_HORZ);
+        }
+        if (new_window_state->has(mir_window_state_vertmaximized))
+        {
             net_wm_states.push_back(connection->_NET_WM_STATE_MAXIMIZED_VERT);
         }
         if (new_window_state->has(mir_window_state_fullscreen))
