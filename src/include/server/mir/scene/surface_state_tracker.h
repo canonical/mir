@@ -64,6 +64,9 @@ public:
     [[nodiscard]]
     auto without(MirWindowState state) const -> SurfaceStateTracker;
 
+    /// Returns if all states are equal
+    auto operator==(SurfaceStateTracker const& other) const -> bool;
+
 private:
     SurfaceStateTracker()
         : hidden{false},

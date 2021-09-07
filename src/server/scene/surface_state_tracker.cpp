@@ -105,6 +105,16 @@ auto ms::SurfaceStateTracker::without(MirWindowState state) const -> SurfaceStat
     return SurfaceStateTracker{*this, state, false};
 }
 
+auto ms::SurfaceStateTracker::operator==(SurfaceStateTracker const& other) const -> bool
+{
+    return hidden == other.hidden &&
+           minimized == other.minimized &&
+           fullscreen == other.fullscreen &&
+           attached == other.attached &&
+           horiz_maximized == other.horiz_maximized &&
+           vert_maximized == other.vert_maximized;
+}
+
 ms::SurfaceStateTracker::SurfaceStateTracker(SurfaceStateTracker base, MirWindowState active)
     : SurfaceStateTracker{base}
 {
