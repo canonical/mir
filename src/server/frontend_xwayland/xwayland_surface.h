@@ -25,6 +25,7 @@
 #include "xwayland_surface_role_surface.h"
 #include "xwayland_surface_observer_surface.h"
 #include "mir/scene/surface_state_tracker.h"
+#include "mir/proof_of_mutex_lock.h"
 
 #include <xcb/xcb.h>
 
@@ -74,20 +75,6 @@ public:
     void move_resize(uint32_t detail);
 
 private:
-    struct ProofOfMutexLock
-    {
-        ProofOfMutexLock(std::lock_guard<std::mutex> const&) {}
-        ProofOfMutexLock(std::unique_lock<std::mutex> const& lock)
-        {
-            if (!lock.owns_lock())
-            {
-                fatal_error("ProofOfMutexLock created with unlocked unique_lock");
-            }
-        }
-        ProofOfMutexLock(ProofOfMutexLock const&) = delete;
-        ProofOfMutexLock operator=(ProofOfMutexLock const&) = delete;
-    };
-
     /// Overrides from XWaylandSurfaceObserverSurface
     /// @{
     void scene_surface_focus_set(bool has_focus) override;
