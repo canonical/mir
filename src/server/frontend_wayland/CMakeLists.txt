@@ -26,6 +26,7 @@ set(
   window_wl_surface_role.cpp    window_wl_surface_role.h
   wl_surface.cpp                wl_surface.h
   wl_seat.cpp                   wl_seat.h
+  keyboard_helper.cpp           keyboard_helper.h
   wl_keyboard.cpp               wl_keyboard.h
   wl_pointer.cpp                wl_pointer.h
   wl_touch.cpp                  wl_touch.h

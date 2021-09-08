@@ -28,7 +28,6 @@
 
 #include "mir/input/input_device_observer.h"
 #include "mir/input/input_device_hub.h"
-#include "mir/input/seat.h"
 #include "mir/input/device.h"
 #include "mir/input/parameter_keymap.h"
 #include "mir/input/mir_keyboard_config.h"
@@ -136,12 +135,11 @@ void mf::WlSeat::ConfigObserver::changes_complete()
 class mf::WlSeat::Instance : public wayland::Seat
 {
 public:
-    Instance(wl_resource* new_resource, mf::WlSeat* seat, bool enable_key_repeat);
+    Instance(wl_resource* new_resource, mf::WlSeat* seat);
 
     mf::WlSeat* const seat;
 
 private:
-    bool const enable_key_repeat;
     void get_pointer(wl_resource* new_pointer) override;
     void get_keyboard(wl_resource* new_keyboard) override;
     void get_touch(wl_resource* new_touch) override;
@@ -204,6 +202,11 @@ void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlTouch
     touch_listeners->for_each(client, func);
 }
 
+auto mf::WlSeat::make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::unique_ptr<KeyboardHelper>
+{
+    return std::make_unique<KeyboardHelper>(callbacks, keymap, seat, enable_key_repeat);
+}
+
 void mf::WlSeat::notify_focus(WlSurface& surface, bool has_focus)
 {
     if (has_focus && !focused_surface.is(surface))
@@ -220,7 +223,7 @@ void mf::WlSeat::notify_focus(WlSurface& surface, bool has_focus)
 
 void mf::WlSeat::bind(wl_resource* new_wl_seat)
 {
-    new Instance{new_wl_seat, this, enable_key_repeat};
+    new Instance{new_wl_seat, this};
 }
 
 void mf::WlSeat::set_focus_to(WlSurface* new_surface)
@@ -257,10 +260,9 @@ void mf::WlSeat::set_focus_to(WlSurface* new_surface)
         });
 }
 
-mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat, bool enable_key_repeat)
+mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
     : mw::Seat(new_resource, Version<6>()),
-      seat{seat},
-      enable_key_repeat{enable_key_repeat}
+      seat{seat}
 {
     // TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
     send_capabilities_event(Capability::pointer | Capability::keyboard | Capability::touch);
@@ -281,37 +283,7 @@ void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
 
 void mf::WlSeat::Instance::get_keyboard(wl_resource* new_keyboard)
 {
-    auto const keyboard = new WlKeyboard{
-        new_keyboard,
-        seat->keymap,
-        [seat = seat->seat]()
-        {
-            std::unordered_set<uint32_t> pressed_keys;
-
-            auto const ev = seat->create_device_state();
-            auto const state_event = mir_event_get_input_device_state_event(ev.get());
-            for (
-                auto dev = 0u;
-                dev < mir_input_device_state_event_device_count(state_event);
-                ++dev)
-            {
-                for (
-                    auto idx = 0u;
-                    idx < mir_input_device_state_event_device_pressed_keys_count(state_event, dev);
-                    ++idx)
-                {
-                    pressed_keys.insert(
-                        mir_input_device_state_event_device_pressed_keys_for_index(
-                            state_event,
-                            dev,
-                            idx));
-                }
-            }
-
-            return std::vector<uint32_t>{pressed_keys.begin(), pressed_keys.end()};
-        },
-        enable_key_repeat
-    };
+    auto const keyboard = new WlKeyboard{new_keyboard, *seat};
 
     seat->keyboard_listeners->register_listener(client, keyboard);
     keyboard->add_destroy_listener(

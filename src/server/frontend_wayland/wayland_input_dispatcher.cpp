@@ -75,19 +75,11 @@ void mf::WaylandInputDispatcher::handle_event(MirInputEvent const* event)
     switch (mir_input_event_get_type(event))
     {
     case mir_input_event_type_key:
-    {
-        auto const keyboard_event = mir_input_event_get_keyboard_event(event);
-        seat->for_each_listener(client, [&](WlKeyboard* keyboard)
-            {
-                keyboard->event(keyboard_event, wl_surface.value());
-            });
-    }   break;
-
     case mir_input_event_type_keyboard_resync:
     {
         seat->for_each_listener(client, [&](WlKeyboard* keyboard)
             {
-                keyboard->resync_keyboard();
+                keyboard->handle_event(event, wl_surface.value());
             });
     }   break;
 

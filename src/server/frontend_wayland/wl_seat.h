@@ -43,6 +43,8 @@ class WlPointer;
 class WlKeyboard;
 class WlTouch;
 class WlSurface;
+class KeyboardCallbacks;
+class KeyboardHelper;
 
 class WlSeat : public wayland::Seat::Global
 {
@@ -74,6 +76,8 @@ public:
         FocusListener(FocusListener const&) = delete;
         FocusListener& operator=(FocusListener const&) = delete;
     };
+
+    auto make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::unique_ptr<KeyboardHelper>;
 
     /// Adds the listener for future use, and makes a call into it to inform of initial state
     void add_focus_listener(wl_client* client, FocusListener* listener);

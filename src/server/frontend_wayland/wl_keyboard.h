@@ -20,66 +20,39 @@
 #define MIR_FRONTEND_WL_KEYBOARD_H
 
 #include "wayland_wrapper.h"
-
-#include <vector>
-#include <functional>
-#include <chrono>
-
-struct MirKeyboardEvent;
-
-// from <xkbcommon/xkbcommon.h>
-struct xkb_keymap;
-struct xkb_state;
-struct xkb_context;
+#include "keyboard_helper.h"
 
 namespace mir
 {
-
-class Executor;
-
-namespace input
-{
-class Keymap;
-}
-
 namespace frontend
 {
 class WlSurface;
+class WlSeat;
 
-class WlKeyboard : public wayland::Keyboard
+class WlKeyboard
+    : public wayland::Keyboard,
+      private KeyboardCallbacks
 {
 public:
-    WlKeyboard(
-        wl_resource* new_resource,
-        std::shared_ptr<mir::input::Keymap> const& initial_keymap,
-        std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state,
-        bool enable_key_repeat);
+    WlKeyboard(wl_resource* new_resource, WlSeat& seat);
 
     ~WlKeyboard();
 
-    void event(MirKeyboardEvent const* event, WlSurface& surface);
+    void handle_event(MirInputEvent const* event, WlSurface& surface);
     void focussed(WlSurface& surface, bool should_be_focused);
-    void resync_keyboard();
 
 private:
-    void set_keymap(std::shared_ptr<mir::input::Keymap> const& new_keymap);
-    void update_modifier_state();
-    void update_keyboard_state(std::vector<uint32_t> const& keyboard_state);
-
-    std::shared_ptr<mir::input::Keymap> current_keymap;
-    std::unique_ptr<xkb_keymap, void (*)(xkb_keymap *)> compiled_keymap;
-    std::unique_ptr<xkb_state, void (*)(xkb_state *)> state;
-    std::unique_ptr<xkb_context, void (*)(xkb_context *)> const context;
-
-    std::function<std::vector<uint32_t>()> const acquire_current_keyboard_state;
-
+    std::unique_ptr<KeyboardHelper> const helper;
     wayland::Weak<WlSurface> focused_surface;
     wayland::DestroyListenerId destroy_listener_id;
 
-    uint32_t mods_depressed{0};
-    uint32_t mods_latched{0};
-    uint32_t mods_locked{0};
-    uint32_t group{0};
+    /// KeyboardCallbacks overrides
+    /// @{
+    void send_repeat_info(int32_t rate, int32_t delay) override;
+    void send_keymap_xkb_v1(mir::Fd const& fd, size_t length) override;
+    void send_key(uint32_t timestamp, int scancode, bool down) override;
+    void send_modifiers(uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group) override;
+    /// @}
 };
 }
 }
