@@ -95,6 +95,8 @@ set(EXPECTED_FAILURES
   LayerShellPopup/XdgPopupTest.non_grabbed_popup_does_not_get_keyboard_focus/0
   LayerShellPopup/XdgPopupTest.grabbed_popup_does_not_get_keyboard_focus/0
   LayerShellPopup/XdgPopupTest.grabbed_popup_gets_done_event_when_new_toplevel_created/0
+
+  ForeignToplevelHandleTest.can_maximize_foreign_while_fullscreen # https://github.com/MirServer/mir/issues/2164
 )
 
 if (MIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN)
