@@ -24,6 +24,7 @@
 #include "xwayland_client_manager.h"
 #include "xwayland_surface_role_surface.h"
 #include "xwayland_surface_observer_surface.h"
+#include "mir/proof_of_mutex_lock.h"
 
 #include <xcb/xcb.h>
 
@@ -99,20 +100,6 @@ private:
         auto operator==(WindowState const& that) const -> bool;
         auto mir_window_state() const -> MirWindowState;
         auto updated_from(MirWindowState state) const -> WindowState; ///< Does not change original
-    };
-
-    struct ProofOfMutexLock
-    {
-        ProofOfMutexLock(std::lock_guard<std::mutex> const&) {}
-        ProofOfMutexLock(std::unique_lock<std::mutex> const& lock)
-        {
-            if (!lock.owns_lock())
-            {
-                fatal_error("ProofOfMutexLock created with unlocked unique_lock");
-            }
-        }
-        ProofOfMutexLock(ProofOfMutexLock const&) = delete;
-        ProofOfMutexLock operator=(ProofOfMutexLock const&) = delete;
     };
 
     /// Overrides from XWaylandSurfaceObserverSurface

@@ -161,12 +161,6 @@ void ms::SurfaceObservers::application_id_set_to(Surface const* surf, std::strin
                  { observer->application_id_set_to(surf, application_id); });
 }
 
-ms::BasicSurface::ProofOfMutexLock::ProofOfMutexLock(std::unique_lock<std::mutex> const& lock)
-{
-    if (!lock.owns_lock())
-        fatal_error("ProofOfMutexLock created with unlocked unique_lock");
-}
-
 struct ms::CursorStreamImageAdapter
 {
     CursorStreamImageAdapter(ms::BasicSurface &surface)

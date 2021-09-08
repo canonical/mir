@@ -21,6 +21,7 @@
 
 #include "mir/scene/surface.h"
 #include "mir/basic_observers.h"
+#include "mir/proof_of_mutex_lock.h"
 #include "mir/scene/surface_observers.h"
 
 #include "mir/geometry/rectangle.h"
@@ -169,14 +170,6 @@ public:
     void set_focus_mode(MirFocusMode focus_mode) override;
 
 private:
-    struct ProofOfMutexLock
-    {
-        ProofOfMutexLock(std::lock_guard<std::mutex> const&) {}
-        ProofOfMutexLock(std::unique_lock<std::mutex> const& lock);
-        ProofOfMutexLock(ProofOfMutexLock const&) = delete;
-        ProofOfMutexLock operator=(ProofOfMutexLock const&) = delete;
-    };
-
     bool visible(ProofOfMutexLock const&) const;
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
     MirWindowState set_state(MirWindowState s);
