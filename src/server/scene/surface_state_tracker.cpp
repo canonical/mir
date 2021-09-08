@@ -105,16 +105,6 @@ auto ms::SurfaceStateTracker::without(MirWindowState state) const -> SurfaceStat
     return SurfaceStateTracker{*this, state, false};
 }
 
-auto ms::SurfaceStateTracker::operator==(SurfaceStateTracker const& other) const -> bool
-{
-    return hidden == other.hidden &&
-           minimized == other.minimized &&
-           fullscreen == other.fullscreen &&
-           attached == other.attached &&
-           horiz_maximized == other.horiz_maximized &&
-           vert_maximized == other.vert_maximized;
-}
-
 ms::SurfaceStateTracker::SurfaceStateTracker(SurfaceStateTracker base, MirWindowState active)
     : SurfaceStateTracker{base}
 {
@@ -227,4 +217,14 @@ ms::SurfaceStateTracker::SurfaceStateTracker(SurfaceStateTracker base, MirWindow
     default:
         fatal_error("Invalid window state: %d", state);
     }
+}
+
+auto ms::operator==(ms::SurfaceStateTracker const& lhs, ms::SurfaceStateTracker const& rhs) -> bool
+{
+    return lhs.hidden == rhs.hidden &&
+           lhs.minimized == rhs.minimized &&
+           lhs.fullscreen == rhs.fullscreen &&
+           lhs.attached == rhs.attached &&
+           lhs.horiz_maximized == rhs.horiz_maximized &&
+           lhs.vert_maximized == rhs.vert_maximized;
 }
