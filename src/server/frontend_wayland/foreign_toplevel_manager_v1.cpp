@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Canonical Ltd.
+ * Copyright © 2019-2021 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -159,14 +159,14 @@ public:
     ForeignToplevelHandleV1(ForeignToplevelManagerV1 const& manager, std::shared_ptr<scene::Surface> const& surface);
 
     /// Sends the required .state event
-    void send_state(MirWindowFocusState focused, MirWindowState state);
+    void send_state(MirWindowFocusState focused, ms::SurfaceStateTracker state);
 
     /// Sends the .closed event and makes this surface inert
     void should_close();
 
 private:
-    /// Modifies the surface if possible, silently fails if not
-    void attempt_modify_surface(shell::SurfaceSpecification const& spec);
+    /// Modifies the surface state if possible, silently fails if not
+    void attempt_change_surface_state(MirWindowState state, bool has_state);
 
     /// Wayland requests
     ///@{
@@ -183,12 +183,6 @@ private:
 
     std::weak_ptr<shell::Shell> const weak_shell;
     std::weak_ptr<scene::Surface> weak_surface;
-
-    /// Used to choose the state to unminimize/unfullscreen to
-    ///@{
-    MirWindowState cached_normal_state{mir_window_state_restored}; ///< always either restored or a maximized state
-    bool cached_fullscreen{false};
-    ///@}
 };
 
 }
@@ -388,8 +382,8 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
 
             std::string name = surface->name();
             std::string app_id = surface->application_id();
-            auto focused = surface->focus_state();
-            auto state = surface->state();
+            auto const focused = surface->focus_state();
+            auto const state = surface->state_tracker();
 
             wayland_executor->spawn([manager = manager, handle = handle, surface, name, app_id, focused, state]()
                 {
@@ -453,8 +447,8 @@ void mf::ForeignSurfaceObserver::attrib_changed(const scene::Surface*, MirWindow
     case mir_window_attrib_state:
     case mir_window_attrib_focus:
     {
-        auto focused = surface->focus_state();
-        auto state = surface->state();
+        auto const focused = surface->focus_state();
+        auto const state = surface->state_tracker();
         with_toplevel_handle(lock, [focused, state](ForeignToplevelHandleV1& handle)
             {
                 handle.send_state(focused, state);
@@ -529,26 +523,8 @@ mf::ForeignToplevelHandleV1::ForeignToplevelHandleV1(
     manager.send_toplevel_event(resource);
 }
 
-void mf::ForeignToplevelHandleV1::send_state(MirWindowFocusState focused, MirWindowState state)
+void mf::ForeignToplevelHandleV1::send_state(MirWindowFocusState focused, ms::SurfaceStateTracker state)
 {
-    switch (state)
-    {
-    case mir_window_state_restored:
-    case mir_window_state_maximized:
-    case mir_window_state_horizmaximized:
-    case mir_window_state_vertmaximized:
-        cached_normal_state = state;
-        cached_fullscreen = false;
-        break;
-
-    case mir_window_state_fullscreen:
-        cached_fullscreen = true;
-        break;
-
-    default:
-        break;
-    }
-
     wl_array states;
     wl_array_init(&states);
 
@@ -558,27 +534,22 @@ void mf::ForeignToplevelHandleV1::send_state(MirWindowFocusState focused, MirWin
             *state = State::activated;
     }
 
-    switch (state)
+    if (state.has(mir_window_state_horizmaximized) || state.has(mir_window_state_vertmaximized))
     {
-    case mir_window_state_maximized:
-    case mir_window_state_horizmaximized:
-    case mir_window_state_vertmaximized:
         if (uint32_t *state = static_cast<uint32_t*>(wl_array_add(&states, sizeof(uint32_t))))
             *state = State::maximized;
-        break;
+    }
 
-    case mir_window_state_fullscreen:
+    if (state.has(mir_window_state_fullscreen))
+    {
         if (uint32_t *state = static_cast<uint32_t*>(wl_array_add(&states, sizeof(uint32_t))))
             *state = State::fullscreen;
-        break;
+    }
 
-    case mir_window_state_minimized:
+    if (state.has(mir_window_state_minimized))
+    {
         if (uint32_t *state = static_cast<uint32_t*>(wl_array_add(&states, sizeof(uint32_t))))
             *state = State::minimized;
-        break;
-
-    default:
-        break;
     }
 
     send_state_event(&states);
@@ -591,57 +562,48 @@ void mf::ForeignToplevelHandleV1::should_close()
     weak_surface.reset();
 }
 
-void mf::ForeignToplevelHandleV1::attempt_modify_surface(shell::SurfaceSpecification const& spec)
+void mf::ForeignToplevelHandleV1::attempt_change_surface_state(MirWindowState state, bool has_state)
 {
     auto const shell = weak_shell.lock();
     auto const surface = weak_surface.lock();
     auto const session = surface ? surface->session().lock() : nullptr;
     if (shell && session && surface)
     {
-        shell->modify_surface(session, surface, spec);
+        msh::SurfaceSpecification spec;
+        auto const tracker = surface->state_tracker();
+        if (has_state)
+        {
+            spec.state = tracker.with_active_state(state).active_state();
+        }
+        else
+        {
+            spec.state = tracker.without(state).active_state();
+        }
+        if (spec.state.value() != tracker.active_state())
+        {
+            shell->modify_surface(session, surface, spec);
+        }
     }
 }
 
 void mf::ForeignToplevelHandleV1::set_maximized()
 {
-    if (cached_fullscreen)
-    {
-        cached_normal_state = mir_window_state_maximized;
-    }
-    else
-    {
-        shell::SurfaceSpecification spec;
-        spec.state = mir_window_state_maximized;
-        attempt_modify_surface(spec);
-    }
+    attempt_change_surface_state(mir_window_state_maximized, true);
 }
 
 void mf::ForeignToplevelHandleV1::unset_maximized()
 {
-    if (cached_fullscreen)
-    {
-        cached_normal_state = mir_window_state_restored;
-    }
-    else
-    {
-        shell::SurfaceSpecification spec;
-        spec.state = mir_window_state_restored;
-        attempt_modify_surface(spec);
-    }
+    attempt_change_surface_state(mir_window_state_maximized, false);
 }
 
 void mf::ForeignToplevelHandleV1::set_minimized()
 {
-    shell::SurfaceSpecification spec;
-    spec.state = mir_window_state_minimized;
-    attempt_modify_surface(spec);
+    attempt_change_surface_state(mir_window_state_minimized, true);
 }
 
 void mf::ForeignToplevelHandleV1::unset_minimized()
 {
-    shell::SurfaceSpecification spec;
-    spec.state = cached_normal_state;
-    attempt_modify_surface(spec);
+    attempt_change_surface_state(mir_window_state_minimized, false);
     activate(nullptr);
 }
 
@@ -681,15 +643,11 @@ void mf::ForeignToplevelHandleV1::set_rectangle(
 
 void mf::ForeignToplevelHandleV1::set_fullscreen(std::optional<struct wl_resource*> const& /*output*/)
 {
-    shell::SurfaceSpecification spec;
-    spec.state = mir_window_state_fullscreen;
+    attempt_change_surface_state(mir_window_state_fullscreen, true);
     // TODO: respect output
-    attempt_modify_surface(spec);
 }
 
 void mf::ForeignToplevelHandleV1::unset_fullscreen()
 {
-    shell::SurfaceSpecification spec;
-    spec.state = cached_normal_state;
-    attempt_modify_surface(spec);
+    attempt_change_surface_state(mir_window_state_fullscreen, false);
 }
