@@ -81,6 +81,8 @@ private:
     /// Copies the base tracker with the given state present or not present
     SurfaceStateTracker(SurfaceStateTracker base, MirWindowState state, bool present);
 
+    friend auto operator==(SurfaceStateTracker const& lhs, SurfaceStateTracker const& rhs) -> bool;
+
     /// Functionally const except for asignment and construction
     /// @{
     bool hidden : 1;
@@ -91,6 +93,10 @@ private:
     bool vert_maximized : 1;
     /// @}
 };
+
+/// Returns if all states are equal
+auto operator==(SurfaceStateTracker const& lhs, SurfaceStateTracker const& rhs) -> bool;
+inline auto operator!=(SurfaceStateTracker const& lhs, SurfaceStateTracker const& rhs) -> bool { return !(lhs == rhs); }
 }
 }
 

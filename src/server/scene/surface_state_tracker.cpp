@@ -218,3 +218,13 @@ ms::SurfaceStateTracker::SurfaceStateTracker(SurfaceStateTracker base, MirWindow
         fatal_error("Invalid window state: %d", state);
     }
 }
+
+auto ms::operator==(ms::SurfaceStateTracker const& lhs, ms::SurfaceStateTracker const& rhs) -> bool
+{
+    return lhs.hidden == rhs.hidden &&
+           lhs.minimized == rhs.minimized &&
+           lhs.fullscreen == rhs.fullscreen &&
+           lhs.attached == rhs.attached &&
+           lhs.horiz_maximized == rhs.horiz_maximized &&
+           lhs.vert_maximized == rhs.vert_maximized;
+}
