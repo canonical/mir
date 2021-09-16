@@ -1028,6 +1028,14 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
 #undef COPY_IF_SET
 
+    if (modifications.client_facing_state().is_set())
+    {
+        window_info_tmp.client_facing_state(
+            modifications.client_facing_state().value() == mir_window_state_unknown ?
+            mir::optional_value<MirWindowState>{} :
+            modifications.client_facing_state());
+    }
+
     if (modifications.parent().is_set())
     {
         if (auto const& parent_window = modifications.parent().value().lock())

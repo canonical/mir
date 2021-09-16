@@ -30,6 +30,8 @@ struct miral::WindowInfo::Self
     Window window;
     std::string name;
     MirWindowType type;
+    /// Only set if the miral state differs from the underlying surface state (aka client_facing_state)
+    std::optional<MirWindowState> miral_state_override;
     /// Not exposed as an optional, lazily calculated instead
     std::optional<mir::geometry::Rectangle> restore_rect;
     Window parent;

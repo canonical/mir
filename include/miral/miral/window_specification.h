@@ -172,6 +172,16 @@ public:
     auto focus_mode() -> mir::optional_value<MirFocusMode>&;
     ///@}
 
+    /// Can be used to make the client draw the window as if it's in a state that is different from how the window
+    /// manager treats it. For example if a shell wants a window to draw itself as if it's fullscreen but not cover up
+    /// panels, it could set state() to mir_window_state_maximized and client_facing_state() to
+    /// mir_window_state_fullscreen. mir_window_state_unknown unsets this property and gives the client the real state.
+    /// \remark Since MirAL 3.3
+    ///@{
+    auto client_facing_state() const -> mir::optional_value<MirWindowState> const&;
+    auto client_facing_state() -> mir::optional_value<MirWindowState>&;
+    ///@}
+
 private:
     struct Self;
     std::unique_ptr<Self> self;

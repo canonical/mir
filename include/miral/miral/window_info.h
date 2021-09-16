@@ -133,11 +133,16 @@ struct WindowInfo
     /// \remark Since MirAL 3.3
     auto focus_mode() const -> MirFocusMode;
 
+    /// If set, the client is given this state instead of the window's real state
+    /// \remark Since MirAL 3.3
+    auto client_facing_state() const -> mir::optional_value<MirWindowState>;
+
 private:
     friend class BasicWindowManager;
     void name(std::string const& name);
     void type(MirWindowType type);
     void state(MirWindowState state);
+    void client_facing_state(mir::optional_value<MirWindowState> state);
     void restore_rect(mir::geometry::Rectangle const& restore_rect);
     void parent(Window const& parent);
     void add_child(Window const& child);

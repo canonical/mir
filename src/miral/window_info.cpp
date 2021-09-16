@@ -280,7 +280,11 @@ auto miral::WindowInfo::type() const -> MirWindowType
 
 auto miral::WindowInfo::state() const -> MirWindowState
 {
-    if (std::shared_ptr<mir::scene::Surface> const surface = self->window)
+    if (self->miral_state_override)
+    {
+        return self->miral_state_override.value();
+    }
+    else if (std::shared_ptr<mir::scene::Surface> const surface = window())
     {
         return surface->state();
     }
@@ -489,5 +493,24 @@ auto miral::WindowInfo::focus_mode() const -> MirFocusMode
     else
     {
         return mir_focus_mode_disabled;
+    }
+}
+
+auto miral::WindowInfo::client_facing_state() const -> mir::optional_value<MirWindowState>
+{
+    if (self->miral_state_override)
+    {
+        if (std::shared_ptr<mir::scene::Surface> const surface = window())
+        {
+            return surface->state();
+        }
+        else
+        {
+            return mir_window_state_unknown;
+        }
+    }
+    else
+    {
+        return {};
     }
 }

@@ -90,6 +90,13 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     depth_layer(optional_value_or_default(params.depth_layer(), mir_depth_layer_application)),
     attached_edges(optional_value_or_default(params.attached_edges(), mir_placement_gravity_center))
 {
+    if (params.client_facing_state().is_set())
+    {
+        // If the client facing state is set it will be the state of the underlying surface
+        // set miral_state_override to indicate it is different from the underlying surface state
+        miral_state_override = optional_value_or_default(params.state(), mir_window_state_unknown);
+    }
+
     if (params.output_id().is_set())
         output_id = params.output_id().value();
 
@@ -119,9 +126,40 @@ void miral::WindowInfo::type(MirWindowType type)
 
 void miral::WindowInfo::state(MirWindowState state)
 {
-    if (std::shared_ptr<mir::scene::Surface> const surface = self->window)
+    if (self->miral_state_override)
+    {
+        self->miral_state_override = state;
+    }
+    else if (std::shared_ptr<mir::scene::Surface> const surface = window())
     {
         surface->configure(mir_window_attrib_state, state);
+    }
+}
+
+void miral::WindowInfo::client_facing_state(mir::optional_value<MirWindowState> state)
+{
+    if (state)
+    {
+        if (std::shared_ptr<mir::scene::Surface> const surface = window())
+        {
+            // We're changing the underlying surface without changing the miral state. If we didn't already have a
+            // miral_state_override, it should be what the surface was before the change.
+            if (!self->miral_state_override)
+            {
+                self->miral_state_override = surface->state();
+            }
+            surface->configure(mir_window_attrib_state, state.value());
+        }
+    }
+    else if (self->miral_state_override)
+    {
+        // The client facing state is cleared, meaning the surface should be set to use what the override state was
+        // and there should no longer be an override.
+        if (std::shared_ptr<mir::scene::Surface> const surface = window())
+        {
+            surface->configure(mir_window_attrib_state, self->miral_state_override.value());
+        }
+        self->miral_state_override.reset();
     }
 }
 

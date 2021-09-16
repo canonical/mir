@@ -47,6 +47,7 @@ struct miral::WindowSpecification::Self
     mir::optional_value<int> output_id;
     mir::optional_value<MirWindowType> type;
     mir::optional_value<MirWindowState> state;
+    mir::optional_value<MirWindowState> client_facing_state;
     mir::optional_value<MirOrientationMode> preferred_orientation;
     std::weak_ptr<mir::frontend::BufferStream> content;
     mir::optional_value<Rectangle> aux_rect;
@@ -294,6 +295,7 @@ void miral::WindowSpecification::Self::update(mir::scene::SurfaceCreationParamet
     copy_if_set(params.output_id, output_id);
     copy_if_set(params.type, type);
     copy_if_set(params.state, state);
+    copy_if_set(params.state, client_facing_state); // client_facing_state should override state
     copy_if_set(params.preferred_orientation, preferred_orientation);
     copy_if_set(params.content, content);
     copy_if_set(params.aux_rect, aux_rect);
@@ -390,6 +392,11 @@ auto miral::WindowSpecification::type() const -> mir::optional_value<MirWindowTy
 auto miral::WindowSpecification::state() const -> mir::optional_value<MirWindowState> const&
 {
     return self->state;
+}
+
+auto miral::WindowSpecification::client_facing_state() const -> mir::optional_value<MirWindowState> const&
+{
+    return self->client_facing_state;
 }
 
 auto miral::WindowSpecification::preferred_orientation() const -> mir::optional_value<MirOrientationMode> const&
@@ -536,6 +543,11 @@ auto miral::WindowSpecification::type() -> mir::optional_value<MirWindowType>&
 auto miral::WindowSpecification::state() -> mir::optional_value<MirWindowState>&
 {
     return self->state;
+}
+
+auto miral::WindowSpecification::client_facing_state() -> mir::optional_value<MirWindowState>&
+{
+    return self->client_facing_state;
 }
 
 auto miral::WindowSpecification::preferred_orientation() -> mir::optional_value<MirOrientationMode>&
