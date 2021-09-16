@@ -75,7 +75,6 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     window{window},
     name{params.name().value()},
     type{optional_value_or_default(params.type(), mir_window_type_normal)},
-    state{optional_value_or_default(params.state(), mir_window_state_restored)},
     restore_rect{},
     min_width{optional_value_or_default(params.min_width(), miral::default_min_width)},
     min_height{optional_value_or_default(params.min_height(), miral::default_min_height)},
@@ -103,7 +102,6 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
 
 miral::WindowInfo::Self::Self() :
     type{mir_window_type_normal},
-    state{mir_window_state_unknown},
     preferred_orientation{mir_orientation_mode_any},
     shell_chrome{mir_shell_chrome_normal}
 {
@@ -121,7 +119,10 @@ void miral::WindowInfo::type(MirWindowType type)
 
 void miral::WindowInfo::state(MirWindowState state)
 {
-    self->state = state;
+    if (std::shared_ptr<mir::scene::Surface> const surface = self->window)
+    {
+        surface->configure(mir_window_attrib_state, state);
+    }
 }
 
 void miral::WindowInfo::restore_rect(mir::geometry::Rectangle const& restore_rect)

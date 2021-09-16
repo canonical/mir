@@ -1524,7 +1524,6 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
         }
 
         window_info.state(value);
-        mir_surface->configure(mir_window_attrib_state, value);
         mir_surface->hide();
 
         break;
@@ -1534,7 +1533,6 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
             !active_window() ||
             active_window().application() == window.application();
         window_info.state(value);
-        mir_surface->configure(mir_window_attrib_state, value);
         mir_surface->show();
         if (was_hidden && can_become_active)
         {
@@ -1648,7 +1646,6 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
                 auto const new_state = scene_surface->state_tracker().without(mir_window_state_minimized).active_state();
                 policy->advise_state_change(info_for_hint, new_state);
                 info_for_hint.state(new_state);
-                mir_surface->configure(mir_window_attrib_state, new_state);
             }
             mir_surface->show();
         }

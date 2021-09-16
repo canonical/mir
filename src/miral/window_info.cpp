@@ -280,7 +280,14 @@ auto miral::WindowInfo::type() const -> MirWindowType
 
 auto miral::WindowInfo::state() const -> MirWindowState
 {
-    return self->state;
+    if (std::shared_ptr<mir::scene::Surface> const surface = self->window)
+    {
+        return surface->state();
+    }
+    else
+    {
+        return mir_window_state_unknown;
+    }
 }
 
 auto miral::WindowInfo::restore_rect() const -> mir::geometry::Rectangle
@@ -290,7 +297,7 @@ auto miral::WindowInfo::restore_rect() const -> mir::geometry::Rectangle
     {
         Size restore_size{};
         // If the window is restored or partially restored, us its current size
-        switch (self->state)
+        switch (state())
         {
         case mir_window_state_restored:
             restore_size = self->window.size();

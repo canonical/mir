@@ -30,7 +30,6 @@ struct miral::WindowInfo::Self
     Window window;
     std::string name;
     MirWindowType type;
-    MirWindowState state;
     /// Not exposed as an optional, lazily calculated instead
     std::optional<mir::geometry::Rectangle> restore_rect;
     Window parent;
