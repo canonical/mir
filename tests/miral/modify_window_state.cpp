@@ -38,20 +38,19 @@ struct ModifyWindowState : mt::TestWindowManagerTools, WithParamInterface<MirWin
 {
     Size const initial_parent_size{600, 400};
 
+    mir::scene::SurfaceCreationParameters creation_parameters;
     Window window;
 
     void SetUp() override
     {
         notify_configuration_applied(create_fake_display_configuration({display_area}));
         basic_window_manager.add_session(session);
+        creation_parameters.type = mir_window_type_normal;
+        creation_parameters.size = initial_parent_size;
     }
 
-    void create_window_of_type(MirWindowType type)
+    void create_window()
     {
-        mir::scene::SurfaceCreationParameters creation_parameters;
-        creation_parameters.type = type;
-        creation_parameters.size = initial_parent_size;
-
         EXPECT_CALL(*window_manager_policy, advise_new_window(_))
             .WillOnce(
                 Invoke(
@@ -66,15 +65,14 @@ struct ModifyWindowState : mt::TestWindowManagerTools, WithParamInterface<MirWin
     }
 };
 
-using ForNormalSurface = ModifyWindowState;
-
-TEST_P(ForNormalSurface, state)
+TEST_P(ModifyWindowState, modify_state)
 {
     auto const original_state = mir_window_state_restored;
     auto const new_state = MirWindowState(GetParam());
     auto const state_is_visible = (new_state != mir_window_state_minimized) && (new_state != mir_window_state_hidden);
 
-    create_window_of_type(mir_window_type_normal);
+    creation_parameters.state = original_state;
+    create_window();
     auto const& info = window_manager_tools.info_for(window);
 
     WindowSpecification mods;
@@ -92,7 +90,7 @@ TEST_P(ForNormalSurface, state)
 }
 }
 
-INSTANTIATE_TEST_SUITE_P(ModifyWindowState, ForNormalSurface, ::testing::Values(
+INSTANTIATE_TEST_SUITE_P(ModifyWindowState, ModifyWindowState, ::testing::Values(
 //    mir_window_state_unknown,
     mir_window_state_restored,
     mir_window_state_minimized,
