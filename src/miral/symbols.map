@@ -453,10 +453,10 @@ global:
     miral::PrintTo*;
     miral::WaylandExtensions::zwp_input_method_v2*;
     miral::WaylandExtensions::zwp_virtual_keyboard_v1*;
+    miral::WindowInfo::client_facing_state*;
     miral::WindowInfo::focus_mode*;
+    miral::WindowSpecification::client_facing_state*;
     miral::WindowSpecification::focus_mode*;
     miral::toolkit::mir_keyboard_event_keysym*;
-    miral::WindowInfo::client_facing_state*;
-    miral::WindowSpecification::client_facing_state*;
   };
 } MIRAL_3.2;
