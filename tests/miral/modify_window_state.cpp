@@ -88,6 +88,42 @@ TEST_P(ModifyWindowState, modify_state)
     EXPECT_THAT(info.state(), Eq(original_state));
     EXPECT_TRUE(info.is_visible());
 }
+
+TEST_P(ModifyWindowState, initial_client_facing_state)
+{
+    auto const miral_state = mir_window_state_maximized;
+    auto const client_facing_state = MirWindowState(GetParam());
+
+    creation_parameters.state = miral_state;
+    ON_CALL(*window_manager_policy, place_new_window(_, _))
+        .WillByDefault([&](auto, auto spec)
+            {
+                spec.client_facing_state() = client_facing_state;
+                return spec;
+            });
+    create_window();
+    auto const& info = window_manager_tools.info_for(window);
+
+    EXPECT_THAT(std::shared_ptr<mir::scene::Surface>(window)->state(), Eq(client_facing_state));
+    EXPECT_THAT(info.state(), Eq(miral_state));
+}
+
+TEST_P(ModifyWindowState, modify_client_facing_state)
+{
+    auto const miral_state = mir_window_state_maximized;
+    auto const client_facing_state = MirWindowState(GetParam());
+
+    creation_parameters.state = miral_state;
+    create_window();
+    auto const& info = window_manager_tools.info_for(window);
+
+    WindowSpecification mods;
+    mods.client_facing_state() = client_facing_state;
+    window_manager_tools.modify_window(window, mods);
+
+    EXPECT_THAT(std::shared_ptr<mir::scene::Surface>(window)->state(), Eq(client_facing_state));
+    EXPECT_THAT(info.state(), Eq(miral_state));
+}
 }
 
 INSTANTIATE_TEST_SUITE_P(ModifyWindowState, ModifyWindowState, ::testing::Values(
