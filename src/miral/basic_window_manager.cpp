@@ -138,20 +138,6 @@ auto miral::BasicWindowManager::add_surface(
 
     WindowSpecification spec = policy->place_new_window(session_info, place_new_surface(params));
 
-    auto const parent_surface = spec.parent().is_set() ? spec.parent().value().lock() : nullptr;
-
-    if (parent_surface)
-    {
-        if (!spec.depth_layer().is_set())
-        {
-            spec.depth_layer() = parent_surface->depth_layer();
-        }
-        if (!spec.focus_mode().is_set())
-        {
-            spec.focus_mode() = parent_surface->focus_mode();
-        }
-    }
-
     scene::SurfaceCreationParameters parameters;
     spec.update(parameters);
     auto const surface = build(session, parameters);
@@ -160,6 +146,7 @@ auto miral::BasicWindowManager::add_surface(
 
     session_info.add_window(window);
 
+    auto const parent_surface = spec.parent().is_set() ? spec.parent().value().lock() : nullptr;
     auto const parent = parent_surface ? info_for(parent_surface).window() : Window{};
     window_info.parent(parent);
     if (parent)
@@ -1873,6 +1860,16 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
 
             parameters.top_left() = centred;
             positioned = true;
+        }
+
+        if (!parameters.depth_layer().is_set())
+        {
+            parameters.depth_layer() = parent_scene_surface->depth_layer();
+        }
+
+        if (!parameters.focus_mode().is_set())
+        {
+            parameters.focus_mode() = parent_scene_surface->focus_mode();
         }
     }
 
