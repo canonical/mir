@@ -49,6 +49,9 @@ struct MockWindowManagerPolicy
     bool handle_pointer_event(MirPointerEvent const* /*event*/) { return false; }
     bool handle_keyboard_event(MirKeyboardEvent const* /*event*/) { return false; }
 
+    MOCK_METHOD2(place_new_window, miral::WindowSpecification(
+        miral::ApplicationInfo const& app_info,
+        miral::WindowSpecification const& request_parameters));
     MOCK_METHOD1(advise_new_window, void (miral::WindowInfo const& window_info));
     MOCK_METHOD2(advise_move_to, void(miral::WindowInfo const& window_info, mir::geometry::Point top_left));
     MOCK_METHOD2(advise_resize, void(miral::WindowInfo const& window_info, mir::geometry::Size const& new_size));

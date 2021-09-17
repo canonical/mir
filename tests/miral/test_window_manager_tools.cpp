@@ -296,6 +296,8 @@ mt::TestWindowManagerTools::TestWindowManagerTools()
             {
                 auto policy = std::make_unique<testing::NiceMock<MockWindowManagerPolicy>>(tools);
                 window_manager_policy = policy.get();
+                ON_CALL(*window_manager_policy, place_new_window(testing::_, testing::_))
+                    .WillByDefault([](auto, auto spec){ return spec; });
                 window_manager_tools = tools;
                 return policy;
             }
