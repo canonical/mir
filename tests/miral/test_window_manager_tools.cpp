@@ -89,9 +89,16 @@ struct StubSurface : mir::test::doubles::StubSurface
         MirWindowType type,
         mir::geometry::Point top_left,
         mir::geometry::Size size,
+        MirWindowState state,
         MirDepthLayer depth_layer,
         MirFocusMode focus_mode)
-        : name_{name}, type_{type}, top_left_{top_left}, size_{size}, depth_layer_{depth_layer}, focus_mode_{focus_mode}
+        : name_{name},
+          type_{type},
+          top_left_{top_left},
+          size_{size},
+          state_{state},
+          depth_layer_{depth_layer},
+          focus_mode_{focus_mode}
     {
     }
 
@@ -143,7 +150,7 @@ struct StubSurface : mir::test::doubles::StubSurface
     MirWindowType type_;
     mir::geometry::Point top_left_;
     mir::geometry::Size size_;
-    MirWindowState state_ = mir_window_state_restored;
+    MirWindowState state_;
     MirDepthLayer depth_layer_;
     mir::geometry::Displacement content_offset_;
     mir::geometry::Displacement content_size_offset;
@@ -163,6 +170,9 @@ struct StubStubSession : mir::test::doubles::StubSession
             params.type.value(),
             params.top_left,
             params.size,
+            params.state.is_set() ?
+                params.state.value()
+                : mir_window_state_restored,
             params.depth_layer.is_set() ?
                 params.depth_layer.value()
                 : mir_depth_layer_application,
