@@ -43,7 +43,7 @@ public:
         wl_resource* resource,
         WlSeat& seat,
         std::shared_ptr<Executor> const& wayland_executor,
-        std::shared_ptr<input::CompositeEventFilter> const& event_filter);
+        input::CompositeEventFilter& event_filter);
 
 private:
     class Handler;

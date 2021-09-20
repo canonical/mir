@@ -425,7 +425,7 @@ void mf::InputMethodV2::grab_keyboard(struct wl_resource* keyboard)
         BOOST_THROW_EXCEPTION(std::runtime_error("tried to grab the keyboard multiple times"));
     }
     current_grab_keyboard = mw::make_weak<wayland::InputMethodKeyboardGrabV2>(
-        new InputMethodGrabKeyboardV2{keyboard, *seat, ctx->wayland_executor, ctx->event_filter});
+        new InputMethodGrabKeyboardV2{keyboard, *seat, ctx->wayland_executor, *ctx->event_filter});
 }
 
 // InputPopupSurfaceV2

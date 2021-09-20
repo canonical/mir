@@ -74,12 +74,12 @@ mf::InputMethodGrabKeyboardV2::InputMethodGrabKeyboardV2(
     wl_resource* resource,
     WlSeat& seat,
     std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<input::CompositeEventFilter> const& event_filter)
+    input::CompositeEventFilter& event_filter)
     : wayland::InputMethodKeyboardGrabV2{resource, Version<1>()},
       handler{std::make_shared<Handler>(this, wayland_executor)},
       helper{seat.make_keyboard_helper(this)}
 {
-    event_filter->prepend(handler);
+    event_filter.prepend(handler);
     // On cleanup the handler will be dropped and automatically removed from the filter
 }
 
