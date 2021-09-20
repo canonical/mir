@@ -38,6 +38,7 @@ namespace input
 class InputDeviceHub;
 class InputDeviceRegistry;
 class Seat;
+class CompositeEventFilter;
 }
 namespace graphics
 {
@@ -87,6 +88,7 @@ public:
         OutputManager* output_manager;
         std::shared_ptr<SurfaceStack> surface_stack;
         std::shared_ptr<input::InputDeviceRegistry> input_device_registry;
+        std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter;
     };
 
     WaylandExtensions() = default;
@@ -121,6 +123,7 @@ public:
         std::shared_ptr<input::InputDeviceHub> const& input_hub,
         std::shared_ptr<input::Seat> const& seat,
         std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
+        std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<SurfaceStack> const& surface_stack,
