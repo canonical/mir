@@ -75,11 +75,10 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
       session{weak_client.value().client_session()},
       output_manager{output_manager},
       observer{std::make_shared<WaylandSurfaceObserver>(wayland_executor, seat, surface, this)},
-      params{std::make_unique<scene::SurfaceCreationParameters>(
-          scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))},
       committed_min_size{0, 0},
       committed_max_size{max_possible_size}
 {
+    spec().type = mir_window_type_freestyle;
     surface->set_role(this);
 }
 
@@ -133,14 +132,7 @@ void mf::WindowWlSurfaceRole::apply_spec(mir::shell::SurfaceSpecification const&
     if (new_spec.height.is_set())
         pending_explicit_height = new_spec.height.value();
 
-    if (weak_scene_surface.lock())
-    {
-        spec().update_from(new_spec);
-    }
-    else
-    {
-        params->update_from(new_spec);
-    }
+    spec().update_from(new_spec);
 }
 
 void mf::WindowWlSurfaceRole::set_pending_offset(std::optional<geom::Displacement> const& offset)
@@ -163,26 +155,12 @@ void mf::WindowWlSurfaceRole::set_pending_height(std::optional<geometry::Height>
 
 void mf::WindowWlSurfaceRole::set_title(std::string const& title)
 {
-    if (weak_scene_surface.lock())
-    {
-        spec().name = title;
-    }
-    else
-    {
-        params->name = title;
-    }
+    spec().name = title;
 }
 
 void mf::WindowWlSurfaceRole::set_application_id(std::string const& application_id)
 {
-    if (weak_scene_surface.lock())
-    {
-        spec().application_id = application_id;
-    }
-    else
-    {
-        params->application_id = application_id;
-    }
+    spec().application_id = application_id;
 }
 
 void mf::WindowWlSurfaceRole::initiate_interactive_move()
@@ -203,66 +181,29 @@ void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge)
 
 void mf::WindowWlSurfaceRole::set_parent(std::optional<std::shared_ptr<scene::Surface>> const& parent)
 {
-    if (weak_scene_surface.lock())
+    auto& mods = spec();
+    if (parent)
     {
-        if (parent)
-            spec().parent = parent.value();
-        else if (spec().parent)
-            spec().parent.consume();
+        mods.parent = parent.value();
     }
-    else
+    else if (mods.parent)
     {
-        if (parent)
-            params->parent = parent.value();
-        else
-            params->parent = {};
+        mods.parent.consume();
     }
 }
 
 void mf::WindowWlSurfaceRole::set_max_size(int32_t width, int32_t height)
 {
-    if (weak_scene_surface.lock())
-    {
-        if (width == 0) width = max_possible_size.width.as_int();
-        if (height == 0) height = max_possible_size.height.as_int();
-
-        auto& mods = spec();
-        mods.max_width = geom::Width{width};
-        mods.max_height = geom::Height{height};
-    }
-    else
-    {
-        if (width == 0)
-        {
-            if (params->max_width.is_set())
-                params->max_width.consume();
-        }
-        else
-            params->max_width = geom::Width{width};
-
-        if (height == 0)
-        {
-            if (params->max_height.is_set())
-                params->max_height.consume();
-        }
-        else
-            params->max_height = geom::Height{height};
-    }
+    auto& mods = spec();
+    mods.max_width = width ? geom::Width{width} : max_possible_size.width;
+    mods.max_height = height ? geom::Height{height} : max_possible_size.height;
 }
 
 void mf::WindowWlSurfaceRole::set_min_size(int32_t width, int32_t height)
 {
-    if (weak_scene_surface.lock())
-    {
-        auto& mods = spec();
-        mods.min_width = geom::Width{width};
-        mods.min_height = geom::Height{height};
-    }
-    else
-    {
-        params->min_width = geom::Width{width};
-        params->min_height = geom::Height{height};
-    }
+    auto& mods = spec();
+    mods.min_width = geom::Width{width};
+    mods.min_height = geom::Height{height};
 }
 
 void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<struct wl_resource*> const& output)
@@ -283,40 +224,30 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<struct wl_resource*> 
     }
     else
     {
-        params->state = mir_window_state_fullscreen;
+        spec().state = mir_window_state_fullscreen;
         auto const output_id = output_manager->output_id_for(
             weak_client.value().raw_client(),
             output.value_or(nullptr));
         if (output_id)
         {
-            params->output_id = output_id.value();
+            spec().output_id = output_id.value();
         }
         create_scene_surface();
     }
 }
 
-void mf::WindowWlSurfaceRole::set_server_side_decorated(bool server_side_decorated)
+void mf::WindowWlSurfaceRole::set_server_side_decorated(bool ssd)
 {
+    server_side_decorated = ssd;
     if (weak_scene_surface.lock())
     {
         log_warning("Changing server_side_decorated property after surface created not yet possible");
-    }
-    else
-    {
-        params->server_side_decorated = server_side_decorated;
     }
 }
 
 void mir::frontend::WindowWlSurfaceRole::set_type(MirWindowType type)
 {
-    if (weak_scene_surface.lock())
-    {
-        spec().type = type;
-    }
-    else
-    {
-        params->type = type;
-    }
+    spec().type = type;
 }
 
 void mf::WindowWlSurfaceRole::add_state_now(MirWindowState state)
@@ -329,7 +260,7 @@ void mf::WindowWlSurfaceRole::add_state_now(MirWindowState state)
     }
     else
     {
-        params->state = state;
+        spec().state = state;
         create_scene_surface();
     }
 }
@@ -498,26 +429,39 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     if (weak_scene_surface.lock() || !surface)
         return;
 
-    params->size = pending_size();
-    params->streams = std::vector<shell::StreamSpecification>{};
-    params->input_shape = std::vector<geom::Rectangle>{};
-    surface.value().populate_surface_data(params->streams.value(), params->input_shape.value(), {});
+    auto& mods = spec();
+    auto const request_size = pending_size();
+    mods.width = request_size.width;
+    mods.height = request_size.height;
+    mods.streams = std::vector<shell::StreamSpecification>{};
+    mods.input_shape = std::vector<geom::Rectangle>{};
+    surface.value().populate_surface_data(mods.streams.value(), mods.input_shape.value(), {});
 
-    auto const scene_surface = shell->create_surface(session, *params, observer);
+    ms::SurfaceCreationParameters params;
+    if (server_side_decorated)
+    {
+        params.server_side_decorated = server_side_decorated;
+    }
+    params.update_from(mods);
+    auto const scene_surface = shell->create_surface(session, params, observer);
     weak_scene_surface = scene_surface;
 
-    if (params->min_width)  committed_min_size.width  = params->min_width.value();
-    if (params->min_height) committed_min_size.height = params->min_height.value();
-    if (params->max_width)  committed_max_size.width  = params->max_width.value();
-    if (params->max_height) committed_max_size.height = params->max_height.value();
+    if (mods.min_width)  committed_min_size.width  = mods.min_width.value();
+    if (mods.min_height) committed_min_size.height = mods.min_height.value();
+    if (mods.max_width)  committed_max_size.width  = mods.max_width.value();
+    if (mods.max_height) committed_max_size.height = mods.max_height.value();
 
     // The shell isn't guaranteed to respect the requested size
     // TODO: make initial updates atomic somehow
     auto const content_size = scene_surface->content_size();
-    if (content_size != params->size)
+    if (content_size != request_size)
+    {
         observer->content_resized_to(scene_surface.get(), content_size);
+    }
     if (is_active())
+    {
         observer->attrib_changed(scene_surface.get(), mir_window_attrib_focus, 1);
+    }
 
     // Send wl_surface.enter events for every output
     // TODO: send enter/leave when the surface actually enters and leaves outputs
@@ -534,4 +478,7 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
                     });
             }
         });
+
+    // Invalidates mods
+    pending_changes.reset();
 }
