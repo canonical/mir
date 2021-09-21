@@ -236,9 +236,9 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<struct wl_resource*> 
     }
 }
 
-void mf::WindowWlSurfaceRole::set_server_side_decorated(bool ssd)
+void mf::WindowWlSurfaceRole::set_server_side_decorated(bool server_side_decorated)
 {
-    server_side_decorated = ssd;
+    spec().server_side_decorated = server_side_decorated;
     if (weak_scene_surface.lock())
     {
         log_warning("Changing server_side_decorated property after surface created not yet possible");
@@ -438,10 +438,6 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     surface.value().populate_surface_data(mods.streams.value(), mods.input_shape.value(), {});
 
     ms::SurfaceCreationParameters params;
-    if (server_side_decorated)
-    {
-        params.server_side_decorated = server_side_decorated;
-    }
     params.update_from(mods);
     auto const scene_surface = shell->create_surface(session, params, observer);
     weak_scene_surface = scene_surface;

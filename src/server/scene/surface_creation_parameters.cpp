@@ -208,7 +208,8 @@ void ms::SurfaceCreationParameters::update_from(msh::SurfaceSpecification const&
         exclusive_rect = that.exclusive_rect.value();
     if (that.application_id.is_set())
         application_id = that.application_id.value();
-    // server_side_decorated not a property of SurfaceSpecification
+    if (that.server_side_decorated.is_set())
+        server_side_decorated = that.server_side_decorated.value();
     if (that.focus_mode.is_set())
         focus_mode = that.focus_mode;
     // TODO: should SurfaceCreationParameters support cursors?

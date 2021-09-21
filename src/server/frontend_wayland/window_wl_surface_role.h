@@ -152,7 +152,6 @@ private:
     geometry::Size committed_max_size;
     /// @}
 
-    bool server_side_decorated = false;
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
 
     shell::SurfaceSpecification& spec();

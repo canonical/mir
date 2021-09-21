@@ -109,7 +109,7 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     attached_edges(spec.attached_edges),
     exclusive_rect(spec.exclusive_rect),
     application_id(spec.application_id),
-    server_side_decorated(), // Not currently on SurfaceSpecification
+    server_side_decorated(spec.server_side_decorated),
     focus_mode(spec.focus_mode)
 {
     if (spec.aux_rect_placement_offset_x.is_set() && spec.aux_rect_placement_offset_y.is_set())
