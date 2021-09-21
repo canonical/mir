@@ -285,10 +285,13 @@ auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surf
     params.surface_placement_gravity = mir_placement_gravity_northwest;
     params.placement_hints = MirPlacementHints(0);
     // Will be replaced by initial update
-    params.content = session->create_buffer_stream(mg::BufferProperties{
-        geom::Size{1, 1},
-        buffer_format,
-        mg::BufferUsage::software});
+    params.streams = {{
+        session->create_buffer_stream(mg::BufferProperties{
+            geom::Size{1, 1},
+            buffer_format,
+            mg::BufferUsage::software}),
+        {},
+        {}}};
     return shell->create_surface(session, params, nullptr);
 }
 
