@@ -760,8 +760,6 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         fatal_error("Property handlers did not set a valid session");
     }
 
-    bool server_side_decorated;
-
     // property_handlers will have updated the pending spec. Use it.
     {
         std::lock_guard<std::mutex> lock{mutex};
@@ -770,14 +768,12 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         {
             spec.update_from(*pending_spec.value());
         }
+        spec.server_side_decorated = !cached.override_redirect && !cached.motif_decorations_disabled;
         prep_surface_spec(lock, spec);
-
-        server_side_decorated = !cached.override_redirect && !cached.motif_decorations_disabled;
     }
 
     ms::SurfaceCreationParameters params;
     params.update_from(spec);
-    params.server_side_decorated = server_side_decorated;
     auto const surface = shell->create_surface(session, params, observer);
     inform_client_of_window_state(state);
     auto const top_left = scaled_top_left_of(*surface) + scaled_content_offset_of(*surface);
