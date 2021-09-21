@@ -171,7 +171,7 @@ msd::BasicDecoration::BasicDecoration(
       buffer_streams{std::make_unique<BufferStreams>(session)},
       renderer{std::make_unique<Renderer>(buffer_allocator, static_geometry)},
       window_surface{window_surface},
-      decoration_surface{shell->create_surface(session, *creation_params(), nullptr)},
+      decoration_surface{create_surface()},
       window_state{new_window_state()},
       window_surface_observer_manager{std::make_unique<WindowSurfaceObserverManager>(
           window_surface,
@@ -274,22 +274,22 @@ auto msd::BasicDecoration::new_window_state() const -> std::unique_ptr<WindowSta
     return std::make_unique<WindowState>(static_geometry, window_surface);
 }
 
-auto msd::BasicDecoration::creation_params() const -> std::unique_ptr<scene::SurfaceCreationParameters>
+auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surface>
 {
-    auto params = std::make_unique<ms::SurfaceCreationParameters>();
-    params->type = mir_window_type_decoration;
-    params->parent = window_surface;
-    params->size = window_surface->window_size();
-    params->aux_rect = {{}, {}};
-    params->aux_rect_placement_gravity = mir_placement_gravity_northwest;
-    params->surface_placement_gravity = mir_placement_gravity_northwest;
-    params->placement_hints = MirPlacementHints(0);
+    ms::SurfaceCreationParameters params;
+    params.type = mir_window_type_decoration;
+    params.parent = window_surface;
+    params.size = window_surface->window_size();
+    params.aux_rect = {{}, {}};
+    params.aux_rect_placement_gravity = mir_placement_gravity_northwest;
+    params.surface_placement_gravity = mir_placement_gravity_northwest;
+    params.placement_hints = MirPlacementHints(0);
     // Will be replaced by initial update
-    params->content = session->create_buffer_stream(mg::BufferProperties{
+    params.content = session->create_buffer_stream(mg::BufferProperties{
         geom::Size{1, 1},
         buffer_format,
         mg::BufferUsage::software});
-    return params;
+    return shell->create_surface(session, params, nullptr);
 }
 
 void msd::BasicDecoration::update(
