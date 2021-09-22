@@ -40,7 +40,6 @@ namespace mir
 class Executor;
 namespace scene
 {
-struct SurfaceCreationParameters;
 class Surface;
 class Session;
 }
@@ -130,7 +129,6 @@ private:
     std::shared_ptr<scene::Session> const session;
     OutputManager* output_manager;
     std::shared_ptr<WaylandSurfaceObserver> const observer;
-    std::unique_ptr<scene::SurfaceCreationParameters> const params;
     std::weak_ptr<scene::Surface> weak_scene_surface;
 
     /// The explicitly set (not taken from the surface buffer size) uncommitted window size
@@ -154,6 +152,7 @@ private:
     geometry::Size committed_max_size;
     /// @}
 
+    bool server_side_decorated = false;
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
 
     shell::SurfaceSpecification& spec();
