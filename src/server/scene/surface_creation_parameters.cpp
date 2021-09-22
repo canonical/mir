@@ -196,6 +196,8 @@ void ms::SurfaceCreationParameters::update_from(msh::SurfaceSpecification const&
         parent = that.parent.value();
     if (that.input_shape.is_set())
         input_shape = that.input_shape;
+    if (that.input_mode.is_set())
+        input_mode = that.input_mode.value();
     if (that.shell_chrome.is_set())
         shell_chrome = that.shell_chrome;
     if (that.confine_pointer.is_set())

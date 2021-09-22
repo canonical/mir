@@ -102,7 +102,9 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     streams(spec.streams),
     parent(spec.parent),
     input_shape(spec.input_shape),
-    input_mode(),
+    input_mode(spec.input_mode.is_set() ?
+        mir::optional_value<InputReceptionMode>(static_cast<InputReceptionMode>(spec.input_mode.value())) :
+        mir::optional_value<InputReceptionMode>()),
     shell_chrome(spec.shell_chrome),
     confine_pointer(spec.confine_pointer),
     depth_layer(spec.depth_layer),

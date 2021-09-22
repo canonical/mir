@@ -35,6 +35,7 @@ namespace mir
 {
 namespace graphics { class CursorImage; }
 namespace scene { class Surface; }
+namespace input { enum class InputReceptionMode; }
 namespace frontend
 {
 class BufferStream;
@@ -95,12 +96,8 @@ struct SurfaceSpecification
     optional_value<std::weak_ptr<scene::Surface>> parent;
 
     optional_value<std::vector<geometry::Rectangle>> input_shape;
+    optional_value<input::InputReceptionMode> input_mode;
 
-    // TODO scene::SurfaceCreationParameters overlaps this content but has additional fields:
-    //    input::InputReceptionMode input_mode;
-    //
-    //    it also has size instead of width + height
-    // Maybe SurfaceCreationParameters /HasA/ SurfaceSpecification?
     optional_value<MirShellChrome> shell_chrome;
     optional_value<MirPointerConfinementState> confine_pointer;
     optional_value<std::shared_ptr<graphics::CursorImage>> cursor_image;

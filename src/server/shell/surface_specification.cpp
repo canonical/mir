@@ -63,6 +63,7 @@ bool msh::SurfaceSpecification::is_empty() const
         !streams.is_set() &&
         !parent.is_set() &&
         !input_shape.is_set() &&
+        !input_mode.is_set() &&
         !shell_chrome.is_set() &&
         !depth_layer.is_set() &&
         !attached_edges.is_set() &&
@@ -132,6 +133,8 @@ void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
         parent = that.parent;
     if (that.input_shape.is_set())
         input_shape = that.input_shape;
+    if (that.input_mode.is_set())
+        input_mode = that.input_mode;
     if (that.shell_chrome.is_set())
         shell_chrome = that.shell_chrome;
     if (that.confine_pointer.is_set())
