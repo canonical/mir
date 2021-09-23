@@ -40,7 +40,7 @@ struct FocusMode : mt::TestWindowManagerTools
         basic_window_manager.add_session(session);
     }
 
-    auto create_window(mir::scene::SurfaceCreationParameters creation_parameters) -> Window
+    auto create_window(mir::shell::SurfaceSpecification creation_parameters) -> Window
     {
         Window result;
 
@@ -51,7 +51,7 @@ struct FocusMode : mt::TestWindowManagerTools
                         { result = window_info.window(); }));
 
         creation_parameters.type = mir_window_type_normal;
-        creation_parameters.size = Size{600, 400};
+        creation_parameters.set_size({600, 400});
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
 
         // Clear the expectations used to capture parent & child
@@ -64,7 +64,7 @@ struct FocusMode : mt::TestWindowManagerTools
 
 TEST_F(FocusMode, new_window_has_focus_mode_created_with)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "disabled";
     params.focus_mode = mir_focus_mode_disabled;
@@ -85,7 +85,7 @@ TEST_F(FocusMode, new_window_has_focus_mode_created_with)
 
 TEST_F(FocusMode, new_focusable_surface_becomes_active_by_default)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "focusable A";
     params.focus_mode = mir_focus_mode_focusable;
@@ -102,7 +102,7 @@ TEST_F(FocusMode, new_focusable_surface_becomes_active_by_default)
 
 TEST_F(FocusMode, new_grabbing_surface_becomes_active_by_default)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "focusable";
     params.focus_mode = mir_focus_mode_focusable;
@@ -119,7 +119,7 @@ TEST_F(FocusMode, new_grabbing_surface_becomes_active_by_default)
 
 TEST_F(FocusMode, new_disabled_surface_does_not_become_active_by_default)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "focusable";
     params.focus_mode = mir_focus_mode_focusable;
@@ -136,7 +136,7 @@ TEST_F(FocusMode, new_disabled_surface_does_not_become_active_by_default)
 
 TEST_F(FocusMode, grabbing_surface_can_not_become_inactive)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "grabbing";
     params.focus_mode = mir_focus_mode_grabbing;
@@ -152,7 +152,7 @@ TEST_F(FocusMode, grabbing_surface_can_not_become_inactive)
 
 TEST_F(FocusMode, disabled_surface_can_not_become_active)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "focusable";
     params.focus_mode = mir_focus_mode_focusable;
@@ -168,7 +168,7 @@ TEST_F(FocusMode, disabled_surface_can_not_become_active)
 
 TEST_F(FocusMode, grabbing_surface_can_not_steal_from_other_grabbing_surface)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "grabbing A";
     params.focus_mode = mir_focus_mode_grabbing;
@@ -184,7 +184,7 @@ TEST_F(FocusMode, grabbing_surface_can_not_steal_from_other_grabbing_surface)
 
 TEST_F(FocusMode, child_of_disabled_is_active)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "focusable";
     params.focus_mode = mir_focus_mode_focusable;
@@ -205,7 +205,7 @@ TEST_F(FocusMode, child_of_disabled_is_active)
 
 TEST_F(FocusMode, disabled_does_not_gain_focus_when_child_closes)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "focusable";
     params.focus_mode = mir_focus_mode_focusable;
@@ -229,7 +229,7 @@ TEST_F(FocusMode, disabled_does_not_gain_focus_when_child_closes)
 
 TEST_F(FocusMode, gains_focus_on_disabled_to_grabbing)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "secondary";
     params.focus_mode = mir_focus_mode_focusable;
@@ -249,7 +249,7 @@ TEST_F(FocusMode, gains_focus_on_disabled_to_grabbing)
 
 TEST_F(FocusMode, gains_focus_on_unfocused_focusable_to_grabbing)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "secondary";
     params.focus_mode = mir_focus_mode_focusable;
@@ -271,7 +271,7 @@ TEST_F(FocusMode, gains_focus_on_unfocused_focusable_to_grabbing)
 
 TEST_F(FocusMode, can_gain_focus_after_disabeled_to_focusable)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "secondary";
     params.focus_mode = mir_focus_mode_focusable;
@@ -291,7 +291,7 @@ TEST_F(FocusMode, can_gain_focus_after_disabeled_to_focusable)
 
 TEST_F(FocusMode, loses_focus_on_grabbing_to_disabeled)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "secondary";
     params.focus_mode = mir_focus_mode_focusable;
@@ -311,7 +311,7 @@ TEST_F(FocusMode, loses_focus_on_grabbing_to_disabeled)
 
 TEST_F(FocusMode, loses_focus_on_focusable_to_disabeled)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "secondary";
     params.focus_mode = mir_focus_mode_focusable;
@@ -333,7 +333,7 @@ TEST_F(FocusMode, loses_focus_on_focusable_to_disabeled)
 
 TEST_F(FocusMode, does_not_lose_focus_on_grabbing_to_focusable)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "secondary";
     params.focus_mode = mir_focus_mode_focusable;
@@ -353,7 +353,7 @@ TEST_F(FocusMode, does_not_lose_focus_on_grabbing_to_focusable)
 
 TEST_F(FocusMode, can_lose_focus_after_grabing_focusable)
 {
-    mir::scene::SurfaceCreationParameters params;
+    mir::shell::SurfaceSpecification params;
 
     params.name = "secondary";
     params.focus_mode = mir_focus_mode_focusable;

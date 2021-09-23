@@ -57,7 +57,7 @@ public:
 
     WindowSpecification(mir::shell::SurfaceSpecification const& spec);
     WindowSpecification(mir::scene::SurfaceCreationParameters const& params);
-    void update(mir::scene::SurfaceCreationParameters& params) const;
+    void apply_to(mir::shell::SurfaceSpecification& params) const;
 
     ~WindowSpecification();
 

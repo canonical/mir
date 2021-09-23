@@ -41,7 +41,7 @@ struct SelectActiveWindow : mt::TestWindowManagerTools
         basic_window_manager.add_session(session);
     }
 
-    auto create_window(mir::scene::SurfaceCreationParameters creation_parameters) -> Window
+    auto create_window(mir::shell::SurfaceSpecification creation_parameters) -> Window
     {
         Window result;
 
@@ -67,10 +67,10 @@ struct SelectActiveWindow : mt::TestWindowManagerTools
 // dialog should receive input focus."
 TEST_F(SelectActiveWindow, given_a_child_dialog_when_selecting_the_parent_the_dialog_receives_focus)
 {
-    mir::scene::SurfaceCreationParameters creation_parameters;
+    mir::shell::SurfaceSpecification creation_parameters;
     creation_parameters.name = "parent";
     creation_parameters.type = mir_window_type_normal;
-    creation_parameters.size = Size{600, 400};
+    creation_parameters.set_size({600, 400});
 
     auto parent = create_window(creation_parameters);
 
@@ -86,10 +86,10 @@ TEST_F(SelectActiveWindow, given_a_child_dialog_when_selecting_the_parent_the_di
 
 TEST_F(SelectActiveWindow, given_a_hidden_child_dialog_when_selecting_the_parent_the_parent_receives_focus)
 {
-    mir::scene::SurfaceCreationParameters creation_parameters;
+    mir::shell::SurfaceSpecification creation_parameters;
     creation_parameters.name = "parent";
     creation_parameters.type = mir_window_type_normal;
-    creation_parameters.size = Size{600, 400};
+    creation_parameters.set_size({600, 400});
 
     auto parent = create_window(creation_parameters);
 

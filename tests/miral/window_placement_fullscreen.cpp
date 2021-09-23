@@ -41,7 +41,7 @@ struct WindowPlacementFullscreen : mt::TestWindowManagerTools
         basic_window_manager.add_session(session);
     }
 
-    auto create_window(mir::scene::SurfaceCreationParameters creation_parameters) -> Window
+    auto create_window(mir::shell::SurfaceSpecification creation_parameters) -> Window
     {
         Window result;
 
@@ -67,7 +67,7 @@ TEST_F(WindowPlacementFullscreen, window_is_initially_placed_correctly)
 {
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_fullscreen;
         window = create_window(params);
     }
@@ -82,7 +82,7 @@ TEST_F(WindowPlacementFullscreen, window_is_placed_correctly_when_fullscreened)
 {
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_maximized;
         window = create_window(params);
     }
@@ -105,9 +105,10 @@ TEST_F(WindowPlacementFullscreen, window_can_be_unfullscreened)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_restored;
-        params.size = window_size;
+        params.width = window_size.width;
+        params.height = window_size.height;
         window = create_window(params);
     }
     auto const& info = basic_window_manager.info_for(window);
@@ -138,7 +139,7 @@ TEST_F(WindowPlacementFullscreen, window_initially_placed_correctly_when_output_
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_fullscreen;
         params.output_id = output_id;
         window = create_window(params);
@@ -161,7 +162,7 @@ TEST_F(WindowPlacementFullscreen, window_placed_correctly_when_output_id_changes
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_fullscreen;
         params.output_id = output_id_b;
         window = create_window(params);
@@ -190,7 +191,7 @@ TEST_F(WindowPlacementFullscreen, fullscreen_window_is_placed_correctly_on_a_log
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_fullscreen;
         window = create_window(params);
     }
@@ -210,7 +211,7 @@ TEST_F(WindowPlacementFullscreen, fullscreen_window_is_placed_correctly_when_log
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_fullscreen;
         window = create_window(params);
     }
@@ -239,7 +240,7 @@ TEST_F(WindowPlacementFullscreen, fullscreen_window_with_output_id_is_placed_cor
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_fullscreen;
         params.output_id = output_id;
         window = create_window(params);
@@ -262,7 +263,7 @@ TEST_F(WindowPlacementFullscreen, fullscreen_window_with_output_id_is_placed_cor
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_fullscreen;
         params.output_id = output_id;
         window = create_window(params);

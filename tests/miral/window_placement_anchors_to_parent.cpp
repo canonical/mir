@@ -61,19 +61,19 @@ struct WindowPlacementAnchorsToParent : mt::TestWindowManagerTools
 
         notify_configuration_applied(create_fake_display_configuration({display_area}));
 
-        mir::scene::SurfaceCreationParameters creation_parameters;
+        mir::shell::SurfaceSpecification creation_parameters;
         basic_window_manager.add_session(session);
 
         EXPECT_CALL(*window_manager_policy, advise_new_window(_))
             .WillOnce(Invoke([this](WindowInfo const& window_info){ parent = window_info.window(); }))
             .WillOnce(Invoke([this](WindowInfo const& window_info){ child = window_info.window(); }));
 
-        creation_parameters.size = parent_size;
+        creation_parameters.set_size(parent_size);
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
 
         creation_parameters.type = mir_window_type_tip;
         creation_parameters.parent = parent;
-        creation_parameters.size = initial_child_size;
+        creation_parameters.set_size(initial_child_size);
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
 
         // Clear the expectations used to capture parent & child

@@ -160,7 +160,9 @@ struct StubStubSession : mir::test::doubles::StubSession
         auto id = mir::frontend::SurfaceId{next_surface_id.fetch_add(1)};
         auto surface = std::make_shared<StubSurface>(
             params.name,
-            params.type.value(),
+            params.type.is_set() ?
+                params.type.value()
+                : mir_window_type_normal,
             params.top_left,
             params.size,
             params.depth_layer.is_set() ?
@@ -307,11 +309,14 @@ mt::TestWindowManagerTools::~TestWindowManagerTools() = default;
 
 auto mt::TestWindowManagerTools::create_surface(
     std::shared_ptr<mir::scene::Session> const& session,
-    mir::scene::SurfaceCreationParameters const& params) -> std::shared_ptr<mir::scene::Surface>
+    mir::shell::SurfaceSpecification const& params) -> std::shared_ptr<mir::scene::Surface>
 {
     // This type is Mir-internal, I hope we don't need to create it here
     std::shared_ptr<mir::scene::SurfaceObserver> const observer;
-    return session->create_surface(nullptr, params, observer);
+    mir::scene::SurfaceCreationParameters creation_params;
+    //creation_params.update_from(params);
+    (void)params;
+    return session->create_surface(nullptr, creation_params, observer);
 }
 
 auto mt::TestWindowManagerTools::create_fake_display_configuration(std::vector<miral::Rectangle> const& outputs)

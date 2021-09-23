@@ -158,18 +158,20 @@ auto msh::AbstractShell::create_surface(
     // Instead of a shared pointer, a local variable could be used and the lambda could capture a reference to it
     // This should be safe, but could be the source of nasty bugs and crashes if the wm did something unexpected
     auto const should_decorate = std::make_shared<bool>(false);
-    auto const build = [observer, should_decorate](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& placed_params)
+    auto const build = [observer, should_decorate](
+            std::shared_ptr<ms::Session> const& session,
+            msh::SurfaceSpecification const& placed_params)
         {
             if (placed_params.server_side_decorated.is_set() && placed_params.server_side_decorated.value())
             {
                 *should_decorate = true;
             }
-            return session->create_surface(session, placed_params, observer);
+            ms::SurfaceCreationParameters creation_params;
+            creation_params.update_from(placed_params);
+            return session->create_surface(session, creation_params, observer);
         };
 
-    scene::SurfaceCreationParameters params;
-    params.update_from(spec);
-    auto const result = window_manager->add_surface(session, params, build);
+    auto const result = window_manager->add_surface(session, spec, build);
     report->created_surface(*session, *result);
 
     if (*should_decorate)

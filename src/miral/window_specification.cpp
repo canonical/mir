@@ -37,7 +37,7 @@ struct miral::WindowSpecification::Self
     Self(mir::shell::SurfaceSpecification const& spec);
     Self(mir::scene::SurfaceCreationParameters const& params);
 
-    void update(mir::scene::SurfaceCreationParameters& params) const;
+    void apply_to(mir::shell::SurfaceSpecification& params) const;
 
     mir::optional_value<Point> top_left;
     mir::optional_value<Size> size;
@@ -48,7 +48,6 @@ struct miral::WindowSpecification::Self
     mir::optional_value<MirWindowType> type;
     mir::optional_value<MirWindowState> state;
     mir::optional_value<MirOrientationMode> preferred_orientation;
-    std::weak_ptr<mir::frontend::BufferStream> content;
     mir::optional_value<Rectangle> aux_rect;
     mir::optional_value<MirPlacementHints> placement_hints;
     mir::optional_value<MirPlacementGravity> window_placement_gravity;
@@ -178,14 +177,14 @@ void copy_if_set(mir::optional_value<Dest>& dest, mir::optional_value<Source> co
 }
 
 template<typename Source>
-void copy_if_set(mir::graphics::BufferUsage& dest, mir::optional_value<Source> const& source)
+void copy_if_set(mir::optional_value<mir::graphics::BufferUsage>& dest, mir::optional_value<Source> const& source)
 {
     if (source.is_set()) dest = static_cast<mir::graphics::BufferUsage>(source.value());
 }
 
 template<typename Source>
 void copy_if_set(
-    mir::graphics::DisplayConfigurationOutputId& dest,
+    mir::optional_value<mir::graphics::DisplayConfigurationOutputId>& dest,
     mir::optional_value<Source> const& source)
 {
     if (source.is_set()) dest = static_cast<mir::graphics::DisplayConfigurationOutputId>(source.value());
@@ -193,7 +192,7 @@ void copy_if_set(
 
 template<typename Source>
 void copy_if_set(
-    mir::input::InputReceptionMode& dest,
+    mir::optional_value<mir::input::InputReceptionMode>& dest,
     mir::optional_value<Source> const& source)
 {
     if (source.is_set()) dest = static_cast<mir::input::InputReceptionMode>(source.value());
@@ -226,7 +225,6 @@ miral::WindowSpecification::Self::Self(mir::scene::SurfaceCreationParameters con
     type(params.type),
     state(params.state),
     preferred_orientation(params.preferred_orientation),
-    content(params.content),
     aux_rect(params.aux_rect),
     placement_hints(params.placement_hints),
     window_placement_gravity(params.surface_placement_gravity),
@@ -286,10 +284,9 @@ miral::WindowSpecification::Self::Self(mir::scene::SurfaceCreationParameters con
         max_aspect = AspectRatio{params.max_aspect.value().width, params.max_aspect.value().height};
 }
 
-void miral::WindowSpecification::Self::update(mir::scene::SurfaceCreationParameters& params) const
+void miral::WindowSpecification::Self::apply_to(mir::shell::SurfaceSpecification& params) const
 {
     copy_if_set(params.top_left, top_left);
-    copy_if_set(params.size, size);
     copy_if_set(params.pixel_format, pixel_format);
     copy_if_set(params.buffer_usage, buffer_usage);
     copy_if_set(params.name, name);
@@ -297,7 +294,6 @@ void miral::WindowSpecification::Self::update(mir::scene::SurfaceCreationParamet
     copy_if_set(params.type, type);
     copy_if_set(params.state, state);
     copy_if_set(params.preferred_orientation, preferred_orientation);
-    copy_if_set(params.content, content);
     copy_if_set(params.aux_rect, aux_rect);
     copy_if_set(params.min_width, min_width);
     copy_if_set(params.min_height, min_height);
@@ -318,10 +314,15 @@ void miral::WindowSpecification::Self::update(mir::scene::SurfaceCreationParamet
     copy_if_set(params.aux_rect_placement_gravity, aux_rect_placement_gravity);
     copy_if_set(params.depth_layer, depth_layer);
     copy_if_set(params.attached_edges, attached_edges);
-    copy_if_set(params.exclusive_rect, exclusive_rect.value());
+    copy_if_set(params.exclusive_rect, exclusive_rect);
     copy_if_set(params.application_id, application_id);
     copy_if_set(params.server_side_decorated, server_side_decorated);
     copy_if_set(params.focus_mode, focus_mode);
+
+    if (size.is_set())
+    {
+        params.set_size(size.value());
+    }
 
     if (aux_rect_placement_offset.is_set())
     {
@@ -359,9 +360,9 @@ auto miral::WindowSpecification::operator=(WindowSpecification const& that) -> W
 
 miral::WindowSpecification::~WindowSpecification() = default;
 
-void miral::WindowSpecification::update(mir::scene::SurfaceCreationParameters& params) const
+void miral::WindowSpecification::apply_to(mir::shell::SurfaceSpecification& params) const
 {
-    self->update(params);
+    self->apply_to(params);
 }
 
 auto miral::WindowSpecification::top_left() const -> mir::optional_value<Point> const&

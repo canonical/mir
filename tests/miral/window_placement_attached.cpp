@@ -66,7 +66,7 @@ struct WindowPlacementAttached : mt::TestWindowManagerTools, WithParamInterface<
         basic_window_manager.add_session(session);
     }
 
-    auto create_window(mir::scene::SurfaceCreationParameters creation_parameters) -> Window
+    auto create_window(mir::shell::SurfaceSpecification creation_parameters) -> Window
     {
         Window result;
 
@@ -176,10 +176,10 @@ TEST_P(WindowPlacementAttached, window_is_initially_placed_correctly)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         window = create_window(params);
     }
     auto const& info = basic_window_manager.info_for(window);
@@ -200,10 +200,10 @@ TEST_P(WindowPlacementAttached, window_is_placed_correctly_when_attached_edges_c
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = mir_placement_gravity_southwest;
-        params.size = window_size;
+        params.set_size(window_size);
         window = create_window(params);
     }
     auto const& info = basic_window_manager.info_for(window);
@@ -229,10 +229,10 @@ TEST_P(WindowPlacementAttached, window_is_placed_correctly_when_size_changes)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = initial_size;
+        params.set_size(initial_size);
         window = create_window(params);
     }
     auto const& info = basic_window_manager.info_for(window);
@@ -258,10 +258,10 @@ TEST_P(WindowPlacementAttached, window_is_placed_correctly_when_output_changes)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         window = create_window(params);
     }
     auto const& info = basic_window_manager.info_for(window);
@@ -285,10 +285,10 @@ TEST_P(WindowPlacementAttached, window_is_placed_correctly_when_put_in_attached_
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_restored;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.top_left = initial_top_left;
         window = create_window(params);
     }
@@ -318,17 +318,17 @@ TEST_P(WindowPlacementAttached, maximized_window_respects_exclusive_zone)
     Rectangle exclusive_rect{{0, 0}, window_size};
 
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.exclusive_rect = exclusive_rect;
         create_window(params);
     }
 
     Window normal;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_maximized;
         normal = create_window(params);
     }
@@ -345,17 +345,17 @@ TEST_P(WindowPlacementAttached, window_respects_exclusive_zone_when_maximized)
     Rectangle exclusive_rect{{0, 0}, window_size};
 
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.exclusive_rect = exclusive_rect;
         create_window(params);
     }
 
     Window normal;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_restored;
         normal = create_window(params);
     }
@@ -377,17 +377,17 @@ TEST_P(WindowPlacementAttached, fullscreen_window_ignores_exclusive_zone)
     Rectangle exclusive_rect{{0, 0}, window_size};
 
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.exclusive_rect = exclusive_rect;
         create_window(params);
     }
 
     Window normal;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_fullscreen;
         normal = create_window(params);
     }
@@ -403,17 +403,17 @@ TEST_P(WindowPlacementAttached, window_ignores_exclusive_zone_when_fullscreened)
     Rectangle exclusive_rect{{0, 0}, window_size};
 
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.exclusive_rect = exclusive_rect;
         create_window(params);
     }
 
     Window normal;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_restored;
         normal = create_window(params);
     }
@@ -433,17 +433,17 @@ TEST_P(WindowPlacementAttached, stretched_attached_window_respects_exclusive_zon
     Rectangle exclusive_rect{{0, 0}, window_size};
 
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.exclusive_rect = exclusive_rect;
         create_window(params);
     }
 
     Window attached;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = (MirPlacementGravity)(
             mir_placement_gravity_north |
@@ -467,26 +467,26 @@ TEST_P(WindowPlacementAttached, maximized_window_respects_multiple_stacked_exclu
     Rectangle exclusive_rect_b{{0, 0}, window_b_size};
 
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_a_size;
+        params.set_size(window_a_size);
         params.exclusive_rect = exclusive_rect_a;
         create_window(params);
     }
 
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_b_size;
+        params.set_size(window_b_size);
         params.exclusive_rect = exclusive_rect_b;
         create_window(params);
     }
 
     Window normal;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_maximized;
         normal = create_window(params);
     }
@@ -504,17 +504,17 @@ TEST_P(WindowPlacementAttached, maximized_window_respects_exclusive_zone_smaller
     Rectangle exclusive_rect{{20, 30}, {130, 60}};
 
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.exclusive_rect = exclusive_rect;
         create_window(params);
     }
 
     Window normal;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_maximized;
         normal = create_window(params);
     }
@@ -532,17 +532,17 @@ TEST_P(WindowPlacementAttached, exclusive_zone_is_cleared_when_window_is_removed
 
     Window attached;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.exclusive_rect = exclusive_rect;
         attached = create_window(params);
     }
 
     Window normal;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_maximized;
         normal = create_window(params);
     }
@@ -561,17 +561,17 @@ TEST_P(WindowPlacementAttached, exclusive_zone_is_cleared_when_window_becomes_no
 
     Window attached;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.exclusive_rect = exclusive_rect;
         attached = create_window(params);
     }
 
     Window normal;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_maximized;
         normal = create_window(params);
     }
@@ -592,17 +592,17 @@ TEST_P(WindowPlacementAttached, exclusive_zone_is_cleared_when_exclusive_rect_cl
 
     Window attached;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.exclusive_rect = exclusive_rect;
         attached = create_window(params);
     }
 
     Window normal;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_maximized;
         normal = create_window(params);
     }
@@ -627,10 +627,10 @@ TEST_P(WindowPlacementAttached, window_initially_placed_correctly_when_output_id
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.output_id = output_id;
         window = create_window(params);
     }
@@ -658,10 +658,10 @@ TEST_P(WindowPlacementAttached, window_placed_correctly_when_output_id_changes)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.output_id = output_id_b;
         window = create_window(params);
     }
@@ -695,10 +695,10 @@ TEST_P(WindowPlacementAttached, window_is_placed_correctly_for_logical_output_gr
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         window = create_window(params);
     }
     auto const& info = basic_window_manager.info_for(window);
@@ -723,10 +723,10 @@ TEST_P(WindowPlacementAttached, window_is_placed_correctly_when_logical_output_g
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         window = create_window(params);
     }
     auto const& info = basic_window_manager.info_for(window);
@@ -758,10 +758,10 @@ TEST_P(WindowPlacementAttached, attaching_to_any_output_in_logical_group_attache
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_attached;
         params.attached_edges = edges;
-        params.size = window_size;
+        params.set_size(window_size);
         params.output_id = output_id;
         window = create_window(params);
     }

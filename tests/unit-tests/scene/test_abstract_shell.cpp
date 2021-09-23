@@ -261,9 +261,7 @@ TEST_F(AbstractShell, create_surface_provides_create_parameters_to_window_manage
         shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
 
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    ms::SurfaceCreationParameters creation_params;
-    creation_params.update_from(params);
-    EXPECT_CALL(*wm, add_surface(session, creation_params, _));
+    EXPECT_CALL(*wm, add_surface(session, params, _));
 
     shell.create_surface(session, params, nullptr);
 }
@@ -276,16 +274,14 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
     params.width = geom::Width{100};
     params.input_mode = mi::InputReceptionMode::receives_all_input;
-    ms::SurfaceCreationParameters placed_params;
-    placed_params.update_from(params);
 
     EXPECT_CALL(surface_stack, add_surface(_, mi::InputReceptionMode::receives_all_input));
 
-    EXPECT_CALL(*wm, add_surface(session, placed_params, _)).WillOnce(Invoke(
+    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
         [&](std::shared_ptr<ms::Session> const& session,
-            ms::SurfaceCreationParameters const&,
-            std::function<std::shared_ptr<ms::Surface>(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const&)> const& build)
-            { return build(session, placed_params); }));
+            msh::SurfaceSpecification const&,
+            std::function<std::shared_ptr<ms::Surface>(std::shared_ptr<ms::Session> const& session, msh::SurfaceSpecification const&)> const& build)
+            { return build(session, params); }));
 
     shell.create_surface(session, params, nullptr);
 }
@@ -296,18 +292,16 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_enable_ssd)
         shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
 
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    ms::SurfaceCreationParameters creation_params;
-    creation_params.update_from(params);
 
     EXPECT_CALL(decoration_manager, decorate(_))
         .Times(1);
 
-    EXPECT_CALL(*wm, add_surface(session, creation_params, _)).WillOnce(Invoke(
+    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
         [&](std::shared_ptr<ms::Session> const& session,
-            ms::SurfaceCreationParameters const& params,
+            msh::SurfaceSpecification const& params,
             std::function<std::shared_ptr<ms::Surface>(
                 std::shared_ptr<ms::Session> const& session,
-                ms::SurfaceCreationParameters const&)> const& build)
+                msh::SurfaceSpecification const&)> const& build)
             {
                 auto modified_params = params;
                 modified_params.server_side_decorated = true;
@@ -324,18 +318,16 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
 
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
     params.server_side_decorated = true;
-    ms::SurfaceCreationParameters creation_params;
-    creation_params.update_from(params);
 
     EXPECT_CALL(decoration_manager, decorate(_))
         .Times(0);
 
-    EXPECT_CALL(*wm, add_surface(session, creation_params, _)).WillOnce(Invoke(
+    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
         [&](std::shared_ptr<ms::Session> const& session,
-            ms::SurfaceCreationParameters const& params,
+            msh::SurfaceSpecification const& params,
             std::function<std::shared_ptr<ms::Surface>(
                 std::shared_ptr<ms::Session> const& session,
-                ms::SurfaceCreationParameters const&)> const& build)
+                msh::SurfaceSpecification const&)> const& build)
             {
                 auto modified_params = params;
                 modified_params.server_side_decorated = false;

@@ -28,7 +28,7 @@
 namespace mir
 {
 namespace geometry { struct Rectangle; }
-namespace scene { class Session; class Surface; struct SurfaceCreationParameters; }
+namespace scene { class Session; class Surface; }
 namespace shell
 {
 struct SurfaceSpecification;
@@ -43,10 +43,10 @@ public:
 
     virtual auto add_surface(
         std::shared_ptr<scene::Session> const& session,
-        scene::SurfaceCreationParameters const& params,
+        shell::SurfaceSpecification const& params,
         std::function<std::shared_ptr<scene::Surface>(
             std::shared_ptr<scene::Session> const& session,
-            scene::SurfaceCreationParameters const& params)> const& build) -> std::shared_ptr<scene::Surface> = 0;
+            shell::SurfaceSpecification const& params)> const& build) -> std::shared_ptr<scene::Surface> = 0;
 
     virtual void modify_surface(
         std::shared_ptr<scene::Session> const& session,

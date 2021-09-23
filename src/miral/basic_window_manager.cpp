@@ -126,10 +126,10 @@ void miral::BasicWindowManager::remove_session(std::shared_ptr<scene::Session> c
 
 auto miral::BasicWindowManager::add_surface(
     std::shared_ptr<scene::Session> const& session,
-    scene::SurfaceCreationParameters const& params,
+    shell::SurfaceSpecification const& params,
     std::function<std::shared_ptr<scene::Surface>(
         std::shared_ptr<scene::Session> const& session,
-        scene::SurfaceCreationParameters const& params)> const& build)
+        shell::SurfaceSpecification const& params)> const& build)
 -> std::shared_ptr<scene::Surface>
 {
     Locker lock{this};
@@ -138,8 +138,8 @@ auto miral::BasicWindowManager::add_surface(
 
     WindowSpecification spec = policy->place_new_window(session_info, place_new_surface(params));
 
-    scene::SurfaceCreationParameters parameters;
-    spec.update(parameters);
+    shell::SurfaceSpecification parameters;
+    spec.apply_to(parameters);
     auto const surface = build(session, parameters);
     Window const window{session, surface};
     auto& window_info = this->window_info.emplace(window, WindowInfo{window, spec}).first->second;
@@ -1803,6 +1803,11 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     if (!parameters.state().is_set())
         parameters.state() = mir_window_state_restored;
 
+    if (!parameters.size().is_set())
+    {
+        parameters.size() = {640, 480};
+    }
+
     std::shared_ptr<DisplayArea> display_area;
     if (parameters.output_id().is_set())
     {
@@ -1813,8 +1818,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
         display_area = active_display_area();
     }
 
-    auto const application_zone = display_area->application_zone.extents();;
-    auto const height = parameters.size().value().height.as_int();
+    auto const application_zone = display_area->application_zone.extents();
 
     bool positioned = false;
 
@@ -1856,7 +1860,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
             auto const parent_top_left = parent.top_left();
             auto const centred = parent_top_left
                                  + 0.5*(as_displacement(parent.size()) - as_displacement(parameters.size().value()))
-                                 - DeltaY{(parent.size().height.as_int()-height)/6};
+                                 - (as_delta(parent.size().height) - as_delta(parameters.size().value().height)) / 6;
 
             parameters.top_left() = centred;
             positioned = true;
@@ -1877,7 +1881,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     {
         auto centred = application_zone.top_left
                        + 0.5*(as_displacement(application_zone.size) - as_displacement(parameters.size().value()))
-                       - DeltaY{(application_zone.size.height.as_int()-height)/6};
+                       - (as_delta(application_zone.size.height) - as_delta(parameters.size().value().height)) / 6;
 
         switch (parameters.state().value())
         {

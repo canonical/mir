@@ -35,6 +35,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
+namespace geom = mir::geometry;
 
 msh::SystemCompositorWindowManager::SystemCompositorWindowManager(
     FocusController* focus_controller,
@@ -58,22 +59,35 @@ void msh::SystemCompositorWindowManager::remove_session(std::shared_ptr<ms::Sess
 
 auto msh::SystemCompositorWindowManager::add_surface(
     std::shared_ptr<ms::Session> const& session,
-    ms::SurfaceCreationParameters const& params,
+    shell::SurfaceSpecification const& params,
     std::function<std::shared_ptr<scene::Surface>(
         std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& params)> const& build)
+        shell::SurfaceSpecification const& params)> const& build)
 -> std::shared_ptr<scene::Surface>
 {
-    mir::geometry::Rectangle rect{params.top_left, params.size};
+    mir::geometry::Rectangle rect;
+    if (params.top_left.is_set())
+    {
+        rect.top_left = params.top_left.value();
+    }
+    if (params.width.is_set())
+    {
+        rect.size.width = params.width.value();
+    }
+    if (params.height.is_set())
+    {
+        rect.size.height = params.height.value();
+    }
 
-    if (!params.output_id.as_value())
+    if (!params.output_id.is_set() || !params.output_id.value().as_value())
         BOOST_THROW_EXCEPTION(std::runtime_error("An output ID must be specified"));
 
-    display_layout->place_in_output(params.output_id, rect);
+    display_layout->place_in_output(params.output_id.value(), rect);
 
     auto placed_parameters = params;
     placed_parameters.top_left = rect.top_left;
-    placed_parameters.size = rect.size;
+    placed_parameters.width = rect.size.width;
+    placed_parameters.height = rect.size.height;
 
     auto const surface = build(session, placed_parameters);
 
@@ -88,7 +102,7 @@ auto msh::SystemCompositorWindowManager::add_surface(
     surface->add_observer(session_ready_observer);
     
     std::lock_guard<decltype(mutex)> lock{mutex};
-    output_map[surface] = params.output_id;
+    output_map[surface] = params.output_id.value();
 
     return surface;
 }
