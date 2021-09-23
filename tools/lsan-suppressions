@@ -1,0 +1,5 @@
+# Suppressions for lsan
+# $ LSAN_OPTIONS=suppressions=tools/lsan-suppressions cmake-build-addresssanitizer/bin/...
+leak:mir::GLibMainLoop::enqueue
+leak:mir::GLibMainLoop::execute_with_context_as_thread_default
+leak:g_main_context_dispatch
