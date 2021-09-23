@@ -65,6 +65,8 @@ struct SurfaceSpecification
 {
     bool is_empty() const;
     void update_from(SurfaceSpecification const& that);
+    /// Sets width and height at the same time
+    void set_size(geometry::Size size) { width = size.width; height = size.height; }
 
     optional_value<geometry::Point> top_left;
     optional_value<geometry::Width> width;
