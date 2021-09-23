@@ -188,10 +188,6 @@ else()
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
 
-# Define LOG_NDEBUG=1 to ensure Android ALOGV calls are not compiled in to
-# consume CPU time...
-add_compile_definitions(LOG_NDEBUG=1)
-
 enable_testing()
 find_package(PkgConfig)
 
@@ -200,17 +196,6 @@ find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem
 include_directories (SYSTEM
   ${Boost_INCLUDE_DIRS}
 )
-
-option(
-  MIR_DISABLE_EPOLL_REACTOR
-  "Disable boost::asio's epoll implementation and switch to a select-based reactor to account for ancient kernels on ppa builders."
-  OFF
-)
-if(MIR_DISABLE_EPOLL_REACTOR)
-add_compile_definitions(
-  BOOST_ASIO_DISABLE_EPOLL BOOST_ASIO_DISABLE_KQUEUE BOOST_ASIO_DISABLE_DEV_POLL
-)
-endif(MIR_DISABLE_EPOLL_REACTOR)
 
 add_compile_definitions(EGL_NO_X11)
 add_compile_definitions(MESA_EGL_NO_X11_HEADERS) # Can be removed when all platforms support EGL_NO_X11
