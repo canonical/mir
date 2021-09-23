@@ -166,9 +166,7 @@ auto msh::AbstractShell::create_surface(
             {
                 *should_decorate = true;
             }
-            ms::SurfaceCreationParameters creation_params;
-            creation_params.update_from(placed_params);
-            return session->create_surface(session, creation_params, observer);
+            return session->create_surface(session, placed_params, observer);
         };
 
     auto const result = window_manager->add_surface(session, spec, build);

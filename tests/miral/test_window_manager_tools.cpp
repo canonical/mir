@@ -154,17 +154,22 @@ struct StubStubSession : mir::test::doubles::StubSession
 {
     auto create_surface(
         std::shared_ptr<mir::scene::Session> const& /*session*/,
-        mir::scene::SurfaceCreationParameters const& params,
+        mir::shell::SurfaceSpecification const& params,
         std::shared_ptr<mir::scene::SurfaceObserver> const& /*observer*/) -> std::shared_ptr<mir::scene::Surface> override
     {
         auto id = mir::frontend::SurfaceId{next_surface_id.fetch_add(1)};
         auto surface = std::make_shared<StubSurface>(
-            params.name,
+            params.name.is_set() ? params.name.value() : "",
             params.type.is_set() ?
                 params.type.value()
                 : mir_window_type_normal,
-            params.top_left,
-            params.size,
+            params.top_left.is_set() ?
+                params.top_left.value()
+                : mir::geometry::Point{},
+            mir::geometry::Size{
+                params.width.is_set() ? params.width.value() : mir::geometry::Width{100},
+                params.height.is_set() ? params.height.value() : mir::geometry::Height{100},
+            },
             params.depth_layer.is_set() ?
                 params.depth_layer.value()
                 : mir_depth_layer_application,
@@ -313,10 +318,7 @@ auto mt::TestWindowManagerTools::create_surface(
 {
     // This type is Mir-internal, I hope we don't need to create it here
     std::shared_ptr<mir::scene::SurfaceObserver> const observer;
-    mir::scene::SurfaceCreationParameters creation_params;
-    //creation_params.update_from(params);
-    (void)params;
-    return session->create_surface(nullptr, creation_params, observer);
+    return session->create_surface(nullptr, params, observer);
 }
 
 auto mt::TestWindowManagerTools::create_fake_display_configuration(std::vector<miral::Rectangle> const& outputs)

@@ -79,47 +79,36 @@ ms::ApplicationSession::~ApplicationSession()
 
 auto ms::ApplicationSession::create_surface(
     std::shared_ptr<Session> const& session,
-    SurfaceCreationParameters const& the_params,
+    shell::SurfaceSpecification const& the_params,
     std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<Surface>
 {
     if (session && session.get() != this)
         fatal_error("Incorrect session");
 
-    //TODO: we take either the content or the first stream's content for now.
-    //      Once the surface factory interface takes more than one stream,
+    //TODO: we take the first stream's content for now. Once the surface factory interface takes more than one stream,
     //      we can take all the streams as content.
-    if (!((the_params.content.lock()) ||
-          (the_params.streams.is_set() && the_params.streams.value().size() > 0)))
+    if (!the_params.streams.is_set() || the_params.streams.value().empty())
     {
         BOOST_THROW_EXCEPTION(std::logic_error("surface must have content"));
     }
 
     auto params = the_params;
 
-    std::shared_ptr<mc::BufferStream> buffer_stream;
-    if (auto const stream = params.content.lock())
-    {
-        buffer_stream = std::dynamic_pointer_cast<mc::BufferStream>(stream);
-    }
-    else
-    {
-        buffer_stream = std::dynamic_pointer_cast<mc::BufferStream>(params.streams.value()[0].stream.lock());
-    }
+    std::shared_ptr<mc::BufferStream> const buffer_stream =
+        std::dynamic_pointer_cast<mc::BufferStream>(params.streams.value()[0].stream.lock());
 
     std::list<StreamInfo> streams;
-    if (auto const stream = the_params.content.lock())
+    for (auto& stream : params.streams.value())
     {
-        streams.push_back({std::dynamic_pointer_cast<mc::BufferStream>(stream), {0,0}, the_params.size});
-    }
-    else
-    {
-        for (auto& stream : params.streams.value())
-            streams.push_back({std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()), stream.displacement, stream.size});
+        streams.push_back({std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()), stream.displacement, stream.size});
     }
 
-    auto surface = surface_factory->create_surface(session, streams, params);
+    SurfaceCreationParameters creation_params;
+    creation_params.update_from(params);
+    auto surface = surface_factory->create_surface(session, streams, creation_params);
 
-    surface_stack->add_surface(surface, params.input_mode);
+    auto const input_mode = params.input_mode.is_set() ? params.input_mode.value() : input::InputReceptionMode::normal;
+    surface_stack->add_surface(surface, input_mode);
 
     if (observer)
         surface->add_observer(observer);
