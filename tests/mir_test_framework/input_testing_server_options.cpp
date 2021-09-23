@@ -19,7 +19,6 @@
 #include "mir_test_framework/input_testing_server_configuration.h"
 
 #include "mir/input/surface.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "mir/input/composite_event_filter.h"
 
 #include "mir/test/signal.h"

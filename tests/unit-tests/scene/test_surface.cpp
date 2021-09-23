@@ -23,7 +23,6 @@
 #include "src/server/scene/legacy_surface_change_notification.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface_event_source.h"
 
 #include "mir/test/doubles/mock_event_sink.h"
@@ -50,124 +49,6 @@ namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mr = mir::report;
-
-TEST(SurfaceCreationParametersTest, default_creation_parameters)
-{
-    using namespace geom;
-    ms::SurfaceCreationParameters params;
-
-    geom::Point const default_point{geom::X{0}, geom::Y{0}};
-
-    EXPECT_EQ(std::string(), params.name);
-    EXPECT_EQ(Width(0), params.size.width);
-    EXPECT_EQ(Height(0), params.size.height);
-    EXPECT_EQ(default_point, params.top_left);
-    EXPECT_EQ(mg::BufferUsage::undefined, params.buffer_usage);
-    EXPECT_EQ(mir_pixel_format_invalid, params.pixel_format);
-    EXPECT_FALSE(params.type.is_set());
-    EXPECT_FALSE(params.state.is_set());
-    EXPECT_FALSE(params.preferred_orientation.is_set());
-    EXPECT_FALSE(params.parent_id.is_set());
-
-    EXPECT_EQ(ms::a_surface(), params);
-}
-
-TEST(SurfaceCreationParametersTest, builder_mutators)
-{
-    using namespace geom;
-    Size const size{1024, 768};
-    mg::BufferUsage const usage{mg::BufferUsage::hardware};
-    MirPixelFormat const format{mir_pixel_format_abgr_8888};
-    std::string name{"surface"};
-    MirWindowState state{mir_window_state_fullscreen};
-    MirWindowType type{mir_window_type_dialog};
-    MirOrientationMode mode{mir_orientation_mode_landscape};
-    mf::SurfaceId surf_id{1000};
-
-    auto params = ms::a_surface()
-        .of_name(name)
-        .of_size(size)
-        .of_buffer_usage(usage)
-        .of_pixel_format(format)
-        .of_type(type)
-        .with_parent_id(surf_id)
-        .with_preferred_orientation(mode)
-        .with_state(state);
-
-    EXPECT_EQ(name, params.name);
-    EXPECT_EQ(size, params.size);
-    EXPECT_EQ(usage, params.buffer_usage);
-    EXPECT_EQ(format, params.pixel_format);
-
-    EXPECT_EQ(type, params.type);
-    EXPECT_EQ(state, params.state);
-    EXPECT_EQ(mode, params.preferred_orientation);
-    EXPECT_EQ(surf_id, params.parent_id);
-}
-
-TEST(SurfaceCreationParametersTest, equality)
-{
-    using namespace geom;
-    Size const size{1024, 768};
-    mg::BufferUsage const usage{mg::BufferUsage::hardware};
-    MirPixelFormat const format{mir_pixel_format_abgr_8888};
-
-    auto params0 = ms::a_surface().of_name("surface")
-                                  .of_size(size)
-                                  .of_buffer_usage(usage)
-                                  .of_pixel_format(format);
-
-    auto params1 = ms::a_surface().of_name("surface")
-                                  .of_size(size)
-                                  .of_buffer_usage(usage)
-                                  .of_pixel_format(format);
-
-    EXPECT_EQ(params0, params1);
-    EXPECT_EQ(params1, params0);
-}
-
-TEST(SurfaceCreationParametersTest, inequality)
-{
-    using namespace geom;
-
-    std::vector<Size> const sizes{{1024, 768},
-                                  {1025, 768}};
-
-    std::vector<mg::BufferUsage> const usages{mg::BufferUsage::hardware,
-                                              mg::BufferUsage::software};
-
-    std::vector<MirPixelFormat> const formats{mir_pixel_format_abgr_8888,
-                                                 mir_pixel_format_bgr_888};
-
-    std::vector<ms::SurfaceCreationParameters> params_vec;
-
-    for (auto const& size : sizes)
-    {
-        for (auto const& usage : usages)
-        {
-            for (auto const& format : formats)
-            {
-                auto cur_params = ms::a_surface().of_name("surface0")
-                                                 .of_size(size)
-                                                 .of_buffer_usage(usage)
-                                                 .of_pixel_format(format);
-                params_vec.push_back(cur_params);
-                size_t cur_index = params_vec.size() - 1;
-
-                /*
-                 * Compare the current SurfaceCreationParameters with all the previously
-                 * created ones.
-                 */
-                for (size_t i = 0; i < cur_index; i++)
-                {
-                    EXPECT_NE(params_vec[i], params_vec[cur_index]) << "cur_index: " << cur_index << " i: " << i;
-                    EXPECT_NE(params_vec[cur_index], params_vec[i]) << "cur_index: " << cur_index << " i: " << i;
-                }
-
-            }
-        }
-    }
-}
 
 namespace
 {

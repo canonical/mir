@@ -241,21 +241,6 @@ MIR_SERVER_2.5 {
     mir::scene::SessionListener::operator*;
     mir::scene::SessionListener::?SessionListener*;
     mir::scene::SessionListener::SessionListener*;
-    mir::scene::SurfaceCreationParameters::of_buffer_usage*;
-    mir::scene::SurfaceCreationParameters::of_name*;
-    mir::scene::SurfaceCreationParameters::of_pixel_format*;
-    mir::scene::SurfaceCreationParameters::of_position*;
-    mir::scene::SurfaceCreationParameters::of_size*;
-    mir::scene::SurfaceCreationParameters::of_type*;
-    mir::scene::SurfaceCreationParameters::SurfaceCreationParameters*;
-    mir::scene::SurfaceCreationParameters::with_aux_rect*;
-    mir::scene::SurfaceCreationParameters::with_buffer_stream*;
-    mir::scene::SurfaceCreationParameters::with_edge_attachment*;
-    mir::scene::SurfaceCreationParameters::with_input_mode*;
-    mir::scene::SurfaceCreationParameters::with_output_id*;
-    mir::scene::SurfaceCreationParameters::with_parent_id*;
-    mir::scene::SurfaceCreationParameters::with_preferred_orientation*;
-    mir::scene::SurfaceCreationParameters::with_state*;
     mir::scene::SurfaceFactory::?SurfaceFactory*;
     mir::scene::SurfaceFactory::SurfaceFactory*;
     mir::scene::SurfaceObserver::operator*;
@@ -772,7 +757,6 @@ MIR_SERVER_2.5 {
     typeinfo?for?mir::scene::Snapshot;
     typeinfo?for?mir::scene::StreamInfo;
     typeinfo?for?mir::scene::Surface;
-    typeinfo?for?mir::scene::SurfaceCreationParameters;
     typeinfo?for?mir::scene::SurfaceFactory;
     typeinfo?for?mir::scene::SurfaceObserver;
     typeinfo?for?mir::Server;
@@ -894,7 +878,6 @@ MIR_SERVER_2.5 {
     vtable?for?mir::scene::Snapshot;
     vtable?for?mir::scene::StreamInfo;
     vtable?for?mir::scene::Surface;
-    vtable?for?mir::scene::SurfaceCreationParameters;
     vtable?for?mir::scene::SurfaceFactory;
     vtable?for?mir::scene::SurfaceObserver;
     vtable?for?mir::Server;

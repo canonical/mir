@@ -30,7 +30,7 @@
 
 namespace mir
 {
-namespace scene { class Surface; struct SurfaceCreationParameters; }
+namespace scene { class Surface; }
 namespace shell { struct SurfaceSpecification; }
 }
 
@@ -56,7 +56,6 @@ public:
     auto operator=(WindowSpecification const& that) -> WindowSpecification&;
 
     WindowSpecification(mir::shell::SurfaceSpecification const& spec);
-    WindowSpecification(mir::scene::SurfaceCreationParameters const& params);
     void apply_to(mir::shell::SurfaceSpecification& params) const;
 
     ~WindowSpecification();

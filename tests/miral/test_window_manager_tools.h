@@ -24,7 +24,6 @@
 #include <miral/canonical_window_manager.h>
 
 #include <mir/shell/surface_specification.h>
-#include <mir/scene/surface_creation_parameters.h>
 #include <mir/scene/surface.h>
 
 #include <gtest/gtest.h>

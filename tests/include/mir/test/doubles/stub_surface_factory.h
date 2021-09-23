@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_SURFACE_FACTORY_H_
 
 #include <mir/scene/surface_factory.h>
+#include <mir/shell/surface_specification.h>
 #include <mir/test/doubles/stub_buffer.h>
 #include <mir/test/doubles/mock_surface.h>
 

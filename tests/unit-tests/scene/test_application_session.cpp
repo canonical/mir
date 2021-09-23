@@ -19,7 +19,6 @@
 #include "src/server/scene/application_session.h"
 #include "mir/events/event_private.h"
 #include "mir/graphics/buffer.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface_factory.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/scene/surface_event_source.h"

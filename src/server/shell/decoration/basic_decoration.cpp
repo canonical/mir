@@ -27,7 +27,6 @@
 #include "mir/shell/surface_specification.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/session.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/compositor/buffer_stream.h"

@@ -24,10 +24,10 @@
 #include <mir/log.h>
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
-#include <mir/scene/surface_creation_parameters.h>
 #include <mir/shell/display_layout.h>
 #include <mir/shell/persistent_surface_store.h>
 #include <mir/shell/surface_ready_observer.h>
+#include <mir/shell/surface_specification.h>
 
 #include <boost/throw_exception.hpp>
 

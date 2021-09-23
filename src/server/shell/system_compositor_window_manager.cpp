@@ -26,7 +26,6 @@
 #include "mir/scene/session.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_creation_parameters.h"
 
 #include <boost/throw_exception.hpp>
 

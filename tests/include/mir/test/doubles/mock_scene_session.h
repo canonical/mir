@@ -21,10 +21,10 @@
 
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/input/mir_input_config.h"
 #include "mir/client_visible_error.h"
+#include "mir/shell/surface_specification.h"
 
 #include <gmock/gmock.h>
 

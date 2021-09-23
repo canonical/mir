@@ -39,7 +39,6 @@ class PromptSessionCreationParameters;
 class SessionCoordinator;
 class Surface;
 class SurfaceObserver;
-struct SurfaceCreationParameters;
 }
 
 namespace shell

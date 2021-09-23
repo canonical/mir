@@ -18,7 +18,7 @@
 
 #include "src/server/shell/decoration/basic_decoration.h"
 #include "mir/scene/surface_observer.h"
-#include "mir/scene/surface_creation_parameters.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/input/cursor_images.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"

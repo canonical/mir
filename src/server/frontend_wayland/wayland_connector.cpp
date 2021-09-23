@@ -40,8 +40,8 @@
 
 #include "mir/compositor/buffer_stream.h"
 
-#include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/shell.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/scene/surface.h"
 #include <mir/thread_name.h>
 

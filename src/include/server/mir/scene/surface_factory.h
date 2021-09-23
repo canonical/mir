@@ -19,7 +19,6 @@
 #ifndef MIR_SCENE_SURFACE_FACTORY_H_
 #define MIR_SCENE_SURFACE_FACTORY_H_
 
-#include "mir/scene/surface_creation_parameters.h"
 #include <memory>
 #include <list>
 

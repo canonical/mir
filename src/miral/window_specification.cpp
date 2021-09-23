@@ -19,7 +19,6 @@
 #include "miral/window_specification.h"
 
 #include <mir/shell/surface_specification.h>
-#include <mir/scene/surface_creation_parameters.h>
 
 struct miral::WindowSpecification::Self
 {
@@ -35,7 +34,6 @@ struct miral::WindowSpecification::Self
     Self() = default;
     Self(Self const&) = default;
     Self(mir::shell::SurfaceSpecification const& spec);
-    Self(mir::scene::SurfaceCreationParameters const& params);
 
     void apply_to(mir::shell::SurfaceSpecification& params) const;
 
@@ -215,75 +213,6 @@ void copy_if_set(
 }
 }
 
-miral::WindowSpecification::Self::Self(mir::scene::SurfaceCreationParameters const& params) :
-    top_left(params.top_left),
-    size(params.size),
-    pixel_format(params.pixel_format),
-    buffer_usage(static_cast<BufferUsage>(params.buffer_usage)),
-    name(params.name),
-    output_id(params.output_id.as_value()),
-    type(params.type),
-    state(params.state),
-    preferred_orientation(params.preferred_orientation),
-    aux_rect(params.aux_rect),
-    placement_hints(params.placement_hints),
-    window_placement_gravity(params.surface_placement_gravity),
-    aux_rect_placement_gravity(params.aux_rect_placement_gravity),
-    min_width(params.min_width),
-    min_height(params.min_height),
-    max_width(params.max_width),
-    max_height(params.max_height),
-    width_inc(params.width_inc),
-    height_inc(params.height_inc),
-    min_aspect(),
-    max_aspect(),
-    streams(params.streams),
-    parent(params.parent),
-    input_shape(params.input_shape),
-    input_mode(static_cast<InputReceptionMode>(params.input_mode)),
-    shell_chrome(params.shell_chrome),
-    confine_pointer(params.confine_pointer),
-    depth_layer(params.depth_layer),
-    attached_edges(params.attached_edges),
-    exclusive_rect(params.exclusive_rect),
-    application_id(params.application_id),
-    server_side_decorated(params.server_side_decorated),
-    focus_mode(params.focus_mode)
-{
-    if (params.aux_rect_placement_offset_x.is_set() && params.aux_rect_placement_offset_y.is_set())
-        aux_rect_placement_offset = Displacement{params.aux_rect_placement_offset_x.value(), params.aux_rect_placement_offset_y.value()};
-
-    if (params.edge_attachment.is_set() && !placement_hints.is_set())
-    {
-        switch (params.edge_attachment.value())
-        {
-        case mir_edge_attachment_vertical:
-            window_placement_gravity = mir_placement_gravity_northwest;
-            aux_rect_placement_gravity = mir_placement_gravity_northeast;
-            placement_hints = mir_placement_hints_flip_x;
-            break;
-
-        case mir_edge_attachment_horizontal:
-            window_placement_gravity = mir_placement_gravity_northwest;
-            aux_rect_placement_gravity = mir_placement_gravity_southwest;
-            placement_hints = mir_placement_hints_flip_y;
-            break;
-
-        case mir_edge_attachment_any:
-            window_placement_gravity = mir_placement_gravity_northwest;
-            aux_rect_placement_gravity = mir_placement_gravity_northeast;
-            placement_hints = mir_placement_hints_flip_any;
-            break;
-        }
-    }
-
-    if (params.min_aspect.is_set())
-        min_aspect = AspectRatio{params.min_aspect.value().width, params.min_aspect.value().height};
-
-    if (params.max_aspect.is_set())
-        max_aspect = AspectRatio{params.max_aspect.value().width, params.max_aspect.value().height};
-}
-
 void miral::WindowSpecification::Self::apply_to(mir::shell::SurfaceSpecification& params) const
 {
     copy_if_set(params.top_left, top_left);
@@ -339,11 +268,6 @@ miral::WindowSpecification::WindowSpecification() :
 
 miral::WindowSpecification::WindowSpecification(mir::shell::SurfaceSpecification const& spec) :
     self{std::make_unique<Self>(spec)}
-{
-}
-
-miral::WindowSpecification::WindowSpecification(mir::scene::SurfaceCreationParameters const& params) :
-    self{std::make_unique<Self>(params)}
 {
 }
 

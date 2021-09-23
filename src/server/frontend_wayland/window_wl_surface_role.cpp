@@ -32,7 +32,6 @@
 
 #include "mir/log.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_creation_parameters.h"
 
 #include <boost/throw_exception.hpp>
 

@@ -21,7 +21,6 @@
 
 #include "mir/shell/window_manager.h"
 #include "mir/shell/surface_specification.h"
-#include "mir/scene/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>
 

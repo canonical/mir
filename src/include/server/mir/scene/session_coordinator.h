@@ -37,7 +37,6 @@ namespace scene
 class Session;
 class SessionListener;
 class Surface;
-struct SurfaceCreationParameters;
 
 class SessionCoordinator
 {

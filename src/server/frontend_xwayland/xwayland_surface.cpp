@@ -24,9 +24,9 @@
 #include "xwayland_surface_role.h"
 
 #include "mir/frontend/wayland.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface.h"
 #include "mir/shell/shell.h"
+#include "mir/shell/surface_specification.h"
 
 #include "boost/throw_exception.hpp"
 

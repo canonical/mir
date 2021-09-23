@@ -20,7 +20,6 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/scene/observer.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "mir/compositor/scene_element.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
@@ -94,7 +93,6 @@ struct SurfaceStack : public ::testing::Test
     void SetUp()
     {
         using namespace testing;
-        default_params = ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}});
 
         stub_surface1 = std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
@@ -136,7 +134,6 @@ struct SurfaceStack : public ::testing::Test
         invisible_stub_surface->hide();
     }
 
-    ms::SurfaceCreationParameters default_params;
     std::shared_ptr<mc::BufferStream> stub_buffer_stream1 = std::make_shared<mtd::StubBufferStream>();
     std::shared_ptr<mc::BufferStream> stub_buffer_stream2 = std::make_shared<mtd::StubBufferStream>();
     std::shared_ptr<mc::BufferStream> stub_buffer_stream3 = std::make_shared<mtd::StubBufferStream>();
@@ -148,7 +145,7 @@ struct SurfaceStack : public ::testing::Test
 
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     ms::SurfaceStack stack{report};
-    void const* compositor_id{&default_params};
+    void const* compositor_id{&stack};
 };
 
 }
@@ -159,7 +156,7 @@ TEST_F(SurfaceStack, owns_surface_from_add_to_remove)
 
     auto const use_count = stub_surface1.use_count();
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(stub_surface1.use_count(), Gt(use_count));
 
@@ -172,9 +169,9 @@ TEST_F(SurfaceStack, stacking_order)
 {
     using namespace testing;
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -203,9 +200,9 @@ TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
     };
     stub_surface3->set_streams(streams);
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -223,9 +220,9 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
 {
     using namespace testing;
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(invisible_stub_surface, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(invisible_stub_surface, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -250,7 +247,7 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
         std::list<ms::StreamInfo> { { stream, {}, {} } },
         std::shared_ptr<mg::CursorImage>(),
         report);
-    stack.add_surface(surface, default_params.input_mode);
+    stack.add_surface(surface, mi::InputReceptionMode::normal);
     surface->configure(mir_window_attrib_visibility,
                        mir_window_visibility_exposed);
 
@@ -285,7 +282,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
         std::shared_ptr<mg::CursorImage>(),
         report);
 
-    stack.add_surface(surface, default_params.input_mode);
+    stack.add_surface(surface, mi::InputReceptionMode::normal);
     auto elements = stack.scene_elements_for(this);
     for (auto const& elem : elements)
         elem->occluded();
@@ -318,7 +315,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
         std::shared_ptr<mg::CursorImage>(),
         report);
 
-    stack.add_surface(surface, default_params.input_mode);
+    stack.add_surface(surface, mi::InputReceptionMode::normal);
     post_a_frame(*stream);
     post_a_frame(*stream);
     post_a_frame(*stream);
@@ -346,9 +343,9 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
 {
     using namespace testing;
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -381,9 +378,9 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
 {
     using namespace ::testing;
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -431,7 +428,7 @@ TEST_F(SurfaceStack, generate_elementelements)
             report);
         
         surfaces.emplace_back(surface);
-        stack.add_surface(surface, default_params.input_mode);
+        stack.add_surface(surface, mi::InputReceptionMode::normal);
     }
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -461,7 +458,7 @@ TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove)
 
     stack.add_observer(mt::fake_shared(observer));
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.remove_surface(stub_surface1);
 }
 
@@ -478,7 +475,7 @@ TEST_F(SurfaceStack, multiple_observers)
     stack.add_observer(mt::fake_shared(observer1));
     stack.add_observer(mt::fake_shared(observer2));
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
 }
 
 TEST_F(SurfaceStack, remove_scene_observer)
@@ -497,7 +494,7 @@ TEST_F(SurfaceStack, remove_scene_observer)
 
     stack.add_observer(mt::fake_shared(observer));
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.remove_observer(mt::fake_shared(observer));
 
     stack.remove_surface(stub_surface1);
@@ -516,8 +513,8 @@ TEST_F(SurfaceStack, scene_observer_informed_of_existing_surfaces)
     EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1);
     EXPECT_CALL(observer, surface_exists(stub_surface2)).Times(1);
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     stack.add_observer(mt::fake_shared(observer));
 }
@@ -536,7 +533,7 @@ TEST_F(SurfaceStack, scene_observer_can_query_scene_within_surface_exists_notifi
     EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1)
         .WillOnce(InvokeWithoutArgs(scene_query));
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_observer(mt::fake_shared(observer));
 }
 
@@ -559,7 +556,7 @@ TEST_F(SurfaceStack, scene_observer_can_async_query_scene_within_surface_exists_
     EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1)
         .WillOnce(InvokeWithoutArgs(async_scene_query));
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_observer(mt::fake_shared(observer));
 }
 
@@ -576,7 +573,7 @@ TEST_F(SurfaceStack, scene_observer_can_remove_surface_from_scene_within_surface
     EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1)
         .WillOnce(InvokeWithoutArgs(surface_removal));
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_observer(mt::fake_shared(observer));
 }
 
@@ -596,8 +593,8 @@ TEST_F(SurfaceStack, surfaces_reordered)
 
     stack.add_observer(mt::fake_shared(observer));
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
     stack.raise(stub_surface1);
 }
 
@@ -605,9 +602,9 @@ TEST_F(SurfaceStack, surface_stacking_order)
 {
     using namespace ::testing;
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
     stack.raise(stub_surface2);
 
     EXPECT_THAT(
@@ -632,7 +629,7 @@ TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
             report);
 
         surfaces.emplace_back(surface);
-        stack.add_surface(surface, default_params.input_mode);
+        stack.add_surface(surface, mi::InputReceptionMode::normal);
     }
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -662,7 +659,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
         std::list<ms::StreamInfo> { { mock_stream, {}, {} } },
         std::shared_ptr<mg::CursorImage>(),
         report);
-        stack.add_surface(surface, default_params.input_mode);
+        stack.add_surface(surface, mi::InputReceptionMode::normal);
 
     auto const elements = stack.scene_elements_for(compositor_id);
 
@@ -691,7 +688,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
         std::list<ms::StreamInfo> { { mock_stream, {}, {} } },
         std::shared_ptr<mg::CursorImage>(),
         report);
-        stack.add_surface(surface, default_params.input_mode);
+        stack.add_surface(surface, mi::InputReceptionMode::normal);
 
     auto const elements = stack.scene_elements_for(compositor_id);
     ASSERT_THAT(elements.size(), Eq(1u));
@@ -731,7 +728,7 @@ TEST_F(SurfaceStack, occludes_not_rendered_surface)
     auto const mock_surface = std::make_shared<MockConfigureSurface>();
     mock_surface->show();
     
-    stack.add_surface(mock_surface, default_params.input_mode);
+    stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
 
     auto const elements = stack.scene_elements_for(compositor_id);
     ASSERT_THAT(elements.size(), Eq(1u));
@@ -754,7 +751,7 @@ TEST_F(SurfaceStack, exposes_rendered_surface)
     stack.register_compositor(compositor_id2);
 
     auto const mock_surface = std::make_shared<MockConfigureSurface>();
-        stack.add_surface(mock_surface, default_params.input_mode);
+        stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
 
     auto const elements = stack.scene_elements_for(compositor_id);
     ASSERT_THAT(elements.size(), Eq(1u));
@@ -779,7 +776,7 @@ TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_re
     stack.register_compositor(compositor_id3);
 
     auto const mock_surface = std::make_shared<MockConfigureSurface>();
-    stack.add_surface(mock_surface, default_params.input_mode);
+    stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
 
     auto const elements = stack.scene_elements_for(compositor_id);
     ASSERT_THAT(elements.size(), Eq(1u));
@@ -810,7 +807,7 @@ TEST_F(SurfaceStack, observer_can_trigger_state_change_within_notification)
     MockSceneObserver observer;
 
     auto const state_changer = [&]{
-        stack.add_surface(stub_surface1, default_params.input_mode);
+        stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     };
 
     //Make sure another thread can also change state
@@ -854,8 +851,8 @@ TEST_F(SurfaceStack, observer_can_remove_itself_within_notification)
     stack.add_observer(mt::fake_shared(observer2));
     stack.add_observer(mt::fake_shared(observer3));
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
 }
 
 TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove_input_visualization)
@@ -878,8 +875,8 @@ TEST_F(SurfaceStack, overlays_do_not_appear_in_input_enumeration)
 {
     mtd::StubRenderable r;
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     // Configure surface1 and surface2 to appear in input enumeration.
     stub_surface1->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_exposed);
@@ -901,9 +898,9 @@ TEST_F(SurfaceStack, overlays_appear_at_top_of_renderlist)
 
     mtd::StubRenderable r;
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_input_visualization(mt::fake_shared(r));
-    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -919,9 +916,9 @@ TEST_F(SurfaceStack, removed_overlays_are_removed)
 
     mtd::StubRenderable r;
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_input_visualization(mt::fake_shared(r));
-    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -956,9 +953,9 @@ TEST_F(SurfaceStack, for_each_enumerates_all_input_surfaces)
 {
     using namespace ::testing;
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
     stub_surface1->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_exposed);
     stub_surface2->configure(mir_window_attrib_visibility, MirWindowVisibility::mir_window_visibility_occluded);
@@ -982,9 +979,9 @@ TEST_F(SurfaceStack, returns_top_surface_under_cursor)
     geom::Point const cursor_over_1   {600, 600};
     geom::Point const cursor_over_none{999, 999};
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
     stub_surface1->resize({900, 900});
     stub_surface2->resize({500, 200});
@@ -1003,10 +1000,10 @@ TEST_F(SurfaceStack, returns_top_visible_surface_under_cursor)
     geom::Point const cursor_over_1   {600, 600};
     geom::Point const cursor_over_none{999, 999};
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.input_mode);
-    stack.add_surface(invisible_stub_surface, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
+    stack.add_surface(invisible_stub_surface, mi::InputReceptionMode::normal);
 
     stub_surface1->resize({900, 900});
     stub_surface2->resize({500, 200});
@@ -1021,9 +1018,9 @@ TEST_F(SurfaceStack, returns_top_visible_surface_under_cursor)
 
 TEST_F(SurfaceStack, raise_surfaces_to_top)
 {
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
     NiceMock<MockSceneObserver> observer;
     stack.add_observer(mt::fake_shared(observer));
@@ -1072,8 +1069,8 @@ TEST_F(SurfaceStack, new_surface_is_placed_under_old_according_to_depth_layer)
     stub_surface1->set_depth_layer(mir_depth_layer_application);
     stub_surface2->set_depth_layer(mir_depth_layer_below);
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -1088,9 +1085,9 @@ TEST_F(SurfaceStack, raise_does_not_reorder_surfaces_when_depth_layers_are_diffe
     stub_surface2->set_depth_layer(mir_depth_layer_application);
     stub_surface3->set_depth_layer(mir_depth_layer_above);
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
     NiceMock<MockSceneObserver> observer;
     stack.add_observer(mt::fake_shared(observer));
@@ -1113,8 +1110,8 @@ TEST_F(SurfaceStack, changing_depth_layer_causes_reorder)
 
     EXPECT_CALL(observer, surfaces_reordered(_)).Times(0);
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -1139,8 +1136,8 @@ TEST_F(SurfaceStack, changing_depth_layer_causes_reorder)
 
 TEST_F(SurfaceStack, changing_depth_layer_does_not_cause_reorder_when_it_shouldnt)
 {
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -1163,9 +1160,9 @@ TEST_F(SurfaceStack, raising_surface_set_respects_depth_layers)
     stub_surface2->set_depth_layer(mir_depth_layer_above);
     stub_surface3->set_depth_layer(mir_depth_layer_above);
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
-    stack.add_surface(stub_surface3, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -1235,8 +1232,8 @@ TEST_F(SurfaceStack, all_depth_layers_are_handled)
     stub_surface1->set_depth_layer(depth_layers_in_order[0]);
     stub_surface2->set_depth_layer(depth_layers_in_order[0]);
 
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     for (auto i = 1u; i < depth_layers_in_order.size(); i++)
     {

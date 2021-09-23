@@ -36,7 +36,6 @@ namespace scene
 {
 class Surface;
 class Session;
-class SurfaceCreationParameters;
 }
 namespace input
 {
