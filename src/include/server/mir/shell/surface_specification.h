@@ -59,6 +59,7 @@ struct StreamCursor
     std::weak_ptr<frontend::BufferStream> stream;
     geometry::Displacement hotspot;
 };
+auto operator==(StreamCursor const& lhs, StreamCursor const& rhs) -> bool;
 
 /// Specification of surface properties requested by client
 struct SurfaceSpecification
@@ -120,6 +121,8 @@ struct SurfaceSpecification
     /// How the surface should gain and lose focus
     optional_value<MirFocusMode> focus_mode;
 };
+bool operator==(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
+bool operator!=(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
 }
 }
 
