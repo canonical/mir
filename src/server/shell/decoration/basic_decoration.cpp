@@ -276,10 +276,12 @@ auto msd::BasicDecoration::new_window_state() const -> std::unique_ptr<WindowSta
 
 auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surface>
 {
-    ms::SurfaceCreationParameters params;
+    msh::SurfaceSpecification params;
     params.type = mir_window_type_decoration;
     params.parent = window_surface;
-    params.size = window_surface->window_size();
+    auto const size = window_surface->window_size();
+    params.width = size.width;
+    params.height = size.height;
     params.aux_rect = {{}, {}};
     params.aux_rect_placement_gravity = mir_placement_gravity_northwest;
     params.surface_placement_gravity = mir_placement_gravity_northwest;

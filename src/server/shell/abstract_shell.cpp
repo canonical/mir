@@ -152,7 +152,7 @@ void msh::AbstractShell::close_session(
 
 auto msh::AbstractShell::create_surface(
     std::shared_ptr<ms::Session> const& session,
-    ms::SurfaceCreationParameters const& params,
+    SurfaceSpecification const& spec,
     std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<ms::Surface>
 {
     // Instead of a shared pointer, a local variable could be used and the lambda could capture a reference to it
@@ -167,6 +167,8 @@ auto msh::AbstractShell::create_surface(
             return session->create_surface(session, placed_params, observer);
         };
 
+    scene::SurfaceCreationParameters params;
+    params.update_from(spec);
     auto const result = window_manager->add_surface(session, params, build);
     report->created_surface(*session, *result);
 

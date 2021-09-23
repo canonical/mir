@@ -75,7 +75,7 @@ public:
 
     virtual auto create_surface(
         std::shared_ptr<scene::Session> const& session,
-        scene::SurfaceCreationParameters const& params,
+        SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<scene::Surface> = 0;
 
     virtual void modify_surface(
