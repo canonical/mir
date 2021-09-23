@@ -125,7 +125,7 @@ struct MockSurfaceFactory : public ms::SurfaceFactory
     MOCK_METHOD3(create_surface, std::shared_ptr<ms::Surface>(
         std::shared_ptr<ms::Session> const&,
         std::list<ms::StreamInfo> const&,
-        ms::SurfaceCreationParameters const&));
+        msh::SurfaceSpecification const&));
 };
 
 struct MockDecorationManager : public msh::decoration::NullManager

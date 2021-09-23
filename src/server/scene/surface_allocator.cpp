@@ -39,14 +39,20 @@ ms::SurfaceAllocator::SurfaceAllocator(
 std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
     std::shared_ptr<Session> const& session,
     std::list<ms::StreamInfo> const& streams,
-    SurfaceCreationParameters const& params)
+    shell::SurfaceSpecification const& params)
 {
     auto confine = params.confine_pointer.is_set() ? params.confine_pointer.value() : mir_pointer_unconfined;
+    auto const name = params.name.is_set() ? params.name.value() : "";
+    geom::Rectangle const rect{
+        params.top_left.is_set() ? params.top_left.value() : geom::Point{}, {
+            params.width.is_set() ? params.width.value() : geom::Width{100},
+            params.height.is_set() ? params.height.value() : geom::Height{100}}};
+    auto const parent = params.parent.is_set() ? params.parent.value() : std::weak_ptr<scene::Surface>{};
     auto const surface = std::make_shared<BasicSurface>(
         session,
-        params.name,
-        geom::Rectangle{params.top_left, params.size},
-        params.parent,
+        name,
+        rect,
+        parent,
         confine,
         streams,
         default_cursor_image,

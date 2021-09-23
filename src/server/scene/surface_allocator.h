@@ -42,7 +42,7 @@ public:
     std::shared_ptr<Surface> create_surface(
         std::shared_ptr<Session> const& session,
         std::list<scene::StreamInfo> const& streams,
-        SurfaceCreationParameters const& params) override;
+        shell::SurfaceSpecification const& params) override;
 
 private:
     std::shared_ptr<graphics::CursorImage> const default_cursor_image;

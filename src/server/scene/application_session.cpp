@@ -103,9 +103,7 @@ auto ms::ApplicationSession::create_surface(
         streams.push_back({std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()), stream.displacement, stream.size});
     }
 
-    SurfaceCreationParameters creation_params;
-    creation_params.update_from(params);
-    auto surface = surface_factory->create_surface(session, streams, creation_params);
+    auto surface = surface_factory->create_surface(session, streams, params);
 
     auto const input_mode = params.input_mode.is_set() ? params.input_mode.value() : input::InputReceptionMode::normal;
     surface_stack->add_surface(surface, input_mode);

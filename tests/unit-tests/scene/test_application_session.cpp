@@ -223,7 +223,7 @@ struct MockSurfaceFactory : ms::SurfaceFactory
     MOCK_METHOD3(create_surface, std::shared_ptr<ms::Surface>(
         std::shared_ptr<ms::Session> const&,
         std::list<ms::StreamInfo> const&,
-        ms::SurfaceCreationParameters const& params));
+        msh::SurfaceSpecification const& params));
 };
 }
 
@@ -701,11 +701,13 @@ public:
     std::shared_ptr<ms::Surface> create_surface(
         std::shared_ptr<ms::Session> const&,
         std::list<ms::StreamInfo> const&,
-        mir::scene::SurfaceCreationParameters const& params) override
+        mir::shell::SurfaceSpecification const& params) override
     {
         using namespace testing;
         auto mock = std::make_shared<NiceMock<ObserverPreservingSurface>>();
-        ON_CALL(*mock, size()).WillByDefault(Return(params.size));
+        ON_CALL(*mock, size()).WillByDefault(Return(geom::Size{
+            params.width.is_set() ? params.width.value() : geom::Width{1},
+            params.height.is_set() ? params.height.value() : geom::Height{1}}));
         return mock;
     };
 };

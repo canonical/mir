@@ -26,6 +26,7 @@
 namespace mir
 {
 namespace compositor { class BufferStream; }
+namespace shell { class SurfaceSpecification; }
 namespace scene
 {
 class Surface;
@@ -41,7 +42,7 @@ public:
     virtual std::shared_ptr<Surface> create_surface(
         std::shared_ptr<Session> const& session,
         std::list<scene::StreamInfo> const& streams,
-        SurfaceCreationParameters const& params) = 0;
+        shell::SurfaceSpecification const& params) = 0;
 
 private:
     SurfaceFactory(const SurfaceFactory&) = delete;
