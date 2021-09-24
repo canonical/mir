@@ -175,7 +175,6 @@ bool msh::operator==(
         lhs.top_left == rhs.top_left &&
         lhs.buffer_usage == rhs.buffer_usage &&
         lhs.pixel_format == rhs.pixel_format &&
-        lhs.input_mode == rhs.input_mode &&
         lhs.output_id == rhs.output_id &&
         lhs.state == rhs.state &&
         lhs.type == rhs.type &&
