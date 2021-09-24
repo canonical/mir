@@ -31,6 +31,14 @@ extern "C" {
 typedef struct MirPointerEvent MirPointerEvent;
 
 /**
+ * Retrieve the source of the pointer axis event.
+ *
+ *   \param [in] event The pointer event
+ *   \return           The modifier mask
+ */
+MirPointerAxisSource mir_pointer_event_axis_source(MirPointerEvent const* event);
+
+/**
  * Retrieve the modifier keys pressed when the pointer action occured.
  *
  *   \param [in] event The pointer event

@@ -47,6 +47,7 @@ MIR_COMMON_2.5 {
   mir_omnidirectional_resize_cursor_name;
   mir_open_hand_cursor_name;
   mir_pointer_event_action;
+  mir_pointer_event_axis_source;
   mir_pointer_event_axis_value;
   mir_pointer_event_buttons;
   mir_pointer_event_button_state;

@@ -32,6 +32,8 @@
 #include "../handle_event_exception.h"
 
 #include <string.h>
+#include <mir_toolkit/events/input/pointer_event.h>
+
 
 namespace ml = mir::logging;
 
@@ -255,6 +257,12 @@ MirEvent const* mir_input_event_get_event(MirInputEvent const* event)
 {
     return event;
 }
+
+
+MirPointerAxisSource mir_pointer_event_axis_source(MirPointerEvent const* event) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return event->axis_source();
+})
 
 MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev) MIR_HANDLE_EVENT_EXCEPTION(
 {
