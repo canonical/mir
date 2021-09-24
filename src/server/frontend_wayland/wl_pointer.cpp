@@ -228,6 +228,10 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
 
     if (h_scroll)
     {
+        // TODO actually retrieve discrete scolling from event (needs to be populated by the input platforms)
+        send_axis_source_event(AxisSource::wheel_tilt);
+        send_axis_discrete_event(AxisSource::wheel_tilt, (h_scroll> 0) ? 1 : -1);
+
         send_axis_event(
             timestamp_of(event),
             Axis::horizontal_scroll,
@@ -237,6 +241,10 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
 
     if (v_scroll)
     {
+        // TODO actually retrieve discrete scolling from event (needs to be populated by the input platforms)
+        send_axis_source_event(AxisSource::wheel);
+        send_axis_discrete_event(AxisSource::wheel, (v_scroll> 0) ? 1 : -1);
+
         send_axis_event(
             timestamp_of(event),
             Axis::vertical_scroll,
