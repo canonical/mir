@@ -17,63 +17,10 @@
  */
 
 #include "miral/window_specification.h"
+#include "window_specification_internal.h"
 
 #include <mir/shell/surface_specification.h>
 #include <mir/log.h>
-
-struct miral::WindowSpecification::Self
-{
-    enum class BufferUsage
-    {
-        undefined,
-        /** rendering using GL */
-        hardware,
-        /** rendering using direct pixel access */
-        software
-    };
-
-    Self() = default;
-    Self(Self const&) = default;
-    Self(mir::shell::SurfaceSpecification const& spec);
-
-    void apply_to(mir::shell::SurfaceSpecification& params) const;
-
-    mir::optional_value<Point> top_left;
-    mir::optional_value<Size> size;
-    mir::optional_value<MirPixelFormat> pixel_format;
-    mir::optional_value<BufferUsage> buffer_usage;
-    mir::optional_value<std::string> name;
-    mir::optional_value<int> output_id;
-    mir::optional_value<MirWindowType> type;
-    mir::optional_value<MirWindowState> state;
-    mir::optional_value<MirOrientationMode> preferred_orientation;
-    mir::optional_value<Rectangle> aux_rect;
-    mir::optional_value<MirPlacementHints> placement_hints;
-    mir::optional_value<MirPlacementGravity> window_placement_gravity;
-    mir::optional_value<MirPlacementGravity> aux_rect_placement_gravity;
-    mir::optional_value<Displacement> aux_rect_placement_offset;
-    mir::optional_value<Width> min_width;
-    mir::optional_value<Height> min_height;
-    mir::optional_value<Width> max_width;
-    mir::optional_value<Height> max_height;
-    mir::optional_value<DeltaX> width_inc;
-    mir::optional_value<DeltaY> height_inc;
-    mir::optional_value<AspectRatio> min_aspect;
-    mir::optional_value<AspectRatio> max_aspect;
-    mir::optional_value<std::vector<mir::shell::StreamSpecification>> streams;
-    mir::optional_value<std::weak_ptr<mir::scene::Surface>> parent;
-    mir::optional_value<std::vector<Rectangle>> input_shape;
-    mir::optional_value<InputReceptionMode> input_mode;
-    mir::optional_value<MirShellChrome> shell_chrome;
-    mir::optional_value<MirPointerConfinementState> confine_pointer;
-    mir::optional_value<MirDepthLayer> depth_layer;
-    mir::optional_value<MirPlacementGravity> attached_edges;
-    mir::optional_value<mir::optional_value<mir::geometry::Rectangle>> exclusive_rect;
-    mir::optional_value<std::string> application_id;
-    mir::optional_value<bool> server_side_decorated;
-    mir::optional_value<MirFocusMode> focus_mode;
-    mir::optional_value<std::shared_ptr<void>> userdata;
-};
 
 miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& spec) :
     top_left(spec.top_left),
@@ -155,113 +102,6 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
         max_aspect = AspectRatio{spec.max_aspect.value().width, spec.max_aspect.value().height};
 }
 
-namespace
-{
-template<typename Dest, typename Source>
-void copy_if_set(Dest& dest, mir::optional_value<Source> const& source)
-{
-    if (source.is_set()) dest = source.value();
-}
-
-template<typename Dest, typename Source>
-void copy_if_set(Dest& dest, std::weak_ptr<Source> const& source)
-{
-    if (source.lock()) dest = source;
-}
-
-template<typename Dest, typename Source>
-void copy_if_set(mir::optional_value<Dest>& dest, mir::optional_value<Source> const& source)
-{
-    if (source.is_set()) dest = source;
-}
-
-template<typename Source>
-void copy_if_set(mir::optional_value<mir::graphics::BufferUsage>& dest, mir::optional_value<Source> const& source)
-{
-    if (source.is_set()) dest = static_cast<mir::graphics::BufferUsage>(source.value());
-}
-
-template<typename Source>
-void copy_if_set(
-    mir::optional_value<mir::graphics::DisplayConfigurationOutputId>& dest,
-    mir::optional_value<Source> const& source)
-{
-    if (source.is_set()) dest = static_cast<mir::graphics::DisplayConfigurationOutputId>(source.value());
-}
-
-template<typename Source>
-void copy_if_set(
-    mir::optional_value<mir::input::InputReceptionMode>& dest,
-    mir::optional_value<Source> const& source)
-{
-    if (source.is_set()) dest = static_cast<mir::input::InputReceptionMode>(source.value());
-}
-
-template<typename Source>
-void copy_if_set(
-    mir::optional_value<mir::shell::SurfaceAspectRatio>& dest,
-    mir::optional_value<Source> const& source)
-{
-    if (source.is_set()) dest = mir::shell::SurfaceAspectRatio{source.value().width, source.value().height};
-}
-
-template<typename Source>
-void copy_if_set(
-    mir::optional_value<mir::frontend::BufferStreamId>& dest,
-    mir::optional_value<Source> const& source)
-{
-    if (source.is_set()) dest = mir::frontend::BufferStreamId{source.value().as_value()};
-}
-}
-
-void miral::WindowSpecification::Self::apply_to(mir::shell::SurfaceSpecification& params) const
-{
-    copy_if_set(params.top_left, top_left);
-    copy_if_set(params.pixel_format, pixel_format);
-    copy_if_set(params.buffer_usage, buffer_usage);
-    copy_if_set(params.name, name);
-    copy_if_set(params.output_id, output_id);
-    copy_if_set(params.type, type);
-    copy_if_set(params.state, state);
-    copy_if_set(params.preferred_orientation, preferred_orientation);
-    copy_if_set(params.aux_rect, aux_rect);
-    copy_if_set(params.min_width, min_width);
-    copy_if_set(params.min_height, min_height);
-    copy_if_set(params.max_width, max_width);
-    copy_if_set(params.max_height, max_height);
-    copy_if_set(params.width_inc, width_inc);
-    copy_if_set(params.height_inc, height_inc);
-    copy_if_set(params.min_aspect, min_aspect);
-    copy_if_set(params.max_aspect, max_aspect);
-    copy_if_set(params.streams, streams);
-    copy_if_set(params.parent, parent);
-    copy_if_set(params.input_shape, input_shape);
-    copy_if_set(params.input_mode, input_mode);
-    copy_if_set(params.shell_chrome, shell_chrome);
-    copy_if_set(params.confine_pointer, confine_pointer);
-    copy_if_set(params.placement_hints, placement_hints);
-    copy_if_set(params.surface_placement_gravity, window_placement_gravity);
-    copy_if_set(params.aux_rect_placement_gravity, aux_rect_placement_gravity);
-    copy_if_set(params.depth_layer, depth_layer);
-    copy_if_set(params.attached_edges, attached_edges);
-    copy_if_set(params.exclusive_rect, exclusive_rect);
-    copy_if_set(params.application_id, application_id);
-    copy_if_set(params.server_side_decorated, server_side_decorated);
-    copy_if_set(params.focus_mode, focus_mode);
-
-    if (size.is_set())
-    {
-        params.set_size(size.value());
-    }
-
-    if (aux_rect_placement_offset.is_set())
-    {
-        auto const offset = aux_rect_placement_offset.value();
-        params.aux_rect_placement_offset_x = offset.dx.as_int();
-        params.aux_rect_placement_offset_y = offset.dy.as_int();
-    }
-}
-
 miral::WindowSpecification::WindowSpecification() :
     self{std::make_unique<Self>()}
 {
@@ -294,11 +134,6 @@ miral::WindowSpecification::~WindowSpecification() = default;
 void miral::WindowSpecification::update(mir::scene::SurfaceCreationParameters&) const
 {
     mir::log_warning("WindowSpecification::update(SurfaceCreationParameters&) is no longer implemented");
-}
-
-void miral::WindowSpecification::apply_to(mir::shell::SurfaceSpecification& params) const
-{
-    self->apply_to(params);
 }
 
 auto miral::WindowSpecification::top_left() const -> mir::optional_value<Point> const&

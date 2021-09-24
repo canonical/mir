@@ -60,7 +60,6 @@ public:
     WindowSpecification(mir::scene::SurfaceCreationParameters const& params);
     /// \deprecated and rendered inert in MirAL 3.3
     void update(mir::scene::SurfaceCreationParameters& params) const;
-    void apply_to(mir::shell::SurfaceSpecification& params) const;
 
     ~WindowSpecification();
 
@@ -176,6 +175,7 @@ public:
     ///@}
 
 private:
+    friend auto make_surface_spec(WindowSpecification const& miral_spec) -> mir::shell::SurfaceSpecification;
     struct Self;
     std::unique_ptr<Self> self;
 };

@@ -454,7 +454,6 @@ global:
     miral::WaylandExtensions::zwp_input_method_v2*;
     miral::WaylandExtensions::zwp_virtual_keyboard_v1*;
     miral::WindowInfo::focus_mode*;
-    miral::WindowSpecification::apply_to*;
     miral::WindowSpecification::focus_mode*;
     miral::toolkit::mir_keyboard_event_keysym*;
   };

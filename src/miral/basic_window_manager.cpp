@@ -138,9 +138,7 @@ auto miral::BasicWindowManager::add_surface(
 
     WindowSpecification spec = policy->place_new_window(session_info, place_new_surface(params));
 
-    shell::SurfaceSpecification parameters;
-    spec.apply_to(parameters);
-    auto const surface = build(session, parameters);
+    auto const surface = build(session, make_surface_spec(spec));
     Window const window{session, surface};
     auto& window_info = this->window_info.emplace(window, WindowInfo{window, spec}).first->second;
 
