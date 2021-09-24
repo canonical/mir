@@ -259,6 +259,7 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WindowManagerTools::window_at(mir::geometry::Point) const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowManagerTools::~WindowManagerTools()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::WindowSpecification()@MIRAL_3.0" 3.0.0
+ (c++)"miral::WindowSpecification::WindowSpecification(mir::scene::SurfaceCreationParameters const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::WindowSpecification(mir::shell::SurfaceSpecification const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::WindowSpecification(miral::WindowSpecification const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::application_id[abi:cxx11]() const@MIRAL_3.0" 3.0.0
@@ -318,6 +319,7 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WindowSpecification::top_left()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::type() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::type()@MIRAL_3.0" 3.0.0
+ (c++)"miral::WindowSpecification::update(mir::scene::SurfaceCreationParameters&) const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::userdata() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::userdata()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::width_inc() const@MIRAL_3.0" 3.0.0
