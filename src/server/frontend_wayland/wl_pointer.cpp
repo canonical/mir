@@ -226,13 +226,19 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
     auto const h_scroll = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll);
     auto const v_scroll = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll);
 
+    if (h_scroll || v_scroll)
+    {
+        // TODO: send the actual axis source, and discrete events if the hardware provides them
+        send_axis_source_event(AxisSource::finger);
+        needs_frame = true;
+    }
+
     if (h_scroll)
     {
         send_axis_event(
             timestamp_of(event),
             Axis::horizontal_scroll,
             h_scroll);
-        needs_frame = true;
     }
 
     if (v_scroll)
@@ -241,7 +247,6 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
             timestamp_of(event),
             Axis::vertical_scroll,
             v_scroll);
-        needs_frame = true;
     }
 }
 
