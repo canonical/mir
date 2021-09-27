@@ -20,7 +20,6 @@
 #include "window_specification_internal.h"
 
 #include <mir/shell/surface_specification.h>
-#include <mir/log.h>
 
 miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& spec) :
     top_left(spec.top_left),
@@ -112,12 +111,6 @@ miral::WindowSpecification::WindowSpecification(mir::shell::SurfaceSpecification
 {
 }
 
-miral::WindowSpecification::WindowSpecification(mir::scene::SurfaceCreationParameters const&) :
-    WindowSpecification()
-{
-    mir::log_warning("WindowSpecification(SurfaceCreationParameters const&) is no longer implemented");
-}
-
 miral::WindowSpecification::WindowSpecification(WindowSpecification const& that) :
     self{std::make_unique<Self>(*that.self)}
 {
@@ -130,11 +123,6 @@ auto miral::WindowSpecification::operator=(WindowSpecification const& that) -> W
 }
 
 miral::WindowSpecification::~WindowSpecification() = default;
-
-void miral::WindowSpecification::update(mir::scene::SurfaceCreationParameters&) const
-{
-    mir::log_warning("WindowSpecification::update(SurfaceCreationParameters&) is no longer implemented");
-}
 
 auto miral::WindowSpecification::top_left() const -> mir::optional_value<Point> const&
 {

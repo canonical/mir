@@ -30,7 +30,7 @@
 
 namespace mir
 {
-namespace scene { class Surface; struct SurfaceCreationParameters; }
+namespace scene { class Surface; }
 namespace shell { struct SurfaceSpecification; }
 }
 
@@ -56,10 +56,6 @@ public:
     auto operator=(WindowSpecification const& that) -> WindowSpecification&;
 
     WindowSpecification(mir::shell::SurfaceSpecification const& spec);
-    /// \deprecated and rendered inert in MirAL 3.3
-    WindowSpecification(mir::scene::SurfaceCreationParameters const& params);
-    /// \deprecated and rendered inert in MirAL 3.3
-    void update(mir::scene::SurfaceCreationParameters& params) const;
 
     ~WindowSpecification();
 
