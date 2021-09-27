@@ -749,7 +749,6 @@ private:
         // So don't enforce the error for this case
         if (requested_modifier == DRM_FORMAT_MOD_INVALID)
         {
-            mir::log_warning("Client requested unsupported format modifier: DRM_FORMAT_MOD_INVALID");
             return Tex2D;
         }
 
