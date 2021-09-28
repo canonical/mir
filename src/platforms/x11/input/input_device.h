@@ -60,16 +60,8 @@ public:
     void key_press(EventTime event_time, xkb_keysym_t keysym, int scan_code);
     void key_release(EventTime event_time, xkb_keysym_t keysym, int scan_code);
     void update_button_state(int button);
-    void pointer_press(
-        EventTime event_time,
-        int button,
-        mir::geometry::PointF pos,
-        mir::geometry::DisplacementF scroll);
-    void pointer_release(
-        EventTime event_time,
-        int button,
-        mir::geometry::PointF pos,
-        mir::geometry::DisplacementF scroll);
+    void pointer_press(EventTime event_time, int button, mir::geometry::PointF pos);
+    void pointer_release(EventTime event_time, int button, mir::geometry::PointF pos);
     void pointer_motion(
         EventTime event_time,
         mir::geometry::PointF pos,

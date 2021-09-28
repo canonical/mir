@@ -161,11 +161,7 @@ void mix::XInputDevice::update_button_state(int button)
     button_state = to_mir_button_state(button);
 }
 
-void mix::XInputDevice::pointer_press(
-    EventTime event_time,
-    int button,
-    mir::geometry::PointF pos,
-    mir::geometry::DisplacementF scroll)
+void mix::XInputDevice::pointer_press(EventTime event_time, int button, mir::geometry::PointF pos)
 {
     button_state |= to_mir_button(button);
     auto const movement = pos - pointer_pos;
@@ -177,19 +173,15 @@ void mix::XInputDevice::pointer_press(
             button_state,
             pointer_pos.x.as_value(),
             pointer_pos.y.as_value(),
-            scroll.dx.as_value(),
-            scroll.dy.as_value(),
+            0,
+            0,
             movement.dx.as_value(),
             movement.dy.as_value()
             )
         );
 }
 
-void mix::XInputDevice::pointer_release(
-    EventTime event_time,
-    int button,
-    mir::geometry::PointF pos,
-    mir::geometry::DisplacementF scroll)
+void mix::XInputDevice::pointer_release(EventTime event_time, int button, mir::geometry::PointF pos)
 {
     button_state &= ~to_mir_button(button);
     auto const movement = pos - pointer_pos;
@@ -201,8 +193,8 @@ void mix::XInputDevice::pointer_release(
             button_state,
             pointer_pos.x.as_value(),
             pointer_pos.y.as_value(),
-            scroll.dx.as_value(),
-            scroll.dy.as_value(),
+            0,
+            0,
             movement.dx.as_value(),
             movement.dy.as_value()
             )

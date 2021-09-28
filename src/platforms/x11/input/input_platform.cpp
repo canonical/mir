@@ -434,8 +434,7 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
             core_pointer->pointer_motion(event_time, pos, {scroll_factor, 0});
             break;
 
-        default:
-            core_pointer->pointer_press(event_time, press_ev->detail, pos, {});
+        default:core_pointer->pointer_press(event_time, press_ev->detail, pos);
         }
     }   break;
 
@@ -460,7 +459,7 @@ void mix::XInputPlatform::process_input_event(xcb_generic_event_t* event)
                 release_ev->event,
                 release_ev->event_x,
                 release_ev->event_y);
-            core_pointer->pointer_release(event_time, release_ev->detail, pos, {});
+            core_pointer->pointer_release(event_time, release_ev->detail, pos);
         }
     }   break;
 
