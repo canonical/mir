@@ -55,14 +55,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-
-class StubInputDeviceRegistry : public mi::InputDeviceRegistry
-{
-public:
-    auto add_device(std::shared_ptr<mi::InputDevice> const&) -> std::weak_ptr<mi::Device> override { return {}; }
-    void remove_device(std::shared_ptr<mi::InputDevice> const&) override {}
-};
-
 using namespace ::testing;
 using Matrix = mi::OutputInfo::Matrix;
 
