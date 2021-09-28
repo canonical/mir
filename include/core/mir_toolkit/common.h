@@ -428,4 +428,16 @@ typedef enum MirFocusMode
                                       leaving it as long as it has this mode */
 } MirFocusMode;
 
+/**
+ * If a window is decorated, and who manages the decorations.
+ */
+typedef enum MirWindowDecorations
+{
+    mir_window_decorations_unknown = 0, /**< The client has not communicated to us about decorations, this generally
+                                             indicates it's client-side decorated */
+    mir_window_decorations_client,      /**< The client draws decorations on it's surface */
+    mir_window_decorations_server,      /**< Mir provides decorations */
+    mir_window_decorations_none,        /**< The window does not have decorations */
+} MirWindowDecorations;
+
 #endif
