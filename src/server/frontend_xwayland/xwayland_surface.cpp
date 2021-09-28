@@ -768,7 +768,8 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         {
             spec.update_from(*pending_spec.value());
         }
-        spec.server_side_decorated = !cached.override_redirect && !cached.motif_decorations_disabled;
+        bool const server_side_decorated = !cached.override_redirect && !cached.motif_decorations_disabled;
+        spec.decorations = server_side_decorated ? mir_window_decorations_server : mir_window_decorations_unknown;
         prep_surface_spec(lock, spec);
     }
 

@@ -304,7 +304,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_enable_ssd)
                 msh::SurfaceSpecification const&)> const& build)
             {
                 auto modified_params = params;
-                modified_params.server_side_decorated = true;
+                modified_params.decorations = mir_window_decorations_server;
                 return build(session, modified_params);
             }));
 
@@ -317,7 +317,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
         shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
 
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    params.server_side_decorated = true;
+    params.decorations = mir_window_decorations_server;
 
     EXPECT_CALL(decoration_manager, decorate(_))
         .Times(0);
@@ -330,7 +330,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
                 msh::SurfaceSpecification const&)> const& build)
             {
                 auto modified_params = params;
-                modified_params.server_side_decorated = false;
+                modified_params.decorations = mir_window_decorations_client;
                 return build(session, modified_params);
             }));
 

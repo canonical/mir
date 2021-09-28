@@ -111,8 +111,15 @@ auto miral::make_surface_spec(WindowSpecification const& window_spec) -> mir::sh
     copy_if_set(result.attached_edges, spec.attached_edges);
     copy_if_set(result.exclusive_rect, spec.exclusive_rect);
     copy_if_set(result.application_id, spec.application_id);
-    copy_if_set(result.server_side_decorated, spec.server_side_decorated);
+    copy_if_set(result.decorations, spec.decorations);
     copy_if_set(result.focus_mode, spec.focus_mode);
+
+    if (spec.server_side_decorated.is_set() && !spec.decorations.is_set())
+    {
+        result.decorations = spec.server_side_decorated.value() ?
+            mir_window_decorations_server :
+            mir_window_decorations_client;
+    }
 
     if (spec.size.is_set())
     {

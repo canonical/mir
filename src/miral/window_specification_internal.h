@@ -73,6 +73,7 @@ struct WindowSpecification::Self
     mir::optional_value<mir::optional_value<mir::geometry::Rectangle>> exclusive_rect;
     mir::optional_value<std::string> application_id;
     mir::optional_value<bool> server_side_decorated;
+    mir::optional_value<MirWindowDecorations> decorations;
     mir::optional_value<MirFocusMode> focus_mode;
     mir::optional_value<std::shared_ptr<void>> userdata;
 };

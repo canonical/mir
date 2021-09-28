@@ -235,15 +235,6 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<struct wl_resource*> 
     }
 }
 
-void mf::WindowWlSurfaceRole::set_server_side_decorated(bool server_side_decorated)
-{
-    spec().server_side_decorated = server_side_decorated;
-    if (weak_scene_surface.lock())
-    {
-        log_warning("Changing server_side_decorated property after surface created not yet possible");
-    }
-}
-
 void mir::frontend::WindowWlSurfaceRole::set_type(MirWindowType type)
 {
     spec().type = type;

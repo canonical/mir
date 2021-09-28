@@ -161,7 +161,8 @@ auto msh::AbstractShell::create_surface(
             std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const& placed_params)
         {
-            if (placed_params.server_side_decorated.is_set() && placed_params.server_side_decorated.value())
+            if (placed_params.decorations.is_set() &&
+                placed_params.decorations.value() == mir_window_decorations_server)
             {
                 *should_decorate = true;
             }

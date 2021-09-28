@@ -158,6 +158,7 @@ public:
 
     /// If this window should have server-side decorations provided by Mir
     /// Currently, Mir only respects this value during surface construction
+    /// \deprecated in MirAL 3.3. Use decorations() instead.
     ///@{
     auto server_side_decorated() const -> mir::optional_value<bool> const&;
     auto server_side_decorated() -> mir::optional_value<bool>&;

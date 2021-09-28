@@ -116,7 +116,7 @@ struct SurfaceSpecification
     optional_value<std::string> application_id;
 
     /// If to enable server-side decorations for this surface
-    optional_value<bool> server_side_decorated;
+    optional_value<MirWindowDecorations> decorations;
 
     /// How the surface should gain and lose focus
     optional_value<MirFocusMode> focus_mode;
