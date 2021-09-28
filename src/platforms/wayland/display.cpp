@@ -70,6 +70,14 @@ class NullPointerInput : public mir::input::wayland::PointerInput
         geom::DisplacementF const&) override
     {
     }
+
+    void pointer_axis_motion(
+        uint32_t,
+        std::chrono::nanoseconds,
+        mir::geometry::PointF const&,
+        mir::geometry::DisplacementF const&) override
+    {
+    }
 };
 
 class NullTouchInput : public mir::input::wayland::TouchInput
@@ -386,7 +394,17 @@ void mir::graphics::wayland::Display::pointer_frame(wl_pointer* pointer)
 {
     {
         std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
-        pointer_sink->pointer_motion(pointer_time, pointer_pos, pointer_scroll);
+
+        if (pointer_axis_source_ == pointer_axis_source_null)
+        {
+            pointer_sink->pointer_motion(pointer_time, pointer_pos, pointer_scroll);
+        }
+        else
+        {
+            pointer_sink->pointer_axis_motion(pointer_axis_source_, pointer_time, pointer_pos, pointer_scroll);
+        }
+
+        pointer_axis_source_ = pointer_axis_source_null;
         pointer_scroll = {};
     }
 
@@ -548,4 +566,9 @@ bool mir::graphics::wayland::Display::active()
 {
     std::lock_guard<decltype(the_display_mtx)> display_lock{the_display_mtx};
     return the_display != nullptr;
+}
+
+void mir::graphics::wayland::Display::pointer_axis_source(wl_pointer* /*pointer*/, uint32_t axis_source)
+{
+    pointer_axis_source_ = axis_source;
 }

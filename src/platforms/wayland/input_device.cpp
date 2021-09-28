@@ -236,6 +236,31 @@ void miw::PointerInputDevice::pointer_motion(
     });
 }
 
+void miw::PointerInputDevice::pointer_axis_motion(
+    uint32_t pointer_axis_source,
+    std::chrono::nanoseconds event_time,
+    mir::geometry::PointF const& pos,
+    mir::geometry::DisplacementF const& scroll)
+{
+    enqueue([=](EventBuilder* b)
+    {
+        auto const movement = pos - cached_pos;
+        cached_pos = pos;
+        return b->pointer_axis_event(
+            MirPointerAxisSource(pointer_axis_source+1),
+            event_time,
+            mir_pointer_action_motion,
+            button_state,
+            cached_pos.x.as_value(),
+            cached_pos.y.as_value(),
+            scroll.dx.as_value(),
+            scroll.dy.as_value(),
+            movement.dx.as_value(),
+            movement.dy.as_value()
+        );
+    });
+}
+
 miw::TouchInputDevice::TouchInputDevice(std::shared_ptr<dispatch::ActionQueue> const& action_queue) :
     GenericInputDevice{InputDeviceInfo{"touch-device", "touch-dev-1", DeviceCapability::touchscreen}, action_queue}
 {

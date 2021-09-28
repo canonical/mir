@@ -63,6 +63,12 @@ public:
         geometry::PointF const& pos,
         geometry::DisplacementF const& scroll) = 0;
 
+    virtual void pointer_axis_motion(
+        uint32_t pointer_axis_source,
+        std::chrono::nanoseconds event_time,
+        geometry::PointF const& pos,
+        geometry::DisplacementF const& scroll) = 0;
+
     PointerInput() = default;
     virtual ~PointerInput() = default;
     PointerInput(PointerInput const&) = delete;
