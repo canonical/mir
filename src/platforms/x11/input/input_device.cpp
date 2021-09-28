@@ -241,6 +241,6 @@ void mix::XInputDevice::pointer_axis_motion(
             scroll.dy.as_value(),
             movement.dx.as_value(),
             movement.dy.as_value()
-                                   )
-                      );
+           )
+        );
 }
