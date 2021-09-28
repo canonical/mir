@@ -35,6 +35,7 @@ namespace mir
 {
 namespace graphics { class CursorImage; }
 namespace scene { class Surface; }
+namespace input { enum class InputReceptionMode; }
 namespace frontend
 {
 class BufferStream;
@@ -58,12 +59,15 @@ struct StreamCursor
     std::weak_ptr<frontend::BufferStream> stream;
     geometry::Displacement hotspot;
 };
+auto operator==(StreamCursor const& lhs, StreamCursor const& rhs) -> bool;
 
 /// Specification of surface properties requested by client
 struct SurfaceSpecification
 {
     bool is_empty() const;
     void update_from(SurfaceSpecification const& that);
+    /// Sets width and height at the same time
+    void set_size(geometry::Size size) { width = size.width; height = size.height; }
 
     optional_value<geometry::Point> top_left;
     optional_value<geometry::Width> width;
@@ -95,12 +99,8 @@ struct SurfaceSpecification
     optional_value<std::weak_ptr<scene::Surface>> parent;
 
     optional_value<std::vector<geometry::Rectangle>> input_shape;
+    optional_value<input::InputReceptionMode> input_mode;
 
-    // TODO scene::SurfaceCreationParameters overlaps this content but has additional fields:
-    //    input::InputReceptionMode input_mode;
-    //
-    //    it also has size instead of width + height
-    // Maybe SurfaceCreationParameters /HasA/ SurfaceSpecification?
     optional_value<MirShellChrome> shell_chrome;
     optional_value<MirPointerConfinementState> confine_pointer;
     optional_value<std::shared_ptr<graphics::CursorImage>> cursor_image;
@@ -115,9 +115,14 @@ struct SurfaceSpecification
     optional_value<optional_value<geometry::Rectangle>> exclusive_rect;
     optional_value<std::string> application_id;
 
+    /// If to enable server-side decorations for this surface
+    optional_value<bool> server_side_decorated;
+
     /// How the surface should gain and lose focus
     optional_value<MirFocusMode> focus_mode;
 };
+bool operator==(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
+bool operator!=(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
 }
 }
 

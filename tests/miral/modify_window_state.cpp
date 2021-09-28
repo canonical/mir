@@ -48,9 +48,9 @@ struct ModifyWindowState : mt::TestWindowManagerTools, WithParamInterface<MirWin
 
     void create_window_of_type(MirWindowType type)
     {
-        mir::scene::SurfaceCreationParameters creation_parameters;
+        mir::shell::SurfaceSpecification creation_parameters;
         creation_parameters.type = type;
-        creation_parameters.size = initial_parent_size;
+        creation_parameters.set_size(initial_parent_size);
 
         EXPECT_CALL(*window_manager_policy, advise_new_window(_))
             .WillOnce(

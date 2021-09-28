@@ -21,10 +21,10 @@
 
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/input/mir_input_config.h"
 #include "mir/client_visible_error.h"
+#include "mir/shell/surface_specification.h"
 
 #include <gmock/gmock.h>
 
@@ -40,7 +40,7 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD3(create_surface,
         std::shared_ptr<scene::Surface>(
             std::shared_ptr<Session> const&,
-            scene::SurfaceCreationParameters const&,
+            shell::SurfaceSpecification const&,
             std::shared_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD1(destroy_surface, void(std::shared_ptr<scene::Surface> const&));
     MOCK_CONST_METHOD1(surface_after, std::shared_ptr<scene::Surface>(std::shared_ptr<scene::Surface> const&));

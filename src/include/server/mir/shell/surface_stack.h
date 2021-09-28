@@ -30,7 +30,6 @@ namespace input { enum class InputReceptionMode; }
 namespace scene
 {
 class Surface;
-struct SurfaceCreationParameters;
 class SurfaceObserver;
 class Session;
 using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;

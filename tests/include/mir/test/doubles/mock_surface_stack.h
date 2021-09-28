@@ -21,7 +21,6 @@
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_STACK_H_
 
 #include "mir/shell/surface_stack.h"
-#include "mir/scene/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>
 

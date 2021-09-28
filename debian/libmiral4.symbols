@@ -259,7 +259,6 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WindowManagerTools::window_at(mir::geometry::Point) const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowManagerTools::~WindowManagerTools()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::WindowSpecification()@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowSpecification::WindowSpecification(mir::scene::SurfaceCreationParameters const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::WindowSpecification(mir::shell::SurfaceSpecification const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::WindowSpecification(miral::WindowSpecification const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::application_id[abi:cxx11]() const@MIRAL_3.0" 3.0.0
@@ -319,7 +318,6 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WindowSpecification::top_left()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::type() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::type()@MIRAL_3.0" 3.0.0
- (c++)"miral::WindowSpecification::update(mir::scene::SurfaceCreationParameters&) const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::userdata() const@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::userdata()@MIRAL_3.0" 3.0.0
  (c++)"miral::WindowSpecification::width_inc() const@MIRAL_3.0" 3.0.0
@@ -396,9 +394,10 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::Output::logical_group_id() const@MIRAL_3.2" 3.2.0
  MIRAL_3.3@MIRAL_3.3 3.3.0
  (c++)"miral::PrintTo(miral::Window const&, std::basic_ostream<char, std::char_traits<char> >*)@MIRAL_3.3" 3.3.0
+ (c++)"miral::WaylandExtensions::zwp_input_method_v2@MIRAL_3.3" 3.3.0
+ (c++)"miral::WaylandExtensions::zwp_virtual_keyboard_v1@MIRAL_3.3" 3.3.0
  (c++)"miral::WindowInfo::focus_mode() const@MIRAL_3.3" 3.3.0
+ (c++)"miral::WindowSpecification::apply_to(mir::shell::SurfaceSpecification&) const@MIRAL_3.3" 3.3.0
  (c++)"miral::WindowSpecification::focus_mode() const@MIRAL_3.3" 3.3.0
  (c++)"miral::WindowSpecification::focus_mode()@MIRAL_3.3" 3.3.0
  (c++)"miral::toolkit::mir_keyboard_event_keysym(MirKeyboardEvent const*)@MIRAL_3.3" 3.3.0
- (c++)"miral::WaylandExtensions::zwp_virtual_keyboard_v1@MIRAL_3.3" 3.3.0
- (c++)"miral::WaylandExtensions::zwp_input_method_v2@MIRAL_3.3" 3.3.0

@@ -21,7 +21,6 @@
 
 #include "mir/shell/window_manager.h"
 #include "mir/shell/surface_specification.h"
-#include "mir/scene/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>
 
@@ -44,10 +43,10 @@ struct MockWindowManager : shell::WindowManager
 
     MOCK_METHOD3(add_surface, std::shared_ptr<scene::Surface>(
         std::shared_ptr<scene::Session> const& session,
-        scene::SurfaceCreationParameters const& params,
+        shell::SurfaceSpecification const& params,
         std::function<std::shared_ptr<scene::Surface>(
             std::shared_ptr<scene::Session> const& session,
-            scene::SurfaceCreationParameters const& params)> const& build));
+            shell::SurfaceSpecification const& params)> const& build));
 
     MOCK_METHOD3(modify_surface, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, shell::SurfaceSpecification const&));
     MOCK_METHOD2(remove_surface, void(std::shared_ptr<scene::Session> const&, std::weak_ptr<scene::Surface> const&));
@@ -72,10 +71,10 @@ struct MockWindowManager : shell::WindowManager
 
     static auto add_surface_default(
         std::shared_ptr<scene::Session> const& session,
-        scene::SurfaceCreationParameters const& params,
+        shell::SurfaceSpecification const& params,
         std::function<std::shared_ptr<scene::Surface>(
             std::shared_ptr<scene::Session> const& session,
-            scene::SurfaceCreationParameters const& params)> const& build) -> std::shared_ptr<scene::Surface>
+            shell::SurfaceSpecification const& params)> const& build) -> std::shared_ptr<scene::Surface>
         { return build(session, params); }
 };
 

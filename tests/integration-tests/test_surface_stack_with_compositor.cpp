@@ -18,7 +18,6 @@
 
 #include "mir/compositor/display_listener.h"
 #include "mir/renderer/renderer_factory.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
 #include "src/server/scene/basic_surface.h"
@@ -47,6 +46,7 @@ namespace mr = mir::report;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 using namespace testing;
 
@@ -148,7 +148,6 @@ struct SurfaceStackCompositor : public Test
     std::shared_ptr<mtd::MockBufferStream> mock_buffer_stream;
     std::list<ms::StreamInfo> const streams;
     std::shared_ptr<ms::BasicSurface> stub_surface;
-    ms::SurfaceCreationParameters default_params;
     std::shared_ptr<mg::Buffer> stub_buffer;
     CountingDisplaySyncGroup stub_primary_db;
     CountingDisplaySyncGroup stub_secondary_db;
@@ -201,7 +200,7 @@ TEST_F(SurfaceStackCompositor, swapping_a_surface_that_has_been_added_triggers_a
         null_comp_report, default_delay, false);
     mt_compositor.start();
 
-    stack.add_surface(stub_surface, default_params.input_mode);
+    stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
     stream->submit_buffer(stub_buffer);
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
@@ -227,7 +226,7 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
         null_comp_report, default_delay, false);
     mt_compositor.start();
 
-    stack.add_surface(stub_surface, default_params.input_mode);
+    stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
     ASSERT_THAT(frame_callback, Ne(nullptr));
     frame_callback({ 100, 100 });
 
@@ -257,7 +256,7 @@ TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffe
         null_comp_report, default_delay, false);
     mt_compositor.start();
 
-    stack.add_surface(stub_surface, default_params.input_mode);
+    stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
     ASSERT_THAT(frame_callback, Ne(nullptr));
     frame_callback({ 100, 100 });
 
@@ -275,7 +274,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
         null_comp_report, default_delay, false);
     mt_compositor.start();
 
-    stack.add_surface(stub_surface, default_params.input_mode);
+    stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
     streams.front().stream->submit_buffer(stub_buffer);
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
@@ -290,7 +289,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
 TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
 {
     streams.front().stream->submit_buffer(stub_buffer);
-    stack.add_surface(stub_surface, default_params.input_mode);
+    stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
@@ -309,7 +308,7 @@ TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
 TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
 {
     streams.front().stream->submit_buffer(stub_buffer);
-    stack.add_surface(stub_surface, default_params.input_mode);
+    stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
@@ -327,7 +326,7 @@ TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
 
 TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
 {
-    stack.add_surface(stub_surface, default_params.input_mode);
+    stack.add_surface(stub_surface, mi::InputReceptionMode::normal);
     streams.front().stream->submit_buffer(stub_buffer);
 
     mc::MultiThreadedCompositor mt_compositor(

@@ -56,7 +56,7 @@ struct StubSession : scene::Session
 
     auto create_surface(
         std::shared_ptr<Session> const& session,
-        scene::SurfaceCreationParameters const& params,
+        shell::SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<scene::Surface> override;
 
     void destroy_surface(std::shared_ptr<scene::Surface> const& surface) override;

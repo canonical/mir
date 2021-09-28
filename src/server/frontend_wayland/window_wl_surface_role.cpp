@@ -32,7 +32,6 @@
 
 #include "mir/log.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_creation_parameters.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -236,9 +235,9 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<struct wl_resource*> 
     }
 }
 
-void mf::WindowWlSurfaceRole::set_server_side_decorated(bool ssd)
+void mf::WindowWlSurfaceRole::set_server_side_decorated(bool server_side_decorated)
 {
-    server_side_decorated = ssd;
+    spec().server_side_decorated = server_side_decorated;
     if (weak_scene_surface.lock())
     {
         log_warning("Changing server_side_decorated property after surface created not yet possible");
@@ -437,13 +436,7 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     mods.input_shape = std::vector<geom::Rectangle>{};
     surface.value().populate_surface_data(mods.streams.value(), mods.input_shape.value(), {});
 
-    ms::SurfaceCreationParameters params;
-    if (server_side_decorated)
-    {
-        params.server_side_decorated = server_side_decorated;
-    }
-    params.update_from(mods);
-    auto const scene_surface = shell->create_surface(session, params, observer);
+    auto const scene_surface = shell->create_surface(session, mods, observer);
     weak_scene_surface = scene_surface;
 
     if (mods.min_width)  committed_min_size.width  = mods.min_width.value();

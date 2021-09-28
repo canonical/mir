@@ -45,6 +45,7 @@ class BufferStream;
 namespace shell
 {
 struct StreamSpecification;
+struct SurfaceSpecification;
 }
 namespace graphics
 {
@@ -55,7 +56,6 @@ namespace scene
 {
 class Surface;
 class SurfaceObserver;
-struct SurfaceCreationParameters;
 
 /// A single connection to a client application
 /// Every mirclient session and wl_client maps to a scene::Session
@@ -88,7 +88,7 @@ public:
     /// \return a newly created surface
     virtual auto create_surface(
         std::shared_ptr<Session> const& session,
-        SurfaceCreationParameters const& params,
+        shell::SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<Surface> = 0;
     virtual void destroy_surface(std::shared_ptr<Surface> const& surface) = 0;
     virtual auto surface_after(std::shared_ptr<Surface> const& surface) const -> std::shared_ptr<Surface> = 0;

@@ -62,9 +62,9 @@ struct IgnoredRequests : mt::TestWindowManagerTools, WithParamInterface<IgnoredR
     {
         Window window;
 
-        mir::scene::SurfaceCreationParameters creation_parameters;
+        mir::shell::SurfaceSpecification creation_parameters;
         creation_parameters.type = mir_window_type_normal;
-        creation_parameters.size = window_size;
+        creation_parameters.set_size(window_size);
 
         EXPECT_CALL(*window_manager_policy, advise_new_window(_))
             .WillOnce(
@@ -90,9 +90,9 @@ struct IgnoredRequests : mt::TestWindowManagerTools, WithParamInterface<IgnoredR
 
     auto create_never_before_seen_window() -> Window
     {
-        mir::scene::SurfaceCreationParameters creation_parameters;
+        mir::shell::SurfaceSpecification creation_parameters;
         creation_parameters.type = mir_window_type_normal;
-        creation_parameters.size = window_size;
+        creation_parameters.set_size(window_size);
 
         return Window{session, create_surface(session, creation_parameters)};
     }

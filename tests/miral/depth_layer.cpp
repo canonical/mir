@@ -40,7 +40,7 @@ struct DepthLayer : mt::TestWindowManagerTools, WithParamInterface<MirDepthLayer
         basic_window_manager.add_session(session);
     }
 
-    auto create_window(mir::scene::SurfaceCreationParameters creation_parameters) -> Window
+    auto create_window(mir::shell::SurfaceSpecification creation_parameters) -> Window
     {
         Window result;
 
@@ -67,7 +67,7 @@ TEST_P(DepthLayer, creation_depth_layer_is_applied)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.depth_layer = layer;
         window = create_window(params);
     }
@@ -85,7 +85,7 @@ TEST_P(DepthLayer, modify_surface_updates_depth_layer)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         window = create_window(params);
     }
     auto const& info = basic_window_manager.info_for(window);
@@ -108,7 +108,7 @@ TEST_P(DepthLayer, modify_window_updates_depth_layer)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.type = mir_window_type_normal;
         window = create_window(params);
     }
@@ -132,14 +132,14 @@ TEST_P(DepthLayer, child_created_on_same_layer_as_parent)
 
     Window parent_window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.depth_layer = layer;
         parent_window = create_window(params);
     }
 
     Window child_window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.parent = parent_window;
         child_window = create_window(params);
     }
@@ -157,7 +157,7 @@ TEST_P(DepthLayer, child_created_on_specific_layer_if_set)
 
     Window parent_window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.depth_layer = mir_depth_layer_above;
         parent_window = create_window(params);
     }
@@ -165,7 +165,7 @@ TEST_P(DepthLayer, child_created_on_specific_layer_if_set)
 
     Window child_window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.parent = parent_window;
         params.depth_layer = layer;
         child_window = create_window(params);
@@ -184,14 +184,14 @@ TEST_P(DepthLayer, child_on_default_layer_moved_with_parent)
 
     Window parent_window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         parent_window = create_window(params);
     }
     std::shared_ptr<mir::scene::Surface> parent_surface = parent_window;
 
     Window child_window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.parent = parent_window;
         child_window = create_window(params);
     }
@@ -216,14 +216,14 @@ TEST_P(DepthLayer, child_on_explicit_layer_moved_with_parent)
 
     Window parent_window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         parent_window = create_window(params);
     }
     std::shared_ptr<mir::scene::Surface> parent_surface = parent_window;
 
     Window child_window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.parent = parent_window;
         params.depth_layer = mir_depth_layer_application;
         child_window = create_window(params);
@@ -246,21 +246,21 @@ TEST_P(DepthLayer, grand_child_moved_with_grand_parent)
 
     Window parent_window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         parent_window = create_window(params);
     }
     std::shared_ptr<mir::scene::Surface> parent_surface = parent_window;
 
     Window child_window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.parent = parent_window;
         child_window = create_window(params);
     }
 
     Window grand_child_window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.parent = child_window;
         grand_child_window = create_window(params);
     }

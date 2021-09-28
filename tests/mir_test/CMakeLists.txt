@@ -13,6 +13,7 @@ add_library(mir-public-test OBJECT
   popen.cpp
   signal.cpp
   spin_wait.cpp
+  make_surface_spec.cpp
 )
 
 target_link_libraries(mir-public-test

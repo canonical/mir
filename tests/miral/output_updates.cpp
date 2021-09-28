@@ -38,7 +38,7 @@ struct OutputUpdates : mt::TestWindowManagerTools
         basic_window_manager.add_session(session);
     }
 
-    auto create_window(mir::scene::SurfaceCreationParameters creation_parameters) -> Window
+    auto create_window(mir::shell::SurfaceSpecification creation_parameters) -> Window
     {
         Window result;
 
@@ -158,7 +158,7 @@ TEST_F(OutputUpdates, maximized_window_not_moved_when_new_output_connected)
     auto display_config_a_b = create_fake_display_configuration({display_area_a, display_area_b});
     notify_configuration_applied(display_config_a);
 
-    mir::scene::SurfaceCreationParameters creation_parameters;
+    mir::shell::SurfaceSpecification creation_parameters;
     creation_parameters.type = mir_window_type_normal;
     creation_parameters.state = mir_window_state_maximized;
 
@@ -180,7 +180,7 @@ TEST_F(OutputUpdates, maximized_window_moved_with_its_output)
     auto display_config_b = create_fake_display_configuration({display_area_b});
     notify_configuration_applied(display_config_a);
 
-    mir::scene::SurfaceCreationParameters creation_parameters;
+    mir::shell::SurfaceSpecification creation_parameters;
     creation_parameters.type = mir_window_type_normal;
     creation_parameters.state = mir_window_state_maximized;
 
@@ -215,7 +215,7 @@ TEST_F(OutputUpdates, maximized_window_moved_when_its_output_disconnected)
     auto display_config_a_b = create_fake_display_configuration({display_area_a, display_area_b});
     notify_configuration_applied(display_config_a_b);
 
-    mir::scene::SurfaceCreationParameters creation_parameters;
+    mir::shell::SurfaceSpecification creation_parameters;
     creation_parameters.type = mir_window_type_normal;
     creation_parameters.state = mir_window_state_maximized;
     creation_parameters.output_id = mir::graphics::DisplayConfigurationOutputId{2};
@@ -246,7 +246,7 @@ TEST_F(OutputUpdates, maximized_window_moved_with_its_logical_output_group)
 
     notify_configuration_applied(display_config_a);
 
-    mir::scene::SurfaceCreationParameters creation_parameters;
+    mir::shell::SurfaceSpecification creation_parameters;
     creation_parameters.type = mir_window_type_normal;
     creation_parameters.state = mir_window_state_maximized;
 
@@ -286,7 +286,7 @@ TEST_F(OutputUpdates, maximized_window_moved_when_outputs_become_logical_group)
 
     notify_configuration_applied(display_config_a);
 
-    mir::scene::SurfaceCreationParameters creation_parameters;
+    mir::shell::SurfaceSpecification creation_parameters;
     creation_parameters.type = mir_window_type_normal;
     creation_parameters.state = mir_window_state_maximized;
 

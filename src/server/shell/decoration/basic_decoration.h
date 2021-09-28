@@ -36,7 +36,6 @@ namespace scene
 {
 class Surface;
 class Session;
-class SurfaceCreationParameters;
 }
 namespace input
 {
@@ -92,7 +91,7 @@ protected:
     auto new_window_state() const -> std::unique_ptr<WindowState>;
 
     /// Returns paramaters to create the decoration surface
-    auto creation_params() const -> std::unique_ptr<scene::SurfaceCreationParameters>;
+    auto create_surface() const -> std::shared_ptr<scene::Surface>;
 
     /// Draw the decoration buffers and submit them to the surface
     /// Current states are stored int window_state and input_state members

@@ -44,7 +44,7 @@ struct RaiseTree : mt::TestWindowManagerTools
     {
         notify_configuration_applied(create_fake_display_configuration({display_area}));
 
-        mir::scene::SurfaceCreationParameters creation_parameters;
+        mir::shell::SurfaceSpecification creation_parameters;
         basic_window_manager.add_session(session);
 
         EXPECT_CALL(*window_manager_policy, advise_new_window(_))
@@ -52,17 +52,17 @@ struct RaiseTree : mt::TestWindowManagerTools
             .WillOnce(Invoke([this](WindowInfo const& window_info){ child = window_info.window(); }))
             .WillOnce(Invoke([this](WindowInfo const& window_info){ another_window = window_info.window(); }));
 
-        creation_parameters.size = initial_parent_size;
+        creation_parameters.set_size(initial_parent_size);
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
 
         creation_parameters.type = mir_window_type_menu;
         creation_parameters.parent = parent;
-        creation_parameters.size = initial_child_size;
+        creation_parameters.set_size(initial_child_size);
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
 
         creation_parameters.type = mir_window_type_normal;
-        creation_parameters.parent.reset();
-        creation_parameters.size = display_area.size;
+        creation_parameters.parent.consume();
+        creation_parameters.set_size(display_area.size);
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
 
         // Clear the expectations used to capture parent & child

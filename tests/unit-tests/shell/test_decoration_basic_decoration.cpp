@@ -18,7 +18,7 @@
 
 #include "src/server/shell/decoration/basic_decoration.h"
 #include "mir/scene/surface_observer.h"
-#include "mir/scene/surface_creation_parameters.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/input/cursor_images.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
@@ -134,7 +134,7 @@ struct MockShell
 
     MOCK_METHOD3(create_surface, std::shared_ptr<ms::Surface>(
         std::shared_ptr<ms::Session> const&,
-        ms::SurfaceCreationParameters const&,
+        msh::SurfaceSpecification const&,
         std::shared_ptr<ms::SurfaceObserver> const&));
 
     MOCK_METHOD2(destroy_surface, void(
@@ -150,11 +150,11 @@ struct DecorationBasicDecoration
         ON_CALL(shell, create_surface(_, _, _))
             .WillByDefault(Invoke([this](
                     std::shared_ptr<ms::Session> const&,
-                    ms::SurfaceCreationParameters const& params,
+                    msh::SurfaceSpecification const& params,
                     std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<ms::Surface>
                 {
                     creation_params = params;
-                    decoration_surface.resize(params.size);
+                    decoration_surface.resize({params.width.value(), params.height.value()});
                     decoration_surface.add_observer(observer);
                     return mt::fake_shared(decoration_surface);
                 }));
@@ -190,7 +190,7 @@ struct DecorationBasicDecoration
     std::shared_ptr<NiceMock<mtd::MockSceneSession>> session{std::make_shared<NiceMock<mtd::MockSceneSession>>()};
     StrictMock<MockSurface> window_surface{session};
     StrictMock<MockSurface> decoration_surface{session};
-    ms::SurfaceCreationParameters creation_params;
+    msh::SurfaceSpecification creation_params;
     NiceMock<mtd::MockBufferStream> buffer_stream;
 };
 
@@ -283,8 +283,10 @@ TEST_F(DecorationBasicDecoration, can_be_created)
 
 TEST_F(DecorationBasicDecoration, decoration_window_creation_params)
 {
-    ASSERT_THAT(creation_params.parent.lock(), Eq(mt::fake_shared(window_surface)));
-    ASSERT_THAT(creation_params.size, Eq(window_surface.window_size()));
+    ASSERT_TRUE(creation_params.parent.is_set());
+    EXPECT_THAT(creation_params.parent.value().lock(), Eq(mt::fake_shared(window_surface)));
+    EXPECT_THAT(creation_params.width, Eq(window_surface.window_size().width));
+    EXPECT_THAT(creation_params.height, Eq(window_surface.window_size().height));
 }
 
 TEST_F(DecorationBasicDecoration, decoration_surface_removed_from_session_on_destroy)

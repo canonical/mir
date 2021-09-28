@@ -34,7 +34,7 @@ struct InitialWindowPlacement : mt::TestWindowManagerTools
         basic_window_manager.add_session(session);
     }
 
-    auto create_window(mir::scene::SurfaceCreationParameters creation_parameters) -> Window
+    auto create_window(mir::shell::SurfaceSpecification creation_parameters) -> Window
     {
         Window result;
 
@@ -65,8 +65,8 @@ TEST_F(InitialWindowPlacement, window_is_not_placed_off_screen_when_existing_win
     Window first;
     {
         // Setting the top left in the initial params wasn't working, so we first create the window then move it
-        mir::scene::SurfaceCreationParameters params;
-        params.size = first_size;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(first_size);
         first = create_window(params);
         miral::WindowSpecification spec;
         spec.top_left() = first_top_left;
@@ -78,8 +78,8 @@ TEST_F(InitialWindowPlacement, window_is_not_placed_off_screen_when_existing_win
 
     Window second;
     {
-        mir::scene::SurfaceCreationParameters params;
-        params.size = second_size;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(second_size);
         second = create_window(params);
     }
     Rectangle second_area{second.top_left(), second.size()};
@@ -95,7 +95,7 @@ TEST_F(InitialWindowPlacement, initially_maximized_window_covers_output)
     Window window;
     {
         // Setting the top left in the initial params wasn't working, so we first create the window then move it
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_maximized;
         window = create_window(params);
     }
@@ -114,7 +114,7 @@ TEST_F(InitialWindowPlacement, initially_maximized_window_covers_only_one_output
     Window window;
     {
         // Setting the top left in the initial params wasn't working, so we first create the window then move it
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.state = mir_window_state_maximized;
         window = create_window(params);
     }

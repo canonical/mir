@@ -73,7 +73,7 @@ auto optional_value_or_default(mir::optional_value<Value> const& optional_value,
 
 miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) :
     window{window},
-    name{params.name().value()},
+    name{optional_value_or_default(params.name(), {""})},
     type{optional_value_or_default(params.type(), mir_window_type_normal)},
     state{optional_value_or_default(params.state(), mir_window_state_restored)},
     restore_rect{},

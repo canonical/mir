@@ -35,7 +35,7 @@ struct ResizeAndMove : mt::TestWindowManagerTools
         basic_window_manager.add_session(session);
     }
 
-    auto create_window(mir::scene::SurfaceCreationParameters creation_parameters) -> Window
+    auto create_window(mir::shell::SurfaceSpecification creation_parameters) -> Window
     {
         Window result;
 
@@ -64,9 +64,9 @@ TEST_F(ResizeAndMove, can_move_window)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
+        mir::shell::SurfaceSpecification params;
         params.top_left = start;
-        params.size = Size{50, 50};
+        params.set_size({50, 50});
         window = create_window(params);
     }
 
@@ -86,8 +86,8 @@ TEST_F(ResizeAndMove, can_resize)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
-        params.size = start;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(start);
         window = create_window(params);
     }
 
@@ -108,8 +108,8 @@ TEST_F(ResizeAndMove, can_not_be_resized_smaller_than_min_size)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
-        params.size = start;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(start);
         params.min_width = min.width;
         params.min_height = min.height;
         window = create_window(params);
@@ -132,8 +132,8 @@ TEST_F(ResizeAndMove, can_not_be_resized_larger_than_max_size)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
-        params.size = start;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(start);
         params.max_width = max.width;
         params.max_height = max.height;
         window = create_window(params);
@@ -156,8 +156,8 @@ TEST_F(ResizeAndMove, min_width_can_be_set_without_height)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
-        params.size = start;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(start);
         params.min_width = min_width;
         window = create_window(params);
     }
@@ -179,8 +179,8 @@ TEST_F(ResizeAndMove, min_height_can_be_set_without_width)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
-        params.size = start;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(start);
         params.min_height = min_height;
         window = create_window(params);
     }
@@ -202,8 +202,8 @@ TEST_F(ResizeAndMove, max_width_can_be_set_without_height)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
-        params.size = start;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(start);
         params.max_width = max_width;
         window = create_window(params);
     }
@@ -225,8 +225,8 @@ TEST_F(ResizeAndMove, max_height_can_be_set_without_width)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
-        params.size = start;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(start);
         params.max_height = max_height;
         window = create_window(params);
     }
@@ -247,8 +247,8 @@ TEST_F(ResizeAndMove, min_size_applied_when_set)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
-        params.size = start;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(start);
         window = create_window(params);
     }
 
@@ -269,8 +269,8 @@ TEST_F(ResizeAndMove, max_size_applied_when_set)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
-        params.size = start;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(start);
         window = create_window(params);
     }
 
@@ -292,8 +292,8 @@ TEST_F(ResizeAndMove, min_size_respected_when_set_in_same_commit_as_resize)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
-        params.size = start;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(start);
         window = create_window(params);
     }
 
@@ -316,8 +316,8 @@ TEST_F(ResizeAndMove, max_size_respected_when_set_in_same_commit_as_resize)
 
     Window window;
     {
-        mir::scene::SurfaceCreationParameters params;
-        params.size = start;
+        mir::shell::SurfaceSpecification params;
+        params.set_size(start);
         window = create_window(params);
     }
 

@@ -24,7 +24,6 @@
 #include <miral/canonical_window_manager.h>
 
 #include <mir/shell/surface_specification.h>
-#include <mir/scene/surface_creation_parameters.h>
 #include <mir/scene/surface.h>
 
 #include <gtest/gtest.h>
@@ -86,7 +85,7 @@ public:
 
     static auto create_surface(
         std::shared_ptr<mir::scene::Session> const& session,
-        mir::scene::SurfaceCreationParameters const& params) -> std::shared_ptr<mir::scene::Surface>;
+        mir::shell::SurfaceSpecification const& params) -> std::shared_ptr<mir::scene::Surface>;
 
     auto static create_fake_display_configuration(std::vector<miral::Rectangle> const& outputs)
         -> std::shared_ptr<graphics::DisplayConfiguration const>;

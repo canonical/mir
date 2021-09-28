@@ -28,7 +28,7 @@
 namespace mir
 {
 namespace geometry { struct Rectangle; }
-namespace scene { class PromptSession; class Session; class Surface; struct SurfaceCreationParameters; }
+namespace scene { class PromptSession; class Session; class Surface; }
 
 namespace shell
 {

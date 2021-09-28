@@ -35,6 +35,13 @@ auto msh::operator==(StreamSpecification const& lhs, StreamSpecification const& 
         lhs.size == rhs.size;
 }
 
+auto msh::operator==(StreamCursor const& lhs, StreamCursor const& rhs) -> bool
+{
+    return
+        lhs.stream.lock() == rhs.stream.lock() &&
+        lhs.hotspot == rhs.hotspot;
+}
+
 bool msh::SurfaceSpecification::is_empty() const
 {
     // You know, compile-time reflection would be pretty
@@ -63,11 +70,13 @@ bool msh::SurfaceSpecification::is_empty() const
         !streams.is_set() &&
         !parent.is_set() &&
         !input_shape.is_set() &&
+        !input_mode.is_set() &&
         !shell_chrome.is_set() &&
         !depth_layer.is_set() &&
         !attached_edges.is_set() &&
         !exclusive_rect.is_set() &&
         !application_id.is_set() &&
+        !server_side_decorated.is_set() &&
         !focus_mode.is_set();
 }
 
@@ -131,6 +140,8 @@ void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
         parent = that.parent;
     if (that.input_shape.is_set())
         input_shape = that.input_shape;
+    if (that.input_mode.is_set())
+        input_mode = that.input_mode;
     if (that.shell_chrome.is_set())
         shell_chrome = that.shell_chrome;
     if (that.confine_pointer.is_set())
@@ -147,6 +158,65 @@ void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
         exclusive_rect = that.exclusive_rect;
     if (that.application_id.is_set())
         application_id = that.application_id;
+    if (that.server_side_decorated.is_set())
+        server_side_decorated = that.server_side_decorated;
     if (that.focus_mode.is_set())
         focus_mode = that.focus_mode;
+}
+
+bool msh::operator==(
+    const msh::SurfaceSpecification& lhs,
+    const msh::SurfaceSpecification& rhs)
+{
+    return
+        lhs.name == rhs.name &&
+        lhs.width == rhs.width &&
+        lhs.height == rhs.height &&
+        lhs.top_left == rhs.top_left &&
+        lhs.buffer_usage == rhs.buffer_usage &&
+        lhs.pixel_format == rhs.pixel_format &&
+        lhs.output_id == rhs.output_id &&
+        lhs.state == rhs.state &&
+        lhs.type == rhs.type &&
+        lhs.preferred_orientation == rhs.preferred_orientation &&
+        lhs.parent_id == rhs.parent_id &&
+        lhs.aux_rect == rhs.aux_rect &&
+        lhs.edge_attachment == rhs.edge_attachment &&
+        lhs.placement_hints == rhs.placement_hints &&
+        lhs.surface_placement_gravity == rhs.surface_placement_gravity &&
+        lhs.aux_rect_placement_gravity == rhs.aux_rect_placement_gravity &&
+        lhs.aux_rect_placement_offset_x == rhs.aux_rect_placement_offset_x &&
+        lhs.aux_rect_placement_offset_y == rhs.aux_rect_placement_offset_y &&
+        (   // parent check passes if neither have a parent, or if they both have parents and they're equal
+            (!lhs.parent && !rhs.parent) ||
+            (lhs.parent && rhs.parent && lhs.parent.value().lock() == rhs.parent.value().lock())
+        ) &&
+        lhs.min_width == rhs.min_width &&
+        lhs.min_height == rhs.min_height &&
+        lhs.max_width == rhs.max_width &&
+        lhs.max_height == rhs.max_height &&
+        lhs.width_inc == rhs.width_inc &&
+        lhs.height_inc == rhs.height_inc &&
+        lhs.min_aspect == rhs.min_aspect &&
+        lhs.max_aspect == rhs.max_aspect &&
+        lhs.input_shape == rhs.input_shape &&
+        lhs.input_mode == rhs.input_mode &&
+        lhs.shell_chrome == rhs.shell_chrome &&
+        lhs.streams == rhs.streams &&
+        lhs.confine_pointer == rhs.confine_pointer &&
+        lhs.cursor_image == rhs.cursor_image &&
+        lhs.stream_cursor == rhs.stream_cursor &&
+        lhs.depth_layer == rhs.depth_layer &&
+        lhs.attached_edges == rhs.attached_edges &&
+        lhs.exclusive_rect == rhs.exclusive_rect &&
+        lhs.application_id == rhs.application_id &&
+        lhs.server_side_decorated == rhs.server_side_decorated &&
+        lhs.focus_mode == rhs.focus_mode;
+}
+
+bool msh::operator!=(
+    const msh::SurfaceSpecification& lhs,
+    const msh::SurfaceSpecification& rhs)
+{
+    return !(lhs == rhs);
 }

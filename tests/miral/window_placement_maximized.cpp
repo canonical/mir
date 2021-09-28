@@ -37,7 +37,7 @@ struct WindowPlacementMaximized : mt::TestWindowManagerTools
         basic_window_manager.add_session(session);
     }
 
-    auto create_window(ms::SurfaceCreationParameters creation_parameters) -> Window
+    auto create_window(msh::SurfaceSpecification creation_parameters) -> Window
     {
         Window result;
 
@@ -63,7 +63,7 @@ TEST_F(WindowPlacementMaximized, window_is_initially_placed_correctly)
 {
     Window window;
     {
-        ms::SurfaceCreationParameters params;
+        msh::SurfaceSpecification params;
         params.state = mir_window_state_maximized;
         window = create_window(params);
     }
@@ -78,9 +78,9 @@ TEST_F(WindowPlacementMaximized, window_is_placed_correctly_when_maximized)
 {
     Window window;
     {
-        ms::SurfaceCreationParameters params;
+        msh::SurfaceSpecification params;
         params.state = mir_window_state_restored;
-        params.size = Size{100, 100};
+        params.set_size({100, 100});
         window = create_window(params);
     }
     auto const& info = basic_window_manager.info_for(window);
@@ -102,9 +102,9 @@ TEST_F(WindowPlacementMaximized, window_size_maintained_after_maximization_and_r
 
     Window window;
     {
-        ms::SurfaceCreationParameters params;
+        msh::SurfaceSpecification params;
         params.state = mir_window_state_restored;
-        params.size = window_size;
+        params.set_size(window_size);
         window = create_window(params);
     }
     auto const& info = basic_window_manager.info_for(window);
@@ -129,7 +129,7 @@ TEST_F(WindowPlacementMaximized, initially_maximized_window_given_smaller_size_w
 {
     Window window;
     {
-        ms::SurfaceCreationParameters params;
+        msh::SurfaceSpecification params;
         params.state = mir_window_state_maximized;
         window = create_window(params);
     }
@@ -158,9 +158,9 @@ TEST_F(WindowPlacementMaximized, window_can_be_maximized_onto_a_logical_output_g
 
     Window window;
     {
-        ms::SurfaceCreationParameters params;
+        msh::SurfaceSpecification params;
         params.state = mir_window_state_restored;
-        params.size = Size{100, 100};
+        params.set_size({100, 100});
         window = create_window(params);
     }
     auto const& info = basic_window_manager.info_for(window);
@@ -185,7 +185,7 @@ TEST_F(WindowPlacementMaximized, maximized_window_is_placed_correctly_when_logic
 
     Window window;
     {
-        ms::SurfaceCreationParameters params;
+        msh::SurfaceSpecification params;
         params.state = mir_window_state_maximized;
         window = create_window(params);
     }

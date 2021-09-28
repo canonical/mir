@@ -48,9 +48,9 @@ struct DisplayConfiguration : mt::TestWindowManagerTools
 
     void create_fullscreen_window()
     {
-        mir::scene::SurfaceCreationParameters creation_parameters;
+        mir::shell::SurfaceSpecification creation_parameters;
         creation_parameters.type = mir_window_type_normal;
-        creation_parameters.size = initial_window_size;
+        creation_parameters.set_size(initial_window_size);
         creation_parameters.state = mir_window_state_fullscreen;
         creation_parameters.output_id = mir::graphics::DisplayConfigurationOutputId{0};
 

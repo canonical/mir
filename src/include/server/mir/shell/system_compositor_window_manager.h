@@ -68,10 +68,10 @@ private:
 
     auto add_surface(
         std::shared_ptr<scene::Session> const& session,
-        scene::SurfaceCreationParameters const& params,
+        shell::SurfaceSpecification const& params,
         std::function<std::shared_ptr<scene::Surface>(
             std::shared_ptr<scene::Session> const& session,
-            scene::SurfaceCreationParameters const& params)> const& build) -> std::shared_ptr<scene::Surface> override;
+            shell::SurfaceSpecification const& params)> const& build) -> std::shared_ptr<scene::Surface> override;
 
     void modify_surface(
         std::shared_ptr<scene::Session> const& session,
