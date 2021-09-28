@@ -271,7 +271,6 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
     auto const relative_y_value = 0.0f;
 
     // TODO: Add descrete scroll to pointer events and source it from libinput_event_pointer_get_axis_value_discrete()
-    // if libinput_event_pointer_get_axis_source(pointer) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL
 
     auto hscroll_value = 0.0f;
     auto vscroll_value = 0.0f;
@@ -288,8 +287,33 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
     }
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
-    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, relative_x_value,
-                                  relative_y_value);
+
+    switch (libinput_event_pointer_get_axis_source(pointer))
+    {
+    case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL:
+        return builder->pointer_axis_event(
+            mir_pointer_axis_source_wheel, time, action, button_state, 0, 0, hscroll_value, vscroll_value,
+            relative_x_value, relative_y_value);
+
+    case LIBINPUT_POINTER_AXIS_SOURCE_FINGER:
+        return builder->pointer_axis_event(
+            mir_pointer_axis_source_finger, time, action, button_state, 0, 0, hscroll_value, vscroll_value,
+            relative_x_value, relative_y_value);
+
+    case LIBINPUT_POINTER_AXIS_SOURCE_CONTINUOUS:
+        return builder->pointer_axis_event(
+            mir_pointer_axis_source_continuous, time, action, button_state, 0, 0, hscroll_value, vscroll_value,
+            relative_x_value, relative_y_value);
+
+    case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL_TILT:
+        return builder->pointer_axis_event(
+            mir_pointer_axis_source_wheel_tilt, time, action, button_state, 0, 0, hscroll_value, vscroll_value,
+            relative_x_value, relative_y_value);
+
+    default:
+        return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, relative_x_value,
+                                      relative_y_value);
+    }
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* touch)
