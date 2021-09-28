@@ -112,6 +112,22 @@ EventUPtr make_pointer_event(
     float relative_x_value,
     float relative_y_value);
 
+// Pointer axis event
+EventUPtr make_pointer_axis_event(
+    MirPointerAxisSource axis_source,
+    MirInputDeviceId device_id,
+    std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& mac,
+    MirInputEventModifiers modifiers,
+    MirPointerAction action,
+    MirPointerButtons buttons_pressed,
+    float x_axis_value,
+    float y_axis_value,
+    float hscroll_value,
+    float vscroll_value,
+    float relative_x_value,
+    float relative_y_value);
+
 // Input configuration event
 EventUPtr make_input_configure_event(
     std::chrono::nanoseconds timestamp,

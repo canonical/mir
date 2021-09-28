@@ -94,6 +94,14 @@ struct MockEventBuilder : mi::EventBuilder
                                        return builder.pointer_event(time, action, buttons, x, y,
                                                                     hscroll, vscroll, relative_x, relative_y);
                                   }));
+
+        ON_CALL(*this, pointer_axis_event(_, _, _, _, _, _, _, _, _, _))
+            .WillByDefault(Invoke([this](MirPointerAxisSource axis_source, std::optional<Timestamp> time, MirPointerAction action, MirPointerButtons buttons, float x,
+                                         float y, float hscroll, float vscroll, float relative_x, float relative_y)
+                                  {
+                                       return builder.pointer_axis_event(axis_source, time, action, buttons, x, y,
+                                                                    hscroll, vscroll, relative_x, relative_y);
+                                  }));
     }
     using EventBuilder::Timestamp;
 
@@ -104,6 +112,12 @@ struct MockEventBuilder : mi::EventBuilder
     MOCK_METHOD9(
         pointer_event,
         mir::EventUPtr(std::optional<Timestamp>, MirPointerAction, MirPointerButtons, float, float, float, float, float, float));
+
+    MOCK_METHOD10(
+        pointer_axis_event,
+        mir::EventUPtr(MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
+        MirPointerButtons buttons_pressed, float x_position, float y_position, float hscroll_value, float vscroll_value,
+        float relative_x_value, float relative_y_value));
 };
 
 struct LibInputDevice : public ::testing::Test

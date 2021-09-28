@@ -72,6 +72,15 @@ public:
         float hscroll_value, float vscroll_value,
         float relative_x_value, float relative_y_value) override;
 
+    EventUPtr pointer_axis_event(
+        MirPointerAxisSource axis_source,
+        std::optional<Timestamp> source_timestamp,
+        MirPointerAction action,
+        MirPointerButtons buttons_pressed,
+        float x, float y,
+        float hscroll_value, float vscroll_value,
+        float relative_x_value, float relative_y_value) override;
+
 private:
     auto calibrate_timestamp(std::optional<Timestamp> source_timestamp) -> Timestamp;
 
