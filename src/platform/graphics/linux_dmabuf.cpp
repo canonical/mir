@@ -738,6 +738,20 @@ private:
                 }
             }
         }
+
+        // The specification of zwp_linux_buffer_params_v1.add says:
+        //
+        //        Warning: It should be an error if the format/modifier pair was not
+        //        advertised with the modifier event. This is not enforced yet because
+        //        some implementations always accept `DRM_FORMAT_MOD_INVALID`. Also
+        //        version 2 of this protocol does not have the modifier event.
+        //
+        // So don't enforce the error for this case
+        if (requested_modifier == DRM_FORMAT_MOD_INVALID)
+        {
+            return Tex2D;
+        }
+
         BOOST_THROW_EXCEPTION((
             mw::ProtocolError{
                 resource,
