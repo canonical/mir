@@ -43,6 +43,9 @@ struct MirPointerEvent : MirInputEvent
 
     auto clone() const -> MirPointerEvent* override;
 
+    auto axis_source() const -> MirPointerAxisSource;
+    void set_axis_source(MirPointerAxisSource source);
+
     float x() const;
     void set_x(float x);
 
@@ -71,6 +74,7 @@ struct MirPointerEvent : MirInputEvent
     MirBlob* dnd_handle() const;
 
 private:
+    MirPointerAxisSource axis_source_ = mir_pointer_axis_source_none;
     float x_ = 0.0;
     float y_ = 0.0;
     float dx_ = 0.0;

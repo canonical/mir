@@ -47,6 +47,7 @@ MIR_COMMON_2.5 {
   mir_omnidirectional_resize_cursor_name;
   mir_open_hand_cursor_name;
   mir_pointer_event_action;
+  mir_pointer_event_axis_source;
   mir_pointer_event_axis_value;
   mir_pointer_event_buttons;
   mir_pointer_event_button_state;
@@ -71,6 +72,7 @@ MIR_COMMON_2.5 {
     mir::events::make_input_configure_event*;
     mir::events::make_key_event*;
     mir::events::make_keymap_event*;
+    mir::events::make_pointer_axis_event*;
     mir::events::make_pointer_event*;
     mir::events::make_prompt_session_state_event*;
     mir::events::make_start_drag_and_drop_event*;

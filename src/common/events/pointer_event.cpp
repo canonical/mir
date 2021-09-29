@@ -168,3 +168,13 @@ MirBlob* MirPointerEvent::dnd_handle() const
 
     return blob.release();
 }
+
+auto MirPointerEvent::axis_source() const -> MirPointerAxisSource
+{
+    return axis_source_;
+}
+
+void MirPointerEvent::set_axis_source(MirPointerAxisSource source)
+{
+    axis_source_ = source;
+}

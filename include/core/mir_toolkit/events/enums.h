@@ -196,6 +196,17 @@ typedef enum {
 } MirPointerButton;
 typedef unsigned int MirPointerButtons;
 
+/**
+ * Identifiers for pointer event source
+ */
+typedef enum {
+    mir_pointer_axis_source_none,
+    mir_pointer_axis_source_wheel,
+    mir_pointer_axis_source_finger,
+    mir_pointer_axis_source_continuous,
+    mir_pointer_axis_source_wheel_tilt
+} MirPointerAxisSource;
+
 #ifdef __cplusplus
 }
 #endif

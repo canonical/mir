@@ -108,6 +108,8 @@ private:
 
     void pointer_frame(wl_pointer* pointer) override;
 
+    void pointer_axis_source(wl_pointer* pointer, uint32_t axis_source) override;
+
     void pointer_enter(wl_pointer* pointer, uint32_t serial, wl_surface* surface, wl_fixed_t x, wl_fixed_t y) override;
 
     void pointer_leave(wl_pointer* pointer, uint32_t serial, wl_surface* surface) override;
@@ -141,6 +143,7 @@ private:
     geometry::PointF pointer_pos;
     geometry::DisplacementF pointer_scroll;
     std::chrono::nanoseconds pointer_time;
+    MirPointerAxisSource pointer_axis_source_ = mir_pointer_axis_source_none;
     std::vector<events::ContactState> touch_contacts;
     std::chrono::nanoseconds touch_time;
 
