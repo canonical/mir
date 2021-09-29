@@ -178,3 +178,23 @@ void MirPointerEvent::set_axis_source(MirPointerAxisSource source)
 {
     axis_source_ = source;
 }
+
+float MirPointerEvent::vscroll_discrete() const
+{
+    return vscroll_discrete_;
+}
+
+void MirPointerEvent::set_vscroll_discrete(float v)
+{
+    vscroll_discrete_ = v;
+}
+
+float MirPointerEvent::hscroll_discrete() const
+{
+    return hscroll_discrete_;
+}
+
+void MirPointerEvent::set_hscroll_discrete(float h)
+{
+    hscroll_discrete_ = h;
+}

@@ -49,7 +49,9 @@ public:
     libinput_event* setup_pointer_event(libinput_device* dev, uint64_t event_time, float relatve_x, float relatve_y);
     libinput_event* setup_absolute_pointer_event(libinput_device* dev, uint64_t event_time, float x, float y);
     libinput_event* setup_button_event(libinput_device* dev, uint64_t event_time, int button, libinput_button_state state);
-    libinput_event* setup_axis_event(libinput_device* dev, uint64_t event_time, double horizontal, double vertical);
+    libinput_event* setup_axis_event(
+        libinput_device* dev, uint64_t event_time, double horizontal, double vertical,
+        double horizontal_discrete = 0.0, double vertical_discrete = 0.0);
     libinput_event* setup_finger_axis_event(libinput_device* dev, uint64_t event_time, double horizontal, double vertical);
     libinput_event* setup_device_add_event(libinput_device* dev);
     libinput_event* setup_device_remove_event(libinput_device* dev);

@@ -232,9 +232,22 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
         break;
 
     case mir_pointer_axis_source_wheel:
+    {
         send_axis_source_event(AxisSource::wheel);
+
+        if (auto const h_scroll_discrete = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll_discrete))
+        {
+            send_axis_discrete_event(Axis::horizontal_scroll, h_scroll_discrete);
+        }
+
+        if (auto const v_scroll_discrete = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll_discrete))
+        {
+            send_axis_discrete_event(Axis::horizontal_scroll, v_scroll_discrete);
+        }
+
         needs_frame = true;
         break;
+    }
 
     case mir_pointer_axis_source_finger:
         send_axis_source_event(AxisSource::finger);
@@ -310,10 +323,10 @@ void mf::WlPointer::enter_or_motion(MirPointerEvent const* event, WlSurface& roo
         needs_frame = true;
         destroy_listener_id = target_surface->add_destroy_listener(
             [this]()
-            {
+                {
                 leave(std::nullopt);
                 maybe_frame();
-            });
+                });
         surface_under_cursor = mw::make_weak(target_surface);
     }
     else if (position_on_target != current_position)
