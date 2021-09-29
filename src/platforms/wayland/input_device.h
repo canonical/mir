@@ -116,7 +116,7 @@ private:
 
 public:
     void pointer_axis_motion(
-        uint32_t pointer_axis_source, std::chrono::nanoseconds event_time, geometry::PointF const& pos,
+        MirPointerAxisSource pointer_axis_source, std::chrono::nanoseconds event_time, geometry::PointF const& pos,
         geometry::DisplacementF const& scroll) override;
 };
 

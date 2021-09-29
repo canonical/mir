@@ -237,7 +237,7 @@ void miw::PointerInputDevice::pointer_motion(
 }
 
 void miw::PointerInputDevice::pointer_axis_motion(
-    uint32_t pointer_axis_source,
+    MirPointerAxisSource pointer_axis_source,
     std::chrono::nanoseconds event_time,
     mir::geometry::PointF const& pos,
     mir::geometry::DisplacementF const& scroll)
@@ -247,7 +247,7 @@ void miw::PointerInputDevice::pointer_axis_motion(
         auto const movement = pos - cached_pos;
         cached_pos = pos;
         return b->pointer_axis_event(
-            MirPointerAxisSource(pointer_axis_source+1),
+            pointer_axis_source,
             event_time,
             mir_pointer_action_motion,
             button_state,

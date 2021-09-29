@@ -288,27 +288,26 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
 
+    auto builder_pointer_axis_event = [&, this](MirPointerAxisSource axis_source)
+        {
+            return builder->pointer_axis_event(
+                axis_source, time, action, button_state, 0, 0, hscroll_value, vscroll_value,
+                relative_x_value, relative_y_value);
+        };
+
     switch (libinput_event_pointer_get_axis_source(pointer))
     {
     case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL:
-        return builder->pointer_axis_event(
-            mir_pointer_axis_source_wheel, time, action, button_state, 0, 0, hscroll_value, vscroll_value,
-            relative_x_value, relative_y_value);
+        return builder_pointer_axis_event(mir_pointer_axis_source_wheel);
 
     case LIBINPUT_POINTER_AXIS_SOURCE_FINGER:
-        return builder->pointer_axis_event(
-            mir_pointer_axis_source_finger, time, action, button_state, 0, 0, hscroll_value, vscroll_value,
-            relative_x_value, relative_y_value);
+        return builder_pointer_axis_event(mir_pointer_axis_source_finger);
 
     case LIBINPUT_POINTER_AXIS_SOURCE_CONTINUOUS:
-        return builder->pointer_axis_event(
-            mir_pointer_axis_source_continuous, time, action, button_state, 0, 0, hscroll_value, vscroll_value,
-            relative_x_value, relative_y_value);
+        return builder_pointer_axis_event(mir_pointer_axis_source_continuous);
 
     case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL_TILT:
-        return builder->pointer_axis_event(
-            mir_pointer_axis_source_wheel_tilt, time, action, button_state, 0, 0, hscroll_value, vscroll_value,
-            relative_x_value, relative_y_value);
+        return builder_pointer_axis_event(mir_pointer_axis_source_wheel_tilt);
 
     default:
         return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, relative_x_value,

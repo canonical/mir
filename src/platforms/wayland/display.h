@@ -143,8 +143,7 @@ private:
     geometry::PointF pointer_pos;
     geometry::DisplacementF pointer_scroll;
     std::chrono::nanoseconds pointer_time;
-    static uint32_t const pointer_axis_source_null = ~0u;
-    uint32_t pointer_axis_source_ = pointer_axis_source_null;
+    MirPointerAxisSource pointer_axis_source_ = mir_pointer_axis_source_none;
     std::vector<events::ContactState> touch_contacts;
     std::chrono::nanoseconds touch_time;
 

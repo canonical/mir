@@ -96,8 +96,12 @@ struct MockEventBuilder : mi::EventBuilder
                                   }));
 
         ON_CALL(*this, pointer_axis_event(_, _, _, _, _, _, _, _, _, _))
-            .WillByDefault(Invoke([this](MirPointerAxisSource axis_source, std::optional<Timestamp> time, MirPointerAction action, MirPointerButtons buttons, float x,
-                                         float y, float hscroll, float vscroll, float relative_x, float relative_y)
+            .WillByDefault(
+                Invoke(
+                    [this](
+                        MirPointerAxisSource axis_source, std::optional<Timestamp> time, MirPointerAction action,
+                        MirPointerButtons buttons, float x, float y, float hscroll, float vscroll, float relative_x,
+                        float relative_y)
                                   {
                                        return builder.pointer_axis_event(axis_source, time, action, buttons, x, y,
                                                                     hscroll, vscroll, relative_x, relative_y);

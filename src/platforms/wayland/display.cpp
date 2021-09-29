@@ -72,7 +72,7 @@ class NullPointerInput : public mir::input::wayland::PointerInput
     }
 
     void pointer_axis_motion(
-        uint32_t,
+        MirPointerAxisSource,
         std::chrono::nanoseconds,
         mir::geometry::PointF const&,
         mir::geometry::DisplacementF const&) override
@@ -395,7 +395,7 @@ void mir::graphics::wayland::Display::pointer_frame(wl_pointer* pointer)
     {
         std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
 
-        if (pointer_axis_source_ == pointer_axis_source_null)
+        if (pointer_axis_source_ == mir_pointer_axis_source_none)
         {
             pointer_sink->pointer_motion(pointer_time, pointer_pos, pointer_scroll);
         }
@@ -404,7 +404,7 @@ void mir::graphics::wayland::Display::pointer_frame(wl_pointer* pointer)
             pointer_sink->pointer_axis_motion(pointer_axis_source_, pointer_time, pointer_pos, pointer_scroll);
         }
 
-        pointer_axis_source_ = pointer_axis_source_null;
+        pointer_axis_source_ = mir_pointer_axis_source_none;
         pointer_scroll = {};
     }
 
@@ -570,5 +570,25 @@ bool mir::graphics::wayland::Display::active()
 
 void mir::graphics::wayland::Display::pointer_axis_source(wl_pointer* /*pointer*/, uint32_t axis_source)
 {
-    pointer_axis_source_ = axis_source;
+    switch (axis_source)
+    {
+    case WL_POINTER_AXIS_SOURCE_WHEEL:
+        pointer_axis_source_ = mir_pointer_axis_source_wheel;
+        break;
+
+    case WL_POINTER_AXIS_SOURCE_FINGER:
+        pointer_axis_source_ = mir_pointer_axis_source_finger;
+        break;
+
+    case WL_POINTER_AXIS_SOURCE_CONTINUOUS:
+        pointer_axis_source_ = mir_pointer_axis_source_continuous;
+        break;
+
+    case WL_POINTER_AXIS_SOURCE_WHEEL_TILT:
+        pointer_axis_source_ = mir_pointer_axis_source_wheel_tilt;
+        break;
+
+    default:
+        break;
+    }
 }
