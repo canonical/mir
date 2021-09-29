@@ -241,6 +241,14 @@ public:
         std::shared_ptr<Workspace> const& workspace,
         std::function<void(Window const& window)> const& callback);
 
+    /**
+     * Enable or disable shell chrome (panels, on-screen keyboards, etc) when a window is fullscreen.
+     * @param chrome
+     * @{
+     */
+    void set_fullscreen_shell_chrome(MirShellChrome chrome);
+    auto fullscreen_shell_chrome() const -> MirShellChrome;
+    /** @} */
 /** @} */
 
     /** Multi-thread support

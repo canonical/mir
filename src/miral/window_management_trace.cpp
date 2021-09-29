@@ -670,6 +670,19 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
+void miral::WindowManagementTrace::set_fullscreen_shell_chrome(MirShellChrome chrome)
+try {
+    mir::log_info("%s chrome=%d", __func__, chrome);
+    wrapped.set_fullscreen_shell_chrome(chrome);
+}
+MIRAL_TRACE_EXCEPTION
+
+auto miral::WindowManagementTrace::fullscreen_shell_chrome() const -> MirShellChrome
+try {
+    return wrapped.fullscreen_shell_chrome();
+}
+MIRAL_TRACE_EXCEPTION
+
 auto miral::WindowManagementTrace::place_new_window(
     ApplicationInfo const& app_info,
     WindowSpecification const& requested_specification) -> WindowSpecification

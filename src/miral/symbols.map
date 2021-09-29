@@ -457,5 +457,7 @@ global:
     miral::WindowSpecification::focus_mode*;
     miral::toolkit::mir_keyboard_event_keysym*;
     miral::WindowSpecification::apply_to*;
+    miral::WindowManagerTools::set_fullscreen_shell_chrome*;
+    miral::WindowManagerTools::fullscreen_shell_chrome*;
   };
 } MIRAL_3.2;

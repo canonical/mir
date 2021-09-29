@@ -113,6 +113,9 @@ private:
     void for_each_window_in_workspace(
         std::shared_ptr<Workspace> const& workspace, std::function<void(Window const&)> const& callback) override;
 
+    void set_fullscreen_shell_chrome(MirShellChrome chrome) override;
+    auto fullscreen_shell_chrome() const -> MirShellChrome override;
+
     void handle_request_drag_and_drop(WindowInfo& window_info) override;
 
     void handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event) override;

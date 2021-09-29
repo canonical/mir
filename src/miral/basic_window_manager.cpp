@@ -1405,6 +1405,20 @@ void miral::BasicWindowManager::place_and_size_for_state(
     modifications.size() = rect.size;
 }
 
+void miral::BasicWindowManager::set_fullscreen_shell_chrome(MirShellChrome chrome)
+{
+    if (fullscreen_shell_chrome_ != chrome)
+    {
+        fullscreen_shell_chrome_ = chrome;
+        update_application_zones_and_attached_windows();
+    }
+}
+
+auto miral::BasicWindowManager::fullscreen_shell_chrome() const -> MirShellChrome
+{
+    return fullscreen_shell_chrome_;
+}
+
 void miral::BasicWindowManager::update_attached_and_fullscreen_sets(WindowInfo const& window_info)
 {
     auto const state = window_info.state();
@@ -2716,18 +2730,6 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         }
     }
 
-    // Fullscreen surface should fill the whole area (does not depend on what the zones end up being)
-    for (auto const& window : fullscreen_surfaces)
-    {
-        if (window)
-        {
-            auto& info = info_for(window);
-            auto const rect =
-                policy->confirm_placement_on_display(info, mir_window_state_fullscreen, display_area_for(info)->area);
-            place_and_size(info, rect.top_left, rect.size);
-        }
-    }
-
     for (auto& area : display_areas)
     {
         Rectangle zone_rect = area->area;
@@ -2792,5 +2794,26 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
             policy->advise_application_zone_update(area->application_zone, area->zone_policy_knows_about.value());
         }
         area->zone_policy_knows_about = area->application_zone;
+    }
+
+    // Fullscreen surface should fill the whole area (does not depend on what the zones end up being)
+    for (auto const& window : fullscreen_surfaces)
+    {
+        if (window)
+        {
+            auto& info = info_for(window);
+            auto const area = display_area_for(info);
+            Rectangle rect_proposal;
+            if (fullscreen_shell_chrome_ == mir_shell_chrome_low)
+            {
+                rect_proposal = area->area;
+            }
+            else
+            {
+                rect_proposal = area->application_zone.extents();
+            }
+            auto const rect = policy->confirm_placement_on_display(info, mir_window_state_fullscreen, rect_proposal);
+            place_and_size(info, rect.top_left, rect.size);
+        }
     }
 }
