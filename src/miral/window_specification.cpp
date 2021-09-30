@@ -441,6 +441,16 @@ auto miral::WindowSpecification::focus_mode() -> mir::optional_value<MirFocusMod
     return self->focus_mode;
 }
 
+auto miral::WindowSpecification::exclusive_mode() const -> mir::optional_value<MirExclusiveMode> const&
+{
+    return self->exclusive_mode;
+}
+
+auto miral::WindowSpecification::exclusive_mode() -> mir::optional_value<MirExclusiveMode>&
+{
+    return self->exclusive_mode;
+}
+
 auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_ptr<void>>&
 {
     return self->userdata;

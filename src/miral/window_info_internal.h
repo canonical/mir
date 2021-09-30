@@ -51,6 +51,7 @@ struct miral::WindowInfo::Self
     MirDepthLayer depth_layer;
     MirPlacementGravity attached_edges;
     mir::optional_value<mir::geometry::Rectangle> exclusive_rect;
+    MirExclusiveMode exclusive_mode;
     std::shared_ptr<void> userdata;
 };
 

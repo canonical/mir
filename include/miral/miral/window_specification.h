@@ -170,6 +170,13 @@ public:
     auto focus_mode() -> mir::optional_value<MirFocusMode>&;
     ///@}
 
+    /// How this window interacts with exclusive zones
+    /// \remark Since MirAL 3.3
+    ///@{
+    auto exclusive_mode() const -> mir::optional_value<MirExclusiveMode> const&;
+    auto exclusive_mode() -> mir::optional_value<MirExclusiveMode>&;
+    ///@}
+
 private:
     friend auto make_surface_spec(WindowSpecification const& miral_spec) -> mir::shell::SurfaceSpecification;
     struct Self;

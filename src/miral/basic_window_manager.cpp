@@ -158,10 +158,14 @@ auto miral::BasicWindowManager::add_surface(
     for_each_workspace_containing(parent,
         [&](std::shared_ptr<miral::Workspace> const& workspace) { add_tree_to_workspace(window, workspace); });
 
+    bool const no_fullscreen_surfaces_before = fullscreen_surfaces.empty();
     update_attached_and_fullscreen_sets(window_info);
 
-    if (window_info.state() == mir_window_state_attached)
+    if (window_info.state() == mir_window_state_attached ||
+        no_fullscreen_surfaces_before != fullscreen_surfaces.empty())
+    {
         update_application_zones_and_attached_windows();
+    }
 
     policy->advise_new_window(window_info);
 
@@ -246,11 +250,14 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
 
     info_for(application).remove_window(info.window());
     mru_active_windows.erase(info.window());
+    bool const no_fullscreen_surfaces_before = fullscreen_surfaces.empty();
     fullscreen_surfaces.erase(info.window());
+
     for (auto& area : display_areas)
         area->attached_windows.erase(info.window());
-    if (info.state() == mir_window_state_attached &&
-        info.exclusive_rect().is_set())
+    if ((info.state() == mir_window_state_attached &&
+        info.exclusive_rect().is_set()) ||
+        no_fullscreen_surfaces_before != fullscreen_surfaces.empty())
     {
         update_application_zones_and_attached_windows();
     }
@@ -1008,6 +1015,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     COPY_IF_SET(depth_layer);
     COPY_IF_SET(attached_edges);
     COPY_IF_SET(exclusive_rect);
+    COPY_IF_SET(exclusive_mode);
     COPY_IF_SET(application_id);
     COPY_IF_SET(focus_mode);
 
@@ -1179,7 +1187,12 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
     if (modifications.state().is_set())
     {
+        bool const no_fullscreen_surfaces_before = fullscreen_surfaces.empty();
         set_state(window_info, modifications.state().value());
+        if (no_fullscreen_surfaces_before != fullscreen_surfaces.empty())
+        {
+            application_zones_need_update = true;
+        }
     }
     else if (modifications.output_id().is_set())
     {
@@ -1391,7 +1404,10 @@ void miral::BasicWindowManager::place_and_size_for_state(
 
     case mir_window_state_fullscreen:
     {
-        rect = policy->confirm_placement_on_display(window_info, new_state, display_area_for(window_info)->area);
+        rect = policy->confirm_placement_on_display(
+            window_info,
+            new_state,
+            display_area_for(window_info)->application_zone.extents());
         break;
     }
 
@@ -1884,8 +1900,8 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
         switch (parameters.state().value())
         {
         case mir_window_state_fullscreen:
-            parameters.top_left() = display_area->area.top_left;
-            parameters.size() = display_area->area.size;
+            parameters.top_left() = display_area->application_zone.extents().top_left;
+            parameters.size() = display_area->application_zone.extents().size;
             break;
 
         case mir_window_state_maximized:
@@ -2682,6 +2698,30 @@ void miral::BasicWindowManager::advise_output_end()
     }
 }
 
+namespace
+{
+
+auto should_apply_exclusive_rect(miral::WindowInfo const& info, bool surface_is_fullscreen) -> bool
+{
+    if (info.state() != mir_window_state_attached || !info.exclusive_rect().is_set())
+    {
+        return false;
+    }
+    switch (info.exclusive_mode())
+    {
+    case mir_exclusive_mode_affect_fullscreen:
+        return true;
+
+    case mir_exclusive_mode_enabled:
+        return !surface_is_fullscreen;
+
+    case mir_exclusive_mode_disabled:;
+    }
+    return false;
+}
+
+}
+
 void miral::BasicWindowManager::update_application_zones_and_attached_windows()
 {
     // Move all live areas to before the split and areas that should be removed to after
@@ -2716,17 +2756,7 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         }
     }
 
-    // Fullscreen surface should fill the whole area (does not depend on what the zones end up being)
-    for (auto const& window : fullscreen_surfaces)
-    {
-        if (window)
-        {
-            auto& info = info_for(window);
-            auto const rect =
-                policy->confirm_placement_on_display(info, mir_window_state_fullscreen, display_area_for(info)->area);
-            place_and_size(info, rect.top_left, rect.size);
-        }
-    }
+    bool const surface_is_fullscreen = !fullscreen_surfaces.empty();
 
     for (auto& area : display_areas)
     {
@@ -2743,24 +2773,13 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
             {
                 auto& info = info_for(window);
 
-                switch (info.state())
+                if (should_apply_exclusive_rect(info, surface_is_fullscreen))
                 {
-                case mir_window_state_attached:
-                    if (info.exclusive_rect().is_set())
-                    {
-                        first_pass.push_back(&info);
-                        break;
-                    }
-                    // fallthrough
-                case mir_window_state_maximized:
-                case mir_window_state_horizmaximized:
-                case mir_window_state_vertmaximized:
+                    first_pass.push_back(&info);
+                }
+                else
+                {
                     second_pass.push_back(&info);
-                    break;
-
-                default:
-                    log_error("Window in attached_windows is not attached or maximized");
-                    break;
                 }
             }
         }
@@ -2783,6 +2802,24 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         }
 
         area->application_zone.extents(zone_rect);
+    }
+
+    // Fullscreen surface should fill the whole area (does not depend on what the zones end up being)
+    for (auto const& window : fullscreen_surfaces)
+    {
+        if (window)
+        {
+            auto& info = info_for(window);
+            auto const rect = policy->confirm_placement_on_display(
+                info,
+                mir_window_state_fullscreen,
+                display_area_for(info)->application_zone.extents());
+            place_and_size(info, rect.top_left, rect.size);
+        }
+    }
+
+    for (auto& area : display_areas)
+    {
         if (!area->zone_policy_knows_about)
         {
             policy->advise_application_zone_create(area->application_zone);

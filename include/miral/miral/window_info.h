@@ -133,6 +133,10 @@ struct WindowInfo
     /// \remark Since MirAL 3.3
     auto focus_mode() const -> MirFocusMode;
 
+    /// If the window's exclusive rect should affect the application zone
+    /// \remark Since MirAL 3.3
+    auto exclusive_mode() const -> MirExclusiveMode;
+
 private:
     friend class BasicWindowManager;
     void name(std::string const& name);
@@ -159,6 +163,7 @@ private:
     void exclusive_rect(mir::optional_value<mir::geometry::Rectangle> const& rect);
     void application_id(std::string const& application_id);
     void focus_mode(MirFocusMode focus_mode);
+    void exclusive_mode(MirExclusiveMode exclusive_mode);
 
     struct Self;
     std::unique_ptr<Self> self;

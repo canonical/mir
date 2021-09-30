@@ -89,7 +89,8 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     max_aspect(optional_value_or_default(params.max_aspect(), default_max_aspect_ratio)),
     shell_chrome(optional_value_or_default(params.shell_chrome(), mir_shell_chrome_normal)),
     depth_layer(optional_value_or_default(params.depth_layer(), mir_depth_layer_application)),
-    attached_edges(optional_value_or_default(params.attached_edges(), mir_placement_gravity_center))
+    attached_edges(optional_value_or_default(params.attached_edges(), mir_placement_gravity_center)),
+    exclusive_mode(optional_value_or_default(params.exclusive_mode(), mir_exclusive_mode_enabled))
 {
     if (params.output_id().is_set())
         output_id = params.output_id().value();
@@ -105,7 +106,8 @@ miral::WindowInfo::Self::Self() :
     type{mir_window_type_normal},
     state{mir_window_state_unknown},
     preferred_orientation{mir_orientation_mode_any},
-    shell_chrome{mir_shell_chrome_normal}
+    shell_chrome{mir_shell_chrome_normal},
+    exclusive_mode{mir_exclusive_mode_enabled}
 {
 }
 
@@ -239,4 +241,9 @@ void miral::WindowInfo::focus_mode(MirFocusMode focus_mode)
 {
     if (std::shared_ptr<mir::scene::Surface> const surface = self->window)
         surface->set_focus_mode(focus_mode);
+}
+
+void miral::WindowInfo::exclusive_mode(MirExclusiveMode exclusive_mode)
+{
+    self->exclusive_mode = exclusive_mode;
 }

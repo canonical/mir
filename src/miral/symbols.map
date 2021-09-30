@@ -453,9 +453,10 @@ global:
     miral::PrintTo*;
     miral::WaylandExtensions::zwp_input_method_v2*;
     miral::WaylandExtensions::zwp_virtual_keyboard_v1*;
+    miral::WindowInfo::exclusive_mode*;
     miral::WindowInfo::focus_mode*;
+    miral::WindowSpecification::exclusive_mode*;
     miral::WindowSpecification::focus_mode*;
     miral::toolkit::mir_keyboard_event_keysym*;
-    miral::WindowSpecification::apply_to*;
   };
 } MIRAL_3.2;

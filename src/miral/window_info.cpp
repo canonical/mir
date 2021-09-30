@@ -484,3 +484,8 @@ auto miral::WindowInfo::focus_mode() const -> MirFocusMode
         return mir_focus_mode_disabled;
     }
 }
+
+auto miral::WindowInfo::exclusive_mode() const -> MirExclusiveMode
+{
+    return self->exclusive_mode;
+}
