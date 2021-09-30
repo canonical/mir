@@ -25,6 +25,7 @@ endif()
 add_compile_definitions(MIRAL_ENABLE_DEPRECATIONS=0)
 
 mir_add_wrapped_executable(miral-test-internal NOINSTALL
+    fullscreen_shell_chrome.cpp
     mru_window_list.cpp
     active_outputs.cpp
     command_line_option.cpp

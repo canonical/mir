@@ -1391,7 +1391,9 @@ void miral::BasicWindowManager::place_and_size_for_state(
 
     case mir_window_state_fullscreen:
     {
-        rect = policy->confirm_placement_on_display(window_info, new_state, display_area_for(window_info)->area);
+        auto const area = display_area_for(window_info);
+        Rectangle rect_proposal = fullscreen_rect_for(*area);
+        rect = policy->confirm_placement_on_display(window_info, new_state, rect_proposal);
         break;
     }
 
@@ -1898,9 +1900,12 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
         switch (parameters.state().value())
         {
         case mir_window_state_fullscreen:
-            parameters.top_left() = display_area->area.top_left;
-            parameters.size() = display_area->area.size;
+        {
+            Rectangle rect_proposal = fullscreen_rect_for(*display_area);
+            parameters.top_left() = rect_proposal.top_left;
+            parameters.size() = rect_proposal.size;
             break;
+        }
 
         case mir_window_state_maximized:
             parameters.top_left() = application_zone.top_left;
@@ -2145,7 +2150,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
     {
         {
             auto result = constrain_to(parent, anchor_for(aux_rect, rect_gravity) + offset) +
-                offset_for(size, win_gravity);
+                          offset_for(size, win_gravity);
 
             if (placement_bounds.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
@@ -2157,7 +2162,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
         if (hints & mir_placement_hints_flip_x)
         {
             auto result = constrain_to(parent, anchor_for(aux_rect, flip_x(rect_gravity)) + flip_x(offset)) +
-                offset_for(size, flip_x(win_gravity));
+                          offset_for(size, flip_x(win_gravity));
 
             if (placement_bounds.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
@@ -2166,7 +2171,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
         if (hints & mir_placement_hints_flip_y)
         {
             auto result = constrain_to(parent, anchor_for(aux_rect, flip_y(rect_gravity)) + flip_y(offset)) +
-                offset_for(size, flip_y(win_gravity));
+                          offset_for(size, flip_y(win_gravity));
 
             if (placement_bounds.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
@@ -2175,7 +2180,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
         if (hints & mir_placement_hints_flip_x && hints & mir_placement_hints_flip_y)
         {
             auto result = constrain_to(parent, anchor_for(aux_rect, flip_x(flip_y(rect_gravity))) + flip_x(flip_y(offset))) +
-                offset_for(size, flip_x(flip_y(win_gravity)));
+                          offset_for(size, flip_x(flip_y(win_gravity)));
 
             if (placement_bounds.contains(Rectangle{result, size}))
                 return Rectangle{result, size};
@@ -2185,7 +2190,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
     for (auto const& rect_gravity : rect_gravities)
     {
         auto result = constrain_to(parent, anchor_for(aux_rect, rect_gravity) + offset) +
-            offset_for(size, win_gravity);
+                      offset_for(size, win_gravity);
 
         if (hints & mir_placement_hints_slide_x)
         {
@@ -2216,7 +2221,7 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
     for (auto const& rect_gravity : rect_gravities)
     {
         auto result = constrain_to(parent, anchor_for(aux_rect, rect_gravity) + offset) +
-            offset_for(size, win_gravity);
+                      offset_for(size, win_gravity);
 
         if (hints & mir_placement_hints_resize_x)
         {
@@ -2286,7 +2291,7 @@ void miral::BasicWindowManager::validate_modification_request(WindowSpecificatio
             default:
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
             }
-	    // Falls through.
+            // Falls through.
 
         case mir_window_type_menu:
             switch (target_type)
@@ -2298,7 +2303,7 @@ void miral::BasicWindowManager::validate_modification_request(WindowSpecificatio
             default:
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
             }
-	    // Falls through.
+            // Falls through.
 
         case mir_window_type_gloss:
         case mir_window_type_freestyle:
@@ -2395,13 +2400,13 @@ void miral::BasicWindowManager::add_tree_to_workspace(
 
     std::function<void(WindowInfo const& info)> const add_children =
         [&,this](WindowInfo const& info)
-        {
+            {
             for (auto const& child : info.children())
             {
                 windows.push_back(child);
                 add_children(info_for(child));
             }
-        };
+            };
 
     windows.push_back(root);
     add_children(*info);
@@ -2442,13 +2447,13 @@ void miral::BasicWindowManager::remove_tree_from_workspace(
 
     std::function<void(WindowInfo const& info)> const add_children =
         [&,this](WindowInfo const& info)
-        {
+            {
             for (auto const& child : info.children())
             {
                 windows.push_back(child);
                 add_children(info_for(child));
             }
-        };
+            };
 
     windows.push_back(root);
     add_children(*info);
@@ -2579,9 +2584,9 @@ auto miral::BasicWindowManager::add_output_to_display_areas(Locker const&, Outpu
     {
         auto const area_iter = std::find_if(display_areas.begin(), display_areas.end(), [&](auto const& area)
             {
-                return (
-                    area->logical_output_group_id &&
-                    area->logical_output_group_id.value() == output.logical_group_id());
+            return (
+                area->logical_output_group_id &&
+                area->logical_output_group_id.value() == output.logical_group_id());
             });
         if (area_iter != display_areas.end())
         {
@@ -2614,9 +2619,9 @@ auto miral::BasicWindowManager::remove_output_from_display_areas(Locker const&, 
             area->contained_outputs.begin(),
             area->contained_outputs.end(),
             [&](Output const& area_output)
-            {
+                {
                 return area_output.is_same_output(output);
-            });
+                });
         bool const output_removed{removed != area->contained_outputs.end()};
         area->contained_outputs.erase(removed, area->contained_outputs.end());
 
@@ -2703,9 +2708,9 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         display_areas.begin(),
         display_areas.end(),
         [&](std::shared_ptr<DisplayArea> const& area)
-        {
+            {
             return area->is_alive();
-        });
+            });
 
     // Move areas after the split into a new vector
     std::vector<std::shared_ptr<DisplayArea>> removed_areas;
@@ -2802,20 +2807,23 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         {
             auto& info = info_for(window);
             auto const area = display_area_for(info);
-            Rectangle rect_proposal;
-            switch (fullscreen_shell_chrome_)
-            {
-            case mir_fullscreen_shell_chrome_none:
-                // Fullscreen surface should fill the whole area (does not depend on what the zones end up being)
-                rect_proposal = area->area;
-                break;
-
-            case mir_fullscreen_shell_chrome_all:
-                rect_proposal = area->application_zone.extents();
-                break;
-            }
+            Rectangle rect_proposal = fullscreen_rect_for(*area);
             auto const rect = policy->confirm_placement_on_display(info, mir_window_state_fullscreen, rect_proposal);
             place_and_size(info, rect.top_left, rect.size);
         }
     }
+}
+
+auto miral::BasicWindowManager::fullscreen_rect_for(miral::BasicWindowManager::DisplayArea const& area) const -> Rectangle
+{
+    switch (fullscreen_shell_chrome_)
+    {
+    case mir_fullscreen_shell_chrome_none:
+        // Fullscreen surface should fill the whole area (does not depend on what the zones end up being)
+        return area.area;
+
+    case mir_fullscreen_shell_chrome_all:
+        return area.application_zone.extents();
+    }
+    abort();
 }
