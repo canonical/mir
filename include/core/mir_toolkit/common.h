@@ -380,6 +380,15 @@ typedef enum MirShellChrome
 } MirShellChrome;
 
 /**
+ * Shell chrome visible with fullscreen surfaces
+ */
+typedef enum MirFullscreenShellChrome
+{
+    mir_fullscreen_shell_chrome_none, // The default
+    mir_fullscreen_shell_chrome_all,
+} MirFullscreenShellChrome;
+
+/**
  * Pointer Confinement
  */
 typedef enum MirPointerConfinementState

@@ -192,8 +192,8 @@ public:
     auto id_for_window(Window const& window) const -> std::string override;
     void place_and_size_for_state(WindowSpecification& modifications, WindowInfo const& window_info) const override;
 
-    void set_fullscreen_shell_chrome(MirShellChrome chrome) override;
-    auto fullscreen_shell_chrome() const -> MirShellChrome override;
+    void set_fullscreen_shell_chrome(MirFullscreenShellChrome chrome) override;
+    auto fullscreen_shell_chrome() const -> MirFullscreenShellChrome override;
 
     void invoke_under_lock(std::function<void()> const& callback) override;
 
@@ -267,7 +267,7 @@ private:
     std::vector<std::shared_ptr<DisplayArea>> display_areas;
     /// If output configuration has changed and application zones need to be updated
     bool application_zones_need_update{false};
-    MirShellChrome fullscreen_shell_chrome_{mir_shell_chrome_low};
+    MirFullscreenShellChrome fullscreen_shell_chrome_{mir_fullscreen_shell_chrome_none};
 
     friend class Workspace;
     using wwbimap_t = boost::bimap<

@@ -246,8 +246,8 @@ public:
      * @param chrome
      * @{
      */
-    void set_fullscreen_shell_chrome(MirShellChrome chrome);
-    auto fullscreen_shell_chrome() const -> MirShellChrome;
+    void set_fullscreen_shell_chrome(MirFullscreenShellChrome chrome);
+    auto fullscreen_shell_chrome() const -> MirFullscreenShellChrome;
     /** @} */
 /** @} */
 

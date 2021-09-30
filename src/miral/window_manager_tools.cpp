@@ -140,8 +140,8 @@ void miral::WindowManagerTools::for_each_window_in_workspace(
     std::function<void(miral::Window const&)> const& callback)
 { tools->for_each_window_in_workspace(workspace, callback); }
 
-void miral::WindowManagerTools::set_fullscreen_shell_chrome(MirShellChrome chrome)
+void miral::WindowManagerTools::set_fullscreen_shell_chrome(MirFullscreenShellChrome chrome)
 { tools->set_fullscreen_shell_chrome(chrome); }
 
-auto miral::WindowManagerTools::fullscreen_shell_chrome() const -> MirShellChrome
+auto miral::WindowManagerTools::fullscreen_shell_chrome() const -> MirFullscreenShellChrome
 { return tools->fullscreen_shell_chrome(); }

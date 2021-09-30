@@ -397,6 +397,8 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WaylandExtensions::zwp_input_method_v2@MIRAL_3.3" 3.3.0
  (c++)"miral::WaylandExtensions::zwp_virtual_keyboard_v1@MIRAL_3.3" 3.3.0
  (c++)"miral::WindowInfo::focus_mode() const@MIRAL_3.3" 3.3.0
+ (c++)"miral::WindowManagerTools::fullscreen_shell_chrome() const@MIRAL_3.3" 3.3.0
+ (c++)"miral::WindowManagerTools::set_fullscreen_shell_chrome(MirFullscreenShellChrome)@MIRAL_3.3" 3.3.0
  (c++)"miral::WindowSpecification::apply_to(mir::shell::SurfaceSpecification&) const@MIRAL_3.3" 3.3.0
  (c++)"miral::WindowSpecification::focus_mode() const@MIRAL_3.3" 3.3.0
  (c++)"miral::WindowSpecification::focus_mode()@MIRAL_3.3" 3.3.0

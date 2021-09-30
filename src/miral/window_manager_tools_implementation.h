@@ -88,8 +88,8 @@ public:
     virtual void for_each_window_in_workspace(
         std::shared_ptr<Workspace> const& workspace,
         std::function<void(Window const& window)> const& callback) = 0;
-    virtual void set_fullscreen_shell_chrome(MirShellChrome chrome) = 0;
-    virtual auto fullscreen_shell_chrome() const -> MirShellChrome = 0;
+    virtual void set_fullscreen_shell_chrome(MirFullscreenShellChrome chrome) = 0;
+    virtual auto fullscreen_shell_chrome() const -> MirFullscreenShellChrome = 0;
 
 
 /** @} */

@@ -1405,7 +1405,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
     modifications.size() = rect.size;
 }
 
-void miral::BasicWindowManager::set_fullscreen_shell_chrome(MirShellChrome chrome)
+void miral::BasicWindowManager::set_fullscreen_shell_chrome(MirFullscreenShellChrome chrome)
 {
     if (fullscreen_shell_chrome_ != chrome)
     {
@@ -1414,7 +1414,7 @@ void miral::BasicWindowManager::set_fullscreen_shell_chrome(MirShellChrome chrom
     }
 }
 
-auto miral::BasicWindowManager::fullscreen_shell_chrome() const -> MirShellChrome
+auto miral::BasicWindowManager::fullscreen_shell_chrome() const -> MirFullscreenShellChrome
 {
     return fullscreen_shell_chrome_;
 }
@@ -2796,7 +2796,6 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
         area->zone_policy_knows_about = area->application_zone;
     }
 
-    // Fullscreen surface should fill the whole area (does not depend on what the zones end up being)
     for (auto const& window : fullscreen_surfaces)
     {
         if (window)
@@ -2804,13 +2803,16 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
             auto& info = info_for(window);
             auto const area = display_area_for(info);
             Rectangle rect_proposal;
-            if (fullscreen_shell_chrome_ == mir_shell_chrome_low)
+            switch (fullscreen_shell_chrome_)
             {
+            case mir_fullscreen_shell_chrome_none:
+                // Fullscreen surface should fill the whole area (does not depend on what the zones end up being)
                 rect_proposal = area->area;
-            }
-            else
-            {
+                break;
+
+            case mir_fullscreen_shell_chrome_all:
                 rect_proposal = area->application_zone.extents();
+                break;
             }
             auto const rect = policy->confirm_placement_on_display(info, mir_window_state_fullscreen, rect_proposal);
             place_and_size(info, rect.top_left, rect.size);
