@@ -2709,13 +2709,13 @@ auto should_apply_exclusive_rect(miral::WindowInfo const& info, bool surface_is_
     }
     switch (info.exclusive_mode())
     {
-    case mir_exclusive_mode_affect_fullscreen:
+    case mir_exclusive_mode_all:
         return true;
 
-    case mir_exclusive_mode_enabled:
+    case mir_exclusive_mode_default:
         return !surface_is_fullscreen;
 
-    case mir_exclusive_mode_disabled:;
+    case mir_exclusive_mode_none:;
     }
     return false;
 }

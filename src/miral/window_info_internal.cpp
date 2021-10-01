@@ -90,7 +90,7 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     shell_chrome(optional_value_or_default(params.shell_chrome(), mir_shell_chrome_normal)),
     depth_layer(optional_value_or_default(params.depth_layer(), mir_depth_layer_application)),
     attached_edges(optional_value_or_default(params.attached_edges(), mir_placement_gravity_center)),
-    exclusive_mode(optional_value_or_default(params.exclusive_mode(), mir_exclusive_mode_enabled))
+    exclusive_mode(optional_value_or_default(params.exclusive_mode(), mir_exclusive_mode_default))
 {
     if (params.output_id().is_set())
         output_id = params.output_id().value();
@@ -107,7 +107,7 @@ miral::WindowInfo::Self::Self() :
     state{mir_window_state_unknown},
     preferred_orientation{mir_orientation_mode_any},
     shell_chrome{mir_shell_chrome_normal},
-    exclusive_mode{mir_exclusive_mode_enabled}
+    exclusive_mode{mir_exclusive_mode_default}
 {
 }
 

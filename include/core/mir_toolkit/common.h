@@ -433,11 +433,11 @@ typedef enum MirFocusMode
  */
 typedef enum MirExclusiveMode
 {
-    mir_exclusive_mode_enabled,             /**< If this surface is attached its exclusive rect will affect the
-                                                 application zone */
-    mir_exclusive_mode_disabled,            /**< This surface's exclusive rect will not affect the application zone */
-    mir_exclusive_mode_affect_fullscreen,   /**< Same as mir_exclusive_mode_enabled, except this surface's exclusive
-                                                 rect will also effect fullscreen surfaces */
+    mir_exclusive_mode_none,    /**< This surface's exclusive rect will not affect application zones */
+    mir_exclusive_mode_default, /**< If this surface is attached its exclusive rect will affect application
+                                     zones for non-fullscreen windows */
+    mir_exclusive_mode_all,     /**< Same as mir_exclusive_mode_default, except this surface's exclusive rect
+                                     will also affect fullscreen surfaces */
 } MirExclusiveMode;
 
 #endif
