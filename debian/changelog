@@ -1,3 +1,40 @@
+mir (2.5.0) UNRELEASED; urgency=medium
+
+  [ Alan Griffiths ]
+  * New upstream release 2.5.0
+
+    - ABI summary:
+      . miral ABI unchanged at 4
+      . mirclient dropped
+      . mircommon ABI bumped to 8
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 1
+      . mirplatform ABI bumped to 23
+      . mirprotobuf dropped
+      . mirserver ABI bumped to 56
+      . mirwayland ABI bumped to 3
+      . mirplatformgraphics ABI bumped to 19
+      . mirinputplatform ABI unchanged at 8
+    - Enhancements:
+      . [Wayland] Bump wlr_layer_shell_unstable_v1 version from 3 to 4
+      . [Wayland] Add focus_mode surface property for Layer Shell
+      . [Wayland] Add zwp_virtual_keyboard_v1 (closes #2063)
+      . [Wayland] Add zwp_text_input_v3 & zwp_input_method_v2 (closes  #2139)
+      . [Wayland] Allow zwp_linux_buffer_params_v1.add() with
+                  DRM_FORMAT_MOD_INVALID (Fixes #2177)
+      . [Wayland] Add axis source to pointer events (Fixes #2180)
+      . [Wayland-platform] Don't block forever in swap_buffers
+      . Drop mirclient, dependencies on Cap'n Proto & protobuf
+    - Bugs fixed:
+      . Mir crash when surface and role destroyed in wrong order (Fixes #2055)
+      . Make GTK's approach to hiding cursors work on Mir (Fixes #2073)
+      . [input] Handle exceptions while handling udev events
+      . [input] Fix InputDeviceHub threadsafety
+      . [Xwayland] Improve popup window types and positioning (Fixes #2037)
+      . [Xwayland] Use SurfaceStateTracker to track window state (Fixes #1217)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 5 Oct 2021 09:06:12 +0100
+
 mir (2.4.1) UNRELEASED; urgency=medium
 
   [ William Wold ]
