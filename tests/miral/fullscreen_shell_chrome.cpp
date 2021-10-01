@@ -99,6 +99,8 @@ struct FullscreenShellChrome : mt::TestWindowManagerTools, WithParamInterface<Mi
 };
 
 using None_OnFullscreen = FullscreenShellChrome;
+using None_OnCreate = FullscreenShellChrome;
+using None_OnAddPanel = FullscreenShellChrome;
 using All_OnFullscreen = FullscreenShellChrome;
 using All_OnCreate = FullscreenShellChrome;
 using All_OnAddPanel = FullscreenShellChrome;
@@ -113,6 +115,31 @@ TEST_P(None_OnFullscreen, type)
 
     change_state_to(info, mir_window_state_restored);
     EXPECT_THAT(info.window().size(), Eq(initial_size));
+}
+
+TEST_P(None_OnCreate, type)
+{
+    Window panel = create_panel();
+    auto const app_zone = window_manager_tools.active_application_zone();
+    ASSERT_THAT(app_zone.extents(), Ne(display_area));
+
+    create_window_of_type(GetParam(), mir_window_state_fullscreen);
+    auto const& info = window_manager_tools.info_for(window);
+
+    EXPECT_THAT(info.window().size(), Eq(display_area.size));
+}
+
+TEST_P(None_OnAddPanel, type)
+{
+    create_window_of_type(GetParam(), mir_window_state_fullscreen);
+    auto const& info = window_manager_tools.info_for(window);
+    EXPECT_THAT(info.window().size(), Eq(display_area.size));
+
+    Window panel = create_panel();
+    auto const app_zone = window_manager_tools.active_application_zone();
+    ASSERT_THAT(app_zone.extents(), Ne(display_area));
+
+    EXPECT_THAT(info.window().size(), Eq(display_area.size));
 }
 
 TEST_P(All_OnFullscreen, type)
@@ -163,6 +190,32 @@ TEST_P(All_OnAddPanel, type)
 }
 
 INSTANTIATE_TEST_SUITE_P(FullscreenShellChrome, None_OnFullscreen, ::testing::Values(
+    mir_window_type_normal,       /**< AKA "regular"                       */
+    mir_window_type_utility,      /**< AKA "floating"                      */
+    mir_window_type_dialog,
+    mir_window_type_gloss,
+    mir_window_type_freestyle,
+    mir_window_type_menu,
+    mir_window_type_inputmethod,  /**< AKA "OSK" or handwriting etc.       */
+    mir_window_type_satellite,    /**< AKA "toolbox"/"toolbar"             */
+    mir_window_type_tip,          /**< AKA "tooltip"                       */
+    mir_window_type_decoration
+));
+
+INSTANTIATE_TEST_SUITE_P(FullscreenShellChrome, None_OnCreate, ::testing::Values(
+    mir_window_type_normal,       /**< AKA "regular"                       */
+    mir_window_type_utility,      /**< AKA "floating"                      */
+    mir_window_type_dialog,
+    mir_window_type_gloss,
+    mir_window_type_freestyle,
+    mir_window_type_menu,
+    mir_window_type_inputmethod,  /**< AKA "OSK" or handwriting etc.       */
+    mir_window_type_satellite,    /**< AKA "toolbox"/"toolbar"             */
+    mir_window_type_tip,          /**< AKA "tooltip"                       */
+    mir_window_type_decoration
+));
+
+INSTANTIATE_TEST_SUITE_P(FullscreenShellChrome, None_OnAddPanel, ::testing::Values(
     mir_window_type_normal,       /**< AKA "regular"                       */
     mir_window_type_utility,      /**< AKA "floating"                      */
     mir_window_type_dialog,
