@@ -83,7 +83,7 @@ TEST_F(WindowPlacementFullscreen, window_is_placed_correctly_when_fullscreened)
     Window window;
     {
         mir::shell::SurfaceSpecification params;
-        params.state = mir_window_state_maximized;
+        params.state = mir_window_state_restored;
         window = create_window(params);
     }
     auto const& info = basic_window_manager.info_for(window);
@@ -91,6 +91,7 @@ TEST_F(WindowPlacementFullscreen, window_is_placed_correctly_when_fullscreened)
     {
         WindowSpecification spec;
         spec.state() = mir_window_state_fullscreen;
+        window_manager_tools.place_and_size_for_state(spec, window_manager_tools.info_for(window));
         window_manager_tools.modify_window(window, spec);
     }
 
@@ -116,12 +117,18 @@ TEST_F(WindowPlacementFullscreen, window_can_be_unfullscreened)
     {
         WindowSpecification spec;
         spec.state() = mir_window_state_fullscreen;
+        window_manager_tools.place_and_size_for_state(spec, window_manager_tools.info_for(window));
         window_manager_tools.modify_window(window, spec);
     }
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_fullscreen));
+    EXPECT_THAT(window.top_left(), Eq(display_area.top_left));
+    EXPECT_THAT(window.size(), Eq(display_area.size));
 
     {
         WindowSpecification spec;
         spec.state() = mir_window_state_restored;
+        window_manager_tools.place_and_size_for_state(spec, window_manager_tools.info_for(window));
         window_manager_tools.modify_window(window, spec);
     }
 
