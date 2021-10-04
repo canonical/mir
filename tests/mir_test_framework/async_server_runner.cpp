@@ -47,8 +47,7 @@ namespace
 std::chrono::seconds const timeout{20};
 }
 
-mtf::AsyncServerRunner::AsyncServerRunner() :
-    set_window_management_policy{[](auto&){}}
+mtf::AsyncServerRunner::AsyncServerRunner()
 {
     unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing Wayland server
     configure_from_commandline(server);
@@ -72,9 +71,7 @@ void mtf::AsyncServerRunner::add_to_environment(char const* key, char const* val
 
 void mtf::AsyncServerRunner::start_server()
 {
-    set_window_management_policy(server);
-
-    server.add_init_callback([&]
+    server.add_init_callback([this]
         {
             auto const main_loop = server.the_main_loop();
             // By enqueuing the notification code in the main loop, we are
