@@ -51,13 +51,6 @@ public:
 
     mir::Server server;
 
-    template<typename Policy, typename ...Args>
-    void override_window_management_policy(Args& ... args)
-    {
-        set_window_management_policy =
-            miral::set_window_management_policy<Policy>(args...);
-    }
-
 private:
     std::list<TemporaryEnvironmentValue> env;
     mir::test::AutoJoinThread server_thread;
