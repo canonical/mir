@@ -71,29 +71,29 @@ void mtf::AsyncServerRunner::add_to_environment(char const* key, char const* val
 
 void mtf::AsyncServerRunner::start_server()
 {
-    server.add_init_callback([this]
-        {
-            auto const main_loop = server.the_main_loop();
-            // By enqueuing the notification code in the main loop, we are
-            // ensuring that the server has really and fully started before
-            // leaving start_mir_server().
-            main_loop->enqueue(
-                this,
-                [&]
-                {
-                    std::lock_guard<std::mutex> lock(mutex);
-                    server_running = true;
-                    started.notify_one();
-                });
-        });
-
-    server.apply_settings();
-
-    mt::AutoJoinThread t([&]
+    mt::AutoJoinThread t([this]
         {
             try
             {
                 mir::set_thread_name("mtf/AsyncServer");
+
+                server.add_init_callback([this]
+                    {
+                        auto const main_loop = server.the_main_loop();
+                        // By enqueuing the notification code in the main loop, we are
+                        // ensuring that the server has really and fully started before
+                        // leaving start_mir_server().
+                        main_loop->enqueue(
+                            this,
+                            [this]
+                            {
+                                std::lock_guard<std::mutex> lock(mutex);
+                                server_running = true;
+                                started.notify_one();
+                            });
+                    });
+
+                server.apply_settings();
                 server.run();
             }
             catch (std::exception const& e)
@@ -108,7 +108,7 @@ void mtf::AsyncServerRunner::start_server()
         });
 
     std::unique_lock<std::mutex> lock(mutex);
-    started.wait_for(lock, timeout, [&] { return server_running; });
+    started.wait_for(lock, timeout, [this] { return server_running; });
 
     if (!server_running)
     {
