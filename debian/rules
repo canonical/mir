@@ -89,13 +89,6 @@ override_dh_makeshlibs:
 	# libmiral4 *has* a symbols file, so we don't need to -V it!
 	dh_makeshlibs -plibmiral4 -- -v$(MIRAL_RELEASE)
 
-ifeq ($(filter xenial yakkety zesty,$(DEB_DISTRIBUTION)),)
-	dh_install
-else
-	# xenial, yakkety & zesty predate dh_missing
-	dh_install --fail-missing
-endif
-
 # Don't try to strip libraries used as test data
 override_dh_strip:
 	dh_strip -Xmir-test-data
