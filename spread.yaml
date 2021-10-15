@@ -29,7 +29,8 @@ environment:
     RELEASE: focal
     RELEASE/ubuntu: focal
     RELEASE/ubuntu_hirsute: hirsute
-    RELEASE/ubuntu_devel: impish
+    RELEASE/ubuntu_impish: impish
+    RELEASE/ubuntu_devel: jammy
     RELEASE/debian_sid: sid
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
