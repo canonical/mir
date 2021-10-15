@@ -22,6 +22,7 @@
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session_listener.h"
 #include "mir/observer_registrar.h"
+#include "mir/fd.h"
 
 #include <memory>
 #include <vector>
@@ -69,6 +70,7 @@ public:
 
     auto open_session(
         pid_t client_pid,
+        Fd socket_fd,
         std::string const& name,
         std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<Session> override;
 

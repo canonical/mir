@@ -23,6 +23,7 @@
 #include "mir_toolkit/client_types.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/geometry/size.h"
+#include "mir/fd.h"
 
 #include <vector>
 #include <sys/types.h>
@@ -65,6 +66,7 @@ public:
     virtual ~Session() = default;
 
     virtual auto process_id() const -> pid_t = 0;
+    virtual auto socket_fd() const -> Fd = 0;
     virtual auto name() const -> std::string = 0;
 
     virtual void send_error(ClientVisibleError const&) = 0;

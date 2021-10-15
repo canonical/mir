@@ -22,6 +22,7 @@
 #include "mir/shell/focus_controller.h"
 #include "mir/input/event_filter.h"
 #include "mir/compositor/display_listener.h"
+#include "mir/fd.h"
 
 #include "mir_toolkit/common.h"
 
@@ -57,6 +58,7 @@ public:
  *  @{ */
     virtual auto open_session(
         pid_t client_pid,
+        Fd socket_fd,
         std::string const& name,
         std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<scene::Session> = 0;
 
