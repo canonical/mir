@@ -531,9 +531,22 @@ global:
 } MIRAL_3.1;
 
 MIRAL_3.3 {
+global:
+  extern "C++" {
+    miral::PrintTo*;
+    miral::WaylandExtensions::zwp_input_method_v2*;
+    miral::WaylandExtensions::zwp_virtual_keyboard_v1*;
+    miral::WindowInfo::focus_mode*;
+    miral::WindowSpecification::focus_mode*;
+    miral::toolkit::mir_keyboard_event_keysym*;
+    miral::WindowSpecification::apply_to*;
+  };
+} MIRAL_3.2;
+
+MIRAL_3.4 {
 global:'''
 
-END_NEW_STANZA = '} MIRAL_3.2;'
+END_NEW_STANZA = '} MIRAL_3.3;'
 
 def _print_report():
     print(OLD_STANZAS)
