@@ -45,6 +45,11 @@ auto miral::pid_of(Application const& application) -> pid_t
     return application->process_id();
 }
 
+auto miral::socket_fd_of(Application const& application) -> int
+{
+    return application->socket_fd();
+}
+
 void miral::apply_lifecycle_state_to(Application const& application, MirLifecycleState state)
 {
     application->set_lifecycle_state(state);

@@ -37,6 +37,11 @@ void apply_lifecycle_state_to(Application const& application, MirLifecycleState 
 void kill(Application const& application, int sig);
 auto name_of(Application const& application) -> std::string;
 auto pid_of(Application const& application) -> pid_t;
+
+/// Returns the file descriptor of the client's socket connection, or -1 if there is no client socket. May be used for
+/// authentication with apparmor. X11 apps always return -1, since they do not connect directly to the Mir process.
+/// \remark Since MirAL 3.4
+auto socket_fd_of(Application const& application) -> int;
 }
 
 #endif //MIRAL_APPLICATION_H
