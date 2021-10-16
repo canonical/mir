@@ -113,6 +113,30 @@ auto timestamp_of(MirPointerEvent const* event) -> uint32_t
 {
     return mir_input_event_get_wayland_timestamp(mir_pointer_event_input_event(event));
 }
+
+auto wayland_axis_source(MirPointerAxisSource mir_source) -> std::optional<uint32_t>
+{
+    switch (mir_source)
+    {
+    case mir_pointer_axis_source_none:
+        return std::nullopt;
+
+    case mir_pointer_axis_source_wheel:
+        return static_cast<uint32_t>(mw::Pointer::AxisSource::wheel);
+
+    case mir_pointer_axis_source_finger:
+        return static_cast<uint32_t>(mw::Pointer::AxisSource::finger);
+
+    case mir_pointer_axis_source_continuous:
+        return static_cast<uint32_t>(mw::Pointer::AxisSource::continuous);
+
+    case mir_pointer_axis_source_wheel_tilt:
+        return static_cast<uint32_t>(mw::Pointer::AxisSource::wheel_tilt);
+    }
+
+    mir::fatal_error("Invalid MirPointerAxisSource %d", mir_source);
+    return std::nullopt;
+}
 }
 
 struct mf::WlPointer::Cursor
@@ -225,47 +249,33 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
 {
     auto const h_scroll = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll);
     auto const v_scroll = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll);
+    auto const h_scroll_discrete = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll_discrete);
+    auto const v_scroll_discrete = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll_discrete);
+    auto const axis_source = wayland_axis_source(mir_pointer_event_axis_source(event));
 
-    switch (mir_pointer_event_axis_source(event))
+    // Don't send an axis source unless we have one and we're also sending some sort of axis event.
+    if (axis_source && (h_scroll || v_scroll || h_scroll_discrete || v_scroll_discrete))
     {
-    case mir_pointer_axis_source_none:
-        break;
-
-    case mir_pointer_axis_source_wheel:
-    {
-        send_axis_source_event(AxisSource::wheel);
-
-        if (auto const h_scroll_discrete = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll_discrete))
-        {
-            send_axis_discrete_event(Axis::horizontal_scroll, h_scroll_discrete);
-        }
-
-        if (auto const v_scroll_discrete = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll_discrete))
-        {
-            send_axis_discrete_event(Axis::horizontal_scroll, v_scroll_discrete);
-        }
-
+        send_axis_source_event(axis_source.value());
         needs_frame = true;
-        break;
     }
 
-    case mir_pointer_axis_source_finger:
-        send_axis_source_event(AxisSource::finger);
+    if (h_scroll_discrete)
+    {
+        send_axis_discrete_event(Axis::horizontal_scroll, h_scroll_discrete);
         needs_frame = true;
-        break;
-
-    case mir_pointer_axis_source_continuous:
-        send_axis_source_event(AxisSource::continuous);
-        needs_frame = true;
-        break;
-
-    case mir_pointer_axis_source_wheel_tilt:
-        send_axis_source_event(AxisSource::wheel_tilt);
-        needs_frame = true;
-        break;
     }
 
-    if (h_scroll)
+    if (v_scroll_discrete)
+    {
+        send_axis_discrete_event(Axis::vertical_scroll, v_scroll_discrete);
+        needs_frame = true;
+    }
+
+    // If we sent discrete scroll events, we're required to also send corresponding non-discrete ones (even if their
+    // values are 0 for some reason)
+
+    if (h_scroll || h_scroll_discrete)
     {
         send_axis_event(
             timestamp_of(event),
@@ -274,7 +284,7 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
         needs_frame = true;
     }
 
-    if (v_scroll)
+    if (v_scroll || v_scroll_discrete)
     {
         send_axis_event(
             timestamp_of(event),
