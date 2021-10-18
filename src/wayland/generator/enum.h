@@ -35,12 +35,14 @@ public:
         std::string value;
     };
 
-    Enum(xmlpp::Element const& node);
+    Enum(xmlpp::Element const& node, std::string const& class_name);
 
     Emitter declaration() const;
+    Emitter impl() const;
 
 private:
     std::string const name;
+    std::string const class_name;
     std::vector<Entry> entries;
 };
 

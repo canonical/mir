@@ -64,6 +64,7 @@ private:
     Emitter event_impls() const;
     Emitter member_vars() const;
     Emitter enum_declarations() const;
+    Emitter enum_impls() const;
     Emitter event_opcodes() const;
     Emitter thunks_impl() const;
     Emitter thunks_impl_contents() const;
@@ -74,7 +75,7 @@ private:
 
     static std::vector<Request> get_requests(xmlpp::Element const& node, std::string generated_name);
     static std::vector<Event> get_events(xmlpp::Element const& node, std::string generated_name);
-    static std::vector<Enum> get_enums(xmlpp::Element const& node);
+    static std::vector<Enum> get_enums(xmlpp::Element const& node, std::string generated_name);
 
     std::string const wl_name;
     int const version;

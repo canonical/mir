@@ -96,7 +96,7 @@ Interface::Interface(xmlpp::Element const& node,
           std::experimental::nullopt},
       requests{get_requests(node, generated_name)},
       events{get_events(node, generated_name)},
-      enums{get_enums(node)},
+      enums{get_enums(node, generated_name)},
       parent_interfaces{matching_keys_to_vector(event_constructable_interfaces, name_transform, wl_name)},
       has_destroy_request{vec_has_destroy_request(requests)}
 {
@@ -158,6 +158,7 @@ Emitter Interface::implementation() const
                     }
                 }
             ),
+            enum_impls(),
             (global ? global.value().implementation() : nullptr),
             types_init(),
             Lines{
@@ -349,6 +350,16 @@ Emitter Interface::enum_declarations() const
     return EmptyLineList{declarations};
 }
 
+Emitter Interface::enum_impls() const
+{
+    std::vector<Emitter> declarations;
+    for (auto const& i : enums)
+    {
+        declarations.push_back(i.impl());
+    }
+    return Lines{declarations};
+}
+
 Emitter Interface::event_opcodes() const
 {
     std::vector<Emitter> opcodes;
@@ -507,13 +518,13 @@ std::vector<Event> Interface::get_events(xmlpp::Element const& node, std::string
     return events;
 }
 
-std::vector<Enum> Interface::get_enums(xmlpp::Element const& node)
+std::vector<Enum> Interface::get_enums(xmlpp::Element const& node, std::string generated_name)
 {
     std::vector<Enum> enums;
     for (auto method_node : node.get_children("enum"))
     {
         auto elem = dynamic_cast<xmlpp::Element*>(method_node);
-        enums.emplace_back(Enum{std::ref(*elem)});
+        enums.emplace_back(Enum{std::ref(*elem), generated_name});
     }
     return enums;
 }

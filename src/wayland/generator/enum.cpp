@@ -21,8 +21,9 @@
 
 #include <libxml++/libxml++.h>
 
-Enum::Enum(xmlpp::Element const& node)
-    : name{sanitize_name(to_camel_case(node.get_attribute_value("name")))}
+Enum::Enum(xmlpp::Element const& node, std::string const& class_name)
+    : name{sanitize_name(to_camel_case(node.get_attribute_value("name")))},
+      class_name{class_name}
 {
     for (auto const& child : node.get_children("entry"))
     {
@@ -47,4 +48,15 @@ Emitter Enum::declaration() const
             body
         }, ";"}
     };
+}
+
+Emitter Enum::impl() const
+{
+    std::vector<Emitter> lines;
+    for (auto const& entry : entries)
+    {
+        lines.push_back({"uint32_t const mw::", class_name, "::", name, "::", entry.name, ";"});
+    }
+
+    return Lines{lines};
 }
