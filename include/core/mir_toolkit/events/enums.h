@@ -177,6 +177,10 @@ typedef enum {
     mir_pointer_axis_relative_x = 4,
 /* Relative axis containing the last reported y differential from the pointer */
     mir_pointer_axis_relative_y = 5,
+/* Relative axis containing physical mouse wheel clicks reported by the vertical scroll wheel */
+    mir_pointer_axis_vscroll_discrete = 6,
+/* Relative axis containing physical mouse wheel clicks reported by the horizontal scroll wheel */
+    mir_pointer_axis_hscroll_discrete = 7,
 
     mir_pointer_axes
 } MirPointerAxis;

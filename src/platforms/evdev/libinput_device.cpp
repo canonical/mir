@@ -270,8 +270,6 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
     auto const relative_x_value = 0.0f;
     auto const relative_y_value = 0.0f;
 
-    // TODO: Add descrete scroll to pointer events and source it from libinput_event_pointer_get_axis_value_discrete()
-
     auto hscroll_value = 0.0f;
     auto vscroll_value = 0.0f;
     if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
@@ -298,7 +296,15 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
     switch (libinput_event_pointer_get_axis_source(pointer))
     {
     case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL:
-        return builder_pointer_axis_event(mir_pointer_axis_source_wheel);
+    {
+        auto const hscroll_discrete = libinput_event_pointer_get_axis_value_discrete(
+            pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
+        auto const vscroll_discrete = libinput_event_pointer_get_axis_value_discrete(
+            pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
+        return builder->pointer_axis_discrete_scroll_event(
+            mir_pointer_axis_source_wheel, time, action, button_state, hscroll_value, vscroll_value,
+            hscroll_discrete, vscroll_discrete);
+    }
 
     case LIBINPUT_POINTER_AXIS_SOURCE_FINGER:
         return builder_pointer_axis_event(mir_pointer_axis_source_finger);

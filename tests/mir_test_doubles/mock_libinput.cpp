@@ -799,7 +799,9 @@ libinput_event* mtd::MockLibInput::setup_button_event(libinput_device* dev, uint
     return event;
 }
 
-libinput_event* mtd::MockLibInput::setup_axis_event(libinput_device* dev, uint64_t event_time, double horizontal, double vertical)
+libinput_event* mtd::MockLibInput::setup_axis_event(
+    libinput_device* dev, uint64_t event_time,
+    double horizontal, double vertical, double horizontal_discrete, double vertical_discrete)
 {
     auto event = get_next_fake_ptr<libinput_event*>();
     auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
@@ -820,9 +822,9 @@ libinput_event* mtd::MockLibInput::setup_axis_event(libinput_device* dev, uint64
     ON_CALL(*this, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
         .WillByDefault(Return(vertical!=0.0));
     ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
-        .WillByDefault(Return(vertical));
+        .WillByDefault(Return(vertical_discrete));
     ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
-        .WillByDefault(Return(horizontal));
+        .WillByDefault(Return(horizontal_discrete));
     ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
         .WillByDefault(Return(vertical));
     ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
