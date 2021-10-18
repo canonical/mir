@@ -177,6 +177,10 @@ bool mw::PointerConstraintsV1::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zwp_pointer_constraints_v1_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::PointerConstraintsV1::Error::already_constrained;
+uint32_t const mw::PointerConstraintsV1::Lifetime::oneshot;
+uint32_t const mw::PointerConstraintsV1::Lifetime::persistent;
+
 mw::PointerConstraintsV1::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(

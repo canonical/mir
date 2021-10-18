@@ -192,6 +192,13 @@ bool mw::XdgWmBase::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &xdg_wm_base_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::XdgWmBase::Error::role;
+uint32_t const mw::XdgWmBase::Error::defunct_surfaces;
+uint32_t const mw::XdgWmBase::Error::not_the_topmost_popup;
+uint32_t const mw::XdgWmBase::Error::invalid_popup_parent;
+uint32_t const mw::XdgWmBase::Error::invalid_surface_state;
+uint32_t const mw::XdgWmBase::Error::invalid_positioner;
+
 mw::XdgWmBase::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
@@ -395,6 +402,33 @@ bool mw::XdgPositioner::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &xdg_positioner_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::XdgPositioner::Error::invalid_input;
+uint32_t const mw::XdgPositioner::Anchor::none;
+uint32_t const mw::XdgPositioner::Anchor::top;
+uint32_t const mw::XdgPositioner::Anchor::bottom;
+uint32_t const mw::XdgPositioner::Anchor::left;
+uint32_t const mw::XdgPositioner::Anchor::right;
+uint32_t const mw::XdgPositioner::Anchor::top_left;
+uint32_t const mw::XdgPositioner::Anchor::bottom_left;
+uint32_t const mw::XdgPositioner::Anchor::top_right;
+uint32_t const mw::XdgPositioner::Anchor::bottom_right;
+uint32_t const mw::XdgPositioner::Gravity::none;
+uint32_t const mw::XdgPositioner::Gravity::top;
+uint32_t const mw::XdgPositioner::Gravity::bottom;
+uint32_t const mw::XdgPositioner::Gravity::left;
+uint32_t const mw::XdgPositioner::Gravity::right;
+uint32_t const mw::XdgPositioner::Gravity::top_left;
+uint32_t const mw::XdgPositioner::Gravity::bottom_left;
+uint32_t const mw::XdgPositioner::Gravity::top_right;
+uint32_t const mw::XdgPositioner::Gravity::bottom_right;
+uint32_t const mw::XdgPositioner::ConstraintAdjustment::none;
+uint32_t const mw::XdgPositioner::ConstraintAdjustment::slide_x;
+uint32_t const mw::XdgPositioner::ConstraintAdjustment::slide_y;
+uint32_t const mw::XdgPositioner::ConstraintAdjustment::flip_x;
+uint32_t const mw::XdgPositioner::ConstraintAdjustment::flip_y;
+uint32_t const mw::XdgPositioner::ConstraintAdjustment::resize_x;
+uint32_t const mw::XdgPositioner::ConstraintAdjustment::resize_y;
+
 struct wl_message const mw::XdgPositioner::Thunks::request_messages[] {
     {"destroy", "", all_null_types},
     {"set_size", "ii", all_null_types},
@@ -570,6 +604,10 @@ bool mw::XdgSurface::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &xdg_surface_interface_data, Thunks::request_vtable);
 }
+
+uint32_t const mw::XdgSurface::Error::not_constructed;
+uint32_t const mw::XdgSurface::Error::already_constructed;
+uint32_t const mw::XdgSurface::Error::unconfigured_buffer;
 
 struct wl_interface const* mw::XdgSurface::Thunks::get_toplevel_types[] {
     &xdg_toplevel_interface_data};
@@ -906,6 +944,20 @@ bool mw::XdgToplevel::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &xdg_toplevel_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::XdgToplevel::ResizeEdge::none;
+uint32_t const mw::XdgToplevel::ResizeEdge::top;
+uint32_t const mw::XdgToplevel::ResizeEdge::bottom;
+uint32_t const mw::XdgToplevel::ResizeEdge::left;
+uint32_t const mw::XdgToplevel::ResizeEdge::top_left;
+uint32_t const mw::XdgToplevel::ResizeEdge::bottom_left;
+uint32_t const mw::XdgToplevel::ResizeEdge::right;
+uint32_t const mw::XdgToplevel::ResizeEdge::top_right;
+uint32_t const mw::XdgToplevel::ResizeEdge::bottom_right;
+uint32_t const mw::XdgToplevel::State::maximized;
+uint32_t const mw::XdgToplevel::State::fullscreen;
+uint32_t const mw::XdgToplevel::State::resizing;
+uint32_t const mw::XdgToplevel::State::activated;
+
 struct wl_interface const* mw::XdgToplevel::Thunks::set_parent_types[] {
     &xdg_toplevel_interface_data};
 
@@ -1054,6 +1106,8 @@ bool mw::XdgPopup::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &xdg_popup_interface_data, Thunks::request_vtable);
 }
+
+uint32_t const mw::XdgPopup::Error::invalid_grab;
 
 struct wl_interface const* mw::XdgPopup::Thunks::grab_types[] {
     &wl_seat_interface_data,

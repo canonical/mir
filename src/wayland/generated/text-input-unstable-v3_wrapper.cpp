@@ -254,6 +254,34 @@ bool mw::TextInputV3::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zwp_text_input_v3_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::TextInputV3::ChangeCause::input_method;
+uint32_t const mw::TextInputV3::ChangeCause::other;
+uint32_t const mw::TextInputV3::ContentHint::none;
+uint32_t const mw::TextInputV3::ContentHint::completion;
+uint32_t const mw::TextInputV3::ContentHint::spellcheck;
+uint32_t const mw::TextInputV3::ContentHint::auto_capitalization;
+uint32_t const mw::TextInputV3::ContentHint::lowercase;
+uint32_t const mw::TextInputV3::ContentHint::uppercase;
+uint32_t const mw::TextInputV3::ContentHint::titlecase;
+uint32_t const mw::TextInputV3::ContentHint::hidden_text;
+uint32_t const mw::TextInputV3::ContentHint::sensitive_data;
+uint32_t const mw::TextInputV3::ContentHint::latin;
+uint32_t const mw::TextInputV3::ContentHint::multiline;
+uint32_t const mw::TextInputV3::ContentPurpose::normal;
+uint32_t const mw::TextInputV3::ContentPurpose::alpha;
+uint32_t const mw::TextInputV3::ContentPurpose::digits;
+uint32_t const mw::TextInputV3::ContentPurpose::number;
+uint32_t const mw::TextInputV3::ContentPurpose::phone;
+uint32_t const mw::TextInputV3::ContentPurpose::url;
+uint32_t const mw::TextInputV3::ContentPurpose::email;
+uint32_t const mw::TextInputV3::ContentPurpose::name;
+uint32_t const mw::TextInputV3::ContentPurpose::password;
+uint32_t const mw::TextInputV3::ContentPurpose::pin;
+uint32_t const mw::TextInputV3::ContentPurpose::date;
+uint32_t const mw::TextInputV3::ContentPurpose::time;
+uint32_t const mw::TextInputV3::ContentPurpose::datetime;
+uint32_t const mw::TextInputV3::ContentPurpose::terminal;
+
 struct wl_interface const* mw::TextInputV3::Thunks::enter_types[] {
     &wl_surface_interface_data};
 

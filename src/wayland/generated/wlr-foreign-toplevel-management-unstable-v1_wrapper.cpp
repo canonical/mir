@@ -428,6 +428,12 @@ bool mw::ForeignToplevelHandleV1::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zwlr_foreign_toplevel_handle_v1_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::ForeignToplevelHandleV1::State::maximized;
+uint32_t const mw::ForeignToplevelHandleV1::State::minimized;
+uint32_t const mw::ForeignToplevelHandleV1::State::activated;
+uint32_t const mw::ForeignToplevelHandleV1::State::fullscreen;
+uint32_t const mw::ForeignToplevelHandleV1::Error::invalid_rectangle;
+
 struct wl_interface const* mw::ForeignToplevelHandleV1::Thunks::activate_types[] {
     &wl_seat_interface_data};
 
