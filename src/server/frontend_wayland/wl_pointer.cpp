@@ -122,16 +122,16 @@ auto wayland_axis_source(MirPointerAxisSource mir_source) -> std::optional<uint3
         return std::nullopt;
 
     case mir_pointer_axis_source_wheel:
-        return static_cast<uint32_t>(mw::Pointer::AxisSource::wheel);
+        return uint32_t{mw::Pointer::AxisSource::wheel};
 
     case mir_pointer_axis_source_finger:
-        return static_cast<uint32_t>(mw::Pointer::AxisSource::finger);
+        return uint32_t{mw::Pointer::AxisSource::finger};
 
     case mir_pointer_axis_source_continuous:
-        return static_cast<uint32_t>(mw::Pointer::AxisSource::continuous);
+        return uint32_t{mw::Pointer::AxisSource::continuous};
 
     case mir_pointer_axis_source_wheel_tilt:
-        return static_cast<uint32_t>(mw::Pointer::AxisSource::wheel_tilt);
+        return uint32_t{mw::Pointer::AxisSource::wheel_tilt};
     }
 
     mir::fatal_error("Invalid MirPointerAxisSource %d", mir_source);
