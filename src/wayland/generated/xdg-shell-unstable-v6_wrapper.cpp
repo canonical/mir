@@ -192,6 +192,13 @@ bool mw::XdgShellV6::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zxdg_shell_v6_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::XdgShellV6::Error::role;
+uint32_t const mw::XdgShellV6::Error::defunct_surfaces;
+uint32_t const mw::XdgShellV6::Error::not_the_topmost_popup;
+uint32_t const mw::XdgShellV6::Error::invalid_popup_parent;
+uint32_t const mw::XdgShellV6::Error::invalid_surface_state;
+uint32_t const mw::XdgShellV6::Error::invalid_positioner;
+
 mw::XdgShellV6::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
@@ -395,6 +402,25 @@ bool mw::XdgPositionerV6::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zxdg_positioner_v6_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::XdgPositionerV6::Error::invalid_input;
+uint32_t const mw::XdgPositionerV6::Anchor::none;
+uint32_t const mw::XdgPositionerV6::Anchor::top;
+uint32_t const mw::XdgPositionerV6::Anchor::bottom;
+uint32_t const mw::XdgPositionerV6::Anchor::left;
+uint32_t const mw::XdgPositionerV6::Anchor::right;
+uint32_t const mw::XdgPositionerV6::Gravity::none;
+uint32_t const mw::XdgPositionerV6::Gravity::top;
+uint32_t const mw::XdgPositionerV6::Gravity::bottom;
+uint32_t const mw::XdgPositionerV6::Gravity::left;
+uint32_t const mw::XdgPositionerV6::Gravity::right;
+uint32_t const mw::XdgPositionerV6::ConstraintAdjustment::none;
+uint32_t const mw::XdgPositionerV6::ConstraintAdjustment::slide_x;
+uint32_t const mw::XdgPositionerV6::ConstraintAdjustment::slide_y;
+uint32_t const mw::XdgPositionerV6::ConstraintAdjustment::flip_x;
+uint32_t const mw::XdgPositionerV6::ConstraintAdjustment::flip_y;
+uint32_t const mw::XdgPositionerV6::ConstraintAdjustment::resize_x;
+uint32_t const mw::XdgPositionerV6::ConstraintAdjustment::resize_y;
+
 struct wl_message const mw::XdgPositionerV6::Thunks::request_messages[] {
     {"destroy", "", all_null_types},
     {"set_size", "ii", all_null_types},
@@ -565,6 +591,10 @@ bool mw::XdgSurfaceV6::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zxdg_surface_v6_interface_data, Thunks::request_vtable);
 }
+
+uint32_t const mw::XdgSurfaceV6::Error::not_constructed;
+uint32_t const mw::XdgSurfaceV6::Error::already_constructed;
+uint32_t const mw::XdgSurfaceV6::Error::unconfigured_buffer;
 
 struct wl_interface const* mw::XdgSurfaceV6::Thunks::get_toplevel_types[] {
     &zxdg_toplevel_v6_interface_data};
@@ -901,6 +931,20 @@ bool mw::XdgToplevelV6::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zxdg_toplevel_v6_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::XdgToplevelV6::ResizeEdge::none;
+uint32_t const mw::XdgToplevelV6::ResizeEdge::top;
+uint32_t const mw::XdgToplevelV6::ResizeEdge::bottom;
+uint32_t const mw::XdgToplevelV6::ResizeEdge::left;
+uint32_t const mw::XdgToplevelV6::ResizeEdge::top_left;
+uint32_t const mw::XdgToplevelV6::ResizeEdge::bottom_left;
+uint32_t const mw::XdgToplevelV6::ResizeEdge::right;
+uint32_t const mw::XdgToplevelV6::ResizeEdge::top_right;
+uint32_t const mw::XdgToplevelV6::ResizeEdge::bottom_right;
+uint32_t const mw::XdgToplevelV6::State::maximized;
+uint32_t const mw::XdgToplevelV6::State::fullscreen;
+uint32_t const mw::XdgToplevelV6::State::resizing;
+uint32_t const mw::XdgToplevelV6::State::activated;
+
 struct wl_interface const* mw::XdgToplevelV6::Thunks::set_parent_types[] {
     &zxdg_toplevel_v6_interface_data};
 
@@ -1049,6 +1093,8 @@ bool mw::XdgPopupV6::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zxdg_popup_v6_interface_data, Thunks::request_vtable);
 }
+
+uint32_t const mw::XdgPopupV6::Error::invalid_grab;
 
 struct wl_interface const* mw::XdgPopupV6::Thunks::grab_types[] {
     &wl_seat_interface_data,

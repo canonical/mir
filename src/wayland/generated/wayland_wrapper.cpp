@@ -496,6 +496,68 @@ void mw::Shm::destroy_and_delete() const
     wl_resource_destroy(resource);
 }
 
+uint32_t const mw::Shm::Error::invalid_format;
+uint32_t const mw::Shm::Error::invalid_stride;
+uint32_t const mw::Shm::Error::invalid_fd;
+uint32_t const mw::Shm::Format::argb8888;
+uint32_t const mw::Shm::Format::xrgb8888;
+uint32_t const mw::Shm::Format::c8;
+uint32_t const mw::Shm::Format::rgb332;
+uint32_t const mw::Shm::Format::bgr233;
+uint32_t const mw::Shm::Format::xrgb4444;
+uint32_t const mw::Shm::Format::xbgr4444;
+uint32_t const mw::Shm::Format::rgbx4444;
+uint32_t const mw::Shm::Format::bgrx4444;
+uint32_t const mw::Shm::Format::argb4444;
+uint32_t const mw::Shm::Format::abgr4444;
+uint32_t const mw::Shm::Format::rgba4444;
+uint32_t const mw::Shm::Format::bgra4444;
+uint32_t const mw::Shm::Format::xrgb1555;
+uint32_t const mw::Shm::Format::xbgr1555;
+uint32_t const mw::Shm::Format::rgbx5551;
+uint32_t const mw::Shm::Format::bgrx5551;
+uint32_t const mw::Shm::Format::argb1555;
+uint32_t const mw::Shm::Format::abgr1555;
+uint32_t const mw::Shm::Format::rgba5551;
+uint32_t const mw::Shm::Format::bgra5551;
+uint32_t const mw::Shm::Format::rgb565;
+uint32_t const mw::Shm::Format::bgr565;
+uint32_t const mw::Shm::Format::rgb888;
+uint32_t const mw::Shm::Format::bgr888;
+uint32_t const mw::Shm::Format::xbgr8888;
+uint32_t const mw::Shm::Format::rgbx8888;
+uint32_t const mw::Shm::Format::bgrx8888;
+uint32_t const mw::Shm::Format::abgr8888;
+uint32_t const mw::Shm::Format::rgba8888;
+uint32_t const mw::Shm::Format::bgra8888;
+uint32_t const mw::Shm::Format::xrgb2101010;
+uint32_t const mw::Shm::Format::xbgr2101010;
+uint32_t const mw::Shm::Format::rgbx1010102;
+uint32_t const mw::Shm::Format::bgrx1010102;
+uint32_t const mw::Shm::Format::argb2101010;
+uint32_t const mw::Shm::Format::abgr2101010;
+uint32_t const mw::Shm::Format::rgba1010102;
+uint32_t const mw::Shm::Format::bgra1010102;
+uint32_t const mw::Shm::Format::yuyv;
+uint32_t const mw::Shm::Format::yvyu;
+uint32_t const mw::Shm::Format::uyvy;
+uint32_t const mw::Shm::Format::vyuy;
+uint32_t const mw::Shm::Format::ayuv;
+uint32_t const mw::Shm::Format::nv12;
+uint32_t const mw::Shm::Format::nv21;
+uint32_t const mw::Shm::Format::nv16;
+uint32_t const mw::Shm::Format::nv61;
+uint32_t const mw::Shm::Format::yuv410;
+uint32_t const mw::Shm::Format::yvu410;
+uint32_t const mw::Shm::Format::yuv411;
+uint32_t const mw::Shm::Format::yvu411;
+uint32_t const mw::Shm::Format::yuv420;
+uint32_t const mw::Shm::Format::yvu420;
+uint32_t const mw::Shm::Format::yuv422;
+uint32_t const mw::Shm::Format::yvu422;
+uint32_t const mw::Shm::Format::yuv444;
+uint32_t const mw::Shm::Format::yvu444;
+
 mw::Shm::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
@@ -768,6 +830,11 @@ bool mw::DataOffer::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_data_offer_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::DataOffer::Error::invalid_finish;
+uint32_t const mw::DataOffer::Error::invalid_action_mask;
+uint32_t const mw::DataOffer::Error::invalid_action;
+uint32_t const mw::DataOffer::Error::invalid_offer;
+
 struct wl_message const mw::DataOffer::Thunks::request_messages[] {
     {"accept", "u?s", all_null_types},
     {"receive", "sh", all_null_types},
@@ -936,6 +1003,9 @@ bool mw::DataSource::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &wl_data_source_interface_data, Thunks::request_vtable);
 }
+
+uint32_t const mw::DataSource::Error::invalid_action_mask;
+uint32_t const mw::DataSource::Error::invalid_source;
 
 struct wl_message const mw::DataSource::Thunks::request_messages[] {
     {"offer", "s", all_null_types},
@@ -1117,6 +1187,8 @@ bool mw::DataDevice::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_data_device_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::DataDevice::Error::role;
+
 struct wl_interface const* mw::DataDevice::Thunks::start_drag_types[] {
     &wl_data_source_interface_data,
     &wl_surface_interface_data,
@@ -1284,6 +1356,11 @@ void mw::DataDeviceManager::destroy_and_delete() const
     wl_resource_destroy(resource);
 }
 
+uint32_t const mw::DataDeviceManager::DndAction::none;
+uint32_t const mw::DataDeviceManager::DndAction::copy;
+uint32_t const mw::DataDeviceManager::DndAction::move;
+uint32_t const mw::DataDeviceManager::DndAction::ask;
+
 mw::DataDeviceManager::Global::Global(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
@@ -1415,6 +1492,8 @@ void mw::Shell::destroy_and_delete() const
     // Will result in this object being deleted
     wl_resource_destroy(resource);
 }
+
+uint32_t const mw::Shell::Error::role;
 
 mw::Shell::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
@@ -1696,6 +1775,21 @@ void mw::ShellSurface::destroy_and_delete() const
     // Will result in this object being deleted
     wl_resource_destroy(resource);
 }
+
+uint32_t const mw::ShellSurface::Resize::none;
+uint32_t const mw::ShellSurface::Resize::top;
+uint32_t const mw::ShellSurface::Resize::bottom;
+uint32_t const mw::ShellSurface::Resize::left;
+uint32_t const mw::ShellSurface::Resize::top_left;
+uint32_t const mw::ShellSurface::Resize::bottom_left;
+uint32_t const mw::ShellSurface::Resize::right;
+uint32_t const mw::ShellSurface::Resize::top_right;
+uint32_t const mw::ShellSurface::Resize::bottom_right;
+uint32_t const mw::ShellSurface::Transient::inactive;
+uint32_t const mw::ShellSurface::FullscreenMethod::default_;
+uint32_t const mw::ShellSurface::FullscreenMethod::scale;
+uint32_t const mw::ShellSurface::FullscreenMethod::driver;
+uint32_t const mw::ShellSurface::FullscreenMethod::fill;
 
 struct wl_interface const* mw::ShellSurface::Thunks::move_types[] {
     &wl_seat_interface_data,
@@ -2012,6 +2106,9 @@ bool mw::Surface::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_surface_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::Surface::Error::invalid_scale;
+uint32_t const mw::Surface::Error::invalid_transform;
+
 struct wl_interface const* mw::Surface::Thunks::attach_types[] {
     &wl_buffer_interface_data,
     nullptr,
@@ -2238,6 +2335,10 @@ bool mw::Seat::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_seat_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::Seat::Capability::pointer;
+uint32_t const mw::Seat::Capability::keyboard;
+uint32_t const mw::Seat::Capability::touch;
+
 mw::Seat::Global::Global(wl_display* display, Version<6>)
     : wayland::Global{
           wl_global_create(
@@ -2438,6 +2539,16 @@ bool mw::Pointer::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_pointer_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::Pointer::Error::role;
+uint32_t const mw::Pointer::ButtonState::released;
+uint32_t const mw::Pointer::ButtonState::pressed;
+uint32_t const mw::Pointer::Axis::vertical_scroll;
+uint32_t const mw::Pointer::Axis::horizontal_scroll;
+uint32_t const mw::Pointer::AxisSource::wheel;
+uint32_t const mw::Pointer::AxisSource::finger;
+uint32_t const mw::Pointer::AxisSource::continuous;
+uint32_t const mw::Pointer::AxisSource::wheel_tilt;
+
 struct wl_interface const* mw::Pointer::Thunks::set_cursor_types[] {
     nullptr,
     &wl_surface_interface_data,
@@ -2574,6 +2685,11 @@ bool mw::Keyboard::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &wl_keyboard_interface_data, Thunks::request_vtable);
 }
+
+uint32_t const mw::Keyboard::KeymapFormat::no_keymap;
+uint32_t const mw::Keyboard::KeymapFormat::xkb_v1;
+uint32_t const mw::Keyboard::KeyState::released;
+uint32_t const mw::Keyboard::KeyState::pressed;
 
 struct wl_interface const* mw::Keyboard::Thunks::enter_types[] {
     nullptr,
@@ -2858,6 +2974,23 @@ bool mw::Output::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_output_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::Output::Subpixel::unknown;
+uint32_t const mw::Output::Subpixel::none;
+uint32_t const mw::Output::Subpixel::horizontal_rgb;
+uint32_t const mw::Output::Subpixel::horizontal_bgr;
+uint32_t const mw::Output::Subpixel::vertical_rgb;
+uint32_t const mw::Output::Subpixel::vertical_bgr;
+uint32_t const mw::Output::Transform::normal;
+uint32_t const mw::Output::Transform::_90;
+uint32_t const mw::Output::Transform::_180;
+uint32_t const mw::Output::Transform::_270;
+uint32_t const mw::Output::Transform::flipped;
+uint32_t const mw::Output::Transform::flipped_90;
+uint32_t const mw::Output::Transform::flipped_180;
+uint32_t const mw::Output::Transform::flipped_270;
+uint32_t const mw::Output::Mode::current;
+uint32_t const mw::Output::Mode::preferred;
+
 mw::Output::Global::Global(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
@@ -3114,6 +3247,8 @@ bool mw::Subcompositor::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &wl_subcompositor_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::Subcompositor::Error::bad_surface;
+
 mw::Subcompositor::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
@@ -3292,6 +3427,8 @@ bool mw::Subsurface::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &wl_subsurface_interface_data, Thunks::request_vtable);
 }
+
+uint32_t const mw::Subsurface::Error::bad_surface;
 
 struct wl_interface const* mw::Subsurface::Thunks::place_above_types[] {
     &wl_surface_interface_data};

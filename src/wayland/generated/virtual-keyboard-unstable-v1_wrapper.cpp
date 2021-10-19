@@ -143,6 +143,8 @@ bool mw::VirtualKeyboardV1::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zwp_virtual_keyboard_v1_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::VirtualKeyboardV1::Error::no_keymap;
+
 struct wl_message const mw::VirtualKeyboardV1::Thunks::request_messages[] {
     {"keymap", "uhu", all_null_types},
     {"key", "uuu", all_null_types},
@@ -255,6 +257,8 @@ void mw::VirtualKeyboardManagerV1::destroy_and_delete() const
     // Will result in this object being deleted
     wl_resource_destroy(resource);
 }
+
+uint32_t const mw::VirtualKeyboardManagerV1::Error::unauthorized;
 
 mw::VirtualKeyboardManagerV1::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{

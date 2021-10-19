@@ -146,6 +146,14 @@ bool mw::LayerShellV1::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zwlr_layer_shell_v1_interface_data, Thunks::request_vtable);
 }
 
+uint32_t const mw::LayerShellV1::Error::role;
+uint32_t const mw::LayerShellV1::Error::invalid_layer;
+uint32_t const mw::LayerShellV1::Error::already_constructed;
+uint32_t const mw::LayerShellV1::Layer::background;
+uint32_t const mw::LayerShellV1::Layer::bottom;
+uint32_t const mw::LayerShellV1::Layer::top;
+uint32_t const mw::LayerShellV1::Layer::overlay;
+
 mw::LayerShellV1::Global::Global(wl_display* display, Version<4>)
     : wayland::Global{
           wl_global_create(
@@ -387,6 +395,18 @@ bool mw::LayerSurfaceV1::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zwlr_layer_surface_v1_interface_data, Thunks::request_vtable);
 }
+
+uint32_t const mw::LayerSurfaceV1::KeyboardInteractivity::none;
+uint32_t const mw::LayerSurfaceV1::KeyboardInteractivity::exclusive;
+uint32_t const mw::LayerSurfaceV1::KeyboardInteractivity::on_demand;
+uint32_t const mw::LayerSurfaceV1::Error::invalid_surface_state;
+uint32_t const mw::LayerSurfaceV1::Error::invalid_size;
+uint32_t const mw::LayerSurfaceV1::Error::invalid_anchor;
+uint32_t const mw::LayerSurfaceV1::Error::invalid_keyboard_interactivity;
+uint32_t const mw::LayerSurfaceV1::Anchor::top;
+uint32_t const mw::LayerSurfaceV1::Anchor::bottom;
+uint32_t const mw::LayerSurfaceV1::Anchor::left;
+uint32_t const mw::LayerSurfaceV1::Anchor::right;
 
 struct wl_interface const* mw::LayerSurfaceV1::Thunks::get_popup_types[] {
     &xdg_popup_interface_data};
