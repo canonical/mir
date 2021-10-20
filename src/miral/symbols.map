@@ -459,3 +459,10 @@ global:
     miral::WindowSpecification::apply_to*;
   };
 } MIRAL_3.2;
+
+MIRAL_3.4 {
+global:
+  extern "C++" {
+    miral::socket_fd_of*;
+  };
+} MIRAL_3.3;

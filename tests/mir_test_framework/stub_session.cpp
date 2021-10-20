@@ -37,6 +37,11 @@ pid_t mtd::StubSession::process_id() const
     return pid;
 }
 
+mir::Fd mtd::StubSession::socket_fd() const
+{
+    return {};
+}
+
 std::shared_ptr<mir::scene::Surface> mtd::StubSession::default_surface() const
 {
     return {};

@@ -36,6 +36,8 @@ struct StubSession : scene::Session
 
     pid_t process_id() const override;
 
+    Fd socket_fd() const override;
+
     std::shared_ptr<scene::Surface> default_surface() const override;
 
     void set_lifecycle_state(MirLifecycleState state) override;

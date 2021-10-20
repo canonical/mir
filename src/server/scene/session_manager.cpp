@@ -136,6 +136,7 @@ ms::SessionManager::~SessionManager() noexcept
 
 std::shared_ptr<ms::Session> ms::SessionManager::open_session(
     pid_t client_pid,
+    Fd socket_fd,
     std::string const& name,
     std::shared_ptr<mf::EventSink> const& sender)
 {
@@ -144,6 +145,7 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
         surface_factory,
         buffer_stream_factory,
         client_pid,
+        socket_fd,
         name,
         observers,
         sender,

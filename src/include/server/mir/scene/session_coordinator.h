@@ -20,6 +20,7 @@
 #define MIR_SCENE_SESSION_COORDINATOR_H_
 
 #include "mir/frontend/surface_id.h"
+#include "mir/fd.h"
 
 #include "mir_toolkit/common.h"
 
@@ -46,6 +47,7 @@ public:
 
     virtual auto open_session(
         pid_t client_pid,
+        Fd socket_fd,
         std::string const& name,
         std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<Session> = 0;
 

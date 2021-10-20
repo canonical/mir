@@ -397,7 +397,8 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WaylandExtensions::zwp_input_method_v2@MIRAL_3.3" 3.3.0
  (c++)"miral::WaylandExtensions::zwp_virtual_keyboard_v1@MIRAL_3.3" 3.3.0
  (c++)"miral::WindowInfo::focus_mode() const@MIRAL_3.3" 3.3.0
- (c++)"miral::WindowSpecification::apply_to(mir::shell::SurfaceSpecification&) const@MIRAL_3.3" 3.3.0
  (c++)"miral::WindowSpecification::focus_mode() const@MIRAL_3.3" 3.3.0
  (c++)"miral::WindowSpecification::focus_mode()@MIRAL_3.3" 3.3.0
  (c++)"miral::toolkit::mir_keyboard_event_keysym(MirKeyboardEvent const*)@MIRAL_3.3" 3.3.0
+ MIRAL_3.4@MIRAL_3.4 3.4.0
+ (c++)"miral::socket_fd_of(std::shared_ptr<mir::scene::Session> const&)@MIRAL_3.4" 3.4.0

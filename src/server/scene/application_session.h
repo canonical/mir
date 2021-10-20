@@ -56,6 +56,7 @@ public:
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
         pid_t pid,
+        Fd socket_fd,
         std::string const& session_name,
         std::shared_ptr<SessionListener> const& session_listener,
         std::shared_ptr<frontend::EventSink> const& sink,
@@ -74,6 +75,7 @@ public:
 
     std::string name() const override;
     pid_t process_id() const override;
+    Fd socket_fd() const override;
 
     void hide() override;
     void show() override;
@@ -105,6 +107,7 @@ private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     pid_t const pid;
+    Fd socket_fd_;
     std::string const session_name;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;

@@ -51,6 +51,7 @@ ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::shared_ptr<ms::BufferStreamFactory> const& buffer_stream_factory,
     pid_t pid,
+    Fd socket_fd,
     std::string const& session_name,
     std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<mf::EventSink> const& sink,
@@ -59,6 +60,7 @@ ms::ApplicationSession::ApplicationSession(
     surface_factory(surface_factory),
     buffer_stream_factory(buffer_stream_factory),
     pid(pid),
+    socket_fd_(socket_fd),
     session_name(session_name),
     session_listener(session_listener),
     event_sink(sink),
@@ -223,6 +225,11 @@ std::string ms::ApplicationSession::name() const
 pid_t ms::ApplicationSession::process_id() const
 {
     return pid;
+}
+
+mir::Fd ms::ApplicationSession::socket_fd() const
+{
+    return socket_fd_;
 }
 
 void ms::ApplicationSession::hide()
