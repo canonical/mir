@@ -43,6 +43,11 @@ mf::KeyboardHelper::KeyboardHelper(
       state{nullptr, &xkb_state_unref},
       context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), &xkb_context_unref}
 {
+    if (!context)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create XKB context"));
+    }
+
     /* The wayland::Keyboard constructor has already run, creating the keyboard
      * resource. It is thus safe to send a keymap event to it; the client will receive
      * the keyboard object before this event.
