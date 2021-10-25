@@ -233,6 +233,13 @@ void mf::XdgSurfaceV6::get_popup(wl_resource* new_popup, struct wl_resource* par
 
 void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
+    if (width <= 0 || height <= 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            mw::generic_error_code,
+            "Invalid %s size %dx%d", interface_name, width, height));
+    }
     if (window_role_)
     {
         window_role_.value().set_pending_offset(geom::Displacement{-x, -y});
