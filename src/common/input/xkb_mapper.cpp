@@ -23,8 +23,6 @@
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
 
-#include <boost/throw_exception.hpp>
-
 #include <linux/input-event-codes.h>
 
 #include <sstream>
@@ -126,7 +124,7 @@ mi::XKBContextPtr mi::make_unique_context()
     auto context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
     if (!context)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create XKB context"));
+        fatal_error("Failed to create XKB context");
     }
     return {context, &xkb_context_unref};
 }

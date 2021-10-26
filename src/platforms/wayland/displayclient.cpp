@@ -421,7 +421,7 @@ mgw::DisplayClient::DisplayClient(
 {
     if (!keyboard_context_)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create XKB context"));
+        fatal_error("Failed to create XKB context");
     }
 
     registry = {wl_display_get_registry(display), &wl_registry_destroy};

@@ -22,6 +22,7 @@
 #include "mir/input/keymap.h"
 #include "mir/events/keyboard_event.h"
 #include "mir/input/seat.h"
+#include "mir/fatal.h"
 
 #include <xkbcommon/xkbcommon.h>
 #include <cstring> // memcpy
@@ -45,7 +46,7 @@ mf::KeyboardHelper::KeyboardHelper(
 {
     if (!context)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create XKB context"));
+        fatal_error("Failed to create XKB context");
     }
 
     /* The wayland::Keyboard constructor has already run, creating the keyboard
