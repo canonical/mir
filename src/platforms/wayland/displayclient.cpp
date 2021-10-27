@@ -419,6 +419,11 @@ mgw::DisplayClient::DisplayClient(
     keyboard_context_{xkb_context_new(XKB_CONTEXT_NO_FLAGS)},
     registry{nullptr, [](auto){}}
 {
+    if (!keyboard_context_)
+    {
+        fatal_error("Failed to create XKB context");
+    }
+
     registry = {wl_display_get_registry(display), &wl_registry_destroy};
 
     static wl_registry_listener const registry_listener = {
