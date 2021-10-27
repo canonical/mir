@@ -139,7 +139,7 @@ void miral::display_configuration_options(mir::Server& server)
             {
                 if (scale != 1.0)
                 {
-                    mir::fatal_error("Scale can't be set on the command line when using static display configuration");
+                    mir::fatal_error("Display scale option can't be when using static display configuration");
                 }
                 layout_selector = std::make_shared<StaticDisplayConfig>(display_layout.substr(strlen(static_opt_val)));
             }
