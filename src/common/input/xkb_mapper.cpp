@@ -23,8 +23,6 @@
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
 
-#include <boost/throw_exception.hpp>
-
 #include <linux/input-event-codes.h>
 
 #include <sstream>
@@ -123,7 +121,12 @@ mi::XKBStatePtr make_unique_state(xkb_keymap* keymap)
 
 mi::XKBContextPtr mi::make_unique_context()
 {
-    return {xkb_context_new(xkb_context_flags(0)), &xkb_context_unref};
+    auto context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+    if (!context)
+    {
+        fatal_error("Failed to create XKB context");
+    }
+    return {context, &xkb_context_unref};
 }
 
 mircv::XKBMapper::XKBMapper() :
