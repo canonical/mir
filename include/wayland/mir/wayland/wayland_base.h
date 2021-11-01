@@ -34,6 +34,9 @@ namespace mir
 {
 namespace wayland
 {
+/// For when the protocol does not provide an appropriate error code
+uint32_t const generic_error_code = -1;
+
 /**
  * An exception type representing a Wayland protocol error
  *
