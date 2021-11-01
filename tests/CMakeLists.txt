@@ -73,6 +73,7 @@ check_cxx_compiler_flag(-Woverloaded-virtual HAS_W_OVERLOADED_VIRTUAL)
 check_cxx_compiler_flag(-Winconsistent-missing-override HAS_W_INCONSISTENT_MISSING_OVERRIDE)
 check_cxx_compiler_flag(-Wgnu-zero-variadic-macro-arguments HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
 check_cxx_compiler_flag(-Wno-sign-compare HAS_W_GNU_SIGN_COMPARE)
+check_cxx_compiler_flag(-Wmaybe-uninitialized HAS_W_MAYBE_UNINITIALIZED)
 
 if (HAS_W_NULL_DEREFERENCE)
   # Avoid clang complaints about poor quality gmock/gtest headers
@@ -100,6 +101,10 @@ endif()
 if (HAS_W_GNU_SIGN_COMPARE)
   # TODO fix the code
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-compare")
+endif()
+if (HAS_W_MAYBE_UNINITIALIZED)
+  # Avoid g++ complaints about gmock/gtest headers
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized")
 endif()
 
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")
