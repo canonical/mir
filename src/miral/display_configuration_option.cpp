@@ -113,16 +113,19 @@ void miral::display_configuration_options(mir::Server& server)
             auto const scale_str = options->get<std::string>(display_scale_opt);
 
             double scale{0};
+            static double const scale_min = 0.01;
+            static double const scale_max = 100.0;
             try
             {
                 scale = std::stod(scale_str);
             }
             catch (std::invalid_argument const&)
             {
+                mir::fatal_error("Failed to parse scale '%s' as double", scale_str.c_str());
             }
-            if (scale < 0.01 || scale > 100.0)
+            if (scale < scale_min || scale > scale_max)
             {
-                mir::fatal_error("Invalid scale %s", scale_str.c_str());
+                mir::fatal_error("Invalid scale %f, must be between %f and %f", scale, scale_min, scale_max);
             }
 
             auto layout_selector = wrapped;
