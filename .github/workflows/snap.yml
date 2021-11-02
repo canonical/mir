@@ -6,10 +6,21 @@ on:
     - staging
     - trying
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, closed, synchronize, reopened, ready_for_review]
 
 jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+          exit 1
+
   mir-core20:
+    if: false
     runs-on: ubuntu-latest
 
     timeout-minutes: 30
