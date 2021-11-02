@@ -92,8 +92,23 @@ public:
         std::function<std::shared_ptr<void>(Context const* context)> build;
     };
 
+    /// Information that can be used to determine if to enable a conditionally enabled extension
+    /// \remark Since MirAL 3.4
+    struct Info
+    {
+        /// The application that is being given access to this extension
+        Application const& app;
+        /// If this extension is in the recommended set
+        bool recommended;
+        /// If the user has enabled this extension using the wayland-extensions or related option
+        bool manually_enabled;
+    };
+
     /// \remark Since MirAL 2.5
     using Filter = std::function<bool(Application const& app, char const* protocol)>;
+
+    /// \remark Since MirAL 3.4
+    using Condition = std::function<bool(Info const& info)>;
 
     /// Set an extension filter callback to control the extensions available to specific clients
     /// \remark Since MirAL 2.5
@@ -163,6 +178,10 @@ public:
     /// Throws a std::runtime_error if the extension is not supported
     /// \remark Since MirAL 2.6
     auto disable(std::string name) -> WaylandExtensions&;
+
+    /// Enable a Wayland extension only when the condition returns true
+    /// \remark Since MirAL 3.4
+    auto conditionally_enable(std::string name, Condition const& condition) -> WaylandExtensions&;
 
 private:
     struct Self;

@@ -464,5 +464,6 @@ MIRAL_3.4 {
 global:
   extern "C++" {
     miral::socket_fd_of*;
+    miral::WaylandExtensions::conditionally_enable*;
   };
 } MIRAL_3.3;

@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <mutex>
 #include <set>
+#include <map>
 #include <vector>
 
 namespace mo = mir::options;
@@ -99,7 +100,8 @@ struct miral::WaylandExtensions::Self
 {
 
     Self()
-        : default_extensions{WaylandExtensions::recommended()},
+        : recommended_extensions{WaylandExtensions::recommended()},
+          default_extensions{recommended_extensions},
           supported_extensions{WaylandExtensions::supported()}
     {
     }
@@ -167,20 +169,44 @@ struct miral::WaylandExtensions::Self
     void enable_extension(std::string name)
     {
         if (supported_extensions.find(name) == supported_extensions.end())
+        {
             BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to enable unsupported extension " + name));
+        }
         else
+        {
             default_extensions.insert(name);
+        }
     }
 
     void disable_extension(std::string name)
     {
         if (supported_extensions.find(name) == supported_extensions.end())
+        {
             BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to disable unsupported extension " + name));
+        }
         else
+        {
             default_extensions.erase(name);
+            conditional_extensions.erase(name);
+        }
     }
 
+    void conditionally_enable(std::string name, Condition const& condition)
+    {
+        if (supported_extensions.find(name) == supported_extensions.end())
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error(
+                "Attempted to conditionally enable unsupported extension " + name));
+        }
+        else
+        {
+            conditional_extensions[name] = condition;
+        }
+    }
+
+    std::set<std::string> const recommended_extensions;
     std::vector<Builder> wayland_extension_hooks;
+    std::map<std::string, Condition> conditional_extensions;
     /**
      * Extensions to enable by default if the user does not override with a command line options
      * This starts set to mir::frontend::get_standard_extensions()
@@ -261,13 +287,13 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                 server.add_wayland_extension(hook.name, std::move(frig));
             }
 
-            server.set_wayland_extension_filter(self->extensions_filter);
-
             std::set<std::string> selected_extensions;
+            std::set<std::string> manually_enabled_extensions;
             if (server.get_options()->is_set(mo::wayland_extensions_opt))
             {
-                selected_extensions = Self::parse_extensions_option(
+                manually_enabled_extensions = Self::parse_extensions_option(
                     server.get_options()->get<std::string>(mo::wayland_extensions_opt));
+                selected_extensions = manually_enabled_extensions;
             }
             else
             {
@@ -281,6 +307,7 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                 for (auto const& extension : added)
                 {
                     selected_extensions.insert(extension);
+                    manually_enabled_extensions.insert(extension);
                 }
             }
 
@@ -291,6 +318,7 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                 for (auto const& extension : dropped)
                 {
                     selected_extensions.erase(extension);
+                    manually_enabled_extensions.erase(extension);
                 }
             }
 
@@ -299,6 +327,28 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                 std::vector<std::string>{
                     selected_extensions.begin(),
                     selected_extensions.end()});
+
+            server.set_wayland_extension_filter(
+                [&self = self, manually_enabled_extensions = manually_enabled_extensions]
+                (Application const& app, char const* protocol) -> bool
+                {
+                    // Wayland calls the filter for all protocols (not just the optional extensions). To avoid accidents
+                    // (like denying base protocols) we always accept extensions that are not in supported_extensions.
+                    if (self->supported_extensions.count(protocol) == 0)
+                    {
+                        return true;
+                    }
+                    auto const cond = self->conditional_extensions.find(protocol);
+                    if (cond != self->conditional_extensions.end() &&
+                        !cond->second(Info{
+                            app,
+                            self->recommended_extensions.find(protocol) != self->recommended_extensions.end(),
+                            manually_enabled_extensions.find(protocol) != manually_enabled_extensions.end()}))
+                    {
+                        return false;
+                    }
+                    return self->extensions_filter(app, protocol);
+                });
         });
 }
 
@@ -314,14 +364,7 @@ void miral::WaylandExtensions::add_extension(Builder const& builder)
 
 void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const& extension_filter)
 {
-    // Wayland calls the filter for all protocols (not just the optional extensions).
-    // To avoid accidents (like denying base protocols) we only defer to the provided
-    // extension_filter for supported_extensions.
-    self->extensions_filter = [&optional = self->supported_extensions, extension_filter]
-        (Application const& app, char const* protocol)
-        {
-            return (optional.count(protocol) == 0) || extension_filter(app, protocol);
-        };
+    self->extensions_filter = extension_filter;
 }
 
 void miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const& builder)
@@ -348,6 +391,12 @@ auto miral::WaylandExtensions::enable(std::string name) -> WaylandExtensions&
 auto miral::WaylandExtensions::disable(std::string name) -> WaylandExtensions&
 {
     self->disable_extension(name);
+    return *this;
+}
+
+auto miral::WaylandExtensions::conditionally_enable(std::string name, Condition const& condition) -> WaylandExtensions&
+{
+    self->conditionally_enable(name, condition);
     return *this;
 }
 
