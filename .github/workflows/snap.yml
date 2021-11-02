@@ -6,10 +6,12 @@ on:
     - staging
     - trying
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, closed, synchronize, reopened, ready_for_review]
 
 jobs:
   mir-core20:
+    if: ${{ github.event.pull_request.action != 'closed' }}
+
     runs-on: ubuntu-latest
 
     timeout-minutes: 30
@@ -99,3 +101,23 @@ jobs:
       if: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
       run: |
         snapcraft upload *.snap --release "edge/mir-pr${{ github.event.number }}"
+
+  close:
+    if: ${{ github.event.pull_request.action == 'closed' }}
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 5
+
+    steps:
+    - name: Install Snapcraft
+      uses: samuelmeuli/action-snapcraft@v1
+      with:
+        snapcraft_token: ${{ secrets.SNAPCRAFT_TOKEN }}
+
+    - name: Close obsolete channels
+      run: |
+        snapcraft close mir-core20 "edge/pr${{ github.event.number }}"
+        for snap in mir-core20 mir-kiosk mir-test-tools egmde-confined-desktop; do
+          snapcraft close "$snap" "edge/mir-pr${{ github.event.number }}"
+        done
