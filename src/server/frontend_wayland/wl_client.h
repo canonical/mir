@@ -25,6 +25,7 @@ struct wl_display;
 
 #include <memory>
 #include <functional>
+#include <unordered_map>
 
 #include "mir/wayland/wayland_base.h"
 
@@ -96,6 +97,7 @@ private:
     std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const extension_filter;
 
     float output_geometry_scale_{1};
+    std::unordered_map<std::string, bool> cached_extension_filter_results;
 };
 }
 }

@@ -153,7 +153,14 @@ mf::WlClient::WlClient(
 
 auto mf::WlClient::filter_extension(const char* global_name) -> bool
 {
-    return extension_filter(session, global_name);
+    auto const result = cached_extension_filter_results.find(global_name);
+    if (result != cached_extension_filter_results.end())
+    {
+        return result->second;
+    }
+    auto const enable = extension_filter(session, global_name);
+    cached_extension_filter_results[global_name] = enable;
+    return enable;
 }
 
 void mf::WlClient::handle_client_created(wl_listener* listener, void* data)
