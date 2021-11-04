@@ -463,11 +463,22 @@ auto mf::create_wl_shell(
 
 void mf::WaylandExtensions::init(Context const& context)
 {
+    valid_global_names = {
+        mw::Compositor::interface_name,
+        mw::Subcompositor::interface_name,
+        mw::Shm::interface_name,
+        mw::Seat::interface_name,
+        mw::Output::interface_name,
+        mw::DataDeviceManager::interface_name,
+        "wl_drm",
+        "zwp_linux_dmabuf_v1",
+    };
     custom_extensions(context);
 }
 
 void mf::WaylandExtensions::add_extension(std::string const name, std::shared_ptr<void> implementation)
 {
+    valid_global_names.insert(name);
     extension_protocols[std::move(name)] = std::move(implementation);
 }
 
@@ -482,6 +493,11 @@ auto mir::frontend::WaylandExtensions::get_extension(std::string const& name) co
         return result->second;
 
     return {};
+}
+
+auto mf::WaylandExtensions::is_valid_global_name(std::string const& name) const -> bool
+{
+    return valid_global_names.find(name) != valid_global_names.end();
 }
 
 void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::function<void()>&& work)> const&)
@@ -770,6 +786,14 @@ bool mf::WaylandConnector::wl_display_global_filter_func_thunk(wl_client const* 
 bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client, wl_global const* global) const
 {
     auto const* const interface = wl_global_get_interface(global);
+    if (!extensions->is_valid_global_name(interface->name))
+    {
+        fatal_error(
+            "Unknown global %s. "
+            "Custom extension may have been added with incorrect name, "
+            "or default global may need to be added to mf::WaylandExtensions::init()",
+            interface->name);
+    }
     auto const session = get_session(const_cast<wl_client*>(client));
     return extension_filter(session, interface->name);
 }
