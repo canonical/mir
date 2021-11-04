@@ -6,239 +6,239 @@ global:
     virtual?thunk?to?mir::wayland::Buffer::*;
     typeinfo?for?mir::wayland::Buffer;
     vtable?for?mir::wayland::Buffer;
-    typeinfo?for?mir::wayland::Buffer::Global;
-    vtable?for?mir::wayland::Buffer::Global;
+    typeinfo?for?mir::wayland::BufferGlobal;
+    vtable?for?mir::wayland::BufferGlobal;
 
     mir::wayland::Callback::*;
     non-virtual?thunk?to?mir::wayland::Callback::*;
     typeinfo?for?mir::wayland::Callback;
     vtable?for?mir::wayland::Callback;
-    typeinfo?for?mir::wayland::Callback::Global;
-    vtable?for?mir::wayland::Callback::Global;
+    typeinfo?for?mir::wayland::CallbackGlobal;
+    vtable?for?mir::wayland::CallbackGlobal;
 
     mir::wayland::Compositor::*;
     non-virtual?thunk?to?mir::wayland::Compositor::*;
     typeinfo?for?mir::wayland::Compositor;
     vtable?for?mir::wayland::Compositor;
-    typeinfo?for?mir::wayland::Compositor::Global;
-    vtable?for?mir::wayland::Compositor::Global;
+    typeinfo?for?mir::wayland::CompositorGlobal;
+    vtable?for?mir::wayland::CompositorGlobal;
 
     mir::wayland::DataDevice::*;
     non-virtual?thunk?to?mir::wayland::DataDevice::*;
     typeinfo?for?mir::wayland::DataDevice;
     vtable?for?mir::wayland::DataDevice;
-    typeinfo?for?mir::wayland::DataDevice::Global;
-    vtable?for?mir::wayland::DataDevice::Global;
+    typeinfo?for?mir::wayland::DataDeviceGlobal;
+    vtable?for?mir::wayland::DataDeviceGlobal;
 
     mir::wayland::DataDeviceManager::*;
     non-virtual?thunk?to?mir::wayland::DataDeviceManager::*;
     typeinfo?for?mir::wayland::DataDeviceManager;
     vtable?for?mir::wayland::DataDeviceManager;
-    typeinfo?for?mir::wayland::DataDeviceManager::Global;
-    vtable?for?mir::wayland::DataDeviceManager::Global;
+    typeinfo?for?mir::wayland::DataDeviceManagerGlobal;
+    vtable?for?mir::wayland::DataDeviceManagerGlobal;
 
     mir::wayland::DataOffer::*;
     non-virtual?thunk?to?mir::wayland::DataOffer::*;
     typeinfo?for?mir::wayland::DataOffer;
     vtable?for?mir::wayland::DataOffer;
-    typeinfo?for?mir::wayland::DataOffer::Global;
-    vtable?for?mir::wayland::DataOffer::Global;
+    typeinfo?for?mir::wayland::DataOfferGlobal;
+    vtable?for?mir::wayland::DataOfferGlobal;
 
     mir::wayland::DataSource::*;
     non-virtual?thunk?to?mir::wayland::DataSource::*;
     typeinfo?for?mir::wayland::DataSource;
     vtable?for?mir::wayland::DataSource;
-    typeinfo?for?mir::wayland::DataSource::Global;
-    vtable?for?mir::wayland::DataSource::Global;
+    typeinfo?for?mir::wayland::DataSourceGlobal;
+    vtable?for?mir::wayland::DataSourceGlobal;
 
     mir::wayland::Keyboard::*;
     non-virtual?thunk?to?mir::wayland::Keyboard::*;
     typeinfo?for?mir::wayland::Keyboard;
     vtable?for?mir::wayland::Keyboard;
-    typeinfo?for?mir::wayland::Keyboard::Global;
-    vtable?for?mir::wayland::Keyboard::Global;
+    typeinfo?for?mir::wayland::KeyboardGlobal;
+    vtable?for?mir::wayland::KeyboardGlobal;
 
     mir::wayland::LayerShellV1::*;
     non-virtual?thunk?to?mir::wayland::LayerShellV1::*;
     typeinfo?for?mir::wayland::LayerShellV1;
     vtable?for?mir::wayland::LayerShellV1;
-    typeinfo?for?mir::wayland::LayerShellV1::Global;
-    vtable?for?mir::wayland::LayerShellV1::Global;
+    typeinfo?for?mir::wayland::LayerShellV1Global;
+    vtable?for?mir::wayland::LayerShellV1Global;
 
     mir::wayland::LayerSurfaceV1::*;
     non-virtual?thunk?to?mir::wayland::LayerSurfaceV1::*;
     typeinfo?for?mir::wayland::LayerSurfaceV1;
     vtable?for?mir::wayland::LayerSurfaceV1;
-    typeinfo?for?mir::wayland::LayerSurfaceV1::Global;
-    vtable?for?mir::wayland::LayerSurfaceV1::Global;
+    typeinfo?for?mir::wayland::LayerSurfaceV1Global;
+    vtable?for?mir::wayland::LayerSurfaceV1Global;
 
     mir::wayland::Output::*;
     non-virtual?thunk?to?mir::wayland::Output::*;
     typeinfo?for?mir::wayland::Output;
     vtable?for?mir::wayland::Output;
-    typeinfo?for?mir::wayland::Output::Global;
-    vtable?for?mir::wayland::Output::Global;
+    typeinfo?for?mir::wayland::OutputGlobal;
+    vtable?for?mir::wayland::OutputGlobal;
 
     mir::wayland::Pointer::*;
     non-virtual?thunk?to?mir::wayland::Pointer::*;
     typeinfo?for?mir::wayland::Pointer;
     vtable?for?mir::wayland::Pointer;
-    typeinfo?for?mir::wayland::Pointer::Global;
-    vtable?for?mir::wayland::Pointer::Global;
+    typeinfo?for?mir::wayland::PointerGlobal;
+    vtable?for?mir::wayland::PointerGlobal;
 
     mir::wayland::Region::*;
     non-virtual?thunk?to?mir::wayland::Region::*;
     typeinfo?for?mir::wayland::Region;
     vtable?for?mir::wayland::Region;
-    typeinfo?for?mir::wayland::Region::Global;
-    vtable?for?mir::wayland::Region::Global;
+    typeinfo?for?mir::wayland::RegionGlobal;
+    vtable?for?mir::wayland::RegionGlobal;
 
     mir::wayland::Seat::*;
     non-virtual?thunk?to?mir::wayland::Seat::*;
     typeinfo?for?mir::wayland::Seat;
     vtable?for?mir::wayland::Seat;
-    typeinfo?for?mir::wayland::Seat::Global;
-    vtable?for?mir::wayland::Seat::Global;
+    typeinfo?for?mir::wayland::SeatGlobal;
+    vtable?for?mir::wayland::SeatGlobal;
 
     mir::wayland::Shell::*;
     non-virtual?thunk?to?mir::wayland::Shell::*;
     typeinfo?for?mir::wayland::Shell;
     vtable?for?mir::wayland::Shell;
-    typeinfo?for?mir::wayland::Shell::Global;
-    vtable?for?mir::wayland::Shell::Global;
+    typeinfo?for?mir::wayland::ShellGlobal;
+    vtable?for?mir::wayland::ShellGlobal;
 
     mir::wayland::ShellSurface::*;
     non-virtual?thunk?to?mir::wayland::ShellSurface::*;
     typeinfo?for?mir::wayland::ShellSurface;
     vtable?for?mir::wayland::ShellSurface;
-    typeinfo?for?mir::wayland::ShellSurface::Global;
-    vtable?for?mir::wayland::ShellSurface::Global;
+    typeinfo?for?mir::wayland::ShellSurfaceGlobal;
+    vtable?for?mir::wayland::ShellSurfaceGlobal;
 
     mir::wayland::Shm::*;
     non-virtual?thunk?to?mir::wayland::Shm::*;
     typeinfo?for?mir::wayland::Shm;
     vtable?for?mir::wayland::Shm;
-    typeinfo?for?mir::wayland::Shm::Global;
-    vtable?for?mir::wayland::Shm::Global;
+    typeinfo?for?mir::wayland::ShmGlobal;
+    vtable?for?mir::wayland::ShmGlobal;
 
     mir::wayland::ShmPool::*;
     non-virtual?thunk?to?mir::wayland::ShmPool::*;
     typeinfo?for?mir::wayland::ShmPool;
     vtable?for?mir::wayland::ShmPool;
-    typeinfo?for?mir::wayland::ShmPool::Global;
-    vtable?for?mir::wayland::ShmPool::Global;
+    typeinfo?for?mir::wayland::ShmPoolGlobal;
+    vtable?for?mir::wayland::ShmPoolGlobal;
 
     mir::wayland::Subcompositor::*;
     non-virtual?thunk?to?mir::wayland::Subcompositor::*;
     typeinfo?for?mir::wayland::Subcompositor;
     vtable?for?mir::wayland::Subcompositor;
-    typeinfo?for?mir::wayland::Subcompositor::Global;
-    vtable?for?mir::wayland::Subcompositor::Global;
+    typeinfo?for?mir::wayland::SubcompositorGlobal;
+    vtable?for?mir::wayland::SubcompositorGlobal;
 
     mir::wayland::Subsurface::*;
     non-virtual?thunk?to?mir::wayland::Subsurface::*;
     typeinfo?for?mir::wayland::Subsurface;
     vtable?for?mir::wayland::Subsurface;
-    typeinfo?for?mir::wayland::Subsurface::Global;
-    vtable?for?mir::wayland::Subsurface::Global;
+    typeinfo?for?mir::wayland::SubsurfaceGlobal;
+    vtable?for?mir::wayland::SubsurfaceGlobal;
 
     mir::wayland::Surface::*;
     non-virtual?thunk?to?mir::wayland::Surface::*;
     typeinfo?for?mir::wayland::Surface;
     vtable?for?mir::wayland::Surface;
-    typeinfo?for?mir::wayland::Surface::Global;
-    vtable?for?mir::wayland::Surface::Global;
+    typeinfo?for?mir::wayland::SurfaceGlobal;
+    vtable?for?mir::wayland::SurfaceGlobal;
 
     mir::wayland::Touch::*;
     non-virtual?thunk?to?mir::wayland::Touch::*;
     typeinfo?for?mir::wayland::Touch;
     vtable?for?mir::wayland::Touch;
-    typeinfo?for?mir::wayland::Touch::Global;
-    vtable?for?mir::wayland::Touch::Global;
+    typeinfo?for?mir::wayland::TouchGlobal;
+    vtable?for?mir::wayland::TouchGlobal;
 
     mir::wayland::XdgPopup::*;
     non-virtual?thunk?to?mir::wayland::XdgPopup::*;
     typeinfo?for?mir::wayland::XdgPopup;
     vtable?for?mir::wayland::XdgPopup;
-    typeinfo?for?mir::wayland::XdgPopup::Global;
-    vtable?for?mir::wayland::XdgPopup::Global;
+    typeinfo?for?mir::wayland::XdgPopupGlobal;
+    vtable?for?mir::wayland::XdgPopupGlobal;
 
     mir::wayland::XdgPopupV6::*;
     non-virtual?thunk?to?mir::wayland::XdgPopupV6::*;
     typeinfo?for?mir::wayland::XdgPopupV6;
     vtable?for?mir::wayland::XdgPopupV6;
-    typeinfo?for?mir::wayland::XdgPopupV6::Global;
-    vtable?for?mir::wayland::XdgPopupV6::Global;
+    typeinfo?for?mir::wayland::XdgPopupV6Global;
+    vtable?for?mir::wayland::XdgPopupV6Global;
 
     mir::wayland::XdgPositioner::*;
     non-virtual?thunk?to?mir::wayland::XdgPositioner::*;
     typeinfo?for?mir::wayland::XdgPositioner;
     vtable?for?mir::wayland::XdgPositioner;
-    typeinfo?for?mir::wayland::XdgPositioner::Global;
-    vtable?for?mir::wayland::XdgPositioner::Global;
+    typeinfo?for?mir::wayland::XdgPositionerGlobal;
+    vtable?for?mir::wayland::XdgPositionerGlobal;
 
     mir::wayland::XdgPositionerV6::*;
     non-virtual?thunk?to?mir::wayland::XdgPositionerV6::*;
     typeinfo?for?mir::wayland::XdgPositionerV6;
     vtable?for?mir::wayland::XdgPositionerV6;
-    typeinfo?for?mir::wayland::XdgPositionerV6::Global;
-    vtable?for?mir::wayland::XdgPositionerV6::Global;
+    typeinfo?for?mir::wayland::XdgPositionerV6Global;
+    vtable?for?mir::wayland::XdgPositionerV6Global;
 
     mir::wayland::XdgShellV6::*;
     non-virtual?thunk?to?mir::wayland::XdgShellV6::*;
     typeinfo?for?mir::wayland::XdgShellV6;
     vtable?for?mir::wayland::XdgShellV6;
-    typeinfo?for?mir::wayland::XdgShellV6::Global;
-    vtable?for?mir::wayland::XdgShellV6::Global;
+    typeinfo?for?mir::wayland::XdgShellV6Global;
+    vtable?for?mir::wayland::XdgShellV6Global;
 
     mir::wayland::XdgSurface::*;
     non-virtual?thunk?to?mir::wayland::XdgSurface::*;
     typeinfo?for?mir::wayland::XdgSurface;
     vtable?for?mir::wayland::XdgSurface;
-    typeinfo?for?mir::wayland::XdgSurface::Global;
-    vtable?for?mir::wayland::XdgSurface::Global;
+    typeinfo?for?mir::wayland::XdgSurfaceGlobal;
+    vtable?for?mir::wayland::XdgSurfaceGlobal;
 
     mir::wayland::XdgSurfaceV6::*;
     non-virtual?thunk?to?mir::wayland::XdgSurfaceV6::*;
     typeinfo?for?mir::wayland::XdgSurfaceV6;
     vtable?for?mir::wayland::XdgSurfaceV6;
-    typeinfo?for?mir::wayland::XdgSurfaceV6::Global;
-    vtable?for?mir::wayland::XdgSurfaceV6::Global;
+    typeinfo?for?mir::wayland::XdgSurfaceV6Global;
+    vtable?for?mir::wayland::XdgSurfaceV6Global;
 
     mir::wayland::XdgToplevel::*;
     non-virtual?thunk?to?mir::wayland::XdgToplevel::*;
     typeinfo?for?mir::wayland::XdgToplevel;
     vtable?for?mir::wayland::XdgToplevel;
-    typeinfo?for?mir::wayland::XdgToplevel::Global;
-    vtable?for?mir::wayland::XdgToplevel::Global;
+    typeinfo?for?mir::wayland::XdgToplevelGlobal;
+    vtable?for?mir::wayland::XdgToplevelGlobal;
 
     mir::wayland::XdgToplevelV6::*;
     non-virtual?thunk?to?mir::wayland::XdgToplevelV6::*;
     typeinfo?for?mir::wayland::XdgToplevelV6;
     vtable?for?mir::wayland::XdgToplevelV6;
-    typeinfo?for?mir::wayland::XdgToplevelV6::Global;
-    vtable?for?mir::wayland::XdgToplevelV6::Global;
+    typeinfo?for?mir::wayland::XdgToplevelV6Global;
+    vtable?for?mir::wayland::XdgToplevelV6Global;
 
     mir::wayland::XdgWmBase::*;
     non-virtual?thunk?to?mir::wayland::XdgWmBase::*;
     typeinfo?for?mir::wayland::XdgWmBase;
     vtable?for?mir::wayland::XdgWmBase;
-    typeinfo?for?mir::wayland::XdgWmBase::Global;
-    vtable?for?mir::wayland::XdgWmBase::Global;
+    typeinfo?for?mir::wayland::XdgWmBaseGlobal;
+    vtable?for?mir::wayland::XdgWmBaseGlobal;
 
     mir::wayland::XdgOutputManagerV1::*;
     non-virtual?thunk?to?mir::wayland::XdgOutputManagerV1::*;
     typeinfo?for?mir::wayland::XdgOutputManagerV1;
     vtable?for?mir::wayland::XdgOutputManagerV1;
-    typeinfo?for?mir::wayland::XdgOutputManagerV1::Global;
-    vtable?for?mir::wayland::XdgOutputManagerV1::Global;
+    typeinfo?for?mir::wayland::XdgOutputManagerV1Global;
+    vtable?for?mir::wayland::XdgOutputManagerV1Global;
 
     mir::wayland::XdgOutputV1::*;
     non-virtual?thunk?to?mir::wayland::XdgOutputV1::*;
     typeinfo?for?mir::wayland::XdgOutputV1;
     vtable?for?mir::wayland::XdgOutputV1;
-    typeinfo?for?mir::wayland::XdgOutputV1::Global;
-    vtable?for?mir::wayland::XdgOutputV1::Global;
+    typeinfo?for?mir::wayland::XdgOutputV1Global;
+    vtable?for?mir::wayland::XdgOutputV1Global;
 
     mir::wayland::wl_buffer_interface_data;
     mir::wayland::wl_callback_interface_data;
@@ -292,9 +292,9 @@ global:
     typeinfo?for?mir::wayland::Resource;
     vtable?for?mir::wayland::Resource;
 
-    mir::wayland::Global::*;
-    typeinfo?for?mir::wayland::Global;
-    vtable?for?mir::wayland::Global;
+    mir::waylandGlobal::*;
+    typeinfo?for?mir::waylandGlobal;
+    vtable?for?mir::waylandGlobal;
 
     mir::wayland::internal_error_processing_request*;
 
@@ -335,8 +335,8 @@ global:
     virtual?thunk?to?mir::wayland::ForeignToplevelManagerV1::?ForeignToplevelManagerV1*;
     typeinfo?for?mir::wayland::ForeignToplevelManagerV1;
     vtable?for?mir::wayland::ForeignToplevelManagerV1;
-    typeinfo?for?mir::wayland::ForeignToplevelManagerV1::Global;
-    vtable?for?mir::wayland::ForeignToplevelManagerV1::Global;
+    typeinfo?for?mir::wayland::ForeignToplevelManagerV1Global;
+    vtable?for?mir::wayland::ForeignToplevelManagerV1Global;
     mir::wayland::zwlr_foreign_toplevel_handle_v1_interface_data;
 
     mir::wayland::ForeignToplevelHandleV1::*;
@@ -359,8 +359,8 @@ global:
     non-virtual?thunk?to?mir::wayland::PointerConstraintsV1::*;
     typeinfo?for?mir::wayland::PointerConstraintsV1;
     vtable?for?mir::wayland::PointerConstraintsV1;
-    typeinfo?for?mir::wayland::PointerConstraintsV1::Global;
-    vtable?for?mir::wayland::PointerConstraintsV1::Global;
+    typeinfo?for?mir::wayland::PointerConstraintsV1Global;
+    vtable?for?mir::wayland::PointerConstraintsV1Global;
     virtual?thunk?to?mir::wayland::PointerConstraintsV1::?PointerConstraintsV1*;
 
     mir::wayland::ConfinedPointerV1::*;
@@ -379,9 +379,9 @@ global:
     non-virtual?thunk?to?mir::wayland::RelativePointerManagerV1::*;
     typeinfo?for?mir::wayland::RelativePointerManagerV1;
     vtable?for?mir::wayland::RelativePointerManagerV1;
-    typeinfo?for?mir::wayland::RelativePointerManagerV1::Global;
-    vtable?for?mir::wayland::RelativePointerManagerV1::Global;
-    virtual?thunk?to?mir::wayland::RelativePointerManagerV1::?RelativePointerManagerV1*;  
+    typeinfo?for?mir::wayland::RelativePointerManagerV1Global;
+    vtable?for?mir::wayland::RelativePointerManagerV1Global;
+    virtual?thunk?to?mir::wayland::RelativePointerManagerV1::?RelativePointerManagerV1*;
 
     mir::wayland::RelativePointerV1::*;
     non-virtual?thunk?to?mir::wayland::RelativePointerV1::*;
@@ -393,8 +393,8 @@ global:
     non-virtual?thunk?to?mir::wayland::VirtualKeyboardManagerV1::*;
     typeinfo?for?mir::wayland::VirtualKeyboardManagerV1;
     vtable?for?mir::wayland::VirtualKeyboardManagerV1;
-    typeinfo?for?mir::wayland::VirtualKeyboardManagerV1::Global;
-    vtable?for?mir::wayland::VirtualKeyboardManagerV1::Global;
+    typeinfo?for?mir::wayland::VirtualKeyboardManagerV1Global;
+    vtable?for?mir::wayland::VirtualKeyboardManagerV1Global;
     virtual?thunk?to?mir::wayland::VirtualKeyboardManagerV1::?VirtualKeyboardManagerV1*;
 
     mir::wayland::VirtualKeyboardV1::*;
@@ -407,8 +407,8 @@ global:
     non-virtual?thunk?to?mir::wayland::TextInputManagerV3::*;
     typeinfo?for?mir::wayland::TextInputManagerV3;
     vtable?for?mir::wayland::TextInputManagerV3;
-    typeinfo?for?mir::wayland::TextInputManagerV3::Global;
-    vtable?for?mir::wayland::TextInputManagerV3::Global;
+    typeinfo?for?mir::wayland::TextInputManagerV3Global;
+    vtable?for?mir::wayland::TextInputManagerV3Global;
     virtual?thunk?to?mir::wayland::TextInputManagerV3::?TextInputManagerV3*;
 
     mir::wayland::TextInputV3::*;
@@ -421,8 +421,8 @@ global:
     non-virtual?thunk?to?mir::wayland::InputMethodManagerV2::*;
     typeinfo?for?mir::wayland::InputMethodManagerV2;
     vtable?for?mir::wayland::InputMethodManagerV2;
-    typeinfo?for?mir::wayland::InputMethodManagerV2::Global;
-    vtable?for?mir::wayland::InputMethodManagerV2::Global;
+    typeinfo?for?mir::wayland::InputMethodManagerV2Global;
+    vtable?for?mir::wayland::InputMethodManagerV2Global;
     virtual?thunk?to?mir::wayland::InputMethodManagerV2::?InputMethodManagerV2*;
 
     mir::wayland::InputMethodV2::*;
@@ -442,6 +442,9 @@ global:
     typeinfo?for?mir::wayland::InputMethodKeyboardGrabV2;
     vtable?for?mir::wayland::InputMethodKeyboardGrabV2;
     virtual?thunk?to?mir::wayland::InputMethodKeyboardGrabV2::?InputMethodKeyboardGrabV2*;
+
+    typeinfo?for?mir::wayland::Global;
+    mir::wayland::*;
   };
   local: *;
 };
