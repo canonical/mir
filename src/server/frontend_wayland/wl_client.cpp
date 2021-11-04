@@ -40,10 +40,14 @@ struct ConstructionCtx
     ConstructionCtx(
         std::shared_ptr<msh::Shell> const& shell,
         std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
-        std::function<void(mf::WlClient&)>&& client_created_callback)
+        std::function<void(mf::WlClient&)> const& client_created_callback,
+        std::function<bool(std::shared_ptr<ms::Session> const&, char const*)> const& extension_filter)
         : shell{shell},
           session_authorizer{session_authorizer},
-          client_created_callback{std::make_unique<std::function<void(mf::WlClient&)>>(std::move(client_created_callback))}
+          client_created_callback{std::make_unique<std::function<void(mf::WlClient&)>>(
+              client_created_callback)},
+          extension_filter{std::make_unique<std::function<bool(std::shared_ptr<ms::Session> const&, char const*)>>(
+              extension_filter)}
     {
     }
 
@@ -53,6 +57,7 @@ struct ConstructionCtx
     std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
     /// Needs to be a pointer so std::is_standard_layout passes
     mir::StdLayoutUPtr<std::function<void(mf::WlClient&)>> const client_created_callback;
+    mir::StdLayoutUPtr<std::function<bool(std::shared_ptr<ms::Session> const&, char const*)>> const extension_filter;
 };
 
 static_assert(
@@ -102,9 +107,14 @@ void mf::WlClient::setup_new_client_handler(
     wl_display* display,
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-    std::function<void(WlClient&)>&& client_created_callback)
+    std::function<void(WlClient&)> const& client_created_callback,
+    std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter)
 {
-    auto context = new ConstructionCtx{shell, session_authorizer, std::move(client_created_callback)};
+    auto context = new ConstructionCtx{
+        shell,
+        session_authorizer,
+        client_created_callback,
+        extension_filter};
 
     context->client_construction_listener.notify = &handle_client_created;
     wl_display_add_client_created_listener(display, &context->client_construction_listener);
@@ -162,12 +172,22 @@ auto mf::WlClient::event_for(uint32_t serial) -> std::optional<std::shared_ptr<M
     return std::nullopt;
 }
 
-mf::WlClient::WlClient(wl_client* client, std::shared_ptr<ms::Session> const& session, msh::Shell* shell)
+mf::WlClient::WlClient(
+    wl_client* client,
+    std::shared_ptr<ms::Session> const& session,
+    msh::Shell* shell,
+    std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter)
     : shell{shell},
       client{client},
       display{wl_client_get_display(client)},
-      session{session}
+      session{session},
+      extension_filter{extension_filter}
 {
+}
+
+auto mf::WlClient::filter_extension(const char* global_name) -> bool
+{
+    return extension_filter(session, global_name);
 }
 
 void mf::WlClient::handle_client_created(wl_listener* listener, void* data)
@@ -195,8 +215,11 @@ void mf::WlClient::handle_client_created(wl_listener* listener, void* data)
         std::make_shared<mf::NullEventSink>());
 
     // Can't use std::make_unique because WlClient constructor is private
-    auto wl_client = std::unique_ptr<mf::WlClient>{
-        new mf::WlClient{client, session, construction_context->shell.get()}};
+    auto wl_client = std::unique_ptr<mf::WlClient>{new mf::WlClient{
+        client,
+        session,
+        construction_context->shell.get(),
+        *construction_context->extension_filter}};
     auto client_context = new ClientCtx{std::move(wl_client)};
     client_context->destroy_listener.notify = &cleanup_client_ctx;
     wl_client_add_destroy_listener(client, &client_context->destroy_listener);

@@ -239,8 +239,7 @@ mf::WaylandConnector::WaylandConnector(
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
       allocator{allocator_for_display(allocator, display.get(), executor)},
       shell{shell},
-      extensions{std::move(extensions_)},
-      extension_filter{extension_filter}
+      extensions{std::move(extensions_)}
 {
     if (pause_signal == mir::Fd::invalid)
     {
@@ -355,7 +354,8 @@ mf::WaylandConnector::WaylandConnector(
                 connect_handlers.erase(handler_iter);
                 callback(client.client_session());
             }
-        });
+        },
+        extension_filter);
 
     pause_source = wl_event_loop_add_fd(wayland_loop, pause_signal, WL_EVENT_READABLE, &halt_eventloop, display.get());
 }
@@ -512,8 +512,8 @@ bool mf::WaylandConnector::wl_display_global_filter_func_thunk(wl_client const* 
 bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client, wl_global const* global) const
 {
     auto const* const interface = wl_global_get_interface(global);
-    auto const session = get_session(const_cast<wl_client*>(client));
-    return extension_filter(session, interface->name);
+    auto& client_class = WlClient::from(const_cast<wl_client*>(client));
+    return client_class.filter_extension(interface->name);
 }
 
 auto mir::frontend::get_session(wl_client* wl_client) -> std::shared_ptr<scene::Session>

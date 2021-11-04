@@ -54,7 +54,8 @@ public:
         wl_display* display,
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-        std::function<void(WlClient&)>&& client_created_callback);
+        std::function<void(WlClient&)> const& client_created_callback,
+        std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter);
 
     static auto from(wl_client* client) -> WlClient&;
 
@@ -85,8 +86,15 @@ public:
     auto output_geometry_scale() -> float { return output_geometry_scale_; }
     /// @}
 
+    /// Check if the given Wayland global is allowed for this client.
+    auto filter_extension(const char* global_name) -> bool;
+
 private:
-    WlClient(wl_client* client, std::shared_ptr<scene::Session> const& session, shell::Shell* shell);
+    WlClient(
+        wl_client* client,
+        std::shared_ptr<scene::Session> const& session,
+        shell::Shell* shell,
+        std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter);
 
     static void handle_client_created(wl_listener* listener, void* data);
 
@@ -95,6 +103,7 @@ private:
     wl_client* const client;
     wl_display* const display;
     std::shared_ptr<scene::Session> const session;
+    std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const extension_filter;
 
     std::deque<std::pair<uint32_t, std::shared_ptr<MirEvent const>>> serial_event_pairs;
     float output_geometry_scale_{1};
