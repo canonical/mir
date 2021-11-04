@@ -25,6 +25,7 @@ struct wl_display;
 #include <functional>
 #include <optional>
 #include <deque>
+#include <unordered_map>
 
 #include "mir/wayland/wayland_base.h"
 
@@ -107,6 +108,7 @@ private:
 
     std::deque<std::pair<uint32_t, std::shared_ptr<MirEvent const>>> serial_event_pairs;
     float output_geometry_scale_{1};
+    std::unordered_map<std::string, bool> cached_extension_filter_results;
 };
 }
 }
