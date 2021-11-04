@@ -45,17 +45,17 @@ struct ServerDecoration :
     uint32_t decoration_mode = Mode::Server;
 };
 
-struct ServerDecorationManager : mw::ServerDecorationManager::Global
+struct ServerDecorationManager : mw::ServerDecorationManagerGlobal
 {
     static int const interface_supported = 1;
 
     ServerDecorationManager(struct wl_display* display) :
-        Global(display, Version<interface_supported>())
+        ServerDecorationManagerGlobal(display, Version<interface_supported>())
     {
     };
 
     ServerDecorationManager(struct wl_display* display, ServerDecorationCreateCallback callback) :
-        Global(display, Version<interface_supported>()),
+        ServerDecorationManagerGlobal(display, Version<interface_supported>()),
         callback{callback}
     {
     };

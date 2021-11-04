@@ -31,7 +31,7 @@ class Clipboard;
 
 namespace frontend
 {
-class WlDataDeviceManager : public wayland::DataDeviceManager::Global
+class WlDataDeviceManager : public wayland::DataDeviceManagerGlobal
 {
 public:
     WlDataDeviceManager(

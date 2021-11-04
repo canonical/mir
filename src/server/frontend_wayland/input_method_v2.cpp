@@ -134,7 +134,7 @@ struct InputMethodV2Ctx
 };
 
 class InputMethodManagerV2Global
-    : public wayland::InputMethodManagerV2::Global
+    : public wayland::InputMethodManagerV2Global
 {
 public:
     InputMethodManagerV2Global(wl_display* display, std::shared_ptr<InputMethodV2Ctx> const& ctx);
@@ -250,7 +250,7 @@ auto mf::create_input_method_manager_v2(
 mf::InputMethodManagerV2Global::InputMethodManagerV2Global(
     wl_display* display,
     std::shared_ptr<InputMethodV2Ctx> const& ctx)
-    : Global{display, Version<1>()},
+    : mw::InputMethodManagerV2Global{display, Version<1>()},
       ctx{ctx}
 {
 }

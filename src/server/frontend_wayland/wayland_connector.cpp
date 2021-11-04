@@ -93,7 +93,7 @@ namespace mir
 {
 namespace frontend
 {
-class WlCompositor : public wayland::Compositor::Global
+class WlCompositor : public wayland::CompositorGlobal
 {
 public:
     WlCompositor(
@@ -101,7 +101,7 @@ public:
         std::shared_ptr<mir::Executor> const& wayland_executor,
         std::shared_ptr<mir::Executor> const& frame_callback_executor,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
-        : Global(display, Version<4>()),
+        : CompositorGlobal(display, Version<4>()),
           allocator{allocator},
           wayland_executor{wayland_executor},
           frame_callback_executor{frame_callback_executor}
@@ -351,7 +351,7 @@ protected:
     }
 };
 
-class WlShell : public wayland::Shell::Global
+class WlShell : public wayland::ShellGlobal
 {
 public:
     WlShell(
@@ -360,7 +360,7 @@ public:
         std::shared_ptr<msh::Shell> const& shell,
         WlSeat& seat,
         OutputManager* const output_manager)
-        : Global(display, Version<1>()),
+        : ShellGlobal(display, Version<1>()),
           wayland_executor{wayland_executor},
           shell{shell},
           seat{seat},

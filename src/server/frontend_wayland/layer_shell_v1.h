@@ -38,7 +38,7 @@ namespace frontend
 class WlSeat;
 class OutputManager;
 
-class LayerShellV1 : public wayland::LayerShellV1::Global
+class LayerShellV1 : public wayland::LayerShellV1Global
 {
 public:
     LayerShellV1(

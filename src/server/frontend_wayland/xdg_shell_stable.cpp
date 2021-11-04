@@ -147,7 +147,7 @@ mf::XdgShellStable::XdgShellStable(
     std::shared_ptr<msh::Shell> shell,
     WlSeat& seat,
     OutputManager* output_manager)
-    : Global(display, Version<1>()),
+    : XdgWmBaseGlobal(display, Version<1>()),
       wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},

@@ -52,7 +52,7 @@ class ForeignToplevelHandleV1;
 /// The Wayland objects it creates for each toplevel can be used to aquire information and control that toplevel
 /// Useful for task bars and app switchers
 class ForeignToplevelManagerV1Global
-    : public wayland::ForeignToplevelManagerV1::Global
+    : public wayland::ForeignToplevelManagerV1Global
 {
 public:
     ForeignToplevelManagerV1Global(
@@ -204,7 +204,7 @@ mf::ForeignToplevelManagerV1Global::ForeignToplevelManagerV1Global(
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<SurfaceStack> const& surface_stack)
-    : Global{display, Version<2>()},
+    : mw::ForeignToplevelManagerV1Global{display, Version<2>()},
       shell{shell},
       wayland_executor{wayland_executor},
       surface_stack{surface_stack}

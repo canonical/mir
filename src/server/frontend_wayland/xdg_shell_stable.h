@@ -36,7 +36,7 @@ class OutputManager;
 class WlSurface;
 class XdgSurfaceStable;
 
-class XdgShellStable : public wayland::XdgWmBase::Global
+class XdgShellStable : public wayland::XdgWmBaseGlobal
 {
 public:
     XdgShellStable(

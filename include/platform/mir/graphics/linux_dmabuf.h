@@ -44,7 +44,7 @@ namespace graphics
 
 class DmaBufFormatDescriptors;
 
-class LinuxDmaBufUnstable : public mir::wayland::LinuxDmabufV1::Global
+class LinuxDmaBufUnstable : public mir::wayland::LinuxDmabufV1Global
 {
 public:
     LinuxDmaBufUnstable(

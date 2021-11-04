@@ -37,7 +37,7 @@ class PointerConstraintsV1 : public wayland::PointerConstraintsV1
 public:
     PointerConstraintsV1(wl_resource* resource, Executor& wayland_executor, std::shared_ptr<shell::Shell> shell);
 
-    class Global : public wayland::PointerConstraintsV1::Global
+    class Global : public wayland::PointerConstraintsV1Global
     {
     public:
         Global(wl_display* display, Executor& wayland_executor, std::shared_ptr<shell::Shell> shell);
@@ -231,7 +231,7 @@ auto mir::frontend::create_pointer_constraints_unstable_v1(wl_display* display, 
 }
 
 mir::frontend::PointerConstraintsV1::Global::Global(wl_display* display, Executor& wayland_executor, std::shared_ptr<shell::Shell> shell) :
-    wayland::PointerConstraintsV1::Global::Global{display, Version<1>{}},
+    PointerConstraintsV1Global{display, Version<1>{}},
     wayland_executor{wayland_executor},
     shell{std::move(shell)}
 {

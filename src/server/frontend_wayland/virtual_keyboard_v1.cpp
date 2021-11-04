@@ -122,7 +122,7 @@ struct VirtualKeyboardV1Ctx
 };
 
 class VirtualKeyboardManagerV1Global
-    : public wayland::VirtualKeyboardManagerV1::Global
+    : public wayland::VirtualKeyboardManagerV1Global
 {
 public:
     VirtualKeyboardManagerV1Global(wl_display* display, std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx);
@@ -226,7 +226,7 @@ auto mf::create_virtual_keyboard_manager_v1(
 mf::VirtualKeyboardManagerV1Global::VirtualKeyboardManagerV1Global(
     wl_display* display,
     std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx)
-    : Global{display, Version<1>()},
+    : mw::VirtualKeyboardManagerV1Global{display, Version<1>()},
       ctx{ctx}
 {
 }

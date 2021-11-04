@@ -37,7 +37,7 @@ namespace frontend
 class WlSeat;
 class OutputManager;
 
-class XdgShellV6 : public wayland::XdgShellV6::Global
+class XdgShellV6 : public wayland::XdgShellV6Global
 {
 public:
     XdgShellV6(

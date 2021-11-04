@@ -1084,7 +1084,7 @@ mg::LinuxDmaBufUnstable::LinuxDmaBufUnstable(
     EGLDisplay dpy,
     std::shared_ptr<EGLExtensions> egl_extensions,
     EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext)
-    : mir::wayland::LinuxDmabufV1::Global(display, Version<3>{}),
+    : mir::wayland::LinuxDmabufV1Global(display, Version<3>{}),
       dpy{dpy},
       egl_extensions{std::move(egl_extensions)},
       formats{std::make_shared<DmaBufFormatDescriptors>(dpy, dmabuf_ext)}

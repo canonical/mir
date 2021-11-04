@@ -31,7 +31,7 @@ class RelativePointerManagerV1 : public wayland::RelativePointerManagerV1
 public:
     RelativePointerManagerV1(wl_resource* resource, std::shared_ptr<shell::Shell> shell);
 
-    class Global : public wayland::RelativePointerManagerV1::Global
+    class Global : public wayland::RelativePointerManagerV1Global
     {
     public:
         Global(wl_display* display, std::shared_ptr<shell::Shell> shell);
@@ -65,7 +65,7 @@ auto mir::frontend::create_relative_pointer_unstable_v1(wl_display *display, std
 }
 
 mir::frontend::RelativePointerManagerV1::Global::Global(wl_display* display, std::shared_ptr<shell::Shell> shell) :
-    wayland::RelativePointerManagerV1::Global::Global{display, Version<1>{}},
+    RelativePointerManagerV1Global{display, Version<1>{}},
     shell{std::move(shell)}
 {
 }

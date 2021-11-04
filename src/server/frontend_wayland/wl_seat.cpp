@@ -151,7 +151,7 @@ mf::WlSeat::WlSeat(
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<mi::Seat> const& seat,
     bool enable_key_repeat)
-    :   Global(display, Version<6>()),
+    :   SeatGlobal(display, Version<6>()),
         keymap{std::make_shared<input::ParameterKeymap>()},
         config_observer{
             std::make_shared<ConfigObserver>(

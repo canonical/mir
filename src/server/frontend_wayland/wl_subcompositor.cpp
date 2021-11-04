@@ -43,7 +43,7 @@ private:
 }
 
 mf::WlSubcompositor::WlSubcompositor(wl_display* display)
-    : Global{display, Version<1>()}
+    : SubcompositorGlobal{display, Version<1>()}
 {
 }
 

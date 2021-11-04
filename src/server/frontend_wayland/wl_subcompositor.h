@@ -40,7 +40,7 @@ namespace frontend
 class WlSurface;
 class WlSubcompositorInstance;
 
-class WlSubcompositor : wayland::Subcompositor::Global
+class WlSubcompositor : wayland::SubcompositorGlobal
 {
 public:
     WlSubcompositor(wl_display* display);

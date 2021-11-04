@@ -35,7 +35,7 @@ namespace mir
 namespace frontend
 {
 
-class XdgOutputManagerV1 : public wayland::XdgOutputManagerV1::Global
+class XdgOutputManagerV1 : public wayland::XdgOutputManagerV1Global
 {
 public:
     XdgOutputManagerV1(struct wl_display* display, OutputManager* const output_manager);
@@ -82,7 +82,7 @@ auto mf::create_xdg_output_manager_v1(struct wl_display* display, OutputManager*
 }
 
 mf::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_display* display, mf::OutputManager* const output_manager)
-    : Global(display, Version<3>()),
+    : XdgOutputManagerV1Global(display, Version<3>()),
       output_manager{output_manager}
 {
 }

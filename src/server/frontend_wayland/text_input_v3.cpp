@@ -131,7 +131,7 @@ struct TextInputV3Ctx
 };
 
 class TextInputManagerV3Global
-    : public wayland::TextInputManagerV3::Global
+    : public wayland::TextInputManagerV3Global
 {
 public:
     TextInputManagerV3Global(wl_display* display, std::shared_ptr<TextInputV3Ctx> const& ctx);
@@ -240,7 +240,7 @@ auto mf::create_text_input_manager_v3(
 mf::TextInputManagerV3Global::TextInputManagerV3Global(
     wl_display* display,
     std::shared_ptr<TextInputV3Ctx> const& ctx)
-    : Global{display, Version<1>()},
+    : mw::TextInputManagerV3Global{display, Version<1>()},
       ctx{ctx}
 {
 }

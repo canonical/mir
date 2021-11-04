@@ -46,7 +46,7 @@ class WlSurface;
 class KeyboardCallbacks;
 class KeyboardHelper;
 
-class WlSeat : public wayland::Seat::Global
+class WlSeat : public wayland::SeatGlobal
 {
 public:
     WlSeat(

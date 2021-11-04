@@ -216,7 +216,7 @@ mf::LayerShellV1::LayerShellV1(
     std::shared_ptr<msh::Shell> shell,
     WlSeat& seat,
     OutputManager* output_manager)
-    : Global(display, Version<4>()),
+    : LayerShellV1Global(display, Version<4>()),
       wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
