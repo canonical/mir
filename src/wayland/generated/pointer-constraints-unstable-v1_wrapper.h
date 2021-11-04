@@ -52,21 +52,19 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<1>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_zwp_pointer_constraints_v1) = 0;
-        friend PointerConstraintsV1::Thunks;
-    };
-
 private:
     virtual void lock_pointer(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* pointer, std::optional<struct wl_resource*> const& region, uint32_t lifetime) = 0;
     virtual void confine_pointer(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* pointer, std::optional<struct wl_resource*> const& region, uint32_t lifetime) = 0;
+};
+
+class PointerConstraintsV1Global : public wayland::Global
+{
+public:
+    PointerConstraintsV1Global(wl_display* display, Version<1>);
+
+private:
+    virtual void bind(wl_resource* new_zwp_pointer_constraints_v1) = 0;
+    friend PointerConstraintsV1::Thunks;
 };
 
 class LockedPointerV1 : public Resource

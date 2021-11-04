@@ -123,20 +123,18 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<1>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_zwp_text_input_manager_v3) = 0;
-        friend TextInputManagerV3::Thunks;
-    };
-
 private:
     virtual void get_text_input(struct wl_resource* id, struct wl_resource* seat) = 0;
+};
+
+class TextInputManagerV3Global : public wayland::Global
+{
+public:
+    TextInputManagerV3Global(wl_display* display, Version<1>);
+
+private:
+    virtual void bind(wl_resource* new_zwp_text_input_manager_v3) = 0;
+    friend TextInputManagerV3::Thunks;
 };
 
 }

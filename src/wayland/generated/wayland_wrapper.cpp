@@ -179,11 +179,11 @@ struct mw::Compositor::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<Compositor::Global*>(data);
+        auto me = static_cast<CompositorGlobal*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_compositor_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, Compositor::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -235,20 +235,15 @@ void mw::Compositor::destroy_and_delete() const
     wl_resource_destroy(resource);
 }
 
-mw::Compositor::Global::Global(wl_display* display, Version<4>)
+mw::CompositorGlobal::CompositorGlobal(wl_display* display, Version<4>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_compositor_interface_data,
-              Thunks::supported_version,
+              Compositor::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &Compositor::Thunks::bind_thunk)}
 {
-}
-
-auto mw::Compositor::Global::interface_name() const -> char const*
-{
-    return Compositor::interface_name;
 }
 
 struct wl_interface const* mw::Compositor::Thunks::create_surface_types[] {
@@ -435,11 +430,11 @@ struct mw::Shm::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<Shm::Global*>(data);
+        auto me = static_cast<ShmGlobal*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_shm_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, Shm::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -558,20 +553,15 @@ uint32_t const mw::Shm::Format::yvu422;
 uint32_t const mw::Shm::Format::yuv444;
 uint32_t const mw::Shm::Format::yvu444;
 
-mw::Shm::Global::Global(wl_display* display, Version<1>)
+mw::ShmGlobal::ShmGlobal(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_shm_interface_data,
-              Thunks::supported_version,
+              Shm::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &Shm::Thunks::bind_thunk)}
 {
-}
-
-auto mw::Shm::Global::interface_name() const -> char const*
-{
-    return Shm::interface_name;
 }
 
 struct wl_interface const* mw::Shm::Thunks::create_pool_types[] {
@@ -1300,11 +1290,11 @@ struct mw::DataDeviceManager::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<DataDeviceManager::Global*>(data);
+        auto me = static_cast<DataDeviceManagerGlobal*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_data_device_manager_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, DataDeviceManager::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -1361,20 +1351,15 @@ uint32_t const mw::DataDeviceManager::DndAction::copy;
 uint32_t const mw::DataDeviceManager::DndAction::move;
 uint32_t const mw::DataDeviceManager::DndAction::ask;
 
-mw::DataDeviceManager::Global::Global(wl_display* display, Version<3>)
+mw::DataDeviceManagerGlobal::DataDeviceManagerGlobal(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_data_device_manager_interface_data,
-              Thunks::supported_version,
+              DataDeviceManager::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &DataDeviceManager::Thunks::bind_thunk)}
 {
-}
-
-auto mw::DataDeviceManager::Global::interface_name() const -> char const*
-{
-    return DataDeviceManager::interface_name;
 }
 
 struct wl_interface const* mw::DataDeviceManager::Thunks::create_data_source_types[] {
@@ -1438,11 +1423,11 @@ struct mw::Shell::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<Shell::Global*>(data);
+        auto me = static_cast<ShellGlobal*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_shell_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, Shell::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -1495,20 +1480,15 @@ void mw::Shell::destroy_and_delete() const
 
 uint32_t const mw::Shell::Error::role;
 
-mw::Shell::Global::Global(wl_display* display, Version<1>)
+mw::ShellGlobal::ShellGlobal(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_shell_interface_data,
-              Thunks::supported_version,
+              Shell::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &Shell::Thunks::bind_thunk)}
 {
-}
-
-auto mw::Shell::Global::interface_name() const -> char const*
-{
-    return Shell::interface_name;
 }
 
 struct wl_interface const* mw::Shell::Thunks::get_shell_surface_types[] {
@@ -2267,11 +2247,11 @@ struct mw::Seat::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<Seat::Global*>(data);
+        auto me = static_cast<SeatGlobal*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_seat_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, Seat::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -2339,20 +2319,15 @@ uint32_t const mw::Seat::Capability::pointer;
 uint32_t const mw::Seat::Capability::keyboard;
 uint32_t const mw::Seat::Capability::touch;
 
-mw::Seat::Global::Global(wl_display* display, Version<6>)
+mw::SeatGlobal::SeatGlobal(wl_display* display, Version<6>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_seat_interface_data,
-              Thunks::supported_version,
+              Seat::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &Seat::Thunks::bind_thunk)}
 {
-}
-
-auto mw::Seat::Global::interface_name() const -> char const*
-{
-    return Seat::interface_name;
 }
 
 struct wl_interface const* mw::Seat::Thunks::get_pointer_types[] {
@@ -2892,11 +2867,11 @@ struct mw::Output::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<Output::Global*>(data);
+        auto me = static_cast<OutputGlobal*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_output_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, Output::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -2991,20 +2966,15 @@ uint32_t const mw::Output::Transform::flipped_270;
 uint32_t const mw::Output::Mode::current;
 uint32_t const mw::Output::Mode::preferred;
 
-mw::Output::Global::Global(wl_display* display, Version<3>)
+mw::OutputGlobal::OutputGlobal(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_output_interface_data,
-              Thunks::supported_version,
+              Output::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &Output::Thunks::bind_thunk)}
 {
-}
-
-auto mw::Output::Global::interface_name() const -> char const*
-{
-    return Output::interface_name;
 }
 
 struct wl_interface const* mw::Output::Thunks::geometry_types[] {
@@ -3198,11 +3168,11 @@ struct mw::Subcompositor::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<Subcompositor::Global*>(data);
+        auto me = static_cast<SubcompositorGlobal*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_subcompositor_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, Subcompositor::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -3249,20 +3219,15 @@ bool mw::Subcompositor::is_instance(wl_resource* resource)
 
 uint32_t const mw::Subcompositor::Error::bad_surface;
 
-mw::Subcompositor::Global::Global(wl_display* display, Version<1>)
+mw::SubcompositorGlobal::SubcompositorGlobal(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_subcompositor_interface_data,
-              Thunks::supported_version,
+              Subcompositor::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &Subcompositor::Thunks::bind_thunk)}
 {
-}
-
-auto mw::Subcompositor::Global::interface_name() const -> char const*
-{
-    return Subcompositor::interface_name;
 }
 
 struct wl_interface const* mw::Subcompositor::Thunks::get_subsurface_types[] {

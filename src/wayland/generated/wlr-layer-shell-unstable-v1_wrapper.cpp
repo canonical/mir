@@ -97,11 +97,11 @@ struct mw::LayerShellV1::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<LayerShellV1::Global*>(data);
+        auto me = static_cast<LayerShellV1Global*>(data);
         auto resource = wl_resource_create(
             client,
             &zwlr_layer_shell_v1_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, LayerShellV1::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -154,20 +154,15 @@ uint32_t const mw::LayerShellV1::Layer::bottom;
 uint32_t const mw::LayerShellV1::Layer::top;
 uint32_t const mw::LayerShellV1::Layer::overlay;
 
-mw::LayerShellV1::Global::Global(wl_display* display, Version<4>)
+mw::LayerShellV1Global::LayerShellV1Global(wl_display* display, Version<4>)
     : wayland::Global{
           wl_global_create(
               display,
               &zwlr_layer_shell_v1_interface_data,
-              Thunks::supported_version,
+              LayerShellV1::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &LayerShellV1::Thunks::bind_thunk)}
 {
-}
-
-auto mw::LayerShellV1::Global::interface_name() const -> char const*
-{
-    return LayerShellV1::interface_name;
 }
 
 struct wl_interface const* mw::LayerShellV1::Thunks::get_layer_surface_types[] {

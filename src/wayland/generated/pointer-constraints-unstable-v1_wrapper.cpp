@@ -127,11 +127,11 @@ struct mw::PointerConstraintsV1::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<PointerConstraintsV1::Global*>(data);
+        auto me = static_cast<PointerConstraintsV1Global*>(data);
         auto resource = wl_resource_create(
             client,
             &zwp_pointer_constraints_v1_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, PointerConstraintsV1::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -181,20 +181,15 @@ uint32_t const mw::PointerConstraintsV1::Error::already_constrained;
 uint32_t const mw::PointerConstraintsV1::Lifetime::oneshot;
 uint32_t const mw::PointerConstraintsV1::Lifetime::persistent;
 
-mw::PointerConstraintsV1::Global::Global(wl_display* display, Version<1>)
+mw::PointerConstraintsV1Global::PointerConstraintsV1Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &zwp_pointer_constraints_v1_interface_data,
-              Thunks::supported_version,
+              PointerConstraintsV1::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &PointerConstraintsV1::Thunks::bind_thunk)}
 {
-}
-
-auto mw::PointerConstraintsV1::Global::interface_name() const -> char const*
-{
-    return PointerConstraintsV1::interface_name;
 }
 
 struct wl_interface const* mw::PointerConstraintsV1::Thunks::lock_pointer_types[] {

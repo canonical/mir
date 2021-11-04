@@ -40,20 +40,18 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<3>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_zxdg_output_manager_v1) = 0;
-        friend XdgOutputManagerV1::Thunks;
-    };
-
 private:
     virtual void get_xdg_output(struct wl_resource* id, struct wl_resource* output) = 0;
+};
+
+class XdgOutputManagerV1Global : public wayland::Global
+{
+public:
+    XdgOutputManagerV1Global(wl_display* display, Version<3>);
+
+private:
+    virtual void bind(wl_resource* new_zxdg_output_manager_v1) = 0;
+    friend XdgOutputManagerV1::Thunks;
 };
 
 class XdgOutputV1 : public Resource

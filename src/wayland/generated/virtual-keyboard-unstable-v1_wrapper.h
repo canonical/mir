@@ -75,20 +75,18 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<1>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_zwp_virtual_keyboard_manager_v1) = 0;
-        friend VirtualKeyboardManagerV1::Thunks;
-    };
-
 private:
     virtual void create_virtual_keyboard(struct wl_resource* seat, struct wl_resource* id) = 0;
+};
+
+class VirtualKeyboardManagerV1Global : public wayland::Global
+{
+public:
+    VirtualKeyboardManagerV1Global(wl_display* display, Version<1>);
+
+private:
+    virtual void bind(wl_resource* new_zwp_virtual_keyboard_manager_v1) = 0;
+    friend VirtualKeyboardManagerV1::Thunks;
 };
 
 }

@@ -55,20 +55,18 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<4>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_zwlr_layer_shell_v1) = 0;
-        friend LayerShellV1::Thunks;
-    };
-
 private:
     virtual void get_layer_surface(struct wl_resource* id, struct wl_resource* surface, std::optional<struct wl_resource*> const& output, uint32_t layer, std::string const& namespace_) = 0;
+};
+
+class LayerShellV1Global : public wayland::Global
+{
+public:
+    LayerShellV1Global(wl_display* display, Version<4>);
+
+private:
+    virtual void bind(wl_resource* new_zwlr_layer_shell_v1) = 0;
+    friend LayerShellV1::Thunks;
 };
 
 class LayerSurfaceV1 : public Resource

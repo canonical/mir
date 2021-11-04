@@ -60,22 +60,20 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<1>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_zxdg_shell_v6) = 0;
-        friend XdgShellV6::Thunks;
-    };
-
 private:
     virtual void create_positioner(struct wl_resource* id) = 0;
     virtual void get_xdg_surface(struct wl_resource* id, struct wl_resource* surface) = 0;
     virtual void pong(uint32_t serial) = 0;
+};
+
+class XdgShellV6Global : public wayland::Global
+{
+public:
+    XdgShellV6Global(wl_display* display, Version<1>);
+
+private:
+    virtual void bind(wl_resource* new_zxdg_shell_v6) = 0;
+    friend XdgShellV6::Thunks;
 };
 
 class XdgPositionerV6 : public Resource

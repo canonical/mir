@@ -69,11 +69,11 @@ struct mw::ForeignToplevelManagerV1::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<ForeignToplevelManagerV1::Global*>(data);
+        auto me = static_cast<ForeignToplevelManagerV1Global*>(data);
         auto resource = wl_resource_create(
             client,
             &zwlr_foreign_toplevel_manager_v1_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, ForeignToplevelManagerV1::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -135,20 +135,15 @@ void mw::ForeignToplevelManagerV1::destroy_and_delete() const
     wl_resource_destroy(resource);
 }
 
-mw::ForeignToplevelManagerV1::Global::Global(wl_display* display, Version<2>)
+mw::ForeignToplevelManagerV1Global::ForeignToplevelManagerV1Global(wl_display* display, Version<2>)
     : wayland::Global{
           wl_global_create(
               display,
               &zwlr_foreign_toplevel_manager_v1_interface_data,
-              Thunks::supported_version,
+              ForeignToplevelManagerV1::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &ForeignToplevelManagerV1::Thunks::bind_thunk)}
 {
-}
-
-auto mw::ForeignToplevelManagerV1::Global::interface_name() const -> char const*
-{
-    return ForeignToplevelManagerV1::interface_name;
 }
 
 struct wl_interface const* mw::ForeignToplevelManagerV1::Thunks::toplevel_types[] {

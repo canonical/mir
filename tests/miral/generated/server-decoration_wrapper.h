@@ -56,20 +56,18 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<1>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_org_kde_kwin_server_decoration_manager) = 0;
-        friend ServerDecorationManager::Thunks;
-    };
-
 private:
     virtual void create(struct wl_resource* id, struct wl_resource* surface) = 0;
+};
+
+class ServerDecorationManagerGlobal : public wayland::Global
+{
+public:
+    ServerDecorationManagerGlobal(wl_display* display, Version<1>);
+
+private:
+    virtual void bind(wl_resource* new_org_kde_kwin_server_decoration_manager) = 0;
+    friend ServerDecorationManager::Thunks;
 };
 
 class ServerDecoration : public Resource

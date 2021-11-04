@@ -89,21 +89,19 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<4>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_wl_compositor) = 0;
-        friend Compositor::Thunks;
-    };
-
 private:
     virtual void create_surface(struct wl_resource* id) = 0;
     virtual void create_region(struct wl_resource* id) = 0;
+};
+
+class CompositorGlobal : public wayland::Global
+{
+public:
+    CompositorGlobal(wl_display* display, Version<4>);
+
+private:
+    virtual void bind(wl_resource* new_wl_compositor) = 0;
+    friend Compositor::Thunks;
 };
 
 class ShmPool : public Resource
@@ -223,20 +221,18 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<1>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_wl_shm) = 0;
-        friend Shm::Thunks;
-    };
-
 private:
     virtual void create_pool(struct wl_resource* id, mir::Fd fd, int32_t size) = 0;
+};
+
+class ShmGlobal : public wayland::Global
+{
+public:
+    ShmGlobal(wl_display* display, Version<1>);
+
+private:
+    virtual void bind(wl_resource* new_wl_shm) = 0;
+    friend Shm::Thunks;
 };
 
 class Buffer : public Resource
@@ -430,21 +426,19 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<3>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_wl_data_device_manager) = 0;
-        friend DataDeviceManager::Thunks;
-    };
-
 private:
     virtual void create_data_source(struct wl_resource* id) = 0;
     virtual void get_data_device(struct wl_resource* id, struct wl_resource* seat) = 0;
+};
+
+class DataDeviceManagerGlobal : public wayland::Global
+{
+public:
+    DataDeviceManagerGlobal(wl_display* display, Version<3>);
+
+private:
+    virtual void bind(wl_resource* new_wl_data_device_manager) = 0;
+    friend DataDeviceManager::Thunks;
 };
 
 class Shell : public Resource
@@ -471,20 +465,18 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<1>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_wl_shell) = 0;
-        friend Shell::Thunks;
-    };
-
 private:
     virtual void get_shell_surface(struct wl_resource* id, struct wl_resource* surface) = 0;
+};
+
+class ShellGlobal : public wayland::Global
+{
+public:
+    ShellGlobal(wl_display* display, Version<1>);
+
+private:
+    virtual void bind(wl_resource* new_wl_shell) = 0;
+    friend Shell::Thunks;
 };
 
 class ShellSurface : public Resource
@@ -634,22 +626,20 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<6>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_wl_seat) = 0;
-        friend Seat::Thunks;
-    };
-
 private:
     virtual void get_pointer(struct wl_resource* id) = 0;
     virtual void get_keyboard(struct wl_resource* id) = 0;
     virtual void get_touch(struct wl_resource* id) = 0;
+};
+
+class SeatGlobal : public wayland::Global
+{
+public:
+    SeatGlobal(wl_display* display, Version<6>);
+
+private:
+    virtual void bind(wl_resource* new_wl_seat) = 0;
+    friend Seat::Thunks;
 };
 
 class Pointer : public Resource
@@ -876,19 +866,17 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<3>);
+private:
+};
 
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_wl_output) = 0;
-        friend Output::Thunks;
-    };
+class OutputGlobal : public wayland::Global
+{
+public:
+    OutputGlobal(wl_display* display, Version<3>);
 
 private:
+    virtual void bind(wl_resource* new_wl_output) = 0;
+    friend Output::Thunks;
 };
 
 class Region : public Resource
@@ -935,20 +923,18 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<1>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_wl_subcompositor) = 0;
-        friend Subcompositor::Thunks;
-    };
-
 private:
     virtual void get_subsurface(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* parent) = 0;
+};
+
+class SubcompositorGlobal : public wayland::Global
+{
+public:
+    SubcompositorGlobal(wl_display* display, Version<1>);
+
+private:
+    virtual void bind(wl_resource* new_wl_subcompositor) = 0;
+    friend Subcompositor::Thunks;
 };
 
 class Subsurface : public Resource

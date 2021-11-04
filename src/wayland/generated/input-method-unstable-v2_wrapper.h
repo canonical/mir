@@ -147,20 +147,18 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<1>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_zwp_input_method_manager_v2) = 0;
-        friend InputMethodManagerV2::Thunks;
-    };
-
 private:
     virtual void get_input_method(struct wl_resource* seat, struct wl_resource* input_method) = 0;
+};
+
+class InputMethodManagerV2Global : public wayland::Global
+{
+public:
+    InputMethodManagerV2Global(wl_display* display, Version<1>);
+
+private:
+    virtual void bind(wl_resource* new_zwp_input_method_manager_v2) = 0;
+    friend InputMethodManagerV2::Thunks;
 };
 
 }

@@ -136,11 +136,11 @@ struct mw::XdgWmBase::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<XdgWmBase::Global*>(data);
+        auto me = static_cast<XdgWmBaseGlobal*>(data);
         auto resource = wl_resource_create(
             client,
             &xdg_wm_base_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, XdgWmBase::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -199,20 +199,15 @@ uint32_t const mw::XdgWmBase::Error::invalid_popup_parent;
 uint32_t const mw::XdgWmBase::Error::invalid_surface_state;
 uint32_t const mw::XdgWmBase::Error::invalid_positioner;
 
-mw::XdgWmBase::Global::Global(wl_display* display, Version<1>)
+mw::XdgWmBaseGlobal::XdgWmBaseGlobal(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &xdg_wm_base_interface_data,
-              Thunks::supported_version,
+              XdgWmBase::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &XdgWmBase::Thunks::bind_thunk)}
 {
-}
-
-auto mw::XdgWmBase::Global::interface_name() const -> char const*
-{
-    return XdgWmBase::interface_name;
 }
 
 struct wl_interface const* mw::XdgWmBase::Thunks::create_positioner_types[] {

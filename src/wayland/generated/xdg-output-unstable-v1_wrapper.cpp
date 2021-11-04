@@ -90,11 +90,11 @@ struct mw::XdgOutputManagerV1::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<XdgOutputManagerV1::Global*>(data);
+        auto me = static_cast<XdgOutputManagerV1Global*>(data);
         auto resource = wl_resource_create(
             client,
             &zxdg_output_manager_v1_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, XdgOutputManagerV1::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -139,20 +139,15 @@ bool mw::XdgOutputManagerV1::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zxdg_output_manager_v1_interface_data, Thunks::request_vtable);
 }
 
-mw::XdgOutputManagerV1::Global::Global(wl_display* display, Version<3>)
+mw::XdgOutputManagerV1Global::XdgOutputManagerV1Global(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
               display,
               &zxdg_output_manager_v1_interface_data,
-              Thunks::supported_version,
+              XdgOutputManagerV1::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &XdgOutputManagerV1::Thunks::bind_thunk)}
 {
-}
-
-auto mw::XdgOutputManagerV1::Global::interface_name() const -> char const*
-{
-    return XdgOutputManagerV1::interface_name;
 }
 
 struct wl_interface const* mw::XdgOutputManagerV1::Thunks::get_xdg_output_types[] {

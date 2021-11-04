@@ -203,11 +203,11 @@ struct mw::VirtualKeyboardManagerV1::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<VirtualKeyboardManagerV1::Global*>(data);
+        auto me = static_cast<VirtualKeyboardManagerV1Global*>(data);
         auto resource = wl_resource_create(
             client,
             &zwp_virtual_keyboard_manager_v1_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, VirtualKeyboardManagerV1::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -260,20 +260,15 @@ void mw::VirtualKeyboardManagerV1::destroy_and_delete() const
 
 uint32_t const mw::VirtualKeyboardManagerV1::Error::unauthorized;
 
-mw::VirtualKeyboardManagerV1::Global::Global(wl_display* display, Version<1>)
+mw::VirtualKeyboardManagerV1Global::VirtualKeyboardManagerV1Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &zwp_virtual_keyboard_manager_v1_interface_data,
-              Thunks::supported_version,
+              VirtualKeyboardManagerV1::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &VirtualKeyboardManagerV1::Thunks::bind_thunk)}
 {
-}
-
-auto mw::VirtualKeyboardManagerV1::Global::interface_name() const -> char const*
-{
-    return VirtualKeyboardManagerV1::interface_name;
 }
 
 struct wl_interface const* mw::VirtualKeyboardManagerV1::Thunks::create_virtual_keyboard_types[] {

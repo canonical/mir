@@ -40,20 +40,18 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : public wayland::Global
-    {
-    public:
-        Global(wl_display* display, Version<1>);
-
-        auto interface_name() const -> char const* override;
-
-    private:
-        virtual void bind(wl_resource* new_zwp_relative_pointer_manager_v1) = 0;
-        friend RelativePointerManagerV1::Thunks;
-    };
-
 private:
     virtual void get_relative_pointer(struct wl_resource* id, struct wl_resource* pointer) = 0;
+};
+
+class RelativePointerManagerV1Global : public wayland::Global
+{
+public:
+    RelativePointerManagerV1Global(wl_display* display, Version<1>);
+
+private:
+    virtual void bind(wl_resource* new_zwp_relative_pointer_manager_v1) = 0;
+    friend RelativePointerManagerV1::Thunks;
 };
 
 class RelativePointerV1 : public Resource

@@ -520,11 +520,11 @@ struct mw::InputMethodManagerV2::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<InputMethodManagerV2::Global*>(data);
+        auto me = static_cast<InputMethodManagerV2Global*>(data);
         auto resource = wl_resource_create(
             client,
             &zwp_input_method_manager_v2_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, InputMethodManagerV2::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -569,20 +569,15 @@ bool mw::InputMethodManagerV2::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zwp_input_method_manager_v2_interface_data, Thunks::request_vtable);
 }
 
-mw::InputMethodManagerV2::Global::Global(wl_display* display, Version<1>)
+mw::InputMethodManagerV2Global::InputMethodManagerV2Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &zwp_input_method_manager_v2_interface_data,
-              Thunks::supported_version,
+              InputMethodManagerV2::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &InputMethodManagerV2::Thunks::bind_thunk)}
 {
-}
-
-auto mw::InputMethodManagerV2::Global::interface_name() const -> char const*
-{
-    return InputMethodManagerV2::interface_name;
 }
 
 struct wl_interface const* mw::InputMethodManagerV2::Thunks::get_input_method_types[] {

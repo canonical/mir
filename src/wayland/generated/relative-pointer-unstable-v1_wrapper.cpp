@@ -90,11 +90,11 @@ struct mw::RelativePointerManagerV1::Thunks
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<RelativePointerManagerV1::Global*>(data);
+        auto me = static_cast<RelativePointerManagerV1Global*>(data);
         auto resource = wl_resource_create(
             client,
             &zwp_relative_pointer_manager_v1_interface_data,
-            std::min((int)version, Thunks::supported_version),
+            std::min((int)version, RelativePointerManagerV1::Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -139,20 +139,15 @@ bool mw::RelativePointerManagerV1::is_instance(wl_resource* resource)
     return wl_resource_instance_of(resource, &zwp_relative_pointer_manager_v1_interface_data, Thunks::request_vtable);
 }
 
-mw::RelativePointerManagerV1::Global::Global(wl_display* display, Version<1>)
+mw::RelativePointerManagerV1Global::RelativePointerManagerV1Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &zwp_relative_pointer_manager_v1_interface_data,
-              Thunks::supported_version,
+              RelativePointerManagerV1::Thunks::supported_version,
               this,
-              &Thunks::bind_thunk)}
+              &RelativePointerManagerV1::Thunks::bind_thunk)}
 {
-}
-
-auto mw::RelativePointerManagerV1::Global::interface_name() const -> char const*
-{
-    return RelativePointerManagerV1::interface_name;
 }
 
 struct wl_interface const* mw::RelativePointerManagerV1::Thunks::get_relative_pointer_types[] {
