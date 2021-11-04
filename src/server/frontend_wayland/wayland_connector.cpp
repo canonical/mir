@@ -463,7 +463,7 @@ auto mf::create_wl_shell(
 
 void mf::WaylandExtensions::init(Context const& context)
 {
-    valid_global_names = {
+    valid_global_names.insert({
         mw::Compositor::interface_name,
         mw::Subcompositor::interface_name,
         mw::Shm::interface_name,
@@ -472,7 +472,7 @@ void mf::WaylandExtensions::init(Context const& context)
         mw::DataDeviceManager::interface_name,
         "wl_drm",
         "zwp_linux_dmabuf_v1",
-    };
+    });
     custom_extensions(context);
 }
 
