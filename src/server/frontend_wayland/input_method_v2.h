@@ -19,8 +19,10 @@
 #ifndef MIR_FRONTEND_INPUT_METHOD_V2_H
 #define MIR_FRONTEND_INPUT_METHOD_V2_H
 
+
+#include "input-method-unstable-v2_wrapper.h"
+
 #include <memory>
-struct wl_display;
 
 namespace mir
 {
@@ -35,13 +37,12 @@ class CompositeEventFilter;
 }
 namespace frontend
 {
-class InputMethodManagerV2Global;
-
 auto create_input_method_manager_v2(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<scene::TextInputHub> const& text_input_hub,
-    std::shared_ptr<input::CompositeEventFilter> const event_filter) -> std::shared_ptr<InputMethodManagerV2Global>;
+    std::shared_ptr<input::CompositeEventFilter> const event_filter)
+-> std::shared_ptr<wayland::InputMethodManagerV2::Global>;
 }
 }
 

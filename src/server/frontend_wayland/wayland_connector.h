@@ -19,6 +19,7 @@
 #ifndef MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 #define MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 
+#include "wayland_wrapper.h"
 #include "mir/frontend/connector.h"
 #include "mir/fd.h"
 #include "mir/optional_value.h"
@@ -185,7 +186,7 @@ auto create_wl_shell(
     Executor& wayland_executor,
     std::shared_ptr<shell::Shell> const& shell,
     WlSeat* seat,
-    OutputManager* const output_manager) -> std::shared_ptr<void>;
+    OutputManager* const output_manager) -> std::shared_ptr<wayland::Shell::Global>;
 
 auto get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>;
 }

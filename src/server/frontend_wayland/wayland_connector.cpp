@@ -32,8 +32,6 @@
 #include "output_manager.h"
 #include "wayland_executor.h"
 
-#include "wayland_wrapper.h"
-
 #include "mir/frontend/wayland.h"
 
 #include "mir/main_loop.h"
@@ -458,7 +456,7 @@ auto mf::create_wl_shell(
     std::shared_ptr<msh::Shell> const& shell,
     WlSeat* seat,
     OutputManager* const output_manager)
--> std::shared_ptr<void>
+-> std::shared_ptr<mw::Shell::Global>
 {
     return std::make_shared<mf::WlShell>(display, wayland_executor, shell, *seat, output_manager);
 }

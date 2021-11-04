@@ -17,6 +17,8 @@
 #ifndef MIR_FRONTEND_POINTER_CONSTRAINTS_UNSTABLE_V1_H
 #define MIR_FRONTEND_POINTER_CONSTRAINTS_UNSTABLE_V1_H
 
+#include "pointer-constraints-unstable-v1_wrapper.h"
+
 #include <memory>
 
 struct wl_display;
@@ -33,7 +35,8 @@ class WlSeat;
 auto create_pointer_constraints_unstable_v1(
     wl_display* display,
     Executor& wayland_executor,
-    std::shared_ptr<shell::Shell> shell) -> std::shared_ptr<void>;
+    std::shared_ptr<shell::Shell> shell)
+-> std::shared_ptr<wayland::PointerConstraintsV1::Global>;
 
 }
 }
