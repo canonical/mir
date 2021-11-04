@@ -92,7 +92,7 @@ Interface::Interface(xmlpp::Element const& node,
       has_server_constructor{event_constructable_interfaces.count(wl_name) != 0},
       has_client_constructor{constructable_interfaces.count(wl_name) != 0},
       global{!(has_server_constructor || has_client_constructor) ?
-          std::experimental::make_optional(Global{wl_name, generated_name, version, nmspace}) :
+          std::experimental::make_optional(Global{wl_name, generated_name, version}) :
           std::experimental::nullopt},
       requests{get_requests(node, generated_name)},
       events{get_events(node, generated_name)},
@@ -109,7 +109,7 @@ std::string Interface::class_name() const
 
 Emitter Interface::declaration() const
 {
-    return Lines{
+    return EmptyLineList{Lines{
         {"class ", generated_name, " : public Resource"},
         "{",
         "public:",
@@ -127,14 +127,14 @@ Emitter Interface::declaration() const
             event_opcodes(),
             (thunks_impl_contents().is_valid() ? "struct Thunks;" : nullptr),
             is_instance_prototype(),
-            (global ? global.value().declaration() : nullptr),
         }, true, true, Emitter::single_indent),
         empty_line,
         "private:",
         Emitter::layout(EmptyLineList{
             virtual_request_prototypes(),
         }, true, true, Emitter::single_indent),
-        "};"
+        "};"},
+        (global ? global.value().declaration() : nullptr),
     };
 }
 

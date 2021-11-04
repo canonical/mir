@@ -20,28 +20,29 @@
 
 #include <libxml++/libxml++.h>
 
-Global::Global(std::string const& wl_name, std::string const& generated_name, int version, std::string const& nmspace)
+Global::Global(std::string const& wl_name, std::string const& interface_name, int version)
     : wl_name{wl_name},
       version{version},
-      generated_name{generated_name},
-      nmspace{nmspace}
+      interface_name{interface_name},
+      global_name{interface_name + "Global"},
+      nmspace{"mw::" + global_name + "::"}
 {
 }
 
 Emitter Global::declaration() const
 {
     return Lines{
-        {"class Global : public wayland::Global"},
+        {"class ", global_name, " : public wayland::Global"},
         "{",
         "public:",
         Emitter::layout(Lines{
-            {"Global(", constructor_args(), ");"},
+            {global_name, "(", constructor_args(), ");"},
         }, true, true, Emitter::single_indent),
         empty_line,
         "private:",
         Emitter::layout(Lines{
             bind_prototype(),
-            {"friend ", generated_name, "::Thunks;"},
+            {"friend ", interface_name, "::Thunks;"},
         }, true, true, Emitter::single_indent),
         "};"
     };
@@ -51,14 +52,14 @@ Emitter Global::implementation() const
 {
     return EmptyLineList{
         Lines{
-            {nmspace, "Global::Global(", constructor_args(), ")"},
+            {nmspace, global_name, "(", constructor_args(), ")"},
             {"    : wayland::Global{"},
             {"          wl_global_create("},
             {"              display,"},
             {"              &", wl_name, "_interface_data,"},
-            {"              Thunks::supported_version,"},
+            {"              ", interface_name, "::Thunks::supported_version,"},
             {"              this,"},
-            {"              &Thunks::bind_thunk)}"},
+            {"              &", interface_name, "::Thunks::bind_thunk)}"},
             Block{
             }
         },
@@ -70,12 +71,12 @@ Emitter Global::bind_thunk_impl() const
     return Lines{
         "static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)",
         Block{
-            {"auto me = static_cast<", generated_name, "::Global*>(data);"},
+            {"auto me = static_cast<", global_name, "*>(data);"},
             {"auto resource = wl_resource_create("},
             Emitter::layout(Lines{
                 "client,",
                 {"&", wl_name, "_interface_data,"},
-                {"std::min((int)version, Thunks::supported_version),"},
+                {"std::min((int)version, ", interface_name, "::Thunks::supported_version),"},
                 "id);",
             }, true, true, Emitter::single_indent),
             "if (resource == nullptr)",
@@ -89,7 +90,7 @@ Emitter Global::bind_thunk_impl() const
             },
             "catch(...)",
             Block{{
-                {"internal_error_processing_request(client, \"", generated_name, " global bind\");"},
+                {"internal_error_processing_request(client, \"", interface_name, " global bind\");"},
             }}
         }
     };
