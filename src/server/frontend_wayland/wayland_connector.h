@@ -174,8 +174,6 @@ private:
     wl_event_source* pause_source;
     std::string wayland_display;
 
-    WaylandProtocolExtensionFilter const extension_filter;
-
     // Only accessed on event loop
     std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>> mutable connect_handlers;
 };
