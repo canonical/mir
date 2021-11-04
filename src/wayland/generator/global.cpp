@@ -36,8 +36,6 @@ Emitter Global::declaration() const
         "public:",
         Emitter::layout(Lines{
             {"Global(", constructor_args(), ");"},
-            empty_line,
-            {"auto interface_name() const -> char const* override;"}
         }, true, true, Emitter::single_indent),
         empty_line,
         "private:",
@@ -64,12 +62,6 @@ Emitter Global::implementation() const
             Block{
             }
         },
-        Lines{
-            {"auto ", nmspace, "Global::interface_name() const -> char const*"},
-            Block{
-                {"return ", generated_name, "::interface_name;"},
-            }
-        }
     };
 }
 

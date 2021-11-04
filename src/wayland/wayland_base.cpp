@@ -143,6 +143,11 @@ mw::Global::~Global()
     wl_global_destroy(global);
 }
 
+auto mw::Global::interface_name() const -> char const*
+{
+    return wl_global_get_interface(global)->name;
+}
+
 void mw::internal_error_processing_request(wl_client* client, char const* method_name)
 {
     wl_client_post_implementation_error(client, "Mir internal error processing %s request", method_name);
