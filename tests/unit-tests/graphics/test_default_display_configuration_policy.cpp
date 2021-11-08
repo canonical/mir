@@ -407,8 +407,6 @@ TEST(SideBySideDisplayConfigurationPolicyTest, uses_specified_scale_multiplyer)
 
     policy.apply_to(conf);
 
-    Point expected_position;
-
     conf.for_each_output([&](DisplayConfigurationOutput const& output)
     {
         if (output.connected && output.modes.size() > 0)
