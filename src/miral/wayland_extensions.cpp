@@ -193,20 +193,39 @@ struct miral::WaylandExtensions::Self
         printf("%s = %s\n", __PRETTY_FUNCTION__, builder.name.c_str());
     }
 
+    void throw_unsupported_extension_error(std::string const& name, std::string const& action)
+    {
+        auto message = "Attempted to " + action + " unsupported extension " + name;
+        auto const iter = alternative_extension_names.find(name);
+        if (iter != alternative_extension_names.end())
+        {
+            message += " (perhaps the shell meant to enable " + iter->second + "?)";
+        }
+        BOOST_THROW_EXCEPTION(std::runtime_error(message));
+    }
+
     void enable_extension(std::string name)
     {
         if (supported_extensions.find(name) == supported_extensions.end())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to enable unsupported extension " + name));
+        {
+            throw_unsupported_extension_error(name, "enable");
+        }
         else
+        {
             default_extensions.insert(name);
+        }
     }
 
     void disable_extension(std::string name)
     {
         if (supported_extensions.find(name) == supported_extensions.end())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to disable unsupported extension " + name));
+        {
+            throw_unsupported_extension_error(name, "disable");
+        }
         else
+        {
             default_extensions.erase(name);
+        }
     }
 
     std::vector<Builder> wayland_extension_hooks;
