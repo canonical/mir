@@ -83,7 +83,7 @@ void mg::CloneDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
 
             conf_output.used = true;
             conf_output.top_left = geom::Point{0, 0};
-            conf_output.scale = scale;
+            conf_output.scale *= scale;
             conf_output.current_mode_index = preferred_mode_index;
             conf_output.current_format = format;
             conf_output.power_mode = default_power_state;
@@ -102,7 +102,7 @@ void mg::SideBySideDisplayConfigurationPolicy::apply_to(graphics::DisplayConfigu
             {
                 conf_output.used = true;
                 conf_output.top_left = geom::Point{max_x, 0};
-                conf_output.scale = scale;
+                conf_output.scale *= scale;
                 size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
                 conf_output.current_mode_index = preferred_mode_index;
                 conf_output.power_mode = mir_power_mode_on;
@@ -129,7 +129,7 @@ void mg::SingleDisplayConfigurationPolicy::apply_to(graphics::DisplayConfigurati
             {
                 conf_output.used = true;
                 conf_output.top_left = geom::Point{0, 0};
-                conf_output.scale = scale;
+                conf_output.scale *= scale;
                 size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
                 conf_output.current_mode_index = preferred_mode_index;
                 conf_output.power_mode = mir_power_mode_on;
