@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <mutex>
 #include <set>
+#include <map>
 #include <vector>
 
 namespace mo = mir::options;
@@ -97,6 +98,30 @@ private:
 
 decltype(StaticExtensionTracker::mutex)       StaticExtensionTracker::mutex;
 decltype(StaticExtensionTracker::extensions)  StaticExtensionTracker::extensions;
+
+std::map<std::string, std::string> const alternative_extension_names{
+    {"zwp_input_method_v2", "zwp_input_method_manager_v2"},
+    {"zwp_virtual_keyboard_v1", "zwp_virtual_keyboard_manager_v1"},
+};
+
+/// The extension names given to Mir may not always be the name of the relevant global, but Mir needs the global name
+auto map_to_global_names(std::set<std::string> const& extensions) -> std::set<std::string>
+{
+    std::set<std::string> result;
+    for (auto const& extension : extensions)
+    {
+        auto const iter = alternative_extension_names.find(extension);
+        if (iter == alternative_extension_names.end())
+        {
+            result.insert(extension);
+        }
+        else
+        {
+            result.insert(iter->second);
+        }
+    }
+    return result;
+}
 }
 
 struct miral::WaylandExtensions::Self
@@ -298,6 +323,7 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                 }
             }
 
+            selected_extensions = map_to_global_names(selected_extensions);
             self->validate(selected_extensions);
             server.set_enabled_wayland_extensions(
                 std::vector<std::string>{
