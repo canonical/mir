@@ -8,8 +8,8 @@ backends:
             - alpine-3.14
             - alpine-edge
             - ubuntu-20.04
-            - fedora-33
             - fedora-34
+            - fedora-35
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
         plan: n1-highcpu-8
@@ -17,8 +17,8 @@ backends:
         halt-timeout: 2h
         systems:
             - ubuntu-20.04-64
-            - fedora-33-64
             - fedora-34-64
+            - fedora-35-64
             - fedora-rawhide-64
 
 environment:
