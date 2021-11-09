@@ -464,5 +464,7 @@ MIRAL_3.4 {
 global:
   extern "C++" {
     miral::socket_fd_of*;
+    miral::WaylandExtensions::zwp_input_method_manager_v2*;
+    miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1*;
   };
 } MIRAL_3.3;

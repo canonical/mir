@@ -18,7 +18,6 @@
 
 #include "foreign_toplevel_manager_v1.h"
 
-#include "wlr-foreign-toplevel-management-unstable-v1_wrapper.h"
 #include "wayland_utils.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/shell/shell.h"
@@ -192,7 +191,8 @@ auto mf::create_foreign_toplevel_manager_v1(
     wl_display* display,
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<SurfaceStack> const& surface_stack) -> std::shared_ptr<ForeignToplevelManagerV1Global>
+    std::shared_ptr<SurfaceStack> const& surface_stack)
+-> std::shared_ptr<mw::ForeignToplevelManagerV1::Global>
 {
     return std::make_shared<ForeignToplevelManagerV1Global>(display, shell, wayland_executor, surface_stack);
 }

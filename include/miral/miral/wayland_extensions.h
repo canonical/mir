@@ -124,15 +124,24 @@ public:
     /// Allows clients to act as a virtual keyboard, useful for on-screen keyboards.
     /// Clients are not required to display anything to send keyboard events using this extension,
     /// so malicious clients could use it to take actions without user input.
-    /// \remark Since MirAL 3.3
-    static char const* const zwp_virtual_keyboard_v1;
+    /// \remark Since MirAL 3.4
+    static char const* const zwp_virtual_keyboard_manager_v1;
+
 
     /// Allows clients (such as on-screen keyboards) to intercept physical key events and act as a
     /// source of text input for other clients. Input methods are not required to display anything
     /// to use this extension, so malicious clients could use it to intercept keys events or take
     /// actions without user input.
-    /// \remark Since MirAL 3.3
+    /// \remark Since MirAL 3.4
+    static char const* const zwp_input_method_manager_v2;
+
+    /**
+     * \remark Since MirAL 3.3
+     * \deprecated Use the *_manager_* versions instead
+     * @{ */
+    static char const* const zwp_virtual_keyboard_v1;
     static char const* const zwp_input_method_v2;
+    /** @} */
     /** @} */
 
     /// Add a bespoke Wayland extension both to "supported" and "enabled by default".

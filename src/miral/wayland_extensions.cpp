@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <mutex>
 #include <set>
+#include <map>
 #include <vector>
 
 namespace mo = mir::options;
@@ -37,8 +38,12 @@ namespace mo = mir::options;
 char const* const miral::WaylandExtensions::zwlr_layer_shell_v1{"zwlr_layer_shell_v1"};
 char const* const miral::WaylandExtensions::zxdg_output_manager_v1{"zxdg_output_manager_v1"};
 char const* const miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1{"zwlr_foreign_toplevel_manager_v1"};
-char const* const miral::WaylandExtensions::zwp_virtual_keyboard_v1{"zwp_virtual_keyboard_v1"};
-char const* const miral::WaylandExtensions::zwp_input_method_v2{"zwp_input_method_v2"};
+/// Not in the header, but keeping around for ABI compat
+char const* const miral::WaylandExtensions::zwp_virtual_keyboard_v1{"zwp_virtual_keyboard_manager_v1"};
+char const* const miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1{"zwp_virtual_keyboard_manager_v1"};
+/// Not in the header, but keeping around for ABI compat
+char const* const miral::WaylandExtensions::zwp_input_method_v2{"zwp_input_method_manager_v2"};
+char const* const miral::WaylandExtensions::zwp_input_method_manager_v2{"zwp_input_method_manager_v2"};
 
 namespace
 {
@@ -93,6 +98,30 @@ private:
 
 decltype(StaticExtensionTracker::mutex)       StaticExtensionTracker::mutex;
 decltype(StaticExtensionTracker::extensions)  StaticExtensionTracker::extensions;
+
+std::map<std::string, std::string> const alternative_extension_names{
+    {"zwp_input_method_v2", "zwp_input_method_manager_v2"},
+    {"zwp_virtual_keyboard_v1", "zwp_virtual_keyboard_manager_v1"},
+};
+
+/// The extension names given to Mir may not always be the name of the relevant global, but Mir needs the global name
+auto map_to_global_names(std::set<std::string> const& extensions) -> std::set<std::string>
+{
+    std::set<std::string> result;
+    for (auto const& extension : extensions)
+    {
+        auto const iter = alternative_extension_names.find(extension);
+        if (iter == alternative_extension_names.end())
+        {
+            result.insert(extension);
+        }
+        else
+        {
+            result.insert(iter->second);
+        }
+    }
+    return result;
+}
 }
 
 struct miral::WaylandExtensions::Self
@@ -164,20 +193,39 @@ struct miral::WaylandExtensions::Self
         printf("%s = %s\n", __PRETTY_FUNCTION__, builder.name.c_str());
     }
 
+    void throw_unsupported_extension_error(std::string const& name, std::string const& action)
+    {
+        auto message = "Attempted to " + action + " unsupported extension " + name;
+        auto const iter = alternative_extension_names.find(name);
+        if (iter != alternative_extension_names.end())
+        {
+            message += " (perhaps the shell meant to enable " + iter->second + "?)";
+        }
+        BOOST_THROW_EXCEPTION(std::runtime_error(message));
+    }
+
     void enable_extension(std::string name)
     {
         if (supported_extensions.find(name) == supported_extensions.end())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to enable unsupported extension " + name));
+        {
+            throw_unsupported_extension_error(name, "enable");
+        }
         else
+        {
             default_extensions.insert(name);
+        }
     }
 
     void disable_extension(std::string name)
     {
         if (supported_extensions.find(name) == supported_extensions.end())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to disable unsupported extension " + name));
+        {
+            throw_unsupported_extension_error(name, "disable");
+        }
         else
+        {
             default_extensions.erase(name);
+        }
     }
 
     std::vector<Builder> wayland_extension_hooks;
@@ -294,6 +342,7 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                 }
             }
 
+            selected_extensions = map_to_global_names(selected_extensions);
             self->validate(selected_extensions);
             server.set_enabled_wayland_extensions(
                 std::vector<std::string>{

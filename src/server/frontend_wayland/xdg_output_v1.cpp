@@ -76,7 +76,7 @@ private:
 }
 
 auto mf::create_xdg_output_manager_v1(struct wl_display* display, OutputManager* const output_manager)
-    -> std::shared_ptr<XdgOutputManagerV1>
+    -> std::shared_ptr<mw::XdgOutputManagerV1::Global>
 {
     return std::make_shared<XdgOutputManagerV1>(display, output_manager);
 }

@@ -17,7 +17,6 @@
  */
 
 #include "text_input_v3.h"
-#include "text-input-unstable-v3_wrapper.h"
 
 #include "wl_seat.h"
 #include "wl_surface.h"
@@ -231,7 +230,7 @@ auto mf::create_text_input_manager_v3(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<scene::TextInputHub> const& text_input_hub)
--> std::shared_ptr<TextInputManagerV3Global>
+-> std::shared_ptr<mw::TextInputManagerV3::Global>
 {
     auto ctx = std::shared_ptr<TextInputV3Ctx>{new TextInputV3Ctx{wayland_executor, text_input_hub}};
     return std::make_shared<TextInputManagerV3Global>(display, std::move(ctx));
