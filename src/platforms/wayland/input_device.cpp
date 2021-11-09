@@ -269,7 +269,7 @@ miw::TouchInputDevice::TouchInputDevice(std::shared_ptr<dispatch::ActionQueue> c
 void mir::input::wayland::TouchInputDevice::touch_event(
     std::chrono::nanoseconds event_time, std::vector<events::ContactState> const& contacts)
 {
-    enqueue([=, this](EventBuilder* b)
+    enqueue([=](EventBuilder* b)
     {
         return b->touch_event(event_time, contacts);
     });
