@@ -133,7 +133,7 @@ bool miw::GenericInputDevice::started() const
 
 void  miw::GenericInputDevice::enqueue(std::function<EventUPtr(EventBuilder* builder)> const& event)
 {
-    action_queue->enqueue([=]
+    action_queue->enqueue([=, this]
           {
               std::lock_guard<decltype(mutex)> lock{mutex};
               if (started())
@@ -167,7 +167,7 @@ void miw::PointerInputDevice::pointer_press(
     geom::PointF const& pos,
     geom::DisplacementF const& scroll)
 {
-    enqueue([=](EventBuilder* b)
+    enqueue([=, this](EventBuilder* b)
     {
         button_state |= to_pointer_button(button, mir_pointer_handedness_right);
 
@@ -193,7 +193,7 @@ void miw::PointerInputDevice::pointer_release(
     geom::PointF const& pos,
     geom::DisplacementF const& scroll)
 {
-    enqueue([=](EventBuilder* b)
+    enqueue([=, this](EventBuilder* b)
     {
         button_state &= ~to_pointer_button(button, mir_pointer_handedness_right);
 
@@ -218,7 +218,7 @@ void miw::PointerInputDevice::pointer_motion(
     geom::PointF const& pos,
     geom::DisplacementF const& scroll)
 {
-    enqueue([=](EventBuilder* b)
+    enqueue([=, this](EventBuilder* b)
     {
         auto const movement = pos - cached_pos;
         cached_pos = pos;
@@ -242,7 +242,7 @@ void miw::PointerInputDevice::pointer_axis_motion(
     mir::geometry::PointF const& pos,
     mir::geometry::DisplacementF const& scroll)
 {
-    enqueue([=](EventBuilder* b)
+    enqueue([=, this](EventBuilder* b)
     {
         auto const movement = pos - cached_pos;
         cached_pos = pos;
@@ -269,7 +269,7 @@ miw::TouchInputDevice::TouchInputDevice(std::shared_ptr<dispatch::ActionQueue> c
 void mir::input::wayland::TouchInputDevice::touch_event(
     std::chrono::nanoseconds event_time, std::vector<events::ContactState> const& contacts)
 {
-    enqueue([=](EventBuilder* b)
+    enqueue([=, this](EventBuilder* b)
     {
         return b->touch_event(event_time, contacts);
     });
