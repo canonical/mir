@@ -169,17 +169,20 @@ public:
     /// \remark Since MirAL 2.6
     static auto supported() -> std::set<std::string>;
 
-    /// Enable a Wayland extension
-    /// Throws a std::runtime_error if the extension is not supported
+    /// Enable a Wayland extension. It will be enabled even if --drop-wayland-extensions is given this extension. Use
+    /// conditionally_enable() to allow users to override this behavior. Throws a std::runtime_error if the extension is
+    /// not supported
     /// \remark Since MirAL 2.6
     auto enable(std::string name) -> WaylandExtensions&;
 
-    /// Disable a Wayand extension
-    /// Throws a std::runtime_error if the extension is not supported
+    /// Disable a Wayand extension. It will be disabled even if --add-wayland-extensions is given this extension. Use
+    /// conditionally_enable() to allow users to override this behavior. Throws a std::runtime_error if the extension is
+    /// not supported
     /// \remark Since MirAL 2.6
     auto disable(std::string name) -> WaylandExtensions&;
 
-    /// Enable a Wayland extension only when the condition returns true
+    /// Enable a Wayland extension only when the callback returns true. In the callback return
+    /// info.user_preference().value_or(true) to let the user manually disable this extension.
     /// \remark Since MirAL 3.4
     auto conditionally_enable(std::string name, Condition const& condition) -> WaylandExtensions&;
 
