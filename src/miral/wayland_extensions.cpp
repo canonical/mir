@@ -231,6 +231,7 @@ struct miral::WaylandExtensions::Self
         else
         {
             default_extensions.insert(name);
+            conditional_extensions.erase(name);
         }
     }
 
