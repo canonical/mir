@@ -530,6 +530,22 @@ TEST_F(WaylandExtensions, drop_extensions_option_removes_extensions)
     EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq("zwlr_layer_shell_v1"))));
 }
 
+TEST_F(WaylandExtensions, add_extensions_option_adds_extensions_if_name_is_not_global_name)
+{
+    miral::WaylandExtensions extensions;
+    ClientGlobalEnumerator enumerator_client;
+
+    add_to_environment("MIR_SERVER_ADD_WAYLAND_EXTENSIONS", "zwp_input_method_v2:zwp_virtual_keyboard_v1");
+
+    add_server_init(extensions);
+    start_server();
+
+    run_as_client(enumerator_client);
+
+    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("zwp_input_method_manager_v2")));
+    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq("zwp_virtual_keyboard_manager_v1")));
+}
+
 TEST_F(WaylandExtensions, drop_extensions_option_overrides_enable)
 {
     miral::WaylandExtensions extensions;

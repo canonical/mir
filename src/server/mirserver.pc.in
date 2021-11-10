@@ -5,7 +5,7 @@ includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@/mirserver
 Name: mirserver
 Description: Mir server library
 Version: @MIR_VERSION@
-Requires.private: mircommon
+Requires.private: mirclient
 Requires: mirplatform uuid mircore
 Libs: -L${libdir} -lmirserver
 Cflags: -I${includedir}

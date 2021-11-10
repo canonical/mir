@@ -236,6 +236,24 @@ TEST(CloneDisplayConfigurationPolicyTest, accept_transparency_when_only_option)
     });
 }
 
+TEST(CloneDisplayConfigurationPolicyTest, uses_specified_scale_multiplyer)
+{
+    using namespace ::testing;
+
+    CloneDisplayConfigurationPolicy policy{3.0};
+    StubDisplayConfiguration conf{create_default_configuration()};
+
+    policy.apply_to(conf);
+
+    conf.for_each_output([&](DisplayConfigurationOutput const& output)
+    {
+        if (output.connected && output.modes.size() > 0)
+        {
+            EXPECT_EQ(output.scale, 3.0);
+        }
+    });
+}
+
 TEST(SingleDisplayConfigurationPolicyTest, uses_first_of_connected_valid_outputs)
 {
     using namespace ::testing;
@@ -298,6 +316,24 @@ TEST(SingleDisplayConfigurationPolicyTest, default_orientation_is_normal)
     });
 }
 
+TEST(SingleDisplayConfigurationPolicyTest, uses_specified_scale_multiplyer)
+{
+    using namespace ::testing;
+
+    SingleDisplayConfigurationPolicy policy{3.0};
+    auto conf = create_default_configuration();
+
+    policy.apply_to(conf);
+
+    conf.for_each_output([&](DisplayConfigurationOutput const& output)
+    {
+        if (output.used)
+        {
+            EXPECT_EQ(output.scale, 3.0);
+        }
+    });
+}
+
 TEST(SideBySideDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
 {
     using namespace ::testing;
@@ -353,6 +389,29 @@ TEST(SideBySideDisplayConfigurationPolicyTest, placement_respects_scale)
         else
         {
             EXPECT_FALSE(output.used);
+        }
+    });
+}
+
+TEST(SideBySideDisplayConfigurationPolicyTest, uses_specified_scale_multiplyer)
+{
+    using namespace ::testing;
+
+    SideBySideDisplayConfigurationPolicy policy{3.0};
+    StubDisplayConfiguration conf{create_default_configuration()};
+
+    conf.for_each_output([&](UserDisplayConfigurationOutput const& output)
+    {
+        output.scale = 2.0f;
+    });
+
+    policy.apply_to(conf);
+
+    conf.for_each_output([&](DisplayConfigurationOutput const& output)
+    {
+        if (output.connected && output.modes.size() > 0)
+        {
+            EXPECT_EQ(output.scale, 6.0);
         }
     });
 }

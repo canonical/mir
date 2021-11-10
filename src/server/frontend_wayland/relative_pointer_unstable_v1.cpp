@@ -15,12 +15,13 @@
  */
 
 #include "relative_pointer_unstable_v1.h"
-#include "relative-pointer-unstable-v1_wrapper.h"
 #include "wl_pointer.h"
 
 #include <mir/scene/surface.h>
 #include <mir/shell/shell.h>
 #include <mir/shell/surface_specification.h>
+
+namespace mw = mir::wayland;
 
 namespace mir
 {
@@ -59,7 +60,7 @@ private:
 }
 
 auto mir::frontend::create_relative_pointer_unstable_v1(wl_display *display, std::shared_ptr<shell::Shell> shell)
-    -> std::shared_ptr<void>
+-> std::shared_ptr<mw::RelativePointerManagerV1::Global>
 {
     return std::make_shared<RelativePointerManagerV1::Global>(display, std::move(shell));
 }
