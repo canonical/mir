@@ -99,25 +99,23 @@ private:
 decltype(StaticExtensionTracker::mutex)       StaticExtensionTracker::mutex;
 decltype(StaticExtensionTracker::extensions)  StaticExtensionTracker::extensions;
 
-std::map<std::string, std::string> const alternative_extension_names{
-    {"zwp_input_method_v2", "zwp_input_method_manager_v2"},
-    {"zwp_virtual_keyboard_v1", "zwp_virtual_keyboard_manager_v1"},
-};
-
 /// The extension names given to Mir may not always be the name of the relevant global, but Mir needs the global name
 auto map_to_global_names(std::set<std::string> const& extensions) -> std::set<std::string>
 {
     std::set<std::string> result;
     for (auto const& extension : extensions)
     {
-        auto const iter = alternative_extension_names.find(extension);
-        if (iter == alternative_extension_names.end())
+        if (extension == "zwp_input_method_v2")
         {
-            result.insert(extension);
+            result.insert("zwp_input_method_manager_v2");
+        }
+        else if (extension == "zwp_virtual_keyboard_v1")
+        {
+            result.insert("zwp_virtual_keyboard_manager_v1");
         }
         else
         {
-            result.insert(iter->second);
+            result.insert(extension);
         }
     }
     return result;
@@ -224,22 +222,11 @@ struct miral::WaylandExtensions::Self
         printf("%s = %s\n", __PRETTY_FUNCTION__, builder.name.c_str());
     }
 
-    void throw_unsupported_extension_error(std::string const& name, std::string const& action)
-    {
-        auto message = "Attempted to " + action + " unsupported extension " + name;
-        auto const iter = alternative_extension_names.find(name);
-        if (iter != alternative_extension_names.end())
-        {
-            message += " (perhaps the shell meant to enable " + iter->second + "?)";
-        }
-        BOOST_THROW_EXCEPTION(std::runtime_error(message));
-    }
-
     void enable_extension(std::string name)
     {
         if (supported_extensions.find(name) == supported_extensions.end())
         {
-            throw_unsupported_extension_error(name, "enable");
+            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to enable unsupported extension " + name));
         }
         else
         {
@@ -251,7 +238,7 @@ struct miral::WaylandExtensions::Self
     {
         if (supported_extensions.find(name) == supported_extensions.end())
         {
-            throw_unsupported_extension_error(name, "disable");
+            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to disable unsupported extension " + name));
         }
         else
         {
