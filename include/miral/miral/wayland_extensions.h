@@ -118,8 +118,10 @@ public:
     /// \remark Since MirAL 3.4
     using EnableCallback = std::function<bool(EnableInfo const& info)>;
 
-    /// Set an extension filter callback to control the extensions available to specific clients
+    /// Set an extension filter callback to control the extensions available to specific clients. Deprecated in favor of
+    /// conditionally_enable(), and not be used in conjunction with conditionally_enable().
     /// \remark Since MirAL 2.5
+    /// \deprecated In MirAL 3.4, use conditionally_enable() instead
     void set_filter(Filter const& extension_filter);
 
     /**
@@ -177,20 +179,21 @@ public:
     /// \remark Since MirAL 2.6
     static auto supported() -> std::set<std::string>;
 
-    /// Enable a Wayland extension. It will be enabled even if --drop-wayland-extensions is given this extension. Use
-    /// conditionally_enable() to allow users to override this behavior. Throws a std::runtime_error if the extension is
-    /// not supported
+    /// Enable a Wayland extension by default. The user can still disable it with the drop-wayland-extensions or
+    /// wayland-extensions options. The extension can be forced to be enabled regardless of user options with
+    /// conditionally_enable().
     /// \remark Since MirAL 2.6
     auto enable(std::string name) -> WaylandExtensions&;
 
-    /// Disable a Wayand extension. It will be disabled even if --add-wayland-extensions is given this extension. Use
-    /// conditionally_enable() to allow users to override this behavior. Throws a std::runtime_error if the extension is
-    /// not supported
+    /// Disable a Wayland extension by default. The user can still enable it with the add-wayland-extensions or
+    /// wayland-extensions options. The extension can be forced to be disabled regardless of user options with
+    /// conditionally_enable().
     /// \remark Since MirAL 2.6
     auto disable(std::string name) -> WaylandExtensions&;
 
-    /// Enable a Wayland extension only when the callback returns true. In the callback return
-    /// info.user_preference().value_or(true) to let the user manually disable this extension.
+    /// Enable a Wayland extension only when the callback returns true. The callback can use info.user_preference()
+    /// to respect the extension options the user provided, it is not required. Unlike enable() and disable(),
+    /// conditionally_enable() can override the user options.
     /// \remark Since MirAL 3.4
     auto conditionally_enable(std::string name, EnableCallback const& callback) -> WaylandExtensions&;
 
