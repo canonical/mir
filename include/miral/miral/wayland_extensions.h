@@ -122,6 +122,7 @@ public:
     /// conditionally_enable(), and not be used in conjunction with conditionally_enable().
     /// \remark Since MirAL 2.5
     /// \deprecated In MirAL 3.4, use conditionally_enable() instead
+    [[deprecated("use conditionally_enable() instead")]]
     void set_filter(Filter const& extension_filter);
 
     /**
@@ -164,7 +165,9 @@ public:
      * \remark Since MirAL 3.3
      * \deprecated Use the *_manager_* versions instead
      * @{ */
+    [[deprecated("use zwp_virtual_keyboard_manager_v1 instead")]]
     static char const* const zwp_virtual_keyboard_v1;
+    [[deprecated("use zwp_input_method_manager_v2 instead")]]
     static char const* const zwp_input_method_v2;
     /** @} */
     /** @} */

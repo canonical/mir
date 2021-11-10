@@ -247,21 +247,6 @@ TEST_F(WaylandExtensions, client_connects)
     EXPECT_THAT(client_connected, Eq(true));
 }
 
-
-TEST_F(WaylandExtensions, filter_is_called)
-{
-    bool filter_called = false;
-
-    miral::WaylandExtensions extensions;
-    add_server_init(extensions);
-    extensions.set_filter([&](auto, auto) { filter_called = true; return true; });
-    start_server();
-
-    run_as_client(trivial_client);
-
-    EXPECT_THAT(filter_called, Eq(true));
-}
-
 TEST_F(WaylandExtensions, client_sees_default_extensions)
 {
     ClientGlobalEnumerator enumerator_client;
@@ -290,38 +275,6 @@ TEST_F(WaylandExtensions, client_sees_default_extensions)
     {
         EXPECT_THAT(available, Contains(Eq(extension)));
     }
-}
-
-TEST_F(WaylandExtensions, filter_controls_extensions_exposed_to_client)
-{
-    ClientGlobalEnumerator enumerator_client;
-    miral::WaylandExtensions extensions;
-    add_server_init(extensions);
-    extensions.set_filter([&](auto, char const* protocol) { return strcmp(protocol, unavailable_extension); });
-    start_server();
-
-    run_as_client(enumerator_client);
-
-    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(std::string{unavailable_extension}))));
-}
-
-TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
-{
-    bool filter_saw_bespoke_extension = false;
-
-    ClientGlobalEnumerator enumerator_client;
-    miral::WaylandExtensions extensions;
-    extensions.set_filter([&](auto, char const* protocol)
-        { if (strcmp(protocol, unavailable_extension) == 0) filter_saw_bespoke_extension = true; return true; });
-    extensions.add_extension(mir::examples::server_decoration_extension());
-    add_server_init(extensions);
-
-    start_server();
-
-    run_as_client(enumerator_client);
-
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(mir::examples::server_decoration_extension().name)));
-    EXPECT_THAT(filter_saw_bespoke_extension, Eq(true));
 }
 
 TEST_F(WaylandExtensions, add_extension_adds_protocol_to_supported_enabled_extensions)
@@ -756,6 +709,54 @@ TEST_F(WaylandExtensions, conditionally_enable_can_disable_extension_enabled_by_
     EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq("zwlr_layer_shell_v1"))));
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+TEST_F(WaylandExtensions, filter_is_called)
+{
+    bool filter_called = false;
+
+    miral::WaylandExtensions extensions;
+    add_server_init(extensions);
+    extensions.set_filter([&](auto, auto) { filter_called = true; return true; });
+    start_server();
+
+    run_as_client(trivial_client);
+
+    EXPECT_THAT(filter_called, Eq(true));
+}
+
+TEST_F(WaylandExtensions, filter_controls_extensions_exposed_to_client)
+{
+    ClientGlobalEnumerator enumerator_client;
+    miral::WaylandExtensions extensions;
+    add_server_init(extensions);
+    extensions.set_filter([&](auto, char const* protocol) { return strcmp(protocol, unavailable_extension); });
+    start_server();
+
+    run_as_client(enumerator_client);
+
+    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(std::string{unavailable_extension}))));
+}
+
+TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
+{
+    bool filter_saw_bespoke_extension = false;
+
+    ClientGlobalEnumerator enumerator_client;
+    miral::WaylandExtensions extensions;
+    extensions.set_filter([&](auto, char const* protocol)
+                              { if (strcmp(protocol, unavailable_extension) == 0) filter_saw_bespoke_extension = true; return true; });
+    extensions.add_extension(mir::examples::server_decoration_extension());
+    add_server_init(extensions);
+
+    start_server();
+
+    run_as_client(enumerator_client);
+
+    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(mir::examples::server_decoration_extension().name)));
+    EXPECT_THAT(filter_saw_bespoke_extension, Eq(true));
+}
+
 TEST_F(WaylandExtensions, using_conditionally_enable_then_filter_throws)
 {
     miral::WaylandExtensions extensions;
@@ -787,3 +788,4 @@ TEST_F(WaylandExtensions, using_filter_then_conditionally_enable_throws)
             });
     }, std::logic_error);
 }
+#pragma GCC diagnostic pop

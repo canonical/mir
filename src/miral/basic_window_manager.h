@@ -92,8 +92,8 @@ public:
         std::shared_ptr<mir::scene::Session> const& session,
         std::weak_ptr<mir::scene::Surface> const& surface) override;
 
-    void add_display(mir::geometry::Rectangle const& area) override
-    __attribute__((deprecated("Mir doesn't reliably call this: it is ignored. Use add_display_for_testing() instead")));
+    [[deprecated("Mir doesn't reliably call this: it is ignored. Use add_display_for_testing() instead")]]
+    void add_display(mir::geometry::Rectangle const& area) override;
 
     void remove_display(mir::geometry::Rectangle const& area) override;
 
