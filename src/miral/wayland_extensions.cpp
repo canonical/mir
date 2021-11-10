@@ -414,38 +414,42 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                     selected_extensions.begin(),
                     selected_extensions.end()});
 
-            server.set_wayland_extension_filter(
-                [&self = self, manually_enabled_extensions, manually_disabled_extensions]
-                (Application const& app, char const* protocol) -> bool
-                {
-                    // Wayland calls the filter for all protocols (not just the optional extensions). To avoid accidents
-                    // (like denying base protocols) we always accept extensions that are not in supported_extensions.
-                    if (self->supported_extensions.count(protocol) == 0)
+            if (self->extensions_filter)
+            {
+                server.set_wayland_extension_filter(
+                    [self](Application const& app, char const* protocol) -> bool
                     {
-                        return true;
-                    }
-                    auto const cond = self->conditional_extensions.find(protocol);
-                    if (cond != self->conditional_extensions.end())
+                        return self->extensions_filter.value()(app, protocol);
+                    });
+            }
+            else if (!self->conditional_extensions.empty())
+            {
+                server.set_wayland_extension_filter(
+                    [&self = self, manually_enabled_extensions, manually_disabled_extensions]
+                    (Application const& app, char const* protocol) -> bool
                     {
-                        std::optional<bool> user_pref;
-                        if (manually_enabled_extensions.find(protocol) != manually_enabled_extensions.end())
+                        auto const cond = self->conditional_extensions.find(protocol);
+
+                        if (cond == self->conditional_extensions.end())
                         {
-                            user_pref = true;
+                            return true;
                         }
-                        else if (manually_disabled_extensions.find(protocol) != manually_disabled_extensions.end())
+                        else
                         {
-                            user_pref = false;
+                            std::optional<bool> user_pref;
+                            if (manually_enabled_extensions.find(protocol) != manually_enabled_extensions.end())
+                            {
+                                user_pref = true;
+                            }
+                            else if (manually_disabled_extensions.find(protocol) != manually_disabled_extensions.end())
+                            {
+                                user_pref = false;
+                            }
+
+                            return cond->second(EnableInfo{ app, protocol, user_pref});
                         }
-                        return cond->second(EnableInfo{
-                            app,
-                            protocol,
-                            user_pref});
-                    }
-                    else
-                    {
-                        return self->extensions_filter ? self->extensions_filter.value()(app, protocol) : true;
-                    }
-                });
+                    });
+            }
         });
 }
 
@@ -461,7 +465,15 @@ void miral::WaylandExtensions::add_extension(Builder const& builder)
 
 void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const& extension_filter)
 {
-    self->extensions_filter = extension_filter;
+    // Wayland calls the filter for all protocols (not just the optional extensions).
+    // To avoid accidents (like denying base protocols) we only defer to the provided
+    // extension_filter for supported_extensions.
+    self->extensions_filter = [&optional = self->supported_extensions, extension_filter]
+        (Application const& app, char const* protocol)
+        {
+            return (optional.count(protocol) == 0) || extension_filter(app, protocol);
+        };
+
     self->assert_only_one_extension_filter_type_used();
 }
 
