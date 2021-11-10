@@ -24,6 +24,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <optional>
 #include <set>
 
 struct wl_display;
@@ -92,11 +93,35 @@ public:
         std::function<std::shared_ptr<void>(Context const* context)> build;
     };
 
+    /// Information that can be used to determine if to enable a conditionally enabled extension
+    /// \remark Since MirAL 3.4
+    class EnableInfo
+    {
+    public:
+        /// The application that is being given access to this extension
+        auto app() const -> Application const&;
+        /// The name of the extension/global, always the same as given to conditionally_enable()
+        auto name() const -> const char*;
+        /// If the user has enabled or disabled this extension one of the wayland extension Mir options
+        auto user_preference() const -> std::optional<bool>;
+
+    private:
+        friend WaylandExtensions;
+        EnableInfo(Application const& app, const char* name, std::optional<bool> user_preference);
+        struct Self;
+        std::unique_ptr<Self> const self;
+    };
+
     /// \remark Since MirAL 2.5
     using Filter = std::function<bool(Application const& app, char const* protocol)>;
 
-    /// Set an extension filter callback to control the extensions available to specific clients
+    /// \remark Since MirAL 3.4
+    using EnableCallback = std::function<bool(EnableInfo const& info)>;
+
+    /// Set an extension filter callback to control the extensions available to specific clients. Deprecated in favor of
+    /// conditionally_enable(), and not be used in conjunction with conditionally_enable().
     /// \remark Since MirAL 2.5
+    /// \deprecated In MirAL 3.4, use conditionally_enable() instead
     void set_filter(Filter const& extension_filter);
 
     /**
@@ -163,15 +188,23 @@ public:
     /// \remark Since MirAL 2.6
     static auto supported() -> std::set<std::string>;
 
-    /// Enable a Wayland extension
-    /// Throws a std::runtime_error if the extension is not supported
+    /// Enable a Wayland extension by default. The user can still disable it with the drop-wayland-extensions or
+    /// wayland-extensions options. The extension can be forced to be enabled regardless of user options with
+    /// conditionally_enable().
     /// \remark Since MirAL 2.6
     auto enable(std::string name) -> WaylandExtensions&;
 
-    /// Disable a Wayand extension
-    /// Throws a std::runtime_error if the extension is not supported
+    /// Disable a Wayland extension by default. The user can still enable it with the add-wayland-extensions or
+    /// wayland-extensions options. The extension can be forced to be disabled regardless of user options with
+    /// conditionally_enable().
     /// \remark Since MirAL 2.6
     auto disable(std::string name) -> WaylandExtensions&;
+
+    /// Enable a Wayland extension only when the callback returns true. The callback can use info.user_preference()
+    /// to respect the extension options the user provided, it is not required. Unlike enable() and disable(),
+    /// conditionally_enable() can override the user options.
+    /// \remark Since MirAL 3.4
+    auto conditionally_enable(std::string name, EnableCallback const& callback) -> WaylandExtensions&;
 
 private:
     struct Self;
