@@ -24,6 +24,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <optional>
 #include <set>
 
 struct wl_display;
@@ -94,21 +95,28 @@ public:
 
     /// Information that can be used to determine if to enable a conditionally enabled extension
     /// \remark Since MirAL 3.4
-    struct Info
+    class EnableInfo
     {
+    public:
         /// The application that is being given access to this extension
-        Application const& app;
-        /// If this extension is in the recommended set
-        bool recommended;
-        /// If the user has enabled this extension using the wayland-extensions or related option
-        bool manually_enabled;
+        auto app() const -> Application const&;
+        /// The name of the extension/global, always the same as given to conditionally_enable()
+        auto name() const -> const char*;
+        /// If the user has enabled or disabled this extension one of the wayland extension Mir options
+        auto user_preference() const -> std::optional<bool>;
+
+    private:
+        friend WaylandExtensions;
+        EnableInfo(Application const& app, const char* name, std::optional<bool> user_preference);
+        struct Self;
+        std::unique_ptr<Self> const self;
     };
 
     /// \remark Since MirAL 2.5
     using Filter = std::function<bool(Application const& app, char const* protocol)>;
 
     /// \remark Since MirAL 3.4
-    using Condition = std::function<bool(Info const& info)>;
+    using EnableCallback = std::function<bool(EnableInfo const& info)>;
 
     /// Set an extension filter callback to control the extensions available to specific clients
     /// \remark Since MirAL 2.5
@@ -184,7 +192,7 @@ public:
     /// Enable a Wayland extension only when the callback returns true. In the callback return
     /// info.user_preference().value_or(true) to let the user manually disable this extension.
     /// \remark Since MirAL 3.4
-    auto conditionally_enable(std::string name, Condition const& condition) -> WaylandExtensions&;
+    auto conditionally_enable(std::string name, EnableCallback const& callback) -> WaylandExtensions&;
 
 private:
     struct Self;

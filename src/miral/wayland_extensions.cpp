@@ -96,6 +96,36 @@ decltype(StaticExtensionTracker::mutex)       StaticExtensionTracker::mutex;
 decltype(StaticExtensionTracker::extensions)  StaticExtensionTracker::extensions;
 }
 
+struct miral::WaylandExtensions::EnableInfo::Self
+{
+    Application const app;
+    const char* const name;
+    std::optional<bool> const user_preference;
+};
+
+miral::WaylandExtensions::EnableInfo::EnableInfo(
+    Application const& app,
+    const char* name,
+    std::optional<bool> user_preference)
+    : self{std::unique_ptr<Self>(new Self{app, name, user_preference})}
+{
+}
+
+auto miral::WaylandExtensions::EnableInfo::app() const -> Application const&
+{
+    return self->app;
+}
+
+auto miral::WaylandExtensions::EnableInfo::name() const -> const char*
+{
+    return self->name;
+}
+
+auto miral::WaylandExtensions::EnableInfo::user_preference() const -> std::optional<bool>
+{
+    return self->user_preference;
+}
+
 struct miral::WaylandExtensions::Self
 {
 
@@ -191,7 +221,7 @@ struct miral::WaylandExtensions::Self
         }
     }
 
-    void conditionally_enable(std::string name, Condition const& condition)
+    void conditionally_enable(std::string name, EnableCallback const& callback)
     {
         if (supported_extensions.find(name) == supported_extensions.end())
         {
@@ -200,13 +230,13 @@ struct miral::WaylandExtensions::Self
         }
         else
         {
-            conditional_extensions[name] = condition;
+            conditional_extensions[name] = callback;
         }
     }
 
     std::set<std::string> const recommended_extensions;
     std::vector<Builder> wayland_extension_hooks;
-    std::map<std::string, Condition> conditional_extensions;
+    std::map<std::string, EnableCallback> conditional_extensions;
     /**
      * Extensions to enable by default if the user does not override with a command line options
      * This starts set to mir::frontend::get_standard_extensions()
@@ -340,9 +370,9 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                     }
                     auto const cond = self->conditional_extensions.find(protocol);
                     if (cond != self->conditional_extensions.end() &&
-                        !cond->second(Info{
+                        !cond->second(EnableInfo{
                             app,
-                            self->recommended_extensions.find(protocol) != self->recommended_extensions.end(),
+                            protocol,
                             manually_enabled_extensions.find(protocol) != manually_enabled_extensions.end()}))
                     {
                         return false;
@@ -394,9 +424,11 @@ auto miral::WaylandExtensions::disable(std::string name) -> WaylandExtensions&
     return *this;
 }
 
-auto miral::WaylandExtensions::conditionally_enable(std::string name, Condition const& condition) -> WaylandExtensions&
+auto miral::WaylandExtensions::conditionally_enable(
+    std::string name,
+    EnableCallback const& callback) -> WaylandExtensions&
 {
-    self->conditionally_enable(name, condition);
+    self->conditionally_enable(name, callback);
     return *this;
 }
 

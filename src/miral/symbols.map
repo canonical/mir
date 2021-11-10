@@ -465,5 +465,8 @@ global:
   extern "C++" {
     miral::socket_fd_of*;
     miral::WaylandExtensions::conditionally_enable*;
+    miral::WaylandExtensions::EnableInfo::app*;
+    miral::WaylandExtensions::EnableInfo::name*;
+    miral::WaylandExtensions::EnableInfo::user_preference*;
   };
 } MIRAL_3.3;
