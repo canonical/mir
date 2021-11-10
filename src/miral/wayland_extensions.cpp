@@ -234,6 +234,16 @@ struct miral::WaylandExtensions::Self
         }
     }
 
+    void assert_only_one_extension_filter_type_used()
+    {
+        if (!conditional_extensions.empty() && extensions_filter)
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error(
+                "Only one of WaylandExtensions::conditionally_enable() or WaylandExtensions::filter() can be used. "
+                "Convert your use of the deprecated filter() method to conditionally_enable()"));
+        }
+    }
+
     std::set<std::string> const recommended_extensions;
     std::vector<Builder> wayland_extension_hooks;
     std::map<std::string, EnableCallback> conditional_extensions;
@@ -247,7 +257,7 @@ struct miral::WaylandExtensions::Self
      * This includes extensions returned by mir::frontend::get_supported_extensions() and any bespoke extensions added
      */
     std::set<std::string> supported_extensions;
-    WaylandExtensions::Filter extensions_filter = [](Application const&, char const*) { return true; };
+    std::optional<WaylandExtensions::Filter> extensions_filter;
 };
 
 
@@ -402,7 +412,7 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                     }
                     else
                     {
-                        return self->extensions_filter(app, protocol);
+                        return self->extensions_filter ? self->extensions_filter.value()(app, protocol) : true;
                     }
                 });
         });
@@ -421,6 +431,7 @@ void miral::WaylandExtensions::add_extension(Builder const& builder)
 void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const& extension_filter)
 {
     self->extensions_filter = extension_filter;
+    self->assert_only_one_extension_filter_type_used();
 }
 
 void miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const& builder)
@@ -455,6 +466,7 @@ auto miral::WaylandExtensions::conditionally_enable(
     EnableCallback const& callback) -> WaylandExtensions&
 {
     self->conditionally_enable(name, callback);
+    self->assert_only_one_extension_filter_type_used();
     return *this;
 }
 
