@@ -319,11 +319,19 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
 
             std::set<std::string> selected_extensions;
             std::set<std::string> manually_enabled_extensions;
+            std::set<std::string> manually_disabled_extensions;
             if (server.get_options()->is_set(mo::wayland_extensions_opt))
             {
                 manually_enabled_extensions = Self::parse_extensions_option(
                     server.get_options()->get<std::string>(mo::wayland_extensions_opt));
                 selected_extensions = manually_enabled_extensions;
+                for (auto const& ext : self->supported_extensions)
+                {
+                    if (manually_enabled_extensions.find(ext) == manually_enabled_extensions.end())
+                    {
+                        manually_disabled_extensions.insert(ext);
+                    }
+                }
             }
             else
             {
@@ -338,6 +346,7 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                 {
                     selected_extensions.insert(extension);
                     manually_enabled_extensions.insert(extension);
+                    manually_disabled_extensions.erase(extension);
                 }
             }
 
@@ -349,7 +358,13 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                 {
                     selected_extensions.erase(extension);
                     manually_enabled_extensions.erase(extension);
+                    manually_disabled_extensions.insert(extension);
                 }
+            }
+
+            for (auto const& pair : self->conditional_extensions)
+            {
+                selected_extensions.insert(pair.first);
             }
 
             self->validate(selected_extensions);
@@ -359,7 +374,7 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                     selected_extensions.end()});
 
             server.set_wayland_extension_filter(
-                [&self = self, manually_enabled_extensions = manually_enabled_extensions]
+                [&self = self, manually_enabled_extensions, manually_disabled_extensions]
                 (Application const& app, char const* protocol) -> bool
                 {
                     // Wayland calls the filter for all protocols (not just the optional extensions). To avoid accidents
@@ -369,15 +384,26 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                         return true;
                     }
                     auto const cond = self->conditional_extensions.find(protocol);
-                    if (cond != self->conditional_extensions.end() &&
-                        !cond->second(EnableInfo{
+                    if (cond != self->conditional_extensions.end())
+                    {
+                        std::optional<bool> user_pref;
+                        if (manually_enabled_extensions.find(protocol) != manually_enabled_extensions.end())
+                        {
+                            user_pref = true;
+                        }
+                        else if (manually_disabled_extensions.find(protocol) != manually_disabled_extensions.end())
+                        {
+                            user_pref = false;
+                        }
+                        return cond->second(EnableInfo{
                             app,
                             protocol,
-                            manually_enabled_extensions.find(protocol) != manually_enabled_extensions.end()}))
-                    {
-                        return false;
+                            user_pref});
                     }
-                    return self->extensions_filter(app, protocol);
+                    else
+                    {
+                        return self->extensions_filter(app, protocol);
+                    }
                 });
         });
 }
