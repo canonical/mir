@@ -18,7 +18,8 @@ backends:
         systems:
             - ubuntu-20.04-64
             - fedora-34-64
-            - fedora-35-64
+            - fedora-35-64:
+                image: fedora-35-64-base
             - fedora-rawhide-64
 
 environment:
