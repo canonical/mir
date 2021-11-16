@@ -321,9 +321,14 @@ auto mf::WindowWlSurfaceRole::window_state() const -> MirWindowState
 auto mf::WindowWlSurfaceRole::is_active() const -> bool
 {
     if (auto const scene_surface = weak_scene_surface.lock())
-        return scene_surface->focus_state() == mir_window_focus_state_focused;
+    {
+        auto const state = scene_surface->focus_state();
+        return state != mir_window_focus_state_unfocused;
+    }
     else
+    {
         return false;
+    }
 }
 
 auto mf::WindowWlSurfaceRole::latest_timestamp() const -> std::chrono::nanoseconds
@@ -451,9 +456,10 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     {
         observer->content_resized_to(scene_surface.get(), content_size);
     }
-    if (is_active())
+    auto const focus_state = scene_surface->focus_state();
+    if (focus_state != mir_window_focus_state_unfocused)
     {
-        observer->attrib_changed(scene_surface.get(), mir_window_attrib_focus, 1);
+        observer->attrib_changed(scene_surface.get(), mir_window_attrib_focus, focus_state);
     }
 
     // Send wl_surface.enter events for every output

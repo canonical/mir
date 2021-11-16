@@ -169,13 +169,13 @@ private:
     std::mutex mutable focus_mutex;
     std::weak_ptr<scene::Surface> focus_surface;
     std::weak_ptr<scene::Session> focus_session;
-    std::weak_ptr<scene::Surface> notified_focus_surface;
+    std::vector<std::weak_ptr<scene::Surface>> notified_active_surfaces;
+    std::weak_ptr<scene::Surface> notified_keyboard_focus_surface;
+    std::weak_ptr<scene::Surface> notified_topmost_active_surface;
     std::shared_ptr<scene::SurfaceObserver> focus_surface_observer;
-    std::vector<std::weak_ptr<scene::Surface>> popups_of_focused_surface;
 
     void notify_focus_locked(
         std::unique_lock<std::mutex> const& lock,
-        std::shared_ptr<scene::Session> const& focus_session,
         std::shared_ptr<scene::Surface> const& focus_surface);
 
     void update_focus_locked(

@@ -140,7 +140,7 @@ void LockedPointerV1::MyWaylandSurfaceObserver::attrib_changed(
         {
         case mir_pointer_locked_persistent:
         case mir_pointer_locked_oneshot:
-            if (value)
+            if (value != mir_window_focus_state_unfocused)
             {
                 wayland_executor.spawn([self=self]()
                     {
@@ -191,7 +191,7 @@ void ConfinedPointerV1::SurfaceObserver::attrib_changed(
         {
         case mir_pointer_confined_persistent:
         case mir_pointer_confined_oneshot:
-            if (value)
+            if (value != mir_window_focus_state_unfocused)
             {
                 wayland_executor.spawn([self=self]()
                     {
