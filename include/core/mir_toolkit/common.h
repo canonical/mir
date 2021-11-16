@@ -88,8 +88,9 @@ typedef enum MirWindowState
 
 typedef enum MirWindowFocusState
 {
-    mir_window_focus_state_unfocused = 0,
-    mir_window_focus_state_focused
+    mir_window_focus_state_unfocused = 0,   /**< Inactive and does not have focus           */
+    mir_window_focus_state_focused,         /**< Active and has keybaord focus              */
+    mir_window_focus_state_active           /**< Active but does not have keyboard focus    */
 } MirWindowFocusState;
 
 typedef enum MirWindowVisibility

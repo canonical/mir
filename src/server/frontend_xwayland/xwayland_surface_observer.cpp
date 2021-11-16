@@ -61,12 +61,12 @@ void mf::XWaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAt
     {
     case mir_window_attrib_focus:
     {
-        auto has_focus = static_cast<bool>(value);
-        wm_surface->scene_surface_focus_set(has_focus);
+        auto state = static_cast<MirWindowFocusState>(value);
+        wm_surface->scene_surface_focus_set(state != mir_window_focus_state_unfocused);
         aquire_input_dispatcher(
-            [has_focus](auto input_dispatcher)
+            [state](auto input_dispatcher)
             {
-                input_dispatcher->set_focus(has_focus);
+                input_dispatcher->set_focus(state == mir_window_focus_state_focused);
             });
     }   break;
 

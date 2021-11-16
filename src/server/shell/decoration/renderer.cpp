@@ -502,7 +502,7 @@ void msd::Renderer::update_state(WindowState const& window_state, InputState con
         titlebar_pixels.reset(); // force a reallocation next time it's needed
     }
 
-    Theme const* const new_theme = (window_state.focused_state() == mir_window_focus_state_focused) ?
+    Theme const* const new_theme = (window_state.focused_state() != mir_window_focus_state_unfocused) ?
         &focused_theme :
         &unfocused_theme;
 

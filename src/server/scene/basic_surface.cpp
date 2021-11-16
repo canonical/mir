@@ -988,6 +988,7 @@ auto mir::scene::BasicSurface::focus_state() const -> MirWindowFocusState
 void mir::scene::BasicSurface::set_focus_state(MirWindowFocusState new_state)
 {
     if (new_state != mir_window_focus_state_focused &&
+        new_state != mir_window_focus_state_active &&
         new_state != mir_window_focus_state_unfocused)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid focus state."));
