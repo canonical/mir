@@ -249,7 +249,19 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
             {
                 *output->config = conf_output;
                 output->display_buffer->set_view_area(output->config->extents());
-                output->display_buffer->set_transformation(output->config->transformation());
+                switch (output->config->power_mode)
+                {
+                case mir_power_mode_on:
+                    output->display_buffer->set_transformation(output->config->transformation());
+                    break;
+
+                case mir_power_mode_standby:
+                case mir_power_mode_suspend:
+                case mir_power_mode_off:
+                    // Simulate an off display by setting a zeroed-out transform
+                    output->display_buffer->set_transformation(glm::mat2{});
+                    break;
+                }
                 found_info = true;
                 break;
             }
