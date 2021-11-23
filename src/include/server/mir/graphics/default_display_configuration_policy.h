@@ -31,48 +31,21 @@ namespace graphics
 class CloneDisplayConfigurationPolicy : public DisplayConfigurationPolicy
 {
 public:
-    CloneDisplayConfigurationPolicy() = default;
-    CloneDisplayConfigurationPolicy(double scale)
-        : scale{scale}
-    {
-    }
-
     void apply_to(DisplayConfiguration& conf);
-
-private:
-    double const scale{1.0};
 };
 
 /// Each screen placed to the right of the previous one
 class SideBySideDisplayConfigurationPolicy : public DisplayConfigurationPolicy
 {
 public:
-    SideBySideDisplayConfigurationPolicy() = default;
-    SideBySideDisplayConfigurationPolicy(double scale)
-        : scale{scale}
-    {
-    }
-
     void apply_to(graphics::DisplayConfiguration& conf);
-
-private:
-    double const scale{1.0};
 };
 
 /// Just use the first screen
 class SingleDisplayConfigurationPolicy : public DisplayConfigurationPolicy
 {
 public:
-    SingleDisplayConfigurationPolicy() = default;
-    SingleDisplayConfigurationPolicy(double scale)
-        : scale{scale}
-    {
-    }
-
     void apply_to(graphics::DisplayConfiguration& conf);
-
-private:
-    double const scale{1.0};
 };
 /** @} */
 }
