@@ -103,7 +103,6 @@ public:
     void init(Context const& context);
 
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
-    auto is_valid_global_name(std::string const& name) const -> bool;
 
 protected:
 
@@ -112,7 +111,6 @@ protected:
 
 private:
     std::unordered_map<std::string, std::shared_ptr<void>> extension_protocols;
-    std::unordered_set<std::string> valid_global_names;
 };
 
 class WaylandConnector : public Connector
