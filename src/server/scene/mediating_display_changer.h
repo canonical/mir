@@ -98,6 +98,7 @@ private:
     void no_focus_handler();
     void session_stopping_handler(std::shared_ptr<Session> const& session);
 
+    void set_power_mode_for_all_used_outputs(MirPowerMode power_mode);
     void apply_config(std::shared_ptr<graphics::DisplayConfiguration> const& conf);
     void apply_base_config();
     void send_config_to_all_sessions(
