@@ -483,6 +483,19 @@ bool configuration_has_new_outputs_enabled(
 }
 }
 
+void ms::MediatingDisplayChanger::set_power_mode_for_all_used_outputs(MirPowerMode power_mode)
+{
+    std::shared_ptr<graphics::DisplayConfiguration> const config = display->configuration();
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (output.used)
+            {
+                output.power_mode = power_mode;
+            }
+        });
+    apply_config(config);
+}
+
 void ms::MediatingDisplayChanger::apply_config(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
