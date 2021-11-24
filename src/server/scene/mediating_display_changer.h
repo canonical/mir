@@ -100,7 +100,7 @@ private:
     void no_focus_handler();
     void session_stopping_handler(std::shared_ptr<Session> const& session);
 
-    void set_power_mode_for_all_used_outputs(MirPowerMode power_mode);
+    void set_power_mode_for_all_used_outputs(MirPowerMode new_power_mode);
     void apply_config(std::shared_ptr<graphics::DisplayConfiguration> const& conf);
     void apply_base_config();
     void send_config_to_all_sessions(
@@ -134,6 +134,11 @@ private:
     /// See configure_for_hardware_change(). The config that will be applied by a currently in-flight server action.
     /// If null, there is no config to apply or hardware config server action queued.
     std::shared_ptr<graphics::DisplayConfiguration> pending_configuration;
+
+    /// Mutex protecting power_mode
+    std::mutex power_mode_mutex;
+    /// Power mode outputs have been set to
+    MirPowerMode power_mode{mir_power_mode_on};
 };
 
 }
