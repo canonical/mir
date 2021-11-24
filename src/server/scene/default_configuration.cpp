@@ -41,6 +41,7 @@
 #include "timeout_application_not_responding_detector.h"
 #include "basic_clipboard.h"
 #include "basic_text_input_hub.h"
+#include "basic_idle_hub.h"
 #include "mir/options/program_option.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/display_configuration.h"
@@ -228,6 +229,21 @@ auto mir::DefaultServerConfiguration::the_text_input_hub()
         []()
         {
             return std::make_shared<ms::BasicTextInputHub>();
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_idle_hub()
+-> std::shared_ptr<scene::IdleHub>
+{
+    return idle_hub(
+        [this]()
+        {
+            return std::make_shared<ms::BasicIdleHub>(
+                std::vector<ms::BasicIdleHub::StateEntry>{
+                    {std::chrono::milliseconds{5000}, ms::IdleState::off},
+                },
+                the_main_loop()
+            );
         });
 }
 
