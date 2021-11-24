@@ -26,7 +26,6 @@
 #include "mir/log.h"
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
 namespace mgmh = mir::graphics::gbm::helpers;
 
 mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config)
