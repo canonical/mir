@@ -215,8 +215,6 @@ mgg::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& dr
     initial_conf_policy->apply_to(current_display_configuration);
 
     configure(current_display_configuration);
-
-    shared_egl.make_current();
 }
 
 // please don't remove this empty destructor, it's here for the
