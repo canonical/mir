@@ -82,7 +82,7 @@ public:
     /// \remark Since MirAL 2.5
     struct Builder
     {
-        /// Name of the protocol extension
+        /// Name of the protocol extension's Wayland global
         std::string name;
 
         /// Functor that creates and registers an extension protocol
