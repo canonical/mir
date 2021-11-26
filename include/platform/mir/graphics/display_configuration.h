@@ -188,7 +188,7 @@ struct UserDisplayConfigurationOutput
     std::vector<uint8_t const> const& edid;
     mir::optional_value<geometry::Size>& custom_logical_size;
 
-    UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
+    UserDisplayConfigurationOutput(DisplayConfigurationOutput& main);
     geometry::Rectangle extents() const;
 };
 
