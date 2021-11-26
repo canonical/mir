@@ -3,7 +3,7 @@ name: PPA Upload
 on:
   push:
     branches:
-    - master
+    - main
     - release/[0-9]+.[0-9]+
     tags:
     - v[0-9]+.[0-9]+.[0-9]+
