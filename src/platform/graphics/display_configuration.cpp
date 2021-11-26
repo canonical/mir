@@ -309,29 +309,29 @@ bool mg::DisplayConfiguration::valid() const
 }
 
 mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
-    DisplayConfigurationOutput& master) :
-        id(master.id),
-        card_id(master.card_id),
-        logical_group_id{master.logical_group_id},
-        type(master.type),
-        pixel_formats(master.pixel_formats),
-        modes(master.modes),
-        preferred_mode_index(master.preferred_mode_index),
-        physical_size_mm(master.physical_size_mm),
-        connected(master.connected),
-        used(master.used),
-        top_left(master.top_left),
-        current_mode_index(master.current_mode_index),
-        current_format(master.current_format),
-        power_mode(master.power_mode),
-        orientation(master.orientation),
-        scale(master.scale),
-        form_factor(master.form_factor),
-        subpixel_arrangement(master.subpixel_arrangement),
-        gamma(master.gamma),
-        gamma_supported(master.gamma_supported),
-        edid(*reinterpret_cast<std::vector<uint8_t const>*>(&master.edid)),
-        custom_logical_size(master.custom_logical_size)
+    DisplayConfigurationOutput& main) :
+        id(main.id),
+        card_id(main.card_id),
+        logical_group_id{main.logical_group_id},
+        type(main.type),
+        pixel_formats(main.pixel_formats),
+        modes(main.modes),
+        preferred_mode_index(main.preferred_mode_index),
+        physical_size_mm(main.physical_size_mm),
+        connected(main.connected),
+        used(main.used),
+        top_left(main.top_left),
+        current_mode_index(main.current_mode_index),
+        current_format(main.current_format),
+        power_mode(main.power_mode),
+        orientation(main.orientation),
+        scale(main.scale),
+        form_factor(main.form_factor),
+        subpixel_arrangement(main.subpixel_arrangement),
+        gamma(main.gamma),
+        gamma_supported(main.gamma_supported),
+        edid(*reinterpret_cast<std::vector<uint8_t const>*>(&main.edid)),
+        custom_logical_size(main.custom_logical_size)
 {
 }
 
