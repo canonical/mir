@@ -40,6 +40,7 @@ public:
         GLConfig const& gl_config,
         GBMHelper const& gbm,
         gbm_surface* surface,
+        uint32_t gbm_format,
         EGLContext shared_context);
     ~EGLHelper() noexcept;
     EGLHelper(EGLHelper&& from);
@@ -49,7 +50,7 @@ public:
 
     void setup(GBMHelper const& gbm);
     void setup(GBMHelper const& gbm, EGLContext shared_context);
-    void setup(GBMHelper const& gbm, gbm_surface* surface_gbm, EGLContext shared_context, bool owns_egl);
+    void setup(GBMHelper const& gbm, gbm_surface* surface_gbm, uint32_t gbm_format, EGLContext shared_context, bool owns_egl);
 
     bool swap_buffers();
     bool make_current() const;
@@ -59,7 +60,9 @@ public:
 
     void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>);
 private:
-    void setup_internal(GBMHelper const& gbm, bool initialize, EGLint gbm_format);
+    auto egl_config_for_format(EGLint gbm_format) -> EGLConfig;
+
+    auto egl_display_for_gbm_device(struct gbm_device* const device) -> EGLDisplay;
 
     EGLint const depth_buffer_bits;
     EGLint const stencil_buffer_bits;

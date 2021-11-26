@@ -528,6 +528,7 @@ void mgg::Display::configure_locked(
 
                 for (auto const& group : kms_output_groups)
                 {
+                    uint32_t const gbm_format = GBM_FORMAT_XRGB8888;
                     /*
                      * In a hybrid setup a scanout surface needs to be allocated differently if it
                      * needs to be able to be shared across GPUs. This likely reduces performance.
@@ -535,7 +536,7 @@ void mgg::Display::configure_locked(
                      * As a first cut, assume every scanout buffer in a hybrid setup might need
                      * to be shared.
                      */
-                    auto surface = gbm->create_scanout_surface(width, height, drm.size() != 1);
+                    auto surface = gbm->create_scanout_surface(width, height, gbm_format, drm.size() != 1);
                     auto const raw_surface = surface.get();
 
                     auto db = std::make_unique<DisplayBuffer>(
@@ -550,6 +551,7 @@ void mgg::Display::configure_locked(
                                 *gl_config,
                                 *gbm,
                                 raw_surface,
+                                gbm_format,
                                 shared_egl.context()
                             }
                         },
