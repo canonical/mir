@@ -273,11 +273,16 @@ auto mgmh::EGLHelper::egl_config_for_format(EGLint gbm_format) -> EGLConfig
             return config;
         }
     }
-    BOOST_THROW_EXCEPTION((
-        std::runtime_error{std::string{"Failed to find EGL config matching "} + std::to_string(gbm_format)}));
+    BOOST_THROW_EXCEPTION((NoMatchingEGLConfig{static_cast<uint32_t>(gbm_format)}));
 }
 
 void mgmh::EGLHelper::report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> f)
 {
     f(egl_display, egl_config);
+}
+
+mgmh::EGLHelper::NoMatchingEGLConfig::NoMatchingEGLConfig(uint32_t /*format*/)
+    : std::runtime_error("Failed to find matching EGL config")
+{
+    // TODO: Include the format string; need to extract from linux_dmabuf.cpp
 }

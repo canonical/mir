@@ -21,6 +21,7 @@
 
 #include "display_helpers.h"
 #include "mir/graphics/egl_extensions.h"
+#include <stdexcept>
 #include <EGL/egl.h>
 
 namespace mir
@@ -59,6 +60,12 @@ public:
     EGLContext context() const { return egl_context; }
 
     void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>);
+
+    class NoMatchingEGLConfig : public std::runtime_error
+    {
+    public:
+        NoMatchingEGLConfig(uint32_t format);
+    };
 private:
     auto egl_config_for_format(EGLint gbm_format) -> EGLConfig;
 
