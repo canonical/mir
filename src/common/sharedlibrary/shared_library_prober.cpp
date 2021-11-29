@@ -23,6 +23,7 @@
 
 #include <system_error>
 #include <cstring>
+#include <algorithm>
 
 namespace
 {
