@@ -17,6 +17,7 @@
  */
 
 #include "window_info_defaults.h"
+#include <limits>
 
 namespace
 {
