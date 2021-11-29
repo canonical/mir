@@ -822,6 +822,7 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         .Times(AtLeast(1))
         .WillRepeatedly(Return(stencil_bits));
 
+    // We create at least one rendering context, with the requested attributes…
     EXPECT_CALL(mock_egl,
                 eglChooseConfig(
                     _,
@@ -829,6 +830,16 @@ TEST_F(MesaDisplayTest, respects_gl_config)
                           mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
                     NotNull(),_,_))
         .Times(AtLeast(1))
+        .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                        SetArgPointee<4>(1),
+                        Return(EGL_TRUE)));
+    //…we *also* create zero-or-more non-rendering contexts; we don't care what they ask for
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    Pointee(EGL_NONE),
+                    NotNull(),_,_))
+        .Times(AnyNumber())
         .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
                         SetArgPointee<4>(1),
                         Return(EGL_TRUE)));
