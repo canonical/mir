@@ -45,7 +45,7 @@ ms::BasicIdleHub::BasicIdleHub(
           })},
       current_state_index{0}
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock<std::mutex> lock{mutex}; // Needed to call set_state_index()
     set_state_index(lock, 0);
 }
 
