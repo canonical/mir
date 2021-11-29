@@ -70,6 +70,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     external_client.cpp
     runner.cpp
     wayland_extensions.cpp
+    display_configuration_option.cpp
     zone.cpp
     server_example_decoration.cpp server_example_decoration.h
     org_kde_kwin_server_decoration.c org_kde_kwin_server_decoration.h
