@@ -32,7 +32,8 @@ namespace scene
 enum class IdleState
 {
     awake,      ///< Outputs should be on
-    dim,        ///< Outputs should be on, but dimmed
+    dim,        ///< Outputs should be on, but dimmed (may not reduce power usage, but warns the user the screen is
+                ///< about to blank)
     standby,    ///< Outputs should be in mir_power_mode_standby
     off,        ///< Outputs should be in mir_power_mode_off
 };
@@ -51,8 +52,7 @@ private:
     IdleStateObserver& operator=(IdleStateObserver const&) = delete;
 };
 
-/// Interface allowing for input methods to get state from and send text input to clients. When a new observer is
-/// registered, it is immediately given the initial state on the current thread.
+/// Interface that exposes notifications about when Mir is idle, and allows for waking Mir up
 class IdleHub : public ObserverRegistrar<IdleStateObserver>
 {
 public:
