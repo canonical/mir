@@ -19,6 +19,8 @@
 #ifndef MIR_GRAPHICS_X_PLATFORM_H_
 #define MIR_GRAPHICS_X_PLATFORM_H_
 
+#include <kj/one-of.h> // HACK for https://github.com/capnproto/capnproto/issues/1393
+
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"

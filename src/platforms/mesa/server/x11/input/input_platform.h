@@ -18,6 +18,8 @@
 #ifndef MIR_INPUT_X_INPUT_PLATFORM_H_
 #define MIR_INPUT_X_INPUT_PLATFORM_H_
 
+#include <kj/one-of.h> // HACK for https://github.com/capnproto/capnproto/issues/1393
+
 #include "mir/input/platform.h"
 #include <memory>
 #include <X11/Xlib.h>
