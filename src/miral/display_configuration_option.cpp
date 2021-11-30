@@ -96,6 +96,31 @@ void PixelFormatSelector::apply_to(mg::DisplayConfiguration& conf)
         });
 }
 
+class ScaleSetter : public mg::DisplayConfigurationPolicy
+{
+public:
+    ScaleSetter(std::shared_ptr<mg::DisplayConfigurationPolicy> const& base_policy, float with_scale)
+        : base_policy{base_policy},
+          with_scale{with_scale}
+    {
+    }
+
+    void apply_to(mg::DisplayConfiguration& conf) override;
+private:
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const base_policy;
+    float const with_scale;
+};
+
+void ScaleSetter::apply_to(mg::DisplayConfiguration& conf)
+{
+    base_policy->apply_to(conf);
+    conf.for_each_output(
+        [&](mg::UserDisplayConfigurationOutput& output)
+        {
+            output.scale = with_scale;
+        });
+}
+
 void miral::display_configuration_options(mir::Server& server)
 {
     // Add choice of monitor configuration
@@ -132,19 +157,24 @@ void miral::display_configuration_options(mir::Server& server)
 
             if (display_layout == sidebyside_opt_val)
             {
-                layout_selector = std::make_shared<mg::SideBySideDisplayConfigurationPolicy>(scale);
+                layout_selector = std::make_shared<mg::SideBySideDisplayConfigurationPolicy>();
             }
             else if (display_layout == single_opt_val)
             {
-                layout_selector = std::make_shared<mg::SingleDisplayConfigurationPolicy>(scale);
+                layout_selector = std::make_shared<mg::SingleDisplayConfigurationPolicy>();
             }
             else if (display_layout.compare(0, strlen(static_opt_val), static_opt_val) == 0)
             {
                 if (scale != 1.0)
                 {
-                    mir::fatal_error("Display scale option can't be when using static display configuration");
+                    mir::fatal_error("Display scale option can't be used with static display configuration");
                 }
                 layout_selector = std::make_shared<StaticDisplayConfig>(display_layout.substr(strlen(static_opt_val)));
+            }
+
+            if (scale != 1.0)
+            {
+                layout_selector = std::make_shared<ScaleSetter>(layout_selector, scale);
             }
 
             // Whatever the layout select a pixel format with requested alpha
