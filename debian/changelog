@@ -1,3 +1,20 @@
+mir (1.8.2) UNRELEASED; urgency=medium
+
+  * New upstream release 1.8.2
+
+    - Add missing headers
+    - Cherry picks
+      . examples/mir_demo_server/server_example_input_filter.cpp: Typo fix in stdout.
+      . Instantiate parameterized test suite DisplayOrientationSetting
+      . Fix FTBFS.
+      . Fix missing #includes for GCC 11
+      . Fix FTBFS
+      . Fix compiler errors
+      . Delete obsolete gmock hack
+      . Add missing include
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Wed, 01 Dec 2021 11:02:35 +0100
+
 mir (1.8.0) UNRELEASED; urgency=medium
 
   * New upstream release 1.8.0
