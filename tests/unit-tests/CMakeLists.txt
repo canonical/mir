@@ -1,8 +1,5 @@
 include(CMakeDependentOption)
 
-add_library(mirdraw STATIC graphics_utils.cpp graphics.h)
-target_include_directories(mirdraw PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
 add_compile_definitions(
   MIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
 )
@@ -167,7 +164,6 @@ target_link_libraries(
   mir_unit_tests
 
   exampleserverconfig
-  mirdraw
   mircommon
   server_platform_common
 
@@ -203,7 +199,6 @@ target_link_libraries(
   mir_umock_unit_tests
 
   exampleserverconfig
-  mirdraw
   mircommon
 
   mir-test-static
