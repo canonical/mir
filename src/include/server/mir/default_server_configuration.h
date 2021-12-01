@@ -103,6 +103,7 @@ class SceneReport;
 class PromptSessionListener;
 class PromptSessionManager;
 class CoordinateTranslator;
+class DisplayDimmer;
 }
 namespace graphics
 {
@@ -292,6 +293,7 @@ public:
     virtual std::shared_ptr<scene::SessionContainer>  the_session_container();
     virtual std::shared_ptr<scene::SessionEventSink>  the_session_event_sink();
     virtual std::shared_ptr<scene::SessionEventHandlerRegister> the_session_event_handler_register();
+    virtual std::shared_ptr<scene::DisplayDimmer>     the_display_dimmer();
     virtual std::shared_ptr<scene::SurfaceFactory>    the_surface_factory();
     virtual std::shared_ptr<shell::SurfaceStack>      the_surface_stack();
     virtual std::shared_ptr<shell::SurfaceStack>      wrap_surface_stack(std::shared_ptr<shell::SurfaceStack> const& wrapped);
@@ -406,6 +408,7 @@ protected:
     CachedPtr<shell::SurfaceStack> surface_stack;
     CachedPtr<scene::SceneReport> scene_report;
 
+    CachedPtr<scene::DisplayDimmer>     display_dimmer;
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<scene::SessionListener> session_listener;

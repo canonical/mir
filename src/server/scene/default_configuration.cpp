@@ -42,6 +42,7 @@
 #include "basic_clipboard.h"
 #include "basic_text_input_hub.h"
 #include "basic_idle_hub.h"
+#include "display_dimmer.h"
 #include "mir/options/program_option.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/display_configuration.h"
@@ -65,6 +66,14 @@ std::shared_ptr<mi::Scene> mir::DefaultServerConfiguration::the_input_scene()
 {
     return scene_surface_stack([this]()
                              { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
+}
+
+auto mir::DefaultServerConfiguration::the_display_dimmer() -> std::shared_ptr<scene::DisplayDimmer>
+{
+    return display_dimmer([this]()
+        {
+            return std::make_shared<ms::DisplayDimmer>(the_idle_hub(), the_input_scene(), the_buffer_allocator());
+        });
 }
 
 auto mir::DefaultServerConfiguration::the_surface_factory()
