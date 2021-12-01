@@ -250,6 +250,7 @@ auto mir::DefaultServerConfiguration::the_idle_hub()
         {
             return std::make_shared<ms::BasicIdleHub>(
                 std::vector<ms::BasicIdleHub::StateEntry>{
+                    {std::chrono::milliseconds{5000}, ms::IdleState::dim},
                     {std::chrono::milliseconds{5000}, ms::IdleState::off},
                 },
                 the_main_loop()
