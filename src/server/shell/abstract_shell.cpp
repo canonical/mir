@@ -78,6 +78,7 @@ msh::AbstractShell::AbstractShell(
     std::shared_ptr<ShellReport> const& report,
     std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder,
     std::shared_ptr<mi::Seat> const& seat,
+    std::shared_ptr<scene::DisplayDimmer> const& display_dimmer,
     std::shared_ptr<decoration::Manager> const& decoration_manager) :
     input_targeter(input_targeter),
     surface_stack(surface_stack),
@@ -87,6 +88,7 @@ msh::AbstractShell::AbstractShell(
     seat(seat),
     report(report),
     focus_surface_observer(std::make_shared<UpdateConfinementOnSurfaceChanges>(this)),
+    display_dimmer{display_dimmer},
     decoration_manager(decoration_manager)
 {
 }

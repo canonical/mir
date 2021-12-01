@@ -27,6 +27,10 @@
 
 namespace mir
 {
+namespace scene
+{
+class DisplayDimmer;
+}
 namespace input
 {
 class Seat;
@@ -52,6 +56,7 @@ public:
         std::shared_ptr<ShellReport> const& report,
         WindowManagerBuilder const& wm_builder,
         std::shared_ptr<input::Seat> const& seat,
+        std::shared_ptr<scene::DisplayDimmer> const& display_dimmer,
         std::shared_ptr<decoration::Manager> const& decoration_manager);
 
     ~AbstractShell() noexcept;
@@ -185,6 +190,7 @@ private:
 
     void update_confinement_for(std::shared_ptr<scene::Surface> const& surface) const;
 
+    std::shared_ptr<scene::DisplayDimmer> const display_dimmer;
     std::shared_ptr<decoration::Manager> decoration_manager;
 };
 }

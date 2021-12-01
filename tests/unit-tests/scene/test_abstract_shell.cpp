@@ -164,6 +164,7 @@ struct AbstractShell : Test
         std::make_shared<mir::report::null::ShellReport>(),
         [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); },
         mt::fake_shared(seat),
+        nullptr,
         mt::fake_shared(decoration_manager)};
 
     void SetUp() override
