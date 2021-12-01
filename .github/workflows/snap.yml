@@ -60,6 +60,7 @@ jobs:
         - MirServer/mir-kiosk
         - MirServer/mir-test-tools
         - MirServer/egmde-confined-desktop
+        - MirServer/ubuntu-frame
 
     steps:
     - name: Setup LXD
