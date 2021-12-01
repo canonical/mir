@@ -238,43 +238,6 @@ void ms::MediatingDisplayChanger::configure(
         });
 }
 
-void ms::MediatingDisplayChanger::remove_session_configuration(
-    std::shared_ptr<ms::Session> const& session)
-{
-    {
-        std::lock_guard<std::mutex> lg{configuration_mutex};
-        if (config_map.find(session) != config_map.end())
-        {
-            config_map.erase(session);
-            observer->session_configuration_removed(session);
-        }
-
-        if (session != focused_session.lock())
-            return;
-    }
-
-    std::weak_ptr<ms::Session> const weak_session{session};
-
-    server_action_queue->enqueue(
-        this,
-        [this, weak_session]
-        {
-            if (auto const session = weak_session.lock())
-            {
-                std::lock_guard<std::mutex> lg{configuration_mutex};
-
-                try
-                {
-                    apply_base_config();
-                }
-                catch (std::exception const&)
-                {
-                    session->send_error(DisplayConfigurationFailedError{});
-                }
-            }
-        });
-}
-
 void
 ms::MediatingDisplayChanger::preview_base_configuration(
     std::weak_ptr<ms::Session> const& session,
@@ -338,47 +301,6 @@ ms::MediatingDisplayChanger::confirm_base_configuration(
         currently_previewing_session = std::weak_ptr<ms::Session>{};
     }
     set_base_configuration(confirmed_conf);
-}
-
-void
-ms::MediatingDisplayChanger::cancel_base_configuration_preview(
-    std::shared_ptr<ms::Session> const& session)
-{
-    std::unique_ptr<mt::Alarm> previously_set_alarm;
-    {
-        std::lock_guard<std::mutex> lock{configuration_mutex};
-        if (!preview_configuration_timeout || (currently_previewing_session.lock() != session))
-        {
-            BOOST_THROW_EXCEPTION(DisplayConfigurationNotInProgressError());
-        }
-        /* We transfer the alarm out of the lock, because the alarm's callback may try
-         * to *take* the configuration_mutex lock.
-         *
-         * Since cancel() blocks until the callback will definitely not be entered,
-         * we need to call cancel() outside the configuration_mutex lock to avoid possible
-         * deadlocks
-         */
-        previously_set_alarm = std::move(preview_configuration_timeout);
-        preview_configuration_timeout = nullptr;
-        currently_previewing_session = std::weak_ptr<ms::Session>{};
-    }
-
-    if (previously_set_alarm->cancel())
-    {
-        // We cancelled the alarm, which means it had not already been triggered.
-        // Therefore, we need to queue up a switch back to the base display configuration and
-        // send a notification.
-        server_action_queue->enqueue(
-            this,
-            [this, weak_session = std::weak_ptr<ms::Session>(session)]()
-            {
-                if (auto live_session = weak_session.lock())
-                {
-                    apply_base_config();
-                    observer->configuration_updated_for_session(live_session, base_configuration());
-                }
-            });
-    }
 }
 
 std::shared_ptr<mg::DisplayConfiguration>

@@ -85,7 +85,6 @@ private:
     void set_keyboard_configuration(MirKeyboardConfig const&);
     void set_touchscreen_configuration(MirTouchscreenConfig const&);
 
-    void wake_hub_for_device_change();
     MirInputDeviceId const device_id;
     InputDevice& device;
     InputDeviceInfo const info;

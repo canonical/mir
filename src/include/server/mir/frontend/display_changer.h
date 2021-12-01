@@ -42,7 +42,7 @@ public:
 
     virtual std::shared_ptr<graphics::DisplayConfiguration> base_configuration() = 0;
     virtual void configure(std::shared_ptr<scene::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
-    virtual void remove_session_configuration(std::shared_ptr<scene::Session> const&) = 0;
+
     virtual void set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
     virtual void preview_base_configuration(
         std::weak_ptr<scene::Session> const& session,
@@ -51,7 +51,6 @@ public:
     virtual void confirm_base_configuration(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_configuration) = 0;
-    virtual void cancel_base_configuration_preview(std::shared_ptr<scene::Session> const& session) = 0;
 
 protected:
     DisplayChanger() = default;

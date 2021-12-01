@@ -22,7 +22,6 @@
 #include "mir/anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "display_helpers.h"
-#include "gbm_format_conversions.h"
 #include "egl_context_executor.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"

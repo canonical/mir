@@ -183,14 +183,6 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (MIR_BUILD_PLATFORM_GBM_KMS)
-  target_link_libraries(
-    mir_unit_tests
-
-    mirsharedgbm-static
-  )
-endif (MIR_BUILD_PLATFORM_GBM_KMS)
-
 mir_add_wrapped_executable(mir_umock_unit_tests NOINSTALL
   ${UMOCK_UNIT_TEST_SOURCES}
   $<TARGET_OBJECTS:mir-umock-test-framework>
