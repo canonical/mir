@@ -5,48 +5,42 @@ kill-timeout: 45m
 backends:
     lxd:
         systems:
-            - ubuntu-16.04
-            - ubuntu-18.04
-            - ubuntu-19.04
-            - ubuntu-19.10
-            - ubuntu-devel:
-               image: ubuntu-daily:devel/amd64
-            - ubuntu-devel-proposed:
-               image: ubuntu-daily:devel/amd64
-            - fedora-30
-            - fedora-31
+            - alpine-3.14
+            - alpine-edge
+            - ubuntu-20.04
+            - fedora-34
+            - fedora-35
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
         plan: n1-highcpu-8
-        location: computeengine/us-east1-b
+        location: snapd-spread/us-east1-b
+        halt-timeout: 2h
         systems:
-            - ubuntu-16.04-64:
-                image: ubuntu-os-cloud/ubuntu-1604-lts
-            - ubuntu-18.04-64:
-                image: ubuntu-os-cloud/ubuntu-1804-lts
-            - ubuntu-19.04-64:
-                image: ubuntu-os-cloud/ubuntu-1904
-            - ubuntu-19.10-64:
-                image: ubuntu-os-cloud/ubuntu-1910
-            - ubuntu-devel-64:
-                image: ubuntu-os-cloud-devel/ubuntu-2004-lts
-            - ubuntu-devel-proposed-64:
-                image: ubuntu-os-cloud-devel/ubuntu-2004-lts
-            - fedora-30-64
-            - fedora-31-64
+            - ubuntu-20.04-64
+            - fedora-34-64
+            - fedora-35-64:
+                image: fedora-35-64-base
             - fedora-rawhide-64
 
 environment:
     ARCH: amd64
-    ARCH/amd64: amd64
-    ARCH/arm64: arm64
-    ARCH/armhf: armhf
-    ARCH/i386: i386
+    ARCH/ubuntu_arm64: arm64
+    ARCH/ubuntu_armhf: armhf
+    ARCH/rpi: armhf
+    RELEASE: focal
+    RELEASE/ubuntu: focal
+    RELEASE/ubuntu_hirsute: hirsute
+    RELEASE/ubuntu_impish: impish
+    RELEASE/ubuntu_devel: jammy
+    RELEASE/debian_sid: sid
+    PROPOSED: false
+    PROPOSED/ubuntu_proposed: true
     CLANG: 0
     CLANG/clang,asan_clang,tsan_clang,ubsan_clang: 1
     VALGRIND: 0
     VALGRIND/valgrind: 1
     BUILD_TYPE: RelWithDebInfo
+    BUILD_TYPE/rpi: Debug
     BUILD_TYPE/asan,asan_clang: AddressSanitizer
     BUILD_TYPE/tsan,tsan_clang: ThreadSanitizer
     BUILD_TYPE/ubsan,ubsan_clang: UBSanitizer

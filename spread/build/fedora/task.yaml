@@ -1,5 +1,6 @@
 summary: Build (on Fedora)
 systems: [fedora-*]
+variants: [amd64]
 
 execute: |
     dnf install --assumeyes --allowerasing \
@@ -10,10 +11,6 @@ execute: |
         mesa-libEGL-devel \
         mesa-libGLES-devel \
         glm-devel \
-        protobuf-lite-devel \
-        protobuf-compiler \
-        capnproto-devel \
-        capnproto \
         glog-devel \
         gflags-devel \
         systemd-devel \
@@ -25,6 +22,8 @@ execute: |
         libinput-devel \
         libxml++-devel \
         libuuid-devel \
+        libX11-devel \
+        libxkbcommon-x11-devel \
         libxkbcommon-devel \
         freetype-devel \
         lttng-ust-devel \
@@ -38,14 +37,14 @@ execute: |
         python3-dbusmock \
         python3-gobject-base \
         python3-dbus \
-        mesa-libwayland-egl-devel\
         libXcursor-devel \
         yaml-cpp-devel\
         egl-wayland-devel \
-        systemtap-sdt-devel
+        systemtap-sdt-devel \
+        libdrm-devel
 
     BUILD_DIR=$(mktemp --directory)
-    cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_USE_LD_GOLD=ON -DMIR_ENABLE_WLCS_TESTS=OFF
+    cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_ENABLE_WLCS_TESTS=OFF
     # Run cmake again to pick up wlcs?!?!?!?!
     cmake $BUILD_DIR
     export VERBOSE=1

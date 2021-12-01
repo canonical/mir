@@ -1,0 +1,76 @@
+environment:
+    DEB_BUILD_OPTIONS: "noopt ${NOCHECK}"
+    NO_PKG_MANGLE: 1
+
+systems: [ubuntu-*]
+variants:
+- ubuntu*
+- debian*
+
+summary: Build Deb packages
+
+execute: |
+    cd $SPREAD_PATH
+
+    add-apt-repository universe
+    apt-get update
+    apt-get install \
+        --yes \
+        --no-install-recommends \
+        binfmt-support \
+        debootstrap \
+        debhelper \
+        dh-python \
+        lsb-invalid-mta \
+        qemu-user-static \
+        sbuild \
+        schroot \
+        ubuntu-dev-tools
+
+    printf "\$mailto = 'null@example.com';\n1;\n" > ~/.sbuildrc
+
+    adduser $USER sbuild
+    # set host and build environment up
+    source <( dpkg-architecture --print-set --host-arch ${ARCH} )
+
+    MKSBUILD_OPTS=(
+      mk-sbuild
+      --eatmydata
+      ${RELEASE}
+    )
+
+    SBUILD_OPTS=(
+      --jobs=$(nproc)
+      --verbose
+      --dist=${RELEASE}
+      --build=${DEB_BUILD_ARCH}
+      --host=${DEB_HOST_ARCH}
+    )
+
+    [ "${PROPOSED}" == "true" ] || MKSBUILD_OPTS+=("--skip-proposed")
+
+    if [[ "${SPREAD_VARIANT}" == *"ubuntu"* ]]; then
+      SBUILD_OPTS+=(
+        --extra-repository="deb http://ppa.launchpad.net/mir-team/dev/ubuntu ${RELEASE} main"
+        --extra-repository-key=${SPREAD_PATH}/${SPREAD_TASK}/mir-team.asc
+      )
+    fi
+
+    # Cross building
+    if [ "${DEB_BUILD_ARCH}" != "${DEB_HOST_ARCH}" ]; then
+      MKSBUILD_OPTS+=("--arch=${DEB_BUILD_ARCH}" "--target=${DEB_HOST_ARCH}")
+
+      # Quirk for the eglexternalplatform-dev build dependency
+      sed -i 's/\(eglexternalplatform-dev\)/\1:all/' debian/control
+    fi
+
+    sg sbuild -c "${MKSBUILD_OPTS[*]}"
+
+    echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk
+
+    # Running the tests under QEMU fails to entirely correctly support libwayland's SIGSEGV handler
+    if [ ${DEB_HOST_ARCH} == "arm64" ]; then
+      echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
+    fi
+
+    sbuild "${SBUILD_OPTS[@]}"

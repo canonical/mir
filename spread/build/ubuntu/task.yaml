@@ -3,27 +3,20 @@ environment:
     NO_PKG_MANGLE: 1
 
 systems: [ubuntu-*]
+variants:
+- -ubuntu*
+- -debian*
 
 summary: Build Ubuntu packages
 
 execute: |
-    if [[ "$SPREAD_SYSTEM" == *-proposed-* ]]; then
-        if [[ "amd64 i386" == *$( dpkg-architecture --query DEB_HOST_ARCH )* ]]; then
-            add-apt-repository --yes --no-update \
-              "deb http://archive.ubuntu.com/ubuntu/ $( lsb_release --short --codename )-proposed restricted main multiverse universe"
-        else
-            add-apt-repository --yes --no-update \
-              "deb http://ports.ubuntu.com/ubuntu-ports/ $( lsb_release --short --codename )-proposed restricted main multiverse universe"
-        fi
-    fi
-
-    # Get any out-of-archive dependencies
-    # (Currently just libnvidia-egl-wayland-dev)
-    for repo in ppa:mir-team/{release,dev}; do
-        add-apt-repository --yes --update ${repo} || add-apt-repository --yes --remove ${repo}
-    done
+    cd $SPREAD_PATH
 
     apt-get update
+
+    # Add Mir dev PPA for any out-of-archive packages needed
+    # (Currently: a newer version of WLCS)
+    add-apt-repository ppa:mir-team/dev
 
     # to get dpkg-architecture and mk-build-deps
     apt-get install \
@@ -64,14 +57,11 @@ execute: |
         > /etc/apt/sources.list.d/cross-${DEB_HOST_ARCH}.list
 
         apt-get update
+        apt-get --yes install qemu-user-static binfmt-support
 
-        if [ "$(lsb_release -cs)" == "xenial" ]; then
-          # workaround for 16.04 passing invalid compiler names (LP#1728673)
-          apt-get --yes install debhelper/xenial-backports
-        fi
+        # Quirk for the eglexternalplatform-dev build dependency
+        sed -i 's/\(eglexternalplatform-dev\)/\1:all/' debian/control
     fi
-
-    cd $SPREAD_PATH
 
     # Mark the "release" in the changelog
     debchange --release "CI release"
@@ -79,7 +69,19 @@ execute: |
     # install dependencies
     mk-build-deps \
       --install \
-      --tool "apt-get --yes -o Debug::pkgProblemResolver=yes"
+      --tool "apt-get --yes -o Debug::pkgProblemResolver=yes -o APT::Immediate-Configure=0"
+
+    # build for Raspberry Pi
+    if [ "${SPREAD_VARIANT}" == "rpi" ]; then
+        # Install the Pi userland
+        snap install --edge rpi-userland
+
+        # Prepend the normal pkgconfig so that we pick up as much as possible from the standard environment
+        export PKG_CONFIG_PATH=/usr/share/pkgconfig:/usr/lib/pkgconfig:/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig:/snap/rpi-userland/current/opt/vc/lib/pkgconfig
+
+        # Enable the platform
+        echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_PLATFORM=rpi-dispmanx" >> debian/opts.mk
+    fi
 
     # use clang
     if [ "${CLANG}" -eq 1 ]; then
@@ -95,6 +97,9 @@ execute: |
 
     # change the build type
     echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_BUILD_TYPE=${BUILD_TYPE}" >> debian/opts.mk
+
+    # Quirk for the GitHub actions CI environment
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
 
     # build and run tests
     debian/rules build
