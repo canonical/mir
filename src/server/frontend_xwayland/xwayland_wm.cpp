@@ -669,7 +669,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
         clipboard_provider->property_deleted_event(event->window, event->atom);
     }
 
-    // Inform the clipboard source, in case it's new data for an incremental send
+    // Inform the clipboard source, in case its new data for an incremental send
     if (event->state == XCB_PROPERTY_NEW_VALUE && connection->is_ours(event->window))
     {
         clipboard_source->property_notify_event(event->window, event->atom);

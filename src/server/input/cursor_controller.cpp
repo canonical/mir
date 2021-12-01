@@ -46,7 +46,7 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
 
     void attrib_changed(ms::Surface const*, MirWindowAttrib, int) override
     {
-        // Attribute changing alone wont trigger a cursor update
+        // Attribute changing alone won't trigger a cursor update
     }
     void content_resized_to(ms::Surface const*, geom::Size const&) override
     {

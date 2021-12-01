@@ -366,7 +366,7 @@ ms::MediatingDisplayChanger::cancel_base_configuration_preview(
     if (previously_set_alarm->cancel())
     {
         // We cancelled the alarm, which means it had not already been triggered.
-        // Therefore we need to queue up a switch back to the base display configuration and
+        // Therefore, we need to queue up a switch back to the base display configuration and
         // send a notification.
         server_action_queue->enqueue(
             this,
@@ -552,7 +552,7 @@ void ms::MediatingDisplayChanger::focus_change_handler(
 
     /*
      * If the newly focused session has a display configuration, apply it.
-     * Otherwise if we aren't currently using the base configuration,
+     * Otherwise, if we aren't currently using the base configuration,
      * apply that.
      */
     auto const it = config_map.find(session);

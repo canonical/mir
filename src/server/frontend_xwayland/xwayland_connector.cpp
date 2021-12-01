@@ -188,7 +188,7 @@ void mf::XWaylandConnector::spawn()
                     "X11 window manager error");
 
                 // This lambda is called by the window manager event dispatcher. It is a runtime error to destroy a
-                // ThreadedDispatcher from it's own call, so we clean up on the main loop.
+                // ThreadedDispatcher from its own call, so we clean up on the main loop.
                 main_loop->spawn([weak_self=weak_from_this()]()
                     {
                         if (auto const self = weak_self.lock())
@@ -216,7 +216,7 @@ void mf::XWaylandConnector::spawn()
             "Spawning XWayland failed");
 
         // This lambda is called by the spawner's ThreadedDispatcher. It is a runtime error to destroy a
-        // ThreadedDispatcher from it's own call, so we clean up on the main loop.
+        // ThreadedDispatcher from its own call, so we clean up on the main loop.
         main_loop->spawn([weak_self=weak_from_this()]()
             {
                 if (auto const self = weak_self.lock())

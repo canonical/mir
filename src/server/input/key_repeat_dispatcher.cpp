@@ -136,7 +136,7 @@ void mi::KeyRepeatDispatcher::set_alarm_for_device(
         // Set the new alarm
         std::swap(repeat_alarm, iter.first->second.repeat_alarm);
     }
-    // Reset the old alarm outside of the mutex lock
+    // Reset the old alarm outside the mutex lock
     repeat_alarm.reset();
 }
 

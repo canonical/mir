@@ -293,7 +293,7 @@ mf::WaylandExecutor::~WaylandExecutor()
 {
     /*
      * We need to move state into the functor; the destruction machinery relies
-     * on WaylandExecutor *not* having a ref on state to determine whether or not
+     * on WaylandExecutor *not* having a ref on state to determine whether
      * to unregister the source itself.
      *
      * If we enqueue the work before dropping WaylandExecutors' ref there's a potential
