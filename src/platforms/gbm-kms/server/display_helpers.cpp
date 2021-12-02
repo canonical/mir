@@ -283,6 +283,7 @@ mgmh::GBMHelper::GBMHelper(mir::Fd const& drm_fd)
 mgg::GBMSurfaceUPtr mgmh::GBMHelper::create_scanout_surface(
     uint32_t width,
     uint32_t height,
+    uint32_t gbm_format,
     bool sharable) const
 {
     auto format_flags = GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
@@ -300,9 +301,7 @@ mgg::GBMSurfaceUPtr mgmh::GBMHelper::create_scanout_surface(
 #endif
     }
 
-    auto surface_raw = gbm_surface_create(device, width, height,
-                                          GBM_FORMAT_XRGB8888,
-                                          format_flags);
+    auto surface_raw = gbm_surface_create(device, width, height, gbm_format, format_flags);
 
     auto gbm_surface_deleter = [](gbm_surface *p) { if (p) gbm_surface_destroy(p); };
     GBMSurfaceUPtr surface{surface_raw, gbm_surface_deleter};

@@ -822,6 +822,7 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         .Times(AtLeast(1))
         .WillRepeatedly(Return(stencil_bits));
 
+    // We create at least one rendering context, with the requested attributes…
     EXPECT_CALL(mock_egl,
                 eglChooseConfig(
                     _,
@@ -829,6 +830,16 @@ TEST_F(MesaDisplayTest, respects_gl_config)
                           mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
                     NotNull(),_,_))
         .Times(AtLeast(1))
+        .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                        SetArgPointee<4>(1),
+                        Return(EGL_TRUE)));
+    //…we *also* create zero-or-more non-rendering contexts; we don't care what they ask for
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    Pointee(EGL_NONE),
+                    NotNull(),_,_))
+        .Times(AnyNumber())
         .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
                         SetArgPointee<4>(1),
                         Return(EGL_TRUE)));
@@ -850,6 +861,62 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         platform->bypass_option(),
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         mir::test::fake_shared(mock_gl_config),
+        null_report};
+}
+
+TEST_F(MesaDisplayTest, uses_xrgb8888_framebuffer_when_argb8888_is_not_supported_by_EGL)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(_, mock_egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
+        .WillRepeatedly(
+            DoAll(
+                SetArgPointee<3>(GBM_FORMAT_XRGB8888),
+                Return(EGL_TRUE)));
+
+    InSequence s;
+    // Maybe we first try ARGB8888, then fallback…
+    EXPECT_CALL(mock_gbm, gbm_surface_create(_, _, _, GBM_FORMAT_ARGB8888, _))
+        .Times(AtMost(1));
+    // …but we end up creating an XRGB8888 surface.
+    EXPECT_CALL(mock_gbm, gbm_surface_create(_, _, _, GBM_FORMAT_XRGB8888, _));
+
+    auto platform = create_platform();
+    mgg::Display display{
+        platform->drm,
+        platform->gbm,
+        platform->vt,
+        platform->bypass_option(),
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+        std::make_shared<NiceMock<mtd::MockGLConfig>>(),
+        null_report};
+}
+
+TEST_F(MesaDisplayTest, uses_argb8888_framebuffer_when_xrgb8888_is_not_supported_by_EGL)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(_, _, EGL_NATIVE_VISUAL_ID, _))
+        .WillRepeatedly(
+            DoAll(
+                SetArgPointee<3>(GBM_FORMAT_ARGB8888),
+                Return(EGL_TRUE)));
+
+    InSequence s;
+    // Maybe we first try XRGB8888, then fallback…
+    EXPECT_CALL(mock_gbm, gbm_surface_create(_, _, _, GBM_FORMAT_XRGB8888, _))
+        .Times(AtMost(1));
+    // …but we end up creating an ARGB8888 surface.
+    EXPECT_CALL(mock_gbm, gbm_surface_create(_, _, _, GBM_FORMAT_ARGB8888, _));
+
+    auto platform = create_platform();
+    mgg::Display display{
+        platform->drm,
+        platform->gbm,
+        platform->vt,
+        platform->bypass_option(),
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+        std::make_shared<NiceMock<mtd::MockGLConfig>>(),
         null_report};
 }
 

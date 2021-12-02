@@ -328,10 +328,6 @@ TEST_F(MesaDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
         EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,Ne(shared_context)))
             .Times(AtLeast(1));
 
-        /* The shared context is made current finally */
-        EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,shared_context))
-            .Times(1);
-
         /* Contexts are released at teardown */
         EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,EGL_NO_CONTEXT))
             .Times(AtLeast(1));

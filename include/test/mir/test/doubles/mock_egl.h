@@ -89,6 +89,11 @@ MATCHER_P2(EGLConfigContainsAttrib, attrib, value, "")
         ++arg_mut;
     }
 
+    size_t end{0};
+    for (; arg[end] != EGL_NONE; ++end);
+
+    *result_listener << "attribute list is " << testing::PrintToString(std::vector<EGLint>(arg, arg + end));
+
     return false;
 }
 
