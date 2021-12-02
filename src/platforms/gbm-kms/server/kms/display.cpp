@@ -444,6 +444,49 @@ void add_to_drm_device_group(
         grouping.push_back(std::vector<std::shared_ptr<mgg::KMSOutput>>{std::move(output)});
     }
 }
+
+auto make_surface_with_egl_context(
+    geom::Size size,
+    uint32_t gbm_format,
+    mgg::helpers::GBMHelper const& gbm,
+    mg::GLConfig const& config,
+    EGLContext shared_context,    
+    bool cross_gpu)
+     -> std::tuple<mgg::GBMSurfaceUPtr, mgg::helpers::EGLHelper>
+{
+    auto surface = gbm.create_scanout_surface(size.width.as_uint32_t(), size.height.as_uint32_t(), gbm_format, cross_gpu);
+    auto raw_surface = surface.get();
+
+    try
+    {
+        return std::make_tuple(
+            std::move(surface),
+            mgg::helpers::EGLHelper{
+                config,
+                gbm,
+                raw_surface,
+                gbm_format,
+                shared_context
+        });
+    }
+    catch (mgg::helpers::EGLHelper::NoMatchingEGLConfig const&)
+    {
+         // TODO: Make a generic "other-alphaness" helper
+        gbm_format = GBM_FORMAT_ARGB8888;
+        surface = gbm.create_scanout_surface(size.width.as_uint32_t(), size.height.as_uint32_t(), gbm_format, cross_gpu);
+        raw_surface = surface.get();
+        return std::make_tuple(
+            std::move(surface),
+            mgg::helpers::EGLHelper{
+                config,
+                gbm,
+                raw_surface,
+                gbm_format,
+                shared_context
+        });
+    }
+}
+
 }
 
 void mgg::Display::configure_locked(
@@ -539,38 +582,13 @@ void mgg::Display::configure_locked(
                      * As a first cut, assume every scanout buffer in a hybrid setup might need
                      * to be shared.
                      */
-                    auto surface = gbm->create_scanout_surface(width, height, gbm_format, drm.size() != 1);
-                    auto raw_surface = surface.get();
-
-                    helpers::EGLHelper egl{
-                        [&]()
-                        {
-                            try
-                            {
-                                return helpers::EGLHelper{
-                                    *gl_config,
-                                    *gbm,
-                                    raw_surface,
-                                    gbm_format,
-                                    shared_egl.context()
-                                };
-                            }
-                            catch (helpers::EGLHelper::NoMatchingEGLConfig const&)
-                            {
-                                 // TODO: Make a generic "other-alphaness" helper
-                                gbm_format = GBM_FORMAT_ARGB8888;
-                                surface = gbm->create_scanout_surface(width, height, gbm_format, drm.size() != 1);
-                                raw_surface = surface.get();
-                                return helpers::EGLHelper{
-                                    *gl_config,
-                                    *gbm,
-                                    raw_surface,
-                                    gbm_format,
-                                    shared_egl.context()
-                                };
-                            }
-                        }()};
-
+                    auto [surface, egl] = make_surface_with_egl_context(
+                        current_mode_resolution,
+                        gbm_format,
+                        *gbm,
+                        *gl_config,
+                        shared_egl.context(),
+                        drm.size() != 1);
                     auto db = std::make_unique<DisplayBuffer>(
                         bypass_option,
                         listener,
