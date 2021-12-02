@@ -864,6 +864,62 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         null_report};
 }
 
+TEST_F(MesaDisplayTest, uses_xrgb8888_framebuffer_when_argb8888_is_not_supported_by_EGL)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(_, mock_egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
+        .WillRepeatedly(
+            DoAll(
+                SetArgPointee<3>(GBM_FORMAT_XRGB8888),
+                Return(EGL_TRUE)));
+
+    InSequence s;
+    // Maybe we first try ARGB8888, then fallback…
+    EXPECT_CALL(mock_gbm, gbm_surface_create(_, _, _, GBM_FORMAT_ARGB8888, _))
+        .Times(AtMost(1));
+    // …but we end up creating an XRGB8888 surface.
+    EXPECT_CALL(mock_gbm, gbm_surface_create(_, _, _, GBM_FORMAT_XRGB8888, _));
+
+    auto platform = create_platform();
+    mgg::Display display{
+        platform->drm,
+        platform->gbm,
+        platform->vt,
+        platform->bypass_option(),
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+        std::make_shared<NiceMock<mtd::MockGLConfig>>(),
+        null_report};
+}
+
+TEST_F(MesaDisplayTest, uses_argb8888_framebuffer_when_xrgb8888_is_not_supported_by_EGL)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_egl, eglGetConfigAttrib(_, _, EGL_NATIVE_VISUAL_ID, _))
+        .WillRepeatedly(
+            DoAll(
+                SetArgPointee<3>(GBM_FORMAT_ARGB8888),
+                Return(EGL_TRUE)));
+
+    InSequence s;
+    // Maybe we first try XRGB8888, then fallback…
+    EXPECT_CALL(mock_gbm, gbm_surface_create(_, _, _, GBM_FORMAT_XRGB8888, _))
+        .Times(AtMost(1));
+    // …but we end up creating an ARGB8888 surface.
+    EXPECT_CALL(mock_gbm, gbm_surface_create(_, _, _, GBM_FORMAT_ARGB8888, _));
+
+    auto platform = create_platform();
+    mgg::Display display{
+        platform->drm,
+        platform->gbm,
+        platform->vt,
+        platform->bypass_option(),
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+        std::make_shared<NiceMock<mtd::MockGLConfig>>(),
+        null_report};
+}
+
 TEST_F(MesaDisplayTest, can_change_configuration_metadata_without_invalidating_display_buffers)
 {
     using namespace testing;
