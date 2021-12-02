@@ -180,7 +180,7 @@ implementation it expects, even when multiple library versions are loaded.
 
 Ensure that different implementations of a symbol have different versions.
 
-Additionally there's the complication of passing objects between different
+Additionally, there's the complication of passing objects between different
 versions. For the moment, we can not bother trying to make this work.
 
 

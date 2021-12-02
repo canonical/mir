@@ -138,7 +138,7 @@ void msh::AbstractShell::close_session(
     for (auto surface = session->default_surface(); surface; surface = session->surface_after(surface))
         if (!surfaces.insert(surface).second) break;
 
-    // this is an ugly kludge to remove the each of the surfaces owned by the session
+    // this is an ugly kludge to remove each of the surfaces owned by the session
     // We could likely do this better (and atomically) within the WindowManager
     for (auto const& surface : surfaces)
     {

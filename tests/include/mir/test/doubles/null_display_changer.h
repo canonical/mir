@@ -39,9 +39,7 @@ public:
     void configure(std::shared_ptr<scene::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) override
     {
     }
-    void remove_session_configuration(std::shared_ptr<scene::Session> const&) override
-    {
-    }
+
     void set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const&) override
     {
     }
@@ -54,10 +52,6 @@ public:
     void confirm_base_configuration(
         std::shared_ptr<scene::Session> const&,
         std::shared_ptr<graphics::DisplayConfiguration> const&) override
-    {
-    }
-    void cancel_base_configuration_preview(
-        std::shared_ptr<scene::Session> const&) override
     {
     }
 };

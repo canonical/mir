@@ -535,7 +535,7 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shar
     {
         // If we have an up but no gesture owner
         // then we never delivered the corresponding
-        // down to anyone so we drop this event.
+        // down to anyone, so we drop this event.
         return false;
     }
     else
@@ -609,9 +609,9 @@ bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirEvent co
 
     // We record the gesture_owner if the event signifies the start of a new
     // gesture. This prevents gesture ownership from transfering in the event
-    // a gesture receiver closes mid gesture (e.g. when a surface closes mid
+    // a gesture receiver closes mid-gesture (e.g. when a surface closes mid
     // swipe we do not want the surface under to receive events). This also
-    // allows a gesture to continue outside of the target surface, providing
+    // allows a gesture to continue outside the target surface, providing
     // it started in the target surface.
     if (is_gesture_start(tev))
     {

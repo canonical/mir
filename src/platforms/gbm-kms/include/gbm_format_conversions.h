@@ -31,8 +31,7 @@ namespace graphics
 namespace gbm
 {
 enum : uint32_t { invalid_gbm_format = std::numeric_limits<uint32_t>::max() };
-MirPixelFormat gbm_format_to_mir_format(uint32_t format);
-uint32_t mir_format_to_gbm_format(MirPixelFormat format);
+
 }
 }
 }

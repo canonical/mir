@@ -83,7 +83,7 @@ started as usual:
 #### Script Options
 
 The `miral-app` script provides options for using an alternative shell
-(e.g `miral-kiosk` as used by the mir-kiosk snap) and an alternative terminal.
+(e.g. `miral-kiosk` as used by the mir-kiosk snap) and an alternative terminal.
 
     -kiosk                      use miral-kiosk instead of miral-shell
     -terminal <terminal>        use <terminal> instead of '/usr/bin/miral-terminal'
