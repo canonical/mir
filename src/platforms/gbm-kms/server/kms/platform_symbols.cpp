@@ -275,7 +275,7 @@ mg::PlatformPriority probe_display_platform(
 }
 
 mg::PlatformPriority probe_rendering_platform(
-    std::shared_ptr<mir::ConsoleServices> const&,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     mir::options::ProgramOption const& options)
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
@@ -339,8 +339,25 @@ mg::PlatformPriority probe_rendering_platform(
 
         try
         {
-            // Open the device node directly; we don't need DRM master
-            mir::Fd tmp_fd{::open(device_node, O_RDWR | O_CLOEXEC)};
+            auto const devnum = device.devnum();
+            mir::Fd tmp_fd;
+
+            // We should be able to simply open the relevant device node; DRM master is not
+            // required for rendering, and is entirely inapplicable to rendernodes.
+            // However, there's at least one EGL implementation supporting KHR_platform_gbm that requires
+            // a DRM master fd for some reason, so let's try and get one…
+            std::unique_ptr<mir::Device> device_cleanup{nullptr};
+            try
+            {
+                device_cleanup = console->acquire_device(
+                    major(devnum), minor(devnum),
+                    std::make_unique<mgc::OneShotDeviceObserver>(tmp_fd)).get();
+            }
+            catch (std::exception const&)
+            {
+                //…ok, so we can't get a DRM master. Maybe we can just ::open() it?
+                tmp_fd = mir::Fd{::open(device_node, O_RDWR | O_CLOEXEC)};
+            }
 
             if (tmp_fd != mir::Fd::invalid)
             {
