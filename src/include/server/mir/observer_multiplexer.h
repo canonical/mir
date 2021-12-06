@@ -43,6 +43,9 @@ public:
         Executor& executor) override;
     void unregister_interest(Observer const& observer) override;
 
+    /// Returns true if there are no observers
+    auto empty() -> bool;
+
 protected:
     /**
      * \param [in] default_executor Executor that will be used as the execution environment
@@ -199,6 +202,13 @@ void ObserverMultiplexer<Observer>::unregister_interest(Observer const& observer
                 return candidate->maybe_reset(&observer);
             }),
         observers.end());
+}
+
+template<class Observer>
+auto ObserverMultiplexer<Observer>::empty() -> bool
+{
+    std::lock_guard<decltype(observer_mutex)> lock{observer_mutex};
+    return observers.empty();
 }
 
 template<class Observer>
