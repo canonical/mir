@@ -16,42 +16,26 @@
  * Authored by: William Wold <william.wold@canonical.com>
  */
 
-#ifndef MIR_SCENE_DISPLAY_DIMMER_H_
-#define MIR_SCENE_DISPLAY_DIMMER_H_
-
-#include <memory>
+#ifndef MIR_SHELL_IDLE_HANDLER_H_
+#define MIR_SHELL_IDLE_HANDLER_H_
 
 namespace mir
 {
-namespace graphics
+namespace shell
 {
-class GraphicBufferAllocator;
-}
-namespace input
-{
-class Scene;
-}
-namespace scene
-{
-class IdleHub;
-class IdleStateObserver;
 
-class DisplayDimmer
+class IdleHandler
 {
 public:
-    DisplayDimmer(
-        std::shared_ptr<IdleHub> const& idle_hub,
-        std::shared_ptr<input::Scene> const& input_scene,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
-
-    ~DisplayDimmer() = default;
+    IdleHandler() = default;
+    virtual ~IdleHandler() = default;
 
 private:
-    std::shared_ptr<IdleHub> const idle_hub;
-    std::shared_ptr<IdleStateObserver> const idle_state_observer;
+    IdleHandler(IdleHandler const&) = delete;
+    IdleHandler& operator=(IdleHandler const&) = delete;
 };
 
 }
 }
 
-#endif // MIR_SCENE_DISPLAY_DIMMER_H_
+#endif // MIR_SHELL_IDLE_HANDLER_H_

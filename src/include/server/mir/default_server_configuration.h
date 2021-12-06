@@ -103,7 +103,6 @@ class SceneReport;
 class PromptSessionListener;
 class PromptSessionManager;
 class CoordinateTranslator;
-class DisplayDimmer;
 }
 namespace graphics
 {
@@ -192,6 +191,7 @@ public:
     std::shared_ptr<scene::Clipboard>       the_clipboard() override;
     std::shared_ptr<scene::TextInputHub>    the_text_input_hub() override;
     std::shared_ptr<scene::IdleHub>         the_idle_hub() override;
+    std::shared_ptr<shell::IdleHandler>     the_idle_handler() override;
     std::function<void()>                   the_stop_callback() override;
     void add_wayland_extension(
         std::string const& name,
@@ -293,7 +293,6 @@ public:
     virtual std::shared_ptr<scene::SessionContainer>  the_session_container();
     virtual std::shared_ptr<scene::SessionEventSink>  the_session_event_sink();
     virtual std::shared_ptr<scene::SessionEventHandlerRegister> the_session_event_handler_register();
-    virtual std::shared_ptr<scene::DisplayDimmer>     the_display_dimmer();
     virtual std::shared_ptr<scene::SurfaceFactory>    the_surface_factory();
     virtual std::shared_ptr<shell::SurfaceStack>      the_surface_stack();
     virtual std::shared_ptr<shell::SurfaceStack>      wrap_surface_stack(std::shared_ptr<shell::SurfaceStack> const& wrapped);
@@ -408,7 +407,6 @@ protected:
     CachedPtr<shell::SurfaceStack> surface_stack;
     CachedPtr<scene::SceneReport> scene_report;
 
-    CachedPtr<scene::DisplayDimmer>     display_dimmer;
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<scene::SessionListener> session_listener;
@@ -417,6 +415,7 @@ protected:
     CachedPtr<scene::Clipboard>         clipboard;
     CachedPtr<scene::TextInputHub>      text_input_hub;
     CachedPtr<scene::IdleHub>           idle_hub;
+    CachedPtr<shell::IdleHandler>       idle_handler;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;

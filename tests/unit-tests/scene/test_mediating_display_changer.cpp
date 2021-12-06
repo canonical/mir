@@ -33,7 +33,6 @@
 #include "mir/test/display_config_matchers.h"
 #include "mir/test/doubles/fake_alarm_factory.h"
 #include "mir/test/doubles/mock_display_configuration_observer.h"
-#include "mir/test/doubles/mock_idle_hub.h"
 
 #include <mutex>
 #include <boost/throw_exception.hpp>
@@ -120,8 +119,7 @@ struct MediatingDisplayChangerTest : public ::testing::Test
                       mt::fake_shared(session_event_sink),
                       mt::fake_shared(server_action_queue),
                       mt::fake_shared(display_configuration_observer),
-                      mt::fake_shared(alarm_factory),
-                      mt::fake_shared(idle_hub));
+                      mt::fake_shared(alarm_factory));
     }
 
     testing::NiceMock<MockDisplay> mock_display;
@@ -133,7 +131,6 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     StubServerActionQueue server_action_queue;
     mtd::MockDisplayConfigurationObserver display_configuration_observer;
     mtd::FakeAlarmFactory alarm_factory;
-    mtd::MockIdleHub idle_hub;
     std::shared_ptr<ms::MediatingDisplayChanger> changer;
 };
 
@@ -681,8 +678,7 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
       mt::fake_shared(session_event_sink),
       mt::fake_shared(mock_server_action_queue),
       mt::fake_shared(display_configuration_observer),
-      mt::fake_shared(alarm_factory),
-      mt::fake_shared(idle_hub));
+      mt::fake_shared(alarm_factory));
 
     void const* owner{nullptr};
 
@@ -736,8 +732,7 @@ TEST_F(MediatingDisplayChangerTest, does_not_block_IPC_thread_for_inactive_sessi
         mt::fake_shared(session_event_sink),
         mt::fake_shared(mock_server_action_queue),
         mt::fake_shared(display_configuration_observer),
-        mt::fake_shared(alarm_factory),
-        mt::fake_shared(idle_hub));
+        mt::fake_shared(alarm_factory));
 
     EXPECT_CALL(mock_server_action_queue, enqueue(_, _));
     session_event_sink.handle_focus_change(active_session);
@@ -863,8 +858,7 @@ TEST_F(MediatingDisplayChangerTest, notifies_observer_on_set_base_configuration)
         mt::fake_shared(session_event_sink),
         mt::fake_shared(server_action_queue),
         mt::fake_shared(display_configuration_observer),
-        mt::fake_shared(alarm_factory),
-        mt::fake_shared(idle_hub));
+        mt::fake_shared(alarm_factory));
 
     mtd::NullDisplayConfiguration conf;
 

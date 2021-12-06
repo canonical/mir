@@ -19,25 +19,16 @@
 #ifndef MIR_SCENE_IDLE_HUB_H_
 #define MIR_SCENE_IDLE_HUB_H_
 
-#include "mir/observer_registrar.h"
-
 #include <memory>
 #include <optional>
 #include <string>
+#include <chrono>
 
 namespace mir
 {
+class Executor;
 namespace scene
 {
-enum class IdleState
-{
-    awake,      ///< Outputs should be on
-    dim,        ///< Outputs should be on, but dimmed (may not reduce power usage, but warns the user the screen is
-                ///< about to blank)
-    standby,    ///< Outputs should be in mir_power_mode_standby
-    off,        ///< Outputs should be in mir_power_mode_off
-};
-
 /// Gets notifications about changes in the idle state
 class IdleStateObserver
 {
@@ -45,7 +36,8 @@ public:
     IdleStateObserver() = default;
     virtual ~IdleStateObserver() = default;
 
-    virtual void idle_state_changed(IdleState state) = 0;
+    virtual void idle() = 0;
+    virtual void active() = 0;
 
 private:
     IdleStateObserver(IdleStateObserver const&) = delete;
@@ -53,16 +45,31 @@ private:
 };
 
 /// Interface that exposes notifications about when Mir is idle, and allows for waking Mir up
-class IdleHub : public ObserverRegistrar<IdleStateObserver>
+class IdleHub
 {
 public:
+    IdleHub() = default;
     virtual ~IdleHub() = default;
-
-    /// Current state
-    virtual auto state() -> IdleState = 0;
 
     /// Wakes Mir if it's not already awake, and starts the timer from now
     virtual void poke() = 0;
+
+    /// Timeout is the amount of time Mir will stay idle before triggering the observer
+    virtual void register_interest(
+        std::weak_ptr<IdleStateObserver> const& observer,
+        std::chrono::milliseconds timeout) = 0;
+
+    /// Timeout is the amount of time Mir will stay idle before triggering the observer
+    virtual void register_interest(
+        std::weak_ptr<IdleStateObserver> const& observer,
+        Executor& executor,
+        std::chrono::milliseconds timeout) = 0;
+
+    virtual void unregister_interest(IdleStateObserver const& observer) = 0;
+
+private:
+    IdleHub(IdleHub const&) = delete;
+    IdleHub& operator=(IdleHub const&) = delete;
 };
 }
 }

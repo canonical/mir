@@ -16,6 +16,7 @@ set(
   ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/display_configuration_controller.h
   surface_specification.cpp
   surface_stack_wrapper.cpp ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/surface_stack_wrapper.h
+  basic_idle_handler.cpp ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/idle_handler.h
 )
 
 add_library(

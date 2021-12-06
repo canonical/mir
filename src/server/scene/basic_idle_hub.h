@@ -21,87 +21,63 @@
 
 #include "mir/scene/idle_hub.h"
 #include "mir/observer_multiplexer.h"
+#include "mir/time/types.h"
+#include "mir/proof_of_mutex_lock.h"
 
 #include <mutex>
+#include <map>
 
 namespace mir
 {
 namespace time
 {
+class Clock;
 class Alarm;
 class AlarmFactory;
 }
 namespace scene
 {
 
-class IdleStateMultiplexer: mir::Executor, public ObserverMultiplexer<IdleStateObserver>
-{
-public:
-    IdleStateMultiplexer()
-        : ObserverMultiplexer{static_cast<Executor&>(*this)}
-    {
-    }
-
-    // By default, dispatch events immediately. The user can override this behavior by setting their own executor.
-    void spawn(std::function<void()>&& work) override
-    {
-        work();
-    }
-
-    void idle_state_changed(IdleState state) override
-    {
-        for_each_observer(&IdleStateObserver::idle_state_changed, state);
-    }
-};
-
 class BasicIdleHub : public IdleHub
 {
 public:
-    struct StateEntry
-    {
-        std::chrono::milliseconds time_from_previous;
-        IdleState state;
-    };
-
     /// IdleState::awake is always the initial state. If state_sequence is empty, it is the only state.
     BasicIdleHub(
-        std::vector<StateEntry> const& state_sequence,
+        std::shared_ptr<time::Clock> const& clock,
         std::shared_ptr<time::AlarmFactory> const& alarm_factory);
 
     ~BasicIdleHub();
 
-    auto state() -> IdleState override;
     void poke() override;
 
-    /// Implement ObserverRegistrar<IdleStateObserver>
-    /// @{
-    void register_interest(std::weak_ptr<IdleStateObserver> const& observer) override
-    {
-        multiplexer.register_interest(observer);
-        send_initial_state(observer);
-    }
-    void register_interest(std::weak_ptr<IdleStateObserver> const& observer, Executor& executor) override
-    {
-        multiplexer.register_interest(observer, executor);
-        send_initial_state(observer);
-    }
-    void unregister_interest(IdleStateObserver const& observer) override
-    {
-        multiplexer.unregister_interest(observer);
-    }
-    /// @}
+    void register_interest(
+        std::weak_ptr<IdleStateObserver> const& observer,
+        std::chrono::milliseconds timeout) override;
+
+    void register_interest(
+        std::weak_ptr<IdleStateObserver> const& observer,
+        Executor& executor,
+        std::chrono::milliseconds timeout) override;
+
+    void unregister_interest(IdleStateObserver const& observer) override;
 
 private:
-    void increment_state();
-    /// May unlock the lock
-    void set_state_index(std::unique_lock<std::mutex>& lock, int index);
-    void send_initial_state(std::weak_ptr<IdleStateObserver> const& observer);
+    struct Multiplexer;
 
-    IdleStateMultiplexer multiplexer;
-    std::vector<StateEntry> const state_sequence;
-    std::unique_ptr<time::Alarm> const next_state_alarm;
+    void alarm_fired();
+    void schedule_alarm(ProofOfMutexLock const& lock, time::Timestamp current_time);
+
+    std::shared_ptr<time::Clock> const clock;
+    std::unique_ptr<time::Alarm> const alarm;
     std::mutex mutex;
-    int current_state_index;
+    /// Maps timeouts (times from last poke) to the multiplexers that need to be fired at those times.
+    std::map<std::chrono::milliseconds, std::shared_ptr<Multiplexer>> timeouts;
+    std::optional<std::chrono::milliseconds> first_timeout;
+    std::vector<std::shared_ptr<Multiplexer>> idle_multiplexers;
+    /// The timestamp when we were last poked
+    time::Timestamp poke_time;
+    /// Amount of time after the poke time that the alarm with fire
+    std::chrono::milliseconds alarm_timeout{0};
 };
 }
 }

@@ -42,7 +42,6 @@
 #include "basic_clipboard.h"
 #include "basic_text_input_hub.h"
 #include "basic_idle_hub.h"
-#include "display_dimmer.h"
 #include "mir/options/program_option.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/display_configuration.h"
@@ -66,14 +65,6 @@ std::shared_ptr<mi::Scene> mir::DefaultServerConfiguration::the_input_scene()
 {
     return scene_surface_stack([this]()
                              { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
-}
-
-auto mir::DefaultServerConfiguration::the_display_dimmer() -> std::shared_ptr<scene::DisplayDimmer>
-{
-    return display_dimmer([this]()
-        {
-            return std::make_shared<ms::DisplayDimmer>(the_idle_hub(), the_input_scene(), the_buffer_allocator());
-        });
 }
 
 auto mir::DefaultServerConfiguration::the_surface_factory()
@@ -159,8 +150,7 @@ mir::DefaultServerConfiguration::the_mediating_display_changer()
                 the_session_event_handler_register(),
                 the_server_action_queue(),
                 the_display_configuration_observer(),
-                the_main_loop(),
-                the_idle_hub());
+                the_main_loop());
         });
 
 }
@@ -248,13 +238,7 @@ auto mir::DefaultServerConfiguration::the_idle_hub()
     return idle_hub(
         [this]()
         {
-            return std::make_shared<ms::BasicIdleHub>(
-                std::vector<ms::BasicIdleHub::StateEntry>{
-                    {std::chrono::milliseconds{5000}, ms::IdleState::dim},
-                    {std::chrono::milliseconds{5000}, ms::IdleState::off},
-                },
-                the_main_loop()
-            );
+            return std::make_shared<ms::BasicIdleHub>(the_clock(), the_main_loop());
         });
 }
 

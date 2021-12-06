@@ -27,6 +27,7 @@
 #include "graphics_display_layout.h"
 #include "decoration/basic_manager.h"
 #include "decoration/basic_decoration.h"
+#include "basic_idle_handler.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -45,7 +46,6 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
                 the_shell_report(),
                 the_window_manager_builder(),
                 the_seat(),
-                the_display_dimmer(),
                 the_decoration_manager()));
 
             the_composite_event_filter()->prepend(result);
@@ -89,6 +89,18 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
 auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) -> std::shared_ptr<msh::Shell>
 {
     return wrapped;
+}
+
+auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh::IdleHandler>
+{
+    return idle_handler([this]()
+        {
+            return std::make_shared<msh::BasicIdleHandler>(
+                the_idle_hub(),
+                the_input_scene(),
+                the_buffer_allocator(),
+                the_display_configuration_controller());
+        });
 }
 
 std::shared_ptr<msh::PersistentSurfaceStore>

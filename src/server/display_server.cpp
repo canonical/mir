@@ -45,6 +45,14 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace msh = mir::shell;
 
+namespace mir
+{
+namespace shell
+{
+class IdleHandler;
+}
+}
+
 namespace
 {
 std::vector<std::shared_ptr<void>> extract_all_platform_modules(mir::ServerConfiguration& config)
@@ -77,6 +85,7 @@ struct mir::DisplayServer::Private
           main_loop{config.the_main_loop()},
           server_status_listener{config.the_server_status_listener()},
           display_changer{config.the_display_changer()},
+          idle_handler{config.the_idle_handler()},
           stop_callback{config.the_stop_callback()}
     {
         display->register_configuration_change_handler(
@@ -197,6 +206,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::ServerStatusListener> const server_status_listener;
     std::shared_ptr<mir::DisplayChanger> const display_changer;
+    std::shared_ptr<msh::IdleHandler> const idle_handler;
     std::function<void()> const stop_callback;
 
 };

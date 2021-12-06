@@ -918,6 +918,7 @@ MIR_SERVER_2.5 {
     mir::DefaultServerConfiguration::the_text_input_hub*;
     mir::input::ResyncKeyboardDispatcher*;
     mir::DefaultServerConfiguration::the_idle_hub*;
+    mir::DefaultServerConfiguration::the_idle_handler*;
   };
  local: *;
 };

@@ -49,7 +49,6 @@ namespace scene
 class SessionEventHandlerRegister;
 class SessionContainer;
 class Session;
-class IdleHub;
 
 class MediatingDisplayChanger : public frontend::DisplayChanger,
                                 public mir::DisplayChanger,
@@ -64,8 +63,7 @@ public:
         std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
         std::shared_ptr<ServerActionQueue> const& server_action_queue,
         std::shared_ptr<graphics::DisplayConfigurationObserver> const& observer,
-        std::shared_ptr<time::AlarmFactory> const& alarm_factory,
-        std::shared_ptr<scene::IdleHub> const& idle_hub);
+        std::shared_ptr<time::AlarmFactory> const& alarm_factory);
 
     ~MediatingDisplayChanger();
 
@@ -94,13 +92,13 @@ public:
 
     /* From shell::DisplayConfigurationController */
     void set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const &conf) override;
+    void set_power_mode(MirPowerMode new_power_mode) override;
 
 private:
     void focus_change_handler(std::shared_ptr<Session> const& session);
     void no_focus_handler();
     void session_stopping_handler(std::shared_ptr<Session> const& session);
 
-    void set_power_mode_for_all_used_outputs(MirPowerMode new_power_mode);
     void apply_config(std::shared_ptr<graphics::DisplayConfiguration> const& conf);
     void apply_base_config();
     void send_config_to_all_sessions(
@@ -125,9 +123,6 @@ private:
     std::weak_ptr<scene::Session> currently_previewing_session;
     struct SessionObserver;
     std::unique_ptr<SessionObserver> const session_observer;
-    std::shared_ptr<scene::IdleHub> const idle_hub;
-    struct IdleStateObserver;
-    std::shared_ptr<IdleStateObserver> const idle_state_observer;
 
     /// Mutex protecting pending_configuration
     std::mutex pending_configuration_mutex;

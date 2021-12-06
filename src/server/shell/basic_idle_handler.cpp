@@ -16,11 +16,12 @@
  * Authored by: William Wold <william.wold@canonical.com>
  */
 
-#include "display_dimmer.h"
+#include "basic_idle_handler.h"
 #include "mir/scene/idle_hub.h"
 #include "mir/graphics/renderable.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/input/scene.h"
+#include "mir/shell/display_configuration_controller.h"
 
 #include <mutex>
 
@@ -29,6 +30,9 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
+namespace msh = mir::shell;
+
+using namespace std::literals::chrono_literals;
 
 namespace
 {
@@ -87,9 +91,9 @@ private:
     std::shared_ptr<mg::Buffer> const buffer_;
 };
 
-struct DimStateObserver : ms::IdleStateObserver
+struct Dimmer : ms::IdleStateObserver
 {
-    DimStateObserver(
+    Dimmer(
         std::shared_ptr<mi::Scene> const& input_scene,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
         : input_scene{input_scene},
@@ -97,31 +101,24 @@ struct DimStateObserver : ms::IdleStateObserver
     {
     }
 
-    void idle_state_changed(ms::IdleState state) override
+    void active() override
     {
-        switch (state)
+        std::lock_guard<std::mutex> lock{mutex};
+        if (renderable)
         {
-        case ms::IdleState::awake:
-        {
-            std::lock_guard<std::mutex> lock{mutex};
-            if (renderable)
-            {
-                input_scene->remove_input_visualization(renderable);
-                renderable.reset();
-            }
-        }   break;
+            input_scene->remove_input_visualization(renderable);
+            renderable.reset();
+        }
 
-        case ms::IdleState::dim:
-        {
-            std::lock_guard<std::mutex> lock{mutex};
-            if (!renderable)
-            {
-                renderable = std::make_shared<DimmingRenderable>(*allocator);
-                input_scene->add_input_visualization(renderable);
-            }
-        }   break;
+    }
 
-        default:;
+    void idle() override
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (!renderable)
+        {
+            renderable = std::make_shared<DimmingRenderable>(*allocator);
+            input_scene->add_input_visualization(renderable);
         }
     }
 
@@ -131,14 +128,54 @@ private:
     std::mutex mutex;
     std::shared_ptr<mg::Renderable> renderable;
 };
+
+struct PowerModeSetter : ms::IdleStateObserver
+{
+    PowerModeSetter(std::shared_ptr<msh::DisplayConfigurationController> const& controller, MirPowerMode power_mode)
+        : controller{controller},
+          power_mode{power_mode}
+    {
+    }
+
+    void active() override
+    {
+        controller->set_power_mode(mir_power_mode_on);
+    }
+
+    void idle() override
+    {
+        controller->set_power_mode(power_mode);
+    }
+
+private:
+    std::shared_ptr<msh::DisplayConfigurationController> const controller;
+    MirPowerMode const power_mode;
+};
 }
 
-ms::DisplayDimmer::DisplayDimmer(
-    std::shared_ptr<IdleHub> const& idle_hub,
+msh::BasicIdleHandler::BasicIdleHandler(
+    std::shared_ptr<ms::IdleHub> const& idle_hub,
     std::shared_ptr<input::Scene> const& input_scene,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator)
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<msh::DisplayConfigurationController> const& display_config_controller)
     : idle_hub{idle_hub},
-      idle_state_observer{std::make_shared<DimStateObserver>(input_scene, allocator)}
+      timeouts{
+          Timeout{5s, std::make_shared<Dimmer>(input_scene, allocator)},
+          Timeout{10s, std::make_shared<PowerModeSetter>(display_config_controller, mir_power_mode_standby)},
+          Timeout{15s, std::make_shared<PowerModeSetter>(display_config_controller, mir_power_mode_suspend)},
+          Timeout{20s, std::make_shared<PowerModeSetter>(display_config_controller, mir_power_mode_off)},
+      }
 {
-    idle_hub->register_interest(idle_state_observer);
+    for (auto const& timeout : timeouts)
+    {
+        idle_hub->register_interest(timeout.observer, timeout.time);
+    }
+}
+
+msh::BasicIdleHandler::~BasicIdleHandler()
+{
+    for (auto const& timeout : timeouts)
+    {
+        idle_hub->unregister_interest(*timeout.observer);
+    }
 }

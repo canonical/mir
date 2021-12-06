@@ -24,7 +24,6 @@
 #include "mir/scene/session.h"
 #include "mir/scene/session_event_handler_register.h"
 #include "mir/scene/session_event_sink.h"
-#include "mir/scene/idle_hub.h"
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
 #include "mir/geometry/rectangles.h"
@@ -124,19 +123,6 @@ private:
 
     std::function<void()> const revert;
 };
-
-auto power_state_to_idle_mode(ms::IdleState state) -> MirPowerMode
-{
-    switch (state)
-    {
-    case ms::IdleState::awake: return mir_power_mode_on;
-    case ms::IdleState::dim: return mir_power_mode_on;
-    case ms::IdleState::standby: return mir_power_mode_standby;
-    case ms::IdleState::off: return mir_power_mode_off;
-    }
-    mir::fatal_error("Invalid idle state %d", static_cast<int>(state));
-    return mir_power_mode_on;
-}
 }
 
 struct ms::MediatingDisplayChanger::SessionObserver : ms::SessionEventSink
@@ -177,18 +163,6 @@ struct ms::MediatingDisplayChanger::SessionObserver : ms::SessionEventSink
     ms::MediatingDisplayChanger* const self;
 };
 
-struct ms::MediatingDisplayChanger::IdleStateObserver : ms::IdleStateObserver
-{
-    IdleStateObserver(ms::MediatingDisplayChanger* self) : self{self} {}
-
-    void idle_state_changed(IdleState state) override
-    {
-        self->set_power_mode_for_all_used_outputs(power_state_to_idle_mode(state));
-    }
-
-    ms::MediatingDisplayChanger* const self;
-};
-
 ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Compositor> const& compositor,
@@ -197,8 +171,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
     std::shared_ptr<ServerActionQueue> const& server_action_queue,
     std::shared_ptr<mg::DisplayConfigurationObserver> const& observer,
-    std::shared_ptr<mt::AlarmFactory> const& alarm_factory,
-    std::shared_ptr<scene::IdleHub> const& idle_hub)
+    std::shared_ptr<mt::AlarmFactory> const& alarm_factory)
     : display{display},
       compositor{compositor},
       display_configuration_policy{display_configuration_policy},
@@ -209,19 +182,15 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
       base_configuration_{display->configuration()},
       base_configuration_applied{true},
       alarm_factory{alarm_factory},
-      session_observer{std::make_unique<SessionObserver>(this)},
-      idle_hub{idle_hub},
-      idle_state_observer{std::make_shared<IdleStateObserver>(this)}
+      session_observer{std::make_unique<SessionObserver>(this)}
 {
     session_event_handler_register->add(session_observer.get());
     observer->initial_configuration(base_configuration_);
-    idle_hub->register_interest(idle_state_observer);
 }
 
 ms::MediatingDisplayChanger::~MediatingDisplayChanger()
 {
     session_event_handler_register->remove(session_observer.get());
-    idle_hub->unregister_interest(*idle_state_observer);
 }
 
 void ms::MediatingDisplayChanger::configure(
@@ -513,25 +482,6 @@ bool configuration_has_new_outputs_enabled(
 }
 }
 
-void ms::MediatingDisplayChanger::set_power_mode_for_all_used_outputs(MirPowerMode new_power_mode)
-{
-    std::lock_guard<std::mutex> lock{power_mode_mutex};
-    if (new_power_mode == power_mode)
-    {
-        return;
-    }
-    power_mode = new_power_mode;
-    std::shared_ptr<graphics::DisplayConfiguration> const config = display->configuration();
-    config->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-        {
-            if (output.used)
-            {
-                output.power_mode = new_power_mode;
-            }
-        });
-    apply_config(config);
-}
-
 void ms::MediatingDisplayChanger::apply_config(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
@@ -662,5 +612,24 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
             observer->base_configuration_updated(conf);
             send_config_to_all_sessions(conf);
         });
+}
+
+void ms::MediatingDisplayChanger::set_power_mode(MirPowerMode new_power_mode)
+{
+    std::lock_guard<std::mutex> lock{power_mode_mutex};
+    if (new_power_mode == power_mode)
+    {
+        return;
+    }
+    power_mode = new_power_mode;
+    std::shared_ptr<graphics::DisplayConfiguration> const config = display->configuration();
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (output.used)
+            {
+                output.power_mode = new_power_mode;
+            }
+        });
+    apply_config(config);
 }
 
