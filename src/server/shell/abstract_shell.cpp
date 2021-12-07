@@ -416,14 +416,13 @@ void msh::AbstractShell::notify_focus_locked(
 {
     auto const current_focus = notified_keyboard_focus_surface.lock();
 
-    // Don't give keyboard focus to popups
+    // Don't give keyboard focus to non-grabbing popups
     auto new_keyboard_focus = new_active_surface;
     while (new_keyboard_focus)
     {
         auto const type = new_keyboard_focus->type();
         if (type != mir_window_type_gloss &&
-            type != mir_window_type_tip &&
-            type != mir_window_type_menu)
+            type != mir_window_type_tip)
         {
             break;
         }
