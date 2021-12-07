@@ -317,7 +317,9 @@ mg::PlatformPriority probe_rendering_platform(
     }
 
     // Check for suitability
-    auto maximum_suitability = mg::PlatformPriority::unsupported;
+    // The implementation claims to support the GBM EGL platform, so it *should*
+    // be at least minimally functional…
+    auto maximum_suitability = mg::PlatformPriority::supported;
     for (auto& device : drm_devices)
     {
         if (quirks.should_skip(device))
@@ -366,7 +368,6 @@ mg::PlatformPriority probe_rendering_platform(
                     strlen("llvmpipe")) == 0)
                 {
                     mir::log_info("Detected software renderer: %s", renderer_string);
-                    maximum_suitability = mg::PlatformPriority::supported;
                 }
                 else
                 {

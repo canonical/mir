@@ -250,6 +250,25 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_gbm_platform_not_sup
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe(stub_vt, options));
 }
 
+TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_EGL_supports_gbm_platform_but_fails_to_get_EGL_display)
+{
+    using namespace testing;
+
+    mtf::UdevEnvironment udev_environment;
+    boost::program_options::options_description po;
+    mir::options::ProgramOption options;
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
+
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    ON_CALL(mock_egl, eglGetPlatformDisplayEXT(_,_,_))
+        .WillByDefault(Return(EGL_NO_DISPLAY));
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-gbm-kms")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(rendering_platform_probe_symbol);
+    EXPECT_EQ(mg::PlatformPriority::supported, probe(stub_vt, options));
+}
+
 TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_modesetting_is_not_supported)
 {
     using namespace testing;
