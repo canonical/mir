@@ -169,7 +169,9 @@ auto wm_resize_edge_to_mir_resize_edge(NetWmMoveresize wm_resize_edge) -> std::o
 
 auto wm_window_type_to_mir_window_type(
     mf::XCBConnection* connection,
-    std::vector<xcb_atom_t> const& wm_types) -> MirWindowType
+    std::vector<xcb_atom_t> const& wm_types,
+    bool is_transient_for,
+    bool override_redirect) -> MirWindowType
 {
     // See https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46515148839648
     for (auto const& wm_type : wm_types)
@@ -206,7 +208,17 @@ auto wm_window_type_to_mir_window_type(
         }
     }
 
-    return mir_window_type_freestyle;
+    // "_NET_WM_WINDOW_TYPE_DIALOG... If _NET_WM_WINDOW_TYPE is not set, then managed windows with WM_TRANSIENT_FOR set
+    // MUST be taken as this type. Override-redirect windows with WM_TRANSIENT_FOR, but without _NET_WM_WINDOW_TYPE must
+    // be taken as _NET_WM_WINDOW_TYPE_NORMAL."
+    if (is_transient_for && !override_redirect)
+    {
+        return mir_window_type_gloss;
+    }
+    else
+    {
+        return mir_window_type_freestyle;
+    }
 }
 
 template<typename T>
@@ -344,18 +356,22 @@ mf::XWaylandSurface::XWaylandSurface(
                   },
                   [this](auto)
                   {
-                    is_transient_for(XCB_WINDOW_NONE);
+                      is_transient_for(XCB_WINDOW_NONE);
                   }
               }),
           property_handler<std::vector<xcb_atom_t>>(
               connection,
               window,
               connection->_NET_WM_WINDOW_TYPE,
-              [this](auto wm_types)
               {
-                  std::lock_guard<std::mutex> lock{mutex};
-                  this->cached.type = wm_window_type_to_mir_window_type(this->connection.get(), wm_types);
-                  apply_cached_transient_for_and_type(lock);
+                  [this](auto wm_types)
+                  {
+                      has_window_types(wm_types);
+                  },
+                  [this](auto)
+                  {
+                      has_window_types({});
+                  }
               }),
           property_handler<std::vector<int32_t>>(
               connection,
@@ -961,6 +977,13 @@ void mf::XWaylandSurface::is_transient_for(xcb_window_t transient_for)
     apply_cached_transient_for_and_type(lock);
 }
 
+void mf::XWaylandSurface::has_window_types(std::vector<xcb_atom_t> const& wm_types)
+{
+    std::lock_guard<std::mutex> lock{mutex};
+    cached.wm_types = wm_types;
+    apply_cached_transient_for_and_type(lock);
+}
+
 void mf::XWaylandSurface::inform_client_of_window_state(
     std::optional<scene::SurfaceStateTracker> const& new_window_state)
 {
@@ -1262,8 +1285,12 @@ auto mf::XWaylandSurface::plausible_parent(ProofOfMutexLock const&) -> std::shar
 
 void mf::XWaylandSurface::apply_cached_transient_for_and_type(ProofOfMutexLock const& lock)
 {
+    auto type = wm_window_type_to_mir_window_type(
+        connection.get(),
+        cached.wm_types,
+        cached.transient_for,
+        cached.override_redirect);
     auto parent = xcb_window_get_scene_surface(xwm, cached.transient_for);
-    auto type = cached.type;
     if (type == mir_window_type_dialog ||
         type == mir_window_type_menu ||
         type == mir_window_type_satellite ||
