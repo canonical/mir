@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 miral_server=miral-shell
+gdb=""
 bindir=$(dirname $0)
 if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 
@@ -19,10 +20,12 @@ do
       echo "    -demo-server                use mir_demo_server instead of ${miral_server}"
     fi
     echo   "    -terminal <terminal>        use <terminal> instead of '${terminal}'"
+    echo   "    -gdb                        run under gdb"
     exit 0
   elif [ "$1" == "-kiosk" ];            then miral_server=miral-kiosk
   elif [ "$1" == "-terminal" ];         then shift; terminal=$1
   elif [ "$1" == "-demo-server" ];      then miral_server=mir_demo_server
+  elif [ "$1" == "-gdb" ];              then gdb="gdb -ex run --args"
   elif [ "${1:0:2}" == "--" ];          then break
   fi
   shift
@@ -36,7 +39,7 @@ then
     unset WAYLAND_DISPLAY
   fi
   # miral-shell can launch it's own terminal with Ctrl-Alt-T
-  MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} exec ${bindir}${miral_server} $*
+  MIR_SERVER_ENABLE_X11=1 MIR_SERVER_SHELL_TERMINAL_EMULATOR=${terminal} exec ${gdb} ${bindir}${miral_server} $*
 else
   # miral-kiosk (and mir_demo_server) need a terminal launched, so we need to manage the WAYLAND_DISPLAY etc. here.
   port=0
@@ -57,7 +60,7 @@ else
     x11_display_file=$(mktemp --tmpdir="${XDG_RUNTIME_DIR}")
 
     # Start mir_demo_server with the chosen WAYLAND_DISPLAY
-    MIR_SERVER_ENABLE_X11=1 WAYLAND_DISPLAY=${wayland_display} ${bindir}${miral_server} $* --x11-displayfd 5 5>${x11_display_file}&
+    MIR_SERVER_ENABLE_X11=1 WAYLAND_DISPLAY=${wayland_display} ${gdb} ${bindir}${miral_server} $* --x11-displayfd 5 5>${x11_display_file}&
     miral_server_pid=$!
 
     if inotifywait -qq --timeout 5 --event close_write "${x11_display_file}" && [ -s "${x11_display_file}" ]
