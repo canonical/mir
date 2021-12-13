@@ -182,10 +182,6 @@ auto wm_window_type_to_mir_window_type(
             // TODO: perhaps desktop and dock should set the layer as well somehow?
             return mir_window_type_freestyle;
         }
-        if (wm_type == connection->_NET_WM_WINDOW_TYPE_DIALOG)
-        {
-            return mir_window_type_dialog;
-        }
         else if (wm_type == connection->_NET_WM_WINDOW_TYPE_TOOLBAR ||
                  wm_type == connection->_NET_WM_WINDOW_TYPE_MENU ||
                  wm_type == connection->_NET_WM_WINDOW_TYPE_UTILITY)
@@ -197,7 +193,8 @@ auto wm_window_type_to_mir_window_type(
                  wm_type == connection->_NET_WM_WINDOW_TYPE_COMBO ||
                  wm_type == connection->_NET_WM_WINDOW_TYPE_TOOLTIP ||
                  wm_type == connection->_NET_WM_WINDOW_TYPE_NOTIFICATION ||
-                 wm_type == connection->_NET_WM_WINDOW_TYPE_DND)
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_DND ||
+                 wm_type == connection->_NET_WM_WINDOW_TYPE_DIALOG)
         {
             return mir_window_type_gloss;
         }
