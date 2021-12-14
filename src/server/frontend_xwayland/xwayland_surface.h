@@ -99,6 +99,7 @@ private:
 
     /// Updates the pending spec
     void is_transient_for(xcb_window_t transient_for);
+    void has_window_types(std::vector<xcb_atom_t> const& wm_types);
 
     /// Updates the window's WM_STATE and _NET_WM_STATE properties. Should NOT be called under lock. Calling with
     /// nullopt withdraws the window.
@@ -180,7 +181,7 @@ private:
         bool motif_decorations_disabled{false};
 
         xcb_window_t transient_for{XCB_WINDOW_NONE};
-        MirWindowType type{mir_window_type_freestyle};
+        std::vector<xcb_atom_t> wm_types;
     } cached;
 
     /// When we send a configure we push it to the back, when we get notified of a configure we pop it and all the ones
