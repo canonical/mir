@@ -297,10 +297,15 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
     {
     case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL:
     {
-        auto const hscroll_discrete = libinput_event_pointer_get_axis_value_discrete(
-            pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
-        auto const vscroll_discrete = libinput_event_pointer_get_axis_value_discrete(
-            pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
+        auto const hscroll_discrete =
+            libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL) ?
+            libinput_event_pointer_get_axis_value_discrete(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL) :
+            0.0;
+        auto const vscroll_discrete =
+            libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) ?
+            libinput_event_pointer_get_axis_value_discrete(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) :
+            0.0;
+
         return builder->pointer_axis_discrete_scroll_event(
             mir_pointer_axis_source_wheel, time, action, button_state, hscroll_value, vscroll_value,
             hscroll_discrete, vscroll_discrete);
