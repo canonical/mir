@@ -160,7 +160,7 @@ mir (2.3.3) UNRELEASED; urgency=medium
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 23 Mar 2021 09:06:12 +0000
 
-mir (2.3.2) UNRELEASED; urgency=medium
+mir (2.3.2) focal; urgency=medium
 
   [ Alan Griffiths ]
   * New upstream release 2.3.2
