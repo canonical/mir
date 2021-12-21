@@ -17,29 +17,69 @@
  */
 
 #include "wallpaper_config.h"
+#include <boost/filesystem.hpp>
+#include <boost/throw_exception.hpp>
 #include <unistd.h>
 #include <mutex>
+#include <vector>
 
 namespace
 {
+/// Font search logic should be kept in sync with src/server/shell/decoration/renderer.cpp
 auto default_font() -> std::string
 {
-    for (std::string const file : { "Ubuntu-B.ttf", "FreeSansBold.ttf", "LiberationSans-Bold.ttf" })
+    struct FontPath
     {
-        for (auto const path : { "/usr/share/fonts/truetype/ubuntu-font-family/",   // Ubuntu < 18.04 Ubuntu-B.ttf
-                                 "/usr/share/fonts/truetype/ubuntu/",               // Ubuntu >= 18.04 Ubuntu-B.ttf
-                                 "/usr/share/fonts/truetype/freefont/",             // Debian FreeSansBold.ttf
-                                 "/usr/share/fonts/gnu-free/",                      // Fedora FreeSansBold.ttf
-                                 "/usr/share/fonts/liberation-sans/",               // Fedora LiberationSans-Bold.ttf
-                                 "/usr/share/fonts/TTF/"})                          // Arch Ubuntu-B.ttf
+        char const* filename;
+        std::vector<char const*> prefixes;
+    };
+
+    FontPath const font_paths[]{
+        FontPath{"Ubuntu-B.ttf", {
+            "ubuntu-font-family",   // Ubuntu < 18.04
+            "ubuntu",               // Ubuntu >= 18.04/Arch
+        }},
+        FontPath{"FreeSansBold.ttf", {
+            "freefont",             // Debian/Ubuntu
+            "gnu-free",             // Fedora/Arch
+        }},
+        FontPath{"DejaVuSans-Bold.ttf", {
+            "dejavu",               // Ubuntu (others?)
+            "",                     // Arch
+        }},
+        FontPath{"LiberationSans-Bold.ttf", {
+            "liberation-sans",      // Fedora
+            "liberation",           // Arch
+        }},
+    };
+
+    char const* const font_path_search_paths[]{
+        "/usr/share/fonts/truetype",    // Ubuntu/Debian
+        "/usr/share/fonts/TTF",         // Arch
+        "/usr/share/fonts",             // Fedora/Arch
+    };
+
+    std::vector<std::string> usable_search_paths;
+    for (auto const& path : font_path_search_paths)
+    {
+        if (boost::filesystem::exists(path))
+            usable_search_paths.push_back(path);
+    }
+
+    for (auto const& font : font_paths)
+    {
+        for (auto const& prefix : font.prefixes)
         {
-            auto const full_path = path + file;
-            if (access(full_path.c_str(), R_OK) == 0)
-                return full_path;
+            for (auto const& path : usable_search_paths)
+            {
+                auto const full_font_path = path + '/' + prefix + '/' + font.filename;
+                if (boost::filesystem::exists(full_font_path))
+                    return full_font_path;
+            }
         }
     }
 
-    return "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf";
+    return "";
 }
 
 std::mutex mutex;

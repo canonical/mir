@@ -307,7 +307,7 @@ auto miral::WindowInfo::restore_rect() const -> mir::geometry::Rectangle
         default:;
         }
 
-        // Half way between current size and min size is reasonable for a maximized/fullscreen window
+        // Halfway between current size and min size is reasonable for a maximized/fullscreen window
         auto const min_size_disp = Displacement{as_delta(self->min_width), as_delta(self->min_height)};
         Size const reasonable_size{as_size(
             (as_displacement(self->window.size()) - min_size_disp) * 0.5

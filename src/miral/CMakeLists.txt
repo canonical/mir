@@ -124,21 +124,19 @@ set_target_properties(miral
         LINK_DEPENDS ${symbol_map}
 )
 
-
-
+find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
 if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols (but we don't care)
     MIR_LINK_TIME_OPTIMIZATION AND  # g++ generates slightly different symbols without LTO (but we don't care)
-    EXISTS /etc/debian_version)     # Using dpkg-gensymbols only makes sense on Debian based distros
+    MIR_DPKG_GENSYMBOLS)
 
-    find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
-    if (MIR_DPKG_GENSYMBOLS)
-        add_custom_target(check-miral-symbols ALL
-            DEPENDS miral ${PROJECT_SOURCE_DIR}/debian/libmiral${MIRAL_ABI}.symbols
-            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miral ${MIRAL_VERSION} ${MIRAL_ABI}
-            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-            VERBATIM)
-    endif()
+    set(MIR_CHECK_MIRAL_SYMBOLS_DEFAULT ALL)
 endif()
+
+add_custom_target(regenerate-miral-debian-symbols ${MIR_CHECK_MIRAL_SYMBOLS_DEFAULT}
+    DEPENDS miral ${PROJECT_SOURCE_DIR}/debian/libmiral${MIRAL_ABI}.symbols
+    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miral ${MIRAL_VERSION} ${MIRAL_ABI}
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    VERBATIM)
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/miral.pc.in

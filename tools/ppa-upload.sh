@@ -10,8 +10,8 @@ fi
 
 GIT_BRANCH=${GITHUB_REF-$( git rev-parse --abbrev-ref HEAD )}
 # determine the patch release
-if ! [[ "${GIT_BRANCH}" =~ ^(refs/(heads|tags)/)?(master|(release/|v)([0-9\.]+))$ ]]; then
-  echo "ERROR: This script should only run on master or release tags" >&2
+if ! [[ "${GIT_BRANCH}" =~ ^(refs/(heads|tags)/)?(main|(release/|v)([0-9\.]+))$ ]]; then
+  echo "ERROR: This script should only run on main or release tags" >&2
   echo "  or branches." >&2
   exit 3
 fi
@@ -58,8 +58,8 @@ if [[ "${GIT_BRANCH}" =~ ^(refs/(heads|tags)/)?(release/|v)([0-9\.]+)$ ]]; then
       MIR_VERSION=$( echo ${PATCH_VERSION} | perl -pe 's/^((\d+\.)*)(\d+)$/$1.($3+1)/e' )
     fi
 
-    # use the number of commits since master
-    GIT_COMMITS=$( git rev-list --count origin/master..HEAD )
+    # use the number of commits since main
+    GIT_COMMITS=$( git rev-list --count origin/main..HEAD )
     MIR_VERSION=${MIR_VERSION}~rc${GIT_COMMITS}-g${GIT_REVISION}
   fi
 else

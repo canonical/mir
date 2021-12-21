@@ -21,12 +21,12 @@
 #include "mir/graphics/egl_error.h"
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
+#include <gbm.h>
 
 #define MIR_LOG_COMPONENT "EGL"
 #include "mir/log.h"
 
 namespace mg = mir::graphics;
-namespace mgg = mir::graphics::gbm;
 namespace mgmh = mir::graphics::gbm::helpers;
 
 mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config)
@@ -42,10 +42,11 @@ mgmh::EGLHelper::EGLHelper(
     GLConfig const& gl_config,
     GBMHelper const& gbm,
     gbm_surface* surface,
+    uint32_t gbm_format,
     EGLContext shared_context)
     : EGLHelper(gl_config)
 {
-    setup(gbm, surface, shared_context, false);
+    setup(gbm, surface, gbm_format, shared_context, false);
 }
 
 mgmh::EGLHelper::EGLHelper(EGLHelper&& from)
@@ -63,6 +64,48 @@ mgmh::EGLHelper::EGLHelper(EGLHelper&& from)
     from.egl_surface = EGL_NO_SURFACE;
 }
 
+namespace
+{
+void initialise_egl(EGLDisplay dpy, int minimum_major_version, int minimum_minor_version)
+{
+    EGLint major, minor;
+
+    if (eglInitialize(dpy, &major, &minor) == EGL_FALSE)
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialize EGL display"));
+
+    if ((major < minimum_major_version) ||
+        (major == minimum_major_version && minor < minimum_minor_version))
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(std::runtime_error("Incompatible EGL version")));
+        // TODO: Insert egl version major and minor into exception
+    }
+}
+
+std::vector<EGLConfig> get_matching_configs(EGLDisplay dpy, EGLint const attr[])
+{
+    EGLint num_egl_configs;
+
+    // First query the number of matching configs…
+    if ((eglChooseConfig(dpy, attr, nullptr, 0, &num_egl_configs) == EGL_FALSE) ||
+        (num_egl_configs == 0))
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to enumerate any matching EGL configs"));
+    }
+
+    std::vector<EGLConfig> matching_configs(static_cast<size_t>(num_egl_configs));
+    if ((eglChooseConfig(dpy, attr, matching_configs.data(), static_cast<EGLint>(matching_configs.size()), &num_egl_configs) == EGL_FALSE) ||
+        (num_egl_configs == 0))
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to acquire matching EGL configs"));
+    }
+
+    matching_configs.resize(static_cast<size_t>(num_egl_configs));
+    return matching_configs;
+}
+
+}
+
 void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 {
     eglBindAPI(EGL_OPENGL_ES_API);
@@ -72,8 +115,14 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm)
         EGL_NONE
     };
 
-    // TODO: Take the required format as a parameter, so we can select the framebuffer format.
-    setup_internal(gbm, true, GBM_FORMAT_XRGB8888);
+    egl_display = egl_display_for_gbm_device(gbm.device);
+    initialise_egl(egl_display, 1, 4);
+    should_terminate_egl = true;
+
+    // This is a context solely used for sharing GL object IDs; we will not do any rendering
+    // with it, so we do not care what EGLconfig is used *at all*.
+    EGLint const no_attribs[] = {EGL_NONE};
+    egl_config = get_matching_configs(egl_display, no_attribs)[0];
 
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr);
     if (egl_context == EGL_NO_CONTEXT)
@@ -89,8 +138,19 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
         EGL_NONE
     };
 
-    // TODO: Take the required format as a parameter, so we can select the framebuffer format.
-    setup_internal(gbm, false, GBM_FORMAT_XRGB8888);
+    egl_display = egl_display_for_gbm_device(gbm.device);
+
+    // Might as well copy the EGLConfig from shared_context
+    EGLint config_id;
+    if (eglQueryContext(egl_display, shared_context, EGL_CONFIG_ID, &config_id) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query EGLConfig of shared EGLContext"));
+    }
+    EGLint const context_attribs[] = {
+        EGL_CONFIG_ID, config_id,
+        EGL_NONE
+    };
+    egl_config = get_matching_configs(egl_display, context_attribs)[0];
 
     egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr);
     if (egl_context == EGL_NO_CONTEXT)
@@ -100,6 +160,7 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
 void mgmh::EGLHelper::setup(
     GBMHelper const& gbm,
     gbm_surface* surface_gbm,
+    uint32_t gbm_format,
     EGLContext shared_context,
     bool owns_egl)
 {
@@ -110,8 +171,14 @@ void mgmh::EGLHelper::setup(
         EGL_NONE
     };
 
-    // TODO: Take the required format as a parameter, so we can select the framebuffer format.
-    setup_internal(gbm, owns_egl, GBM_FORMAT_XRGB8888);
+    egl_display = egl_display_for_gbm_device(gbm.device);
+    if (owns_egl)
+    {
+        initialise_egl(egl_display, 1, 4);
+        should_terminate_egl = owns_egl;
+    }
+
+    egl_config = egl_config_for_format(gbm_format);
 
     egl_surface = platform_base.eglCreatePlatformWindowSurface(
         egl_display,
@@ -162,32 +229,19 @@ bool mgmh::EGLHelper::release_current() const
     return (ret == EGL_TRUE);
 }
 
-namespace
+auto mgmh::EGLHelper::egl_display_for_gbm_device(struct gbm_device* const device) -> EGLDisplay
 {
-std::vector<EGLConfig> get_matching_configs(EGLDisplay dpy, EGLint const attr[])
-{
-    EGLint num_egl_configs;
+    auto const egl_display = platform_base.eglGetPlatformDisplay(
+        EGL_PLATFORM_GBM_KHR,      // EGL_PLATFORM_GBM_MESA has the same value.
+        static_cast<EGLNativeDisplayType>(device),
+        nullptr);
+    if (egl_display == EGL_NO_DISPLAY)
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get EGL display"));
 
-    // First query the number of matching configs…
-    if ((eglChooseConfig(dpy, attr, nullptr, 0, &num_egl_configs) == EGL_FALSE) ||
-        (num_egl_configs == 0))
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to enumerate any matching EGL configs"));
-    }
-
-    std::vector<EGLConfig> matching_configs(static_cast<size_t>(num_egl_configs));
-    if ((eglChooseConfig(dpy, attr, matching_configs.data(), static_cast<EGLint>(matching_configs.size()), &num_egl_configs) == EGL_FALSE) ||
-        (num_egl_configs == 0))
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to acquire matching EGL configs"));
-    }
-
-    matching_configs.resize(static_cast<size_t>(num_egl_configs));
-    return matching_configs;
-}
+    return egl_display;
 }
 
-void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize, EGLint gbm_format)
+auto mgmh::EGLHelper::egl_config_for_format(EGLint gbm_format) -> EGLConfig
 {
     // TODO: Get the required EGL_{RED,GREEN,BLUE}_SIZE values out of gbm_format
     EGLint const config_attr[] = {
@@ -201,34 +255,6 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize, EGLi
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };
-
-    static const EGLint required_egl_version_major = 1;
-    static const EGLint required_egl_version_minor = 4;
-
-    egl_display = platform_base.eglGetPlatformDisplay(
-        EGL_PLATFORM_GBM_KHR,      // EGL_PLATFORM_GBM_MESA has the same value.
-        static_cast<EGLNativeDisplayType>(gbm.device),
-        nullptr);
-    if (egl_display == EGL_NO_DISPLAY)
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get EGL display"));
-
-    if (initialize)
-    {
-        EGLint major, minor;
-
-        if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialize EGL display"));
-
-        if ((major < required_egl_version_major) ||
-            (major == required_egl_version_major && minor < required_egl_version_minor))
-        {
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(std::runtime_error("Incompatible EGL version")));
-            // TODO: Insert egl version major and minor into exception
-        }
-
-        should_terminate_egl = true;
-    }
 
     for (auto const& config : get_matching_configs(egl_display, config_attr))
     {
@@ -244,15 +270,19 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize, EGLi
         if (id == gbm_format)
         {
             // We've found our matching format, so we're done here.
-            egl_config = config;
-            return;
+            return config;
         }
     }
-    BOOST_THROW_EXCEPTION((
-        std::runtime_error{std::string{"Failed to find EGL config matching "} + std::to_string(gbm_format)}));
+    BOOST_THROW_EXCEPTION((NoMatchingEGLConfig{static_cast<uint32_t>(gbm_format)}));
 }
 
 void mgmh::EGLHelper::report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> f)
 {
     f(egl_display, egl_config);
+}
+
+mgmh::EGLHelper::NoMatchingEGLConfig::NoMatchingEGLConfig(uint32_t /*format*/)
+    : std::runtime_error("Failed to find matching EGL config")
+{
+    // TODO: Include the format string; need to extract from linux_dmabuf.cpp
 }

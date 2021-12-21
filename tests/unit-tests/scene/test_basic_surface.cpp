@@ -823,8 +823,8 @@ AttributeTestParameters const surface_dpi_test_parameters{
 AttributeTestParameters const surface_focus_test_parameters{
     mir_window_attrib_focus,
     mir_window_focus_state_unfocused,
-    mir_window_focus_state_focused,
-    mir_window_focus_state_focused + 1,
+    mir_window_focus_state_active,
+    mir_window_focus_state_active + 1,
     mir_window_focus_state_unfocused - 1
 };
 
@@ -965,7 +965,7 @@ TEST_F(BasicSurfaceTest, throws_on_invalid_focus_state)
 {
     using namespace testing;
 
-    auto const invalid_state = static_cast<MirWindowFocusState>(mir_window_focus_state_focused + 1);
+    auto const invalid_state = static_cast<MirWindowFocusState>(mir_window_focus_state_active + 1);
 
     EXPECT_THROW({
             surface.configure(mir_window_attrib_focus, invalid_state);

@@ -13,35 +13,26 @@ the [\#mirserver](https://web.libera.chat/?channels=#mir-server) IRC channel on 
 
 
 ## Getting Mir source and dependencies
+
+You can get the source with:
+
+    git clone https://github.com/MirServer/mir.git
+    cd mir
+
+You may need to install git for the system you are working on.
+
+You’ll also need a few development tools installed. The exact dependencies and
+instructions vary across distros.
+
 ###  On Ubuntu
 
-You’ll need a few development tools installed:
-
-    sudo apt install devscripts equivs git
-
-With these installed you can checkout Mir and get the remaining dependencies:
-
-    git clone --recursive https://github.com/MirServer/mir.git
-    cd mir
+    sudo apt install devscripts equivs
     mk-build-deps -i -s sudo
 
-### On Fedora
+### On Fedora and Alpine
 
-You’ll need some development tools and packages installed:
-
-    sudo dnf install git cmake make gcc-c++ boost-devel mesa-libEGL-devel \
-    mesa-libGLES-devel glm-devel glog-devel gflags-devel systemd-devel \
-    glib2-devel wayland-devel mesa-libgbm-devel libepoxy-devel nettle-devel \
-    libinput-devel libxml++-devel libuuid-devel libxkbcommon-devel \
-    freetype-devel lttng-ust-devel libatomic qterminal qt5-qtwayland \
-    python3-pillow libevdev-devel umockdev-devel gtest-devel gmock-devel \
-    libXcursor-devel yaml-cpp-devel egl-wayland-devel libdrm-devel \
-    wlcs-devel python3-dbusmock
-
-With these installed you can checkout Mir:
-
-    git clone --recursive https://github.com/MirServer/mir.git
-    cd mir
+As we build these distros in Mir's CI you can copy the instructions
+from the corresponding files under `spread/build`.
 
 Building Mir
 ------------

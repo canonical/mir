@@ -19,7 +19,6 @@
 #include "server_example_log_options.h"
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
-#include "server_example_host_lifecycle_event_listener.h"
 #include "server_example_test_client.h"
 #include "server_example_input_device_config.h"
 
@@ -133,15 +132,14 @@ try
     auto const server_exit_status = runner.run_with({
         // example options for display layout, logging and timeout
         miral::display_configuration_options,
-        me::add_log_host_lifecycle_option_to,
         me::add_glog_options_to,
         miral::X11Support{},
         miral::WaylandExtensions{}
             .enable(miral::WaylandExtensions::zwlr_layer_shell_v1)
             .enable(miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1)
             .enable(miral::WaylandExtensions::zxdg_output_manager_v1)
-            .enable(miral::WaylandExtensions::zwp_virtual_keyboard_v1)
-            .enable(miral::WaylandExtensions::zwp_input_method_v2),
+            .enable(miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1)
+            .enable(miral::WaylandExtensions::zwp_input_method_manager_v2),
         miral::set_window_management_policy<miral::MinimalWindowManager>(),
         me::add_input_device_configuration_options_to,
         add_timeout_option_to,

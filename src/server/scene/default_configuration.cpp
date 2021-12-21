@@ -29,7 +29,6 @@
 #include "mir/shell/display_configuration_controller.h"
 
 #include "broadcasting_session_event_sink.h"
-#include "gl_pixel_buffer.h"
 #include "mediating_display_changer.h"
 #include "mir/scene/session_container.h"
 #include "session_manager.h"

@@ -18,7 +18,6 @@
 
 #include "input_method_v2.h"
 #include "input_method_grab_keyboard_v2.h"
-#include "input-method-unstable-v2_wrapper.h"
 #include "text-input-unstable-v3_wrapper.h"
 #include "wl_seat.h"
 
@@ -239,7 +238,8 @@ auto mf::create_input_method_manager_v2(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<scene::TextInputHub> const& text_input_hub,
-    std::shared_ptr<input::CompositeEventFilter> const event_filter) -> std::shared_ptr<InputMethodManagerV2Global>
+    std::shared_ptr<input::CompositeEventFilter> const event_filter)
+-> std::shared_ptr<mw::InputMethodManagerV2::Global>
 {
     auto ctx = std::shared_ptr<InputMethodV2Ctx>{new InputMethodV2Ctx{wayland_executor, text_input_hub, event_filter}};
     return std::make_shared<InputMethodManagerV2Global>(display, std::move(ctx));

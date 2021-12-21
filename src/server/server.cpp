@@ -93,7 +93,6 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(cursor_images)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(gl_config)\
-    MACRO(host_lifecycle_event_listener)\
     MACRO(input_dispatcher)\
     MACRO(input_targeter)\
     MACRO(logger)\

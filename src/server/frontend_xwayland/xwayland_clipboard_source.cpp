@@ -255,7 +255,7 @@ void mf::XWaylandClipboardSource::initiate_send(xcb_atom_t target_type, Fd const
         connection._WL_SELECTION,
         XCB_TIME_CURRENT_TIME);
 
-    // Needed here because this is not called during an X11 event, and so wont get flushed at the end
+    // Needed here because this is not called during an X11 event, and so won't get flushed at the end
     connection.flush();
 }
 

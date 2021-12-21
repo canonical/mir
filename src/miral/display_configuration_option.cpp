@@ -44,6 +44,10 @@ char const* const display_alpha_descr = "Select a display mode with alpha[{on,of
 char const* const display_alpha_off = "off";
 char const* const display_alpha_on = "on";
 
+char const* const display_scale_opt = "display-scale";
+char const* const display_scale_descr = "Scale for all displays";
+char const* const display_scale_default = "1.0";
+
 class PixelFormatSelector : public mg::DisplayConfigurationPolicy
 {
 public:
@@ -92,11 +96,37 @@ void PixelFormatSelector::apply_to(mg::DisplayConfiguration& conf)
         });
 }
 
+class ScaleSetter : public mg::DisplayConfigurationPolicy
+{
+public:
+    ScaleSetter(std::shared_ptr<mg::DisplayConfigurationPolicy> const& base_policy, float with_scale)
+        : base_policy{base_policy},
+          with_scale{with_scale}
+    {
+    }
+
+    void apply_to(mg::DisplayConfiguration& conf) override;
+private:
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const base_policy;
+    float const with_scale;
+};
+
+void ScaleSetter::apply_to(mg::DisplayConfiguration& conf)
+{
+    base_policy->apply_to(conf);
+    conf.for_each_output(
+        [&](mg::UserDisplayConfigurationOutput& output)
+        {
+            output.scale = with_scale;
+        });
+}
+
 void miral::display_configuration_options(mir::Server& server)
 {
     // Add choice of monitor configuration
     server.add_configuration_option(display_config_opt, display_config_descr,   sidebyside_opt_val);
     server.add_configuration_option(display_alpha_opt,  display_alpha_descr,    display_alpha_off);
+    server.add_configuration_option(display_scale_opt,  display_scale_descr,    display_scale_default);
 
     server.wrap_display_configuration_policy(
         [&](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
@@ -105,15 +135,47 @@ void miral::display_configuration_options(mir::Server& server)
             auto const options = server.get_options();
             auto display_layout = options->get<std::string>(display_config_opt);
             auto with_alpha = options->get<std::string>(display_alpha_opt) == display_alpha_on;
+            auto const scale_str = options->get<std::string>(display_scale_opt);
+
+            double scale{0};
+            static double const scale_min = 0.01;
+            static double const scale_max = 100.0;
+            try
+            {
+                scale = std::stod(scale_str);
+            }
+            catch (std::invalid_argument const&)
+            {
+                mir::fatal_error("Failed to parse scale '%s' as double", scale_str.c_str());
+            }
+            if (scale < scale_min || scale > scale_max)
+            {
+                mir::fatal_error("Invalid scale %f, must be between %f and %f", scale, scale_min, scale_max);
+            }
 
             auto layout_selector = wrapped;
 
             if (display_layout == sidebyside_opt_val)
+            {
                 layout_selector = std::make_shared<mg::SideBySideDisplayConfigurationPolicy>();
+            }
             else if (display_layout == single_opt_val)
+            {
                 layout_selector = std::make_shared<mg::SingleDisplayConfigurationPolicy>();
+            }
             else if (display_layout.compare(0, strlen(static_opt_val), static_opt_val) == 0)
+            {
+                if (scale != 1.0)
+                {
+                    mir::fatal_error("Display scale option can't be used with static display configuration");
+                }
                 layout_selector = std::make_shared<StaticDisplayConfig>(display_layout.substr(strlen(static_opt_val)));
+            }
+
+            if (scale != 1.0)
+            {
+                layout_selector = std::make_shared<ScaleSetter>(layout_selector, scale);
+            }
 
             // Whatever the layout select a pixel format with requested alpha
             return std::make_shared<PixelFormatSelector>(layout_selector, with_alpha);

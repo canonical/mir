@@ -53,7 +53,6 @@ namespace shell
 class DisplayLayout;
 class DisplayConfigurationController;
 class FocusController;
-class HostLifecycleEventListener;
 class InputTargeter;
 class PersistentSurfaceStore;
 class Shell;
@@ -269,10 +268,6 @@ public:
     /// Sets an override functor for creating the coordinate translator.
     void override_the_coordinate_translator(
         Builder<scene::CoordinateTranslator> const& coordinate_translator_builder);
-
-    /// Sets an override functor for creating the host lifecycle event listener.
-    void override_the_host_lifecycle_event_listener(
-        Builder<shell::HostLifecycleEventListener> const& host_lifecycle_event_listener_builder);
 
     /// Sets an override functor for creating the input dispatcher.
     void override_the_input_dispatcher(Builder<input::InputDispatcher> const& input_dispatcher_builder);

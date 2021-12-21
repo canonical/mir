@@ -77,7 +77,7 @@ void mf::XWaylandSurfaceRole::populate_surface_data_scaled(
             if (auto inner = std::dynamic_pointer_cast<mc::BufferStream>(stream.stream.lock()))
             {
                 // We could set the scale of the original stream, but then the WlSurface would see the scaled size.
-                // Instead we wrap the surface's stream in our own that scales without the surface knowing.
+                // Instead, we wrap the surface's stream in our own that scales without the surface knowing.
                 auto scaled = std::make_shared<ScaledBufferStream>(std::move(inner), scale);
                 stream.stream = scaled;
                 keep_alive_until_spec_is_used.push_back(std::move(scaled));

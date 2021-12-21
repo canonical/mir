@@ -76,6 +76,15 @@ protected:
                     SetArgPointee<3>(GBM_FORMAT_XRGB8888),
                     Return(EGL_TRUE)));
 
+        // We sometimes want to copy the config of an existing context.
+        // Since our mocks don't check what config attribs we're asking for,
+        // we can just make something up.
+        ON_CALL(mock_egl, eglQueryContext(_,_,EGL_CONFIG_ID,_))
+            .WillByDefault(
+                DoAll(
+                    SetArgPointee<3>(0xabadbaab),
+                    Return(EGL_TRUE)));
+
         mock_egl.provide_egl_extensions();
         mock_gl.provide_gles_extensions();
 

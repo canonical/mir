@@ -27,18 +27,11 @@
 #include "mir_display.h"
 #include "wl_seat.h"
 #include "xdg_output_v1.h"
-#include "xdg-output-unstable-v1_wrapper.h"
 #include "foreign_toplevel_manager_v1.h"
-#include "wlr-foreign-toplevel-management-unstable-v1_wrapper.h"
-#include "pointer-constraints-unstable-v1_wrapper.h"
 #include "pointer_constraints_unstable_v1.h"
-#include "relative-pointer-unstable-v1_wrapper.h"
 #include "relative_pointer_unstable_v1.h"
-#include "virtual-keyboard-unstable-v1_wrapper.h"
 #include "virtual_keyboard_v1.h"
-#include "text-input-unstable-v3_wrapper.h"
 #include "text_input_v3.h"
-#include "input-method-unstable-v2_wrapper.h"
 #include "input_method_v2.h"
 
 #include "mir/graphics/platform.h"
@@ -56,97 +49,94 @@ namespace
 {
 struct ExtensionBuilder
 {
-    std::string name;
+    std::string global_name;
     std::function<std::shared_ptr<void>(mf::WaylandExtensions::Context const& ctx)> build;
 };
+
+template<typename T>
+auto make_extension_builder(
+    std::function<std::shared_ptr<typename T::Global>(mf::WaylandExtensions::Context const& ctx)> build)
+-> ExtensionBuilder
+{
+    static_assert(std::is_base_of<mw::Resource, T>::value, "make_extension_builder() not given a resource");
+    return ExtensionBuilder{T::interface_name, build};
+}
 
 /// Extensions that are not in the set returned by mf::get_standard_extensions() should generally be listed in
 /// include/miral/miral/wayland_extensions.h for easy access by shells.
 std::vector<ExtensionBuilder> const internal_extension_builders = {
-    {
-        mw::Shell::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            {
-                return mf::create_wl_shell(
-                    ctx.display,
-                    *ctx.wayland_executor,
-                    ctx.shell,
-                    ctx.seat,
-                    ctx.output_manager);
-            }
-    },
-    {
-        mw::XdgShellV6::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            {
-                return std::make_shared<mf::XdgShellV6>(
-                    ctx.display,
-                    *ctx.wayland_executor,
-                    ctx.shell,
-                    *ctx.seat,
-                    ctx.output_manager);
-            }
-    },
-    {
-        mw::XdgWmBase::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            {
-                return std::make_shared<mf::XdgShellStable>(
-                    ctx.display,
-                    *ctx.wayland_executor,
-                    ctx.shell,
-                    *ctx.seat,
-                    ctx.output_manager);
-            }
-    },
-    {
-        mw::LayerShellV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            {
-                return std::make_shared<mf::LayerShellV1>(
-                    ctx.display,
-                    *ctx.wayland_executor,
-                    ctx.shell,
-                    *ctx.seat,
-                    ctx.output_manager);
-            }
-    },
-    {
-        mw::XdgOutputManagerV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return create_xdg_output_manager_v1(ctx.display, ctx.output_manager); }
-    },
-    {
-        mw::ForeignToplevelManagerV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            {
-                return create_foreign_toplevel_manager_v1(
-                    ctx.display,
-                    ctx.shell,
-                    ctx.wayland_executor,
-                    ctx.surface_stack);
-            }
-    },
-    {
-        mw::RelativePointerManagerV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return mf::create_relative_pointer_unstable_v1(ctx.display, ctx.shell); }
-    },
-    {
-        mw::PointerConstraintsV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return mf::create_pointer_constraints_unstable_v1(ctx.display, *ctx.wayland_executor, ctx.shell); }
-    },
-    {
-        mw::VirtualKeyboardV1::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return mf::create_virtual_keyboard_manager_v1(ctx.display, ctx.input_device_registry); }
-    },
-    {
-        mw::TextInputV3::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            { return mf::create_text_input_manager_v3(ctx.display, ctx.wayland_executor, ctx.text_input_hub); }
-    },
-    {
-        mw::InputMethodV2::interface_name, [](auto const& ctx) -> std::shared_ptr<void>
-            {
-                return mf::create_input_method_manager_v2(
-                    ctx.display,
-                    ctx.wayland_executor,
-                    ctx.text_input_hub,
-                    ctx.composite_event_filter);
-            }
-    },
+    make_extension_builder<mw::Shell>([](auto const& ctx)
+        {
+            return mf::create_wl_shell(
+                ctx.display,
+                *ctx.wayland_executor,
+                ctx.shell,
+                ctx.seat,
+                ctx.output_manager);
+        }),
+    make_extension_builder<mw::XdgShellV6>([](auto const& ctx)
+        {
+            return std::make_shared<mf::XdgShellV6>(
+                ctx.display,
+                *ctx.wayland_executor,
+                ctx.shell,
+                *ctx.seat,
+                ctx.output_manager);
+        }),
+    make_extension_builder<mw::XdgWmBase>([](auto const& ctx)
+        {
+            return std::make_shared<mf::XdgShellStable>(
+                ctx.display,
+                *ctx.wayland_executor,
+                ctx.shell,
+                *ctx.seat,
+                ctx.output_manager);
+        }),
+    make_extension_builder<mw::LayerShellV1>([](auto const& ctx)
+        {
+            return std::make_shared<mf::LayerShellV1>(
+                ctx.display,
+                *ctx.wayland_executor,
+                ctx.shell,
+                *ctx.seat,
+                ctx.output_manager);
+        }),
+    make_extension_builder<mw::XdgOutputManagerV1>([](auto const& ctx)
+        {
+            return create_xdg_output_manager_v1(ctx.display, ctx.output_manager);
+        }),
+    make_extension_builder<mw::ForeignToplevelManagerV1>([](auto const& ctx)
+        {
+            return create_foreign_toplevel_manager_v1(
+                ctx.display,
+                ctx.shell,
+                ctx.wayland_executor,
+                ctx.surface_stack);
+        }),
+    make_extension_builder<mw::RelativePointerManagerV1>([](auto const& ctx)
+        {
+            return mf::create_relative_pointer_unstable_v1(ctx.display, ctx.shell);
+        }),
+    make_extension_builder<mw::PointerConstraintsV1>([](auto const& ctx)
+        {
+            return mf::create_pointer_constraints_unstable_v1(ctx.display, *ctx.wayland_executor, ctx.shell);
+        }),
+    make_extension_builder<mw::VirtualKeyboardManagerV1>([](auto const& ctx)
+        {
+            return mf::create_virtual_keyboard_manager_v1(ctx.display, ctx.input_device_registry);
+        }),
+    make_extension_builder<mw::TextInputManagerV3>([](auto const& ctx)
+        {
+            return mf::create_text_input_manager_v3(ctx.display, ctx.wayland_executor, ctx.text_input_hub);
+        }),
+    make_extension_builder<mw::InputMethodManagerV2>([](auto const& ctx)
+        {
+            return mf::create_input_method_manager_v2(
+                ctx.display,
+                ctx.wayland_executor,
+                ctx.text_input_hub,
+                ctx.composite_event_filter);
+        }),
 };
 
 ExtensionBuilder const xwayland_builder {
@@ -176,7 +166,7 @@ protected:
     {
         for (auto const& extension : enabled_internal_builders)
         {
-            add_extension(extension.name, extension.build(context));
+            add_extension(extension.global_name, extension.build(context));
         }
     }
 
@@ -205,9 +195,9 @@ auto configure_wayland_extensions(
     std::vector<ExtensionBuilder> enabled_internal_builders;
     for (auto const& builder : internal_extension_builders)
     {
-        if (enabled_extension_names.find(builder.name) != enabled_extension_names.end())
+        if (enabled_extension_names.find(builder.global_name) != enabled_extension_names.end())
         {
-            remaining_extension_names.erase(builder.name);
+            remaining_extension_names.erase(builder.global_name);
             enabled_internal_builders.push_back(builder);
         }
     }
@@ -242,7 +232,7 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::XdgWmBase::interface_name,
         mw::XdgShellV6::interface_name,
         mw::XdgOutputManagerV1::interface_name,
-        mw::TextInputV3::interface_name};
+        mw::TextInputManagerV3::interface_name};
 }
 
 auto mf::get_supported_extensions() -> std::vector<std::string>
@@ -250,7 +240,7 @@ auto mf::get_supported_extensions() -> std::vector<std::string>
     std::vector<std::string> result;
     for (auto const& builder : internal_extension_builders)
     {
-        result.push_back(builder.name);
+        result.push_back(builder.global_name);
     }
     return result;
 }

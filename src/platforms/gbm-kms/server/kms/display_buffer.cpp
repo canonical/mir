@@ -236,7 +236,7 @@ public:
         mir::Fd const& drm_fd,
         uint32_t width,
         uint32_t height,
-        uint32_t /*format*/)
+        uint32_t format)
         : eglCreateImageKHR{
               reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"))},
           eglDestroyImageKHR{
@@ -246,10 +246,10 @@ public:
           device{drm_fd},
           width{width},
           height{height},
-          surface{device.create_scanout_surface(width, height, false)},
+          surface{device.create_scanout_surface(width, height, format, false)},
           egl{NoAuxGlConfig{}}
     {
-        egl.setup(device, surface.get(), EGL_NO_CONTEXT, true);
+        egl.setup(device, surface.get(), format, EGL_NO_CONTEXT, true);
 
         require_gl_extensions({
             "GL_OES_EGL_image"

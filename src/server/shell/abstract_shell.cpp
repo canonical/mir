@@ -138,7 +138,7 @@ void msh::AbstractShell::close_session(
     for (auto surface = session->default_surface(); surface; surface = session->surface_after(surface))
         if (!surfaces.insert(surface).second) break;
 
-    // this is an ugly kludge to remove the each of the surfaces owned by the session
+    // this is an ugly kludge to remove each of the surfaces owned by the session
     // We could likely do this better (and atomically) within the WindowManager
     for (auto const& surface : surfaces)
     {
@@ -404,79 +404,50 @@ void msh::AbstractShell::set_focus_to(
     std::shared_ptr<ms::Session> const& focus_session,
     std::shared_ptr<ms::Surface> const& focus_surface)
 {
-    std::vector<std::shared_ptr<ms::Surface>> new_popups;
-
-    // Don't give keyboard focus to popups
-    auto surface = focus_surface;
-    while (surface)
-    {
-        auto const type = surface->type();
-        if (type != mir_window_type_gloss &&
-            type != mir_window_type_tip &&
-            type != mir_window_type_menu)
-        {
-            break;
-        }
-        new_popups.push_back(surface);
-        surface = surface->parent();
-    }
-
     std::unique_lock<std::mutex> lock(focus_mutex);
 
-    for (auto const& old_popup_weak : popups_of_focused_surface)
-    {
-        if (auto const old_popup = old_popup_weak.lock())
-        {
-            if (find(begin(new_popups), end(new_popups), old_popup) == end(new_popups))
-            {
-                // If the popup isn't in the set of new popups, hide it
-                old_popup->request_client_surface_close();
-                old_popup->hide();
-            }
-        }
-    }
-
-    popups_of_focused_surface.clear();
-    for (auto const& new_popup : new_popups)
-    {
-        popups_of_focused_surface.push_back(new_popup);
-    }
-
-    notify_focus_locked(lock, focus_session, surface);
-    update_focus_locked(lock, focus_session, surface);
+    notify_focus_locked(lock, focus_surface);
+    update_focus_locked(lock, focus_session, focus_surface);
 }
 
 void msh::AbstractShell::notify_focus_locked(
     std::unique_lock<std::mutex> const& /*lock*/,
-    std::shared_ptr<ms::Session> const& /*session*/,
-    std::shared_ptr<ms::Surface> const& surface)
+    std::shared_ptr<ms::Surface> const& new_focus_surface)
 {
-    auto const current_focus = notified_focus_surface.lock();
+    auto const current_focus = focus_surface.lock();
 
-    std::vector<std::shared_ptr<ms::Surface>> new_focus_tree;
-
-    for (auto item = surface; item; item = item->parent())
+    if (current_focus != new_focus_surface)
     {
-        new_focus_tree.insert(begin(new_focus_tree), item);
-    }
+        std::vector<std::shared_ptr<ms::Surface>> new_active_surfaces;
+        for (auto item = new_focus_surface; item; item = item->parent())
+        {
+            new_active_surfaces.insert(begin(new_active_surfaces), item);
+        }
 
-    std::vector<std::shared_ptr<ms::Surface>> current_focus_tree;
+        std::vector<std::shared_ptr<ms::Surface>> current_focus_tree;
 
-    for (auto item = current_focus; item; item = item->parent())
-    {
-        current_focus_tree.push_back(item);
-    }
-
-    if (surface != current_focus)
-    {
-        notified_focus_surface = surface;
         seat->reset_confinement_regions();
 
-        for (auto const& item : current_focus_tree)
+        for (auto const& item : notified_active_surfaces)
         {
-            if (find(begin(new_focus_tree), end(new_focus_tree), item) == end(new_focus_tree))
+            if (auto const active = item.lock())
             {
-                item->set_focus_state(mir_window_focus_state_unfocused);
+                current_focus_tree.push_back(active);
+                if (find(begin(new_active_surfaces), end(new_active_surfaces), active) == end(new_active_surfaces))
+                {
+                    active->set_focus_state(mir_window_focus_state_unfocused);
+
+                    // When a menu loses focus we should close and unmap it
+                    if (active->type() == mir_window_type_menu || active->type() == mir_window_type_gloss)
+                    {
+                        active->request_client_surface_close();
+                        active->hide();
+                    }
+                }
+                else if (active == current_focus)
+                {
+                    active->set_focus_state(mir_window_focus_state_active);
+                }
             }
         }
 
@@ -497,20 +468,31 @@ void msh::AbstractShell::notify_focus_locked(
             }
         }
 
-        if (surface)
+        notified_active_surfaces.clear();
+        if (notified_active_surfaces.capacity() > 100)
         {
-            update_confinement_for(surface);
+            notified_active_surfaces.shrink_to_fit();
+        }
+
+        if (new_focus_surface)
+        {
+            update_confinement_for(new_focus_surface);
 
             // Ensure the surface has really taken the focus before notifying it that it is focused
-            input_targeter->set_focus(surface);
-            surface->consume(seat->create_device_state().get());
-            surface->add_observer(focus_surface_observer);
+            input_targeter->set_focus(new_focus_surface);
+            new_focus_surface->consume(seat->create_device_state().get());
+            new_focus_surface->add_observer(focus_surface_observer);
 
-            for (auto const& item : new_focus_tree)
+            for (auto const& item : new_active_surfaces)
             {
-                if (find(begin(current_focus_tree), end(current_focus_tree), item) == end(current_focus_tree))
+                notified_active_surfaces.push_back(item);
+                if (item == new_focus_surface)
                 {
                     item->set_focus_state(mir_window_focus_state_focused);
+                }
+                else if (find(begin(current_focus_tree), end(current_focus_tree), item) == end(current_focus_tree))
+                {
+                    item->set_focus_state(mir_window_focus_state_active);
                 }
             }
         }

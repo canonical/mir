@@ -17,7 +17,6 @@
  */
 
 #include "virtual_keyboard_v1.h"
-#include "virtual-keyboard-unstable-v1_wrapper.h"
 #include "wayland_wrapper.h"
 
 #include "mir/input/event_builder.h"
@@ -217,7 +216,8 @@ private:
 
 auto mf::create_virtual_keyboard_manager_v1(
     wl_display* display,
-    std::shared_ptr<mi::InputDeviceRegistry> const& device_registry) -> std::shared_ptr<VirtualKeyboardManagerV1Global>
+    std::shared_ptr<mi::InputDeviceRegistry> const& device_registry)
+-> std::shared_ptr<mw::VirtualKeyboardManagerV1::Global>
 {
     auto ctx = std::shared_ptr<VirtualKeyboardV1Ctx>{new VirtualKeyboardV1Ctx{device_registry}};
     return std::make_shared<VirtualKeyboardManagerV1Global>(display, std::move(ctx));

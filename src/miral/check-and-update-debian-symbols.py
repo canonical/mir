@@ -4,7 +4,7 @@ updates the debian symbols if needed.
 
 USAGE: ./check-and-update-debian-symbols.py LIB_DIR_PATH LIB_NAME LIB_VERSION ABI_VERSION
 
-To use: Go to your build folder and run "make check-miral-symbols"""
+To use: Go to your build folder and run "make regenerate-miral-debian-symbols"""
 
 import sys
 from sys import stderr

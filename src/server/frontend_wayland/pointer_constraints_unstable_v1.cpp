@@ -15,7 +15,6 @@
  */
 
 #include "pointer_constraints_unstable_v1.h"
-#include "pointer-constraints-unstable-v1_wrapper.h"
 #include "wl_region.h"
 #include "wl_surface.h"
 
@@ -141,7 +140,7 @@ void LockedPointerV1::MyWaylandSurfaceObserver::attrib_changed(
         {
         case mir_pointer_locked_persistent:
         case mir_pointer_locked_oneshot:
-            if (value)
+            if (value != mir_window_focus_state_unfocused)
             {
                 wayland_executor.spawn([self=self]()
                     {
@@ -192,7 +191,7 @@ void ConfinedPointerV1::SurfaceObserver::attrib_changed(
         {
         case mir_pointer_confined_persistent:
         case mir_pointer_confined_oneshot:
-            if (value)
+            if (value != mir_window_focus_state_unfocused)
             {
                 wayland_executor.spawn([self=self]()
                     {
@@ -224,8 +223,11 @@ void ConfinedPointerV1::SurfaceObserver::attrib_changed(
 }
 }
 
-auto mir::frontend::create_pointer_constraints_unstable_v1(wl_display* display, Executor& wayland_executor, std::shared_ptr<shell::Shell> shell)
-    -> std::shared_ptr<void>
+auto mir::frontend::create_pointer_constraints_unstable_v1(
+    wl_display* display,
+    Executor& wayland_executor,
+    std::shared_ptr<shell::Shell> shell)
+-> std::shared_ptr<mw::PointerConstraintsV1::Global>
 {
     return std::make_shared<PointerConstraintsV1::Global>(display, wayland_executor, std::move(shell));
 }

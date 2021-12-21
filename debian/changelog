@@ -1,3 +1,35 @@
+mir (2.6.0) UNRELEASED; urgency=medium
+
+  [ Alan Griffiths ]
+  * New upstream release 2.6.0
+
+    - ABI summary:
+      . miral ABI unchanged at 4
+      . mircommon ABI unchanged to 8
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 1
+      . mirplatform ABI bumped to 23
+      . mirserver ABI bumped to 57
+      . mirwayland ABI unchanged to 3
+      . mirplatformgraphics ABI unchanged to 19
+      . mirinputplatform ABI unchanged at 8
+    - Enhancements:
+      . [Wayland] Error on invalid xdg_surface size
+      . [MirAL] add a `socket_fd_of(Application)` function (for use with
+        authenticating in snaps with apparmor)
+      . [MirAL] Add `WaylandExtensions::conditionally_enable()` (Fixes #2194)
+      . Add display-scale option
+      . Try harder to pick a working GBM framebuffer (Some drivers don't support
+        rendering to `RGBX` GBM buffers)
+    - Bugs fixed:
+      . [Wayland] Extension names in configuration and global names should match
+        (Fixes #2208)
+      . fix Miral shell text on Arch
+      . Differentiate between active surfaces and surfaces with keyboard input
+        (Fixes #1626, #2189)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Fri, 3 Dec 2021 09:56:10 +0000
+
 mir (2.5.0) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]

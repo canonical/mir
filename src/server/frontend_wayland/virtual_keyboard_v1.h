@@ -19,8 +19,9 @@
 #ifndef MIR_FRONTEND_VIRTUAL_KEYBOARD_V1_H
 #define MIR_FRONTEND_VIRTUAL_KEYBOARD_V1_H
 
+#include "virtual-keyboard-unstable-v1_wrapper.h"
+
 #include <memory>
-struct wl_display;
 
 namespace mir
 {
@@ -30,12 +31,10 @@ class InputDeviceRegistry;
 }
 namespace frontend
 {
-class VirtualKeyboardManagerV1Global;
-
 auto create_virtual_keyboard_manager_v1(
     wl_display* display,
     std::shared_ptr<input::InputDeviceRegistry> const& device_registry)
--> std::shared_ptr<VirtualKeyboardManagerV1Global>;
+-> std::shared_ptr<wayland::VirtualKeyboardManagerV1::Global>;
 }
 }
 

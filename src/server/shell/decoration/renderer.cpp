@@ -61,32 +61,62 @@ uint32_t const default_close_normal_button  = color(0xA0, 0x20, 0x20);
 uint32_t const default_close_active_button  = color(0xC0, 0x60, 0x60);
 uint32_t const default_button_icon          = color(0xFF, 0xFF, 0xFF);
 
-struct FontPath
+/// Font search logic should be kept in sync with examples/example-server-lib/wallpaper_config.cpp
+auto default_font() -> std::string
 {
-    char const* filename;
-    std::vector<char const*> prefixes;
-};
+    struct FontPath
+    {
+        char const* filename;
+        std::vector<char const*> prefixes;
+    };
 
-FontPath const font_paths[]{
-    FontPath{"Ubuntu-B.ttf", {
-        "ubuntu-font-family",   // Ubuntu < 18.04
-        "ubuntu",               // Ubuntu >= 18.04/Arch
-    }},
-    FontPath{"FreeSansBold.ttf", {
-        "freefont",             // Debian/Ubuntu
-        "gnu-free",             // Fedora/Arch
-    }},
-    FontPath{"DejaVuSans-Bold.ttf", {
-        "dejavu",               // Ubuntu (others?)
-        "",                     // Arch
-    }},
-};
+    FontPath const font_paths[]{
+        FontPath{"Ubuntu-B.ttf", {
+            "ubuntu-font-family",   // Ubuntu < 18.04
+            "ubuntu",               // Ubuntu >= 18.04/Arch
+        }},
+        FontPath{"FreeSansBold.ttf", {
+            "freefont",             // Debian/Ubuntu
+            "gnu-free",             // Fedora/Arch
+        }},
+        FontPath{"DejaVuSans-Bold.ttf", {
+            "dejavu",               // Ubuntu (others?)
+            "",                     // Arch
+        }},
+        FontPath{"LiberationSans-Bold.ttf", {
+            "liberation-sans",      // Fedora
+            "liberation",           // Arch
+        }},
+    };
 
-char const* const font_path_search_paths[]{
-    "/usr/share/fonts/truetype",    // Ubuntu/Debian
-    "/usr/share/fonts/TTF",         // Arch
-    "/usr/share/fonts",             // Fedora/Arch
-};
+    char const* const font_path_search_paths[]{
+        "/usr/share/fonts/truetype",    // Ubuntu/Debian
+        "/usr/share/fonts/TTF",         // Arch
+        "/usr/share/fonts",             // Fedora/Arch
+    };
+
+    std::vector<std::string> usable_search_paths;
+    for (auto const& path : font_path_search_paths)
+    {
+        if (boost::filesystem::exists(path))
+            usable_search_paths.push_back(path);
+    }
+
+    for (auto const& font : font_paths)
+    {
+        for (auto const& prefix : font.prefixes)
+        {
+            for (auto const& path : usable_search_paths)
+            {
+                auto const full_font_path = path + '/' + prefix + '/' + font.filename;
+                if (boost::filesystem::exists(full_font_path))
+                    return full_font_path;
+            }
+        }
+    }
+
+    return "";
+}
 
 inline auto area(geom::Size size) -> size_t
 {
@@ -388,29 +418,12 @@ void msd::Renderer::Text::Impl::render_glyph(
 
 auto msd::Renderer::Text::Impl::font_path() -> std::string
 {
-    // Similar to default_font() in examples/example-server-lib/wallpaper_config.cpp
-
-    std::vector<std::string> usable_search_paths;
-    for (auto const& path : font_path_search_paths)
+    auto const path = default_font();
+    if (path.empty())
     {
-        if (boost::filesystem::exists(path))
-            usable_search_paths.push_back(path);
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find a font"));
     }
-
-    for (auto const& font : font_paths)
-    {
-        for (auto const& prefix : font.prefixes)
-        {
-            for (auto const& path : usable_search_paths)
-            {
-                auto const full_font_path = path + '/' + prefix + '/' + font.filename;
-                if (boost::filesystem::exists(full_font_path))
-                    return full_font_path;
-            }
-        }
-    }
-
-    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find a font"));
+    return path;
 }
 
 auto msd::Renderer::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u32string
@@ -489,7 +502,7 @@ void msd::Renderer::update_state(WindowState const& window_state, InputState con
         titlebar_pixels.reset(); // force a reallocation next time it's needed
     }
 
-    Theme const* const new_theme = (window_state.focused_state() == mir_window_focus_state_focused) ?
+    Theme const* const new_theme = (window_state.focused_state() != mir_window_focus_state_unfocused) ?
         &focused_theme :
         &unfocused_theme;
 

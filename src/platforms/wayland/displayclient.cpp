@@ -274,12 +274,17 @@ mgw::DisplayClient::Output::~Output()
         eglDestroyContext(owner->egldisplay, eglctx);
 }
 
+
+// If building against newer Wayland protocol definitions we may miss trailing fields
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 wl_output_listener const mgw::DisplayClient::Output::output_listener = {
     &geometry,
     &mode,
     &done,
     &scale,
 };
+#pragma GCC diagnostic pop
 
 void mgw::DisplayClient::Output::done(void* data, struct wl_output* /*wl_output*/)
 {

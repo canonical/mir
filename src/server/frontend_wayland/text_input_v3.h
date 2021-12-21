@@ -19,8 +19,9 @@
 #ifndef MIR_FRONTEND_TEXT_INPUT_V3_H
 #define MIR_FRONTEND_TEXT_INPUT_V3_H
 
+#include "text-input-unstable-v3_wrapper.h"
+
 #include <memory>
-struct wl_display;
 
 namespace mir
 {
@@ -31,13 +32,11 @@ class TextInputHub;
 }
 namespace frontend
 {
-class TextInputManagerV3Global;
-
 auto create_text_input_manager_v3(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<scene::TextInputHub> const& text_input_hub)
--> std::shared_ptr<TextInputManagerV3Global>;
+-> std::shared_ptr<wayland::TextInputManagerV3::Global>;
 }
 }
 

@@ -33,7 +33,7 @@ public:
     // It does some type conversion and calls the virtual method, which should be overridden somewhere in Mir
     Emitter thunk_impl() const;
 
-    // the bit of this objects vtable that holds this method
+    // the bit of this object's vtable that holds this method
     Emitter vtable_initialiser() const;
 
     // If this request destroys the object

@@ -245,7 +245,7 @@ int main(int argc, char** argv)
         auto const interface_name = arg->get_attribute_value("interface");
         if (constructor_request->get_name() == "event")
         {
-            // An new_id in an event means the server has constructed the object,
+            // A new_id in an event means the server has constructed the object,
             // and hence will choose the ID.
             auto const parent_interface = constructor_request->get_parent();
             auto const parent_name = parent_interface->get_attribute_value("name");

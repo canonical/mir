@@ -219,7 +219,7 @@ void mf::WlPointer::leave(std::optional<MirPointerEvent const*> event)
         surface_under_cursor.value().raw_resource());
     current_position = std::nullopt;
     // Don't clear current_buttons, their state can survive leaving and entering surfaces (note we currently have logic
-    // to prevent changing surfaces while buttons are pressed, we wouln't need to clear current_buttons regardless)
+    // to prevent changing surfaces while buttons are pressed, we wouldn't need to clear current_buttons regardless)
     needs_frame = true;
     surface_under_cursor = {};
     destroy_listener_id = {};
