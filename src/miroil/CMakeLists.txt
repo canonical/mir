@@ -36,6 +36,8 @@ add_library(miroil SHARED
     mirbuffer.cpp ${miroil_include}/miroil/mirbuffer.h
     persist_display_config.cpp ${miroil_include}/miroil/persist_display_config.h
     display_configuration_policy.cpp ${miroil_include}/miroil/display_configuration_policy.h
+    display_configuration_controller_wrapper.cpp ${miroil_include}/miroil/display_configuration_controller_wrapper.h
+    display_listener_wrapper.cpp ${miroil_include}/miroil/display_listener_wrapper.h
     eventdispatch.cpp ${miroil_include}/miroil/eventdispatch.h
     event_builder.cpp ${miroil_include}/miroil/event_builder.h
     input_device.cpp ${miroil_include}/miroil/input_device.h

@@ -34,7 +34,8 @@ public:
 
     void add_display(mir::geometry::Rectangle const& area);
     void remove_display(mir::geometry::Rectangle const& area);
-    
+
+private:
     std::shared_ptr<mir::compositor::DisplayListener> const& display_listener;     
 };
 

@@ -7,6 +7,13 @@ global:
     miroil::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
     miroil::DisplayConfigurationPolicy::DisplayConfigurationPolicy*;
     miroil::DisplayConfigurationPolicy::operator*;
+    miroil::DisplayConfigurationControllerWrapper::?DisplayConfigurationControllerWrapper*;
+    miroil::DisplayConfigurationControllerWrapper::DisplayConfigurationControllerWrapper*;
+    miroil::DisplayConfigurationControllerWrapper::set_base_configuration*;
+    miroil::DisplayListenerWrapper::?DisplayListenerWrapper*;
+    miroil::DisplayListenerWrapper::DisplayListenerWrapper*;
+    miroil::DisplayListenerWrapper::add_display*;
+    miroil::DisplayListenerWrapper::remove_display*;
     miroil::DisplayConfigurationStorage::?DisplayConfigurationStorage*;
     miroil::Edid::Descriptor::string_value*;
     miroil::Edid::parse_data*;

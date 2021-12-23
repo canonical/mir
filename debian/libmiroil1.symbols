@@ -3,6 +3,8 @@ libmiroil.so.1 libmiroil1 #MINVER#
  (c++)"miroil::Compositor::~Compositor()@MIROIL_1.0" 2.6.0
  (c++)"miroil::DisplayConfigurationPolicy::DisplayConfigurationPolicy()@MIROIL_1.0" 2.6.0
  (c++)"miroil::DisplayConfigurationPolicy::~DisplayConfigurationPolicy()@MIROIL_1.0" 2.6.0
+ (c++)"miroil::DisplayListenerWrapper::DisplayListenerWrapper()@MIROIL_1.0" 2.6.0
+ (c++)"miroil::DisplayListenerWrapper::~DisplayListenerWrapper()@MIROIL_1.0" 2.6.0
  (c++)"miroil::Edid::Descriptor::string_value[abi:cxx11]() const@MIROIL_1.0" 2.6.0
  (c++)"miroil::Edid::parse_data(std::vector<unsigned char, std::allocator<unsigned char> > const&)@MIROIL_1.0" 2.6.0
  (c++)"miroil::EventBuilder::EventBuilder()@MIROIL_1.0" 2.6.0
