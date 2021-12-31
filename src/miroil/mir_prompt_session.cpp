@@ -1,7 +1,5 @@
 #include <miroil/mir_prompt_session.h>
-#include <mir_toolkit/mir_prompt_session.h>
 #include <mir/uncaught.h>
-#include "../client/mir_prompt_session.h"
 
 miroil::MirPromptSession::MirPromptSession(::MirPromptSession * prompt_session)
 {
@@ -29,7 +27,8 @@ bool miroil::MirPromptSession::operator==(MirPromptSession const& other)
     return prompt_session == other.prompt_session;
 }
 
-bool miroil::MirPromptSession::new_fds_for_prompt_providers(unsigned int no_of_fds, MirClientFdCallback callback, void * context)
+bool miroil::MirPromptSession::new_fds_for_prompt_providers(unsigned int /*no_of_fds*/, MirClientFdCallback /*callback*/, void * /*context*/)
 {
-    return mir_prompt_session_new_fds_for_prompt_providers(prompt_session, no_of_fds, callback, context);   
+//    return mir_prompt_session_new_fds_for_prompt_providers(prompt_session, no_of_fds, callback, context);
+    return false;
 }

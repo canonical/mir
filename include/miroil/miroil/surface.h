@@ -52,8 +52,6 @@ public:
     
     bool is_confined_to_window();
     void set_orientation(MirOrientation orientation);
-    void set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
-                        std::string const& variant, std::string const& options);
 
     void set_confine_pointer_state(MirPointerConfinementState state);                        
     std::shared_ptr<mir::scene::Surface> parent() const;

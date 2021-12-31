@@ -43,10 +43,12 @@ add_library(miroil SHARED
     input_device.cpp ${miroil_include}/miroil/input_device.h
     input_device_observer.cpp ${miroil_include}/miroil/input_device_observer.h
     mir_server_hooks.cpp ${miroil_include}/miroil/mir_server_hooks.h
+    mir_prompt_session.cpp ${miroil_include}/miroil/mir_prompt_session.h
     open_gl_context.cpp ${miroil_include}/miroil/open_gl_context.h    
     prompt_session_listener.cpp ${miroil_include}/miroil/prompt_session_listener.h
     prompt_session_manager.cpp ${miroil_include}/miroil/prompt_session_manager.h    
     set_compositor.cpp ${miroil_include}/miroil/set_compositor.h
+    surface.cpp ${miroil_include}/miroil/surface.h
     ${miroil_include}/miroil/display_configuration_storage.h
     ${miroil_include}/miroil/display_id.h
 )
@@ -86,7 +88,7 @@ if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols
     if (MIR_DPKG_GENSYMBOLS)
         add_custom_target(check-miroil-symbols ALL
             DEPENDS miroil ${PROJECT_SOURCE_DIR}/debian/libmiroil${MIROIL_ABI}.symbols
-            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil 2.4.0 ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
+            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil 2.7.0 ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             VERBATIM)
     endif()

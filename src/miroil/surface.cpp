@@ -37,8 +37,6 @@ public:
     void frame_posted(mir::scene::Surface const* surf, int frames_available, mir::geometry::Size const& size) override;
     void hidden_set_to(mir::scene::Surface const* surf, bool hide) override;
     void input_consumed(mir::scene::Surface const* surf, MirEvent const* event) override;
-    void keymap_changed(mir::scene::Surface const* surf, MirInputDeviceId id, std::string const& model,
-                                std::string const& layout, std::string const& variant, std::string const& options) override;
     void moved_to(mir::scene::Surface const* surf, mir::geometry::Point const& top_left) override;
     void orientation_set_to(mir::scene::Surface const* surf, MirOrientation orientation) override;
     void placed_relative(mir::scene::Surface const* surf, mir::geometry::Rectangle const& placement) override;
@@ -112,12 +110,6 @@ void SurfaceObserverImpl::hidden_set_to(mir::scene::Surface const* surf, bool hi
 void SurfaceObserverImpl::input_consumed(mir::scene::Surface const* surf, MirEvent const* event)
 {
     listener->input_consumed(surf, event);
-}
-
-void SurfaceObserverImpl::keymap_changed(mir::scene::Surface const* surf, MirInputDeviceId id, std::string const& model,
-                            std::string const& layout, std::string const& variant, std::string const& options)
-{
-    listener->keymap_changed(surf, id, model, layout, variant, options);
 }
 
 void SurfaceObserverImpl::moved_to(mir::scene::Surface const* surf, mir::geometry::Point const& top_left)
@@ -207,12 +199,6 @@ mir::graphics::RenderableList Surface::generate_renderables(miroil::CompositorID
 void Surface::set_orientation(MirOrientation orientation)
 {
     wrapped->set_orientation(orientation);
-}
-
-void Surface::set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
-                         std::string const& variant, std::string const& options)
-{
-    wrapped->set_keymap(id, model, layout, variant, options);
 }
 
 void Surface::set_confine_pointer_state(MirPointerConfinementState state)
