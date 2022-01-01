@@ -41,7 +41,7 @@ public:
     void orientation_set_to(mir::scene::Surface const* surf, MirOrientation orientation) override;
     void placed_relative(mir::scene::Surface const* surf, mir::geometry::Rectangle const& placement) override;
     void reception_mode_set_to(mir::scene::Surface const* /*surf*/, mir::input::InputReceptionMode /*mode*/) override {};
-    void renamed(mir::scene::Surface const* surf, char const* name);    
+    void renamed(mir::scene::Surface const* surf, char const* name) override;
     void start_drag_and_drop(mir::scene::Surface const* surf, std::vector<uint8_t> const& handle) override;
     void transformation_set_to(mir::scene::Surface const* surf, glm::mat4 const& t) override;
     void window_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& window_size) override;
