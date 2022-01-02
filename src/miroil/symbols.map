@@ -88,6 +88,7 @@ global:
     miroil::Surface::remove_observer*;
     miroil::Surface::set_confine_pointer_state*;
     miroil::Surface::set_orientation*;
+    miroil::Surface::set_keymap*;
     miroil::Surface::top_left*;
     miroil::Surface::visible*;
     miroil::SurfaceObserver::?SurfaceObserver*;

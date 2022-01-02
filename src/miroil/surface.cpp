@@ -17,146 +17,156 @@
 #include <miroil/surface_observer.h>
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_observer.h"
+#include "mir/log.h"
 
-namespace miroil {
-
-class SurfaceObserverImpl : public mir::scene::SurfaceObserver
+class miroil::SurfaceObserverImpl : public mir::scene::SurfaceObserver
 {
 public:
-    SurfaceObserverImpl(std::shared_ptr<miroil::SurfaceObserver> const & wrapped);
-    virtual ~SurfaceObserverImpl();
-    
-    void alpha_set_to(mir::scene::Surface const* surf, float alpha) override;
-    void application_id_set_to(mir::scene::Surface const* surf, std::string const& application_id) override;
-    void attrib_changed(mir::scene::Surface const* surf, MirWindowAttrib attrib, int value) override;
-    void client_surface_close_requested(mir::scene::Surface const* surf) override;
-    void content_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& content_size) override;
-    void cursor_image_removed(mir::scene::Surface const* surf) override;
-    void cursor_image_set_to(mir::scene::Surface const* surf, mir::graphics::CursorImage const& image) override;
-    void depth_layer_set_to(mir::scene::Surface const* surf, MirDepthLayer depth_layer) override;
-    void frame_posted(mir::scene::Surface const* surf, int frames_available, mir::geometry::Size const& size) override;
-    void hidden_set_to(mir::scene::Surface const* surf, bool hide) override;
-    void input_consumed(mir::scene::Surface const* surf, MirEvent const* event) override;
-    void moved_to(mir::scene::Surface const* surf, mir::geometry::Point const& top_left) override;
-    void orientation_set_to(mir::scene::Surface const* surf, MirOrientation orientation) override;
-    void placed_relative(mir::scene::Surface const* surf, mir::geometry::Rectangle const& placement) override;
-    void reception_mode_set_to(mir::scene::Surface const* /*surf*/, mir::input::InputReceptionMode /*mode*/) override {};
-    void renamed(mir::scene::Surface const* surf, char const* name) override;
-    void start_drag_and_drop(mir::scene::Surface const* surf, std::vector<uint8_t> const& handle) override;
-    void transformation_set_to(mir::scene::Surface const* surf, glm::mat4 const& t) override;
-    void window_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& window_size) override;
-    
+  SurfaceObserverImpl(std::shared_ptr<miroil::SurfaceObserver> const &wrapped);
+  virtual ~SurfaceObserverImpl();
+
+  void alpha_set_to(mir::scene::Surface const *surf, float alpha) override;
+  void application_id_set_to(mir::scene::Surface const *surf,
+                             std::string const &application_id) override;
+  void attrib_changed(mir::scene::Surface const *surf, MirWindowAttrib attrib,
+                      int value) override;
+  void client_surface_close_requested(mir::scene::Surface const *surf) override;
+  void content_resized_to(mir::scene::Surface const *surf,
+                          mir::geometry::Size const &content_size) override;
+  void cursor_image_removed(mir::scene::Surface const *surf) override;
+  void cursor_image_set_to(mir::scene::Surface const *surf,
+                           mir::graphics::CursorImage const &image) override;
+  void depth_layer_set_to(mir::scene::Surface const *surf,
+                          MirDepthLayer depth_layer) override;
+  void frame_posted(mir::scene::Surface const *surf, int frames_available,
+                    mir::geometry::Size const &size) override;
+  void hidden_set_to(mir::scene::Surface const *surf, bool hide) override;
+  void input_consumed(mir::scene::Surface const *surf,
+                      MirEvent const *event) override;
+  void moved_to(mir::scene::Surface const *surf,
+                mir::geometry::Point const &top_left) override;
+  void orientation_set_to(mir::scene::Surface const *surf,
+                          MirOrientation orientation) override;
+  void placed_relative(mir::scene::Surface const *surf,
+                       mir::geometry::Rectangle const &placement) override;
+  void
+  reception_mode_set_to(mir::scene::Surface const * /*surf*/,
+                        mir::input::InputReceptionMode /*mode*/) override{};
+  void renamed(mir::scene::Surface const *surf, char const *name) override;
+  void start_drag_and_drop(mir::scene::Surface const *surf,
+                           std::vector<uint8_t> const &handle) override;
+  void transformation_set_to(mir::scene::Surface const *surf,
+                             glm::mat4 const &t) override;
+  void window_resized_to(mir::scene::Surface const *surf,
+                         mir::geometry::Size const &window_size) override;
+
 private:
-    std::shared_ptr<miroil::SurfaceObserver> listener;
+  std::shared_ptr<miroil::SurfaceObserver> listener;
 };
 
-SurfaceObserverImpl::SurfaceObserverImpl(std::shared_ptr<miroil::SurfaceObserver> const & wrapped)
+miroil::SurfaceObserverImpl::SurfaceObserverImpl(std::shared_ptr<miroil::SurfaceObserver> const & wrapped)
 : listener(wrapped)
 {
 }
 
-SurfaceObserverImpl::~SurfaceObserverImpl() = default;
+miroil::SurfaceObserverImpl::~SurfaceObserverImpl() = default;
 
-void SurfaceObserverImpl::alpha_set_to(mir::scene::Surface const* surf, float alpha)
+void miroil::SurfaceObserverImpl::alpha_set_to(mir::scene::Surface const* surf, float alpha)
 {
     listener->alpha_set_to(surf, alpha);
 }
 
-void SurfaceObserverImpl::application_id_set_to(mir::scene::Surface const* surf, std::string const& application_id)
+void miroil::SurfaceObserverImpl::application_id_set_to(mir::scene::Surface const* surf, std::string const& application_id)
 {
     listener->application_id_set_to(surf, application_id);
 }
 
-void SurfaceObserverImpl::attrib_changed(mir::scene::Surface const* surf, MirWindowAttrib attrib, int value)
+void miroil::SurfaceObserverImpl::attrib_changed(mir::scene::Surface const* surf, MirWindowAttrib attrib, int value)
 {
     listener->attrib_changed(surf, attrib, value);
 }
 
-void SurfaceObserverImpl::client_surface_close_requested(mir::scene::Surface const* surf)
+void miroil::SurfaceObserverImpl::client_surface_close_requested(mir::scene::Surface const* surf)
 {
     listener->client_surface_close_requested(surf);
 }
 
-void SurfaceObserverImpl::content_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& content_size)
+void miroil::SurfaceObserverImpl::content_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& content_size)
 {
     listener->content_resized_to(surf, content_size);
 }
 
-void SurfaceObserverImpl::cursor_image_removed(mir::scene::Surface const* surf)
+void miroil::SurfaceObserverImpl::cursor_image_removed(mir::scene::Surface const* surf)
 {
     listener->cursor_image_removed(surf);
 }
 
-void SurfaceObserverImpl::cursor_image_set_to(mir::scene::Surface const* surf, mir::graphics::CursorImage const& image)
+void miroil::SurfaceObserverImpl::cursor_image_set_to(mir::scene::Surface const* surf, mir::graphics::CursorImage const& image)
 {
     listener->cursor_image_set_to(surf, image);
 }
 
-void SurfaceObserverImpl::depth_layer_set_to(mir::scene::Surface const* surf, MirDepthLayer depth_layer)
+void miroil::SurfaceObserverImpl::depth_layer_set_to(mir::scene::Surface const* surf, MirDepthLayer depth_layer)
 {
     listener->depth_layer_set_to(surf, depth_layer);
 }
 
-void SurfaceObserverImpl::frame_posted(mir::scene::Surface const* surf, int frames_available, mir::geometry::Size const& size)
+void miroil::SurfaceObserverImpl::frame_posted(mir::scene::Surface const* surf, int frames_available, mir::geometry::Size const& size)
 {
     listener->frame_posted(surf, frames_available, size);
 }
 
-void SurfaceObserverImpl::hidden_set_to(mir::scene::Surface const* surf, bool hide)
+void miroil::SurfaceObserverImpl::hidden_set_to(mir::scene::Surface const* surf, bool hide)
 {
     listener->hidden_set_to(surf, hide);
 }
 
-void SurfaceObserverImpl::input_consumed(mir::scene::Surface const* surf, MirEvent const* event)
+void miroil::SurfaceObserverImpl::input_consumed(mir::scene::Surface const* surf, MirEvent const* event)
 {
     listener->input_consumed(surf, event);
 }
 
-void SurfaceObserverImpl::moved_to(mir::scene::Surface const* surf, mir::geometry::Point const& top_left)
+void miroil::SurfaceObserverImpl::moved_to(mir::scene::Surface const* surf, mir::geometry::Point const& top_left)
 {
     listener->moved_to(surf, top_left);
 }
 
-void SurfaceObserverImpl::orientation_set_to(mir::scene::Surface const* surf, MirOrientation orientation)
+void miroil::SurfaceObserverImpl::orientation_set_to(mir::scene::Surface const* surf, MirOrientation orientation)
 {
     listener->orientation_set_to(surf, orientation);
 }
 
-void SurfaceObserverImpl::placed_relative(mir::scene::Surface const* surf, mir::geometry::Rectangle const& placement)
+void miroil::SurfaceObserverImpl::placed_relative(mir::scene::Surface const* surf, mir::geometry::Rectangle const& placement)
 {
     listener->placed_relative(surf, placement);
 }
 
-void SurfaceObserverImpl::renamed(mir::scene::Surface const* surf, char const* name)
+void miroil::SurfaceObserverImpl::renamed(mir::scene::Surface const* surf, char const* name)
 {
     listener->renamed(surf, name);
 }
 
-void SurfaceObserverImpl::start_drag_and_drop(mir::scene::Surface const* surf, std::vector<uint8_t> const& handle)
+void miroil::SurfaceObserverImpl::start_drag_and_drop(mir::scene::Surface const* surf, std::vector<uint8_t> const& handle)
 {
     listener->start_drag_and_drop(surf, handle);
 }
 
-void SurfaceObserverImpl::transformation_set_to(mir::scene::Surface const* surf, glm::mat4 const& t)
+void miroil::SurfaceObserverImpl::transformation_set_to(mir::scene::Surface const* surf, glm::mat4 const& t)
 {
     listener->transformation_set_to(surf, t);
 }
 
-void SurfaceObserverImpl::window_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& window_size)
+void miroil::SurfaceObserverImpl::window_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& window_size)
 {
     listener->window_resized_to(surf, window_size);
 }
 
-}
-
-namespace miroil {
-    
-Surface::Surface(std::shared_ptr<mir::scene::Surface> wrapped)
-: wrapped(wrapped)
+miroil::Surface::Surface(std::shared_ptr<mir::scene::Surface> wrapped) :
+     wrapped(wrapped)
 {    
 }
 
-void Surface::add_observer(std::shared_ptr<miroil::SurfaceObserver> const& observer)
+void miroil::Surface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
 {
     auto it = observers.find(observer);
     if (it == observers.end()) {
@@ -167,12 +177,13 @@ void Surface::add_observer(std::shared_ptr<miroil::SurfaceObserver> const& obser
     }
 }
 
-bool Surface::is_confined_to_window()
+bool miroil::Surface::is_confined_to_window()
 {
-    return (wrapped->confine_pointer_state() == mir_pointer_confined_oneshot || wrapped->confine_pointer_state() == mir_pointer_confined_persistent);
+    return (wrapped->confine_pointer_state() == mir_pointer_confined_oneshot ||
+            wrapped->confine_pointer_state() == mir_pointer_confined_persistent);
 }
 
-void Surface::remove_observer(std::shared_ptr<miroil::SurfaceObserver> const& observer)
+void miroil::Surface::remove_observer(std::shared_ptr<miroil::SurfaceObserver> const& observer)
 {
     auto it = observers.find(observer);
     if (it != observers.end()) {        
@@ -181,54 +192,59 @@ void Surface::remove_observer(std::shared_ptr<miroil::SurfaceObserver> const& ob
     }
 }
 
-mir::scene::Surface * Surface::getWrapped() const
+auto miroil::Surface::getWrapped() const -> mir::scene::Surface*
 {
     return wrapped.get();
 }
 
-int Surface::buffers_ready_for_compositor(void const* compositor_id) const
+int miroil::Surface::buffers_ready_for_compositor(void const* compositor_id) const
 {
     return wrapped->buffers_ready_for_compositor(compositor_id);
 }
 
-mir::graphics::RenderableList Surface::generate_renderables(miroil::CompositorID id) const
+mir::graphics::RenderableList miroil::Surface::generate_renderables(miroil::CompositorID id) const
 {
     return wrapped->generate_renderables(id);
 }
 
-void Surface::set_orientation(MirOrientation orientation)
+void miroil::Surface::set_orientation(MirOrientation orientation)
 {
     wrapped->set_orientation(orientation);
 }
 
-void Surface::set_confine_pointer_state(MirPointerConfinementState state)
+void miroil::Surface::set_confine_pointer_state(MirPointerConfinementState state)
 {
     wrapped->set_confine_pointer_state(state);
 }
 
-std::shared_ptr<mir::scene::Surface> Surface::parent() const
+std::shared_ptr<mir::scene::Surface> miroil::Surface::parent() const
 {
     return wrapped->parent();
 }
 
-mir::geometry::Point Surface::top_left() const
+mir::geometry::Point miroil::Surface::top_left() const
 {
     return wrapped->top_left();
 }
 
-bool Surface::visible() const
+bool miroil::Surface::visible() const
 {
     return wrapped->visible();
 }
 
-int Surface::configure(MirWindowAttrib attrib, int value)
+int miroil::Surface::configure(MirWindowAttrib attrib, int value)
 {
     return wrapped->configure(attrib, value);
 }
 
-int Surface::query(MirWindowAttrib attrib) const
+int miroil::Surface::query(MirWindowAttrib attrib) const
 {
     return wrapped->query(attrib);
 }
 
+void miroil::Surface::set_keymap(MirInputDeviceId /*id*/, const std::string& /*model*/,
+                         const std::string& /*layout*/, const std::string& /*variant*/,
+                         const std::string& /*options*/)
+{
+    mir::log_warning("Stubbed function miroil::Surface::set_keymap() called - per-surface keymaps no longer supported");
 }

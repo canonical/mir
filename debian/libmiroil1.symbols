@@ -91,6 +91,7 @@ libmiroil.so.1 libmiroil1 #MINVER#
  (c++)"miroil::Surface::query(MirWindowAttrib) const@MIROIL_1.0" 2.7.0
  (c++)"miroil::Surface::remove_observer(std::shared_ptr<miroil::SurfaceObserver> const&)@MIROIL_1.0" 2.7.0
  (c++)"miroil::Surface::set_confine_pointer_state(MirPointerConfinementState)@MIROIL_1.0" 2.7.0
+ (c++)"miroil::Surface::set_keymap(long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIROIL_1.0" 2.7.0
  (c++)"miroil::Surface::set_orientation(MirOrientation)@MIROIL_1.0" 2.7.0
  (c++)"miroil::Surface::top_left() const@MIROIL_1.0" 2.7.0
  (c++)"miroil::Surface::visible() const@MIROIL_1.0" 2.7.0

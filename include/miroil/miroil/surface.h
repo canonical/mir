@@ -63,6 +63,9 @@ public:
     int configure(MirWindowAttrib attrib, int value);
     // TODO a legacy of old interactions and needs removing
     int query(MirWindowAttrib attrib) const;
+    // TODO a legacy of old interactions and needs removing
+    void set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
+                            std::string const& variant, std::string const& options);
 
 private:
     std::shared_ptr<mir::scene::Surface> wrapped;
