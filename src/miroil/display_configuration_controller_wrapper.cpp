@@ -19,14 +19,14 @@
 
 namespace miroil {
 
-DisplayConfigurationControllerWrapper::DisplayConfigurationControllerWrapper(std::shared_ptr<mir::shell::DisplayConfigurationController> const & wrapped)
-: wrapped(wrapped)
-{
-}
-
 void DisplayConfigurationControllerWrapper::set_base_configuration(std::shared_ptr<mir::graphics::DisplayConfiguration> const& conf)
 {
-    wrapped->set_base_configuration(conf);    
+    wrapped->set_base_configuration(conf);
+}
+
+DisplayConfigurationControllerWrapper::DisplayConfigurationControllerWrapper(std::shared_ptr<mir::shell::DisplayConfigurationController> const & wrapped)
+    : wrapped(wrapped)
+{
 }
 
 }

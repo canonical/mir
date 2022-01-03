@@ -81,7 +81,7 @@ global:
     miroil::Surface::buffers_ready_for_compositor*;
     miroil::Surface::configure*;
     miroil::Surface::generate_renderables*;
-    miroil::Surface::getWrapped*;
+    miroil::Surface::get_wrapped*;
     miroil::Surface::is_confined_to_window*;
     miroil::Surface::parent*;
     miroil::Surface::query*;

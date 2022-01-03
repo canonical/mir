@@ -85,7 +85,7 @@ libmiroil.so.1 libmiroil1 #MINVER#
  (c++)"miroil::Surface::buffers_ready_for_compositor(void const*) const@MIROIL_1.0" 2.7.0
  (c++)"miroil::Surface::configure(MirWindowAttrib, int)@MIROIL_1.0" 2.7.0
  (c++)"miroil::Surface::generate_renderables(void const*) const@MIROIL_1.0" 2.7.0
- (c++)"miroil::Surface::getWrapped() const@MIROIL_1.0" 2.7.0
+ (c++)"miroil::Surface::get_wrapped() const@MIROIL_1.0" 2.7.0
  (c++)"miroil::Surface::is_confined_to_window()@MIROIL_1.0" 2.7.0
  (c++)"miroil::Surface::parent() const@MIROIL_1.0" 2.7.0
  (c++)"miroil::Surface::query(MirWindowAttrib) const@MIROIL_1.0" 2.7.0

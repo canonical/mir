@@ -192,7 +192,7 @@ void miroil::Surface::remove_observer(std::shared_ptr<miroil::SurfaceObserver> c
     }
 }
 
-auto miroil::Surface::getWrapped() const -> mir::scene::Surface*
+auto miroil::Surface::get_wrapped() const -> mir::scene::Surface*
 {
     return wrapped.get();
 }
