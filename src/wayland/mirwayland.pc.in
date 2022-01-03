@@ -4,7 +4,7 @@ includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@/mirwayland
 
 Name: mirwayland
 Description: Mir Wayland library
-Version: @MIRAL_VERSION@
-Requires: mircommon, mircore
+Version: @MIR_VERSION@
+Requires: mircommon mircore wayland-server
 Libs: -L${libdir} -lmirwayland
 Cflags: -I${includedir}
