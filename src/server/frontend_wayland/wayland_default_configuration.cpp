@@ -126,6 +126,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         {
             return mf::create_virtual_keyboard_manager_v1(ctx.display, ctx.input_device_registry);
         }),
+    make_extension_builder<mw::TextInputManagerV2>([](auto const& ctx)
+        {
+            return mf::create_text_input_manager_v2(ctx.display, ctx.wayland_executor, ctx.text_input_hub);
+        }),
     make_extension_builder<mw::TextInputManagerV3>([](auto const& ctx)
         {
             return mf::create_text_input_manager_v3(ctx.display, ctx.wayland_executor, ctx.text_input_hub);
@@ -233,6 +237,7 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::XdgWmBase::interface_name,
         mw::XdgShellV6::interface_name,
         mw::XdgOutputManagerV1::interface_name,
+        mw::TextInputManagerV2::interface_name,
         mw::TextInputManagerV3::interface_name};
 }
 
