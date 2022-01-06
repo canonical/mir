@@ -32,6 +32,7 @@
 #include "relative_pointer_unstable_v1.h"
 #include "virtual_keyboard_v1.h"
 #include "text_input_v3.h"
+#include "text_input_v2.h"
 #include "input_method_v2.h"
 
 #include "mir/graphics/platform.h"
