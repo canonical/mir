@@ -282,6 +282,7 @@ mf::TextInputV3::TextInputV3(
 mf::TextInputV3::~TextInputV3()
 {
     seat.remove_focus_listener(client, this);
+    ctx->text_input_hub->deactivate_handler(handler);
 }
 
 void mf::TextInputV3::send_text_change(ms::TextInputChange const& change)
