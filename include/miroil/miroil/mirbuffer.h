@@ -35,9 +35,7 @@ public:
     explicit GLBuffer(std::shared_ptr<mir::graphics::Buffer> const& buffer);
 
     operator bool() const;
-#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
     bool has_alpha_channel() const;
-#endif
     mir::geometry::Size size() const;
 
     void reset();

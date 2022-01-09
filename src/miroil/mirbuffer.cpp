@@ -80,14 +80,12 @@ miroil::GLBuffer::operator bool() const
     return !!wrapped;
 }
 
-#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 3, 0)
 bool miroil::GLBuffer::has_alpha_channel() const
 {
     return wrapped &&
         (wrapped->pixel_format() == mir_pixel_format_abgr_8888
         || wrapped->pixel_format() == mir_pixel_format_argb_8888);
 }
-#endif
 
 mir::geometry::Size miroil::GLBuffer::size() const
 {
