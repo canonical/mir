@@ -735,3 +735,25 @@ TEST(ObserverMultiplexer, unregister_interest_prevents_dispatch_of_already_queue
 
     EXPECT_THAT(call_count, Eq(1));
 }
+
+TEST(ObserverMultiplexer, reports_if_empty)
+{
+    using namespace testing;
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
+    auto observer_one = std::make_shared<NiceMock<MockObserver>>();
+    auto observer_two = std::make_shared<NiceMock<MockObserver>>();
+
+    EXPECT_THAT(multiplexer.empty(), Eq(true));
+    multiplexer.register_interest(observer_one);
+    EXPECT_THAT(multiplexer.empty(), Eq(false));
+    multiplexer.register_interest(observer_two);
+    EXPECT_THAT(multiplexer.empty(), Eq(false));
+    multiplexer.unregister_interest(*observer_one);
+    EXPECT_THAT(multiplexer.empty(), Eq(false));
+    multiplexer.unregister_interest(*observer_two);
+    EXPECT_THAT(multiplexer.empty(), Eq(true));
+
+    executor.drain_work();
+}
