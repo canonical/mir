@@ -21,16 +21,17 @@
 
 #include "wayland_wrapper.h"
 #include "keyboard_helper.h"
+#include "wl_seat.h"
 
 namespace mir
 {
 namespace frontend
 {
 class WlSurface;
-class WlSeat;
 
 class WlKeyboard
     : public wayland::Keyboard,
+      private WlSeat::FocusListener,
       private KeyboardCallbacks
 {
 public:
@@ -39,12 +40,14 @@ public:
     ~WlKeyboard();
 
     void handle_event(MirInputEvent const* event, WlSurface& surface);
-    void focussed(WlSurface& surface, bool should_be_focused);
 
 private:
+    WlSeat& seat;
     std::unique_ptr<KeyboardHelper> const helper;
     wayland::Weak<WlSurface> focused_surface;
-    wayland::DestroyListenerId destroy_listener_id;
+
+    /// WlSeat::FocusListener override
+    void focus_on(WlSurface* surface) override;
 
     /// KeyboardCallbacks overrides
     /// @{
