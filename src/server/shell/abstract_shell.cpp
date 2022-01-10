@@ -138,7 +138,7 @@ void msh::AbstractShell::close_session(
     for (auto surface = session->default_surface(); surface; surface = session->surface_after(surface))
         if (!surfaces.insert(surface).second) break;
 
-    // this is an ugly kludge to remove the each of the surfaces owned by the session
+    // this is an ugly kludge to remove each of the surfaces owned by the session
     // We could likely do this better (and atomically) within the WindowManager
     for (auto const& surface : surfaces)
     {
@@ -412,36 +412,20 @@ void msh::AbstractShell::set_focus_to(
 
 void msh::AbstractShell::notify_focus_locked(
     std::unique_lock<std::mutex> const& /*lock*/,
-    std::shared_ptr<ms::Surface> const& new_active_surface)
+    std::shared_ptr<ms::Surface> const& new_focus_surface)
 {
-    auto const current_focus = notified_keyboard_focus_surface.lock();
+    auto const current_focus = focus_surface.lock();
 
-    // Don't give keyboard focus to popups
-    auto new_keyboard_focus = new_active_surface;
-    while (new_keyboard_focus)
-    {
-        auto const type = new_keyboard_focus->type();
-        if (type != mir_window_type_gloss &&
-            type != mir_window_type_tip &&
-            type != mir_window_type_menu)
-        {
-            break;
-        }
-        new_keyboard_focus = new_keyboard_focus->parent();
-    }
-
-    if (current_focus != new_keyboard_focus || notified_topmost_active_surface.lock() != new_active_surface)
+    if (current_focus != new_focus_surface)
     {
         std::vector<std::shared_ptr<ms::Surface>> new_active_surfaces;
-        for (auto item = new_active_surface; item; item = item->parent())
+        for (auto item = new_focus_surface; item; item = item->parent())
         {
             new_active_surfaces.insert(begin(new_active_surfaces), item);
         }
 
         std::vector<std::shared_ptr<ms::Surface>> current_focus_tree;
 
-        notified_keyboard_focus_surface = new_keyboard_focus;
-        notified_topmost_active_surface = new_active_surface;
         seat->reset_confinement_regions();
 
         for (auto const& item : notified_active_surfaces)
@@ -490,19 +474,19 @@ void msh::AbstractShell::notify_focus_locked(
             notified_active_surfaces.shrink_to_fit();
         }
 
-        if (new_active_surface)
+        if (new_focus_surface)
         {
-            update_confinement_for(new_active_surface);
+            update_confinement_for(new_focus_surface);
 
             // Ensure the surface has really taken the focus before notifying it that it is focused
-            input_targeter->set_focus(new_active_surface);
-            new_active_surface->consume(seat->create_device_state().get());
-            new_active_surface->add_observer(focus_surface_observer);
+            input_targeter->set_focus(new_focus_surface);
+            new_focus_surface->consume(seat->create_device_state().get());
+            new_focus_surface->add_observer(focus_surface_observer);
 
             for (auto const& item : new_active_surfaces)
             {
                 notified_active_surfaces.push_back(item);
-                if (item == new_keyboard_focus)
+                if (item == new_focus_surface)
                 {
                     item->set_focus_state(mir_window_focus_state_focused);
                 }

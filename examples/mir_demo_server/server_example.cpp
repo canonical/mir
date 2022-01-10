@@ -19,7 +19,6 @@
 #include "server_example_log_options.h"
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
-#include "server_example_host_lifecycle_event_listener.h"
 #include "server_example_test_client.h"
 #include "server_example_input_device_config.h"
 
@@ -133,7 +132,6 @@ try
     auto const server_exit_status = runner.run_with({
         // example options for display layout, logging and timeout
         miral::display_configuration_options,
-        me::add_log_host_lifecycle_option_to,
         me::add_glog_options_to,
         miral::X11Support{},
         miral::WaylandExtensions{}

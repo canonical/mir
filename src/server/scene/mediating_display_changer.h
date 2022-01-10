@@ -71,7 +71,7 @@ public:
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration() override;
     void configure(std::shared_ptr<scene::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
-    void remove_session_configuration(std::shared_ptr<scene::Session> const& session) override;
+
     void preview_base_configuration(
         std::weak_ptr<scene::Session> const& session,
         std::shared_ptr<graphics::DisplayConfiguration> const& conf,
@@ -79,9 +79,6 @@ public:
     void confirm_base_configuration(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf) override;
-
-    void cancel_base_configuration_preview(
-        std::shared_ptr<scene::Session> const& session) override;
 
     /* From mir::DisplayChanger */
     void configure_for_hardware_change(

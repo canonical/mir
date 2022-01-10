@@ -21,10 +21,15 @@
 
 namespace geom = mir::geometry;
 
+// If building against newer Wayland protocol definitions we may miss trailing fields
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 wl_shell_surface_listener const WaylandSurface::shell_surface_listener {
     handle_ping,
     handle_configure,
-    [](auto, auto){}}; // popup_done
+    [](auto, auto){}  // popup_done
+};
+#pragma GCC diagnostic pop
 
 mir::geometry::Size const WaylandSurface::default_size{640, 480};
 

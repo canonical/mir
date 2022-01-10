@@ -18,6 +18,7 @@
 
 #include "display.h"
 #include "cursor.h"
+#include "kms/egl_helper.h"
 #include "platform.h"
 #include "display_buffer.h"
 #include "kms_display_configuration.h"
@@ -215,8 +216,6 @@ mgg::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& dr
     initial_conf_policy->apply_to(current_display_configuration);
 
     configure(current_display_configuration);
-
-    shared_egl.make_current();
 }
 
 // please don't remove this empty destructor, it's here for the
@@ -445,6 +444,49 @@ void add_to_drm_device_group(
         grouping.push_back(std::vector<std::shared_ptr<mgg::KMSOutput>>{std::move(output)});
     }
 }
+
+auto make_surface_with_egl_context(
+    geom::Size size,
+    uint32_t gbm_format,
+    mgg::helpers::GBMHelper const& gbm,
+    mg::GLConfig const& config,
+    EGLContext shared_context,    
+    bool cross_gpu)
+     -> std::tuple<mgg::GBMSurfaceUPtr, mgg::helpers::EGLHelper>
+{
+    auto surface = gbm.create_scanout_surface(size.width.as_uint32_t(), size.height.as_uint32_t(), gbm_format, cross_gpu);
+    auto raw_surface = surface.get();
+
+    try
+    {
+        return std::make_tuple(
+            std::move(surface),
+            mgg::helpers::EGLHelper{
+                config,
+                gbm,
+                raw_surface,
+                gbm_format,
+                shared_context
+        });
+    }
+    catch (mgg::helpers::EGLHelper::NoMatchingEGLConfig const&)
+    {
+         // TODO: Make a generic "other-alphaness" helper
+        gbm_format = GBM_FORMAT_ARGB8888;
+        surface = gbm.create_scanout_surface(size.width.as_uint32_t(), size.height.as_uint32_t(), gbm_format, cross_gpu);
+        raw_surface = surface.get();
+        return std::make_tuple(
+            std::move(surface),
+            mgg::helpers::EGLHelper{
+                config,
+                gbm,
+                raw_surface,
+                gbm_format,
+                shared_context
+        });
+    }
+}
+
 }
 
 void mgg::Display::configure_locked(
@@ -530,6 +572,9 @@ void mgg::Display::configure_locked(
 
                 for (auto const& group : kms_output_groups)
                 {
+                    // TODO: Pull this out of the configuration
+                    // TODO: Actually query available formats!
+                    uint32_t gbm_format = GBM_FORMAT_XRGB8888;
                     /*
                      * In a hybrid setup a scanout surface needs to be allocated differently if it
                      * needs to be able to be shared across GPUs. This likely reduces performance.
@@ -537,9 +582,13 @@ void mgg::Display::configure_locked(
                      * As a first cut, assume every scanout buffer in a hybrid setup might need
                      * to be shared.
                      */
-                    auto surface = gbm->create_scanout_surface(width, height, drm.size() != 1);
-                    auto const raw_surface = surface.get();
-
+                    auto [surface, egl] = make_surface_with_egl_context(
+                        current_mode_resolution,
+                        gbm_format,
+                        *gbm,
+                        *gl_config,
+                        shared_egl.context(),
+                        drm.size() != 1);
                     auto db = std::make_unique<DisplayBuffer>(
                         bypass_option,
                         listener,
@@ -548,12 +597,7 @@ void mgg::Display::configure_locked(
                             group.front()->drm_fd(),
                             std::move(surface),
                             width, height,
-                            helpers::EGLHelper{
-                                *gl_config,
-                                *gbm,
-                                raw_surface,
-                                shared_egl.context()
-                            }
+                            std::move(egl)
                         },
                         bounding_rect,
                         transformation);

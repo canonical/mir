@@ -1,4 +1,4 @@
-MIR_SERVER_2.5 {
+MIR_SERVER_2.6 {
  global:
   extern "C++" {
     mir::check_for_termination_exception*;
@@ -421,9 +421,6 @@ MIR_SERVER_2.5 {
     mir::shell::FocusController::?FocusController*;
     mir::shell::FocusController::FocusController*;
     mir::shell::FocusController::operator*;
-    mir::shell::HostLifecycleEventListener::?HostLifecycleEventListener*;
-    mir::shell::HostLifecycleEventListener::HostLifecycleEventListener*;
-    mir::shell::HostLifecycleEventListener::operator*;
     mir::shell::InputTargeter::?InputTargeter*;
     mir::shell::InputTargeter::InputTargeter*;
     mir::shell::InputTargeter::operator*;
@@ -646,7 +643,6 @@ MIR_SERVER_2.5 {
     non-virtual?thunk?to?mir::shell::DisplayConfigurationController::?DisplayConfigurationController*;
     non-virtual?thunk?to?mir::shell::DisplayLayout::?DisplayLayout*;
     non-virtual?thunk?to?mir::shell::FocusController::?FocusController*;
-    non-virtual?thunk?to?mir::shell::HostLifecycleEventListener::?HostLifecycleEventListener*;
     non-virtual?thunk?to?mir::shell::InputTargeter::?InputTargeter*;
     non-virtual?thunk?to?mir::shell::PersistentSurfaceStore::?PersistentSurfaceStore*;
     non-virtual?thunk?to?mir::shell::ShellReport::?ShellReport*;
@@ -768,7 +764,6 @@ MIR_SERVER_2.5 {
     typeinfo?for?mir::shell::DisplayConfigurationController;
     typeinfo?for?mir::shell::DisplayLayout;
     typeinfo?for?mir::shell::FocusController;
-    typeinfo?for?mir::shell::HostLifecycleEventListener;
     typeinfo?for?mir::shell::InputTargeter;
     typeinfo?for?mir::shell::PersistentSurfaceStore;
     typeinfo?for?mir::shell::PersistentSurfaceStore::Id;
@@ -889,7 +884,6 @@ MIR_SERVER_2.5 {
     vtable?for?mir::shell::DisplayConfigurationController;
     vtable?for?mir::shell::DisplayLayout;
     vtable?for?mir::shell::FocusController;
-    vtable?for?mir::shell::HostLifecycleEventListener;
     vtable?for?mir::shell::InputTargeter;
     vtable?for?mir::shell::PersistentSurfaceStore;
     vtable?for?mir::shell::PersistentSurfaceStore::Id;

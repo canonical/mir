@@ -293,7 +293,7 @@ void mgg::Cursor::show(CursorImage const& cursor_image)
         }
     }
 
-    // Writing the data could throw an exception so lets
+    // Writing the data could throw an exception so let's
     // hold off on setting visible until after we have succeeded.
     visible = true;
     place_cursor_at_locked(lg, current_position, ForceState);
@@ -401,7 +401,7 @@ void mgg::Cursor::place_cursor_at_locked(
             auto const hotspot_displacement = transform(geom::Rectangle{{}, size}, hotspot, orientation);
 
             // It's a little strange that we implement hotspot this way as there is
-            // drmModeSetCursor2 with hotspot support. However it appears to not actually
+            // drmModeSetCursor2 with hotspot support. However, it appears to not actually
             // work on radeon and intel. There also seems to be precedent in weston for
             // implementing hotspot in this fashion.
             output.move_cursor(position_on_output - hotspot_displacement);

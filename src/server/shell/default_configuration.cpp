@@ -19,7 +19,6 @@
 #include <mir/shell/system_compositor_window_manager.h>
 #include <mir/main_loop.h>
 #include "mir/default_server_configuration.h"
-#include "null_host_lifecycle_event_listener.h"
 
 #include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
@@ -128,12 +127,3 @@ mir::DefaultServerConfiguration::the_shell_display_layout()
         });
 }
 
-std::shared_ptr<msh::HostLifecycleEventListener>
-mir::DefaultServerConfiguration::the_host_lifecycle_event_listener()
-{
-    return host_lifecycle_event_listener(
-        []()
-        {
-            return std::make_shared<msh::NullHostLifecycleEventListener>();
-        });
-}
