@@ -29,7 +29,7 @@ class NullSessionListener : public SessionListener
 {
 public:
     NullSessionListener() = default;
-    virtual ~NullSessionListener() noexcept(true) = default;
+    virtual ~NullSessionListener() noexcept = default;
 
     void starting(std::shared_ptr<Session> const&) override {}
     void stopping(std::shared_ptr<Session> const&) override {}

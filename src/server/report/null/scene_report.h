@@ -40,7 +40,7 @@ public:
     virtual void surface_deleted(BasicSurfaceId /*id*/, std::string const& /*name*/) override;
 
     SceneReport() = default;
-    virtual ~SceneReport() noexcept(true) = default;
+    virtual ~SceneReport() noexcept = default;
 
 };
 }
