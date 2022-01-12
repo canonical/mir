@@ -19,6 +19,8 @@
 #ifndef MIR_GRAPHICS_X11_EGL_HELPER_H_
 #define MIR_GRAPHICS_X11_EGL_HELPER_H_
 
+#include <kj/one-of.h> // HACK for https://github.com/capnproto/capnproto/issues/1393
+
 #include <memory>
 #include <functional>
 

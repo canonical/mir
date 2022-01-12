@@ -19,6 +19,8 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_X11_H_
 #define MIR_TEST_DOUBLES_MOCK_X11_H_
 
+#include <kj/one-of.h> // HACK for https://github.com/capnproto/capnproto/issues/1393
+
 #include <gmock/gmock.h>
 
 #include <X11/Xlib.h>
