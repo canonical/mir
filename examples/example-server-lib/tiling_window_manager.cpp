@@ -496,7 +496,7 @@ void TilingWindowManagerPolicy::update_tiles(Rectangles const& outputs)
     auto const total_width  = bounding_rect.size.width.as_int();
     auto const total_height = bounding_rect.size.height.as_int();
 
-    auto index = 0;
+    size_t index = 0;
 
     if (tile_count < 3)
     {
