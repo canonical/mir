@@ -29,7 +29,7 @@ namespace input
 struct NullInputTargeter : public shell::InputTargeter
 {
     NullInputTargeter() = default;
-    virtual ~NullInputTargeter() noexcept(true) = default;
+    virtual ~NullInputTargeter() noexcept = default;
 
     void set_focus(std::shared_ptr<Surface> const&) override
     {

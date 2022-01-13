@@ -14,7 +14,6 @@ add_library(mircore SHARED
     ${PROJECT_SOURCE_DIR}/include/core/mir/optional_value.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/fatal.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/fd.h
-    ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/length.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/rectangle.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/point.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/rectangles.h
