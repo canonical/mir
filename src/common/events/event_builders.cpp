@@ -279,6 +279,8 @@ mir::EventUPtr mir::events::make_pointer_axis_event(
     float y_axis_value,
     float hscroll_value,
     float vscroll_value,
+    bool hscroll_stop,
+    bool vscroll_stop,
     float relative_x_value,
     float relative_y_value)
 {
@@ -286,6 +288,8 @@ mir::EventUPtr mir::events::make_pointer_axis_event(
         device_id, timestamp, modifiers, cookie, action, buttons_pressed, x_axis_value,
         y_axis_value, relative_x_value, relative_y_value, vscroll_value, hscroll_value);
     e->set_axis_source(axis_source);
+    e->set_hscroll_stop(hscroll_stop);
+    e->set_vscroll_stop(vscroll_stop);
 
     return make_uptr_event(e);
 }

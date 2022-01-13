@@ -73,6 +73,16 @@ public:
         float hscroll_value, float vscroll_value,
         float relative_x_value, float relative_y_value) = 0;
 
+    virtual EventUPtr pointer_axis_with_stop_event(
+        MirPointerAxisSource axis_source,
+        std::optional<Timestamp> timestamp,
+        MirPointerAction action,
+        MirPointerButtons buttons_pressed,
+        float x_position, float y_position,
+        float hscroll_value, float vscroll_value,
+        bool hscroll_stop, bool vscroll_stop,
+        float relative_x_value, float relative_y_value) = 0;
+
     virtual EventUPtr pointer_axis_discrete_scroll_event(
         MirPointerAxisSource axis_source,
         std::optional<Timestamp> timestamp,

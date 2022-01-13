@@ -125,6 +125,8 @@ EventUPtr make_pointer_axis_event(
     float y_axis_value,
     float hscroll_value,
     float vscroll_value,
+    bool hscroll_stop,
+    bool vscroll_stop,
     float relative_x_value,
     float relative_y_value);
 

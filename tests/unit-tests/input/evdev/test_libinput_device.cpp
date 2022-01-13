@@ -105,6 +105,16 @@ struct MockEventBuilder : mi::EventBuilder
                     axis_source, time, action, buttons, x, y, hscroll, vscroll, relative_x, relative_y);
             });
 
+        ON_CALL(*this, pointer_axis_with_stop_event(_, _, _, _, _, _, _, _, _, _, _, _)).WillByDefault(
+            [this](MirPointerAxisSource axis_source, std::optional<Timestamp> time, MirPointerAction action,
+                   MirPointerButtons buttons, float x, float y, float hscroll, float vscroll,
+                   bool hscroll_stop, bool vscroll_stop, float relative_x, float relative_y)
+            {
+                return builder.pointer_axis_with_stop_event(
+                    axis_source, time, action, buttons, x, y, hscroll, vscroll, vscroll_stop, hscroll_stop,
+                    relative_x, relative_y);
+            });
+
         ON_CALL(*this, pointer_axis_discrete_scroll_event(_, _, _, _, _, _, _, _)).WillByDefault(
             [this](MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
                    MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value,
@@ -127,6 +137,11 @@ struct MockEventBuilder : mi::EventBuilder
                 (MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
                  MirPointerButtons buttons_pressed, float x_position, float y_position,
                  float hscroll_value, float vscroll_value, float relative_x_value, float relative_y_value));
+    MOCK_METHOD(mir::EventUPtr, pointer_axis_with_stop_event,
+                (MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
+                 MirPointerButtons buttons_pressed, float x_position, float y_position,
+                 float hscroll_value, float vscroll_value, bool hscroll_stop, bool vscroll_stop,
+                 float relative_x_value, float relative_y_value));
     MOCK_METHOD(mir::EventUPtr, pointer_axis_discrete_scroll_event,
                 (MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
                  MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value, float hscroll_discrete,
