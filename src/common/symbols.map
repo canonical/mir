@@ -49,6 +49,7 @@ MIR_COMMON_2.5 {
   mir_pointer_event_action;
   mir_pointer_event_axis_source;
   mir_pointer_event_axis_value;
+  mir_pointer_event_axis_stop;
   mir_pointer_event_buttons;
   mir_pointer_event_button_state;
   mir_pointer_event_input_event;
