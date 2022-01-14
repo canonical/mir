@@ -170,6 +170,8 @@ private:
     std::weak_ptr<scene::Surface> focus_surface;
     std::weak_ptr<scene::Session> focus_session;
     std::vector<std::weak_ptr<scene::Surface>> notified_active_surfaces;
+    std::weak_ptr<scene::Surface> notified_keyboard_focus_surface;
+    std::weak_ptr<scene::Surface> notified_topmost_active_surface;
     std::shared_ptr<scene::SurfaceObserver> focus_surface_observer;
 
     void notify_focus_locked(
