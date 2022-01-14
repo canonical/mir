@@ -21,8 +21,8 @@
 
 #include "mir/dispatch/action_queue.h"
 
+#include <optional>
 #include <gmock/gmock.h>
-
 #include <libinput.h>
 
 namespace mir
