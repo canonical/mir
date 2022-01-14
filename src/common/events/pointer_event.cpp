@@ -125,6 +125,26 @@ void MirPointerEvent::set_hscroll(float hs)
     hscroll_ = hs;
 }
 
+bool MirPointerEvent::vscroll_stop() const
+{
+    return vscroll_stop_;
+}
+
+void MirPointerEvent::set_vscroll_stop(bool stop)
+{
+    vscroll_stop_ = stop;
+}
+
+bool MirPointerEvent::hscroll_stop() const
+{
+    return hscroll_stop_;
+}
+
+void MirPointerEvent::set_hscroll_stop(bool stop)
+{
+    hscroll_stop_ = stop;
+}
+
 MirPointerAction MirPointerEvent::action() const
 {
     return action_;

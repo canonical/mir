@@ -491,3 +491,12 @@ MIR_COMMON_2.5 {
   };
   local: *;
 };
+
+MIR_COMMON_2.7 {
+  global:
+  mir_pointer_event_axis_stop;
+
+  extern "C++" {
+    mir::events::make_pointer_axis_with_stop_event*;
+  };
+} MIR_COMMON_2.5;
