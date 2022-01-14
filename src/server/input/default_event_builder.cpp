@@ -113,7 +113,7 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_axis_event(
     }
     return me::make_pointer_axis_event(
         axis_source, device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis,
-        y_axis, hscroll_value, vscroll_value, false, false, relative_x_value, relative_y_value);
+        y_axis, hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::pointer_axis_with_stop_event(
@@ -133,7 +133,7 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_axis_with_stop_event(
         auto const cookie = cookie_authority->make_cookie(timestamp.count());
         vec_cookie = cookie->serialize();
     }
-    return me::make_pointer_axis_event(
+    return me::make_pointer_axis_with_stop_event(
         axis_source, device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis,
         y_axis, hscroll_value, vscroll_value, hscroll_stop, vscroll_stop, relative_x_value, relative_y_value);
 }
