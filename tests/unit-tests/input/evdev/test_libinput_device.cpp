@@ -781,6 +781,25 @@ TEST_F(LibInputDeviceOnTouchpad, process_event_handles_scroll)
     process_events(touchpad);
 }
 
+TEST_F(LibInputDeviceOnTouchpad, process_event_handles_stop)
+{
+    InSequence seq;
+    // expect two scroll events..
+    EXPECT_CALL(mock_builder, pointer_axis_with_stop_event(
+        mir_pointer_axis_source_finger, {time_stamp_1}, mir_pointer_action_motion, 0,
+        0, 0, 0.0f, -10.0f, false, false, 0.0f, 0.0f));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -10.0f)));
+    EXPECT_CALL(mock_builder, pointer_axis_with_stop_event(
+        mir_pointer_axis_source_finger, {time_stamp_2}, mir_pointer_action_motion, 0,
+        0, 0, 0.0f, 0.0f, false, true, 0.0f, 0.0f));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 0.0f)));
+
+    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_1, {}, -10.0);
+    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_2, {}, 0.0);
+    touchpad.start(&mock_sink, &mock_builder);
+    process_events(touchpad);
+}
+
 TEST_F(LibInputDeviceOnTouchpad, reads_touchpad_settings_from_libinput)
 {
     setup_touchpad_configuration(fake_device, mir_touchpad_click_mode_finger_count,
