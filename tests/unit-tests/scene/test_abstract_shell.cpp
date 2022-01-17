@@ -785,6 +785,81 @@ TEST_F(AbstractShell, when_remaining_session_has_no_surface_focus_next_session_d
     shell.focus_next_session();
 }
 
+TEST_F(AbstractShell, focus_can_be_set)
+{
+    NiceMock<mtd::MockSurface> mock_surface1;
+    EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(AnyNumber())
+        .WillOnce(Return(mt::fake_shared(mock_surface1)))
+        .WillOnce(Return(mt::fake_shared(mock_surface)));
+
+    msh::FocusController& focus_controller = shell;
+    auto const session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
+    auto const created_surface1 = shell.create_surface(session, params, nullptr);
+    auto const created_surface2 = shell.create_surface(session, params, nullptr);
+
+    focus_controller.set_focus_to(session, created_surface2);
+    EXPECT_THAT(created_surface1->focus_state(), Eq(mir_window_focus_state_unfocused));
+    EXPECT_THAT(created_surface2->focus_state(), Eq(mir_window_focus_state_focused));
+
+    focus_controller.set_focus_to(session, created_surface1);
+    EXPECT_THAT(created_surface1->focus_state(), Eq(mir_window_focus_state_focused));
+    EXPECT_THAT(created_surface2->focus_state(), Eq(mir_window_focus_state_unfocused));
+}
+
+TEST_F(AbstractShell, setting_focus_to_child_makes_parent_active)
+{
+    NiceMock<mtd::MockSurface> mock_surface1;
+    NiceMock<mtd::MockSurface> mock_surface2;
+    ON_CALL(mock_surface1, parent())
+        .WillByDefault(Return(mt::fake_shared(mock_surface)));
+    EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(AnyNumber())
+        .WillOnce(Return(mt::fake_shared(mock_surface)))
+        .WillOnce(Return(mt::fake_shared(mock_surface1)))
+        .WillOnce(Return(mt::fake_shared(mock_surface2)));
+
+    msh::FocusController& focus_controller = shell;
+    auto const session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
+    auto const parent_surface = shell.create_surface(session, params, nullptr);
+    auto const child_surface = shell.create_surface(session, params, nullptr);
+    auto const other_surface = shell.create_surface(session, params, nullptr);
+
+    ASSERT_THAT(child_surface->parent(), Eq(parent_surface));
+
+    focus_controller.set_focus_to(session, other_surface);
+    EXPECT_THAT(child_surface->focus_state(), Eq(mir_window_focus_state_unfocused));
+    EXPECT_THAT(parent_surface->focus_state(), Eq(mir_window_focus_state_unfocused));
+
+    focus_controller.set_focus_to(session, child_surface);
+    EXPECT_THAT(child_surface->focus_state(), Eq(mir_window_focus_state_focused));
+    EXPECT_THAT(parent_surface->focus_state(), Eq(mir_window_focus_state_active));
+}
+
+// Regression test for https://github.com/MirServer/mir/issues/2279
+TEST_F(AbstractShell, focus_next_session_allows_later_focusing_same_window)
+{
+    NiceMock<mtd::MockSurface> mock_surface1;
+    EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(AnyNumber())
+        .WillOnce(Return(mt::fake_shared(mock_surface1)))
+        .WillOnce(Return(mt::fake_shared(mock_surface)));
+
+    msh::FocusController& focus_controller = shell;
+    auto session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto session2 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Bla", std::shared_ptr<mf::EventSink>());
+    auto const params1 = mt::make_surface_spec(session1->create_buffer_stream(properties));
+    auto created_surface1 = shell.create_surface(session1, params1, nullptr);
+    auto const params2 = mt::make_surface_spec(session2->create_buffer_stream(properties));
+    auto created_surface2 = shell.create_surface(session2, params2, nullptr);
+
+    focus_controller.set_focus_to(session1, created_surface1);
+    focus_controller.focus_next_session();
+    focus_controller.set_focus_to(session2, created_surface2);
+
+    EXPECT_THAT(created_surface1->focus_state(), Eq(mir_window_focus_state_unfocused));
+    EXPECT_THAT(created_surface2->focus_state(), Eq(mir_window_focus_state_focused));
+}
+
 namespace mir
 {
 namespace scene
