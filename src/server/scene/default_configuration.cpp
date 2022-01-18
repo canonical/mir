@@ -237,7 +237,7 @@ auto mir::DefaultServerConfiguration::the_idle_hub()
     return idle_hub(
         [this]()
         {
-            return std::make_shared<ms::BasicIdleHub>(the_clock(), the_main_loop());
+            return std::make_shared<ms::BasicIdleHub>(the_clock(), *the_main_loop());
         });
 }
 

@@ -52,15 +52,13 @@ public:
     {
         for_each_observer(&IdleStateObserver::active);
     }
-
-protected:
 };
 
 ms::BasicIdleHub::BasicIdleHub(
     std::shared_ptr<time::Clock> const& clock,
-    std::shared_ptr<mt::AlarmFactory> const& alarm_factory)
+    mt::AlarmFactory& alarm_factory)
     : clock{clock},
-      alarm{alarm_factory->create_alarm([this]()
+      alarm{alarm_factory.create_alarm([this]()
           {
               alarm_fired();
           })},

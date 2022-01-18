@@ -160,10 +160,8 @@ msh::BasicIdleHandler::BasicIdleHandler(
     std::shared_ptr<msh::DisplayConfigurationController> const& display_config_controller)
     : idle_hub{idle_hub},
       timeouts{
-          Timeout{5s, std::make_shared<Dimmer>(input_scene, allocator)},
-          Timeout{10s, std::make_shared<PowerModeSetter>(display_config_controller, mir_power_mode_standby)},
-          Timeout{15s, std::make_shared<PowerModeSetter>(display_config_controller, mir_power_mode_suspend)},
-          Timeout{20s, std::make_shared<PowerModeSetter>(display_config_controller, mir_power_mode_off)},
+          Timeout{300s, std::make_shared<Dimmer>(input_scene, allocator)},
+          Timeout{310s, std::make_shared<PowerModeSetter>(display_config_controller, mir_power_mode_off)},
       }
 {
     for (auto const& timeout : timeouts)

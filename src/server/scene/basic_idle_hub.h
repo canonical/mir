@@ -41,10 +41,9 @@ namespace scene
 class BasicIdleHub : public IdleHub
 {
 public:
-    /// IdleState::awake is always the initial state. If state_sequence is empty, it is the only state.
     BasicIdleHub(
         std::shared_ptr<time::Clock> const& clock,
-        std::shared_ptr<time::AlarmFactory> const& alarm_factory);
+        time::AlarmFactory& alarm_factory);
 
     ~BasicIdleHub();
 
@@ -76,7 +75,7 @@ private:
     std::vector<std::shared_ptr<Multiplexer>> idle_multiplexers;
     /// The timestamp when we were last poked
     time::Timestamp poke_time;
-    /// Amount of time after the poke time that the alarm with fire
+    /// Amount of time after the poke time before the alarm fires
     std::chrono::milliseconds alarm_timeout{0};
 };
 }

@@ -42,6 +42,7 @@ bool mi::IdlePokingDispatcher::dispatch(std::shared_ptr<MirEvent const> const& e
             case mir_input_event_type_pointer:
             case mir_input_event_type_touch:
                 idle_hub->poke();
+                break;
 
             case mir_input_event_type_keyboard_resync:
             case mir_input_event_types:
