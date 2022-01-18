@@ -198,7 +198,7 @@ void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
             ++i;
         }
     }
-    first_timeout = timeouts.begin()->first;
+    first_timeout = timeouts.empty() ? std::nullopt : std::make_optional(timeouts.begin()->first);
 }
 
 void ms::BasicIdleHub::alarm_fired(std::unique_lock<std::mutex>& lock)

@@ -71,6 +71,8 @@ private:
     std::mutex mutex;
     /// Maps timeouts (times from last poke) to the multiplexers that need to be fired at those times.
     std::map<std::chrono::milliseconds, std::shared_ptr<Multiplexer>> timeouts;
+    /// Should always be equal to timeouts.begin()->first, or nullopt if timeouts is empty. Only purpose is so we don't
+    /// need to do a map lookup on every poke (we are poked for every input event).
     std::optional<std::chrono::milliseconds> first_timeout;
     std::vector<std::shared_ptr<Multiplexer>> idle_multiplexers;
     /// The timestamp when we were last poked
