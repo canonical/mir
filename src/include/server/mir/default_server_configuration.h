@@ -101,7 +101,6 @@ class SurfaceStack;
 class SceneReport;
 class PromptSessionListener;
 class PromptSessionManager;
-class CoordinateTranslator;
 }
 namespace graphics
 {
@@ -306,7 +305,6 @@ public:
      * services provided by scene for the rest of Mir
      *  @{ */
     virtual std::shared_ptr<scene::SessionCoordinator>  the_session_coordinator();
-    virtual std::shared_ptr<scene::CoordinateTranslator> the_coordinate_translator();
     /** @} */
 
 
@@ -427,7 +425,6 @@ protected:
     CachedPtr<scene::PromptSessionListener> prompt_session_listener;
     CachedPtr<scene::PromptSessionManager> prompt_session_manager;
     CachedPtr<scene::SessionCoordinator> session_coordinator;
-    CachedPtr<scene::CoordinateTranslator> coordinate_translator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::PersistentSurfaceStore> persistent_surface_store;
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;

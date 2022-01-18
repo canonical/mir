@@ -20,7 +20,7 @@
 
 namespace mf = mir::frontend;
 
-void mf::NullEventSink::send_buffer(BufferStreamId /*id*/, graphics::Buffer& /*buffer*/, graphics::BufferIpcMsgType)
+void mf::NullEventSink::send_buffer(frontend::BufferStreamId, graphics::Buffer&)
 {
 }
 

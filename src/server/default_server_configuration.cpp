@@ -41,7 +41,6 @@
 #include "mir/scene/null_prompt_session_listener.h"
 #include "default_emergency_cleanup.h"
 #include "mir/graphics/platform.h"
-#include "mir/scene/coordinate_translator.h"
 #include "mir/console_services.h"
 
 #include <type_traits>

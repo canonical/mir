@@ -15,7 +15,6 @@ add_library(miral-internal STATIC
     active_outputs.cpp                  active_outputs.h
     application_info_internal.cpp       application_info_internal.h
     basic_window_manager.cpp            basic_window_manager.h window_manager_tools_implementation.h
-    coordinate_translator.cpp           coordinate_translator.h
     display_configuration_listeners.cpp display_configuration_listeners.h
     launch_app.cpp                      launch_app.h
     mru_window_list.cpp                 mru_window_list.h
