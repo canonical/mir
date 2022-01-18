@@ -18,6 +18,10 @@
 
 #include "mir/shared_library.h"
 
+#ifdef MIR_DONT_USE_DLVSYM
+#include <mir/log.h>
+#endif
+
 #include <boost/throw_exception.hpp>
 
 #include <dlfcn.h>
