@@ -23,6 +23,7 @@
 #include "mir/renderer/gl/context_source.h"
 #include "mir/input/scene.h"
 #include "mir/scene/session.h"
+#include "mir/scene/session_container.h"
 #include "mir/shell/display_configuration_controller.h"
 
 #include "broadcasting_session_event_sink.h"
