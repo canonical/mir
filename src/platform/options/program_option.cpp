@@ -22,7 +22,6 @@
 #include <boost/program_options/parsers.hpp>
 
 #include <fstream>
-#include <locale>
 
 namespace mo = mir::options;
 namespace po = boost::program_options;

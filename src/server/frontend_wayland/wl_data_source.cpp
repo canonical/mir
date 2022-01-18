@@ -21,7 +21,6 @@
 #include "mir/executor.h"
 
 #include <vector>
-#include <algorithm>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;

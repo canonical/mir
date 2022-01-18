@@ -26,7 +26,6 @@
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/input/input_manager.h"
-#include "mir/input/mir_input_config.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/input/mir_touchscreen_config.h"

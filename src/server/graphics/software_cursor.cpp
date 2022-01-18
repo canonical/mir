@@ -29,7 +29,6 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <mutex>
-#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;

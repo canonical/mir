@@ -20,18 +20,14 @@
 #include "mir/anonymous_shm_file.h"
 
 #include <boost/throw_exception.hpp>
-#include <boost/filesystem.hpp>
-#include <system_error>
 
-#include <vector>
-
-#include <cstdlib>
-#include <cstring>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <linux/memfd.h>
 #include <sys/syscall.h>
 
+#include <system_error>
+#include <cstdlib>
 
 namespace
 {

@@ -17,12 +17,9 @@
  */
 
 #include "miral/window_info.h"
-#include "window_info_defaults.h"
 #include "window_info_internal.h"
 
 #include <mir/scene/surface.h>
-
-#include <limits>
 
 using namespace mir::geometry;
 

@@ -17,10 +17,8 @@
  */
 
 #include "mir/shared_library.h"
-#include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
-#include <boost/exception/info.hpp>
 
 #include <dlfcn.h>
 

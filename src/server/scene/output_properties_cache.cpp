@@ -21,7 +21,6 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display_configuration.h"
 
-#include <atomic>
 #include <cmath>
 
 namespace ms = mir::scene;

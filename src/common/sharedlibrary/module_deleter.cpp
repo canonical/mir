@@ -21,7 +21,6 @@
 #include "mir/shared_library.h"
 
 #include <dlfcn.h>
-#include <atomic>
 
 namespace
 {

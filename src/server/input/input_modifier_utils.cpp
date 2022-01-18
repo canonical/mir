@@ -19,11 +19,8 @@
 #include "input_modifier_utils.h"
 
 #include "mir_toolkit/events/input/input_event.h"
-#include "boost/throw_exception.hpp"
 
 #include "linux/input.h"
-
-#include <stdexcept>
 
 namespace mi = mir::input;
 

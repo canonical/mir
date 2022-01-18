@@ -26,7 +26,6 @@
 #include "mir/scene/session_event_sink.h"
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
-#include "mir/geometry/rectangles.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_observer.h"

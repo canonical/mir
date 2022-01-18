@@ -24,12 +24,8 @@
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
-#include "mir/compositor/buffer_stream.h"
 #include "mir/renderer/renderer.h"
 #include "occlusion.h"
-#include <mutex>
-#include <cstdlib>
-#include <algorithm>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;

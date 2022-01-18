@@ -16,9 +16,6 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include <boost/throw_exception.hpp>
-
-#include "mir/log.h"
 #include "mir/events/event.h"
 #include "mir/events/close_window_event.h"
 #include "mir/events/input_event.h"
@@ -32,8 +29,6 @@
 #include "mir/events/input_device_state_event.h"
 #include "mir/events/window_placement_event.h"
 
-
-namespace ml = mir::logging;
 
 MirEvent::MirEvent(MirEventType type) :
     type_{type}

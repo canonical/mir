@@ -24,7 +24,6 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 
-#include <cstring>
 #include <algorithm>
 
 namespace ms = mir::scene;
