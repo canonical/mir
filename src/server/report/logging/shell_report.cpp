@@ -134,7 +134,7 @@ void mrl::ShellReport::input_focus_set_to(
 {
     std::ostringstream out;
 
-    if (focus_session && focus_session)
+    if (focus_session && focus_surface)
     {
         log_basics(out, *focus_session, *focus_surface, "input focus");
     }
