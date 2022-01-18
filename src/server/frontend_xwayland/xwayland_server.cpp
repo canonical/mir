@@ -30,6 +30,7 @@
 
 #include <chrono>
 #include <condition_variable>
+#include <cstring>
 
 namespace mf = mir::frontend;
 namespace md = mir::dispatch;
