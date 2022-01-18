@@ -63,7 +63,7 @@ public:
 private:
     struct Multiplexer;
 
-    void alarm_fired();
+    void alarm_fired(std::unique_lock<std::mutex>& lock);
     void schedule_alarm(ProofOfMutexLock const& lock, time::Timestamp current_time);
 
     std::shared_ptr<time::Clock> const clock;

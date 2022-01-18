@@ -20,6 +20,7 @@
 #include "mir/time/alarm.h"
 #include "mir/time/alarm_factory.h"
 #include "mir/time/clock.h"
+#include "mir/lockable_callback.h"
 
 namespace ms = mir::scene;
 namespace mt = mir::time;
@@ -33,6 +34,42 @@ struct DirectExecutor: mir::Executor
         work();
     }
 } direct_executor;
+
+/// The callback used by the alarm. Does not need to be threadsafe because it is only called into by the alarm when it
+/// is fired.
+class AlarmCallback: public mir::LockableCallback
+{
+public:
+    AlarmCallback(std::mutex& mutex, std::function<void(std::unique_lock<std::mutex>&)> const& func)
+        : mutex{mutex},
+          func{func}
+    {
+    }
+
+    void operator()() override
+    {
+        if (!lock_)
+        {
+            mir::fatal_error("AlarmCallback called while unlocked");
+        }
+        func(*lock_);
+    }
+
+    void lock() override
+    {
+        lock_ = std::make_unique<std::unique_lock<std::mutex>>(mutex);
+    }
+
+    void unlock() override
+    {
+        lock_.reset();
+    }
+
+private:
+    std::mutex& mutex;
+    std::function<void(std::unique_lock<std::mutex>&)> const func;
+    std::unique_ptr<std::unique_lock<std::mutex>> lock_;
+};
 }
 
 class ms::BasicIdleHub::Multiplexer: public ObserverMultiplexer<IdleStateObserver>
@@ -58,10 +95,11 @@ ms::BasicIdleHub::BasicIdleHub(
     std::shared_ptr<time::Clock> const& clock,
     mt::AlarmFactory& alarm_factory)
     : clock{clock},
-      alarm{alarm_factory.create_alarm([this]()
-          {
-              alarm_fired();
-          })},
+      alarm{alarm_factory.create_alarm(
+          std::make_unique<AlarmCallback>(mutex, [this](std::unique_lock<std::mutex>& lock)
+            {
+                alarm_fired(lock);
+            }))},
       poke_time{clock->now()}
 {
 }
@@ -163,9 +201,8 @@ void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
     first_timeout = timeouts.begin()->first;
 }
 
-void ms::BasicIdleHub::alarm_fired()
+void ms::BasicIdleHub::alarm_fired(std::unique_lock<std::mutex>& lock)
 {
-    std::unique_lock<std::mutex> lock{mutex};
     auto const iter = timeouts.find(alarm_timeout);
     std::shared_ptr<Multiplexer> multiplexer;
     if (iter != timeouts.end())
