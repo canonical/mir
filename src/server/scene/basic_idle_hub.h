@@ -38,6 +38,11 @@ class AlarmFactory;
 namespace scene
 {
 
+/// Users can register an IdleStateObserver to be notified after a given timeout using the IdleHub interface. This class
+/// keeps track of all registered observers and organizes them by timeout. It sets an alarm for the next timeout, and
+/// when the alarm fires it notifies the observer it is is now idle. When this class gets poked (generally by an input
+/// event), Mir is no longer considered to be idle and any idle observers get notified. After each poke the alarm gets
+/// rescheduled based on the first timeout.
 class BasicIdleHub : public IdleHub
 {
 public:
