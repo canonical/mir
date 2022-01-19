@@ -27,6 +27,8 @@ add_library(mircore SHARED
     ${PROJECT_SOURCE_DIR}/include/core/mir/depth_layer.h
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/common.h
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/mir_version_number.h
+    system_executor.cpp
+    ${PROJECT_SOURCE_DIR}/include/core/mir/system_executor.h
 )
 
 target_include_directories(mircore

@@ -80,3 +80,13 @@ MIR_CORE_1.1 {
     mir::mir_depth_layer_get_index?MirDepthLayer?;
   };
 } MIR_CORE_1.0;
+
+MIR_CORE_2.7 {
+ global:
+  extern "C++" {
+   mir::SystemExecutor::spawn*;
+   typeinfo?for?mir::SystemExecutor;
+   vtable?for?mir::SystemExecutor;
+   mir::system_executor;
+ };
+} MIR_CORE_1.1;

@@ -72,6 +72,7 @@ set(
   test_observer_multiplexer.cpp
   test_edid.cpp
   test_report_exception.cpp
+  test_system_executor.cpp
 )
 
 if (HAVE_PTHREAD_GETNAME_NP)
