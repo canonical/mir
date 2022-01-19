@@ -152,19 +152,16 @@ bool mi::KeyRepeatDispatcher::dispatch(std::shared_ptr<MirEvent const> const& ev
         if (mir_input_event_get_type(iev) != mir_input_event_type_key)
             return next_dispatcher->dispatch(event);
         auto device_id = mir_input_event_get_device_id(iev);
-        if (disable_repeat_on_touchscreen && touch_button_device.is_set() && device_id == touch_button_device.value())
-            return next_dispatcher->dispatch(event);
+        if (!disable_repeat_on_touchscreen || !touch_button_device.is_set() || device_id != touch_button_device.value())
+            handle_key_input(mir_input_event_get_device_id(iev), mir_input_event_get_keyboard_event(iev));
 
-        if (!handle_key_input(mir_input_event_get_device_id(iev), mir_input_event_get_keyboard_event(iev)))
-            return next_dispatcher->dispatch(event);
-        else
-            return true;
+        return next_dispatcher->dispatch(event);
     }
     return next_dispatcher->dispatch(event);
 }
 
 // Returns true if the original event has been handled, that is ::dispatch should not pass it on.
-bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* kev)
+void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* kev)
 {
     auto scan_code = mir_keyboard_event_scan_code(kev);
 
@@ -185,7 +182,7 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
             // Further, we don't want to repeat with the old modifier state.
             // So just cancel any existing repeats and carry on.
             set_alarm_for_device(id, nullptr);
-            return false;
+            return;
         }
 
         auto clone_event = [scan_code, id,
@@ -231,7 +228,6 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Unexpected key event action"));
     }
-    return false;
 }
 
 void mi::KeyRepeatDispatcher::start()
