@@ -20,12 +20,9 @@
 #include <miral/external_client.h>
 #include <miral/x11_support.h>
 
-#include <mir/test/signal.h>
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <fstream>
-#include <miral/x11_support.h>
 
 using namespace testing;
 

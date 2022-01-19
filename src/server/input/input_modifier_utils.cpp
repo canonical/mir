@@ -20,8 +20,6 @@
 
 #include "mir_toolkit/events/input/input_event.h"
 
-#include "linux/input.h"
-
 namespace mi = mir::input;
 
 MirInputEventModifiers mi::expand_modifiers(MirInputEventModifiers modifiers)

@@ -22,13 +22,11 @@
 #include "kms_output_container.h"
 #include "kms_output.h"
 
-#include <cmath>
 #include <limits>
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <algorithm>
-#include <system_error>
 #include <cstring>
 
 namespace mg = mir::graphics;

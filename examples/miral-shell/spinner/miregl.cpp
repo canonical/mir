@@ -19,11 +19,8 @@
 
 #include <cstring>
 
-#include <GLES2/gl2.h>
-
 #include <wayland-egl.h>
 
-#include <chrono>
 #include <algorithm>
 #include <stdexcept>
 #include <set>

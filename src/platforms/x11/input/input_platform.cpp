@@ -29,10 +29,8 @@
 #define MIR_LOG_COMPONENT "x11-input"
 #include "mir/log.h"
 
-#include <linux/input.h>
 #include <inttypes.h>
 #include <signal.h>
-#include <stdio.h>
 #include <chrono>
 
 #include <xcb/xfixes.h>

@@ -20,24 +20,12 @@
 #include "buffer_allocator.h"
 #include "display.h"
 #include "mir/console_services.h"
-#include "mir/graphics/native_buffer.h"
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/udev/wrapper.h"
-#include "mir/renderer/gl/texture_target.h"
-#include "mir/graphics/buffer_basic.h"
-#include "mir/graphics/egl_error.h"
-
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
 
 #define MIR_LOG_COMPONENT "platform-graphics-gbm-kms"
 #include "mir/log.h"
 
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
-#include <wayland-server-core.h>
 #include <wayland-server-protocol.h>
 
 namespace mg = mir::graphics;

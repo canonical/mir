@@ -28,7 +28,6 @@ struct Point;
 struct Size;
 class Displacement;
 struct Rectangle;
-class Region;
 }
 }
 

@@ -19,7 +19,10 @@
 #include "mir/test/current_thread_name.h"
 
 #include <pthread.h>
+
+#ifdef MIR_DONT_USE_PTHREAD_GETNAME_NP
 #include <stdexcept>
+#endif
 
 std::string mir::test::current_thread_name()
 {

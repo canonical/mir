@@ -34,8 +34,6 @@
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/mock_event_sink.h"
-#include "mir/test/doubles/null_prompt_session.h"
-#include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_observer_registrar.h"
 #include "mir/test/make_surface_spec.h"

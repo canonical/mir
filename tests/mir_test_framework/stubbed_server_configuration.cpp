@@ -21,7 +21,6 @@
 
 #include "mir_test_framework/stub_server_platform_factory.h"
 
-#include <mir/options/configuration.h>
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/cursor.h"
 

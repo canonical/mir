@@ -19,8 +19,6 @@
 #include "mir/test/doubles/mock_xkb.h"
 #include <gtest/gtest.h>
 
-#include <cstring>
-
 // xcb/xkb.h has a struct member named "explicit", which C++ does not like
 #ifdef __clang__
 #pragma clang diagnostic push

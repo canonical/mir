@@ -52,7 +52,6 @@ class BufferStream;
 namespace shell
 {
 class Shell;
-class DefaultDecorationGeometry;
 class StreamSpecification;
 namespace decoration
 {
@@ -100,8 +99,6 @@ protected:
     void update(
         std::experimental::optional<WindowState const*> previous_window_state,
         std::experimental::optional<InputState const*> previous_input_state);
-
-    struct DecorationSurfaceObserver;
 
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> threadsafe_self;
     std::shared_ptr<StaticGeometry const> const static_geometry;

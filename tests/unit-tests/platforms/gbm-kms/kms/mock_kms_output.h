@@ -25,14 +25,6 @@
 namespace mir
 {
 
-namespace graphics
-{
-namespace gbm
-{
-class DRMFB;
-}
-}
-
 namespace test
 {
 

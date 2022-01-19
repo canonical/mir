@@ -47,10 +47,6 @@ struct LibInputEnvironment
      * queued LIBINPUT_EVENT_DEVICE_ADDED event.
      */
     void add_standard_device(std::string const& device_name);
-    /**
-     * Removes the predefined device selected via the given device_name.
-     */
-    void remove_standard_device(std::string const& device_name);
 
     testing::NiceMock<mir::test::doubles::MockLibInput> mock_libinput;
     testing::NiceMock<mir::test::doubles::MockUdev> mock_udev;
@@ -59,12 +55,6 @@ struct LibInputEnvironment
     PtrT to_fake_ptr(unsigned int number)
     {
         return reinterpret_cast<PtrT>(number);
-    }
-
-    template<typename PtrT, typename Container>
-    PtrT get_next_fake_ptr(Container const& container)
-    {
-        return to_fake_ptr<PtrT>(container.size()+1);
     }
 
     struct DeviceSetup

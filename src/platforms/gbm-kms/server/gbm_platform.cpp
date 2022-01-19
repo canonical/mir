@@ -18,7 +18,6 @@
 
 #include "gbm_platform.h"
 #include "buffer_allocator.h"
-#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;

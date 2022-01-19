@@ -26,7 +26,6 @@
 #include "src/server/compositor/stream.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
-#include "mir/test/doubles/stub_buffer_stream_factory.h"
 #include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 
@@ -35,7 +34,6 @@
 
 #include <memory>
 #include <stdexcept>
-#include <thread>
 #include <atomic>
 #include <future>
 

@@ -63,25 +63,6 @@ public:
     }
 };
 
-class DisplayConfigurationNotInProgressError : public mir::ClientVisibleError
-{
-public:
-    DisplayConfigurationNotInProgressError()
-        : ClientVisibleError("No base display configuration preview in progress")
-    {
-    }
-
-    MirErrorDomain domain() const noexcept override
-    {
-        return mir_error_domain_display_configuration;
-    }
-
-    uint32_t code() const noexcept override
-    {
-        return mir_display_configuration_error_no_preview_in_progress;
-    }
-};
-
 class DisplayConfigurationFailedError : public mir::ClientVisibleError
 {
 public:

@@ -18,11 +18,11 @@
 
 #include "mir/renderer/sw/pixel_source.h"
 
-#include <algorithm>
+#include <mir/graphics/graphic_buffer_allocator.h>
+
 #include <boost/throw_exception.hpp>
 #include <cstring>
 #include <memory>
-#include <mir/graphics/graphic_buffer_allocator.h>
 #include <stdexcept>
 
 namespace mg = mir::graphics;

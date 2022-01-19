@@ -26,7 +26,6 @@
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/cursor.h"
 
-#include "mir_toolkit/common.h"
 #include "mir_toolkit/cursors.h"
 
 #include "mir/test/fake_shared.h"

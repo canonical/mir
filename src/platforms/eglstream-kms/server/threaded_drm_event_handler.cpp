@@ -20,17 +20,12 @@
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/enable_error_info.hpp>
-#include <boost/exception/error_info.hpp>
 #include <boost/exception/info.hpp>
 
-#include <xf86drmMode.h>
 #include <xf86drm.h>
 #include <poll.h>
 #include <cstring>
 #include <algorithm>
-
-#define MIR_LOG_COMPONENT "EGLStream KMS event handler"
-#include "mir/log.h"
 
 namespace mge = mir::graphics::eglstream;
 

@@ -38,7 +38,6 @@
 #include <gtest/gtest.h>
 
 #include <thread>
-#include <cstdlib>
 
 namespace mi = mir::input;
 namespace mis = mir::input::synthesis;

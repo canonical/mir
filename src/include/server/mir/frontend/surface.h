@@ -38,7 +38,6 @@ class CursorImage;
 
 namespace frontend
 {
-class ClientBufferTracker;
 class BufferStream;
 
 class Surface

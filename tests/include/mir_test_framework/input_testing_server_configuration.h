@@ -50,8 +50,6 @@ public:
 protected:
     virtual void inject_input() = 0;
 
-    void wait_until_client_appears(std::string const& surface_name);
-
     std::thread input_injection_thread;
 };
 

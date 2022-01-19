@@ -105,11 +105,6 @@ public:
         return the_gl_config();
     }
 
-    auto render_factory() -> std::shared_ptr<mir::renderer::RendererFactory>
-    {
-        return the_renderer_factory();
-    }
-
 private:
     std::thread main_loop_thread;
     static char const* argv[];

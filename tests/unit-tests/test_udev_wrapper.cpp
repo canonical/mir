@@ -24,7 +24,6 @@
 #include <gmock/gmock.h>
 #include <memory>
 #include <stdexcept>
-#include <umockdev.h>
 #include <libudev.h>
 #include <poll.h>
 #include <sys/sysmacros.h>

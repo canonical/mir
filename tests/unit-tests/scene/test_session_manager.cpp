@@ -20,7 +20,6 @@
 
 #include "mir/scene/session.h"
 #include "mir/scene/session_container.h"
-#include "mir/scene/session_listener.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/compositor/buffer_stream.h"

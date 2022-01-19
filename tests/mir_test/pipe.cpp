@@ -24,7 +24,6 @@
 #include <system_error>
 
 #include <unistd.h>
-#include <fcntl.h>
 
 namespace mt = mir::test;
 

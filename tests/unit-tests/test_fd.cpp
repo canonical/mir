@@ -21,7 +21,6 @@
 #include <gmock/gmock.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdio.h>
 
 namespace
 {

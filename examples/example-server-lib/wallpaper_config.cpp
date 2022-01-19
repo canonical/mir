@@ -18,8 +18,6 @@
 
 #include "wallpaper_config.h"
 #include <boost/filesystem.hpp>
-#include <boost/throw_exception.hpp>
-#include <unistd.h>
 #include <mutex>
 #include <vector>
 

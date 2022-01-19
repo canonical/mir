@@ -17,8 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <stdint.h>
 #include "wayland-util.h"
 
 #ifndef __has_attribute

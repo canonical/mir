@@ -22,7 +22,6 @@
 #include <gflags/gflags.h>
 
 #include <mutex>
-#include <cstdlib>
 
 namespace ml=mir::logging;
 

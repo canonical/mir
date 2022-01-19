@@ -26,8 +26,6 @@
 #include <vector>
 #include <memory>
 
-struct MirKeyEvent;
-
 namespace mir
 {
 namespace input

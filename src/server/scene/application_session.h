@@ -30,14 +30,9 @@
 
 namespace mir
 {
-namespace frontend
-{
-class ClientBuffers;
-}
 namespace graphics
 {
 class GraphicBufferAllocator;
-class BufferAttribute;
 }
 namespace shell { class SurfaceStack; }
 namespace scene

@@ -52,7 +52,6 @@ namespace compositor
 {
 class BufferStreamFactory;
 class Scene;
-class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
 class CompositorReport;
@@ -114,7 +113,6 @@ class CursorImage;
 class GLConfig;
 namespace nested
 {
-class HostConnection;
 class MirClientHostConnection;
 }
 }

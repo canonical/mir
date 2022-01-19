@@ -16,7 +16,6 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#include "src/server/scene/application_session.h"
 #include "mir/test/doubles/stub_session.h"
 #include "mir/scene/session_container.h"
 

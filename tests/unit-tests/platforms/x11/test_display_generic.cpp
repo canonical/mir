@@ -18,14 +18,11 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/graphics/platform.h"
-#include "mir/options/program_option.h"
 
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
-#include "mir/test/doubles/null_console_services.h"
 #include "src/server/report/null/display_report.h"
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "src/platforms/x11/graphics/platform.h"

@@ -69,7 +69,6 @@ public:
      */
     int client_socket_fd() const override { return 0; }
     int client_socket_fd(std::function<void(std::shared_ptr<ms::Session> const&)> const&) const override { return 0; }
-    void remove_endpoint() const {}
     auto socket_name() const -> mir::optional_value<std::string> override { return {}; }
 };
 
@@ -307,7 +306,6 @@ public:
 private:
     std::shared_ptr<mtd::MockCompositor> mock_compositor;
     std::shared_ptr<MockDisplay> mock_display;
-    std::shared_ptr<MockConnector> mock_connector;
     std::shared_ptr<mtd::MockInputManager> mock_input_manager;
     std::shared_ptr<mtd::MockInputDispatcher> mock_input_dispatcher;
 

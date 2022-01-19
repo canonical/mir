@@ -17,12 +17,9 @@
  */
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/test/doubles/null_console_services.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/platforms/gbm-kms/server/kms/display_buffer.h"
-#include "src/platforms/gbm-kms/include/native_buffer.h"
 #include "mir/graphics/dmabuf_buffer.h"
-#include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/mock_drm.h"
