@@ -23,18 +23,12 @@
 #include "const_memcmp.h"
 #include "format.h"
 
-#include <algorithm>
-#include <random>
 #include <memory>
 #include <system_error>
 
 #include <nettle/hmac.h>
 
-#include <linux/random.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/select.h>
 #include <string.h>
 
 #include <boost/throw_exception.hpp>

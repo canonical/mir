@@ -18,19 +18,16 @@
 
 #include "mir/default_server_configuration.h"
 
-#include "mir/main_loop.h"
 #include "mir/graphics/display.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/renderer/gl/context_source.h"
 #include "mir/input/scene.h"
-#include "mir/abnormal_exit.h"
 #include "mir/scene/session.h"
 #include "mir/scene/session_container.h"
 #include "mir/shell/display_configuration_controller.h"
 
 #include "broadcasting_session_event_sink.h"
 #include "mediating_display_changer.h"
-#include "mir/scene/session_container.h"
 #include "session_manager.h"
 #include "surface_allocator.h"
 #include "surface_stack.h"
@@ -40,9 +37,7 @@
 #include "timeout_application_not_responding_detector.h"
 #include "basic_clipboard.h"
 #include "basic_text_input_hub.h"
-#include "mir/options/program_option.h"
 #include "mir/options/default_configuration.h"
-#include "mir/graphics/display_configuration.h"
 #include "mir/frontend/display_changer.h"
 
 namespace mc = mir::compositor;

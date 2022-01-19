@@ -21,7 +21,6 @@
 
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/event_filter.h"
-#include "mir/input/event_filter.h"
 #include "mir/events/input_event.h"
 #include "mir/events/event_builders.h"
 #include "mir/executor.h"

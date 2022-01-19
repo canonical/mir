@@ -30,7 +30,6 @@
 #include "mir/input/device.h"
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/input/buffer_keymap.h"
-#include "mir/fatal.h"
 #include "mir/log.h"
 
 #include <mutex>

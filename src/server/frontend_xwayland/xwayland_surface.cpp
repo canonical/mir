@@ -30,7 +30,6 @@
 
 #include "boost/throw_exception.hpp"
 
-#include <string.h>
 #include <algorithm>
 
 namespace mf = mir::frontend;

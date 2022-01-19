@@ -24,8 +24,6 @@
 #include <mir/options/option.h>
 #include <mir/server.h>
 
-#include <algorithm>
-#include <map>
 #include <stdexcept>
 
 namespace mo = mir::options;

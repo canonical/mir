@@ -27,13 +27,9 @@
 #include "mir/emergency_cleanup.h"
 
 #include <atomic>
-#include <exception>
 #include <mutex>
 #include <csignal>
-#include <cstdlib>
 #include <cassert>
-#include <sys/types.h>
-#include <unistd.h>
 
 namespace
 {

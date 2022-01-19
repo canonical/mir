@@ -29,7 +29,6 @@
 
 #include <boost/throw_exception.hpp>
 
-#include <algorithm>
 #include <stdexcept>
 #include <chrono>
 

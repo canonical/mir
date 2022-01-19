@@ -24,8 +24,6 @@
 #include <linux/input.h>
 
 #include <sstream>
-#include <cstring>
-#include <mutex>
 
 namespace mrl = mir::report::logging;
 namespace ml = mir::logging;

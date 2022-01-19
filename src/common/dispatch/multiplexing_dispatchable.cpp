@@ -18,16 +18,12 @@
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "utils.h"
-#include "mir/raii.h"
 #include "mir/posix_rw_mutex.h"
 
 #include <boost/throw_exception.hpp>
 #include <shared_mutex>
 
 #include <sys/epoll.h>
-#include <poll.h>
-#include <limits.h>
-#include <unistd.h>
 #include <string.h>
 #include <system_error>
 #include <algorithm>

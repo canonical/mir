@@ -18,7 +18,6 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/options/configuration.h"
-#include "mir/options/option.h"
 
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -37,16 +36,11 @@
 #include "mir/abnormal_exit.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/log.h"
-#include "mir/main_loop.h"
 #include "mir/report_exception.h"
-
-#include "mir_toolkit/common.h"
 
 #include <boost/throw_exception.hpp>
 
-#include <map>
 #include <sstream>
-#include <unordered_set>
 
 namespace mg = mir::graphics;
 namespace ml = mir::logging;

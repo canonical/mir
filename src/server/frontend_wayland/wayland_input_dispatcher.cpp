@@ -24,10 +24,6 @@
 #include "wl_touch.h"
 
 #include <mir/input/keymap.h>
-#include <mir/log.h>
-
-#include <linux/input-event-codes.h>
-#include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;

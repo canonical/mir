@@ -18,7 +18,9 @@
 
 #include "mir/depth_layer.h"
 
+#ifndef __clang__
 #include <stdexcept>
+#endif
 
 auto mir::mir_depth_layer_get_index(MirDepthLayer depth_layer) -> unsigned int
 {

@@ -24,9 +24,7 @@
 #include "mir/raii.h"
 #include "mir/logging/logger.h"
 
-#include <fcntl.h>
 #include <poll.h>
-#include <unistd.h>
 #include <system_error>
 #include <signal.h>
 #include <boost/exception/all.hpp>

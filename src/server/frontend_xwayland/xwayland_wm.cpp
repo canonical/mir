@@ -35,9 +35,6 @@
 #include "mir/scene/null_observer.h"
 
 #include <cstring>
-#include <poll.h>
-#include <sys/socket.h>
-#include <unistd.h>
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
