@@ -240,7 +240,7 @@ void mix::XInputPlatform::process_input_events()
             bool consumed = false;
             if (next_pending_event_callback)
             {
-                (*next_pending_event_callback)(event.get());
+                consumed = (*next_pending_event_callback)(event.get());
                 next_pending_event_callback = {};
             }
             if (!consumed)
