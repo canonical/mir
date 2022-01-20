@@ -160,7 +160,6 @@ bool mi::KeyRepeatDispatcher::dispatch(std::shared_ptr<MirEvent const> const& ev
     return next_dispatcher->dispatch(event);
 }
 
-// Returns true if the original event has been handled, that is ::dispatch should not pass it on.
 void mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* kev)
 {
     auto scan_code = mir_keyboard_event_scan_code(kev);
