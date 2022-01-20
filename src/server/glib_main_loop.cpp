@@ -22,7 +22,6 @@
 #include "mir/basic_callback.h"
 
 #include <stdexcept>
-#include <algorithm>
 #include <condition_variable>
 
 #include <boost/throw_exception.hpp>

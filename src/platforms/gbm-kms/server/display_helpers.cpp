@@ -20,7 +20,6 @@
 #include "one_shot_device_observer.h"
 
 #include "kms-utils/drm_mode_resources.h"
-#include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
 #include "kms/quirks.h"
 
@@ -36,7 +35,6 @@
 #include <boost/throw_exception.hpp>
 
 #include <cstring>
-#include <sstream>
 #include <stdexcept>
 #include <xf86drm.h>
 #include <fcntl.h>

@@ -45,9 +45,6 @@ class OutputInfo;
 class InputReport;
 namespace evdev
 {
-struct PointerState;
-struct KeyboardState;
-
 class LibInputDevice : public input::InputDevice
 {
 public:

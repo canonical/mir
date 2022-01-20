@@ -52,7 +52,6 @@ namespace compositor
 {
 class BufferStreamFactory;
 class Scene;
-class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
 class CompositorReport;
@@ -78,7 +77,6 @@ class ShellReport;
 class SurfaceStack;
 class PersistentSurfaceStore;
 namespace decoration { class Manager; }
-namespace detail { class FrontendShell; }
 }
 namespace time
 {
@@ -90,18 +88,15 @@ class SurfaceFactory;
 class BroadcastingSessionEventSink;
 class BufferStreamFactory;
 class MediatingDisplayChanger;
-class PixelBuffer;
 class SessionContainer;
 class SessionEventSink;
 class SessionEventHandlerRegister;
 class SessionListener;
 class SessionCoordinator;
-class SnapshotStrategy;
 class SurfaceStack;
 class SceneReport;
 class PromptSessionListener;
 class PromptSessionManager;
-class CoordinateTranslator;
 }
 namespace graphics
 {
@@ -113,11 +108,6 @@ class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
 class GLConfig;
-namespace nested
-{
-class HostConnection;
-class MirClientHostConnection;
-}
 }
 namespace input
 {
@@ -306,7 +296,6 @@ public:
      * services provided by scene for the rest of Mir
      *  @{ */
     virtual std::shared_ptr<scene::SessionCoordinator>  the_session_coordinator();
-    virtual std::shared_ptr<scene::CoordinateTranslator> the_coordinate_translator();
     /** @} */
 
 
@@ -345,12 +334,6 @@ public:
     virtual std::shared_ptr<ConsoleServices> the_console_services();
     auto default_reports() -> std::shared_ptr<void>;
 
-private:
-    // We need to ensure the platform library is destroyed last as the
-    // DisplayConfiguration can hold weak_ptrs to objects created from the library
-    // TODO: We need a better way to manage the lifetimes of platform libraries
-    std::shared_ptr<mir::SharedLibrary> platform_library;
-
 protected:
     std::shared_ptr<options::Option> the_options() const;
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
@@ -376,7 +359,6 @@ protected:
     CachedPtr<frontend::Connector>   connector;
     CachedPtr<frontend::Connector>   wayland_connector;
     CachedPtr<frontend::Connector>   xwayland_connector;
-    CachedPtr<frontend::Connector>   prompt_connector;
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;
@@ -407,8 +389,6 @@ protected:
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<scene::SessionListener> session_listener;
-    CachedPtr<scene::PixelBuffer>       pixel_buffer;
-    CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
     CachedPtr<scene::Clipboard>         clipboard;
     CachedPtr<scene::TextInputHub>      text_input_hub;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
@@ -421,13 +401,11 @@ protected:
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
-    CachedPtr<graphics::nested::MirClientHostConnection> host_connection;
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<graphics::GLConfig> gl_config;
     CachedPtr<scene::PromptSessionListener> prompt_session_listener;
     CachedPtr<scene::PromptSessionManager> prompt_session_manager;
     CachedPtr<scene::SessionCoordinator> session_coordinator;
-    CachedPtr<scene::CoordinateTranslator> coordinate_translator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::PersistentSurfaceStore> persistent_surface_store;
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
@@ -455,7 +433,6 @@ private:
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
 
-    CachedPtr<shell::detail::FrontendShell> frontend_shell;
     std::vector<WaylandExtensionHook> wayland_extension_hooks;
     WaylandProtocolExtensionFilter wayland_extension_filter =
         [](std::shared_ptr<scene::Session> const&, char const*) { return true; };

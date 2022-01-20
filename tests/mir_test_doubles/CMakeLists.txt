@@ -20,7 +20,6 @@ set(
   triggered_main_loop.cpp
   fake_alarm_factory.cpp
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_message_sender.h
-  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_message_sender.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_console_services.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_device_observer.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/simple_device_observer.h

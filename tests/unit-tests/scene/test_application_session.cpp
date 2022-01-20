@@ -34,8 +34,6 @@
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/mock_event_sink.h"
-#include "mir/test/doubles/null_prompt_session.h"
-#include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_observer_registrar.h"
 #include "mir/test/make_surface_spec.h"
@@ -209,7 +207,6 @@ struct ApplicationSession : public testing::Test
     std::shared_ptr<ms::NullSurfaceObserver> const surface_observer;
     std::shared_ptr<ms::NullSessionListener> const stub_session_listener;
     std::shared_ptr<StubSurfaceStack> const stub_surface_stack;
-    std::shared_ptr<ms::SnapshotStrategy> const null_snapshot_strategy;
     std::shared_ptr<mtd::StubBufferStreamFactory> const stub_buffer_stream_factory =
         std::make_shared<mtd::StubBufferStreamFactory>();
     std::shared_ptr<mtd::StubSurfaceFactory> const stub_surface_factory{std::make_shared<mtd::StubSurfaceFactory>()};

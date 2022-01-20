@@ -39,7 +39,6 @@ namespace mir
 {
 namespace compositor
 {
-struct BufferIPCPackage;
 class BufferStream;
 }
 namespace frontend { class EventSink; }

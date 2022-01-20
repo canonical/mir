@@ -24,8 +24,6 @@
 #include "mir/options/program_option.h"
 
 #include "mir/test/doubles/mock_buffer.h"
-#include "mir/test/doubles/mock_console_services.h"
-#include "mir/test/doubles/null_console_services.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 
 #include <gtest/gtest.h>
@@ -33,22 +31,17 @@
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/temporary_environment_value.h"
-#include "mir/test/pipe.h"
 
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
-#include "mir/test/doubles/fd_matcher.h"
 #include "mir/test/doubles/stub_console_services.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <stdexcept>
 #include <atomic>
-#include <thread>
-#include <chrono>
 
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;

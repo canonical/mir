@@ -29,7 +29,6 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/test/event_matchers.h"
-#include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_input_sink.h"
 #include "mir/test/doubles/advanceable_clock.h"

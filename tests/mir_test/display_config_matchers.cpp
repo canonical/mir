@@ -18,7 +18,6 @@
 
 #include "mir/test/display_config_matchers.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir_toolkit/client_types.h"
 #include <gtest/gtest.h>
 
 namespace mg = mir::graphics;

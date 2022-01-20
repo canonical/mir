@@ -20,13 +20,7 @@
 #include "libinput_ptr.h"
 #include "fd_store.h"
 
-#include <boost/throw_exception.hpp>
-
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <linux/input.h>
 #include <iostream>
 #include <cstring>
 

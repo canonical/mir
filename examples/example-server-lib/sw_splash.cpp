@@ -22,14 +22,10 @@
 #include "wayland_shm.h"
 #include <wayland-client.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #include <chrono>
 #include <cstring>
 #include <thread>
 #include <mutex>
-#include <map>
 
 using namespace mir::geometry;
 

@@ -24,7 +24,6 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
-#include "mir/renderer/gl/texture_target.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/graphics/texture.h"

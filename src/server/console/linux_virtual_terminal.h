@@ -37,7 +37,6 @@ class EmergencyCleanupRegistry;
 namespace graphics
 {
 class DisplayReport;
-class EventHandlerRegistrar;
 }
 
 class VTFileOperations

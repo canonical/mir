@@ -27,9 +27,7 @@
 #include <cstring>
 #include <drm.h>
 #include <sys/ioctl.h>
-#include <vector>
 #include <boost/throw_exception.hpp>
-#include <unordered_map>
 #include <tuple>
 #include <sys/mman.h>
 

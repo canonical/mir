@@ -25,7 +25,6 @@
 #include <system_error>
 #include <boost/throw_exception.hpp>
 
-#include <unistd.h>
 #include <sys/eventfd.h>
 
 namespace mtd = mir::test::doubles;

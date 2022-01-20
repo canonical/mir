@@ -24,11 +24,8 @@
 
 #include <umockdev.h>
 
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <libgen.h>
-#include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>

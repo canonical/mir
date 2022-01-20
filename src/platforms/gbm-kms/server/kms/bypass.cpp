@@ -16,9 +16,9 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/graphics/renderable.h"
-#include "mir/graphics/display_buffer.h"
 #include "bypass.h"
+
+#include "mir/graphics/renderable.h"
 
 using namespace mir;
 namespace mgg = mir::graphics::gbm;

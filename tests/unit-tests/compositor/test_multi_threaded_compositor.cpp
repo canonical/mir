@@ -46,7 +46,6 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <csignal>
 
 using namespace std::literals::chrono_literals;
 

@@ -32,7 +32,6 @@
 
 namespace mir
 {
-namespace frontend { class ClientBuffers; }
 namespace compositor
 {
 class Schedule;

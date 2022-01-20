@@ -28,13 +28,6 @@ namespace mir
 namespace graphics
 {
 class Buffer;
-
-// Temporary hack while progressively removing mirclient support
-enum class BufferIpcMsgType
-{
-    full_msg, //pack the full ipc representation of the buffer
-    update_msg //assume the client has a full representation, and pack only updates to the buffer
-};
 }
 namespace frontend
 {
@@ -43,7 +36,7 @@ class BufferSink
 public:
     virtual ~BufferSink() = default;
 
-    virtual void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType) = 0;
+    virtual void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer) = 0;
     virtual void add_buffer(graphics::Buffer&) = 0;
     virtual void error_buffer(geometry::Size req_size, MirPixelFormat req_format, std::string const& error_msg) = 0;
     virtual void update_buffer(graphics::Buffer&) = 0;

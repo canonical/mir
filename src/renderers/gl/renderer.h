@@ -33,7 +33,6 @@
 
 namespace mir
 {
-namespace gl { class TextureCache; }
 namespace graphics { class DisplayBuffer; }
 namespace renderer
 {

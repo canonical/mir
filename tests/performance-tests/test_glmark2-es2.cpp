@@ -49,15 +49,9 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
         stop_server();
     }
 
-    enum ResultFileType {
-        raw, json
-    };
-
     virtual char const *command() =0;
 
     int run_glmark2(char const *args) {
-        ResultFileType file_type = raw; // Should this still be selectable?
-
         auto const cmd = std::string{} + command() + " -b build " + args;
         mir::test::Popen p(cmd);
 
@@ -82,18 +76,7 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
                 score = match;
             }
 
-            if (file_type == raw) {
-                glmark2_output << line << std::endl;
-            }
-        }
-
-        if (file_type == json) {
-            std::string json = "{";
-            json += "\"benchmark_name\":\"glmark2-es2-mir\"";
-            json += ",";
-            json += "\"score\":\"" + std::to_string(score) + "\"";
-            json += "}";
-            glmark2_output << json;
+            glmark2_output << line << std::endl;
         }
 
         // Use GTest's structured annotation support to expose the score

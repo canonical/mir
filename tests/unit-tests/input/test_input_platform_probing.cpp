@@ -20,7 +20,6 @@
 
 #include "mir/input/input_probe.h"
 
-#include "mir/input/platform.h"
 #include "src/server/report/null_report_factory.h"
 
 #include "mir/options/option.h"

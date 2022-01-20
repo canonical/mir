@@ -18,7 +18,6 @@
 
 #include "mir/input/platform.h"
 #include "mir/test/doubles/mock_option.h"
-#include "mir/console_services.h"
 
 #include "mir/shared_library.h"
 #include "mir_test_framework/udev_environment.h"
@@ -27,7 +26,6 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <fcntl.h>
 #include <mir/fd.h>
 
 namespace mtf = mir_test_framework;

@@ -22,7 +22,6 @@
 
 #include "mir/test/signal.h"
 #include "mir/test/pipe.h"
-#include "mir/test/fake_shared.h"
 #include "mir/test/auto_unblock_thread.h"
 #include "mir/test/barrier.h"
 #include "mir/test/doubles/advanceable_clock.h"

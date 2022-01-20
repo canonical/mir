@@ -18,8 +18,6 @@
 
 #include "global.h"
 
-#include <libxml++/libxml++.h>
-
 Global::Global(std::string const& wl_name, std::string const& generated_name, int version, std::string const& nmspace)
     : wl_name{wl_name},
       version{version},

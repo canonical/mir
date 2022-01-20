@@ -17,15 +17,10 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
-#include "buffer_allocator.h"
-#include "mir/fatal.h"
 
 #include "mir/graphics/egl_error.h"
 
 #include <boost/throw_exception.hpp>
-#include <fcntl.h>
-#include <wayland-client.h>
-#include <wayland-egl.h>
 
 namespace mg = mir::graphics;
 namespace mgw = mir::graphics::wayland;
