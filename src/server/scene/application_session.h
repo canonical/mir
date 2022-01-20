@@ -39,7 +39,6 @@ namespace scene
 {
 class SessionListener;
 class Surface;
-class SnapshotStrategy;
 class BufferStreamFactory;
 class SurfaceFactory;
 

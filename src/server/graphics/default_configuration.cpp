@@ -44,7 +44,6 @@
 
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
-namespace mgn = mir::graphics::nested;
 
 std::shared_ptr<mg::DisplayConfigurationPolicy>
 mir::DefaultServerConfiguration::the_display_configuration_policy()

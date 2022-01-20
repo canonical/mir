@@ -207,7 +207,6 @@ struct ApplicationSession : public testing::Test
     std::shared_ptr<ms::NullSurfaceObserver> const surface_observer;
     std::shared_ptr<ms::NullSessionListener> const stub_session_listener;
     std::shared_ptr<StubSurfaceStack> const stub_surface_stack;
-    std::shared_ptr<ms::SnapshotStrategy> const null_snapshot_strategy;
     std::shared_ptr<mtd::StubBufferStreamFactory> const stub_buffer_stream_factory =
         std::make_shared<mtd::StubBufferStreamFactory>();
     std::shared_ptr<mtd::StubSurfaceFactory> const stub_surface_factory{std::make_shared<mtd::StubSurfaceFactory>()};
