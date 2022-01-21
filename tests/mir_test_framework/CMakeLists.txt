@@ -99,7 +99,7 @@ target_link_libraries(mir-test-framework-static
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
-  ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
+  ${UMOCKDEV_LDFLAGS}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 

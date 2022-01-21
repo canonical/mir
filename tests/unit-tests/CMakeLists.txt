@@ -203,7 +203,7 @@ target_link_libraries(
   mir-test-framework-static
 
   ${Boost_LIBRARIES}
-  ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
+  ${UMOCKDEV_LDFLAGS}
   ${LIBINPUT_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
