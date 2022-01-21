@@ -19,7 +19,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <future>
+#include <boost/throw_exception.hpp>
+#include <thread>
 
 #include "mir/system_executor.h"
 #include "mir/test/signal.h"
@@ -67,4 +68,19 @@ TEST(SystemExecutor, work_executed_from_within_work_item_is_not_blocked_by_work_
 
     EXPECT_TRUE(done->wait_for(60s));
     waited_for_done->raise();
+}
+
+TEST(SystemExecutorDeathTest, unhandled_exception_in_work_item_causes_termination)
+{
+    EXPECT_DEATH(
+        {
+            mir::system_executor.spawn(
+                []()
+                {
+                    BOOST_THROW_EXCEPTION((std::runtime_error{"Oops, unhandled exception"}));
+                });
+            std::this_thread::sleep_for(std::chrono::seconds{60});
+        },
+        ""
+    );
 }
