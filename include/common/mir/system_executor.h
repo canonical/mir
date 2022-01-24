@@ -38,9 +38,12 @@ public:
      *                      This handler will be called on an unspecified thread.
      */
     static void set_unhandled_exception_handler(void (*handler)());
+
+protected:
+    SystemExecutor() = default;
 };
 
-SystemExecutor system_executor;
+extern SystemExecutor& system_executor;
 }
 
 #endif //MIR_SYSTEM_EXECUTOR_H_

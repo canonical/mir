@@ -103,7 +103,7 @@ private:
     std::thread thread;
 };
 
-class ThreadPool
+class ThreadPool : public mir::SystemExecutor
 {
 public:
     ThreadPool() noexcept
@@ -176,6 +176,8 @@ private:
 ThreadPool system_threadpool;
 
 }
+
+mir::SystemExecutor& mir::system_executor = system_threadpool;
 
 void mir::SystemExecutor::spawn(std::function<void()>&& work)
 {
