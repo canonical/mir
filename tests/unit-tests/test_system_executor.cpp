@@ -25,6 +25,7 @@
 
 #include "mir/system_executor.h"
 #include "mir/test/signal.h"
+#include "mir/test/current_thread_name.h"
 
 using namespace std::literals::chrono_literals;
 using namespace testing;
@@ -110,4 +111,23 @@ TEST(SystemExecutor, can_set_unhandled_exception_handler)
     {
         EXPECT_THAT(err.what(), StrEq("Boop!"));
     }
+}
+
+#ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
+TEST(SystemExecutor, executor_threads_have_sensible_name)
+#else
+TEST(SystemExecutor, DISABLED_executor_threads_have_sensible_names)
+#endif
+{
+    auto thread_name_provider = std::make_shared<std::promise<std::string>>();
+    auto thread_name = thread_name_provider->get_future();
+
+    mir::system_executor.spawn(
+        [thread_name_provider]()
+        {
+            thread_name_provider->set_value(mt::current_thread_name());
+        });
+
+    ASSERT_THAT(thread_name.wait_for(std::chrono::seconds{60}), Eq(std::future_status::ready));
+    EXPECT_THAT(thread_name.get(), MatchesRegex("Mir/Workqueue.*"));
 }

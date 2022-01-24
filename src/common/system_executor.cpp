@@ -18,6 +18,8 @@
 
 #include "mir/system_executor.h"
 
+#include "mir/thread_name.h"
+
 #include <thread>
 #include <semaphore>
 #include <array>
@@ -47,6 +49,7 @@ public:
           work_available{0},
           thread{&work_loop, this}
     {
+        mir::set_thread_name("Mir/Workqueue");
     }
 
     ~Worker() noexcept
