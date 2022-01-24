@@ -47,6 +47,8 @@ class DisplayConfigurationController;
 class BasicIdleHandler : public IdleHandler
 {
 public:
+    static constexpr std::chrono::milliseconds display_off_timeout{300 * 1000};
+
     BasicIdleHandler(
         std::shared_ptr<scene::IdleHub> const& idle_hub,
         std::shared_ptr<input::Scene> const& input_scene,
