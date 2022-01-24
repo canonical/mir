@@ -24,16 +24,18 @@ endif
 COMMON_CONFIGURE_OPTIONS = \
   -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"\
   -DMIR_BUILD_INTERPROCESS_TESTS=OFF\
+  -DMIR_LINK_TIME_OPTIMIZATION=ON\
 
+# Disable LTO if optimizations are off
 ifeq ($(filter noopt,$(DEB_BUILD_OPTIONS)),noopt)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
-else
-	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=ON
+	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
 endif
 
-# Disable LTO on s390x, armhf, ppc64el & arm64 due to failing to build
-ifeq ($(filter amd64 i386,$(DEB_HOST_ARCH)),)
+# Disable LTO on jammy due to failing to build
+ifneq ($(filter jammy,$(DEB_DISTRIBUTION)),)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
+	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
 endif
 
 # We can't guarantee non-Ubuntu builds will build against WLCS packages we
@@ -42,8 +44,10 @@ ifeq ($(filter Ubuntu,$(DEB_VENDOR)),)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_WLCS_TESTS=OFF
 endif
 
+export DEB_BUILD_MAINT_OPTIONS
 
 $(info COMMON_CONFIGURE_OPTIONS: ${COMMON_CONFIGURE_OPTIONS})
+$(info DEB_BUILD_MAINT_OPTIONS: ${DEB_BUILD_MAINT_OPTIONS})
 
 AVAILABLE_PLATFORMS=gbm-kms\;x11\;wayland\;eglstream-kms
 
