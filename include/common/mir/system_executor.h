@@ -27,6 +27,17 @@ class SystemExecutor : public Executor
 {
 public:
     void spawn(std::function<void()>&& work) override;
+
+    /**
+     * Set a handler to be called should an unhandled exception occur on the SystemExecutor
+     *
+     * By default the SystemExecutor will allow exceptions to propagate, resulting in process termination.
+     *
+     * \param handler [in]  A handler that will be called in exception context should an exception escape
+     *                      any functor executed by \ref spawn.
+     *                      This handler will be called on an unspecified thread.
+     */
+    static void set_unhandled_exception_handler(void (*handler)());
 };
 
 SystemExecutor system_executor;

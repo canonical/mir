@@ -29,6 +29,16 @@ namespace
 {
 constexpr int const min_threadpool_threads = 4;
 
+void just_rethrow_exception()
+{
+    std::rethrow_exception(std::current_exception());
+}
+
+/* We use an atomic void(*)() rather than a std::function to avoid needing to take a mutex
+ * in exception context, as taking a mutex can itself throw an exception!
+ */
+std::atomic<void(*)()> exception_handler = &just_rethrow_exception;
+
 class Worker
 {
 public:
@@ -75,7 +85,14 @@ private:
         while (!me->shutdown)
         {
             me->work_available.acquire();
-            me->work();
+            try
+            {
+                me->work();
+            }
+            catch (...)
+            {
+                (*exception_handler)();
+            }
             me->work = [](){};
         }
     }
@@ -163,4 +180,9 @@ ThreadPool system_threadpool;
 void mir::SystemExecutor::spawn(std::function<void()>&& work)
 {
     system_threadpool.spawn(std::move(work));
+}
+
+void mir::SystemExecutor::set_unhandled_exception_handler(void (*handler)())
+{
+    exception_handler = handler;
 }

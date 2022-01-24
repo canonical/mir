@@ -21,6 +21,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <thread>
+#include <future>
 
 #include "mir/system_executor.h"
 #include "mir/test/signal.h"
@@ -70,7 +71,7 @@ TEST(SystemExecutor, work_executed_from_within_work_item_is_not_blocked_by_work_
     waited_for_done->raise();
 }
 
-TEST(SystemExecutorDeathTest, unhandled_exception_in_work_item_causes_termination)
+TEST(SystemExecutorDeathTest, unhandled_exception_in_work_item_causes_termination_by_default)
 {
     EXPECT_DEATH(
         {
@@ -83,4 +84,30 @@ TEST(SystemExecutorDeathTest, unhandled_exception_in_work_item_causes_terminatio
         },
         ""
     );
+}
+
+TEST(SystemExecutor, can_set_unhandled_exception_handler)
+{
+    static std::promise<std::exception_ptr> exception_pipe;
+
+    auto exception = exception_pipe.get_future();
+
+    mir::system_executor.set_unhandled_exception_handler(
+        []()
+        {
+            exception_pipe.set_value(std::current_exception());
+        });
+
+    mir::system_executor.spawn([]() { throw std::runtime_error{"Boop!"}; });
+
+    EXPECT_THAT(exception.wait_for(std::chrono::seconds{60}), Eq(std::future_status::ready));
+
+    try
+    {
+        std::rethrow_exception(exception.get());
+    }
+    catch (std::runtime_error const& err)
+    {
+        EXPECT_THAT(err.what(), StrEq("Boop!"));
+    }
 }
