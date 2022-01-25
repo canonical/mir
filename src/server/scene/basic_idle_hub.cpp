@@ -128,7 +128,7 @@ void ms::BasicIdleHub::poke()
 
 void ms::BasicIdleHub::register_interest(
     std::weak_ptr<IdleStateObserver> const& observer,
-    std::chrono::milliseconds timeout)
+    time::Duration timeout)
 {
     register_interest(observer, direct_executor, timeout);
 }
@@ -136,7 +136,7 @@ void ms::BasicIdleHub::register_interest(
 void ms::BasicIdleHub::register_interest(
     std::weak_ptr<IdleStateObserver> const& observer,
     Executor& executor,
-    std::chrono::milliseconds timeout)
+    time::Duration timeout)
 {
     std::unique_lock<std::mutex> lock{mutex};
     auto const iter = timeouts.find(timeout);
@@ -225,7 +225,7 @@ void ms::BasicIdleHub::alarm_fired(std::unique_lock<std::mutex>& lock)
 
 void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp current_time)
 {
-    std::optional<std::chrono::milliseconds> next_timeout;
+    std::optional<time::Duration> next_timeout;
     if (poke_time == current_time)
     {
         // Don't do map lookup for every poke
@@ -233,7 +233,7 @@ void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp c
     }
     else
     {
-        auto const idle_time = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - poke_time);
+        time::Duration const idle_time = current_time - poke_time;
         auto const iter = timeouts.upper_bound(idle_time);
         if (iter != timeouts.end())
         {

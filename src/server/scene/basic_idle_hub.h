@@ -56,12 +56,12 @@ public:
 
     void register_interest(
         std::weak_ptr<IdleStateObserver> const& observer,
-        std::chrono::milliseconds timeout) override;
+        time::Duration timeout) override;
 
     void register_interest(
         std::weak_ptr<IdleStateObserver> const& observer,
         Executor& executor,
-        std::chrono::milliseconds timeout) override;
+        time::Duration timeout) override;
 
     void unregister_interest(IdleStateObserver const& observer) override;
 
@@ -75,15 +75,15 @@ private:
     std::unique_ptr<time::Alarm> const alarm;
     std::mutex mutex;
     /// Maps timeouts (times from last poke) to the multiplexers that need to be fired at those times.
-    std::map<std::chrono::milliseconds, std::shared_ptr<Multiplexer>> timeouts;
+    std::map<time::Duration, std::shared_ptr<Multiplexer>> timeouts;
     /// Should always be equal to timeouts.begin()->first, or nullopt if timeouts is empty. Only purpose is so we don't
     /// need to do a map lookup on every poke (we are poked for every input event).
-    std::optional<std::chrono::milliseconds> first_timeout;
+    std::optional<time::Duration> first_timeout;
     std::vector<std::shared_ptr<Multiplexer>> idle_multiplexers;
     /// The timestamp when we were last poked
     time::Timestamp poke_time;
     /// Amount of time after the poke time before the alarm fires, or none if the alarm is not scheduled
-    std::optional<std::chrono::milliseconds> alarm_timeout;
+    std::optional<time::Duration> alarm_timeout;
 };
 }
 }

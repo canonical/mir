@@ -19,10 +19,11 @@
 #ifndef MIR_SCENE_IDLE_HUB_H_
 #define MIR_SCENE_IDLE_HUB_H_
 
+#include "mir/time/types.h"
+
 #include <memory>
 #include <optional>
 #include <string>
-#include <chrono>
 
 namespace mir
 {
@@ -57,13 +58,13 @@ public:
     /// Timeout is the amount of time Mir will stay idle before triggering the observer
     virtual void register_interest(
         std::weak_ptr<IdleStateObserver> const& observer,
-        std::chrono::milliseconds timeout) = 0;
+        time::Duration timeout) = 0;
 
     /// Timeout is the amount of time Mir will stay idle before triggering the observer
     virtual void register_interest(
         std::weak_ptr<IdleStateObserver> const& observer,
         Executor& executor,
-        std::chrono::milliseconds timeout) = 0;
+        time::Duration timeout) = 0;
 
     virtual void unregister_interest(IdleStateObserver const& observer) = 0;
 
