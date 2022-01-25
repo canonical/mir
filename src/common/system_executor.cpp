@@ -58,8 +58,6 @@ public:
             std::move(shutdown_channel)};
 
         shutdown = resolved_shutdown_location.get();
-
-        mir::set_thread_name("Mir/Workqueue");
     }
 
     ~Worker() noexcept
@@ -116,6 +114,8 @@ private:
 
     static void work_loop(Worker* me, std::promise<std::atomic<bool>*>&& shutdown_channel)
     {
+        mir::set_thread_name("Mir/Workqueue");
+
         std::atomic<bool> shutdown{false};
         shutdown_channel.set_value(&shutdown);
 
