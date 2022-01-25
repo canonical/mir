@@ -101,14 +101,14 @@ private:
     void signal_work_thread_to_halt()
     {
         *shutdown = true;
-        if (work_available.try_acquire())
-        {
-            // We had some work that we hadn't quite got to, but let's drop that on the floor.
-            work = [](){};
-        }
-        // work_available is now guaranteed not-signalled, as try_acquire has consumed any pending signal,
-        // so it's OK to unconditionally raise the signal and so release the workloop thread.
-        // (It would be UB to raise the signal if it were already rasied)
+        /* We need to release the workloop thread by raising the signal.
+         * However, it's UB to raise the semaphore if it's already raised.
+         * So, first, consume any pending signal…
+         */
+        work_available.try_acquire();
+        /* work_available is now guaranteed not-signalled, so it's OK to
+         * unconditionally raise the signal and so release the workloop thread.
+         */
         work_available.release();
     }
 
@@ -124,14 +124,7 @@ private:
             me->work_available.acquire();
             auto work = std::move(me->work);
             me->work = [](){};
-            try
-            {
-                work();
-            }
-            catch (...)
-            {
-                (*exception_handler)();
-            }
+            work();
         }
     }
 
@@ -150,12 +143,21 @@ public:
 
     ~ThreadPool() noexcept
     {
-        // Any active workers have a reference to this ThreadPool. Avoid use-after-free by explicitly
-        // cleaning up the workers first.
-        for (auto worker : workers)
+        // We need to wait for any active workers to finish.
+        bool idle;
+        do
         {
-            worker->stop();
-        }
+            std::this_thread::sleep_for(std::chrono::milliseconds{1});
+
+            std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
+            /* When a worker finishes it either adds itself to the free_workers list
+             * or removes itself from the workers list.
+             *
+             * This means that we're idle once all the workers are free_workers
+             * - that is, the free_workers list is the same size as workers.
+             */
+            idle = workers.size() == free_workers.size();
+        } while(!idle);
     }
 
     void spawn(std::function<void()>&& work)
@@ -178,7 +180,14 @@ public:
         worker.worker->set_work(
             [this, worker, work = std::move(work)]() mutable
             {
-                work();
+                try
+                {
+                    work();
+                }
+                catch (...)
+                {
+                    (*exception_handler)();
+                }
                 recycle(std::move(worker));
             });
     }
