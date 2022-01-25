@@ -104,3 +104,74 @@ TEST_F(BasicIdleHandler, turns_display_back_on_when_active)
     EXPECT_CALL(display, set_power_mode(mir_power_mode_on));
     locked->active();
 }
+
+TEST_F(BasicIdleHandler, off_timeout_is_disabled_on_destruction)
+{
+    std::weak_ptr<ms::IdleStateObserver> observer;
+    msh::BasicIdleHandler handler{
+        mt::fake_shared(idle_hub),
+        mt::fake_shared(input_scene),
+        mt::fake_shared(allocator),
+        mt::fake_shared(display)};
+    EXPECT_CALL(idle_hub, register_interest(_, _))
+        .Times(AnyNumber());
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
+        .WillOnce(SaveArg<0>(&observer));
+    handler.set_display_off_timeout(30s);
+    auto const locked = observer.lock();
+    ASSERT_THAT(locked, Ne(nullptr));
+    EXPECT_CALL(idle_hub, unregister_interest(_))
+        .Times(AnyNumber());
+    EXPECT_CALL(idle_hub, unregister_interest(Ref(*locked)))
+        .Times(1);
+}
+
+TEST_F(BasicIdleHandler, off_timeout_can_be_disabled)
+{
+    std::weak_ptr<ms::IdleStateObserver> observer;
+    msh::BasicIdleHandler handler{
+        mt::fake_shared(idle_hub),
+        mt::fake_shared(input_scene),
+        mt::fake_shared(allocator),
+        mt::fake_shared(display)};
+    EXPECT_CALL(idle_hub, register_interest(_, _))
+        .Times(AnyNumber());
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
+        .WillOnce(SaveArg<0>(&observer));
+    handler.set_display_off_timeout(30s);
+    auto const locked = observer.lock();
+    ASSERT_THAT(locked, Ne(nullptr));
+    EXPECT_CALL(idle_hub, unregister_interest(_))
+        .Times(AnyNumber());
+    EXPECT_CALL(idle_hub, unregister_interest(Ref(*locked)))
+        .Times(1);
+    handler.set_display_off_timeout(std::nullopt);
+    EXPECT_CALL(idle_hub, unregister_interest(_))
+        .Times(0);
+    EXPECT_CALL(idle_hub, register_interest(_, _))
+        .Times(0);
+}
+
+TEST_F(BasicIdleHandler, off_timeout_can_be_changed)
+{
+    std::weak_ptr<ms::IdleStateObserver> observer;
+    msh::BasicIdleHandler handler{
+        mt::fake_shared(idle_hub),
+        mt::fake_shared(input_scene),
+        mt::fake_shared(allocator),
+        mt::fake_shared(display)};
+    EXPECT_CALL(idle_hub, register_interest(_, _))
+        .Times(AnyNumber());
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
+        .WillOnce(SaveArg<0>(&observer));
+    handler.set_display_off_timeout(30s);
+    auto const locked = observer.lock();
+    ASSERT_THAT(locked, Ne(nullptr));
+    EXPECT_CALL(idle_hub, unregister_interest(_))
+        .Times(AnyNumber());
+    EXPECT_CALL(idle_hub, unregister_interest(Ref(*locked)))
+        .Times(1);
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(99s)))
+        .Times(1);
+    handler.set_display_off_timeout(99s);
+}
