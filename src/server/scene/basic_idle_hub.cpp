@@ -99,9 +99,9 @@ ms::BasicIdleHub::BasicIdleHub(
           std::make_unique<AlarmCallback>(mutex, [this](std::unique_lock<std::mutex>& lock)
             {
                 alarm_fired(lock);
-            }))},
-      poke_time{clock->now()}
+            }))}
 {
+    poke();
 }
 
 ms::BasicIdleHub::~BasicIdleHub()
@@ -127,8 +127,8 @@ void ms::BasicIdleHub::poke()
 }
 
 void ms::BasicIdleHub::register_interest(
-        std::weak_ptr<IdleStateObserver> const& observer,
-        std::chrono::milliseconds timeout)
+    std::weak_ptr<IdleStateObserver> const& observer,
+    std::chrono::milliseconds timeout)
 {
     register_interest(observer, direct_executor, timeout);
 }
@@ -148,7 +148,7 @@ void ms::BasicIdleHub::register_interest(
         timeouts.insert({timeout, multiplexer});
         first_timeout = timeouts.begin()->first;
         auto const current_time = clock->now() - poke_time;
-        if (alarm_timeout <= timeout)
+        if (alarm_timeout && alarm_timeout.value() <= timeout)
         {
             // The alarm will be fired before we hit our timeout
             is_active = true;
@@ -171,7 +171,7 @@ void ms::BasicIdleHub::register_interest(
     else
     {
         iter->second->register_interest(observer, executor);
-        is_active = (alarm_timeout <= timeout);
+        is_active = (alarm_timeout && alarm_timeout.value() <= timeout);
     }
     lock.unlock();
     if (auto const shared = observer.lock())
@@ -203,14 +203,19 @@ void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
 
 void ms::BasicIdleHub::alarm_fired(std::unique_lock<std::mutex>& lock)
 {
-    auto const iter = timeouts.find(alarm_timeout);
+    if (!alarm_timeout)
+    {
+        // Possible if the alarm is fired but fails to get the lock until after it's been canceled
+        return;
+    }
+    auto const iter = timeouts.find(alarm_timeout.value());
     std::shared_ptr<Multiplexer> multiplexer;
     if (iter != timeouts.end())
     {
         multiplexer = iter->second;
         idle_multiplexers.push_back(iter->second);
     }
-    schedule_alarm(lock, poke_time + alarm_timeout);
+    schedule_alarm(lock, poke_time + alarm_timeout.value());
     lock.unlock();
     if (multiplexer)
     {
@@ -243,6 +248,6 @@ void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp c
     else
     {
         alarm->cancel();
-        alarm_timeout = std::chrono::milliseconds{0};
+        alarm_timeout = std::nullopt;
     }
 }

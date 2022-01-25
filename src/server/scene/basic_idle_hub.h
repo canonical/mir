@@ -82,8 +82,8 @@ private:
     std::vector<std::shared_ptr<Multiplexer>> idle_multiplexers;
     /// The timestamp when we were last poked
     time::Timestamp poke_time;
-    /// Amount of time after the poke time before the alarm fires
-    std::chrono::milliseconds alarm_timeout{0};
+    /// Amount of time after the poke time before the alarm fires, or none if the alarm is not scheduled
+    std::optional<std::chrono::milliseconds> alarm_timeout;
 };
 }
 }
