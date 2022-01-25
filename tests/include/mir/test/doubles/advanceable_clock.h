@@ -36,7 +36,7 @@ class AdvanceableClock : public mir::time::Clock
 public:
     mir::time::Timestamp now() const override
     {
-        std::lock_guard<std::mutex> lock{clock_mutex};
+        std::lock_guard<std::recursive_mutex> lock{mutex};
         return current_time;
     }
 
@@ -47,7 +47,7 @@ public:
 
     void advance_by(mir::time::Duration step)
     {
-        std::lock_guard<std::mutex> lock{clock_mutex};
+        std::lock_guard<std::recursive_mutex> lock{mutex};
         current_time += step;
         auto next = callbacks.begin();
         while (next != callbacks.end())
@@ -72,11 +72,12 @@ public:
      */
     void register_time_change_callback(std::function<bool(mir::time::Timestamp)> cb)
     {
+        std::lock_guard<std::recursive_mutex> lock{mutex};
         callbacks.push_back(cb);
     }
 
 private:
-    mutable std::mutex clock_mutex;
+    mutable std::recursive_mutex mutex;
     mir::time::Timestamp current_time{
         []
         {
