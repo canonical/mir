@@ -20,10 +20,10 @@
 #define MIR_SHELL_BASIC_IDLE_HANDLER_H_
 
 #include "mir/shell/idle_handler.h"
+#include "mir/proof_of_mutex_lock.h"
 
 #include <memory>
 #include <vector>
-#include <chrono>
 
 namespace mir
 {
@@ -47,8 +47,6 @@ class DisplayConfigurationController;
 class BasicIdleHandler : public IdleHandler
 {
 public:
-    static constexpr std::chrono::milliseconds display_off_timeout{300 * 1000};
-
     BasicIdleHandler(
         std::shared_ptr<scene::IdleHub> const& idle_hub,
         std::shared_ptr<input::Scene> const& input_scene,
@@ -57,15 +55,19 @@ public:
 
     ~BasicIdleHandler();
 
+    void set_display_off_timeout(std::optional<time::Duration> timeout) override;
+
 private:
-    struct Timeout
-    {
-        std::chrono::milliseconds time;
-        std::shared_ptr<scene::IdleStateObserver> observer;
-    };
+    void clear_observers(ProofOfMutexLock const&);
 
     std::shared_ptr<scene::IdleHub> const idle_hub;
-    std::vector<Timeout> const timeouts;
+    std::shared_ptr<input::Scene> const input_scene;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
+    std::shared_ptr<shell::DisplayConfigurationController> const display_config_controller;
+
+    std::mutex mutex;
+    std::optional<time::Duration> current_off_timeout;
+    std::vector<std::shared_ptr<scene::IdleStateObserver>> observers;
 };
 
 }

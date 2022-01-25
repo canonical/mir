@@ -17,6 +17,7 @@
  */
 
 #include "basic_idle_handler.h"
+#include "mir/fatal.h"
 #include "mir/scene/idle_hub.h"
 #include "mir/graphics/renderable.h"
 #include "mir/renderer/sw/pixel_source.h"
@@ -32,12 +33,11 @@ namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
 namespace msh = mir::shell;
 
-using namespace std::literals::chrono_literals;
-
 namespace
 {
+auto const dim_time_before_off = std::chrono::seconds{10};
 unsigned char const black_pixel_data[4] = {0, 0, 0, 255};
-const int coverage_size = 100000;
+int const coverage_size = 100000;
 
 struct DimmingRenderable : public mg::Renderable
 {
@@ -159,21 +159,52 @@ msh::BasicIdleHandler::BasicIdleHandler(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<msh::DisplayConfigurationController> const& display_config_controller)
     : idle_hub{idle_hub},
-      timeouts{
-          Timeout{display_off_timeout - 10s, std::make_shared<Dimmer>(input_scene, allocator)},
-          Timeout{display_off_timeout, std::make_shared<PowerModeSetter>(display_config_controller, mir_power_mode_off)},
-      }
+      input_scene{input_scene},
+      allocator{allocator},
+      display_config_controller{display_config_controller}
 {
-    for (auto const& timeout : timeouts)
-    {
-        idle_hub->register_interest(timeout.observer, timeout.time);
-    }
 }
 
 msh::BasicIdleHandler::~BasicIdleHandler()
 {
-    for (auto const& timeout : timeouts)
+    std::lock_guard<std::mutex> lock{mutex};
+    clear_observers(lock);
+}
+
+void msh::BasicIdleHandler::set_display_off_timeout(std::optional<time::Duration> timeout)
+{
+    std::lock_guard<std::mutex> lock{mutex};
+    if (timeout == current_off_timeout)
     {
-        idle_hub->unregister_interest(*timeout.observer);
+        return;
     }
+    current_off_timeout = timeout;
+    clear_observers(lock);
+    if (timeout)
+    {
+        auto const off_timeout = timeout.value();
+        if (off_timeout <= time::Duration{})
+        {
+            fatal_error("BasicIdleHandler given invalid timeout %d, should be >0", off_timeout.count());
+        }
+        if (off_timeout >= dim_time_before_off * 2)
+        {
+            auto const dim_timeout = off_timeout - dim_time_before_off;
+            auto const dimmer = std::make_shared<Dimmer>(input_scene, allocator);
+            observers.push_back(dimmer);
+            idle_hub->register_interest(dimmer, dim_timeout);
+        }
+        auto const power_setter = std::make_shared<PowerModeSetter>(display_config_controller, mir_power_mode_off);
+        observers.push_back(power_setter);
+        idle_hub->register_interest(power_setter, off_timeout);
+    }
+}
+
+void msh::BasicIdleHandler::clear_observers(ProofOfMutexLock const&)
+{
+    for (auto const& observer : observers)
+    {
+        idle_hub->unregister_interest(*observer);
+    }
+    observers.clear();
 }

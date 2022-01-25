@@ -19,6 +19,10 @@
 #ifndef MIR_SHELL_IDLE_HANDLER_H_
 #define MIR_SHELL_IDLE_HANDLER_H_
 
+#include "mir/time/types.h"
+
+#include <optional>
+
 namespace mir
 {
 namespace shell
@@ -29,6 +33,10 @@ class IdleHandler
 public:
     IdleHandler() = default;
     virtual ~IdleHandler() = default;
+
+    /// Time Mir will sit idle before the display is turned off. Display may go dim some time before this. If nullopt
+    /// is sent the display is never turned off or dimmed, which is the default.
+    virtual void set_display_off_timeout(std::optional<time::Duration> timeout) = 0;
 
 private:
     IdleHandler(IdleHandler const&) = delete;
