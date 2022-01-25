@@ -192,7 +192,7 @@ private:
     void recycle(WorkerHandle&& worker)
     {
         std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
-        if (num_workers_free <= min_threadpool_threads)
+        if (num_workers_free < min_threadpool_threads)
         {
             // If we're below our free-thread minimum, recycle this thread back into the pool…
             free_workers.emplace_front(std::move(worker));
