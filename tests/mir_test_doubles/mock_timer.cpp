@@ -33,8 +33,9 @@ namespace
 class FakeAlarm : public mir::time::Alarm
 {
 public:
-    FakeAlarm(std::unique_ptr<mir::LockableCallback> callback,
-              std::shared_ptr<mt::FakeClock> const& clock);
+    FakeAlarm(
+        std::unique_ptr<mir::LockableCallback> callback,
+        std::shared_ptr<mtd::AdvanceableClock> const& clock);
     ~FakeAlarm() override;
 
 
@@ -49,13 +50,13 @@ private:
         explicit InternalState(std::unique_ptr<mir::LockableCallback> callback);
         State state;
         std::unique_ptr<mir::LockableCallback> callback;
-        mt::FakeClock::time_point threshold;
+        mir::time::Timestamp threshold;
     };
 
-    bool handle_time_change(InternalState& state, mt::FakeClock::time_point now);
+    bool handle_time_change(InternalState& state, mir::time::Timestamp now);
 
     std::shared_ptr<InternalState> const internal_state;
-    std::shared_ptr<mt::FakeClock> const clock;
+    std::shared_ptr<mtd::AdvanceableClock> const clock;
 };
 
 FakeAlarm::InternalState::InternalState(
@@ -66,7 +67,7 @@ FakeAlarm::InternalState::InternalState(
 
 FakeAlarm::FakeAlarm(
     std::unique_ptr<mir::LockableCallback> callback,
-    std::shared_ptr<mt::FakeClock> const& clock)
+    std::shared_ptr<mtd::AdvanceableClock> const& clock)
     : internal_state{std::make_shared<InternalState>(std::move(callback))}, clock{clock}
 {
 }
@@ -90,8 +91,7 @@ FakeAlarm::State FakeAlarm::state() const
     return internal_state->state;
 }
 
-bool FakeAlarm::handle_time_change(InternalState& state,
-                                   mir::test::FakeClock::time_point now)
+bool FakeAlarm::handle_time_change(InternalState& state, mir::time::Timestamp now)
 {
     if (state.state == pending)
     {
@@ -119,7 +119,7 @@ bool FakeAlarm::reschedule_in(std::chrono::milliseconds delay)
     internal_state->threshold = clock->now() + delay;
 
     std::shared_ptr<InternalState> state_copy{internal_state};
-    clock->register_time_change_callback([this, state_copy](mt::FakeClock::time_point now)
+    clock->register_time_change_callback([this, state_copy](mir::time::Timestamp now)
     {
         return handle_time_change(*state_copy, now);
     });
@@ -135,7 +135,7 @@ bool FakeAlarm::reschedule_for(mir::time::Timestamp timeout)
 }
 }
 
-mtd::FakeTimer::FakeTimer(std::shared_ptr<FakeClock> const& clock) : clock{clock}
+mtd::FakeTimer::FakeTimer(std::shared_ptr<AdvanceableClock> const& clock) : clock{clock}
 {
 }
 

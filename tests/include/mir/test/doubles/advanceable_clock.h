@@ -20,6 +20,8 @@
 #define MIR_TEST_DOUBLES_ADVANCEABLE_CLOCK_H_
 
 #include "mir/time/steady_clock.h"
+#include <functional>
+#include <list>
 #include <mutex>
 
 namespace mir
@@ -47,6 +49,30 @@ public:
     {
         std::lock_guard<std::mutex> lock{clock_mutex};
         current_time += step;
+        auto next = callbacks.begin();
+        while (next != callbacks.end())
+        {
+            if (!(*next)(now()))
+            {
+                next = callbacks.erase(next);
+            }
+            else
+            {
+                next++;
+            }
+        }
+    }
+
+    /**
+     * \brief Register an event callback when the time is changed
+     * \param cb    Function to call when the time is changed.
+     *              This function is called with the new time.
+     *              If the function returns false, it will no longer be called
+     *              on subsequent time changes.
+     */
+    void register_time_change_callback(std::function<bool(mir::time::Timestamp)> cb)
+    {
+        callbacks.push_back(cb);
     }
 
 private:
@@ -58,6 +84,7 @@ private:
            return clock.now();
         }()
         };
+    std::list<std::function<bool(mir::time::Timestamp)>> callbacks;
 };
 
 }
