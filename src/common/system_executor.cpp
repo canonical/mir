@@ -47,16 +47,41 @@ class Worker
 public:
     Worker()
         : work{[](){}},
-          work_available{0},
-          thread{&work_loop, this}
+          work_available{0}
     {
+        std::promise<std::atomic<bool>*> shutdown_channel;
+        auto resolved_shutdown_location = shutdown_channel.get_future();
+
+        thread = std::thread{
+            &work_loop,
+            this,
+            std::move(shutdown_channel)};
+
+        shutdown = resolved_shutdown_location.get();
+
         mir::set_thread_name("Mir/Workqueue");
     }
 
     ~Worker() noexcept
     {
         if (thread.joinable())
-            stop();
+        {
+            signal_work_thread_to_halt();
+            if (thread.get_id() == std::this_thread::get_id())
+            {
+                /* We're being destroyed from our own work thread.
+                 * This can only happen when destroying the work functor at me->work = [](){}
+                 * in work_loop results in destroying the last shared pointer to *this.
+                 *
+                 * At this point, work_loop will exit without touching anything
+                 */
+                thread.detach();
+            }
+            else
+            {
+                thread.join();
+            }
+        }
     }
 
     void set_work(std::function<void()>&& to_do)
@@ -71,7 +96,13 @@ public:
      */
     void stop()
     {
-        shutdown = true;
+        signal_work_thread_to_halt();
+        thread.join();
+    }
+private:
+    void signal_work_thread_to_halt()
+    {
+        *shutdown = true;
         if (work_available.try_acquire())
         {
             // We had some work that we hadn't quite got to, but let's drop that on the floor.
@@ -81,29 +112,32 @@ public:
         // so it's OK to unconditionally raise the signal and so release the workloop thread.
         // (It would be UB to raise the signal if it were already rasied)
         work_available.release();
-        thread.join();
     }
-private:
-    static void work_loop(Worker* me)
+
+    static void work_loop(Worker* me, std::promise<std::atomic<bool>*>&& shutdown_channel)
     {
-        while (!me->shutdown)
+        std::atomic<bool> shutdown{false};
+        shutdown_channel.set_value(&shutdown);
+
+        while (!shutdown)
         {
             me->work_available.acquire();
+            auto work = std::move(me->work);
+            me->work = [](){};
             try
             {
-                me->work();
+                work();
             }
             catch (...)
             {
                 (*exception_handler)();
             }
-            me->work = [](){};
         }
     }
 
     std::function<void()> work;
+    std::atomic<bool>* shutdown;
     std::binary_semaphore work_available;
-    std::atomic<bool> shutdown{false};
     std::thread thread;
 };
 
