@@ -204,6 +204,8 @@ void msh::BasicIdleHandler::clear_observers(ProofOfMutexLock const&)
 {
     for (auto const& observer : observers)
     {
+        // If we remove observers in an idle state, the display might become stuck off or dim
+        observer->active();
         idle_hub->unregister_interest(*observer);
     }
     observers.clear();
