@@ -26,6 +26,7 @@
 #include <memory>
 #include <atomic>
 #include <list>
+#include <future>
 
 namespace
 {

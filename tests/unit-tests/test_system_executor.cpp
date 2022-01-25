@@ -131,3 +131,35 @@ TEST(SystemExecutor, DISABLED_executor_threads_have_sensible_names)
     ASSERT_THAT(thread_name.wait_for(std::chrono::seconds{60}), Eq(std::future_status::ready));
     EXPECT_THAT(thread_name.get(), MatchesRegex("Mir/Workqueue.*"));
 }
+
+TEST(SystemExecutor, work_with_dependencies_completes)
+{
+    std::array<std::shared_ptr<std::promise<void>>, 100> promises;
+    for (auto& promise : promises)
+    {
+        promise = std::make_shared<std::promise<void>>();
+    }
+
+    // Set up a big chain of work, with each item depending on the one after it.
+    for(auto i = 0; i < promises.size() - 1; ++i)
+    {
+        mir::system_executor.spawn(
+            [wait_on_promise = promises[i + 1], signal_next = promises[i]]()
+            {
+                auto wait_on = wait_on_promise->get_future();
+                if (wait_on.wait_for(std::chrono::seconds{60}) != std::future_status::ready)
+                {
+                    ADD_FAILURE() << "Timeout waiting for previous work to signal";
+                    throw std::runtime_error{"Timeout"};
+                }
+                signal_next->set_value();
+            });
+    }
+
+    auto first_work_completed = promises[0]->get_future();
+
+    // Release the chain by triggering the final work item.
+    promises.back()->set_value();
+
+    EXPECT_THAT(first_work_completed.wait_for(std::chrono::seconds{60}), Eq(std::future_status::ready));
+}
