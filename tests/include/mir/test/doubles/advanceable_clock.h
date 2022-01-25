@@ -52,7 +52,7 @@ public:
         auto next = callbacks.begin();
         while (next != callbacks.end())
         {
-            if (!(*next)(now()))
+            if (!(*next)(current_time))
             {
                 next = callbacks.erase(next);
             }
