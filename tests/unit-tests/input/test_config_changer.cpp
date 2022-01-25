@@ -23,9 +23,6 @@
 #include "mir/scene/session_container.h"
 #include "mir/scene/session_event_handler_register.h"
 #include "mir/input/input_device_observer.h"
-#include "mir/input/mir_pointer_config.h"
-#include "mir/input/mir_keyboard_config.h"
-#include "mir/input/mir_touchpad_config.h"
 #include "mir/input/mir_touchscreen_config.h"
 
 #include "mir/test/doubles/mock_input_device_hub.h"

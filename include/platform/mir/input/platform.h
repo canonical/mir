@@ -44,7 +44,6 @@ namespace input
 class InputDevice;
 class InputReport;
 class InputDeviceRegistry;
-class InputPlatformPolicy;
 
 enum class PlatformPriority : uint32_t
 {

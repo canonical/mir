@@ -121,5 +121,5 @@ void mtd::StubSession::send_input_config(MirInputConfig const& /*config*/)
 namespace
 {
 // Ensure we don't accidentally have an abstract class
-mtd::StubSession instantiation_test;
+mtd::StubSession instantiation_test [[maybe_unused]];
 }

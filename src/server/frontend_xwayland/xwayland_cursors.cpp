@@ -22,7 +22,6 @@
 #include "xwayland_cursors.h"
 #include "xwayland_log.h"
 
-#include <cstring>
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;

@@ -26,8 +26,6 @@
 #include "mir/events/event_builders.h"
 #include "mir_toolkit/mir_cookie.h"
 
-#include <string.h>
-
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <algorithm>

@@ -29,7 +29,6 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/test/event_matchers.h"
-#include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_input_sink.h"
 #include "mir/test/doubles/advanceable_clock.h"
@@ -105,6 +104,16 @@ struct MockEventBuilder : mi::EventBuilder
                     axis_source, time, action, buttons, x, y, hscroll, vscroll, relative_x, relative_y);
             });
 
+        ON_CALL(*this, pointer_axis_with_stop_event(_, _, _, _, _, _, _, _, _, _, _, _)).WillByDefault(
+            [this](MirPointerAxisSource axis_source, std::optional<Timestamp> time, MirPointerAction action,
+                   MirPointerButtons buttons, float x, float y, float hscroll, float vscroll,
+                   bool hscroll_stop, bool vscroll_stop, float relative_x, float relative_y)
+            {
+                return builder.pointer_axis_with_stop_event(
+                    axis_source, time, action, buttons, x, y, hscroll, vscroll, vscroll_stop, hscroll_stop,
+                    relative_x, relative_y);
+            });
+
         ON_CALL(*this, pointer_axis_discrete_scroll_event(_, _, _, _, _, _, _, _)).WillByDefault(
             [this](MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
                    MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value,
@@ -127,6 +136,11 @@ struct MockEventBuilder : mi::EventBuilder
                 (MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
                  MirPointerButtons buttons_pressed, float x_position, float y_position,
                  float hscroll_value, float vscroll_value, float relative_x_value, float relative_y_value));
+    MOCK_METHOD(mir::EventUPtr, pointer_axis_with_stop_event,
+                (MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
+                 MirPointerButtons buttons_pressed, float x_position, float y_position,
+                 float hscroll_value, float vscroll_value, bool hscroll_stop, bool vscroll_stop,
+                 float relative_x_value, float relative_y_value));
     MOCK_METHOD(mir::EventUPtr, pointer_axis_discrete_scroll_event,
                 (MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
                  MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value, float hscroll_discrete,
@@ -534,8 +548,8 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 5.0f)));
 
     mouse.start(&mock_sink, &mock_builder);
-    env.mock_libinput.setup_axis_event(fake_device, event_time_1, 0.0, -20.0, 0, 2);
-    env.mock_libinput.setup_axis_event(fake_device, event_time_2, 5.0, 0.0, 1, 0);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, {}, -20.0, 0, 2);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_2, 5.0, {}, 1, 0);
     process_events(mouse);
 }
 
@@ -732,8 +746,8 @@ TEST_F(LibInputDeviceOnMouse, scroll_speed_scales_scroll_events)
     settings.horizontal_scroll_scale = 5.0;
     mouse.apply_settings(settings);
 
-    env.mock_libinput.setup_axis_event(fake_device, event_time_1, 0.0, -3.0);
-    env.mock_libinput.setup_axis_event(fake_device, event_time_2, -2.0, 0.0);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, {}, -3.0);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_2, -2.0, {});
 
     mouse.start(&mock_sink, &mock_builder);
     process_events(mouse);
@@ -751,18 +765,38 @@ TEST_F(LibInputDeviceOnTouchpad, process_event_handles_scroll)
 {
     InSequence seq;
     // expect two scroll events..
-    EXPECT_CALL(mock_builder,
-                pointer_axis_event(mir_pointer_axis_source_finger, {time_stamp_1}, mir_pointer_action_motion, 0, 0, 0, 0.0f, -10.0f, 0.0f, 0.0f));
+    EXPECT_CALL(mock_builder, pointer_axis_with_stop_event(
+        mir_pointer_axis_source_finger, {time_stamp_1}, mir_pointer_action_motion, 0,
+        0, 0, 0.0f, -10.0f, false, false, 0.0f, 0.0f));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -10.0f)));
-    EXPECT_CALL(mock_builder,
-                pointer_axis_event(mir_pointer_axis_source_finger, {time_stamp_2}, mir_pointer_action_motion, 0, 0, 0, 1.0f, 0.0f, 0.0f, 0.0f));
+    EXPECT_CALL(mock_builder, pointer_axis_with_stop_event(
+        mir_pointer_axis_source_finger, {time_stamp_2}, mir_pointer_action_motion, 0,
+        0, 0, 1.0f, 0.0f, false, false, 0.0f, 0.0f));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 1.0f)));
 
-    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_1, 0.0, -10.0);
-    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_2, 1.0, 0.0);
+    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_1, {}, -10.0);
+    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_2, 1.0, {});
     touchpad.start(&mock_sink, &mock_builder);
     process_events(touchpad);
+}
 
+TEST_F(LibInputDeviceOnTouchpad, process_event_handles_stop)
+{
+    InSequence seq;
+    // expect two scroll events..
+    EXPECT_CALL(mock_builder, pointer_axis_with_stop_event(
+        mir_pointer_axis_source_finger, {time_stamp_1}, mir_pointer_action_motion, 0,
+        0, 0, 0.0f, -10.0f, false, false, 0.0f, 0.0f));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -10.0f)));
+    EXPECT_CALL(mock_builder, pointer_axis_with_stop_event(
+        mir_pointer_axis_source_finger, {time_stamp_2}, mir_pointer_action_motion, 0,
+        0, 0, 0.0f, 0.0f, false, true, 0.0f, 0.0f));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 0.0f)));
+
+    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_1, {}, -10.0);
+    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_2, {}, 0.0);
+    touchpad.start(&mock_sink, &mock_builder);
+    process_events(touchpad);
 }
 
 TEST_F(LibInputDeviceOnTouchpad, reads_touchpad_settings_from_libinput)

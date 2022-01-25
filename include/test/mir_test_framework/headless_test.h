@@ -51,8 +51,6 @@ public:
 private:
     std::unique_ptr<mir::SharedLibrary> server_platform_graphics_lib;
 };
-
-std::string const& test_socket_file();
 }
 
 #endif /* MIR_TEST_FRAMEWORK_HEADLESS_TEST_H_ */

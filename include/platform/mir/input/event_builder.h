@@ -84,6 +84,16 @@ public:
     virtual EventUPtr touch_event(
         std::optional<Timestamp> timestamp,
         std::vector<mir::events::ContactState> const& contacts) = 0;
+
+    virtual EventUPtr pointer_axis_with_stop_event(
+        MirPointerAxisSource axis_source,
+        std::optional<Timestamp> timestamp,
+        MirPointerAction action,
+        MirPointerButtons buttons_pressed,
+        float x_position, float y_position,
+        float hscroll_value, float vscroll_value,
+        bool hscroll_stop, bool vscroll_stop,
+        float relative_x_value, float relative_y_value) = 0;
 protected:
     EventBuilder(EventBuilder const&) = delete;
     EventBuilder& operator=(EventBuilder const&) = delete;

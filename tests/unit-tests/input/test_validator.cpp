@@ -23,7 +23,6 @@
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
-#include "mir/test/doubles/mock_input_dispatcher.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -31,7 +30,6 @@
 namespace mi = mir::input;
 namespace mev = mir::events;
 namespace mt = mir::test;
-namespace mtd = mt::doubles;
 
 using namespace ::testing;
 

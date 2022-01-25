@@ -18,13 +18,11 @@
 
 #include "mir/input/buffer_keymap.h"
 #include "mir/input/parameter_keymap.h"
-#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mi = mir::input;
-namespace mt = mir::test;
 
 using namespace ::testing;
 

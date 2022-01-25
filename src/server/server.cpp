@@ -104,7 +104,6 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(shell)\
     MACRO(application_not_responding_detector)\
     MACRO(cookie_authority)\
-    MACRO(coordinate_translator) \
     MACRO(persistent_surface_store)
 
 #define FOREACH_ACCESSOR(MACRO)\

@@ -32,7 +32,6 @@
 #define MIR_LOG_COMPONENT "miral::Keymap"
 #include <mir/log.h>
 
-#include <algorithm>
 #include <mutex>
 #include <string>
 #include <vector>

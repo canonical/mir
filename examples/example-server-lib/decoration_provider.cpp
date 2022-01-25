@@ -34,7 +34,6 @@
 #include <map>
 #include <string>
 #include <cstring>
-#include <sstream>
 
 #include <boost/throw_exception.hpp>
 #include <system_error>

@@ -18,15 +18,9 @@
 
 #include "mir/events/event_builders.h"
 
-#define MIR_LOG_COMPONENT "event-builders"
-#include "mir/log.h"
-
 #include "mir/events/event_private.h"
 #include "mir/events/window_placement_event.h"
-#include "mir/cookie/blob.h"
 #include "mir/input/xkb_mapper.h"
-
-#include <string.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -286,6 +280,33 @@ mir::EventUPtr mir::events::make_pointer_axis_event(
         device_id, timestamp, modifiers, cookie, action, buttons_pressed, x_axis_value,
         y_axis_value, relative_x_value, relative_y_value, vscroll_value, hscroll_value);
     e->set_axis_source(axis_source);
+
+    return make_uptr_event(e);
+}
+
+mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
+    MirPointerAxisSource axis_source,
+    MirInputDeviceId device_id,
+    std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& cookie,
+    MirInputEventModifiers modifiers,
+    MirPointerAction action,
+    MirPointerButtons buttons_pressed,
+    float x_axis_value,
+    float y_axis_value,
+    float hscroll_value,
+    float vscroll_value,
+    bool hscroll_stop,
+    bool vscroll_stop,
+    float relative_x_value,
+    float relative_y_value)
+{
+    auto const e = new_event<MirPointerEvent>(
+        device_id, timestamp, modifiers, cookie, action, buttons_pressed, x_axis_value,
+        y_axis_value, relative_x_value, relative_y_value, vscroll_value, hscroll_value);
+    e->set_axis_source(axis_source);
+    e->set_hscroll_stop(hscroll_stop);
+    e->set_vscroll_stop(vscroll_stop);
 
     return make_uptr_event(e);
 }

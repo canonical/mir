@@ -22,13 +22,8 @@
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
 #include <memory>
 #include <string>
-#include <iostream>
 
 namespace mo = mir::options;
 namespace mi = mir::input;

@@ -18,10 +18,7 @@
 
 #include "keyboard_resync_dispatcher.h"
 
-#include "mir/input/seat.h"
 #include "mir/events/keyboard_resync_event.h"
-
-#include <unordered_set>
 
 namespace mi = mir::input;
 

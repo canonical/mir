@@ -20,7 +20,6 @@
 
 #include <libgen.h>
 
-#include <cstring>
 #include <iostream>
 
 int main(int argc, char* argv[])

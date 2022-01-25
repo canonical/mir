@@ -27,7 +27,6 @@ namespace mir_test_framework
 {
 struct PassthroughTracker
 {
-    bool wait_for_passthrough_frames(size_t num_frames, std::chrono::milliseconds ms);
     void note_passthrough();
 
 private:

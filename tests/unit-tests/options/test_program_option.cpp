@@ -18,9 +18,6 @@
 
 #include "mir/options/program_option.h"
 
-#include <boost/program_options/cmdline.hpp>
-#include <boost/program_options/parsers.hpp>
-
 #include <cstdlib>
 
 #include <gtest/gtest.h>

@@ -26,11 +26,7 @@
 #include "mir/graphics/egl_error.h"
 
 #include <boost/throw_exception.hpp>
-#include <boost/exception/info.hpp>
 #include <boost/exception/errinfo_file_name.hpp>
-#include <xf86drm.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <one_shot_device_observer.h>
 

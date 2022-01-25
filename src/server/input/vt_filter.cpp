@@ -22,10 +22,6 @@
 #include "mir/log.h"
 
 #include <linux/input.h>
-#include <linux/vt.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 mir::input::VTFilter::VTFilter(std::unique_ptr<mir::VTSwitcher> switcher)
     : switcher{std::move(switcher)}

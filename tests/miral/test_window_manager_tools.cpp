@@ -30,7 +30,6 @@
 
 #include <mir/test/doubles/stub_session.h>
 #include <mir/test/doubles/stub_surface.h>
-#include "mir/test/doubles/mock_display_configuration.h"
 #include <mir/test/fake_shared.h>
 
 #include <gtest/gtest.h>

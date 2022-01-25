@@ -67,7 +67,6 @@ class PromptSessionManager;
 class SessionListener;
 class SessionCoordinator;
 class SurfaceFactory;
-class CoordinateTranslator;
 class Session;
 }
 namespace input
@@ -264,10 +263,6 @@ public:
     /// A secret can be saved and any process this secret is shared
     /// with can verify Mir-generated cookies, or produce their own.
     void override_the_cookie_authority(Builder<cookie::Authority> const& cookie_authority_builder);
-
-    /// Sets an override functor for creating the coordinate translator.
-    void override_the_coordinate_translator(
-        Builder<scene::CoordinateTranslator> const& coordinate_translator_builder);
 
     /// Sets an override functor for creating the input dispatcher.
     void override_the_input_dispatcher(Builder<input::InputDispatcher> const& input_dispatcher_builder);

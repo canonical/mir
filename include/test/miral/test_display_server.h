@@ -31,7 +31,6 @@
 #include <mutex>
 
 namespace mir { namespace shell { class WindowManager; }}
-namespace mir { namespace client { class Connection; }}
 namespace miral
 {
 class WindowManagementPolicy;

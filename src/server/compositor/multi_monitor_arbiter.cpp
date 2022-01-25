@@ -18,11 +18,9 @@
 
 #include "multi_monitor_arbiter.h"
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/event_sink.h"
 #include "schedule.h"
 #include <boost/throw_exception.hpp>
-#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;

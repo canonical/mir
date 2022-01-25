@@ -31,8 +31,6 @@
 
 #include <boost/throw_exception.hpp>
 
-#include <stdexcept>
-
 #include <string.h>
 #include <endian.h>
 

@@ -20,10 +20,7 @@
 
 #include <mir/graphics/cursor_image.h>
 
-#include <boost/throw_exception.hpp>
 #include <stdexcept>
-
-#include <string.h>
 
 #include <mir_toolkit/cursors.h>
 

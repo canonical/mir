@@ -23,7 +23,6 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/threaded_dispatcher.h"
 
-#include "mir/main_loop.h"
 #include "mir/thread_name.h"
 #include "mir/unwind_helpers.h"
 #include "mir/terminate_with_current_exception.h"

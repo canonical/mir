@@ -172,8 +172,6 @@ target_link_libraries(
 
   mircommon
 
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARIES}
   ${Boost_LIBRARIES}
   ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
@@ -204,10 +202,8 @@ target_link_libraries(
   mir-test-static
   mir-test-framework-static
 
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARIES}
   ${Boost_LIBRARIES}
-  ${UMOCKDEV_LIBRARIES}
+  ${UMOCKDEV_LDFLAGS}
   ${LIBINPUT_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )

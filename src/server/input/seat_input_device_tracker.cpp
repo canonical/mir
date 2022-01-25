@@ -199,12 +199,6 @@ void mi::SeatInputDeviceTracker::update_states()
                               [](auto const& acc, auto const& item) { return acc | item.second.buttons; });
 }
 
-mir::geometry::Point mi::SeatInputDeviceTracker::cursor_position() const
-{
-    std::lock_guard<std::mutex> lock(device_state_mutex);
-    return {cursor_x, cursor_y};
-}
-
 MirPointerButtons mi::SeatInputDeviceTracker::button_state() const
 {
     std::lock_guard<std::mutex> lock(device_state_mutex);

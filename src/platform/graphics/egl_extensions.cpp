@@ -22,9 +22,6 @@
 #include <stdexcept>
 #include <cstring>
 
-#define MIR_LOG_COMPONENT "EGL extensions"
-#include "mir/log.h"
-
 namespace mg=mir::graphics;
 
 namespace

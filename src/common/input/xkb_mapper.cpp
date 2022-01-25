@@ -25,7 +25,6 @@
 
 #include <linux/input-event-codes.h>
 
-#include <sstream>
 #include <unordered_set>
 
 namespace mi = mir::input;

@@ -38,7 +38,6 @@
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
 
-#include <algorithm>
 #include <chrono>
 #include <boost/throw_exception.hpp>
 #include <wayland-server-protocol.h>

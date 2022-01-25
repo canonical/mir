@@ -17,7 +17,6 @@
  */
 
 #include "mir/flags.h"
-#include "mir_toolkit/common.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -16,13 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "MirCursorAPI"
-
 #include "mir_toolkit/cursors.h"
-
-#include "mir/uncaught.h"
-
-#include <memory>
 
 // Cursor names are from CSS3: https://www.w3.org/TR/css-ui-3/#propdef-cursor
 extern "C" char const* const mir_default_cursor_name = "default";

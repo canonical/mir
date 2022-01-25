@@ -25,7 +25,6 @@
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/buffer.h"
 #include "mir/geometry/rectangle.h"
-#include <algorithm>
 
 namespace mtf = mir_test_framework;
 namespace mg = mir::graphics;

@@ -24,7 +24,6 @@
 
 #include <vector>
 #include <unordered_set>
-#include <boost/assign.hpp>
 
 namespace mgg = mir::graphics::gbm;
 namespace mo = mir::options;

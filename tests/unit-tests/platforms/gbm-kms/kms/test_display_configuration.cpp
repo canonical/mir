@@ -23,7 +23,6 @@
 #include "mir/time/steady_clock.h"
 #include "mir/glib_main_loop.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
-#include "src/platforms/gbm-kms/server/kms/kms_display_configuration.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/options/program_option.h"
 #include "src/platforms/gbm-kms/server/kms/quirks.h"

@@ -240,7 +240,6 @@ Argument::TypeDescriptor Argument::get_type(xmlpp::Element const& node, bool is_
     }
 }
 
-#include <iostream>
 std::experimental::optional<std::string> Argument::get_interface(xmlpp::Element const& node)
 {
     std::string ret = node.get_attribute_value("interface");

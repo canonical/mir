@@ -24,10 +24,8 @@
 #include <mir/main_loop.h>
 #include <mir/report_exception.h>
 #include <mir/options/option.h>
-#include <mir/options/configuration.h>
 
 #include <algorithm>
-#include <chrono>
 #include <mutex>
 #include <thread>
 

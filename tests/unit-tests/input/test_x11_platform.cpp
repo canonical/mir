@@ -25,7 +25,6 @@
 
 #include "mir/events/event_private.h"
 #include "mir/dispatch/dispatchable.h"
-#include "mir_toolkit/event.h"
 #include "mir_toolkit/events/input/input_event.h"
 #include "mir/test/doubles/mock_input_sink.h"
 #include "mir/test/doubles/mock_input_seat.h"

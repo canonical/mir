@@ -55,9 +55,9 @@ target_link_libraries(
 
   mircommon
 
+  ${MIR_PLATFORM_REFERENCES}
+  ${MIR_SERVER_REFERENCES}
   ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARIES}
   # GBM platform dependencies
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
@@ -65,8 +65,6 @@ target_link_libraries(
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${MIR_PLATFORM_REFERENCES}
-  ${MIR_SERVER_REFERENCES}
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "gbm-kms")

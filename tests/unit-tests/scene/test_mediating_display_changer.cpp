@@ -19,7 +19,6 @@
 #include "src/server/scene/mediating_display_changer.h"
 #include "mir/scene/session_container.h"
 #include "mir/graphics/display_configuration_policy.h"
-#include "mir/geometry/rectangles.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 #include "mir/server_action_queue.h"
 

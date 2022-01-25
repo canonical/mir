@@ -17,7 +17,6 @@
  */
 
 #include "mir/graphics/atomic_frame.h"
-#include "mir/log.h"
 
 namespace mir { namespace graphics {
 

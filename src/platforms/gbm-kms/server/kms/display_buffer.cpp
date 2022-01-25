@@ -40,7 +40,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <chrono>
-#include <thread>
 #include <algorithm>
 
 namespace mg = mir::graphics;

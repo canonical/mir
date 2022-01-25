@@ -18,7 +18,6 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/graphics/platform.h"
 #include "mir/options/program_option.h"
 
 #include "mir/test/doubles/mock_egl.h"

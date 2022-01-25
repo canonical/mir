@@ -16,28 +16,22 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
 #include "mir/scene/output_properties_cache.h"
 #include "src/server/scene/basic_surface.h"
-#include "src/server/scene/legacy_surface_change_notification.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/frontend/event_sink.h"
 #include "mir/scene/surface_event_source.h"
 
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/mock_input_surface.h"
 #include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/doubles/null_event_sink.h"
-#include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <stdexcept>
-#include <cstring>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;

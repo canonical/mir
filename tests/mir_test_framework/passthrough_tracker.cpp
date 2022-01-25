@@ -27,9 +27,3 @@ void mtf::PassthroughTracker::note_passthrough()
     cv.notify_all();
 }
 
-bool mtf::PassthroughTracker::wait_for_passthrough_frames(size_t nframes, std::chrono::milliseconds ms)
-{
-    std::unique_lock<std::mutex> lk(mutex);
-    return cv.wait_for(lk, ms, [&] { return num_passthrough >= nframes; } );
-}
-

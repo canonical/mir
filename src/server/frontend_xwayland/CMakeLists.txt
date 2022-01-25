@@ -16,7 +16,7 @@ set(
                           xwayland_surface_role_surface.h
   xwayland_surface_observer.cpp xwayland_surface_observer.h
                           xwayland_surface_observer_surface.h
-  xwayland_wm_shell.cpp   xwayland_wm_shell.h
+  xwayland_wm_shell.h
   scaled_buffer_stream.cpp scaled_buffer_stream.h
 )
 

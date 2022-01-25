@@ -47,7 +47,6 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
-#include "mir/renderer/gl/texture_target.h"
 #include "mir/frontend/buffer_stream_id.h"
 
 #include "mir/input/seat.h"

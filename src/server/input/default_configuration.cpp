@@ -60,7 +60,6 @@ namespace mi = mir::input;
 namespace mr = mir::report;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
-namespace mgn = mg::nested;
 namespace msh = mir::shell;
 namespace md = mir::dispatch;
 

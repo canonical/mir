@@ -24,7 +24,6 @@
 #include "mir/anonymous_shm_file.h"
 
 #include <fcntl.h>
-#include <drm.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

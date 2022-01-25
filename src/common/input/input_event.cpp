@@ -311,6 +311,27 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
    }
 })
 
+bool mir_pointer_event_axis_stop(MirPointerEvent const* pev, MirPointerAxis axis) MIR_HANDLE_EVENT_EXCEPTION(
+{
+   switch (axis)
+   {
+   case mir_pointer_axis_vscroll:
+       return pev->vscroll_stop();
+   case mir_pointer_axis_hscroll:
+       return pev->hscroll_stop();
+   case mir_pointer_axis_x:
+   case mir_pointer_axis_y:
+   case mir_pointer_axis_relative_x:
+   case mir_pointer_axis_relative_y:
+   case mir_pointer_axis_vscroll_discrete:
+   case mir_pointer_axis_hscroll_discrete:
+       return false;
+   default:
+       mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
+       abort();
+   }
+})
+
 bool mir_input_event_has_cookie(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     switch (ev->input_type())

@@ -22,7 +22,6 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/session.h"
 #include "mir/scene/session_listener.h"
-#include "mir/scene/prompt_session.h"
 #include "mir/scene/application_not_responding_detector.h"
 #include "mir/shell/surface_stack.h"
 #include "mir/scene/session_event_sink.h"
@@ -35,7 +34,6 @@
 
 #include <stdexcept>
 #include <memory>
-#include <cassert>
 #include <algorithm>
 
 namespace mf = mir::frontend;

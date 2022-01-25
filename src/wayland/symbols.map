@@ -403,6 +403,20 @@ global:
     vtable?for?mir::wayland::VirtualKeyboardV1;
     virtual?thunk?to?mir::wayland::VirtualKeyboardV1::?VirtualKeyboardV1*;
 
+    mir::wayland::TextInputManagerV2::*;
+    non-virtual?thunk?to?mir::wayland::TextInputManagerV2::*;
+    typeinfo?for?mir::wayland::TextInputManagerV2;
+    vtable?for?mir::wayland::TextInputManagerV2;
+    typeinfo?for?mir::wayland::TextInputManagerV2::Global;
+    vtable?for?mir::wayland::TextInputManagerV2::Global;
+    virtual?thunk?to?mir::wayland::TextInputManagerV2::?TextInputManagerV2*;
+
+    mir::wayland::TextInputV2::*;
+    non-virtual?thunk?to?mir::wayland::TextInputV2::*;
+    typeinfo?for?mir::wayland::TextInputV2;
+    vtable?for?mir::wayland::TextInputV2;
+    virtual?thunk?to?mir::wayland::TextInputV2::?TextInputV2*;
+
     mir::wayland::TextInputManagerV3::*;
     non-virtual?thunk?to?mir::wayland::TextInputManagerV3::*;
     typeinfo?for?mir::wayland::TextInputManagerV3;

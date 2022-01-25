@@ -29,7 +29,6 @@
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <boost/exception/diagnostic_information.hpp>
 
 namespace
 {

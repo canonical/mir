@@ -18,23 +18,18 @@
 
 #include "mir_test_framework/async_server_runner.h"
 #include "mir_test_framework/command_line_server_configuration.h"
-#include "mir_test_framework/canonical_window_manager_policy.h"
 
 #include "mir/fd.h"
 #include "mir/main_loop.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include <mir/report_exception.h>
 #include <mir/thread_name.h>
 #include "mir/test/doubles/null_logger.h"
-#include <miral/set_window_management_policy.h>
 
 #include <boost/throw_exception.hpp>
 
 #include <gtest/gtest.h>
 
-namespace geom = mir::geometry;
 namespace ml = mir::logging;
 namespace mo = mir::options;
 namespace msh = mir::shell;

@@ -21,7 +21,6 @@
 
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
-#include <cstdio>
 #include <fcntl.h>
 #include <boost/throw_exception.hpp>
 
