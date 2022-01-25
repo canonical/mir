@@ -224,7 +224,7 @@ ThreadPool system_threadpool;
 
 }
 
-mir::SystemExecutor& mir::system_executor = system_threadpool;
+mir::Executor& mir::system_executor = system_threadpool;
 
 void mir::SystemExecutor::spawn(std::function<void()>&& work)
 {

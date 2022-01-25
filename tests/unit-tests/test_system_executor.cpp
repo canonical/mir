@@ -93,7 +93,7 @@ TEST(SystemExecutor, can_set_unhandled_exception_handler)
 
     auto exception = exception_pipe.get_future();
 
-    mir::system_executor.set_unhandled_exception_handler(
+    mir::SystemExecutor::set_unhandled_exception_handler(
         []()
         {
             exception_pipe.set_value(std::current_exception());

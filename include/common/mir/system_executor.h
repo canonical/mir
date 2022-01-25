@@ -43,7 +43,7 @@ protected:
     SystemExecutor() = default;
 };
 
-extern SystemExecutor& system_executor;
+extern Executor& system_executor;
 }
 
 #endif //MIR_SYSTEM_EXECUTOR_H_
