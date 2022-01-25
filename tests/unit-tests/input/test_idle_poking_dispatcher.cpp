@@ -18,6 +18,7 @@
 
 #include "src/server/input/idle_poking_dispatcher.h"
 
+#include "mir/executor.h"
 #include "mir/events/keyboard_event.h"
 #include "mir/events/keyboard_resync_event.h"
 #include "mir/events/pointer_event.h"
@@ -81,7 +82,6 @@ auto touch_ev() -> std::shared_ptr<MirEvent>
     touch_ev->set_y(0, 0);
     return touch_ev;
 }
-
 }
 
 TEST_F(IdlePokingDispatcher, forwards_events)
