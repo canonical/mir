@@ -57,9 +57,12 @@ template<typename DRMUPtr, DRMUPtr(*)(int, uint32_t)>
 class ObjectCollection
 {
 public:
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     class iterator :
         public std::iterator<std::input_iterator_tag, DRMUPtr>
     {
+#pragma GCC diagnostic pop
     public:
         iterator(iterator const& from);
         iterator& operator=(iterator const& rhs);
