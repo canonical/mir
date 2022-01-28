@@ -3,7 +3,7 @@ set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirwayland")
 
 add_subdirectory(generator/)
-add_subdirectory(generated/)
+add_subdirectory(protocol/)
 
 set_property(SOURCE
     ${GENERATED_FILES}
@@ -32,7 +32,7 @@ target_link_libraries(mirwayland
 target_include_directories(mirwayland
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/wayland
-    ${CMAKE_CURRENT_BINARY_DIR}/generated
+    ${CMAKE_CURRENT_BINARY_DIR}/protocol
 )
 
 set_target_properties(mirwayland

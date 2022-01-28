@@ -1,4 +1,4 @@
-set(PROTOCOL "${CMAKE_CURRENT_SOURCE_DIR}/../protocol/server-decoration.xml")
+set(PROTOCOL "${CMAKE_CURRENT_SOURCE_DIR}/server-decoration.xml")
 set(OUTPUT_PATH_HEADER "${CMAKE_CURRENT_BINARY_DIR}/server-decoration_wrapper.h")
 set(OUTPUT_PATH_SRC "${CMAKE_CURRENT_BINARY_DIR}/server-decoration_wrapper.cpp")
 

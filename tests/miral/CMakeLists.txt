@@ -64,7 +64,7 @@ target_link_libraries(miral-test-internal
     ${GMOCK_LIBRARIES}
 )
 
-add_subdirectory(generated/)
+add_subdirectory(protocol/)
 
 set_property(SOURCE
     ${GENERATED_FILES}
@@ -83,7 +83,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
 
 add_dependencies(miral-test refresh-test-wayland-wrapper)
 
-set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/generated/")
+set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/protocol/")
 
 target_link_libraries(miral-test
     mir-test-assist
