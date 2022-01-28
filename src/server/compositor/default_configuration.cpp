@@ -27,8 +27,6 @@
 
 #include "mir/options/configuration.h"
 
-#include <boost/throw_exception.hpp>
-
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace mf = mir::frontend;

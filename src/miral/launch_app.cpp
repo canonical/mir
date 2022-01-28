@@ -22,7 +22,6 @@
 #include <boost/throw_exception.hpp>
 
 #include <unistd.h>
-#include <signal.h>
 
 #include <cstring>
 #include <stdexcept>

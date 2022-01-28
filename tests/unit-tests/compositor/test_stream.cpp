@@ -17,11 +17,8 @@
  */
 
 #include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/fake_shared.h"
 #include "src/server/compositor/stream.h"
-#include "mir/scene/null_surface_observer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

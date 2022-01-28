@@ -23,7 +23,6 @@
 #include "mir/fatal.h"
 #include "mir/log.h"
 #include <string.h> // strcmp
-#include <sys/stat.h>
 
 #include <boost/throw_exception.hpp>
 #include <system_error>

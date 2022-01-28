@@ -34,12 +34,10 @@
 #include "mir/graphics/egl_logger.h"
 
 #include <boost/throw_exception.hpp>
-#include <boost/exception/diagnostic_information.hpp>
 #include <xf86drm.h>
 #include <sstream>
 
 #include <fcntl.h>
-#include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <boost/exception/errinfo_file_name.hpp>
 #include <xf86drmMode.h>

@@ -22,8 +22,6 @@
 #include "mir/events/pointer_event.h"
 #include "mir/events/touch_event.h"
 
-#include <stdlib.h>
-
 MirInputEvent::MirInputEvent(MirInputEventType input_type,
                              MirInputDeviceId dev,
                              std::chrono::nanoseconds et,

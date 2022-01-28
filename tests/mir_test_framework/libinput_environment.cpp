@@ -93,12 +93,6 @@ void mtf::LibInputEnvironment::add_standard_device(std::string const& device_nam
     mock_libinput.setup_device_add_event(dev);
 }
 
-void mtf::LibInputEnvironment::remove_standard_device(std::string const& device_name)
-{
-    mock_libinput.setup_device_remove_event(available_devs[device_name]);
-    available_devs.erase(device_name);
-}
-
 libinput_device* mtf::LibInputEnvironment::setup_device(std::string const& device_name)
 {
     auto entry = standard_devices.find(device_name);

@@ -22,11 +22,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "stream.h"
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/buffer_id.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/display.h"
 
-#include <cassert>
 #include <memory>
 
 namespace mc = mir::compositor;

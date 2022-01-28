@@ -26,7 +26,6 @@
 #include "mir/scene/session_event_sink.h"
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
-#include "mir/geometry/rectangles.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_observer.h"
@@ -61,25 +60,6 @@ public:
     uint32_t code() const noexcept override
     {
         return mir_display_configuration_error_in_progress;
-    }
-};
-
-class DisplayConfigurationNotInProgressError : public mir::ClientVisibleError
-{
-public:
-    DisplayConfigurationNotInProgressError()
-        : ClientVisibleError("No base display configuration preview in progress")
-    {
-    }
-
-    MirErrorDomain domain() const noexcept override
-    {
-        return mir_error_domain_display_configuration;
-    }
-
-    uint32_t code() const noexcept override
-    {
-        return mir_display_configuration_error_no_preview_in_progress;
     }
 };
 

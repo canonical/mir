@@ -249,12 +249,15 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
 {
     auto const h_scroll = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll);
     auto const v_scroll = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll);
+    auto const h_scroll_stop = mir_pointer_event_axis_stop(event, mir_pointer_axis_hscroll);
+    auto const v_scroll_stop = mir_pointer_event_axis_stop(event, mir_pointer_axis_vscroll);
     auto const h_scroll_discrete = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll_discrete);
     auto const v_scroll_discrete = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll_discrete);
     auto const axis_source = wayland_axis_source(mir_pointer_event_axis_source(event));
 
     // Don't send an axis source unless we have one and we're also sending some sort of axis event.
-    if (axis_source && (h_scroll || v_scroll || h_scroll_discrete || v_scroll_discrete))
+    if (axis_source &&
+        (h_scroll || v_scroll || h_scroll_stop || v_scroll_stop || h_scroll_discrete || v_scroll_discrete))
     {
         send_axis_source_event(axis_source.value());
         needs_frame = true;
@@ -290,6 +293,18 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
             timestamp_of(event),
             Axis::vertical_scroll,
             v_scroll);
+        needs_frame = true;
+    }
+
+    if (h_scroll_stop)
+    {
+        send_axis_stop_event(timestamp_of(event), Axis::horizontal_scroll);
+        needs_frame = true;
+    }
+
+    if (v_scroll_stop)
+    {
+        send_axis_stop_event(timestamp_of(event), Axis::vertical_scroll);
         needs_frame = true;
     }
 }

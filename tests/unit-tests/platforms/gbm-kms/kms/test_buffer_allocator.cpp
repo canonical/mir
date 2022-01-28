@@ -21,8 +21,6 @@
 #include "mir/test/doubles/stub_console_services.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/platforms/gbm-kms/server/kms/quirks.h"
-#include "src/platforms/gbm-kms/include/native_buffer.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/platforms/gbm-kms/server/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/display.h"
@@ -36,11 +34,8 @@
 #include "mir/test/doubles/null_display_configuration_policy.h"
 #include "mir_test_framework/udev_environment.h"
 
-#include <cstdlib>
 #include <memory>
 #include <stdexcept>
-#include <system_error>
-#include <algorithm>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 

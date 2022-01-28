@@ -272,25 +272,29 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
 
     auto hscroll_value = 0.0f;
     auto vscroll_value = 0.0f;
+    auto hscroll_stop = false;
+    auto vscroll_stop = false;
     if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
     {
         hscroll_value = horizontal_scroll_scale *
                         libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
+        hscroll_stop = hscroll_value == 0;
     }
 
     if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
     {
         vscroll_value = vertical_scroll_scale *
                         libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
+        vscroll_stop = vscroll_value == 0;
     }
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
 
     auto builder_pointer_axis_event = [&, this](MirPointerAxisSource axis_source)
         {
-            return builder->pointer_axis_event(
+            return builder->pointer_axis_with_stop_event(
                 axis_source, time, action, button_state, 0, 0, hscroll_value, vscroll_value,
-                relative_x_value, relative_y_value);
+                hscroll_stop, vscroll_stop, relative_x_value, relative_y_value);
         };
 
     switch (libinput_event_pointer_get_axis_source(pointer))

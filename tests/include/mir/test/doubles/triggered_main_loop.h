@@ -34,7 +34,6 @@ class TriggeredMainLoop : public ::testing::NiceMock<MockMainLoop>
 {
 public:
     using fd_callback = std::function<void(int)>;
-    using signal_callback = std::function<void(int)>;
     using callback = std::function<void()>;
 
     void register_fd_handler(std::initializer_list<int> fds, void const* owner, fd_callback const& handler) override;

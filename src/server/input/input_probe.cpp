@@ -25,7 +25,6 @@
 #include "mir/shared_library_prober.h"
 #include "mir/shared_library.h"
 #include "mir/log.h"
-#include "mir/libname.h"
 
 #include <stdexcept>
 

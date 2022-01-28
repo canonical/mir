@@ -58,10 +58,10 @@ target_include_directories(miral-test-internal
     PRIVATE ${PROJECT_SOURCE_DIR}/src/miral)
 
 target_link_libraries(miral-test-internal
-    ${GTEST_BOTH_LIBRARIES}
-    ${GMOCK_LIBRARIES}
     miral-internal
     mir-test-assist
+    ${GTEST_BOTH_LIBRARIES}
+    ${GMOCK_LIBRARIES}
 )
 
 add_subdirectory(generated/)

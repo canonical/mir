@@ -21,17 +21,12 @@
 
 #include "splash.h"
 
-#include <chrono>
-
 #include "eglapp.h"
 #include "miregl.h"
 #include <assert.h>
 #include <glib.h>
 #include <string.h>
 #include <GLES2/gl2.h>
-#include <sys/stat.h>
-#include <signal.h>
-#include <atomic>
 #include <mutex>
 
 #include "spinner_glow.h"

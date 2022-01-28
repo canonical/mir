@@ -85,6 +85,19 @@ float mir_pointer_event_axis_value(MirPointerEvent const* event,
     MirPointerAxis axis);
 
 /**
+ * Retrieve if this is a stop event for the given scroll axis. When scroll
+ * events are generated with a source of finger they always end in an axis
+ * stop when the finger is raised. Other scroll events may in with an axis
+ * stop. Any axis other than vscroll and hscroll always returns false.
+ *
+ *  \param [in] event       The pointer event
+ *  \param [in] axis        The axis to check
+ *  \return                 If this is an axis stop event for the given axis
+ */
+bool mir_pointer_event_axis_stop(MirPointerEvent const* event,
+    MirPointerAxis axis);
+
+/**
  * Retrieve the corresponding input event.
  *
  * \param [in] event The pointer event

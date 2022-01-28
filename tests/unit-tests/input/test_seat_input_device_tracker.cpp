@@ -20,7 +20,6 @@
 #include "src/server/input/default_event_builder.h"
 
 #include "mir/input/xkb_mapper.h"
-#include "mir/test/doubles/mock_input_device.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_cursor_listener.h"
 #include "mir/test/doubles/mock_touch_visualizer.h"

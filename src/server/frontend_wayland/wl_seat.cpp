@@ -33,7 +33,6 @@
 #include "mir/input/mir_keyboard_config.h"
 
 #include <mutex>
-#include <unordered_set>
 #include <algorithm>
 
 namespace mf = mir::frontend;

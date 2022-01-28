@@ -29,10 +29,8 @@
 #define MIR_LOG_COMPONENT "x11-input"
 #include "mir/log.h"
 
-#include <linux/input.h>
 #include <inttypes.h>
 #include <signal.h>
-#include <stdio.h>
 #include <chrono>
 
 #include <xcb/xfixes.h>
@@ -240,7 +238,7 @@ void mix::XInputPlatform::process_input_events()
             bool consumed = false;
             if (next_pending_event_callback)
             {
-                (*next_pending_event_callback)(event.get());
+                consumed = (*next_pending_event_callback)(event.get());
                 next_pending_event_callback = {};
             }
             if (!consumed)

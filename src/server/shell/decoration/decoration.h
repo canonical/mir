@@ -36,8 +36,6 @@ private:
     Decoration(Decoration const&) = delete;
     Decoration& operator=(Decoration const&) = delete;
 };
-
-typedef Decoration NullDecoration;
 }
 }
 }

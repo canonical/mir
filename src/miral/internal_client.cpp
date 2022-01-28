@@ -19,7 +19,6 @@
 #include "miral/internal_client.h"
 #include "join_client_threads.h"
 
-#include <mir/fd.h>
 #include <mir/main_loop.h>
 #include <mir/server.h>
 #include <mir/scene/session.h>

@@ -22,7 +22,6 @@
 #include "server_example_test_client.h"
 #include "server_example_input_device_config.h"
 
-#include <miral/command_line_option.h>
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
 #include <miral/minimal_window_manager.h>

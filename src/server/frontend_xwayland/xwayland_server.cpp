@@ -23,11 +23,7 @@
 #include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
-#include <csignal>
-#include <fcntl.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <sys/un.h>
 #include <sys/wait.h>
 #include <unistd.h>

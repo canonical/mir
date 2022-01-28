@@ -44,7 +44,6 @@ namespace scene
 class SessionContainer;
 class SessionEventSink;
 class SessionListener;
-class SnapshotStrategy;
 class SurfaceStack;
 class PromptSessionManager;
 class BufferStreamFactory;

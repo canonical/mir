@@ -27,7 +27,6 @@
 #include <chrono>
 #include <future>
 
-#include <csignal>
 #include <sys/wait.h>
 
 namespace me = mir::examples;

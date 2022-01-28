@@ -26,8 +26,6 @@
 #include "seat_report.h"
 #include "mir/logging/shared_library_prober_report.h"
 
-#include "mir/default_server_configuration.h"
-
 namespace mr = mir::report;
 
 mr::LoggingReportFactory::LoggingReportFactory(std::shared_ptr<mir::logging::Logger> const& logger,

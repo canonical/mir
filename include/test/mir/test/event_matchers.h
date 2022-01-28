@@ -58,14 +58,9 @@ inline MirEvent const* to_address(std::shared_ptr<MirEvent const> const& event)
     return event.get();
 }
 
-inline MirEvent const& to_ref(MirEvent const* event)
+inline MirEvent const* to_address(std::reference_wrapper<MirEvent> const& event)
 {
-    return *event;
-}
-
-inline MirEvent const& to_ref(MirEvent const& event)
-{
-    return event;
+    return &event.get();
 }
 
 inline MirKeyboardEvent const* maybe_key_event(MirEvent const* event)

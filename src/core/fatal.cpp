@@ -20,7 +20,6 @@
 #include "mir/fatal.h"
 
 #include <boost/throw_exception.hpp>
-#include <boost/exception/info.hpp>
 
 #include <stdexcept>
 #include <cstdlib>

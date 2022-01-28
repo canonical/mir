@@ -22,7 +22,6 @@
 
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/executor.h"
-#include "mir/renderer/gl/context.h"
 
 #define MIR_LOG_COMPONENT "wayland-gfx-helpers"
 #include "mir/log.h"
@@ -32,7 +31,6 @@
 #include <atomic>
 
 #include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
 
 #include <wayland-server-core.h>
 #include <wayland-server-protocol.h>

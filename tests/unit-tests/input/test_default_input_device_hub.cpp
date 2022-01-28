@@ -20,35 +20,25 @@
 
 #include "mir/test/doubles/mock_input_device.h"
 #include "mir/test/doubles/mock_input_device_observer.h"
-#include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/mock_key_mapper.h"
 #include "mir/test/doubles/mock_server_status_listener.h"
-#include "mir/test/doubles/stub_cursor_listener.h"
-#include "mir/test/doubles/stub_touch_visualizer.h"
-#include "mir/test/doubles/triggered_main_loop.h"
 #include "mir/test/doubles/advanceable_clock.h"
-#include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/fd_utils.h"
 
 #include "mir/dispatch/action_queue.h"
-#include "mir/geometry/rectangles.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/events/event_builders.h"
-#include "mir/input/cursor_listener.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/cookie/authority.h"
-#include "mir/graphics/buffer.h"
 #include "mir/input/device.h"
 #include "mir/input/input_device.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
-#include <cstring>
 
 namespace mi = mir::input;
 namespace mt = mir::test;

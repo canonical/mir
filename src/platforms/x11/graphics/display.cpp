@@ -17,7 +17,6 @@
  */
 
 #include "mir/c_memory.h"
-#include "mir/graphics/platform.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_configuration.h"
 #include <mir/graphics/display_configuration_policy.h>
@@ -26,12 +25,10 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/atomic_frame.h"
-#include "mir/graphics/transformation.h"
 #include "display_configuration.h"
 #include "display.h"
 #include "platform.h"
 #include "display_buffer.h"
-#include "../x11_resources.h"
 
 #include <boost/throw_exception.hpp>
 #include <algorithm>

@@ -28,16 +28,6 @@ public:
     virtual ~Impl() = default;
 
     virtual void emit(State state) const = 0;
-
-    static bool contains_valid(std::vector<Emitter> const& emitters)
-    {
-        for (auto const& i: emitters)
-        {
-            if (i.is_valid())
-                return true;
-        }
-        return false;
-    }
 };
 
 class EmptyLineEmitter : public Emitter::Impl

@@ -28,10 +28,6 @@
 #include "mir/input/scene.h"
 #include "mir/renderer/sw/pixel_source.h"
 
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
-#include <cstring>
-
 namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;

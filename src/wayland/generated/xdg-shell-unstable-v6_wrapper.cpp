@@ -12,8 +12,6 @@
 
 #include <wayland-server-core.h>
 
-#include "mir/log.h"
-
 namespace mir
 {
 namespace wayland

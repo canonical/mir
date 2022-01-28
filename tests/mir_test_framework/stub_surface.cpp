@@ -21,5 +21,6 @@
 namespace
 {
 // Ensure we don't accidentally have an abstract class
+[[maybe_unused]]
 mir::test::doubles::StubSurface instantiation_test;
 }

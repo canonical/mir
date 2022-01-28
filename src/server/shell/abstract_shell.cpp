@@ -414,7 +414,7 @@ void msh::AbstractShell::notify_focus_locked(
     std::unique_lock<std::mutex> const& /*lock*/,
     std::shared_ptr<ms::Surface> const& new_focus_surface)
 {
-    auto const current_focus = focus_surface.lock();
+    auto const current_focus = notified_focus_surface.lock();
 
     if (current_focus != new_focus_surface)
     {
@@ -426,6 +426,7 @@ void msh::AbstractShell::notify_focus_locked(
 
         std::vector<std::shared_ptr<ms::Surface>> current_focus_tree;
 
+        notified_focus_surface = new_focus_surface;
         seat->reset_confinement_regions();
 
         for (auto const& item : notified_active_surfaces)

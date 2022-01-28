@@ -82,7 +82,7 @@ private:
     /// repeat_state_mutex must NOT be locked when calling
     void set_alarm_for_device(MirInputDeviceId id, std::shared_ptr<mir::time::Alarm> repeat_alarm);
 
-    bool handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* ev);
+    void handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* ev);
 };
 
 }

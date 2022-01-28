@@ -44,9 +44,7 @@
 #include "mir/log.h"
 
 #include <xf86drmMode.h>
-#include <sys/ioctl.h>
 #include <system_error>
-#include <poll.h>
 #include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;

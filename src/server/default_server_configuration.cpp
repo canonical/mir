@@ -19,7 +19,6 @@
 #include "mir/default_server_configuration.h"
 #include "mir/fatal.h"
 #include "mir/options/default_configuration.h"
-#include "mir/abnormal_exit.h"
 #include "mir/glib_main_loop.h"
 #include "mir/default_server_status_listener.h"
 #include "mir/emergency_cleanup.h"
@@ -41,10 +40,7 @@
 #include "mir/scene/null_prompt_session_listener.h"
 #include "default_emergency_cleanup.h"
 #include "mir/graphics/platform.h"
-#include "mir/scene/coordinate_translator.h"
 #include "mir/console_services.h"
-
-#include <type_traits>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;

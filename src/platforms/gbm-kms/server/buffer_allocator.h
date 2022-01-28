@@ -57,12 +57,6 @@ class EGLContextExecutor;
 namespace gbm
 {
 
-enum class BufferImportMethod
-{
-    gbm_native_pixmap,
-    dma_buf
-};
-
 class BufferAllocator:
     public graphics::GraphicBufferAllocator
 {

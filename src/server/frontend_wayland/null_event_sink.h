@@ -38,7 +38,7 @@ public:
 
     void send_ping(int32_t serial) override;
 
-    void send_buffer(BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType type) override;
+    void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer) override;
 
     void handle_input_config_change(MirInputConfig const&) override;
 

@@ -36,7 +36,6 @@ class ActionQueue;
 namespace input
 {
 class Platform;
-class InputEventHandlerRegister;
 class InputDeviceRegistry;
 
 class DefaultInputManager : public InputManager

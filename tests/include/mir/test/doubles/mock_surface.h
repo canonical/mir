@@ -47,6 +47,8 @@ struct MockSurface : public scene::BasicSurface
         ON_CALL(*this, primary_buffer_stream())
             .WillByDefault(testing::Invoke([this]
                 { return scene::BasicSurface::primary_buffer_stream(); }));
+        ON_CALL(*this, parent())
+            .WillByDefault(testing::Return(nullptr));
     }
 
     ~MockSurface() noexcept {}
@@ -61,6 +63,7 @@ struct MockSurface : public scene::BasicSurface
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
 
+    MOCK_CONST_METHOD0(parent, std::shared_ptr<scene::Surface>());
     MOCK_METHOD2(configure, int(MirWindowAttrib, int));
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::SurfaceObserver> const&));

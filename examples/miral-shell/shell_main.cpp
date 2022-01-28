@@ -34,10 +34,7 @@
 #include <miral/x11_support.h>
 #include <miral/wayland_extensions.h>
 
-
 #include <xkbcommon/xkbcommon-keysyms.h>
-#include <unistd.h>
-#include <boost/filesystem.hpp>
 
 int main(int argc, char const* argv[])
 {

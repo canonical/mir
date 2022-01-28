@@ -30,7 +30,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <vector>
 
 #include <assert.h>
