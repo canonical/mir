@@ -5,6 +5,11 @@ add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirwayland")
 add_subdirectory(generator/)
 add_subdirectory(generated/)
 
+set_property(SOURCE
+    ${GENERATED_FILES}
+    PROPERTY GENERATED 1
+)
+
 set(STANDARD_SOURCES
   wayland_base.cpp
 )
@@ -13,6 +18,8 @@ add_library(mirwayland SHARED
     ${GENERATED_FILES}
     ${STANDARD_SOURCES}
 )
+
+add_dependencies(mirwayland refresh-wayland-wrapper)
 
 target_link_libraries(mirwayland
   PUBLIC
@@ -25,7 +32,7 @@ target_link_libraries(mirwayland
 target_include_directories(mirwayland
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/wayland
-    ${CMAKE_CURRENT_SOURCE_DIR}/generated
+    ${CMAKE_CURRENT_BINARY_DIR}/generated
 )
 
 set_target_properties(mirwayland

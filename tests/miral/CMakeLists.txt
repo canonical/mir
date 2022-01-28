@@ -66,6 +66,11 @@ target_link_libraries(miral-test-internal
 
 add_subdirectory(generated/)
 
+set_property(SOURCE
+    ${GENERATED_FILES}
+    PROPERTY GENERATED 1
+)
+
 mir_add_wrapped_executable(miral-test NOINSTALL
     external_client.cpp
     runner.cpp
@@ -73,10 +78,12 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     zone.cpp
     server_example_decoration.cpp server_example_decoration.h
     org_kde_kwin_server_decoration.c org_kde_kwin_server_decoration.h
-    generated/server-decoration_wrapper.cpp generated/server-decoration_wrapper.h
+    ${GENERATED_FILES}
 )
 
-set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/generated/")
+add_dependencies(miral-test refresh-test-wayland-wrapper)
+
+set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/generated/")
 
 target_link_libraries(miral-test
     mir-test-assist
