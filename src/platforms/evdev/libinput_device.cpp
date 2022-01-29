@@ -176,7 +176,10 @@ void mie::LibInputDevice::process_event(libinput_event* event)
         case LIBINPUT_EVENT_TOUCH_FRAME:
             if (is_output_active())
             {
-                sink->handle_input(convert_touch_frame(libinput_event_get_touch_event(event)));
+                if (auto input = convert_touch_frame(libinput_event_get_touch_event(event)))
+                {
+                    sink->handle_input(std::move(input));
+                }
             }
             break;
         default:
@@ -364,6 +367,18 @@ mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* to
             ++it;
     }
 
+    // Sanity check: Bogus panels are sending sometimes empty events that all point
+    // to (0, 0) coordinates. Detect those and drop the whole frame in this case.
+    // Also drop touch frames with no contacts inside
+    int emptyTouches = 0;
+    for_each(begin(contacts), end(contacts), [&](auto const& contact)
+    {
+        if (contact.x == 0 && contact.y == 0)
+            emptyTouches++;
+    });
+    if (contacts.empty() || emptyTouches > 1)
+        return {nullptr, [](auto){}};
+
     return builder->touch_event(time, contacts);
 }
 
@@ -376,7 +391,13 @@ void mie::LibInputDevice::handle_touch_down(libinput_event_touch* touch)
 void mie::LibInputDevice::handle_touch_up(libinput_event_touch* touch)
 {
     MirTouchId const id = libinput_event_touch_get_slot(touch);
-    last_seen_properties[id].action = mir_touch_action_up;
+
+    //Only update last_seen_properties[].action if there is a valid record in the map
+    //for this ID. Otherwise, an invalid "up" event from a bogus panel will
+    //create a fake action.
+    auto const it = last_seen_properties.find(id);
+    if (it != end(last_seen_properties))
+        (*it).second.action = mir_touch_action_up;
 }
 
 void mie::LibInputDevice::update_contact_data(ContactData & data, MirTouchAction action, libinput_event_touch* touch)
