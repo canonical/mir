@@ -32,7 +32,6 @@ add_subdirectory(frontend/)
 add_subdirectory(frontend_wayland/)
 add_subdirectory(frontend_xwayland/)
 add_subdirectory(shell/)
-add_subdirectory(thread/)
 add_subdirectory(console/)
 
 configure_file(
@@ -94,7 +93,6 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirreport>
   $<TARGET_OBJECTS:mirlogging>
   $<TARGET_OBJECTS:mirnullreport>
-  $<TARGET_OBJECTS:mirthread>
   $<TARGET_OBJECTS:mirconsole>
 
   $<TARGET_OBJECTS:mirrenderergl>

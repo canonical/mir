@@ -20,7 +20,6 @@
 #define MIR_COMPOSITOR_MULTI_THREADED_COMPOSITOR_H_
 
 #include "mir/compositor/compositor.h"
-#include "mir/thread/basic_thread_pool.h"
 
 #include <mutex>
 #include <memory>
