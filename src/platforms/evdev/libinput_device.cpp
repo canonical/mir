@@ -371,11 +371,11 @@ mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* to
     // to (0, 0) coordinates. Detect those and drop the whole frame in this case.
     // Also drop touch frames with no contacts inside
     int emptyTouches = 0;
-    for_each(begin(contacts), end(contacts), [&](auto const& contact)
+    for (const auto &contact: contacts)
     {
         if (contact.x == 0 && contact.y == 0)
             emptyTouches++;
-    });
+    }
     if (contacts.empty() || emptyTouches > 1)
         return {nullptr, [](auto){}};
 
@@ -397,7 +397,7 @@ void mie::LibInputDevice::handle_touch_up(libinput_event_touch* touch)
     //create a fake action.
     auto const it = last_seen_properties.find(id);
     if (it != end(last_seen_properties))
-        (*it).second.action = mir_touch_action_up;
+        it->second.action = mir_touch_action_up;
 }
 
 void mie::LibInputDevice::update_contact_data(ContactData & data, MirTouchAction action, libinput_event_touch* touch)
