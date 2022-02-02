@@ -28,6 +28,56 @@
 #include <list>
 #include <future>
 
+#ifndef __cpp_lib_semaphore
+// Hello, there! Alpine 3.14's libstdc++ doesn't have this C++20 feature, so they can get a janky
+// open-coded version here, intsead.
+namespace std
+{
+class binary_semaphore
+{
+public:
+    binary_semaphore(int initial)
+        : raised{initial == 1}
+    {
+    }
+
+    void release()
+    {
+        std::lock_guard<decltype(mutex)> lock{mutex};
+        raised = true;
+        cv.notify_all();
+    }
+
+    void acquire()
+    {
+        std::unique_lock<decltype(mutex)> lock{mutex};
+        if (raised)
+        {
+            raised = false;
+            return;
+        }
+        cv.wait(lock, [this]() { return raised; });
+        raised = false;
+    }
+
+    bool try_acquire()
+    {
+        std::lock_guard<decltype(mutex)> lock{mutex};
+        if (raised)
+        {
+            raised = false;
+            return true;
+        }
+        return false;
+    }
+private:
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool raised;
+};
+}
+#endif
+
 namespace
 {
 constexpr int const min_threadpool_threads = 4;
