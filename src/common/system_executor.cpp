@@ -21,16 +21,19 @@
 #include "mir/thread_name.h"
 
 #include <thread>
-#include <semaphore>
 #include <array>
 #include <memory>
 #include <atomic>
 #include <list>
 #include <future>
 
-#ifndef __cpp_lib_semaphore
-// Hello, there! Alpine 3.14's libstdc++ doesn't have this C++20 feature, so they can get a janky
-// open-coded version here, intsead.
+#include <version>
+
+#ifdef __cpp_lib_semaphore
+#include <semaphore>
+#else
+// Hello, there! This version of libstdc++ doesn't support the C++20 feature std::binary_semaphore
+// We shall, instead, open-code the simplest possible implementation of what we use here.
 namespace std
 {
 class binary_semaphore
