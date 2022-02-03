@@ -117,6 +117,10 @@ public:
     {
         if (thread.joinable())
         {
+            /* Safety: stop() is the only other callsite of signal_work_thread_to_halt()
+             * If stop() has been called then it has already called thread.join(), so
+             * thread.joinable() will be false and we can't get here.
+             */
             signal_work_thread_to_halt();
             if (thread.get_id() == std::this_thread::get_id())
             {
@@ -153,6 +157,12 @@ public:
 private:
     void signal_work_thread_to_halt()
     {
+        /* Precondition: *shutdown == false
+         * If *shutdown has become true, then we are unsynchronised with the termination of
+         * the worker thread, and so we can not guarantee that shutdown points to valid memory.
+         *
+         * This implies that signal_work_thread_to_halt() must be called exactly once.
+         */
         *shutdown = true;
         /* We need to release the workloop thread by raising the signal.
          * However, it's UB to raise the semaphore if it's already raised.
@@ -182,11 +192,40 @@ private:
     }
 
     std::function<void()> work;
+    /**
+     * Pointer to an atomic<bool> on the thread's stack (in work_loop).
+     *
+     * Being on the thread's stack means that the thread is allowed to outlive the Worker
+     * (as long as the thread does not access anything from the Worker), but also means that
+     * after setting *shutdown to true it is no longer safe to access.
+     */
     std::atomic<bool>* shutdown;
     std::binary_semaphore work_available;
     std::thread thread;
 };
 
+/**
+ * A self-managing ThreadPool
+ *
+ * Theory of operation:
+ * The ThreadPool executes each item of work on an independent thread; each call to spawn() is
+ * guaranteed to be on a different thread to the caller.
+ *
+ * To reduce the overhead of spawning threads, the ThreadPool attempts to maintain
+ * min_threadpool_threads of free worker threads.
+ *
+ * The ThreadPool maintains two linked-lists of Worker threads; a list of all Workers, and a list of
+ * (Worker, position-in-all-workers-list) containing idle Worker threads.
+ *
+ * When a work item is received through spawn() the ThreadPool first checks to see if there's a
+ * free Worker thread in the idle list; if so, it takes it off the free list and dispatches the work.
+ * If there are no free Workers, it creates a new Worker, adds it to the all-workers list, and dispatches
+ * the work to the new Worker.
+ *
+ * When a Worker finishes an item of work, it calls recycle(). If there are fewer than
+ * min_threadpool_threads in the free list, the Worker is added to the free list. Otherwise, the
+ * Worker is removed from the all-workers list and is destroyed.
+ */
 class ThreadPool : public mir::SystemExecutor
 {
 public:
