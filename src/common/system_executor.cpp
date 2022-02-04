@@ -85,15 +85,10 @@ namespace
 {
 constexpr int const min_threadpool_threads = 4;
 
-void just_rethrow_exception()
-{
-    std::rethrow_exception(std::current_exception());
-}
-
 /* We use an atomic void(*)() rather than a std::function to avoid needing to take a mutex
  * in exception context, as taking a mutex can itself throw an exception!
  */
-std::atomic<void(*)()> exception_handler = &just_rethrow_exception;
+std::atomic<void(*)()> exception_handler{[] { std::rethrow_exception(std::current_exception()); }};
 
 class Worker
 {
