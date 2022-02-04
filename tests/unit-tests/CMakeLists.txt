@@ -72,6 +72,7 @@ set(
   test_observer_multiplexer.cpp
   test_edid.cpp
   test_report_exception.cpp
+  test_system_executor.cpp
 )
 
 if (HAVE_PTHREAD_GETNAME_NP)
@@ -101,7 +102,6 @@ add_subdirectory(platforms/)
 add_subdirectory(renderers/gl)
 add_subdirectory(scene/)
 add_subdirectory(shell/)
-add_subdirectory(thread/)
 add_subdirectory(wayland/)
 
 if (NOT HAVE_PTHREAD_GETNAME_NP)
@@ -109,7 +109,7 @@ if (NOT HAVE_PTHREAD_GETNAME_NP)
     ${CMAKE_CURRENT_SOURCE_DIR}/dispatch/test_threaded_dispatcher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/frontend/test_basic_connector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/compositor/test_multi_threaded_compositor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/thread/test_basic_thread_pool.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_system_executor.cpp
 
     PROPERTIES COMPILE_DEFINITIONS MIR_DONT_USE_PTHREAD_GETNAME_NP
   )
@@ -117,7 +117,7 @@ if (NOT HAVE_PTHREAD_GETNAME_NP)
   message(WARNING "pthread_getname_np() not supported: Disabling test_basic_connector.cpp tests that rely on it")
   message(WARNING "pthread_getname_np() not supported: Disabling test_multi_threaded_compositor.cpp tests that rely on it")
   message(WARNING "pthread_getname_np() not supported: Disabling test_threaded_snapshot_strategy.cpp tests that rely on it")
-  message(WARNING "pthread_getname_np() not supported: Disabling test_basic_thread_pool.cpp tests that rely on it")
+  message(WARNING "pthread_getname_np() not supported: Disabling test_system_executor.cpp tests that rely on it")
 endif()
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})

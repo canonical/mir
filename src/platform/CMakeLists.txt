@@ -52,7 +52,6 @@ set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
 add_library(mirplatform SHARED
   ${PROJECT_SOURCE_DIR}/include/platform/mir/input/input_sink.h
   ${PROJECT_SOURCE_DIR}/include/platform/mir/console_services.h
-  ${PROJECT_SOURCE_DIR}/include/platform/mir/executor.h
 )
 
 add_object_libraries_to_target(
