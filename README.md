@@ -48,5 +48,5 @@ Website
 -------
 Mir's website is hosted on <https://mir-server.io/>.
 
-\copyright Copyright © 2012-2018 Canonical Ltd.
-\author Alan Griffiths <alan@octopull.co.uk>
+Copyright Copyright © 2012-2022 Canonical Ltd.  
+Author Alan Griffiths <alan@octopull.co.uk>
