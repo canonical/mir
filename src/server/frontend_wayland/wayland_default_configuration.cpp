@@ -66,6 +66,7 @@ auto make_extension_builder(
 /// Extensions that are not in the set returned by mf::get_standard_extensions() should generally be listed in
 /// include/miral/miral/wayland_extensions.h for easy access by shells.
 std::vector<ExtensionBuilder> const internal_extension_builders = {
+    /*
     make_extension_builder<mw::Shell>([](auto const& ctx)
         {
             return mf::create_wl_shell(
@@ -75,6 +76,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.seat,
                 ctx.output_manager);
         }),
+    */
     make_extension_builder<mw::XdgShellV6>([](auto const& ctx)
         {
             return std::make_shared<mf::XdgShellV6>(
@@ -233,7 +235,6 @@ auto configure_wayland_extensions(
 auto mf::get_standard_extensions() -> std::vector<std::string>
 {
     return std::vector<std::string>{
-        mw::Shell::interface_name,
         mw::XdgWmBase::interface_name,
         mw::XdgShellV6::interface_name,
         mw::XdgOutputManagerV1::interface_name,

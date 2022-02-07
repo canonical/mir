@@ -26,7 +26,6 @@ WlcsExtensionDescriptor const extensions[] = {
     {"wl_compositor",               4},
     {"wl_shm",                      1},
     {"wl_data_device_manager",      3},
-    {"wl_shell",                    1},
     {"wl_seat",                     6},
     {"wl_output",                   3},
     {"wl_subcompositor",            1},
