@@ -94,16 +94,3 @@ jobs:
       env:
         SPREAD_GOOGLE_KEY: ${{ secrets.SPREAD_GOOGLE_KEY }}
       run: snap run spread -v ${{ matrix.spread-task }}
-
-  # Report result to Bors on `staging` and `trying` branches.
-  Bors:
-    if: ${{ always() && github.event_name == 'push' && contains('refs/heads/staging refs/heads/trying', github.ref) }}
-    needs:
-    - BuildAndTest
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Report failure
-      if: ${{ needs.BuildAndTest.result != 'success' }}
-      run: exit 1
