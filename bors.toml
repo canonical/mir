@@ -1,10 +1,8 @@
 status = [
           "BuildAndTest (lxd:alpine-3.15:spread/build/alpine:amd64)",
-          "BuildAndTest (google:ubuntu-20.04-64:spread/build/sbuild:debian_sid)",
           "BuildAndTest (google:ubuntu-20.04-64:spread/build/sbuild:ubuntu)",
           "BuildAndTest (google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_impish)",
           "BuildAndTest (google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64)",
-          "BuildAndTest (google:ubuntu-20.04-64:spread/build/ubuntu:rpi)",
           "BuildAndTest (google:ubuntu-20.04-64:spread/build/ubuntu:clang)",
           "BuildAndTest (google:fedora-34-64:spread/build/fedora:amd64)",
           "BuildAndTest (google:fedora-35-64:spread/build/fedora:amd64)",
