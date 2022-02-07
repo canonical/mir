@@ -21,20 +21,13 @@
 #include "mir/time/alarm_factory.h"
 #include "mir/time/clock.h"
 #include "mir/lockable_callback.h"
+#include "mir/system_executor.h"
 
 namespace ms = mir::scene;
 namespace mt = mir::time;
 
 namespace
 {
-struct DirectExecutor: mir::Executor
-{
-    void spawn(std::function<void()>&& work) override
-    {
-        work();
-    }
-} direct_executor;
-
 /// The callback used by the alarm. Does not need to be threadsafe because it is only called into by the alarm when it
 /// is fired.
 class AlarmCallback: public mir::LockableCallback
@@ -76,7 +69,7 @@ class ms::BasicIdleHub::Multiplexer: public ObserverMultiplexer<IdleStateObserve
 {
 public:
     Multiplexer()
-        : ObserverMultiplexer{direct_executor}
+        : ObserverMultiplexer{system_executor}
     {
     }
 
