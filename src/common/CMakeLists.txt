@@ -32,6 +32,8 @@ list(APPEND MIR_COMMON_SOURCES
   event_printer.cpp
   mir_cookie.cpp
   mir_cursor_api.cpp
+  system_executor.cpp
+  ${PROJECT_SOURCE_DIR}/include/common/mir/system_executor.h
 )
 
 set(

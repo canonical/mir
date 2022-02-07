@@ -33,7 +33,7 @@ jobs:
                  "google:ubuntu-20.04-64:spread/build/ubuntu:tsan_clang"
                  "google:ubuntu-20.04-64:spread/build/ubuntu:ubsan_clang"'
         else
-          TASKS='"lxd:alpine-3.14:spread/build/alpine:amd64"
+          TASKS='"lxd:alpine-3.15:spread/build/alpine:amd64"
                  "lxd:alpine-edge:spread/build/alpine:amd64"'
 
           # Only run if we have access to secrets.
@@ -45,22 +45,20 @@ jobs:
                     "google:ubuntu-20.04-64:spread/build/ubuntu:rpi"
                     "google:ubuntu-20.04-64:spread/build/ubuntu:clang"
                     "google:fedora-34-64:spread/build/fedora:amd64"
-                    "google:fedora-35-64:spread/build/fedora:amd64"'
-            FAILING_TASKS='"google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel"
-                           "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed"
-                           "google:fedora-rawhide-64:spread/build/fedora:amd64"'
+                    "google:fedora-35-64:spread/build/fedora:amd64"
+                    "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_devel"
+                    "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_proposed"
+                    "google:fedora-rawhide-64:spread/build/fedora:amd64"'
           fi
         fi
 
-        ( echo ${TASKS:-} | jq -s '{ "spread-task": ., "allow-fail": [false] }';
-          echo ${FAILING_TASKS:-} | jq '{ "spread-task": ., "allow-fail": true }' | jq -s '{ "include": . }' ) \
-        | jq -cs add | awk '{ print "::set-output name=matrix::" $0 }'
+        echo ${TASKS:-} | jq -cs '{ "spread-task": .  }' | awk '{ print "::set-output name=matrix::" $0 }'
 
   BuildAndTest:
     needs: GetMatrix
 
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix: ${{ fromJSON(needs.GetMatrix.outputs.matrix) }}
 
     runs-on: ubuntu-latest
@@ -96,17 +94,3 @@ jobs:
       env:
         SPREAD_GOOGLE_KEY: ${{ secrets.SPREAD_GOOGLE_KEY }}
       run: snap run spread -v ${{ matrix.spread-task }}
-      continue-on-error: ${{ matrix.allow-fail }}
-
-  # Report result to Bors on `staging` and `trying` branches.
-  Bors:
-    if: ${{ always() && github.event_name == 'push' && contains('refs/heads/staging refs/heads/trying', github.ref) }}
-    needs:
-    - BuildAndTest
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Report failure
-      if: ${{ needs.BuildAndTest.result != 'success' }}
-      run: exit 1
