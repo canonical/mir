@@ -38,6 +38,14 @@ struct MockObserver: ms::IdleStateObserver
     MOCK_METHOD0(active, void());
 };
 
+struct DirectExecutor: mir::Executor
+{
+    void spawn(std::function<void()>&& work) override
+    {
+        work();
+    }
+} direct_executor;
+
 struct BasicIdleHub: Test
 {
     mtd::AdvanceableClock clock;
@@ -56,7 +64,7 @@ TEST_F(BasicIdleHub, observer_marked_active_initially)
 {
     auto const observer = std::make_shared<StrictMock<MockObserver>>();
     EXPECT_CALL(*observer, active());
-    hub.register_interest(observer, 5s);
+    hub.register_interest(observer, direct_executor, 5s);
 }
 
 TEST_F(BasicIdleHub, observer_marked_idle_initially_after_wait)
@@ -64,7 +72,7 @@ TEST_F(BasicIdleHub, observer_marked_idle_initially_after_wait)
     auto const observer = std::make_shared<StrictMock<MockObserver>>();
     advance_by(6s);
     EXPECT_CALL(*observer, idle());
-    hub.register_interest(observer, 5s);
+    hub.register_interest(observer, direct_executor, 5s);
 }
 
 TEST_F(BasicIdleHub, observer_marked_active_initially_after_wait_and_poke)
@@ -74,14 +82,14 @@ TEST_F(BasicIdleHub, observer_marked_active_initially_after_wait_and_poke)
     hub.poke();
     advance_by(4s);
     EXPECT_CALL(*observer, active());
-    hub.register_interest(observer, 5s);
+    hub.register_interest(observer, direct_executor, 5s);
 }
 
 TEST_F(BasicIdleHub, observer_marked_idle_after_wait)
 {
     auto const observer = std::make_shared<StrictMock<MockObserver>>();
     EXPECT_CALL(*observer, active());
-    hub.register_interest(observer, 5s);
+    hub.register_interest(observer, direct_executor, 5s);
     advance_by(4s);
     EXPECT_CALL(*observer, idle());
     advance_by(6s);
@@ -91,7 +99,7 @@ TEST_F(BasicIdleHub, observer_marked_active_after_poke)
 {
     auto const observer = std::make_shared<StrictMock<MockObserver>>();
     EXPECT_CALL(*observer, active());
-    hub.register_interest(observer, 5s);
+    hub.register_interest(observer, direct_executor, 5s);
     EXPECT_CALL(*observer, idle());
     advance_by(6s);
     EXPECT_CALL(*observer, active());
@@ -102,7 +110,7 @@ TEST_F(BasicIdleHub, observer_can_remove_itself_in_idle_notification)
 {
     auto const observer = std::make_shared<StrictMock<MockObserver>>();
     EXPECT_CALL(*observer, active());
-    hub.register_interest(observer, 5s);
+    hub.register_interest(observer, direct_executor, 5s);
     EXPECT_CALL(*observer, idle()).WillOnce(Invoke([&]()
         {
             hub.unregister_interest(*observer);
@@ -114,21 +122,21 @@ TEST_F(BasicIdleHub, second_observer_with_same_timeout_marked_idle_initially_aft
 {
     auto const observer1 = std::make_shared<NiceMock<MockObserver>>();
     auto const observer2 = std::make_shared<StrictMock<MockObserver>>();
-    hub.register_interest(observer1, 5s);
+    hub.register_interest(observer1, direct_executor, 5s);
     advance_by(6s);
     EXPECT_CALL(*observer2, idle());
-    hub.register_interest(observer2, 5s);
+    hub.register_interest(observer2, direct_executor, 5s);
 }
 
 TEST_F(BasicIdleHub, second_observer_with_same_timeout_marked_active_initially_after_wait_and_poke)
 {
     auto const observer1 = std::make_shared<NiceMock<MockObserver>>();
     auto const observer2 = std::make_shared<StrictMock<MockObserver>>();
-    hub.register_interest(observer1, 5s);
+    hub.register_interest(observer1, direct_executor, 5s);
     advance_by(6s);
     hub.poke();
     EXPECT_CALL(*observer2, active());
-    hub.register_interest(observer2, 5s);
+    hub.register_interest(observer2, direct_executor, 5s);
 }
 
 TEST_F(BasicIdleHub, multiple_observers_with_same_timeout_marked_idle_after_wait)
@@ -139,9 +147,9 @@ TEST_F(BasicIdleHub, multiple_observers_with_same_timeout_marked_idle_after_wait
     EXPECT_CALL(*observer1, active());
     EXPECT_CALL(*observer2, active());
     EXPECT_CALL(*observer3, active());
-    hub.register_interest(observer1, 5s);
-    hub.register_interest(observer2, 5s);
-    hub.register_interest(observer3, 5s);
+    hub.register_interest(observer1, direct_executor, 5s);
+    hub.register_interest(observer2, direct_executor, 5s);
+    hub.register_interest(observer3, direct_executor, 5s);
     EXPECT_CALL(*observer1, idle());
     EXPECT_CALL(*observer2, idle());
     EXPECT_CALL(*observer3, idle());
@@ -156,9 +164,9 @@ TEST_F(BasicIdleHub, multiple_observers_with_different_timeouts_marked_idle_at_c
     EXPECT_CALL(*observer1, active());
     EXPECT_CALL(*observer2, active());
     EXPECT_CALL(*observer3, active());
-    hub.register_interest(observer1, 5s);
-    hub.register_interest(observer2, 10s);
-    hub.register_interest(observer3, 12s);
+    hub.register_interest(observer1, direct_executor, 5s);
+    hub.register_interest(observer2, direct_executor, 10s);
+    hub.register_interest(observer3, direct_executor, 12s);
     EXPECT_CALL(*observer1, idle());
     advance_by(6s);
     EXPECT_CALL(*observer2, idle());
@@ -175,9 +183,9 @@ TEST_F(BasicIdleHub, multiple_observers_with_different_timeouts_marked_active_af
     EXPECT_CALL(*observer1, active());
     EXPECT_CALL(*observer2, active());
     EXPECT_CALL(*observer3, active());
-    hub.register_interest(observer1, 5s);
-    hub.register_interest(observer2, 10s);
-    hub.register_interest(observer3, 12s);
+    hub.register_interest(observer1, direct_executor, 5s);
+    hub.register_interest(observer2, direct_executor, 10s);
+    hub.register_interest(observer3, direct_executor, 12s);
     EXPECT_CALL(*observer1, idle());
     EXPECT_CALL(*observer2, idle());
     EXPECT_CALL(*observer3, idle());
@@ -194,8 +202,8 @@ TEST_F(BasicIdleHub, observer_marked_idle_after_observer_with_same_timeout_remov
     auto const observer2 = std::make_shared<StrictMock<MockObserver>>();
     EXPECT_CALL(*observer1, active());
     EXPECT_CALL(*observer2, active());
-    hub.register_interest(observer1, 5s);
-    hub.register_interest(observer2, 5s);
+    hub.register_interest(observer1, direct_executor, 5s);
+    hub.register_interest(observer2, direct_executor, 5s);
     hub.unregister_interest(*observer1);
     EXPECT_CALL(*observer2, idle());
     advance_by(6s);
@@ -207,8 +215,8 @@ TEST_F(BasicIdleHub, observer_marked_idle_after_observer_with_shorter_timeout_re
     auto const observer2 = std::make_shared<StrictMock<MockObserver>>();
     EXPECT_CALL(*observer1, active());
     EXPECT_CALL(*observer2, active());
-    hub.register_interest(observer1, 5s);
-    hub.register_interest(observer2, 10s);
+    hub.register_interest(observer1, direct_executor, 5s);
+    hub.register_interest(observer2, direct_executor, 10s);
     hub.unregister_interest(*observer1);
     EXPECT_CALL(*observer2, idle());
     advance_by(11s);
@@ -220,8 +228,8 @@ TEST_F(BasicIdleHub, observer_marked_idle_when_added_after_observer_with_longer_
     auto const observer2 = std::make_shared<StrictMock<MockObserver>>();
     EXPECT_CALL(*observer1, active());
     EXPECT_CALL(*observer2, active());
-    hub.register_interest(observer1, 10s);
-    hub.register_interest(observer2, 5s);
+    hub.register_interest(observer1, direct_executor, 10s);
+    hub.register_interest(observer2, direct_executor, 5s);
     hub.unregister_interest(*observer1);
     EXPECT_CALL(*observer2, idle());
     advance_by(6s);
@@ -233,8 +241,8 @@ TEST_F(BasicIdleHub, observer_marked_idle_after_shorter_timeout_removed_and_poke
     auto const observer2 = std::make_shared<StrictMock<MockObserver>>();
     EXPECT_CALL(*observer1, active());
     EXPECT_CALL(*observer2, active());
-    hub.register_interest(observer1, 5s);
-    hub.register_interest(observer2, 10s);
+    hub.register_interest(observer1, direct_executor, 5s);
+    hub.register_interest(observer2, direct_executor, 10s);
     EXPECT_CALL(*observer1, idle());
     advance_by(6s);
     hub.unregister_interest(*observer1);
