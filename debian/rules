@@ -32,12 +32,6 @@ ifeq ($(filter noopt,$(DEB_BUILD_OPTIONS)),noopt)
 	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
 endif
 
-# Disable LTO on jammy due to failing to build
-ifneq ($(filter jammy,$(DEB_DISTRIBUTION)),)
-	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
-	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
-endif
-
 # We can't guarantee non-Ubuntu builds will build against WLCS packages we
 # control, so disable it on non-Ubuntu builds
 ifeq ($(filter Ubuntu,$(DEB_VENDOR)),)
