@@ -95,13 +95,15 @@ public:
     void match_parent(Device const& parent);
     void match_sysname(std::string const& sysname);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    class iterator :
-        public std::iterator<std::input_iterator_tag, Device>
+    class iterator
     {
-#pragma GCC diagnostic pop
     public:
+        using iterator_category = std::input_iterator_tag;
+        using value_type = Device;
+        using difference_type = ptrdiff_t;
+        using pointer = Device*;
+        using reference = Device&;
+
         iterator& operator++();
         iterator operator++(int);
 
