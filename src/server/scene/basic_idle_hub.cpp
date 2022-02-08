@@ -123,7 +123,7 @@ void ms::BasicIdleHub::register_interest(
     std::weak_ptr<IdleStateObserver> const& observer,
     time::Duration timeout)
 {
-    register_interest(observer, direct_executor, timeout);
+    register_interest(observer, system_executor, timeout);
 }
 
 void ms::BasicIdleHub::register_interest(
