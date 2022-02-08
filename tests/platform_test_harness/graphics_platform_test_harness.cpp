@@ -204,17 +204,6 @@ auto test_display_construction(mir::graphics::DisplayPlatform& platform, Minimal
     }
 }
 
-auto test_display_supports_gl(mg::Display& display) -> bool
-{
-    if (dynamic_cast<mir::renderer::gl::ContextSource*>(&display))
-    {
-        std::cout << "Display supports GL context creation" << std::endl;
-        return true;
-    }
-    std::cout << "Display does not support GL context creation" << std::endl;
-    return false;
-}
-
 void for_each_display_buffer(mg::Display& display, std::function<void(mg::DisplayBuffer&)> functor)
 {
     display.for_each_display_sync_group(
@@ -556,7 +545,6 @@ int main(int argc, char const** argv)
         {
             if (auto display = test_display_construction(*platform, config))
             {
-                success &= test_display_supports_gl(*display);
                 success &= dump_egl_config(*display);
                 success &= test_display_has_at_least_one_enabled_output(*display);
                 success &= test_display_buffers_support_gl(*display);
