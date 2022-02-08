@@ -116,7 +116,7 @@ private:
 
     MatcherVec matchers_;
 
-    GTEST_DISALLOW_ASSIGN_(InputConfigElementsMatcher);
+    void operator=(InputConfigElementsMatcher const&) = delete;
 };
 
 // Multiple specializations because gmock does not decay the parameter type to the

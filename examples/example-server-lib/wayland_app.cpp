@@ -49,9 +49,18 @@ void WaylandCallback::create(wl_callback* callback, std::function<void()>&& func
     // Will destroy itself when called
 }
 
+namespace
+{
+void wl_output_release_if_valid(struct wl_output* wl_output)
+{
+    if (wl_output_get_version(wl_output) >= WL_OUTPUT_RELEASE_SINCE_VERSION)
+        wl_output_release(wl_output);
+}
+}
+
 WaylandOutput::WaylandOutput(WaylandApp* app, wl_output* output)
     : app{app},
-      wl_{output, wl_output_release},
+      wl_{output, wl_output_release_if_valid},
       has_initialized{false},
       state_dirty{false},
       scale_{1},
@@ -152,7 +161,7 @@ void WaylandApp::handle_new_global(
     struct wl_registry* registry,
     uint32_t id,
     char const* interface,
-    uint32_t /*version*/)
+    uint32_t version)
 {
     auto const self = static_cast<WaylandApp*>(data);
 
@@ -188,9 +197,7 @@ void WaylandApp::handle_new_global(
     }
     else if (strcmp(interface, "wl_output") == 0)
     {
-        // NOTE: We'd normally need to do std::min(version, 3), lest the compositor only support version 1
-        // of the interface. However, we're an internal client of a compositor that supports version 3, so…
-        auto const output_resource = static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, 3));
+        auto const output_resource = static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, std::min(version, 3u)));
         // shared_ptr instead of unique_ptr only so it can be captured by the lambda
         auto output = std::make_shared<WaylandOutput>(self, output_resource);
         // global_remove_handlers will hold on to the output until it is removed
