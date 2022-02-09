@@ -38,11 +38,11 @@ void EventBuilder::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchActio
 
 // Key event
 mir::EventUPtr EventBuilder::make_key_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t key_code,
+    std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t keysym,
     int scan_code, MirInputEventModifiers modifiers)
 {
     return mir::events::make_key_event(device_id, timestamp,
-                                   cookie, action, key_code,
+                                   cookie, action, keysym,
                                    scan_code, modifiers);
 }
 

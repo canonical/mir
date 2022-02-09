@@ -74,7 +74,7 @@ public:
     
     // Key event
     mir::EventUPtr make_key_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-        std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t key_code,
+        std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t keysym,
         int scan_code, MirInputEventModifiers modifiers);
 
     // Touch event
