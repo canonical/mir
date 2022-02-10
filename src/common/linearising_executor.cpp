@@ -28,12 +28,16 @@ namespace
 class LinearisingAdaptor : public mir::Executor
 {
 public:
-    LinearisingAdaptor() noexcept = default;
+    LinearisingAdaptor() noexcept
+        : idle{true}
+    {
+    }
 
     ~LinearisingAdaptor() noexcept
     {
         std::unique_lock<decltype(mutex)> lock{mutex};
-        while (!workqueue.empty())
+        workqueue.clear();
+        while (!idle)
         {
             lock.unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds{1});
@@ -45,10 +49,9 @@ public:
     {
         std::lock_guard<decltype(mutex)> lock{mutex};
         workqueue.push_back(std::move(work));
-        if (workqueue.size() == 1)
+        if (idle)
         {
-            // If the workqueue now contains 1 item, then previously it contained 0, which means
-            // any previous work_loop() invocation has finished and we need to spawn a new one.
+            idle = false;
             mir::system_executor.spawn([this]() { work_loop(); });
         }
     }
@@ -62,16 +65,18 @@ private:
         {
             {
                 auto work = std::move(workqueue.front());
+                workqueue.pop_front();
                 lock.unlock();
                 work();
             }
             lock.lock();
-            workqueue.pop_front();
         }
+        idle = true;
     }
 
     std::mutex mutex;
     std::deque<std::function<void()>> workqueue;
+    bool idle;
 } adaptor;
 }
 
