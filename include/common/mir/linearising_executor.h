@@ -30,7 +30,7 @@ namespace mir
  *      A() happens-before B(). That is, the entire execution of A is completed before B is started.
  * 2.   No work is performed concurrently. For any two calls linearising_executor.spawn(A)
  *      linearising_executor.spawn(B) either A() happens-before B() or B() happens-before A().
- * 3.   Work is executed on a separate thread of execution to the call to spawn().
+ * 3.   Work is deferred; linearising_executor.spawn(A) will not block on the execution of A
  */
 extern Executor& linearising_executor;
 }
