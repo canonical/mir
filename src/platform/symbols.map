@@ -182,3 +182,10 @@ MIRPLATFORM_2.5 {
  };
  local: *;
 };
+
+MIRPLATFORM_2.7 {
+ global:
+  extern "C++" {
+    mir::options::idle_timeout_opt;
+  };
+} MIRPLATFORM_2.5;

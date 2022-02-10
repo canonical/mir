@@ -22,6 +22,8 @@
 
 #include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
+#include "mir/options/configuration.h"
+#include "mir/options/option.h"
 #include "default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
 #include "decoration/basic_manager.h"
@@ -94,11 +96,20 @@ auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh:
 {
     return idle_handler([this]()
         {
-            return std::make_shared<msh::BasicIdleHandler>(
+            auto const idle_handler = std::make_shared<msh::BasicIdleHandler>(
                 the_idle_hub(),
                 the_input_scene(),
                 the_buffer_allocator(),
                 the_display_configuration_controller());
+
+            auto options = the_options();
+            int const idle_timeout_seconds = options->get<int>(options::idle_timeout_opt);
+            if (idle_timeout_seconds > 0)
+            {
+                idle_handler->set_display_off_timeout(std::chrono::seconds{idle_timeout_seconds});
+            }
+
+            return idle_handler;
         });
 }
 
