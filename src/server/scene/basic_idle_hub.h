@@ -69,12 +69,14 @@ public:
 
 private:
     struct Multiplexer;
+    struct PendingRegistration;
 
     void alarm_fired(ProofOfMutexLock const& lock);
     void schedule_alarm(ProofOfMutexLock const& lock, time::Timestamp current_time);
 
     std::shared_ptr<time::Clock> const clock;
     std::unique_ptr<time::Alarm> const alarm;
+    std::shared_ptr<PendingRegistration> const pending_registrations;
     std::mutex mutex;
     /// Maps timeouts (times from last poke) to the multiplexers that need to be fired at those times.
     std::map<time::Duration, std::shared_ptr<Multiplexer>> timeouts;

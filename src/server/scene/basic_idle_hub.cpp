@@ -101,9 +101,10 @@ ms::BasicIdleHub::BasicIdleHub(
     : clock{clock},
       alarm{alarm_factory.create_alarm(
           std::make_unique<AlarmCallback>(mutex, [this](ProofOfMutexLock const& lock)
-            {
-                alarm_fired(lock);
-            }))}
+              {
+                  alarm_fired(lock);
+              }))},
+      pending_registrations{std::make_shared<PendingRegistration>()}
 {
     poke();
 }
@@ -178,15 +179,28 @@ void ms::BasicIdleHub::register_interest(
         iter->second->register_interest(observer, executor);
     }
 
+    {
+        std::lock_guard<std::recursive_mutex> lock{pending_registrations->mutex};
+        pending_registrations->observers.insert(shared_observer.get());
+    }
+
     auto const is_active = (alarm_timeout && alarm_timeout.value() <= timeout);
-    if (is_active)
-    {
-        shared_observer->active();
-    }
-    else
-    {
-        shared_observer->idle();
-    }
+    executor.spawn([pending_registrations=pending_registrations, shared_observer, is_active]()
+        {
+            std::lock_guard<std::recursive_mutex> lock{pending_registrations->mutex};
+            auto const removed = pending_registrations->observers.erase(shared_observer.get());
+            if (removed)
+            {
+                if (is_active)
+                {
+                    shared_observer->active();
+                }
+                else
+                {
+                    shared_observer->idle();
+                }
+            }
+        });
 }
 
 void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
@@ -201,6 +215,8 @@ void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
         }
     }
     first_timeout = timeouts.empty() ? std::nullopt : std::make_optional(timeouts.begin()->first);
+    std::lock_guard<std::recursive_mutex> registrations_lock{pending_registrations->mutex};
+    pending_registrations->observers.erase(&observer);
 }
 
 void ms::BasicIdleHub::alarm_fired(ProofOfMutexLock const& lock)
