@@ -58,6 +58,8 @@ public:
         std::weak_ptr<IdleStateObserver> const& observer,
         time::Duration timeout) override;
 
+    /// Idle and active notifications will be sent via the specified executor. The executor must not block the calling
+    /// thread.
     void register_interest(
         std::weak_ptr<IdleStateObserver> const& observer,
         Executor& executor,
@@ -68,7 +70,7 @@ public:
 private:
     struct Multiplexer;
 
-    void alarm_fired(std::unique_lock<std::mutex>& lock);
+    void alarm_fired(ProofOfMutexLock const& lock);
     void schedule_alarm(ProofOfMutexLock const& lock, time::Timestamp current_time);
 
     std::shared_ptr<time::Clock> const clock;
