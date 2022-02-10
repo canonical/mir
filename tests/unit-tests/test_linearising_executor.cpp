@@ -18,10 +18,10 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <thread>
 
 #include "mir/linearising_executor.h"
 #include "mir/test/signal.h"
-#include "mir/test/current_thread_name.h"
 
 using namespace std::literals::chrono_literals;
 using namespace testing;
