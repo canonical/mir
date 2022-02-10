@@ -121,6 +121,43 @@ private:
     std::queue<std::function<void()>> work_pending;
 };
 
+class CountingExecutor : public mir::Executor
+{
+public:
+    void spawn(std::function<void()>&& work) override
+    {
+        std::lock_guard<decltype(work_mutex)> lock{work_mutex};
+        ++spawn_count;
+        work_queue.emplace(std::move(work));
+    }
+
+    void do_work()
+    {
+        std::unique_lock<decltype(work_mutex)> lock{work_mutex};
+        while (!work_queue.empty())
+        {
+            auto work = work_queue.front();
+            work_queue.pop();
+            lock.unlock();
+
+            work();
+
+            lock.lock();
+        }
+    }
+
+    int work_spawned()
+    {
+        std::lock_guard<decltype(work_mutex)> lock{work_mutex};
+        return spawn_count;
+    }
+private:
+    int spawn_count{0};
+
+    std::mutex work_mutex;
+    std::queue<std::function<void()>> work_queue;
+};
+
 class ImmediateExecutor : public mir::Executor
 {
 public:
@@ -592,43 +629,7 @@ TEST(ObserverMultiplexer, observations_can_be_delegated_to_specified_executor)
 {
     using namespace testing;
 
-    class CountingExecutor : public mir::Executor
-    {
-    public:
-        void spawn(std::function<void()>&& work) override
-        {
-            std::lock_guard<decltype(work_mutex)> lock{work_mutex};
-            ++spawn_count;
-            work_queue.emplace(std::move(work));
-        }
-
-        void do_work()
-        {
-            std::unique_lock<decltype(work_mutex)> lock{work_mutex};
-            while (!work_queue.empty())
-            {
-                auto work = work_queue.front();
-                work_queue.pop();
-                lock.unlock();
-
-                work();
-
-                lock.lock();
-            }
-        }
-
-        int work_spawned()
-        {
-            std::lock_guard<decltype(work_mutex)> lock{work_mutex};
-            return spawn_count;
-        }
-    private:
-        int spawn_count{0};
-
-        std::mutex work_mutex;
-        std::queue<std::function<void()>> work_queue;
-    } counting_executor;
-
+    CountingExecutor counting_executor;
     ThreadedExecutor executor;
     TestObserverMultiplexer multiplexer{executor};
 
