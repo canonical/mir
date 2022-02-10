@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <thread>
+#include <atomic>
 
 #include "mir/linearising_executor.h"
 #include "mir/test/signal.h"
