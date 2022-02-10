@@ -74,6 +74,25 @@ struct ms::BasicIdleHub::Multiplexer: ObserverMultiplexer<IdleStateObserver>
     {
     }
 
+    void register_and_send_initial_state(
+        std::weak_ptr<IdleStateObserver> const& observer,
+        Executor& executor,
+        bool is_active)
+    {
+        register_interest(observer, executor);
+        if (auto const locked = observer.lock())
+        {
+            if (is_active)
+            {
+                for_single_observer(*locked, &IdleStateObserver::active);
+            }
+            else
+            {
+                for_single_observer(*locked, &IdleStateObserver::idle);
+            }
+        }
+    }
+
     void idle() override
     {
         for_each_observer(&IdleStateObserver::idle);
@@ -103,8 +122,7 @@ ms::BasicIdleHub::BasicIdleHub(
           std::make_unique<AlarmCallback>(mutex, [this](ProofOfMutexLock const& lock)
               {
                   alarm_fired(lock);
-              }))},
-      pending_registrations{std::make_shared<PendingRegistration>()}
+              }))}
 {
     poke();
 }
@@ -150,57 +168,39 @@ void ms::BasicIdleHub::register_interest(
 
     std::lock_guard<std::mutex> lock{mutex};
     auto const iter = timeouts.find(timeout);
+    std::shared_ptr<Multiplexer> multiplexer;
     if (iter == timeouts.end())
     {
-        auto const multiplexer = std::make_shared<Multiplexer>();
-        multiplexer->register_interest(observer, executor);
+        multiplexer = std::make_shared<Multiplexer>();
         timeouts.insert({timeout, multiplexer});
+        // In case this changes the first timeout
         first_timeout = timeouts.begin()->first;
-        auto const current_time = clock->now() - poke_time;
+        // Check if the current alarm will overshoot the new timeout (or there isn't an alarm at all)
         if (!alarm_timeout || alarm_timeout.value() > timeout)
         {
             // The alarm will not be fired before we hit our timeout
+            auto const current_time = clock->now() - poke_time;
             if (current_time < timeout)
             {
-                // The alarm will be fired after we hit our timout,
+                // As it stands, the alarm will be fired after we hit our timout,
                 // but we have not hit it yet so the alarm needs to be moved up
                 alarm_timeout = timeout;
                 alarm->reschedule_in(std::chrono::duration_cast<std::chrono::milliseconds>(timeout - current_time));
             }
             else
             {
-                // This timeout has already been passed
+                // Our timeout has already been passed, so we are idle
                 idle_multiplexers.push_back(multiplexer);
             }
         }
     }
     else
     {
-        iter->second->register_interest(observer, executor);
-    }
-
-    {
-        std::lock_guard<std::recursive_mutex> lock{pending_registrations->mutex};
-        pending_registrations->observers.insert(shared_observer.get());
+        multiplexer = iter->second;
     }
 
     auto const is_active = (alarm_timeout && alarm_timeout.value() <= timeout);
-    executor.spawn([pending_registrations=pending_registrations, shared_observer, is_active]()
-        {
-            std::lock_guard<std::recursive_mutex> lock{pending_registrations->mutex};
-            auto const removed = pending_registrations->observers.erase(shared_observer.get());
-            if (removed)
-            {
-                if (is_active)
-                {
-                    shared_observer->active();
-                }
-                else
-                {
-                    shared_observer->idle();
-                }
-            }
-        });
+    multiplexer->register_and_send_initial_state(observer, executor, is_active);
 }
 
 void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
@@ -215,8 +215,6 @@ void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
         }
     }
     first_timeout = timeouts.empty() ? std::nullopt : std::make_optional(timeouts.begin()->first);
-    std::lock_guard<std::recursive_mutex> registrations_lock{pending_registrations->mutex};
-    pending_registrations->observers.erase(&observer);
 }
 
 void ms::BasicIdleHub::alarm_fired(ProofOfMutexLock const& lock)
