@@ -67,6 +67,18 @@ protected:
      */
     template<typename MemberFn, typename... Args>
     void for_each_observer(MemberFn f, Args&&... args);
+
+    /**
+     *  Invoke a member function of a specific Observer (if and only if it is registered).
+     *
+     * \tparam MemberFn Must be (Observer::*)(Args...)
+     * \tparam Args     Parameter pack of arguments of Observer member function.
+     * \param observer  Reference to the observer the function should be invoked for.
+     * \param f         Pointer to Observer member function to invoke.
+     * \param args      Arguments for member function invocation.
+     */
+    template<typename MemberFn, typename... Args>
+    void for_single_observer(Observer const& observer, MemberFn f, Args&&... args);
 private:
     Executor& default_executor;
 
@@ -236,6 +248,38 @@ void ObserverMultiplexer<Observer>::for_each_observer(MemberFn f, Args&&... args
                         invokable_mem_fn(observer, std::forward<Args>(args)...);
                     }
                 });
+        }
+    }
+}
+
+template<class Observer>
+template<typename MemberFn, typename... Args>
+void ObserverMultiplexer<Observer>::for_single_observer(Observer const& target_observer, MemberFn f, Args&&... args)
+{
+    static_assert(
+        std::is_member_function_pointer<MemberFn>::value,
+        "f must be of type (Observer::*)(Args...), a pointer to an Observer member function.");
+    auto const invokable_mem_fn = std::mem_fn(f);
+    decltype(observers) local_observers;
+    {
+        std::lock_guard<decltype(observer_mutex)> lock{observer_mutex};
+        local_observers = observers;
+    }
+    for (auto& weak_observer: local_observers)
+    {
+        if (auto observer = weak_observer->lock())
+        {
+            if (observer.get() == &target_observer)
+            {
+                observer.spawn(
+                    [invokable_mem_fn, weak_observer = std::move(weak_observer), args...]() mutable
+                    {
+                        if (auto observer = weak_observer->lock())
+                        {
+                            invokable_mem_fn(observer, std::forward<Args>(args)...);
+                        }
+                    });
+            }
         }
     }
 }
