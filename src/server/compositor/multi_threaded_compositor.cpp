@@ -31,7 +31,6 @@
 #include "mir/raii.h"
 #include "mir/unwind_helpers.h"
 #include "mir/thread_name.h"
-#include "mir/system_executor.h"
 
 #include <thread>
 #include <chrono>
@@ -67,8 +66,7 @@ public:
         force_sleep{fixed_composite_delay},
         display_listener{display_listener},
         report{report},
-        started_future{started.get_future()},
-        stopped_future{stopped.get_future()}
+        started_future{started.get_future()}
     {
     }
 
@@ -76,12 +74,6 @@ public:
     try
     {
         mir::set_thread_name("Mir/Comp");
-        auto const signal_when_stopped = mir::raii::paired_calls(
-            [](){},
-            [this]()
-            {
-                stopped.set_value();
-            });
 
         std::vector<std::tuple<mg::DisplayBuffer*, std::unique_ptr<mc::DisplayBufferCompositor>>> compositors;
         group.for_each_display_buffer(
@@ -238,15 +230,6 @@ public:
         started_future.get();
     }
 
-    void wait_until_stopped()
-    {
-        stop();
-        if (stopped_future.wait_for(10s) != std::future_status::ready)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Compositor thread failed to stop"));
-
-        stopped_future.get();
-    }
-
 private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const compositor_factory;
     mg::DisplaySyncGroup& group;
@@ -260,8 +243,6 @@ private:
     std::shared_ptr<CompositorReport> const report;
     std::promise<void> started;
     std::future<void> started_future;
-    std::promise<void> stopped;
-    std::future<void> stopped_future;
     bool not_posted_yet = true;
 };
 
@@ -283,7 +264,8 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       report{compositor_report},
       state{CompositorState::stopped},
       fixed_composite_delay{fixed_composite_delay},
-      compose_on_start{compose_on_start}
+      compose_on_start{compose_on_start},
+      thread_pool{1}
 {
     observer = std::make_shared<ms::LegacySceneChangeNotification>(
     [this]()
@@ -379,9 +361,11 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
             display_buffer_compositor_factory, group, scene, display_listener,
             fixed_composite_delay, report);
 
-        mir::system_executor.spawn(std::ref(*thread_functor));
+        futures.push_back(thread_pool.run(std::ref(*thread_functor), &group));
         thread_functors.push_back(std::move(thread_functor));
     });
+
+    thread_pool.shrink();
 
     for (auto& functor : thread_functors)
         functor->wait_until_started();
@@ -392,8 +376,9 @@ void mc::MultiThreadedCompositor::destroy_compositing_threads()
     for (auto& f : thread_functors)
         f->stop();
 
-    for (auto& f : thread_functors)
-        f->wait_until_stopped();
+    for (auto& f : futures)
+        f.wait();
 
     thread_functors.clear();
+    futures.clear();
 }

@@ -85,6 +85,7 @@ private:
     std::shared_ptr<CompositorReport> const report;
 
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
+    std::vector<std::future<void>> futures;
 
     std::atomic<CompositorState> state;
     std::chrono::milliseconds fixed_composite_delay;
@@ -94,6 +95,7 @@ private:
     void schedule_compositing(int number_composites, geometry::Rectangle const& damage) const;
 
     std::shared_ptr<mir::scene::Observer> observer;
+    mir::thread::BasicThreadPool thread_pool;
 };
 
 }
