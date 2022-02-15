@@ -221,7 +221,7 @@ private:
  * min_threadpool_threads in the free list, the Worker is added to the free list. Otherwise, the
  * Worker is removed from the all-workers list and is destroyed.
  */
-class ThreadPool : public mir::SystemExecutor
+class ThreadPool : public mir::Executor
 {
 public:
     ThreadPool() noexcept
@@ -230,21 +230,16 @@ public:
 
     ~ThreadPool() noexcept
     {
-        // We need to wait for any active workers to finish.
-        bool idle;
-        do
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds{1});
+        wait_for_idle();
+    }
 
-            std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
-            /* When a worker finishes it either adds itself to the free_workers list
-             * or removes itself from the workers list.
-             *
-             * This means that we're idle once all the workers are free_workers
-             * - that is, the free_workers list is the same size as workers.
-             */
-            idle = workers.size() == free_workers.size();
-        } while(!idle);
+    void quiesce()
+    {
+        wait_for_idle();
+        std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
+        free_workers.clear();
+        workers.clear();
+        num_workers_free = 0;
     }
 
     void spawn(std::function<void()>&& work)
@@ -285,23 +280,46 @@ private:
         std::shared_ptr<Worker> worker;
     };
 
-    void recycle(WorkerHandle&& worker)
+    void wait_for_idle()
     {
-        std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
-        if (num_workers_free < min_threadpool_threads)
+        std::unique_lock<decltype(workers_mutex)> lock{workers_mutex};
+        // We need to wait for any active workers to finish.
+        bool idle = workers.size() == free_workers.size();
+        while (!idle)
         {
-            // If we're below our free-thread minimum, recycle this thread back into the pool…
-            free_workers.emplace_front(std::move(worker));
-            num_workers_free++;
-        }
-        else
-        {
-            // …otherwise, let it die.
-            workers.erase(worker.pos);
+            workers_changed.wait(lock);
+
+            /* When a worker finishes it either adds itself to the free_workers list
+             * or removes itself from the workers list.
+             *
+             * This means that we're idle once all the workers are free_workers
+             * - that is, the free_workers list is the same size as workers.
+             */
+            idle = workers.size() == free_workers.size();
         }
     }
 
+    void recycle(WorkerHandle&& worker)
+    {
+        {
+            std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
+            if (num_workers_free < min_threadpool_threads)
+            {
+                // If we're below our free-thread minimum, recycle this thread back into the pool…
+                free_workers.emplace_front(std::move(worker));
+                num_workers_free++;
+            }
+            else
+            {
+                // …otherwise, let it die.
+                workers.erase(worker.pos);
+            }
+        }
+        workers_changed.notify_all();
+    }
+
     std::mutex workers_mutex;
+    std::condition_variable workers_changed;
     int num_workers_free{0};
     std::list<WorkerHandle> free_workers;
     std::list<std::shared_ptr<Worker>> workers;
@@ -321,4 +339,9 @@ void mir::SystemExecutor::spawn(std::function<void()>&& work)
 void mir::SystemExecutor::set_unhandled_exception_handler(void (*handler)())
 {
     exception_handler = handler;
+}
+
+void mir::SystemExecutor::quiesce()
+{
+    system_threadpool.quiesce();
 }

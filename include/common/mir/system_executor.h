@@ -39,6 +39,10 @@ public:
      */
     static void set_unhandled_exception_handler(void (*handler)());
 
+    /**
+     * Wait for all current work to finish and terminate all worker threads
+     */
+    static void quiesce();
 protected:
     SystemExecutor() = default;
 };
