@@ -30,7 +30,7 @@ namespace mir
 class Executor;
 namespace scene
 {
-/// Gets notifications about changes in the idle state
+/// Gets notifications about the idle state when registered and subsequent state changes until unregistered
 class IdleStateObserver
 {
 public:
