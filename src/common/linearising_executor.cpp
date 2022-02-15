@@ -22,6 +22,7 @@
 #include <deque>
 #include <mutex>
 #include <thread>
+#include <condition_variable>
 
 namespace
 {
@@ -39,9 +40,7 @@ public:
         workqueue.clear();
         while (!idle)
         {
-            lock.unlock();
-            std::this_thread::sleep_for(std::chrono::milliseconds{1});
-            lock.lock();
+            idle_changed.wait(lock);
         }
     }
 
@@ -72,9 +71,11 @@ private:
             lock.lock();
         }
         idle = true;
+        idle_changed.notify_all();
     }
 
     std::mutex mutex;
+    std::condition_variable idle_changed;
     std::deque<std::function<void()>> workqueue;
     bool idle;
 } adaptor;
