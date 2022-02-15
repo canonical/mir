@@ -19,6 +19,7 @@
 #include <mir/shell/system_compositor_window_manager.h>
 #include <mir/main_loop.h>
 #include "mir/default_server_configuration.h"
+#include "mir/abnormal_exit.h"
 
 #include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
@@ -106,7 +107,12 @@ auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh:
             int const idle_timeout_seconds = options->get<int>(options::idle_timeout_opt);
             if (idle_timeout_seconds < 0)
             {
-                fatal_error("Invalid %s value %d, must be > 0", options::idle_timeout_opt, idle_timeout_seconds);
+                throw mir::AbnormalExit(
+                    "Invalid " +
+                    std::string{options::idle_timeout_opt} +
+                    " value " +
+                    std::to_string(idle_timeout_seconds) +
+                    ", must be > 0");
             }
             else if (idle_timeout_seconds == 0)
             {
