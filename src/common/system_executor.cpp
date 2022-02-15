@@ -282,13 +282,13 @@ private:
 
     void wait_for_idle()
     {
+        std::unique_lock<decltype(workers_mutex)> lock{workers_mutex};
         // We need to wait for any active workers to finish.
-        bool idle = false;
+        bool idle = workers.size() == free_workers.size();
         while (!idle)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds{1});
+            workers_changed.wait(lock);
 
-            std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
             /* When a worker finishes it either adds itself to the free_workers list
              * or removes itself from the workers list.
              *
@@ -301,21 +301,25 @@ private:
 
     void recycle(WorkerHandle&& worker)
     {
-        std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
-        if (num_workers_free < min_threadpool_threads)
         {
-            // If we're below our free-thread minimum, recycle this thread back into the pool…
-            free_workers.emplace_front(std::move(worker));
-            num_workers_free++;
+            std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
+            if (num_workers_free < min_threadpool_threads)
+            {
+                // If we're below our free-thread minimum, recycle this thread back into the pool…
+                free_workers.emplace_front(std::move(worker));
+                num_workers_free++;
+            }
+            else
+            {
+                // …otherwise, let it die.
+                workers.erase(worker.pos);
+            }
         }
-        else
-        {
-            // …otherwise, let it die.
-            workers.erase(worker.pos);
-        }
+        workers_changed.notify_all();
     }
 
     std::mutex workers_mutex;
+    std::condition_variable workers_changed;
     int num_workers_free{0};
     std::list<WorkerHandle> free_workers;
     std::list<std::shared_ptr<Worker>> workers;
