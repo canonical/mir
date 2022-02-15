@@ -256,7 +256,7 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
                 case mir_power_mode_suspend:
                 case mir_power_mode_off:
                     // Simulate an off display by setting a zeroed-out transform
-                    output->display_buffer->set_transformation(glm::mat2{});
+                    output->display_buffer->set_transformation(glm::mat2{0});
                     break;
                 }
                 found_info = true;
