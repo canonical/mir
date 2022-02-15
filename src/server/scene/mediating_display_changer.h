@@ -89,6 +89,7 @@ public:
 
     /* From shell::DisplayConfigurationController */
     void set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const &conf) override;
+    void set_power_mode(MirPowerMode new_power_mode) override;
 
 private:
     void focus_change_handler(std::shared_ptr<Session> const& session);
@@ -125,6 +126,11 @@ private:
     /// See configure_for_hardware_change(). The config that will be applied by a currently in-flight server action.
     /// If null, there is no config to apply or hardware config server action queued.
     std::shared_ptr<graphics::DisplayConfiguration> pending_configuration;
+
+    /// Mutex protecting power_mode
+    std::mutex power_mode_mutex;
+    /// Power mode outputs have been set to
+    MirPowerMode power_mode{mir_power_mode_on};
 };
 
 }

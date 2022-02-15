@@ -17,6 +17,8 @@
  */
 
 #include "mir/test/doubles/fake_alarm_factory.h"
+#include "mir/lockable_callback.h"
+#include "mir/basic_callback.h"
 
 #include <numeric>
 #include <algorithm>
@@ -28,7 +30,7 @@ class mtd::FakeAlarmFactory::FakeAlarm : public mt::Alarm
 {
 public:
     FakeAlarm(
-        std::function<void()> const& callback,
+        std::unique_ptr<mir::LockableCallback> callback,
         std::shared_ptr<mir::time::Clock> const& clock,
         std::function<void(FakeAlarm*)> const& on_destruction);
     ~FakeAlarm() override;
@@ -44,7 +46,7 @@ public:
 
 private:
     int triggered_count;
-    std::function<void()> const callback;
+    std::unique_ptr<mir::LockableCallback> callback;
     State alarm_state;
     mir::time::Timestamp triggers_at;
     std::shared_ptr<mt::Clock> clock;
@@ -53,11 +55,11 @@ private:
 
 
 mtd::FakeAlarmFactory::FakeAlarm::FakeAlarm(
-    std::function<void()> const& callback,
+    std::unique_ptr<mir::LockableCallback> callback,
     std::shared_ptr<mir::time::Clock> const& clock,
     std::function<void(FakeAlarm*)> const& on_destruction)
     : triggered_count{0},
-      callback{callback},
+      callback{std::move(callback)},
       alarm_state{State::cancelled},
       triggers_at{mir::time::Timestamp::max()},
       clock{clock},
@@ -76,7 +78,8 @@ void mtd::FakeAlarmFactory::FakeAlarm::time_updated()
     {
         triggers_at = mir::time::Timestamp::max();
         alarm_state = State::triggered;
-        callback();
+        std::lock_guard<mir::LockableCallback> guard{*callback};
+        (*callback)();
         ++triggered_count;
     }
 }
@@ -120,7 +123,7 @@ bool mtd::FakeAlarmFactory::FakeAlarm::reschedule_for(mir::time::Timestamp timeo
     }
     else
     {
-        callback();
+        (*callback)();
         triggers_at = mir::time::Timestamp::max();
         alarm_state = State::triggered;
     }
@@ -135,8 +138,14 @@ mtd::FakeAlarmFactory::FakeAlarmFactory()
 std::unique_ptr<mt::Alarm> mtd::FakeAlarmFactory::create_alarm(
     std::function<void()> const& callback)
 {
+    return create_alarm(std::make_unique<mir::BasicCallback>(callback));
+}
+
+std::unique_ptr<mt::Alarm> mtd::FakeAlarmFactory::create_alarm(
+    std::unique_ptr<LockableCallback> callback)
+{
     std::unique_ptr<mt::Alarm> alarm = std::make_unique<FakeAlarm>(
-        callback,
+        std::move(callback),
         clock,
         [this](FakeAlarm* destroying)
         {
@@ -144,12 +153,6 @@ std::unique_ptr<mt::Alarm> mtd::FakeAlarmFactory::create_alarm(
         });
     alarms.push_back(static_cast<FakeAlarm*>(alarm.get()));
     return alarm;
-}
-
-std::unique_ptr<mt::Alarm> mtd::FakeAlarmFactory::create_alarm(
-    std::unique_ptr<LockableCallback> /*callback*/)
-{
-    throw std::logic_error{"Lockable alarm creation not implemented for fake alarms"};
 }
 
 void mtd::FakeAlarmFactory::advance_by(mt::Duration step)

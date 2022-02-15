@@ -19,6 +19,7 @@
 #ifndef MIR_SHELL_DISPLAY_CONFIGURATION_CONTROLLER_H_
 #define MIR_SHELL_DISPLAY_CONFIGURATION_CONTROLLER_H_
 
+#include <mir_toolkit/common.h>
 #include <memory>
 
 namespace mir
@@ -57,6 +58,11 @@ public:
      * overridden by a client's requested configuration if that client is focused.
      */
     virtual std::shared_ptr<graphics::DisplayConfiguration> base_configuration() = 0;
+
+    /**
+     * Set the power mode for all outputs currently in use
+     */
+    virtual void set_power_mode(MirPowerMode new_power_mode) = 0;
 };
 }
 }

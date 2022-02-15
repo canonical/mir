@@ -179,6 +179,8 @@ public:
     std::shared_ptr<cookie::Authority>      the_cookie_authority() override;
     std::shared_ptr<scene::Clipboard>       the_clipboard() override;
     std::shared_ptr<scene::TextInputHub>    the_text_input_hub() override;
+    std::shared_ptr<scene::IdleHub>         the_idle_hub() override;
+    std::shared_ptr<shell::IdleHandler>     the_idle_handler() override;
     std::function<void()>                   the_stop_callback() override;
     void add_wayland_extension(
         std::string const& name,
@@ -391,6 +393,8 @@ protected:
     CachedPtr<scene::SessionListener> session_listener;
     CachedPtr<scene::Clipboard>         clipboard;
     CachedPtr<scene::TextInputHub>      text_input_hub;
+    CachedPtr<scene::IdleHub>           idle_hub;
+    CachedPtr<shell::IdleHandler>       idle_handler;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;

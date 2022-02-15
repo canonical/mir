@@ -25,6 +25,7 @@ set(
   vt_filter.cpp
   seat_observer_multiplexer.cpp
   seat_observer_multiplexer.h
+  idle_poking_dispatcher.cpp
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/seat_observer.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/input_dispatcher.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/seat.h

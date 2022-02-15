@@ -24,7 +24,6 @@ target_link_libraries(mir-public-test
 )
 
 add_library(mir-test-static STATIC
-  fake_clock.cpp
   fd_utils.cpp
   test_dispatchable.cpp
   $<TARGET_OBJECTS:mir-public-test>

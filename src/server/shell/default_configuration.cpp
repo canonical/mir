@@ -19,13 +19,17 @@
 #include <mir/shell/system_compositor_window_manager.h>
 #include <mir/main_loop.h>
 #include "mir/default_server_configuration.h"
+#include "mir/abnormal_exit.h"
 
 #include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
+#include "mir/options/configuration.h"
+#include "mir/options/option.h"
 #include "default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
 #include "decoration/basic_manager.h"
 #include "decoration/basic_decoration.h"
+#include "basic_idle_handler.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -87,6 +91,40 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
 auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) -> std::shared_ptr<msh::Shell>
 {
     return wrapped;
+}
+
+auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh::IdleHandler>
+{
+    return idle_handler([this]()
+        {
+            auto const idle_handler = std::make_shared<msh::BasicIdleHandler>(
+                the_idle_hub(),
+                the_input_scene(),
+                the_buffer_allocator(),
+                the_display_configuration_controller());
+
+            auto options = the_options();
+            int const idle_timeout_seconds = options->get<int>(options::idle_timeout_opt);
+            if (idle_timeout_seconds < 0)
+            {
+                throw mir::AbnormalExit(
+                    "Invalid " +
+                    std::string{options::idle_timeout_opt} +
+                    " value " +
+                    std::to_string(idle_timeout_seconds) +
+                    ", must be > 0");
+            }
+            else if (idle_timeout_seconds == 0)
+            {
+                idle_handler->set_display_off_timeout(std::nullopt);
+            }
+            else
+            {
+                idle_handler->set_display_off_timeout(std::chrono::seconds{idle_timeout_seconds});
+            }
+
+            return idle_handler;
+        });
 }
 
 std::shared_ptr<msh::PersistentSurfaceStore>
