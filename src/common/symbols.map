@@ -504,5 +504,6 @@ MIR_COMMON_2.7 {
     typeinfo?for?mir::SystemExecutor;
     vtable?for?mir::SystemExecutor;
     mir::system_executor;
+    mir::linearising_executor;
   };
 } MIR_COMMON_2.5;
