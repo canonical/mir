@@ -21,7 +21,7 @@
 #include "mir/time/alarm_factory.h"
 #include "mir/time/clock.h"
 #include "mir/lockable_callback.h"
-#include "mir/system_executor.h"
+#include "mir/linearising_executor.h"
 
 #include <set>
 
@@ -70,7 +70,7 @@ private:
 struct ms::BasicIdleHub::Multiplexer: ObserverMultiplexer<IdleStateObserver>
 {
     Multiplexer()
-        : ObserverMultiplexer{system_executor}
+        : ObserverMultiplexer{linearising_executor}
     {
     }
 
@@ -152,7 +152,7 @@ void ms::BasicIdleHub::register_interest(
     std::weak_ptr<IdleStateObserver> const& observer,
     time::Duration timeout)
 {
-    register_interest(observer, system_executor, timeout);
+    register_interest(observer, linearising_executor, timeout);
 }
 
 void ms::BasicIdleHub::register_interest(
