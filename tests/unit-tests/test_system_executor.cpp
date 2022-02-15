@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 
 #include <boost/throw_exception.hpp>
+#include <chrono>
 #include <thread>
 #include <future>
 
@@ -199,4 +200,20 @@ TEST(SystemExecutor, new_work_can_be_submitted_after_quiesce)
             });
     }
     EXPECT_TRUE(done->wait_for(60s));
+}
+
+TEST(SystemExecutor, quiesce_waits_until_work_completes)
+{
+    constexpr auto const delay = 500ms;
+
+    auto const expected_end = std::chrono::steady_clock::now() + delay;
+
+    mir::system_executor.spawn(
+        [delay]()
+        {
+            std::this_thread::sleep_for(delay);
+        });
+
+    mir::SystemExecutor::quiesce();
+    EXPECT_THAT(std::chrono::steady_clock::now(), Gt(expected_end));
 }
