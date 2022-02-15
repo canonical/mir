@@ -25,6 +25,8 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <map>
+#include <boost/throw_exception.hpp>
 
 using namespace testing;
 namespace ms = mir::scene;
@@ -50,7 +52,39 @@ struct BasicIdleHandler: Test
     NiceMock<mtd::MockIdleHub> idle_hub;
     mtd::StubInputScene input_scene;
     mtd::StubBufferAllocator allocator;
-    StrictMock<MockDisplayConfigurationController> display;
+    NiceMock<MockDisplayConfigurationController> display;
+    msh::BasicIdleHandler handler{
+        mt::fake_shared(idle_hub),
+        mt::fake_shared(input_scene),
+        mt::fake_shared(allocator),
+        mt::fake_shared(display)};
+    std::map<mir::time::Duration, std::weak_ptr<ms::IdleStateObserver>> observers;
+
+    void SetUp()
+    {
+        EXPECT_CALL(idle_hub, register_interest(_, _))
+            .WillRepeatedly(Invoke([this](auto observer, auto timeout)
+                {
+                    observers.insert(std::make_pair(timeout, observer));
+                }));
+    }
+
+    auto observer_for(mir::time::Duration timeout) -> std::shared_ptr<ms::IdleStateObserver>
+    {
+        auto const iter = observers.find(timeout);
+        if (iter == observers.end())
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error(
+                "no observer registered for timeout " + std::to_string(timeout.count())));
+        }
+        auto const locked = iter->second.lock();
+        if (!locked)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error(
+                "observer registered for timeout " + std::to_string(timeout.count()) + " is null"));
+        }
+        return locked;
+    }
 };
 }
 
@@ -58,7 +92,7 @@ TEST_F(BasicIdleHandler, does_not_register_observers_by_default)
 {
     EXPECT_CALL(idle_hub, register_interest(_, _))
         .Times(0);
-    msh::BasicIdleHandler handler{
+    msh::BasicIdleHandler local_handler{
         mt::fake_shared(idle_hub),
         mt::fake_shared(input_scene),
         mt::fake_shared(allocator),
@@ -67,138 +101,78 @@ TEST_F(BasicIdleHandler, does_not_register_observers_by_default)
 
 TEST_F(BasicIdleHandler, turns_display_off_when_idle)
 {
-    std::weak_ptr<ms::IdleStateObserver> observer;
-    msh::BasicIdleHandler handler{
-        mt::fake_shared(idle_hub),
-        mt::fake_shared(input_scene),
-        mt::fake_shared(allocator),
-        mt::fake_shared(display)};
-    EXPECT_CALL(idle_hub, register_interest(_, _))
-        .Times(AnyNumber());
-    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
-        .WillOnce(SaveArg<0>(&observer));
     handler.set_display_off_timeout(30s);
-    auto const locked = observer.lock();
-    ASSERT_THAT(locked, Ne(nullptr));
+    auto const observer = observer_for(30s);
+
     EXPECT_CALL(display, set_power_mode(mir_power_mode_off));
-    locked->idle();
-    EXPECT_CALL(display, set_power_mode(mir_power_mode_on)).Times(AnyNumber());
+    observer->idle();
+    Mock::VerifyAndClearExpectations(&display);
 }
 
 TEST_F(BasicIdleHandler, turns_display_back_on_when_active)
 {
-    std::weak_ptr<ms::IdleStateObserver> observer;
-    msh::BasicIdleHandler handler{
-        mt::fake_shared(idle_hub),
-        mt::fake_shared(input_scene),
-        mt::fake_shared(allocator),
-        mt::fake_shared(display)};
-    EXPECT_CALL(idle_hub, register_interest(_, _))
-        .Times(AnyNumber());
-    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
-        .WillOnce(SaveArg<0>(&observer));
     handler.set_display_off_timeout(30s);
-    auto const locked = observer.lock();
-    ASSERT_THAT(locked, Ne(nullptr));
-    EXPECT_CALL(display, set_power_mode(mir_power_mode_off));
-    locked->idle();
+    auto const observer = observer_for(30s);
+    observer->idle();
+
     EXPECT_CALL(display, set_power_mode(mir_power_mode_on));
-    locked->active();
-    EXPECT_CALL(display, set_power_mode(mir_power_mode_on)).Times(AnyNumber());
+    observer->active();
+    Mock::VerifyAndClearExpectations(&display);
 }
 
 TEST_F(BasicIdleHandler, off_timeout_is_disabled_on_destruction)
 {
-    std::weak_ptr<ms::IdleStateObserver> observer;
-    msh::BasicIdleHandler handler{
-        mt::fake_shared(idle_hub),
-        mt::fake_shared(input_scene),
-        mt::fake_shared(allocator),
-        mt::fake_shared(display)};
-    EXPECT_CALL(idle_hub, register_interest(_, _))
-        .Times(AnyNumber());
-    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
-        .WillOnce(SaveArg<0>(&observer));
     handler.set_display_off_timeout(30s);
-    auto const locked = observer.lock();
-    ASSERT_THAT(locked, Ne(nullptr));
+    auto const observer = observer_for(30s);
+
     EXPECT_CALL(idle_hub, unregister_interest(_))
         .Times(AnyNumber());
-    EXPECT_CALL(idle_hub, unregister_interest(Ref(*locked)))
+    EXPECT_CALL(idle_hub, unregister_interest(Ref(*observer)))
         .Times(1);
-    EXPECT_CALL(display, set_power_mode(mir_power_mode_on)).Times(AnyNumber());
 }
 
 TEST_F(BasicIdleHandler, off_timeout_can_be_disabled)
 {
-    std::weak_ptr<ms::IdleStateObserver> observer;
-    msh::BasicIdleHandler handler{
-        mt::fake_shared(idle_hub),
-        mt::fake_shared(input_scene),
-        mt::fake_shared(allocator),
-        mt::fake_shared(display)};
-    EXPECT_CALL(idle_hub, register_interest(_, _))
-        .Times(AnyNumber());
-    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
-        .WillOnce(SaveArg<0>(&observer));
     handler.set_display_off_timeout(30s);
-    auto const locked = observer.lock();
-    ASSERT_THAT(locked, Ne(nullptr));
+    auto const observer = observer_for(30s);
+
     EXPECT_CALL(idle_hub, unregister_interest(_))
         .Times(AnyNumber());
-    EXPECT_CALL(idle_hub, unregister_interest(Ref(*locked)))
+    EXPECT_CALL(idle_hub, unregister_interest(Ref(*observer)))
         .Times(1);
-    EXPECT_CALL(display, set_power_mode(mir_power_mode_on)).Times(AnyNumber());
     handler.set_display_off_timeout(std::nullopt);
-    EXPECT_CALL(idle_hub, unregister_interest(_))
-        .Times(0);
-    EXPECT_CALL(idle_hub, register_interest(_, _))
-        .Times(0);
+    Mock::VerifyAndClearExpectations(&display);
 }
 
-TEST_F(BasicIdleHandler, off_timeout_can_be_changed)
+TEST_F(BasicIdleHandler, registers_new_off_timeout)
 {
-    std::weak_ptr<ms::IdleStateObserver> observer;
-    msh::BasicIdleHandler handler{
-        mt::fake_shared(idle_hub),
-        mt::fake_shared(input_scene),
-        mt::fake_shared(allocator),
-        mt::fake_shared(display)};
-    EXPECT_CALL(idle_hub, register_interest(_, _))
-        .Times(AnyNumber());
-    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
-        .WillOnce(SaveArg<0>(&observer));
     handler.set_display_off_timeout(30s);
-    auto const locked = observer.lock();
-    ASSERT_THAT(locked, Ne(nullptr));
-    EXPECT_CALL(idle_hub, unregister_interest(_))
-        .Times(AnyNumber());
-    EXPECT_CALL(idle_hub, unregister_interest(Ref(*locked)))
-        .Times(1);
+    auto const observer = observer_for(30s);
+
     EXPECT_CALL(idle_hub, register_interest(_, Eq(99s)))
         .Times(1);
-    EXPECT_CALL(display, set_power_mode(mir_power_mode_on)).Times(AnyNumber());
+    handler.set_display_off_timeout(99s);
+}
+
+TEST_F(BasicIdleHandler, unregisters_old_off_timeout)
+{
+    handler.set_display_off_timeout(30s);
+    auto const observer = observer_for(30s);
+
+    EXPECT_CALL(idle_hub, unregister_interest(_))
+        .Times(AnyNumber());
+    EXPECT_CALL(idle_hub, unregister_interest(Ref(*observer)))
+        .Times(1);
     handler.set_display_off_timeout(99s);
 }
 
 TEST_F(BasicIdleHandler, display_turned_back_on_when_off_timeout_disabled)
 {
-    std::weak_ptr<ms::IdleStateObserver> observer;
-    msh::BasicIdleHandler handler{
-        mt::fake_shared(idle_hub),
-        mt::fake_shared(input_scene),
-        mt::fake_shared(allocator),
-        mt::fake_shared(display)};
-    EXPECT_CALL(idle_hub, register_interest(_, _))
-        .Times(AnyNumber());
-    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
-        .WillOnce(SaveArg<0>(&observer));
     handler.set_display_off_timeout(30s);
-    auto const locked = observer.lock();
-    ASSERT_THAT(locked, Ne(nullptr));
-    EXPECT_CALL(display, set_power_mode(mir_power_mode_off));
-    locked->idle();
+    auto const observer = observer_for(30s);
+    observer->idle();
+
     EXPECT_CALL(display, set_power_mode(mir_power_mode_on));
     handler.set_display_off_timeout(std::nullopt);
-    EXPECT_CALL(display, set_power_mode(mir_power_mode_on)).Times(AnyNumber());
+    Mock::VerifyAndClearExpectations(&display);
 }
