@@ -125,7 +125,7 @@ TEST_F(BasicIdleHandler, off_timeout_is_disabled_on_destruction)
     handler.set_display_off_timeout(30s);
     auto const observer = observer_for(30s);
 
-    EXPECT_CALL(idle_hub, unregister_interest(_))
+    EXPECT_CALL(idle_hub, unregister_interest(Not(Ref(*observer))))
         .Times(AnyNumber());
     EXPECT_CALL(idle_hub, unregister_interest(Ref(*observer)))
         .Times(1);
@@ -136,7 +136,7 @@ TEST_F(BasicIdleHandler, off_timeout_can_be_disabled)
     handler.set_display_off_timeout(30s);
     auto const observer = observer_for(30s);
 
-    EXPECT_CALL(idle_hub, unregister_interest(_))
+    EXPECT_CALL(idle_hub, unregister_interest(Not(Ref(*observer))))
         .Times(AnyNumber());
     EXPECT_CALL(idle_hub, unregister_interest(Ref(*observer)))
         .Times(1);
@@ -159,7 +159,7 @@ TEST_F(BasicIdleHandler, unregisters_old_off_timeout)
     handler.set_display_off_timeout(30s);
     auto const observer = observer_for(30s);
 
-    EXPECT_CALL(idle_hub, unregister_interest(_))
+    EXPECT_CALL(idle_hub, unregister_interest(Not(Ref(*observer))))
         .Times(AnyNumber());
     EXPECT_CALL(idle_hub, unregister_interest(Ref(*observer)))
         .Times(1);
