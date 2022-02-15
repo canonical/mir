@@ -104,7 +104,15 @@ auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh:
 
             auto options = the_options();
             int const idle_timeout_seconds = options->get<int>(options::idle_timeout_opt);
-            if (idle_timeout_seconds > 0)
+            if (idle_timeout_seconds < 0)
+            {
+                fatal_error("Invalid %s value %d, must be > 0", options::idle_timeout_opt, idle_timeout_seconds);
+            }
+            else if (idle_timeout_seconds == 0)
+            {
+                idle_handler->set_display_off_timeout(std::nullopt);
+            }
+            else
             {
                 idle_handler->set_display_off_timeout(std::chrono::seconds{idle_timeout_seconds});
             }
