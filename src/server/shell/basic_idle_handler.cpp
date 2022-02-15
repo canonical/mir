@@ -103,7 +103,6 @@ struct Dimmer : ms::IdleStateObserver
 
     void active() override
     {
-        std::lock_guard<std::mutex> lock{mutex};
         if (renderable)
         {
             input_scene->remove_input_visualization(renderable);
@@ -114,7 +113,6 @@ struct Dimmer : ms::IdleStateObserver
 
     void idle() override
     {
-        std::lock_guard<std::mutex> lock{mutex};
         if (!renderable)
         {
             renderable = std::make_shared<DimmingRenderable>(*allocator);
@@ -125,7 +123,6 @@ struct Dimmer : ms::IdleStateObserver
 private:
     std::shared_ptr<mi::Scene> const input_scene;
     std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
-    std::mutex mutex;
     std::shared_ptr<mg::Renderable> renderable;
 };
 
