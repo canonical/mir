@@ -230,21 +230,15 @@ public:
 
     ~ThreadPool() noexcept
     {
-        // We need to wait for any active workers to finish.
-        bool idle;
-        do
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds{1});
+        wait_for_idle();
+    }
 
-            std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
-            /* When a worker finishes it either adds itself to the free_workers list
-             * or removes itself from the workers list.
-             *
-             * This means that we're idle once all the workers are free_workers
-             * - that is, the free_workers list is the same size as workers.
-             */
-            idle = workers.size() == free_workers.size();
-        } while(!idle);
+    void quiesce()
+    {
+        wait_for_idle();
+        std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
+        free_workers.clear();
+        workers.clear();
     }
 
     void spawn(std::function<void()>&& work)
@@ -285,6 +279,25 @@ private:
         std::shared_ptr<Worker> worker;
     };
 
+    void wait_for_idle()
+    {
+        // We need to wait for any active workers to finish.
+        bool idle = false;
+        while (!idle)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds{1});
+
+            std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
+            /* When a worker finishes it either adds itself to the free_workers list
+             * or removes itself from the workers list.
+             *
+             * This means that we're idle once all the workers are free_workers
+             * - that is, the free_workers list is the same size as workers.
+             */
+            idle = workers.size() == free_workers.size();
+        }
+    }
+
     void recycle(WorkerHandle&& worker)
     {
         std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
@@ -321,4 +334,9 @@ void mir::SystemExecutor::spawn(std::function<void()>&& work)
 void mir::SystemExecutor::set_unhandled_exception_handler(void (*handler)())
 {
     exception_handler = handler;
+}
+
+void mir::SystemExecutor::quiesce()
+{
+    system_threadpool.quiesce();
 }

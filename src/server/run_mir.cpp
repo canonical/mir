@@ -112,5 +112,6 @@ void mir::run_mir(
     init(server);
     server.run();
 
+    mir::SystemExecutor::quiesce();
     check_for_termination_exception();
 }
