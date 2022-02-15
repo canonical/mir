@@ -239,6 +239,7 @@ public:
         std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
         free_workers.clear();
         workers.clear();
+        num_workers_free = 0;
     }
 
     void spawn(std::function<void()>&& work)

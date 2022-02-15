@@ -163,3 +163,40 @@ TEST(SystemExecutor, work_with_dependencies_completes)
 
     EXPECT_THAT(first_work_completed.wait_for(std::chrono::seconds{60}), Eq(std::future_status::ready));
 }
+
+TEST(SystemExecutor, new_work_can_be_submitted_after_quiesce)
+{
+    auto done = std::make_shared<mt::Signal>();
+    constexpr int const work_count{10};
+    std::atomic<int> work_index{0};
+
+    for (auto i = 0; i < work_count; ++i)
+    {
+        mir::system_executor.spawn(
+            [&work_index, done]()
+            {
+                if (++work_index == work_count)
+                {
+                    done->raise();
+                }
+            });
+    }
+
+    ASSERT_TRUE(done->wait_for(60s));
+    mir::SystemExecutor::quiesce();
+    done->reset();
+
+    work_index = 0;
+    for (auto i = 0; i < work_count; ++i)
+    {
+        mir::system_executor.spawn(
+            [&work_index, done]()
+            {
+                if (++work_index == work_count)
+                {
+                    done->raise();
+                }
+            });
+    }
+    EXPECT_TRUE(done->wait_for(60s));
+}
