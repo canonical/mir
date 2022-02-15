@@ -221,7 +221,7 @@ private:
  * min_threadpool_threads in the free list, the Worker is added to the free list. Otherwise, the
  * Worker is removed from the all-workers list and is destroyed.
  */
-class ThreadPool : public mir::SystemExecutor
+class ThreadPool : public mir::Executor
 {
 public:
     ThreadPool() noexcept
