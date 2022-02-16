@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cmake,
+               lld, # Workaround for lp:1958984 (ld broken on 22.04)
                pkg-config,
                debhelper (>= 9),
                doxygen,

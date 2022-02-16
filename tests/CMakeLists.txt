@@ -104,7 +104,7 @@ if (HAS_W_GNU_SIGN_COMPARE)
 endif()
 if (HAS_W_MAYBE_UNINITIALIZED)
   # Avoid g++ complaints about gmock/gtest headers
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized")
 endif()
 
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")

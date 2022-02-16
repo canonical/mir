@@ -32,6 +32,11 @@ ifeq ($(filter noopt,$(DEB_BUILD_OPTIONS)),noopt)
 	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
 endif
 
+# Use ldd on jammy due to failing to build with ld
+ifneq ($(filter jammy,$(DEB_DISTRIBUTION)),)
+	COMMON_CONFIGURE_OPTIONS += -DMIR_USE_LD=ldd
+endif
+
 # We can't guarantee non-Ubuntu builds will build against WLCS packages we
 # control, so disable it on non-Ubuntu builds
 ifeq ($(filter Ubuntu,$(DEB_VENDOR)),)

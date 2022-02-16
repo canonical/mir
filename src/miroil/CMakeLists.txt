@@ -61,6 +61,7 @@ set_target_properties(miroil
 
 find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
 if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols (but we don't care)
+    MIR_USE_LD EQUAL "ld"      AND  # lld on 22.04 generates slightly different symbols (but we don't care)
     MIR_LINK_TIME_OPTIMIZATION AND  # g++ generates slightly different symbols without LTO (but we don't care)
     MIR_DPKG_GENSYMBOLS)            # Using dpkg-gensymbols only makes sense on Debian based distros
 
