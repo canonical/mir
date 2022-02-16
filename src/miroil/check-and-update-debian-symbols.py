@@ -16,7 +16,7 @@ import re
 HELPTEXT = __doc__
 
 def get_output_symbols_path():
-    return '/tmp/temp_mir_debian_symbols.symbols'
+    return '/tmp/temp_miroil_debian_symbols.symbols'
 
 class Context:
     def __init__(self, args):
