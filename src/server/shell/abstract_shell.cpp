@@ -68,6 +68,32 @@ private:
 
     msh::AbstractShell* shell;
 };
+
+auto get_non_popup_parent(std::shared_ptr<ms::Surface> surface) -> std::shared_ptr<ms::Surface>
+{
+    while (surface)
+    {
+        auto const type = surface->type();
+        if (type != mir_window_type_gloss &&
+            type != mir_window_type_tip &&
+            type != mir_window_type_menu)
+        {
+            break;
+        }
+        surface = surface->parent();
+    }
+    return surface;
+}
+
+auto get_active_surfaces(std::shared_ptr<ms::Surface> surface) -> std::vector<std::shared_ptr<ms::Surface>>
+{
+    std::vector<std::shared_ptr<ms::Surface>> result;
+    for (auto item = surface; item; item = item->parent())
+    {
+        result.insert(begin(result), item);
+    }
+    return result;
+}
 }
 
 msh::AbstractShell::AbstractShell(
@@ -406,102 +432,114 @@ void msh::AbstractShell::set_focus_to(
 {
     std::unique_lock<std::mutex> lock(focus_mutex);
 
-    notify_focus_locked(lock, focus_surface);
+    if (last_requested_focus_surface.lock() != focus_surface)
+    {
+        last_requested_focus_surface = focus_surface;
+        auto new_active_surfaces = get_active_surfaces(focus_surface);
+
+        /// HACK: Grabbing popups (menus, in Mir terminology) should be given keyboard focus according to xdg-shell,
+        /// however, giving menus keyboard focus breaks Qt submenus. As of February 2022 Weston and other compositors
+        /// disobey the protocol by not giving keyboard focus to grabbing popups, so we do the same thing. The behavior
+        /// is subject change. See: https://github.com/MirServer/mir/issues/2324.
+        auto const new_keyboard_focus_surface = get_non_popup_parent(focus_surface);
+
+        notify_active_surfaces(lock, new_keyboard_focus_surface, new_active_surfaces);
+        set_keyboard_focus_surface(lock, new_keyboard_focus_surface);
+    }
+
     update_focus_locked(lock, focus_session, focus_surface);
 }
 
-void msh::AbstractShell::notify_focus_locked(
-    std::unique_lock<std::mutex> const& /*lock*/,
-    std::shared_ptr<ms::Surface> const& new_focus_surface)
+void msh::AbstractShell::notify_active_surfaces(
+    std::unique_lock<std::mutex> const&,
+    std::shared_ptr<ms::Surface> const& new_keyboard_focus_surface,
+    std::vector<std::shared_ptr<ms::Surface>> const& new_active_surfaces)
 {
-    auto const current_focus = notified_focus_surface.lock();
+    std::vector<std::shared_ptr<ms::Surface>> prev_active_surfaces;
+    prev_active_surfaces.reserve(notified_active_surfaces.size());
 
-    if (current_focus != new_focus_surface)
+    for (auto const& current_active_weak: notified_active_surfaces)
     {
-        std::vector<std::shared_ptr<ms::Surface>> new_active_surfaces;
-        for (auto item = new_focus_surface; item; item = item->parent())
+        if (auto const current_active = current_active_weak.lock())
         {
-            new_active_surfaces.insert(begin(new_active_surfaces), item);
-        }
-
-        std::vector<std::shared_ptr<ms::Surface>> current_focus_tree;
-
-        notified_focus_surface = new_focus_surface;
-        seat->reset_confinement_regions();
-
-        for (auto const& item : notified_active_surfaces)
-        {
-            if (auto const active = item.lock())
+            prev_active_surfaces.push_back(current_active);
+            // If a surface that was previously active is not in the set of new active surfaces, notify it
+            if (find(begin(new_active_surfaces), end(new_active_surfaces), current_active) == end(new_active_surfaces))
             {
-                current_focus_tree.push_back(active);
-                if (find(begin(new_active_surfaces), end(new_active_surfaces), active) == end(new_active_surfaces))
-                {
-                    active->set_focus_state(mir_window_focus_state_unfocused);
+                current_active->set_focus_state(mir_window_focus_state_unfocused);
 
-                    // When a menu loses focus we should close and unmap it
-                    if (active->type() == mir_window_type_menu || active->type() == mir_window_type_gloss)
-                    {
-                        active->request_client_surface_close();
-                        active->hide();
-                    }
-                }
-                else if (active == current_focus)
+                // When a menu loses focus we should close and unmap it
+                if (current_active->type() == mir_window_type_menu || current_active->type() == mir_window_type_gloss)
                 {
-                    active->set_focus_state(mir_window_focus_state_active);
+                    current_active->request_client_surface_close();
+                    current_active->hide();
                 }
             }
-        }
-
-        if (current_focus)
-        {
-            current_focus->remove_observer(focus_surface_observer);
-
-            switch (current_focus->confine_pointer_state())
-            {
-            case mir_pointer_confined_oneshot:
-            case mir_pointer_locked_oneshot:
-                seat->reset_confinement_regions();
-                current_focus->set_confine_pointer_state(mir_pointer_unconfined);
-                break;
-
-            default:
-                break;
-            }
-        }
-
-        notified_active_surfaces.clear();
-        if (notified_active_surfaces.capacity() > 100)
-        {
-            notified_active_surfaces.shrink_to_fit();
-        }
-
-        if (new_focus_surface)
-        {
-            update_confinement_for(new_focus_surface);
-
-            // Ensure the surface has really taken the focus before notifying it that it is focused
-            input_targeter->set_focus(new_focus_surface);
-            new_focus_surface->consume(seat->create_device_state().get());
-            new_focus_surface->add_observer(focus_surface_observer);
-
-            for (auto const& item : new_active_surfaces)
-            {
-                notified_active_surfaces.push_back(item);
-                if (item == new_focus_surface)
-                {
-                    item->set_focus_state(mir_window_focus_state_focused);
-                }
-                else if (find(begin(current_focus_tree), end(current_focus_tree), item) == end(current_focus_tree))
-                {
-                    item->set_focus_state(mir_window_focus_state_active);
-                }
-            }
-        }
-        else
-        {
-            input_targeter->clear_focus();
         }
     }
+
+    notified_active_surfaces.clear();
+    if (notified_active_surfaces.capacity() > 100)
+    {
+        notified_active_surfaces.shrink_to_fit();
+    }
+
+    for (auto const& new_active: new_active_surfaces)
+    {
+        notified_active_surfaces.push_back(new_active);
+        if (new_active == new_keyboard_focus_surface)
+        {
+            new_active->set_focus_state(mir_window_focus_state_focused);
+        }
+        else if (find(begin(prev_active_surfaces), end(prev_active_surfaces), new_active) == end(prev_active_surfaces))
+        {
+            new_active->set_focus_state(mir_window_focus_state_active);
+        }
+    }
+}
+
+void msh::AbstractShell::set_keyboard_focus_surface(
+    std::unique_lock<std::mutex> const&,
+    std::shared_ptr<ms::Surface> const& new_keyboard_focus_surface)
+{
+    auto const current_keyboard_focus = notified_keyboard_focus_surface.lock();
+    if (current_keyboard_focus == new_keyboard_focus_surface)
+    {
+        return;
+    }
+
+    seat->reset_confinement_regions();
+
+    if (current_keyboard_focus)
+    {
+        current_keyboard_focus->remove_observer(focus_surface_observer);
+
+        switch (current_keyboard_focus->confine_pointer_state())
+        {
+        case mir_pointer_confined_oneshot:
+        case mir_pointer_locked_oneshot:
+            current_keyboard_focus->set_confine_pointer_state(mir_pointer_unconfined);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    if (new_keyboard_focus_surface)
+    {
+        update_confinement_for(new_keyboard_focus_surface);
+
+        input_targeter->set_focus(new_keyboard_focus_surface);
+        new_keyboard_focus_surface->consume(seat->create_device_state().get());
+        new_keyboard_focus_surface->add_observer(focus_surface_observer);
+    }
+    else
+    {
+        input_targeter->clear_focus();
+    }
+
+    notified_keyboard_focus_surface = new_keyboard_focus_surface;
 }
 
 void msh::AbstractShell::update_confinement_for(std::shared_ptr<ms::Surface> const& surface) const
