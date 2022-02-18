@@ -468,20 +468,22 @@ void msh::AbstractShell::notify_active_surfaces(
         auto const found = old_active_surfaces.find(new_active);
         if (found == end(old_active_surfaces))
         {
+            // If the new active surface was not already active, add it to new_activations
             new_activations.push_back(new_active);
         }
         else
         {
+            // If the new active surface was already active, remove it from old_active_surfaces so it's not deactivated
             old_active_surfaces.erase(found);
         }
     }
 
-    for (auto const& old_active: notified_active_surfaces)
+    for (auto const& current_active_weak: notified_active_surfaces)
     {
-        if (auto const current_active = old_active.lock())
+        if (auto const current_active = current_active_weak.lock())
         {
-            // old_active_surfaces has only surfaces that are no longer active
-            if (old_active_surfaces.find(old_active) != end(old_active_surfaces))
+            // old_active_surfaces has only surfaces that should no longer be active
+            if (old_active_surfaces.find(current_active_weak) != end(old_active_surfaces))
             {
                 // If a surface that was previously active is not in the set of new active surfaces, notify it
                 current_active->set_focus_state(mir_window_focus_state_unfocused);
