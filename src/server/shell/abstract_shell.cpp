@@ -85,12 +85,13 @@ auto get_non_popup_parent(std::shared_ptr<ms::Surface> surface) -> std::shared_p
     return surface;
 }
 
-auto get_active_surfaces(std::shared_ptr<ms::Surface> surface) -> std::vector<std::shared_ptr<ms::Surface>>
+// Returns a vector comprising the supplied surface (if not null), parent, grandparent, etc. in order
+auto get_ancestry(std::shared_ptr<ms::Surface> surface) -> std::vector<std::shared_ptr<ms::Surface>>
 {
     std::vector<std::shared_ptr<ms::Surface>> result;
-    for (auto item = surface; item; item = item->parent())
+    for (auto item = std::move(surface); item; item = item->parent())
     {
-        result.insert(begin(result), item);
+        result.push_back(item);
     }
     return result;
 }
@@ -435,7 +436,7 @@ void msh::AbstractShell::set_focus_to(
     if (last_requested_focus_surface.lock() != focus_surface)
     {
         last_requested_focus_surface = focus_surface;
-        auto new_active_surfaces = get_active_surfaces(focus_surface);
+        auto new_active_surfaces = get_ancestry(focus_surface);
 
         /// HACK: Grabbing popups (menus, in Mir terminology) should be given keyboard focus according to xdg-shell,
         /// however, giving menus keyboard focus breaks Qt submenus. As of February 2022 Weston and other compositors
