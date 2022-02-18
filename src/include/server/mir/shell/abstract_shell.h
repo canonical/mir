@@ -175,9 +175,9 @@ private:
     std::shared_ptr<scene::SurfaceObserver> const focus_surface_observer;
 
     void notify_active_surfaces(
-        std::unique_lock<std::mutex> const& lock,
+        std::unique_lock<std::mutex> const&,
         std::shared_ptr<scene::Surface> const& new_keyboard_focus_surface,
-        std::vector<std::shared_ptr<scene::Surface>> const& new_active_surfaces);
+        std::vector<std::shared_ptr<scene::Surface>> new_active_surfaces);
 
     void set_keyboard_focus_surface(
         std::unique_lock<std::mutex> const& lock,

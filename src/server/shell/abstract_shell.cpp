@@ -32,6 +32,7 @@
 #include "decoration/manager.h"
 
 #include <algorithm>
+#include <iterator>
 #include <vector>
 
 namespace mf = mir::frontend;
@@ -444,7 +445,7 @@ void msh::AbstractShell::set_focus_to(
         /// is subject change. See: https://github.com/MirServer/mir/issues/2324.
         auto const new_keyboard_focus_surface = get_non_popup_parent(focus_surface);
 
-        notify_active_surfaces(lock, new_keyboard_focus_surface, new_active_surfaces);
+        notify_active_surfaces(lock, new_keyboard_focus_surface, std::move(new_active_surfaces));
         set_keyboard_focus_surface(lock, new_keyboard_focus_surface);
     }
 
@@ -454,19 +455,35 @@ void msh::AbstractShell::set_focus_to(
 void msh::AbstractShell::notify_active_surfaces(
     std::unique_lock<std::mutex> const&,
     std::shared_ptr<ms::Surface> const& new_keyboard_focus_surface,
-    std::vector<std::shared_ptr<ms::Surface>> const& new_active_surfaces)
+    std::vector<std::shared_ptr<ms::Surface>> new_active_surfaces)
 {
-    std::vector<std::shared_ptr<ms::Surface>> prev_active_surfaces;
-    prev_active_surfaces.reserve(notified_active_surfaces.size());
+    // Initially populate old_active_surfaces with all surfaces that were already active,
+    // but we will discard any that remain active (below)
+    SurfaceSet old_active_surfaces{begin(notified_active_surfaces), end(notified_active_surfaces)};
 
-    for (auto const& current_active_weak: notified_active_surfaces)
+    decltype(new_active_surfaces) new_activations;
+
+    for (auto const& new_active: new_active_surfaces)
     {
-        if (auto const current_active = current_active_weak.lock())
+        auto const found = old_active_surfaces.find(new_active);
+        if (found == end(old_active_surfaces))
         {
-            prev_active_surfaces.push_back(current_active);
-            // If a surface that was previously active is not in the set of new active surfaces, notify it
-            if (find(begin(new_active_surfaces), end(new_active_surfaces), current_active) == end(new_active_surfaces))
+            new_activations.push_back(new_active);
+        }
+        else
+        {
+            old_active_surfaces.erase(found);
+        }
+    }
+
+    for (auto const& old_active: notified_active_surfaces)
+    {
+        if (auto const current_active = old_active.lock())
+        {
+            // old_active_surfaces has only surfaces that are no longer active
+            if (old_active_surfaces.find(old_active) != end(old_active_surfaces))
             {
+                // If a surface that was previously active is not in the set of new active surfaces, notify it
                 current_active->set_focus_state(mir_window_focus_state_unfocused);
 
                 // When a menu loses focus we should close and unmap it
@@ -479,24 +496,19 @@ void msh::AbstractShell::notify_active_surfaces(
         }
     }
 
-    notified_active_surfaces.clear();
-    if (notified_active_surfaces.capacity() > 100)
+    for (auto const& new_active: new_activations)
     {
-        notified_active_surfaces.shrink_to_fit();
-    }
-
-    for (auto const& new_active: new_active_surfaces)
-    {
-        notified_active_surfaces.push_back(new_active);
         if (new_active == new_keyboard_focus_surface)
         {
             new_active->set_focus_state(mir_window_focus_state_focused);
         }
-        else if (find(begin(prev_active_surfaces), end(prev_active_surfaces), new_active) == end(prev_active_surfaces))
+        else
         {
             new_active->set_focus_state(mir_window_focus_state_active);
         }
     }
+
+    notified_active_surfaces = {begin(new_active_surfaces), end(new_active_surfaces)};
 }
 
 void msh::AbstractShell::set_keyboard_focus_surface(
