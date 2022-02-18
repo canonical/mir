@@ -184,6 +184,21 @@ struct AbstractShell : Test
                     }));
     }
 
+    auto create_surface(ms::Surface& surface) -> std::shared_ptr<ms::Surface>
+    {
+        auto const session = shell.open_session(
+            __LINE__,
+            mir::Fd{mir::Fd::invalid},
+            "Foo",
+            std::shared_ptr<mf::EventSink>());
+        EXPECT_CALL(surface_factory, create_surface(_, _, _))
+            .WillOnce(Return(mt::fake_shared(surface)));
+        return shell.create_surface(
+            session,
+            mt::make_surface_spec(session->create_buffer_stream(properties)),
+            nullptr);
+    }
+
     std::chrono::nanoseconds const event_timestamp = std::chrono::nanoseconds(0);
     std::vector<uint8_t> const cookie{};
     mg::BufferProperties properties { geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
@@ -834,6 +849,81 @@ TEST_F(AbstractShell, setting_focus_to_child_makes_parent_active)
     focus_controller.set_focus_to(session, child_surface);
     EXPECT_THAT(child_surface->focus_state(), Eq(mir_window_focus_state_focused));
     EXPECT_THAT(parent_surface->focus_state(), Eq(mir_window_focus_state_active));
+}
+
+TEST_F(AbstractShell, does_not_give_keyboard_focus_to_menu)
+{
+    auto const surface_parent = create_surface(mock_surface);
+
+    NiceMock<mtd::MockSurface> mock_surface_child;
+    auto const surface_child = create_surface(mock_surface_child);
+    ON_CALL(mock_surface_child, parent())
+        .WillByDefault(Return(surface_parent));
+    ON_CALL(mock_surface_child, type())
+        .WillByDefault(Return(mir_window_type_menu));
+
+    msh::FocusController& focus_controller = shell;
+
+    EXPECT_CALL(mock_surface_child, set_focus_state(mir_window_focus_state_active));
+    EXPECT_CALL(mock_surface, set_focus_state(mir_window_focus_state_focused));
+    focus_controller.set_focus_to(surface_child->session().lock(), surface_child);
+}
+
+TEST_F(AbstractShell, does_not_give_keyboard_focus_to_tip)
+{
+    auto const surface_parent = create_surface(mock_surface);
+
+    NiceMock<mtd::MockSurface> mock_surface_child;
+    auto const surface_child = create_surface(mock_surface_child);
+    ON_CALL(mock_surface_child, parent())
+        .WillByDefault(Return(surface_parent));
+    ON_CALL(mock_surface_child, type())
+        .WillByDefault(Return(mir_window_type_tip));
+
+    msh::FocusController& focus_controller = shell;
+
+    EXPECT_CALL(mock_surface_child, set_focus_state(mir_window_focus_state_active));
+    EXPECT_CALL(mock_surface, set_focus_state(mir_window_focus_state_focused));
+    focus_controller.set_focus_to(surface_child->session().lock(), surface_child);
+}
+
+TEST_F(AbstractShell, does_not_deactivate_parent_when_switching_children)
+{
+    auto const surface_parent = create_surface(mock_surface);
+
+    NiceMock<mtd::MockSurface> mock_surface_child_a;
+    auto const surface_child_a = create_surface(mock_surface_child_a);
+    ON_CALL(mock_surface_child_a, parent())
+        .WillByDefault(Return(surface_parent));
+
+    NiceMock<mtd::MockSurface> mock_surface_child_b;
+    auto const surface_child_b = create_surface(mock_surface_child_b);
+    ON_CALL(mock_surface_child_b, parent())
+        .WillByDefault(Return(surface_parent));
+
+    msh::FocusController& focus_controller = shell;
+    focus_controller.set_focus_to(surface_child_a->session().lock(), surface_child_a);
+
+    EXPECT_CALL(mock_surface, set_focus_state(_)).Times(0);
+    focus_controller.set_focus_to(surface_child_b->session().lock(), surface_child_b);
+}
+
+TEST_F(AbstractShell, removing_focus_from_menu_closes_it)
+{
+    auto const surface_parent = create_surface(mock_surface);
+
+    NiceMock<mtd::MockSurface> mock_surface_menu;
+    auto const surface_menu = create_surface(mock_surface_menu);
+    ON_CALL(mock_surface_menu, parent())
+        .WillByDefault(Return(surface_parent));
+    ON_CALL(mock_surface_menu, type())
+        .WillByDefault(Return(mir_window_type_menu));
+
+    msh::FocusController& focus_controller = shell;
+    focus_controller.set_focus_to(surface_menu->session().lock(), surface_menu);
+
+    EXPECT_CALL(mock_surface_menu, request_client_surface_close());
+    focus_controller.set_focus_to(surface_parent->session().lock(), surface_parent);
 }
 
 // Regression test for https://github.com/MirServer/mir/issues/2279
