@@ -49,16 +49,10 @@ struct MockSurface : public scene::BasicSurface
                 { return scene::BasicSurface::primary_buffer_stream(); }));
         ON_CALL(*this, parent())
             .WillByDefault(testing::Return(nullptr));
-        ON_CALL(*this, set_focus_state(testing::_))
-            .WillByDefault(testing::Invoke([this](MirWindowFocusState focus_state)
-                {
-                    BasicSurface::set_focus_state(focus_state);
-                }));
     }
 
     ~MockSurface() noexcept {}
 
-    MOCK_CONST_METHOD0(type, MirWindowType());
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
     MOCK_CONST_METHOD0(visible, bool());
@@ -69,7 +63,6 @@ struct MockSurface : public scene::BasicSurface
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
 
-    MOCK_METHOD0(request_client_surface_close, void());
     MOCK_CONST_METHOD0(parent, std::shared_ptr<scene::Surface>());
     MOCK_METHOD2(configure, int(MirWindowAttrib, int));
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));
@@ -78,8 +71,6 @@ struct MockSurface : public scene::BasicSurface
 
     MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());
     MOCK_METHOD1(set_streams, void(std::list<scene::StreamInfo> const&));
-
-    MOCK_METHOD1(set_focus_state, void(MirWindowFocusState));
 
     std::shared_ptr<MockBufferStream> const stream;
 };

@@ -98,12 +98,9 @@ set(EXPECTED_FAILURES
 
   ForeignToplevelHandleTest.can_maximize_foreign_while_fullscreen # https://github.com/MirServer/mir/issues/2164
 
-  # See https://github.com/MirServer/mir/issues/2324
-  TextInputV3WithInputMethodV2Test.text_input_enters_parent_surface_after_child_destroyed
-  TextInputV3WithInputMethodV2Test.text_input_enters_grabbing_popup
-  XdgPopupUnstableV6/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
-  XdgPopupStable/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
-  LayerShellPopup/XdgPopupTest.grabbed_popup_gets_keyboard_focus/0
+  # Fixed by https://github.com/MirServer/wlcs/pull/216
+  XdgPopupStable/XdgPopupTest.grabbed_popup_does_not_get_keyboard_focus/0
+  XdgPopupUnstableV6/XdgPopupTest.grabbed_popup_does_not_get_keyboard_focus/0
 )
 
 if (MIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN)
