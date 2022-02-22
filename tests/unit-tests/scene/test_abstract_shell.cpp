@@ -904,8 +904,40 @@ TEST_F(AbstractShell, does_not_deactivate_parent_when_switching_children)
     msh::FocusController& focus_controller = shell;
     focus_controller.set_focus_to(surface_child_a->session().lock(), surface_child_a);
 
-    EXPECT_CALL(mock_surface, set_focus_state(_)).Times(0);
+    EXPECT_CALL(mock_surface, set_focus_state(mir_window_focus_state_active)).Times(AnyNumber());
     focus_controller.set_focus_to(surface_child_b->session().lock(), surface_child_b);
+}
+
+TEST_F(AbstractShell, makes_parent_active_when_switching_to_child)
+{
+    auto const surface_parent = create_surface(mock_surface);
+
+    NiceMock<mtd::MockSurface> mock_surface_child;
+    auto const surface_child = create_surface(mock_surface_child);
+    ON_CALL(mock_surface_child, parent())
+        .WillByDefault(Return(surface_parent));
+
+    msh::FocusController& focus_controller = shell;
+    focus_controller.set_focus_to(surface_parent->session().lock(), surface_parent);
+
+    EXPECT_CALL(mock_surface, set_focus_state(mir_window_focus_state_active));
+    focus_controller.set_focus_to(surface_child->session().lock(), surface_child);
+}
+
+TEST_F(AbstractShell, makes_parent_focused_when_switching_back_from_child)
+{
+    auto const surface_parent = create_surface(mock_surface);
+
+    NiceMock<mtd::MockSurface> mock_surface_child;
+    auto const surface_child = create_surface(mock_surface_child);
+    ON_CALL(mock_surface_child, parent())
+        .WillByDefault(Return(surface_parent));
+
+    msh::FocusController& focus_controller = shell;
+    focus_controller.set_focus_to(surface_child->session().lock(), surface_child);
+
+    EXPECT_CALL(mock_surface, set_focus_state(mir_window_focus_state_focused));
+    focus_controller.set_focus_to(surface_parent->session().lock(), surface_parent);
 }
 
 TEST_F(AbstractShell, removing_focus_from_menu_closes_it)
