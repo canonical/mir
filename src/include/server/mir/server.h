@@ -83,7 +83,8 @@ enum class OptionType
     null,
     integer,
     string,
-    boolean
+    boolean,
+    strings
 };
 
 /// Customise and run a Mir server.

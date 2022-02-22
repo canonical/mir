@@ -75,7 +75,6 @@ void miral::ExternalClientLauncher::operator()(mir::Server& server)
     static auto const app_x11_env = "app-env-x11";
     static auto const default_x11_env = "GDK_BACKEND=x11:QT_QPA_PLATFORM=xcb:SDL_VIDEODRIVER=x11";
     static auto const app_env_amend = "app-env-amend";
-    static auto const default_env_amend = "";
 
     server.add_configuration_option(
         app_env,
@@ -84,8 +83,8 @@ void miral::ExternalClientLauncher::operator()(mir::Server& server)
 
     server.add_configuration_option(
             app_env_amend,
-            "Amendments to environment for launched apps",
-            default_env_amend);
+            "Amendments to environment for launched apps (may be repeated)",
+            mir::OptionType::strings);
 
     server.add_configuration_option(
         app_x11_env,
@@ -97,8 +96,14 @@ void miral::ExternalClientLauncher::operator()(mir::Server& server)
              auto const options = server.get_options();
 
              parse_env(options->get(app_env, default_env), self->env);
-             parse_env(options->get(app_env_amend, default_env_amend), self->env);
 
+             if (options->is_set(app_env_amend))
+             {
+                 for (auto const& amend: options->get<std::vector<std::string>>(app_env_amend))
+                 {
+                     parse_env(amend, self->env);
+                 }
+             }
              self->x11_env = self->env; // base the X11 environment on the "normal" one
              parse_env(options->get(app_x11_env, default_x11_env), self->x11_env);
          });
