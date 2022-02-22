@@ -51,7 +51,7 @@ void mf::WlKeyboard::handle_event(MirInputEvent const* event, WlSurface& surface
             "Sending keyboard event to wl_surface@%u even though it was not explicitly given keyboard focus",
             wl_resource_get_id(surface.resource));
 
-        focussed(surface, true);
+        focus_on(&surface);
     }
 
     helper->handle_event(event);
