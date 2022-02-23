@@ -457,33 +457,14 @@ void msh::AbstractShell::notify_active_surfaces(
     std::shared_ptr<ms::Surface> const& new_keyboard_focus_surface,
     std::vector<std::shared_ptr<ms::Surface>> new_active_surfaces)
 {
-    // Initially populate old_active_surfaces with all surfaces that were already active,
-    // but we will discard any that remain active (below)
-    SurfaceSet old_active_surfaces{begin(notified_active_surfaces), end(notified_active_surfaces)};
-
-    decltype(new_active_surfaces) new_activations;
-
-    for (auto const& new_active: new_active_surfaces)
-    {
-        auto const found = old_active_surfaces.find(new_active);
-        if (found == end(old_active_surfaces))
-        {
-            // If the new active surface was not already active, add it to new_activations
-            new_activations.push_back(new_active);
-        }
-        else
-        {
-            // If the new active surface was already active, remove it from old_active_surfaces so it's not deactivated
-            old_active_surfaces.erase(found);
-        }
-    }
+    SurfaceSet new_active_set{begin(new_active_surfaces), end(new_active_surfaces)};
 
     for (auto const& current_active_weak: notified_active_surfaces)
     {
         if (auto const current_active = current_active_weak.lock())
         {
-            // old_active_surfaces has only surfaces that should no longer be active
-            if (old_active_surfaces.find(current_active_weak) != end(old_active_surfaces))
+            // If this surface is not still active
+            if (new_active_set.find(current_active_weak) == end(new_active_set))
             {
                 // If a surface that was previously active is not in the set of new active surfaces, notify it
                 current_active->set_focus_state(mir_window_focus_state_unfocused);
@@ -498,16 +479,17 @@ void msh::AbstractShell::notify_active_surfaces(
         }
     }
 
-    for (auto const& new_active: new_activations)
+    for (auto const& new_active: new_active_surfaces)
     {
-        if (new_active == new_keyboard_focus_surface)
-        {
-            new_active->set_focus_state(mir_window_focus_state_focused);
-        }
-        else
+        if (new_active != new_keyboard_focus_surface)
         {
             new_active->set_focus_state(mir_window_focus_state_active);
         }
+    }
+
+    if (new_keyboard_focus_surface)
+    {
+        new_keyboard_focus_surface->set_focus_state(mir_window_focus_state_focused);
     }
 
     notified_active_surfaces = {begin(new_active_surfaces), end(new_active_surfaces)};
