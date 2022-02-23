@@ -919,9 +919,20 @@ TEST_F(AbstractShell, makes_parent_active_when_switching_to_child)
 
     msh::FocusController& focus_controller = shell;
     focus_controller.set_focus_to(surface_parent->session().lock(), surface_parent);
+    /* window         | expected focus state
+     * -----------------------------------------------
+     * surface_parent | mir_window_focus_state_focused 
+     * surface_child  | <don't care>
+    */
 
     EXPECT_CALL(mock_surface, set_focus_state(mir_window_focus_state_active));
     focus_controller.set_focus_to(surface_child->session().lock(), surface_child);
+    /* window         | expected focus state
+     * -----------------------------------------------
+     * surface_parent | mir_window_focus_state_active
+     * surface_child  | mir_window_focus_state_focused
+    */
+
 }
 
 TEST_F(AbstractShell, makes_parent_focused_when_switching_back_from_child)
@@ -935,9 +946,19 @@ TEST_F(AbstractShell, makes_parent_focused_when_switching_back_from_child)
 
     msh::FocusController& focus_controller = shell;
     focus_controller.set_focus_to(surface_child->session().lock(), surface_child);
+    /* window         | expected focus state
+     * -----------------------------------------------
+     * surface_parent | mir_window_focus_state_active
+     * surface_child  | mir_window_focus_state_focused
+    */
 
     EXPECT_CALL(mock_surface, set_focus_state(mir_window_focus_state_focused));
     focus_controller.set_focus_to(surface_parent->session().lock(), surface_parent);
+    /* window         | expected focus state
+     * -----------------------------------------------
+     * surface_parent | mir_window_focus_state_focused
+     * surface_child  | <don't care>
+    */
 }
 
 TEST_F(AbstractShell, removing_focus_from_menu_closes_it)
