@@ -1,3 +1,42 @@
+mir (2.7.0) UNRELEASED; urgency=medium
+
+  [ Alan Griffiths ]
+  * New upstream release 2.7.0
+
+    - ABI summary:
+      . miral ABI unchanged at 4
+      . mircommon ABI unchanged to 8
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 1
+      . miroil ABI added, at version 1
+      . mirplatform ABI unchanged at 23
+      . mirserver ABI unchanged at 57
+      . mirwayland ABI unchanged to 3
+      . mirplatformgraphics ABI unchanged to 19
+      . mirinputplatform ABI unchanged at 8
+    - Enhancements:
+      . Add "idle-timeout" configuration option
+      . Support zwp_text_input_manager_v2: This older text input protocol is the
+        only one currently supported by Qt. (Fixes #2260)
+      . Move to c++20
+      . Add mir::system_executor, linearising_executor
+      . Add `-gdb` option to miral-app script to run the server under gdb
+      . Add miroil (compatibility layer for Lomiri)
+    - Bugs fixed:
+      . Give keyboard focus to menus (grabbing popups). (Fixes #2241)
+      . XWayland fixes for dialog window type (Fixes #2250)
+      . Don't send keyboard events without focus
+      . Don't request axis values when axis is unset. (Fixes #2248)
+      . Fix mentions of mirclient in mirserver.pc, mirtest.pc
+      . Fix pkg-config mistakes in mirwayland.pc mirtest.pc
+      . WlKeyboard: use WlSeat::FocusListener for focus tracking (Fixes #2272)
+      . Deactivate text input when the Wayland object is deleted (Fixes #2269)
+      . Send wl_pointer.axis_stop. (Fixes #2247, #2276)
+      . FTBFS with newer deps on Fedora/rawhide, Alpine/edge & Debian/sid
+      . wl_pointer: do not send events not compatible with version (Fixes #2341)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 15 Feb 2022 09:56:10 +0000
+
 mir (2.6.0) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]
