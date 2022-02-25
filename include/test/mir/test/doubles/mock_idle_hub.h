@@ -21,6 +21,8 @@
 
 #include "mir/scene/idle_hub.h"
 
+#include <gmock/gmock.h>
+
 namespace mir
 {
 namespace test
