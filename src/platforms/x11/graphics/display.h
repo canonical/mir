@@ -55,7 +55,8 @@ public:
     X11Window(mir::X::X11Resources* x11_resources,
               EGLDisplay egl_dpy,
               geometry::Size const size,
-              EGLConfig const egl_cfg);
+              EGLConfig const egl_cfg,
+              std::string title);
     ~X11Window();
 
     operator xcb_window_t() const;
