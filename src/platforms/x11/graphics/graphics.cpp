@@ -86,7 +86,6 @@ void add_graphics_platform_options(boost::program_options::options_description& 
          "[mir-on-X specific] Colon separated list of WIDTHxHEIGHT sizes for \"output\" windows."
          " ^SCALE may also be appended to any output");
 
-    mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
     config.add_options()
         (x11_window_title_option_name,
          boost::program_options::value<std::string>()->default_value("Mir on X"),
