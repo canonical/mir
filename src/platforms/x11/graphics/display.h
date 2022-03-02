@@ -53,10 +53,10 @@ class X11Window
 {
 public:
     X11Window(mir::X::X11Resources* x11_resources,
+              std::string* title,
               EGLDisplay egl_dpy,
               geometry::Size const size,
-              EGLConfig const egl_cfg,
-              std::string title);
+              EGLConfig const egl_cfg);
     ~X11Window();
 
     operator xcb_window_t() const;
@@ -64,6 +64,7 @@ public:
 
 private:
     mir::X::X11Resources* const x11_resources;
+    std::string* const title;
     xcb_window_t win;
     unsigned long r_mask;
 };
