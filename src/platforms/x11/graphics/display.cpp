@@ -79,11 +79,12 @@ private:
 }
 
 mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
+                          std::string* title,
                           EGLDisplay egl_dpy,
                           geom::Size const size,
-                          EGLConfig const egl_cfg,
-                          std::string title)
-    : x11_resources{x11_resources}
+                          EGLConfig const egl_cfg)
+    : x11_resources{x11_resources},
+      title{title}
 {
     auto const conn = x11_resources->conn.get();
 
@@ -118,12 +119,12 @@ mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
         char buffer[128] = { '\0' };
         if (gethostname(buffer, sizeof buffer - 1) == 0)
         {
-            title += " - ";
-            title += buffer;
+            *title += " - ";
+            *title += buffer;
         }
     }
 
-    conn->change_property(win, x11_resources->_NET_WM_NAME, x11_resources->UTF8_STRING, 8, title.size(), title.c_str());
+    conn->change_property(win, x11_resources->_NET_WM_NAME, x11_resources->UTF8_STRING, 8, title->size(), title->c_str());
 
     conn->map_window(win);
 }
