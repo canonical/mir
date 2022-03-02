@@ -69,7 +69,7 @@ public:
     {
         return std::make_shared<mg::X::Platform>(
             std::make_shared<mtd::MockX11Resources>(),
-            std::make_shared<std::string>("Mir on X"),
+            std::string("Mir on X"),
             std::vector<mg::X::X11OutputConfig>{{{1280, 1024}}},
             std::make_shared<mir::report::null::DisplayReport>());
     }
@@ -89,7 +89,7 @@ TEST_F(X11GraphicsPlatformTest, failure_to_open_x11_display_results_in_an_error)
         {
             std::make_shared<mg::X::Platform>(
                 nullptr,
-                std::make_shared<std::string>("Mir on X"),
+                std::string("Mir on X"),
                 std::vector<mg::X::X11OutputConfig>{{{1280, 1024}}},
                 std::make_shared<mir::report::null::DisplayReport>());
         }, std::exception);

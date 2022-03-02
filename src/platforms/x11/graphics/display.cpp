@@ -79,7 +79,7 @@ private:
 }
 
 mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
-                          std::string* title,
+                          std::string title,
                           EGLDisplay egl_dpy,
                           geom::Size const size,
                           EGLConfig const egl_cfg)
@@ -119,12 +119,12 @@ mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
         char buffer[128] = { '\0' };
         if (gethostname(buffer, sizeof buffer - 1) == 0)
         {
-            *title += " - ";
-            *title += buffer;
+            title += " - ";
+            title += buffer;
         }
     }
 
-    conn->change_property(win, x11_resources->_NET_WM_NAME, x11_resources->UTF8_STRING, 8, title->size(), title->c_str());
+    conn->change_property(win, x11_resources->_NET_WM_NAME, x11_resources->UTF8_STRING, 8, title.size(), title.c_str());
 
     conn->map_window(win);
 }
@@ -145,7 +145,7 @@ unsigned long mgx::X11Window::red_mask() const
 }
 
 mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
-                      std::shared_ptr<std::string> const& title,
+                      std::string const title,
                       std::vector<X11OutputConfig> const& requested_sizes,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
@@ -164,7 +164,7 @@ mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources
         auto actual_size = requested_size.size;
         auto window = std::make_unique<X11Window>(
             x11_resources.get(),
-            title.get(),
+            title,
             shared_egl.display(),
             actual_size,
             shared_egl.config());

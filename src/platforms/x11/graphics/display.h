@@ -53,7 +53,7 @@ class X11Window
 {
 public:
     X11Window(mir::X::X11Resources* x11_resources,
-              std::string* title,
+              std::string title,
               EGLDisplay egl_dpy,
               geometry::Size const size,
               EGLConfig const egl_cfg);
@@ -64,7 +64,7 @@ public:
 
 private:
     mir::X::X11Resources* const x11_resources;
-    std::string* const title;
+    std::string const title;
     xcb_window_t win;
     unsigned long r_mask;
 };
@@ -73,7 +73,7 @@ class Display : public graphics::Display
 {
 public:
     explicit Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
-                     std::shared_ptr<std::string> const& title,
+                     std::string const title,
                      std::vector<X11OutputConfig> const& requested_size,
                      std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                      std::shared_ptr<GLConfig> const& gl_config,

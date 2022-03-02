@@ -91,7 +91,7 @@ public:
     {
         auto const platform = std::make_shared<mg::X::Platform>(
             std::make_shared<mtd::MockX11Resources>(),
-            std::make_shared<std::string>("Mir on X"),
+            std::string("Mir on X"),
             std::vector<mg::X::X11OutputConfig>{{{1280, 1024}}},
             std::make_shared<mir::report::null::DisplayReport>());
         return platform->create_display(

@@ -62,7 +62,7 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 
     return mir::make_module_ptr<mgx::Platform>(
         std::move(x11_resources),
-        std::move(std::make_shared<std::string>(title)),
+        std::move(title),
         move(output_sizes),
         report
     );
