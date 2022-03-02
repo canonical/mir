@@ -108,11 +108,11 @@ auto mgx::Platform::parse_output_sizes(std::string output_sizes) -> std::vector<
 }
 
 mgx::Platform::Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
-                        std::string const title,
+                        std::string title,
                         std::vector<X11OutputConfig> output_sizes,
                         std::shared_ptr<mg::DisplayReport> const& report)
     : x11_resources{x11_resources},
-      title{title},
+      title{std::move(title)},
       report{report},
       output_sizes{move(output_sizes)}
 {
