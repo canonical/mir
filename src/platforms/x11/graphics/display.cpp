@@ -83,8 +83,7 @@ mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
                           EGLDisplay egl_dpy,
                           geom::Size const size,
                           EGLConfig const egl_cfg)
-    : x11_resources{x11_resources},
-      title{title}
+    : x11_resources{x11_resources}
 {
     auto const conn = x11_resources->conn.get();
 
