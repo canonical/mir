@@ -73,6 +73,7 @@ class Display : public graphics::Display
 {
 public:
     explicit Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
+                     std::shared_ptr<std::string> const& title,
                      std::vector<X11OutputConfig> const& requested_size,
                      std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                      std::shared_ptr<GLConfig> const& gl_config,
