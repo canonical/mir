@@ -108,9 +108,11 @@ auto mgx::Platform::parse_output_sizes(std::string output_sizes) -> std::vector<
 }
 
 mgx::Platform::Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
+                        std::shared_ptr<std::string> const& title,
                         std::vector<X11OutputConfig> output_sizes,
                         std::shared_ptr<mg::DisplayReport> const& report)
     : x11_resources{x11_resources},
+      title{title},
       report{report},
       output_sizes{move(output_sizes)}
 {
@@ -128,5 +130,5 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return make_module_ptr<mgx::Display>(x11_resources, output_sizes, initial_conf_policy, gl_config, report);
+    return make_module_ptr<mgx::Display>(x11_resources, title, output_sizes, initial_conf_policy, gl_config, report);
 }
