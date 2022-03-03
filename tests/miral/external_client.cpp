@@ -82,9 +82,6 @@ auto const app_x11_env = "MIR_SERVER_APP_ENV_X11";
 
 TEST_F(ExternalClient, default_app_env_is_as_expected)
 {
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
-        add_to_environment("XDG_RUNTIME_DIR", "/tmp");
-
     start_server();
 
     EXPECT_THAT(client_env_value("GDK_BACKEND"), StrEq("wayland,x11"));
@@ -116,9 +113,6 @@ TEST_F(ExternalClient, default_app_env_x11_is_as_expected)
 
 TEST_F(ExternalClient, override_app_env_can_set_gdk_backend)
 {
-    if (getenv("XDG_RUNTIME_DIR") == nullptr)
-        add_to_environment("XDG_RUNTIME_DIR", "/tmp");
-
     add_to_environment(app_env, "GDK_BACKEND=mir");
     start_server();
 

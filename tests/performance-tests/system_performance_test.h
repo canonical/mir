@@ -25,6 +25,7 @@
 #include <string>
 #include <chrono>
 #include <initializer_list>
+#include <list>
 
 namespace mir { namespace test {
 
@@ -41,7 +42,7 @@ protected:
 private:
     std::string const bin_dir;
     std::string const mir_sock;
-    mir_test_framework::TemporaryEnvironmentValue wayland_display;
+    std::list<mir_test_framework::TemporaryEnvironmentValue> env;
     pid_t server_pid = 0;
     std::vector<pid_t> client_pids;
 };
