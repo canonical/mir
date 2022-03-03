@@ -103,7 +103,7 @@ public:
     {
         return std::make_shared<mgx::Display>(
                    mt::fake_shared(x11_resources),
-                   std::string("Mir on X"),
+                   "Mir on X",
                    sizes,
                    mt::fake_shared(null_display_configuration_policy),
                    mt::fake_shared(mock_gl_config),
