@@ -64,7 +64,6 @@ public:
 
 private:
     mir::X::X11Resources* const x11_resources;
-    std::string const title;
     xcb_window_t win;
     unsigned long r_mask;
 };
