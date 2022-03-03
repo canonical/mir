@@ -598,6 +598,10 @@ mf::WaylandConnector::WaylandConnector(
 
         this->wayland_display = wayland_display;
     }
+    else
+    {
+        fatal_error("Unable to bind Wayland socket");
+    }
 
     auto wayland_loop = wl_display_get_event_loop(display.get());
 
