@@ -597,7 +597,9 @@ mf::WaylandConnector::WaylandConnector(
         };
 
         this->wayland_display = wayland_display;
-    } else {
+    }
+    else
+    {
         fatal_error("Unable to bind Wayland socket");
     }
 
