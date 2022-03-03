@@ -79,6 +79,7 @@ private:
 }
 
 mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
+                          std::string title,
                           EGLDisplay egl_dpy,
                           geom::Size const size,
                           EGLConfig const egl_cfg)
@@ -110,9 +111,6 @@ mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
 
     // Enable the WM_DELETE_WINDOW protocol for the window (causes a client message to be sent when window is closed)
     conn->change_property(win, x11_resources->WM_PROTOCOLS, XCB_ATOM_ATOM, 32, 1, &x11_resources->WM_DELETE_WINDOW);
-
-    // Set the window title
-    std::string title{"Mir on X"};
 
     // Include hostname in title when X-forwarding
     if (getenv("SSH_CONNECTION"))
@@ -146,6 +144,7 @@ unsigned long mgx::X11Window::red_mask() const
 }
 
 mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
+                      std::string const title,
                       std::vector<X11OutputConfig> const& requested_sizes,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
@@ -164,6 +163,7 @@ mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources
         auto actual_size = requested_size.size;
         auto window = std::make_unique<X11Window>(
             x11_resources.get(),
+            title,
             shared_egl.display(),
             actual_size,
             shared_egl.config());

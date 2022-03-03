@@ -38,6 +38,7 @@ namespace geom = mir::geometry;
 namespace
 {
 char const* x11_displays_option_name{"x11-output"};
+char const* x11_window_title_option_name{"x11-window-title"};
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
@@ -57,9 +58,11 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     }
 
     auto output_sizes = mgx::Platform::parse_output_sizes(options->get<std::string>(x11_displays_option_name));
+    auto const title = options->get<std::string>(x11_window_title_option_name);
 
     return mir::make_module_ptr<mgx::Platform>(
         std::move(x11_resources),
+        std::move(title),
         move(output_sizes),
         report
     );
@@ -82,6 +85,11 @@ void add_graphics_platform_options(boost::program_options::options_description& 
          boost::program_options::value<std::string>()->default_value("1280x1024"),
          "[mir-on-X specific] Colon separated list of WIDTHxHEIGHT sizes for \"output\" windows."
          " ^SCALE may also be appended to any output");
+
+    config.add_options()
+        (x11_window_title_option_name,
+         boost::program_options::value<std::string>()->default_value("Mir on X"),
+         "[mir-on-X specific] Title for the banner of the generated X11 window");
 }
 
 mg::PlatformPriority probe_graphics_platform()

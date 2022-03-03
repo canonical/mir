@@ -61,6 +61,7 @@ public:
     static auto parse_output_sizes(std::string output_sizes) -> std::vector<X11OutputConfig>;
 
     explicit Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resources,
+                      std::string const title,
                       std::vector<X11OutputConfig> output_sizes,
                       std::shared_ptr<DisplayReport> const& report);
     ~Platform() = default;
@@ -71,6 +72,7 @@ public:
         std::shared_ptr<GLConfig> const& gl_config) override;
 private:
     std::shared_ptr<mir::X::X11Resources> const x11_resources;
+    std::string const title;
     std::shared_ptr<DisplayReport> const report;
     std::vector<X11OutputConfig> const output_sizes;
 };
