@@ -216,46 +216,6 @@ std::unique_ptr<mgmh::DRMHelper> mgmh::DRMHelper::open_any_render_node(
         new mgmh::DRMHelper{std::move(tmp_fd), nullptr}};
 }
 
-void mgmh::DRMHelper::drop_master() const
-{
-    /* We must have our own device fd first, so that it has become the DRM master */
-    if (fd < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Tried to drop DRM master without a DRM device"));
-    }
-
-    int ret = drmDropMaster(fd);
-
-    if (ret < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to drop DRM master"))
-                    << boost::errinfo_errno(errno));
-    }
-}
-
-void mgmh::DRMHelper::set_master() const
-{
-    /* We must have our own device fd first, so that it has become the DRM master */
-    if (fd < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Tried to set DRM master without a DRM device"));
-    }
-
-    int ret = drmSetMaster(fd);
-
-    if (ret < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to set DRM master"))
-                    << boost::errinfo_errno(errno));
-    }
-}
-
 mgmh::DRMHelper::DRMHelper(mir::Fd&& fd, std::unique_ptr<mir::Device> device)
     : fd{std::move(fd)},
       device_handle{std::move(device)}
