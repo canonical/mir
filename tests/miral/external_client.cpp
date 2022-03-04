@@ -72,7 +72,7 @@ struct ExternalClient : miral::TestServer
     bool cannot_start_X_server()
     {
         // Starting an X server on LP builder, or Fedora CI, doesn't work
-        return getenv("XDG_RUNTIME_DIR") == nullptr || access("/tmp/.X11-unix/", W_OK) == 0;
+        return strcmp(getenv("XDG_RUNTIME_DIR"), "/tmp") == 0 || access("/tmp/.X11-unix/", W_OK) == 0;
     }
 };
 
