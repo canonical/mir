@@ -34,6 +34,8 @@ add_library(mirplatformgraphicscommon OBJECT
   linux_dmabuf.cpp
   ${DRM_FORMATS_FILE}
   ${DRM_FORMATS_BIG_ENDIAN_FILE}
+  drm_formats.cpp
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/drm_formats.h
 )
 
 set(LINUX_DMABUF_PROTO "${CMAKE_CURRENT_SOURCE_DIR}/protocol/linux-dmabuf-unstable-v1.xml")
