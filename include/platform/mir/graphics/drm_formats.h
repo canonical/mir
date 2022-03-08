@@ -36,10 +36,8 @@ public:
         std::optional<uint32_t> alpha_bits;
     };
 
-    constexpr explicit DRMFormat(uint32_t fourcc_format)
-        : format{fourcc_format}
-    {
-    }
+    // This could be constexpr, at the cost of moving a bunch of implementation into the header
+    explicit DRMFormat(uint32_t fourcc_format);
 
     auto name() const -> char const*;
 
@@ -51,8 +49,10 @@ public:
     auto components() const -> std::optional<RGBComponentInfo> const&;
 
     operator uint32_t() const;
+
+    struct FormatInfo;
 private:
-    uint32_t const format;
+    FormatInfo const& info;
 };
 
 auto drm_modifier_to_string(uint64_t modifier) -> std::string;
