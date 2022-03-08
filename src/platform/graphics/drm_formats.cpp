@@ -483,7 +483,7 @@ mg::DRMFormat::operator uint32_t() const
 
 auto mg::drm_modifier_to_string(uint64_t modifier) -> std::string
 {
-#ifdef HAVE_DRM_GET_MODIFIER_NAME
+#ifdef MIR_HAVE_DRM_GET_MODIFIER_NAME
     struct CStrDeleter
     {
     public:
