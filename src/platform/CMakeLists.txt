@@ -30,7 +30,7 @@ function(add_object_library_to_target TARGET OBJECT_LIB)
     endif()
 
     if (LIBS)
-        target_link_libraries(${TARGET} INTERFACE ${LIBS})
+        target_link_libraries(${TARGET} PUBLIC ${LIBS})
     endif()
 
     target_sources(${TARGET} PRIVATE $<TARGET_OBJECTS:${OBJECT_LIB}>)
