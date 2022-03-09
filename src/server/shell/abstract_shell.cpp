@@ -29,6 +29,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/input/seat.h"
+#include "mir/wayland/wayland_base.h"
 #include "decoration/manager.h"
 
 #include <algorithm>
@@ -180,13 +181,14 @@ void msh::AbstractShell::close_session(
 
 auto msh::AbstractShell::create_surface(
     std::shared_ptr<ms::Session> const& session,
+    wayland::Weak<frontend::WlSurface> const& wayland_surface,
     SurfaceSpecification const& spec,
     std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<ms::Surface>
 {
     // Instead of a shared pointer, a local variable could be used and the lambda could capture a reference to it
     // This should be safe, but could be the source of nasty bugs and crashes if the wm did something unexpected
     auto const should_decorate = std::make_shared<bool>(false);
-    auto const build = [observer, should_decorate](
+    auto const build = [observer, should_decorate, wayland_surface](
             std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const& placed_params)
         {
@@ -194,7 +196,7 @@ auto msh::AbstractShell::create_surface(
             {
                 *should_decorate = true;
             }
-            return session->create_surface(session, placed_params, observer);
+            return session->create_surface(session, wayland_surface, placed_params, observer);
         };
 
     auto const result = window_manager->add_surface(session, spec, build);

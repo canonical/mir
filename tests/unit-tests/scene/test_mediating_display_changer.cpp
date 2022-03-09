@@ -21,6 +21,7 @@
 #include "mir/graphics/display_configuration_policy.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 #include "mir/server_action_queue.h"
+#include "mir/wayland/wayland_base.h"
 
 #include "mir/test/doubles/mock_display.h"
 #include "mir/test/doubles/mock_compositor.h"

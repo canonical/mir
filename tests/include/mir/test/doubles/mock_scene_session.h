@@ -25,6 +25,7 @@
 #include "mir/input/mir_input_config.h"
 #include "mir/client_visible_error.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/wayland/wayland_base.h"
 
 #include <gmock/gmock.h>
 
@@ -37,9 +38,10 @@ namespace doubles
 
 struct MockSceneSession : public scene::Session
 {
-    MOCK_METHOD3(create_surface,
+    MOCK_METHOD4(create_surface,
         std::shared_ptr<scene::Surface>(
             std::shared_ptr<Session> const&,
+            wayland::Weak<frontend::WlSurface> const&,
             shell::SurfaceSpecification const&,
             std::shared_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD1(destroy_surface, void(std::shared_ptr<scene::Surface> const&));

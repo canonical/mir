@@ -51,6 +51,7 @@ struct SurfaceCreation : public ::testing::Test
     SurfaceCreation()
         : surface(
             nullptr /* session */,
+            {} /* wayland_surface */,
             surface_name,
             rect,
             mir_pointer_unconfined,
@@ -188,6 +189,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     using namespace testing;
     ms::BasicSurface surface(
         nullptr /* session */,
+        {} /* wayland_surface */,
         surface_name,
         rect,
         mir_pointer_unconfined,

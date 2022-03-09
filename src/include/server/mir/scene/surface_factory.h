@@ -26,6 +26,15 @@ namespace mir
 {
 namespace compositor { class BufferStream; }
 namespace shell { class SurfaceSpecification; }
+namespace wayland
+{
+template<typename>
+class Weak;
+}
+namespace frontend
+{
+class WlSurface;
+}
 namespace scene
 {
 class Surface;
@@ -40,6 +49,7 @@ public:
 
     virtual std::shared_ptr<Surface> create_surface(
         std::shared_ptr<Session> const& session,
+        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         std::list<scene::StreamInfo> const& streams,
         shell::SurfaceSpecification const& params) = 0;
 

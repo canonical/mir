@@ -17,6 +17,7 @@
  */
 
 #include "mir/compositor/display_listener.h"
+#include "mir/wayland/wayland_base.h"
 #include "mir/renderer/renderer_factory.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
@@ -46,6 +47,7 @@ namespace mr = mir::report;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
+namespace mw = mir::wayland;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 using namespace testing;
@@ -128,6 +130,7 @@ struct SurfaceStackCompositor : public Test
         streams({ { stream, {0,0}, {} } }),
         stub_surface{std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
+            mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{{0,0},{1,1}},
             mir_pointer_unconfined,

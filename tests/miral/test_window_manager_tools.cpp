@@ -27,6 +27,7 @@
 #include <mir/shell/focus_controller.h>
 #include <mir/shell/persistent_surface_store.h>
 #include "mir/graphics/display_configuration_observer.h"
+#include <mir/wayland/wayland_base.h>
 
 #include <mir/test/doubles/stub_session.h>
 #include <mir/test/doubles/stub_surface.h>
@@ -152,6 +153,7 @@ struct StubStubSession : mir::test::doubles::StubSession
 {
     auto create_surface(
         std::shared_ptr<mir::scene::Session> const& /*session*/,
+        mir::wayland::Weak<mir::frontend::WlSurface> const& /*wayland_surface*/,
         mir::shell::SurfaceSpecification const& params,
         std::shared_ptr<mir::scene::SurfaceObserver> const& /*observer*/) -> std::shared_ptr<mir::scene::Surface> override
     {
@@ -316,7 +318,7 @@ auto mt::TestWindowManagerTools::create_surface(
 {
     // This type is Mir-internal, I hope we don't need to create it here
     std::shared_ptr<mir::scene::SurfaceObserver> const observer;
-    return session->create_surface(nullptr, params, observer);
+    return session->create_surface(nullptr, {}, params, observer);
 }
 
 auto mt::TestWindowManagerTools::create_fake_display_configuration(std::vector<miral::Rectangle> const& outputs)

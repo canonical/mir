@@ -79,6 +79,7 @@ struct MockSurface
         : ms::BasicSurface{
               session,
               {},
+              {},
               {{},{}},
               mir_pointer_unconfined,
               { { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {0, 0}, {} } },
