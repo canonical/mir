@@ -52,7 +52,6 @@
 #include "mir/shared_library.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/console_services.h"
-#include "mir/log.h"
 
 #include "mir_toolkit/cursors.h"
 
@@ -116,6 +115,12 @@ mir::DefaultServerConfiguration::the_input_targeter()
             else
                 return the_surface_input_dispatcher();
         });
+}
+
+std::shared_ptr<mir::ObserverRegistrar<mi::KeyboardObserver>>
+mir::DefaultServerConfiguration::the_keyboard_observer_registrar()
+{
+    return the_surface_input_dispatcher();
 }
 
 std::shared_ptr<mi::SurfaceInputDispatcher>

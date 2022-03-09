@@ -115,6 +115,7 @@ class InputReport;
 class SeatObserver;
 class Scene;
 class InputManager;
+class KeyboardObserver;
 class SurfaceInputDispatcher;
 class InputDeviceRegistry;
 class InputDeviceHub;
@@ -310,6 +311,7 @@ public:
     virtual std::shared_ptr<input::EventFilterChainDispatcher> the_event_filter_chain_dispatcher();
 
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
+    virtual std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> the_keyboard_observer_registrar();
     virtual std::shared_ptr<input::Scene>  the_input_scene();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
