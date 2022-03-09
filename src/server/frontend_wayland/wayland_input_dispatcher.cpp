@@ -40,17 +40,6 @@ mf::WaylandInputDispatcher::WaylandInputDispatcher(
 {
 }
 
-void mf::WaylandInputDispatcher::set_focus(bool has_focus)
-{
-    if (!wl_surface)
-    {
-        return;
-    }
-
-    auto const surface = &wl_surface.value();
-    seat->notify_focus(*surface, has_focus);
-}
-
 void mf::WaylandInputDispatcher::handle_event(MirInputEvent const* event)
 {
     if (!wl_surface)

@@ -88,7 +88,6 @@ public:
     /// Adds the listener for future use, and makes a call into it to inform of initial state
     void add_focus_listener(wl_client* client, FocusListener* listener);
     void remove_focus_listener(wl_client* client, FocusListener* listener);
-    void notify_focus(WlSurface& surface, bool has_focus);
 
 private:
     void set_focus_to(WlSurface* surface);

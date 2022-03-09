@@ -54,10 +54,9 @@ void mf::WaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAtt
     {
     case mir_window_attrib_focus:
         run_on_wayland_thread_unless_window_destroyed(
-            [value](Impl* impl, WindowWlSurfaceRole* window)
+            [value](Impl* /*impl*/, WindowWlSurfaceRole* window)
             {
-                auto state = static_cast<MirWindowFocusState>(value);
-                impl->input_dispatcher->set_focus(state == mir_window_focus_state_focused);
+                auto const state = static_cast<MirWindowFocusState>(value);
                 window->handle_active_change(state != mir_window_focus_state_unfocused);
             });
         break;

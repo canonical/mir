@@ -255,20 +255,6 @@ auto mf::WlSeat::make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::uniq
     return std::make_unique<KeyboardHelper>(callbacks, keymap, seat, enable_key_repeat);
 }
 
-void mf::WlSeat::notify_focus(WlSurface& surface, bool has_focus)
-{
-    if (has_focus && !focused_surface.is(surface))
-    {
-        // give focus to any surface other than the current one
-        set_focus_to(&surface);
-    }
-    else if (!has_focus && focused_surface.is(surface))
-    {
-        // only take focus away if the newly unfocused surface is the current one
-        set_focus_to(nullptr);
-    }
-}
-
 void mf::WlSeat::bind(wl_resource* new_wl_seat)
 {
     new Instance{new_wl_seat, this};
