@@ -79,363 +79,383 @@ struct mg::DRMFormat::FormatInfo
 
 namespace
 {
-constexpr auto make_sorted_formats_list()
-{
-    std::array local_formats = {
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_XRGB4444,
-            false,
-            DRM_FORMAT_XRGB4444,
-            DRM_FORMAT_ARGB4444,
-            mg::DRMFormat::RGBComponentInfo{
-                4, 4, 4, {}
-            },
+constexpr std::array const formats = {
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_XRGB4444,
+        false,
+        DRM_FORMAT_XRGB4444,
+        DRM_FORMAT_ARGB4444,
+        mg::DRMFormat::RGBComponentInfo{
+            4, 4, 4, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_XBGR4444,
-            false,
-            DRM_FORMAT_XBGR4444,
-            DRM_FORMAT_ABGR4444,
-            mg::DRMFormat::RGBComponentInfo{
-                4, 4, 4, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_XBGR4444,
+        false,
+        DRM_FORMAT_XBGR4444,
+        DRM_FORMAT_ABGR4444,
+        mg::DRMFormat::RGBComponentInfo{
+            4, 4, 4, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_RGBX4444,
-            false,
-            DRM_FORMAT_RGBX4444,
-            DRM_FORMAT_RGBA4444,
-            mg::DRMFormat::RGBComponentInfo{
-                4, 4, 4, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_RGBX4444,
+        false,
+        DRM_FORMAT_RGBX4444,
+        DRM_FORMAT_RGBA4444,
+        mg::DRMFormat::RGBComponentInfo{
+            4, 4, 4, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_BGRX4444,
-            false,
-            DRM_FORMAT_BGRX4444,
-            DRM_FORMAT_BGRA4444,
-            mg::DRMFormat::RGBComponentInfo{
-                4, 4, 4, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_BGRX4444,
+        false,
+        DRM_FORMAT_BGRX4444,
+        DRM_FORMAT_BGRA4444,
+        mg::DRMFormat::RGBComponentInfo{
+            4, 4, 4, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_ARGB4444,
-            true,
-            DRM_FORMAT_XRGB4444,
-            DRM_FORMAT_ARGB4444,
-            mg::DRMFormat::RGBComponentInfo{
-                4, 4, 4, 4
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_ARGB4444,
+        true,
+        DRM_FORMAT_XRGB4444,
+        DRM_FORMAT_ARGB4444,
+        mg::DRMFormat::RGBComponentInfo{
+            4, 4, 4, 4
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_ABGR4444,
-            true,
-            DRM_FORMAT_XBGR4444,
-            DRM_FORMAT_ABGR4444,
-            mg::DRMFormat::RGBComponentInfo{
-                4, 4, 4, 4
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_ABGR4444,
+        true,
+        DRM_FORMAT_XBGR4444,
+        DRM_FORMAT_ABGR4444,
+        mg::DRMFormat::RGBComponentInfo{
+            4, 4, 4, 4
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_RGBA4444,
-            true,
-            DRM_FORMAT_RGBX4444,
-            DRM_FORMAT_RGBA4444,
-            mg::DRMFormat::RGBComponentInfo{
-                4, 4, 4, 4
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_RGBA4444,
+        true,
+        DRM_FORMAT_RGBX4444,
+        DRM_FORMAT_RGBA4444,
+        mg::DRMFormat::RGBComponentInfo{
+            4, 4, 4, 4
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_BGRA4444,
-            true,
-            DRM_FORMAT_BGRX4444,
-            DRM_FORMAT_BGRA4444,
-            mg::DRMFormat::RGBComponentInfo{
-                4, 4, 4, 4
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_BGRA4444,
+        true,
+        DRM_FORMAT_BGRX4444,
+        DRM_FORMAT_BGRA4444,
+        mg::DRMFormat::RGBComponentInfo{
+            4, 4, 4, 4
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_XRGB1555,
-            false,
-            DRM_FORMAT_XRGB1555,
-            DRM_FORMAT_ARGB1555,
-            mg::DRMFormat::RGBComponentInfo{
-                5, 5, 5, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_XRGB1555,
+        false,
+        DRM_FORMAT_XRGB1555,
+        DRM_FORMAT_ARGB1555,
+        mg::DRMFormat::RGBComponentInfo{
+            5, 5, 5, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_XBGR1555,
-            false,
-            DRM_FORMAT_XBGR1555,
-            DRM_FORMAT_ABGR1555,
-            mg::DRMFormat::RGBComponentInfo{
-                5, 5, 5, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_XBGR1555,
+        false,
+        DRM_FORMAT_XBGR1555,
+        DRM_FORMAT_ABGR1555,
+        mg::DRMFormat::RGBComponentInfo{
+            5, 5, 5, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_RGBX5551,
-            false,
-            DRM_FORMAT_RGBX5551,
-            DRM_FORMAT_RGBA5551,
-            mg::DRMFormat::RGBComponentInfo{
-                5, 5, 5, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_RGBX5551,
+        false,
+        DRM_FORMAT_RGBX5551,
+        DRM_FORMAT_RGBA5551,
+        mg::DRMFormat::RGBComponentInfo{
+            5, 5, 5, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_BGRX5551,
-            false,
-            DRM_FORMAT_BGRX5551,
-            DRM_FORMAT_BGRA5551,
-            mg::DRMFormat::RGBComponentInfo{
-                5, 5, 5, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_BGRX5551,
+        false,
+        DRM_FORMAT_BGRX5551,
+        DRM_FORMAT_BGRA5551,
+        mg::DRMFormat::RGBComponentInfo{
+            5, 5, 5, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_ARGB1555,
-            true,
-            DRM_FORMAT_XRGB1555,
-            DRM_FORMAT_ARGB1555,
-            mg::DRMFormat::RGBComponentInfo{
-                5, 5, 5, 1
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_ARGB1555,
+        true,
+        DRM_FORMAT_XRGB1555,
+        DRM_FORMAT_ARGB1555,
+        mg::DRMFormat::RGBComponentInfo{
+            5, 5, 5, 1
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_ABGR1555,
-            true,
-            DRM_FORMAT_XBGR1555,
-            DRM_FORMAT_ABGR1555,
-            mg::DRMFormat::RGBComponentInfo{
-                5, 5, 5, 1
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_ABGR1555,
+        true,
+        DRM_FORMAT_XBGR1555,
+        DRM_FORMAT_ABGR1555,
+        mg::DRMFormat::RGBComponentInfo{
+            5, 5, 5, 1
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_RGBA5551,
-            true,
-            DRM_FORMAT_RGBX5551,
-            DRM_FORMAT_RGBA5551,
-            mg::DRMFormat::RGBComponentInfo{
-                5, 5, 5, 1
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_RGBA5551,
+        true,
+        DRM_FORMAT_RGBX5551,
+        DRM_FORMAT_RGBA5551,
+        mg::DRMFormat::RGBComponentInfo{
+            5, 5, 5, 1
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_BGRA5551,
-            true,
-            DRM_FORMAT_BGRX5551,
-            DRM_FORMAT_BGRA5551,
-            mg::DRMFormat::RGBComponentInfo{
-                5, 5, 5, 1
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_BGRA5551,
+        true,
+        DRM_FORMAT_BGRX5551,
+        DRM_FORMAT_BGRA5551,
+        mg::DRMFormat::RGBComponentInfo{
+            5, 5, 5, 1
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_RGB565,
-            false,
-            DRM_FORMAT_RGB565,
-            DRM_FORMAT_INVALID,
-            mg::DRMFormat::RGBComponentInfo{
-                5, 6, 5, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_RGB565,
+        false,
+        DRM_FORMAT_RGB565,
+        DRM_FORMAT_INVALID,
+        mg::DRMFormat::RGBComponentInfo{
+            5, 6, 5, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_BGR565,
-            false,
-            DRM_FORMAT_BGR565,
-            DRM_FORMAT_INVALID,
-            mg::DRMFormat::RGBComponentInfo{
-                5, 6, 5, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_BGR565,
+        false,
+        DRM_FORMAT_BGR565,
+        DRM_FORMAT_INVALID,
+        mg::DRMFormat::RGBComponentInfo{
+            5, 6, 5, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_RGB888,
-            false,
-            DRM_FORMAT_RGB888,
-            DRM_FORMAT_INVALID,
-            mg::DRMFormat::RGBComponentInfo{
-                8, 8, 8, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_RGB888,
+        false,
+        DRM_FORMAT_RGB888,
+        DRM_FORMAT_INVALID,
+        mg::DRMFormat::RGBComponentInfo{
+            8, 8, 8, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_BGR888,
-            false,
-            DRM_FORMAT_BGR888,
-            DRM_FORMAT_INVALID,
-            mg::DRMFormat::RGBComponentInfo{
-                8, 8, 8, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_BGR888,
+        false,
+        DRM_FORMAT_BGR888,
+        DRM_FORMAT_INVALID,
+        mg::DRMFormat::RGBComponentInfo{
+            8, 8, 8, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_XRGB8888,
-            false,
-            DRM_FORMAT_XRGB8888,
-            DRM_FORMAT_ARGB8888,
-            mg::DRMFormat::RGBComponentInfo{
-                8, 8, 8, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_XRGB8888,
+        false,
+        DRM_FORMAT_XRGB8888,
+        DRM_FORMAT_ARGB8888,
+        mg::DRMFormat::RGBComponentInfo{
+            8, 8, 8, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_XBGR8888,
-            false,
-            DRM_FORMAT_XBGR8888,
-            DRM_FORMAT_ABGR8888,
-            mg::DRMFormat::RGBComponentInfo{
-                8, 8, 8, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_XBGR8888,
+        false,
+        DRM_FORMAT_XBGR8888,
+        DRM_FORMAT_ABGR8888,
+        mg::DRMFormat::RGBComponentInfo{
+            8, 8, 8, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_RGBX8888,
-            false,
-            DRM_FORMAT_RGBX8888,
-            DRM_FORMAT_RGBA8888,
-            mg::DRMFormat::RGBComponentInfo{
-                8, 8, 8, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_RGBX8888,
+        false,
+        DRM_FORMAT_RGBX8888,
+        DRM_FORMAT_RGBA8888,
+        mg::DRMFormat::RGBComponentInfo{
+            8, 8, 8, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_BGRX8888,
-            false,
-            DRM_FORMAT_BGRX8888,
-            DRM_FORMAT_BGRA8888,
-            mg::DRMFormat::RGBComponentInfo{
-                8, 8, 8, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_BGRX8888,
+        false,
+        DRM_FORMAT_BGRX8888,
+        DRM_FORMAT_BGRA8888,
+        mg::DRMFormat::RGBComponentInfo{
+            8, 8, 8, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_ARGB8888,
-            true,
-            DRM_FORMAT_XRGB8888,
-            DRM_FORMAT_ARGB8888,
-            mg::DRMFormat::RGBComponentInfo{
-                8, 8, 8, 8
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_ARGB8888,
+        true,
+        DRM_FORMAT_XRGB8888,
+        DRM_FORMAT_ARGB8888,
+        mg::DRMFormat::RGBComponentInfo{
+            8, 8, 8, 8
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_ABGR8888,
-            true,
-            DRM_FORMAT_XBGR8888,
-            DRM_FORMAT_ABGR8888,
-            mg::DRMFormat::RGBComponentInfo{
-                8, 8, 8, 8
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_ABGR8888,
+        true,
+        DRM_FORMAT_XBGR8888,
+        DRM_FORMAT_ABGR8888,
+        mg::DRMFormat::RGBComponentInfo{
+            8, 8, 8, 8
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_RGBA8888,
-            true,
-            DRM_FORMAT_RGBX8888,
-            DRM_FORMAT_RGBA8888,
-            mg::DRMFormat::RGBComponentInfo{
-                8, 8, 8, 8
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_RGBA8888,
+        true,
+        DRM_FORMAT_RGBX8888,
+        DRM_FORMAT_RGBA8888,
+        mg::DRMFormat::RGBComponentInfo{
+            8, 8, 8, 8
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_BGRA8888,
-            true,
-            DRM_FORMAT_BGRX8888,
-            DRM_FORMAT_BGRA8888,
-            mg::DRMFormat::RGBComponentInfo{
-                8, 8, 8, 8
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_BGRA8888,
+        true,
+        DRM_FORMAT_BGRX8888,
+        DRM_FORMAT_BGRA8888,
+        mg::DRMFormat::RGBComponentInfo{
+            8, 8, 8, 8
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_XRGB2101010,
-            false,
-            DRM_FORMAT_XRGB2101010,
-            DRM_FORMAT_ARGB2101010,
-            mg::DRMFormat::RGBComponentInfo{
-                10, 10, 10, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_XRGB2101010,
+        false,
+        DRM_FORMAT_XRGB2101010,
+        DRM_FORMAT_ARGB2101010,
+        mg::DRMFormat::RGBComponentInfo{
+            10, 10, 10, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_XBGR2101010,
-            false,
-            DRM_FORMAT_XBGR2101010,
-            DRM_FORMAT_ABGR2101010,
-            mg::DRMFormat::RGBComponentInfo{
-                10, 10, 10, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_XBGR2101010,
+        false,
+        DRM_FORMAT_XBGR2101010,
+        DRM_FORMAT_ABGR2101010,
+        mg::DRMFormat::RGBComponentInfo{
+            10, 10, 10, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_RGBX1010102,
-            false,
-            DRM_FORMAT_RGBX1010102,
-            DRM_FORMAT_RGBA1010102,
-            mg::DRMFormat::RGBComponentInfo{
-                10, 10, 10, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_RGBX1010102,
+        false,
+        DRM_FORMAT_RGBX1010102,
+        DRM_FORMAT_RGBA1010102,
+        mg::DRMFormat::RGBComponentInfo{
+            10, 10, 10, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_BGRX1010102,
-            false,
-            DRM_FORMAT_BGRX1010102,
-            DRM_FORMAT_BGRA1010102,
-            mg::DRMFormat::RGBComponentInfo{
-                10, 10, 10, {}
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_BGRX1010102,
+        false,
+        DRM_FORMAT_BGRX1010102,
+        DRM_FORMAT_BGRA1010102,
+        mg::DRMFormat::RGBComponentInfo{
+            10, 10, 10, {}
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_ARGB2101010,
-            true,
-            DRM_FORMAT_XRGB2101010,
-            DRM_FORMAT_ARGB2101010,
-            mg::DRMFormat::RGBComponentInfo{
-                10, 10, 10, 2
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_ARGB2101010,
+        true,
+        DRM_FORMAT_XRGB2101010,
+        DRM_FORMAT_ARGB2101010,
+        mg::DRMFormat::RGBComponentInfo{
+            10, 10, 10, 2
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_ABGR2101010,
-            true,
-            DRM_FORMAT_XBGR2101010,
-            DRM_FORMAT_ABGR2101010,
-            mg::DRMFormat::RGBComponentInfo{
-                10, 10, 10, 2
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_ABGR2101010,
+        true,
+        DRM_FORMAT_XBGR2101010,
+        DRM_FORMAT_ABGR2101010,
+        mg::DRMFormat::RGBComponentInfo{
+            10, 10, 10, 2
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_RGBA1010102,
-            true,
-            DRM_FORMAT_RGBX1010102,
-            DRM_FORMAT_RGBA1010102,
-            mg::DRMFormat::RGBComponentInfo{
-                10, 10, 10, 2
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_RGBA1010102,
+        true,
+        DRM_FORMAT_RGBX1010102,
+        DRM_FORMAT_RGBA1010102,
+        mg::DRMFormat::RGBComponentInfo{
+            10, 10, 10, 2
         },
-        mg::DRMFormat::FormatInfo{
-            DRM_FORMAT_BGRA1010102,
-            true,
-            DRM_FORMAT_BGRX1010102,
-            DRM_FORMAT_BGRA1010102,
-            mg::DRMFormat::RGBComponentInfo{
-                10, 10, 10, 2
-            },
+    },
+    mg::DRMFormat::FormatInfo{
+        DRM_FORMAT_BGRA1010102,
+        true,
+        DRM_FORMAT_BGRX1010102,
+        DRM_FORMAT_BGRA1010102,
+        mg::DRMFormat::RGBComponentInfo{
+            10, 10, 10, 2
         },
-    };
-    std::sort(
-        local_formats.begin(), local_formats.end(),
-        [](auto const& a, auto const& b)
-        {
-            return a.format < b.format;
-        });
-    return local_formats;
+    },
 };
 
-constexpr std::array const formats = make_sorted_formats_list();
-
-constexpr auto info_for_format(uint32_t fourcc) -> mg::DRMFormat::FormatInfo const&
+constexpr auto find_format_info(uint32_t fourcc) -> mg::DRMFormat::FormatInfo const*
 {
-    auto const candidate = std::lower_bound(
-        formats.begin(), formats.end(),
-        fourcc,
-        [](auto const& format, uint32_t fourcc)
-        {
-            return format.format < fourcc;
-        });
-
-    if (candidate != formats.end() && candidate->format == fourcc)
+    for (auto const& format: formats)
     {
-        return *candidate;
+        if (format.format == fourcc)
+            return &format;
+    }
+    /* The format array doesn't cover all DRM_FORMAT_*, only the ones relevant to Mir
+     * (and not all of them, yet: eg YUV formats), so we must have a sentinel value
+     * for the missing ones
+     */
+    return nullptr;
+}
+
+/* Generate a bunch of variables named format_info_DRM_FORMAT_FOO pointing to associated FormatInfo */
+#define STRINGIFY(format) \
+    constexpr mg::DRMFormat::FormatInfo const* format_info_##format = find_format_info(format);
+
+#include "drm-formats"
+
+#undef STRINGIFY
+
+constexpr auto info_for_format(uint32_t fourcc_format) -> mg::DRMFormat::FormatInfo const&
+{
+    mg::DRMFormat::FormatInfo const* info;
+    switch (fourcc_format)
+    {
+#define STRINGIFY(format) \
+    case format: \
+        info = format_info_##format; \
+        break;
+
+#include "drm-formats"
+
+        default:
+            BOOST_THROW_EXCEPTION((
+                std::runtime_error{
+                    std::string{"Unknown DRM format "} + std::to_string(fourcc_format) +
+                    " (may need to rebuild Mir against newer DRM headers?)"}));
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error{
-        std::string{"Failed to find descriptor for format " + std::to_string(fourcc)}}); // TODO: Print fourcc as four characters.
+    if (info)
+    {
+        return *info;
+    }
+    BOOST_THROW_EXCEPTION((
+        std::runtime_error{
+            std::string{"Unsupported DRM format: "} + drm_format_to_string(fourcc_format)}));
 }
+
 }
 
 mg::DRMFormat::DRMFormat(uint32_t fourcc_format)
