@@ -276,6 +276,7 @@ std::shared_ptr<mf::Connector>
                 the_clock(),
                 the_input_device_hub(),
                 the_seat(),
+                the_keyboard_observer_registrar(),
                 the_input_device_registry(),
                 the_composite_event_filter(),
                 the_buffer_allocator(),

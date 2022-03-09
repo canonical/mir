@@ -26,18 +26,25 @@
 #include "wl_pointer.h"
 #include "wl_touch.h"
 
+#include "mir/executor.h"
+#include "mir/observer_registrar.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/device.h"
 #include "mir/input/parameter_keymap.h"
 #include "mir/input/mir_keyboard_config.h"
+#include "mir/input/keyboard_observer.h"
+#include "mir/events/input_event.h"
+#include "mir/scene/surface.h"
 
 #include <mutex>
 #include <algorithm>
 
 namespace mf = mir::frontend;
 namespace mi = mir::input;
+namespace ms = mir::scene;
 namespace mw = mir::wayland;
+namespace mev = mir::events;
 
 template<class T>
 class mf::WlSeat::ListenerList
@@ -131,6 +138,42 @@ void mf::WlSeat::ConfigObserver::changes_complete()
     pending_keymap.reset();
 }
 
+class mf::WlSeat::KeyboardObserver
+    : public input::KeyboardObserver
+{
+public:
+    KeyboardObserver(WlSeat& seat)
+        : seat{seat}
+    {
+    }
+
+    void keyboard_event(std::shared_ptr<MirEvent const> const& event) override
+    {
+        if (seat.focused_surface)
+        {
+            seat.for_each_listener(seat.focused_surface.value().client, [&](WlKeyboard* keyboard)
+                {
+                    keyboard->handle_event(mir_event_get_input_event(event.get()), seat.focused_surface.value());
+                });
+        }
+    }
+
+    void keyboard_focus_set(std::shared_ptr<mi::Surface> const& surface) override
+    {
+        if (auto const scene_surface = dynamic_cast<ms::Surface*>(surface.get()))
+        {
+            seat.set_focus_to(mw::as_nullable_ptr(scene_surface->wayland_surface()));
+        }
+        else
+        {
+            seat.set_focus_to({});
+        }
+    }
+
+private:
+    WlSeat& seat;
+};
+
 class mf::WlSeat::Instance : public wayland::Seat
 {
 public:
@@ -146,8 +189,10 @@ private:
 
 mf::WlSeat::WlSeat(
     wl_display* display,
+    Executor& wayland_executor,
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     std::shared_ptr<mi::Seat> const& seat,
     bool enable_key_repeat)
     :   Global(display, Version<6>()),
@@ -159,6 +204,8 @@ mf::WlSeat::WlSeat(
                 {
                     keymap = new_keymap;
                 })},
+        keyboard_observer_registrar{keyboard_observer_registrar},
+        keyboard_observer{std::make_shared<KeyboardObserver>(*this)},
         focus_listeners{std::make_shared<ListenerList<FocusListener>>()},
         pointer_listeners{std::make_shared<ListenerList<WlPointer>>()},
         keyboard_listeners{std::make_shared<ListenerList<WlKeyboard>>()},
@@ -169,10 +216,12 @@ mf::WlSeat::WlSeat(
         enable_key_repeat{enable_key_repeat}
 {
     input_hub->add_observer(config_observer);
+    keyboard_observer_registrar->register_interest(keyboard_observer, wayland_executor);
 }
 
 mf::WlSeat::~WlSeat()
 {
+    keyboard_observer_registrar->unregister_interest(*keyboard_observer);
     input_hub->remove_observer(config_observer);
     if (focused_surface)
     {
