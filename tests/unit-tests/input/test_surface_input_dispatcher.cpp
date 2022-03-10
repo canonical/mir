@@ -262,31 +262,19 @@ struct FakeToucher
 
 }
 
-TEST_F(SurfaceInputDispatcher, key_event_delivered_to_focused_surface)
+TEST_F(SurfaceInputDispatcher, key_event_not_delivered_to_surface)
 {
     auto surface = scene.add_surface();
 
     FakeKeyboard keyboard;
     auto event = keyboard.press();
 
-    EXPECT_CALL(*surface, consume(mt::MirKeyboardEventMatches(event.get()))).Times(1);
-
-    dispatcher.start();
-
-    dispatcher.set_focus(surface);
-    EXPECT_TRUE(dispatcher.dispatch(std::move(event)));
-}
-
-TEST_F(SurfaceInputDispatcher, key_event_dropped_if_no_surface_focused)
-{
-    auto surface = scene.add_surface();
-    
     EXPECT_CALL(*surface, consume(_)).Times(0);
 
     dispatcher.start();
 
-    FakeKeyboard keyboard;
-    EXPECT_FALSE(dispatcher.dispatch(keyboard.press()));
+    dispatcher.set_focus(surface);
+    dispatcher.dispatch(std::move(event));
 }
 
 TEST_F(SurfaceInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
