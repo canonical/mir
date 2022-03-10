@@ -39,6 +39,7 @@ ms::SurfaceAllocator::SurfaceAllocator(
 
 std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
     std::shared_ptr<Session> const& session,
+    wayland::Weak<frontend::WlSurface> const& wayland_surface,
     std::list<ms::StreamInfo> const& streams,
     shell::SurfaceSpecification const& params)
 {
@@ -51,6 +52,7 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
     auto const parent = params.parent.is_set() ? params.parent.value() : std::weak_ptr<scene::Surface>{};
     auto const surface = std::make_shared<BasicSurface>(
         session,
+        wayland_surface,
         name,
         rect,
         parent,

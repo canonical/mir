@@ -916,3 +916,10 @@ MIR_SERVER_2.6 {
   };
  local: *;
 };
+
+MIR_SERVER_2.8 {
+ global:
+  extern "C++" {
+    mir::DefaultServerConfiguration::the_keyboard_observer_registrar*;
+  };
+} MIR_SERVER_2.6;

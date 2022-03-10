@@ -43,15 +43,8 @@ mf::WlKeyboard::~WlKeyboard()
     seat.remove_focus_listener(client, this);
 }
 
-void mf::WlKeyboard::handle_event(MirInputEvent const* event, WlSurface& surface)
+void mf::WlKeyboard::handle_event(MirInputEvent const* event)
 {
-    if (!focused_surface.is(surface))
-    {
-        fatal_error(
-            "Attempt to send keyboard event to wl_surface@%u even though it was not given keyboard focus",
-            wl_resource_get_id(surface.resource));
-    }
-
     helper->handle_event(event);
 }
 

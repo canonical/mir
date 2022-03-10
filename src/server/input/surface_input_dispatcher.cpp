@@ -400,19 +400,9 @@ void mi::SurfaceInputDispatcher::device_reset(MirInputDeviceId reset_device_id, 
         touch_state_by_id.erase(touch_it);
 }
 
-bool mi::SurfaceInputDispatcher::dispatch_key(MirEvent const* kev)
+bool mi::SurfaceInputDispatcher::dispatch_key(std::shared_ptr<MirEvent const> const& ev)
 {
-    std::lock_guard<std::mutex> lg(dispatcher_mutex);
-
-    if (!started)
-        return false;
-
-    auto strong_focus = focus_surface.lock();
-    if (!strong_focus)
-        return false;
-
-    strong_focus->consume(kev);
-
+    keyboard_multiplexer.keyboard_event(ev);
     return true;
 }
 
@@ -643,7 +633,7 @@ bool mi::SurfaceInputDispatcher::dispatch(std::shared_ptr<MirEvent const> const&
     {
     case mir_input_event_type_key:
     case mir_input_event_type_keyboard_resync:
-        return dispatch_key(event.get());
+        return dispatch_key(event);
     case mir_input_event_type_touch:
         return dispatch_touch(id, event.get());
     case mir_input_event_type_pointer:
@@ -676,6 +666,7 @@ void mi::SurfaceInputDispatcher::stop()
 void mi::SurfaceInputDispatcher::set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<mi::Surface> const& target)
 {
     focus_surface = target;
+    keyboard_multiplexer.keyboard_focus_set(target);
 }
 
 void mi::SurfaceInputDispatcher::set_focus(std::shared_ptr<mi::Surface> const& target)
@@ -702,3 +693,19 @@ void mir::input::SurfaceInputDispatcher::clear_drag_and_drop_handle()
     drag_and_drop_handle.clear();
 }
 
+void mir::input::SurfaceInputDispatcher::register_interest(std::weak_ptr<KeyboardObserver> const& observer)
+{
+    keyboard_multiplexer.register_interest(observer);
+}
+
+void mir::input::SurfaceInputDispatcher::register_interest(
+    std::weak_ptr<KeyboardObserver> const& observer,
+    Executor& executor)
+{
+    keyboard_multiplexer.register_interest(observer, executor);
+}
+
+void mir::input::SurfaceInputDispatcher::unregister_interest(KeyboardObserver const& observer)
+{
+    keyboard_multiplexer.unregister_interest(observer);
+}

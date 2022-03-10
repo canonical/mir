@@ -39,7 +39,7 @@ public:
 
     ~WlKeyboard();
 
-    void handle_event(MirInputEvent const* event, WlSurface& surface);
+    void handle_event(MirInputEvent const* event);
 
 private:
     WlSeat& seat;

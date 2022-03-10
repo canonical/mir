@@ -493,6 +493,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<mi::Seat> const& seat,
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::CompositeEventFilter> const& composite_event_filter,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
@@ -548,7 +549,14 @@ mf::WaylandConnector::WaylandConnector(
         std::make_shared<FrameExecutor>(*main_loop),
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
-    seat_global = std::make_unique<mf::WlSeat>(display.get(), clock, input_hub, seat, enable_key_repeat);
+    seat_global = std::make_unique<mf::WlSeat>(
+        display.get(),
+        *executor,
+        clock,
+        input_hub,
+        keyboard_observer_registrar,
+        seat,
+        enable_key_repeat);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         display_config,

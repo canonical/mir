@@ -34,6 +34,8 @@
 namespace mir
 {
 class Executor;
+template<typename>
+class ObserverRegistrar;
 
 namespace input
 {
@@ -41,6 +43,7 @@ class InputDeviceHub;
 class InputDeviceRegistry;
 class Seat;
 class CompositeEventFilter;
+class KeyboardObserver;
 }
 namespace graphics
 {
@@ -124,6 +127,7 @@ public:
         std::shared_ptr<time::Clock> const& clock,
         std::shared_ptr<input::InputDeviceHub> const& input_hub,
         std::shared_ptr<input::Seat> const& seat,
+        std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
         std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
         std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,

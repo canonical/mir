@@ -24,7 +24,7 @@
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/null_surface_observer.h"
-
+#include "mir/wayland/wayland_base.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/report/null_report_factory.h"
@@ -48,6 +48,7 @@
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
+namespace mw = mir::wayland;
 namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
@@ -69,6 +70,7 @@ struct SessionManagerSetup : public testing::Test
 {
     std::shared_ptr<ms::Surface> dummy_surface = std::make_shared<ms::BasicSurface>(
         nullptr /* session */,
+        mw::Weak<mf::WlSurface>{},
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
@@ -176,7 +178,7 @@ TEST_F(SessionManagerSessionListenerSetup, additional_listeners_receive_surface_
     auto session = session_manager.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
     auto bs = std::dynamic_pointer_cast<mc::BufferStream>(session->create_buffer_stream(
         mg::BufferProperties{{640, 480}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware}));
-    session->create_surface(nullptr, mt::make_surface_spec(bs), mt::fake_shared(observer));
+    session->create_surface(nullptr, {}, mt::make_surface_spec(bs), mt::fake_shared(observer));
 }
 
 namespace

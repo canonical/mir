@@ -40,17 +40,6 @@ mf::WaylandInputDispatcher::WaylandInputDispatcher(
 {
 }
 
-void mf::WaylandInputDispatcher::set_focus(bool has_focus)
-{
-    if (!wl_surface)
-    {
-        return;
-    }
-
-    auto const surface = &wl_surface.value();
-    seat->notify_focus(*surface, has_focus);
-}
-
 void mf::WaylandInputDispatcher::handle_event(MirInputEvent const* event)
 {
     if (!wl_surface)
@@ -66,14 +55,6 @@ void mf::WaylandInputDispatcher::handle_event(MirInputEvent const* event)
 
     switch (mir_input_event_get_type(event))
     {
-    case mir_input_event_type_key:
-    case mir_input_event_type_keyboard_resync:
-    {
-        seat->for_each_listener(client, [&](WlKeyboard* keyboard)
-            {
-                keyboard->handle_event(event, wl_surface.value());
-            });
-    }   break;
 
     case mir_input_event_type_pointer:
     {
@@ -92,6 +73,8 @@ void mf::WaylandInputDispatcher::handle_event(MirInputEvent const* event)
                 touch->event(touch_event, wl_surface.value());
             });
     }   break;
+
+    // Keyboard events are sent to the WlSeat via it's KeyboardObserver
 
     default:
         break;
