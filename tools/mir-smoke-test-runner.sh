@@ -29,12 +29,6 @@ WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-cli
 date --utc --iso-8601=seconds | xargs echo "[timestamp] End :" ${client}
 
 for client in ${client_list}; do
-  if [[ "$XAUTHORITY" =~ .*xvfb-run.* ]]; then
-    if [[ "${client}" = mir_demo_client_wayland_egl_spinner ]]; then
-      # Skipped because of https://github.com/MirServer/mir/issues/2154
-      continue
-    fi
-  fi
     echo running client ${client}
     date --utc --iso-8601=seconds | xargs echo "[timestamp] Start :" ${client}
     echo WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client ${root}/${client}
