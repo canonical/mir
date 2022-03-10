@@ -428,24 +428,29 @@ constexpr auto find_format_info(uint32_t fourcc) -> mg::DRMFormat::FormatInfo co
 
 #undef STRINGIFY
 
-constexpr auto info_for_format(uint32_t fourcc_format) -> mg::DRMFormat::FormatInfo const&
+constexpr auto maybe_info_for_format(uint32_t fourcc_format) -> mg::DRMFormat::FormatInfo const*
 {
-    mg::DRMFormat::FormatInfo const* info;
     switch (fourcc_format)
     {
 #define STRINGIFY(format) \
     case format: \
-        info = format_info_##format; \
-        break;
+        return format_info_##format; \
 
 #include "drm-formats"
 
+#undef STRINGIFY
         default:
             BOOST_THROW_EXCEPTION((
                 std::runtime_error{
                     std::string{"Unknown DRM format "} + std::to_string(fourcc_format) +
                     " (may need to rebuild Mir against newer DRM headers?)"}));
     }
+
+}
+
+constexpr auto info_for_format(uint32_t fourcc_format) -> mg::DRMFormat::FormatInfo const&
+{
+    auto const info = maybe_info_for_format(fourcc_format);
 
     if (info)
     {
