@@ -38,7 +38,7 @@ public:
     void swap_buffers(EGLSurface eglsurface) const;
     void destroy_surface(EGLSurface eglsurface) const;
     void get_surface_size(EGLSurface eglsurface, int* width, int* height) const;
-
+    void set_swap_interval(EGLSurface eglsurface, int interval) const;
     bool supports_surfaceless_context();
 
     ~MirEglApp();
@@ -84,6 +84,7 @@ MirEglSurface::MirEglSurface(
         surface(),
         configured_size().width.as_int(),
         configured_size().height.as_int());
+    mir_egl_app->set_swap_interval(eglsurface, -1);
 }
 
 MirEglSurface::~MirEglSurface()
@@ -206,6 +207,17 @@ void MirEglApp::get_surface_size(EGLSurface eglsurface, int* width, int* height)
 {
     eglQuerySurface(egldisplay, eglsurface, EGL_WIDTH, width);
     eglQuerySurface(egldisplay, eglsurface, EGL_HEIGHT, height);
+}
+
+void MirEglApp::set_swap_interval(EGLSurface eglsurface, int interval) const
+{
+    auto const previous_surface = eglGetCurrentSurface(EGL_DRAW);
+
+    make_current(eglsurface);
+    eglSwapInterval(egldisplay, interval);
+
+    if (previous_surface != EGL_NO_SURFACE)
+        make_current(previous_surface);
 }
 
 bool MirEglApp::supports_surfaceless_context()
