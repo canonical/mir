@@ -41,6 +41,8 @@ namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mev = mir::events;
+namespace mf = mir::frontend;
+namespace mw = mir::wayland;
 namespace msd = mir::shell::decoration;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -133,8 +135,9 @@ struct MockShell
         uint64_t,
         MirResizeEdge));
 
-    MOCK_METHOD3(create_surface, std::shared_ptr<ms::Surface>(
+    MOCK_METHOD4(create_surface, std::shared_ptr<ms::Surface>(
         std::shared_ptr<ms::Session> const&,
+        mw::Weak<mf::WlSurface> const&,
         msh::SurfaceSpecification const&,
         std::shared_ptr<ms::SurfaceObserver> const&));
 
@@ -148,9 +151,10 @@ struct DecorationBasicDecoration
 {
     void SetUp() override
     {
-        ON_CALL(shell, create_surface(_, _, _))
+        ON_CALL(shell, create_surface(_, _, _, _))
             .WillByDefault(Invoke([this](
                     std::shared_ptr<ms::Session> const&,
+                    mw::Weak<mf::WlSurface> const&,
                     msh::SurfaceSpecification const& params,
                     std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<ms::Surface>
                 {
