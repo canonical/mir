@@ -27,7 +27,13 @@ execute: |
         schroot \
         ubuntu-dev-tools
 
-    printf "\$mailto = 'null@example.com';\n1;\n" > ~/.sbuildrc
+    cat > ~/.sbuildrc <<EOF
+    \$mailto = 'null@example.com';
+    \$build_environment = {
+      "XDG_RUNTIME_DIR" => "/run/user/$UID"
+    };
+    1;
+    EOF
 
     adduser $USER sbuild
     # set host and build environment up
@@ -65,8 +71,6 @@ execute: |
     fi
 
     sg sbuild -c "${MKSBUILD_OPTS[*]}"
-
-    echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk
 
     # Running the tests under QEMU fails to entirely correctly support libwayland's SIGSEGV handler
     if [ ${DEB_HOST_ARCH} == "arm64" ]; then
