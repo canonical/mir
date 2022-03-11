@@ -52,7 +52,7 @@ public:
 
     struct FormatInfo;
 private:
-    FormatInfo const& info;
+    FormatInfo const* info;
 };
 
 auto drm_modifier_to_string(uint64_t modifier) -> std::string;

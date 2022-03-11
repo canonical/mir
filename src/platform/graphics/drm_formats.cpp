@@ -464,46 +464,46 @@ constexpr auto info_for_format(uint32_t fourcc_format) -> mg::DRMFormat::FormatI
 }
 
 mg::DRMFormat::DRMFormat(uint32_t fourcc_format)
-    : info{info_for_format(fourcc_format)}
+    : info{&info_for_format(fourcc_format)}
 {
 }
 
 auto mg::DRMFormat::name() const -> const char*
 {
-    return drm_format_to_string(info.format);
+    return drm_format_to_string(info->format);
 }
 
 auto mg::DRMFormat::opaque_equivalent() const -> const std::optional<DRMFormat>
 {
-    if (info.opaque_equivalent != DRM_FORMAT_INVALID)
+    if (info->opaque_equivalent != DRM_FORMAT_INVALID)
     {
-        return DRMFormat{info.opaque_equivalent};
+        return DRMFormat{info->opaque_equivalent};
     }
     return {};
 }
 
 auto mg::DRMFormat::alpha_equivalent() const -> const std::optional<DRMFormat>
 {
-    if (info.alpha_equivalent != DRM_FORMAT_INVALID)
+    if (info->alpha_equivalent != DRM_FORMAT_INVALID)
     {
-        return DRMFormat{info.alpha_equivalent};
+        return DRMFormat{info->alpha_equivalent};
     }
     return {};
 }
 
 bool mg::DRMFormat::has_alpha() const
 {
-    return info.has_alpha;
+    return info->has_alpha;
 }
 
 auto mg::DRMFormat::components() const -> std::optional<RGBComponentInfo> const&
 {
-    return info.components;
+    return info->components;
 }
 
 mg::DRMFormat::operator uint32_t() const
 {
-    return info.format;
+    return info->format;
 }
 
 auto mg::drm_modifier_to_string(uint64_t modifier) -> std::string
