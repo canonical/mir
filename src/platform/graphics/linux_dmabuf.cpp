@@ -18,6 +18,7 @@
 
 
 #include "mir/graphics/linux_dmabuf.h"
+#include "mir/graphics/drm_formats.h"
 
 
 #include "wayland_wrapper.h"
@@ -48,149 +49,6 @@ namespace mg = mir::graphics;
 namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 
-namespace
-{
-constexpr auto drm_format_to_string(uint32_t format) -> char const*
-{
-#define STRINGIFY(val) \
-    case val:          \
-        return #val;
-
-    if (!(format & DRM_FORMAT_BIG_ENDIAN))
-    {
-        switch (format)
-        {
-#include "drm-formats"
-            default:
-                return "Unknown DRM format; rebuild Mir against newer DRM headers?";
-        }
-
-    }
-#undef STRINGIFY
-
-#define STRINGIFY_BIG_ENDIAN(val) \
-    case val:                    \
-        return #val " (big endian)";
-
-    switch (format & (~DRM_FORMAT_BIG_ENDIAN))
-    {
-#include "drm-formats-big-endian"
-        default:
-            return "Unknown DRM format; rebuild Mir against newer DRM headers?";
-    }
-#undef STRINGIFY_BIGENDIAN
-}
-
-constexpr auto drm_modifier_to_string(uint64_t modifier) -> char const*
-{
-#define STRINGIFY(val) \
-    case val:          \
-        return #val;
-
-    switch (modifier)
-    {
-#ifdef DRM_FORMAT_MOD_INVALID
-        STRINGIFY(DRM_FORMAT_MOD_INVALID)
-#endif
-#ifdef DRM_FORMAT_MOD_LINEAR
-        STRINGIFY(DRM_FORMAT_MOD_LINEAR)
-#endif
-#ifdef I915_FORMAT_MOD_X_TILED
-        STRINGIFY(I915_FORMAT_MOD_X_TILED)
-#endif
-#ifdef I915_FORMAT_MOD_Y_TILED
-        STRINGIFY(I915_FORMAT_MOD_Y_TILED)
-#endif
-#ifdef I915_FORMAT_MOD_Yf_TILED
-        STRINGIFY(I915_FORMAT_MOD_Yf_TILED)
-#endif
-#ifdef I915_FORMAT_MOD_Y_TILED_CCS
-        STRINGIFY(I915_FORMAT_MOD_Y_TILED_CCS)
-#endif
-#ifdef I915_FORMAT_MOD_Yf_TILED_CCS
-        STRINGIFY(I915_FORMAT_MOD_Yf_TILED_CCS)
-#endif
-#ifdef I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS
-        STRINGIFY(I915_FORMAT_MOD_Y_TILED_GEN12_RC_CCS)
-#endif
-#ifdef I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS
-        STRINGIFY(I915_FORMAT_MOD_Y_TILED_GEN12_MC_CCS)
-#endif
-#ifdef DRM_FORMAT_MOD_SAMSUNG_64_32_TILE
-        STRINGIFY(DRM_FORMAT_MOD_SAMSUNG_64_32_TILE)
-#endif
-#ifdef DRM_FORMAT_MOD_SAMSUNG_16_16_TILE
-        STRINGIFY(DRM_FORMAT_MOD_SAMSUNG_16_16_TILE)
-#endif
-#ifdef DRM_FORMAT_MOD_QCOM_COMPRESSED
-        STRINGIFY(DRM_FORMAT_MOD_QCOM_COMPRESSED)
-#endif
-#ifdef DRM_FORMAT_MOD_VIVANTE_TILED
-        STRINGIFY(DRM_FORMAT_MOD_VIVANTE_TILED)
-#endif
-#ifdef DRM_FORMAT_MOD_VIVANTE_SUPER_TILED
-        STRINGIFY(DRM_FORMAT_MOD_VIVANTE_SUPER_TILED)
-#endif
-#ifdef DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED
-        STRINGIFY(DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED)
-#endif
-#ifdef DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED
-        STRINGIFY(DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED)
-#endif
-#ifdef DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED
-        STRINGIFY(DRM_FORMAT_MOD_NVIDIA_TEGRA_TILED)
-#endif
-#ifdef DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB
-        STRINGIFY(DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_ONE_GOB)
-#endif
-#ifdef DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB
-        STRINGIFY(DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_TWO_GOB)
-#endif
-#ifdef DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_FOUR_GOB
-        STRINGIFY(DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_FOUR_GOB)
-#endif
-#ifdef DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB
-        STRINGIFY(DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_EIGHT_GOB)
-#endif
-#ifdef DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB
-        STRINGIFY(DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_SIXTEEN_GOB)
-#endif
-#ifdef DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB
-        STRINGIFY(DRM_FORMAT_MOD_NVIDIA_16BX2_BLOCK_THIRTYTWO_GOB)
-#endif
-#ifdef DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED
-        STRINGIFY(DRM_FORMAT_MOD_BROADCOM_VC4_T_TILED)
-#endif
-#ifdef DRM_FORMAT_MOD_BROADCOM_SAND32
-        STRINGIFY(DRM_FORMAT_MOD_BROADCOM_SAND32)
-#endif
-#ifdef DRM_FORMAT_MOD_BROADCOM_SAND64
-        STRINGIFY(DRM_FORMAT_MOD_BROADCOM_SAND64)
-#endif
-#ifdef DRM_FORMAT_MOD_BROADCOM_SAND128
-        STRINGIFY(DRM_FORMAT_MOD_BROADCOM_SAND128)
-#endif
-#ifdef DRM_FORMAT_MOD_BROADCOM_SAND256
-        STRINGIFY(DRM_FORMAT_MOD_BROADCOM_SAND256)
-#endif
-#ifdef DRM_FORMAT_MOD_BROADCOM_UIF
-        STRINGIFY(DRM_FORMAT_MOD_BROADCOM_UIF)
-#endif
-#ifdef DRM_FORMAT_MOD_ARM_16X16_BLOCK_U_INTERLEAVED
-        STRINGIFY(DRM_FORMAT_MOD_ARM_16X16_BLOCK_U_INTERLEAVED)
-#endif
-#ifdef DRM_FORMAT_MOD_ALLWINNER_TILED
-        STRINGIFY(DRM_FORMAT_MOD_ALLWINNER_TILED)
-#endif
-
-        default:
-            return "(unknown)";
-    }
-
-#undef STRINGIFY
-}
-
-}
 
 class mg::DmaBufFormatDescriptors
 {
@@ -384,7 +242,7 @@ public:
         wl_resource* wl_buffer,
         int32_t width,
         int32_t height,
-        uint32_t format,
+        mg::DRMFormat format,
         uint32_t flags,
         uint64_t modifier,
         std::vector<PlaneInfo> plane_params)
@@ -518,7 +376,7 @@ private:
     std::shared_ptr<mg::EGLExtensions> const egl_extensions;
     BufferGLDescription const& desc;
     int32_t const width, height;
-    uint32_t const format_;
+    mg::DRMFormat const format_;
     uint32_t const flags;
     uint64_t const modifier_;
     std::vector<PlaneInfo> const planes_;
@@ -712,7 +570,7 @@ private:
         }
     }
 
-    BufferGLDescription const& descriptor_for_format_and_modifiers(uint32_t format)
+    BufferGLDescription const& descriptor_for_format_and_modifiers(mg::DRMFormat format)
     {
         /* The optional<uint64_t> modifier is guaranteed to be engaged here,
          * as the add() call fills it if it is unset, and validate_and_count_planes()
@@ -757,9 +615,9 @@ private:
                 resource,
                 Error::invalid_format,
                 "Client requested unsupported format/modifier combination %s/%s (%u/%u,%u)",
-                drm_format_to_string(format),
-                drm_modifier_to_string(requested_modifier),
-                format,
+                format.name(),
+                mg::drm_modifier_to_string(requested_modifier).c_str(),
+                static_cast<uint32_t>(format),
                 static_cast<uint32_t>(requested_modifier >> 32),
                 static_cast<uint32_t>(requested_modifier & 0xFFFFFFFF)}));
     }
@@ -778,14 +636,16 @@ private:
             }
 
             auto const last_valid_plane = validate_and_count_planes();
+
+            mg::DRMFormat const drm_format{format};
             new WlDmaBufBuffer{
                 dpy,
                 egl_extensions,
-                descriptor_for_format_and_modifiers(format),
+                descriptor_for_format_and_modifiers(drm_format),
                 buffer_resource,
                 width,
                 height,
-                format,
+                drm_format,
                 flags,
                 modifier.value(),
                 {planes.cbegin(), last_valid_plane}};
@@ -820,14 +680,15 @@ private:
         {
             auto const last_valid_plane = validate_and_count_planes();
 
+            mg::DRMFormat const drm_format{format};
             new WlDmaBufBuffer{
                 dpy,
                 egl_extensions,
-                descriptor_for_format_and_modifiers(format),
+                descriptor_for_format_and_modifiers(drm_format),
                 buffer_id,
                 width,
                 height,
-                format,
+                drm_format,
                 flags,
                 modifier.value(),
                 {planes.cbegin(), last_valid_plane}};
