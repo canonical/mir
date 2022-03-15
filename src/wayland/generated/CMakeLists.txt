@@ -44,6 +44,7 @@ GENERATE_PROTOCOL("zwp_" "virtual-keyboard-unstable-v1")
 GENERATE_PROTOCOL("zwp_" "text-input-unstable-v3")
 GENERATE_PROTOCOL("zwp_" "text-input-unstable-v2")
 GENERATE_PROTOCOL("zwp_" "input-method-unstable-v2")
+GENERATE_PROTOCOL("zwp_" "idle-inhibit-unstable-v1")
 
 add_custom_target(refresh-wayland-wrapper
     DEPENDS ${GENERATED_FILES}
