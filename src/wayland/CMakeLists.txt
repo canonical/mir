@@ -3,12 +3,6 @@ set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirwayland")
 
 add_subdirectory(generator/)
-add_subdirectory(protocol/)
-
-set_property(SOURCE
-    ${GENERATED_FILES}
-    PROPERTY GENERATED 1
-)
 
 set(STANDARD_SOURCES
   wayland_base.cpp
@@ -19,7 +13,18 @@ add_library(mirwayland SHARED
     ${STANDARD_SOURCES}
 )
 
-add_dependencies(mirwayland refresh-wayland-wrapper)
+mir_generate_protocol_wrapper(mirwayland "wl_"   protocol/wayland.xml)
+mir_generate_protocol_wrapper(mirwayland "z"     protocol/xdg-shell-unstable-v6.xml)
+mir_generate_protocol_wrapper(mirwayland ""      protocol/xdg-shell.xml)
+mir_generate_protocol_wrapper(mirwayland "z"     protocol/xdg-output-unstable-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "zwlr_" protocol/wlr-layer-shell-unstable-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "zwlr_" protocol/wlr-foreign-toplevel-management-unstable-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/pointer-constraints-unstable-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/relative-pointer-unstable-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/virtual-keyboard-unstable-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/text-input-unstable-v3.xml)
+mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/text-input-unstable-v2.xml)
+mir_generate_protocol_wrapper(mirwayland "zwp_"  protocol/input-method-unstable-v2.xml)
 
 target_link_libraries(mirwayland
   PUBLIC

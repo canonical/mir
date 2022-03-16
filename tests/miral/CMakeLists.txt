@@ -64,13 +64,6 @@ target_link_libraries(miral-test-internal
     ${GMOCK_LIBRARIES}
 )
 
-add_subdirectory(protocol/)
-
-set_property(SOURCE
-    ${GENERATED_FILES}
-    PROPERTY GENERATED 1
-)
-
 mir_add_wrapped_executable(miral-test NOINSTALL
     external_client.cpp
     runner.cpp
@@ -81,7 +74,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     ${GENERATED_FILES}
 )
 
-add_dependencies(miral-test refresh-test-wayland-wrapper)
+mir_generate_protocol_wrapper(miral-test "org_kde_kwin_" protocol/server-decoration.xml)
 
 set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/protocol/")
 
