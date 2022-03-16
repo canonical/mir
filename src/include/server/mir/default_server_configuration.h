@@ -115,6 +115,7 @@ class InputReport;
 class SeatObserver;
 class Scene;
 class InputManager;
+class KeyboardObserver;
 class SurfaceInputDispatcher;
 class InputDeviceRegistry;
 class InputDeviceHub;
@@ -179,6 +180,8 @@ public:
     std::shared_ptr<cookie::Authority>      the_cookie_authority() override;
     std::shared_ptr<scene::Clipboard>       the_clipboard() override;
     std::shared_ptr<scene::TextInputHub>    the_text_input_hub() override;
+    std::shared_ptr<scene::IdleHub>         the_idle_hub() override;
+    std::shared_ptr<shell::IdleHandler>     the_idle_handler() override;
     std::function<void()>                   the_stop_callback() override;
     void add_wayland_extension(
         std::string const& name,
@@ -308,6 +311,7 @@ public:
     virtual std::shared_ptr<input::EventFilterChainDispatcher> the_event_filter_chain_dispatcher();
 
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
+    virtual std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> the_keyboard_observer_registrar();
     virtual std::shared_ptr<input::Scene>  the_input_scene();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
@@ -391,6 +395,8 @@ protected:
     CachedPtr<scene::SessionListener> session_listener;
     CachedPtr<scene::Clipboard>         clipboard;
     CachedPtr<scene::TextInputHub>      text_input_hub;
+    CachedPtr<scene::IdleHub>           idle_hub;
+    CachedPtr<shell::IdleHandler>       idle_handler;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;

@@ -35,6 +35,7 @@
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
+namespace mw = mir::wayland;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
@@ -77,6 +78,7 @@ struct Surface : testing::Test
         
         surface = std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
+            mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
@@ -272,6 +274,7 @@ TEST_F(Surface, preferred_orientation_mode_defaults_to_any)
 
     ms::BasicSurface surf(
         nullptr /* session */,
+        {} /* wayland_surface */,
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,

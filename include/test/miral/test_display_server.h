@@ -38,6 +38,7 @@ class WindowManagementPolicy;
 class TestRuntimeEnvironment
 {
 public:
+    TestRuntimeEnvironment();
     void add_to_environment(char const* key, char const* value);
 
 private:

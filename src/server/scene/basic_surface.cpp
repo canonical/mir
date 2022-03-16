@@ -44,6 +44,7 @@ namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mf = mir::frontend;
+namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
 
@@ -244,6 +245,7 @@ auto weak(std::shared_ptr<ms::SurfaceObservers>& observers) -> std::weak_ptr<ms:
 
 ms::BasicSurface::BasicSurface(
     std::shared_ptr<Session> const& session,
+    mw::Weak<frontend::WlSurface> wayland_surface,
     std::string const& name,
     geometry::Rectangle rect,
     std::weak_ptr<Surface> const& parent,
@@ -262,6 +264,7 @@ ms::BasicSurface::BasicSurface(
     cursor_image_(cursor_image),
     report(report),
     parent_(parent),
+    wayland_surface_{wayland_surface},
     layers(layers),
     confine_pointer_state_(state),
     cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)},
@@ -282,14 +285,23 @@ ms::BasicSurface::BasicSurface(
 
 ms::BasicSurface::BasicSurface(
     std::shared_ptr<Session> const& session,
+    mw::Weak<frontend::WlSurface> wayland_surface,
     std::string const& name,
     geometry::Rectangle rect,
     MirPointerConfinementState state,
     std::list<StreamInfo> const& layers,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
-    BasicSurface(session, name, rect, std::shared_ptr<Surface>{nullptr}, state, layers,
-                 cursor_image, report)
+    BasicSurface(
+        session,
+        wayland_surface,
+        name,
+        rect,
+        std::shared_ptr<Surface>{nullptr},
+        state,
+        layers,
+        cursor_image,
+        report)
 {
 }
 
@@ -709,6 +721,11 @@ void ms::BasicSurface::set_cursor_stream(std::shared_ptr<mf::BufferStream> const
                                          geom::Displacement const& hotspot)
 {
     cursor_stream_adapter->update(stream, hotspot);
+}
+
+auto ms::BasicSurface::wayland_surface() -> mw::Weak<mf::WlSurface> const&
+{
+    return wayland_surface_;
 }
 
 void ms::BasicSurface::request_client_surface_close()

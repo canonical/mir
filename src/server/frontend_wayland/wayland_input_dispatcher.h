@@ -50,7 +50,6 @@ public:
         WlSurface* wl_surface);
     ~WaylandInputDispatcher() = default;
 
-    void set_focus(bool has_focus);
     void handle_event(MirInputEvent const* event);
 
     auto latest_timestamp() const -> std::chrono::nanoseconds { return timestamp; }

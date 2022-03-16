@@ -27,11 +27,15 @@
 
 namespace mir
 {
+class Executor;
+template<typename T>
+class ObserverRegistrar;
 namespace input
 {
 class InputDeviceHub;
 class Seat;
 class Keymap;
+class KeyboardObserver;
 }
 namespace time
 {
@@ -51,8 +55,10 @@ class WlSeat : public wayland::Seat::Global
 public:
     WlSeat(
         wl_display* display,
+        Executor& wayland_executor,
         std::shared_ptr<time::Clock> const& clock,
         std::shared_ptr<mir::input::InputDeviceHub> const& input_hub,
+        std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
         std::shared_ptr<mir::input::Seat> const& seat,
         bool enable_key_repeat);
 
@@ -82,7 +88,6 @@ public:
     /// Adds the listener for future use, and makes a call into it to inform of initial state
     void add_focus_listener(wl_client* client, FocusListener* listener);
     void remove_focus_listener(wl_client* client, FocusListener* listener);
-    void notify_focus(WlSurface& surface, bool has_focus);
 
 private:
     void set_focus_to(WlSurface* surface);
@@ -96,9 +101,12 @@ private:
 
     class ConfigObserver;
     class Instance;
+    class KeyboardObserver;
 
     std::shared_ptr<mir::input::Keymap> keymap;
     std::shared_ptr<ConfigObserver> const config_observer;
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const keyboard_observer_registrar;
+    std::shared_ptr<KeyboardObserver> const keyboard_observer;
 
     // listener list are shared pointers so devices can keep them around long enough to remove themselves
     std::shared_ptr<ListenerList<FocusListener>> const focus_listeners;

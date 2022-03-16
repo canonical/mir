@@ -23,9 +23,8 @@
 #include "mir/basic_observers.h"
 #include "mir/proof_of_mutex_lock.h"
 #include "mir/scene/surface_observers.h"
-
+#include "mir/wayland/wayland_base.h"
 #include "mir/geometry/rectangle.h"
-
 #include "mir_toolkit/common.h"
 
 #include <glm/glm.hpp>
@@ -60,6 +59,7 @@ class BasicSurface : public Surface
 public:
     BasicSurface(
         std::shared_ptr<Session> const& session,
+        wayland::Weak<frontend::WlSurface> wayland_surface,
         std::string const& name,
         geometry::Rectangle rect,
         MirPointerConfinementState state,
@@ -69,6 +69,7 @@ public:
 
     BasicSurface(
         std::shared_ptr<Session> const& session,
+        wayland::Weak<frontend::WlSurface> wayland_surface,
         std::string const& name,
         geometry::Rectangle rect,
         std::weak_ptr<Surface> const& parent,
@@ -128,6 +129,8 @@ public:
                            geometry::Displacement const& hotspot) override;
     void set_cursor_from_buffer(std::shared_ptr<graphics::Buffer> buffer,
                                 geometry::Displacement const& hotspot);
+
+    auto wayland_surface() -> wayland::Weak<frontend::WlSurface> const& override;
 
     void request_client_surface_close() override;
 
@@ -192,6 +195,7 @@ private:
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
+    wayland::Weak<frontend::WlSurface> const wayland_surface_;
 
     std::list<StreamInfo> layers;
     // Surface attributes:

@@ -33,6 +33,7 @@
 #include "surface_input_dispatcher.h"
 #include "basic_seat.h"
 #include "seat_observer_multiplexer.h"
+#include "idle_poking_dispatcher.h"
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_probe.h"
@@ -51,7 +52,6 @@
 #include "mir/shared_library.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/console_services.h"
-#include "mir/log.h"
 
 #include "mir_toolkit/cursors.h"
 
@@ -117,6 +117,12 @@ mir::DefaultServerConfiguration::the_input_targeter()
         });
 }
 
+std::shared_ptr<mir::ObserverRegistrar<mi::KeyboardObserver>>
+mir::DefaultServerConfiguration::the_keyboard_observer_registrar()
+{
+    return the_surface_input_dispatcher();
+}
+
 std::shared_ptr<mi::SurfaceInputDispatcher>
 mir::DefaultServerConfiguration::the_surface_input_dispatcher()
 {
@@ -140,8 +146,12 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
             // lp:1675357: Disable generation of key repeat events on nested servers
             auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
 
+            auto const idle_poking_dispatcher = std::make_shared<mi::IdlePokingDispatcher>(
+                the_event_filter_chain_dispatcher(),
+                the_idle_hub());
+
             auto const keyboard_resync_dispatcher =
-                std::make_shared<mi::KeyboardResyncDispatcher>(the_event_filter_chain_dispatcher());
+                std::make_shared<mi::KeyboardResyncDispatcher>(idle_poking_dispatcher);
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
                 keyboard_resync_dispatcher, the_main_loop(), the_cookie_authority(),

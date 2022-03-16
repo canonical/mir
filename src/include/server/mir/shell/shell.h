@@ -30,7 +30,16 @@
 
 namespace mir
 {
-namespace frontend { class EventSink; }
+namespace wayland
+{
+template<typename>
+class Weak;
+}
+namespace frontend
+{
+class WlSurface;
+class EventSink;
+}
 namespace geometry { struct Rectangle; }
 namespace scene
 {
@@ -76,6 +85,7 @@ public:
 
     virtual auto create_surface(
         std::shared_ptr<scene::Session> const& session,
+        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<scene::Surface> = 0;
 

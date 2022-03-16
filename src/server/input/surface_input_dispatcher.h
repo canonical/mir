@@ -20,8 +20,12 @@
 #define MIR_INPUT_DEFAULT_INPUT_DISPATCHER_H_
 
 #include "mir/input/input_dispatcher.h"
+#include "mir/input/keyboard_observer.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/geometry/point.h"
+#include "mir/observer_registrar.h"
+#include "mir/observer_multiplexer.h"
+#include "mir/linearising_executor.h"
 
 #include <memory>
 #include <mutex>
@@ -40,7 +44,10 @@ namespace input
 class Surface;
 class Scene;
 
-class SurfaceInputDispatcher : public mir::input::InputDispatcher, public shell::InputTargeter
+class SurfaceInputDispatcher :
+    public input::InputDispatcher,
+    public shell::InputTargeter,
+    public ObserverRegistrar<KeyboardObserver>
 {
 public:
     SurfaceInputDispatcher(std::shared_ptr<input::Scene> const& scene);
@@ -58,9 +65,16 @@ public:
     void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) override;
     void clear_drag_and_drop_handle() override;
 
+    // ObserverRegistrar
+    void register_interest(std::weak_ptr<KeyboardObserver> const& observer) override;
+    void register_interest(
+        std::weak_ptr<KeyboardObserver> const& observer,
+        Executor& executor) override;
+    void unregister_interest(KeyboardObserver const& observer) override;
+
 private:
     void device_reset(MirInputDeviceId reset_device_id, std::chrono::nanoseconds when);
-    bool dispatch_key(MirEvent const* kev);
+    bool dispatch_key(std::shared_ptr<MirEvent const> const& ev);
     bool dispatch_pointer(MirInputDeviceId id, std::shared_ptr<MirEvent const> const& ev);
     bool dispatch_touch(MirInputDeviceId id, MirEvent const* tev);
 
@@ -92,6 +106,24 @@ private:
     std::unordered_map<MirInputDeviceId, TouchInputState> touch_state_by_id;
     TouchInputState& ensure_touch_state(MirInputDeviceId id);
     
+    struct KeyboardEventMultiplexer : ObserverMultiplexer<KeyboardObserver>
+    {
+        KeyboardEventMultiplexer()
+            : ObserverMultiplexer{linearising_executor}
+        {
+        }
+
+        void keyboard_event(std::shared_ptr<MirEvent const> const& event) override
+        {
+            for_each_observer(&KeyboardObserver::keyboard_event, event);
+        }
+
+        void keyboard_focus_set(std::shared_ptr<Surface> const& surface) override
+        {
+            for_each_observer(&KeyboardObserver::keyboard_focus_set, surface);
+        }
+    } keyboard_multiplexer;
+
     std::shared_ptr<input::Scene> const scene;
 
     std::shared_ptr<scene::Observer> scene_observer;

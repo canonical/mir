@@ -121,6 +121,43 @@ private:
     std::queue<std::function<void()>> work_pending;
 };
 
+class CountingExecutor : public mir::Executor
+{
+public:
+    void spawn(std::function<void()>&& work) override
+    {
+        std::lock_guard<decltype(work_mutex)> lock{work_mutex};
+        ++spawn_count;
+        work_queue.emplace(std::move(work));
+    }
+
+    void do_work()
+    {
+        std::unique_lock<decltype(work_mutex)> lock{work_mutex};
+        while (!work_queue.empty())
+        {
+            auto work = work_queue.front();
+            work_queue.pop();
+            lock.unlock();
+
+            work();
+
+            lock.lock();
+        }
+    }
+
+    int work_spawned()
+    {
+        std::lock_guard<decltype(work_mutex)> lock{work_mutex};
+        return spawn_count;
+    }
+private:
+    int spawn_count{0};
+
+    std::mutex work_mutex;
+    std::queue<std::function<void()>> work_queue;
+};
+
 class ImmediateExecutor : public mir::Executor
 {
 public:
@@ -141,6 +178,11 @@ public:
     void observation_made(std::string const& arg) override
     {
         for_each_observer(&TestObserver::observation_made, arg);
+    }
+
+    void single_observer_observation(TestObserver const& observer, std::string const& arg)
+    {
+        for_single_observer(observer, &TestObserver::observation_made, arg);
     }
 
     void multi_argument_observation(std::string const& arg, int another_one, float third) override
@@ -592,43 +634,7 @@ TEST(ObserverMultiplexer, observations_can_be_delegated_to_specified_executor)
 {
     using namespace testing;
 
-    class CountingExecutor : public mir::Executor
-    {
-    public:
-        void spawn(std::function<void()>&& work) override
-        {
-            std::lock_guard<decltype(work_mutex)> lock{work_mutex};
-            ++spawn_count;
-            work_queue.emplace(std::move(work));
-        }
-
-        void do_work()
-        {
-            std::unique_lock<decltype(work_mutex)> lock{work_mutex};
-            while (!work_queue.empty())
-            {
-                auto work = work_queue.front();
-                work_queue.pop();
-                lock.unlock();
-
-                work();
-
-                lock.lock();
-            }
-        }
-
-        int work_spawned()
-        {
-            std::lock_guard<decltype(work_mutex)> lock{work_mutex};
-            return spawn_count;
-        }
-    private:
-        int spawn_count{0};
-
-        std::mutex work_mutex;
-        std::queue<std::function<void()>> work_queue;
-    } counting_executor;
-
+    CountingExecutor counting_executor;
     ThreadedExecutor executor;
     TestObserverMultiplexer multiplexer{executor};
 
@@ -734,4 +740,95 @@ TEST(ObserverMultiplexer, unregister_interest_prevents_dispatch_of_already_queue
     executor.execute();
 
     EXPECT_THAT(call_count, Eq(1));
+}
+
+TEST(ObserverMultiplexer, reports_if_empty)
+{
+    using namespace testing;
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
+    auto observer_one = std::make_shared<NiceMock<MockObserver>>();
+    auto observer_two = std::make_shared<NiceMock<MockObserver>>();
+
+    EXPECT_THAT(multiplexer.empty(), Eq(true));
+    multiplexer.register_interest(observer_one);
+    EXPECT_THAT(multiplexer.empty(), Eq(false));
+    multiplexer.register_interest(observer_two);
+    EXPECT_THAT(multiplexer.empty(), Eq(false));
+    multiplexer.unregister_interest(*observer_one);
+    EXPECT_THAT(multiplexer.empty(), Eq(false));
+    multiplexer.unregister_interest(*observer_two);
+    EXPECT_THAT(multiplexer.empty(), Eq(true));
+
+    executor.drain_work();
+}
+
+TEST(ObserverMultiplexer, can_send_observation_to_single_observer)
+{
+    using namespace testing;
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+    auto observer_one = std::make_shared<StrictMock<MockObserver>>();
+    auto observer_two = std::make_shared<StrictMock<MockObserver>>();
+
+    multiplexer.register_interest(observer_one);
+    executor.drain_work();
+
+    EXPECT_CALL(*observer_one, observation_made("one!"));
+    multiplexer.single_observer_observation(*observer_one, "one!");
+    executor.drain_work();
+
+    multiplexer.register_interest(observer_two);
+    EXPECT_CALL(*observer_two, observation_made("two!"));
+    multiplexer.single_observer_observation(*observer_two, "two!");
+    executor.drain_work();
+
+    EXPECT_CALL(*observer_one, observation_made("one!"));
+    multiplexer.single_observer_observation(*observer_one, "one!");
+    executor.drain_work();
+}
+
+TEST(ObserverMultiplexer, single_observer_observation_can_be_delegated_to_specified_executor)
+{
+    using namespace testing;
+
+    ThreadedExecutor executor;
+    CountingExecutor counting_executor;
+    TestObserverMultiplexer multiplexer{executor};
+
+    auto observer_one = std::make_shared<NiceMock<MockObserver>>();
+    auto observer_two = std::make_shared<NiceMock<MockObserver>>();
+
+    multiplexer.register_interest(observer_one);
+    multiplexer.register_interest(observer_two, counting_executor);
+
+    EXPECT_THAT(counting_executor.work_spawned(), Eq(0));
+
+    multiplexer.single_observer_observation(*observer_one, "Hello one!");
+
+    EXPECT_THAT(counting_executor.work_spawned(), Eq(0));
+
+    multiplexer.single_observer_observation(*observer_two, "Hello two!");
+
+    EXPECT_THAT(counting_executor.work_spawned(), Eq(1));
+
+    counting_executor.do_work();
+    executor.drain_work();
+}
+
+TEST(ObserverMultiplexer, sending_to_single_observer_does_nothing_if_executor_deleted)
+{
+    using namespace testing;
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+    auto observer_one = std::make_shared<StrictMock<MockObserver>>();
+    auto observer_two = std::make_shared<StrictMock<MockObserver>>();
+
+    multiplexer.register_interest(observer_one);
+    multiplexer.register_interest(observer_two);
+
+    multiplexer.unregister_interest(*observer_one);
+    executor.drain_work();
+    multiplexer.single_observer_observation(*observer_one, "one!");
 }

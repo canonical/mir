@@ -31,6 +31,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/input/cursor_images.h"
+#include "mir/wayland/wayland_base.h"
 #include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
@@ -292,7 +293,7 @@ auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surf
             mg::BufferUsage::software}),
         {},
         {}}};
-    return shell->create_surface(session, params, nullptr);
+    return shell->create_surface(session, {}, params, nullptr);
 }
 
 void msd::BasicDecoration::update(

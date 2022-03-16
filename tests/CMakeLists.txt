@@ -74,6 +74,7 @@ check_cxx_compiler_flag(-Winconsistent-missing-override HAS_W_INCONSISTENT_MISSI
 check_cxx_compiler_flag(-Wgnu-zero-variadic-macro-arguments HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
 check_cxx_compiler_flag(-Wno-sign-compare HAS_W_GNU_SIGN_COMPARE)
 check_cxx_compiler_flag(-Wmaybe-uninitialized HAS_W_MAYBE_UNINITIALIZED)
+check_cxx_compiler_flag(-Winfinite-recursion HAS_W_INFINITE_RECURSION)
 
 if (HAS_W_NULL_DEREFERENCE)
   # Avoid clang complaints about poor quality gmock/gtest headers
@@ -105,6 +106,11 @@ endif()
 if (HAS_W_MAYBE_UNINITIALIZED)
   # Avoid g++ complaints about gmock/gtest headers
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized")
+endif()
+if (HAS_W_INFINITE_RECURSION)
+  # g++-12 doesn't notice that Abort() is going to call a [[noreturn]] function
+  # before Invalid<T>() tries to return itself.
+  add_compile_options(-Wno-error=infinite-recursion)
 endif()
 
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")

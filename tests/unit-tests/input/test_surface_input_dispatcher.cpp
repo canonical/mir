@@ -27,6 +27,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_input_scene.h"
 #include "mir/test/doubles/mock_surface.h"
+#include "mir/test/doubles/explicit_executor.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -70,7 +71,7 @@ struct StubInputScene : public mtd::StubInputScene
 {
     std::shared_ptr<mtd::MockSurface> add_surface(geom::Rectangle const& geometry)
     {
-        auto surface = std::make_shared<MockSurfaceWithGeometry>(geometry);
+        auto surface = std::make_shared<NiceMock<MockSurfaceWithGeometry>>(geometry);
         surfaces.add(surface);
 
         observer->surface_added(surface);
@@ -260,33 +261,75 @@ struct FakeToucher
     MirInputDeviceId const id;
 };
 
+struct MockKeyboardObserver: mi::KeyboardObserver
+{
+    MOCK_METHOD1(keyboard_event, void(std::shared_ptr<MirEvent const> const& event));
+    MOCK_METHOD1(keyboard_focus_set, void(std::shared_ptr<mi::Surface> const& surface));
+};
+
 }
 
-TEST_F(SurfaceInputDispatcher, key_event_delivered_to_focused_surface)
+TEST_F(SurfaceInputDispatcher, key_event_not_delivered_to_surface)
 {
     auto surface = scene.add_surface();
 
     FakeKeyboard keyboard;
     auto event = keyboard.press();
 
-    EXPECT_CALL(*surface, consume(mt::MirKeyboardEventMatches(event.get()))).Times(1);
-
-    dispatcher.start();
-
-    dispatcher.set_focus(surface);
-    EXPECT_TRUE(dispatcher.dispatch(std::move(event)));
-}
-
-TEST_F(SurfaceInputDispatcher, key_event_dropped_if_no_surface_focused)
-{
-    auto surface = scene.add_surface();
-    
     EXPECT_CALL(*surface, consume(_)).Times(0);
 
     dispatcher.start();
 
+    dispatcher.set_focus(surface);
+    dispatcher.dispatch(std::move(event));
+}
+
+TEST_F(SurfaceInputDispatcher, key_event_delivered_to_keyboard_observer)
+{
+    auto surface = scene.add_surface();
+    mtd::ExplicitExectutor executor;
+
     FakeKeyboard keyboard;
-    EXPECT_FALSE(dispatcher.dispatch(keyboard.press()));
+    auto event = keyboard.press();
+
+    auto const kb_observer = std::make_shared<MockKeyboardObserver>();
+    EXPECT_CALL(*kb_observer, keyboard_event(mt::MirKeyboardEventMatches(event.get())));
+
+    dispatcher.start();
+    dispatcher.register_interest(kb_observer, executor);
+    dispatcher.dispatch(std::move(event));
+    executor.execute();
+}
+
+TEST_F(SurfaceInputDispatcher, keyboard_focus_delivered_to_keyboard_observer)
+{
+    auto surface = scene.add_surface();
+    mtd::ExplicitExectutor executor;
+
+    auto const kb_observer = std::make_shared<MockKeyboardObserver>();
+    EXPECT_CALL(*kb_observer, keyboard_focus_set(Eq(surface)));
+
+    dispatcher.start();
+    dispatcher.register_interest(kb_observer, executor);
+    dispatcher.set_focus(surface);
+    executor.execute();
+}
+
+TEST_F(SurfaceInputDispatcher, keyboard_focus_clear_delivered_to_keyboard_observer)
+{
+    auto surface = scene.add_surface();
+    mtd::ExplicitExectutor executor;
+
+    auto const kb_observer = std::make_shared<NiceMock<MockKeyboardObserver>>();
+
+    dispatcher.start();
+    dispatcher.register_interest(kb_observer, executor);
+    dispatcher.set_focus(surface);
+    executor.execute();
+
+    EXPECT_CALL(*kb_observer, keyboard_focus_set(Eq(nullptr)));
+    dispatcher.set_focus(nullptr);
+    executor.execute();
 }
 
 TEST_F(SurfaceInputDispatcher, pointer_motion_delivered_to_client_under_pointer)

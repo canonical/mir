@@ -20,6 +20,8 @@
 #define MIR_TEST_DOUBLES_ADVANCEABLE_CLOCK_H_
 
 #include "mir/time/steady_clock.h"
+#include <functional>
+#include <list>
 #include <mutex>
 
 namespace mir
@@ -34,7 +36,7 @@ class AdvanceableClock : public mir::time::Clock
 public:
     mir::time::Timestamp now() const override
     {
-        std::lock_guard<std::mutex> lock{clock_mutex};
+        std::lock_guard<std::recursive_mutex> lock{mutex};
         return current_time;
     }
 
@@ -45,12 +47,12 @@ public:
 
     void advance_by(mir::time::Duration step)
     {
-        std::lock_guard<std::mutex> lock{clock_mutex};
+        std::lock_guard<std::recursive_mutex> lock{mutex};
         current_time += step;
     }
 
 private:
-    mutable std::mutex clock_mutex;
+    mutable std::recursive_mutex mutex;
     mir::time::Timestamp current_time{
         []
         {

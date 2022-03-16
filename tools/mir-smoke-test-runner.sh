@@ -17,6 +17,10 @@ echo "I: client_list=" ${client_list}
 # The CI environment sets this test-specific env var, mir_demo_server doesn't know it
 unset MIR_SERVER_LOGGING
 
+if [ -z "$XDG_RUNTIME_DIR" ]; then
+  export XDG_RUNTIME_DIR=/tmp
+fi
+
 # Start with eglinfo for the system
 echo Running eglinfo client
 date --utc --iso-8601=seconds | xargs echo "[timestamp] Start :" ${client}
@@ -25,12 +29,6 @@ WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-cli
 date --utc --iso-8601=seconds | xargs echo "[timestamp] End :" ${client}
 
 for client in ${client_list}; do
-  if [[ "$XAUTHORITY" =~ .*xvfb-run.* ]]; then
-    if [[ "${client}" = mir_demo_client_wayland_egl_spinner ]]; then
-      # Skipped because of https://github.com/MirServer/mir/issues/2154
-      continue
-    fi
-  fi
     echo running client ${client}
     date --utc --iso-8601=seconds | xargs echo "[timestamp] Start :" ${client}
     echo WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client ${root}/${client}

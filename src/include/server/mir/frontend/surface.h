@@ -35,10 +35,15 @@ namespace graphics
 class Buffer;
 class CursorImage;
 }
-
+namespace wayland
+{
+template<typename T>
+class Weak;
+}
 namespace frontend
 {
 class BufferStream;
+class WlSurface;
 
 class Surface
 {
@@ -58,6 +63,9 @@ public:
     virtual void set_cursor_stream(
         std::shared_ptr<frontend::BufferStream> const& image,
         geometry::Displacement const& hotspot) = 0;
+
+    /// Returned value is only safe to use on the Wayland thread
+    virtual auto wayland_surface() -> wayland::Weak<WlSurface> const& = 0;
 
 protected:
     Surface() = default;

@@ -37,8 +37,14 @@ namespace compositor
 {
 class BufferStream;
 }
+namespace wayland
+{
+template<typename>
+class Weak;
+}
 namespace frontend
 {
+class WlSurface;
 class EventSink;
 class Surface;
 class BufferStream;
@@ -90,6 +96,7 @@ public:
     /// \return a newly created surface
     virtual auto create_surface(
         std::shared_ptr<Session> const& session,
+        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         shell::SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<Surface> = 0;
     virtual void destroy_surface(std::shared_ptr<Surface> const& surface) = 0;

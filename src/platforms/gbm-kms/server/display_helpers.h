@@ -65,9 +65,6 @@ public:
     static std::unique_ptr<DRMHelper> open_any_render_node(
         std::shared_ptr<mir::udev::Context> const& udev);
 
-    void drop_master() const;
-    void set_master() const;
-
     mir::Fd fd;
 private:
     std::unique_ptr<Device> const device_handle;

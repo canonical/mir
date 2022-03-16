@@ -25,6 +25,7 @@
 #include "mir/frontend/connector.h"
 #include "mir/raii.h"
 #include "mir/emergency_cleanup.h"
+#include "mir/system_executor.h"
 
 #include <atomic>
 #include <mutex>
@@ -106,8 +107,11 @@ void mir::run_mir(
         [&]{ if (!concurrent_calls++) for (auto sig : intercepted) old_handler[sig] = signal(sig, fatal_signal_cleanup); },
         [&]{ if (!--concurrent_calls) for (auto sig : intercepted) signal(sig, old_handler[sig]); });
 
+    mir::SystemExecutor::set_unhandled_exception_handler(&terminate_with_current_exception);
+
     init(server);
     server.run();
 
+    mir::SystemExecutor::quiesce();
     check_for_termination_exception();
 }

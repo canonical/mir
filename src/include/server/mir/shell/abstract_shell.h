@@ -66,6 +66,7 @@ public:
 
     auto create_surface(
         std::shared_ptr<scene::Session> const& session,
+        wayland::Weak<frontend::WlSurface> const& wayland_surface,
         SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<scene::Surface> override;
 
@@ -170,12 +171,18 @@ private:
     std::weak_ptr<scene::Surface> focus_surface;
     std::weak_ptr<scene::Session> focus_session;
     std::vector<std::weak_ptr<scene::Surface>> notified_active_surfaces;
-    std::weak_ptr<scene::Surface> notified_focus_surface;
-    std::shared_ptr<scene::SurfaceObserver> focus_surface_observer;
+    std::weak_ptr<scene::Surface> last_requested_focus_surface;
+    std::weak_ptr<scene::Surface> notified_keyboard_focus_surface;
+    std::shared_ptr<scene::SurfaceObserver> const focus_surface_observer;
 
-    void notify_focus_locked(
+    void notify_active_surfaces(
+        std::unique_lock<std::mutex> const&,
+        std::shared_ptr<scene::Surface> const& new_keyboard_focus_surface,
+        std::vector<std::shared_ptr<scene::Surface>> new_active_surfaces);
+
+    void set_keyboard_focus_surface(
         std::unique_lock<std::mutex> const& lock,
-        std::shared_ptr<scene::Surface> const& focus_surface);
+        std::shared_ptr<scene::Surface> const& new_keyboard_focus_surface);
 
     void update_focus_locked(
         std::unique_lock<std::mutex> const& lock,

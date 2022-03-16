@@ -34,7 +34,20 @@ add_library(mirplatformgraphicscommon OBJECT
   linux_dmabuf.cpp
   ${DRM_FORMATS_FILE}
   ${DRM_FORMATS_BIG_ENDIAN_FILE}
+  drm_formats.cpp
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/drm_formats.h
 )
+
+if (DRM_VERSION VERSION_GREATER 2.4.107)
+  target_compile_definitions(
+    mirplatformgraphicscommon
+    PRIVATE
+      MIR_HAVE_DRM_GET_MODIFIER_NAME)
+  target_link_libraries(
+    mirplatformgraphicscommon
+    PUBLIC
+      ${DRM_LDFLAGS} ${DRM_LIBRARIES})
+endif()
 
 set(LINUX_DMABUF_PROTO "${CMAKE_CURRENT_SOURCE_DIR}/protocol/linux-dmabuf-unstable-v1.xml")
 set(WAYLAND_GENERATOR "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator")

@@ -129,6 +129,7 @@ struct StubShell : public shell::Shell
 
     auto create_surface(
         std::shared_ptr<scene::Session> const& /*session*/,
+        wayland::Weak<frontend::WlSurface> const& /*wayland_surface*/,
         shell::SurfaceSpecification const& /*params*/,
         std::shared_ptr<scene::SurfaceObserver> const& /*observer*/) -> std::shared_ptr<scene::Surface> override
     {

@@ -34,6 +34,7 @@
 #include "mir/graphics/transformation.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/renderer/gl/context.h"
+#include "mir/graphics/drm_formats.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>
@@ -445,16 +446,28 @@ void add_to_drm_device_group(
     }
 }
 
+auto get_equivalent_other_alphaness_format(mg::DRMFormat const format) -> std::optional<mg::DRMFormat>
+{
+    if (format.has_alpha())
+    {
+        return format.opaque_equivalent();
+    }
+    else
+    {
+        return format.alpha_equivalent();
+    }
+}
+
 auto make_surface_with_egl_context(
     geom::Size size,
-    uint32_t gbm_format,
+    mg::DRMFormat format,
     mgg::helpers::GBMHelper const& gbm,
     mg::GLConfig const& config,
     EGLContext shared_context,    
     bool cross_gpu)
      -> std::tuple<mgg::GBMSurfaceUPtr, mgg::helpers::EGLHelper>
 {
-    auto surface = gbm.create_scanout_surface(size.width.as_uint32_t(), size.height.as_uint32_t(), gbm_format, cross_gpu);
+    auto surface = gbm.create_scanout_surface(size.width.as_uint32_t(), size.height.as_uint32_t(), format, cross_gpu);
     auto raw_surface = surface.get();
 
     try
@@ -465,23 +478,34 @@ auto make_surface_with_egl_context(
                 config,
                 gbm,
                 raw_surface,
-                gbm_format,
+                format,
                 shared_context
         });
     }
     catch (mgg::helpers::EGLHelper::NoMatchingEGLConfig const&)
     {
-         // TODO: Make a generic "other-alphaness" helper
-        gbm_format = GBM_FORMAT_ARGB8888;
-        surface = gbm.create_scanout_surface(size.width.as_uint32_t(), size.height.as_uint32_t(), gbm_format, cross_gpu);
+        // If the format has an opaque/alpha equivalent, try that
+        auto equivalent_format = get_equivalent_other_alphaness_format(format);
+        if (!equivalent_format)
+        {
+            // No equivalent format to try, so bail
+            throw;
+        }
+
+        surface = gbm.create_scanout_surface(
+            size.width.as_uint32_t(),
+            size.height.as_uint32_t(),
+            *equivalent_format,
+            cross_gpu);
         raw_surface = surface.get();
         return std::make_tuple(
             std::move(surface),
+
             mgg::helpers::EGLHelper{
                 config,
                 gbm,
                 raw_surface,
-                gbm_format,
+                *equivalent_format,
                 shared_context
         });
     }
@@ -574,7 +598,7 @@ void mgg::Display::configure_locked(
                 {
                     // TODO: Pull this out of the configuration
                     // TODO: Actually query available formats!
-                    uint32_t gbm_format = GBM_FORMAT_XRGB8888;
+                    mg::DRMFormat format{GBM_FORMAT_XRGB8888};
                     /*
                      * In a hybrid setup a scanout surface needs to be allocated differently if it
                      * needs to be able to be shared across GPUs. This likely reduces performance.
@@ -584,7 +608,7 @@ void mgg::Display::configure_locked(
                      */
                     auto [surface, egl] = make_surface_with_egl_context(
                         current_mode_resolution,
-                        gbm_format,
+                        format,
                         *gbm,
                         *gl_config,
                         shared_egl.context(),

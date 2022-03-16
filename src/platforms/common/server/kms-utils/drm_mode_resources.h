@@ -57,10 +57,15 @@ template<typename DRMUPtr, DRMUPtr(*)(int, uint32_t)>
 class ObjectCollection
 {
 public:
-    class iterator :
-        public std::iterator<std::input_iterator_tag, DRMUPtr>
+    class iterator
     {
     public:
+        using iterator_category = std::input_iterator_tag;
+        using value_type = DRMUPtr;
+        using difference_type = ptrdiff_t;
+        using pointer = DRMUPtr*;
+        using reference = DRMUPtr&;
+
         iterator(iterator const& from);
         iterator& operator=(iterator const& rhs);
 

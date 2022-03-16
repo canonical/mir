@@ -29,6 +29,7 @@
 #include "mir/test/signal.h"
 #include "mir/test/auto_unblock_thread.h"
 #include "mir_test_framework/testing_server_configuration.h"
+#include "mir_test_framework/temporary_environment_value.h"
 #include "mir/test/doubles/mock_input_manager.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_compositor.h"
@@ -40,6 +41,7 @@
 #include <gmock/gmock.h>
 
 #include <atomic>
+#include <list>
 #include <thread>
 #include <chrono>
 
@@ -337,6 +339,11 @@ private:
 
 struct DisplayServerMainLoopEvents : testing::Test
 {
+    DisplayServerMainLoopEvents()
+    {
+        if (getenv("XDG_RUNTIME_DIR") == nullptr)
+            env.emplace_back("XDG_RUNTIME_DIR", "/tmp");
+    }
     void use_config_for_expectations(TestMainLoopServerConfig& server_config)
     {
         mock_compositor = server_config.the_mock_compositor();
@@ -382,6 +389,7 @@ struct DisplayServerMainLoopEvents : testing::Test
         EXPECT_CALL(*mock_compositor, start()).Times(1);
     }
 
+    std::list<mir_test_framework::TemporaryEnvironmentValue> env;
     std::shared_ptr<MockDisplay> mock_display;
     std::shared_ptr<mtd::MockCompositor> mock_compositor;
     std::shared_ptr<mtd::MockInputManager> mock_input_manager;

@@ -64,6 +64,7 @@ struct StubSurface : scene::Surface
     void set_cursor_image(std::shared_ptr<graphics::CursorImage> const&) override {}
     std::shared_ptr<graphics::CursorImage> cursor_image() const override { return nullptr; }
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) override {}
+    auto wayland_surface() -> wayland::Weak<frontend::WlSurface> const& override { abort(); }
     void request_client_surface_close() override {}
     std::shared_ptr<Surface> parent() const override { return nullptr; }
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) override {}

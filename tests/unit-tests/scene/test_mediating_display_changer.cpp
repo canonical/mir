@@ -21,6 +21,7 @@
 #include "mir/graphics/display_configuration_policy.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 #include "mir/server_action_queue.h"
+#include "mir/wayland/wayland_base.h"
 
 #include "mir/test/doubles/mock_display.h"
 #include "mir/test/doubles/mock_compositor.h"
@@ -141,6 +142,33 @@ TEST_F(MediatingDisplayChangerTest, returns_base_configuration_from_display_at_s
 
     auto const base_conf = changer->base_configuration();
     EXPECT_THAT(*base_conf, mt::DisplayConfigMatches(std::ref(*mock_display.configuration())));
+}
+
+TEST_F(MediatingDisplayChangerTest, power_mode_can_be_set)
+{
+    using namespace testing;
+
+    auto const expect_power_mode_eq = [&](MirPowerMode expected)
+        {
+            bool has_output = false;
+            mock_display.config->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+                {
+                    has_output = true;
+                    EXPECT_THAT(output.power_mode, Eq(expected));
+                });
+            EXPECT_THAT(has_output, Eq(true));
+        };
+
+    mock_display.config->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
+        {
+            output.used = true;
+        });
+    changer->set_power_mode(mir_power_mode_off);
+    expect_power_mode_eq(mir_power_mode_off);
+    changer->set_power_mode(mir_power_mode_standby);
+    expect_power_mode_eq(mir_power_mode_standby);
+    changer->set_power_mode(mir_power_mode_on);
+    expect_power_mode_eq(mir_power_mode_on);
 }
 
 TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuration_for_focused_session_would_invalidate_display_buffers)

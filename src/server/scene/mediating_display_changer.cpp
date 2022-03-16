@@ -143,7 +143,6 @@ struct ms::MediatingDisplayChanger::SessionObserver : ms::SessionEventSink
     ms::MediatingDisplayChanger* const self;
 };
 
-
 ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Compositor> const& compositor,
@@ -515,5 +514,24 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
             observer->base_configuration_updated(conf);
             send_config_to_all_sessions(conf);
         });
+}
+
+void ms::MediatingDisplayChanger::set_power_mode(MirPowerMode new_power_mode)
+{
+    std::lock_guard<std::mutex> lock{power_mode_mutex};
+    if (new_power_mode == power_mode)
+    {
+        return;
+    }
+    power_mode = new_power_mode;
+    std::shared_ptr<graphics::DisplayConfiguration> const config = display->configuration();
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (output.used)
+            {
+                output.power_mode = new_power_mode;
+            }
+        });
+    apply_config(config);
 }
 

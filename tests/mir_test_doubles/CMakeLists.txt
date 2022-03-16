@@ -16,7 +16,6 @@ set(
   TEST_UTILS_SRCS
 
   mock_input_device.cpp
-  mock_timer.cpp
   triggered_main_loop.cpp
   fake_alarm_factory.cpp
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_message_sender.h

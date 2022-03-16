@@ -44,6 +44,9 @@ std::chrono::seconds const timeout{20};
 
 mtf::AsyncServerRunner::AsyncServerRunner()
 {
+    if (getenv("XDG_RUNTIME_DIR") == nullptr)
+        add_to_environment("XDG_RUNTIME_DIR", "/tmp");
+
     unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing Wayland server
     configure_from_commandline(server);
 

@@ -30,6 +30,7 @@ ADD_LIBRARY(
   basic_clipboard.cpp
   surface_state_tracker.cpp
   basic_text_input_hub.cpp
+  basic_idle_hub.cpp
   ${CMAKE_SOURCE_DIR}/src/include/server/mir/scene/surface_observer.h
 )
 

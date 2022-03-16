@@ -46,6 +46,8 @@ namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mr = mir::report;
+namespace mf = mir::frontend;
+namespace mw = mir::wayland;
 
 namespace
 {
@@ -94,6 +96,7 @@ struct SurfaceStack : public ::testing::Test
 
         stub_surface1 = std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
+            mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
@@ -103,6 +106,7 @@ struct SurfaceStack : public ::testing::Test
 
         stub_surface2 = std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
+            mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
@@ -113,6 +117,7 @@ struct SurfaceStack : public ::testing::Test
         
         stub_surface3 = std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
+            mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
@@ -123,6 +128,7 @@ struct SurfaceStack : public ::testing::Test
         
         invisible_stub_surface = std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
+            mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
@@ -239,6 +245,7 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
 
     auto surface = std::make_shared<ms::BasicSurface>(
         nullptr /* session */,
+        mw::Weak<mf::WlSurface>{},
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
@@ -273,6 +280,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
     auto stream = std::make_shared<mtd::StubBufferStream>();
     auto surface = std::make_shared<ms::BasicSurface>(
         nullptr /* session */,
+        mw::Weak<mf::WlSurface>{},
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
@@ -306,6 +314,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
     auto stream = std::make_shared<mtd::StubBufferStream>();
     auto surface = std::make_shared<ms::BasicSurface>(
         nullptr /* session */,
+        mw::Weak<mf::WlSurface>{},
         std::string("stub"),
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
@@ -418,6 +427,7 @@ TEST_F(SurfaceStack, generate_elementelements)
     {
         auto const surface = std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
+            mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             mir_pointer_unconfined,
@@ -619,6 +629,7 @@ TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
     {
         auto const surface = std::make_shared<ms::BasicSurface>(
             nullptr /* session */,
+            mw::Weak<mf::WlSurface>{},
             std::string("stub"),
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             mir_pointer_unconfined,
@@ -651,6 +662,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
 
     auto const surface = std::make_shared<ms::BasicSurface>(
         nullptr /* session */,
+        mw::Weak<mf::WlSurface>{},
         std::string("stub"),
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         mir_pointer_unconfined,
@@ -680,6 +692,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
 
     auto const surface = std::make_shared<ms::BasicSurface>(
         nullptr /* session */,
+        mw::Weak<mf::WlSurface>{},
         std::string("stub"),
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         mir_pointer_unconfined,
@@ -701,6 +714,7 @@ struct MockConfigureSurface : public ms::BasicSurface
 {
     MockConfigureSurface() :
         ms::BasicSurface(
+            {},
             {},
             {},
             {{},{}},

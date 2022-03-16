@@ -160,9 +160,11 @@ namespace mir { namespace test {
 
 SystemPerformanceTest::SystemPerformanceTest() :
     bin_dir{mir_bin_dir()},
-    mir_sock{"mir_test_socket_" + std::to_string(getpid())},
-    wayland_display{"WAYLAND_DISPLAY", mir_sock.c_str()}
+    mir_sock{"mir_test_socket_" + std::to_string(getpid())}
 {
+    env.emplace_back("WAYLAND_DISPLAY", mir_sock.c_str());
+    if (getenv("XDG_RUNTIME_DIR") == nullptr)
+        env.emplace_back("XDG_RUNTIME_DIR", "/tmp");
 }
 
 void SystemPerformanceTest::set_up_with(std::string const server_args)

@@ -498,5 +498,12 @@ MIR_COMMON_2.7 {
 
   extern "C++" {
     mir::events::make_pointer_axis_with_stop_event*;
+    mir::SystemExecutor::spawn*;
+    mir::SystemExecutor::set_unhandled_exception_handler*;
+    mir::SystemExecutor::quiesce*;
+    typeinfo?for?mir::SystemExecutor;
+    vtable?for?mir::SystemExecutor;
+    mir::system_executor;
+    mir::linearising_executor;
   };
 } MIR_COMMON_2.5;
