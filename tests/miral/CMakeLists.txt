@@ -71,7 +71,6 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     zone.cpp
     server_example_decoration.cpp server_example_decoration.h
     org_kde_kwin_server_decoration.c org_kde_kwin_server_decoration.h
-    ${GENERATED_FILES}
 )
 
 mir_generate_protocol_wrapper(miral-test "org_kde_kwin_" protocol/server-decoration.xml)

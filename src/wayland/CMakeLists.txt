@@ -9,7 +9,6 @@ set(STANDARD_SOURCES
 )
 
 add_library(mirwayland SHARED
-    ${GENERATED_FILES}
     ${STANDARD_SOURCES}
 )
 
