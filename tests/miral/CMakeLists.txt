@@ -76,7 +76,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
 
 mir_generate_protocol_wrapper(miral-test "org_kde_kwin_" protocol/server-decoration.xml)
 
-set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}/protocol/")
+set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}")
 
 target_link_libraries(miral-test
     mir-test-assist
