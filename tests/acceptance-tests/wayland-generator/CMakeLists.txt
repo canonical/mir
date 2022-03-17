@@ -1,0 +1,20 @@
+set(GENERATED_HEADER "${CMAKE_CURRENT_BINARY_DIR}/generated.h")
+set(GENERATED_SRC "${CMAKE_CURRENT_BINARY_DIR}/generated.cpp")
+set(PROTOCOL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/protocol.xml")
+add_custom_command(
+  OUTPUT "${GENERATED_HEADER}" "${GENERATED_SRC}"
+  VERBATIM
+  COMMAND "sh" "-c"
+  "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator wl_ ${PROTOCOL_PATH} header > ${GENERATED_HEADER}"
+  COMMAND "sh" "-c"
+  "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator wl_ ${PROTOCOL_PATH} source > ${GENERATED_SRC}"
+  DEPENDS mir_wayland_generator "${PROTOCOL_PATH}"
+)
+add_custom_target(wayland_generator_test_generated_files ALL DEPENDS "${GENERATED_SRC}" "${GENERATED_HEADER}")
+
+set(EXPECTED_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/expected.h")
+set(EXPECTED_SRC "${CMAKE_CURRENT_SOURCE_DIR}/expected.cpp")
+set(TEST_SCRIPT "${CMAKE_BINARY_DIR}/bin/test_wayland_generator.sh")
+configure_file("test_wayland_generator.sh.in" "${TEST_SCRIPT}" @ONLY)
+
+add_test(test_wayland_generator "${TEST_SCRIPT}")

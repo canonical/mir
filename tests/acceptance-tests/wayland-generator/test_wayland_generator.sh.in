@@ -1,0 +1,25 @@
+#!/bin/bash
+set -euo pipefail
+
+RET_CODE=0
+
+compare() {
+    if git diff --no-index --color "$1" "$2"; then
+        echo "- $1 and $2 match"
+        echo
+    else
+        echo
+        echo "X $1 and $2 do not match"
+        echo
+        RET_CODE=1
+    fi
+}
+
+compare "@EXPECTED_HEADER@" "@GENERATED_HEADER@"
+compare "@EXPECTED_SRC@"    "@GENERATED_SRC@"
+
+if test $RET_CODE -eq 0; then
+    echo "PASSED"
+fi
+
+exit $RET_CODE
