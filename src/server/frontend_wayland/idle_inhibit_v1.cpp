@@ -37,8 +37,6 @@ public:
 
 private:
     void bind(wl_resource* new_resource) override;
-
-    friend IdleInhibitorV1::Thunks;
 };
 
 class IdleInhibitManagerV1
