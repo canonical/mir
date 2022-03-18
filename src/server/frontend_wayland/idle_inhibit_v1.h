@@ -21,14 +21,15 @@
 
 #include "idle-inhibit-unstable-v1_wrapper.h"
 
-#include <memory>
-
 namespace mir
 {
 namespace frontend
 {
 auto create_idle_inhibit_manager_v1(wl_display* display)
 -> std::shared_ptr<wayland::IdleInhibitManagerV1::Global>;
+}
+namespace scene
+{
 }
 }
 

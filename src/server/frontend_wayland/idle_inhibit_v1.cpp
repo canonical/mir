@@ -24,6 +24,7 @@
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
+namespace ms = mir::scene;
 
 namespace mir
 {
@@ -65,4 +66,29 @@ private:
 auto mf::create_idle_inhibit_manager_v1(wl_display* display) 
 -> std::shared_ptr<mw::IdleInhibitManagerV1::Global> {
     return std::make_shared<IdleInhibitManagerV1Global>(display);
+}
+
+mf::IdleInhibitManagerV1Global::IdleInhibitManagerV1Global(wl_display *display)
+    : Global{display, Version<1>()}
+{
+}
+
+void mf::IdleInhibitManagerV1Global::bind(wl_resource *new_resource)
+{
+    new IdleInhibitManagerV1{new_resource};
+}
+
+mf::IdleInhibitManagerV1::IdleInhibitManagerV1(wl_resource *resource)
+    : wayland::IdleInhibitManagerV1{resource, Version<1>()}
+{
+}
+
+void mf::IdleInhibitManagerV1::create_inhibitor(struct wl_resource *id, struct wl_resource *surface)
+{
+    (void)id;
+    new wayland::IdleInhibitorV1{surface, Version<1>()};
+}
+
+mf::IdleInhibitManagerV1::~IdleInhibitManagerV1()
+{
 }
