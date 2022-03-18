@@ -261,3 +261,13 @@ void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp c
         alarm_timeout = std::nullopt;
     }
 }
+
+void ms::BasicIdleHub::inhibit_idle()
+{
+    alarm->cancel();
+}
+
+void ms::BasicIdleHub::resume_idle()
+{
+    alarm->reschedule_for(poke_time);
+}

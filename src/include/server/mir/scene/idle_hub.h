@@ -68,6 +68,12 @@ public:
 
     virtual void unregister_interest(IdleStateObserver const& observer) = 0;
 
+    /// Inhibits idling function if not set
+    virtual void inhibit_idle() = 0;
+
+    /// Releases inhibit_idle() if set
+    virtual void resume_idle() = 0;
+
 private:
     IdleHub(IdleHub const&) = delete;
     IdleHub& operator=(IdleHub const&) = delete;
