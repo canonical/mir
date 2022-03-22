@@ -104,8 +104,26 @@ void mir::run_mir(
     static std::atomic<unsigned int> concurrent_calls{0};
 
     auto const raii = raii::paired_calls(
-        [&]{ if (!concurrent_calls++) for (auto sig : intercepted) old_handler[sig] = signal(sig, fatal_signal_cleanup); },
-        [&]{ if (!--concurrent_calls) for (auto sig : intercepted) signal(sig, old_handler[sig]); });
+        [&]()
+        {
+            if (!concurrent_calls++)
+            {
+                for (auto sig : intercepted)
+                {
+                    old_handler[sig] = signal(sig, fatal_signal_cleanup);
+                }
+            }
+        },
+        [&]()
+        {
+            if (!--concurrent_calls)
+            {
+                for (auto sig : intercepted)
+                {
+                    signal(sig, old_handler[sig]);
+                }
+            }
+        });
 
     mir::SystemExecutor::set_unhandled_exception_handler(&terminate_with_current_exception);
 
