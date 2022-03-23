@@ -31,10 +31,11 @@
 #include <mutex>
 #include <csignal>
 #include <cassert>
+#include <boost/throw_exception.hpp>
 
 namespace
 {
-auto const intercepted = { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
+constexpr std::array const intercepted = { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
 
 std::weak_ptr<mir::EmergencyCleanup> weak_emergency_cleanup;
 
@@ -47,16 +48,126 @@ extern "C" void perform_emergency_cleanup()
     }
 }
 
-extern "C" { typedef void (*sig_handler)(int); }
+/**
+ * Manage the thread- and signal-safe storage of sigaction signal handler descriptors
+ */
+class SignalHandlers
+{
+public:
+    /* Read-only accessor
+     * Throws if asked for a signal outside of the intercepted array, returns nullptr if handler hasn't yet
+     * been initialised.
+     */
+    [[nodiscard]]
+    auto at(int sig) const -> struct sigaction const*
+    {
+        for (size_t i = 0; i < handlers.size(); ++i)
+        {
+            if (sig == intercepted[i])
+            {
+                return handlers[i];
+            }
+        }
+        BOOST_THROW_EXCEPTION((std::logic_error{"Attempted to access signal handler not in intercepted list"}));
+    }
 
-volatile sig_handler old_handler[NSIG]  = { nullptr };
+    /**
+     * Helper struct to atomically initialise an atomic<struct sigaction*> from an API using an out-pointer
+     * (like, for example, sigaction())
+     */
+    class AtomicOutPtr
+    {
+    public:
+        ~AtomicOutPtr() noexcept
+        {
+            auto old_value = to_initialise.exchange(new_value);
+            delete old_value;
+        }
 
-extern "C" void fatal_signal_cleanup(int sig)
+        operator struct sigaction*()    // NOLINT: The whole point is this transparently decays to a struct sigaction*
+        {
+            return new_value;
+        }
+    private:
+        friend class SignalHandlers;
+
+        explicit AtomicOutPtr(std::atomic<struct sigaction*>& to_initialise)
+            : to_initialise{to_initialise},
+              new_value{new struct sigaction}
+        {
+        }
+
+        std::atomic<struct sigaction*>& to_initialise;
+        struct sigaction* const new_value;
+    };
+
+    /* Atomically store a sigaction descriptor.
+     *
+     * Because the sigaction() API initialises an out-pointer, this returns a helper to atomically
+     * initialise our stored value.
+     */
+    auto initialiser_for_signal(int sig) -> AtomicOutPtr
+    {
+        for (size_t i = 0; i < handlers.size(); ++i)
+        {
+            if (intercepted[i] == sig)
+            {
+                return AtomicOutPtr{handlers[i]};
+            }
+        }
+        BOOST_THROW_EXCEPTION((std::logic_error{"Attempted to access signal handler not in intercepted list"}));
+    }
+
+private:
+    /* We *might* be able to get away with just a volatile array, but we *know* that atomic provides the necessary
+     * guarantees
+     */
+    std::array<std::atomic<struct sigaction*>, intercepted.size()> handlers = { nullptr };
+} old_handlers;
+
+extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void* ucontext)
 {
     perform_emergency_cleanup();
 
-    signal(sig, old_handler[sig]);
+    auto const old_handler = old_handlers.at(sig);
+    sigaction(sig, old_handler, nullptr);
+    if (old_handler->sa_flags & SA_SIGINFO)
+    {
+        /* The old handler wants the information from the siginfo struct
+         * Re-raising the signal will destroy this context, so call the handler directly.
+         */
+        (*old_handler->sa_sigaction)(sig, info, ucontext);
+        /* We don't *expect* to get here - fatal signal handlers will *generally* re-raise the signal,
+         * and so don't return.
+         *
+         * However, we've just performed emergency cleanup, so if the handler was trying to fix things up
+         * and continue we unfortunately can't let them.
+         */
+        std::abort();
+    }
+    // The handler doesn't care about fancy context, we can just call it via raise()
     raise(sig);
+    // We definitely can't continue, though, even if their handler tries.
+    std::abort();
+}
+
+auto signum_to_string(int sig) -> char const*
+{
+    switch(sig)
+    {
+    case SIGQUIT:
+        return "SIGQUIT";
+    case SIGABRT:
+        return "SIGABRT";
+    case SIGFPE:
+        return "SIGFPE";
+    case SIGSEGV:
+        return "SIGSEGV";
+    case SIGBUS:
+        return "SIGBUS";
+    default:
+        return "(Unknown signal)";
+    }
 }
 }
 
@@ -110,7 +221,20 @@ void mir::run_mir(
             {
                 for (auto sig : intercepted)
                 {
-                    old_handler[sig] = signal(sig, fatal_signal_cleanup);
+                    struct sigaction sig_handler_desc;
+                    sig_handler_desc.sa_flags = SA_SIGINFO;
+                    sig_handler_desc.sa_sigaction = &fatal_signal_cleanup;
+
+                    if (sigaction(sig, &sig_handler_desc, old_handlers.initialiser_for_signal(sig)))
+                    {
+                        using namespace std::string_literals;
+                        BOOST_THROW_EXCEPTION((
+                            std::system_error{
+                                errno,
+                                std::system_category(),
+                                "Failed to install signal handler for "s + signum_to_string(sig)
+                            }));
+                    }
                 }
             }
         },
@@ -120,7 +244,16 @@ void mir::run_mir(
             {
                 for (auto sig : intercepted)
                 {
-                    signal(sig, old_handler[sig]);
+                    if (sigaction(sig, old_handlers.at(sig), nullptr))
+                    {
+                        using namespace std::string_literals;
+                        BOOST_THROW_EXCEPTION((
+                            std::system_error{
+                                errno,
+                                std::system_category(),
+                                "Failed to install signal handler for "s + signum_to_string(sig)
+                            }));
+                    }
                 }
             }
         });
