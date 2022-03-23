@@ -35,7 +35,7 @@
 
 namespace
 {
-constexpr std::array const intercepted = { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
+constexpr std::array const fatal_error_signals = {SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
 
 std::weak_ptr<mir::EmergencyCleanup> weak_emergency_cleanup;
 
@@ -119,6 +119,7 @@ public:
     }
 
 private:
+    static constexpr std::array const intercepted = { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
     /* We *might* be able to get away with just a volatile array, but we *know* that atomic provides the necessary
      * guarantees
      */
@@ -219,7 +220,7 @@ void mir::run_mir(
         {
             if (!concurrent_calls++)
             {
-                for (auto sig : intercepted)
+                for (auto sig : fatal_error_signals)
                 {
                     struct sigaction sig_handler_desc;
                     sig_handler_desc.sa_flags = SA_SIGINFO;
@@ -242,7 +243,7 @@ void mir::run_mir(
         {
             if (!--concurrent_calls)
             {
-                for (auto sig : intercepted)
+                for (auto sig : fatal_error_signals)
                 {
                     if (sigaction(sig, old_handlers.at(sig), nullptr))
                     {
