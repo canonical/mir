@@ -152,6 +152,8 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
     std::abort();
 }
 
+std::atomic<struct sigaction*> wayland_sigbus_handler = nullptr;
+
 auto signum_to_string(int sig) -> char const*
 {
     switch(sig)
@@ -237,6 +239,34 @@ void mir::run_mir(
                             }));
                     }
                 }
+                /* We need to handle SIGBUS specially. Particularly: libwayland installs a SIGBUS handler
+                 * the *first* time a process calls wl_shm_buffer_begin_access; this will be after we've
+                 * installed our own handlers, so we haven't saved it.
+                 *
+                 * However, in order to make it possible to call run_mir() twice in the same process, we need to
+                 * be able to call libwayland's SIGBUS handler, so that out-of-bounds accesses to wl_shm_buffers
+                 * can result in protocol errors rather than terminating Mir.
+                 *
+                 * Check if we have previously captured libwayland's SIGBUS handler, and install that instead.
+                 *
+                 * This can only happen after the first call to run_mir() in this process has finished.
+                 *
+                 * In that case, libwayland will have captured *our* SIGBUS handler, and will call it if
+                 * it's handler fails, so re-installing libwayland's handler will do what we want
+                 */
+                if (wayland_sigbus_handler)
+                {
+                    // We don't need to capture the old handler, because we know it's the one we just set above.
+                    if (sigaction(SIGBUS, wayland_sigbus_handler, nullptr))
+                    {
+                        BOOST_THROW_EXCEPTION((
+                            std::system_error{
+                                errno,
+                                std::system_category(),
+                                "Failed to install signal handler for SIGBUS"
+                            }));
+                    }
+                }
             }
         },
         [&]()
@@ -245,6 +275,45 @@ void mir::run_mir(
             {
                 for (auto sig : fatal_error_signals)
                 {
+                    if (sig == SIGBUS)
+                    {
+                        /* Dance the signal handler fandango!
+                         *
+                         * *If* libwayland has installed its SIGBUS handler, then we need to capture it so that
+                         * we can restore it on the next run_mir() invocation, because libwayland will only install
+                         * its handler once per process.
+                         *
+                         * libwayland may not have installed a SIGBUS handler; it only does so on the first call
+                         * to wl_shm_buffer_begin_access(). Detect this case by comparing the currently-installed
+                         * SIGBUS handler with the one we installed. If it's not our handler, assume that it's
+                         * the one that libwayland has installed.
+                         *
+                         * Because signal handlers are a terrifying bundle of global mutable state, we can't guarantee
+                         * that this *is* libwayland's SIGBUS handler, but if the code using Mir is trying to install
+                         * its own SIGBUS handler after us that's on them.
+                         */
+                        struct sigaction current_handler;
+                        if (sigaction(sig, nullptr, &current_handler))
+                        {
+                            BOOST_THROW_EXCEPTION((
+                                std::system_error{
+                                    errno,
+                                    std::system_category(),
+                                    "Failed to query current SIGBUS handler"
+                                }));
+                        }
+                        if (current_handler.sa_sigaction != &fatal_signal_cleanup)
+                        {
+                            /* Our signal handler has been replaced (presumably by libwayland)
+                             * Store it so we can restore it on the next run_mir() call
+                             */
+                            auto new_handler = new struct sigaction;
+                            *new_handler = current_handler;
+                            auto old_handler = wayland_sigbus_handler.exchange(new_handler);
+                            delete old_handler;
+                        }
+                        // Now go on and restore the previous (to us) SIGBUS handler...
+                    }
                     if (sigaction(sig, old_handlers.at(sig), nullptr))
                     {
                         using namespace std::string_literals;
