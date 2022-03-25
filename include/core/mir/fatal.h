@@ -51,6 +51,7 @@ void fatal_error_except(char const* reason, ...);
  * as cleanly as possible.
  *   \param [in] reason  A printf-style format string.
  */
+[[noreturn]]
 void fatal_error_abort(char const* reason, ...);
 
 // Utility class to override & restore existing error handler

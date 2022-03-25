@@ -26,6 +26,7 @@
 #include <cstdio>
 #include <cstdarg>
 
+[[noreturn]]
 void mir::fatal_error_abort(char const* reason, ...)
 {
     va_list args;
