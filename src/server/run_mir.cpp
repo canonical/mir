@@ -126,6 +126,25 @@ private:
     std::array<std::atomic<struct sigaction*>, intercepted.size()> handlers = { nullptr };
 } old_handlers;
 
+auto signum_to_string(int sig) -> std::string
+{
+    switch(sig)
+    {
+        case SIGQUIT:
+            return "SIGQUIT";
+        case SIGABRT:
+            return "SIGABRT";
+        case SIGFPE:
+            return "SIGFPE";
+        case SIGSEGV:
+            return "SIGSEGV";
+        case SIGBUS:
+            return "SIGBUS";
+        default:
+            return std::string{"(Unknown signal: "} + std::to_string(sig) + ")";
+    }
+}
+
 extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void* ucontext)
 {
     perform_emergency_cleanup();
@@ -153,25 +172,6 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
 }
 
 std::atomic<struct sigaction*> wayland_sigbus_handler = nullptr;
-
-auto signum_to_string(int sig) -> char const*
-{
-    switch(sig)
-    {
-    case SIGQUIT:
-        return "SIGQUIT";
-    case SIGABRT:
-        return "SIGABRT";
-    case SIGFPE:
-        return "SIGFPE";
-    case SIGSEGV:
-        return "SIGSEGV";
-    case SIGBUS:
-        return "SIGBUS";
-    default:
-        return "(Unknown signal)";
-    }
-}
 }
 
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
