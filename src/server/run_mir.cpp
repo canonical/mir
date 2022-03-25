@@ -68,7 +68,7 @@ public:
                 return handlers[i];
             }
         }
-        BOOST_THROW_EXCEPTION((std::logic_error{"Attempted to access signal handler not in intercepted list"}));
+        mir::fatal_error_abort("Attempted to access signal handler for signal %i not in intercepted list", sig);
     }
 
     /**
@@ -115,7 +115,7 @@ public:
                 return AtomicOutPtr{handlers[i]};
             }
         }
-        BOOST_THROW_EXCEPTION((std::logic_error{"Attempted to access signal handler not in intercepted list"}));
+        mir::fatal_error_abort("Attempted to access signal handler for signal %i not in intercepted list", sig);
     }
 
 private:
