@@ -17,6 +17,7 @@
  */
 
 #include <miroil/mir_server_hooks.h>
+#include <stdexcept>
 
 // mir
 #include <mir/server.h>
