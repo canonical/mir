@@ -125,6 +125,8 @@ msh::AbstractShell::~AbstractShell() noexcept
 
 void msh::AbstractShell::update_focused_surface_confined_region()
 {
+    std::unique_lock lock{focus_mutex};
+
     if (auto const current_focus = focus_surface.lock())
     {
         switch (current_focus->confine_pointer_state())
