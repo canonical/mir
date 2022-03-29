@@ -16,14 +16,14 @@
  * Authored By: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_SYSTEM_EXECUTOR_H_
-#define MIR_SYSTEM_EXECUTOR_H_
+#ifndef MIR_THREAD_POOL_EXECUTOR_H_
+#define MIR_THREAD_POOL_EXECUTOR_H_
 
 #include "mir/executor.h"
 
 namespace mir
 {
-class SystemExecutor : public NonBlockingExecutor
+class ThreadPoolExecutor : public NonBlockingExecutor
 {
 public:
     void spawn(std::function<void()>&& work) override;
@@ -44,10 +44,10 @@ public:
      */
     static void quiesce();
 protected:
-    SystemExecutor() = default;
+    ThreadPoolExecutor() = default;
 };
 
-extern NonBlockingExecutor& system_executor;
+extern NonBlockingExecutor& thread_pool_executor;
 }
 
-#endif //MIR_SYSTEM_EXECUTOR_H_
+#endif // MIR_THREAD_POOL_EXECUTOR_H_

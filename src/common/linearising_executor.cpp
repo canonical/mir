@@ -17,7 +17,7 @@
  */
 
 #include "mir/linearising_executor.h"
-#include "mir/system_executor.h"
+#include "mir/thread_pool_executor.h"
 
 #include <deque>
 #include <mutex>
@@ -51,7 +51,7 @@ public:
         if (idle)
         {
             idle = false;
-            mir::system_executor.spawn([this]() { work_loop(); });
+            mir::thread_pool_executor.spawn([this]() { work_loop(); });
         }
     }
 

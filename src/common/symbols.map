@@ -507,3 +507,17 @@ MIR_COMMON_2.7 {
     mir::linearising_executor;
   };
 } MIR_COMMON_2.5;
+
+MIR_COMMON_2.8 {
+  global:
+  mir_pointer_event_axis_stop;
+
+  extern "C++" {
+    mir::ThreadPoolExecutor::spawn*;
+    mir::ThreadPoolExecutor::set_unhandled_exception_handler*;
+    mir::ThreadPoolExecutor::quiesce*;
+    typeinfo?for?mir::ThreadPoolExecutor;
+    vtable?for?mir::ThreadPoolExecutor;
+    mir::thread_pool_executor;
+  };
+} MIR_COMMON_2.7;

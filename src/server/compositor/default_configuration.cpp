@@ -27,7 +27,7 @@
 #include "null_screen_shooter.h"
 #include "mir/main_loop.h"
 #include "mir/graphics/display.h"
-#include "mir/system_executor.h"
+#include "mir/thread_pool_executor.h"
 #include "mir/renderer/gl/basic_buffer_render_target.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/renderer/renderer.h"
@@ -109,7 +109,7 @@ auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<co
                 return std::make_shared<compositor::BasicScreenShooter>(
                     the_scene(),
                     the_clock(),
-                    system_executor,
+                    thread_pool_executor,
                     std::move(render_target),
                     std::move(renderer));
             }
@@ -120,7 +120,7 @@ auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<co
                     "",
                     std::current_exception(),
                     "failed to create BasicScreenShooter");
-                return std::make_shared<compositor::NullScreenShooter>(system_executor);
+                return std::make_shared<compositor::NullScreenShooter>(thread_pool_executor);
             }
         });
 }

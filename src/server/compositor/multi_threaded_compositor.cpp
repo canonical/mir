@@ -31,7 +31,7 @@
 #include "mir/raii.h"
 #include "mir/unwind_helpers.h"
 #include "mir/thread_name.h"
-#include "mir/system_executor.h"
+#include "mir/thread_pool_executor.h"
 
 #include <thread>
 #include <chrono>
@@ -383,7 +383,7 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
             display_buffer_compositor_factory, group, scene, display_listener,
             fixed_composite_delay, report);
 
-        mir::system_executor.spawn(std::ref(*thread_functor));
+        mir::thread_pool_executor.spawn(std::ref(*thread_functor));
         thread_functors.push_back(std::move(thread_functor));
     });
 
