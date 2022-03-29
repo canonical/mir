@@ -221,7 +221,7 @@ private:
  * min_threadpool_threads in the free list, the Worker is added to the free list. Otherwise, the
  * Worker is removed from the all-workers list and is destroyed.
  */
-class ThreadPool : public mir::Executor
+class ThreadPool : public mir::NonBlockingExecutor
 {
 public:
     ThreadPool() noexcept
@@ -329,7 +329,7 @@ ThreadPool system_threadpool;
 
 }
 
-mir::Executor& mir::system_executor = system_threadpool;
+mir::NonBlockingExecutor& mir::system_executor = system_threadpool;
 
 void mir::SystemExecutor::spawn(std::function<void()>&& work)
 {
