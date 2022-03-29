@@ -59,7 +59,7 @@ public:
     virtual void reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode) = 0;
     virtual void cursor_image_set_to(Surface const* surf, graphics::CursorImage const& image) = 0;
     virtual void client_surface_close_requested(Surface const* surf) = 0;
-    virtual void renamed(Surface const* surf, char const* name) = 0;
+    virtual void renamed(Surface const* surf, std::string const& name) = 0;
     virtual void cursor_image_removed(Surface const* surf) = 0;
     virtual void placed_relative(Surface const* surf, geometry::Rectangle const& placement) = 0;
     virtual void input_consumed(Surface const* surf, MirEvent const* event) = 0;

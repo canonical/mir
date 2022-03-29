@@ -78,7 +78,7 @@ void ms::SurfaceChangeNotification::reception_mode_set_to(Surface const*, input:
     notify_scene_change();
 }
 
-void ms::SurfaceChangeNotification::renamed(Surface const*, char const*)
+void ms::SurfaceChangeNotification::renamed(Surface const*, std::string const&)
 {
     notify_scene_change();
 }

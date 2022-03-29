@@ -41,7 +41,7 @@ public:
     void cursor_image_set_to(Surface const* surf, graphics::CursorImage const& image) override;
     void reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode) override;
     void client_surface_close_requested(Surface const* surf) override;
-    void renamed(Surface const* surf, char const* name) override;
+    void renamed(Surface const* surf, std::string const& name) override;
     void cursor_image_removed(Surface const* surf) override;
     void placed_relative(Surface const* surf, geometry::Rectangle const& placement) override;
     void input_consumed(Surface const* surf, MirEvent const* event) override;

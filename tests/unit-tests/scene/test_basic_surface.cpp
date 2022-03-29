@@ -68,9 +68,9 @@ public:
     MOCK_METHOD2(content_resized_to, void(ms::Surface const*, geom::Size const&));
     MOCK_METHOD3(frame_posted, void(ms::Surface const*, int, geom::Rectangle const&));
     MOCK_METHOD2(hidden_set_to, void(ms::Surface const*, bool));
-    MOCK_METHOD2(renamed, void(ms::Surface const*, char const*));
+    MOCK_METHOD2(renamed, void(ms::Surface const*, std::string const&));
     MOCK_METHOD1(client_surface_close_requested, void(ms::Surface const*));
-    MOCK_METHOD2(cursor_image_set_to, void(ms::Surface const*, mir::graphics::CursorImage const& image));
+    MOCK_METHOD2(cursor_image_set_to, void(ms::Surface const*, std::weak_ptr<mir::graphics::CursorImage> const& image));
     MOCK_METHOD1(cursor_image_removed, void(ms::Surface const*));
     MOCK_METHOD2(application_id_set_to, void(ms::Surface const*, std::string const&));
 };

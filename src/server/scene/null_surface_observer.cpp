@@ -31,7 +31,7 @@ void ms::NullSurfaceObserver::transformation_set_to(Surface const*, glm::mat4 co
 void ms::NullSurfaceObserver::reception_mode_set_to(Surface const*, input::InputReceptionMode) {}
 void ms::NullSurfaceObserver::cursor_image_set_to(Surface const*, graphics::CursorImage const&) {}
 void ms::NullSurfaceObserver::client_surface_close_requested(Surface const*) {}
-void ms::NullSurfaceObserver::renamed(Surface const*, char const*) {}
+void ms::NullSurfaceObserver::renamed(Surface const*, std::string const&) {}
 void ms::NullSurfaceObserver::cursor_image_removed(Surface const*) {}
 void ms::NullSurfaceObserver::placed_relative(Surface const*, geometry::Rectangle const&) {}
 void ms::NullSurfaceObserver::input_consumed(Surface const*, MirEvent const*) {}

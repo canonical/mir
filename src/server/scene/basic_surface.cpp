@@ -113,7 +113,7 @@ void ms::SurfaceObservers::client_surface_close_requested(Surface const* surf)
         { observer->client_surface_close_requested(surf); });
 }
 
-void ms::SurfaceObservers::renamed(Surface const* surf, char const* name)
+void ms::SurfaceObservers::renamed(Surface const* surf, std::string const& name)
 {
     for_each([&surf, name](std::shared_ptr<SurfaceObserver> const& observer)
         { observer->renamed(surf, name); });
