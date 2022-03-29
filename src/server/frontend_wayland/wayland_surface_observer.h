@@ -49,7 +49,7 @@ public:
     void content_resized_to(scene::Surface const*, geometry::Size const& content_size) override;
     void client_surface_close_requested(scene::Surface const*) override;
     void placed_relative(scene::Surface const*, geometry::Rectangle const& placement) override;
-    void input_consumed(scene::Surface const*, MirEvent const* event) override;
+    void input_consumed(scene::Surface const*, std::shared_ptr<MirEvent const> const& event) override;
     ///@}
 
     /// Should only be called from the Wayland thread

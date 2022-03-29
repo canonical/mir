@@ -26,6 +26,7 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace mir
 {
@@ -62,7 +63,7 @@ public:
     virtual void renamed(Surface const* surf, std::string const& name) = 0;
     virtual void cursor_image_removed(Surface const* surf) = 0;
     virtual void placed_relative(Surface const* surf, geometry::Rectangle const& placement) = 0;
-    virtual void input_consumed(Surface const* surf, MirEvent const* event) = 0;
+    virtual void input_consumed(Surface const* surf, std::shared_ptr<MirEvent const> const& event) = 0;
     virtual void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) = 0;
     virtual void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) = 0;
     virtual void application_id_set_to(Surface const* surf, std::string const& application_id) = 0;

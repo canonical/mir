@@ -47,7 +47,7 @@ public:
     void renamed(Surface const* surf, std::string const&) override;
     void cursor_image_removed(Surface const* surf) override;
     void placed_relative(Surface const* surf, geometry::Rectangle const& placement) override;
-    void input_consumed(Surface const* surf, MirEvent const* event) override;
+    void input_consumed(Surface const* surf, std::shared_ptr<MirEvent const> const& event) override;
     void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) override;
     void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) override;
     void application_id_set_to(Surface const* surf, std::string const& application_id) override;

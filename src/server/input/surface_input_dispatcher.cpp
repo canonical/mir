@@ -124,7 +124,7 @@ void deliver_without_relative_motion(
     mev::transform_positions(*to_deliver, geom::Displacement{bounds.top_left.x.as_int(), bounds.top_left.y.as_int()});
     if (!drag_and_drop_handle.empty())
         mev::set_drag_and_drop_handle(*to_deliver, drag_and_drop_handle);
-    surface->consume(to_deliver.get());
+    surface->consume(std::move(to_deliver));
 }
 
 void deliver(
@@ -139,7 +139,7 @@ void deliver(
 
     auto const& bounds = surface->input_bounds();
     mev::transform_positions(*to_deliver, geom::Displacement{bounds.top_left.x.as_int(), bounds.top_left.y.as_int()});
-    surface->consume(to_deliver.get());
+    surface->consume(std::move(to_deliver));
 }
 
 }
@@ -459,7 +459,7 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
 
     if (!drag_and_drop_handle.empty())
         mev::set_drag_and_drop_handle(*event, drag_and_drop_handle);
-    surface->consume(event.get());
+    surface->consume(std::move(event));
 }
 
 mi::SurfaceInputDispatcher::PointerInputState& mi::SurfaceInputDispatcher::ensure_pointer_state(MirInputDeviceId id)

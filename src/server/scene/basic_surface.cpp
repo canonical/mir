@@ -131,7 +131,7 @@ void ms::SurfaceObservers::placed_relative(Surface const* surf, geometry::Rectan
                  { observer->placed_relative(surf, placement); });
 }
 
-void ms::SurfaceObservers::input_consumed(Surface const* surf, MirEvent const* event)
+void ms::SurfaceObservers::input_consumed(Surface const* surf, std::shared_ptr<MirEvent const> const& event)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
                  { observer->input_consumed(surf, event); });
@@ -780,7 +780,7 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
     return max_buf;
 }
 
-void ms::BasicSurface::consume(MirEvent const* event)
+void ms::BasicSurface::consume(std::shared_ptr<MirEvent const> const& event)
 {
     observers->input_consumed(this, event);
 }

@@ -42,7 +42,7 @@ public:
                     mir::geometry::Rectangle const& area) override;
   void hidden_set_to(mir::scene::Surface const *surf, bool hide) override;
   void input_consumed(mir::scene::Surface const *surf,
-                      MirEvent const *event) override;
+                      std::shared_ptr<MirEvent const> const& event) override;
   void moved_to(mir::scene::Surface const *surf,
                 mir::geometry::Point const &top_left) override;
   void orientation_set_to(mir::scene::Surface const *surf,
@@ -121,9 +121,9 @@ void miroil::SurfaceObserverImpl::hidden_set_to(mir::scene::Surface const* surf,
     listener->hidden_set_to(surf, hide);
 }
 
-void miroil::SurfaceObserverImpl::input_consumed(mir::scene::Surface const* surf, MirEvent const* event)
+void miroil::SurfaceObserverImpl::input_consumed(mir::scene::Surface const* surf, std::shared_ptr<MirEvent const> const& event)
 {
-    listener->input_consumed(surf, event);
+    listener->input_consumed(surf, event.get());
 }
 
 void miroil::SurfaceObserverImpl::moved_to(mir::scene::Surface const* surf, mir::geometry::Point const& top_left)
