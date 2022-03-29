@@ -119,10 +119,10 @@ public:
     MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
 };
 
-class ExplicitExectutor : public mtd::ExplicitExectutor
+class ExplicitExecutor : public mtd::ExplicitExecutor
 {
 public:
-    ~ExplicitExectutor()
+    ~ExplicitExecutor()
     {
         execute();
     }
@@ -134,7 +134,7 @@ struct SoftwareCursor : testing::Test
     StubCursorImage another_stub_cursor_image{{10,9}};
     testing::NiceMock<MockBufferAllocator> mock_buffer_allocator;
     testing::NiceMock<MockInputScene> mock_input_scene;
-    ExplicitExectutor executor;
+    ExplicitExecutor executor;
 
     mg::SoftwareCursor cursor{
         mt::fake_shared(mock_buffer_allocator),

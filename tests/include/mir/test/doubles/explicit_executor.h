@@ -31,16 +31,16 @@ namespace test
 namespace doubles
 {
 
-class ExplicitExectutor
+class ExplicitExecutor
     : public Executor
 {
 public:
-    ~ExplicitExectutor()
+    ~ExplicitExecutor()
     {
         if (!work_items.empty())
         {
             ADD_FAILURE() <<
-                "ExplicitExectutor destroyed with " <<
+                "ExplicitExecutor destroyed with " <<
                 work_items.size() <<
                 " work items left in the queue";
         }

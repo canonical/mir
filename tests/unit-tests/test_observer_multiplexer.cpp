@@ -683,8 +683,7 @@ TEST(ObserverMultiplexer, destroyed_observer_is_not_called)
 {
     using namespace testing;
 
-
-    mtd::ExplicitExectutor executor;
+    mtd::ExplicitExecutor executor;
     TestObserverMultiplexer multiplexer{executor};
 
     auto observer_owner = std::make_unique<NiceMock<MockObserver>>();
@@ -709,7 +708,7 @@ TEST(ObserverMultiplexer, unregister_interest_prevents_dispatch_of_already_queue
 {
     using namespace testing;
 
-    mtd::ExplicitExectutor executor;
+    mtd::ExplicitExecutor executor;
     TestObserverMultiplexer multiplexer{executor};
 
     auto const observer = std::make_shared<NiceMock<MockObserver>>();

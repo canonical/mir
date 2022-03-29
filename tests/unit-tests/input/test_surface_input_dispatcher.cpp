@@ -287,7 +287,7 @@ TEST_F(SurfaceInputDispatcher, key_event_not_delivered_to_surface)
 TEST_F(SurfaceInputDispatcher, key_event_delivered_to_keyboard_observer)
 {
     auto surface = scene.add_surface();
-    mtd::ExplicitExectutor executor;
+    mtd::ExplicitExecutor executor;
 
     FakeKeyboard keyboard;
     auto event = keyboard.press();
@@ -304,7 +304,7 @@ TEST_F(SurfaceInputDispatcher, key_event_delivered_to_keyboard_observer)
 TEST_F(SurfaceInputDispatcher, keyboard_focus_delivered_to_keyboard_observer)
 {
     auto surface = scene.add_surface();
-    mtd::ExplicitExectutor executor;
+    mtd::ExplicitExecutor executor;
 
     auto const kb_observer = std::make_shared<MockKeyboardObserver>();
     EXPECT_CALL(*kb_observer, keyboard_focus_set(Eq(surface)));
@@ -318,7 +318,7 @@ TEST_F(SurfaceInputDispatcher, keyboard_focus_delivered_to_keyboard_observer)
 TEST_F(SurfaceInputDispatcher, keyboard_focus_clear_delivered_to_keyboard_observer)
 {
     auto surface = scene.add_surface();
-    mtd::ExplicitExectutor executor;
+    mtd::ExplicitExecutor executor;
 
     auto const kb_observer = std::make_shared<NiceMock<MockKeyboardObserver>>();
 
