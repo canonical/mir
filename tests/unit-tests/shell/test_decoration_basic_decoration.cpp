@@ -75,7 +75,7 @@ struct StubCursorImages
 struct MockSurface
     : ms::BasicSurface
 {
-    MockSurface(std::shared_ptr<ms::Session> const& session)
+    MockSurface(std::shared_ptr<ms::Session> const& session, mir::Executor& executor)
         : ms::BasicSurface{
               session,
               {},
@@ -84,11 +84,24 @@ struct MockSurface
               mir_pointer_unconfined,
               { { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {0, 0}, {} } },
               {},
-              mir::report::null_scene_report()}
+              mir::report::null_scene_report()},
+          executor{executor}
     {
     }
 
+    void register_interest(std::weak_ptr<ms::SurfaceObserver> const& observer)
+    {
+        BasicSurface::register_interest(observer, executor);
+    }
+
+    void register_interest(std::weak_ptr<ms::SurfaceObserver> const& observer, mir::Executor&)
+    {
+        register_interest(observer);
+    }
+
     MOCK_METHOD0(request_client_surface_close, void());
+
+    mir::Executor& executor;
 };
 
 struct MockShell
@@ -193,8 +206,8 @@ struct DecorationBasicDecoration
     StubCursorImages cursor_images;
     std::shared_ptr<msd::BasicDecoration> basic_decoration;
     std::shared_ptr<NiceMock<mtd::MockSceneSession>> session{std::make_shared<NiceMock<mtd::MockSceneSession>>()};
-    StrictMock<MockSurface> window_surface{session};
-    StrictMock<MockSurface> decoration_surface{session};
+    StrictMock<MockSurface> window_surface{session, executor};
+    StrictMock<MockSurface> decoration_surface{session, executor};
     msh::SurfaceSpecification creation_params;
     NiceMock<mtd::MockBufferStream> buffer_stream;
 };

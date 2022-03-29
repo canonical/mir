@@ -23,6 +23,7 @@
 
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/mock_event_sink.h"
+#include "mir/test/doubles/explicit_executor.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
 
@@ -180,13 +181,15 @@ TEST_F(Surface, emits_resize_events)
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
 
-    surface->register_interest(observer);
+    mtd::ExplicitExecutor executor;
+    surface->register_interest(observer, executor);
 
     auto e = mev::make_window_resize_event(stub_id, new_size);
     EXPECT_CALL(*sink, handle_event(MirResizeEventEq(e.get())))
         .Times(1);
 
     surface->resize(new_size);
+    executor.execute();
     EXPECT_EQ(new_size, surface->window_size());
 }
 
@@ -200,7 +203,8 @@ TEST_F(Surface, emits_resize_events_only_on_change)
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
 
-    surface->register_interest(observer);
+    mtd::ExplicitExecutor executor;
+    surface->register_interest(observer, executor);
 
     auto e = mev::make_window_resize_event(stub_id, new_size);
     EXPECT_CALL(*sink, handle_event(MirResizeEventEq(e.get())))
@@ -219,6 +223,8 @@ TEST_F(Surface, emits_resize_events_only_on_change)
     EXPECT_EQ(new_size2, surface->window_size());
     surface->resize(new_size2);
     EXPECT_EQ(new_size2, surface->window_size());
+
+    executor.execute();
 }
 
 TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
@@ -238,10 +244,12 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, mt::fake_shared(sink));
 
-    surface->register_interest(observer);
+    mtd::ExplicitExecutor executor;
+    surface->register_interest(observer, executor);
 
     surface->configure(mir_window_attrib_focus, mir_window_focus_state_focused);
     surface->configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
+    executor.execute();
 }
 MATCHER_P(MirCloseSurfaceEventMatches, event, "")
 {
@@ -256,7 +264,8 @@ TEST_F(Surface, emits_client_close_events)
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
 
-    surface->register_interest(observer);
+    mtd::ExplicitExecutor executor;
+    surface->register_interest(observer, executor);
 
     MirCloseWindowEvent e;
     e.to_close_window()->set_surface_id(stub_id.as_value());
@@ -264,6 +273,7 @@ TEST_F(Surface, emits_client_close_events)
     EXPECT_CALL(*sink, handle_event(MirCloseSurfaceEventMatches(&e))).Times(1);
 
     surface->request_client_surface_close();
+    executor.execute();
 }
 
 TEST_F(Surface, preferred_orientation_mode_defaults_to_any)
