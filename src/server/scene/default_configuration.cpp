@@ -25,6 +25,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/session_container.h"
 #include "mir/shell/display_configuration_controller.h"
+#include "mir/main_loop.h"
 
 #include "broadcasting_session_event_sink.h"
 #include "mediating_display_changer.h"

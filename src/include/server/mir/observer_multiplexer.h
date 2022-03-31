@@ -20,16 +20,12 @@
 #define MIR_OBSERVER_MULTIPLEXER_H_
 
 #include "mir/observer_registrar.h"
-#include "mir/raii.h"
 #include "mir/posix_rw_mutex.h"
 #include "mir/executor.h"
-#include "mir/main_loop.h"
 
 #include <vector>
 #include <algorithm>
 #include <mutex>
-#include <thread>
-#include <shared_mutex>
 
 namespace mir
 {
