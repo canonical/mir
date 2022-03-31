@@ -785,7 +785,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         prep_surface_spec(lock, spec);
     }
 
-    auto const surface = shell->create_surface(session, mw::make_weak(wl_surface), spec, observer);
+    auto const surface = shell->create_surface(session, mw::make_weak(wl_surface), spec, observer, nullptr);
     inform_client_of_window_state(state);
     auto const top_left = scaled_top_left_of(*surface) + scaled_content_offset_of(*surface);
     auto const size = scaled_content_size_of(*surface);

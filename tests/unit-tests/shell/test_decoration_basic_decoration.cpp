@@ -133,11 +133,12 @@ struct MockShell
         uint64_t,
         MirResizeEdge));
 
-    MOCK_METHOD4(create_surface, std::shared_ptr<ms::Surface>(
+    MOCK_METHOD5(create_surface, std::shared_ptr<ms::Surface>(
         std::shared_ptr<ms::Session> const&,
         mw::Weak<mf::WlSurface> const&,
         msh::SurfaceSpecification const&,
-        std::shared_ptr<ms::SurfaceObserver> const&));
+        std::shared_ptr<ms::SurfaceObserver> const&,
+        mir::Executor*));
 
     MOCK_METHOD2(destroy_surface, void(
         std::shared_ptr<ms::Session> const&,
@@ -149,12 +150,13 @@ struct DecorationBasicDecoration
 {
     void SetUp() override
     {
-        ON_CALL(shell, create_surface(_, _, _, _))
+        ON_CALL(shell, create_surface(_, _, _, _, _))
             .WillByDefault(Invoke([this](
                     std::shared_ptr<ms::Session> const&,
                     mw::Weak<mf::WlSurface> const&,
                     msh::SurfaceSpecification const& params,
-                    std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<ms::Surface>
+                    std::shared_ptr<ms::SurfaceObserver> const& observer,
+                    mir::Executor*) -> std::shared_ptr<ms::Surface>
                 {
                     creation_params = params;
                     decoration_surface.resize({params.width.value(), params.height.value()});

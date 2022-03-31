@@ -31,6 +31,7 @@
 namespace mir
 {
 class ClientVisibleError;
+class Executor;
 namespace compositor
 {
 class BufferStream;
@@ -96,7 +97,8 @@ public:
         std::shared_ptr<Session> const& session,
         wayland::Weak<frontend::WlSurface> const& wayland_surface,
         shell::SurfaceSpecification const& params,
-        std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<Surface> = 0;
+        std::shared_ptr<scene::SurfaceObserver> const& observer,
+        Executor* observer_executor) -> std::shared_ptr<Surface> = 0;
     virtual void destroy_surface(std::shared_ptr<Surface> const& surface) = 0;
     virtual auto surface_after(std::shared_ptr<Surface> const& surface) const -> std::shared_ptr<Surface> = 0;
 

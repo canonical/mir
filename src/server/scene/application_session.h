@@ -60,7 +60,8 @@ public:
         std::shared_ptr<Session> const& session,
         wayland::Weak<frontend::WlSurface> const& wayland_surface,
         shell::SurfaceSpecification const& params,
-        std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<Surface> override;
+        std::shared_ptr<scene::SurfaceObserver> const& observer,
+        Executor* observer_executor) -> std::shared_ptr<Surface> override;
     void destroy_surface(std::shared_ptr<Surface> const& surface) override;
     auto surface_after(std::shared_ptr<Surface> const& sruface) const -> std::shared_ptr<Surface> override;
 
