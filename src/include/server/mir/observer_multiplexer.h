@@ -83,11 +83,11 @@ private:
     public:
         explicit WeakObserver(std::weak_ptr<Observer> observer, Executor& executor)
             : executor{&executor},
-              run_observer{observer}
+              observer{observer}
         {
         }
 
-        /// An observer with run_mutex and run_observer locked. Used to make run observations.
+        /// A handle that excludes attempts to unregister or destroy the Observer
         class LockedObserver
         {
         public:
@@ -116,8 +116,8 @@ private:
 
         LockedObserver lock()
         {
-            std::unique_lock<std::recursive_mutex> lock{run_mutex};
-            auto live_observer = run_observer.lock();
+            std::unique_lock<std::recursive_mutex> lock{expired_mutex};
+            auto live_observer = observer.lock();
             if (live_observer && !expired)
             {
                 return LockedObserver{std::move(live_observer), std::move(lock)};
@@ -131,16 +131,17 @@ private:
         void spawn(std::function<void()>&& work)
         {
             // Executor only guaranteed to be alive as long as observer
-            if (auto const live_observer = run_observer.lock())
+            if (auto const live_observer = observer.lock())
             {
                 executor->spawn(std::move(work));
             }
         }
 
-        void spawn_if_eq(Observer const* observer, std::function<void()>&& work)
+        void spawn_if_eq(Observer const& candidate_observer, std::function<void()>&& work)
         {
-            auto const live_observer = run_observer.lock();
-            if (live_observer.get() == observer)
+            // Executor is only guaranteed to be live as long as observer
+            auto const live_observer = observer.lock();
+            if (live_observer.get() == &candidate_observer)
             {
                 executor->spawn(std::move(work));
             }
@@ -150,10 +151,10 @@ private:
         /// this held the unregistered observer or this->observer has expired)
         auto maybe_reset(Observer const* const unregistered_observer) -> bool
         {
-            auto const self = run_observer.lock().get();
+            auto const self = observer.lock().get();
             if (self == unregistered_observer)
             {
-                std::lock_guard<std::recursive_mutex> run_lock{run_mutex};
+                std::lock_guard<std::recursive_mutex> run_lock{expired_mutex};
                 expired = true;
                 return true;
             }
@@ -168,10 +169,12 @@ private:
         /// through this executor.
         Executor* executor;
 
-        std::weak_ptr<Observer> const run_observer;
+        std::weak_ptr<Observer> const observer;
 
-        /// Protects run_observer. Always locked while observations are being run.
-        std::recursive_mutex run_mutex;
+        /// mutex-guarded boolean to signal when this WeakObserver has been unregistered,
+        /// is not currently dispatching an observation and will not dispatch any future
+        /// observations.
+        std::recursive_mutex expired_mutex;
         bool expired{false};
     };
 
@@ -260,7 +263,7 @@ void ObserverMultiplexer<Observer>::for_single_observer(Observer const& target_o
     }
     for (auto& weak_observer: local_observers)
     {
-        weak_observer->spawn_if_eq(&target_observer,
+        weak_observer->spawn_if_eq(target_observer,
             [invokable_mem_fn, weak_observer = std::move(weak_observer), args...]() mutable
             {
                 if (auto observer = weak_observer->lock())
