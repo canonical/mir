@@ -26,7 +26,7 @@
 
 namespace
 {
-class LinearisingAdaptor : public mir::Executor
+class LinearisingAdaptor : public mir::NonBlockingExecutor
 {
 public:
     LinearisingAdaptor() noexcept
@@ -81,4 +81,4 @@ private:
 } adaptor;
 }
 
-mir::Executor& mir::linearising_executor = adaptor;
+mir::NonBlockingExecutor& mir::linearising_executor = adaptor;

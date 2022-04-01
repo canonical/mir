@@ -76,7 +76,7 @@ struct ms::BasicIdleHub::Multiplexer: ObserverMultiplexer<IdleStateObserver>
 
     void register_and_send_initial_state(
         std::weak_ptr<IdleStateObserver> const& observer,
-        Executor& executor,
+        NonBlockingExecutor& executor,
         bool is_active)
     {
         register_interest(observer, executor);
@@ -157,7 +157,7 @@ void ms::BasicIdleHub::register_interest(
 
 void ms::BasicIdleHub::register_interest(
     std::weak_ptr<IdleStateObserver> const& observer,
-    Executor& executor,
+    NonBlockingExecutor& executor,
     time::Duration timeout)
 {
     auto const shared_observer = observer.lock();
