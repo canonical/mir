@@ -82,8 +82,7 @@ private:
     {
     public:
         explicit WeakObserver(std::weak_ptr<Observer> observer, Executor& executor)
-            : spawn_observer{observer},
-              executor{&executor},
+            : executor{&executor},
               run_observer{observer}
         {
         }
@@ -118,7 +117,8 @@ private:
         LockedObserver lock()
         {
             std::unique_lock<std::recursive_mutex> lock{run_mutex};
-            if (auto live_observer = run_observer.lock())
+            auto live_observer = run_observer.lock();
+            if (live_observer && !expired)
             {
                 return LockedObserver{std::move(live_observer), std::move(lock)};
             }
@@ -130,9 +130,8 @@ private:
 
         void spawn(std::function<void()>&& work)
         {
-            std::lock_guard<std::recursive_mutex> lock{spawn_mutex};
             // Executor only guaranteed to be alive as long as observer
-            if (auto const live_observer = spawn_observer.lock())
+            if (auto const live_observer = run_observer.lock())
             {
                 executor->spawn(std::move(work));
             }
@@ -140,8 +139,7 @@ private:
 
         void spawn_if_eq(Observer const* observer, std::function<void()>&& work)
         {
-            std::lock_guard<std::recursive_mutex> lock{spawn_mutex};
-            auto const live_observer = spawn_observer.lock();
+            auto const live_observer = run_observer.lock();
             if (live_observer.get() == observer)
             {
                 executor->spawn(std::move(work));
@@ -152,14 +150,11 @@ private:
         /// this held the unregistered observer or this->observer has expired)
         auto maybe_reset(Observer const* const unregistered_observer) -> bool
         {
-            std::unique_lock<std::recursive_mutex> spawn_lock{spawn_mutex};
-            auto const self = spawn_observer.lock().get();
+            auto const self = run_observer.lock().get();
             if (self == unregistered_observer)
             {
-                spawn_observer.reset();
-                spawn_lock.unlock();
                 std::lock_guard<std::recursive_mutex> run_lock{run_mutex};
-                run_observer.reset();
+                expired = true;
                 return true;
             }
             else
@@ -169,21 +164,15 @@ private:
             }
         }
     private:
-        /// Protects spawn_observer and executor. Not locked while observations are being run unless the executor
-        /// blocks on work completing. A recursive mutex so we can be reset from inside an observation in the case an
-        /// executor runs the observation immediately.
-        std::recursive_mutex spawn_mutex;
-        /// A copy of the observer that can be safely used while spawn_mutex is locked. Used for checking the value of
-        /// this observer, but not running observations. Reset when observer unregistered.
-        std::weak_ptr<Observer> spawn_observer;
-        /// Only guaranteed to be alive while the observer is non-null and locked. All observations should be run
+        /// Only guaranteed to be alive while the observer is live. All observations should be run
         /// through this executor.
         Executor* executor;
 
+        std::weak_ptr<Observer> const run_observer;
+
         /// Protects run_observer. Always locked while observations are being run.
         std::recursive_mutex run_mutex;
-        /// Used to run observations. Reset wen observer unregistered.
-        std::weak_ptr<Observer> run_observer;
+        bool expired{false};
     };
 
     PosixRWMutex observer_mutex;
