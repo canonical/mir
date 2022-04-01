@@ -37,6 +37,7 @@
 #include "mir/emergency_cleanup.h"
 #include "mir/log.h"
 #include "mir/report_exception.h"
+#include "mir/main_loop.h"
 
 #include <boost/throw_exception.hpp>
 

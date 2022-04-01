@@ -20,16 +20,12 @@
 #define MIR_OBSERVER_MULTIPLEXER_H_
 
 #include "mir/observer_registrar.h"
-#include "mir/raii.h"
 #include "mir/posix_rw_mutex.h"
 #include "mir/executor.h"
-#include "mir/main_loop.h"
 
 #include <vector>
 #include <algorithm>
 #include <mutex>
-#include <thread>
-#include <shared_mutex>
 
 namespace mir
 {
@@ -86,71 +82,68 @@ private:
     {
     public:
         explicit WeakObserver(std::weak_ptr<Observer> observer, Executor& executor)
-            : observer{observer},
-              executor{executor}
+            : executor{&executor},
+              observer{observer}
         {
         }
 
+        /// A handle that excludes attempts to unregister or destroy the Observer
         class LockedObserver
         {
         public:
-            LockedObserver(LockedObserver const&) = delete;
-            LockedObserver(LockedObserver&&) = default;
-            LockedObserver& operator=(LockedObserver const&) = delete;
-            LockedObserver& operator=(LockedObserver&&) = default;
+            LockedObserver(
+                std::shared_ptr<Observer>&& observer,
+                std::unique_lock<std::recursive_mutex>&& lock)
+                : lock{std::move(lock)},
+                  observer{std::move(observer)}
+            {
+            }
 
-            ~LockedObserver() = default;
-
-            Observer& operator*()
+            Observer& operator*() const
             {
                 return *observer;
-            }
-            Observer* operator->()
-            {
-                return observer.get();
-            }
-            Observer* get()
-            {
-                return observer.get();
-            }
-
-            void spawn(std::function<void()>&& work)
-            {
-                executor->spawn(std::move(work));
             }
 
             operator bool() const
             {
                 return static_cast<bool>(observer);
             }
-        private:
-            friend class WeakObserver;
-            LockedObserver(
-                std::shared_ptr<Observer> observer,
-                Executor* const executor,
-                std::unique_lock<std::recursive_mutex>&& lock)
-                : lock{std::move(lock)},
-                  observer{std::move(observer)},
-                  executor{executor}
-            {
-            }
 
-            std::unique_lock<std::recursive_mutex> lock;
-            std::shared_ptr<Observer> observer;
-            Executor* const executor;
+        private:
+            std::unique_lock<std::recursive_mutex> const lock;
+            std::shared_ptr<Observer> const observer;
         };
 
         LockedObserver lock()
         {
-            std::unique_lock<std::recursive_mutex> lock{mutex};
+            std::unique_lock<std::recursive_mutex> lock{expired_mutex};
             auto live_observer = observer.lock();
-            if (live_observer)
+            if (live_observer && !expired)
             {
-                return LockedObserver{live_observer, &executor, std::move(lock)};
+                return LockedObserver{std::move(live_observer), std::move(lock)};
             }
             else
             {
-                return LockedObserver{nullptr, nullptr, {}};
+                return LockedObserver{nullptr, {}};
+            }
+        }
+
+        void spawn(std::function<void()>&& work)
+        {
+            // Executor only guaranteed to be alive as long as observer
+            if (auto const live_observer = observer.lock())
+            {
+                executor->spawn(std::move(work));
+            }
+        }
+
+        void spawn_if_eq(Observer const& candidate_observer, std::function<void()>&& work)
+        {
+            // Executor is only guaranteed to be live as long as observer
+            auto const live_observer = observer.lock();
+            if (live_observer.get() == &candidate_observer)
+            {
+                executor->spawn(std::move(work));
             }
         }
 
@@ -158,11 +151,11 @@ private:
         /// this held the unregistered observer or this->observer has expired)
         auto maybe_reset(Observer const* const unregistered_observer) -> bool
         {
-            std::lock_guard<std::recursive_mutex> lock{mutex};
             auto const self = observer.lock().get();
             if (self == unregistered_observer)
             {
-                observer.reset();
+                std::lock_guard<std::recursive_mutex> run_lock{expired_mutex};
+                expired = true;
                 return true;
             }
             else
@@ -172,11 +165,17 @@ private:
             }
         }
     private:
-        // A recursive_mutex so that we can reset the observer pointer from a call to
-        // a LockedObserver.
-        std::recursive_mutex mutex;
-        std::weak_ptr<Observer> observer;
-        Executor& executor;
+        /// Only guaranteed to be alive while the observer is live. All observations should be run
+        /// through this executor.
+        Executor* executor;
+
+        std::weak_ptr<Observer> const observer;
+
+        /// mutex-guarded boolean to signal when this WeakObserver has been unregistered,
+        /// is not currently dispatching an observation and will not dispatch any future
+        /// observations.
+        std::recursive_mutex expired_mutex;
+        bool expired{false};
     };
 
     PosixRWMutex observer_mutex;
@@ -238,17 +237,14 @@ void ObserverMultiplexer<Observer>::for_each_observer(MemberFn f, Args&&... args
     }
     for (auto& weak_observer: local_observers)
     {
-        if (auto observer = weak_observer->lock())
-        {
-            observer.spawn(
-                [invokable_mem_fn, weak_observer = std::move(weak_observer), args...]() mutable
+        weak_observer->spawn(
+            [invokable_mem_fn, weak_observer = std::move(weak_observer), args...]() mutable
+            {
+                if (auto observer = weak_observer->lock())
                 {
-                    if (auto observer = weak_observer->lock())
-                    {
-                        invokable_mem_fn(observer, std::forward<Args>(args)...);
-                    }
-                });
-        }
+                    invokable_mem_fn(observer, std::forward<Args>(args)...);
+                }
+            });
     }
 }
 
@@ -267,23 +263,16 @@ void ObserverMultiplexer<Observer>::for_single_observer(Observer const& target_o
     }
     for (auto& weak_observer: local_observers)
     {
-        if (auto observer = weak_observer->lock())
-        {
-            if (observer.get() == &target_observer)
+        weak_observer->spawn_if_eq(target_observer,
+            [invokable_mem_fn, weak_observer = std::move(weak_observer), args...]() mutable
             {
-                observer.spawn(
-                    [invokable_mem_fn, weak_observer = std::move(weak_observer), args...]() mutable
-                    {
-                        if (auto observer = weak_observer->lock())
-                        {
-                            invokable_mem_fn(observer, std::forward<Args>(args)...);
-                        }
-                    });
-            }
-        }
+                if (auto observer = weak_observer->lock())
+                {
+                    invokable_mem_fn(observer, std::forward<Args>(args)...);
+                }
+            });
     }
 }
 }
 
-
-#endif //MIR_OBSERVER_MULTIPLEXER_H_
+#endif // MIR_OBSERVER_MULTIPLEXER_H_

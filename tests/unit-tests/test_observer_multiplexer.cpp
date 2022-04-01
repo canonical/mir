@@ -599,6 +599,97 @@ TEST(ObserverMultiplexer, can_trigger_observers_from_observers)
     executor.drain_work();
 }
 
+TEST(ObserverMultiplexer, can_trigger_observer_during_observation_from_other_thread)
+{
+    using namespace testing;
+    constexpr char const* first_observation = "Elementary, my dear Watson";
+    constexpr char const* second_observation = "You're one microscopic cog in his catastrophic plan";
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
+    EXPECT_CALL(*observer, observation_made(StrEq(first_observation)))
+        .WillOnce(InvokeWithoutArgs([&]()
+            {
+                mt::AutoJoinThread([&]()
+                    {
+                        multiplexer.observation_made(second_observation);
+                    });
+            }));
+    EXPECT_CALL(*observer, observation_made(StrEq(second_observation)));
+
+    multiplexer.register_interest(observer);
+
+    multiplexer.observation_made(first_observation);
+
+    executor.drain_work();
+}
+
+TEST(ObserverMultiplexer, can_trigger_single_observer_during_single_observer_observation_from_other_thread)
+{
+    using namespace testing;
+    constexpr char const* first_observation = "Elementary, my dear Watson";
+    constexpr char const* second_observation = "You're one microscopic cog in his catastrophic plan";
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
+    EXPECT_CALL(*observer, observation_made(StrEq(first_observation)))
+        .WillOnce(InvokeWithoutArgs([&]()
+            {
+                mt::AutoJoinThread([&]()
+                    {
+                        multiplexer.single_observer_observation(*observer, second_observation);
+                    });
+            }));
+    EXPECT_CALL(*observer, observation_made(StrEq(second_observation)));
+
+    multiplexer.register_interest(observer);
+
+    multiplexer.single_observer_observation(*observer, first_observation);
+
+    executor.drain_work();
+}
+
+TEST(ObserverMultiplexer, can_remove_observer_during_other_observers_observation_from_other_thread)
+{
+    using namespace testing;
+    constexpr char const* first_observation = "Elementary, my dear Watson";
+    constexpr char const* second_observation = "You're one microscopic cog in his catastrophic plan";
+
+    auto observer_a = std::make_shared<NiceMock<MockObserver>>();
+    auto observer_b = std::make_shared<NiceMock<MockObserver>>();
+
+    ThreadedExecutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
+    EXPECT_CALL(*observer_a, observation_made(StrEq(first_observation)))
+        .WillOnce(InvokeWithoutArgs([&]()
+            {
+                mt::AutoJoinThread([&]()
+                    {
+                        multiplexer.unregister_interest(*observer_b);
+                    });
+            }));
+    EXPECT_CALL(*observer_a, observation_made(StrEq(second_observation)));
+
+    EXPECT_CALL(*observer_b, observation_made(StrEq(first_observation))).Times(AnyNumber()); // May or may not be called
+    EXPECT_CALL(*observer_b, observation_made(StrEq(second_observation))).Times(0);
+
+    multiplexer.register_interest(observer_a);
+    multiplexer.register_interest(observer_b);
+
+    multiplexer.observation_made(first_observation);
+    executor.drain_work();
+
+    multiplexer.observation_made(second_observation);
+    executor.drain_work();
+}
+
 TEST(ObserverMultiplexer, addition_takes_effect_immediately_even_in_callback)
 {
     using namespace testing;
