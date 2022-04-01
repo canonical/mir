@@ -627,7 +627,7 @@ TEST(ObserverMultiplexer, can_trigger_observer_during_observation_from_other_thr
     executor.drain_work();
 }
 
-TEST(ObserverMultiplexer, can_trigger_singl_observer_during_single_observer_observation_from_other_thread)
+TEST(ObserverMultiplexer, can_trigger_single_observer_during_single_observer_observation_from_other_thread)
 {
     using namespace testing;
     constexpr char const* first_observation = "Elementary, my dear Watson";
