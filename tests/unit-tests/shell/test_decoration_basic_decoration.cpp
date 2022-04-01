@@ -189,7 +189,7 @@ struct DecorationBasicDecoration
 
     NiceMock<MockShell> shell;
     mtd::StubBufferAllocator buffer_allocator;
-    mtd::ExplicitExectutor executor;
+    mtd::ExplicitExecutor executor;
     StubCursorImages cursor_images;
     std::shared_ptr<msd::BasicDecoration> basic_decoration;
     std::shared_ptr<NiceMock<mtd::MockSceneSession>> session{std::make_shared<NiceMock<mtd::MockSceneSession>>()};

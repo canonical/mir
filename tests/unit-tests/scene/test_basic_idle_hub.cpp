@@ -44,7 +44,7 @@ struct BasicIdleHub: Test
     mtd::AdvanceableClock clock;
     mtd::FakeAlarmFactory alarm_factory{};
     ms::BasicIdleHub hub{mt::fake_shared(clock), alarm_factory};
-    mtd::ExplicitExectutor executor;
+    mtd::ExplicitExecutor executor;
 
     void advance_by(mir::time::Duration step)
     {
