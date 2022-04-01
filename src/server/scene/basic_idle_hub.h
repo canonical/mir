@@ -58,11 +58,9 @@ public:
         std::weak_ptr<IdleStateObserver> const& observer,
         time::Duration timeout) override;
 
-    /// Idle and active notifications will be sent via the specified executor. The executor must not block the calling
-    /// thread.
     void register_interest(
         std::weak_ptr<IdleStateObserver> const& observer,
-        Executor& executor,
+        NonBlockingExecutor& executor,
         time::Duration timeout) override;
 
     void unregister_interest(IdleStateObserver const& observer) override;

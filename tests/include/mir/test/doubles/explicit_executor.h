@@ -32,7 +32,7 @@ namespace doubles
 {
 
 class ExplicitExectutor
-    : public Executor
+    : public NonBlockingExecutor
 {
 public:
     ~ExplicitExectutor()

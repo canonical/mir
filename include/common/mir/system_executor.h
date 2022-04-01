@@ -23,7 +23,7 @@
 
 namespace mir
 {
-class SystemExecutor : public Executor
+class SystemExecutor : public NonBlockingExecutor
 {
 public:
     void spawn(std::function<void()>&& work) override;
@@ -47,7 +47,7 @@ protected:
     SystemExecutor() = default;
 };
 
-extern Executor& system_executor;
+extern NonBlockingExecutor& system_executor;
 }
 
 #endif //MIR_SYSTEM_EXECUTOR_H_

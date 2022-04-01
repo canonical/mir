@@ -52,6 +52,13 @@ protected:
     virtual ~Executor() = default;
 };
 
+/**
+ * An executor which never blocks the spawn() method on work completing.
+ */
+class NonBlockingExecutor: public Executor
+{
+};
+
 }
 
 #endif // MIR_EXECUTOR_H_
