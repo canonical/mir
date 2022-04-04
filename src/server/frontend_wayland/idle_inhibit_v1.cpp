@@ -93,11 +93,15 @@ mf::IdleInhibitManagerV1Global::IdleInhibitManagerV1Global(
     : Global{display, Version<1>()},
       ctx{ctx}
 {
+    // TODO - remove
+    mir::log_info("Client asking for IdleInhibitManagerV1Global");
 }
 
-void mf::IdleInhibitManagerV1Global::bind(wl_resource *new_resource)
+void mf::IdleInhibitManagerV1Global::bind(wl_resource* new_resource)
 {
-    new IdleInhibitManagerV1{new_resource};
+    // TODO - remove
+    mir::log_info("Client calling IdleInhibitManagerV1Global::bind()");
+    new IdleInhibitManagerV1{new_resource, ctx};
 }
 
 mf::IdleInhibitManagerV1::IdleInhibitManagerV1(
@@ -106,9 +110,10 @@ mf::IdleInhibitManagerV1::IdleInhibitManagerV1(
         : wayland::IdleInhibitManagerV1{resource, Version<1>()},
           ctx{ctx}
 {
+    mir::log_info("Client asking for idle inhibit! (Manager)");
 }
 
-void mf::IdleInhibitManagerV1::create_inhibitor(struct wl_resource *id, struct wl_resource *surface)
+void mf::IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct wl_resource* surface)
 {
     // TODO - remove log and snarky comment
     mir::log_info("Client calling IdleInhibitManagerV1::create_inhibitor()");
@@ -133,6 +138,6 @@ mf::IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<Idle
     ctx->idle_hub->inhibit_idle();
 }
 
-mf::IdleInhibitManagerV1::~IdleInhibitManagerV1()
+mf::IdleInhibitorV1::~IdleInhibitorV1()
 {
 }
