@@ -82,8 +82,8 @@ private:
     {
     public:
         explicit WeakObserver(std::weak_ptr<Observer> observer, Executor& executor)
-            : executor{&executor},
-              observer{observer}
+            : observer{observer},
+              executor{&executor}
         {
         }
 
@@ -130,8 +130,10 @@ private:
 
         void spawn(std::function<void()>&& work)
         {
+            std::lock_guard<std::recursive_mutex> lock{executor_mutex};
             // Executor only guaranteed to be alive as long as observer
-            if (auto const live_observer = observer.lock())
+            auto const live_observer = observer.lock();
+            if (executor && live_observer)
             {
                 executor->spawn(std::move(work));
             }
@@ -139,9 +141,10 @@ private:
 
         void spawn_if_eq(Observer const& candidate_observer, std::function<void()>&& work)
         {
+            std::lock_guard<std::recursive_mutex> lock{executor_mutex};
             // Executor is only guaranteed to be live as long as observer
             auto const live_observer = observer.lock();
-            if (live_observer.get() == &candidate_observer)
+            if (executor && live_observer.get() == &candidate_observer)
             {
                 executor->spawn(std::move(work));
             }
@@ -154,6 +157,9 @@ private:
             auto const self = observer.lock().get();
             if (self == unregistered_observer)
             {
+                std::unique_lock<std::recursive_mutex> executor_lock{executor_mutex};
+                executor = nullptr;
+                executor_lock.unlock();
                 std::lock_guard<std::recursive_mutex> run_lock{expired_mutex};
                 expired = true;
                 return true;
@@ -165,11 +171,13 @@ private:
             }
         }
     private:
+        std::weak_ptr<Observer> const observer;
+
+        /// Guards executor, which is nulled out on unregister_interest
+        std::recursive_mutex executor_mutex;
         /// Only guaranteed to be alive while the observer is live. All observations should be run
         /// through this executor.
         Executor* executor;
-
-        std::weak_ptr<Observer> const observer;
 
         /// mutex-guarded boolean to signal when this WeakObserver has been unregistered,
         /// is not currently dispatching an observation and will not dispatch any future
