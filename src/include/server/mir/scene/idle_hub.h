@@ -68,10 +68,10 @@ public:
 
     virtual void unregister_interest(IdleStateObserver const& observer) = 0;
 
-    /// Inhibits idling function if not set
+    /// Inhibits idling on all surfaces until resumed
     virtual void inhibit_idle() = 0;
 
-    /// Releases inhibit_idle() if set
+    /// Resumes idling on all surfaces if inhibited, does nothing otherwise
     virtual void resume_idle() = 0;
 
 private:
