@@ -68,7 +68,9 @@ public:
     void unregister_interest(IdleStateObserver const& observer) override;
 
     void inhibit_idle() override;
+
     void resume_idle() override;
+
 
 private:
     struct Multiplexer;
