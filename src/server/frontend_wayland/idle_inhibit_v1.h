@@ -21,6 +21,8 @@
 
 #include "idle-inhibit-unstable-v1_wrapper.h"
 
+#include <memory>
+
 namespace mir
 {
 class Executor;
