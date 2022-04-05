@@ -140,20 +140,24 @@ std::string describe_probe_result(mg::PlatformPriority priority)
     return std::string{"BEST + "} + std::to_string(priority - mg::PlatformPriority::best);
 }
 
-bool test_probe(mir::SharedLibrary const& dso, MinimalServerEnvironment& config)
+auto test_probe(mir::SharedLibrary const& dso, MinimalServerEnvironment& config) -> std::vector<mg::SupportedDevice>
 {
     try
     {
         auto probe_fn =
             dso.load_function<mg::PlatformProbe>("probe_graphics_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
-        auto const result = probe_fn(
+        auto result = probe_fn(
             config.console_services(),
+            std::make_shared<mir::udev::Context>(),
             *std::dynamic_pointer_cast<mir::options::ProgramOption>(config.options()));
 
-        std::cout << "Probe result: " << describe_probe_result(result) << "(" << result << ")" << std::endl;
+        for (auto const& device : result)
+        {
+            std::cout << "Probe result: " << describe_probe_result(device.support_level) << "(" << device.support_level << ")" << std::endl;
+        }
 
-        return result > mg::PlatformPriority::dummy;
+        return result;
     }
     catch (...)
     {
@@ -540,7 +544,7 @@ int main(int argc, char const** argv)
     bool success = true;
     try
     {
-        success &= test_probe(platform_dso, config);
+        auto devices = test_probe(platform_dso, config);
         if (auto platform = test_platform_construction(platform_dso, config))
         {
             if (auto display = test_display_construction(*platform, config))

@@ -110,20 +110,36 @@ private:
 
 }
 
-mg::PlatformPriority probe_display_platform(
+auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mo::ProgramOption const& /*options*/)
+    std::shared_ptr<mir::udev::Context> const&,
+    mir::options::ProgramOption const&) -> std::vector<mir::graphics::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
-    return mg::PlatformPriority::unsupported;
+    std::vector<mg::SupportedDevice> result;
+    result.emplace_back(
+        mg::SupportedDevice {
+            nullptr,
+            mg::PlatformPriority::unsupported,
+            nullptr
+         });
+    return result;
 }
 
-mg::PlatformPriority probe_rendering_platform(
+auto probe_rendering_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mo::ProgramOption const& /*options*/)
+    std::shared_ptr<mir::udev::Context> const&,
+    mir::options::ProgramOption const&) -> std::vector<mir::graphics::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
-    return mg::PlatformPriority::unsupported;
+    std::vector<mg::SupportedDevice> result;
+    result.emplace_back(
+        mg::SupportedDevice {
+            nullptr,
+            mg::PlatformPriority::unsupported,
+            nullptr
+         });
+    return result;
 }
 
 mir::ModuleProperties const description {

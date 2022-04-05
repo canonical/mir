@@ -177,13 +177,13 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 
     auto modules = available_platforms();
 
-    auto selected_modules = mir::graphics::display_modules_for_device(
+    auto selection_result = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<StubConsoleServices>());
 
     std::vector<std::string> found_platforms;
-    for (auto& module : selected_modules)
+    for (auto& [device, module] : selection_result)
     {
         auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
         auto description = descriptor();
@@ -211,13 +211,13 @@ TEST_F(ServerPlatformProbeMockDRM, returns_kms_platform_when_nested)
 
     auto modules = available_platforms();
 
-    auto selected_modules = mir::graphics::display_modules_for_device(
+    auto selection_result = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<StubConsoleServices>());
 
     std::vector<std::string> found_platforms;
-    for (auto& module : selected_modules)
+    for (auto& [device, module] : selection_result)
     {
         auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
         auto description = descriptor();
@@ -251,14 +251,14 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     auto modules = available_platforms();
     add_dummy_platform(modules);
 
-    auto selected_modules = mir::graphics::display_modules_for_device(
+    auto selection_result = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<mtd::NullConsoleServices>());
-    ASSERT_THAT(selected_modules, Not(IsEmpty()));
+    ASSERT_THAT(selection_result, Not(IsEmpty()));
 
     std::vector<std::string> loaded_descriptors;
-    for (auto const& module : selected_modules)
+    for (auto const& [device, module] : selection_result)
     {
         auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
         loaded_descriptors.emplace_back(descriptor()->name);
