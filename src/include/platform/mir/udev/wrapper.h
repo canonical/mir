@@ -73,6 +73,12 @@ public:
      * \note    udev devices may be parentless. This returns an empty unique_ptr on parentless udev devices.
      */
     virtual auto parent() const -> std::unique_ptr<Device> = 0;
+    /**
+     * Copy this Device handle
+     *
+     * \return A copy of this Device
+     */
+    virtual auto clone() const -> std::unique_ptr<Device> = 0;
 protected:
     Device() = default;
 };
