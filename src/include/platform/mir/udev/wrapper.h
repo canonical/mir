@@ -40,7 +40,8 @@ public:
     Context(Context const&) = delete;
     Context& operator=(Context const&) = delete;
 
-    std::shared_ptr<Device> device_from_syspath(std::string const& syspath);
+    auto device_from_syspath(std::string const& syspath) -> std::unique_ptr<Device>;
+    auto char_device_from_devnum(dev_t devnum) -> std::unique_ptr<Device>;
 
     ::udev* ctx() const;
 

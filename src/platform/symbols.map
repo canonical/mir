@@ -204,5 +204,6 @@ MIR_PLATFORM_2.8 {
     mir::graphics::drm_modifier_to_string*;
  
     mir::udev::Device::clone*;
+    mir::udev::Context::char_device_from_devnum*;
    };
 } MIRPLATFORM_2.7;

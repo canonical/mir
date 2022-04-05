@@ -295,9 +295,14 @@ mu::Context::~Context() noexcept
     udev_unref(context);
 }
 
-std::shared_ptr<mu::Device> mu::Context::device_from_syspath(std::string const& syspath)
+auto mu::Context::device_from_syspath(std::string const& syspath) -> std::unique_ptr<Device>
 {
-    return std::make_shared<DeviceImpl>(udev_device_new_from_syspath(context, syspath.c_str()));
+    return std::make_unique<DeviceImpl>(udev_device_new_from_syspath(context, syspath.c_str()));
+}
+
+auto mu::Context::char_device_from_devnum(dev_t devnum) -> std::unique_ptr<Device>
+{
+    return std::make_unique<DeviceImpl>(udev_device_new_from_devnum(context, 'C', devnum));
 }
 
 udev* mu::Context::ctx() const
