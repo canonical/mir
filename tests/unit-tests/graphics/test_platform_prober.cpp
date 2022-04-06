@@ -192,40 +192,6 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 
     EXPECT_THAT(found_platforms, Contains(HasSubstr("gbm-kms")));
 }
-
-//LP: #1526225, LP: #1526505, LP: #1515558, LP: #1526209
-TEST_F(ServerPlatformProbeMockDRM, returns_kms_platform_when_nested)
-{
-    using namespace testing;
-    ON_CALL(mock_drm, drmSetMaster(_))
-        .WillByDefault(Return(-1));
-
-    mir::options::ProgramOption options;
-    boost::program_options::options_description desc("");
-    desc.add_options()
-        ("host-socket", boost::program_options::value<std::string>(), "Host socket filename");
-    std::array<char const*, 3> args {{ "./aserver", "--host-socket", "/dev/null" }};
-    options.parse_arguments(desc, args.size(), args.data());
-
-    auto block_mesa = ensure_mesa_probing_succeeds();
-
-    auto modules = available_platforms();
-
-    auto selection_result = mir::graphics::display_modules_for_device(
-        modules,
-        options,
-        std::make_shared<StubConsoleServices>());
-
-    std::vector<std::string> found_platforms;
-    for (auto& [device, module] : selection_result)
-    {
-        auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
-        auto description = descriptor();
-        found_platforms.emplace_back(description->name);
-    }
-
-    EXPECT_THAT(found_platforms, Contains(HasSubstr("gbm-kms")));
-}
 #endif
 
 TEST(ServerPlatformProbe, ThrowsExceptionWhenNothingProbesSuccessfully)
