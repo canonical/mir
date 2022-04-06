@@ -233,13 +233,12 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     EXPECT_THAT(loaded_descriptors, Contains(HasSubstr("mir:stub-graphics")));
 }
 
-TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
+TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
 {
     using namespace testing;
     mir::options::ProgramOption options;
-    auto ensure_mesa = ensure_mesa_probing_succeeds();
 
-    auto modules = available_platforms();
+    std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
     add_dummy_platform(modules);
 
     // NOTE: We want to load something that doesn't link with libmirplatform,
