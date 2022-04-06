@@ -246,8 +246,7 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::XdgShellV6::interface_name,
         mw::XdgOutputManagerV1::interface_name,
         mw::TextInputManagerV2::interface_name,
-        mw::TextInputManagerV3::interface_name,
-        mw::IdleInhibitManagerV1::interface_name};
+        mw::TextInputManagerV3::interface_name};
 }
 
 auto mf::get_supported_extensions() -> std::vector<std::string>
