@@ -47,13 +47,9 @@ namespace mgl = mir::gl;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
-mrg::CurrentRenderTarget::CurrentRenderTarget(mg::DisplayBuffer* display_buffer)
-    : render_target{
-        dynamic_cast<renderer::gl::RenderTarget*>(display_buffer->native_display_buffer())}
+mrg::CurrentRenderTarget::CurrentRenderTarget(RenderTarget& render_target)
+    : render_target{&render_target}
 {
-    if (!render_target)
-        BOOST_THROW_EXCEPTION(std::logic_error("DisplayBuffer does not support GL rendering"));
-
     ensure_current();
 }
 
@@ -304,8 +300,8 @@ mrg::Renderer::Program::Program(GLuint program_id)
     alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
-mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
-    : render_target(&display_buffer),
+mrg::Renderer::Renderer(RenderTarget& render_target, geometry::Rectangle const& viewport)
+    : render_target(render_target),
       clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       program_factory{std::make_unique<ProgramFactory>()},
       display_transform(1)
@@ -359,7 +355,7 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    set_viewport(display_buffer.view_area());
+    set_viewport(viewport);
 }
 
 mrg::Renderer::~Renderer()

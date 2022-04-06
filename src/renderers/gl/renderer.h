@@ -42,7 +42,7 @@ namespace gl
 class CurrentRenderTarget
 {
 public:
-    CurrentRenderTarget(graphics::DisplayBuffer* display_buffer);
+    CurrentRenderTarget(RenderTarget& render_target);
     ~CurrentRenderTarget();
 
     void ensure_current();
@@ -56,7 +56,8 @@ private:
 class Renderer : public renderer::Renderer
 {
 public:
-    Renderer(graphics::DisplayBuffer& display_buffer);
+    /// render_target is owned externally, and must be kept alive as long as this object.
+    Renderer(RenderTarget& render_target, geometry::Rectangle const& viewport);
     virtual ~Renderer();
 
     // These are called with a valid GL context:
