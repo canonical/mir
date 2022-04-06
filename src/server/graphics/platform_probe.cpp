@@ -41,8 +41,8 @@ auto probe_module(
 
     auto desc = describe();
     mir::log_info("Found %s driver: %s (version %d.%d.%d)",
-                  desc->name,
                   platform_type_name,
+                  desc->name,
                   desc->major_version,
                   desc->minor_version,
                   desc->micro_version);

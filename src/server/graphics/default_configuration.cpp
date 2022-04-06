@@ -206,7 +206,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                     MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
                 auto description = describe_module();
-                mir::log_info("Selected driver: %s (version %d.%d.%d)",
+                mir::log_info("Selected display driver: %s (version %d.%d.%d)",
                               description->name,
                               description->major_version,
                               description->minor_version,
@@ -308,7 +308,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                     MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
                 auto description = describe_module();
-                mir::log_info("Selected driver: %s (version %d.%d.%d)",
+                mir::log_info("Selected rendering driver: %s (version %d.%d.%d)",
                               description->name,
                               description->major_version,
                               description->minor_version,
