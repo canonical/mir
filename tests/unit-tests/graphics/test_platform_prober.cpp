@@ -197,6 +197,28 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 
     EXPECT_THAT(found_platforms, Contains(HasSubstr("gbm-kms")));
 }
+
+TEST_F(ServerPlatformProbeMockDRM, DoesNotLoadDummyPlatformWhenBetterPlatformExists)
+{
+    using namespace testing;
+    mir::options::ProgramOption options;
+    auto fake_mesa = ensure_mesa_probing_succeeds();
+
+    auto modules = available_platforms();
+    add_dummy_platform(modules);
+    add_broken_platform(modules);
+
+    auto selection_result = mir::graphics::display_modules_for_device(
+        modules,
+        options,
+        std::make_shared<StubConsoleServices>());
+
+    EXPECT_THAT(selection_result, Not(IsEmpty()));
+    for (auto& [device, module] : selection_result)
+    {
+        EXPECT_THAT(device.support_level, Gt(mir::graphics::PlatformPriority::dummy));
+    }
+}
 #endif
 
 TEST(ServerPlatformProbe, ThrowsExceptionWhenNothingProbesSuccessfully)
