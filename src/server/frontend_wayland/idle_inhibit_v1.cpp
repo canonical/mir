@@ -181,4 +181,6 @@ void mf::IdleInhibitorV1::idle()
 
 mf::IdleInhibitorV1::~IdleInhibitorV1()
 {
+    ctx->idle_hub->resume_idle();
+    ctx->idle_hub->unregister_interest(*state_observer);
 }
