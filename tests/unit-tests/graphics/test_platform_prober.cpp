@@ -61,6 +61,11 @@ void add_dummy_platform(std::vector<std::shared_ptr<mir::SharedLibrary>>& module
     modules.insert(modules.begin(), std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-dummy.so")));
 }
 
+void add_broken_platform(std::vector<std::shared_ptr<mir::SharedLibrary>>& modules)
+{
+    modules.insert(modules.begin(), std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-throw.so")));
+}
+
 std::shared_ptr<void> ensure_mesa_probing_fails()
 {
     return std::make_shared<mtf::UdevEnvironment>();
@@ -200,9 +205,12 @@ TEST(ServerPlatformProbe, ThrowsExceptionWhenNothingProbesSuccessfully)
     mir::options::ProgramOption options;
     auto block_mesa = ensure_mesa_probing_fails();
 
+    auto modules = available_platforms();
+    add_broken_platform(modules);
+
     EXPECT_THROW(
         mir::graphics::display_modules_for_device(
-            available_platforms(),
+            modules,
             options,
             std::make_shared<mtd::NullConsoleServices>()),
         std::runtime_error);
