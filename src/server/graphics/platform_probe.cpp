@@ -176,7 +176,7 @@ auto modules_for_device(
                         best_modules_so_far.emplace_back(std::move(device), module);
                     }
                 }
-                else
+                else if (device.support_level > mg::PlatformPriority::unsupported)
                 {
                     // Devices with null associated udev device are not combined with any others
                     best_modules_so_far.emplace_back(std::move(device), module);
