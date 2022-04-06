@@ -398,7 +398,13 @@ void basic_software_buffer_drawing(
         display,
         [&renderers, &factory, &min_height, &min_width](mg::DisplayBuffer& db)
         {
-            renderers.push_back(factory.create_renderer_for(db));
+            auto const render_target = dynamic_cast<mir::renderer::gl::RenderTarget*>(db.native_display_buffer());
+            if (!render_target)
+            {
+                BOOST_THROW_EXCEPTION(std::logic_error("DisplayBuffer does not support GL rendering"));
+            }
+            renderers.push_back(factory.create_renderer_for(*render_target));
+            renderers.back()->set_viewport(db.view_area());
             min_height = std::min(min_height, db.view_area().bottom().as_int());
             min_width = std::min(min_width, db.view_area().right().as_int());
         });

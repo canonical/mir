@@ -57,7 +57,7 @@ class Renderer : public renderer::Renderer
 {
 public:
     /// render_target is owned externally, and must be kept alive as long as this object.
-    Renderer(RenderTarget& render_target, geometry::Rectangle const& viewport);
+    Renderer(RenderTarget& render_target);
     virtual ~Renderer();
 
     // These are called with a valid GL context:

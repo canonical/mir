@@ -31,8 +31,7 @@ namespace gl
 class RendererFactory : public renderer::RendererFactory
 {
 public:
-    std::unique_ptr<renderer::Renderer> create_renderer_for(
-        graphics::DisplayBuffer& display_buffer) override;
+    std::unique_ptr<renderer::Renderer> create_renderer_for(RenderTarget& render_target) override;
 };
 
 }

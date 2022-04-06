@@ -29,6 +29,10 @@ struct DisplayBuffer;
 }
 namespace renderer
 {
+namespace gl
+{
+class RenderTarget;
+}
 
 class Renderer;
 
@@ -37,7 +41,7 @@ class RendererFactory
 public:
     virtual ~RendererFactory() = default;
 
-    virtual std::unique_ptr<Renderer> create_renderer_for(graphics::DisplayBuffer& display_buffer) = 0;
+    virtual std::unique_ptr<Renderer> create_renderer_for(gl::RenderTarget& render_target) = 0;
 
 protected:
     RendererFactory() = default;

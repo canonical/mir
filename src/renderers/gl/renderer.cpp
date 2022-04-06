@@ -300,7 +300,7 @@ mrg::Renderer::Program::Program(GLuint program_id)
     alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
-mrg::Renderer::Renderer(RenderTarget& render_target, geometry::Rectangle const& viewport)
+mrg::Renderer::Renderer(RenderTarget& render_target)
     : render_target(render_target),
       clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       program_factory{std::make_unique<ProgramFactory>()},
@@ -354,8 +354,6 @@ mrg::Renderer::Renderer(RenderTarget& render_target, geometry::Rectangle const& 
                   rbits, gbits, bbits, abits, dbits, sbits);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    set_viewport(viewport);
 }
 
 mrg::Renderer::~Renderer()

@@ -58,7 +58,7 @@ class StubRendererFactory : public mir::renderer::RendererFactory
 {
 public:
     std::unique_ptr<mir::renderer::Renderer>
-        create_renderer_for(mg::DisplayBuffer&) override
+        create_renderer_for(mir::renderer::gl::RenderTarget&) override
     {
         return std::unique_ptr<mtd::StubRenderer>(new mtd::StubRenderer);
     }
