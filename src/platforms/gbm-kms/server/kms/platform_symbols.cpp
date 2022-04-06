@@ -286,7 +286,7 @@ auto probe_rendering_platform(
     mir::udev::Enumerator drm_devices{udev};
     drm_devices.match_subsystem("drm");
     drm_devices.match_sysname("card[0-9]*");
-    drm_devices.match_sysname("render[0-9]*");
+    drm_devices.match_sysname("renderD[0-9]*");
     drm_devices.scan_devices();
 
     if (drm_devices.begin() == drm_devices.end())
