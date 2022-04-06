@@ -71,7 +71,36 @@ public:
     ~IdleInhibitorV1();
 
 private:
+    struct StateObserver : ms::IdleStateObserver
+    {
+        StateObserver(IdleInhibitorV1* idle_inhibitor)
+                : idle_inhibitor{idle_inhibitor}
+        {
+        }
+
+        void idle() override
+        {
+           // TODO
+        }
+
+        void active() override
+        {
+            // TODO
+        }
+
+        IdleInhibitorV1* const idle_inhibitor;
+    };
+
     std::shared_ptr<IdleInhibitV1Ctx> const ctx;
+    std::shared_ptr<StateObserver> const state_observer;
+
+    /// Called by the state observer
+    /// @{
+    void active();
+    void idle();
+    /// @}
+
+
     // wayland::Weak<WlSurface> current_surface; // To be used when detecting active surface
 };
 }
@@ -132,10 +161,22 @@ void mf::IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct w
 
 mf::IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
         : wayland::IdleInhibitorV1{resource, Version<1>()},
-          ctx{ctx}
+          ctx{ctx},
+          state_observer{std::make_shared<StateObserver>(this)}
 {
     mir::log_info("IdleInhibitorV1 created!");
     ctx->idle_hub->inhibit_idle();
+    ctx->idle_hub->register_interest(state_observer, time::Duration(0));
+}
+
+void mf::IdleInhibitorV1::active()
+{
+// Currently unused
+}
+
+void mf::IdleInhibitorV1::idle()
+{
+// Currently unused
 }
 
 mf::IdleInhibitorV1::~IdleInhibitorV1()
