@@ -50,7 +50,6 @@ namespace mo = mir::options;
 namespace
 {
 char const* bypass_option_name{"bypass"};
-char const* host_socket{"host-socket"};
 
 }
 
