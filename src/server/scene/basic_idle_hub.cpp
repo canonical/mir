@@ -269,7 +269,7 @@ void ms::BasicIdleHub::inhibit_idle()
 {
     // Only the window in focus should be able to call inhibit_idle()
     mir::log_info("Calling inhibit_idle()");
-    alarm->reschedule_in(std::chrono::duration_cast<std::chrono::milliseconds>(alarm_timeout.value()));
+    alarm->cancel();
 }
 
 void ms::BasicIdleHub::resume_idle()
