@@ -42,7 +42,6 @@
 #include <sys/sysmacros.h>
 #include <boost/exception/errinfo_file_name.hpp>
 #include <xf86drmMode.h>
-#include <span>
 
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
@@ -163,8 +162,9 @@ auto probe_display_platform(
     }
 
     std::vector<mg::SupportedDevice> supported_devices;
-    for (auto device : std::span{devices.get(), static_cast<size_t>(device_count)})
+    for (auto i = 0; i <= device_count; ++i)
     {
+        auto const& device = devices[i];
         auto device_extensions = eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
         if (device_extensions)
         {
@@ -412,8 +412,9 @@ auto probe_rendering_platform(
     }
 
     std::vector<mg::SupportedDevice> supported_devices;
-    for (auto device : std::span{devices.get(), static_cast<size_t>(device_count)})
+    for (auto i = 0; i <= device_count; ++i)
     {
+        auto const& device = devices[i];
         supported_devices.emplace_back(mg::SupportedDevice{
             udev->char_device_from_devnum(mge::devnum_for_device(device)),
             mg::PlatformPriority::unsupported,
