@@ -33,8 +33,6 @@ auto probe_module(
     mir::options::ProgramOption const& options,
     std::shared_ptr<mir::ConsoleServices> const& console) -> std::vector<mg::SupportedDevice>
 {
-    auto supported_devices = probe(console, std::make_shared<mir::udev::Context>(), options);
-
     auto describe = module.load_function<mir::graphics::DescribeModule>(
         "describe_graphics_module",
         MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
@@ -46,6 +44,8 @@ auto probe_module(
                   desc->major_version,
                   desc->minor_version,
                   desc->micro_version);
+
+    auto supported_devices = probe(console, std::make_shared<mir::udev::Context>(), options);
     if (supported_devices.empty())
     {
         mir::log_info("(Unsupported by system environment)");
