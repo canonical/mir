@@ -263,6 +263,7 @@ TEST_F(BasicIdleHub, observer_marked_idle_after_shorter_timeout_removed_and_poke
     hub.unregister_interest(*observer1);
     hub.poke();
     advance_by(9s);
+    executor.execute();
     EXPECT_CALL(*observer2, idle());
     advance_by(2s);
     executor.execute();
@@ -270,6 +271,7 @@ TEST_F(BasicIdleHub, observer_marked_idle_after_shorter_timeout_removed_and_poke
 
 TEST_F(BasicIdleHub, inhibit_idle_when_uninhibited)
 {
+    // TODO - write
 //    TEST_F(BasicIdleHub, observer_marked_active_after_poke)
 //    {
 //        auto const observer = std::make_shared<NiceMock<MockObserver>>();
