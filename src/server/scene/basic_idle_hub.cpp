@@ -268,12 +268,12 @@ void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp c
 void ms::BasicIdleHub::inhibit_idle()
 {
     // Only the window in focus should be able to call inhibit_idle()
-    mir::log_info("Calling inhibit_idle()");
+    mir::log_info("Calling BasicIdleHub::inhibit_idle()");
     alarm->cancel();
 }
 
 void ms::BasicIdleHub::resume_idle()
 {
-    mir::log_info("Calling resume_idle()"); // TIS NOT CALLING!
+    mir::log_info("Calling BasicIdleHub::resume_idle()");
     alarm->reschedule_in(std::chrono::duration_cast<std::chrono::milliseconds>(alarm_timeout.value()));
 }
