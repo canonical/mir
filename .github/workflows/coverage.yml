@@ -1,0 +1,85 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  Run:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 60
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up CCache
+      id: setup-ccache
+      run: |
+        sudo apt-get install ccache
+        ccache --max-size=2G
+
+        # Determine common base between main and HEAD to use as cache key.
+        if [ "${{ github.event_name }}" == "push" ]; then
+          BASE=$( git rev-parse HEAD )
+        else
+          BASE=$( git cat-file -p HEAD | awk '/parent/ { print $2; exit }' )
+        fi
+        echo "::set-output name=key::${BASE}"
+
+    - name: CCache
+      uses: actions/cache@v2
+      with:
+        key: ccache-${{ steps.setup-ccache.outputs.key }}
+        restore-keys: |
+          ccache-
+        path: ~/.ccache/**
+
+    - name: Install dependencies
+      run: |
+        sudo apt-add-repository --yes ppa:mir-team/dev
+        sudo apt install --no-install-recommends \
+          devscripts \
+          dmz-cursor-theme \
+          equivs \
+          gcovr \
+          lcov \
+          ninja-build
+
+        mk-build-deps --root-cmd sudo --install
+
+    - name: Configure
+      run: >
+        cmake
+        -DCMAKE_BUILD_TYPE=Coverage
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        -GNinja
+        -B build
+        ${{ github.workspace }}
+
+    - name: Build
+      run: cmake --build build
+
+    - name: Clear CCache stats
+      run: ccache --show-stats --zero-stats
+
+    - name: Test
+      timeout-minutes: 5
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+      run: cmake --build build --target test
+
+    - name: Measure coverage
+      timeout-minutes: 5
+      run: cmake --build build --target coverage
+
+    - name: Send coverage report
+      uses: codecov/codecov-action@v2
+      with:
+        directory: build
+        fail_ci_if_error: true
+        verbose: true
