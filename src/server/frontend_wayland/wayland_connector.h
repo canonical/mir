@@ -93,7 +93,7 @@ public:
         OutputManager* output_manager;
         std::shared_ptr<SurfaceStack> surface_stack;
         std::shared_ptr<input::InputDeviceRegistry> input_device_registry;
-        std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter;
+        std::shared_ptr<input::CompositeEventFilter> composite_event_filter;
     };
 
     WaylandExtensions() = default;
