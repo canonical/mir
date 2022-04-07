@@ -71,6 +71,8 @@ public:
     ~IdleInhibitorV1();
 
 private:
+    // Not sure why, but removing this unused StateObserver stops the functionality of the IdleInhibit.
+    // It seems unlikely that it will ever actually be used.
     struct StateObserver : ms::IdleStateObserver
     {
         StateObserver(IdleInhibitorV1* idle_inhibitor)
@@ -78,15 +80,9 @@ private:
         {
         }
 
-        void idle() override
-        {
-           // TODO
-        }
+        void idle() override;
 
-        void active() override
-        {
-            // TODO
-        }
+        void active() override;
 
         IdleInhibitorV1* const idle_inhibitor;
     };
@@ -94,14 +90,12 @@ private:
     std::shared_ptr<IdleInhibitV1Ctx> const ctx;
     std::shared_ptr<StateObserver> const state_observer;
 
-    /// Called by the state observer
+    /// (Would be) called by the state observer
     /// @{
-    void active();
     void idle();
+
+    void active();
     /// @}
-
-
-    // wayland::Weak<WlSurface> current_surface; // To be used when detecting active surface
 };
 }
 }
@@ -148,14 +142,6 @@ void mf::IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct w
     mir::log_info("Client calling IdleInhibitManagerV1::create_inhibitor()");
     (void)surface;
 
-    // If you're wondering what I'm doing here, so am I...
-    // The surface should be watched with a SurfaceObserver and only inhibit if it's visible
-    // Chris: Should it only inhibit the output that the surface is visible on?
-//    auto const wl_surface = surface;
-//    if (!wl_surface)
-//    {
-//        BOOST_THROW_EXCEPTION(std::runtime_error("failed to resolve WlSurface creating TextInputV2"));
-//    }
     new IdleInhibitorV1{id, ctx};
 }
 
@@ -171,12 +157,12 @@ mf::IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<Idle
 
 void mf::IdleInhibitorV1::active()
 {
-// Currently unused
+    // Currently unused
 }
 
 void mf::IdleInhibitorV1::idle()
 {
-// Currently unused
+    // Currently unused
 }
 
 mf::IdleInhibitorV1::~IdleInhibitorV1()
