@@ -191,6 +191,26 @@ auto modules_for_device(
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find any platforms for current system"}));
     }
+    else
+    {
+        // If there are any non-dummy platforms in our support list, remove all the dummy platforms.
+
+        // First, move all the non-dummy platforms to the front…
+        auto first_dummy_platform = std::partition(
+            best_modules_so_far.begin(),
+            best_modules_so_far.end(),
+            [](auto const& module)
+            {
+                return module.first.support_level > mg::PlatformPriority::dummy;
+            });
+
+        // …then, if there are any platforms before the start of the dummy platforms…
+        if (first_dummy_platform != best_modules_so_far.begin())
+        {
+            // …erase everything after the start of the dummy platforms.
+            best_modules_so_far.erase(first_dummy_platform, best_modules_so_far.end());
+        }
+    }
     return best_modules_so_far;
 }
 }
