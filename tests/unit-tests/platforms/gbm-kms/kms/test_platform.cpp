@@ -487,10 +487,10 @@ TEST_F(MesaGraphicsPlatform, render_probe_does_not_touch_quirked_device)
      */
     auto const options_with_quirk = parsed_options_from_args({"--driver-quirks=skip:devnode:/dev/dri/card1"}, po);
 
-    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card0"), _))
-        .Times(AtLeast(1));
     EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card1"), _))
         .Times(0);
+    EXPECT_CALL(mock_drm, open(Not(StrEq("/dev/dri/card1")), _))
+        .Times(AtLeast(1));
 
     auto probe = platform_lib.load_function<mg::PlatformProbe>(rendering_platform_probe_symbol);
     probe(stub_vt, udev, *options_with_quirk);
