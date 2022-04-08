@@ -19,6 +19,8 @@
 #include "output_manager.h"
 #include "wayland_executor.h"
 
+#include "mir/log.h"
+
 #include <algorithm>
 
 namespace mf = mir::frontend;
@@ -258,6 +260,34 @@ auto mf::OutputManager::output_for(graphics::DisplayConfigurationOutputId id) ->
         return result->second.get();
     else
         return std::nullopt;
+}
+
+auto mf::OutputManager::with_config(
+    wl_resource* output,
+    std::function<void(mg::DisplayConfigurationOutput const&)> const& functor) -> bool
+{
+    bool found = false;
+    if (auto const output_id = output_id_for(wl_resource_get_client(output), output))
+    {
+        display_config_->for_each_output(
+            [&](mg::DisplayConfigurationOutput const& config)
+            {
+                if (config.id == output_id.value())
+                {
+                    if (found)
+                    {
+                        log_warning("Found multiple output configs with id %d", output_id.value().as_value());
+                    }
+                    else
+                    {
+                        functor(config);
+                        found = true;
+                    }
+                }
+            });
+    }
+
+    return found;
 }
 
 void mf::OutputManager::create_output(mg::DisplayConfigurationOutput const& initial_config)

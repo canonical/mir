@@ -77,6 +77,12 @@ public:
 
     auto display_config() const -> std::shared_ptr<MirDisplay> {return display_config_;}
 
+    /// Either calls functor exactly once and returns true, or does not call functor and returns false if the output is
+    /// not found
+    auto with_config(
+        wl_resource* output,
+        std::function<void(graphics::DisplayConfigurationOutput const&)> const& functor) -> bool;
+
 private:
     void create_output(graphics::DisplayConfigurationOutput const& initial_config);
 
