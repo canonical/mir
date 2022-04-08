@@ -125,3 +125,14 @@ if (MIR_RUN_WLCS_TESTS)
 endif()
 
 install(TARGETS miral_wlcs_integration LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir)
+
+add_custom_target(
+  list_missing_wlcs_xfail_tests
+
+  COMMAND
+    ${CMAKE_COMMAND}
+      -DWLCS_BINARY=${WLCS_BINARY}
+      -DWLCS_INTEGRATION=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/miral_wlcs_integration.so
+      -DTESTS_TO_QUERY="${EXPECTED_FAILURES}"
+      -P ${CMAKE_CURRENT_SOURCE_DIR}/print_missing_wlcs_tests.cmake
+)
