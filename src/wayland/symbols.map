@@ -456,6 +456,20 @@ global:
     typeinfo?for?mir::wayland::InputMethodKeyboardGrabV2;
     vtable?for?mir::wayland::InputMethodKeyboardGrabV2;
     virtual?thunk?to?mir::wayland::InputMethodKeyboardGrabV2::?InputMethodKeyboardGrabV2*;
+
+    mir::wayland::WlrScreencopyManagerV1::*;
+    non-virtual?thunk?to?mir::wayland::WlrScreencopyManagerV1::*;
+    typeinfo?for?mir::wayland::WlrScreencopyManagerV1;
+    vtable?for?mir::wayland::WlrScreencopyManagerV1;
+    typeinfo?for?mir::wayland::WlrScreencopyManagerV1::Global;
+    vtable?for?mir::wayland::WlrScreencopyManagerV1::Global;
+    virtual?thunk?to?mir::wayland::WlrScreencopyManagerV1::?WlrScreencopyManagerV1*;
+
+    mir::wayland::WlrScreencopyFrameV1::*;
+    non-virtual?thunk?to?mir::wayland::WlrScreencopyFrameV1::*;
+    typeinfo?for?mir::wayland::WlrScreencopyFrameV1;
+    vtable?for?mir::wayland::WlrScreencopyFrameV1;
+    virtual?thunk?to?mir::wayland::WlrScreencopyFrameV1::?WlrScreencopyFrameV1*;
   };
   local: *;
 };
