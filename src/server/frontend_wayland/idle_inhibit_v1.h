@@ -16,8 +16,8 @@
  * Authored by: Grayson Guarino <grayson.guarino@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_IDLE_INHIBIT_V1_H
-#define MIR_FRONTEND_IDLE_INHIBIT_V1_H
+#ifndef MIR_FRONTEND_IDLE_INHIBIT_V1_H_
+#define MIR_FRONTEND_IDLE_INHIBIT_V1_H_
 
 #include "idle-inhibit-unstable-v1_wrapper.h"
 
@@ -40,4 +40,4 @@ auto create_idle_inhibit_manager_v1(
 }
 }
 
-#endif // MIR_FRONTEND_IDLE_INHIBIT_V1_H
+#endif // MIR_FRONTEND_IDLE_INHIBIT_V1_H_
