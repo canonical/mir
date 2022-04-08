@@ -91,8 +91,6 @@ set(EXPECTED_FAILURES
 
   XdgToplevelStableTest.touch_can_not_steal_pointer_based_move # https://github.com/MirServer/mir/issues/1792
 
-  LayerShellPopup/XdgPopupTest.grabbed_popup_does_not_get_keyboard_focus/0
-
   ForeignToplevelHandleTest.can_maximize_foreign_while_fullscreen # https://github.com/MirServer/mir/issues/2164
 
   # See https://github.com/MirServer/mir/issues/2324
