@@ -23,7 +23,9 @@
 #include "default_display_buffer_compositor_factory.h"
 #include "multi_threaded_compositor.h"
 #include "gl/renderer_factory.h"
+#include "basic_screen_shooter.h"
 #include "mir/main_loop.h"
+#include "mir/graphics/display.h"
 
 #include "mir/options/configuration.h"
 
@@ -85,5 +87,18 @@ std::shared_ptr<mir::renderer::RendererFactory> mir::DefaultServerConfiguration:
         []()
         {
             return std::make_shared<mir::renderer::gl::RendererFactory>();
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<compositor::ScreenShooter>
+{
+    return screen_shooter(
+        [this]()
+        {
+            return std::make_shared<compositor::BasicScreenShooter>(
+                the_scene(),
+                *the_display(),
+                *the_renderer_factory(),
+                the_clock());
         });
 }
