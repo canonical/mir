@@ -106,7 +106,10 @@ auto mf::create_idle_inhibit_manager_v1(
         std::shared_ptr<scene::IdleHub> const& idle_hub)
 -> std::shared_ptr<mw::IdleInhibitManagerV1::Global>
 {
-    auto ctx = std::shared_ptr<IdleInhibitV1Ctx>{new IdleInhibitV1Ctx{wayland_executor, idle_hub}};
+    auto surface_observer = std::make_shared<scene::NullSurfaceObserver>();
+    auto ctx = std::make_shared<IdleInhibitV1Ctx>(
+            IdleInhibitV1Ctx{wayland_executor, idle_hub, surface_observer});
+
     return std::make_shared<IdleInhibitManagerV1Global>(display, std::move(ctx));
 }
 
