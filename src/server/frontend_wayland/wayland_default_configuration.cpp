@@ -34,6 +34,7 @@
 #include "text_input_v3.h"
 #include "text_input_v2.h"
 #include "input_method_v2.h"
+#include "wlr_screencopy_v1.h"
 
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
@@ -141,6 +142,15 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.wayland_executor,
                 ctx.text_input_hub,
                 ctx.composite_event_filter);
+        }),
+    make_extension_builder<mw::WlrScreencopyManagerV1>([](auto const& ctx)
+        {
+            return mf::create_wlr_screencopy_manager_unstable_v1(
+                ctx.display,
+                ctx.wayland_executor,
+                *ctx.output_manager,
+                ctx.graphic_buffer_allocator,
+                ctx.screen_shooter);
         }),
 };
 
@@ -284,6 +294,7 @@ std::shared_ptr<mf::Connector>
                 the_frontend_surface_stack(),
                 the_clipboard(),
                 the_text_input_hub(),
+                the_screen_shooter(),
                 the_main_loop(),
                 arw_socket,
                 configure_wayland_extensions(
