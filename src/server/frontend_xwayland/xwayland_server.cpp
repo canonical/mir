@@ -142,10 +142,12 @@ auto connect_xwayland_wl_client(
     wayland_connector->run_on_wayland_display(
         [ctx, wayland_fd, scale](wl_display* display)
         {
-            std::lock_guard lock{ctx->mutex};
-            ctx->client = wl_client_create(display, wayland_fd);
-            mf::WlClient::from(ctx->client)->set_output_geometry_scale(scale);
-            ctx->ready = true;
+            {
+                std::lock_guard lock{ctx->mutex};
+                ctx->client = wl_client_create(display, wayland_fd);
+                mf::WlClient::from(ctx->client)->set_output_geometry_scale(scale);
+                ctx->ready = true;
+            }
             ctx->condition_variable.notify_all();
         });
 

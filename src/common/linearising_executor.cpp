@@ -59,18 +59,20 @@ private:
     // Execute items from the queue one at a time, until none are left
     void work_loop()
     {
-        std::unique_lock lock{mutex};
-        while (!workqueue.empty())
         {
+            std::unique_lock lock{mutex};
+            while (!workqueue.empty())
             {
-                auto work = std::move(workqueue.front());
-                workqueue.pop_front();
-                lock.unlock();
-                work();
+                {
+                    auto work = std::move(workqueue.front());
+                    workqueue.pop_front();
+                    lock.unlock();
+                    work();
+                }
+                lock.lock();
             }
-            lock.lock();
+            idle = true;
         }
-        idle = true;
         idle_changed.notify_all();
     }
 

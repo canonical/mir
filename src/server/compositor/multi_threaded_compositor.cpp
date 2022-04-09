@@ -199,18 +199,19 @@ public:
 
     void schedule_compositing(int num_frames)
     {
-        std::lock_guard lock{run_mutex};
+        std::unique_lock lock{run_mutex};
 
         if (num_frames > frames_scheduled)
         {
             frames_scheduled = num_frames;
+            lock.unlock();
             run_cv.notify_one();
         }
     }
 
     void schedule_compositing(int num_frames, geometry::Rectangle const& damage)
     {
-        std::lock_guard lock{run_mutex};
+        std::unique_lock lock{run_mutex};
         bool took_damage = not_posted_yet;
 
         group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
@@ -219,14 +220,17 @@ public:
         if (took_damage && num_frames > frames_scheduled)
         {
             frames_scheduled = num_frames;
+            lock.unlock();
             run_cv.notify_one();
         }
     }
 
     void stop()
     {
-        std::lock_guard lock{run_mutex};
-        running = false;
+        {
+            std::lock_guard lock{run_mutex};
+            running = false;
+        }
         run_cv.notify_one();
     }
 

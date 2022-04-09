@@ -385,8 +385,10 @@ void mgw::DisplayClient::Output::swap_buffers()
 
         void frame_done(wl_callback*, uint32_t)
         {
-            std::lock_guard lock{mutex};
-            posted = true;
+            {
+                std::lock_guard lock{mutex};
+                posted = true;
+            }
             cv.notify_all();
         }
 

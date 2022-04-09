@@ -919,8 +919,10 @@ class Counter
 public:
     int operator++()
     {
-        std::lock_guard lock(mutex);
-        cv.notify_one();
+        {
+            std::lock_guard lock(mutex);
+            cv.notify_one();
+        }
         return ++counter;
     }
 

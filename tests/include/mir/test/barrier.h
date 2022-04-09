@@ -40,10 +40,16 @@ public:
     void ready()
     {
         std::unique_lock lock(mutex);
-        --wait_threads;
-        cv.notify_all();
-        if (!cv.wait_for(lock, std::chrono::minutes(1), [&]{ return wait_threads == 0; }))
-            throw std::runtime_error("Timeout");
+        if (--wait_threads)
+        {
+            if (!cv.wait_for(lock, std::chrono::minutes(1), [&]{ return wait_threads == 0; }))
+                throw std::runtime_error("Timeout");
+        }
+        else
+        {
+            lock.unlock();
+            cv.notify_all();
+        }
     }
 
     Barrier(Barrier const&) = delete;

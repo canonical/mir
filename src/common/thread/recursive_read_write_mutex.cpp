@@ -48,14 +48,15 @@ void mir::RecursiveReadWriteMutex::read_unlock()
 {
     auto const my_id = std::this_thread::get_id();
 
-    std::lock_guard lock{mutex};
-    auto const my_count = std::find_if(
-        read_locking_threads.begin(),
-        read_locking_threads.end(),
-        [my_id](ThreadLockCount const& candidate) { return my_id == candidate.id; });
+    {
+        std::lock_guard lock{mutex};
+        auto const my_count = std::find_if(
+            read_locking_threads.begin(),
+            read_locking_threads.end(),
+            [my_id](ThreadLockCount const& candidate) { return my_id == candidate.id; });
 
-    --(my_count->count);
-
+        --(my_count->count);
+    }
     cv.notify_all();
 }
 
@@ -81,7 +82,9 @@ void mir::RecursiveReadWriteMutex::write_lock()
 
 void mir::RecursiveReadWriteMutex::write_unlock()
 {
-    std::lock_guard lock{mutex};
-    --write_locking_thread.count;
+    {
+        std::lock_guard lock{mutex};
+        --write_locking_thread.count;
+    }
     cv.notify_all();
 }
