@@ -51,7 +51,7 @@ public:
 
     void initialize(T* t)
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (target)
             fatal_error("ThreadsafeAccess initialized multiple times");
         target = t;
@@ -61,7 +61,7 @@ public:
     {
         executor->spawn([self = this->shared_from_this(), work]()
             {
-                std::lock_guard<std::mutex> lock{self->mutex};
+                std::lock_guard lock{self->mutex};
                 if (self->target)
                     work(self->target.value());
             });
@@ -69,7 +69,7 @@ public:
 
     void invalidate()
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         target = std::experimental::nullopt;
     }
 

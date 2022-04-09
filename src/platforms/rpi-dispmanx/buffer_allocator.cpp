@@ -471,7 +471,7 @@ public:
     {
         ShmBuffer::bind();
 
-        std::lock_guard<std::mutex> lock{consumption_mutex};
+        std::lock_guard lock{consumption_mutex};
         if (on_consumed)
         {
             auto const pixels = std::make_unique<unsigned char[]>(stride().as_uint32_t() * size().height.as_uint32_t());

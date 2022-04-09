@@ -22,14 +22,14 @@ namespace mt = mir::test;
 
 void mt::Signal::raise()
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard lock(mutex);
     signalled = true;
     cv.notify_all();
 }
 
 bool mt::Signal::raised()
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard lock(mutex);
     return signalled;
 }
 
@@ -44,6 +44,6 @@ void mt::Signal::wait()
 
 void mt::Signal::reset()
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard lock(mutex);
     signalled = false;
 }

@@ -84,7 +84,7 @@ public:
 
     void invalidate_owner()
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         owner = nullptr;
     }
 
@@ -95,7 +95,7 @@ public:
 
     void initiate_send(std::string const& mime_type, Fd const& receiver_fd) override
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (owner)
         {
             auto const target_type = mime_types_map.find(mime_type);
@@ -128,7 +128,7 @@ public:
 
     /// Returns if the previous buffer was empty. If return value is true, this needs to be added to the dispatcher.
     auto add_data(std::vector<uint8_t>&& new_data) -> bool {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (data.empty())
         {
             data = std::move(new_data);
@@ -149,7 +149,7 @@ private:
 
     auto dispatch(md::FdEvents events) -> bool override
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
 
         if (events & md::FdEvent::error)
         {
@@ -296,7 +296,7 @@ void mf::XWaylandClipboardSource::selection_notify_event(xcb_selection_notify_ev
             log_info("Clipboard data from X11 client is ready");
         }
 
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         read_and_send_wl_selection_data(lock);
     }
 }
@@ -353,7 +353,7 @@ void mf::XWaylandClipboardSource::property_notify_event(xcb_window_t window, xcb
         return;
     }
 
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     if (incremental_transfer_in_progress)
     {
         read_and_send_wl_selection_data(lock);

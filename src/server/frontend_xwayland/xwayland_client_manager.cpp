@@ -64,7 +64,7 @@ mf::XWaylandClientManager::~XWaylandClientManager()
 
 auto mf::XWaylandClientManager::session_for_client(pid_t client_pid) -> std::shared_ptr<Session>
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     std::shared_ptr<Session> session;
     auto const iter = sessions_by_pid.find(client_pid);

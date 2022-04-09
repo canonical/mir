@@ -324,7 +324,7 @@ mf::XWaylandSurface::XWaylandSurface(
               XCB_ATOM_WM_CLASS,
               [this](auto value)
               {
-                  std::lock_guard<std::mutex> lock{mutex};
+                  std::lock_guard lock{mutex};
                   this->pending_spec(lock).application_id = value;
               }),
           property_handler<std::string>(
@@ -333,7 +333,7 @@ mf::XWaylandSurface::XWaylandSurface(
               XCB_ATOM_WM_NAME,
               [this](auto value)
               {
-                  std::lock_guard<std::mutex> lock{mutex};
+                  std::lock_guard lock{mutex};
                   this->pending_spec(lock).name = value;
               }),
           property_handler<std::string>(
@@ -342,7 +342,7 @@ mf::XWaylandSurface::XWaylandSurface(
               connection->_NET_WM_NAME,
               [this](auto value)
               {
-                  std::lock_guard<std::mutex> lock{mutex};
+                  std::lock_guard lock{mutex};
                   this->pending_spec(lock).name = value;
               }),
           property_handler<xcb_window_t>(
@@ -388,12 +388,12 @@ mf::XWaylandSurface::XWaylandSurface(
               {
                   [this](auto value)
                   {
-                      std::lock_guard<std::mutex> lock{mutex};
+                      std::lock_guard lock{mutex};
                       this->cached.supported_wm_protocols = std::set<xcb_atom_t>{value.begin(), value.end()};
                   },
                   [this](auto)
                   {
-                      std::lock_guard<std::mutex> lock{mutex};
+                      std::lock_guard lock{mutex};
                       this->cached.supported_wm_protocols.clear();
                   }
               }),
@@ -462,7 +462,7 @@ void mf::XWaylandSurface::close()
     std::shared_ptr<XWaylandSurfaceObserver> observer;
 
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
 
         local_client_session = std::move(client_session);
 
@@ -520,7 +520,7 @@ void mf::XWaylandSurface::take_focus()
 {
     bool supports_take_focus;
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
 
         if (cached.override_redirect)
             return;
@@ -718,7 +718,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         scale);
 
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
 
         if (surface_observer || weak_scene_surface.lock())
             BOOST_THROW_EXCEPTION(std::runtime_error("XWaylandSurface::attach_wl_surface() called multiple times"));
@@ -775,7 +775,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
     // property_handlers will have updated the pending spec. Use it.
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
 
         if (auto const pending_spec = consume_pending_spec(lock))
         {
@@ -798,7 +798,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
         XCB_STACK_MODE_ABOVE);
 
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         client_session = local_client_session;
         weak_scene_surface = surface;
     }
@@ -816,7 +816,7 @@ void mf::XWaylandSurface::move_resize(uint32_t detail)
     std::shared_ptr<scene::Surface> scene_surface;
     std::chrono::nanoseconds timestamp;
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         scene_surface = weak_scene_surface.lock();
         timestamp = latest_input_timestamp(lock);
     }
@@ -887,7 +887,7 @@ void mf::XWaylandSurface::scene_surface_close_requested()
 {
     bool delete_window;
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         delete_window = (
             cached.supported_wm_protocols.find(connection->WM_DELETE_WINDOW) !=
             cached.supported_wm_protocols.end());
@@ -931,7 +931,7 @@ void mf::XWaylandSurface::wl_surface_destroyed()
 
 auto mf::XWaylandSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     if (auto const scene_surface = weak_scene_surface.lock())
         return scene_surface;
     else
@@ -972,14 +972,14 @@ void mf::XWaylandSurface::is_transient_for(xcb_window_t transient_for)
         }
     }
 
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     cached.transient_for = transient_for;
     apply_cached_transient_for_and_type(lock);
 }
 
 void mf::XWaylandSurface::has_window_types(std::vector<xcb_atom_t> const& wm_types)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     cached.wm_types = wm_types;
     apply_cached_transient_for_and_type(lock);
 }
@@ -988,7 +988,7 @@ void mf::XWaylandSurface::inform_client_of_window_state(
     std::optional<scene::SurfaceStateTracker> const& new_window_state)
 {
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
 
         if ((!new_window_state && cached.withdrawn) ||
             (new_window_state && !cached.withdrawn && *new_window_state == cached.state))
@@ -1108,7 +1108,7 @@ void mf::XWaylandSurface::request_scene_surface_state(MirWindowState new_state)
     std::shared_ptr<scene::Surface> scene_surface;
 
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         scene_surface = weak_scene_surface.lock();
     }
 
@@ -1140,7 +1140,7 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
     std::optional<std::unique_ptr<mir::shell::SurfaceSpecification>> spec;
 
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if ((scene_surface = weak_scene_surface.lock()))
         {
             spec = consume_pending_spec(lock);
@@ -1319,7 +1319,7 @@ void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
 {
     // See ICCCM 4.1.2.3 (https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.2.3)
     // except actually I'm pretty sure that mistakenly drops min size so actually see anything that implements it
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     if (hints.size() != WmSizeHintsIndices::END)
     {
         log_error("WM_NORMAL_HINTS only has %zu element(s)", hints.size());
@@ -1356,7 +1356,7 @@ void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
 
 void mf::XWaylandSurface::motif_wm_hints(std::vector<uint32_t> const& hints)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     if (hints.size() != MotifWmHintsIndices::END)
     {
         log_error("_MOTIF_WM_HINTS value has incorrect size %zu", hints.size());

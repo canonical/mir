@@ -33,7 +33,7 @@ ms::RenderingTracker::RenderingTracker(
 
 void ms::RenderingTracker::rendered_in(mc::CompositorID cid)
 {
-    std::lock_guard<std::mutex> lock{guard};
+    std::lock_guard lock{guard};
 
     ensure_is_active_compositor(cid);
 
@@ -44,7 +44,7 @@ void ms::RenderingTracker::rendered_in(mc::CompositorID cid)
 
 void ms::RenderingTracker::occluded_in(mc::CompositorID cid)
 {
-    std::lock_guard<std::mutex> lock{guard};
+    std::lock_guard lock{guard};
 
     ensure_is_active_compositor(cid);
 
@@ -56,7 +56,7 @@ void ms::RenderingTracker::occluded_in(mc::CompositorID cid)
 
 void ms::RenderingTracker::active_compositors(std::set<mc::CompositorID> const& cids)
 {
-    std::lock_guard<std::mutex> lock{guard};
+    std::lock_guard lock{guard};
 
     active_compositors_ = cids;
 
@@ -68,7 +68,7 @@ void ms::RenderingTracker::active_compositors(std::set<mc::CompositorID> const& 
 
 bool ms::RenderingTracker::is_exposed_in(mc::CompositorID cid) const
 {
-    std::lock_guard<std::mutex> lock{guard};
+    std::lock_guard lock{guard};
 
     ensure_is_active_compositor(cid);
 

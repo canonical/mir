@@ -60,7 +60,7 @@ struct StaticExtensionTracker
 {
     static void add_server_extension(mir::Server* server, void* extension)
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
 
         for (auto const& x : extensions)
         {
@@ -81,7 +81,7 @@ struct StaticExtensionTracker
 
     static void remove_extension(void* extension)
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
 
         extensions.erase(
             remove_if(begin(extensions), end(extensions), [extension](auto& x) { return x.extension == extension; }),

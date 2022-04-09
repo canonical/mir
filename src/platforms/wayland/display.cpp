@@ -107,7 +107,7 @@ mgw::Display::Display(
     runner = std::thread{[this] { run(); }};
 
     {
-        std::lock_guard<decltype(the_display_mtx)> lock{the_display_mtx};
+        std::lock_guard lock{the_display_mtx};
         the_display = this;
     }
 }
@@ -210,10 +210,10 @@ void mgw::Display::for_each_display_sync_group(const std::function<void(DisplayS
 void mgw::Display::set_keyboard_sink(std::shared_ptr<input::wayland::KeyboardInput> const& keyboard_sink)
 {
 
-    std::lock_guard<decltype(the_display_mtx)> display_lock{the_display_mtx};
+    std::lock_guard display_lock{the_display_mtx};
     if (!the_display) fatal_error("mir::graphics::wayland::Display not initialized");
 
-    std::lock_guard<decltype(the_display->sink_mutex)> lock{the_display->sink_mutex};
+    std::lock_guard lock{the_display->sink_mutex};
     if (keyboard_sink)
     {
         the_display->keyboard_sink = keyboard_sink;
@@ -228,7 +228,7 @@ void mir::graphics::wayland::Display::keyboard_key(wl_keyboard*, uint32_t, uint3
 {
     auto const keysym = xkb_state_key_get_one_sym(keyboard_state(), key + 8);
 
-    std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+    std::lock_guard lock{sink_mutex};
     switch (state)
     {
     case WL_KEYBOARD_KEY_STATE_PRESSED:
@@ -316,7 +316,7 @@ void mir::graphics::wayland::Display::stop()
 mir::graphics::wayland::Display::~Display()
 {
     {
-        std::lock_guard<decltype(the_display_mtx)> lock{the_display_mtx};
+        std::lock_guard lock{the_display_mtx};
         the_display = nullptr;
     }
     stop();
@@ -325,10 +325,10 @@ mir::graphics::wayland::Display::~Display()
 
 void mgw::Display::set_pointer_sink(std::shared_ptr<input::wayland::PointerInput> const& pointer_sink)
 {
-    std::lock_guard<decltype(the_display_mtx)> display_lock{the_display_mtx};
+    std::lock_guard display_lock{the_display_mtx};
     if (!the_display) fatal_error("mir::graphics::wayland::Display not initialized");
 
-    std::lock_guard<decltype(the_display->sink_mutex)> lock{the_display->sink_mutex};
+    std::lock_guard lock{the_display->sink_mutex};
     if (pointer_sink)
     {
         the_display->pointer_sink = pointer_sink;
@@ -342,7 +342,7 @@ void mgw::Display::set_pointer_sink(std::shared_ptr<input::wayland::PointerInput
 void mir::graphics::wayland::Display::pointer_motion(wl_pointer* pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y)
 {
     {
-        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+        std::lock_guard lock{sink_mutex};
         pointer_pos = geom::PointF{wl_fixed_to_double(x), wl_fixed_to_double(y)} + geom::DisplacementF{pointer_displacement};
         pointer_time = std::chrono::milliseconds{time};
     }
@@ -353,7 +353,7 @@ void mir::graphics::wayland::Display::pointer_motion(wl_pointer* pointer, uint32
 void mir::graphics::wayland::Display::pointer_button(wl_pointer* pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
 {
     {
-        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+        std::lock_guard lock{sink_mutex};
         pointer_time = std::chrono::milliseconds{time};
 
         switch (state)
@@ -374,7 +374,7 @@ void mir::graphics::wayland::Display::pointer_button(wl_pointer* pointer, uint32
 void mir::graphics::wayland::Display::pointer_axis(wl_pointer* pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
 {
     {
-        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+        std::lock_guard lock{sink_mutex};
         switch (axis)
         {
         case WL_POINTER_AXIS_HORIZONTAL_SCROLL:
@@ -393,7 +393,7 @@ void mir::graphics::wayland::Display::pointer_axis(wl_pointer* pointer, uint32_t
 void mir::graphics::wayland::Display::pointer_frame(wl_pointer* pointer)
 {
     {
-        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+        std::lock_guard lock{sink_mutex};
 
         if (pointer_axis_source_ == mir_pointer_axis_source_none)
         {
@@ -417,7 +417,7 @@ void mir::graphics::wayland::Display::touch_down(
     DisplayClient::touch_down(touch, serial, time, surface, id, x, y);
 
     {
-        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+        std::lock_guard lock{sink_mutex};
         auto const contact = get_touch_contact(id);
 
         touch_time = std::chrono::milliseconds{time};
@@ -430,7 +430,7 @@ void mir::graphics::wayland::Display::touch_down(
 void mir::graphics::wayland::Display::touch_up(wl_touch* touch, uint32_t serial, uint32_t time, int32_t id)
 {
     {
-        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+        std::lock_guard lock{sink_mutex};
         auto const contact = get_touch_contact(id);
 
         touch_time = std::chrono::milliseconds{time};
@@ -446,7 +446,7 @@ void mir::graphics::wayland::Display::touch_up(wl_touch* touch, uint32_t serial,
 void mir::graphics::wayland::Display::touch_motion(wl_touch* touch, uint32_t time, int32_t id, wl_fixed_t x, wl_fixed_t y)
 {
     {
-        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+        std::lock_guard lock{sink_mutex};
         auto const contact = get_touch_contact(id);
 
         touch_time = std::chrono::milliseconds{time};
@@ -461,7 +461,7 @@ void mir::graphics::wayland::Display::touch_motion(wl_touch* touch, uint32_t tim
 void mir::graphics::wayland::Display::touch_frame(wl_touch* touch)
 {
     {
-        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+        std::lock_guard lock{sink_mutex};
 
         if (touch_contacts.size())
         {
@@ -475,7 +475,7 @@ void mir::graphics::wayland::Display::touch_frame(wl_touch* touch)
 void mir::graphics::wayland::Display::touch_cancel(wl_touch* touch)
 {
     {
-        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+        std::lock_guard lock{sink_mutex};
 
         for (auto& contact : touch_contacts)
         {
@@ -495,7 +495,7 @@ void mir::graphics::wayland::Display::touch_cancel(wl_touch* touch)
 void mir::graphics::wayland::Display::touch_shape(wl_touch* touch, int32_t id, wl_fixed_t major, wl_fixed_t minor)
 {
     {
-        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+        std::lock_guard lock{sink_mutex};
         auto const contact = get_touch_contact(id);
 
         contact->action = mir_touch_action_change;
@@ -509,7 +509,7 @@ void mir::graphics::wayland::Display::touch_shape(wl_touch* touch, int32_t id, w
 void mir::graphics::wayland::Display::touch_orientation(wl_touch* touch, int32_t id, wl_fixed_t orientation)
 {
     {
-        std::lock_guard<decltype(sink_mutex)> lock{sink_mutex};
+        std::lock_guard lock{sink_mutex};
         auto const contact = get_touch_contact(id);
 
         contact->action = mir_touch_action_change;
@@ -521,10 +521,10 @@ void mir::graphics::wayland::Display::touch_orientation(wl_touch* touch, int32_t
 
 void mir::graphics::wayland::Display::set_touch_sink(std::shared_ptr<input::wayland::TouchInput> const& touch_sink)
 {
-    std::lock_guard<decltype(the_display_mtx)> display_lock{the_display_mtx};
+    std::lock_guard display_lock{the_display_mtx};
     if (!the_display) fatal_error("mir::graphics::wayland::Display not initialized");
 
-    std::lock_guard<decltype(the_display->sink_mutex)> lock{the_display->sink_mutex};
+    std::lock_guard lock{the_display->sink_mutex};
     if (touch_sink)
     {
         the_display->touch_sink = touch_sink;
@@ -564,7 +564,7 @@ void mir::graphics::wayland::Display::pointer_leave(wl_pointer* pointer, uint32_
 
 bool mir::graphics::wayland::Display::active()
 {
-    std::lock_guard<decltype(the_display_mtx)> display_lock{the_display_mtx};
+    std::lock_guard display_lock{the_display_mtx};
     return the_display != nullptr;
 }
 

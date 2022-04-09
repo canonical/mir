@@ -165,7 +165,7 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
 void mrl::DisplayReport::report_vsync(unsigned int output_id,
                                       graphics::Frame const& frame)
 {
-    std::lock_guard<decltype(vsync_event_mutex)> lk(vsync_event_mutex);
+    std::lock_guard lk(vsync_event_mutex);
     auto prev = prev_frame.find(output_id);
     if (prev != prev_frame.end() && prev->second.msc < frame.msc)
     {

@@ -39,7 +39,7 @@ mge::ThreadedDRMEventHandler::ThreadedDRMEventHandler(mir::Fd drm_fd)
 mge::ThreadedDRMEventHandler::~ThreadedDRMEventHandler()
 {
     {
-        std::lock_guard<std::mutex> lock{expectation_mutex};
+        std::lock_guard lock{expectation_mutex};
         shutdown = true;
         expectations_changed.notify_all();
     }
@@ -78,7 +78,7 @@ std::future<void> mge::ThreadedDRMEventHandler::expect_flip_event(
     std::function<void(unsigned int frame_number, std::chrono::milliseconds frame_time)> on_flip)
 {
     NotifyOnScopeExit notifier{expectations_changed};
-    std::lock_guard<std::mutex> lock{expectation_mutex};
+    std::lock_guard lock{expectation_mutex};
     // First check if there's an empty slot in the vector (there probably is)
     for (auto& slot : pending_expectations)
     {

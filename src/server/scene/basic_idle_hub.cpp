@@ -134,7 +134,7 @@ ms::BasicIdleHub::~BasicIdleHub()
 
 void ms::BasicIdleHub::poke()
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     poke_time = clock->now();
     schedule_alarm(lock, poke_time);
     if (!idle_multiplexers.empty())
@@ -166,7 +166,7 @@ void ms::BasicIdleHub::register_interest(
         return;
     }
 
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     auto const iter = timeouts.find(timeout);
     std::shared_ptr<Multiplexer> multiplexer;
     if (iter == timeouts.end())
@@ -205,7 +205,7 @@ void ms::BasicIdleHub::register_interest(
 
 void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     for (auto i = timeouts.begin(); i != timeouts.end();) {
         i->second->unregister_interest(observer);
         if (i->second->empty()) {

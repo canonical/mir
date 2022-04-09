@@ -254,7 +254,7 @@ std::weak_ptr<msd::Renderer::Text> msd::Renderer::Text::singleton;
 
 auto msd::Renderer::Text::instance() -> std::shared_ptr<Text>
 {
-    std::lock_guard<std::mutex> lock{static_mutex};
+    std::lock_guard lock{static_mutex};
     auto shared = singleton.lock();
     if (!shared)
     {
@@ -312,7 +312,7 @@ void msd::Renderer::Text::Impl::render(
     if (!area(buf_size) || height_pixels <= geom::Height{})
         return;
 
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     if (!library || !face)
     {

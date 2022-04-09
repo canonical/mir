@@ -919,7 +919,7 @@ class Counter
 public:
     int operator++()
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
+        std::lock_guard lock(mutex);
         cv.notify_one();
         return ++counter;
     }
@@ -932,7 +932,7 @@ public:
 
     operator int() const
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
+        std::lock_guard lock(mutex);
         return counter;
     }
 

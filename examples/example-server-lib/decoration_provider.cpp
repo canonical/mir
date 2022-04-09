@@ -441,13 +441,13 @@ void DecorationProvider::operator()(wl_display* display)
 
 void DecorationProvider::operator()(std::weak_ptr<mir::scene::Session> const& session)
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     this->weak_session = session;
 }
 
 auto DecorationProvider::session() const -> std::shared_ptr<mir::scene::Session>
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     return weak_session.lock();
 }
 

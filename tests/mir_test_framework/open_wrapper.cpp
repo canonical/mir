@@ -42,7 +42,7 @@ public:
     static auto add(mtf::OpenHandler handler) -> mtf::OpenHandlerHandle
     {
         auto& me = instance();
-        std::lock_guard<std::mutex> lock{me.mutex};
+        std::lock_guard lock{me.mutex};
         auto iterator = me.handlers.emplace(me.handlers.begin(), std::move(handler));
         auto remove_callback = [](void* iterator)
             {
@@ -57,7 +57,7 @@ public:
     static auto run(char const* path, int flags, std::optional<mode_t> mode) -> std::optional<int>
     {
         auto& me = instance();
-        std::lock_guard<std::mutex> lock{me.mutex};
+        std::lock_guard lock{me.mutex};
         for (auto const& handler : me.handlers)
         {
             if (auto val = handler(path, flags, mode))
@@ -79,7 +79,7 @@ private:
     static void remove(std::list<mtf::OpenHandler>::iterator* to_remove)
     {
         auto& me = instance();
-        std::lock_guard<std::mutex> lock{me.mutex};
+        std::lock_guard lock{me.mutex};
         me.handlers.erase(*to_remove);
         delete to_remove;
     }

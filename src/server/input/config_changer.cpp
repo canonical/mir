@@ -188,13 +188,13 @@ mi::ConfigChanger::~ConfigChanger()
 
 MirInputConfig mi::ConfigChanger::base_configuration()
 {
-    std::lock_guard<std::mutex> lg{config_mutex};
+    std::lock_guard lg{config_mutex};
     return base;
 }
 
 void mi::ConfigChanger::configure(std::shared_ptr<scene::Session> const& session, MirInputConfig && config)
 {
-    std::lock_guard<std::mutex> lg{config_mutex};
+    std::lock_guard lg{config_mutex};
     auto const& session_config = (config_map[session] = std::move(config));
 
     if (session != focused_session.lock())
@@ -205,7 +205,7 @@ void mi::ConfigChanger::configure(std::shared_ptr<scene::Session> const& session
 
 void mi::ConfigChanger::set_base_configuration(MirInputConfig && config)
 {
-    std::lock_guard<std::mutex> lg{config_mutex};
+    std::lock_guard lg{config_mutex};
     base = std::move(config);
     apply_base_config();
     send_base_config_to_all_sessions();
@@ -213,7 +213,7 @@ void mi::ConfigChanger::set_base_configuration(MirInputConfig && config)
 
 void mi::ConfigChanger::devices_updated(std::vector<std::shared_ptr<Device>> const& added, std::vector<MirInputDeviceId> const& removed)
 {
-    std::lock_guard<std::mutex> lg{config_mutex};
+    std::lock_guard lg{config_mutex};
     for (auto const id : removed)
     {
         base.remove_device_by_id(id);
@@ -235,7 +235,7 @@ void mi::ConfigChanger::devices_updated(std::vector<std::shared_ptr<Device>> con
 
 void mi::ConfigChanger::focus_change_handler(std::shared_ptr<ms::Session> const& session)
 {
-    std::lock_guard<std::mutex> lg{config_mutex};
+    std::lock_guard lg{config_mutex};
 
     focused_session = session;
 
@@ -262,7 +262,7 @@ void mi::ConfigChanger::send_base_config_to_all_sessions()
 
 void mi::ConfigChanger::no_focus_handler()
 {
-    std::lock_guard<std::mutex> lg{config_mutex};
+    std::lock_guard lg{config_mutex};
     focused_session.reset();
     if (!base_configuration_applied)
     {
@@ -272,7 +272,7 @@ void mi::ConfigChanger::no_focus_handler()
 
 void mi::ConfigChanger::session_stopping_handler(std::shared_ptr<ms::Session> const& session)
 {
-    std::lock_guard<std::mutex> lg{config_mutex};
+    std::lock_guard lg{config_mutex};
 
     config_map.erase(session);
 }

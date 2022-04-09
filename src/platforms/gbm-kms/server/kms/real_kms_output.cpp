@@ -341,7 +341,7 @@ void mgg::RealKMSOutput::restore_saved_crtc()
 
 void mgg::RealKMSOutput::set_power_mode(MirPowerMode mode)
 {
-    std::lock_guard<std::mutex> lg(power_mutex);
+    std::lock_guard lg(power_mutex);
 
     if (power_mode != mode)
     {

@@ -277,7 +277,7 @@ void mgg::Cursor::pad_and_write_image_data_locked(
 
 void mgg::Cursor::show(CursorImage const& cursor_image)
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
 
     size = cursor_image.size();
 
@@ -306,7 +306,7 @@ void mgg::Cursor::move_to(geometry::Point position)
 
 void mir::graphics::gbm::Cursor::suspend()
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
     clear(lg);
 }
 
@@ -327,7 +327,7 @@ void mgg::Cursor::resume()
 
 void mgg::Cursor::hide()
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
     visible = false;
     clear(lg);
 }
@@ -353,7 +353,7 @@ void mgg::Cursor::place_cursor_at(
     geometry::Point position,
     ForceCursorState force_state)
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
     place_cursor_at_locked(lg, position, force_state);
 }
 

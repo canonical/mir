@@ -103,7 +103,7 @@ int mf::XWaylandConnector::client_socket_fd(
 
 auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     if (spawner)
     {
@@ -168,7 +168,7 @@ void mf::XWaylandConnector::spawn()
         auto const wm_dispatcher = std::make_shared<md::MultiplexingDispatchable>();
         wm_dispatcher->add_watch(std::make_shared<md::ReadableFd>(server->x11_wm_fd(), [this]()
             {
-                std::lock_guard<std::mutex> lock{mutex};
+                std::lock_guard lock{mutex};
                 if (wm)
                 {
                     wm->handle_events();

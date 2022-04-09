@@ -154,7 +154,7 @@ private:
             auto const self = observer.lock().get();
             if (self == unregistered_observer)
             {
-                std::lock_guard<std::recursive_mutex> run_lock{expired_mutex};
+                std::lock_guard run_lock{expired_mutex};
                 expired = true;
                 return true;
             }
@@ -193,7 +193,7 @@ void ObserverMultiplexer<Observer>::register_interest(
     std::weak_ptr<Observer> const& observer,
     Executor& executor)
 {
-    std::lock_guard<decltype(observer_mutex)> lock{observer_mutex};
+    std::lock_guard lock{observer_mutex};
 
     observers.emplace_back(std::make_shared<WeakObserver>(observer, executor));
 }
@@ -201,7 +201,7 @@ void ObserverMultiplexer<Observer>::register_interest(
 template<class Observer>
 void ObserverMultiplexer<Observer>::unregister_interest(Observer const& observer)
 {
-    std::lock_guard<decltype(observer_mutex)> lock{observer_mutex};
+    std::lock_guard lock{observer_mutex};
     observers.erase(
         std::remove_if(
             observers.begin(),
@@ -218,7 +218,7 @@ void ObserverMultiplexer<Observer>::unregister_interest(Observer const& observer
 template<class Observer>
 auto ObserverMultiplexer<Observer>::empty() -> bool
 {
-    std::lock_guard<decltype(observer_mutex)> lock{observer_mutex};
+    std::lock_guard lock{observer_mutex};
     return observers.empty();
 }
 
@@ -232,7 +232,7 @@ void ObserverMultiplexer<Observer>::for_each_observer(MemberFn f, Args&&... args
     auto const invokable_mem_fn = std::mem_fn(f);
     decltype(observers) local_observers;
     {
-        std::lock_guard<decltype(observer_mutex)> lock{observer_mutex};
+        std::lock_guard lock{observer_mutex};
         local_observers = observers;
     }
     for (auto& weak_observer: local_observers)
@@ -258,7 +258,7 @@ void ObserverMultiplexer<Observer>::for_single_observer(Observer const& target_o
     auto const invokable_mem_fn = std::mem_fn(f);
     decltype(observers) local_observers;
     {
-        std::lock_guard<decltype(observer_mutex)> lock{observer_mutex};
+        std::lock_guard lock{observer_mutex};
         local_observers = observers;
     }
     for (auto& weak_observer: local_observers)

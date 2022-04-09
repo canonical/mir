@@ -227,7 +227,7 @@ struct EGLExtensions
         {
             if (!has_initialized)
             {
-                std::lock_guard<std::mutex> lock{mutex};
+                std::lock_guard lock{mutex};
                 if (!has_initialized)
                 {
                     cached_display = dpy;

@@ -317,8 +317,8 @@ md::GSourceHandle md::add_timer_gsource(
                 // Attempt to preserve locking order during callback dispatching
                 // so we acquire the caller's lock before our own.
                 auto& handler = *ctx.handler;
-                std::lock_guard<LockableCallback> handler_lock{handler};
-                std::lock_guard<decltype(ctx.mutex)> lock{ctx.mutex};
+                std::lock_guard handler_lock{handler};
+                std::lock_guard lock{ctx.mutex};
                 if (ctx.enabled)
                     handler();
             }
@@ -340,7 +340,7 @@ md::GSourceHandle md::add_timer_gsource(
         static void disable(GSource* source)
         {
             auto& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
-            std::lock_guard<decltype(ctx.mutex)> lock{ctx.mutex};
+            std::lock_guard lock{ctx.mutex};
             ctx.enabled = false;
         }
     };
@@ -381,13 +381,13 @@ struct md::FdSources::FdContext
 
     void disable_callback()
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
         enabled = false;
     }
 
     static gboolean static_call(int fd, GIOCondition, FdContext* ctx)
     {
-        std::lock_guard<decltype(ctx->mutex)> lock{ctx->mutex};
+        std::lock_guard lock{ctx->mutex};
 
         if (ctx->enabled)
             ctx->handler(fd);
@@ -444,7 +444,7 @@ void md::FdSources::add(
         fd_context,
         reinterpret_cast<GDestroyNotify>(reinterpret_cast<void*>(&FdContext::static_destroy)));
 
-    std::lock_guard<std::mutex> lock{sources_mutex};
+    std::lock_guard lock{sources_mutex};
 
     sources.emplace_back(new FdSource{std::move(gsource), owner});
     g_source_attach(sources.back()->gsource, main_context);
@@ -452,7 +452,7 @@ void md::FdSources::add(
 
 void md::FdSources::remove_all_owned_by(void const* owner)
 {
-    std::lock_guard<std::mutex> lock{sources_mutex};
+    std::lock_guard lock{sources_mutex};
 
     auto const new_end = std::remove_if(
         sources.begin(), sources.end(),
@@ -620,7 +620,7 @@ void md::SignalSources::add(
 
 void md::SignalSources::ensure_signal_is_handled(int sig)
 {
-    std::lock_guard<std::mutex> lock{handled_signals_mutex};
+    std::lock_guard lock{handled_signals_mutex};
 
     if (handled_signals.find(sig) != handled_signals.end())
         return;

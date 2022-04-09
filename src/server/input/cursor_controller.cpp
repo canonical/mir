@@ -283,11 +283,11 @@ void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
 
 void mir::input::CursorController::pointer_usable()
 {
-    std::lock_guard<std::mutex> lock(serialize_pointer_usable_unusable);
+    std::lock_guard lock(serialize_pointer_usable_unusable);
     bool became_usable = false;
     std::shared_ptr<mg::CursorImage> image;
     {
-        std::lock_guard<std::mutex> lock(cursor_state_guard);
+        std::lock_guard lock(cursor_state_guard);
         became_usable = !usable;
         image = current_cursor;
         usable = true;
@@ -302,9 +302,9 @@ void mir::input::CursorController::pointer_usable()
 
 void mir::input::CursorController::pointer_unusable()
 {
-    std::lock_guard<std::mutex> lock(serialize_pointer_usable_unusable);
+    std::lock_guard lock(serialize_pointer_usable_unusable);
     {
-        std::lock_guard<std::mutex> lock(cursor_state_guard);
+        std::lock_guard lock(cursor_state_guard);
         usable = false;
     }
     cursor->hide();

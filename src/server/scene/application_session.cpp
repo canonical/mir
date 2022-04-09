@@ -164,7 +164,7 @@ void ms::ApplicationSession::destroy_surface(std::shared_ptr<Surface> const& sur
 
 std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_ptr<ms::Surface> const& before) const
 {
-    std::lock_guard<std::mutex> lock(surfaces_and_streams_mutex);
+    std::lock_guard lock(surfaces_and_streams_mutex);
     auto current = surfaces.begin();
     for (; current != surfaces.end(); ++current)
     {

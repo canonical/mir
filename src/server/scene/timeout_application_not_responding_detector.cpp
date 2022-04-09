@@ -67,7 +67,7 @@ void ms::TimeoutApplicationNotRespondingDetector::register_session(
 {
     bool alarm_needs_schedule;
     {
-        std::lock_guard<std::mutex> lock{session_mutex};
+        std::lock_guard lock{session_mutex};
         sessions[dynamic_cast<Session const*>(session)] = std::make_unique<ANRContext>(pinger);
         alarm_needs_schedule = alarm->state() != mt::Alarm::State::pending;
     }
@@ -80,7 +80,7 @@ void ms::TimeoutApplicationNotRespondingDetector::register_session(
 void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
     scene::Session const* session)
 {
-    std::lock_guard<std::mutex> lock{session_mutex};
+    std::lock_guard lock{session_mutex};
     sessions.erase(dynamic_cast<Session const*>(session));
 }
 
@@ -90,7 +90,7 @@ void ms::TimeoutApplicationNotRespondingDetector::pong_received(
     bool needs_now_responsive_notification{false};
     bool alarm_needs_rescheduling;
     {
-        std::lock_guard<std::mutex> lock{session_mutex};
+        std::lock_guard lock{session_mutex};
 
         auto& session_ctx = sessions.at(dynamic_cast<Session const*>(received_for));
         if (session_ctx->flagged_as_unresponsive)
@@ -119,7 +119,7 @@ void ms::TimeoutApplicationNotRespondingDetector::register_observer(
 
     std::vector<Session const*> unresponsive_sessions;
     {
-        std::lock_guard<std::mutex> lock{session_mutex};
+        std::lock_guard lock{session_mutex};
         for (auto const& session_pair : sessions)
         {
             if (session_pair.second->flagged_as_unresponsive)
@@ -145,7 +145,7 @@ void ms::TimeoutApplicationNotRespondingDetector::handle_ping_cycle()
 {
     bool needs_rearm{false};
     {
-        std::lock_guard<std::mutex> lock{session_mutex};
+        std::lock_guard lock{session_mutex};
         for (auto const& session_pair : sessions)
         {
             bool const newly_unresponsive =

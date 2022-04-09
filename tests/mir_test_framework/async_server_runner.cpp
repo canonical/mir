@@ -85,7 +85,7 @@ void mtf::AsyncServerRunner::start_server()
                             this,
                             [this]
                             {
-                                std::lock_guard<std::mutex> lock(mutex);
+                                std::lock_guard lock(mutex);
                                 server_running = true;
                                 started.notify_one();
                             });
@@ -100,7 +100,7 @@ void mtf::AsyncServerRunner::start_server()
                 mir::report_exception(error);
                 FAIL() << error.str();
             }
-            std::lock_guard<std::mutex> lock(mutex);
+            std::lock_guard lock(mutex);
             server_running = false;
             started.notify_one();
         });

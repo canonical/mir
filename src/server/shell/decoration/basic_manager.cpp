@@ -63,7 +63,7 @@ void msd::BasicManager::undecorate(std::shared_ptr<ms::Surface> const& surface)
 {
     std::unique_ptr<Decoration> decoration;
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         auto const it = decorations.find(surface.get());
         if (it != decorations.end())
         {
@@ -79,7 +79,7 @@ void msd::BasicManager::undecorate_all()
 {
     std::vector<std::unique_ptr<Decoration>> to_destroy;
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         for (auto& it : decorations)
             to_destroy.push_back(std::move(it.second));
         decorations.clear();

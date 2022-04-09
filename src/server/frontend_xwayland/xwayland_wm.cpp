@@ -240,7 +240,7 @@ mf::XWaylandWM::~XWaylandWM()
     std::map<xcb_window_t, std::shared_ptr<XWaylandSurface>> local_surfaces;
 
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         local_surfaces = std::move(surfaces);
         surfaces.clear();
     }
@@ -297,7 +297,7 @@ void mf::XWaylandWM::handle_events()
 auto mf::XWaylandWM::get_wm_surface(
     xcb_window_t xcb_window) -> std::optional<std::shared_ptr<XWaylandSurface>>
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     auto const surface = surfaces.find(xcb_window);
     if (surface == surfaces.end())
@@ -308,14 +308,14 @@ auto mf::XWaylandWM::get_wm_surface(
 
 auto mf::XWaylandWM::get_focused_window() -> std::optional<xcb_window_t>
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     return focused_window;
 }
 
 void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
 {
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         bool const was_focused = (focused_window && focused_window.value() == xcb_window);
 
         if (verbose_xwayland_logging_enabled())
@@ -367,14 +367,14 @@ void mf::XWaylandWM::set_focus(xcb_window_t xcb_window, bool should_be_focused)
 
 void mf::XWaylandWM::remember_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface, xcb_window_t window)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     scene_surfaces.insert(std::make_pair(scene_surface, window));
     scene_surface_set.insert(scene_surface);
 }
 
 void mf::XWaylandWM::forget_scene_surface(std::weak_ptr<scene::Surface> const& scene_surface)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     scene_surfaces.erase(scene_surface);
     scene_surface_set.erase(scene_surface);
 }
@@ -384,7 +384,7 @@ void mf::XWaylandWM::surfaces_reordered(scene::SurfaceSet const& affected_surfac
     bool our_surfaces_affected = false;
 
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         for (auto const& surface : affected_surfaces)
         {
             if (scene_surfaces.find(surface) != scene_surfaces.end())
@@ -406,7 +406,7 @@ void mf::XWaylandWM::restack_surfaces()
     std::vector<xcb_window_t> new_order;
 
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         auto const new_surface_order = wm_shell->surface_stack->stacking_order_of(scene_surface_set);
         for (auto const& surface : new_surface_order)
         {
@@ -494,7 +494,7 @@ void mf::XWaylandWM::manage_window(xcb_window_t window, geom::Rectangle const& g
         }
     }
 
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     if (surfaces.find(window) != surfaces.end())
     {
@@ -721,7 +721,7 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
     std::shared_ptr<XWaylandSurface> surface{nullptr};
 
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         auto iter = surfaces.find(event->window);
         if (iter != surfaces.end())
         {
@@ -900,7 +900,7 @@ void mf::XWaylandWM::handle_focus_in(xcb_focus_in_event_t* event)
     // Ignore grabs
     if (event->mode != XCB_NOTIFY_MODE_GRAB && event->mode != XCB_NOTIFY_MODE_UNGRAB)
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         focused_window = event->event;
         // We might want to keep X11 focus and Mir focus in sync
         // (either by requesting a focus change in Mir, reverting this X11 focus change or both)

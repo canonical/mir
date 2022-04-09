@@ -78,7 +78,7 @@ public:
 
     geom::Rectangle screen_position() const override
     {
-        std::lock_guard<std::mutex> lock{position_mutex};
+        std::lock_guard lock{position_mutex};
         return {position, buffer_->size()};
     }
 
@@ -104,7 +104,7 @@ public:
 
     void move_to(geom::Point new_position)
     {
-        std::lock_guard<std::mutex> lock{position_mutex};
+        std::lock_guard lock{position_mutex};
         position = new_position;
     }
 
@@ -134,7 +134,7 @@ mg::SoftwareCursor::~SoftwareCursor()
 
 void mg::SoftwareCursor::show(CursorImage const& cursor_image)
 {
-    std::lock_guard<std::mutex> lg{guard};
+    std::lock_guard lg{guard};
 
     auto const to_remove = visible ? renderable : nullptr;
 
@@ -181,7 +181,7 @@ mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom:
 
 void mg::SoftwareCursor::hide()
 {
-    std::lock_guard<std::mutex> lg{guard};
+    std::lock_guard lg{guard};
 
     if (visible && renderable)
     {
@@ -197,7 +197,7 @@ void mg::SoftwareCursor::hide()
 void mg::SoftwareCursor::move_to(geometry::Point position)
 {
     {
-        std::lock_guard<std::mutex> lg{guard};
+        std::lock_guard lg{guard};
 
         if (!renderable)
             return;

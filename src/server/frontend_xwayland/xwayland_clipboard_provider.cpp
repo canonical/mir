@@ -194,7 +194,7 @@ private:
 
     void initiate_incremental_transfer()
     {
-        std::lock_guard<std::mutex> lock{provider->mutex};
+        std::lock_guard lock{provider->mutex};
         if (provider->ptr)
         {
             // https://www.x.org/releases/X11R7.6/doc/xorg-docs/specs/ICCCM/icccm.html#incr_properties:
@@ -236,7 +236,7 @@ private:
 
         if (still_sending)
         {
-            std::lock_guard<std::mutex> lock{provider->mutex};
+            std::lock_guard lock{provider->mutex};
             if (provider->ptr)
             {
                 provider->ptr->defer_incremental_send(shared_from_this(), requester, property);
@@ -313,7 +313,7 @@ mf::XWaylandClipboardProvider::XWaylandClipboardProvider(
 mf::XWaylandClipboardProvider::~XWaylandClipboardProvider()
 {
     {
-        std::lock_guard<std::mutex> lock{threadsafe_self->mutex};
+        std::lock_guard lock{threadsafe_self->mutex};
         threadsafe_self->ptr = nullptr;
     }
     if (!pending_incremental_sends.empty())
@@ -381,7 +381,7 @@ void mf::XWaylandClipboardProvider::xfixes_selection_notify_event(xcb_xfixes_sel
     {
         // We have to use XCB_TIME_CURRENT_TIME when we claim the selection, so grab the actual timestamp here so we can
         // answer TIMESTAMP conversion requests correctly (this is what Weston does)
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         clipboard_ownership_timestamp = event->timestamp;
     }
 }
@@ -420,7 +420,7 @@ void mf::XWaylandClipboardProvider::send_timestamp(
     xcb_atom_t property)
 {
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         // Unclear why the timestamp (which has an unsigned type in our code) is sent with an integer (signed) type
         // instead of a cardinal (unsigned) type, but that's what Weston does.
         connection->set_property<XCBType::INTEGER32>(
@@ -452,7 +452,7 @@ void mf::XWaylandClipboardProvider::send_data(
     {
         Fd in_fd{fds[1]};
 
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (!current_source)
         {
             log_warning("failed to send clipboard data to X11 client: no source");

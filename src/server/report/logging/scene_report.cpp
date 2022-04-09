@@ -37,7 +37,7 @@ mrl::SceneReport::SceneReport(std::shared_ptr<ml::Logger> const& logger) :
 
 void mrl::SceneReport::surface_created(BasicSurfaceId id, std::string const& name)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard lock(mutex);
     surfaces[id] = name;
 
     std::stringstream ss;
@@ -48,7 +48,7 @@ void mrl::SceneReport::surface_created(BasicSurfaceId id, std::string const& nam
 
 void mrl::SceneReport::surface_added(BasicSurfaceId id, std::string const& name)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard lock(mutex);
 
     auto const i = surfaces.find(id);
 
@@ -71,7 +71,7 @@ void mrl::SceneReport::surface_added(BasicSurfaceId id, std::string const& name)
 
 void mrl::SceneReport::surface_removed(BasicSurfaceId id, std::string const& name)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard lock(mutex);
 
     auto const i = surfaces.find(id);
 
@@ -94,7 +94,7 @@ void mrl::SceneReport::surface_removed(BasicSurfaceId id, std::string const& nam
 
 void mrl::SceneReport::surface_deleted(BasicSurfaceId id, std::string const& name)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard lock(mutex);
 
     auto const i = surfaces.find(id);
 

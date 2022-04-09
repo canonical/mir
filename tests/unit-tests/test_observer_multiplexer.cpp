@@ -78,7 +78,7 @@ public:
                         work();
 
                         {
-                            std::lock_guard<decltype(work_mutex)> lock{work_mutex};
+                            std::lock_guard lock{work_mutex};
                             work_pending.pop();
                             work_changed.notify_all();
                         }
@@ -107,7 +107,7 @@ public:
 
     void spawn(std::function<void()>&& work) override
     {
-        std::lock_guard<decltype(work_mutex)> lock{work_mutex};
+        std::lock_guard lock{work_mutex};
         work_pending.emplace(std::move(work));
         work_changed.notify_all();
     }
@@ -126,7 +126,7 @@ class CountingExecutor : public mir::Executor
 public:
     void spawn(std::function<void()>&& work) override
     {
-        std::lock_guard<decltype(work_mutex)> lock{work_mutex};
+        std::lock_guard lock{work_mutex};
         ++spawn_count;
         work_queue.emplace(std::move(work));
     }
@@ -148,7 +148,7 @@ public:
 
     int work_spawned()
     {
-        std::lock_guard<decltype(work_mutex)> lock{work_mutex};
+        std::lock_guard lock{work_mutex};
         return spawn_count;
     }
 private:
