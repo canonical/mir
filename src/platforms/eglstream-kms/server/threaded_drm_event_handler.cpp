@@ -113,7 +113,7 @@ void mge::ThreadedDRMEventHandler::event_loop() noexcept
                 [](auto const& slot) { return static_cast<bool>(slot); });
         };
 
-    std::unique_lock<std::mutex> lock{expectation_mutex};
+    std::unique_lock lock{expectation_mutex};
     while (!shutdown)
     {
         if (!any_pending_expectations())

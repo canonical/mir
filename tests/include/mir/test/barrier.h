@@ -33,13 +33,13 @@ public:
 
     void reset(unsigned threads)
     {
-        std::unique_lock<decltype(mutex)> lock(mutex);
+        std::unique_lock lock(mutex);
         wait_threads  = threads;
     }
 
     void ready()
     {
-        std::unique_lock<decltype(mutex)> lock(mutex);
+        std::unique_lock lock(mutex);
         --wait_threads;
         cv.notify_all();
         if (!cv.wait_for(lock, std::chrono::minutes(1), [&]{ return wait_threads == 0; }))

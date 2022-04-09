@@ -392,7 +392,7 @@ void mgw::DisplayClient::Output::swap_buffers()
 
         void wait_for_done()
         {
-            std::unique_lock<decltype(mutex)> lock{mutex};
+            std::unique_lock lock{mutex};
             cv.wait_for(lock, std::chrono::milliseconds{100}, [this]{ return posted; });
         }
 

@@ -30,14 +30,14 @@ ms::SessionContainer::~SessionContainer() = default;
 
 void ms::SessionContainer::insert_session(std::shared_ptr<Session> const& session)
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::unique_lock lk(guard);
 
     apps.push_back(session);
 }
 
 void ms::SessionContainer::remove_session(std::shared_ptr<Session> const& session)
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::unique_lock lk(guard);
 
     auto it = std::find(apps.begin(), apps.end(), session);
     if (it != apps.end())
@@ -52,7 +52,7 @@ void ms::SessionContainer::remove_session(std::shared_ptr<Session> const& sessio
 
 void ms::SessionContainer::for_each(std::function<void(std::shared_ptr<Session> const&)> f) const
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::unique_lock lk(guard);
 
     for (auto const& ptr : apps)
     {

@@ -372,7 +372,7 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
     if (new_size.width <= geom::Width{0})   new_size.width = geom::Width{1};
     if (new_size.height <= geom::Height{0}) new_size.height = geom::Height{1};
 
-    std::unique_lock<std::mutex> lock(guard);
+    std::unique_lock lock(guard);
     if (new_size != surface_rect.size)
     {
         surface_rect.size = new_size;
@@ -493,7 +493,7 @@ MirWindowType ms::BasicSurface::set_type(MirWindowType t)
             "type."));
     }
 
-    std::unique_lock<std::mutex> lock(guard);
+    std::unique_lock lock(guard);
     if (type_ != t)
     {
         type_ = t;
@@ -522,7 +522,7 @@ MirWindowState ms::BasicSurface::set_state(MirWindowState s)
     if (s < mir_window_state_unknown || s >= mir_window_states)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
 
-    std::unique_lock<std::mutex> lock(guard);
+    std::unique_lock lock(guard);
     if (state_.active_state() != s)
     {
         state_ = state_.with_active_state(s);
@@ -541,7 +541,7 @@ int ms::BasicSurface::set_swap_interval(int interval)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid swapinterval"));
     }
 
-    std::unique_lock<std::mutex> lock(guard);
+    std::unique_lock lock(guard);
     if (swapinterval_ != interval)
     {
         swapinterval_ = interval;
@@ -563,7 +563,7 @@ MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMod
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation mode"));
     }
 
-    std::unique_lock<std::mutex> lock(guard);
+    std::unique_lock lock(guard);
     if (pref_orientation_mode != new_orientation_mode)
     {
         pref_orientation_mode = new_orientation_mode;
@@ -746,7 +746,7 @@ int ms::BasicSurface::set_dpi(int new_dpi)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid DPI value"));
     }
 
-    std::unique_lock<std::mutex> lock(guard);
+    std::unique_lock lock(guard);
     if (dpi_ != new_dpi)
     {
         dpi_ = new_dpi;
@@ -766,7 +766,7 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid visibility value"));
     }
 
-    std::unique_lock<std::mutex> lock(guard);
+    std::unique_lock lock(guard);
     if (visibility_ != new_visibility)
     {
         visibility_ = new_visibility;
@@ -882,7 +882,7 @@ void ms::BasicSurface::consume(MirEvent const* event)
 
 void ms::BasicSurface::rename(std::string const& title)
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::unique_lock lock(guard);
     if (surface_name != title)
     {
         surface_name = title;
@@ -1011,7 +1011,7 @@ void mir::scene::BasicSurface::set_focus_state(MirWindowFocusState new_state)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid focus state."));
     }
 
-    std::unique_lock<std::mutex> lock(guard);
+    std::unique_lock lock(guard);
     if (focus_ != new_state)
     {
         focus_ = new_state;
@@ -1029,7 +1029,7 @@ auto mir::scene::BasicSurface::application_id() const -> std::string
 
 void mir::scene::BasicSurface::set_application_id(std::string const& application_id)
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::unique_lock lock(guard);
     if (application_id_ != application_id)
     {
         application_id_ = application_id;
@@ -1056,7 +1056,7 @@ void mir::scene::BasicSurface::set_window_margins(
     bottom = std::max(bottom, geom::DeltaY{});
     right  = std::max(right,  geom::DeltaX{});
 
-    std::unique_lock<std::mutex> lock(guard);
+    std::unique_lock lock(guard);
     if (top    != margins.top    ||
         left   != margins.left   ||
         bottom != margins.bottom ||

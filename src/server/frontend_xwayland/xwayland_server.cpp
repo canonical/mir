@@ -149,7 +149,7 @@ auto connect_xwayland_wl_client(
             ctx->condition_variable.notify_all();
         });
 
-    std::unique_lock<std::mutex> client_lock{ctx->mutex};
+    std::unique_lock client_lock{ctx->mutex};
     if (!ctx->condition_variable.wait_for(client_lock, 10s, [ctx]{ return ctx->ready; }))
     {
         // "Shouldn't happen" but this is better than hanging.

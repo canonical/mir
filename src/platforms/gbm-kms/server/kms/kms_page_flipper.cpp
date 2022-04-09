@@ -65,7 +65,7 @@ bool mgg::KMSPageFlipper::schedule_flip(uint32_t crtc_id,
                                         uint32_t fb_id,
                                         uint32_t connector_id)
 {
-    std::unique_lock<std::mutex> lock{pf_mutex};
+    std::unique_lock lock{pf_mutex};
 
     if (pending_page_flips.find(crtc_id) != pending_page_flips.end())
         BOOST_THROW_EXCEPTION(std::logic_error("Page flip for crtc_id is already scheduled"));
@@ -98,7 +98,7 @@ mg::Frame mgg::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
     static std::thread::id const invalid_tid;
 
     {
-        std::unique_lock<std::mutex> lock{pf_mutex};
+        std::unique_lock lock{pf_mutex};
 
         /*
          * While another thread is the worker (it is controlling the
@@ -132,7 +132,7 @@ mg::Frame mgg::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
         auto ret = select(drm_fd + 1, &fds, nullptr, nullptr, nullptr);
 
         {
-            std::unique_lock<std::mutex> lock{pf_mutex};
+            std::unique_lock lock{pf_mutex};
 
             if (ret > 0)
             {
@@ -164,7 +164,7 @@ mg::Frame mgg::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
 
 std::thread::id mgg::KMSPageFlipper::debug_get_worker_tid()
 {
-    std::unique_lock<std::mutex> lock{pf_mutex};
+    std::unique_lock lock{pf_mutex};
 
     return worker_tid;
 }

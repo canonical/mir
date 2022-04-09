@@ -131,7 +131,7 @@ void miral::TestDisplayServer::start_server()
             started.notify_one();
          });
 
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock lock(mutex);
     started.wait_for(lock, timeout, [&] { return server_running; });
 
     if (!server_running)
@@ -142,7 +142,7 @@ void miral::TestDisplayServer::start_server()
 
 void miral::TestDisplayServer::stop_server()
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock lock(mutex);
 
     runner.stop();
 

@@ -154,7 +154,7 @@ void ms::PromptSessionManagerImpl::add_prompt_provider(
     std::shared_ptr<PromptSession> const& prompt_session,
     std::shared_ptr<Session> const& prompt_provider) const
 {
-    std::unique_lock<std::mutex> lock(prompt_sessions_mutex);
+    std::unique_lock lock(prompt_sessions_mutex);
 
     if (prompt_session_container->insert_participant(prompt_session.get(), prompt_provider, PromptSessionContainer::ParticipantType::prompt_provider))
         prompt_session_listener->prompt_provider_added(*prompt_session, prompt_provider);

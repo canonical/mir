@@ -78,7 +78,7 @@ struct CountingDisplaySyncGroup : public mtd::StubDisplaySyncGroup
 
     bool has_posted_at_least(unsigned int count, std::chrono::system_clock::time_point& timeout)
     {
-        std::unique_lock<decltype(mutex)> lk(mutex);
+        std::unique_lock lk(mutex);
         return count_cv.wait_until(lk, timeout,
         [this, &count](){
             return post_count_ >= count;  
@@ -88,7 +88,7 @@ struct CountingDisplaySyncGroup : public mtd::StubDisplaySyncGroup
 private:
     void increment_post_count()
     {
-        std::unique_lock<decltype(mutex)> lk(mutex);
+        std::unique_lock lk(mutex);
         ++post_count_;
         count_cv.notify_all();
     }

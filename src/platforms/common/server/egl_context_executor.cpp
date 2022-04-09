@@ -52,7 +52,7 @@ void mgc::EGLContextExecutor::process_loop(mgc::EGLContextExecutor* const me)
 {
     me->ctx->make_current();
 
-    std::unique_lock<std::mutex> lock{me->mutex};
+    std::unique_lock lock{me->mutex};
     while (!me->shutdown_requested)
     {
         for (auto& work : me->work_queue)

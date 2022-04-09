@@ -286,7 +286,7 @@ void mir::GLibMainLoop::enqueue_with_guaranteed_execution(mir::ServerAction cons
         };
 
     {
-        std::unique_lock<std::mutex> lock{run_on_halt_mutex};
+        std::unique_lock lock{run_on_halt_mutex};
 
         if (!running_)
         {
@@ -391,7 +391,7 @@ void mir::GLibMainLoop::reprocess_all_sources()
             g_main_context_wakeup(main_context);
         });
 
-    std::unique_lock<std::mutex> reprocessed_lock{reprocessed_mutex};
+    std::unique_lock reprocessed_lock{reprocessed_mutex};
     reprocessed_cv.wait(reprocessed_lock, [&] { return reprocessed == true; });
 }
 

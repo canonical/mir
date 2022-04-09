@@ -64,7 +64,7 @@ public:
                 {
                     std::function<void()> work{nullptr};
                     {
-                        std::unique_lock<decltype(work_mutex)> lock{work_mutex};
+                        std::unique_lock lock{work_mutex};
                         work_changed.wait(lock, [this]() { return (work_pending.size() > 0) || !running; });
 
                         if (work_pending.size() > 0)
@@ -91,7 +91,7 @@ public:
 
     void drain_work()
     {
-        std::unique_lock<decltype(work_mutex)> lock{work_mutex};
+        std::unique_lock lock{work_mutex};
         work_changed.wait(lock, [this]() { return work_pending.size() == 0; });
     }
 
@@ -133,7 +133,7 @@ public:
 
     void do_work()
     {
-        std::unique_lock<decltype(work_mutex)> lock{work_mutex};
+        std::unique_lock lock{work_mutex};
         while (!work_queue.empty())
         {
             auto work = work_queue.front();

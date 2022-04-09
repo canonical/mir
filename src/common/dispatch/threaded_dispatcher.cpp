@@ -94,7 +94,7 @@ public:
         // in client code that we don't control.
         //
         // If the client is entirely unresponsive for a whole minute, it deserves to die.
-        std::unique_lock<decltype(terminating_thread_mutex)> lock{terminating_thread_mutex};
+        std::unique_lock lock{terminating_thread_mutex};
         if (!thread_terminating.wait_for (lock,
                                           std::chrono::seconds{60},
                                           [this]() { return !terminating_threads.empty(); }))

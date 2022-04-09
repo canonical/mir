@@ -926,7 +926,7 @@ public:
 
     bool wait_for(std::chrono::milliseconds const& delay, int expected)
     {
-        std::unique_lock<decltype(mutex)> lock(mutex);
+        std::unique_lock lock(mutex);
         return cv.wait_for(lock, delay, [&]{ return counter == expected;});
     }
 

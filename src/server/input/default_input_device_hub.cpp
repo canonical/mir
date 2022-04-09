@@ -109,7 +109,7 @@ void mi::ExternalInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserv
                 cv.notify_one();
             });
 
-        std::unique_lock<decltype(mutex)> lock{mutex};
+        std::unique_lock lock{mutex};
 
         // Before returning wait for the remove - otherwise notifications can still happen
         cv.wait(lock, [&] { return removed; });
@@ -377,7 +377,7 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
     device_queue->enqueue(
         [this,observer]()
         {
-            std::unique_lock<std::recursive_mutex> lock(mutex);
+            std::unique_lock lock(mutex);
             for (auto const& item : handles)
                 observer->device_added(item);
             observer->changes_complete();
@@ -389,14 +389,14 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
 
 void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(Device const&)> const& callback)
 {
-    std::unique_lock<std::recursive_mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     for (auto const& item : handles)
         callback(*item);
 }
 
 void mi::DefaultInputDeviceHub::for_each_mutable_input_device(std::function<void(Device&)> const& callback)
 {
-    std::unique_lock<std::recursive_mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     // perform_transaction is true if no transaction is already in-progress
     bool const perform_transaction = !pending_changes;
     if (perform_transaction)
@@ -481,7 +481,7 @@ void mi::DefaultInputDeviceHub::remove_device_handle(std::lock_guard<std::recurs
 
 void mi::DefaultInputDeviceHub::device_changed(Device* dev)
 {
-    std::unique_lock<std::recursive_mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     auto dev_it = find_if(begin(handles), end(handles), [dev](auto const& ptr){return ptr.get() == dev;});
     std::shared_ptr<Device> const dev_shared = *dev_it;
     if (pending_changes)
@@ -502,7 +502,7 @@ void mi::DefaultInputDeviceHub::device_changed(Device* dev)
 
 void mi::DefaultInputDeviceHub::complete_transaction()
 {
-    std::unique_lock<std::recursive_mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     std::vector<std::shared_ptr<mi::Device>> devices_to_notify;
     if (pending_changes)
     {

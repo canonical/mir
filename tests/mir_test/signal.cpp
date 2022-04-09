@@ -35,7 +35,7 @@ bool mt::Signal::raised()
 
 void mt::Signal::wait()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
+    std::unique_lock lock(mutex);
     if (!signalled)
     {
         cv.wait(lock, [this]() { return signalled; });

@@ -105,7 +105,7 @@ void mtf::AsyncServerRunner::start_server()
             started.notify_one();
         });
 
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock lock(mutex);
     started.wait_for(lock, timeout, [this] { return server_running; });
 
     if (!server_running)
@@ -123,7 +123,7 @@ void mtf::AsyncServerRunner::stop_server()
 
 void mtf::AsyncServerRunner::wait_for_server_exit()
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock lock(mutex);
     started.wait_for(lock, timeout, [&] { return !server_running; });
 
     if (server_running)

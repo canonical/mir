@@ -152,7 +152,7 @@ public:
      */
     MutexGuard<Guarded> lock()
     {
-        return MutexGuard<Guarded>{std::unique_lock<std::mutex>{mutex}, value};
+        return MutexGuard<Guarded>{std::unique_lock{mutex}, value};
     }
 
 protected:
@@ -169,7 +169,7 @@ public:
     template<typename Predicate, typename Rep, typename Period>
     MutexGuard<Guarded> wait_for(Predicate predicate, std::chrono::duration<Rep, Period> timeout)
     {
-        std::unique_lock<std::mutex> lock{this->mutex};
+        std::unique_lock lock{this->mutex};
         if (!notifier.wait_for(
             lock, timeout, [this, &predicate]()
                 { return predicate(this->value); }))

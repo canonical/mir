@@ -24,7 +24,7 @@ void mir::RecursiveReadWriteMutex::read_lock()
 {
     auto const my_id = std::this_thread::get_id();
 
-    std::unique_lock<decltype(mutex)> lock{mutex};
+    std::unique_lock lock{mutex};
     cv.wait(lock, [&]{
         return !write_locking_thread.count ||
             write_locking_thread.id == my_id; });
@@ -63,7 +63,7 @@ void mir::RecursiveReadWriteMutex::write_lock()
 {
     auto const my_id = std::this_thread::get_id();
 
-    std::unique_lock<decltype(mutex)> lock{mutex};
+    std::unique_lock lock{mutex};
     cv.wait(lock, [&]
         {
             if (write_locking_thread.count &&

@@ -420,7 +420,7 @@ mf::XWaylandSurface::~XWaylandSurface()
 
 void mf::XWaylandSurface::map()
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     ms::SurfaceStateTracker state = cached.state;
     lock.unlock();
 
@@ -555,7 +555,7 @@ void mf::XWaylandSurface::take_focus()
 
 void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event)
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     if (event->value_mask & XCB_CONFIG_WINDOW_X || event->value_mask & XCB_CONFIG_WINDOW_Y)
     {
         pending_spec(lock).top_left = geom::Point{
@@ -596,7 +596,7 @@ void mf::XWaylandSurface::configure_request(xcb_configure_request_event_t* event
 
 void mf::XWaylandSurface::configure_notify(xcb_configure_notify_event_t* event)
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     cached.override_redirect = event->override_redirect;
     // If this configure is in response to a configure we sent we don't want to make a window manager request
     auto const geometry = geom::Rectangle{geom::Point{event->x, event->y}, geom::Size{event->width, event->height}};
@@ -636,7 +636,7 @@ void mf::XWaylandSurface::net_wm_state_client_message(uint32_t const (&data)[5])
 
     (void)source_indication;
 
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     ms::SurfaceStateTracker new_window_state{cached.state};
     lock.unlock();
 
@@ -658,7 +658,7 @@ void mf::XWaylandSurface::wm_change_state_client_message(uint32_t const (&data)[
 
     WmState const requested_state = static_cast<WmState>(data[0]);
 
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     ms::SurfaceStateTracker new_window_state{cached.state};
     lock.unlock();
 
@@ -849,7 +849,7 @@ void mf::XWaylandSurface::scene_surface_focus_set(bool has_focus)
 
 void mf::XWaylandSurface::scene_surface_state_set(MirWindowState new_state)
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     ms::SurfaceStateTracker const state{cached.state.with_active_state(new_state)};
     lock.unlock();
 
@@ -873,7 +873,7 @@ void mf::XWaylandSurface::scene_surface_resized(geometry::Size const& new_size)
 
 void mf::XWaylandSurface::scene_surface_moved_to(geometry::Point const& new_top_left)
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     auto const scene_surface = weak_scene_surface.lock();
     lock.unlock();
 
@@ -1076,7 +1076,7 @@ void mf::XWaylandSurface::inform_client_of_geometry(
     std::optional<geometry::Width> width,
     std::optional<geometry::Height> height)
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     auto const geometry = geom::Rectangle{
         {x.value_or(cached.geometry.left()), y.value_or(cached.geometry.top())},
         {width.value_or(cached.geometry.size.width), height.value_or(cached.geometry.size.height)}};

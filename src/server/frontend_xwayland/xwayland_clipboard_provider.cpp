@@ -475,7 +475,7 @@ void mf::XWaylandClipboardProvider::send_data(
 
 void mf::XWaylandClipboardProvider::paste_source_set(std::shared_ptr<ms::ClipboardSource> const& source)
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
 
     if (XWaylandClipboardSource::source_is_from(source.get(), *connection))
     {

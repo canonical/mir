@@ -183,7 +183,7 @@ public:
 
     LockedHandle lock() const
     {
-        std::unique_lock<std::mutex> lock{resource->mutex};
+        std::unique_lock lock{resource->mutex};
         if (resource->buffer)
         {
             return LockedHandle{resource->buffer, std::move(lock)};

@@ -25,7 +25,7 @@ auto ms::BasicTextInputHub::set_handler_state(
     bool new_input_field,
     TextInputState const& state) -> TextInputStateSerial
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     if (active_handler != handler)
     {
         new_input_field = true;
@@ -41,7 +41,7 @@ auto ms::BasicTextInputHub::set_handler_state(
 
 void ms::BasicTextInputHub::deactivate_handler(std::shared_ptr<TextInputChangeHandler> const& handler)
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     if (active_handler != handler)
     {
         return;
@@ -54,7 +54,7 @@ void ms::BasicTextInputHub::deactivate_handler(std::shared_ptr<TextInputChangeHa
 
 void ms::BasicTextInputHub::text_changed(TextInputChange const& change)
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     auto const local_handler = active_handler;
     lock.unlock();
     if (local_handler)
@@ -65,7 +65,7 @@ void ms::BasicTextInputHub::text_changed(TextInputChange const& change)
 
 void ms::BasicTextInputHub::send_initial_state(std::weak_ptr<TextInputStateObserver> const& observer)
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     auto const state = current_state;
     auto const serial = current_serial;
     lock.unlock();

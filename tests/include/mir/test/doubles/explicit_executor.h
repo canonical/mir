@@ -54,7 +54,7 @@ public:
 
     void execute()
     {
-        std::unique_lock<std::mutex> lock{mutex};
+        std::unique_lock lock{mutex};
         auto const items = std::move(work_items);
         work_items.clear();
         lock.unlock();

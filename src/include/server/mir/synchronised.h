@@ -92,7 +92,7 @@ public:
      */
     Locked lock()
     {
-        return Locked{std::unique_lock<std::mutex>{mutex}, value};
+        return Locked{std::unique_lock{mutex}, value};
     }
 
 protected:

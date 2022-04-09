@@ -95,7 +95,7 @@ auto mf::XWaylandClientManager::session_for_client(pid_t client_pid) -> std::sha
 
 void mf::XWaylandClientManager::drop_expired(pid_t client_pid)
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
 
     auto const iter = sessions_by_pid.find(client_pid);
 

@@ -53,7 +53,7 @@ public:
 
     void acquire()
     {
-        std::unique_lock<decltype(mutex)> lock{mutex};
+        std::unique_lock lock{mutex};
         if (raised)
         {
             raised = false;
@@ -282,7 +282,7 @@ private:
 
     void wait_for_idle()
     {
-        std::unique_lock<decltype(workers_mutex)> lock{workers_mutex};
+        std::unique_lock lock{workers_mutex};
         // We need to wait for any active workers to finish.
         bool idle = workers.size() == free_workers.size();
         while (!idle)

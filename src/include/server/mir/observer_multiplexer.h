@@ -116,7 +116,7 @@ private:
 
         LockedObserver lock()
         {
-            std::unique_lock<std::recursive_mutex> lock{expired_mutex};
+            std::unique_lock lock{expired_mutex};
             auto live_observer = observer.lock();
             if (live_observer && !expired)
             {

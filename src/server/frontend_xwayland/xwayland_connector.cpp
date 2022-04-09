@@ -67,7 +67,7 @@ void mf::XWaylandConnector::start()
 {
     if (wayland_connector->get_extension("x11-support"))
     {
-        std::unique_lock<std::mutex> lock{mutex};
+        std::unique_lock lock{mutex};
         is_started = true;
         maybe_create_spawner(lock);
         mir::log_info("XWayland started on X11 display %s", spawner->x11_display().c_str());
@@ -76,7 +76,7 @@ void mf::XWaylandConnector::start()
 
 void mf::XWaylandConnector::stop()
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
 
     bool const was_started = is_started;
     is_started = false;
@@ -148,7 +148,7 @@ void mf::XWaylandConnector::clean_up(std::unique_lock<std::mutex> lock)
 
 void mf::XWaylandConnector::spawn()
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
 
     if (server || !spawner)
     {
@@ -193,9 +193,9 @@ void mf::XWaylandConnector::spawn()
                     {
                         if (auto const self = weak_self.lock())
                         {
-                            self->clean_up(std::unique_lock<std::mutex>{self->mutex});
+                            self->clean_up(std::unique_lock{self->mutex});
                             log_info("Restarting XWayland");
-                            self->maybe_create_spawner(std::unique_lock<std::mutex>{self->mutex});
+                            self->maybe_create_spawner(std::unique_lock{self->mutex});
                         }
                     });
             });
@@ -221,11 +221,11 @@ void mf::XWaylandConnector::spawn()
             {
                 if (auto const self = weak_self.lock())
                 {
-                    self->clean_up(std::unique_lock<std::mutex>{self->mutex});
+                    self->clean_up(std::unique_lock{self->mutex});
                     log_info("Restarting XWayland");
                     // XWaylandConnector::spawn() is only called when a client tries to connect, so restarting the
                     // on failure should not result in an endless loop.
-                    self->maybe_create_spawner(std::unique_lock<std::mutex>{self->mutex});
+                    self->maybe_create_spawner(std::unique_lock{self->mutex});
                 }
             });
     }

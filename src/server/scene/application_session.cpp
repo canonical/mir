@@ -71,7 +71,7 @@ ms::ApplicationSession::ApplicationSession(
 
 ms::ApplicationSession::~ApplicationSession()
 {
-    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    std::unique_lock lock(surfaces_and_streams_mutex);
     for (auto const& surface : surfaces)
     {
         session_listener->destroying_surface(*this, surface);
@@ -115,7 +115,7 @@ auto ms::ApplicationSession::create_surface(
         surface->add_observer(observer);
 
     {
-        std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+        std::unique_lock lock(surfaces_and_streams_mutex);
         surfaces.push_back(surface);
         default_content_map[surface] = buffer_stream;
     }
@@ -146,7 +146,7 @@ auto ms::ApplicationSession::create_surface(
 void ms::ApplicationSession::destroy_surface(std::shared_ptr<Surface> const& surface)
 {
     {
-        std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+        std::unique_lock lock(surfaces_and_streams_mutex);
 
         auto default_content_map_iter = default_content_map.find(surface);
         auto surface_iter = std::find(surfaces.begin(), surfaces.end(), surface);
@@ -210,7 +210,7 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
 
 std::shared_ptr<ms::Surface> ms::ApplicationSession::default_surface() const
 {
-    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    std::unique_lock lock(surfaces_and_streams_mutex);
 
     if (!surfaces.empty())
         return *surfaces.begin();
@@ -235,7 +235,7 @@ mir::Fd ms::ApplicationSession::socket_fd() const
 
 void ms::ApplicationSession::hide()
 {
-    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    std::unique_lock lock(surfaces_and_streams_mutex);
     for (auto& surface : surfaces)
     {
         surface->hide();
@@ -244,7 +244,7 @@ void ms::ApplicationSession::hide()
 
 void ms::ApplicationSession::show()
 {
-    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    std::unique_lock lock(surfaces_and_streams_mutex);
     for (auto& surface : surfaces)
     {
         surface->show();
@@ -288,14 +288,14 @@ auto ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& pr
     auto stream = buffer_stream_factory->create_buffer_stream(props);
     session_listener->buffer_stream_created(*this, stream);
 
-    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    std::unique_lock lock(surfaces_and_streams_mutex);
     streams.insert(stream);
     return stream;
 }
 
 void ms::ApplicationSession::destroy_buffer_stream(std::shared_ptr<frontend::BufferStream> const& stream)
 {
-    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    std::unique_lock lock(surfaces_and_streams_mutex);
     auto stream_it = streams.find(std::dynamic_pointer_cast<compositor::BufferStream>(stream));
     if (stream_it == streams.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot destroy stream: Invalid BufferStream"));

@@ -86,7 +86,7 @@ struct WaylandExtensions : miral::TestServer
                 cv.notify_one();
             };
 
-        std::unique_lock<decltype(mutex)> lock{mutex};
+        std::unique_lock lock{mutex};
         launcher.launch(client);
         cv.wait(lock, [&]{ return client_run; });
     }

@@ -340,7 +340,7 @@ mgx::Display::OutputInfo::~OutputInfo()
 
 void mgx::Display::OutputInfo::set_size(geometry::Size const& size)
 {
-    std::unique_lock<std::mutex> lock{owner->mutex};
+    std::unique_lock lock{owner->mutex};
     if (config->modes[0].size == size)
     {
         return;

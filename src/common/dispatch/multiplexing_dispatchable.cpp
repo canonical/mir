@@ -161,7 +161,7 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
 {
     decltype(dispatchee_holder)::iterator new_holder;
     {
-        std::unique_lock<decltype(lifetime_mutex)> lock{lifetime_mutex};
+        std::unique_lock lock{lifetime_mutex};
         new_holder = dispatchee_holder.emplace(dispatchee_holder.begin(),
                                                dispatchee,
                                                reentrancy == DispatchReentrancy::sequential);
@@ -178,7 +178,7 @@ void md::MultiplexingDispatchable::add_watch(std::shared_ptr<md::Dispatchable> c
     e.data.ptr = static_cast<void*>(&(*new_holder));
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, dispatchee->watch_fd(), &e) < 0)
     {
-        std::unique_lock<decltype(lifetime_mutex)> lock{lifetime_mutex};
+        std::unique_lock lock{lifetime_mutex};
         dispatchee_holder.erase(new_holder);
         if (errno == EEXIST)
         {
@@ -218,7 +218,7 @@ void md::MultiplexingDispatchable::remove_watch(Fd const& fd)
                                                  "Failed to remove fd monitor"}));
     }
 
-    std::unique_lock<decltype(lifetime_mutex)> lock{lifetime_mutex};
+    std::unique_lock lock{lifetime_mutex};
     dispatchee_holder.remove_if([&fd](std::pair<std::shared_ptr<Dispatchable>,bool> const& candidate)
     {
         return candidate.first->watch_fd() == fd;

@@ -120,7 +120,7 @@ public:
 
         try
         {
-            std::unique_lock<std::mutex> lock{run_mutex};
+            std::unique_lock lock{run_mutex};
             while (running)
             {
                 /* Wait until compositing has been scheduled or we are stopped */

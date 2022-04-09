@@ -306,7 +306,7 @@ void ms::MediatingDisplayChanger::configure_for_hardware_change(
 
     server_action_queue->enqueue(this, [this]
         {
-            std::unique_lock<std::mutex> pending_lg{pending_configuration_mutex};
+            std::unique_lock pending_lg{pending_configuration_mutex};
             if (!pending_configuration)
             {
                 return;

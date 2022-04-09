@@ -106,9 +106,9 @@ public:
         return {};
     }
 
-    std::unique_lock<std::mutex> drain()
+    auto drain()
     {
-        std::unique_lock<std::mutex> lock{mutex};
+        std::unique_lock lock{mutex};
 
         if (state == ExecutionState::TerminationRequested)
         {
