@@ -40,7 +40,7 @@ public:
     template<typename rep, typename period>
     bool wait_for(std::chrono::duration<rep, period> delay)
     {
-        std::unique_lock<decltype(mutex)> lock(mutex);
+        std::unique_lock lock(mutex);
         if (signalled)
         {
             return true;
@@ -50,7 +50,7 @@ public:
     template<class Clock, class Duration>
     bool wait_until(std::chrono::time_point<Clock, Duration> const& time)
     {
-        std::unique_lock<decltype(mutex)> lock(mutex);
+        std::unique_lock lock(mutex);
         if (signalled)
         {
             return true;

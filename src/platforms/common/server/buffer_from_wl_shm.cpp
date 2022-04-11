@@ -183,7 +183,7 @@ public:
 
     LockedHandle lock() const
     {
-        std::unique_lock<std::mutex> lock{resource->mutex};
+        std::unique_lock lock{resource->mutex};
         if (resource->buffer)
         {
             return LockedHandle{resource->buffer, std::move(lock)};
@@ -266,7 +266,7 @@ private:
         resource = wl_container_of(listener, resource, destruction_listener);
 
         {
-            std::lock_guard<std::mutex> lock{resource->mutex};
+            std::lock_guard lock{resource->mutex};
             resource->buffer = nullptr;
         }
         // Release the wl_resource's ownership
@@ -323,7 +323,7 @@ public:
     void bind() override
     {
         ShmBuffer::bind();
-        std::lock_guard<std::mutex> lock{upload_mutex};
+        std::lock_guard lock{upload_mutex};
         if (!uploaded)
         {
             auto const mapping = map_readable();

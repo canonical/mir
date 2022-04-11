@@ -148,7 +148,7 @@ std::weak_ptr<mx::X11Resources> mx::X11Resources::instance_;
 
 auto mx::X11Resources::instance() -> std::shared_ptr<X11Resources>
 {
-    std::lock_guard<std::mutex> lock{instance_mutex};
+    std::lock_guard lock{instance_mutex};
 
     if (auto resources = instance_.lock())
     {
@@ -198,13 +198,13 @@ mx::X11Resources::~X11Resources()
 
 void mx::X11Resources::set_set_output_for_window(xcb_window_t win, VirtualOutput* output)
 {
-    std::lock_guard<std::mutex> lock{outputs_mutex};
+    std::lock_guard lock{outputs_mutex};
     outputs[win] = output;
 }
 
 void mx::X11Resources::clear_output_for_window(xcb_window_t win)
 {
-    std::lock_guard<std::mutex> lock{outputs_mutex};
+    std::lock_guard lock{outputs_mutex};
     outputs.erase(win);
 }
 
@@ -212,7 +212,7 @@ void mx::X11Resources::with_output_for_window(
     xcb_window_t win,
     std::function<void(std::optional<VirtualOutput*> output)> fn)
 {
-    std::lock_guard<std::mutex> lock{outputs_mutex};
+    std::lock_guard lock{outputs_mutex};
     auto const iter = outputs.find(win);
     if (iter != outputs.end())
     {

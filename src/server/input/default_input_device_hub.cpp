@@ -79,7 +79,7 @@ void mi::ExternalInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserve
         data.get(),
         [observer, data = this->data]
         {
-            std::lock_guard<std::recursive_mutex> lock{data->mutex};
+            std::lock_guard lock{data->mutex};
             for (auto const& item : data->handles)
                 observer->device_added(item);
             observer->changes_complete();
@@ -101,15 +101,15 @@ void mi::ExternalInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserv
         data->observer_queue->enqueue_with_guaranteed_execution(
             [&,this]
             {
-                std::lock_guard<std::recursive_mutex> lock{data->mutex};
+                std::lock_guard lock{data->mutex};
                 data->observers.remove(observer);
 
-                std::lock_guard<decltype(mutex)> cond_var_lock{mutex};
+                std::lock_guard cond_var_lock{mutex};
                 removed = true;
                 cv.notify_one();
             });
 
-        std::unique_lock<decltype(mutex)> lock{mutex};
+        std::unique_lock lock{mutex};
 
         // Before returning wait for the remove - otherwise notifications can still happen
         cv.wait(lock, [&] { return removed; });
@@ -128,25 +128,25 @@ void mi::ExternalInputDeviceHub::for_each_mutable_input_device(std::function<voi
 
 void mi::ExternalInputDeviceHub::Internal::device_added(std::shared_ptr<Device> const& device)
 {
-    std::lock_guard<std::recursive_mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     devices_added.push_back(device);
 }
 
 void mi::ExternalInputDeviceHub::Internal::device_changed(std::shared_ptr<Device> const& device)
 {
-    std::lock_guard<std::recursive_mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     devices_changed.push_back(device);
 }
 
 void mi::ExternalInputDeviceHub::Internal::device_removed(std::shared_ptr<Device> const& device)
 {
-    std::lock_guard<std::recursive_mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     devices_removed.push_back(device);
 }
 
 void mi::ExternalInputDeviceHub::Internal::changes_complete()
 {
-    std::lock_guard<std::recursive_mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     decltype(devices_added) added, changed, removed;
     std::swap(devices_added, added);
@@ -203,7 +203,7 @@ auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     if (!device)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input device"));
 
-    std::lock_guard<std::recursive_mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     auto it = find_if(devices.cbegin(),
                       devices.cend(),
@@ -244,7 +244,7 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
     if (!device)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input device"));
 
-    std::lock_guard<std::recursive_mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     auto pos = remove_if(
         begin(devices),
@@ -377,7 +377,7 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
     device_queue->enqueue(
         [this,observer]()
         {
-            std::unique_lock<std::recursive_mutex> lock(mutex);
+            std::unique_lock lock(mutex);
             for (auto const& item : handles)
                 observer->device_added(item);
             observer->changes_complete();
@@ -389,14 +389,14 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
 
 void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(Device const&)> const& callback)
 {
-    std::unique_lock<std::recursive_mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     for (auto const& item : handles)
         callback(*item);
 }
 
 void mi::DefaultInputDeviceHub::for_each_mutable_input_device(std::function<void(Device&)> const& callback)
 {
-    std::unique_lock<std::recursive_mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     // perform_transaction is true if no transaction is already in-progress
     bool const perform_transaction = !pending_changes;
     if (perform_transaction)
@@ -481,7 +481,7 @@ void mi::DefaultInputDeviceHub::remove_device_handle(std::lock_guard<std::recurs
 
 void mi::DefaultInputDeviceHub::device_changed(Device* dev)
 {
-    std::unique_lock<std::recursive_mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     auto dev_it = find_if(begin(handles), end(handles), [dev](auto const& ptr){return ptr.get() == dev;});
     std::shared_ptr<Device> const dev_shared = *dev_it;
     if (pending_changes)
@@ -502,7 +502,7 @@ void mi::DefaultInputDeviceHub::device_changed(Device* dev)
 
 void mi::DefaultInputDeviceHub::complete_transaction()
 {
-    std::unique_lock<std::recursive_mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     std::vector<std::shared_ptr<mi::Device>> devices_to_notify;
     if (pending_changes)
     {

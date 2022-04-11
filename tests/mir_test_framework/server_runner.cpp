@@ -48,7 +48,7 @@ void mtf::ServerRunner::start_server()
         BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to start server thread"});
     }
 
-    std::lock_guard<std::mutex> main_loop_lock{main_loop_mutex};
+    std::lock_guard main_loop_lock{main_loop_mutex};
     std::swap(ml, main_loop);
 }
 
@@ -58,7 +58,7 @@ void mtf::ServerRunner::stop_server()
         decltype(main_loop) ml;
 
         {
-            std::lock_guard<std::mutex> main_loop_lock{main_loop_mutex};
+            std::lock_guard main_loop_lock{main_loop_mutex};
             std::swap(ml, main_loop);
         }
 
@@ -99,7 +99,7 @@ std::shared_ptr<mir::MainLoop> mtf::ServerRunner::start_mir_server()
                     this,
                     [&]
                     {
-                        std::lock_guard<std::mutex> lock(mutex);
+                        std::lock_guard lock(mutex);
                         started = true;
                         started_cv.notify_one();
                     });
@@ -113,7 +113,7 @@ std::shared_ptr<mir::MainLoop> mtf::ServerRunner::start_mir_server()
         }
     });
 
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock lock(mutex);
     started_cv.wait_for(lock, std::chrono::seconds{30}, [&]{ return started; });
 
     return ml;

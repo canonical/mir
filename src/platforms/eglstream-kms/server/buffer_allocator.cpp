@@ -261,7 +261,7 @@ struct BoundEGLStream
              * render thread will bind the new texture (ie: there's some implicit syncpoint
              * action happening)
              */
-            std::lock_guard<std::mutex> lock{sync->sync_mutex};
+            std::lock_guard lock{sync->sync_mutex};
             if (sync->sync)
             {
                 glWaitSync(sync->sync, 0, GL_TIMEOUT_IGNORED);

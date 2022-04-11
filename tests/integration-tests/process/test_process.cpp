@@ -37,7 +37,7 @@ struct MainFunctionFactory
     static void an_infinitely_waiting_main_function()
     {
         std::mutex m;
-        std::unique_lock<std::mutex> ul(m);
+        std::unique_lock ul(m);
 
         std::condition_variable cv;
 

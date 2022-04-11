@@ -100,7 +100,7 @@ auto msh::SystemCompositorWindowManager::add_surface(
 
     surface->add_observer(session_ready_observer);
     
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     output_map[surface] = params.output_id.value();
 
     return surface;
@@ -126,7 +126,7 @@ void msh::SystemCompositorWindowManager::modify_surface(
             surface->resize(rect.size);
         }
 
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
         output_map[surface] = output_id;
     }
 
@@ -143,13 +143,13 @@ void msh::SystemCompositorWindowManager::remove_surface(
     if (auto const locked = surface.lock())
         session->destroy_surface(locked);
 
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     output_map.erase(surface);
 }
 
 void msh::SystemCompositorWindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
 
     for (auto const& so : output_map)
     {

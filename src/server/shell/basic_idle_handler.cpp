@@ -164,13 +164,13 @@ msh::BasicIdleHandler::BasicIdleHandler(
 
 msh::BasicIdleHandler::~BasicIdleHandler()
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     clear_observers(lock);
 }
 
 void msh::BasicIdleHandler::set_display_off_timeout(std::optional<time::Duration> timeout)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     if (timeout == current_off_timeout)
     {
         return;

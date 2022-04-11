@@ -236,7 +236,7 @@ public:
     {
         glBindTexture(GL_TEXTURE_2D, tex);
 
-        std::lock_guard<decltype(consumed_mutex)> lock(consumed_mutex);
+        std::lock_guard lock(consumed_mutex);
         on_consumed();
         on_consumed = [](){};
     }

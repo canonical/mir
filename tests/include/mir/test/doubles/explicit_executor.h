@@ -48,13 +48,13 @@ public:
 
     void spawn(std::function<void()>&& work) override
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         work_items.push_back(std::move(work));
     }
 
     void execute()
     {
-        std::unique_lock<std::mutex> lock{mutex};
+        std::unique_lock lock{mutex};
         auto const items = std::move(work_items);
         work_items.clear();
         lock.unlock();

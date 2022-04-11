@@ -152,7 +152,7 @@ public:
      */
     MutexGuard<Guarded> lock()
     {
-        return MutexGuard<Guarded>{std::unique_lock<std::mutex>{mutex}, value};
+        return MutexGuard<Guarded>{std::unique_lock{mutex}, value};
     }
 
 protected:
@@ -169,7 +169,7 @@ public:
     template<typename Predicate, typename Rep, typename Period>
     MutexGuard<Guarded> wait_for(Predicate predicate, std::chrono::duration<Rep, Period> timeout)
     {
-        std::unique_lock<std::mutex> lock{this->mutex};
+        std::unique_lock lock{this->mutex};
         if (!notifier.wait_for(
             lock, timeout, [this, &predicate]()
                 { return predicate(this->value); }))
@@ -198,7 +198,7 @@ public:
     void spawn (std::function<void()>&& work) override
     {
         {
-            std::lock_guard<std::mutex> lock{mutex};
+            std::lock_guard lock{mutex};
             workqueue.emplace_back(std::move(work));
         }
         if (auto err = eventfd_write(notify_fd, 1))
@@ -253,7 +253,7 @@ private:
 
     std::function<void()> get_work()
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (!workqueue.empty())
         {
             auto const work = std::move(workqueue.front());
@@ -304,7 +304,7 @@ private:
         shim = wl_container_of(listener, shim, destruction_listener);
 
         {
-            std::lock_guard<std::mutex> lock{shim->executor->mutex};
+            std::lock_guard lock{shim->executor->mutex};
             wl_event_source_remove(shim->executor->notify_source);
         }
         delete shim;

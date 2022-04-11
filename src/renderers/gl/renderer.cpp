@@ -213,7 +213,7 @@ public:
             "}\n";
 
         // GL shader compilation is *not* threadsafe, and requires external synchronisation
-        std::lock_guard<std::mutex> lock{compilation_mutex};
+        std::lock_guard lock{compilation_mutex};
 
         ShaderHandle const opaque_shader{
             compile_shader(GL_FRAGMENT_SHADER, opaque_fragment.str().c_str())};

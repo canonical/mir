@@ -48,7 +48,7 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
     if (!locked_shell)
         BOOST_THROW_EXCEPTION(std::runtime_error("Shell is null"));
 
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     if (decorations.find(surface.get()) == decorations.end())
     {
         decorations[surface.get()] = nullptr;
@@ -63,7 +63,7 @@ void msd::BasicManager::undecorate(std::shared_ptr<ms::Surface> const& surface)
 {
     std::unique_ptr<Decoration> decoration;
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         auto const it = decorations.find(surface.get());
         if (it != decorations.end())
         {
@@ -79,7 +79,7 @@ void msd::BasicManager::undecorate_all()
 {
     std::vector<std::unique_ptr<Decoration>> to_destroy;
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         for (auto& it : decorations)
             to_destroy.push_back(std::move(it.second));
         decorations.clear();

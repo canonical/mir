@@ -120,7 +120,7 @@ public:
 
         try
         {
-            std::unique_lock<std::mutex> lock{run_mutex};
+            std::unique_lock lock{run_mutex};
             while (running)
             {
                 /* Wait until compositing has been scheduled or we are stopped */
@@ -199,7 +199,7 @@ public:
 
     void schedule_compositing(int num_frames)
     {
-        std::lock_guard<std::mutex> lock{run_mutex};
+        std::lock_guard lock{run_mutex};
 
         if (num_frames > frames_scheduled)
         {
@@ -210,7 +210,7 @@ public:
 
     void schedule_compositing(int num_frames, geometry::Rectangle const& damage)
     {
-        std::lock_guard<std::mutex> lock{run_mutex};
+        std::lock_guard lock{run_mutex};
         bool took_damage = not_posted_yet;
 
         group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
@@ -225,7 +225,7 @@ public:
 
     void stop()
     {
-        std::lock_guard<std::mutex> lock{run_mutex};
+        std::lock_guard lock{run_mutex};
         running = false;
         run_cv.notify_one();
     }

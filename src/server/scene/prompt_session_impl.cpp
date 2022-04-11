@@ -29,7 +29,7 @@ ms::PromptSessionImpl::PromptSessionImpl() :
 
 void ms::PromptSessionImpl::start(std::shared_ptr<Session> const& helper_session)
 {
-    std::lock_guard<std::mutex> lk(guard);
+    std::lock_guard lk(guard);
 
     if (current_state == mir_prompt_session_state_stopped)
     {
@@ -41,7 +41,7 @@ void ms::PromptSessionImpl::start(std::shared_ptr<Session> const& helper_session
 
 void ms::PromptSessionImpl::stop(std::shared_ptr<Session> const& helper_session)
 {
-    std::lock_guard<std::mutex> lk(guard);
+    std::lock_guard lk(guard);
 
     if (current_state != mir_prompt_session_state_stopped)
     {
@@ -53,7 +53,7 @@ void ms::PromptSessionImpl::stop(std::shared_ptr<Session> const& helper_session)
 
 void ms::PromptSessionImpl::suspend(std::shared_ptr<Session> const& helper_session)
 {
-    std::lock_guard<std::mutex> lk(guard);
+    std::lock_guard lk(guard);
 
     if (current_state == mir_prompt_session_state_started)
     {
@@ -65,7 +65,7 @@ void ms::PromptSessionImpl::suspend(std::shared_ptr<Session> const& helper_sessi
 
 void ms::PromptSessionImpl::resume(std::shared_ptr<Session> const& helper_session)
 {
-    std::lock_guard<std::mutex> lk(guard);
+    std::lock_guard lk(guard);
 
     if (current_state == mir_prompt_session_state_suspended)
     {

@@ -374,7 +374,7 @@ void msh::AbstractShell::request_resize(
 
 void msh::AbstractShell::focus_next_session()
 {
-    std::unique_lock<std::mutex> lock(focus_mutex);
+    std::unique_lock lock(focus_mutex);
     auto const focused_session = focus_session.lock();
     auto successor = session_coordinator->successor_of(focused_session);
     auto const sentinel = successor;
@@ -397,7 +397,7 @@ void msh::AbstractShell::focus_next_session()
 
 void msh::AbstractShell::focus_prev_session()
 {
-    std::unique_lock<std::mutex> lock(focus_mutex);
+    std::unique_lock lock(focus_mutex);
     auto const focused_session = focus_session.lock();
     auto predecessor = session_coordinator->predecessor_of(focused_session);
     auto const sentinel = predecessor;
@@ -420,13 +420,13 @@ void msh::AbstractShell::focus_prev_session()
 
 std::shared_ptr<ms::Session> msh::AbstractShell::focused_session() const
 {
-    std::unique_lock<std::mutex> lg(focus_mutex);
+    std::unique_lock lg(focus_mutex);
     return focus_session.lock();
 }
 
 std::shared_ptr<ms::Surface> msh::AbstractShell::focused_surface() const
 {
-    std::unique_lock<std::mutex> lock(focus_mutex);
+    std::unique_lock lock(focus_mutex);
     return focus_surface.lock();
 }
 
@@ -434,7 +434,7 @@ void msh::AbstractShell::set_focus_to(
     std::shared_ptr<ms::Session> const& focus_session,
     std::shared_ptr<ms::Surface> const& focus_surface)
 {
-    std::unique_lock<std::mutex> lock(focus_mutex);
+    std::unique_lock lock(focus_mutex);
 
     if (last_requested_focus_surface.lock() != focus_surface)
     {

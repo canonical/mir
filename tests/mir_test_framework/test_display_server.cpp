@@ -95,7 +95,7 @@ void miral::TestDisplayServer::start_server()
                             // leaving start_mir_server().
                             main_loop->enqueue(this, [&]
                                 {
-                                     std::lock_guard<std::mutex> lock(mutex);
+                                     std::lock_guard lock(mutex);
                                      server_running = &server;
                                      started.notify_one();
                                 });
@@ -126,12 +126,12 @@ void miral::TestDisplayServer::start_server()
                 mir::fatal_error(e.what());
             }
 
-            std::lock_guard<std::mutex> lock(mutex);
+            std::lock_guard lock(mutex);
             server_running = nullptr;
             started.notify_one();
          });
 
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock lock(mutex);
     started.wait_for(lock, timeout, [&] { return server_running; });
 
     if (!server_running)
@@ -142,7 +142,7 @@ void miral::TestDisplayServer::start_server()
 
 void miral::TestDisplayServer::stop_server()
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock lock(mutex);
 
     runner.stop();
 

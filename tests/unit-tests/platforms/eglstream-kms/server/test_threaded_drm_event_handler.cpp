@@ -60,7 +60,7 @@ public:
 
                         EventDetails event;
                         {
-                            std::lock_guard<std::mutex> lock{event_mutex};
+                            std::lock_guard lock{event_mutex};
                             if (expected_events.empty())
                             {
                                 ADD_FAILURE() << "drmHandleEvent called with no pending event";
@@ -92,7 +92,7 @@ public:
     {
         using namespace std::literals::chrono_literals;
 
-        std::lock_guard<std::mutex> lock{event_mutex};
+        std::lock_guard lock{event_mutex};
 
         expected_events.emplace_back(
             EventDetails

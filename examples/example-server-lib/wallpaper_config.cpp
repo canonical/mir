@@ -86,12 +86,12 @@ std::string font_file{default_font()};
 
 void wallpaper::font_file(std::string const& font_file)
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     ::font_file = font_file;
 }
 
 auto wallpaper::font_file() -> std::string
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     return ::font_file;
 }

@@ -46,14 +46,14 @@ public:
 
     void release()
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
         raised = true;
         cv.notify_all();
     }
 
     void acquire()
     {
-        std::unique_lock<decltype(mutex)> lock{mutex};
+        std::unique_lock lock{mutex};
         if (raised)
         {
             raised = false;
@@ -65,7 +65,7 @@ public:
 
     bool try_acquire()
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
         if (raised)
         {
             raised = false;
@@ -236,7 +236,7 @@ public:
     void quiesce()
     {
         wait_for_idle();
-        std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
+        std::lock_guard lock{workers_mutex};
         free_workers.clear();
         workers.clear();
         num_workers_free = 0;
@@ -246,7 +246,7 @@ public:
     {
         WorkerHandle worker;
         {
-            std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
+            std::lock_guard lock{workers_mutex};
             if (num_workers_free > 0)
             {
                 worker = free_workers.front();
@@ -282,7 +282,7 @@ private:
 
     void wait_for_idle()
     {
-        std::unique_lock<decltype(workers_mutex)> lock{workers_mutex};
+        std::unique_lock lock{workers_mutex};
         // We need to wait for any active workers to finish.
         bool idle = workers.size() == free_workers.size();
         while (!idle)
@@ -302,7 +302,7 @@ private:
     void recycle(WorkerHandle&& worker)
     {
         {
-            std::lock_guard<decltype(workers_mutex)> lock{workers_mutex};
+            std::lock_guard lock{workers_mutex};
             if (num_workers_free < min_threadpool_threads)
             {
                 // If we're below our free-thread minimum, recycle this thread back into the pool…

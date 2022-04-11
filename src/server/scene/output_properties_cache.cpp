@@ -62,14 +62,14 @@ void ms::OutputPropertiesCache::update_from(mg::DisplayConfiguration const &conf
             }
         });
 
-    std::lock_guard<std::mutex> lk(mutex);
+    std::lock_guard lk(mutex);
     cache = new_properties;
 }
 
 auto ms::OutputPropertiesCache::get_cache() const
     -> std::shared_ptr<std::vector<OutputProperties>>
 {
-    std::lock_guard<std::mutex> lk(mutex);
+    std::lock_guard lk(mutex);
     return cache;
 }
 

@@ -147,7 +147,7 @@ void mi::Validator::ensure_stream_validity_locked(
 
 void mi::Validator::handle_touch_event(MirEvent const& event)
 {
-    std::lock_guard<std::mutex> lg(state_guard);
+    std::lock_guard lg(state_guard);
 
     auto const input_event = mir_event_get_input_event(&event);
     auto const id = mir_input_event_get_device_id(input_event);

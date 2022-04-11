@@ -31,7 +31,7 @@ mgc::EGLContextExecutor::EGLContextExecutor(
 mgc::EGLContextExecutor::~EGLContextExecutor() noexcept
 {
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         shutdown_requested = true;
     }
     new_work.notify_all();
@@ -42,7 +42,7 @@ void mgc::EGLContextExecutor::spawn(
     std::function<void()>&& functor)
 {
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         work_queue.emplace_back(std::move(functor));
     }
     new_work.notify_all();
@@ -52,7 +52,7 @@ void mgc::EGLContextExecutor::process_loop(mgc::EGLContextExecutor* const me)
 {
     me->ctx->make_current();
 
-    std::unique_lock<std::mutex> lock{me->mutex};
+    std::unique_lock lock{me->mutex};
     while (!me->shutdown_requested)
     {
         for (auto& work : me->work_queue)

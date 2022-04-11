@@ -78,7 +78,7 @@ void mtd::FakeAlarmFactory::FakeAlarm::time_updated()
     {
         triggers_at = mir::time::Timestamp::max();
         alarm_state = State::triggered;
-        std::lock_guard<mir::LockableCallback> guard{*callback};
+        std::lock_guard guard{*callback};
         (*callback)();
         ++triggered_count;
     }

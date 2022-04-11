@@ -142,14 +142,14 @@ auto connect_xwayland_wl_client(
     wayland_connector->run_on_wayland_display(
         [ctx, wayland_fd, scale](wl_display* display)
         {
-            std::lock_guard<std::mutex> lock{ctx->mutex};
+            std::lock_guard lock{ctx->mutex};
             ctx->client = wl_client_create(display, wayland_fd);
             mf::WlClient::from(ctx->client)->set_output_geometry_scale(scale);
             ctx->ready = true;
             ctx->condition_variable.notify_all();
         });
 
-    std::unique_lock<std::mutex> client_lock{ctx->mutex};
+    std::unique_lock client_lock{ctx->mutex};
     if (!ctx->condition_variable.wait_for(client_lock, 10s, [ctx]{ return ctx->ready; }))
     {
         // "Shouldn't happen" but this is better than hanging.
@@ -200,7 +200,7 @@ mf::XWaylandServer::~XWaylandServer()
 
 auto mf::XWaylandServer::is_running() const -> bool
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     if (running)
     {

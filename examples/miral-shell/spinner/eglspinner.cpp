@@ -221,7 +221,7 @@ struct SpinnerSplash::Self : SplashSession
 
     std::shared_ptr<mir::scene::Session> session() const override
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
         return session_.lock();
     }
 };
@@ -232,7 +232,7 @@ SpinnerSplash::~SpinnerSplash() = default;
 
 void SpinnerSplash::operator()(std::weak_ptr<mir::scene::Session> const& session)
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
+    std::lock_guard lock{self->mutex};
     self->session_ = session;
 }
 

@@ -22,26 +22,26 @@ namespace mir { namespace graphics {
 
 Frame AtomicFrame::load() const
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard lock(mutex);
     return frame;
 }
 
 void AtomicFrame::store(Frame const& f)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard lock(mutex);
     frame = f;
 }
 
 void AtomicFrame::increment_now()
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard lock(mutex);
     frame.ust = Frame::Timestamp::now(frame.ust.clock_id);
     frame.msc++;
 }
 
 void AtomicFrame::increment_with_timestamp(Frame::Timestamp t)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard lock(mutex);
     frame.ust = t;
     frame.msc++;
 }

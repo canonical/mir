@@ -37,13 +37,13 @@ TEST(PosixRWMutex, exclusive_locks_are_exclusive)
 {
     mir::PosixRWMutex mutex;
 
-    std::unique_lock<decltype(mutex)> exclusive_lock{mutex};
+    std::unique_lock exclusive_lock{mutex};
 
     bool lock_taken_in_thread{false};
     mt::AutoJoinThread thread_which_should_block{
         [&mutex, &lock_taken_in_thread]()
         {
-            std::lock_guard<decltype(mutex)> lock{mutex};
+            std::lock_guard lock{mutex};
             lock_taken_in_thread = true;
         }};
 
@@ -58,9 +58,9 @@ TEST(PosixRWMutex, exclusive_trylock_fails_when_exclusive_lock_held)
 {
     mir::PosixRWMutex mutex;
 
-    std::lock_guard<decltype(mutex)> exclusive_lock{mutex};
+    std::lock_guard exclusive_lock{mutex};
 
-    if (auto second_lock = std::unique_lock<decltype(mutex)>{mutex, std::try_to_lock})
+    if (auto second_lock = std::unique_lock{mutex, std::try_to_lock})
     {
         FAIL() << "Unexpectedly took a second exclusive lock";
     }
@@ -78,7 +78,7 @@ TEST(PosixRWMutex, exclusive_locks_exclude_read_locks)
 {
     mir::PosixRWMutex mutex;
 
-    std::unique_lock<decltype(mutex)> exclusive_lock{mutex};
+    std::unique_lock exclusive_lock{mutex};
 
     bool lock_taken_in_thread{false};
     mt::AutoJoinThread thread_which_should_block{
@@ -99,7 +99,7 @@ TEST(PosixRWMutex, try_shared_lock_fails_when_exclusive_lock_held)
 {
     mir::PosixRWMutex mutex;
 
-    std::lock_guard<decltype(mutex)> exclusive_lock{mutex};
+    std::lock_guard exclusive_lock{mutex};
 
     if (auto second_lock = std::shared_lock<decltype(mutex)>{mutex, std::try_to_lock})
     {
@@ -117,7 +117,7 @@ TEST(PosixRWMutex, read_locks_exclude_exclusive_locks)
     mt::AutoJoinThread thread_which_should_block{
         [&mutex, &lock_taken_in_thread]()
         {
-            std::lock_guard<decltype(mutex)> lock{mutex};
+            std::lock_guard lock{mutex};
             lock_taken_in_thread = true;
         }};
 
@@ -134,7 +134,7 @@ TEST(PosixRWMutex, try_exclusive_lock_fails_when_read_lock_held)
 
     std::shared_lock<decltype(mutex)> read_lock{mutex};
 
-    if (auto second_lock = std::unique_lock<decltype(mutex)>{mutex, std::try_to_lock})
+    if (auto second_lock = std::unique_lock{mutex, std::try_to_lock})
     {
         FAIL() << "Unexpectedly took a read lock while write lock was already taken";
     }
@@ -150,7 +150,7 @@ TEST(PosixRWMutex, successful_read_trylock_excludes_write_lock)
     mt::AutoJoinThread thread_which_should_block{
         [&mutex, &lock_taken_in_thread]()
         {
-            std::lock_guard<decltype(mutex)> lock{mutex};
+            std::lock_guard lock{mutex};
             lock_taken_in_thread = true;
         }};
 
@@ -177,7 +177,7 @@ TEST(PosixRWMutex, successful_trylock_excludes_read_lock)
 {
     mir::PosixRWMutex mutex;
 
-    std::unique_lock<decltype(mutex)> exclusive_lock{mutex, std::try_to_lock};
+    std::unique_lock exclusive_lock{mutex, std::try_to_lock};
 
     bool lock_taken_in_thread{false};
     mt::AutoJoinThread thread_which_should_block{
@@ -198,13 +198,13 @@ TEST(PosixRWMutex, successful_trylock_excludes_exclusive_lock)
 {
     mir::PosixRWMutex mutex;
 
-    std::unique_lock<decltype(mutex)> exclusive_lock{mutex, std::try_to_lock};
+    std::unique_lock exclusive_lock{mutex, std::try_to_lock};
 
     bool lock_taken_in_thread{false};
     mt::AutoJoinThread thread_which_should_block{
         [&mutex, &lock_taken_in_thread]()
         {
-            std::lock_guard<decltype(mutex)> lock{mutex};
+            std::lock_guard lock{mutex};
             lock_taken_in_thread = true;
         }};
 
@@ -237,7 +237,7 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
                     [&]()
                     {
                         {
-                            std::lock_guard<decltype(reader_mutex)> l{reader_mutex};
+                            std::lock_guard l{reader_mutex};
                             reader_to_run = (id + 1) % readers.size();
                         }
                         reader_changed.notify_all();
@@ -249,7 +249,7 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
                     {
                         readers_started.raise();
                         {
-                            std::unique_lock<decltype(reader_mutex)> l{reader_mutex};
+                            std::unique_lock l{reader_mutex};
                             if (reader_to_run != id)
                             {
                                 reader_changed.wait(l, [&reader_to_run, id]() { return reader_to_run == id; });
@@ -292,7 +292,7 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
             for (auto i = 0u; i < readers.size() ; ++i)
             {
                 {
-                    std::lock_guard<decltype(reader_mutex)> lock{reader_mutex};
+                    std::lock_guard lock{reader_mutex};
                     reader_to_run = i;
                 }
                 reader_changed.notify_all();
@@ -303,7 +303,7 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
     // Wait until the reader threads have spooled up and taken a shared lock.
     ASSERT_TRUE(readers_started.wait_for(std::chrono::seconds{10}));
 
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
 
     shutdown_readers = true;
 }

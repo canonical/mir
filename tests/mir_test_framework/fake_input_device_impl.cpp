@@ -126,7 +126,7 @@ void mtf::FakeInputDeviceImpl::on_new_configuration_do(std::function<void(mir::i
 }
 void mtf::FakeInputDeviceImpl::InputDevice::set_apply_settings_callback(std::function<void(mir::input::InputDevice const&)> const& callback)
 {
-    std::lock_guard<std::mutex> lock(config_callback_mutex);
+    std::lock_guard lock(config_callback_mutex);
     this->callback = callback;
 }
 
@@ -295,7 +295,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::trigger_callback() const
 {
     decltype(callback) stored_callback;
     {
-        std::lock_guard<std::mutex> lock(config_callback_mutex);
+        std::lock_guard lock(config_callback_mutex);
         stored_callback = callback;
     }
     stored_callback(*this);

@@ -208,7 +208,7 @@ mgx::Display::~Display() noexcept
 
 void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     for (auto const& output : outputs)
     {
         f(*output->display_buffer);
@@ -217,7 +217,7 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     std::vector<DisplayConfigurationOutput> output_configurations;
     for (auto const& output : outputs)
     {
@@ -228,7 +228,7 @@ std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 
 void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     if (!new_configuration.valid())
     {
@@ -273,7 +273,7 @@ void mgx::Display::register_configuration_change_handler(
     EventHandlerRegister& /* event_handler*/,
     DisplayConfigurationChangeHandler const& change_handler)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     config_change_handlers.push_back(change_handler);
 }
 
@@ -340,7 +340,7 @@ mgx::Display::OutputInfo::~OutputInfo()
 
 void mgx::Display::OutputInfo::set_size(geometry::Size const& size)
 {
-    std::unique_lock<std::mutex> lock{owner->mutex};
+    std::unique_lock lock{owner->mutex};
     if (config->modes[0].size == size)
     {
         return;

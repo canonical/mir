@@ -91,7 +91,7 @@ public:
      */
     MutexGuard<Guarded> lock()
     {
-        return MutexGuard<Guarded>{std::unique_lock<std::mutex>{mutex}, value};
+        return MutexGuard<Guarded>{std::unique_lock{mutex}, value};
     }
 
 private:

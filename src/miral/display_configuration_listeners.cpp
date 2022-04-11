@@ -26,13 +26,13 @@
 
 void miral::DisplayConfigurationListeners::add_listener(ActiveOutputsListener* listener)
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     active_output_listeners.push_back(listener);
 }
 
 void miral::DisplayConfigurationListeners::delete_listener(ActiveOutputsListener* listener)
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
 
     auto const new_end = std::remove(active_output_listeners.begin(), active_output_listeners.end(), listener);
     active_output_listeners.erase(new_end, active_output_listeners.end());
@@ -41,7 +41,7 @@ void miral::DisplayConfigurationListeners::delete_listener(ActiveOutputsListener
 void miral::DisplayConfigurationListeners::process_active_outputs(
     std::function<void(std::vector<Output> const& outputs)> const& functor) const
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     functor(active_outputs);
 }
 
@@ -75,7 +75,7 @@ void miral::DisplayConfigurationListeners::configuration_updated_for_session(
 
 void miral::DisplayConfigurationListeners::configuration_applied(std::shared_ptr<mir::graphics::DisplayConfiguration const> const& config)
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
 
     decltype(active_outputs) current_outputs;
 

@@ -166,7 +166,7 @@ mf::XCBConnection::Atom::operator xcb_atom_t() const
 {
     if (atom == XCB_ATOM_NONE)
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
 
         // The initial atomic check is faster, but we need to check again once we've got the lock
         if (atom == XCB_ATOM_NONE)
@@ -176,7 +176,7 @@ mf::XCBConnection::Atom::operator xcb_atom_t() const
                 BOOST_THROW_EXCEPTION(std::runtime_error("Failed to look up atom " + name_));
             atom = reply->atom;
 
-            std::lock_guard<std::mutex> lock{connection->atom_name_cache_mutex};
+            std::lock_guard lock{connection->atom_name_cache_mutex};
             connection->atom_name_cache[atom] = name_;
         }
     }
@@ -207,7 +207,7 @@ void mf::XCBConnection::verify_not_in_error_state() const
 
 auto mf::XCBConnection::query_name(xcb_atom_t atom) const -> std::string
 {
-    std::lock_guard<std::mutex>{atom_name_cache_mutex};
+    std::lock_guard{atom_name_cache_mutex};
     auto const iter = atom_name_cache.find(atom);
 
     if (iter == atom_name_cache.end())

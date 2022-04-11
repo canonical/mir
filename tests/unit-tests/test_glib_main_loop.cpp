@@ -919,20 +919,20 @@ class Counter
 public:
     int operator++()
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
+        std::lock_guard lock(mutex);
         cv.notify_one();
         return ++counter;
     }
 
     bool wait_for(std::chrono::milliseconds const& delay, int expected)
     {
-        std::unique_lock<decltype(mutex)> lock(mutex);
+        std::unique_lock lock(mutex);
         return cv.wait_for(lock, delay, [&]{ return counter == expected;});
     }
 
     operator int() const
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
+        std::lock_guard lock(mutex);
         return counter;
     }
 

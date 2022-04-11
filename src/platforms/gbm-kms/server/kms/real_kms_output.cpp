@@ -220,7 +220,7 @@ void mgg::RealKMSOutput::clear_crtc()
 
 bool mgg::RealKMSOutput::schedule_page_flip(FBHandle const& fb)
 {
-    std::unique_lock<std::mutex> lg(power_mutex);
+    std::unique_lock lg(power_mutex);
     if (power_mode != mir_power_mode_on)
         return true;
     if (!current_crtc)
@@ -237,7 +237,7 @@ bool mgg::RealKMSOutput::schedule_page_flip(FBHandle const& fb)
 
 void mgg::RealKMSOutput::wait_for_page_flip()
 {
-    std::unique_lock<std::mutex> lg(power_mutex);
+    std::unique_lock lg(power_mutex);
     if (power_mode != mir_power_mode_on)
         return;
     if (!current_crtc)
@@ -341,7 +341,7 @@ void mgg::RealKMSOutput::restore_saved_crtc()
 
 void mgg::RealKMSOutput::set_power_mode(MirPowerMode mode)
 {
-    std::lock_guard<std::mutex> lg(power_mutex);
+    std::lock_guard lg(power_mutex);
 
     if (power_mode != mode)
     {

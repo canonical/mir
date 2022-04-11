@@ -144,7 +144,7 @@ struct StubInputSurface : public mtd::StubSurface
         cursor_image_ = image;
 
         {
-            std::unique_lock<decltype(observer_guard)> lk(observer_guard);
+            std::unique_lock lk(observer_guard);
             for (auto o : observers)
                 o->cursor_image_set_to(this, *image);
         }
@@ -152,7 +152,7 @@ struct StubInputSurface : public mtd::StubSurface
 
     void add_observer(std::shared_ptr<ms::SurfaceObserver> const& observer) override
     {
-        std::unique_lock<decltype(observer_guard)> lk(observer_guard);
+        std::unique_lock lk(observer_guard);
 
         observers.push_back(observer);
     }

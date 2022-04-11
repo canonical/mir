@@ -36,7 +36,7 @@ public:
 
     ~LinearisingAdaptor() noexcept
     {
-        std::unique_lock<decltype(mutex)> lock{mutex};
+        std::unique_lock lock{mutex};
         workqueue.clear();
         while (!idle)
         {
@@ -46,7 +46,7 @@ public:
 
     void spawn(std::function<void()>&& work) override
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
         workqueue.push_back(std::move(work));
         if (idle)
         {
@@ -59,7 +59,7 @@ private:
     // Execute items from the queue one at a time, until none are left
     void work_loop()
     {
-        std::unique_lock<decltype(mutex)> lock{mutex};
+        std::unique_lock lock{mutex};
         while (!workqueue.empty())
         {
             {
