@@ -225,6 +225,7 @@ void mir::run_mir(
                 for (auto sig : fatal_error_signals)
                 {
                     struct sigaction sig_handler_desc;
+                    sigfillset(&sig_handler_desc.sa_mask);
                     sig_handler_desc.sa_flags = SA_SIGINFO;
                     sig_handler_desc.sa_sigaction = &fatal_signal_cleanup;
 
