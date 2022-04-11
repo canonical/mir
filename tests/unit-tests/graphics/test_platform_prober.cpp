@@ -66,11 +66,13 @@ void add_broken_platform(std::vector<std::shared_ptr<mir::SharedLibrary>>& modul
     modules.insert(modules.begin(), std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-throw.so")));
 }
 
+[[maybe_unused]]
 std::shared_ptr<void> ensure_mesa_probing_fails()
 {
     return std::make_shared<mtf::UdevEnvironment>();
 }
 
+[[maybe_unused]]
 std::shared_ptr<void> ensure_mesa_probing_succeeds()
 {
     using namespace testing;
