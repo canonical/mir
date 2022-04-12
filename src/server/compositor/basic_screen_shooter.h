@@ -51,7 +51,7 @@ public:
 
     void capture(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
-        mir::geometry::Rectangle const& area,
+        geometry::Rectangle const& area,
         std::function<void(std::optional<time::Timestamp>)>&& callback) override;
 
 private:
@@ -60,8 +60,12 @@ private:
         Self(
             std::shared_ptr<Scene> const& scene,
              renderer::gl::ContextSource& context_source,
-             mir::renderer::RendererFactory& renderer_factory,
+             renderer::RendererFactory& renderer_factory,
              std::shared_ptr<time::Clock> const& clock);
+
+        auto render(
+            std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
+            geometry::Rectangle const& area) -> time::Timestamp;
 
         std::mutex mutex;
         std::shared_ptr<Scene> const scene;

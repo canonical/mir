@@ -26,7 +26,7 @@
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/scene.h"
 #include "mir/system_executor.h"
-#include "mir/raii.h"
+#include "mir/log.h"
 
 namespace mc = mir::compositor;
 namespace mr = mir::renderer;
@@ -47,6 +47,36 @@ mc::BasicScreenShooter::Self::Self(
 {
 }
 
+auto mc::BasicScreenShooter::Self::render(
+    std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
+    geom::Rectangle const& area) -> time::Timestamp
+{
+    std::lock_guard<std::mutex> lock{mutex};
+
+    auto scene_elements = scene->scene_elements_for(this);
+    auto const captured_time = clock->now();
+    mg::RenderableList renderable_list;
+    renderable_list.reserve(scene_elements.size());
+    for (auto const& element : scene_elements)
+    {
+        renderable_list.push_back(element->renderable());
+    }
+    scene_elements.clear();
+
+    render_target->make_current();
+    render_target->set_buffer(buffer, area.size);
+
+    render_target->bind();
+    renderer->set_output_transform(glm::mat2{1});
+    renderer->set_viewport(area);
+    renderer->render(renderable_list);
+
+    render_target->release_current();
+    renderable_list.clear();
+
+    return captured_time;
+}
+
 mc::BasicScreenShooter::BasicScreenShooter(
     std::shared_ptr<Scene> const& scene,
     renderer::gl::ContextSource& context_source,
@@ -65,41 +95,23 @@ void mc::BasicScreenShooter::capture(
 
     system_executor.spawn([weak_self=std::weak_ptr<Self>{self}, buffer, area, callback=std::move(callback)]
         {
-            // This will make sure the callback is called no matter what happens
-            std::optional<time::Timestamp> completed;
-            raii::PairedCalls cleanup{[](){},
-                [&]()
-                {
-                    callback(completed);
-                }
-            };
-
             if (auto const self = weak_self.lock())
             {
-                std::lock_guard<std::mutex> lock{self->mutex};
-
-                auto scene_elements = self->scene->scene_elements_for(self.get());
-                auto const captured_time = self->clock->now();
-                mg::RenderableList renderable_list;
-                renderable_list.reserve(scene_elements.size());
-                for (auto const& element : scene_elements)
+                try
                 {
-                    renderable_list.push_back(element->renderable());
+                    callback(self->render(buffer, area));
+                    return;
                 }
-                scene_elements.clear();
-
-                self->render_target->make_current();
-                self->render_target->set_buffer(buffer, area.size);
-
-                self->render_target->bind();
-                self->renderer->set_output_transform(glm::mat2{1});
-                self->renderer->set_viewport(area);
-                self->renderer->render(renderable_list);
-
-                self->render_target->release_current();
-                renderable_list.clear();
-
-                completed = captured_time;
+                catch (...)
+                {
+                    mir::log(
+                        ::mir::logging::Severity::error,
+                        "BasicScreenShooter",
+                        std::current_exception(),
+                        "failed to capture screen");
+                }
             }
+
+            callback(std::nullopt);
         });
 }
