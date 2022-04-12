@@ -92,7 +92,7 @@ private:
     public:
         Framebuffer(geometry::Size const& size);
         ~Framebuffer();
-        void render(software::WriteMappableBuffer& buffer);
+        void copy_to(software::WriteMappableBuffer& buffer);
         void bind();
 
         geometry::Size const size;

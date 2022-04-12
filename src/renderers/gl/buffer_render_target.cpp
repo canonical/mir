@@ -81,7 +81,7 @@ mrg::BufferRenderTarget::Framebuffer::~Framebuffer()
     glDeleteRenderbuffers(1, &colour_buffer);
 }
 
-void mrg::BufferRenderTarget::Framebuffer::render(software::WriteMappableBuffer& buffer)
+void mrg::BufferRenderTarget::Framebuffer::copy_to(software::WriteMappableBuffer& buffer)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     auto mapping = buffer.map_writeable();
@@ -137,7 +137,7 @@ void mrg::BufferRenderTarget::swap_buffers()
     {
         BOOST_THROW_EXCEPTION(std::logic_error("swap_buffers() called when buffer unset"));
     }
-    framebuffer->render(*buffer);
+    framebuffer->copy_to(*buffer);
 }
 
 void mrg::BufferRenderTarget::bind()
