@@ -91,9 +91,14 @@ void mrg::BufferRenderTarget::Framebuffer::copy_to(software::WriteMappableBuffer
     {
         BOOST_THROW_EXCEPTION(std::logic_error("given size does not match buffer size"));
     }
-    /*
-    * TODO: We are assuming that the framebuffer pixel format is RGBX
-    */
+    if (mapping->stride() != geometry::Stride{size.width.as_int() * 4})
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer stride " + std::to_string(mapping->stride().as_int())));
+    }
+    if (mapping->format() != mir_pixel_format_argb_8888)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("invalid pixel format " + std::to_string(mapping->format())));
+    }
     glReadPixels(
         0, 0,
         size.width.as_int(), size.height.as_int(),
