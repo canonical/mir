@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_PLATFORM_H_
 
 #include <boost/program_options/options_description.hpp>
+#include <any>
 
 #include "mir/module_properties.h"
 #include "mir/module_deleter.h"
@@ -136,19 +137,13 @@ struct SupportedDevice
     std::unique_ptr<udev::Device> device;
     PlatformPriority support_level;     /**< How well the platform can support this device */
 
-    class DriverPrivate
-    {
-    public:
-        DriverPrivate() = default;
-        virtual ~DriverPrivate() = default;
-    };
     /**
      * Platform-private data from probing
      *
      * If there is any extra data helpful in creating a Platform on this device, the platform can
      * stash it here, and it will be passed in to the platform constructor.
      */
-    std::unique_ptr<DriverPrivate> platform_data;
+    std::any platform_data;
 };
 
 typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatform)(

@@ -92,20 +92,6 @@ void add_graphics_platform_options(boost::program_options::options_description& 
          "[mir-on-X specific] Title for the banner of the generated X11 window");
 }
 
-namespace
-{
-class X11PlatformPrivate : public mg::SupportedDevice::DriverPrivate
-{
-public:
-    explicit X11PlatformPrivate(std::shared_ptr<mx::X11Resources> resources)
-        : resources{std::move(resources)}
-    {
-    }
-
-    std::shared_ptr<mx::X11Resources> const resources;
-};
-}
-
 auto probe_graphics_platform() -> std::optional<mg::SupportedDevice>
 {
     if (auto resources = mx::X11Resources::instance())
@@ -113,7 +99,7 @@ auto probe_graphics_platform() -> std::optional<mg::SupportedDevice>
         return mg::SupportedDevice {
             nullptr,
             mg::PlatformPriority::hosted,
-            std::make_unique<X11PlatformPrivate>(std::move(resources))
+            std::move(resources)
         };
     }
     return {};
