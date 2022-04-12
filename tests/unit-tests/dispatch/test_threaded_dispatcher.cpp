@@ -371,7 +371,6 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
                 stop_and_restart_process.~CrossProcessAction();
                 exit_success_sync.~CrossProcessSync();
             }
-
             exit(HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
         },
         []{ return 1; });
@@ -388,7 +387,7 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
         });
 
     auto const result = child->wait_for_termination(30s);
-    EXPECT_TRUE(result.exited_normally());
+    EXPECT_TRUE(result.exited_normally()) << result;
 
     // The test may run under valgrind which may change the exit code of the
     // forked child if it detects any issues. Issues detected by valgrind are
