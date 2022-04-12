@@ -217,7 +217,26 @@ std::ostream& print_reason(std::ostream & out, mtf::TerminationReason reason)
 
 std::ostream& print_signal(std::ostream& out, int signal)
 {
-    out << "signal(" << signal << ")";
+    switch(signal)
+    {
+    case SIGQUIT:
+        out << "SIGQUIT";
+        break;
+    case SIGABRT:
+        out << "SIGABRT";
+        break;
+    case SIGFPE:
+        out << "SIGFPE";
+        break;
+    case SIGSEGV:
+        out << "SIGSEGV";
+        break;
+    case SIGBUS:
+        out << "SIGBUS";
+        break;
+    default:
+        out << "signal(" + std::to_string(signal) + ")";
+    }
     return out;
 }
 
@@ -239,15 +258,15 @@ std::ostream& mtf::operator<<(std::ostream& out, const mtf::Result& result)
 {
     out << "process::Result(";
     print_reason(out, result.reason);
-    out << ", ";
     if (result.signalled())
     {
-        print_signal(out, result.signal);
         out << ", ";
+        print_signal(out, result.signal);
     }
 
     if (result.reason == TerminationReason::child_terminated_normally)
     {
+        out << ", ";
         print_exit_code(out, result.exit_code);
     }
 
