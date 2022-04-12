@@ -21,8 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/geometry/size.h"
-#include "mir/test/doubles/null_display_buffer.h"
-#include "mir/test/doubles/stub_display_buffer.h"
+#include "mir/test/doubles/stub_gl_display_buffer.h"
 #include <thread>
 
 namespace mir
@@ -62,7 +61,7 @@ public:
 
 private:
     std::vector<geometry::Rectangle> const output_rects;
-    std::vector<StubDisplayBuffer> display_buffers;
+    std::vector<StubGLDisplayBuffer> display_buffers;
 };
 
 struct NullDisplaySyncGroup : graphics::DisplaySyncGroup
@@ -82,7 +81,7 @@ struct NullDisplaySyncGroup : graphics::DisplaySyncGroup
         return std::chrono::milliseconds::zero();
     }
 
-    NullDisplayBuffer db;
+    StubGLDisplayBuffer db{{{}, {1, 1}}};
 };
 
 }
