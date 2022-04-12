@@ -409,9 +409,15 @@ int main()
 
     wl_output_add_listener(globals->output, &output_listener, NULL);
 
-    signal(SIGINT, shutdown);
-    signal(SIGTERM, shutdown);
-    signal(SIGHUP, shutdown);
+    struct sigaction sig_handler_new;
+    sigfillset(&sig_handler_new.sa_mask);
+    sig_handler_new.sa_flags = 0;
+    sig_handler_new.sa_handler = shutdown;
+
+    sigaction(SIGINT, &sig_handler_new, NULL);
+    sigaction(SIGTERM, &sig_handler_new, NULL);
+    sigaction(SIGHUP, &sig_handler_new, NULL);
+
     running = 1;
 
     while (wl_display_dispatch(display) && running)

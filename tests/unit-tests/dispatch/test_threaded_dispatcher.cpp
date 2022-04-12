@@ -318,10 +318,6 @@ TEST_F(ThreadedDispatcherTest, DISABLED_sets_thread_names_appropriately)
     EXPECT_TRUE(dispatched->wait_for(10s));
 }
 
-void sigcont_handler(int)
-{
-}
-
 // Regression test for: lp #1439719
 TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
 {
@@ -348,7 +344,11 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
                  * When there's a signal handler for SIGCONT installed then
                  * any blocked syscall will (correctly) return EINTR, so install one.
                  */
-                signal(SIGCONT, &sigcont_handler);
+                struct sigaction sig_handler_new;
+                sigfillset(&sig_handler_new.sa_mask);
+                sig_handler_new.sa_flags = 0;
+                sig_handler_new.sa_handler = [](auto) {};
+                sigaction(SIGCONT, &sig_handler_new, nullptr);
 
                 md::ThreadedDispatcher dispatcher{"Test thread", dispatchable};
                 // Ensure the dispatcher has started
