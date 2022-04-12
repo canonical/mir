@@ -445,20 +445,6 @@ global:
     vtable?for?mir::wayland::InputMethodV2;
     virtual?thunk?to?mir::wayland::InputMethodV2::?InputMethodV2*;
 
-    mir::wayland::IdleInhibitManagerV1::*;
-    non-virtual?thunk?to?mir::wayland::IdleInhibitManagerV1::*;
-    typeinfo?for?mir::wayland::IdleInhibitManagerV1;
-    vtable?for?mir::wayland::IdleInhibitManagerV1;
-    typeinfo?for?mir::wayland::IdleInhibitManagerV1::Global;
-    vtable?for?mir::wayland::IdleInhibitManagerV1::Global;
-    virtual?thunk?to?mir::wayland::IdleInhibitManagerV1::?IdleInhibitManagerV1*;
-
-    mir::wayland::IdleInhibitorV1::*;
-    non-virtual?thunk?to?mir::wayland::IdleInhibitorV1::*;
-    typeinfo?for?mir::wayland::IdleInhibitorV1;
-    vtable?for?mir::wayland::IdleInhibitorV1;
-    virtual?thunk?to?mir::wayland::IdleInhibitorV1::?IdleInhibitorV1*;
-
     mir::wayland::InputPopupSurfaceV2::*;
     non-virtual?thunk?to?mir::wayland::InputPopupSurfaceV2::*;
     typeinfo?for?mir::wayland::InputPopupSurfaceV2;
