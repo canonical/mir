@@ -201,7 +201,7 @@ void WaylandApp::handle_new_global(
         // shared_ptr instead of unique_ptr only so it can be captured by the lambda
         auto output = std::make_shared<WaylandOutput>(self, output_resource);
         // global_remove_handlers will hold on to the output until it is removed
-        self->global_remove_handlers[id] = [self, output = move(output)]()
+        self->global_remove_handlers[id] = [self, output = std::move(output)]()
             {
                 self->output_gone(output.get());
             };

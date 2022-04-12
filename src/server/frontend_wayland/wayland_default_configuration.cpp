@@ -161,8 +161,8 @@ struct WaylandExtensions : mf::WaylandExtensions
     WaylandExtensions(
         std::vector<ExtensionBuilder> enabled_internal_builders,
         std::vector<mir::WaylandExtensionHook> enabled_external_hooks) :
-        enabled_internal_builders{move(enabled_internal_builders)},
-        enabled_external_hooks{move(enabled_external_hooks)}
+        enabled_internal_builders{std::move(enabled_internal_builders)},
+        enabled_external_hooks{std::move(enabled_external_hooks)}
     {
     }
 
@@ -226,7 +226,7 @@ auto configure_wayland_extensions(
         mir::log_warning("Wayland extension %s not supported", name.c_str());
     }
 
-    return std::make_unique<WaylandExtensions>(move(enabled_internal_builders), move(enabled_external_hooks));
+    return std::make_unique<WaylandExtensions>(std::move(enabled_internal_builders), std::move(enabled_external_hooks));
 }
 }
 

@@ -190,7 +190,11 @@ mgx::Display::Display(std::shared_ptr<mir::X::X11Resources> const& x11_resources
             report,
             *gl_config);
         top_left.x += as_delta(configuration->extents().size.width);
-        outputs.push_back(std::make_unique<OutputInfo>(this, move(window), move(display_buffer), move(configuration)));
+        outputs.push_back(std::make_unique<OutputInfo>(
+            this,
+             std::move(window),
+             std::move(display_buffer),
+             std::move(configuration)));
     }
 
     shared_egl.make_current();
@@ -326,9 +330,9 @@ mgx::Display::OutputInfo::OutputInfo(
     std::unique_ptr<DisplayBuffer> display_buffer,
     std::shared_ptr<DisplayConfigurationOutput> configuration)
     : owner{owner},
-      window{move(window)},
-      display_buffer{move(display_buffer)},
-      config{move(configuration)}
+      window{std::move(window)},
+      display_buffer{std::move(display_buffer)},
+      config{std::move(configuration)}
 {
     owner->x11_resources->set_set_output_for_window(*this->window, this);
 }

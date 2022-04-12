@@ -164,7 +164,7 @@ std::shared_ptr<Emitter::Impl const> Emitter::seq(std::vector<Emitter> const& ch
     if (valid.empty())
         return {};
     else
-        return std::make_shared<SeqEmitter>(move(valid), delimiter, at_start, at_end);
+        return std::make_shared<SeqEmitter>(std::move(valid), delimiter, at_start, at_end);
 }
 
 std::shared_ptr<Emitter::Impl const> Emitter::layout(Emitter const& child,
@@ -192,7 +192,7 @@ void Emitter::emit(State state) const
 }
 
 Emitter::Emitter(std::shared_ptr<Impl const> impl)
-    : impl{move(impl)}
+    : impl{std::move(impl)}
 {
 }
 

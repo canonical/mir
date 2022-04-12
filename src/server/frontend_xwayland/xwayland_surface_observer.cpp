@@ -117,7 +117,7 @@ auto mf::XWaylandSurfaceObserver::latest_timestamp() const -> std::chrono::nanos
 
 mf::XWaylandSurfaceObserver::ThreadsafeInputDispatcher::ThreadsafeInputDispatcher(
     std::unique_ptr<WaylandInputDispatcher> dispatcher)
-    : dispatcher{move(dispatcher)}
+    : dispatcher{std::move(dispatcher)}
 {
 }
 
@@ -127,7 +127,7 @@ mf::XWaylandSurfaceObserver::ThreadsafeInputDispatcher::~ThreadsafeInputDispatch
 
 void mf::XWaylandSurfaceObserver::aquire_input_dispatcher(std::function<void(WaylandInputDispatcher*)>&& work)
 {
-    wayland_executor.spawn([work = move(work), input_dispatcher = input_dispatcher]()
+    wayland_executor.spawn([work = std::move(work), input_dispatcher = input_dispatcher]()
         {
             std::lock_guard lock{input_dispatcher->mutex};
             if (input_dispatcher->dispatcher)

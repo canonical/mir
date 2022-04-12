@@ -949,7 +949,7 @@ auto mf::XWaylandSurface::consume_pending_spec(
     ProofOfMutexLock const&) -> std::optional<std::unique_ptr<msh::SurfaceSpecification>>
 {
     if (nullable_pending_spec)
-        return move(nullable_pending_spec);
+        return std::move(nullable_pending_spec);
     else
         return std::nullopt;
 }

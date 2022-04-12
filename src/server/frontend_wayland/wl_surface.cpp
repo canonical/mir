@@ -296,7 +296,7 @@ void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
     {
         // since pending.input_shape is an optional optional, this is needed
         auto shape = WlRegion::from(region.value())->rectangle_vector();
-        pending.input_shape = decltype(pending.input_shape)::value_type{move(shape)};
+        pending.input_shape = decltype(pending.input_shape)::value_type{std::move(shape)};
     }
     else
     {
