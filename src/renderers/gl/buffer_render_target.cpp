@@ -72,6 +72,8 @@ mrg::BufferRenderTarget::Framebuffer::Framebuffer(geometry::Size const& size)
                 std::string{"Unknown GL framebuffer error code: "} + std::to_string(status)}));
     }
 
+    // gl::Renderer can only set glViewport if there is a current EGL surface to get the size from. Since we don't bind
+    // an EGL surface when rendering to a buffer, we have to set the viewport ourselves.
     glViewport(0, 0, size.width.as_int(), size.height.as_int());
 }
 
