@@ -59,9 +59,9 @@ private:
     {
         Self(
             std::shared_ptr<Scene> const& scene,
-             renderer::gl::ContextSource& context_source,
-             renderer::RendererFactory& renderer_factory,
-             std::shared_ptr<time::Clock> const& clock);
+            renderer::gl::ContextSource& context_source,
+            renderer::RendererFactory& renderer_factory,
+            std::shared_ptr<time::Clock> const& clock);
 
         auto render(
             std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,

@@ -82,7 +82,22 @@ mc::BasicScreenShooter::BasicScreenShooter(
     renderer::gl::ContextSource& context_source,
     mr::RendererFactory& renderer_factory,
     std::shared_ptr<time::Clock> const& clock)
-    : self{std::make_shared<Self>(scene, context_source, renderer_factory, clock)}
+    : self{[&]() -> std::shared_ptr<Self>
+        {
+            try
+            {
+                return std::make_shared<Self>(scene, context_source, renderer_factory, clock);
+            }
+            catch (...)
+            {
+                mir::log(
+                    ::mir::logging::Severity::error,
+                    "BasicScreenShooter",
+                    std::current_exception(),
+                    "failed to initialize");
+                return nullptr;
+            }
+        }()}
 {
 }
 
