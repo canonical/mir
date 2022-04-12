@@ -96,6 +96,7 @@ private:
 
     std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
     geometry::Rectangle const area;
+    geometry::Stride const stride;
 };
 }
 }
@@ -179,13 +180,14 @@ mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
     geometry::Rectangle const& area)
     : wayland::WlrScreencopyFrameV1{resource, Version<3>()},
       ctx{ctx},
-      area{area}
+      area{area},
+      stride{area.size.width.as_uint32_t() * 4}
 {
     send_buffer_event(
         wayland::Shm::Format::argb8888,
         area.size.width.as_uint32_t(),
         area.size.height.as_uint32_t(),
-        area.size.width.as_uint32_t() * 4);
+        stride.as_uint32_t());
     if (version_supports_buffer_done())
     {
         send_buffer_done_event();
@@ -213,6 +215,16 @@ void mf::WlrScreencopyFrameV1::copy(struct wl_resource* buffer)
             graphics_buffer->size().height.as_int(),
             area.size.width.as_int(),
             area.size.height.as_int()));
+    }
+    auto const buffer_stride = geom::Stride{wl_shm_buffer_get_stride(wl_shm_buffer_get(buffer))};
+    if (buffer_stride != stride)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_buffer,
+            "Invalid stride %d, should be %d",
+            buffer_stride.as_int(),
+            stride.as_int()));
     }
     auto const target = std::dynamic_pointer_cast<renderer::software::WriteMappableBuffer>(graphics_buffer);
     if (!target)
