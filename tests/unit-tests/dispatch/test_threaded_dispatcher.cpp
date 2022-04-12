@@ -371,7 +371,7 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
                 stop_and_restart_process.~CrossProcessAction();
                 exit_success_sync.~CrossProcessSync();
             }
-            exit(HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+            _exit(HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
         },
         []{ return 1; });
 
