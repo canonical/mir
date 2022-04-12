@@ -138,11 +138,11 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_seat_observer_registrar)
 
 #define MIR_SERVER_BUILDER(name)\
-    std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;
+    std::function<std::invoke_result_t<decltype(&mir::DefaultServerConfiguration::the_##name),mir::DefaultServerConfiguration*>()> name##_builder;
 
 #define MIR_SERVER_WRAPPER(name)\
-    std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type\
-        (std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type const&)> name##_wrapper;
+    std::function<std::invoke_result_t<decltype(&mir::DefaultServerConfiguration::the_##name),mir::DefaultServerConfiguration*>\
+        (std::invoke_result_t<decltype(&mir::DefaultServerConfiguration::the_##name),mir::DefaultServerConfiguration*> const&)> name##_wrapper;
 
 struct mir::Server::Self
 {
