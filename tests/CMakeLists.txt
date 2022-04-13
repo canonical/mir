@@ -142,6 +142,7 @@ include_directories(
 option(MIR_BUILD_ACCEPTANCE_TESTS "Build acceptance tests" ON)
 option(MIR_BUILD_INTEGRATION_TESTS "Build integration tests" ON)
 option(MIR_BUILD_PERFORMANCE_TESTS "Build performance tests" ON)
+option(MIR_BUILD_MIRAL_TESTS "Build miral tests" ON)
 option(MIR_BUILD_UNIT_TESTS "Build unit tests" ON)
 option(MIR_BUILD_PLATFORM_TEST_HARNESS "Build platform test harness" ON)
 
@@ -159,7 +160,9 @@ if (MIR_BUILD_PERFORMANCE_TESTS)
     add_subdirectory(performance-tests/)
 endif(MIR_BUILD_PERFORMANCE_TESTS)
 
-add_subdirectory(miral)
+if (MIR_BUILD_MIRAL_TESTS)
+  add_subdirectory(miral)
+endif(MIR_BUILD_MIRAL_TESTS)
 
 # Private test headers used by integration and unit tests
 include_directories(
