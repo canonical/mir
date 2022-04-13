@@ -83,5 +83,11 @@ target_link_libraries(miral-test
     ${UUID_LDFLAGS} ${UUID_LIBRARIES}
 )
 
-mir_discover_tests_with_fd_leak_detection(miral-test)
-mir_discover_tests_with_fd_leak_detection(miral-test-internal)
+CMAKE_DEPENDENT_OPTION(
+    MIR_RUN_MIRAL_TESTS "Run miral tests as part of testsuite" ON
+)
+
+if(MIR_RUN_MIRAL_TESTS)
+    mir_discover_tests_with_fd_leak_detection(miral-test)
+    mir_discover_tests_with_fd_leak_detection(miral-test-internal)
+endif()
