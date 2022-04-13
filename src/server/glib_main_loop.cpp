@@ -381,7 +381,7 @@ void mir::GLibMainLoop::reprocess_all_sources()
                                 std::lock_guard lock{reprocessed_mutex};
                                 reprocessed = true;
                             }
-                            reprocessed_cv.notify_all();
+                            reprocessed_cv.notify_one();
                         });
 
                     before_iteration_hook = []{};

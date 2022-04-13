@@ -73,7 +73,7 @@ private:
             }
             idle = true;
         }
-        idle_changed.notify_all();
+        idle_changed.notify_one();
     }
 
     std::mutex mutex;

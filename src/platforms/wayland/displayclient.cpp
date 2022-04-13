@@ -389,7 +389,7 @@ void mgw::DisplayClient::Output::swap_buffers()
                 std::lock_guard lock{mutex};
                 posted = true;
             }
-            cv.notify_all();
+            cv.notify_one();
         }
 
         void wait_for_done()

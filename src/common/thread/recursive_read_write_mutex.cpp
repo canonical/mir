@@ -57,7 +57,7 @@ void mir::RecursiveReadWriteMutex::read_unlock()
 
         --(my_count->count);
     }
-    cv.notify_all();
+    cv.notify_one();
 }
 
 void mir::RecursiveReadWriteMutex::write_lock()

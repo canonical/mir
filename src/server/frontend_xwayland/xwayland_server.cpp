@@ -148,7 +148,7 @@ auto connect_xwayland_wl_client(
                 mf::WlClient::from(ctx->client)->set_output_geometry_scale(scale);
                 ctx->ready = true;
             }
-            ctx->condition_variable.notify_all();
+            ctx->condition_variable.notify_one();
         });
 
     std::unique_lock client_lock{ctx->mutex};
