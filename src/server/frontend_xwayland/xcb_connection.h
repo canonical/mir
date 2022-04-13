@@ -129,8 +129,8 @@ public:
         Handler(
             std::function<void(T const& value)>&& on_success,
             std::function<void(std::string const& message)>&& on_error)
-            : on_success{move(on_success)},
-              on_error{move(on_error)}
+            : on_success{std::move(on_success)},
+              on_error{std::move(on_error)}
         {
         }
 

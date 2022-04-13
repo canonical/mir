@@ -130,7 +130,7 @@ void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_window_destroyed(
     std::function<void(Impl* impl, WindowWlSurfaceRole* window)>&& work)
 {
     wayland_executor.spawn(
-        [impl=impl, work=move(work)]
+        [impl=impl, work=std::move(work)]
         {
             if (impl->window)
             {

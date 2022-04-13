@@ -141,15 +141,6 @@ bool FloatingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
         return false;
     }
 
-    long total_x = 0;
-    long total_y = 0;
-
-    for (auto i = 0U; i != count; ++i)
-    {
-        total_x += mir_touch_event_axis_value(event, i, mir_touch_axis_x);
-        total_y += mir_touch_event_axis_value(event, i, mir_touch_axis_y);
-    }
-
     for (auto i = 0U; i != count; ++i)
     {
         switch (mir_touch_event_action(event, i))

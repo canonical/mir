@@ -429,14 +429,14 @@ void mie::Platform::device_added(libinput_device* dev)
     auto device_it = find_device(device_ptr.get());
     if (end(devices) != device_it)
     {
-        (*device_it)->add_device_of_group(move(device_ptr));
+        (*device_it)->add_device_of_group(std::move(device_ptr));
         log_debug("Device %s is part of an already opened device group", libinput_device_get_sysname(dev));
         return;
     }
 
     try
     {
-        devices.emplace_back(std::make_shared<mie::LibInputDevice>(report, move(device_ptr)));
+        devices.emplace_back(std::make_shared<mie::LibInputDevice>(report, std::move(device_ptr)));
 
         input_device_registry->add_device(devices.back());
 

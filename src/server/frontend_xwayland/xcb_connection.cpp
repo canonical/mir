@@ -93,7 +93,7 @@ auto value_handler(
     mf::XCBConnection::Handler<T> handler) -> mf::XCBConnection::Handler<xcb_get_property_reply_t*>
 {
     return {
-        [connection, prop, on_success=move(handler.on_success)](xcb_get_property_reply_t const* reply)
+        [connection, prop, on_success=std::move(handler.on_success)](xcb_get_property_reply_t const* reply)
         {
             uint8_t const expected_format = sizeof(T) * 8;
             if (reply->format != expected_format)
@@ -119,7 +119,7 @@ auto value_handler(
 
             on_success(*static_cast<T const*>(xcb_get_property_value(reply)));
         },
-        move(handler.on_error)
+        std::move(handler.on_error)
     };
 }
 
@@ -150,7 +150,7 @@ auto vector_handler(
 
             on_success(values);
         },
-        move(handler.on_error)
+        std::move(handler.on_error)
     };
 }
 }
@@ -340,11 +340,11 @@ auto mf::XCBConnection::read_property(
         window,
         prop,
         {
-            [this, on_success=move(handler.on_success)](xcb_get_property_reply_t const* reply)
+            [this, on_success=std::move(handler.on_success)](xcb_get_property_reply_t const* reply)
             {
                 on_success(string_from(reply));
             },
-            move(handler.on_error)
+            std::move(handler.on_error)
         });
 }
 
