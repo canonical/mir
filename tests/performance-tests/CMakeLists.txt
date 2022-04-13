@@ -27,7 +27,7 @@ CMAKE_DEPENDENT_OPTION(
 )
 
 CMAKE_DEPENDENT_OPTION(
-  MIR_RUN_PERFORMANCE_TESTS "Run mir_performance_tests as part of testsuite" ON
+  MIR_RUN_PERFORMANCE_TESTS "Run mir_performance_tests as part of testsuite" OFF
   "XVFB_RUN_EXECUTABLE;GLMARK2_EXECUTABLE" OFF
 )
 
