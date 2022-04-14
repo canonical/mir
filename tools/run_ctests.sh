@@ -50,7 +50,7 @@ then
 fi
 
 # Run tests
-ctest -S "$TEST_DIR/steer.cmake" --output-on-failure -j8 -V $@
+ctest -S "$TEST_DIR/steer.cmake" --output-on-failure -j$(nproc --ignore=1) -V $@
 test_result=$(find $TEST_DIR -name LastTestsFailed_*.log | wc -l)
 
 # Update cost file
