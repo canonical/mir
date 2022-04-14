@@ -101,11 +101,13 @@ void mi::ExternalInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserv
         data->observer_queue->enqueue_with_guaranteed_execution(
             [&,this]
             {
-                std::lock_guard lock{data->mutex};
-                data->observers.remove(observer);
+                {
+                    std::lock_guard lock{data->mutex};
+                    data->observers.remove(observer);
 
-                std::lock_guard cond_var_lock{mutex};
-                removed = true;
+                    std::lock_guard cond_var_lock{mutex};
+                    removed = true;
+                }
                 cv.notify_one();
             });
 

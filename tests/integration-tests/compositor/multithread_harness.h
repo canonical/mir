@@ -77,8 +77,10 @@ class Synchronizer : public SynchronizerController,
 
         void activate_waiting_child()
         {
-            std::unique_lock lk(sync_mutex);
-            paused = false;
+            {
+                std::unique_lock lk(sync_mutex);
+                paused = false;
+            }
             cv.notify_all();
         };
 

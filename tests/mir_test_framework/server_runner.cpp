@@ -99,8 +99,10 @@ std::shared_ptr<mir::MainLoop> mtf::ServerRunner::start_mir_server()
                     this,
                     [&]
                     {
-                        std::lock_guard lock(mutex);
-                        started = true;
+                        {
+                            std::lock_guard lock(mutex);
+                            started = true;
+                        }
                         started_cv.notify_one();
                     });
             });

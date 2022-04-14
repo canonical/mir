@@ -95,9 +95,11 @@ void miral::TestDisplayServer::start_server()
                             // leaving start_mir_server().
                             main_loop->enqueue(this, [&]
                                 {
-                                     std::lock_guard lock(mutex);
-                                     server_running = &server;
-                                     started.notify_one();
+                                    {
+                                        std::lock_guard lock(mutex);
+                                        server_running = &server;
+                                    }
+                                    started.notify_one();
                                 });
                         });
 
@@ -126,8 +128,10 @@ void miral::TestDisplayServer::start_server()
                 mir::fatal_error(e.what());
             }
 
-            std::lock_guard lock(mutex);
-            server_running = nullptr;
+            {
+                std::lock_guard lock(mutex);
+                server_running = nullptr;
+            }
             started.notify_one();
          });
 

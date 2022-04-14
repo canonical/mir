@@ -22,8 +22,10 @@ namespace mtf = mir_test_framework;
 
 void mtf::PassthroughTracker::note_passthrough()
 {
-    std::unique_lock lk(mutex);
-    num_passthrough++;
+    {
+        std::unique_lock lk(mutex);
+        num_passthrough++;
+    }
     cv.notify_all();
 }
 

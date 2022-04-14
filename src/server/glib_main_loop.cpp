@@ -377,9 +377,11 @@ void mir::GLibMainLoop::reprocess_all_sources()
                     detail::add_idle_gsource(main_context, G_PRIORITY_LOW,
                         [&]
                         {
-                            std::lock_guard lock{reprocessed_mutex};
-                            reprocessed = true;
-                            reprocessed_cv.notify_all();
+                            {
+                                std::lock_guard lock{reprocessed_mutex};
+                                reprocessed = true;
+                            }
+                            reprocessed_cv.notify_one();
                         });
 
                     before_iteration_hook = []{};

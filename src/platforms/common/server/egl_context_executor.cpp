@@ -34,7 +34,7 @@ mgc::EGLContextExecutor::~EGLContextExecutor() noexcept
         std::lock_guard lock{mutex};
         shutdown_requested = true;
     }
-    new_work.notify_all();
+    new_work.notify_one();
     egl_thread.join();
 }
 
@@ -45,7 +45,7 @@ void mgc::EGLContextExecutor::spawn(
         std::lock_guard lock{mutex};
         work_queue.emplace_back(std::move(functor));
     }
-    new_work.notify_all();
+    new_work.notify_one();
 }
 
 void mgc::EGLContextExecutor::process_loop(mgc::EGLContextExecutor* const me)

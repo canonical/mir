@@ -22,8 +22,10 @@ namespace mt = mir::test;
 
 void mt::Signal::raise()
 {
-    std::lock_guard lock(mutex);
-    signalled = true;
+    {
+        std::lock_guard lock(mutex);
+        signalled = true;
+    }
     cv.notify_all();
 }
 

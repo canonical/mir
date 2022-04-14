@@ -39,9 +39,11 @@ mge::ThreadedDRMEventHandler::ThreadedDRMEventHandler(mir::Fd drm_fd)
 mge::ThreadedDRMEventHandler::~ThreadedDRMEventHandler()
 {
     {
-        std::lock_guard lock{expectation_mutex};
-        shutdown = true;
-        expectations_changed.notify_all();
+        {
+            std::lock_guard lock{expectation_mutex};
+            shutdown = true;
+        }
+        expectations_changed.notify_one();
     }
     if (dispatch_thread.joinable())
     {
@@ -66,7 +68,7 @@ public:
 
     ~NotifyOnScopeExit()
     {
-        notifier.notify_all();
+        notifier.notify_one();
     }
 private:
     std::condition_variable& notifier;

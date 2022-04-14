@@ -46,8 +46,10 @@ public:
 
     void release()
     {
-        std::lock_guard lock{mutex};
-        raised = true;
+        {
+            std::lock_guard lock{mutex};
+            raised = true;
+        }
         cv.notify_all();
     }
 

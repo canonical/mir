@@ -88,8 +88,10 @@ struct CountingDisplaySyncGroup : public mtd::StubDisplaySyncGroup
 private:
     void increment_post_count()
     {
-        std::unique_lock lk(mutex);
-        ++post_count_;
+        {
+            std::unique_lock lk(mutex);
+            ++post_count_;
+        }
         count_cv.notify_all();
     }
 

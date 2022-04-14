@@ -80,9 +80,11 @@ struct WaylandExtensions : miral::TestServer
 
         client.code = [&](struct wl_display* display)
             {
-                std::lock_guard lock{mutex};
-                code(display);
-                client_run = true;
+                {
+                    std::lock_guard lock{mutex};
+                    code(display);
+                    client_run = true;
+                }
                 cv.notify_one();
             };
 

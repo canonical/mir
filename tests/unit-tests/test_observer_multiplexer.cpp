@@ -80,7 +80,6 @@ public:
                         {
                             std::lock_guard lock{work_mutex};
                             work_pending.pop();
-                            work_changed.notify_all();
                         }
                         work_changed.notify_all();
                     }
@@ -107,8 +106,10 @@ public:
 
     void spawn(std::function<void()>&& work) override
     {
-        std::lock_guard lock{work_mutex};
-        work_pending.emplace(std::move(work));
+        {
+            std::lock_guard lock{work_mutex};
+            work_pending.emplace(std::move(work));
+        }
         work_changed.notify_all();
     }
 
