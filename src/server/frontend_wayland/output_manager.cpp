@@ -262,7 +262,7 @@ auto mf::OutputManager::output_for(graphics::DisplayConfigurationOutputId id) ->
         return std::nullopt;
 }
 
-auto mf::OutputManager::with_config(
+auto mf::OutputManager::with_config_for(
     wl_resource* output,
     std::function<void(mg::DisplayConfigurationOutput const&)> const& functor) -> bool
 {

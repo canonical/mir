@@ -100,7 +100,7 @@ mf::XdgOutputManagerV1::Instance::Instance(wl_resource* new_resource, OutputMana
 
 void mf::XdgOutputManagerV1::Instance::get_xdg_output(wl_resource* new_output, wl_resource* output)
 {
-    if (!output_manager->with_config(output,
+    if (!output_manager->with_config_for(output,
         [&](mg::DisplayConfigurationOutput const& config)
         {
             new XdgOutputV1{new_output, config, output};

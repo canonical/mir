@@ -120,7 +120,7 @@ auto mf::create_wlr_screencopy_manager_unstable_v1(
 auto mf::WlrScreencopyV1Ctx::extents_of_output(wl_resource* output) -> geom::Rectangle
 {
     geom::Rectangle extents;
-    if (!output_manager.with_config(output, [&](mg::DisplayConfigurationOutput const& config)
+    if (!output_manager.with_config_for(output, [&](mg::DisplayConfigurationOutput const& config)
         {
             extents = config.extents();
         }))

@@ -79,7 +79,7 @@ public:
 
     /// Either calls functor exactly once and returns true, or does not call functor and returns false if the output is
     /// not found
-    auto with_config(
+    auto with_config_for(
         wl_resource* output,
         std::function<void(graphics::DisplayConfigurationOutput const&)> const& functor) -> bool;
 
