@@ -18,7 +18,12 @@ ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 	echo "Testsuite disabled on $(DEB_HOST_ARCH) due to lack of big-endian support."
   endif
 else
+  # Run tests across Launchpad RISC-V builds (LP#1891686)
+  ifeq ($(USER) $(DEB_HOST_ARCH),buildd riscv64)
+	GTEST_OUTPUT=xml:./ dh_auto_build -- ARGS="-V" ptest
+  else
 	echo "Testsuite disabled due to DEB_BUILD_OPTIONS=\"$(DEB_BUILD_OPTIONS)\""
+  endif
 endif
 
 COMMON_CONFIGURE_OPTIONS = \
