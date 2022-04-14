@@ -21,9 +21,11 @@
 #define MIR_GRAPHICS_PLATFORM_H_
 
 #include <boost/program_options/options_description.hpp>
+#include <any>
 
 #include "mir/module_properties.h"
 #include "mir/module_deleter.h"
+#include "mir/udev/wrapper.h"
 
 namespace mir
 {
@@ -118,6 +120,32 @@ enum PlatformPriority : uint32_t
                          */
 };
 
+struct SupportedDevice
+{
+    /**
+     * UDev device the platform claims
+     *
+     * Mir assumes that all devices that platforms can claim are represented in udev,
+     * and can be uniquely identified there. Particularly: platform loading will guarantee
+     * that at most one platform (of each type) is created on each unique device.
+     *
+     * \note    It is acceptable for device to be empty; in this case Mir assumes that
+     *          device is incomparable with any other device. In particular, hosted platforms
+     *          like X11 or Wayland should use an empty device, as they are not bound to any
+     *          particular hardware.
+     */
+    std::unique_ptr<udev::Device> device;
+    PlatformPriority support_level;     /**< How well the platform can support this device */
+
+    /**
+     * Platform-private data from probing
+     *
+     * If there is any extra data helpful in creating a Platform on this device, the platform can
+     * stash it here, and it will be passed in to the platform constructor.
+     */
+    std::any platform_data;
+};
+
 typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
@@ -131,9 +159,10 @@ typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderPlat
 typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
 
-typedef mir::graphics::PlatformPriority(*PlatformProbe)(
+typedef std::vector<mir::graphics::SupportedDevice>(*PlatformProbe)(
     std::shared_ptr<mir::ConsoleServices> const&,
-        mir::options::ProgramOption const& options);
+    std::shared_ptr<mir::udev::Context> const&,
+    mir::options::ProgramOption const& options);
 
 typedef mir::ModuleProperties const*(*DescribeModule)();
 }
@@ -184,16 +213,16 @@ mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform
 void add_graphics_platform_options(
     boost::program_options::options_description& config);
 
-// TODO: We actually need to be more granular here; on a device with more
-//       than one graphics system we may need a different platform per GPU,
-//       so we should be associating platforms with graphics devices in some way
-mir::graphics::PlatformPriority probe_display_platform(
-    std::shared_ptr<mir::ConsoleServices> const& console,
-    mir::options::ProgramOption const& options);
 
-mir::graphics::PlatformPriority probe_rendering_platform(
+auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const& console,
-    mir::options::ProgramOption const& options);
+    std::shared_ptr<mir::udev::Context> const& udev,
+    mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>;
+
+auto probe_rendering_platform(
+    std::shared_ptr<mir::ConsoleServices> const& console,
+    std::shared_ptr<mir::udev::Context> const& udev,
+    mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>;
 
 mir::ModuleProperties const* describe_graphics_module();
 

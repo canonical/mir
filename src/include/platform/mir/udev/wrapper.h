@@ -40,7 +40,8 @@ public:
     Context(Context const&) = delete;
     Context& operator=(Context const&) = delete;
 
-    std::shared_ptr<Device> device_from_syspath(std::string const& syspath);
+    auto device_from_syspath(std::string const& syspath) -> std::unique_ptr<Device>;
+    auto char_device_from_devnum(dev_t devnum) -> std::unique_ptr<Device>;
 
     ::udev* ctx() const;
 
@@ -73,6 +74,12 @@ public:
      * \note    udev devices may be parentless. This returns an empty unique_ptr on parentless udev devices.
      */
     virtual auto parent() const -> std::unique_ptr<Device> = 0;
+    /**
+     * Copy this Device handle
+     *
+     * \return A copy of this Device
+     */
+    virtual auto clone() const -> std::unique_ptr<Device> = 0;
 protected:
     Device() = default;
 };

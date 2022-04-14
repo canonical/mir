@@ -434,7 +434,7 @@ TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
     monitor.enable();
 
     auto sysfs_path = udev_environment.add_device("drm", "control64D", NULL, {}, {});
-    auto device = ctx.device_from_syspath(sysfs_path);
+    std::shared_ptr<mir::udev::Device> device = ctx.device_from_syspath(sysfs_path);
 
     monitor.process_events(
         [&event_handler_called, device](mir::udev::Monitor::EventType, mir::udev::Device const& dev)
@@ -497,7 +497,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
     monitor.enable();
 
     auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
-    auto minor_device = ctx.device_from_syspath(test_sysfspath);
+    std::shared_ptr<mir::udev::Device> minor_device = ctx.device_from_syspath(test_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", test_sysfspath.c_str(), {}, {});
     udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
 
@@ -524,10 +524,10 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersAreAdditive)
     monitor.enable();
 
     auto drm_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
-    auto drm_device = ctx.device_from_syspath(drm_sysfspath);
+    std::shared_ptr<mir::udev::Device> drm_device = ctx.device_from_syspath(drm_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", drm_sysfspath.c_str(), {}, {});
     auto usb_sysfspath = udev_environment.add_device("usb", "mightymouse", NULL, {}, {"DEVTYPE", "hid"});
-    auto usb_device = ctx.device_from_syspath(usb_sysfspath);
+    std::shared_ptr<mir::udev::Device> usb_device = ctx.device_from_syspath(usb_sysfspath);
 
     monitor.process_events([&drm_event_recieved, drm_device, &usb_event_received, usb_device]
         (mir::udev::Monitor::EventType, mir::udev::Device const& dev)
@@ -554,7 +554,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersApplyAfterEnable)
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
 
     auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
-    auto minor_device = ctx.device_from_syspath(test_sysfspath);
+    std::shared_ptr<mir::udev::Device> minor_device = ctx.device_from_syspath(test_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", test_sysfspath.c_str(), {}, {});
     udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
 

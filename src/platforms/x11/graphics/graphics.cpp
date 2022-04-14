@@ -92,29 +92,47 @@ void add_graphics_platform_options(boost::program_options::options_description& 
          "[mir-on-X specific] Title for the banner of the generated X11 window");
 }
 
-mg::PlatformPriority probe_graphics_platform()
+auto probe_graphics_platform() -> std::optional<mg::SupportedDevice>
 {
-    if (mx::X11Resources::instance())
+    if (auto resources = mx::X11Resources::instance())
     {
-        return mg::PlatformPriority::hosted;
+        return mg::SupportedDevice {
+            nullptr,
+            mg::PlatformPriority::hosted,
+            std::move(resources)
+        };
     }
-    return mg::PlatformPriority::unsupported;
+    return {};
 }
 
 auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mo::ProgramOption const&) -> mg::PlatformPriority
+    std::shared_ptr<mir::udev::Context> const&,
+    mir::options::ProgramOption const&) -> std::vector<mg::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
-    return probe_graphics_platform();
+    if (auto probe = probe_graphics_platform())
+    {
+        std::vector<mg::SupportedDevice> result;
+        result.emplace_back(std::move(probe.value()));
+        return result;
+    }
+    return {};
 }
 
 auto probe_rendering_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mo::ProgramOption const&) -> mg::PlatformPriority
+    std::shared_ptr<mir::udev::Context> const&,
+    mo::ProgramOption const&) -> std::vector<mg::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
-    return probe_graphics_platform();
+    if (auto probe = probe_graphics_platform())
+    {
+        std::vector<mg::SupportedDevice> result;
+        result.emplace_back(std::move(probe.value()));
+        return result;
+    }
+    return {};
 }
 
 namespace

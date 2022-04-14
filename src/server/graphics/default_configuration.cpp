@@ -38,13 +38,13 @@
 #include "mir/log.h"
 #include "mir/report_exception.h"
 #include "mir/main_loop.h"
+#include "mir/udev/wrapper.h"
 
 #include <boost/throw_exception.hpp>
 
 #include <sstream>
 
 namespace mg = mir::graphics;
-namespace ml = mir::logging;
 
 std::shared_ptr<mg::DisplayConfigurationPolicy>
 mir::DefaultServerConfiguration::the_display_configuration_policy()
@@ -143,7 +143,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
     if (display_platforms.empty())
     {
         std::stringstream error_report;
-        std::vector<std::shared_ptr<mir::SharedLibrary>> platform_modules;
+        std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir::SharedLibrary>>> platform_modules;
 
         try
         {
@@ -158,25 +158,35 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
 
             if (the_options()->is_set(options::platform_display_libs))
             {
-                platform_modules =
+                auto const manually_selected_platforms =
                     select_platforms_from_list(the_options()->get<std::string>(options::platform_display_libs), platforms);
 
-                for (auto const& platform : platform_modules)
+                for (auto const& platform : manually_selected_platforms)
                 {
-                    auto const platform_priority =
+                    auto supported_devices =
                         graphics::probe_display_module(
                             *platform,
                             dynamic_cast<mir::options::ProgramOption&>(*the_options()),
                             the_console_services());
 
-                    if (platform_priority < mir::graphics::PlatformPriority::supported)
+                    bool found_supported_device{false};
+                    for (auto& device : supported_devices)
+                    {
+                        if (device.support_level >= mg::PlatformPriority::supported)
+                        {
+                            found_supported_device = true;
+                        }
+                        platform_modules.emplace_back(std::move(device), platform);
+                    }
+
+                    if (!found_supported_device)
                     {
                         auto const describe_module = platform->load_function<mg::DescribeModule>(
                             "describe_graphics_module",
                             MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
                         auto const descriptor = describe_module();
 
-                        mir::log_warning("Manually-specified graphics platform %s does not claim to support this system. Trying anyway...", descriptor->name);
+                        mir::log_warning("Manually-specified display platform %s does not claim to support this system. Trying anyway...", descriptor->name);
                     }
                 }
             }
@@ -185,7 +195,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                 platform_modules = mir::graphics::display_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
             }
 
-            for (auto const& platform : platform_modules)
+            for (auto const& [device, platform]: platform_modules)
             {
                 auto create_display_platform = platform->load_function<mg::CreateDisplayPlatform>(
                     "create_display_platform",
@@ -196,7 +206,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                     MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
                 auto description = describe_module();
-                mir::log_info("Selected driver: %s (version %d.%d.%d)",
+                mir::log_info("Selected display driver: %s (version %d.%d.%d)",
                               description->name,
                               description->major_version,
                               description->minor_version,
@@ -235,7 +245,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
     if (rendering_platforms.empty())
     {
         std::stringstream error_report;
-        std::vector<std::shared_ptr<mir::SharedLibrary>> platform_modules;
+        std::vector<std::pair<mg::SupportedDevice, std::shared_ptr<mir::SharedLibrary>>> platform_modules;
 
         try
         {
@@ -250,25 +260,35 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
 
             if (the_options()->is_set(options::platform_rendering_libs))
             {
-                platform_modules =
+                auto const manually_selected_platforms =
                     select_platforms_from_list(the_options()->get<std::string>(options::platform_rendering_libs), platforms);
 
-                for (auto const& platform : platform_modules)
+                for (auto const& platform : manually_selected_platforms)
                 {
-                    auto const platform_priority =
+                    auto supported_devices =
                         graphics::probe_rendering_module(
                             *platform,
                             dynamic_cast<mir::options::ProgramOption&>(*the_options()),
                             the_console_services());
 
-                    if (platform_priority < mir::graphics::PlatformPriority::supported)
+                    bool found_supported_device{false};
+                    for (auto& device : supported_devices)
+                    {
+                        if (device.support_level >= mg::PlatformPriority::supported)
+                        {
+                            found_supported_device = true;
+                        }
+                        platform_modules.emplace_back(std::move(device), platform);
+                    }
+
+                    if (!found_supported_device)
                     {
                         auto const describe_module = platform->load_function<mg::DescribeModule>(
                             "describe_graphics_module",
                             MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
                         auto const descriptor = describe_module();
 
-                        mir::log_warning("Manually-specified graphics platform %s does not claim to support this system. Trying anyway...", descriptor->name);
+                        mir::log_warning("Manually-specified rendering platform %s does not claim to support this system. Trying anyway...", descriptor->name);
                     }
                 }
             }
@@ -277,7 +297,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 platform_modules = mir::graphics::rendering_modules_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
             }
 
-            for (auto const& platform : platform_modules)
+            for (auto const& [device, platform]: platform_modules)
             {
                 auto create_rendering_platform = platform->load_function<mg::CreateRenderPlatform>(
                     "create_rendering_platform",
@@ -288,7 +308,7 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                     MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
                 auto description = describe_module();
-                mir::log_info("Selected driver: %s (version %d.%d.%d)",
+                mir::log_info("Selected rendering driver: %s (version %d.%d.%d)",
                               description->name,
                               description->major_version,
                               description->minor_version,

@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <memory>
+#include <tuple>
 #include "mir/shared_library.h"
 #include "mir/options/program_option.h"
 #include "mir/graphics/platform.h"
@@ -31,29 +32,27 @@ class ConsoleServices;
 
 namespace graphics
 {
-class Platform;
-
 auto probe_display_module(
     SharedLibrary& module,
     options::ProgramOption const& options,
-    std::shared_ptr<ConsoleServices> const& console) -> PlatformPriority;
+    std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>;
 
 auto probe_rendering_module(
     SharedLibrary& module,
     options::ProgramOption const& options,
-    std::shared_ptr<ConsoleServices> const& console) -> PlatformPriority;
+    std::shared_ptr<ConsoleServices> const& console) -> std::vector<SupportedDevice>;
 
 auto display_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console)
-    -> std::vector<std::shared_ptr<SharedLibrary>>;
+    -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;
 
 auto rendering_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
     options::ProgramOption const& options,
     std::shared_ptr<ConsoleServices> const& console)
-    -> std::vector<std::shared_ptr<SharedLibrary>>;
+    -> std::vector<std::pair<SupportedDevice, std::shared_ptr<SharedLibrary>>>;
 }
 }
 

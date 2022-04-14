@@ -20,6 +20,8 @@
 #include "mir/graphics/platform.h"
 #include "mir/assert_module_entry_point.h"
 
+namespace mg = mir::graphics;
+
 namespace mir
 {
 namespace options
@@ -28,20 +30,36 @@ class ProgramOption;
 }
 }
 
-mir::graphics::PlatformPriority probe_display_platform(
+auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mir::options::ProgramOption const& /*options*/)
+    std::shared_ptr<mir::udev::Context> const&,
+    mir::options::ProgramOption const&) -> std::vector<mir::graphics::SupportedDevice>
 {
-    mir::assert_entry_point_signature<mir::graphics::PlatformProbe>(&probe_display_platform);
-    return mir::graphics::PlatformPriority::dummy;
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
+    std::vector<mg::SupportedDevice> result;
+    result.emplace_back(
+        mg::SupportedDevice {
+            nullptr,
+            mg::PlatformPriority::dummy,
+            nullptr
+         });
+    return result;
 }
 
-mir::graphics::PlatformPriority probe_rendering_platform(
+auto probe_rendering_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mir::options::ProgramOption const& /*options*/)
+    std::shared_ptr<mir::udev::Context> const&,
+    mir::options::ProgramOption const&) -> std::vector<mir::graphics::SupportedDevice>
 {
-    mir::assert_entry_point_signature<mir::graphics::PlatformProbe>(&probe_rendering_platform);
-    return mir::graphics::PlatformPriority::dummy;
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
+    std::vector<mg::SupportedDevice> result;
+    result.emplace_back(
+        mg::SupportedDevice {
+            nullptr,
+            mg::PlatformPriority::dummy,
+            nullptr
+         });
+    return result;
 }
 
 namespace
