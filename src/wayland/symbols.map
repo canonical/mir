@@ -456,7 +456,13 @@ global:
     typeinfo?for?mir::wayland::InputMethodKeyboardGrabV2;
     vtable?for?mir::wayland::InputMethodKeyboardGrabV2;
     virtual?thunk?to?mir::wayland::InputMethodKeyboardGrabV2::?InputMethodKeyboardGrabV2*;
+  };
+  local: *;
+};
 
+MIRWAYLAND_2.8 {
+global:
+  extern "C++" {
     mir::wayland::WlrScreencopyManagerV1::*;
     non-virtual?thunk?to?mir::wayland::WlrScreencopyManagerV1::*;
     typeinfo?for?mir::wayland::WlrScreencopyManagerV1;
@@ -471,5 +477,4 @@ global:
     vtable?for?mir::wayland::WlrScreencopyFrameV1;
     virtual?thunk?to?mir::wayland::WlrScreencopyFrameV1::?WlrScreencopyFrameV1*;
   };
-  local: *;
-};
+} MIRWAYLAND_2.5;
