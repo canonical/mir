@@ -16,7 +16,7 @@
  * Authored By: William Wold <william.wold@canonical.com>
  */
 
-#include "mir/renderer/gl/buffer_render_target.h"
+#include "mir/renderer/gl/basic_buffer_render_target.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "mir/graphics/egl_error.h"
@@ -28,7 +28,7 @@ namespace mg = mir::graphics;
 namespace mrg = mir::renderer::gl;
 namespace mrs = mir::renderer::software;
 
-mrg::BufferRenderTarget::Framebuffer::Framebuffer(geometry::Size const& size)
+mrg::BasicBufferRenderTarget::Framebuffer::Framebuffer(geometry::Size const& size)
     : size{size}
 {
     glGenRenderbuffers(1, &colour_buffer);
@@ -77,13 +77,13 @@ mrg::BufferRenderTarget::Framebuffer::Framebuffer(geometry::Size const& size)
     glViewport(0, 0, size.width.as_int(), size.height.as_int());
 }
 
-mrg::BufferRenderTarget::Framebuffer::~Framebuffer()
+mrg::BasicBufferRenderTarget::Framebuffer::~Framebuffer()
 {
     glDeleteFramebuffers(1, &fbo);
     glDeleteRenderbuffers(1, &colour_buffer);
 }
 
-void mrg::BufferRenderTarget::Framebuffer::copy_to(software::WriteMappableBuffer& buffer)
+void mrg::BasicBufferRenderTarget::Framebuffer::copy_to(software::WriteMappableBuffer& buffer)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     auto mapping = buffer.map_writeable();
@@ -105,17 +105,17 @@ void mrg::BufferRenderTarget::Framebuffer::copy_to(software::WriteMappableBuffer
         GL_BGRA_EXT, GL_UNSIGNED_BYTE, mapping->data());
 }
 
-void mrg::BufferRenderTarget::Framebuffer::bind()
+void mrg::BasicBufferRenderTarget::Framebuffer::bind()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
-mrg::BufferRenderTarget::BufferRenderTarget(std::shared_ptr<Context> const& ctx)
+mrg::BasicBufferRenderTarget::BasicBufferRenderTarget(std::shared_ptr<Context> const& ctx)
     : ctx{ctx}
 {
 }
 
-void mrg::BufferRenderTarget::set_buffer(
+void mrg::BasicBufferRenderTarget::set_buffer(
     std::shared_ptr<software::WriteMappableBuffer> const& buffer,
     geometry::Size const& size)
 {
@@ -128,17 +128,17 @@ void mrg::BufferRenderTarget::set_buffer(
     framebuffer.emplace(size);
 }
 
-void mrg::BufferRenderTarget::make_current()
+void mrg::BasicBufferRenderTarget::make_current()
 {
     ctx->make_current();
 }
 
-void mrg::BufferRenderTarget::release_current()
+void mrg::BasicBufferRenderTarget::release_current()
 {
     ctx->release_current();
 }
 
-void mrg::BufferRenderTarget::swap_buffers()
+void mrg::BasicBufferRenderTarget::swap_buffers()
 {
     if (!framebuffer || !buffer)
     {
@@ -147,7 +147,7 @@ void mrg::BufferRenderTarget::swap_buffers()
     framebuffer->copy_to(*buffer);
 }
 
-void mrg::BufferRenderTarget::bind()
+void mrg::BasicBufferRenderTarget::bind()
 {
     if (!framebuffer)
     {

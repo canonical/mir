@@ -23,8 +23,6 @@
 #include "mir/geometry/size.h"
 
 #include <memory>
-#include <optional>
-#include <GLES2/gl2.h>
 
 namespace mir
 {
@@ -36,46 +34,14 @@ class WriteMappableBuffer;
 }
 namespace gl
 {
-class Context;
 
 /// Not threadsafe, do not use concurrently
 class BufferRenderTarget: public RenderTarget
 {
 public:
-    BufferRenderTarget(std::shared_ptr<Context> const& ctx);
-
-    void set_buffer(
+    virtual void set_buffer(
         std::shared_ptr<software::WriteMappableBuffer> const& buffer,
-        geometry::Size const& size);
-
-    void make_current() override;
-    void release_current() override;
-    void swap_buffers() override;
-    void bind() override;
-
-private:
-    class Framebuffer
-    {
-    public:
-        Framebuffer(geometry::Size const& size);
-        ~Framebuffer();
-        void copy_to(software::WriteMappableBuffer& buffer);
-        void bind();
-
-        geometry::Size const size;
-
-    private:
-        Framebuffer(Framebuffer const&) = delete;
-        Framebuffer& operator=(Framebuffer const&) = delete;
-
-        GLuint colour_buffer;
-        GLuint fbo;
-    };
-
-    std::shared_ptr<Context> const ctx;
-
-    std::shared_ptr<software::WriteMappableBuffer> buffer{nullptr};
-    std::optional<Framebuffer> framebuffer;
+        geometry::Size const& size) = 0;
 };
 
 }

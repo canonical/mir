@@ -19,7 +19,6 @@
 #include "basic_screen_shooter.h"
 #include "mir/renderer/gl/buffer_render_target.h"
 #include "mir/renderer/renderer.h"
-#include "mir/renderer/gl/buffer_render_target.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/scene.h"
