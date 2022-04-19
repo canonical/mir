@@ -303,7 +303,7 @@ private:
 
 class WlShmBuffer :
     public mg::common::ShmBuffer,
-    public mir::renderer::software::ReadMappableBuffer
+    public mir::renderer::software::RWMappableBuffer
 {
 public:
     WlShmBuffer(
@@ -334,9 +334,25 @@ public:
 
     auto map_readable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char const>> override
     {
+        return map_generic<unsigned char const>();
+    }
+
+    auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override
+    {
+        return map_generic<unsigned char>();
+    }
+
+    auto map_rw() -> std::unique_ptr<mir::renderer::software::Mapping<unsigned char>> override
+    {
+        return map_generic<unsigned char>();
+    }
+
+    template<typename T>
+    auto map_generic() -> std::unique_ptr<mir::renderer::software::Mapping<T>>
+    {
         notify_consumed();
 
-        class Mapping : public mir::renderer::software::Mapping<unsigned char const>
+        class Mapping : public mir::renderer::software::Mapping<T>
         {
         public:
             Mapping(
@@ -369,9 +385,9 @@ public:
                 return parent->size();
             }
 
-            auto data() -> unsigned char const* override
+            auto data() -> T* override
             {
-                return static_cast<unsigned char const*>(wl_shm_buffer_get_data(shm_buffer));
+                return static_cast<T*>(wl_shm_buffer_get_data(shm_buffer));
             }
 
             auto len() const -> size_t override
@@ -392,7 +408,7 @@ public:
         else
         {
             mir::log_debug("Wayland buffer destroyed before use; rendering will be incomplete");
-            class FallbackMapping : public mir::renderer::software::Mapping<unsigned char const>
+            class FallbackMapping : public mir::renderer::software::Mapping<T>
             {
             public:
                 FallbackMapping(
@@ -422,7 +438,7 @@ public:
                     return size_;
                 }
 
-                auto data() -> unsigned char const* override
+                auto data() -> T* override
                 {
                     return buffer.get();
                 }

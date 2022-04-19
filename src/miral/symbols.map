@@ -472,3 +472,10 @@ global:
     miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1*;
   };
 } MIRAL_3.3;
+
+MIRAL_3.5 {
+global:
+  extern "C++" {
+    miral::WaylandExtensions::zwlr_screencopy_manager_v1*;
+  };
+} MIRAL_3.4;

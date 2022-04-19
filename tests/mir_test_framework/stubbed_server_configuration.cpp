@@ -49,7 +49,7 @@ namespace
 class StubRendererFactory : public mir::renderer::RendererFactory
 {
 public:
-    std::unique_ptr<mir::renderer::Renderer> create_renderer_for(mg::DisplayBuffer&)
+    std::unique_ptr<mir::renderer::Renderer> create_renderer_for(mir::renderer::gl::RenderTarget&)
     {
         return std::unique_ptr<mir::renderer::Renderer>(new mtd::StubRenderer());
     }

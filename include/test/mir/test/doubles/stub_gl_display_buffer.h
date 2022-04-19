@@ -34,6 +34,7 @@ class StubGLDisplayBuffer : public StubDisplayBuffer,
 {
 public:
     using StubDisplayBuffer::StubDisplayBuffer;
+    StubGLDisplayBuffer(StubGLDisplayBuffer const& s) : StubDisplayBuffer(s) {}
 
     void make_current() override {}
     void release_current() override {}

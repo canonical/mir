@@ -408,3 +408,5 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::WaylandExtensions::zwp_input_method_manager_v2@MIRAL_3.4" 3.4.0
  (c++)"miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1@MIRAL_3.4" 3.4.0
  (c++)"miral::socket_fd_of(std::shared_ptr<mir::scene::Session> const&)@MIRAL_3.4" 3.4.0
+ MIRAL_3.5@MIRAL_3.5 3.5.0
+ (c++)"miral::WaylandExtensions::zwlr_screencopy_manager_v1@MIRAL_3.5" 3.5.0

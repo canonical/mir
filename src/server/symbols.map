@@ -921,5 +921,6 @@ MIR_SERVER_2.8 {
  global:
   extern "C++" {
     mir::DefaultServerConfiguration::the_keyboard_observer_registrar*;
+    mir::DefaultServerConfiguration::the_screen_shooter*;
   };
 } MIR_SERVER_2.6;

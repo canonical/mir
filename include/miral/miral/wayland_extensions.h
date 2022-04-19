@@ -153,13 +153,17 @@ public:
     /// \remark Since MirAL 3.4
     static char const* const zwp_virtual_keyboard_manager_v1;
 
-
     /// Allows clients (such as on-screen keyboards) to intercept physical key events and act as a
     /// source of text input for other clients. Input methods are not required to display anything
     /// to use this extension, so malicious clients could use it to intercept keys events or take
     /// actions without user input.
     /// \remark Since MirAL 3.4
     static char const* const zwp_input_method_manager_v2;
+
+    /// Allows clients to take screenshots and record the screen. Only enable for clients that are
+    /// trusted to view all displayed content, including windows of other apps.
+    /// \remark Since MirAL 3.5
+    static char const* const zwlr_screencopy_manager_v1;
 
     /**
      * \remark Since MirAL 3.3
