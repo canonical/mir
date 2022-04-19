@@ -26,12 +26,17 @@
 #include "basic_screen_shooter.h"
 #include "mir/main_loop.h"
 #include "mir/graphics/display.h"
+#include "mir/system_executor.h"
+#include "mir/renderer/gl/buffer_render_target.h"
+#include "mir/renderer/gl/context.h"
+#include "mir/renderer/renderer.h"
 
 #include "mir/options/configuration.h"
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
+namespace mrg = mir::renderer::gl;
 
 std::shared_ptr<ms::BufferStreamFactory>
 mir::DefaultServerConfiguration::the_buffer_stream_factory()
@@ -95,10 +100,13 @@ auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<co
     return screen_shooter(
         [this]()
         {
+            auto render_target = std::make_unique<mrg::BufferRenderTarget>(the_display()->create_gl_context());
+            auto renderer = the_renderer_factory()->create_renderer_for(*render_target);
             return std::make_shared<compositor::BasicScreenShooter>(
                 the_scene(),
-                *the_display(),
-                *the_renderer_factory(),
-                the_clock());
+                the_clock(),
+                system_executor,
+                std::move(render_target),
+                std::move(renderer));
         });
 }

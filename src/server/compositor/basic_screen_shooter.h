@@ -26,14 +26,13 @@
 
 namespace mir
 {
+class Executor;
 namespace renderer
 {
 class Renderer;
-class RendererFactory;
 namespace gl
 {
 class BufferRenderTarget;
-class ContextSource;
 }
 }
 namespace compositor
@@ -45,9 +44,10 @@ class BasicScreenShooter: public ScreenShooter
 public:
     BasicScreenShooter(
         std::shared_ptr<Scene> const& scene,
-        renderer::gl::ContextSource& context_source,
-        renderer::RendererFactory& renderer_factory,
-        std::shared_ptr<time::Clock> const& clock);
+        std::shared_ptr<time::Clock> const& clock,
+        Executor& executor,
+        std::unique_ptr<renderer::gl::BufferRenderTarget>&& render_target,
+        std::unique_ptr<renderer::Renderer>&& renderer);
 
     void capture(
         std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
@@ -59,9 +59,9 @@ private:
     {
         Self(
             std::shared_ptr<Scene> const& scene,
-            renderer::gl::ContextSource& context_source,
-            renderer::RendererFactory& renderer_factory,
-            std::shared_ptr<time::Clock> const& clock);
+            std::shared_ptr<time::Clock> const& clock,
+            std::unique_ptr<renderer::gl::BufferRenderTarget>&& render_target,
+            std::unique_ptr<renderer::Renderer>&& renderer);
 
         auto render(
             std::shared_ptr<renderer::software::WriteMappableBuffer> const& buffer,
@@ -74,6 +74,7 @@ private:
         std::shared_ptr<time::Clock> const clock;
     };
     std::shared_ptr<Self> const self;
+    Executor& executor;
 };
 }
 }

@@ -18,15 +18,13 @@
 
 #include "basic_screen_shooter.h"
 #include "mir/renderer/gl/buffer_render_target.h"
-#include "mir/renderer/renderer_factory.h"
 #include "mir/renderer/renderer.h"
 #include "mir/renderer/gl/buffer_render_target.h"
-#include "mir/renderer/gl/context_source.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/scene.h"
-#include "mir/system_executor.h"
 #include "mir/log.h"
+#include "mir/executor.h"
 
 namespace mc = mir::compositor;
 namespace mr = mir::renderer;
@@ -37,12 +35,12 @@ namespace geom = mir::geometry;
 
 mc::BasicScreenShooter::Self::Self(
     std::shared_ptr<Scene> const& scene,
-    renderer::gl::ContextSource& context_source,
-    mr::RendererFactory& renderer_factory,
-    std::shared_ptr<time::Clock> const& clock)
+    std::shared_ptr<time::Clock> const& clock,
+    std::unique_ptr<mrg::BufferRenderTarget>&& render_target,
+    std::unique_ptr<mr::Renderer>&& renderer)
     : scene{scene},
-      render_target{std::make_unique<mrg::BufferRenderTarget>(context_source.create_gl_context())},
-      renderer{renderer_factory.create_renderer_for(*render_target)},
+      render_target{std::move(render_target)},
+      renderer{std::move(renderer)},
       clock{clock}
 {
 }
@@ -79,25 +77,12 @@ auto mc::BasicScreenShooter::Self::render(
 
 mc::BasicScreenShooter::BasicScreenShooter(
     std::shared_ptr<Scene> const& scene,
-    renderer::gl::ContextSource& context_source,
-    mr::RendererFactory& renderer_factory,
-    std::shared_ptr<time::Clock> const& clock)
-    : self{[&]() -> std::shared_ptr<Self>
-        {
-            try
-            {
-                return std::make_shared<Self>(scene, context_source, renderer_factory, clock);
-            }
-            catch (...)
-            {
-                mir::log(
-                    ::mir::logging::Severity::error,
-                    "BasicScreenShooter",
-                    std::current_exception(),
-                    "failed to initialize");
-                return nullptr;
-            }
-        }()}
+    std::shared_ptr<time::Clock> const& clock,
+    Executor& executor,
+    std::unique_ptr<mrg::BufferRenderTarget>&& render_target,
+    std::unique_ptr<mr::Renderer>&& renderer)
+    : self{std::make_shared<Self>(scene, clock, std::move(render_target), std::move(renderer))},
+      executor{executor}
 {
 }
 
@@ -108,7 +93,7 @@ void mc::BasicScreenShooter::capture(
 {
     // TODO: use an atomic to keep track of number of in-flight captures, and error if it's too many
 
-    system_executor.spawn([weak_self=std::weak_ptr<Self>{self}, buffer, area, callback=std::move(callback)]
+    executor.spawn([weak_self=std::weak_ptr<Self>{self}, buffer, area, callback=std::move(callback)]
         {
             if (auto const self = weak_self.lock())
             {
