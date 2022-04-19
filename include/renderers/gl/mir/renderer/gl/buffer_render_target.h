@@ -38,39 +38,6 @@ namespace gl
 {
 class Context;
 
-template<void (*allocator)(GLsizei, GLuint*), void (* deleter)(GLsizei, GLuint const*)>
-class GLHandle
-{
-public:
-    GLHandle()
-    {
-        (*allocator)(1, &id);
-    }
-
-    ~GLHandle()
-    {
-        if (id)
-            (*deleter)(1, &id);
-    }
-
-    GLHandle(GLHandle&& from)
-        : id{from.id}
-    {
-        from.id = 0;
-    }
-
-    operator GLuint() const
-    {
-        return id;
-    }
-
-private:
-    GLuint id;
-};
-
-using RenderbufferHandle = GLHandle<&glGenRenderbuffers, &glDeleteRenderbuffers>;
-using FramebufferHandle = GLHandle<&glGenFramebuffers, &glDeleteFramebuffers>;
-
 /// Not threadsafe, do not use concurrently
 class BufferRenderTarget: public RenderTarget
 {
