@@ -48,7 +48,7 @@ auto mc::BasicScreenShooter::Self::render(
     std::shared_ptr<mrs::WriteMappableBuffer> const& buffer,
     geom::Rectangle const& area) -> time::Timestamp
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     auto scene_elements = scene->scene_elements_for(this);
     auto const captured_time = clock->now();
