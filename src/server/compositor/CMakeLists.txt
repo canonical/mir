@@ -18,6 +18,7 @@ set(
   dropping_schedule.cpp
   queueing_schedule.cpp
   basic_screen_shooter.cpp
+  null_screen_shooter.cpp
 )
 
 ADD_LIBRARY(
