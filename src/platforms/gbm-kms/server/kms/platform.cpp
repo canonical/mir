@@ -48,6 +48,12 @@ mgg::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
 {
 }
 
+mgg::RenderingPlatform::RenderingPlatform(
+    mir::udev::Device const&,
+    std::vector<std::shared_ptr<mg::DisplayPlatform>> const&)
+{
+}
+
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgg::RenderingPlatform::create_buffer_allocator(
     mg::Display const& output)
 {

@@ -51,8 +51,13 @@ public:
         auto create_stub_render_platform = stub_platform_library.load_function<mg::CreateRenderPlatform>("create_rendering_platform");
 
         mtd::NullEmergencyCleanup null_cleanup;
-        stub_render_platform = create_stub_render_platform(mo::ProgramOption{}, null_cleanup);
-        stub_display_platform = create_stub_display_platform(nullptr, nullptr, nullptr, nullptr);
+        mg::SupportedDevice device = {
+            nullptr,
+            mg::PlatformPriority::unsupported,
+            nullptr
+        };
+        stub_render_platform = create_stub_render_platform(device, {}, mo::ProgramOption{}, null_cleanup);
+        stub_display_platform = create_stub_display_platform(device, nullptr, nullptr, nullptr, nullptr);
     }
 
     mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator>
@@ -160,6 +165,8 @@ void add_graphics_platform_options(boost::program_options::options_description&)
 }
 
 mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
+    mg::SupportedDevice const&,
+    std::vector<std::shared_ptr<mg::DisplayPlatform>> const&,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&)
 {
@@ -168,6 +175,7 @@ mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
+    mg::SupportedDevice const&,
     std::shared_ptr<mo::Option> const&,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const&,

@@ -213,6 +213,7 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
                 // TODO: Do we want to be able to continue on partial failure here?
                 display_platforms.push_back(
                     create_display_platform(
+                        device,
                         the_options(),
                         the_emergency_cleanup(),
                         the_console_services(),
@@ -315,6 +316,8 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 // TODO: Do we want to be able to continue on partial failure here?
                 rendering_platforms.push_back(
                     create_rendering_platform(
+                        device,
+                        the_display_platforms(),
                         *the_options(),
                         *the_emergency_cleanup()));
                 // Add this module to the list searched by the input stack later

@@ -82,6 +82,7 @@ EGLDeviceEXT find_device()
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
+    mg::SupportedDevice const&,
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const& console,
@@ -98,6 +99,8 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 }
 
 auto create_rendering_platform(
+    mg::SupportedDevice const& /*device*/,
+    std::vector<std::shared_ptr<mg::DisplayPlatform>> const& /*displays*/,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {

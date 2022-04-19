@@ -16,6 +16,7 @@
 
 #include "stubbed_graphics_platform.h"
 
+#include "mir/graphics/platform.h"
 #include "mir_test_framework/stub_platform_native_buffer.h"
 
 #include "mir_toolkit/common.h"
@@ -115,6 +116,7 @@ extern "C" std::shared_ptr<mg::RenderingPlatform> create_stub_render_platform()
 #endif
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
+    mg::SupportedDevice const&,
     std::shared_ptr<mo::Option> const&,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const&,
@@ -134,6 +136,8 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 }
 
 mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
+    mg::SupportedDevice const&,
+    std::vector<std::shared_ptr<mg::DisplayPlatform>> const&,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&)
 {
