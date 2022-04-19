@@ -18,11 +18,9 @@
 
 #include "src/server/compositor/basic_screen_shooter.h"
 
-#include "mir/renderer/renderer_factory.h"
 #include "mir/renderer/gl/buffer_render_target.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_scene.h"
-#include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/mock_renderer.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/explicit_executor.h"
