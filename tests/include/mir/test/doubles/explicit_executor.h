@@ -54,14 +54,19 @@ public:
 
     void execute()
     {
-        std::unique_lock lock{mutex};
-        auto const items = std::move(work_items);
-        work_items.clear();
-        lock.unlock();
-        for (auto const& work : items)
+        decltype(work_items) drained_items;
+        do
         {
-            work();
-        }
+            drained_items.clear();
+            {
+                std::lock_guard lock{mutex};
+                swap(drained_items, work_items);
+            }
+            for (auto const& work : drained_items)
+            {
+                work();
+            }
+        } while (!drained_items.empty());
     }
 
 private:
