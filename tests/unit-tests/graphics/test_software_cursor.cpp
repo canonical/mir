@@ -196,7 +196,7 @@ TEST_F(SoftwareCursor, tolerates_being_hidden_while_being_shown)
             {
                 cursor.hide();
             }));
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_));
+    EXPECT_CALL(mock_input_scene, remove_input_visualization(_)).Times(AnyNumber());
 
     cursor.show(stub_cursor_image);
     executor.execute();
@@ -216,7 +216,7 @@ TEST_F(SoftwareCursor, tolerates_being_hidden_while_being_reshown)
             {
                 cursor.hide();
             }));
-    EXPECT_CALL(mock_input_scene, remove_input_visualization(_));
+    EXPECT_CALL(mock_input_scene, remove_input_visualization(_)).Times(AnyNumber());
 
     cursor.show(stub_cursor_image);
     executor.execute();
