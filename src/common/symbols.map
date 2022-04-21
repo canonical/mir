@@ -490,12 +490,6 @@ MIR_COMMON_2.8 {
     typeinfo?for?mir::input::BufferKeymap;
     vtable?for?mir::input::BufferKeymap;
     mir::events::make_pointer_axis_with_stop_event*;
-    mir::SystemExecutor::spawn*;
-    mir::SystemExecutor::set_unhandled_exception_handler*;
-    mir::SystemExecutor::quiesce*;
-    typeinfo?for?mir::SystemExecutor;
-    vtable?for?mir::SystemExecutor;
-    mir::system_executor;
     mir::linearising_executor;
     mir::ThreadPoolExecutor::spawn*;
     mir::ThreadPoolExecutor::set_unhandled_exception_handler*;

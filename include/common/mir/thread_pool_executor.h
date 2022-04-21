@@ -29,9 +29,9 @@ public:
     void spawn(std::function<void()>&& work) override;
 
     /**
-     * Set a handler to be called should an unhandled exception occur on the SystemExecutor
+     * Set a handler to be called should an unhandled exception occur on the ThreadPoolExecutor
      *
-     * By default the SystemExecutor will allow exceptions to propagate, resulting in process termination.
+     * By default the ThreadPoolExecutor will allow exceptions to propagate, resulting in process termination.
      *
      * \param handler [in]  A handler that will be called in exception context should an exception escape
      *                      any functor executed by \ref spawn.
