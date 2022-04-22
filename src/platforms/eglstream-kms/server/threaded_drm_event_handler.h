@@ -25,7 +25,7 @@
 
 #include <functional>
 #include <vector>
-#include <experimental/optional>
+#include <optional>
 #include <mutex>
 #include <condition_variable>
 
@@ -69,7 +69,7 @@ private:
     // We *could* do something fancy and lock-free, but a basic mutex will suffice for now
     std::mutex expectation_mutex;
     std::condition_variable expectations_changed;
-    std::vector<std::experimental::optional<FlipEventData>> pending_expectations;
+    std::vector<std::optional<FlipEventData>> pending_expectations;
 
     bool shutdown{false};
     std::thread dispatch_thread;

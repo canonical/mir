@@ -52,7 +52,7 @@ void parse_env(std::string const& value, miral::AppEnvironment& map)
 
         if (key[0] == '-')
         {
-            map[key.substr(1)] = std::experimental::nullopt;
+            map[key.substr(1)] = std::nullopt;
         }
         else
         {

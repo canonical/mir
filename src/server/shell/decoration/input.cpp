@@ -307,7 +307,7 @@ void msd::InputManager::pointer_leave(std::chrono::nanoseconds timestamp)
     event_timestamp = timestamp;
     if (pointer)
         process_leave(pointer.value());
-    pointer = std::experimental::nullopt;
+    pointer = std::nullopt;
 }
 
 void msd::InputManager::touch_event(int32_t id, std::chrono::nanoseconds timestamp, geom::Point location)
@@ -354,7 +354,7 @@ void msd::InputManager::process_leave(Device& device)
     if (device.active_widget)
     {
         widget_leave(*device.active_widget.value());
-        device.active_widget = std::experimental::nullopt;
+        device.active_widget = std::nullopt;
     }
 }
 
@@ -407,14 +407,14 @@ void msd::InputManager::process_drag(Device& device)
         widget_enter(*device.active_widget.value());
 }
 
-auto msd::InputManager::widget_at(geom::Point location) -> std::experimental::optional<std::shared_ptr<Widget>>
+auto msd::InputManager::widget_at(geom::Point location) -> std::optional<std::shared_ptr<Widget>>
 {
     for (auto const& widget : widgets)
     {
         if (widget->rect.contains(location))
             return widget;
     }
-    return std::experimental::nullopt;
+    return std::nullopt;
 }
 
 void msd::InputManager::widget_enter(Widget& widget)

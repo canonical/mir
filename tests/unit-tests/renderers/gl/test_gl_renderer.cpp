@@ -141,7 +141,7 @@ public:
         EXPECT_CALL(*renderable, screen_position())
             .WillRepeatedly(Return(mir::geometry::Rectangle{{1,2},{3,4}}));
         EXPECT_CALL(*renderable, clip_area())
-            .WillRepeatedly(Return(std::experimental::optional<mir::geometry::Rectangle>()));
+            .WillRepeatedly(Return(std::optional<mir::geometry::Rectangle>()));
         EXPECT_CALL(mock_gl, glDisable(_)).Times(AnyNumber());
 
         renderable_list.push_back(renderable);
@@ -318,7 +318,7 @@ TEST_F(GLRenderer, swaps_buffers_after_rendering)
 TEST_F(GLRenderer, sets_scissor_test)
 {
     EXPECT_CALL(*renderable, clip_area())
-        .WillRepeatedly(Return(std::experimental::optional<mir::geometry::Rectangle>({{0,1},{2,3}})));
+        .WillRepeatedly(Return(std::optional<mir::geometry::Rectangle>({{0,1},{2,3}})));
     EXPECT_CALL(mock_gl, glEnable(GL_SCISSOR_TEST));
     EXPECT_CALL(mock_gl, glDisable(GL_SCISSOR_TEST));
     EXPECT_CALL(mock_gl, glScissor(-1, 2, 2, 3));

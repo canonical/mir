@@ -21,7 +21,7 @@
 
 #include "emitter.h"
 
-#include <experimental/optional>
+#include <optional>
 #include <functional>
 #include <unordered_map>
 #include <set>
@@ -39,7 +39,7 @@ public:
         std::string mir_type;
         std::string wl_type;
         std::string wl_type_abbr; // abbreviated type (i for int, etc), used by libwayland
-        std::experimental::optional<std::function<Emitter(Argument const*)>> converter;
+        std::optional<std::function<Emitter(Argument const*)>> converter;
     };
 
     Argument(xmlpp::Element const& node, bool is_event);
@@ -49,15 +49,15 @@ public:
     Emitter call_fragment() const;
     Emitter object_type_fragment() const;
     Emitter type_str_fragment() const;
-    std::experimental::optional<Emitter> converter() const;
+    std::optional<Emitter> converter() const;
 
     void populate_required_interfaces(std::set<std::string>& interfaces) const; // fills the set with interfaces used
 
     std::string const name;
-    std::experimental::optional<std::string> const interface;
+    std::optional<std::string> const interface;
 private:
     static TypeDescriptor get_type(xmlpp::Element const& node, bool is_event);
-    static std::experimental::optional<std::string> get_interface(xmlpp::Element const& node);
+    static std::optional<std::string> get_interface(xmlpp::Element const& node);
 
     TypeDescriptor descriptor;
 };

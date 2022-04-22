@@ -92,8 +92,8 @@ Interface::Interface(xmlpp::Element const& node,
       has_server_constructor{event_constructable_interfaces.count(wl_name) != 0},
       has_client_constructor{constructable_interfaces.count(wl_name) != 0},
       global{!(has_server_constructor || has_client_constructor) ?
-          std::experimental::make_optional(Global{wl_name, generated_name, version, nmspace}) :
-          std::experimental::nullopt},
+          std::make_optional(Global{wl_name, generated_name, version, nmspace}) :
+          std::nullopt},
       requests{get_requests(node, generated_name)},
       events{get_events(node, generated_name)},
       enums{get_enums(node, generated_name)},

@@ -67,7 +67,7 @@ public:
         return {{-coverage_size / 2, -coverage_size / 2}, {coverage_size, coverage_size}};
     }
 
-    auto clip_area() const -> std::experimental::optional<geom::Rectangle> override
+    auto clip_area() const -> std::optional<geom::Rectangle> override
     {
         return {};
     }

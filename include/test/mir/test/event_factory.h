@@ -21,7 +21,7 @@
 
 #include "mir/geometry/point.h"
 
-#include <experimental/optional>
+#include <optional>
 #include <chrono>
 
 namespace mir
@@ -49,7 +49,7 @@ public:
     int device_id;
     int scancode;
     EventAction action;
-    std::experimental::optional<std::chrono::nanoseconds> event_time;
+    std::optional<std::chrono::nanoseconds> event_time;
 };
 KeyParameters a_key_down_event();
 KeyParameters a_key_up_event();
@@ -66,7 +66,7 @@ public:
     int device_id;
     int button;
     EventAction action;
-    std::experimental::optional<std::chrono::nanoseconds> event_time;
+    std::optional<std::chrono::nanoseconds> event_time;
 };
 ButtonParameters a_button_down_event();
 ButtonParameters a_button_up_event();
@@ -82,7 +82,7 @@ public:
     int device_id;
     int rel_x;
     int rel_y;
-    std::experimental::optional<std::chrono::nanoseconds> event_time;
+    std::optional<std::chrono::nanoseconds> event_time;
 };
 MotionParameters a_pointer_event();
 
@@ -106,7 +106,7 @@ public:
     int abs_x;
     int abs_y;
     Action action;
-    std::experimental::optional<std::chrono::nanoseconds> event_time;
+    std::optional<std::chrono::nanoseconds> event_time;
 };
 TouchParameters a_touch_event();
 

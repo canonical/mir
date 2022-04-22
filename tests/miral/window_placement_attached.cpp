@@ -87,10 +87,10 @@ struct WindowPlacementAttached : mt::TestWindowManagerTools, WithParamInterface<
 
     auto placement_for_attachement(Rectangle output_rect, Size window_size, MirPlacementGravity edges) -> Rectangle
     {
-        std::experimental::optional<X> left;
-        std::experimental::optional<Y> top;
-        std::experimental::optional<X> right;
-        std::experimental::optional<Y> bottom;
+        std::optional<X> left;
+        std::optional<Y> top;
+        std::optional<X> right;
+        std::optional<Y> bottom;
 
         if (edges & mir_placement_gravity_west)
             left = output_rect.left();

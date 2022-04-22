@@ -76,8 +76,8 @@ struct StubSurface : scene::Surface
     void start_drag_and_drop(std::vector<uint8_t> const&) override {}
     MirDepthLayer depth_layer() const override { return mir_depth_layer_application; }
     void set_depth_layer(MirDepthLayer) override {}
-    std::experimental::optional<geometry::Rectangle> clip_area() const override { return std::experimental::nullopt; }
-    void set_clip_area(std::experimental::optional<geometry::Rectangle> const&) override {}
+    std::optional<geometry::Rectangle> clip_area() const override { return std::nullopt; }
+    void set_clip_area(std::optional<geometry::Rectangle> const&) override {}
     MirWindowFocusState focus_state() const override { return mir_window_focus_state_unfocused; }
     void set_focus_state(MirWindowFocusState) override {}
     std::string application_id() const override { return ""; }

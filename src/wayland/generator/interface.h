@@ -25,7 +25,7 @@
 #include "enum.h"
 #include "global.h"
 
-#include <experimental/optional>
+#include <optional>
 #include <functional>
 #include <map>
 #include <unordered_set>
@@ -83,7 +83,7 @@ private:
     std::string const nmspace;
     bool const has_server_constructor;
     bool const has_client_constructor;
-    std::experimental::optional<Global> const global;
+    std::optional<Global> const global;
     std::vector<Request> const requests;
     std::vector<Event> const events;
     std::vector<Enum> const enums;

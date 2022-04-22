@@ -60,7 +60,7 @@ dev_t mg::eglstream::devnum_for_device(EGLDeviceEXT device)
     return info.st_rdev;
 }
 
-auto mg::eglstream::parse_nvidia_version(char const* gl_version) -> std::experimental::optional<VersionInfo>
+auto mg::eglstream::parse_nvidia_version(char const* gl_version) -> std::optional<VersionInfo>
 {
     /* Parses the GL_VERSION output of the NVIDIA binary drivers, which has the form
      * $GL_VERSION NVIDIA $NVIDIA_DRIVER_MAJOR.$NVIDIA_DRIVER_MINOR

@@ -27,7 +27,7 @@
 #include <mutex>
 #include <functional>
 #include <map>
-#include <experimental/optional>
+#include <optional>
 
 namespace mir
 {
@@ -157,9 +157,9 @@ private:
 
         geometry::Rectangle rect;
         ButtonState state{ButtonState::Up};
-        std::experimental::optional<ButtonFunction> const button;
+        std::optional<ButtonFunction> const button;
         // mir_resize_edge_none is used to mean the widget moves the window
-        std::experimental::optional<MirResizeEdge> const resize_edge;
+        std::optional<MirResizeEdge> const resize_edge;
     };
 
     /// Pointer or touchpoint
@@ -174,7 +174,7 @@ private:
 
         geometry::Point location;
         bool pressed;
-        std::experimental::optional<std::shared_ptr<Widget>> active_widget;
+        std::optional<std::shared_ptr<Widget>> active_widget;
     };
 
     /// The input device has entered the surface
@@ -192,7 +192,7 @@ private:
     /// The device has moved while down
     void process_drag(Device& device);
 
-    auto widget_at(geometry::Point location) -> std::experimental::optional<std::shared_ptr<Widget>>;
+    auto widget_at(geometry::Point location) -> std::optional<std::shared_ptr<Widget>>;
 
     /// Called when an input device enters the widget
     void widget_enter(Widget& widget);
@@ -209,7 +209,7 @@ private:
 
     void set_cursor(MirResizeEdge resize_edge);
 
-    std::experimental::optional<Device> pointer;
+    std::optional<Device> pointer;
     std::map<int32_t, Device> touches;
     std::vector<std::shared_ptr<Widget>> widgets;
 };

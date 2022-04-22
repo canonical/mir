@@ -43,14 +43,14 @@ TEST(EGLStreamUtils, returns_empty_option_on_non_nvidia_version)
 {
     EXPECT_THAT(
         mge::parse_nvidia_version("Not an nvidia version"),
-        Eq(std::experimental::optional<mge::VersionInfo>{}));
+        Eq(std::optional<mge::VersionInfo>{}));
 }
 
 TEST(EGLStreamUtils, returns_empty_option_on_empty_string)
 {
     EXPECT_THAT(
         mge::parse_nvidia_version(""),
-        Eq(std::experimental::optional<mge::VersionInfo>{}));
+        Eq(std::optional<mge::VersionInfo>{}));
 }
 
 TEST(EGLStreamUtils, returns_nvidia_driver_version)

@@ -454,9 +454,9 @@ void basic_software_buffer_drawing(
             return mg::contains_alpha(buffer_->pixel_format());
         }
 
-        auto clip_area() const -> std::experimental::optional<mir::geometry::Rectangle> override
+        auto clip_area() const -> std::optional<mir::geometry::Rectangle> override
         {
-            return std::experimental::optional<mir::geometry::Rectangle>{};
+            return std::optional<mir::geometry::Rectangle>{};
         }
 
         void set_position(mir::geometry::Point top_left)
