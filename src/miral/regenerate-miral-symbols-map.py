@@ -544,9 +544,22 @@ global:
 } MIRAL_3.2;
 
 MIRAL_3.4 {
+global:
+  extern "C++" {
+    miral::socket_fd_of*;
+    miral::WaylandExtensions::conditionally_enable*;
+    miral::WaylandExtensions::EnableInfo::app*;
+    miral::WaylandExtensions::EnableInfo::name*;
+    miral::WaylandExtensions::EnableInfo::user_preference*;
+    miral::WaylandExtensions::zwp_input_method_manager_v2*;
+    miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1*;
+  };
+} MIRAL_3.3;
+
+MIRAL_3.5 {
 global:'''
 
-END_NEW_STANZA = '} MIRAL_3.3;'
+END_NEW_STANZA = '} MIRAL_3.4;'
 
 def _print_report():
     print(OLD_STANZAS)
