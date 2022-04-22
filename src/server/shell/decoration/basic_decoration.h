@@ -27,7 +27,7 @@
 #include <memory>
 #include <vector>
 #include <chrono>
-#include <experimental/optional>
+#include <optional>
 
 namespace mir
 {
@@ -97,8 +97,8 @@ protected:
     /// Previous state pointers may be equal to current window_state/input_state to trigger no change
     /// If previous states are nullopt, a full refresh is performed
     void update(
-        std::experimental::optional<WindowState const*> previous_window_state,
-        std::experimental::optional<InputState const*> previous_input_state);
+        std::optional<WindowState const*> previous_window_state,
+        std::optional<InputState const*> previous_input_state);
 
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> threadsafe_self;
     std::shared_ptr<StaticGeometry const> const static_geometry;

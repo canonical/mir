@@ -20,7 +20,6 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <experimental/optional>
 
 namespace mw = mir::wayland;
 
@@ -45,9 +44,9 @@ auto operator<<(std::ostream& out, mw::Weak<T> const& weak) -> std::ostream&
 class WaylandWeakTest : public Test
 {
 public:
-    std::experimental::optional<MockResource> resource{{}};
-    std::experimental::optional<MockResource> resource_a{{}};
-    std::experimental::optional<MockResource> resource_b{{}};
+    std::unique_ptr<MockResource> resource{std::make_unique<MockResource>()};
+    std::unique_ptr<MockResource> resource_a{std::make_unique<MockResource>()};
+    std::unique_ptr<MockResource> resource_b{std::make_unique<MockResource>()};
 };
 
 template<typename T>
@@ -66,15 +65,15 @@ MATCHER_P(FullyCheckedEq, a, std::string(negation ? "isn't" : "is") + " equal to
 
 TEST_F(WaylandWeakTest, returns_resource)
 {
-    mw::Weak<MockResource> const weak{&resource.value()};
-    EXPECT_THAT(&weak.value(), Eq(&resource.value()));
+    mw::Weak<MockResource> const weak{resource.get()};
+    EXPECT_THAT(&weak.value(), Eq(resource.get()));
 }
 
 TEST_F(WaylandWeakTest, false_after_resource_destroyed)
 {
-    mw::Weak<MockResource> const weak{&resource.value()};
+    mw::Weak<MockResource> const weak{resource.get()};
     ASSERT_THAT(weak, Eq(true));
-    resource = std::experimental::nullopt;
+    resource.reset();
     EXPECT_THAT(weak, Eq(false));
 }
 
@@ -86,8 +85,8 @@ TEST_F(WaylandWeakTest, can_be_created_with_nullptr)
 
 TEST_F(WaylandWeakTest, throws_logic_error_on_access_after_resource_destroyed)
 {
-    mw::Weak<MockResource> const weak{&resource.value()};
-    resource = std::experimental::nullopt;
+    mw::Weak<MockResource> const weak{resource.get()};
+    resource.reset();
     EXPECT_THROW(weak.value(), std::logic_error);
 }
 
@@ -99,14 +98,14 @@ TEST_F(WaylandWeakTest, throws_logic_error_on_access_of_null)
 
 TEST_F(WaylandWeakTest, copies_are_equal)
 {
-    mw::Weak<MockResource> const weak_a{&resource.value()};
+    mw::Weak<MockResource> const weak_a{resource.get()};
     mw::Weak<MockResource> const weak_b{weak_a};
     EXPECT_THAT(weak_a, FullyCheckedEq(weak_b));
 }
 
 TEST_F(WaylandWeakTest, equal_after_assignment)
 {
-    mw::Weak<MockResource> const weak_a{&resource.value()};
+    mw::Weak<MockResource> const weak_a{resource.get()};
     mw::Weak<MockResource> weak_b{nullptr};
     weak_b = weak_a;
     EXPECT_THAT(weak_a, FullyCheckedEq(weak_b));
@@ -114,8 +113,8 @@ TEST_F(WaylandWeakTest, equal_after_assignment)
 
 TEST_F(WaylandWeakTest, weaks_made_from_the_same_resource_are_equal)
 {
-    mw::Weak<MockResource> const weak_a{&resource.value()};
-    mw::Weak<MockResource> const weak_b{&resource.value()};
+    mw::Weak<MockResource> const weak_a{resource.get()};
+    mw::Weak<MockResource> const weak_b{resource.get()};
     EXPECT_THAT(weak_a, FullyCheckedEq(weak_b));
 }
 
@@ -128,78 +127,78 @@ TEST_F(WaylandWeakTest, default_constructed_weak_equal_to_nullptr_constructed_we
 
 TEST_F(WaylandWeakTest, weaks_made_from_different_resources_not_equal)
 {
-    mw::Weak<MockResource> const weak_a{&resource_a.value()};
-    mw::Weak<MockResource> const weak_b{&resource_b.value()};
+    mw::Weak<MockResource> const weak_a{resource_a.get()};
+    mw::Weak<MockResource> const weak_b{resource_b.get()};
     EXPECT_THAT(weak_a, Not(FullyCheckedEq(weak_b)));
 }
 
 TEST_F(WaylandWeakTest, nullptr_weak_not_equal_to_valid_weak)
 {
-    mw::Weak<MockResource> const weak_a{&resource.value()};
+    mw::Weak<MockResource> const weak_a{resource.get()};
     mw::Weak<MockResource> const weak_b{nullptr};
     EXPECT_THAT(weak_a, Not(FullyCheckedEq(weak_b)));
 }
 
 TEST_F(WaylandWeakTest, weaks_made_from_the_same_resource_are_equal_after_resource_destroyed)
 {
-    mw::Weak<MockResource> const weak_a{&resource.value()};
-    mw::Weak<MockResource> const weak_b{&resource.value()};
-    resource = std::experimental::nullopt;
+    mw::Weak<MockResource> const weak_a{resource.get()};
+    mw::Weak<MockResource> const weak_b{resource.get()};
+    resource.reset();
     EXPECT_THAT(weak_a, FullyCheckedEq(weak_b));
 }
 
 TEST_F(WaylandWeakTest, weaks_made_from_different_resources_are_equal_after_both_destroyed)
 {
-    mw::Weak<MockResource> const weak_a{&resource_a.value()};
-    mw::Weak<MockResource> const weak_b{&resource_b.value()};
-    resource_a = std::experimental::nullopt;
-    resource_b = std::experimental::nullopt;
+    mw::Weak<MockResource> const weak_a{resource_a.get()};
+    mw::Weak<MockResource> const weak_b{resource_b.get()};
+    resource_a.reset();
+    resource_b.reset();
     EXPECT_THAT(weak_a, FullyCheckedEq(weak_b));
 }
 
 TEST_F(WaylandWeakTest, weak_not_equal_to_weak_of_new_resource_with_same_address)
 {
-    auto* const old_resource_ptr = &resource.value();
-    mw::Weak<MockResource> const weak_a{&resource.value()};
-    resource = std::experimental::nullopt;
-    resource.emplace();
-    auto* const new_resource_ptr = &resource.value();
-    mw::Weak<MockResource> const weak_b{&resource.value()};
+    auto* const old_resource_ptr = resource.get();
+    mw::Weak<MockResource> const weak_a{resource.get()};
+    resource->~MockResource();
+    new(resource.get()) MockResource();
+    auto* const new_resource_ptr = resource.get();
+    mw::Weak<MockResource> const weak_b{resource.get()};
     ASSERT_THAT(old_resource_ptr, Eq(new_resource_ptr));
     EXPECT_THAT(weak_a, Not(FullyCheckedEq(weak_b)));
 }
 
 TEST_F(WaylandWeakTest, is_raw_resource)
 {
-    mw::Weak<MockResource> const weak{&resource.value()};
+    mw::Weak<MockResource> const weak{resource.get()};
     // GTest's Eq() assertion doesn't seem to work with uncopyable types
-    EXPECT_THAT(weak.is(resource.value()), Eq(true));
+    EXPECT_THAT(weak.is(*resource), Eq(true));
 }
 
 TEST_F(WaylandWeakTest, is_not_different_raw_resource)
 {
-    mw::Weak<MockResource> const weak_a{&resource_a.value()};
+    mw::Weak<MockResource> const weak_a{resource_a.get()};
     // GTest's Eq() assertion doesn't seem to work with uncopyable types
-    EXPECT_THAT(weak_a.is(resource_b.value()), Eq(false));
+    EXPECT_THAT(weak_a.is(*resource_b), Eq(false));
 }
 
 TEST_F(WaylandWeakTest, weak_cleared_when_resource_marked_as_destroyed)
 {
-    mw::Weak<MockResource> const weak{&resource.value()};
+    mw::Weak<MockResource> const weak{resource.get()};
     ASSERT_THAT(weak, Eq(true));
-    resource.value().mark_destroyed();
+    resource->mark_destroyed();
     EXPECT_THAT(weak, Eq(false));
 }
 
 TEST_F(WaylandWeakTest, as_nullable_ptr_returns_valid_pointer)
 {
-    mw::Weak<MockResource> const weak{&resource.value()};
-    EXPECT_THAT(mw::as_nullable_ptr(weak), Eq(&resource.value()));
+    mw::Weak<MockResource> const weak{resource.get()};
+    EXPECT_THAT(mw::as_nullable_ptr(weak), Eq(resource.get()));
 }
 
 TEST_F(WaylandWeakTest, as_nullable_ptr_returns_nullptr_if_resource_destroyed)
 {
-    mw::Weak<MockResource> const weak{&resource.value()};
-    resource = std::experimental::nullopt;
+    mw::Weak<MockResource> const weak{resource.get()};
+    resource.reset();
     EXPECT_THAT(mw::as_nullable_ptr(weak), Eq(nullptr));
 }

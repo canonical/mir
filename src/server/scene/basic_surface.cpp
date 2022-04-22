@@ -812,7 +812,7 @@ public:
         std::shared_ptr<mc::BufferStream> const& stream,
         void const* compositor_id,
         geom::Rectangle const& position,
-        std::experimental::optional<geom::Rectangle> const& clip_area,
+        std::optional<geom::Rectangle> const& clip_area,
         glm::mat4 const& transform,
         float alpha,
         mg::Renderable::ID id)
@@ -840,7 +840,7 @@ public:
     geom::Rectangle screen_position() const override
     { return screen_position_; }
 
-    std::experimental::optional<geom::Rectangle> clip_area() const override
+    std::optional<geom::Rectangle> clip_area() const override
     { return clip_area_; }
 
     float alpha() const override
@@ -860,7 +860,7 @@ private:
     void const*const compositor_id;
     float const alpha_;
     geom::Rectangle const screen_position_;
-    std::experimental::optional<geom::Rectangle> const clip_area_;
+    std::optional<geom::Rectangle> const clip_area_;
     glm::mat4 const transformation_;
     mg::Renderable::ID const id_;
 };
@@ -984,13 +984,13 @@ void mir::scene::BasicSurface::set_depth_layer(MirDepthLayer depth_layer)
     observers->depth_layer_set_to(this, depth_layer);
 }
 
-std::experimental::optional<geom::Rectangle> mir::scene::BasicSurface::clip_area() const
+std::optional<geom::Rectangle> mir::scene::BasicSurface::clip_area() const
 {
     std::lock_guard lock(guard);
     return clip_area_;
 }
 
-void mir::scene::BasicSurface::set_clip_area(std::experimental::optional<geom::Rectangle> const& area)
+void mir::scene::BasicSurface::set_clip_area(std::optional<geom::Rectangle> const& area)
 {
     std::lock_guard lock(guard);
     clip_area_ = area;

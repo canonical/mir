@@ -187,7 +187,7 @@ void mge::ThreadedDRMEventHandler::flip_handler(
      * No need to lock (and indeed, locking would be incorrect) as this is only called from
      * drmHandleEvent() which is only called from event_loop, and is called while holding the lock
      */
-    auto pending_expectations = static_cast<std::vector<std::experimental::optional<FlipEventData>>*>(data);
+    auto pending_expectations = static_cast<std::vector<std::optional<FlipEventData>>*>(data);
     for (auto& slot : *pending_expectations)
     {
         if (slot && slot->id == crtc_id)

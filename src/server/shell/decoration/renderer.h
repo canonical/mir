@@ -52,10 +52,10 @@ public:
         std::shared_ptr<StaticGeometry const> const& static_geometry);
 
     void update_state(WindowState const& window_state, InputState const& input_state);
-    auto render_titlebar() -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
-    auto render_left_border() -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
-    auto render_right_border() -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
-    auto render_bottom_border() -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
+    auto render_titlebar() -> std::optional<std::shared_ptr<graphics::Buffer>>;
+    auto render_left_border() -> std::optional<std::shared_ptr<graphics::Buffer>>;
+    auto render_right_border() -> std::optional<std::shared_ptr<graphics::Buffer>>;
+    auto render_bottom_border() -> std::optional<std::shared_ptr<graphics::Buffer>>;
 
 private:
     using Pixel = uint32_t;
@@ -132,7 +132,7 @@ private:
     void update_solid_color_pixels();
     auto make_buffer(
         Pixel const* pixels,
-        geometry::Size size) -> std::experimental::optional<std::shared_ptr<graphics::Buffer>>;
+        geometry::Size size) -> std::optional<std::shared_ptr<graphics::Buffer>>;
     static auto alloc_pixels(geometry::Size size) -> std::unique_ptr<Pixel[]>;
 };
 }

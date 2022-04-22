@@ -24,7 +24,7 @@
 
 #include <memory>
 #include <mutex>
-#include <experimental/optional>
+#include <optional>
 
 namespace mir
 {
@@ -70,12 +70,12 @@ public:
     void invalidate()
     {
         std::lock_guard lock{mutex};
-        target = std::experimental::nullopt;
+        target = std::nullopt;
     }
 
 private:
     std::mutex mutex;
-    std::experimental::optional<T*> target;
+    std::optional<T*> target;
     std::shared_ptr<Executor> executor;
 };
 }

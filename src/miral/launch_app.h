@@ -23,7 +23,7 @@
 
 #include <sys/types.h>
 
-#include <experimental/optional>
+#include <optional>
 
 #include <map>
 #include <string>
@@ -31,7 +31,7 @@
 
 namespace miral
 {
-using AppEnvironment = std::map<std::string, std::experimental::optional<std::string>>;
+using AppEnvironment = std::map<std::string, std::optional<std::string>>;
 
 auto launch_app_env(std::vector<std::string> const& app,
     mir::optional_value<std::string> const& wayland_display,

@@ -21,7 +21,7 @@
 
 #include <epoxy/egl.h>
 #include <sys/types.h>
-#include <experimental/optional>
+#include <optional>
 
 namespace mir
 {
@@ -37,7 +37,7 @@ struct VersionInfo
     int minor;
 };
 
-std::experimental::optional<VersionInfo> parse_nvidia_version(char const* gl_version);
+std::optional<VersionInfo> parse_nvidia_version(char const* gl_version);
 }
 }
 }

@@ -37,7 +37,7 @@
 #include <boost/throw_exception.hpp>
 #include <functional>
 #include <mutex>
-#include <experimental/optional>
+#include <optional>
 
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
@@ -188,7 +188,7 @@ msd::BasicDecoration::BasicDecoration(
     }
 
     // Trigger a full refresh
-    update(std::experimental::nullopt, std::experimental::nullopt);
+    update(std::nullopt, std::nullopt);
 
     // Calls from the executor thread can come in at any point after this
     threadsafe_self->initialize(this);
@@ -297,8 +297,8 @@ auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surf
 }
 
 void msd::BasicDecoration::update(
-    std::experimental::optional<WindowState const*> previous_window_state,
-    std::experimental::optional<InputState const*> previous_input_state)
+    std::optional<WindowState const*> previous_window_state,
+    std::optional<InputState const*> previous_input_state)
 {
     ObjUpdated<WindowState> window_updated{previous_window_state.value_or(nullptr), window_state.get()};
     ObjUpdated<InputState> input_updated{previous_input_state.value_or(nullptr), input_state.get()};
@@ -380,7 +380,7 @@ void msd::BasicDecoration::update(
 
     std::vector<std::pair<
         std::shared_ptr<mc::BufferStream>,
-        std::experimental::optional<std::shared_ptr<mg::Buffer>>>> new_buffers;
+        std::optional<std::shared_ptr<mg::Buffer>>>> new_buffers;
 
     if (window_updated({
             &WindowState::focused_state,
