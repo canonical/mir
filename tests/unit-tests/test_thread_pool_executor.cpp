@@ -24,7 +24,7 @@
 #include <thread>
 #include <future>
 
-#include "mir/system_executor.h"
+#include "mir/thread_pool_executor.h"
 #include "mir/test/signal.h"
 #include "mir/test/current_thread_name.h"
 
@@ -33,36 +33,36 @@ using namespace testing;
 
 namespace mt = mir::test;
 
-TEST(SystemExecutor, executes_work)
+TEST(ThreadPoolExecutor, executes_work)
 {
     auto const done = std::make_shared<mt::Signal>();
-    mir::system_executor.spawn([done]() { done->raise(); });
+    mir::thread_pool_executor.spawn([done]() { done->raise(); });
 
     EXPECT_TRUE(done->wait_for(60s));
 }
 
-TEST(SystemExecutor, can_execute_work_from_within_work_item)
+TEST(ThreadPoolExecutor, can_execute_work_from_within_work_item)
 {
     auto const done = std::make_shared<mt::Signal>();
 
-    mir::system_executor.spawn(
+    mir::thread_pool_executor.spawn(
         [done]()
         {
-            mir::system_executor.spawn([done]() { done->raise(); });
+            mir::thread_pool_executor.spawn([done]() { done->raise(); });
         });
 
     EXPECT_TRUE(done->wait_for(60s));
 }
 
-TEST(SystemExecutor, work_executed_from_within_work_item_is_not_blocked_by_work_item_blocking)
+TEST(ThreadPoolExecutor, work_executed_from_within_work_item_is_not_blocked_by_work_item_blocking)
 {
     auto const done = std::make_shared<mt::Signal>();
     auto const waited_for_done = std::make_shared<mt::Signal>();
 
-    mir::system_executor.spawn(
+    mir::thread_pool_executor.spawn(
         [done, waited_for_done]()
         {
-            mir::system_executor.spawn([done]() { done->raise(); });
+            mir::thread_pool_executor.spawn([done]() { done->raise(); });
             if (!waited_for_done->wait_for(60s))
             {
                 FAIL() << "Spawned work failed to execute";
@@ -73,11 +73,11 @@ TEST(SystemExecutor, work_executed_from_within_work_item_is_not_blocked_by_work_
     waited_for_done->raise();
 }
 
-TEST(SystemExecutorDeathTest, unhandled_exception_in_work_item_causes_termination_by_default)
+TEST(ThreadPoolExecutorDeathTest, unhandled_exception_in_work_item_causes_termination_by_default)
 {
     EXPECT_DEATH(
         {
-            mir::system_executor.spawn(
+            mir::thread_pool_executor.spawn(
                 []()
                 {
                     BOOST_THROW_EXCEPTION((std::runtime_error{"Oops, unhandled exception"}));
@@ -88,19 +88,19 @@ TEST(SystemExecutorDeathTest, unhandled_exception_in_work_item_causes_terminatio
     );
 }
 
-TEST(SystemExecutor, can_set_unhandled_exception_handler)
+TEST(ThreadPoolExecutor, can_set_unhandled_exception_handler)
 {
     static std::promise<std::exception_ptr> exception_pipe;
 
     auto exception = exception_pipe.get_future();
 
-    mir::SystemExecutor::set_unhandled_exception_handler(
+    mir::ThreadPoolExecutor::set_unhandled_exception_handler(
         []()
         {
             exception_pipe.set_value(std::current_exception());
         });
 
-    mir::system_executor.spawn([]() { throw std::runtime_error{"Boop!"}; });
+    mir::thread_pool_executor.spawn([]() { throw std::runtime_error{"Boop!"}; });
 
     EXPECT_THAT(exception.wait_for(std::chrono::seconds{60}), Eq(std::future_status::ready));
 
@@ -115,15 +115,15 @@ TEST(SystemExecutor, can_set_unhandled_exception_handler)
 }
 
 #ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
-TEST(SystemExecutor, executor_threads_have_sensible_name)
+TEST(ThreadPoolExecutor, executor_threads_have_sensible_name)
 #else
-TEST(SystemExecutor, DISABLED_executor_threads_have_sensible_names)
+TEST(ThreadPoolExecutor, DISABLED_executor_threads_have_sensible_names)
 #endif
 {
     auto thread_name_provider = std::make_shared<std::promise<std::string>>();
     auto thread_name = thread_name_provider->get_future();
 
-    mir::system_executor.spawn(
+    mir::thread_pool_executor.spawn(
         [thread_name_provider]()
         {
             thread_name_provider->set_value(mt::current_thread_name());
@@ -133,7 +133,7 @@ TEST(SystemExecutor, DISABLED_executor_threads_have_sensible_names)
     EXPECT_THAT(thread_name.get(), MatchesRegex("Mir/Workqueue.*"));
 }
 
-TEST(SystemExecutor, work_with_dependencies_completes)
+TEST(ThreadPoolExecutor, work_with_dependencies_completes)
 {
     std::array<std::shared_ptr<std::promise<void>>, 100> promises;
     for (auto& promise : promises)
@@ -144,7 +144,7 @@ TEST(SystemExecutor, work_with_dependencies_completes)
     // Set up a big chain of work, with each item depending on the one after it.
     for(auto i = 0; i < promises.size() - 1; ++i)
     {
-        mir::system_executor.spawn(
+        mir::thread_pool_executor.spawn(
             [wait_on_promise = promises[i + 1], signal_next = promises[i]]()
             {
                 auto wait_on = wait_on_promise->get_future();
@@ -165,7 +165,7 @@ TEST(SystemExecutor, work_with_dependencies_completes)
     EXPECT_THAT(first_work_completed.wait_for(std::chrono::seconds{60}), Eq(std::future_status::ready));
 }
 
-TEST(SystemExecutor, new_work_can_be_submitted_after_quiesce)
+TEST(ThreadPoolExecutor, new_work_can_be_submitted_after_quiesce)
 {
     auto done = std::make_shared<mt::Signal>();
     constexpr int const work_count{10};
@@ -173,7 +173,7 @@ TEST(SystemExecutor, new_work_can_be_submitted_after_quiesce)
 
     for (auto i = 0; i < work_count; ++i)
     {
-        mir::system_executor.spawn(
+        mir::thread_pool_executor.spawn(
             [&work_index, done]()
             {
                 if (++work_index == work_count)
@@ -184,13 +184,13 @@ TEST(SystemExecutor, new_work_can_be_submitted_after_quiesce)
     }
 
     ASSERT_TRUE(done->wait_for(60s));
-    mir::SystemExecutor::quiesce();
+    mir::ThreadPoolExecutor::quiesce();
     done->reset();
 
     work_index = 0;
     for (auto i = 0; i < work_count; ++i)
     {
-        mir::system_executor.spawn(
+        mir::thread_pool_executor.spawn(
             [&work_index, done]()
             {
                 if (++work_index == work_count)
@@ -202,18 +202,18 @@ TEST(SystemExecutor, new_work_can_be_submitted_after_quiesce)
     EXPECT_TRUE(done->wait_for(60s));
 }
 
-TEST(SystemExecutor, quiesce_waits_until_work_completes)
+TEST(ThreadPoolExecutor, quiesce_waits_until_work_completes)
 {
     constexpr auto const delay = 500ms;
 
     auto const expected_end = std::chrono::steady_clock::now() + delay;
 
-    mir::system_executor.spawn(
+    mir::thread_pool_executor.spawn(
         [delay]()
         {
             std::this_thread::sleep_for(delay);
         });
 
-    mir::SystemExecutor::quiesce();
+    mir::ThreadPoolExecutor::quiesce();
     EXPECT_THAT(std::chrono::steady_clock::now(), Gt(expected_end));
 }

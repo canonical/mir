@@ -16,7 +16,7 @@
  * Authored By: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/system_executor.h"
+#include "mir/thread_pool_executor.h"
 
 #include "mir/thread_name.h"
 
@@ -327,23 +327,23 @@ private:
     std::list<std::shared_ptr<Worker>> workers;
 };
 
-ThreadPool system_threadpool;
+ThreadPool thread_pool;
 
 }
 
-mir::NonBlockingExecutor& mir::system_executor = system_threadpool;
+mir::NonBlockingExecutor& mir::thread_pool_executor = thread_pool;
 
-void mir::SystemExecutor::spawn(std::function<void()>&& work)
+void mir::ThreadPoolExecutor::spawn(std::function<void()>&& work)
 {
-    system_threadpool.spawn(std::move(work));
+    thread_pool.spawn(std::move(work));
 }
 
-void mir::SystemExecutor::set_unhandled_exception_handler(void (*handler)())
+void mir::ThreadPoolExecutor::set_unhandled_exception_handler(void (*handler)())
 {
     exception_handler = handler;
 }
 
-void mir::SystemExecutor::quiesce()
+void mir::ThreadPoolExecutor::quiesce()
 {
-    system_threadpool.quiesce();
+    thread_pool.quiesce();
 }

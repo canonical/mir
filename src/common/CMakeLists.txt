@@ -32,8 +32,8 @@ list(APPEND MIR_COMMON_SOURCES
   event_printer.cpp
   mir_cookie.cpp
   mir_cursor_api.cpp
-  system_executor.cpp
-  ${PROJECT_SOURCE_DIR}/include/common/mir/system_executor.h
+  thread_pool_executor.cpp
+  ${PROJECT_SOURCE_DIR}/include/common/mir/thread_pool_executor.h
   linearising_executor.cpp
   ${PROJECT_SOURCE_DIR}/include/common/mir/linearising_executor.h
 )
@@ -44,7 +44,7 @@ set(
   PARENT_SCOPE)
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 8)
+set(MIRCOMMON_ABI 9)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mircommon SHARED

@@ -25,7 +25,7 @@
 #include "mir/frontend/connector.h"
 #include "mir/raii.h"
 #include "mir/emergency_cleanup.h"
-#include "mir/system_executor.h"
+#include "mir/thread_pool_executor.h"
 
 #include <atomic>
 #include <mutex>
@@ -329,11 +329,11 @@ void mir::run_mir(
             }
         });
 
-    mir::SystemExecutor::set_unhandled_exception_handler(&terminate_with_current_exception);
+    mir::ThreadPoolExecutor::set_unhandled_exception_handler(&terminate_with_current_exception);
 
     init(server);
     server.run();
 
-    mir::SystemExecutor::quiesce();
+    mir::ThreadPoolExecutor::quiesce();
     check_for_termination_exception();
 }
