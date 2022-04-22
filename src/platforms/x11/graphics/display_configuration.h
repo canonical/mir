@@ -12,6 +12,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef MIR_GRAPHICS_X_DISPLAY_CONFIGURATION_H_
 #define MIR_GRAPHICS_X_DISPLAY_CONFIGURATION_H_
