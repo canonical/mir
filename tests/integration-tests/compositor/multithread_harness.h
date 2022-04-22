@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 #ifndef MIR_TEST_MULTITHREAD_HARNESS_H_
 #define MIR_TEST_MULTITHREAD_HARNESS_H_

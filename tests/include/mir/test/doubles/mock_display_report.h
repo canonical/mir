@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_REPORT_H_

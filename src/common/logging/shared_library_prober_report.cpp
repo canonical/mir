@@ -13,8 +13,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "mir/logging/shared_library_prober_report.h"

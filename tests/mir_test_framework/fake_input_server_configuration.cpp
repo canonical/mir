@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Robert Carr <robert.carr@canonical.com>
- *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #include "mir_test_framework/fake_input_server_configuration.h"

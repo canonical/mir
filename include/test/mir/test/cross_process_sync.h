@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
 #ifndef MIR_TEST_CROSS_PROCESS_SYNC_H_

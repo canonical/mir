@@ -14,8 +14,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #ifndef MIR_LOG_H_

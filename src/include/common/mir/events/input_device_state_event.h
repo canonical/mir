@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #ifndef MIR_COMMON_INPUT_DEVICE_STATE_EVENT_H_

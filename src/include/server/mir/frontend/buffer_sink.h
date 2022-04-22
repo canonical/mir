@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #ifndef MIR_FRONTEND_BUFFER_SINK_H_

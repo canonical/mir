@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_SCENE_BROADCASTING_SESSION_EVENT_SINK_H_

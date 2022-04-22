@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
 #ifndef MIR_SCENE_PROMPT_SESSION_CREATION_PARAMETERS_H_

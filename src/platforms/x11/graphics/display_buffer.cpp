@@ -12,10 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
- *
- */
 
 #include "mir/graphics/atomic_frame.h"
 #include "mir/fatal.h"
