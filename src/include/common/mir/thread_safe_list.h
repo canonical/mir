@@ -12,7 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-                Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_THREAD_SAFE_LIST_H_
