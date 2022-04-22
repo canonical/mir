@@ -160,8 +160,8 @@ TEST_F(WaylandWeakTest, weak_not_equal_to_weak_of_new_resource_with_same_address
 {
     auto* const old_resource_ptr = resource.get();
     mw::Weak<MockResource> const weak_a{resource.get()};
-    resource.reset();
-    resource = std::make_unique<MockResource>();
+    resource->~MockResource();
+    new(resource.get()) MockResource();
     auto* const new_resource_ptr = resource.get();
     mw::Weak<MockResource> const weak_b{resource.get()};
     ASSERT_THAT(old_resource_ptr, Eq(new_resource_ptr));
