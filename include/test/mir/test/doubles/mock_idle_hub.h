@@ -36,8 +36,7 @@ struct MockIdleHub : mir::scene::IdleHub
     MOCK_METHOD2(register_interest, void(std::weak_ptr<mir::scene::IdleStateObserver> const&, time::Duration));
     MOCK_METHOD3(register_interest, void(std::weak_ptr<mir::scene::IdleStateObserver> const&, mir::Executor&, time::Duration));
     MOCK_METHOD1(unregister_interest, void(mir::scene::IdleStateObserver const&));
-    MOCK_METHOD0(inhibit_idle, void());
-    MOCK_METHOD0(resume_idle, void());
+    MOCK_METHOD0(inhibit_idle, std::shared_ptr<IdleHub::WakeLock>());
 };
 
 }
