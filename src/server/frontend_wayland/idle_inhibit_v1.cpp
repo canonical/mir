@@ -38,8 +38,33 @@ namespace frontend
 {
 struct IdleInhibitV1Ctx
 {
+    class SurfaceObserver : ms::NullSurfaceObserver
+    {
+    public:
+        SurfaceObserver()
+        {
+            mir::log_info("SurfaceObserver created!");
+        }
+
+        ~SurfaceObserver()
+        {
+            mir::log_info("SurfaceObserver destroyed!");
+        }
+
+        void attrib_changed(const ms::Surface *surf, MirWindowAttrib attrib, int value) override
+        {
+            (void)surf;
+            mir::log_info("SurfaceObserver::attrib_changed() called.");
+            if (attrib == mir_window_attrib_focus && value == mir_window_focus_state_unfocused)
+                mir::log_info("Unfocused...");
+            else if (attrib == mir_window_attrib_focus)
+                mir::log_info("Focused...");
+        };
+    };
+
     std::shared_ptr<Executor> const wayland_executor;
-    std::shared_ptr<scene::IdleHub> const idle_hub;
+    std::shared_ptr<ms::IdleHub> const idle_hub;
+    std::shared_ptr<ms::SurfaceObserver> surface_observer;
 };
 
 class IdleInhibitManagerV1Global
