@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Thomas Voß <thomas.voss@canonical.com>
  */
 
 #ifndef MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_

@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Joseph Rushton Wakeling <joe [@t] webdrake.net>
- *              Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "miral/command_line_option.h"

@@ -18,9 +18,6 @@
  * happen and don't have logic to gracefully recover from. The most useful
  * thing you can do in that situation is abort to get a clean core file and
  * stack trace to maximize the chances of it being readable.
- *
- * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
- *         Alan Griffiths <alan@octopull.co.uk>
  */
 
 #ifndef MIR_FATAL_H_

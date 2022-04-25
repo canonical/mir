@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Robert Carr <robert.carr@canonical.com>
- *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
 #include "mir_test_framework/deferred_in_process_server.h"

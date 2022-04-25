@@ -12,11 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authors: Daniel van Vugt <daniel.van.vugt@canonical.com>
- *          Mirco Müller <mirco.mueller@canonical.com>
- *          Alan Griffiths <alan@octopull.co.uk>
- *          Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "splash.h"
