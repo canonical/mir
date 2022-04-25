@@ -107,8 +107,6 @@ public:
     ~IdleInhibitorV1();
 
 private:
-    // Not sure why, but removing this unused StateObserver stops the functionality of the IdleInhibit.
-    // It seems unlikely that it will ever actually be used.
     struct StateObserver : ms::IdleStateObserver
     {
         StateObserver(IdleInhibitorV1* idle_inhibitor)
@@ -120,7 +118,7 @@ private:
 
         void active() override;
 
-        IdleInhibitorV1* const idle_inhibitor;
+        IdleInhibitorV1 const* idle_inhibitor;
     };
 
     std::shared_ptr<IdleInhibitV1Ctx> const ctx;
@@ -141,7 +139,7 @@ private:
 auto mf::create_idle_inhibit_manager_v1(
         wl_display* display,
         std::shared_ptr<Executor> const& wayland_executor,
-        std::shared_ptr<scene::IdleHub> const& idle_hub)
+        std::shared_ptr<ms::IdleHub> const& idle_hub)
 -> std::shared_ptr<mw::IdleInhibitManagerV1::Global>
 {
     auto surface_observer = std::make_shared<scene::NullSurfaceObserver>();
@@ -207,23 +205,11 @@ mf::IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<Idle
           wake_lock{ctx->idle_hub->inhibit_idle()}
 {
     mir::log_info("IdleInhibitorV1 created!");
-    ctx->idle_hub->inhibit_idle();
     ctx->idle_hub->register_interest(state_observer, time::Duration(0));
-}
-
-void mf::IdleInhibitorV1::active()
-{
-    // Currently unused
-}
-
-void mf::IdleInhibitorV1::idle()
-{
-    // Currently unused
 }
 
 mf::IdleInhibitorV1::~IdleInhibitorV1()
 {
     mir::log_info("IdleInhibitorV1 destroyed!");
-    ctx->idle_hub->resume_idle();
     ctx->idle_hub->unregister_interest(*state_observer);
 }
