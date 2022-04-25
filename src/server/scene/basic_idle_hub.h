@@ -37,13 +37,12 @@ class AlarmFactory;
 }
 namespace scene
 {
-
 /// Users can register an IdleStateObserver to be notified after a given timeout using the IdleHub interface. This class
 /// keeps track of all registered observers and organizes them by timeout. It sets an alarm for the next timeout, and
 /// when the alarm fires it notifies the observer it is is now idle. When this class gets poked (generally by an input
 /// event), Mir is no longer considered to be idle and any idle observers get notified. After each poke the alarm gets
 /// rescheduled based on the first timeout.
-class BasicIdleHub : public IdleHub
+class BasicIdleHub : public IdleHub, public std::enable_shared_from_this<BasicIdleHub>
 {
 public:
     BasicIdleHub(
@@ -51,6 +50,17 @@ public:
         time::AlarmFactory& alarm_factory);
 
     ~BasicIdleHub();
+
+    struct WakeLock: public IdleHub::WakeLock
+    {
+    public:
+        WakeLock(std::shared_ptr<BasicIdleHub> idle_hub);
+
+        ~WakeLock() override;
+
+    private:
+        std::weak_ptr<BasicIdleHub> idle_hub;
+    };
 
     void poke() override;
 
@@ -67,10 +77,7 @@ public:
 
     void unregister_interest(IdleStateObserver const& observer) override;
 
-    void inhibit_idle() override;
-
-    void resume_idle() override;
-
+    std::shared_ptr<IdleHub::WakeLock> inhibit_idle() override; // Should this be implemented in IdleHub?
 
 private:
     struct Multiplexer;
@@ -81,6 +88,7 @@ private:
 
     std::shared_ptr<time::Clock> const clock;
     std::unique_ptr<time::Alarm> const alarm;
+    std::weak_ptr<BasicIdleHub::WakeLock> wake_lock;
     std::mutex mutex;
     /// Maps timeouts (times from last poke) to the multiplexers that need to be fired at those times.
     std::map<time::Duration, std::shared_ptr<Multiplexer>> timeouts;

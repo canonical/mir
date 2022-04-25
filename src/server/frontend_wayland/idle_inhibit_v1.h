@@ -20,6 +20,8 @@
 #define MIR_FRONTEND_IDLE_INHIBIT_V1_H_
 
 #include "idle-inhibit-unstable-v1_wrapper.h"
+#include "mir/scene/surface_observer.h"
+#include "../scene/basic_idle_hub.h"
 
 #include <memory>
 

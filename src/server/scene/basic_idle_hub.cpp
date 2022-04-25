@@ -117,6 +117,17 @@ struct ms::BasicIdleHub::PendingRegistration
     std::set<IdleStateObserver const*> observers;
 };
 
+ms::BasicIdleHub::WakeLock::WakeLock(std::shared_ptr<BasicIdleHub> idle_hub)
+        : idle_hub{idle_hub}
+{
+}
+
+ms::BasicIdleHub::WakeLock::~WakeLock()
+{
+    idle_hub.lock()->alarm->reschedule_in(std::chrono::duration_cast<std::chrono::milliseconds>(
+            idle_hub.lock()->alarm_timeout.value()));
+}
+
 ms::BasicIdleHub::BasicIdleHub(
     std::shared_ptr<time::Clock> const& clock,
     mt::AlarmFactory& alarm_factory)
@@ -265,15 +276,22 @@ void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp c
     }
 }
 
-void ms::BasicIdleHub::inhibit_idle()
+std::shared_ptr<ms::IdleHub::WakeLock> ms::BasicIdleHub::inhibit_idle()
 {
     // Only the window in focus should be able to call inhibit_idle()
     mir::log_info("Calling BasicIdleHub::inhibit_idle()");
-    alarm->cancel();
-}
 
-void ms::BasicIdleHub::resume_idle()
-{
-    mir::log_info("Calling BasicIdleHub::resume_idle()");
-    alarm->reschedule_in(std::chrono::duration_cast<std::chrono::milliseconds>(alarm_timeout.value()));
+    if (wake_lock.expired()) // wake_lock is null
+    {
+        mir::log_info("BasicIdleHub::wake_lock is NOT being held! Returning shared_lock");
+        auto shared_lock = std::make_shared<BasicIdleHub::WakeLock>(shared_from_this());
+        wake_lock = shared_lock;  // WHERE SHOULD I GO?
+        alarm->cancel(); // TODO - move this logic into state logic
+        return shared_lock;
+    }
+    else // wake_lock is not null
+    {
+        mir::log_info("BasicIdleHub::wake_lock is already held! Returning wake_lock.lock()");
+        return wake_lock.lock();
+    }
 }

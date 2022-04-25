@@ -20,7 +20,10 @@
 
 #include "mir/log.h"
 #include "mir/executor.h"
-#include "mir/scene/idle_hub.h"
+#include "mir/scene/surface.h"
+#include "mir/scene/null_surface_observer.h"
+
+#include "wl_surface.h"
 
 #include <boost/throw_exception.hpp>
 #include <memory>
@@ -89,13 +92,7 @@ private:
 
     std::shared_ptr<IdleInhibitV1Ctx> const ctx;
     std::shared_ptr<StateObserver> const state_observer;
-
-    /// (Would be) called by the state observer
-    /// @{
-    void idle();
-
-    void active();
-    /// @}
+    std::shared_ptr<ms::IdleHub::WakeLock> const wake_lock;
 };
 }
 }
@@ -141,17 +138,30 @@ mf::IdleInhibitManagerV1::IdleInhibitManagerV1(
 
 void mf::IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct wl_resource* surface)
 {
-    // TODO - remove log and snarky comment
     mir::log_info("Client calling IdleInhibitManagerV1::create_inhibitor()");
-    (void)surface;
 
-    new IdleInhibitorV1{id, ctx};
+    auto wl_surface = WlSurface::from(surface);
+
+    if (auto const scene_surface = wl_surface->scene_surface(); scene_surface)
+    {
+        if (scene_surface.value()->focus_state() != mir_window_focus_state_unfocused)
+        {
+            mir::log_info("Creating IdleInhibitorV1");
+            new IdleInhibitorV1{id, ctx};
+            scene_surface.value()->add_observer(ctx->surface_observer);
+        }
+        else
+        {
+            mir::log_info("focus_state is wrong. Not creating IdleInhibitorV1.");
+        }
+    }
 }
 
 mf::IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
         : wayland::IdleInhibitorV1{resource, Version<1>()},
           ctx{ctx},
-          state_observer{std::make_shared<StateObserver>(this)}
+          state_observer{std::make_shared<StateObserver>(this)},
+          wake_lock{ctx->idle_hub->inhibit_idle()}
 {
     mir::log_info("IdleInhibitorV1 created!");
     ctx->idle_hub->inhibit_idle();
