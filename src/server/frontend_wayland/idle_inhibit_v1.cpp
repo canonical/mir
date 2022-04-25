@@ -43,22 +43,19 @@ struct IdleInhibitV1Ctx
     public:
         SurfaceObserver()
         {
-            mir::log_info("SurfaceObserver created!");
         }
 
         ~SurfaceObserver()
         {
-            mir::log_info("SurfaceObserver destroyed!");
         }
 
         void attrib_changed(const ms::Surface *surf, MirWindowAttrib attrib, int value) override
         {
             (void)surf;
-            mir::log_info("SurfaceObserver::attrib_changed() called.");
             if (attrib == mir_window_attrib_focus && value == mir_window_focus_state_unfocused)
-                mir::log_info("Unfocused...");
+                ; // TODO
             else if (attrib == mir_window_attrib_focus)
-                mir::log_info("Focused...");
+                ; // TODO
         };
     };
 
@@ -157,14 +154,10 @@ mf::IdleInhibitManagerV1Global::IdleInhibitManagerV1Global(
     : Global{display, Version<1>()},
       ctx{ctx}
 {
-    // TODO - remove
-    mir::log_info("Client asking for IdleInhibitManagerV1Global");
 }
 
 void mf::IdleInhibitManagerV1Global::bind(wl_resource* new_resource)
 {
-    // TODO - remove
-    mir::log_info("Client calling IdleInhibitManagerV1Global::bind()");
     new IdleInhibitManagerV1{new_resource, ctx};
 }
 
@@ -174,26 +167,18 @@ mf::IdleInhibitManagerV1::IdleInhibitManagerV1(
         : wayland::IdleInhibitManagerV1{resource, Version<1>()},
           ctx{ctx}
 {
-    mir::log_info("Client asking for idle inhibit! (Manager)");
 }
 
 void mf::IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct wl_resource* surface)
 {
-    mir::log_info("Client calling IdleInhibitManagerV1::create_inhibitor()");
-
     auto wl_surface = WlSurface::from(surface);
 
     if (auto const scene_surface = wl_surface->scene_surface(); scene_surface)
     {
         if (scene_surface.value()->focus_state() != mir_window_focus_state_unfocused)
         {
-            mir::log_info("Creating IdleInhibitorV1");
             new IdleInhibitorV1{id, ctx};
             scene_surface.value()->add_observer(ctx->surface_observer);
-        }
-        else
-        {
-            mir::log_info("focus_state is wrong. Not creating IdleInhibitorV1.");
         }
     }
 }
@@ -204,12 +189,10 @@ mf::IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<Idle
           state_observer{std::make_shared<StateObserver>(this)},
           wake_lock{ctx->idle_hub->inhibit_idle()}
 {
-    mir::log_info("IdleInhibitorV1 created!");
     ctx->idle_hub->register_interest(state_observer, time::Duration(0));
 }
 
 mf::IdleInhibitorV1::~IdleInhibitorV1()
 {
-    mir::log_info("IdleInhibitorV1 destroyed!");
     ctx->idle_hub->unregister_interest(*state_observer);
 }

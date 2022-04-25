@@ -278,12 +278,8 @@ void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp c
 
 std::shared_ptr<ms::IdleHub::WakeLock> ms::BasicIdleHub::inhibit_idle()
 {
-    // Only the window in focus should be able to call inhibit_idle()
-    mir::log_info("Calling BasicIdleHub::inhibit_idle()");
-
     if (wake_lock.expired()) // wake_lock is null
     {
-        mir::log_info("BasicIdleHub::wake_lock is NOT being held! Returning shared_lock");
         auto shared_lock = std::make_shared<BasicIdleHub::WakeLock>(shared_from_this());
         wake_lock = shared_lock;  // WHERE SHOULD I GO?
         alarm->cancel(); // TODO - move this logic into state logic
@@ -291,7 +287,6 @@ std::shared_ptr<ms::IdleHub::WakeLock> ms::BasicIdleHub::inhibit_idle()
     }
     else // wake_lock is not null
     {
-        mir::log_info("BasicIdleHub::wake_lock is already held! Returning wake_lock.lock()");
         return wake_lock.lock();
     }
 }
