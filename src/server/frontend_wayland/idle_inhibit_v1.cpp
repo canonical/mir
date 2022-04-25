@@ -71,7 +71,9 @@ class IdleInhibitManagerV1Global
     : public wayland::IdleInhibitManagerV1::Global
 {
 public:
-    IdleInhibitManagerV1Global(wl_display* display, std::shared_ptr<IdleInhibitV1Ctx> const& ctx);
+    IdleInhibitManagerV1Global(
+            wl_display* display,
+            std::shared_ptr<IdleInhibitV1Ctx> const& ctx);
 
 private:
     void bind(wl_resource* new_resource) override;
@@ -83,19 +85,25 @@ class IdleInhibitManagerV1
     : public wayland::IdleInhibitManagerV1
 {
 public:
-    IdleInhibitManagerV1(wl_resource* resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx);
+    IdleInhibitManagerV1(
+            wl_resource* resource,
+            std::shared_ptr<IdleInhibitV1Ctx> const& ctx);
+
 
 private:
     void create_inhibitor(struct wl_resource* id, struct wl_resource* surface) override;
 
-    std::shared_ptr<IdleInhibitV1Ctx> const ctx;
+    std::shared_ptr<IdleInhibitV1Ctx> const& ctx;
 };
 
 class IdleInhibitorV1
     : public wayland::IdleInhibitorV1
 {
 public:
-    IdleInhibitorV1(wl_resource* resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx);
+    IdleInhibitorV1(
+            wl_resource *resource,
+            std::shared_ptr<IdleInhibitV1Ctx> const& ctx);
+
     ~IdleInhibitorV1();
 
 private:
@@ -119,6 +127,14 @@ private:
     std::shared_ptr<StateObserver> const state_observer;
     std::shared_ptr<ms::IdleHub::WakeLock> const wake_lock;
 };
+
+    void IdleInhibitorV1::StateObserver::idle()
+    {
+    }
+
+    void IdleInhibitorV1::StateObserver::active()
+    {
+    }
 }
 }
 
@@ -129,15 +145,17 @@ auto mf::create_idle_inhibit_manager_v1(
 -> std::shared_ptr<mw::IdleInhibitManagerV1::Global>
 {
     auto surface_observer = std::make_shared<scene::NullSurfaceObserver>();
-    auto ctx = std::make_shared<IdleInhibitV1Ctx>(
-            IdleInhibitV1Ctx{wayland_executor, idle_hub, surface_observer});
+    auto ctx = std::make_shared<IdleInhibitV1Ctx>(IdleInhibitV1Ctx{
+                                                                wayland_executor,
+                                                                idle_hub,
+                                                                surface_observer});
 
     return std::make_shared<IdleInhibitManagerV1Global>(display, std::move(ctx));
 }
 
 mf::IdleInhibitManagerV1Global::IdleInhibitManagerV1Global(
-    wl_display *display,
-    std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
+      wl_display *display,
+      std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
     : Global{display, Version<1>()},
       ctx{ctx}
 {
