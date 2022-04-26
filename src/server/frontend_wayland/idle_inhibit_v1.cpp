@@ -137,7 +137,7 @@ auto mf::create_idle_inhibit_manager_v1(
                                                                 idle_hub,
                                                                 surface_observer});
 
-    return std::make_shared<IdleInhibitManagerV1Global>(display, std::move(ctx));
+    return std::make_shared<IdleInhibitManagerV1Global>(display, ctx);
 }
 
 IdleInhibitManagerV1Global::IdleInhibitManagerV1Global(
