@@ -225,25 +225,27 @@ struct mf::OutputManager::DisplayConfigObserver: public graphics::NullDisplayCon
 private:
     OutputManager& manager;
 
+    void initial_configuration(std::shared_ptr<graphics::DisplayConfiguration const> const& config) override
+    {
+        manager.handle_configuration_change(config);
+    }
+
     void configuration_applied(std::shared_ptr<graphics::DisplayConfiguration const> const& config) override
     {
-        manager.handle_configuration_change(*config);
+        manager.handle_configuration_change(config);
     }
 };
 
 mf::OutputManager::OutputManager(
     wl_display* display,
     std::shared_ptr<Executor> const& executor,
-    std::shared_ptr<DisplayChanger> const& changer,
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& registrar)
     : display{display},
       executor{executor},
-      changer{changer},
       registrar{registrar},
       display_config_observer{std::make_shared<DisplayConfigObserver>(*this)}
 {
     registrar->register_interest(display_config_observer, *executor);
-    for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
 }
 
 mf::OutputManager::~OutputManager()
@@ -313,23 +315,20 @@ auto mf::OutputManager::with_config_for(
 
 void mf::OutputManager::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
 {
-    // Not only is this a train-wreck, it also does not use the *current* configuration.
-    // OTOH is replicates the functionality it replaces and "session" display configs
-    // are only supported through the Mir client API. (For now.)
-    changer->base_configuration()->for_each_output(f);
-}
-
-void mf::OutputManager::create_output(mg::DisplayConfigurationOutput const& initial_config)
-{
-    if (initial_config.used)
+    if (current_config)
     {
-        outputs.emplace(initial_config.id, std::make_unique<Output>(display, initial_config));
+        current_config->for_each_output(f);
+    }
+    else
+    {
+        fatal_error("OutputManager::for_each_output() can't run because it doesn't have a display config yet");
     }
 }
 
-void mf::OutputManager::handle_configuration_change(mg::DisplayConfiguration const& config)
+void mf::OutputManager::handle_configuration_change(std::shared_ptr<mg::DisplayConfiguration const> const& config)
 {
-    config.for_each_output([this](mg::DisplayConfigurationOutput const& output_config)
+    current_config = config;
+    config->for_each_output([this](mg::DisplayConfigurationOutput const& output_config)
         {
             auto output_iter = outputs.find(output_config.id);
             if (output_iter != outputs.end())

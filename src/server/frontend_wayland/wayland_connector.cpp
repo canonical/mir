@@ -496,7 +496,6 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<SurfaceStack> const& surface_stack,
-    std::shared_ptr<DisplayChanger> const& display_changer,
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar,
     std::shared_ptr<ms::Clipboard> const& clipboard,
     std::shared_ptr<ms::TextInputHub> const& text_input_hub,
@@ -560,7 +559,6 @@ mf::WaylandConnector::WaylandConnector(
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         executor,
-        display_changer,
         display_config_registrar);
 
     data_device_manager_global = std::make_unique<WlDataDeviceManager>(display.get(), executor, clipboard);

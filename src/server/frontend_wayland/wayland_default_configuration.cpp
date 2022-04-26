@@ -284,7 +284,6 @@ std::shared_ptr<mf::Connector>
                 the_buffer_allocator(),
                 the_session_authorizer(),
                 the_frontend_surface_stack(),
-                the_frontend_display_changer(),
                 the_display_configuration_observer_registrar(),
                 the_clipboard(),
                 the_text_input_hub(),
