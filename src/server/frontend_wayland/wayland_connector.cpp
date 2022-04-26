@@ -487,7 +487,6 @@ void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::fu
 
 mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<msh::Shell> const& shell,
-    std::shared_ptr<MirDisplay> const& /*display_config*/,
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<mi::Seat> const& seat,

@@ -22,7 +22,6 @@
 #include "xdg_shell_stable.h"
 #include "layer_shell_v1.h"
 #include "xwayland_wm_shell.h"
-#include "mir_display.h"
 #include "wl_seat.h"
 #include "xdg_output_v1.h"
 #include "foreign_toplevel_manager_v1.h"
@@ -272,15 +271,10 @@ std::shared_ptr<mf::Connector>
                 enabled_wayland_extensions.begin(),
                 enabled_wayland_extensions.end()};
 
-            auto const display_config = std::make_shared<mf::MirDisplay>(
-                the_frontend_display_changer(),
-                the_display_configuration_observer_registrar());
-
             auto const enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
 
             return std::make_shared<mf::WaylandConnector>(
                 the_shell(),
-                display_config,
                 the_clock(),
                 the_input_device_hub(),
                 the_seat(),

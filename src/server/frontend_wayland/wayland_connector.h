@@ -71,7 +71,6 @@ class WlSubcompositor;
 class WlApplication;
 class WlSeat;
 class OutputManager;
-class MirDisplay;
 class SessionAuthorizer;
 class WlDataDeviceManager;
 class WlSurface;
@@ -125,7 +124,6 @@ public:
 
     WaylandConnector(
         std::shared_ptr<shell::Shell> const& shell,
-        std::shared_ptr<MirDisplay> const& display_config,
         std::shared_ptr<time::Clock> const& clock,
         std::shared_ptr<input::InputDeviceHub> const& input_hub,
         std::shared_ptr<input::Seat> const& seat,
