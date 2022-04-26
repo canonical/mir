@@ -29,59 +29,6 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 
-namespace 
-{
-struct DisplayConfigurationObserverAdapter : mg::DisplayConfigurationObserver
-{
-    mf::OutputObserver* const wrapped;
-
-    DisplayConfigurationObserverAdapter(mf::OutputObserver* adaptee) :
-        wrapped{adaptee}
-    {
-    }
-
-    void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const&) override
-    {
-    }
-
-    void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
-    {
-        wrapped->handle_configuration_change(config);
-    }
-
-    void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const&) override
-    {
-    }
-
-    void session_configuration_applied(
-        std::shared_ptr<ms::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&) override
-    {
-    }
-
-    void session_configuration_removed(std::shared_ptr<ms::Session> const&) override
-    {
-    }
-
-    void configuration_failed(
-        std::shared_ptr<mg::DisplayConfiguration const> const&,
-        std::exception const&) override
-    {
-    }
-
-    void catastrophic_configuration_error(
-        std::shared_ptr<mg::DisplayConfiguration const> const&,
-        std::exception const&) override
-    {
-    }
-
-    void configuration_updated_for_session(
-        std::shared_ptr<ms::Session> const&,
-        std::shared_ptr<mg::DisplayConfiguration const> const&) override
-    {
-    }
-};
-}
-
 struct mf::MirDisplay::Self
 {
     std::shared_ptr<DisplayChanger> const changer;
@@ -91,9 +38,6 @@ struct mf::MirDisplay::Self
         std::shared_ptr<DisplayChanger> const& changer,
         std::shared_ptr<ObserverRegistrar<mg::DisplayConfigurationObserver>> const& registrar) :
         changer{changer}, registrar{registrar} {}
-
-    std::mutex mutable mutex;
-    std::vector<std::shared_ptr<DisplayConfigurationObserverAdapter>> adapters;
 };
 
 mf::MirDisplay::MirDisplay(
@@ -103,52 +47,20 @@ mf::MirDisplay::MirDisplay(
 {
 }
 
-void mf::MirDisplay::register_interest(OutputObserver* observer, Executor& executor)
-{
-    auto const adapter = std::make_shared<DisplayConfigurationObserverAdapter>(observer);
-
-    std::lock_guard lock{self->mutex};
-    self->adapters.push_back(adapter);
-    self->registrar->register_interest(adapter, executor);
-}
-
-void mf::MirDisplay::unregister_interest(OutputObserver* observer)
-{
-    std::lock_guard lock{self->mutex};
-
-    self->adapters.erase(
-        std::remove_if(
-            begin(self->adapters),
-            end(self->adapters),
-            [observer, registrar = self->registrar](auto const& adapter)
-                {
-                    auto const adaptee = adapter->wrapped;
-
-                    if (adaptee == nullptr)
-                    {
-                        return true;
-                    }
-                    else if (adaptee == observer)
-                    {
-                        registrar->unregister_interest(*adapter);
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }),
-        end(self->adapters));
-}
-
 mf::MirDisplay::~MirDisplay()
 {
-    std::lock_guard lock{self->mutex};
-    for (auto const& adapter : self->adapters)
-    {
-        if (adapter)
-            self->registrar->unregister_interest(*adapter);
-    }
+}
+
+void mf::MirDisplay::register_interest(
+    std::weak_ptr<graphics::DisplayConfigurationObserver> const& observer,
+    Executor& executor)
+{
+    self->registrar->register_interest(observer, executor);
+}
+
+void mf::MirDisplay::unregister_interest(graphics::DisplayConfigurationObserver const& observer)
+{
+    self->registrar->unregister_interest(observer);
 }
 
 void mf::MirDisplay::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const

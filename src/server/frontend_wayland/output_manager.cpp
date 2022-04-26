@@ -213,19 +213,35 @@ void mf::Output::resource_destructor(wl_resource* resource)
     client_resource_list.erase(erase_from, client_resource_list.end());
 }
 
+struct mf::OutputManager::DisplayConfigObserver: public graphics::NullDisplayConfigurationObserver
+{
+    DisplayConfigObserver(OutputManager& manager)
+        : manager{manager}
+    {
+    }
+
+private:
+    OutputManager& manager;
+
+    void configuration_applied(std::shared_ptr<graphics::DisplayConfiguration const> const& config) override
+    {
+        manager.handle_configuration_change(*config);
+    }
+};
 
 mf::OutputManager::OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config, std::shared_ptr<Executor> const& executor) :
     display_config_{display_config},
     display{display},
-    executor{executor}
+    executor{executor},
+    display_config_observer{std::make_shared<DisplayConfigObserver>(*this)}
 {
-    display_config->register_interest(this, *executor);
+    display_config->register_interest(display_config_observer, *executor);
     display_config->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
 }
 
 mf::OutputManager::~OutputManager()
 {
-    display_config_->unregister_interest(this);
+    display_config_->unregister_interest(*display_config_observer);
 }
 
 auto mf::OutputManager::output_id_for(wl_client* client, wl_resource* output) const
@@ -296,9 +312,9 @@ void mf::OutputManager::create_output(mg::DisplayConfigurationOutput const& init
     }
 }
 
-void mf::OutputManager::handle_configuration_change(std::shared_ptr<mg::DisplayConfiguration const> const& config)
+void mf::OutputManager::handle_configuration_change(mg::DisplayConfiguration const& config)
 {
-    config->for_each_output([this](mg::DisplayConfigurationOutput const& output_config)
+    config.for_each_output([this](mg::DisplayConfigurationOutput const& output_config)
         {
             auto output_iter = outputs.find(output_config.id);
             if (output_iter != outputs.end())

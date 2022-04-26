@@ -38,17 +38,6 @@ namespace frontend
 {
 class DisplayChanger;
 
-class OutputObserver
-{
-public:
-    virtual void handle_configuration_change(std::shared_ptr<graphics::DisplayConfiguration const> const& config) = 0;
-
-    OutputObserver() = default;
-    virtual ~OutputObserver() = default;
-    OutputObserver(OutputObserver const&) = delete;
-    OutputObserver& operator=(OutputObserver const&) = delete;
-};
-
 class MirDisplay
 {
 public:
@@ -60,8 +49,8 @@ public:
 
     void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const;
 
-    void register_interest(OutputObserver* observer, Executor& executor);
-    void unregister_interest(OutputObserver* observer);
+    void register_interest(std::weak_ptr<graphics::DisplayConfigurationObserver> const& observer, Executor& executor);
+    void unregister_interest(graphics::DisplayConfigurationObserver const& observer);
 
 private:
 

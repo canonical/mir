@@ -18,6 +18,7 @@
 #define MIR_FRONTEND_OUTPUT_MANAGER_H_
 
 #include <mir/graphics/display_configuration.h>
+#include <mir/graphics/null_display_configuration_observer.h>
 
 #include "mir_display.h"
 
@@ -61,7 +62,7 @@ private:
     std::unordered_map<wl_client*, std::vector<wl_resource*>> resource_map;
 };
 
-class OutputManager : public OutputObserver
+class OutputManager
 {
 public:
     OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config, std::shared_ptr<Executor> const& executor);
@@ -83,12 +84,14 @@ public:
 
 private:
     void create_output(graphics::DisplayConfigurationOutput const& initial_config);
+    void handle_configuration_change(graphics::DisplayConfiguration const& config);
 
-    void handle_configuration_change(std::shared_ptr<graphics::DisplayConfiguration const> const& config) override;
+    struct DisplayConfigObserver;
 
     std::shared_ptr<MirDisplay> const display_config_;
     wl_display* const display;
     std::shared_ptr<Executor> const executor;
+    std::shared_ptr<DisplayConfigObserver> const display_config_observer;
     std::unordered_map<graphics::DisplayConfigurationOutputId, std::unique_ptr<Output>> outputs;
 };
 }
