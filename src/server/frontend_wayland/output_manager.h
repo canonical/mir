@@ -84,7 +84,7 @@ public:
 private:
     void create_output(graphics::DisplayConfigurationOutput const& initial_config);
 
-    void handle_configuration_change(graphics::DisplayConfiguration const& config) override;
+    void handle_configuration_change(std::shared_ptr<graphics::DisplayConfiguration const> const& config) override;
 
     std::shared_ptr<MirDisplay> const display_config_;
     wl_display* const display;

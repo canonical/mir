@@ -41,7 +41,7 @@ class DisplayChanger;
 class OutputObserver
 {
 public:
-    virtual void handle_configuration_change(graphics::DisplayConfiguration const& config) = 0;
+    virtual void handle_configuration_change(std::shared_ptr<graphics::DisplayConfiguration const> const& config) = 0;
 
     OutputObserver() = default;
     virtual ~OutputObserver() = default;
@@ -60,7 +60,7 @@ public:
 
     void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const;
 
-    void register_interest(OutputObserver* observer);
+    void register_interest(OutputObserver* observer, Executor& executor);
     void unregister_interest(OutputObserver* observer);
 
 private:

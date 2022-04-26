@@ -46,7 +46,7 @@ struct DisplayConfigurationObserverAdapter : mg::DisplayConfigurationObserver
 
     void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
     {
-        wrapped->handle_configuration_change(*config);
+        wrapped->handle_configuration_change(config);
     }
 
     void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const&) override
@@ -103,13 +103,13 @@ mf::MirDisplay::MirDisplay(
 {
 }
 
-void mf::MirDisplay::register_interest(OutputObserver* observer)
+void mf::MirDisplay::register_interest(OutputObserver* observer, Executor& executor)
 {
     auto const adapter = std::make_shared<DisplayConfigurationObserverAdapter>(observer);
 
     std::lock_guard lock{self->mutex};
     self->adapters.push_back(adapter);
-    self->registrar->register_interest(adapter);
+    self->registrar->register_interest(adapter, executor);
 }
 
 void mf::MirDisplay::unregister_interest(OutputObserver* observer)

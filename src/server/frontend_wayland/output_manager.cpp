@@ -219,7 +219,7 @@ mf::OutputManager::OutputManager(wl_display* display, std::shared_ptr<MirDisplay
     display{display},
     executor{executor}
 {
-    display_config->register_interest(this);
+    display_config->register_interest(this, *executor);
     display_config->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
 }
 
@@ -296,29 +296,25 @@ void mf::OutputManager::create_output(mg::DisplayConfigurationOutput const& init
     }
 }
 
-void mf::OutputManager::handle_configuration_change(mg::DisplayConfiguration const& config)
+void mf::OutputManager::handle_configuration_change(std::shared_ptr<mg::DisplayConfiguration const> const& config)
 {
-    std::shared_ptr<mg::DisplayConfiguration> pconfig{config.clone()};
-    executor->spawn([config = std::move(pconfig), this]
-    {
-        config->for_each_output([this](mg::DisplayConfigurationOutput const& output_config)
+    config->for_each_output([this](mg::DisplayConfigurationOutput const& output_config)
+        {
+            auto output_iter = outputs.find(output_config.id);
+            if (output_iter != outputs.end())
             {
-                auto output_iter = outputs.find(output_config.id);
-                if (output_iter != outputs.end())
+                if (output_config.used)
                 {
-                    if (output_config.used)
-                    {
-                        output_iter->second->handle_configuration_changed(output_config);
-                    }
-                    else
-                    {
-                        outputs.erase(output_iter);
-                    }
+                    output_iter->second->handle_configuration_changed(output_config);
                 }
-                else if (output_config.used)
+                else
                 {
-                    outputs[output_config.id] = std::make_unique<Output>(display, output_config);
+                    outputs.erase(output_iter);
                 }
-            });
-    });
+            }
+            else if (output_config.used)
+            {
+                outputs[output_config.id] = std::make_unique<Output>(display, output_config);
+            }
+        });
 }
