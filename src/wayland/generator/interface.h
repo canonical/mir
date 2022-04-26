@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: William Wold <william.wold@canonical.com>
  */
 
 #ifndef MIR_WAYLAND_GENERATOR_INTERFACE_H
@@ -25,7 +23,7 @@
 #include "enum.h"
 #include "global.h"
 
-#include <experimental/optional>
+#include <optional>
 #include <functional>
 #include <map>
 #include <unordered_set>
@@ -83,7 +81,7 @@ private:
     std::string const nmspace;
     bool const has_server_constructor;
     bool const has_client_constructor;
-    std::experimental::optional<Global> const global;
+    std::optional<Global> const global;
     std::vector<Request> const requests;
     std::vector<Event> const events;
     std::vector<Enum> const enums;

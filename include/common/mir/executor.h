@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #ifndef MIR_EXECUTOR_H_
@@ -50,6 +48,13 @@ public:
 
 protected:
     virtual ~Executor() = default;
+};
+
+/**
+ * An executor which never blocks the spawn() method on work completing.
+ */
+class NonBlockingExecutor: public Executor
+{
 };
 
 }

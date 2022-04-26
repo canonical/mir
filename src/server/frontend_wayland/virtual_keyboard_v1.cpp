@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #include "virtual_keyboard_v1.h"
@@ -154,7 +152,7 @@ public:
 
     void use(std::function<void(input::InputSink*, input::EventBuilder*)> const& fn)
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (sink && builder)
         {
             fn(sink, builder);
@@ -164,14 +162,14 @@ public:
 private:
     void start(input::InputSink* new_sink, input::EventBuilder* new_builder) override
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         sink = new_sink;
         builder = new_builder;
     }
 
     void stop() override
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         sink = nullptr;
         builder = nullptr;
     }

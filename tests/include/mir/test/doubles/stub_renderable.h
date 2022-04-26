@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #ifndef MIR_TEST_DOUBLES_STUB_RENDERABLE_H_
@@ -74,9 +72,9 @@ public:
     {
         return rect;
     }
-    std::experimental::optional<geometry::Rectangle> clip_area() const override
+    std::optional<geometry::Rectangle> clip_area() const override
     {
-        return std::experimental::optional<geometry::Rectangle>();
+        return std::optional<geometry::Rectangle>();
     }
     float alpha() const override
     {

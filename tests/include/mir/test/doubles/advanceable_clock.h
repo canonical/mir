@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_TEST_DOUBLES_ADVANCEABLE_CLOCK_H_
@@ -36,7 +34,7 @@ class AdvanceableClock : public mir::time::Clock
 public:
     mir::time::Timestamp now() const override
     {
-        std::lock_guard<std::recursive_mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         return current_time;
     }
 
@@ -47,7 +45,7 @@ public:
 
     void advance_by(mir::time::Duration step)
     {
-        std::lock_guard<std::recursive_mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         current_time += step;
     }
 

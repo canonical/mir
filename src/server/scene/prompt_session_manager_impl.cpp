@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "prompt_session_manager_impl.h"
@@ -67,7 +65,7 @@ void ms::PromptSessionManagerImpl::stop_prompt_session_locked(
 
 void ms::PromptSessionManagerImpl::remove_session(std::shared_ptr<Session> const& session) const
 {
-    std::lock_guard<std::mutex> lock(prompt_sessions_mutex);
+    std::lock_guard lock(prompt_sessions_mutex);
 
     std::vector<std::pair<std::shared_ptr<PromptSession>, PromptSessionContainer::ParticipantType>> prompt_sessions;
 
@@ -96,14 +94,14 @@ void ms::PromptSessionManagerImpl::remove_session(std::shared_ptr<Session> const
 
 void ms::PromptSessionManagerImpl::stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const
 {
-    std::lock_guard<std::mutex> lock(prompt_sessions_mutex);
+    std::lock_guard lock(prompt_sessions_mutex);
 
     stop_prompt_session_locked(lock, prompt_session);
 }
 
 void ms::PromptSessionManagerImpl::suspend_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const
 {
-    std::lock_guard<std::mutex> lock(prompt_sessions_mutex);
+    std::lock_guard lock(prompt_sessions_mutex);
 
     prompt_session->suspend(helper_for(prompt_session));
     prompt_session_listener->suspending(prompt_session);
@@ -111,7 +109,7 @@ void ms::PromptSessionManagerImpl::suspend_prompt_session(std::shared_ptr<Prompt
 
 void ms::PromptSessionManagerImpl::resume_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const
 {
-    std::lock_guard<std::mutex> lock(prompt_sessions_mutex);
+    std::lock_guard lock(prompt_sessions_mutex);
 
     prompt_session->resume(helper_for(prompt_session));
     prompt_session_listener->resuming(prompt_session);
@@ -136,7 +134,7 @@ std::shared_ptr<ms::PromptSession> ms::PromptSessionManagerImpl::start_prompt_se
     if (!application_session)
         BOOST_THROW_EXCEPTION(std::runtime_error("Could not identify application session"));
 
-    std::lock_guard<std::mutex> lock(prompt_sessions_mutex);
+    std::lock_guard lock(prompt_sessions_mutex);
 
     prompt_session_container->insert_prompt_session(prompt_session);
     if (!prompt_session_container->insert_participant(prompt_session.get(), session, PromptSessionContainer::ParticipantType::helper))
@@ -154,7 +152,7 @@ void ms::PromptSessionManagerImpl::add_prompt_provider(
     std::shared_ptr<PromptSession> const& prompt_session,
     std::shared_ptr<Session> const& prompt_provider) const
 {
-    std::unique_lock<std::mutex> lock(prompt_sessions_mutex);
+    std::unique_lock lock(prompt_sessions_mutex);
 
     if (prompt_session_container->insert_participant(prompt_session.get(), prompt_provider, PromptSessionContainer::ParticipantType::prompt_provider))
         prompt_session_listener->prompt_provider_added(*prompt_session, prompt_provider);

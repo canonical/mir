@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: William Wold <william.wold@canonical.com>
  */
 
 #ifndef MIR_SCENE_IDLE_HUB_H_
@@ -27,7 +25,7 @@
 
 namespace mir
 {
-class Executor;
+class NonBlockingExecutor;
 namespace scene
 {
 /// Gets notifications about the idle state when registered and subsequent state changes until unregistered
@@ -71,7 +69,7 @@ public:
     /// Timeout is the amount of time Mir will stay idle before triggering the observer
     virtual void register_interest(
         std::weak_ptr<IdleStateObserver> const& observer,
-        Executor& executor,
+        NonBlockingExecutor& executor,
         time::Duration timeout) = 0;
 
     virtual void unregister_interest(IdleStateObserver const& observer) = 0;

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "cursor.h"
@@ -77,7 +75,7 @@ mpw::Cursor::~Cursor()
 {
     wl_surface_destroy(surface);
 
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     if (buffer) wl_buffer_destroy(buffer);
 }
 
@@ -88,7 +86,7 @@ void mpw::Cursor::move_to(geometry::Point)
 void mpw::Cursor::show(graphics::CursorImage const& cursor_image)
 {
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
         if (buffer) wl_buffer_destroy(buffer);
 
         auto const width = cursor_image.size().width.as_uint32_t();
@@ -113,12 +111,12 @@ void mpw::Cursor::hide()
 
 void mir::platform::wayland::Cursor::enter(wl_pointer* pointer)
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     this->pointer = pointer;
 }
 
 void mir::platform::wayland::Cursor::leave(wl_pointer* /*pointer*/)
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     pointer = nullptr;
 }

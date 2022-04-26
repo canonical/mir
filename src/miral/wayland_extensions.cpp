@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "miral/wayland_extensions.h"
@@ -44,6 +42,7 @@ char const* const miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1{"zwp
 /// Not in the header, but keeping around for ABI compat
 char const* const miral::WaylandExtensions::zwp_input_method_v2{"zwp_input_method_manager_v2"};
 char const* const miral::WaylandExtensions::zwp_input_method_manager_v2{"zwp_input_method_manager_v2"};
+char const* const miral::WaylandExtensions::zwlr_screencopy_manager_v1{"zwlr_screencopy_manager_v1"};
 
 namespace
 {
@@ -60,7 +59,7 @@ struct StaticExtensionTracker
 {
     static void add_server_extension(mir::Server* server, void* extension)
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
 
         for (auto const& x : extensions)
         {
@@ -81,7 +80,7 @@ struct StaticExtensionTracker
 
     static void remove_extension(void* extension)
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
 
         extensions.erase(
             remove_if(begin(extensions), end(extensions), [extension](auto& x) { return x.extension == extension; }),

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "mir/recursive_read_write_mutex.h"
@@ -24,7 +22,7 @@ void mir::RecursiveReadWriteMutex::read_lock()
 {
     auto const my_id = std::this_thread::get_id();
 
-    std::unique_lock<decltype(mutex)> lock{mutex};
+    std::unique_lock lock{mutex};
     cv.wait(lock, [&]{
         return !write_locking_thread.count ||
             write_locking_thread.id == my_id; });
@@ -48,22 +46,23 @@ void mir::RecursiveReadWriteMutex::read_unlock()
 {
     auto const my_id = std::this_thread::get_id();
 
-    std::lock_guard<decltype(mutex)> lock{mutex};
-    auto const my_count = std::find_if(
-        read_locking_threads.begin(),
-        read_locking_threads.end(),
-        [my_id](ThreadLockCount const& candidate) { return my_id == candidate.id; });
+    {
+        std::lock_guard lock{mutex};
+        auto const my_count = std::find_if(
+            read_locking_threads.begin(),
+            read_locking_threads.end(),
+            [my_id](ThreadLockCount const& candidate) { return my_id == candidate.id; });
 
-    --(my_count->count);
-
-    cv.notify_all();
+        --(my_count->count);
+    }
+    cv.notify_one();
 }
 
 void mir::RecursiveReadWriteMutex::write_lock()
 {
     auto const my_id = std::this_thread::get_id();
 
-    std::unique_lock<decltype(mutex)> lock{mutex};
+    std::unique_lock lock{mutex};
     cv.wait(lock, [&]
         {
             if (write_locking_thread.count &&
@@ -81,7 +80,9 @@ void mir::RecursiveReadWriteMutex::write_lock()
 
 void mir::RecursiveReadWriteMutex::write_unlock()
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
-    --write_locking_thread.count;
+    {
+        std::lock_guard lock{mutex};
+        --write_locking_thread.count;
+    }
     cv.notify_all();
 }

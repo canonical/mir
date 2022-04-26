@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "mir/udev/wrapper.h"
@@ -49,6 +47,8 @@ public:
     virtual std::shared_ptr<udev_device> as_raw() const override;
     virtual auto driver() const -> char const* override;
     virtual auto parent() const -> std::unique_ptr<mu::Device> override;
+
+    auto clone() const -> std::unique_ptr<Device> override;
 
     udev_device* const dev;
 };
@@ -137,6 +137,12 @@ auto DeviceImpl::parent() const -> std::unique_ptr<mu::Device>
     }
     return {nullptr};
 }
+
+auto DeviceImpl::clone() const -> std::unique_ptr<Device>
+{
+    return std::make_unique<DeviceImpl>(udev_device_ref(dev));
+}
+
 }
 
 bool mu::operator==(mu::Device const& lhs, mu::Device const& rhs)
@@ -287,9 +293,14 @@ mu::Context::~Context() noexcept
     udev_unref(context);
 }
 
-std::shared_ptr<mu::Device> mu::Context::device_from_syspath(std::string const& syspath)
+auto mu::Context::device_from_syspath(std::string const& syspath) -> std::unique_ptr<Device>
 {
-    return std::make_shared<DeviceImpl>(udev_device_new_from_syspath(context, syspath.c_str()));
+    return std::make_unique<DeviceImpl>(udev_device_new_from_syspath(context, syspath.c_str()));
+}
+
+auto mu::Context::char_device_from_devnum(dev_t devnum) -> std::unique_ptr<Device>
+{
+    return std::make_unique<DeviceImpl>(udev_device_new_from_devnum(context, 'C', devnum));
 }
 
 udev* mu::Context::ctx() const

@@ -13,8 +13,6 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
- *
  * This file also contains a subset of EGL definitions taken from eglext.h.
  * These are:
  *
@@ -227,7 +225,7 @@ struct EGLExtensions
         {
             if (!has_initialized)
             {
-                std::lock_guard<std::mutex> lock{mutex};
+                std::lock_guard lock{mutex};
                 if (!has_initialized)
                 {
                     cached_display = dpy;

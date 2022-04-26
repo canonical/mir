@@ -24,7 +24,7 @@
 #include <memory>
 #include <mutex>
 #include <vector>
-#include <experimental/optional>
+#include <optional>
 
 namespace mir
 {
@@ -53,7 +53,7 @@ private:
 
     std::mutex mutable mutex;
     std::shared_ptr<graphics::Buffer> current_buffer;
-    std::vector<std::experimental::optional<compositor::CompositorID>> current_buffer_users;
+    std::vector<std::optional<compositor::CompositorID>> current_buffer_users;
     std::shared_ptr<Schedule> schedule;
 };
 

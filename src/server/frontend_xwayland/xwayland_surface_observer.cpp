@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #include "xwayland_surface_observer.h"
@@ -51,7 +49,7 @@ mf::XWaylandSurfaceObserver::XWaylandSurfaceObserver(
 
 mf::XWaylandSurfaceObserver::~XWaylandSurfaceObserver()
 {
-    std::lock_guard<std::mutex> lock{input_dispatcher->mutex};
+    std::lock_guard lock{input_dispatcher->mutex};
     input_dispatcher->dispatcher = std::nullopt;
 }
 
@@ -108,7 +106,7 @@ void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, MirEvent co
 
 auto mf::XWaylandSurfaceObserver::latest_timestamp() const -> std::chrono::nanoseconds
 {
-    std::lock_guard<std::mutex> lock{input_dispatcher->mutex};
+    std::lock_guard lock{input_dispatcher->mutex};
     if (input_dispatcher->dispatcher)
         return input_dispatcher->dispatcher.value()->latest_timestamp();
     else
@@ -117,7 +115,7 @@ auto mf::XWaylandSurfaceObserver::latest_timestamp() const -> std::chrono::nanos
 
 mf::XWaylandSurfaceObserver::ThreadsafeInputDispatcher::ThreadsafeInputDispatcher(
     std::unique_ptr<WaylandInputDispatcher> dispatcher)
-    : dispatcher{move(dispatcher)}
+    : dispatcher{std::move(dispatcher)}
 {
 }
 
@@ -127,9 +125,9 @@ mf::XWaylandSurfaceObserver::ThreadsafeInputDispatcher::~ThreadsafeInputDispatch
 
 void mf::XWaylandSurfaceObserver::aquire_input_dispatcher(std::function<void(WaylandInputDispatcher*)>&& work)
 {
-    wayland_executor.spawn([work = move(work), input_dispatcher = input_dispatcher]()
+    wayland_executor.spawn([work = std::move(work), input_dispatcher = input_dispatcher]()
         {
-            std::lock_guard<std::mutex> lock{input_dispatcher->mutex};
+            std::lock_guard lock{input_dispatcher->mutex};
             if (input_dispatcher->dispatcher)
             {
                 work(input_dispatcher->dispatcher.value().get());

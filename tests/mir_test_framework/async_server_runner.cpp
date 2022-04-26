@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "mir_test_framework/async_server_runner.h"
@@ -85,8 +83,10 @@ void mtf::AsyncServerRunner::start_server()
                             this,
                             [this]
                             {
-                                std::lock_guard<std::mutex> lock(mutex);
-                                server_running = true;
+                                {
+                                    std::lock_guard lock(mutex);
+                                    server_running = true;
+                                }
                                 started.notify_one();
                             });
                     });
@@ -100,12 +100,14 @@ void mtf::AsyncServerRunner::start_server()
                 mir::report_exception(error);
                 FAIL() << error.str();
             }
-            std::lock_guard<std::mutex> lock(mutex);
-            server_running = false;
+            {
+                std::lock_guard lock(mutex);
+                server_running = false;
+            }
             started.notify_one();
         });
 
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock lock(mutex);
     started.wait_for(lock, timeout, [this] { return server_running; });
 
     if (!server_running)
@@ -123,7 +125,7 @@ void mtf::AsyncServerRunner::stop_server()
 
 void mtf::AsyncServerRunner::wait_for_server_exit()
 {
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock lock(mutex);
     started.wait_for(lock, timeout, [&] { return !server_running; });
 
     if (server_running)

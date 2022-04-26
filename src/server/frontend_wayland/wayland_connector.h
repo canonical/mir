@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #ifndef MIR_FRONTEND_WAYLAND_CONNECTOR_H_
@@ -94,7 +92,9 @@ public:
         OutputManager* output_manager;
         std::shared_ptr<SurfaceStack> surface_stack;
         std::shared_ptr<input::InputDeviceRegistry> input_device_registry;
-        std::shared_ptr<input::CompositeEventFilter> const& composite_event_filter;
+        std::shared_ptr<input::CompositeEventFilter> composite_event_filter;
+        std::shared_ptr<graphics::GraphicBufferAllocator> graphic_buffer_allocator;
+        std::shared_ptr<compositor::ScreenShooter> screen_shooter;
     };
 
     WaylandExtensions() = default;
@@ -137,6 +137,7 @@ public:
         std::shared_ptr<scene::Clipboard> const& clipboard,
         std::shared_ptr<scene::TextInputHub> const& text_input_hub,
         std::shared_ptr<scene::IdleHub> const& idle_hub,
+        std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
         std::shared_ptr<MainLoop> const& main_loop,
         bool arw_socket,
         std::unique_ptr<WaylandExtensions> extensions,

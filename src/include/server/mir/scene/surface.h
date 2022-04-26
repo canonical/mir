@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #ifndef MIR_SCENE_SURFACE_H_
@@ -126,8 +124,8 @@ public:
     /// When the depth layer is changed, the surface becomes the top surface on that layer
     virtual void set_depth_layer(MirDepthLayer depth_layer) = 0;
 
-    virtual std::experimental::optional<geometry::Rectangle> clip_area() const = 0;
-    virtual void set_clip_area(std::experimental::optional<geometry::Rectangle> const& area) = 0;
+    virtual std::optional<geometry::Rectangle> clip_area() const = 0;
+    virtual void set_clip_area(std::optional<geometry::Rectangle> const& area) = 0;
 
     virtual auto focus_state() const -> MirWindowFocusState = 0;
     virtual void set_focus_state(MirWindowFocusState focus_state) = 0;

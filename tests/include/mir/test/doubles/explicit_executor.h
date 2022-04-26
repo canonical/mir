@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #ifndef MIR_TEST_DOUBLES_EXPLICIT_EXECUTOR_H_
@@ -31,16 +29,16 @@ namespace test
 namespace doubles
 {
 
-class ExplicitExectutor
-    : public Executor
+class ExplicitExecutor
+    : public NonBlockingExecutor
 {
 public:
-    ~ExplicitExectutor()
+    ~ExplicitExecutor()
     {
         if (!work_items.empty())
         {
             ADD_FAILURE() <<
-                "ExplicitExectutor destroyed with " <<
+                "ExplicitExecutor destroyed with " <<
                 work_items.size() <<
                 " work items left in the queue";
         }
@@ -48,20 +46,25 @@ public:
 
     void spawn(std::function<void()>&& work) override
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         work_items.push_back(std::move(work));
     }
 
     void execute()
     {
-        std::unique_lock<std::mutex> lock{mutex};
-        auto const items = std::move(work_items);
-        work_items.clear();
-        lock.unlock();
-        for (auto const& work : items)
+        decltype(work_items) drained_items;
+        do
         {
-            work();
-        }
+            drained_items.clear();
+            {
+                std::lock_guard lock{mutex};
+                swap(drained_items, work_items);
+            }
+            for (auto const& work : drained_items)
+            {
+                work();
+            }
+        } while (!drained_items.empty());
     }
 
 private:

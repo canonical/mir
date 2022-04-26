@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by:
- *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include <epoxy/egl.h>
@@ -261,7 +258,7 @@ struct BoundEGLStream
              * render thread will bind the new texture (ie: there's some implicit syncpoint
              * action happening)
              */
-            std::lock_guard<std::mutex> lock{sync->sync_mutex};
+            std::lock_guard lock{sync->sync_mutex};
             if (sync->sync)
             {
                 glWaitSync(sync->sync, 0, GL_TIMEOUT_IGNORED);

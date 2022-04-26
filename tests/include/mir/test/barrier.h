@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #ifndef MIR_TEST_BARRIER_H_
@@ -33,17 +31,23 @@ public:
 
     void reset(unsigned threads)
     {
-        std::unique_lock<decltype(mutex)> lock(mutex);
+        std::unique_lock lock(mutex);
         wait_threads  = threads;
     }
 
     void ready()
     {
-        std::unique_lock<decltype(mutex)> lock(mutex);
-        --wait_threads;
-        cv.notify_all();
-        if (!cv.wait_for(lock, std::chrono::minutes(1), [&]{ return wait_threads == 0; }))
-            throw std::runtime_error("Timeout");
+        std::unique_lock lock(mutex);
+        if (--wait_threads)
+        {
+            if (!cv.wait_for(lock, std::chrono::minutes(1), [&]{ return wait_threads == 0; }))
+                throw std::runtime_error("Timeout");
+        }
+        else
+        {
+            lock.unlock();
+            cv.notify_all();
+        }
     }
 
     Barrier(Barrier const&) = delete;

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 /* As suggested by umockdev, _FILE_OFFSET_BITS breaks our open() interposing,
@@ -25,6 +23,7 @@
 
 #include "mir_test_framework/open_wrapper.h"
 
+#include <atomic>
 #include <list>
 #include <mutex>
 #include <dlfcn.h>
@@ -41,8 +40,9 @@ class OpenHandlers
 public:
     static auto add(mtf::OpenHandler handler) -> mtf::OpenHandlerHandle
     {
+        handlers_added.store(true);
         auto& me = instance();
-        std::lock_guard<std::mutex> lock{me.mutex};
+        std::lock_guard lock{me.mutex};
         auto iterator = me.handlers.emplace(me.handlers.begin(), std::move(handler));
         auto remove_callback = [](void* iterator)
             {
@@ -56,19 +56,26 @@ public:
 
     static auto run(char const* path, int flags, std::optional<mode_t> mode) -> std::optional<int>
     {
-        auto& me = instance();
-        std::lock_guard<std::mutex> lock{me.mutex};
-        for (auto const& handler : me.handlers)
+        if (handlers_added)
         {
-            if (auto val = handler(path, flags, mode))
+            auto& me = instance();
+            std::lock_guard lock{me.mutex};
+            for (auto const& handler: me.handlers)
             {
-                return val;
+                if (auto val = handler(path, flags, mode))
+                {
+                    return val;
+                }
             }
         }
         return std::nullopt;
     }
 
 private:
+    // We want to ensure that run() doesn't call instance() too early (e.g. during coverage setup)
+    // as that leads to destruction order issues. (https://github.com/MirServer/mir/issues/2387)
+    static std::atomic<bool> handlers_added;
+
     static auto instance() -> OpenHandlers&
     {
         // static local so we don't have to worry about initialization order
@@ -79,7 +86,7 @@ private:
     static void remove(std::list<mtf::OpenHandler>::iterator* to_remove)
     {
         auto& me = instance();
-        std::lock_guard<std::mutex> lock{me.mutex};
+        std::lock_guard lock{me.mutex};
         me.handlers.erase(*to_remove);
         delete to_remove;
     }
@@ -87,6 +94,8 @@ private:
     std::mutex mutex;
     std::list<mtf::OpenHandler> handlers;
 };
+
+std::atomic<bool> OpenHandlers::handlers_added{false};
 }
 
 mtf::OpenHandlerHandle mtf::add_open_handler(OpenHandler handler)

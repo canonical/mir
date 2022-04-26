@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #include "compositor_report.h"
@@ -53,7 +51,7 @@ void mrl::CompositorReport::added_display(int width, int height, int x, int y, S
 
 void mrl::CompositorReport::began_frame(SubCompositorId id)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard lock(mutex);
     auto& inst = instance[id];
 
     auto t = now();
@@ -68,7 +66,7 @@ void mrl::CompositorReport::renderables_in_frame(SubCompositorId, mir::graphics:
 
 void mrl::CompositorReport::rendered_frame(SubCompositorId id)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard lock(mutex);
     auto& inst = instance[id];
     inst.render_time_sum += now() - inst.start_of_frame;
     inst.bypassed = false;
@@ -134,7 +132,7 @@ void mrl::CompositorReport::Instance::log(ml::Logger& logger, SubCompositorId id
 
 void mrl::CompositorReport::finished_frame(SubCompositorId id)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard lock(mutex);
     auto& inst = instance[id];
 
     auto t = now();
@@ -175,12 +173,12 @@ void mrl::CompositorReport::stopped()
 {
     logger->log(ml::Severity::informational, "Stopped", component);
 
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard lock(mutex);
     instance.clear();
 }
 
 void mrl::CompositorReport::scheduled()
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard lock(mutex);
     last_scheduled = now();
 }

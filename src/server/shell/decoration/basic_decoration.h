@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: William Wold <william.wold@canonical.com>
  */
 
 #ifndef MIR_SHELL_DECORATION_BASIC_DECORATION_H_
@@ -27,7 +25,7 @@
 #include <memory>
 #include <vector>
 #include <chrono>
-#include <experimental/optional>
+#include <optional>
 
 namespace mir
 {
@@ -97,8 +95,8 @@ protected:
     /// Previous state pointers may be equal to current window_state/input_state to trigger no change
     /// If previous states are nullopt, a full refresh is performed
     void update(
-        std::experimental::optional<WindowState const*> previous_window_state,
-        std::experimental::optional<InputState const*> previous_input_state);
+        std::optional<WindowState const*> previous_window_state,
+        std::optional<InputState const*> previous_input_state);
 
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> threadsafe_self;
     std::shared_ptr<StaticGeometry const> const static_geometry;

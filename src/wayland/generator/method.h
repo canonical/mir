@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: William Wold <william.wold@canonical.com>
  */
 
 #ifndef MIR_WAYLAND_GENERATOR_METHOD_H
@@ -22,7 +20,7 @@
 #include "emitter.h"
 #include "argument.h"
 
-#include <experimental/optional>
+#include <optional>
 #include <functional>
 #include <unordered_map>
 

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
 #ifndef MIR_COOKIE_COOKIE_H_

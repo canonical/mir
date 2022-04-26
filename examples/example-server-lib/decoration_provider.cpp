@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "decoration_provider.h"
@@ -441,13 +439,13 @@ void DecorationProvider::operator()(wl_display* display)
 
 void DecorationProvider::operator()(std::weak_ptr<mir::scene::Session> const& session)
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     this->weak_session = session;
 }
 
 auto DecorationProvider::session() const -> std::shared_ptr<mir::scene::Session>
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     return weak_session.lock();
 }
 

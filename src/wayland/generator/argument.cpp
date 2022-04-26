@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: William Wold <william.wold@canonical.com>
  */
 
 #include "argument.h"
@@ -180,12 +178,12 @@ Emitter Argument::type_str_fragment() const
     return descriptor.wl_type_abbr;
 }
 
-std::experimental::optional<Emitter> Argument::converter() const
+std::optional<Emitter> Argument::converter() const
 {
     if (descriptor.converter)
         return descriptor.converter.value()(this);
     else
-        return std::experimental::nullopt;
+        return std::nullopt;
 }
 
 void Argument::populate_required_interfaces(std::set<std::string>& interfaces) const
@@ -240,11 +238,11 @@ Argument::TypeDescriptor Argument::get_type(xmlpp::Element const& node, bool is_
     }
 }
 
-std::experimental::optional<std::string> Argument::get_interface(xmlpp::Element const& node)
+std::optional<std::string> Argument::get_interface(xmlpp::Element const& node)
 {
     std::string ret = node.get_attribute_value("interface");
     if (ret.empty())
-        return std::experimental::nullopt;
+        return std::nullopt;
     else
         return {ret};
 }

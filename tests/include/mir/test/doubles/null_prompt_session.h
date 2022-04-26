@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
  */
 
 #ifndef MIR_TEST_DOUBLES_NULL_PROMPT_SESSION_H_

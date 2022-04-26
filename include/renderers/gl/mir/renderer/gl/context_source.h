@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_RENDERER_GL_CONTEXT_SOURCE_H_

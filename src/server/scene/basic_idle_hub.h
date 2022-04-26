@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: William Wold <william.wold@canonical.com>
  */
 
 #ifndef MIR_SCENE_BASIC_IDLE_HUB_H_
@@ -68,11 +66,9 @@ public:
         std::weak_ptr<IdleStateObserver> const& observer,
         time::Duration timeout) override;
 
-    /// Idle and active notifications will be sent via the specified executor. The executor must not block the calling
-    /// thread.
     void register_interest(
         std::weak_ptr<IdleStateObserver> const& observer,
-        Executor& executor,
+        NonBlockingExecutor& executor,
         time::Duration timeout) override;
 
     void unregister_interest(IdleStateObserver const& observer) override;

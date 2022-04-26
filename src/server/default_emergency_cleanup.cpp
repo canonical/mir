@@ -12,15 +12,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #include "default_emergency_cleanup.h"
 
 void mir::DefaultEmergencyCleanup::add(EmergencyCleanupHandler const& handler)
 {
-    std::lock_guard<std::mutex> lock{handlers_mutex};
+    std::lock_guard lock{handlers_mutex};
 
     last_item()->next.reset(
         new ListItem{std::make_shared<EmergencyCleanupHandler>(handler), nullptr});
@@ -29,7 +27,7 @@ void mir::DefaultEmergencyCleanup::add(EmergencyCleanupHandler const& handler)
 
 void mir::DefaultEmergencyCleanup::add(ModuleEmergencyCleanupHandler handler)
 {
-    std::lock_guard<std::mutex> lock{handlers_mutex};
+    std::lock_guard lock{handlers_mutex};
 
     last_item()->next.reset(new ListItem{std::move(handler), nullptr});
     ++num_handlers;

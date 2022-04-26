@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "miral/keymap.h"
@@ -94,7 +92,7 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
 
     void set_keymap(std::string const& keymap)
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
         auto get_next_token = [km = keymap]() mutable
         {
             auto const i = km.find('+');
@@ -117,7 +115,7 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     void device_added(std::shared_ptr<mir::input::Device> const& device) override
     try
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
 
         if (mir::contains(device->capabilities(), mir::input::DeviceCapability::keyboard))
             add_keyboard(device);
@@ -130,7 +128,7 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
 
     void device_changed(std::shared_ptr<mir::input::Device> const& device) override
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
 
         auto const keyboard = std::find(begin(keyboards), end(keyboards), device);
 
@@ -167,7 +165,7 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     void device_removed(std::shared_ptr<mir::input::Device> const& device) override
     try
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
 
         if (mir::contains(device->capabilities(), mir::input::DeviceCapability::keyboard))
             keyboards.erase(std::find(begin(keyboards), end(keyboards), device));

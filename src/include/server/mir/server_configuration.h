@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 #ifndef MIR_SERVER_CONFIGURATION_H_
 #define MIR_SERVER_CONFIGURATION_H_
@@ -33,6 +31,7 @@ class Authority;
 namespace compositor
 {
 class Compositor;
+class ScreenShooter;
 }
 namespace frontend
 {
@@ -81,6 +80,7 @@ public:
     virtual std::shared_ptr<frontend::Connector> the_xwayland_connector() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
+    virtual std::shared_ptr<compositor::ScreenShooter> the_screen_shooter() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
     virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher() = 0;
     virtual std::shared_ptr<MainLoop> the_main_loop() = 0;

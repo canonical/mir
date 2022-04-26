@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
 #include "touchspot_controller.h"
@@ -65,9 +63,9 @@ public:
         return {position, buffer_->size()};
     }
 
-    std::experimental::optional<geometry::Rectangle> clip_area() const override
+    std::optional<geometry::Rectangle> clip_area() const override
     {
-        return std::experimental::optional<geometry::Rectangle>();
+        return std::optional<geometry::Rectangle>();
     }
     
     float alpha() const override
@@ -88,7 +86,7 @@ public:
 // TouchspotRenderable    
     void move_center_to(geom::Point pos)
     {
-        std::lock_guard<std::mutex> lg(guard);
+        std::lock_guard lg(guard);
         position = pos - geom::Displacement{0.5*touchspot_image.width, 0.5*touchspot_image.height};
     }
 
@@ -125,7 +123,7 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
     bool must_update_scene = false;
 
     {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
     
     unsigned int const num_touches = enabled ? touches.size() : 0;
 
@@ -158,12 +156,12 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
 
 void mi::TouchspotController::enable()
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
     enabled = true;
 }
 
 void mi::TouchspotController::disable()
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
     enabled = false;
 }

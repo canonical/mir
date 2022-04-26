@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "multi_monitor_arbiter.h"
@@ -40,7 +38,7 @@ mc::MultiMonitorArbiter::~MultiMonitorArbiter()
 
 std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(compositor::CompositorID id)
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
+    std::lock_guard lk(mutex);
 
     // If there is no current buffer or there is, but this compositor is already using it...
     if (!current_buffer || is_user_of_current_buffer(id))
@@ -67,7 +65,7 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 
 std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
+    std::lock_guard lk(mutex);
 
     if (!current_buffer)
     {
@@ -87,13 +85,13 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
 
 void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_schedule)
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
+    std::lock_guard lk(mutex);
     schedule = new_schedule;
 }
 
 bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
+    std::lock_guard lk(mutex);
     // If there are scheduled buffers then there is one ready for any compositor
     if (schedule->num_scheduled() > 0)
         return true;
@@ -107,7 +105,7 @@ bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
 
 void mc::MultiMonitorArbiter::advance_schedule()
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
+    std::lock_guard lk(mutex);
     if (schedule->num_scheduled() > 0)
     {
         current_buffer = schedule->next_buffer();

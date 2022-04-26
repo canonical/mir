@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
- *              Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
 #include "mir/glib_main_loop.h"
@@ -55,7 +52,7 @@ public:
 
     bool cancel() override
     {
-        std::lock_guard<std::mutex> lock{alarm_mutex};
+        std::lock_guard lock{alarm_mutex};
 
         gsource.ensure_no_further_dispatch();
         if (state_ ==  State::pending)
@@ -68,7 +65,7 @@ public:
 
     State state() const override
     {
-        std::lock_guard<std::mutex> lock{alarm_mutex};
+        std::lock_guard lock{alarm_mutex};
         return state_;
     }
 
@@ -79,7 +76,7 @@ public:
 
     bool reschedule_for(mir::time::Timestamp time_point) override
     {
-        std::lock_guard<std::mutex> lock{alarm_mutex};
+        std::lock_guard lock{alarm_mutex};
 
         auto old_state = state_;
         state_ = State::pending;
@@ -155,7 +152,7 @@ void mir::GLibMainLoop::stop()
         [this]
         {
             {
-                std::lock_guard<std::mutex> lock{run_on_halt_mutex};
+                std::lock_guard lock{run_on_halt_mutex};
                 running_ = false;
             }
             // We know any other thread sees running == false here, so don't need
@@ -273,7 +270,7 @@ void mir::GLibMainLoop::enqueue_with_guaranteed_execution(mir::ServerAction cons
             {
                 mir::ServerAction action;
                 {
-                    std::lock_guard<std::mutex> lock{run_on_halt_mutex};
+                    std::lock_guard lock{run_on_halt_mutex};
                     action = run_on_halt_queue.front();
                     run_on_halt_queue.pop_front();
                 }
@@ -286,7 +283,7 @@ void mir::GLibMainLoop::enqueue_with_guaranteed_execution(mir::ServerAction cons
         };
 
     {
-        std::unique_lock<std::mutex> lock{run_on_halt_mutex};
+        std::unique_lock lock{run_on_halt_mutex};
 
         if (!running_)
         {
@@ -308,7 +305,7 @@ void mir::GLibMainLoop::enqueue_with_guaranteed_execution(mir::ServerAction cons
 
 void mir::GLibMainLoop::pause_processing_for(void const* owner)
 {
-    std::lock_guard<std::mutex> lock{do_not_process_mutex};
+    std::lock_guard lock{do_not_process_mutex};
 
     auto const iter = std::find(do_not_process.begin(), do_not_process.end(), owner);
     if (iter == do_not_process.end())
@@ -317,7 +314,7 @@ void mir::GLibMainLoop::pause_processing_for(void const* owner)
 
 void mir::GLibMainLoop::resume_processing_for(void const* owner)
 {
-    std::lock_guard<std::mutex> lock{do_not_process_mutex};
+    std::lock_guard lock{do_not_process_mutex};
 
     auto const new_end = std::remove(do_not_process.begin(), do_not_process.end(), owner);
     do_not_process.erase(new_end, do_not_process.end());
@@ -328,7 +325,7 @@ void mir::GLibMainLoop::resume_processing_for(void const* owner)
 
 bool mir::GLibMainLoop::should_process_actions_for(void const* owner)
 {
-    std::lock_guard<std::mutex> lock{do_not_process_mutex};
+    std::lock_guard lock{do_not_process_mutex};
 
     auto const iter = std::find(do_not_process.begin(), do_not_process.end(), owner);
     return iter == do_not_process.end();
@@ -377,9 +374,11 @@ void mir::GLibMainLoop::reprocess_all_sources()
                     detail::add_idle_gsource(main_context, G_PRIORITY_LOW,
                         [&]
                         {
-                            std::lock_guard<std::mutex> lock{reprocessed_mutex};
-                            reprocessed = true;
-                            reprocessed_cv.notify_all();
+                            {
+                                std::lock_guard lock{reprocessed_mutex};
+                                reprocessed = true;
+                            }
+                            reprocessed_cv.notify_one();
                         });
 
                     before_iteration_hook = []{};
@@ -391,7 +390,7 @@ void mir::GLibMainLoop::reprocess_all_sources()
             g_main_context_wakeup(main_context);
         });
 
-    std::unique_lock<std::mutex> reprocessed_lock{reprocessed_mutex};
+    std::unique_lock reprocessed_lock{reprocessed_mutex};
     reprocessed_cv.wait(reprocessed_lock, [&] { return reprocessed == true; });
 }
 
@@ -429,7 +428,7 @@ void mir::GLibMainLoop::execute_with_context_as_thread_default(std::function<voi
                  *      This case is unlikely, and is should be rapidly transient, so just busy-wait :(
                  */
                 {
-                    std::lock_guard<std::mutex> lock{run_on_halt_mutex};
+                    std::lock_guard lock{run_on_halt_mutex};
                     while (!g_main_context_acquire(main_context))
                         std::this_thread::yield();
                 }

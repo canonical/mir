@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
 #include "surface_input_dispatcher.h"
@@ -183,7 +181,7 @@ bool compare_surfaces(std::shared_ptr<mi::Surface> const& input_surface, ms::Sur
 
 void mi::SurfaceInputDispatcher::surface_removed(std::shared_ptr<ms::Surface> surface)
 {
-    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    std::lock_guard lg(dispatcher_mutex);
 
     auto strong_focus = focus_surface.lock();
     if (strong_focus && compare_surfaces(strong_focus, surface.get()))
@@ -333,7 +331,7 @@ void send_motion_event_to_moved_surface(
 
 void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
 {
-    std::lock_guard<std::mutex> lock{dispatcher_mutex};
+    std::lock_guard lock{dispatcher_mutex};
 
     if (!last_pointer_event)
         return;
@@ -364,7 +362,7 @@ void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
 
 void mi::SurfaceInputDispatcher::surface_resized()
 {
-    std::lock_guard<std::mutex> lock{dispatcher_mutex};
+    std::lock_guard lock{dispatcher_mutex};
 
     if (!last_pointer_event)
         return;
@@ -386,7 +384,7 @@ void mi::SurfaceInputDispatcher::surface_resized()
 
 void mi::SurfaceInputDispatcher::device_reset(MirInputDeviceId reset_device_id, std::chrono::nanoseconds /* when */)
 {
-    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    std::lock_guard lg(dispatcher_mutex);
 
     if (!started)
         return;
@@ -479,7 +477,7 @@ mi::SurfaceInputDispatcher::TouchInputState& mi::SurfaceInputDispatcher::ensure_
 bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shared_ptr<MirEvent const> const& event)
 {
     auto const ev = event.get();
-    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    std::lock_guard lg(dispatcher_mutex);
     last_pointer_event = event;
     auto const* input_ev = mir_event_get_input_event(ev);
     auto const* pev = mir_input_event_get_pointer_event(input_ev);
@@ -589,7 +587,7 @@ bool is_gesture_end(MirTouchEvent const* tev)
 
 bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirEvent const* ev)
 {
-    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    std::lock_guard lg(dispatcher_mutex);
     auto const* input_ev = mir_event_get_input_event(ev);
     auto const* tev = mir_input_event_get_touch_event(input_ev);
 
@@ -647,14 +645,14 @@ bool mi::SurfaceInputDispatcher::dispatch(std::shared_ptr<MirEvent const> const&
 
 void mi::SurfaceInputDispatcher::start()
 {
-    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    std::lock_guard lg(dispatcher_mutex);
 
     started = true;
 }
 
 void mi::SurfaceInputDispatcher::stop()
 {
-    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    std::lock_guard lg(dispatcher_mutex);
 
     pointer_state_by_id.clear();
     touch_state_by_id.clear();
@@ -671,25 +669,25 @@ void mi::SurfaceInputDispatcher::set_focus_locked(std::lock_guard<std::mutex> co
 
 void mi::SurfaceInputDispatcher::set_focus(std::shared_ptr<mi::Surface> const& target)
 {
-    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    std::lock_guard lg(dispatcher_mutex);
     set_focus_locked(lg, target);
 }
 
 void mi::SurfaceInputDispatcher::clear_focus()
 {
-    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    std::lock_guard lg(dispatcher_mutex);
     set_focus_locked(lg, nullptr);
 }
 
 void mir::input::SurfaceInputDispatcher::set_drag_and_drop_handle(std::vector<uint8_t> const& handle)
 {
-    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    std::lock_guard lg(dispatcher_mutex);
     drag_and_drop_handle = handle;
 }
 
 void mir::input::SurfaceInputDispatcher::clear_drag_and_drop_handle()
 {
-    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    std::lock_guard lg(dispatcher_mutex);
     drag_and_drop_handle.clear();
 }
 

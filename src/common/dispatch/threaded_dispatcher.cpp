@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "mir/dispatch/threaded_dispatcher.h"
@@ -68,7 +66,7 @@ public:
                                                      std::system_category(),
                                                      "Failed to clear shutdown notification"}));
         }
-        std::lock_guard<decltype(running_flag_guard)> lock{running_flag_guard};
+        std::lock_guard lock{running_flag_guard};
         *running_flags.at(std::this_thread::get_id()) = false;
 
         return true;
@@ -94,7 +92,7 @@ public:
         // in client code that we don't control.
         //
         // If the client is entirely unresponsive for a whole minute, it deserves to die.
-        std::unique_lock<decltype(terminating_thread_mutex)> lock{terminating_thread_mutex};
+        std::unique_lock lock{terminating_thread_mutex};
         if (!thread_terminating.wait_for (lock,
                                           std::chrono::seconds{60},
                                           [this]() { return !terminating_threads.empty(); }))
@@ -111,7 +109,7 @@ public:
     {
         eventfd_t thread_count;
         {
-            std::lock_guard<std::mutex> lock(running_flag_guard);
+            std::lock_guard lock(running_flag_guard);
             thread_count = running_flags.size();
             shutting_down = true;
         }
@@ -125,7 +123,7 @@ public:
 
     void register_thread(bool& run_flag)
     {
-        std::lock_guard<decltype(running_flag_guard)> lock{running_flag_guard};
+        std::lock_guard lock{running_flag_guard};
 
         running_flags[std::this_thread::get_id()] = &run_flag;
         if (shutting_down)
@@ -142,12 +140,12 @@ public:
     void unregister_thread()
     {
         {
-            std::lock_guard<decltype(terminating_thread_mutex)> lock{terminating_thread_mutex};
+            std::lock_guard lock{terminating_thread_mutex};
             terminating_threads.push_back(std::this_thread::get_id());
         }
         thread_terminating.notify_one();
         {
-            std::lock_guard<decltype(running_flag_guard)> lock{running_flag_guard};
+            std::lock_guard lock{running_flag_guard};
 
             if (running_flags.erase(std::this_thread::get_id()) != 1)
             {
@@ -243,7 +241,7 @@ md::ThreadedDispatcher::ThreadedDispatcher(std::string const& name,
 
 md::ThreadedDispatcher::~ThreadedDispatcher() noexcept
 {
-    std::lock_guard<decltype(thread_pool_mutex)> lock{thread_pool_mutex};
+    std::lock_guard lock{thread_pool_mutex};
 
     thread_exiter->terminate_all_threads_async();
 
@@ -269,7 +267,7 @@ md::ThreadedDispatcher::~ThreadedDispatcher() noexcept
 
 void md::ThreadedDispatcher::add_thread()
 {
-    std::lock_guard<decltype(thread_pool_mutex)> lock{thread_pool_mutex};
+    std::lock_guard lock{thread_pool_mutex};
     mir::SignalBlocker blocker;
     threadpool.emplace_back(&dispatch_loop, name_base, thread_exiter, dispatcher, exception_handler);
 }
@@ -279,7 +277,7 @@ void md::ThreadedDispatcher::remove_thread()
     auto terminated_thread_id = thread_exiter->terminate_one_thread();
 
     // Find that thread in our vector, join() it, then remove it.
-    std::lock_guard<decltype(thread_pool_mutex)> threadpool_lock{thread_pool_mutex};
+    std::lock_guard threadpool_lock{thread_pool_mutex};
 
     auto dying_thread = std::find_if(threadpool.begin(),
                                      threadpool.end(),

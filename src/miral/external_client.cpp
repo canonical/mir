@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "miral/external_client.h"
@@ -52,7 +50,7 @@ void parse_env(std::string const& value, miral::AppEnvironment& map)
 
         if (key[0] == '-')
         {
-            map[key.substr(1)] = std::experimental::nullopt;
+            map[key.substr(1)] = std::nullopt;
         }
         else
         {

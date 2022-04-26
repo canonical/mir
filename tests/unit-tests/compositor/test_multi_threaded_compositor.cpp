@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #include "src/server/compositor/multi_threaded_compositor.h"
@@ -102,7 +100,7 @@ public:
 
     void add_observer(std::shared_ptr<ms::Observer> const& observer_) override
     {
-        std::lock_guard<std::mutex> lock{observer_mutex};
+        std::lock_guard lock{observer_mutex};
 
         if (throw_on_add_observer_)
             BOOST_THROW_EXCEPTION(std::runtime_error(""));
@@ -113,14 +111,14 @@ public:
 
     void remove_observer(std::weak_ptr<ms::Observer> const& /* observer */) override
     {
-        std::lock_guard<std::mutex> lock{observer_mutex};
+        std::lock_guard lock{observer_mutex};
         observer.reset();
     }
 
     void emit_change_event()
     {
         {
-            std::lock_guard<std::mutex> lock{observer_mutex};
+            std::lock_guard lock{observer_mutex};
 
             // Any old event will do.
             if (observer)
@@ -188,7 +186,7 @@ public:
 
     void mark_render_buffer(mg::DisplayBuffer& display_buffer)
     {
-        std::lock_guard<std::mutex> lk{m};
+        std::lock_guard lk{m};
 
         if (records.find(&display_buffer) == records.end())
             records[&display_buffer] = Record(0, std::unordered_set<std::thread::id>());
@@ -199,7 +197,7 @@ public:
 
     bool enough_records_gathered(unsigned int nbuffers, unsigned int min_record_count = 1000)
     {
-        std::lock_guard<std::mutex> lk{m};
+        std::lock_guard lk{m};
 
         if (records.size() < nbuffers)
             return false;
@@ -248,7 +246,7 @@ public:
             unsigned int min,
             unsigned int max = ~0u)
     {
-        std::lock_guard<std::mutex> lk{m};
+        std::lock_guard lk{m};
 
         if (records.size() < nbuffers)
             return (min == 0 && max == 0);
@@ -328,7 +326,7 @@ public:
         auto raw = new RecordingDisplayBufferCompositor{
             [this]()
             {
-                std::lock_guard<std::mutex> lock{thread_names_mutex};
+                std::lock_guard lock{thread_names_mutex};
                 thread_names.emplace_back(mt::current_thread_name());
             }};
         return std::unique_ptr<RecordingDisplayBufferCompositor>(raw);
@@ -336,7 +334,7 @@ public:
 
     size_t num_thread_names_gathered()
     {
-        std::lock_guard<std::mutex> lock{thread_names_mutex};
+        std::lock_guard lock{thread_names_mutex};
         return thread_names.size();
     }
 

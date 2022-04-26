@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Author: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #ifndef _GNU_SOURCE
@@ -409,9 +407,15 @@ int main()
 
     wl_output_add_listener(globals->output, &output_listener, NULL);
 
-    signal(SIGINT, shutdown);
-    signal(SIGTERM, shutdown);
-    signal(SIGHUP, shutdown);
+    struct sigaction sig_handler_new;
+    sigfillset(&sig_handler_new.sa_mask);
+    sig_handler_new.sa_flags = 0;
+    sig_handler_new.sa_handler = shutdown;
+
+    sigaction(SIGINT, &sig_handler_new, NULL);
+    sigaction(SIGTERM, &sig_handler_new, NULL);
+    sigaction(SIGHUP, &sig_handler_new, NULL);
+
     running = 1;
 
     while (wl_display_dispatch(display) && running)

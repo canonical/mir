@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "mir/test/signal.h"
@@ -22,20 +20,22 @@ namespace mt = mir::test;
 
 void mt::Signal::raise()
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-    signalled = true;
+    {
+        std::lock_guard lock(mutex);
+        signalled = true;
+    }
     cv.notify_all();
 }
 
 bool mt::Signal::raised()
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard lock(mutex);
     return signalled;
 }
 
 void mt::Signal::wait()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
+    std::unique_lock lock(mutex);
     if (!signalled)
     {
         cv.wait(lock, [this]() { return signalled; });
@@ -44,6 +44,6 @@ void mt::Signal::wait()
 
 void mt::Signal::reset()
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard lock(mutex);
     signalled = false;
 }

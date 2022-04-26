@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #include "basic_idle_handler.h"
@@ -67,7 +65,7 @@ public:
         return {{-coverage_size / 2, -coverage_size / 2}, {coverage_size, coverage_size}};
     }
 
-    auto clip_area() const -> std::experimental::optional<geom::Rectangle> override
+    auto clip_area() const -> std::optional<geom::Rectangle> override
     {
         return {};
     }
@@ -164,13 +162,13 @@ msh::BasicIdleHandler::BasicIdleHandler(
 
 msh::BasicIdleHandler::~BasicIdleHandler()
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     clear_observers(lock);
 }
 
 void msh::BasicIdleHandler::set_display_off_timeout(std::optional<time::Duration> timeout)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     if (timeout == current_off_timeout)
     {
         return;

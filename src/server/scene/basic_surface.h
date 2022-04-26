@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
 #ifndef MIR_SCENE_BASIC_SURFACE_H_
@@ -151,8 +149,8 @@ public:
     auto depth_layer() const -> MirDepthLayer override;
     void set_depth_layer(MirDepthLayer depth_layer) override;
 
-    std::experimental::optional<geometry::Rectangle> clip_area() const override;
-    void set_clip_area(std::experimental::optional<geometry::Rectangle> const& area) override;
+    std::optional<geometry::Rectangle> clip_area() const override;
+    void set_clip_area(std::optional<geometry::Rectangle> const& area) override;
 
     auto focus_state() const -> MirWindowFocusState override;
     void set_focus_state(MirWindowFocusState new_state) override;
@@ -212,7 +210,7 @@ private:
     std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;
 
     MirDepthLayer depth_layer_ = mir_depth_layer_application;
-    std::experimental::optional<geometry::Rectangle> clip_area_;
+    std::optional<geometry::Rectangle> clip_area_;
     std::string application_id_;
 
     std::weak_ptr<Session> session_;

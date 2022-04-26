@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #ifndef MIR_LINEARISING_EXECUTOR_H_
@@ -32,7 +30,7 @@ namespace mir
  *      linearising_executor.spawn(B) either A() happens-before B() or B() happens-before A().
  * 3.   Work is deferred; linearising_executor.spawn(A) will not block on the execution of A
  */
-extern Executor& linearising_executor;
+extern NonBlockingExecutor& linearising_executor;
 }
 
 

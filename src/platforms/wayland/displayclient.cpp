@@ -385,14 +385,16 @@ void mgw::DisplayClient::Output::swap_buffers()
 
         void frame_done(wl_callback*, uint32_t)
         {
-            std::lock_guard<decltype(mutex)> lock{mutex};
-            posted = true;
-            cv.notify_all();
+            {
+                std::lock_guard lock{mutex};
+                posted = true;
+            }
+            cv.notify_one();
         }
 
         void wait_for_done()
         {
-            std::unique_lock<decltype(mutex)> lock{mutex};
+            std::unique_lock lock{mutex};
             cv.wait_for(lock, std::chrono::milliseconds{100}, [this]{ return posted; });
         }
 
@@ -498,7 +500,7 @@ mgw::DisplayClient::~DisplayClient()
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
     {
-        std::lock_guard<decltype(outputs_mutex)> lock{outputs_mutex};
+        std::lock_guard lock{outputs_mutex};
         bound_outputs.clear();
     }
     registry.reset();
@@ -540,7 +542,7 @@ void mgw::DisplayClient::new_global(
     {
         auto output =
             static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, std::min(version, 2u)));
-        std::lock_guard<decltype(self->outputs_mutex)> lock{self->outputs_mutex};
+        std::lock_guard lock{self->outputs_mutex};
         self->bound_outputs.insert(
             std::make_pair(
                 id,
@@ -563,7 +565,7 @@ void mgw::DisplayClient::remove_global(
 {
     DisplayClient* self = static_cast<decltype(self)>(data);
 
-    std::lock_guard<decltype(self->outputs_mutex)> lock{self->outputs_mutex};
+    std::lock_guard lock{self->outputs_mutex};
     auto const output = self->bound_outputs.find(id);
     if (output != self->bound_outputs.end())
     {
@@ -632,7 +634,7 @@ void mgw::DisplayClient::pointer_enter(
     wl_fixed_t /*x*/,
     wl_fixed_t /*y*/)
 {
-    std::lock_guard<decltype(outputs_mutex)> lock{outputs_mutex};
+    std::lock_guard lock{outputs_mutex};
 
     for (auto const& out : bound_outputs)
     {
@@ -700,7 +702,7 @@ void mgw::DisplayClient::touch_down(
     wl_fixed_t /*x*/,
     wl_fixed_t /*y*/)
 {
-    std::lock_guard<decltype(outputs_mutex)> lock{outputs_mutex};
+    std::lock_guard lock{outputs_mutex};
 
     for (auto const& out : bound_outputs)
     {
@@ -883,7 +885,7 @@ auto mgw::DisplayClient::display_configuration() const -> std::unique_ptr<Displa
     std::vector<DisplayConfigurationOutput> outputs;
 
     {
-        std::lock_guard<decltype(outputs_mutex)> lock{outputs_mutex};
+        std::lock_guard lock{outputs_mutex};
         for (auto const& output : bound_outputs)
         {
             outputs.push_back(output.second->dcout);
@@ -895,7 +897,7 @@ auto mgw::DisplayClient::display_configuration() const -> std::unique_ptr<Displa
 
 void mgw::DisplayClient::for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f)
 {
-    std::lock_guard<decltype(outputs_mutex)> lock{outputs_mutex};
+    std::lock_guard lock{outputs_mutex};
     for (auto& output : bound_outputs)
     {
         f(*output.second);

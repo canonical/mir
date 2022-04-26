@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "wayland_executor.h"
@@ -74,7 +72,7 @@ public:
             return;
         }
 
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (state == ExecutionState::Running)
         {
             workqueue.emplace_back(std::move(work));
@@ -85,7 +83,7 @@ public:
 
     void enqueue_termination(std::function<void()>&& terminator)
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (state == ExecutionState::Running)
         {
             workqueue.emplace_front(std::move(terminator));
@@ -96,7 +94,7 @@ public:
 
     std::function<void()> get_work()
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (!workqueue.empty())
         {
             auto const work = std::move(workqueue.front());
@@ -106,9 +104,9 @@ public:
         return {};
     }
 
-    std::unique_lock<std::mutex> drain()
+    auto drain()
     {
-        std::unique_lock<std::mutex> lock{mutex};
+        std::unique_lock lock{mutex};
 
         if (state == ExecutionState::TerminationRequested)
         {

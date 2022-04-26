@@ -28,6 +28,7 @@ ADD_LIBRARY(
 
   renderer.cpp
   renderer_factory.cpp
+  basic_buffer_render_target.cpp
 )
 
 target_link_libraries(mirrenderergl

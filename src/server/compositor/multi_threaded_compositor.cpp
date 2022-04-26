@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #include "multi_threaded_compositor.h"
@@ -31,7 +29,7 @@
 #include "mir/raii.h"
 #include "mir/unwind_helpers.h"
 #include "mir/thread_name.h"
-#include "mir/system_executor.h"
+#include "mir/thread_pool_executor.h"
 
 #include <thread>
 #include <chrono>
@@ -120,7 +118,7 @@ public:
 
         try
         {
-            std::unique_lock<std::mutex> lock{run_mutex};
+            std::unique_lock lock{run_mutex};
             while (running)
             {
                 /* Wait until compositing has been scheduled or we are stopped */
@@ -199,18 +197,19 @@ public:
 
     void schedule_compositing(int num_frames)
     {
-        std::lock_guard<std::mutex> lock{run_mutex};
+        std::unique_lock lock{run_mutex};
 
         if (num_frames > frames_scheduled)
         {
             frames_scheduled = num_frames;
+            lock.unlock();
             run_cv.notify_one();
         }
     }
 
     void schedule_compositing(int num_frames, geometry::Rectangle const& damage)
     {
-        std::lock_guard<std::mutex> lock{run_mutex};
+        std::unique_lock lock{run_mutex};
         bool took_damage = not_posted_yet;
 
         group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
@@ -219,14 +218,17 @@ public:
         if (took_damage && num_frames > frames_scheduled)
         {
             frames_scheduled = num_frames;
+            lock.unlock();
             run_cv.notify_one();
         }
     }
 
     void stop()
     {
-        std::lock_guard<std::mutex> lock{run_mutex};
-        running = false;
+        {
+            std::lock_guard lock{run_mutex};
+            running = false;
+        }
         run_cv.notify_one();
     }
 
@@ -379,7 +381,7 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
             display_buffer_compositor_factory, group, scene, display_listener,
             fixed_composite_delay, report);
 
-        mir::system_executor.spawn(std::ref(*thread_functor));
+        mir::thread_pool_executor.spawn(std::ref(*thread_functor));
         thread_functors.push_back(std::move(thread_functor));
     });
 

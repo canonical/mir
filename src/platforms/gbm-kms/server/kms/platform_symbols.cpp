@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #define MIR_LOG_COMPONENT "gbm-kms"
@@ -50,7 +48,6 @@ namespace mo = mir::options;
 namespace
 {
 char const* bypass_option_name{"bypass"};
-char const* host_socket{"host-socket"};
 
 }
 
@@ -114,16 +111,14 @@ public:
 };
 }
 
-mg::PlatformPriority probe_display_platform(
+auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const& console,
-    mo::ProgramOption const& options)
+    std::shared_ptr<mir::udev::Context> const& udev,
+    mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
 
-    auto nested = options.is_set(host_socket);
     mgg::Quirks quirks{options};
-
-    auto udev = std::make_shared<mir::udev::Context>();
 
     mir::udev::Enumerator drm_devices{udev};
     drm_devices.match_subsystem("drm");
@@ -133,7 +128,7 @@ mg::PlatformPriority probe_display_platform(
     if (drm_devices.begin() == drm_devices.end())
     {
         mir::log_info("Unsupported: No DRM devices detected");
-        return mg::PlatformPriority::unsupported;
+        return {};
     }
 
     // We also require GBM EGL platform
@@ -142,7 +137,7 @@ mg::PlatformPriority probe_display_platform(
     {
         // Doesn't support EGL client extensions; Mesa does, so this is unlikely to be gbm-kms.
         mir::log_info("Unsupported: EGL platform does not support client extensions.");
-        return mg::PlatformPriority::unsupported;
+        return {};
     }
     if (strstr(client_extensions, "EGL_KHR_platform_gbm") == nullptr)
     {
@@ -153,11 +148,13 @@ mg::PlatformPriority probe_display_platform(
         {
             mir::log_info(
                 "Unsupported: EGL platform supports neither EGL_KHR_platform_gbm nor EGL_MESA_platform_gbm");
-            return mg::PlatformPriority::unsupported;
+            return {};
         }
     }
 
+
     // Check for suitability
+    std::vector<mg::SupportedDevice> supported_devices;
     mir::Fd tmp_fd;
     for (auto& device : drm_devices)
     {
@@ -180,12 +177,18 @@ mg::PlatformPriority probe_display_platform(
 
         try
         {
-            auto maximum_suitability = mg::PlatformPriority::best;
-
             // Rely on the console handing us a DRM master...
             auto const device_cleanup = console->acquire_device(
                 major(devnum), minor(devnum),
                 std::make_unique<mgc::OneShotDeviceObserver>(tmp_fd)).get();
+
+            // We have a device. We don't know if it works yet, but it's a device we *could* support
+            supported_devices.emplace_back(
+                mg::SupportedDevice{
+                    device.clone(),
+                    mg::PlatformPriority::unsupported,
+                    nullptr
+                });
 
             if (tmp_fd != mir::Fd::invalid)
             {
@@ -218,13 +221,16 @@ mg::PlatformPriority probe_display_platform(
                     mir::log_warning(
                         "Failed to query BusID for device %s; cannot check if KMS is available",
                         device.devnode());
-                    maximum_suitability = mg::PlatformPriority::supported;
+                    supported_devices.back().support_level = mg::PlatformPriority::supported;
                 }
                 else
                 {
                     switch (auto err = -drmCheckModesettingSupported(busid.get()))
                     {
-                    case 0: break;
+                    case 0:
+                        // We've got a DRM device that supports KMS. Full marks!
+                        supported_devices.back().support_level = mg::PlatformPriority::best;
+                        break;
 
                     case ENOSYS:
                         if (getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") == nullptr)
@@ -238,7 +244,7 @@ mg::PlatformPriority probe_display_platform(
                         mir::log_warning(
                             "Failed to detect whether device %s supports KMS, continuing with lower confidence",
                             device.devnode());
-                        maximum_suitability = mg::PlatformPriority::supported;
+                        supported_devices.back().support_level = mg::PlatformPriority::supported;
                         break;
 
                     default:
@@ -246,11 +252,9 @@ mg::PlatformPriority probe_display_platform(
                                          "but continuing anyway", strerror(err), err);
                         mir::log_warning("Please file a bug at "
                                          "https://github.com/MirServer/mir/issues containing this message");
-                        maximum_suitability = mg::PlatformPriority::supported;
+                        supported_devices.back().support_level = mg::PlatformPriority::supported;
                     }
                 }
-
-                return maximum_suitability;
             }
         }
         catch (std::exception const& e)
@@ -263,19 +267,13 @@ mg::PlatformPriority probe_display_platform(
         }
     }
 
-    if (nested)
-        return mg::PlatformPriority::supported;
-
-    /*
-     * We haven't found any suitable devices. We've complained above about
-     * the reason, so we don't have to pretend to be supported.
-     */
-    return mg::PlatformPriority::unsupported;
+    return supported_devices;
 }
 
-mg::PlatformPriority probe_rendering_platform(
+auto probe_rendering_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mir::options::ProgramOption const& options)
+    std::shared_ptr<mir::udev::Context> const&,
+    mir::options::ProgramOption const& options) -> std::vector<mir::graphics::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
 
@@ -285,13 +283,13 @@ mg::PlatformPriority probe_rendering_platform(
     mir::udev::Enumerator drm_devices{udev};
     drm_devices.match_subsystem("drm");
     drm_devices.match_sysname("card[0-9]*");
-    drm_devices.match_sysname("render[0-9]*");
+    drm_devices.match_sysname("renderD[0-9]*");
     drm_devices.scan_devices();
 
     if (drm_devices.begin() == drm_devices.end())
     {
         mir::log_info("Unsupported: No DRM devices detected");
-        return mg::PlatformPriority::unsupported;
+        return {};
     }
 
     // We also require GBM EGL platform
@@ -300,7 +298,7 @@ mg::PlatformPriority probe_rendering_platform(
     {
         // Doesn't support EGL client extensions; Mesa does, so this is unlikely to be gbm-kms.
         mir::log_info("Unsupported: EGL platform does not support client extensions.");
-        return mg::PlatformPriority::unsupported;
+        return {};
     }
     if (strstr(client_extensions, "EGL_KHR_platform_gbm") == nullptr)
     {
@@ -311,14 +309,12 @@ mg::PlatformPriority probe_rendering_platform(
         {
             mir::log_info(
                 "Unsupported: EGL platform supports neither EGL_KHR_platform_gbm nor EGL_MESA_platform_gbm");
-            return mg::PlatformPriority::unsupported;
+            return {};
         }
     }
 
     // Check for suitability
-    // The implementation claims to support the GBM EGL platform, so it *should*
-    // be at least minimally functional…
-    auto maximum_suitability = mg::PlatformPriority::supported;
+    std::vector<mg::SupportedDevice> supported_devices;
     for (auto& device : drm_devices)
     {
         if (quirks.should_skip(device))
@@ -343,6 +339,28 @@ mg::PlatformPriority probe_rendering_platform(
             // Open the device node directly; we don't need DRM master
             mir::Fd tmp_fd{::open(device_node, O_RDWR | O_CLOEXEC)};
 
+            /* We prefer render nodes for the RenderingPlatform.
+             * Check if this device has an associated render node,
+             * and skip it if it does.
+             */
+            std::unique_ptr<char, std::function<void(char*)>> const render_node{
+                drmGetRenderDeviceNameFromFd(tmp_fd),
+                &free
+            };
+            if (render_node)
+            {
+                // We might already be probing a render node
+                if (strcmp(device_node, render_node.get()))
+                {
+                    // The render node of this device is not *this* device,
+                    // so let's pass and let us open the render node later.
+                    continue;
+                }
+            }
+
+            // We know we've got a device that we *might* be able to use
+            // Mark it as “supported” because we should *at least* be able to get a software context on it.
+            supported_devices.emplace_back(mg::SupportedDevice{device.clone(), mg::PlatformPriority::supported, nullptr});
             if (tmp_fd != mir::Fd::invalid)
             {
                 mgg::helpers::GBMHelper gbm_device{tmp_fd};
@@ -367,11 +385,13 @@ mg::PlatformPriority probe_rendering_platform(
                     strlen("llvmpipe")) == 0)
                 {
                     mir::log_info("Detected software renderer: %s", renderer_string);
+                    // Leave the priority at ::supported; if we've got a software renderer then
+                    // we *don't* support *this* device very well.
                 }
                 else
                 {
-                    // If we're good on *any* device, we're best.
-                    return mg::PlatformPriority::best;
+                    // We've got a non-software renderer. That's our cue!
+                    supported_devices.back().support_level = mg::PlatformPriority::best;
                 }
             }
         }
@@ -385,7 +405,7 @@ mg::PlatformPriority probe_rendering_platform(
         }
     }
 
-    return maximum_suitability;
+    return supported_devices;
 }
 
 namespace

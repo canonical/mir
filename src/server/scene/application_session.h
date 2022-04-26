@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: Robert Carr <racarr@canonical.com>
  */
 
 #ifndef MIR_SCENE_APPLICATION_SESSION_H_

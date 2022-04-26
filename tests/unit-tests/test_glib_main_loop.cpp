@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
- *              Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
 #include "mir/glib_main_loop.h"
@@ -919,20 +916,22 @@ class Counter
 public:
     int operator++()
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        cv.notify_one();
+        {
+            std::lock_guard lock(mutex);
+            cv.notify_one();
+        }
         return ++counter;
     }
 
     bool wait_for(std::chrono::milliseconds const& delay, int expected)
     {
-        std::unique_lock<decltype(mutex)> lock(mutex);
+        std::unique_lock lock(mutex);
         return cv.wait_for(lock, delay, [&]{ return counter == expected;});
     }
 
     operator int() const
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
+        std::lock_guard lock(mutex);
         return counter;
     }
 

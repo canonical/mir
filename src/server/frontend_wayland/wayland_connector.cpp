@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "wayland_connector.h"
@@ -502,6 +500,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<ms::Clipboard> const& clipboard,
     std::shared_ptr<ms::TextInputHub> const& text_input_hub,
     std::shared_ptr<ms::IdleHub> const& idle_hub,
+    std::shared_ptr<mc::ScreenShooter> const& screen_shooter,
     std::shared_ptr<MainLoop> const& main_loop,
     bool arw_socket,
     std::unique_ptr<WaylandExtensions> extensions_,
@@ -576,7 +575,9 @@ mf::WaylandConnector::WaylandConnector(
         output_manager.get(),
         surface_stack,
         input_device_registry,
-        composite_event_filter});
+        composite_event_filter,
+        allocator,
+        screen_shooter});
 
     wl_display_init_shm(display.get());
 

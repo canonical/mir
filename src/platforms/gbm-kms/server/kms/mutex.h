@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #ifndef MIR_MUTEX_H_
@@ -91,7 +89,7 @@ public:
      */
     MutexGuard<Guarded> lock()
     {
-        return MutexGuard<Guarded>{std::unique_lock<std::mutex>{mutex}, value};
+        return MutexGuard<Guarded>{std::unique_lock{mutex}, value};
     }
 
 private:

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_RENDERER_GL_RENDERER_H_
@@ -42,7 +40,7 @@ namespace gl
 class CurrentRenderTarget
 {
 public:
-    CurrentRenderTarget(graphics::DisplayBuffer* display_buffer);
+    CurrentRenderTarget(RenderTarget& render_target);
     ~CurrentRenderTarget();
 
     void ensure_current();
@@ -56,7 +54,8 @@ private:
 class Renderer : public renderer::Renderer
 {
 public:
-    Renderer(graphics::DisplayBuffer& display_buffer);
+    /// render_target is owned externally, and must be kept alive as long as this object.
+    Renderer(RenderTarget& render_target);
     virtual ~Renderer();
 
     // These are called with a valid GL context:

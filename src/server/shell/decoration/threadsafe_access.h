@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: William Wold <william.wold@canonical.com>
  */
 
 #ifndef MIR_SHELL_DECORATION_THREADSAFE_ACCESS_H_
@@ -24,7 +22,7 @@
 
 #include <memory>
 #include <mutex>
-#include <experimental/optional>
+#include <optional>
 
 namespace mir
 {
@@ -51,7 +49,7 @@ public:
 
     void initialize(T* t)
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (target)
             fatal_error("ThreadsafeAccess initialized multiple times");
         target = t;
@@ -61,7 +59,7 @@ public:
     {
         executor->spawn([self = this->shared_from_this(), work]()
             {
-                std::lock_guard<std::mutex> lock{self->mutex};
+                std::lock_guard lock{self->mutex};
                 if (self->target)
                     work(self->target.value());
             });
@@ -69,13 +67,13 @@ public:
 
     void invalidate()
     {
-        std::lock_guard<std::mutex> lock{mutex};
-        target = std::experimental::nullopt;
+        std::lock_guard lock{mutex};
+        target = std::nullopt;
     }
 
 private:
     std::mutex mutex;
-    std::experimental::optional<T*> target;
+    std::optional<T*> target;
     std::shared_ptr<Executor> executor;
 };
 }

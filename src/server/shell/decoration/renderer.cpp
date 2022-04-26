@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: William Wold <william.wold@canonical.com>
  */
 
 
@@ -254,7 +252,7 @@ std::weak_ptr<msd::Renderer::Text> msd::Renderer::Text::singleton;
 
 auto msd::Renderer::Text::instance() -> std::shared_ptr<Text>
 {
-    std::lock_guard<std::mutex> lock{static_mutex};
+    std::lock_guard lock{static_mutex};
     auto shared = singleton.lock();
     if (!shared)
     {
@@ -312,7 +310,7 @@ void msd::Renderer::Text::Impl::render(
     if (!area(buf_size) || height_pixels <= geom::Height{})
         return;
 
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     if (!library || !face)
     {
@@ -540,10 +538,10 @@ void msd::Renderer::update_state(WindowState const& window_state, InputState con
     }
 }
 
-auto msd::Renderer::render_titlebar() -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
+auto msd::Renderer::render_titlebar() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
     if (!area(titlebar_size))
-        return std::experimental::nullopt;
+        return std::nullopt;
 
     if (!titlebar_pixels)
     {
@@ -613,26 +611,26 @@ auto msd::Renderer::render_titlebar() -> std::experimental::optional<std::shared
     return make_buffer(titlebar_pixels.get(), titlebar_size);
 }
 
-auto msd::Renderer::render_left_border() -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
+auto msd::Renderer::render_left_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
     if (!area(left_border_size))
-        return std::experimental::nullopt;
+        return std::nullopt;
     update_solid_color_pixels();
     return make_buffer(solid_color_pixels.get(), left_border_size);
 }
 
-auto msd::Renderer::render_right_border() -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
+auto msd::Renderer::render_right_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
     if (!area(right_border_size))
-        return std::experimental::nullopt;
+        return std::nullopt;
     update_solid_color_pixels();
     return make_buffer(solid_color_pixels.get(), right_border_size);
 }
 
-auto msd::Renderer::render_bottom_border() -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
+auto msd::Renderer::render_bottom_border() -> std::optional<std::shared_ptr<mg::Buffer>>
 {
     if (!area(bottom_border_size))
-        return std::experimental::nullopt;
+        return std::nullopt;
     update_solid_color_pixels();
     return make_buffer(solid_color_pixels.get(), bottom_border_size);
 }
@@ -658,12 +656,12 @@ void msd::Renderer::update_solid_color_pixels()
 
 auto msd::Renderer::make_buffer(
     uint32_t const* pixels,
-    geometry::Size size) -> std::experimental::optional<std::shared_ptr<mg::Buffer>>
+    geometry::Size size) -> std::optional<std::shared_ptr<mg::Buffer>>
 {
     if (!area(size))
     {
         log_warning("Failed to draw SSD: tried to create zero size buffer");
-        return std::experimental::nullopt;
+        return std::nullopt;
     }
 
     try
@@ -678,7 +676,7 @@ auto msd::Renderer::make_buffer(
     catch (std::runtime_error const&)
     {
         log_warning("Failed to draw SSD: software buffer not a pixel source");
-        return std::experimental::nullopt;
+        return std::nullopt;
     }
 }
 

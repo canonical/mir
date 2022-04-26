@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #include "mir_test_framework/stub_input_platform.h"
@@ -40,14 +38,14 @@ mtf::StubInputPlatform::StubInputPlatform(
 
 mtf::StubInputPlatform::~StubInputPlatform()
 {
-    std::lock_guard<decltype(device_store_guard)> lk{device_store_guard};
+    std::lock_guard lk{device_store_guard};
     device_store.clear();
     stub_input_platform = nullptr;
 }
 
 void mtf::StubInputPlatform::start()
 {
-    std::lock_guard<decltype(device_store_guard)> lk{device_store_guard};
+    std::lock_guard lk{device_store_guard};
     for (auto const& dev : device_store)
     {
         auto device = dev.lock();
@@ -63,7 +61,7 @@ std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::dispatchabl
 
 void mtf::StubInputPlatform::stop()
 {
-    std::lock_guard<decltype(device_store_guard)> lk{device_store_guard};
+    std::lock_guard lk{device_store_guard};
     for (auto const& dev : device_store)
     {
         auto device = dev.lock();
@@ -85,7 +83,7 @@ void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const&
     auto input_platform = stub_input_platform.load();
     if (!input_platform)
     {
-        std::lock_guard<decltype(device_store_guard)> lk{device_store_guard};
+        std::lock_guard lk{device_store_guard};
         device_store.push_back(dev);
         return;
     }
@@ -103,7 +101,7 @@ void mtf::StubInputPlatform::remove(std::shared_ptr<mir::input::InputDevice> con
     if (!input_platform)
         BOOST_THROW_EXCEPTION(std::runtime_error("No stub input platform available"));
 
-    std::lock_guard<decltype(device_store_guard)> lk{device_store_guard};
+    std::lock_guard lk{device_store_guard};
     device_store.erase(
         std::remove_if(begin(device_store),
                        end(device_store),

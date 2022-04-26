@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "mir/graphics/platform.h"
@@ -140,20 +138,24 @@ std::string describe_probe_result(mg::PlatformPriority priority)
     return std::string{"BEST + "} + std::to_string(priority - mg::PlatformPriority::best);
 }
 
-bool test_probe(mir::SharedLibrary const& dso, MinimalServerEnvironment& config)
+auto test_probe(mir::SharedLibrary const& dso, MinimalServerEnvironment& config) -> std::vector<mg::SupportedDevice>
 {
     try
     {
         auto probe_fn =
             dso.load_function<mg::PlatformProbe>("probe_graphics_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
-        auto const result = probe_fn(
+        auto result = probe_fn(
             config.console_services(),
+            std::make_shared<mir::udev::Context>(),
             *std::dynamic_pointer_cast<mir::options::ProgramOption>(config.options()));
 
-        std::cout << "Probe result: " << describe_probe_result(result) << "(" << result << ")" << std::endl;
+        for (auto const& device : result)
+        {
+            std::cout << "Probe result: " << describe_probe_result(device.support_level) << "(" << device.support_level << ")" << std::endl;
+        }
 
-        return result > mg::PlatformPriority::dummy;
+        return result;
     }
     catch (...)
     {
@@ -398,7 +400,13 @@ void basic_software_buffer_drawing(
         display,
         [&renderers, &factory, &min_height, &min_width](mg::DisplayBuffer& db)
         {
-            renderers.push_back(factory.create_renderer_for(db));
+            auto const render_target = dynamic_cast<mir::renderer::gl::RenderTarget*>(db.native_display_buffer());
+            if (!render_target)
+            {
+                BOOST_THROW_EXCEPTION(std::logic_error("DisplayBuffer does not support GL rendering"));
+            }
+            renderers.push_back(factory.create_renderer_for(*render_target));
+            renderers.back()->set_viewport(db.view_area());
             min_height = std::min(min_height, db.view_area().bottom().as_int());
             min_width = std::min(min_width, db.view_area().right().as_int());
         });
@@ -444,9 +452,9 @@ void basic_software_buffer_drawing(
             return mg::contains_alpha(buffer_->pixel_format());
         }
 
-        auto clip_area() const -> std::experimental::optional<mir::geometry::Rectangle> override
+        auto clip_area() const -> std::optional<mir::geometry::Rectangle> override
         {
-            return std::experimental::optional<mir::geometry::Rectangle>{};
+            return std::optional<mir::geometry::Rectangle>{};
         }
 
         void set_position(mir::geometry::Point top_left)
@@ -540,7 +548,7 @@ int main(int argc, char const** argv)
     bool success = true;
     try
     {
-        success &= test_probe(platform_dso, config);
+        auto devices = test_probe(platform_dso, config);
         if (auto platform = test_platform_construction(platform_dso, config))
         {
             if (auto display = test_display_construction(*platform, config))

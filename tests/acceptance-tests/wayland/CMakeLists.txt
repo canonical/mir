@@ -91,11 +91,6 @@ set(EXPECTED_FAILURES
 
   XdgToplevelStableTest.touch_can_not_steal_pointer_based_move # https://github.com/MirServer/mir/issues/1792
 
-  # Fixed by https://github.com/MirServer/wlcs/pull/203
-  LayerShellPopup/XdgPopupTest.non_grabbed_popup_does_not_get_keyboard_focus/0
-  LayerShellPopup/XdgPopupTest.grabbed_popup_does_not_get_keyboard_focus/0
-  LayerShellPopup/XdgPopupTest.grabbed_popup_gets_done_event_when_new_toplevel_created/0
-
   ForeignToplevelHandleTest.can_maximize_foreign_while_fullscreen # https://github.com/MirServer/mir/issues/2164
 
   # See https://github.com/MirServer/mir/issues/2324
@@ -125,3 +120,14 @@ if (MIR_RUN_WLCS_TESTS)
 endif()
 
 install(TARGETS miral_wlcs_integration LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir)
+
+add_custom_target(
+  list_missing_wlcs_xfail_tests
+
+  COMMAND
+    ${CMAKE_COMMAND}
+      -DWLCS_BINARY=${WLCS_BINARY}
+      -DWLCS_INTEGRATION=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/miral_wlcs_integration.so
+      -DTESTS_TO_QUERY="${EXPECTED_FAILURES}"
+      -P ${CMAKE_CURRENT_SOURCE_DIR}/print_missing_wlcs_tests.cmake
+)

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "mir/scene/output_properties_cache.h"
@@ -62,14 +60,14 @@ void ms::OutputPropertiesCache::update_from(mg::DisplayConfiguration const &conf
             }
         });
 
-    std::lock_guard<std::mutex> lk(mutex);
+    std::lock_guard lk(mutex);
     cache = new_properties;
 }
 
 auto ms::OutputPropertiesCache::get_cache() const
     -> std::shared_ptr<std::vector<OutputProperties>>
 {
-    std::lock_guard<std::mutex> lk(mutex);
+    std::lock_guard lk(mutex);
     return cache;
 }
 

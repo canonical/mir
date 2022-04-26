@@ -93,7 +93,7 @@ auto value_handler(
     mf::XCBConnection::Handler<T> handler) -> mf::XCBConnection::Handler<xcb_get_property_reply_t*>
 {
     return {
-        [connection, prop, on_success=move(handler.on_success)](xcb_get_property_reply_t const* reply)
+        [connection, prop, on_success=std::move(handler.on_success)](xcb_get_property_reply_t const* reply)
         {
             uint8_t const expected_format = sizeof(T) * 8;
             if (reply->format != expected_format)
@@ -119,7 +119,7 @@ auto value_handler(
 
             on_success(*static_cast<T const*>(xcb_get_property_value(reply)));
         },
-        move(handler.on_error)
+        std::move(handler.on_error)
     };
 }
 
@@ -150,7 +150,7 @@ auto vector_handler(
 
             on_success(values);
         },
-        move(handler.on_error)
+        std::move(handler.on_error)
     };
 }
 }
@@ -166,7 +166,7 @@ mf::XCBConnection::Atom::operator xcb_atom_t() const
 {
     if (atom == XCB_ATOM_NONE)
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
 
         // The initial atomic check is faster, but we need to check again once we've got the lock
         if (atom == XCB_ATOM_NONE)
@@ -176,7 +176,7 @@ mf::XCBConnection::Atom::operator xcb_atom_t() const
                 BOOST_THROW_EXCEPTION(std::runtime_error("Failed to look up atom " + name_));
             atom = reply->atom;
 
-            std::lock_guard<std::mutex> lock{connection->atom_name_cache_mutex};
+            std::lock_guard lock{connection->atom_name_cache_mutex};
             connection->atom_name_cache[atom] = name_;
         }
     }
@@ -207,7 +207,7 @@ void mf::XCBConnection::verify_not_in_error_state() const
 
 auto mf::XCBConnection::query_name(xcb_atom_t atom) const -> std::string
 {
-    std::lock_guard<std::mutex>{atom_name_cache_mutex};
+    std::lock_guard{atom_name_cache_mutex};
     auto const iter = atom_name_cache.find(atom);
 
     if (iter == atom_name_cache.end())
@@ -340,11 +340,11 @@ auto mf::XCBConnection::read_property(
         window,
         prop,
         {
-            [this, on_success=move(handler.on_success)](xcb_get_property_reply_t const* reply)
+            [this, on_success=std::move(handler.on_success)](xcb_get_property_reply_t const* reply)
             {
                 on_success(string_from(reply));
             },
-            move(handler.on_error)
+            std::move(handler.on_error)
         });
 }
 

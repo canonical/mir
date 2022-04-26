@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #include "xdg_output_v1.h"
@@ -100,34 +98,14 @@ mf::XdgOutputManagerV1::Instance::Instance(wl_resource* new_resource, OutputMana
 
 void mf::XdgOutputManagerV1::Instance::get_xdg_output(wl_resource* new_output, wl_resource* output)
 {
-    bool found = false;
-    auto const output_id_opt = output_manager->output_id_for(client, output);
-    if (!output_id_opt)
+    if (!output_manager->with_config_for(output,
+        [&](mg::DisplayConfigurationOutput const& config)
+        {
+            new XdgOutputV1{new_output, config, output};
+        }))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
             "No output for wl_output@" + std::to_string(wl_resource_get_id(output))));
-    }
-    auto const output_id = output_id_opt.value();
-
-    output_manager->display_config()->for_each_output(
-        [&found, output, output_id, new_output](mg::DisplayConfigurationOutput const& config)
-        {
-            if (config.id == output_id)
-            {
-                if (found)
-                {
-                    BOOST_THROW_EXCEPTION(std::runtime_error(
-                        "Found multiple output configs with id " + std::to_string(output_id.as_value())));
-                }
-                new XdgOutputV1{new_output, config, output};
-                found = true;
-            }
-        });
-
-    if (!found)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "Did not find output config with id " + std::to_string(output_id.as_value())));
     }
 }
 

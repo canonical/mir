@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #include "frame_executor.h"
@@ -47,7 +45,7 @@ mf::FrameExecutor::FrameExecutor(time::AlarmFactory& alarm_factory)
 
 void mf::FrameExecutor::spawn(std::function<void()>&& work)
 {
-    std::unique_lock<std::mutex> lock{callbacks->mutex};
+    std::unique_lock lock{callbacks->mutex};
     bool const needs_alarm = callbacks->queued.empty();
     callbacks->queued.push_back(std::move(work));
     lock.unlock();
@@ -62,7 +60,7 @@ void mf::FrameExecutor::fire_callbacks(std::weak_ptr<Callbacks> const& weak_call
 {
     if (auto const callbacks = weak_callbacks.lock())
     {
-        std::unique_lock<std::mutex> lock{callbacks->mutex};
+        std::unique_lock lock{callbacks->mutex};
         auto const queued = std::move(callbacks->queued);
         callbacks->queued.clear();
         lock.unlock();

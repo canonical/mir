@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include <gtest/gtest.h>
@@ -61,11 +59,18 @@ void add_dummy_platform(std::vector<std::shared_ptr<mir::SharedLibrary>>& module
     modules.insert(modules.begin(), std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-dummy.so")));
 }
 
+void add_broken_platform(std::vector<std::shared_ptr<mir::SharedLibrary>>& modules)
+{
+    modules.insert(modules.begin(), std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-throw.so")));
+}
+
+[[maybe_unused]]
 std::shared_ptr<void> ensure_mesa_probing_fails()
 {
     return std::make_shared<mtf::UdevEnvironment>();
 }
 
+[[maybe_unused]]
 std::shared_ptr<void> ensure_mesa_probing_succeeds()
 {
     using namespace testing;
@@ -177,13 +182,13 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 
     auto modules = available_platforms();
 
-    auto selected_modules = mir::graphics::display_modules_for_device(
+    auto selection_result = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<StubConsoleServices>());
 
     std::vector<std::string> found_platforms;
-    for (auto& module : selected_modules)
+    for (auto& [device, module] : selection_result)
     {
         auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
         auto description = descriptor();
@@ -193,38 +198,26 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
     EXPECT_THAT(found_platforms, Contains(HasSubstr("gbm-kms")));
 }
 
-//LP: #1526225, LP: #1526505, LP: #1515558, LP: #1526209
-TEST_F(ServerPlatformProbeMockDRM, returns_kms_platform_when_nested)
+TEST_F(ServerPlatformProbeMockDRM, DoesNotLoadDummyPlatformWhenBetterPlatformExists)
 {
     using namespace testing;
-    ON_CALL(mock_drm, drmSetMaster(_))
-        .WillByDefault(Return(-1));
-
     mir::options::ProgramOption options;
-    boost::program_options::options_description desc("");
-    desc.add_options()
-        ("host-socket", boost::program_options::value<std::string>(), "Host socket filename");
-    std::array<char const*, 3> args {{ "./aserver", "--host-socket", "/dev/null" }};
-    options.parse_arguments(desc, args.size(), args.data());
-
-    auto block_mesa = ensure_mesa_probing_succeeds();
+    auto fake_mesa = ensure_mesa_probing_succeeds();
 
     auto modules = available_platforms();
+    add_dummy_platform(modules);
+    add_broken_platform(modules);
 
-    auto selected_modules = mir::graphics::display_modules_for_device(
+    auto selection_result = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<StubConsoleServices>());
 
-    std::vector<std::string> found_platforms;
-    for (auto& module : selected_modules)
+    EXPECT_THAT(selection_result, Not(IsEmpty()));
+    for (auto& [device, module] : selection_result)
     {
-        auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
-        auto description = descriptor();
-        found_platforms.emplace_back(description->name);
+        EXPECT_THAT(device.support_level, Gt(mir::graphics::PlatformPriority::dummy));
     }
-
-    EXPECT_THAT(found_platforms, Contains(HasSubstr("gbm-kms")));
 }
 #endif
 
@@ -234,9 +227,12 @@ TEST(ServerPlatformProbe, ThrowsExceptionWhenNothingProbesSuccessfully)
     mir::options::ProgramOption options;
     auto block_mesa = ensure_mesa_probing_fails();
 
+    auto modules = available_platforms();
+    add_broken_platform(modules);
+
     EXPECT_THROW(
         mir::graphics::display_modules_for_device(
-            available_platforms(),
+            modules,
             options,
             std::make_shared<mtd::NullConsoleServices>()),
         std::runtime_error);
@@ -251,14 +247,14 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     auto modules = available_platforms();
     add_dummy_platform(modules);
 
-    auto selected_modules = mir::graphics::display_modules_for_device(
+    auto selection_result = mir::graphics::display_modules_for_device(
         modules,
         options,
         std::make_shared<mtd::NullConsoleServices>());
-    ASSERT_THAT(selected_modules, Not(IsEmpty()));
+    ASSERT_THAT(selection_result, Not(IsEmpty()));
 
     std::vector<std::string> loaded_descriptors;
-    for (auto const& module : selected_modules)
+    for (auto const& [device, module] : selection_result)
     {
         auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
         loaded_descriptors.emplace_back(descriptor()->name);
@@ -267,13 +263,12 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     EXPECT_THAT(loaded_descriptors, Contains(HasSubstr("mir:stub-graphics")));
 }
 
-TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
+TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
 {
     using namespace testing;
     mir::options::ProgramOption options;
-    auto ensure_mesa = ensure_mesa_probing_succeeds();
 
-    auto modules = available_platforms();
+    std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
     add_dummy_platform(modules);
 
     // NOTE: We want to load something that doesn't link with libmirplatform,

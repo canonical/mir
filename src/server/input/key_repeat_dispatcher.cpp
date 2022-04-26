@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
 #include "key_repeat_dispatcher.h"
@@ -112,13 +110,13 @@ void mi::KeyRepeatDispatcher::set_input_device_hub(std::shared_ptr<InputDeviceHu
 
 void mi::KeyRepeatDispatcher::set_touch_button_device(MirInputDeviceId id)
 {
-    std::lock_guard<std::mutex> lock(repeat_state_mutex);
+    std::lock_guard lock(repeat_state_mutex);
     touch_button_device = id;
 }
 
 void mi::KeyRepeatDispatcher::remove_device(MirInputDeviceId id)
 {
-    std::lock_guard<std::mutex> lock(repeat_state_mutex);
+    std::lock_guard lock(repeat_state_mutex);
     repeat_state_by_device.erase(id); // destructor cancels alarms
     if (touch_button_device.is_set() && touch_button_device.value() == id)
         touch_button_device.consume();
@@ -129,7 +127,7 @@ void mi::KeyRepeatDispatcher::set_alarm_for_device(
     std::shared_ptr<mir::time::Alarm> repeat_alarm)
 {
     {
-        std::lock_guard<std::mutex> lg(repeat_state_mutex);
+        std::lock_guard lg(repeat_state_mutex);
         // Get the current KeyboardState or insert a new one
         auto const& iter = repeat_state_by_device.insert(std::make_pair(id, KeyboardState()));
         // Set the new alarm
@@ -236,7 +234,7 @@ void mi::KeyRepeatDispatcher::start()
 
 void mi::KeyRepeatDispatcher::stop()
 {
-    std::lock_guard<std::mutex> lg(repeat_state_mutex);
+    std::lock_guard lg(repeat_state_mutex);
 
     repeat_state_by_device.clear();
 

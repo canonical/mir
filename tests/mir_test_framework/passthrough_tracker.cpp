@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "mir_test_framework/passthrough_tracker.h"
@@ -22,8 +20,10 @@ namespace mtf = mir_test_framework;
 
 void mtf::PassthroughTracker::note_passthrough()
 {
-    std::unique_lock<std::mutex> lk(mutex);
-    num_passthrough++;
+    {
+        std::unique_lock lk(mutex);
+        num_passthrough++;
+    }
     cv.notify_all();
 }
 

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #ifndef MIR_TEST_DOUBLES_MOCK_RENDERABLE_H_
@@ -36,7 +34,7 @@ struct MockRenderable : public graphics::Renderable
         ON_CALL(*this, screen_position())
             .WillByDefault(testing::Return(geometry::Rectangle{{},{}}));
         ON_CALL(*this, clip_area())
-            .WillByDefault(testing::Return(std::experimental::optional<geometry::Rectangle>()));
+            .WillByDefault(testing::Return(std::optional<geometry::Rectangle>()));
         ON_CALL(*this, buffer())
             .WillByDefault(testing::Return(std::make_shared<StubBuffer>()));
         ON_CALL(*this, alpha())
@@ -50,7 +48,7 @@ struct MockRenderable : public graphics::Renderable
     MOCK_CONST_METHOD0(id, ID());
     MOCK_CONST_METHOD0(buffer, std::shared_ptr<graphics::Buffer>());
     MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());
-    MOCK_CONST_METHOD0(clip_area, std::experimental::optional<geometry::Rectangle>());
+    MOCK_CONST_METHOD0(clip_area, std::optional<geometry::Rectangle>());
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(transformation, glm::mat4());
     MOCK_CONST_METHOD0(visible, bool());

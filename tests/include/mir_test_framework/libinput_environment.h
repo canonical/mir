@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #ifndef MIR_TEST_FRAMEWORK_LIBINPUT_ENVIRONMENT_H_

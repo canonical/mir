@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
- *              Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "test_wlcs_display_server.h"
@@ -47,7 +44,7 @@
 #include <sys/eventfd.h>
 
 #include <deque>
-#include <experimental/optional>
+#include <optional>
 #include <unordered_map>
 
 
@@ -152,7 +149,7 @@ public:
      */
     MutexGuard<Guarded> lock()
     {
-        return MutexGuard<Guarded>{std::unique_lock<std::mutex>{mutex}, value};
+        return MutexGuard<Guarded>{std::unique_lock{mutex}, value};
     }
 
 protected:
@@ -169,7 +166,7 @@ public:
     template<typename Predicate, typename Rep, typename Period>
     MutexGuard<Guarded> wait_for(Predicate predicate, std::chrono::duration<Rep, Period> timeout)
     {
-        std::unique_lock<std::mutex> lock{this->mutex};
+        std::unique_lock lock{this->mutex};
         if (!notifier.wait_for(
             lock, timeout, [this, &predicate]()
                 { return predicate(this->value); }))
@@ -198,7 +195,7 @@ public:
     void spawn (std::function<void()>&& work) override
     {
         {
-            std::lock_guard<std::mutex> lock{mutex};
+            std::lock_guard lock{mutex};
             workqueue.emplace_back(std::move(work));
         }
         if (auto err = eventfd_write(notify_fd, 1))
@@ -253,7 +250,7 @@ private:
 
     std::function<void()> get_work()
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (!workqueue.empty())
         {
             auto const work = std::move(workqueue.front());
@@ -304,7 +301,7 @@ private:
         shim = wl_container_of(listener, shim, destruction_listener);
 
         {
-            std::lock_guard<std::mutex> lock{shim->executor->mutex};
+            std::lock_guard lock{shim->executor->mutex};
             wl_event_source_remove(shim->executor->notify_source);
         }
         delete shim;
@@ -489,7 +486,7 @@ private:
         std::unordered_map<wl_resource*, std::weak_ptr<mir::scene::Surface>> surface_map;
         std::unordered_map<std::shared_ptr<mir::frontend::BufferStream>, wl_resource*> stream_map;
 
-        std::experimental::optional<wl_client*> latest_client;
+        std::optional<wl_client*> latest_client;
         std::unordered_map<ClientFd, wl_client*> client_session_map;
         std::unordered_map<wl_client*, ResourceListener> resource_listener;
     };

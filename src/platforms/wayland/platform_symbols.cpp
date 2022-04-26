@@ -12,11 +12,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include <mir/graphics/platform.h>
+#include <optional>
 
 #include "wayland_display.h"
 #include "platform.h"
@@ -65,28 +64,48 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     mpw::add_connection_options(config);
 }
 
-mg::PlatformPriority probe_graphics_platform(
-    mo::ProgramOption const& options)
+auto probe_graphics_platform(
+    mo::ProgramOption const& options) -> std::optional<mg::SupportedDevice>
 {
-
-    return mpw::connection_options_supplied(options) ? mg::PlatformPriority::best :
-           mg::PlatformPriority::unsupported;
+    if (mpw::connection_options_supplied(options))
+    {
+        return mg::SupportedDevice {
+            nullptr,
+            mg::PlatformPriority::hosted,
+            nullptr
+        };
+    }
+    return {};
 }
 
 auto probe_rendering_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mo::ProgramOption const& options) -> mg::PlatformPriority
+    std::shared_ptr<mir::udev::Context> const&,
+    mo::ProgramOption const& options) -> std::vector<mg::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
-    return probe_graphics_platform(options);
+    if (auto probe = probe_graphics_platform(options))
+    {
+        std::vector<mg::SupportedDevice> result;
+        result.emplace_back(std::move(probe.value()));
+        return result;
+    }
+    return {};
 }
 
 auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mo::ProgramOption const& options) -> mg::PlatformPriority
+    std::shared_ptr<mir::udev::Context> const&,
+    mo::ProgramOption const& options) -> std::vector<mg::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
-    return probe_graphics_platform(options);
+    if (auto probe = probe_graphics_platform(options))
+    {
+        std::vector<mg::SupportedDevice> result;
+        result.emplace_back(std::move(probe.value()));
+        return result;
+    }
+    return {};
 }
 
 mir::ModuleProperties const* describe_graphics_module()

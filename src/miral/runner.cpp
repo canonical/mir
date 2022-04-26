@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "miral/runner.h"
@@ -120,7 +118,7 @@ try
     auto const server = std::make_shared<mir::Server>();
 
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
 
         server->set_config_filename(config_file);
         server->set_exception_handler(exception_handler);
@@ -160,7 +158,7 @@ catch (...)
 
 void miral::MirRunner::add_start_callback(std::function<void()> const& start_callback)
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
+    std::lock_guard lock{self->mutex};
     auto const& existing = self->start_callback;
 
     auto const updated = [=]
@@ -174,7 +172,7 @@ void miral::MirRunner::add_start_callback(std::function<void()> const& start_cal
 
 void miral::MirRunner::add_stop_callback(std::function<void()> const& stop_callback)
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
+    std::lock_guard lock{self->mutex};
     auto const& existing = self->stop_callback;
 
     auto const updated = [=]
@@ -188,7 +186,7 @@ void miral::MirRunner::add_stop_callback(std::function<void()> const& stop_callb
 
 void miral::MirRunner::set_exception_handler(std::function<void()> const& handler)
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
+    std::lock_guard lock{self->mutex};
     self->exception_handler = handler;
 }
 
@@ -200,7 +198,7 @@ auto miral::MirRunner::run_with(std::initializer_list<std::function<void(::mir::
 
 void miral::MirRunner::stop()
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
+    std::lock_guard lock{self->mutex};
 
     if (auto const server = self->weak_server.lock())
     {
@@ -220,7 +218,7 @@ auto miral::MirRunner::display_config_file() const -> std::string
 
 auto miral::MirRunner::wayland_display() const -> mir::optional_value<std::string>
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
+    std::lock_guard lock{self->mutex};
 
     if (auto const server = self->weak_server.lock())
     {
@@ -232,7 +230,7 @@ auto miral::MirRunner::wayland_display() const -> mir::optional_value<std::strin
 
 auto miral::MirRunner::x11_display() const -> mir::optional_value<std::string>
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
+    std::lock_guard lock{self->mutex};
 
     if (auto const server = self->weak_server.lock())
     {

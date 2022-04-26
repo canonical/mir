@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
- *         Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "mir/fatal.h"
@@ -26,6 +23,7 @@
 #include <cstdio>
 #include <cstdarg>
 
+[[noreturn]]
 void mir::fatal_error_abort(char const* reason, ...)
 {
     va_list args;

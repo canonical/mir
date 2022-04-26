@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
 #include "cursor_controller.h"
@@ -117,7 +115,7 @@ struct UpdateCursorOnSceneChanges : ms::Observer
         surface->add_observer(observer);
 
         {
-            std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
+            std::unique_lock lg(surface_observers_guard);
             surface_observers[surface] = observer;
         }
     }
@@ -131,7 +129,7 @@ struct UpdateCursorOnSceneChanges : ms::Observer
     void surface_removed(std::shared_ptr<ms::Surface> const& surface) override
     {
         {
-            std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
+            std::unique_lock lg(surface_observers_guard);
             auto it = surface_observers.find(surface.get());
             if (it != surface_observers.end())
             {
@@ -160,7 +158,7 @@ struct UpdateCursorOnSceneChanges : ms::Observer
 
     void end_observation() override
     {
-        std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
+        std::unique_lock lg(surface_observers_guard);
         for (auto &kv : surface_observers)
         {
                 auto surface = kv.first;
@@ -262,7 +260,7 @@ void mi::CursorController::update_cursor_image_locked(std::unique_lock<std::mute
 
 void mi::CursorController::update_cursor_image()
 {
-    std::unique_lock<std::mutex> lock(cursor_state_guard);
+    std::unique_lock lock(cursor_state_guard);
     update_cursor_image_locked(lock);
 }
 
@@ -271,7 +269,7 @@ void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
     auto const new_location = geom::Point{geom::X{abs_x}, geom::Y{abs_y}};
 
     {
-        std::unique_lock<std::mutex> lock(cursor_state_guard);
+        std::unique_lock lock(cursor_state_guard);
 
         cursor_location = new_location;
 
@@ -283,11 +281,11 @@ void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
 
 void mir::input::CursorController::pointer_usable()
 {
-    std::lock_guard<std::mutex> lock(serialize_pointer_usable_unusable);
+    std::lock_guard lock(serialize_pointer_usable_unusable);
     bool became_usable = false;
     std::shared_ptr<mg::CursorImage> image;
     {
-        std::lock_guard<std::mutex> lock(cursor_state_guard);
+        std::lock_guard lock(cursor_state_guard);
         became_usable = !usable;
         image = current_cursor;
         usable = true;
@@ -302,9 +300,9 @@ void mir::input::CursorController::pointer_usable()
 
 void mir::input::CursorController::pointer_unusable()
 {
-    std::lock_guard<std::mutex> lock(serialize_pointer_usable_unusable);
+    std::lock_guard lock(serialize_pointer_usable_unusable);
     {
-        std::lock_guard<std::mutex> lock(cursor_state_guard);
+        std::lock_guard lock(cursor_state_guard);
         usable = false;
     }
     cursor->hide();

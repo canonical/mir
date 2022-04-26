@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
 #include "src/server/input/cursor_controller.h"
@@ -144,7 +142,7 @@ struct StubInputSurface : public mtd::StubSurface
         cursor_image_ = image;
 
         {
-            std::unique_lock<decltype(observer_guard)> lk(observer_guard);
+            std::unique_lock lk(observer_guard);
             for (auto o : observers)
                 o->cursor_image_set_to(this, *image);
         }
@@ -152,7 +150,7 @@ struct StubInputSurface : public mtd::StubSurface
 
     void add_observer(std::shared_ptr<ms::SurfaceObserver> const& observer) override
     {
-        std::unique_lock<decltype(observer_guard)> lk(observer_guard);
+        std::unique_lock lk(observer_guard);
 
         observers.push_back(observer);
     }
@@ -179,12 +177,12 @@ struct StubInputSurface : public mtd::StubSurface
         cursor_image_ = image;
     }
 
-    std::experimental::optional<mir::geometry::Rectangle> clip_area() const override
+    std::optional<mir::geometry::Rectangle> clip_area() const override
     {
-        return std::experimental::optional<mir::geometry::Rectangle>();
+        return std::optional<mir::geometry::Rectangle>();
     }
 
-    void set_clip_area(std::experimental::optional<mir::geometry::Rectangle> const& /*area*/) override
+    void set_clip_area(std::optional<mir::geometry::Rectangle> const& /*area*/) override
     {
     }
 

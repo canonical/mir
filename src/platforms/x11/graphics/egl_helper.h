@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
 #ifndef MIR_GRAPHICS_X11_EGL_HELPER_H_

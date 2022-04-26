@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #include "src/platforms/gbm-kms/server/kms/kms_page_flipper.h"
@@ -412,7 +410,7 @@ class PageFlipCounter
 public:
     void add_flip(uint32_t crtc_id, void* user_data)
     {
-        std::lock_guard<std::mutex> lock{data_mutex};
+        std::lock_guard lock{data_mutex};
 
         data.push_back({CountType::flip, crtc_id});
         pending_flips.insert(user_data);
@@ -420,14 +418,14 @@ public:
 
     void add_handle_event(uint32_t crtc_id)
     {
-        std::lock_guard<std::mutex> lock{data_mutex};
+        std::lock_guard lock{data_mutex};
 
         data.push_back({CountType::handle_event, crtc_id});
     }
 
     int count_flips()
     {
-        std::lock_guard<std::mutex> lock{data_mutex};
+        std::lock_guard lock{data_mutex};
 
         return std::count_if(begin(data), end(data), [](CountElement& e) -> bool
         {
@@ -437,7 +435,7 @@ public:
 
     int count_handle_events()
     {
-        std::lock_guard<std::mutex> lock{data_mutex};
+        std::lock_guard lock{data_mutex};
 
         return std::count_if(begin(data), end(data), [](CountElement& e) -> bool
         {
@@ -447,7 +445,7 @@ public:
 
     bool no_consecutive_flips_for_same_crtc_id()
     {
-        std::lock_guard<std::mutex> lock{data_mutex};
+        std::lock_guard lock{data_mutex};
 
         std::unordered_set<uint32_t> pending_crtc_ids;
 
@@ -473,7 +471,7 @@ public:
 
     void* get_pending_flip_data()
     {
-        std::lock_guard<std::mutex> lock{data_mutex};
+        std::lock_guard lock{data_mutex};
 
         auto iter = pending_flips.begin();
         if (iter == pending_flips.end())

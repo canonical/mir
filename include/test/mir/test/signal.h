@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #ifndef MIR_TEST_SIGNAL_H_
@@ -40,7 +38,7 @@ public:
     template<typename rep, typename period>
     bool wait_for(std::chrono::duration<rep, period> delay)
     {
-        std::unique_lock<decltype(mutex)> lock(mutex);
+        std::unique_lock lock(mutex);
         if (signalled)
         {
             return true;
@@ -50,7 +48,7 @@ public:
     template<class Clock, class Duration>
     bool wait_until(std::chrono::time_point<Clock, Duration> const& time)
     {
-        std::unique_lock<decltype(mutex)> lock(mutex);
+        std::unique_lock lock(mutex);
         if (signalled)
         {
             return true;

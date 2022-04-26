@@ -12,14 +12,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #ifndef MIR_GRAPHICS_RENDERABLE_H_
 #define MIR_GRAPHICS_RENDERABLE_H_
 
-#include <experimental/optional>
+#include <optional>
 #include <mir/geometry/rectangle.h>
 #include <glm/glm.hpp>
 #include <memory>
@@ -50,7 +48,7 @@ public:
     virtual std::shared_ptr<Buffer> buffer() const = 0;
 
     virtual geometry::Rectangle screen_position() const = 0;
-    virtual std::experimental::optional<geometry::Rectangle> clip_area() const = 0;
+    virtual std::optional<geometry::Rectangle> clip_area() const = 0;
 
     // These are from the old CompositingCriteria. There is a little bit
     // of function overlap with the above functions still.

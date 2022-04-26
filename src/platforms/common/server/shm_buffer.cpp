@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by:
- *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #include "mir/graphics/gl_format.h"
@@ -185,7 +182,7 @@ mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
 
 void mgc::ShmBuffer::bind()
 {
-    std::lock_guard<decltype(tex_id_mutex)> lock{tex_id_mutex};
+    std::lock_guard lock{tex_id_mutex};
     bool const needs_initialisation = tex_id == 0;
     if (needs_initialisation)
     {
@@ -205,7 +202,7 @@ void mgc::ShmBuffer::bind()
 void mgc::MemoryBackedShmBuffer::bind()
 {
     mgc::ShmBuffer::bind();
-    std::lock_guard<decltype(uploaded_mutex)> lock{uploaded_mutex};
+    std::lock_guard lock{uploaded_mutex};
     if (!uploaded)
     {
         upload_to_texture(pixels.get(), stride_);

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "miral/window_info.h"
@@ -456,9 +454,9 @@ void miral::WindowInfo::clip_area(mir::optional_value<mir::geometry::Rectangle> 
     std::shared_ptr<mir::scene::Surface> const surface = self->window;
 
     if (area)
-        surface->set_clip_area(std::experimental::optional<mir::geometry::Rectangle>(area.value()));
+        surface->set_clip_area(std::optional<mir::geometry::Rectangle>(area.value()));
     else
-        surface->set_clip_area(std::experimental::optional<mir::geometry::Rectangle>());
+        surface->set_clip_area(std::optional<mir::geometry::Rectangle>());
 }
 
 auto miral::WindowInfo::application_id() const -> std::string

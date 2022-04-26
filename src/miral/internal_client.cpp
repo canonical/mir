@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "miral/internal_client.h"
@@ -63,13 +61,13 @@ std::multimap<mir::Server*, std::weak_ptr<InternalClientRunner>> client_runners;
 
 void register_runner(mir::Server* server, std::weak_ptr<InternalClientRunner> internal_client)
 {
-    std::lock_guard<decltype(client_runners_mutex)> lock{client_runners_mutex};
+    std::lock_guard lock{client_runners_mutex};
     client_runners.emplace(server, std::move(internal_client));
 }
 
 void join_runners_for(mir::Server* server)
 {
-    std::lock_guard<decltype(client_runners_mutex)> lock{client_runners_mutex};
+    std::lock_guard lock{client_runners_mutex};
     auto range = client_runners.equal_range(server);
 
     for (auto i = range.first; i != range.second; ++i)

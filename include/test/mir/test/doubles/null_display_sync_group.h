@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_SYNC_GROUP_H_
@@ -21,8 +19,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/geometry/size.h"
-#include "mir/test/doubles/null_display_buffer.h"
-#include "mir/test/doubles/stub_display_buffer.h"
+#include "mir/test/doubles/stub_gl_display_buffer.h"
 #include <thread>
 
 namespace mir
@@ -62,7 +59,7 @@ public:
 
 private:
     std::vector<geometry::Rectangle> const output_rects;
-    std::vector<StubDisplayBuffer> display_buffers;
+    std::vector<StubGLDisplayBuffer> display_buffers;
 };
 
 struct NullDisplaySyncGroup : graphics::DisplaySyncGroup
@@ -82,7 +79,7 @@ struct NullDisplaySyncGroup : graphics::DisplaySyncGroup
         return std::chrono::milliseconds::zero();
     }
 
-    NullDisplayBuffer db;
+    StubGLDisplayBuffer db{{{}, {1, 1}}};
 };
 
 }

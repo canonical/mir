@@ -12,11 +12,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #include "wl_client.h"
+#include "std_layout_uptr.h"
 
 #include "null_event_sink.h"
 #include "mir/frontend/session_authorizer.h"
@@ -50,7 +49,7 @@ struct ConstructionCtx
     std::shared_ptr<msh::Shell> const shell;
     std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
     /// Needs to be a pointer so std::is_standard_layout passes
-    std::unique_ptr<std::function<void(mf::WlClient&)>> const client_created_callback;
+    mir::StdLayoutUPtr<std::function<void(mf::WlClient&)>> const client_created_callback;
 };
 
 static_assert(
@@ -72,7 +71,7 @@ struct ClientCtx
         return ctx;
     }
 
-    std::unique_ptr<mf::WlClient> const client;
+    mir::StdLayoutUPtr<mf::WlClient> const client;
     wl_listener destroy_listener;
 };
 

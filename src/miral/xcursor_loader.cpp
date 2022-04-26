@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
 #include "xcursor_loader.h"
@@ -154,7 +152,7 @@ void miral::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images
 {
     // We would rather take this lock in load_cursor_theme but the Xcursor lib style
     // makes it difficult to use our standard 'pass the lg around to _locked members' pattern
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
 
     // We have to save all the images as XCursor expects us to free them.
     // This contains the actual image data though, so we need to ensure they stay alive
@@ -197,7 +195,7 @@ std::shared_ptr<mg::CursorImage> miral::XCursorLoader::image(
 {
     auto xcursor_name = xcursor_name_for_mir_cursor(cursor_name);
 
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
 
     auto it = loaded_images.find(xcursor_name);
     if (it != loaded_images.end())

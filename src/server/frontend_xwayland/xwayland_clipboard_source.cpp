@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: William Wold <william.wold@canonical.com>
  */
 
 #include "xwayland_clipboard_source.h"
@@ -84,7 +82,7 @@ public:
 
     void invalidate_owner()
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         owner = nullptr;
     }
 
@@ -95,7 +93,7 @@ public:
 
     void initiate_send(std::string const& mime_type, Fd const& receiver_fd) override
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (owner)
         {
             auto const target_type = mime_types_map.find(mime_type);
@@ -128,7 +126,7 @@ public:
 
     /// Returns if the previous buffer was empty. If return value is true, this needs to be added to the dispatcher.
     auto add_data(std::vector<uint8_t>&& new_data) -> bool {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         if (data.empty())
         {
             data = std::move(new_data);
@@ -149,7 +147,7 @@ private:
 
     auto dispatch(md::FdEvents events) -> bool override
     {
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
 
         if (events & md::FdEvent::error)
         {
@@ -214,7 +212,7 @@ auto mf::XWaylandClipboardSource::source_is_from(ms::ClipboardSource* source, XC
 
 mf::XWaylandClipboardSource::~XWaylandClipboardSource()
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     auto const source_to_reset = std::move(clipboard_source);
     lock.unlock();
 
@@ -232,7 +230,7 @@ mf::XWaylandClipboardSource::~XWaylandClipboardSource()
 
 void mf::XWaylandClipboardSource::initiate_send(xcb_atom_t target_type, Fd const& receiver_fd)
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     if (in_progress_send)
     {
         log_error("can not send clipboard data from X11 because another send is currently in progress");
@@ -296,7 +294,7 @@ void mf::XWaylandClipboardSource::selection_notify_event(xcb_selection_notify_ev
             log_info("Clipboard data from X11 client is ready");
         }
 
-        std::lock_guard<std::mutex> lock{mutex};
+        std::lock_guard lock{mutex};
         read_and_send_wl_selection_data(lock);
     }
 }
@@ -308,7 +306,7 @@ void mf::XWaylandClipboardSource::xfixes_selection_notify_event(xcb_xfixes_selec
         return;
     }
 
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
 
     current_clipbaord_owner = event->owner;
     clipboard_ownership_timestamp = event->timestamp;
@@ -353,7 +351,7 @@ void mf::XWaylandClipboardSource::property_notify_event(xcb_window_t window, xcb
         return;
     }
 
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     if (incremental_transfer_in_progress)
     {
         read_and_send_wl_selection_data(lock);
@@ -387,7 +385,7 @@ void mf::XWaylandClipboardSource::create_source(xcb_timestamp_t timestamp, std::
 
     auto const source = std::make_shared<ClipboardSource>(std::move(mime_types), this);
 
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
     if (clipboard_ownership_timestamp != timestamp)
     {
         // Something has happened since we requested the targets

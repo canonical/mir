@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Author: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #ifndef MIR_INPUT_DEVICE_STATE_H_

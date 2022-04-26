@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Robert Ancell <robert.ancell@canonical.com>
  */
 
 #ifndef MIR_SERVER_STATUS_LISTENER_H_

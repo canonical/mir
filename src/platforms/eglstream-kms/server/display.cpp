@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include <epoxy/egl.h>
@@ -353,7 +351,7 @@ void mge::Display::for_each_display_sync_group(const std::function<void(DisplayS
 
 std::unique_ptr<mg::DisplayConfiguration> mge::Display::configuration() const
 {
-    std::lock_guard<std::mutex> lock{configuration_mutex};
+    std::lock_guard lock{configuration_mutex};
     return display_configuration.clone();
 }
 
@@ -405,7 +403,7 @@ void mge::Display::register_configuration_change_handler(
                 monitor->process_events(
                     [conf_change_handler, this](mir::udev::Monitor::EventType, mir::udev::Device const&)
                     {
-                        std::lock_guard<std::mutex> lock{configuration_mutex};
+                        std::lock_guard lock{configuration_mutex};
                         display_configuration.update();
                         conf_change_handler();
                     });

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
 #include "platform.h"
@@ -114,7 +112,7 @@ mgx::Platform::Platform(std::shared_ptr<mir::X::X11Resources> const& x11_resourc
     : x11_resources{x11_resources},
       title{std::move(title)},
       report{report},
-      output_sizes{move(output_sizes)}
+      output_sizes{std::move(output_sizes)}
 {
     if (!x11_resources)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));

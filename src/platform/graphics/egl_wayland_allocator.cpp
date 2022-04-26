@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by:
- *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "mir/graphics/egl_wayland_allocator.h"
@@ -236,7 +233,7 @@ public:
     {
         glBindTexture(GL_TEXTURE_2D, tex);
 
-        std::lock_guard<decltype(consumed_mutex)> lock(consumed_mutex);
+        std::lock_guard lock(consumed_mutex);
         on_consumed();
         on_consumed = [](){};
     }

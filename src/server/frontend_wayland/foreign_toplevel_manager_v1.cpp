@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #include "foreign_toplevel_manager_v1.h"
@@ -238,7 +236,7 @@ void mf::ForeignSceneObserver::surface_added(std::shared_ptr<scene::Surface> con
 
 void mf::ForeignSceneObserver::surface_removed(std::shared_ptr<scene::Surface> const& surface)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     auto const iter = surface_observers.find(surface);
     if (iter == surface_observers.end())
     {
@@ -265,7 +263,7 @@ void mf::ForeignSceneObserver::end_observation()
 
 void mf::ForeignSceneObserver::create_surface_observer(std::shared_ptr<scene::Surface> const& surface)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     auto observer = std::make_shared<ForeignSurfaceObserver>(wayland_executor, manager, surface);
     surface->add_observer(observer);
     auto insert_result = surface_observers.insert(std::make_pair(surface, observer));
@@ -280,7 +278,7 @@ void mf::ForeignSceneObserver::create_surface_observer(std::shared_ptr<scene::Su
 
 void mf::ForeignSceneObserver::clear_surface_observers()
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     for (auto const& pair : surface_observers)
     {
         pair.second->cease_and_desist();
@@ -302,7 +300,7 @@ mf::ForeignSurfaceObserver::ForeignSurfaceObserver(
       manager{manager},
       weak_surface{surface}
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     create_or_close_toplevel_handle_as_needed(lock);
 }
 
@@ -313,7 +311,7 @@ mf::ForeignSurfaceObserver::~ForeignSurfaceObserver()
 
 void mf::ForeignSurfaceObserver::cease_and_desist()
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     weak_surface.reset();
     create_or_close_toplevel_handle_as_needed(lock);
 }
@@ -416,7 +414,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
 
 void mf::ForeignSurfaceObserver::attrib_changed(const scene::Surface*, MirWindowAttrib attrib, int)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     auto surface = weak_surface.lock();
     if (!surface)
@@ -463,7 +461,7 @@ void mf::ForeignSurfaceObserver::attrib_changed(const scene::Surface*, MirWindow
 
 void mf::ForeignSurfaceObserver::renamed(ms::Surface const*, char const* name_c_str)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     std::string name = name_c_str;
     with_toplevel_handle(lock, [name](ForeignToplevelHandleV1& handle)
@@ -477,7 +475,7 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
     scene::Surface const*,
     std::string const& application_id)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     std::string id = application_id;
     with_toplevel_handle(lock, [id](ForeignToplevelHandleV1& handle)

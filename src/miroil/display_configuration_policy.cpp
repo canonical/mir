@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
 #include "miroil/display_configuration_policy.h"

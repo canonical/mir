@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "src/platforms/eglstream-kms/server/utils.h"
@@ -43,14 +41,14 @@ TEST(EGLStreamUtils, returns_empty_option_on_non_nvidia_version)
 {
     EXPECT_THAT(
         mge::parse_nvidia_version("Not an nvidia version"),
-        Eq(std::experimental::optional<mge::VersionInfo>{}));
+        Eq(std::optional<mge::VersionInfo>{}));
 }
 
 TEST(EGLStreamUtils, returns_empty_option_on_empty_string)
 {
     EXPECT_THAT(
         mge::parse_nvidia_version(""),
-        Eq(std::experimental::optional<mge::VersionInfo>{}));
+        Eq(std::optional<mge::VersionInfo>{}));
 }
 
 TEST(EGLStreamUtils, returns_nvidia_driver_version)

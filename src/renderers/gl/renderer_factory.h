@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_RENDERER_GL_RENDERER_FACTORY_H_
@@ -31,8 +29,7 @@ namespace gl
 class RendererFactory : public renderer::RendererFactory
 {
 public:
-    std::unique_ptr<renderer::Renderer> create_renderer_for(
-        graphics::DisplayBuffer& display_buffer) override;
+    std::unique_ptr<renderer::Renderer> create_renderer_for(RenderTarget& render_target) override;
 };
 
 }

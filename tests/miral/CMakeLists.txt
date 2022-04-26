@@ -64,8 +64,6 @@ target_link_libraries(miral-test-internal
     ${GMOCK_LIBRARIES}
 )
 
-add_subdirectory(generated/)
-
 mir_add_wrapped_executable(miral-test NOINSTALL
     external_client.cpp
     runner.cpp
@@ -73,10 +71,11 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     zone.cpp
     server_example_decoration.cpp server_example_decoration.h
     org_kde_kwin_server_decoration.c org_kde_kwin_server_decoration.h
-    generated/server-decoration_wrapper.cpp generated/server-decoration_wrapper.h
 )
 
-set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/generated/")
+mir_generate_protocol_wrapper(miral-test "org_kde_kwin_" protocol/server-decoration.xml)
+
+set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}")
 
 target_link_libraries(miral-test
     mir-test-assist
@@ -84,5 +83,9 @@ target_link_libraries(miral-test
     ${UUID_LDFLAGS} ${UUID_LIBRARIES}
 )
 
-mir_discover_tests_with_fd_leak_detection(miral-test)
-mir_discover_tests_with_fd_leak_detection(miral-test-internal)
+option(MIR_RUN_MIRAL_TESTS "Run miral tests as part of testsuite" ON)
+
+if(MIR_RUN_MIRAL_TESTS)
+    mir_discover_tests_with_fd_leak_detection(miral-test)
+    mir_discover_tests_with_fd_leak_detection(miral-test-internal)
+endif()

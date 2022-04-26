@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "sw_splash.h"
@@ -84,7 +82,7 @@ struct SwSplash::Self : SplashSession
 
     std::shared_ptr<mir::scene::Session> session() const override
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
         return session_.lock();
     }
 
@@ -101,7 +99,7 @@ void SwSplash::enable (bool show_splash_opt){
 
 void SwSplash::operator()(std::weak_ptr<mir::scene::Session> const& session)
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
+    std::lock_guard lock{self->mutex};
     self->session_ = session;
 }
 

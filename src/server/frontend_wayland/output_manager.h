@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #ifndef MIR_FRONTEND_OUTPUT_MANAGER_H_
@@ -76,6 +74,12 @@ public:
     auto output_for(graphics::DisplayConfigurationOutputId id) -> std::optional<Output*>;
 
     auto display_config() const -> std::shared_ptr<MirDisplay> {return display_config_;}
+
+    /// Either calls functor exactly once and returns true, or does not call functor and returns false if the output is
+    /// not found
+    auto with_config_for(
+        wl_resource* output,
+        std::function<void(graphics::DisplayConfigurationOutput const&)> const& functor) -> bool;
 
 private:
     void create_output(graphics::DisplayConfigurationOutput const& initial_config);

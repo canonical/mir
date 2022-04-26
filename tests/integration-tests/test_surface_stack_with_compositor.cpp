@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "mir/compositor/display_listener.h"
@@ -58,7 +56,7 @@ class StubRendererFactory : public mir::renderer::RendererFactory
 {
 public:
     std::unique_ptr<mir::renderer::Renderer>
-        create_renderer_for(mg::DisplayBuffer&) override
+        create_renderer_for(mir::renderer::gl::RenderTarget&) override
     {
         return std::unique_ptr<mtd::StubRenderer>(new mtd::StubRenderer);
     }
@@ -78,7 +76,7 @@ struct CountingDisplaySyncGroup : public mtd::StubDisplaySyncGroup
 
     bool has_posted_at_least(unsigned int count, std::chrono::system_clock::time_point& timeout)
     {
-        std::unique_lock<decltype(mutex)> lk(mutex);
+        std::unique_lock lk(mutex);
         return count_cv.wait_until(lk, timeout,
         [this, &count](){
             return post_count_ >= count;  
@@ -88,8 +86,10 @@ struct CountingDisplaySyncGroup : public mtd::StubDisplaySyncGroup
 private:
     void increment_post_count()
     {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        ++post_count_;
+        {
+            std::unique_lock lk(mutex);
+            ++post_count_;
+        }
         count_cv.notify_all();
     }
 

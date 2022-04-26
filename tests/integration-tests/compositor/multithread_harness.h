@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 #ifndef MIR_TEST_MULTITHREAD_HARNESS_H_
 #define MIR_TEST_MULTITHREAD_HARNESS_H_
@@ -65,7 +63,7 @@ class Synchronizer : public SynchronizerController,
 
         void ensure_child_is_waiting()
         {
-            std::unique_lock<std::mutex> lk(sync_mutex);
+            std::unique_lock lk(sync_mutex);
             pause_request = true;
             while (!paused)
             {
@@ -77,14 +75,16 @@ class Synchronizer : public SynchronizerController,
 
         void activate_waiting_child()
         {
-            std::unique_lock<std::mutex> lk(sync_mutex);
-            paused = false;
+            {
+                std::unique_lock lk(sync_mutex);
+                paused = false;
+            }
             cv.notify_all();
         };
 
         bool child_enter_wait()
         {
-            std::unique_lock<std::mutex> lk(sync_mutex);
+            std::unique_lock lk(sync_mutex);
             paused = true;
             cv.notify_all();
             while (paused) {
@@ -96,13 +96,13 @@ class Synchronizer : public SynchronizerController,
 
         bool child_check_wait_request()
         {
-            std::unique_lock<std::mutex> lk(sync_mutex);
+            std::unique_lock lk(sync_mutex);
             return pause_request;
         };
 
         void kill_thread()
         {
-            std::unique_lock<std::mutex> lk(sync_mutex);
+            std::unique_lock lk(sync_mutex);
             kill = true;
         };
     private:

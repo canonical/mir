@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #define MIR_LOG_COMPONENT "rpi-dispmanx"
@@ -80,11 +78,8 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
 }
 
-auto probe_graphics_platform() -> mg::PlatformPriority
+auto probe_graphics_platform(std::shared_ptr<mir::udev::Context> const& udev) -> std::vector<mg::SupportedDevice>
 {
-
-    auto udev = std::make_shared<mir::udev::Context>();
-
     mir::udev::Enumerator drm_devices{udev};
     drm_devices.match_subsystem("drm");
     drm_devices.match_sysname("card[0-9]*");
@@ -96,7 +91,7 @@ auto probe_graphics_platform() -> mg::PlatformPriority
      */
     if (drm_devices.begin() != drm_devices.end())
     {
-        return mg::PlatformPriority::unsupported;
+        return {};
     }
 
     /*
@@ -106,30 +101,40 @@ auto probe_graphics_platform() -> mg::PlatformPriority
      */
     auto vchiq_dev_fd = mir::Fd{open("/dev/vchiq", O_RDWR)};
     if (vchiq_dev_fd == mir::Fd::invalid)
-        return mg::PlatformPriority::unsupported;
+        return {};
 
     /*
      * Sadly we can't actually *try* to probe the dispmanx driver; attempting
      * to call bcm_host_init() will terminate the process if it fails, so let's
      * just say we're plausible
      */
-    return mg::PlatformPriority::supported;
+    std::vector<mg::SupportedDevice> devices;
+    devices.emplace_back(
+        mg::SupportedDevice {
+            nullptr,
+            mg::PlatformPriority::supported,
+            nullptr
+        });
+
+    return devices;
 }
 
 auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mo::ProgramOption const&) -> mg::PlatformPriority
+    std::shared_ptr<mir::udev::Context> const& udev,
+    mo::ProgramOption const&) -> std::vector<mg::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
-    return probe_graphics_platform();
+    return probe_graphics_platform(udev);
 }
 
 auto probe_rendering_platform(
     std::shared_ptr<mir::ConsoleServices> const&,
-    mo::ProgramOption const&) -> mg::PlatformPriority
+    std::shared_ptr<mir::udev::Context> const& udev,
+    mo::ProgramOption const&) -> std::vector<mg::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_rendering_platform);
-    return probe_graphics_platform();
+    return probe_graphics_platform(udev);
 }
 
 namespace

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #ifndef MIR_PLATFORM_EGLSTREAM_THREADED_DRM_EVENT_HANDLER_H_
@@ -25,7 +23,7 @@
 
 #include <functional>
 #include <vector>
-#include <experimental/optional>
+#include <optional>
 #include <mutex>
 #include <condition_variable>
 
@@ -69,7 +67,7 @@ private:
     // We *could* do something fancy and lock-free, but a basic mutex will suffice for now
     std::mutex expectation_mutex;
     std::condition_variable expectations_changed;
-    std::vector<std::experimental::optional<FlipEventData>> pending_expectations;
+    std::vector<std::optional<FlipEventData>> pending_expectations;
 
     bool shutdown{false};
     std::thread dispatch_thread;

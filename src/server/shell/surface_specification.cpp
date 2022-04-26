@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com
  */
 
 #include "mir/shell/surface_specification.h"

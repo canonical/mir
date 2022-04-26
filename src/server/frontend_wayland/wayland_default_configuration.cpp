@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "mir/default_server_configuration.h"
@@ -35,6 +33,7 @@
 #include "text_input_v2.h"
 #include "input_method_v2.h"
 #include "idle_inhibit_v1.h"
+#include "wlr_screencopy_v1.h"
 
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
@@ -150,6 +149,15 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                     ctx.wayland_executor,
                     ctx.idle_hub);
         }),
+    make_extension_builder<mw::WlrScreencopyManagerV1>([](auto const& ctx)
+        {
+            return mf::create_wlr_screencopy_manager_unstable_v1(
+                ctx.display,
+                ctx.wayland_executor,
+                *ctx.output_manager,
+                ctx.graphic_buffer_allocator,
+                ctx.screen_shooter);
+        }),
 };
 
 ExtensionBuilder const xwayland_builder {
@@ -169,8 +177,8 @@ struct WaylandExtensions : mf::WaylandExtensions
     WaylandExtensions(
         std::vector<ExtensionBuilder> enabled_internal_builders,
         std::vector<mir::WaylandExtensionHook> enabled_external_hooks) :
-        enabled_internal_builders{move(enabled_internal_builders)},
-        enabled_external_hooks{move(enabled_external_hooks)}
+        enabled_internal_builders{std::move(enabled_internal_builders)},
+        enabled_external_hooks{std::move(enabled_external_hooks)}
     {
     }
 
@@ -234,7 +242,7 @@ auto configure_wayland_extensions(
         mir::log_warning("Wayland extension %s not supported", name.c_str());
     }
 
-    return std::make_unique<WaylandExtensions>(move(enabled_internal_builders), move(enabled_external_hooks));
+    return std::make_unique<WaylandExtensions>(std::move(enabled_internal_builders), std::move(enabled_external_hooks));
 }
 }
 
@@ -293,6 +301,7 @@ std::shared_ptr<mf::Connector>
                 the_clipboard(),
                 the_text_input_hub(),
                 the_idle_hub(),
+                the_screen_shooter(),
                 the_main_loop(),
                 arw_socket,
                 configure_wayland_extensions(

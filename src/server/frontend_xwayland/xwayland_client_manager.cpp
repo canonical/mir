@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #include "xwayland_client_manager.h"
@@ -64,7 +62,7 @@ mf::XWaylandClientManager::~XWaylandClientManager()
 
 auto mf::XWaylandClientManager::session_for_client(pid_t client_pid) -> std::shared_ptr<Session>
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     std::shared_ptr<Session> session;
     auto const iter = sessions_by_pid.find(client_pid);
@@ -95,7 +93,7 @@ auto mf::XWaylandClientManager::session_for_client(pid_t client_pid) -> std::sha
 
 void mf::XWaylandClientManager::drop_expired(pid_t client_pid)
 {
-    std::unique_lock<std::mutex> lock{mutex};
+    std::unique_lock lock{mutex};
 
     auto const iter = sessions_by_pid.find(client_pid);
 

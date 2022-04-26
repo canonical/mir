@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #include "src/server/shell/decoration/basic_decoration.h"
@@ -189,7 +187,7 @@ struct DecorationBasicDecoration
 
     NiceMock<MockShell> shell;
     mtd::StubBufferAllocator buffer_allocator;
-    mtd::ExplicitExectutor executor;
+    mtd::ExplicitExecutor executor;
     StubCursorImages cursor_images;
     std::shared_ptr<msd::BasicDecoration> basic_decoration;
     std::shared_ptr<NiceMock<mtd::MockSceneSession>> session{std::make_shared<NiceMock<mtd::MockSceneSession>>()};

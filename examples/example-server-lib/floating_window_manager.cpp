@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "floating_window_manager.h"
@@ -139,15 +137,6 @@ bool FloatingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
     {
         pinching = false;
         return false;
-    }
-
-    long total_x = 0;
-    long total_y = 0;
-
-    for (auto i = 0U; i != count; ++i)
-    {
-        total_x += mir_touch_event_axis_value(event, i, mir_touch_axis_x);
-        total_y += mir_touch_event_axis_value(event, i, mir_touch_axis_y);
     }
 
     for (auto i = 0U; i != count; ++i)

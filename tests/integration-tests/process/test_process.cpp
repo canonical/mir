@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
 #include "mir_test_framework/process.h"
@@ -37,7 +35,7 @@ struct MainFunctionFactory
     static void an_infinitely_waiting_main_function()
     {
         std::mutex m;
-        std::unique_lock<std::mutex> ul(m);
+        std::unique_lock ul(m);
 
         std::condition_variable cv;
 

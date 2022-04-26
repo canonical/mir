@@ -1,6 +1,3 @@
-set(DMABUF_PROTO_HEADER ${CMAKE_CURRENT_BINARY_DIR}/linux-dmabuf-unstable-v1_wrapper.h)
-set(DMABUF_PROTO_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/linux-dmabuf-unstable-v1_wrapper.cpp)
-
 set(DRM_FORMATS_FILE ${CMAKE_CURRENT_BINARY_DIR}/drm-formats)
 set(DRM_FORMATS_BIG_ENDIAN_FILE ${CMAKE_CURRENT_BINARY_DIR}/drm-formats-big-endian)
 
@@ -28,8 +25,6 @@ add_library(mirplatformgraphicscommon OBJECT
   cpu_buffers.cpp
   egl_logger.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/egl_logger.h
-  ${DMABUF_PROTO_HEADER}
-  ${DMABUF_PROTO_SOURCE}
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/linux_dmabuf.h
   linux_dmabuf.cpp
   ${DRM_FORMATS_FILE}
@@ -37,6 +32,8 @@ add_library(mirplatformgraphicscommon OBJECT
   drm_formats.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/drm_formats.h
 )
+
+mir_generate_protocol_wrapper(mirplatformgraphicscommon "zwp_" protocol/linux-dmabuf-unstable-v1.xml)
 
 if (DRM_VERSION VERSION_GREATER 2.4.107)
   target_compile_definitions(
@@ -48,32 +45,6 @@ if (DRM_VERSION VERSION_GREATER 2.4.107)
     PUBLIC
       ${DRM_LDFLAGS} ${DRM_LIBRARIES})
 endif()
-
-set(LINUX_DMABUF_PROTO "${CMAKE_CURRENT_SOURCE_DIR}/protocol/linux-dmabuf-unstable-v1.xml")
-set(WAYLAND_GENERATOR "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator")
-
-add_custom_command(
-  OUTPUT
-  linux-dmabuf-unstable-v1_wrapper.h
-  VERBATIM
-  COMMAND
-  "sh" "-c"
-  "${WAYLAND_GENERATOR} zwp_ ${LINUX_DMABUF_PROTO} header > ${DMABUF_PROTO_HEADER}"
-  DEPENDS
-  ${LINUX_DMABUF_PROTO}
-  mir_wayland_generator
-)
-add_custom_command(
-  OUTPUT
-  linux-dmabuf-unstable-v1_wrapper.cpp
-  VERBATIM
-  COMMAND
-  "sh" "-c"
-  "${WAYLAND_GENERATOR} zwp_ ${LINUX_DMABUF_PROTO} source > ${DMABUF_PROTO_SOURCE}"
-  DEPENDS
-  ${LINUX_DMABUF_PROTO}
-  mir_wayland_generator
-)
 
 add_custom_command(
   OUTPUT

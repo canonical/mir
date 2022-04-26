@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_RENDERER_RENDERER_FACTORY_H_
@@ -29,6 +27,10 @@ struct DisplayBuffer;
 }
 namespace renderer
 {
+namespace gl
+{
+class RenderTarget;
+}
 
 class Renderer;
 
@@ -37,7 +39,7 @@ class RendererFactory
 public:
     virtual ~RendererFactory() = default;
 
-    virtual std::unique_ptr<Renderer> create_renderer_for(graphics::DisplayBuffer& display_buffer) = 0;
+    virtual std::unique_ptr<Renderer> create_renderer_for(gl::RenderTarget& render_target) = 0;
 
 protected:
     RendererFactory() = default;

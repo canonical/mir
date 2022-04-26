@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"

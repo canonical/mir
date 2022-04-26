@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include <miral/test_server.h>
@@ -47,13 +45,13 @@ public:
 
     void operator()(std::weak_ptr<mir::scene::Session> const& session)
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
         session_ = session;
     }
 
     std::shared_ptr<mir::scene::Session> session() const
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
         return session_.lock();
     }
 
@@ -80,13 +78,15 @@ struct WaylandExtensions : miral::TestServer
 
         client.code = [&](struct wl_display* display)
             {
-                std::lock_guard<decltype(mutex)> lock{mutex};
-                code(display);
-                client_run = true;
+                {
+                    std::lock_guard lock{mutex};
+                    code(display);
+                    client_run = true;
+                }
                 cv.notify_one();
             };
 
-        std::unique_lock<decltype(mutex)> lock{mutex};
+        std::unique_lock lock{mutex};
         launcher.launch(client);
         cv.wait(lock, [&]{ return client_run; });
     }

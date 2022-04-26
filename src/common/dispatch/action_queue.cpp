@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #include "mir/dispatch/action_queue.h"
@@ -37,7 +35,7 @@ mir::Fd mir::dispatch::ActionQueue::watch_fd() const
 
 void mir::dispatch::ActionQueue::enqueue(std::function<void()> const& action)
 {
-    std::unique_lock<std::mutex> lock(list_lock);
+    std::unique_lock lock(list_lock);
     actions.push_back(action);
     wake();
 }
@@ -57,7 +55,7 @@ bool mir::dispatch::ActionQueue::dispatch(FdEvents events)
     std::function<void()> action_to_process;
 
     {
-        std::unique_lock<std::mutex> lock(list_lock);
+        std::unique_lock lock(list_lock);
         action_to_process = actions.front();
         actions.pop_front();
     }

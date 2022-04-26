@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "src/platforms/eglstream-kms/server/threaded_drm_event_handler.h"
@@ -60,7 +58,7 @@ public:
 
                         EventDetails event;
                         {
-                            std::lock_guard<std::mutex> lock{event_mutex};
+                            std::lock_guard lock{event_mutex};
                             if (expected_events.empty())
                             {
                                 ADD_FAILURE() << "drmHandleEvent called with no pending event";
@@ -92,7 +90,7 @@ public:
     {
         using namespace std::literals::chrono_literals;
 
-        std::lock_guard<std::mutex> lock{event_mutex};
+        std::lock_guard lock{event_mutex};
 
         expected_events.emplace_back(
             EventDetails

@@ -65,4 +65,5 @@ CMAKE_DEPENDENT_OPTION(
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
   mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests)
+  add_subdirectory(wayland-generator)
 endif (MIR_RUN_ACCEPTANCE_TESTS)

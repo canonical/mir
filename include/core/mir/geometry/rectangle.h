@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
- *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_GEOMETRY_RECTANGLE_H_

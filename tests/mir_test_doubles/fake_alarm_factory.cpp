@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "mir/test/doubles/fake_alarm_factory.h"
@@ -78,7 +76,7 @@ void mtd::FakeAlarmFactory::FakeAlarm::time_updated()
     {
         triggers_at = mir::time::Timestamp::max();
         alarm_state = State::triggered;
-        std::lock_guard<mir::LockableCallback> guard{*callback};
+        std::lock_guard guard{*callback};
         (*callback)();
         ++triggered_count;
     }

@@ -12,10 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by:
- *   Robert Carr <robert.carr@canonical.com>
- *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #include "mir/input/xkb_mapper.h"
@@ -136,7 +132,7 @@ mircv::XKBMapper::XKBMapper() :
 
 void mircv::XKBMapper::set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& key_state)
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
 
     auto mapping_state = get_keymapping_state(id);
     if (mapping_state)
@@ -160,7 +156,7 @@ void mircv::XKBMapper::update_modifier()
 
 void mircv::XKBMapper::map_event(MirEvent& ev)
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
 
     auto type = mir_event_get_type(&ev);
 
@@ -217,7 +213,7 @@ void mircv::XKBMapper::set_keymap_for_all_devices(std::shared_ptr<Keymap> new_ke
 
 void mircv::XKBMapper::set_keymap(std::shared_ptr<Keymap> new_keymap)
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
     default_keymap = std::move(new_keymap);
     default_compiled_keymap = default_keymap->make_unique_xkb_keymap(context.get());
     device_mapping.clear();
@@ -230,7 +226,7 @@ void mircv::XKBMapper::set_keymap_for_device(MirInputDeviceId id, std::shared_pt
 
 void mircv::XKBMapper::set_keymap(MirInputDeviceId id, std::shared_ptr<Keymap> new_keymap)
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
 
     auto compiled_keymap = new_keymap->make_unique_xkb_keymap(context.get());
     auto mapping_state = std::make_unique<XkbMappingState>(std::move(new_keymap), std::move(compiled_keymap));
@@ -244,7 +240,7 @@ void mircv::XKBMapper::set_keymap(MirInputDeviceId id, std::shared_ptr<Keymap> n
 
 void mircv::XKBMapper::clear_all_keymaps()
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
     default_keymap.reset();
     device_mapping.clear();
     update_modifier();
@@ -252,14 +248,14 @@ void mircv::XKBMapper::clear_all_keymaps()
 
 void mircv::XKBMapper::clear_keymap_for_device(MirInputDeviceId id)
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
     device_mapping.erase(id);
     update_modifier();
 }
 
 MirInputEventModifiers mircv::XKBMapper::modifiers() const
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
     if (modifier_state.is_set())
         return expand_modifiers(modifier_state.value());
     return mir_input_event_modifier_none;
@@ -267,7 +263,7 @@ MirInputEventModifiers mircv::XKBMapper::modifiers() const
 
 MirInputEventModifiers mircv::XKBMapper::device_modifiers(MirInputDeviceId id) const
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard lg(guard);
 
     auto it = device_mapping.find(id);
     if (it == end(device_mapping))

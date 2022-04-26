@@ -11,9 +11,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
- *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #define MIR_LOG_COMPONENT "GLRenderer"
@@ -47,13 +44,9 @@ namespace mgl = mir::gl;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
-mrg::CurrentRenderTarget::CurrentRenderTarget(mg::DisplayBuffer* display_buffer)
-    : render_target{
-        dynamic_cast<renderer::gl::RenderTarget*>(display_buffer->native_display_buffer())}
+mrg::CurrentRenderTarget::CurrentRenderTarget(RenderTarget& render_target)
+    : render_target{&render_target}
 {
-    if (!render_target)
-        BOOST_THROW_EXCEPTION(std::logic_error("DisplayBuffer does not support GL rendering"));
-
     ensure_current();
 }
 
@@ -213,7 +206,7 @@ public:
             "}\n";
 
         // GL shader compilation is *not* threadsafe, and requires external synchronisation
-        std::lock_guard<std::mutex> lock{compilation_mutex};
+        std::lock_guard lock{compilation_mutex};
 
         ShaderHandle const opaque_shader{
             compile_shader(GL_FRAGMENT_SHADER, opaque_fragment.str().c_str())};
@@ -304,8 +297,8 @@ mrg::Renderer::Program::Program(GLuint program_id)
     alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
-mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
-    : render_target(&display_buffer),
+mrg::Renderer::Renderer(RenderTarget& render_target)
+    : render_target(render_target),
       clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       program_factory{std::make_unique<ProgramFactory>()},
       display_transform(1)
@@ -358,8 +351,6 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
                   rbits, gbits, bbits, abits, dbits, sbits);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    set_viewport(display_buffer.view_area());
 }
 
 mrg::Renderer::~Renderer()

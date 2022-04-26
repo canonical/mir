@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "threaded_drm_event_handler.h"
@@ -39,9 +37,11 @@ mge::ThreadedDRMEventHandler::ThreadedDRMEventHandler(mir::Fd drm_fd)
 mge::ThreadedDRMEventHandler::~ThreadedDRMEventHandler()
 {
     {
-        std::lock_guard<std::mutex> lock{expectation_mutex};
-        shutdown = true;
-        expectations_changed.notify_all();
+        {
+            std::lock_guard lock{expectation_mutex};
+            shutdown = true;
+        }
+        expectations_changed.notify_one();
     }
     if (dispatch_thread.joinable())
     {
@@ -66,7 +66,7 @@ public:
 
     ~NotifyOnScopeExit()
     {
-        notifier.notify_all();
+        notifier.notify_one();
     }
 private:
     std::condition_variable& notifier;
@@ -78,7 +78,7 @@ std::future<void> mge::ThreadedDRMEventHandler::expect_flip_event(
     std::function<void(unsigned int frame_number, std::chrono::milliseconds frame_time)> on_flip)
 {
     NotifyOnScopeExit notifier{expectations_changed};
-    std::lock_guard<std::mutex> lock{expectation_mutex};
+    std::lock_guard lock{expectation_mutex};
     // First check if there's an empty slot in the vector (there probably is)
     for (auto& slot : pending_expectations)
     {
@@ -113,7 +113,7 @@ void mge::ThreadedDRMEventHandler::event_loop() noexcept
                 [](auto const& slot) { return static_cast<bool>(slot); });
         };
 
-    std::unique_lock<std::mutex> lock{expectation_mutex};
+    std::unique_lock lock{expectation_mutex};
     while (!shutdown)
     {
         if (!any_pending_expectations())
@@ -185,7 +185,7 @@ void mge::ThreadedDRMEventHandler::flip_handler(
      * No need to lock (and indeed, locking would be incorrect) as this is only called from
      * drmHandleEvent() which is only called from event_loop, and is called while holding the lock
      */
-    auto pending_expectations = static_cast<std::vector<std::experimental::optional<FlipEventData>>*>(data);
+    auto pending_expectations = static_cast<std::vector<std::optional<FlipEventData>>*>(data);
     for (auto& slot : *pending_expectations)
     {
         if (slot && slot->id == crtc_id)

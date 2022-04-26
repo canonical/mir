@@ -12,12 +12,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "mir/linearising_executor.h"
-#include "mir/system_executor.h"
+#include "mir/thread_pool_executor.h"
 
 #include <deque>
 #include <mutex>
@@ -26,7 +24,7 @@
 
 namespace
 {
-class LinearisingAdaptor : public mir::Executor
+class LinearisingAdaptor : public mir::NonBlockingExecutor
 {
 public:
     LinearisingAdaptor() noexcept
@@ -36,7 +34,7 @@ public:
 
     ~LinearisingAdaptor() noexcept
     {
-        std::unique_lock<decltype(mutex)> lock{mutex};
+        std::unique_lock lock{mutex};
         workqueue.clear();
         while (!idle)
         {
@@ -46,12 +44,12 @@ public:
 
     void spawn(std::function<void()>&& work) override
     {
-        std::lock_guard<decltype(mutex)> lock{mutex};
+        std::lock_guard lock{mutex};
         workqueue.push_back(std::move(work));
         if (idle)
         {
             idle = false;
-            mir::system_executor.spawn([this]() { work_loop(); });
+            mir::thread_pool_executor.spawn([this]() { work_loop(); });
         }
     }
 
@@ -59,19 +57,21 @@ private:
     // Execute items from the queue one at a time, until none are left
     void work_loop()
     {
-        std::unique_lock<decltype(mutex)> lock{mutex};
-        while (!workqueue.empty())
         {
+            std::unique_lock lock{mutex};
+            while (!workqueue.empty())
             {
-                auto work = std::move(workqueue.front());
-                workqueue.pop_front();
-                lock.unlock();
-                work();
+                {
+                    auto work = std::move(workqueue.front());
+                    workqueue.pop_front();
+                    lock.unlock();
+                    work();
+                }
+                lock.lock();
             }
-            lock.lock();
+            idle = true;
         }
-        idle = true;
-        idle_changed.notify_all();
+        idle_changed.notify_one();
     }
 
     std::mutex mutex;
@@ -81,4 +81,4 @@ private:
 } adaptor;
 }
 
-mir::Executor& mir::linearising_executor = adaptor;
+mir::NonBlockingExecutor& mir::linearising_executor = adaptor;

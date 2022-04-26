@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "mir_display.h"
@@ -109,14 +107,14 @@ void mf::MirDisplay::register_interest(OutputObserver* observer)
 {
     auto const adapter = std::make_shared<DisplayConfigurationObserverAdapter>(observer);
 
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
+    std::lock_guard lock{self->mutex};
     self->adapters.push_back(adapter);
     self->registrar->register_interest(adapter);
 }
 
 void mf::MirDisplay::unregister_interest(OutputObserver* observer)
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
+    std::lock_guard lock{self->mutex};
 
     self->adapters.erase(
         std::remove_if(
@@ -145,7 +143,7 @@ void mf::MirDisplay::unregister_interest(OutputObserver* observer)
 
 mf::MirDisplay::~MirDisplay()
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
+    std::lock_guard lock{self->mutex};
     for (auto const& adapter : self->adapters)
     {
         if (adapter)

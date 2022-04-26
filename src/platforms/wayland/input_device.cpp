@@ -70,14 +70,14 @@ miw::GenericInputDevice::GenericInputDevice(
 
 void miw::GenericInputDevice::start(InputSink* input_sink, EventBuilder* event_builder)
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     sink = input_sink;
     builder = event_builder;
 }
 
 void miw::GenericInputDevice::stop()
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
+    std::lock_guard lock{mutex};
     sink = nullptr;
     builder = nullptr;
 }
@@ -135,7 +135,7 @@ void  miw::GenericInputDevice::enqueue(std::function<EventUPtr(EventBuilder* bui
 {
     action_queue->enqueue([=, this]
           {
-              std::lock_guard<decltype(mutex)> lock{mutex};
+              std::lock_guard lock{mutex};
               if (started())
                   sink->handle_input(event(builder));
           });

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "wl_surface.h"
@@ -296,7 +294,7 @@ void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
     {
         // since pending.input_shape is an optional optional, this is needed
         auto shape = WlRegion::from(region.value())->rectangle_vector();
-        pending.input_shape = decltype(pending.input_shape)::value_type{move(shape)};
+        pending.input_shape = decltype(pending.input_shape)::value_type{std::move(shape)};
     }
     else
     {

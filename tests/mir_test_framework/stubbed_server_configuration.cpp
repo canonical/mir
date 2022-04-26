@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "mir_test_framework/stubbed_server_configuration.h"
@@ -49,7 +47,7 @@ namespace
 class StubRendererFactory : public mir::renderer::RendererFactory
 {
 public:
-    std::unique_ptr<mir::renderer::Renderer> create_renderer_for(mg::DisplayBuffer&)
+    std::unique_ptr<mir::renderer::Renderer> create_renderer_for(mir::renderer::gl::RenderTarget&)
     {
         return std::unique_ptr<mir::renderer::Renderer>(new mtd::StubRenderer());
     }

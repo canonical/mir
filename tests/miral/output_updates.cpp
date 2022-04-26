@@ -12,14 +12,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #include "test_window_manager_tools.h"
 #include "miral/output.h"
 
-#include <experimental/optional>
+#include <optional>
 
 using namespace miral;
 using namespace testing;
@@ -61,7 +59,7 @@ struct OutputUpdates : mt::TestWindowManagerTools
 
 TEST_F(OutputUpdates, policy_notified_of_output_creation)
 {
-    std::experimental::optional<Output> output_a;
+    std::optional<Output> output_a;
     auto display_config_a = create_fake_display_configuration({display_area_a});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
@@ -75,8 +73,8 @@ TEST_F(OutputUpdates, policy_notified_of_output_creation)
 
 TEST_F(OutputUpdates, policy_notified_of_multiple_outputs)
 {
-    std::experimental::optional<Output> output_a;
-    std::experimental::optional<Output> output_b;
+    std::optional<Output> output_a;
+    std::optional<Output> output_b;
     auto display_config_a_b = create_fake_display_configuration({display_area_a, display_area_b});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
@@ -93,9 +91,9 @@ TEST_F(OutputUpdates, policy_notified_of_multiple_outputs)
 
 TEST_F(OutputUpdates, policy_notified_of_output_update)
 {
-    std::experimental::optional<Output> output_initial;
-    std::experimental::optional<Output> output_original;
-    std::experimental::optional<Output> output_updated;
+    std::optional<Output> output_initial;
+    std::optional<Output> output_original;
+    std::optional<Output> output_updated;
     auto display_config_a = create_fake_display_configuration({display_area_a});
     auto display_config_b = create_fake_display_configuration({display_area_b});
 
@@ -126,9 +124,9 @@ TEST_F(OutputUpdates, policy_notified_of_output_update)
 
 TEST_F(OutputUpdates, policy_notified_of_output_delete)
 {
-    std::experimental::optional<Output> output_a;
-    std::experimental::optional<Output> output_b;
-    std::experimental::optional<Output> output_b_deleted;
+    std::optional<Output> output_a;
+    std::optional<Output> output_b;
+    std::optional<Output> output_b_deleted;
     auto display_config_a_b = create_fake_display_configuration({display_area_a, display_area_b});
     auto display_config_a = create_fake_display_configuration({display_area_a});
 

@@ -12,10 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by:
- * Thomas Voss <thomas.voss@canonical.com>
- * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "mir/test/doubles/mock_egl.h"
@@ -140,7 +136,7 @@ mtd::MockEGL::MockEGL()
     .WillByDefault(Invoke(
         [this] (EGLDisplay, EGLSurface, EGLSurface, EGLContext context)
         {
-            std::lock_guard<decltype(current_contexts_mutex)> lock{current_contexts_mutex};
+            std::lock_guard lock{current_contexts_mutex};
             current_contexts[std::this_thread::get_id()] = context;
             return EGL_TRUE;
         }));
@@ -148,7 +144,7 @@ mtd::MockEGL::MockEGL()
     ON_CALL(*this, eglGetCurrentContext())
     .WillByDefault(Invoke([this]
         {
-            std::lock_guard<decltype(current_contexts_mutex)> lock{current_contexts_mutex};
+            std::lock_guard lock{current_contexts_mutex};
             return current_contexts[std::this_thread::get_id()];
         }));
 

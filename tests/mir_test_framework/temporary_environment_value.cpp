@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "mir_test_framework/temporary_environment_value.h"

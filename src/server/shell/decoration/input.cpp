@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: William Wold <william.wold@canonical.com>
  */
 
 #include "input.h"
@@ -153,7 +151,7 @@ msd::InputManager::~InputManager()
 
 void msd::InputManager::update_window_state(WindowState const& window_state)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
 
     unsigned button_index = 0;
     for (auto const& widget : widgets)
@@ -198,7 +196,7 @@ void msd::InputManager::update_window_state(WindowState const& window_state)
 
 auto msd::InputManager::state() -> std::unique_ptr<InputState>
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     std::vector<ButtonInfo> buttons;
     for (auto const& widget : widgets)
     {
@@ -276,7 +274,7 @@ auto msd::InputManager::resize_edge_rect(
 
 void msd::InputManager::pointer_event(std::chrono::nanoseconds timestamp, geom::Point location, bool pressed)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     event_timestamp = timestamp;
     if (!pointer)
     {
@@ -303,16 +301,16 @@ void msd::InputManager::pointer_event(std::chrono::nanoseconds timestamp, geom::
 
 void msd::InputManager::pointer_leave(std::chrono::nanoseconds timestamp)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     event_timestamp = timestamp;
     if (pointer)
         process_leave(pointer.value());
-    pointer = std::experimental::nullopt;
+    pointer = std::nullopt;
 }
 
 void msd::InputManager::touch_event(int32_t id, std::chrono::nanoseconds timestamp, geom::Point location)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     event_timestamp = timestamp;
     auto device = touches.find(id);
     if (device == touches.end())
@@ -331,7 +329,7 @@ void msd::InputManager::touch_event(int32_t id, std::chrono::nanoseconds timesta
 
 void msd::InputManager::touch_up(int32_t id, std::chrono::nanoseconds timestamp)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     event_timestamp = timestamp;
     auto device = touches.find(id);
     if (device != touches.end())
@@ -354,7 +352,7 @@ void msd::InputManager::process_leave(Device& device)
     if (device.active_widget)
     {
         widget_leave(*device.active_widget.value());
-        device.active_widget = std::experimental::nullopt;
+        device.active_widget = std::nullopt;
     }
 }
 
@@ -407,14 +405,14 @@ void msd::InputManager::process_drag(Device& device)
         widget_enter(*device.active_widget.value());
 }
 
-auto msd::InputManager::widget_at(geom::Point location) -> std::experimental::optional<std::shared_ptr<Widget>>
+auto msd::InputManager::widget_at(geom::Point location) -> std::optional<std::shared_ptr<Widget>>
 {
     for (auto const& widget : widgets)
     {
         if (widget->rect.contains(location))
             return widget;
     }
-    return std::experimental::nullopt;
+    return std::nullopt;
 }
 
 void msd::InputManager::widget_enter(Widget& widget)

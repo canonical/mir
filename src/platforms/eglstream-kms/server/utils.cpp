@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "utils.h"
@@ -60,7 +58,7 @@ dev_t mg::eglstream::devnum_for_device(EGLDeviceEXT device)
     return info.st_rdev;
 }
 
-auto mg::eglstream::parse_nvidia_version(char const* gl_version) -> std::experimental::optional<VersionInfo>
+auto mg::eglstream::parse_nvidia_version(char const* gl_version) -> std::optional<VersionInfo>
 {
     /* Parses the GL_VERSION output of the NVIDIA binary drivers, which has the form
      * $GL_VERSION NVIDIA $NVIDIA_DRIVER_MAJOR.$NVIDIA_DRIVER_MINOR

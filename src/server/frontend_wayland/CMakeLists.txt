@@ -44,9 +44,11 @@ set(
   input_method_v2.cpp           input_method_v2.h
   input_method_grab_keyboard_v2.cpp input_method_grab_keyboard_v2.h
   idle_inhibit_v1.cpp           idle_inhibit_v1.h
+  wlr_screencopy_v1.cpp         wlr_screencopy_v1.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/wayland.h
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
+  std_layout_uptr.h
 )
 
 add_custom_command(

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
 #include "mir/logging/dumb_console_logger.h"
@@ -45,7 +43,7 @@ std::shared_ptr<ml::Logger> the_logger;
 
 std::shared_ptr<ml::Logger> get_logger()
 {
-    std::lock_guard<decltype(log_mutex)> lock{log_mutex};
+    std::lock_guard lock{log_mutex};
 
     if (!the_logger)
         the_logger = std::make_shared<ml::DumbConsoleLogger>();
@@ -65,7 +63,7 @@ void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
 {
     if (new_logger)
     {
-        std::lock_guard<decltype(log_mutex)> lock{log_mutex};
+        std::lock_guard lock{log_mutex};
         the_logger = new_logger;
     }
 }

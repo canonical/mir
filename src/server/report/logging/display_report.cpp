@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "display_report.h"
@@ -165,7 +163,7 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
 void mrl::DisplayReport::report_vsync(unsigned int output_id,
                                       graphics::Frame const& frame)
 {
-    std::lock_guard<decltype(vsync_event_mutex)> lk(vsync_event_mutex);
+    std::lock_guard lk(vsync_event_mutex);
     auto prev = prev_frame.find(output_id);
     if (prev != prev_frame.end() && prev->second.msc < frame.msc)
     {

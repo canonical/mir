@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
 #include <gtest/gtest.h>
@@ -106,7 +104,9 @@ TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_x_cannot_open_dis
 
     mir::SharedLibrary platform_lib{mtf::server_platform("server-x11")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(nullptr, options));
+    auto probe_result = probe(nullptr, nullptr, options);
+    
+    EXPECT_THAT(probe_result, IsEmpty());
 }
 
 TEST_F(X11GraphicsPlatformTest, parses_simple_output_size)

@@ -50,6 +50,9 @@ SNAPS = {
         "edge": {"ppa": "dev", "recipe": "ubuntu-frame-edge"},
         "beta": {"ppa": "rc", "recipe": "ubuntu-frame-beta"},
     },
+    "mesa-core20": {
+        "beta": {"recipe": "mesa-core20-beta"},
+    },
     "mir-kiosk-x11": {
         "edge": {"ppa": "dev", "recipe": "mir-kiosk-x11-edge"},
         "beta": {"ppa": "rc", "recipe": "mir-kiosk-x11-beta"},

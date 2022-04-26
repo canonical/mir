@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by:
- *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #include "basic_seat.h"
@@ -44,7 +41,7 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
 
     void update_outputs(mg::DisplayConfiguration const& conf)
     {
-        std::lock_guard<std::mutex> lock(output_mutex);
+        std::lock_guard lock(output_mutex);
         outputs.clear();
         geom::Rectangles output_rectangles;
         conf.for_each_output(
@@ -136,13 +133,13 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
 
     geom::Rectangle get_bounding_rectangle() const
     {
-        std::lock_guard<std::mutex> lock(output_mutex);
+        std::lock_guard lock(output_mutex);
         return bounding_rectangle;
     }
 
     mi::OutputInfo get_output_info(uint32_t output) const
     {
-        std::lock_guard<std::mutex> lock(output_mutex);
+        std::lock_guard lock(output_mutex);
         if (output)
         {
             auto pos = outputs.find(output);

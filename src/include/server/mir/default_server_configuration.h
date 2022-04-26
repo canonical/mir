@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 #ifndef MIR_DEFAULT_SERVER_CONFIGURATION_H_
 #define MIR_DEFAULT_SERVER_CONFIGURATION_H_
@@ -169,6 +167,7 @@ public:
     std::shared_ptr<frontend::Connector>    the_xwayland_connector() override;
     std::shared_ptr<graphics::Display>      the_display() override;
     std::shared_ptr<compositor::Compositor> the_compositor() override;
+    std::shared_ptr<compositor::ScreenShooter> the_screen_shooter() override;
     std::shared_ptr<input::InputManager>    the_input_manager() override;
     std::shared_ptr<MainLoop>               the_main_loop() override;
     std::shared_ptr<ServerStatusListener>   the_server_status_listener() override;
@@ -401,6 +400,7 @@ protected:
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<compositor::CompositorReport> compositor_report;
+    CachedPtr<compositor::ScreenShooter> screen_shooter;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
     CachedPtr<time::Clock> clock;

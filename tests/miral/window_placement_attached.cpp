@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: William Wold <william.wold@canonical.com>
  */
 
 #include "test_window_manager_tools.h"
@@ -87,10 +85,10 @@ struct WindowPlacementAttached : mt::TestWindowManagerTools, WithParamInterface<
 
     auto placement_for_attachement(Rectangle output_rect, Size window_size, MirPlacementGravity edges) -> Rectangle
     {
-        std::experimental::optional<X> left;
-        std::experimental::optional<Y> top;
-        std::experimental::optional<X> right;
-        std::experimental::optional<Y> bottom;
+        std::optional<X> left;
+        std::optional<Y> top;
+        std::optional<X> right;
+        std::optional<Y> bottom;
 
         if (edges & mir_placement_gravity_west)
             left = output_rect.left();

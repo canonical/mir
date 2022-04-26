@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "server_example_log_options.h"
@@ -138,7 +136,8 @@ try
             .enable(miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1)
             .enable(miral::WaylandExtensions::zxdg_output_manager_v1)
             .enable(miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1)
-            .enable(miral::WaylandExtensions::zwp_input_method_manager_v2),
+            .enable(miral::WaylandExtensions::zwp_input_method_manager_v2)
+            .enable(miral::WaylandExtensions::zwlr_screencopy_manager_v1),
         miral::set_window_management_policy<miral::MinimalWindowManager>(),
         me::add_input_device_configuration_options_to,
         add_timeout_option_to,

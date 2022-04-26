@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "mir/dispatch/threaded_dispatcher.h"
@@ -318,10 +316,6 @@ TEST_F(ThreadedDispatcherTest, DISABLED_sets_thread_names_appropriately)
     EXPECT_TRUE(dispatched->wait_for(10s));
 }
 
-void sigcont_handler(int)
-{
-}
-
 // Regression test for: lp #1439719
 TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
 {
@@ -348,7 +342,11 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
                  * When there's a signal handler for SIGCONT installed then
                  * any blocked syscall will (correctly) return EINTR, so install one.
                  */
-                signal(SIGCONT, &sigcont_handler);
+                struct sigaction sig_handler_new;
+                sigfillset(&sig_handler_new.sa_mask);
+                sig_handler_new.sa_flags = 0;
+                sig_handler_new.sa_handler = [](auto) {};
+                sigaction(SIGCONT, &sig_handler_new, nullptr);
 
                 md::ThreadedDispatcher dispatcher{"Test thread", dispatchable};
                 // Ensure the dispatcher has started
@@ -371,8 +369,7 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
                 stop_and_restart_process.~CrossProcessAction();
                 exit_success_sync.~CrossProcessSync();
             }
-
-            exit(HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+            _exit(HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
         },
         []{ return 1; });
 
@@ -388,7 +385,7 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
         });
 
     auto const result = child->wait_for_termination(30s);
-    EXPECT_TRUE(result.exited_normally());
+    EXPECT_TRUE(result.exited_normally()) << result;
 
     // The test may run under valgrind which may change the exit code of the
     // forked child if it detects any issues. Issues detected by valgrind are

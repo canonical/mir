@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #include "display.h"
@@ -229,7 +227,7 @@ mgg::Display::~Display()
 void mgg::Display::for_each_display_sync_group(
     std::function<void(graphics::DisplaySyncGroup&)> const& f)
 {
-    std::lock_guard<std::mutex> lg{configuration_mutex};
+    std::lock_guard lg{configuration_mutex};
 
     for (auto& db_ptr : display_buffers)
         f(*db_ptr);
@@ -237,7 +235,7 @@ void mgg::Display::for_each_display_sync_group(
 
 std::unique_ptr<mg::DisplayConfiguration> mgg::Display::configuration() const
 {
-    std::lock_guard<std::mutex> lg{configuration_mutex};
+    std::lock_guard lg{configuration_mutex};
 
     if (dirty_configuration)
     {
@@ -259,7 +257,7 @@ void mgg::Display::configure(mg::DisplayConfiguration const& conf)
     }
 
     {
-        std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+        std::lock_guard lock{configuration_mutex};
         configure_locked(dynamic_cast<RealKMSDisplayConfiguration const&>(conf), lock);
     }
 
@@ -301,7 +299,7 @@ void mgg::Display::pause()
 void mgg::Display::resume()
 {
     {
-        std::lock_guard<std::mutex> lg{configuration_mutex};
+        std::lock_guard lg{configuration_mutex};
 
         /*
          * After resuming (e.g. because we switched back to the display server VT)
@@ -336,7 +334,7 @@ auto mgg::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
             void with_current_configuration_do(
                 std::function<void(KMSDisplayConfiguration const&)> const& exec)
             {
-                std::lock_guard<std::mutex> lg{display.configuration_mutex};
+                std::lock_guard lg{display.configuration_mutex};
                 exec(display.current_display_configuration);
             }
 
@@ -399,7 +397,7 @@ bool mgg::Display::apply_if_configuration_preserves_display_buffers(
     auto const& new_kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
 
     {
-        std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+        std::lock_guard lock{configuration_mutex};
         if (compatible(current_display_configuration, new_kms_conf))
         {
             configure_locked(new_kms_conf, lock);

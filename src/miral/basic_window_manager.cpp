@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "basic_window_manager.h"
@@ -71,7 +69,7 @@ miral::BasicWindowManager::Locker::Locker(BasicWindowManager* self) :
     policy->advise_begin();
     std::vector<std::weak_ptr<Workspace>> workspaces;
     {
-        std::lock_guard<std::mutex> const lock{self->dead_workspaces->dead_workspaces_mutex};
+        std::lock_guard const lock{self->dead_workspaces->dead_workspaces_mutex};
         workspaces.swap(self->dead_workspaces->workspaces);
     }
 
@@ -408,7 +406,7 @@ void miral::BasicWindowManager::handle_request_move(
     std::shared_ptr<mir::scene::Surface> const& surface,
     uint64_t timestamp)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard lock(mutex);
 
     if (!surface_known(surface, "move"))
         return;
@@ -425,7 +423,7 @@ void miral::BasicWindowManager::handle_request_resize(
     uint64_t timestamp,
     MirResizeEdge edge)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard lock(mutex);
 
     if (!surface_known(surface, "resize"))
         return;
@@ -2348,7 +2346,7 @@ public:
 
     ~Workspace()
     {
-        std::lock_guard<std::mutex> lock {dead_workspaces->dead_workspaces_mutex};
+        std::lock_guard lock {dead_workspaces->dead_workspaces_mutex};
         dead_workspaces->workspaces.push_back(self);
     }
 

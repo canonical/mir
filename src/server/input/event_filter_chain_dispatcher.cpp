@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
 #include "event_filter_chain_dispatcher.h"
@@ -31,7 +29,7 @@ mi::EventFilterChainDispatcher::EventFilterChainDispatcher(
 // TODO: It probably makes sense to provide keymapped events.
 bool mi::EventFilterChainDispatcher::handle(MirEvent const& event)
 {
-    std::lock_guard<std::mutex> lg(filter_guard);
+    std::lock_guard lg(filter_guard);
     
     auto it = filters.begin();
     while (it != filters.end())
@@ -50,14 +48,14 @@ bool mi::EventFilterChainDispatcher::handle(MirEvent const& event)
 
 void mi::EventFilterChainDispatcher::append(std::weak_ptr<EventFilter> const& filter)
 {
-    std::lock_guard<std::mutex> lg(filter_guard);
+    std::lock_guard lg(filter_guard);
 
     filters.push_back(filter);
 }
 
 void mi::EventFilterChainDispatcher::prepend(std::weak_ptr<EventFilter> const& filter)
 {
-    std::lock_guard<std::mutex> lg(filter_guard);
+    std::lock_guard lg(filter_guard);
         
     filters.insert(filters.begin(), filter);
 }

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "mir/events/event_builders.h"
@@ -86,7 +84,7 @@ void ms::SurfaceEventSource::input_consumed(Surface const*, MirEvent const* even
 {
     auto ev = mev::clone_event(*event);
     mev::set_window_id(*ev, id.as_value());
-    event_sink->handle_event(move(ev));
+    event_sink->handle_event(std::move(ev));
 }
 
 void ms::SurfaceEventSource::start_drag_and_drop(Surface const*, std::vector<uint8_t> const& handle)

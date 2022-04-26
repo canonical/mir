@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include <condition_variable>
@@ -183,7 +181,7 @@ void ms::MediatingDisplayChanger::configure(
     }
 
     {
-        std::lock_guard<std::mutex> lg{configuration_mutex};
+        std::lock_guard lg{configuration_mutex};
         config_map[session] = conf;
         observer->session_configuration_applied(session, conf);
 
@@ -199,7 +197,7 @@ void ms::MediatingDisplayChanger::configure(
         {
             if (auto const session = weak_session.lock())
             {
-                std::lock_guard<std::mutex> lg{configuration_mutex};
+                std::lock_guard lg{configuration_mutex};
 
                 /* If the session is focused, apply the configuration */
                 if (focused_session.lock() == session)
@@ -229,7 +227,7 @@ ms::MediatingDisplayChanger::preview_base_configuration(
     }
 
     {
-        std::lock_guard<std::mutex> lock{configuration_mutex};
+        std::lock_guard lock{configuration_mutex};
 
         if (preview_configuration_timeout)
         {
@@ -275,7 +273,7 @@ ms::MediatingDisplayChanger::confirm_base_configuration(
     std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf)
 {
     {
-        std::lock_guard<std::mutex> lock{configuration_mutex};
+        std::lock_guard lock{configuration_mutex};
         preview_configuration_timeout = std::unique_ptr<mt::Alarm>();
         currently_previewing_session = std::weak_ptr<ms::Session>{};
     }
@@ -285,7 +283,7 @@ ms::MediatingDisplayChanger::confirm_base_configuration(
 std::shared_ptr<mg::DisplayConfiguration>
 ms::MediatingDisplayChanger::base_configuration()
 {
-    std::lock_guard<std::mutex> lg{configuration_mutex};
+    std::lock_guard lg{configuration_mutex};
 
     return base_configuration_->clone();
 }
@@ -294,7 +292,7 @@ void ms::MediatingDisplayChanger::configure_for_hardware_change(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf)
 {
     {
-        std::lock_guard<std::mutex> lg{pending_configuration_mutex};
+        std::lock_guard lg{pending_configuration_mutex};
         // if pending_configuration is not null, there is already an action queued
         bool const has_in_flight_action{pending_configuration};
         pending_configuration = conf;
@@ -306,7 +304,7 @@ void ms::MediatingDisplayChanger::configure_for_hardware_change(
 
     server_action_queue->enqueue(this, [this]
         {
-            std::unique_lock<std::mutex> pending_lg{pending_configuration_mutex};
+            std::unique_lock pending_lg{pending_configuration_mutex};
             if (!pending_configuration)
             {
                 return;
@@ -315,7 +313,7 @@ void ms::MediatingDisplayChanger::configure_for_hardware_change(
             pending_configuration = {};
             pending_lg.unlock();
 
-            std::lock_guard<std::mutex> lg{configuration_mutex};
+            std::lock_guard lg{configuration_mutex};
 
             auto existing_configuration = base_configuration_;
 
@@ -447,7 +445,7 @@ void ms::MediatingDisplayChanger::send_config_to_all_sessions(
 void ms::MediatingDisplayChanger::focus_change_handler(
     std::shared_ptr<ms::Session> const& session)
 {
-    std::lock_guard<std::mutex> lg{configuration_mutex};
+    std::lock_guard lg{configuration_mutex};
 
     focused_session = session;
 
@@ -477,7 +475,7 @@ void ms::MediatingDisplayChanger::focus_change_handler(
 
 void ms::MediatingDisplayChanger::no_focus_handler()
 {
-    std::lock_guard<std::mutex> lg{configuration_mutex};
+    std::lock_guard lg{configuration_mutex};
 
     focused_session.reset();
     if (!base_configuration_applied)
@@ -489,7 +487,7 @@ void ms::MediatingDisplayChanger::no_focus_handler()
 void ms::MediatingDisplayChanger::session_stopping_handler(
     std::shared_ptr<ms::Session> const& session)
 {
-    std::lock_guard<std::mutex> lg{configuration_mutex};
+    std::lock_guard lg{configuration_mutex};
 
     config_map.erase(session);
 }
@@ -505,7 +503,7 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
         this,
         [this, conf]
         {
-            std::lock_guard<std::mutex> lg{configuration_mutex};
+            std::lock_guard lg{configuration_mutex};
 
             base_configuration_ = conf;
             if (base_configuration_applied)
@@ -518,7 +516,7 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
 
 void ms::MediatingDisplayChanger::set_power_mode(MirPowerMode new_power_mode)
 {
-    std::lock_guard<std::mutex> lock{power_mode_mutex};
+    std::lock_guard lock{power_mode_mutex};
     if (new_power_mode == power_mode)
     {
         return;

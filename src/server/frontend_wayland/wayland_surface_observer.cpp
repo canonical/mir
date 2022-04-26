@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
- *              William Wold <william.wold@canonical.com>
  */
 
 #include "wayland_surface_observer.h"
@@ -130,7 +127,7 @@ void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_window_destroyed(
     std::function<void(Impl* impl, WindowWlSurfaceRole* window)>&& work)
 {
     wayland_executor.spawn(
-        [impl=impl, work=move(work)]
+        [impl=impl, work=std::move(work)]
         {
             if (impl->window)
             {

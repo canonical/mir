@@ -12,9 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by:
- *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #include "default_device.h"
@@ -101,7 +98,7 @@ MirInputDeviceId mi::DefaultDevice::id() const
 
 mir::optional_value<MirPointerConfig> mi::DefaultDevice::pointer_configuration() const
 {
-    std::lock_guard<std::mutex> lock(config_mutex);
+    std::lock_guard lock(config_mutex);
     if (!pointer.is_set())
         return {};
 
@@ -114,7 +111,7 @@ mir::optional_value<MirPointerConfig> mi::DefaultDevice::pointer_configuration()
 
 mir::optional_value<MirTouchpadConfig> mi::DefaultDevice::touchpad_configuration() const
 {
-    std::lock_guard<std::mutex> lock(config_mutex);
+    std::lock_guard lock(config_mutex);
     if (!touchpad.is_set())
         return {};
 
@@ -128,7 +125,7 @@ mir::optional_value<MirTouchpadConfig> mi::DefaultDevice::touchpad_configuration
 void mi::DefaultDevice::apply_pointer_configuration(MirPointerConfig const& conf)
 {
     {
-        std::lock_guard<std::mutex> lock(config_mutex);
+        std::lock_guard lock(config_mutex);
         if (!pointer.is_set())
             BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a pointer configuration"));
     }
@@ -150,7 +147,7 @@ void mi::DefaultDevice::set_pointer_configuration(MirPointerConfig const& conf)
     settings.horizontal_scroll_scale = conf.horizontal_scroll_scale();
 
     {
-        std::lock_guard<std::mutex> lock(config_mutex);
+        std::lock_guard lock(config_mutex);
         pointer = settings;
         if (!actions) // device is disabled
             return;
@@ -164,7 +161,7 @@ void mi::DefaultDevice::set_pointer_configuration(MirPointerConfig const& conf)
 void mi::DefaultDevice::apply_touchpad_configuration(MirTouchpadConfig const& conf)
 {
     {
-        std::lock_guard<std::mutex> lock(config_mutex);
+        std::lock_guard lock(config_mutex);
         if (!touchpad.is_set())
             BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a touchpad configuration"));
     }
@@ -189,7 +186,7 @@ void mi::DefaultDevice::set_touchpad_configuration(MirTouchpadConfig const& conf
     settings.middle_mouse_button_emulation = conf.middle_mouse_button_emulation();
 
     {
-        std::lock_guard<std::mutex> lock(config_mutex);
+        std::lock_guard lock(config_mutex);
         touchpad = settings;
         if (!actions) // device is disabled
             return;
@@ -202,7 +199,7 @@ void mi::DefaultDevice::set_touchpad_configuration(MirTouchpadConfig const& conf
 
 mir::optional_value<MirKeyboardConfig> mi::DefaultDevice::keyboard_configuration() const
 {
-    std::lock_guard<std::mutex> lock(config_mutex);
+    std::lock_guard lock(config_mutex);
     return keyboard;
 }
 
@@ -217,7 +214,7 @@ void mi::DefaultDevice::apply_keyboard_configuration(MirKeyboardConfig const& co
 
 void mi::DefaultDevice::set_keyboard_configuration(MirKeyboardConfig const& conf)
 {
-    std::lock_guard<std::mutex> lock(config_mutex);
+    std::lock_guard lock(config_mutex);
     if (!actions) // device is disabled
         return;
     if (!keyboard.value().device_keymap()->matches(*conf.device_keymap()))
@@ -253,7 +250,7 @@ void mi::DefaultDevice::set_touchscreen_configuration(MirTouchscreenConfig const
     settings.mapping_mode = config.mapping_mode();
 
     {
-        std::lock_guard<std::mutex> lock(config_mutex);
+        std::lock_guard lock(config_mutex);
         touchscreen = settings;
 
         if (!actions) // device is disabled
@@ -290,6 +287,6 @@ MirInputDevice mi::DefaultDevice::config() const
 
 void mi::DefaultDevice::disable_queue()
 {
-    std::lock_guard<std::mutex> lock(config_mutex);
+    std::lock_guard lock(config_mutex);
     actions.reset();
 }

@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "mir/default_server_configuration.h"
@@ -25,6 +23,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/session_container.h"
 #include "mir/shell/display_configuration_controller.h"
+#include "mir/main_loop.h"
 
 #include "broadcasting_session_event_sink.h"
 #include "mediating_display_changer.h"

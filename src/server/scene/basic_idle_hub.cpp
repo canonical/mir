@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: William Wold <william.wold@canonical.com>
  */
 
 #include "basic_idle_hub.h"
@@ -79,7 +77,7 @@ struct ms::BasicIdleHub::Multiplexer: ObserverMultiplexer<IdleStateObserver>
 
     void register_and_send_initial_state(
         std::weak_ptr<IdleStateObserver> const& observer,
-        Executor& executor,
+        NonBlockingExecutor& executor,
         bool is_active)
     {
         register_interest(observer, executor);
@@ -148,7 +146,7 @@ ms::BasicIdleHub::~BasicIdleHub()
 
 void ms::BasicIdleHub::poke()
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     poke_time = clock->now();
     schedule_alarm(lock, poke_time);
     if (!idle_multiplexers.empty())
@@ -171,7 +169,7 @@ void ms::BasicIdleHub::register_interest(
 
 void ms::BasicIdleHub::register_interest(
     std::weak_ptr<IdleStateObserver> const& observer,
-    Executor& executor,
+    NonBlockingExecutor& executor,
     time::Duration timeout)
 {
     auto const shared_observer = observer.lock();
@@ -180,7 +178,7 @@ void ms::BasicIdleHub::register_interest(
         return;
     }
 
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     auto const iter = timeouts.find(timeout);
     std::shared_ptr<Multiplexer> multiplexer;
     if (iter == timeouts.end())
@@ -219,7 +217,7 @@ void ms::BasicIdleHub::register_interest(
 
 void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
 {
-    std::lock_guard<std::mutex> lock{mutex};
+    std::lock_guard lock{mutex};
     for (auto i = timeouts.begin(); i != timeouts.end();) {
         i->second->unregister_interest(observer);
         if (i->second->empty()) {

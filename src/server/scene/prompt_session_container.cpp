@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
 #include "prompt_session_container.h"
@@ -38,13 +36,13 @@ ms::PromptSessionContainer::PromptSessionContainer()
 
 void ms::PromptSessionContainer::insert_prompt_session(std::shared_ptr<PromptSession> const& prompt_session)
 {
-    std::unique_lock<std::mutex> lk(mutex);
+    std::unique_lock lk(mutex);
     prompt_sessions[prompt_session.get()] = prompt_session;
 }
 
 void ms::PromptSessionContainer::remove_prompt_session(std::shared_ptr<PromptSession> const& prompt_session)
 {
-    std::unique_lock<std::mutex> lk(mutex);
+    std::unique_lock lk(mutex);
 
     {
         participant_by_prompt_session::iterator it, end;
@@ -57,7 +55,7 @@ void ms::PromptSessionContainer::remove_prompt_session(std::shared_ptr<PromptSes
 
 bool ms::PromptSessionContainer::insert_participant(PromptSession* prompt_session, std::weak_ptr<Session> const& session, ParticipantType participant_type)
 {
-    std::unique_lock<std::mutex> lk(mutex);
+    std::unique_lock lk(mutex);
 
     // the prompt session must have first been added by insert_prompt_session.
     if (prompt_sessions.find(prompt_session) == prompt_sessions.end())
@@ -78,7 +76,7 @@ bool ms::PromptSessionContainer::insert_participant(PromptSession* prompt_sessio
 
 bool ms::PromptSessionContainer::remove_participant(PromptSession* prompt_session, std::weak_ptr<Session> const& session, ParticipantType participant_type)
 {
-    std::unique_lock<std::mutex> lk(mutex);
+    std::unique_lock lk(mutex);
 
     participant_by_session::iterator it = participant_index.find(boost::make_tuple(session, participant_type, prompt_session));
     if (it == participant_index.end())
@@ -92,7 +90,7 @@ void ms::PromptSessionContainer::for_each_participant_in_prompt_session(
     PromptSession* prompt_session,
     std::function<void(std::weak_ptr<Session> const&, ms::PromptSessionContainer::ParticipantType participant_type)> f) const
 {
-    std::unique_lock<std::mutex> lk(mutex);
+    std::unique_lock lk(mutex);
 
     participant_by_prompt_session::iterator it,end;
     boost::tie(it,end) = prompt_session_index.equal_range(prompt_session);
@@ -109,7 +107,7 @@ void ms::PromptSessionContainer::for_each_prompt_session_with_participant(
     ParticipantType participant_type,
     std::function<void(std::shared_ptr<PromptSession> const&)> f) const
 {
-    std::unique_lock<std::mutex> lk(mutex);
+    std::unique_lock lk(mutex);
 
     participant_by_session::iterator it,end;
     boost::tie(it,end) = participant_index.equal_range(boost::make_tuple(participant, participant_type));
@@ -128,7 +126,7 @@ void ms::PromptSessionContainer::for_each_prompt_session_with_participant(
     std::weak_ptr<Session> const& participant,
     std::function<void(std::shared_ptr<PromptSession> const&, ParticipantType)> f) const
 {
-    std::unique_lock<std::mutex> lk(mutex);
+    std::unique_lock lk(mutex);
     participant_by_session::iterator it,end;
     boost::tie(it,end) = participant_index.equal_range(participant);
 
