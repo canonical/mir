@@ -46,6 +46,7 @@ class KeyboardObserver;
 namespace graphics
 {
 class GraphicBufferAllocator;
+class DisplayConfigurationObserver;
 }
 namespace geometry
 {
@@ -75,6 +76,7 @@ class SessionAuthorizer;
 class WlDataDeviceManager;
 class WlSurface;
 class SurfaceStack;
+class DisplayChanger;
 
 class WaylandExtensions
 {
@@ -133,6 +135,8 @@ public:
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<SurfaceStack> const& surface_stack,
+        std::shared_ptr<DisplayChanger> const& display_changer,
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar,
         std::shared_ptr<scene::Clipboard> const& clipboard,
         std::shared_ptr<scene::TextInputHub> const& text_input_hub,
         std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,

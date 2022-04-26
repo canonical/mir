@@ -462,7 +462,7 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
 
     // Send wl_surface.enter events for every output
     // TODO: send enter/leave when the surface actually enters and leaves outputs
-    output_manager->display_config()->for_each_output([&](graphics::DisplayConfigurationOutput const& conf)
+    output_manager->for_each_output([&](graphics::DisplayConfigurationOutput const& conf)
         {
             auto const output = output_manager->output_for(conf.id);
             if (output)

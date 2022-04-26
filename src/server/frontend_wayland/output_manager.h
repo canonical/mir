@@ -20,8 +20,6 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/null_display_configuration_observer.h>
 
-#include "mir_display.h"
-
 #include <wayland-server-core.h>
 #include <wayland-server-protocol.h>
 
@@ -32,9 +30,12 @@
 
 namespace mir
 {
+template<typename T>
+class ObserverRegistrar;
+class Executor;
 namespace frontend
 {
-class MirDisplay;
+class DisplayChanger;
 
 class Output
 {
@@ -65,7 +66,11 @@ private:
 class OutputManager
 {
 public:
-    OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config, std::shared_ptr<Executor> const& executor);
+    OutputManager(
+        wl_display* display,
+        std::shared_ptr<Executor> const& executor,
+        std::shared_ptr<DisplayChanger> const& changer,
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& registrar);
     ~OutputManager();
 
     /// Returns the output ID (if any) associated with the given output resource. Output resource may be nullptr.
@@ -74,13 +79,13 @@ public:
 
     auto output_for(graphics::DisplayConfigurationOutputId id) -> std::optional<Output*>;
 
-    auto display_config() const -> std::shared_ptr<MirDisplay> {return display_config_;}
-
     /// Either calls functor exactly once and returns true, or does not call functor and returns false if the output is
     /// not found
     auto with_config_for(
         wl_resource* output,
         std::function<void(graphics::DisplayConfigurationOutput const&)> const& functor) -> bool;
+
+    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const;
 
 private:
     void create_output(graphics::DisplayConfigurationOutput const& initial_config);
@@ -88,9 +93,10 @@ private:
 
     struct DisplayConfigObserver;
 
-    std::shared_ptr<MirDisplay> const display_config_;
     wl_display* const display;
     std::shared_ptr<Executor> const executor;
+    std::shared_ptr<DisplayChanger> const changer;
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const registrar;
     std::shared_ptr<DisplayConfigObserver> const display_config_observer;
     std::unordered_map<graphics::DisplayConfigurationOutputId, std::unique_ptr<Output>> outputs;
 };

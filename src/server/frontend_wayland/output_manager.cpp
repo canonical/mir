@@ -17,7 +17,9 @@
 #include "output_manager.h"
 #include "wayland_executor.h"
 
-#include "mir/log.h"
+#include <mir/frontend/display_changer.h>
+#include <mir/observer_registrar.h>
+#include <mir/log.h>
 
 #include <algorithm>
 
@@ -229,19 +231,24 @@ private:
     }
 };
 
-mf::OutputManager::OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config, std::shared_ptr<Executor> const& executor) :
-    display_config_{display_config},
-    display{display},
-    executor{executor},
-    display_config_observer{std::make_shared<DisplayConfigObserver>(*this)}
+mf::OutputManager::OutputManager(
+    wl_display* display,
+    std::shared_ptr<Executor> const& executor,
+    std::shared_ptr<DisplayChanger> const& changer,
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& registrar)
+    : display{display},
+      executor{executor},
+      changer{changer},
+      registrar{registrar},
+      display_config_observer{std::make_shared<DisplayConfigObserver>(*this)}
 {
-    display_config->register_interest(display_config_observer, *executor);
-    display_config->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
+    registrar->register_interest(display_config_observer, *executor);
+    for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
 }
 
 mf::OutputManager::~OutputManager()
 {
-    display_config_->unregister_interest(*display_config_observer);
+    registrar->unregister_interest(*display_config_observer);
 }
 
 auto mf::OutputManager::output_id_for(wl_client* client, wl_resource* output) const
@@ -283,7 +290,7 @@ auto mf::OutputManager::with_config_for(
     bool found = false;
     if (auto const output_id = output_id_for(wl_resource_get_client(output), output))
     {
-        display_config_->for_each_output(
+        for_each_output(
             [&](mg::DisplayConfigurationOutput const& config)
             {
                 if (config.id == output_id.value())
@@ -302,6 +309,14 @@ auto mf::OutputManager::with_config_for(
     }
 
     return found;
+}
+
+void mf::OutputManager::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
+{
+    // Not only is this a train-wreck, it also does not use the *current* configuration.
+    // OTOH is replicates the functionality it replaces and "session" display configs
+    // are only supported through the Mir client API. (For now.)
+    changer->base_configuration()->for_each_output(f);
 }
 
 void mf::OutputManager::create_output(mg::DisplayConfigurationOutput const& initial_config)
