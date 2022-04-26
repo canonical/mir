@@ -58,7 +58,7 @@ struct IdleInhibitV1Ctx
 
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<ms::IdleHub> const idle_hub;
-    std::shared_ptr<ms::SurfaceObserver> surface_observer;
+    std::shared_ptr<ms::SurfaceObserver> const surface_observer;
 };
 
 class IdleInhibitManagerV1Global : public mw::IdleInhibitManagerV1::Global
