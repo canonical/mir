@@ -57,7 +57,7 @@ public:
         ~WakeLock() override;
 
     private:
-        std::weak_ptr<BasicIdleHub> idle_hub;
+        std::weak_ptr<BasicIdleHub> const idle_hub;
     };
 
     void poke() override;
