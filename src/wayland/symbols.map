@@ -1,23 +1,3 @@
-MIRWAYLAND_2.8 {
-global:
-  extern "C++" {
-  mir::wayland::IdleInhibitManagerV1::*;
-  non-virtual?thunk?to?mir::wayland::IdleInhibitManagerV1::*;
-  typeinfo?for?mir::wayland::IdleInhibitManagerV1;
-  vtable?for?mir::wayland::IdleInhibitManagerV1;
-  typeinfo?for?mir::wayland::IdleInhibitManagerV1::Global;
-  vtable?for?mir::wayland::IdleInhibitManagerV1::Global;
-  virtual?thunk?to?mir::wayland::IdleInhibitManagerV1::?IdleInhibitManagerV1*;
-
-  mir::wayland::IdleInhibitorV1::*;
-  non-virtual?thunk?to?mir::wayland::IdleInhibitorV1::*;
-  typeinfo?for?mir::wayland::IdleInhibitorV1;
-  vtable?for?mir::wayland::IdleInhibitorV1;
-  virtual?thunk?to?mir::wayland::IdleInhibitorV1::?IdleInhibitorV1*;
-  };
-  local: *;
-};
-
 MIRWAYLAND_2.5 {
 global:
   extern "C++" {
@@ -496,5 +476,19 @@ global:
     typeinfo?for?mir::wayland::WlrScreencopyFrameV1;
     vtable?for?mir::wayland::WlrScreencopyFrameV1;
     virtual?thunk?to?mir::wayland::WlrScreencopyFrameV1::?WlrScreencopyFrameV1*;
+
+    mir::wayland::IdleInhibitManagerV1::*;
+    non-virtual?thunk?to?mir::wayland::IdleInhibitManagerV1::*;
+    typeinfo?for?mir::wayland::IdleInhibitManagerV1;
+    vtable?for?mir::wayland::IdleInhibitManagerV1;
+    typeinfo?for?mir::wayland::IdleInhibitManagerV1::Global;
+    vtable?for?mir::wayland::IdleInhibitManagerV1::Global;
+    virtual?thunk?to?mir::wayland::IdleInhibitManagerV1::?IdleInhibitManagerV1*;
+
+    mir::wayland::IdleInhibitorV1::*;
+    non-virtual?thunk?to?mir::wayland::IdleInhibitorV1::*;
+    typeinfo?for?mir::wayland::IdleInhibitorV1;
+    vtable?for?mir::wayland::IdleInhibitorV1;
+    virtual?thunk?to?mir::wayland::IdleInhibitorV1::?IdleInhibitorV1*;
   };
 } MIRWAYLAND_2.5;
