@@ -18,7 +18,6 @@
 
 #include "mir/executor.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/null_surface_observer.h"
 
 #include "wl_surface.h"
 
@@ -31,34 +30,8 @@ namespace ms = mir::scene;
 
 struct IdleInhibitV1Ctx
 {
-    class SurfaceObserver : ms::NullSurfaceObserver
-    {
-    public:
-        SurfaceObserver()
-        {
-        }
-
-        ~SurfaceObserver()
-        {
-        }
-
-        void attrib_changed(const ms::Surface *surf, MirWindowAttrib attrib, int value) override
-        {
-            (void)surf;
-            if (attrib == mir_window_attrib_focus && value == mir_window_focus_state_unfocused)
-            {
-                // TODO
-            }
-            else if (attrib == mir_window_attrib_focus)
-            {
-                // TODO
-            }
-        };
-    };
-
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<ms::IdleHub> const idle_hub;
-    std::shared_ptr<ms::SurfaceObserver> const surface_observer;
 };
 
 class IdleInhibitManagerV1Global : public mw::IdleInhibitManagerV1::Global
@@ -131,11 +104,9 @@ auto mf::create_idle_inhibit_manager_v1(
         std::shared_ptr<ms::IdleHub> const& idle_hub)
 -> std::shared_ptr<mw::IdleInhibitManagerV1::Global>
 {
-    auto surface_observer = std::make_shared<scene::NullSurfaceObserver>();
     auto ctx = std::make_shared<IdleInhibitV1Ctx>(IdleInhibitV1Ctx{
                                                                 wayland_executor,
-                                                                idle_hub,
-                                                                surface_observer});
+                                                                idle_hub});
 
     return std::make_shared<IdleInhibitManagerV1Global>(display, ctx);
 }
@@ -170,7 +141,6 @@ void IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct wl_re
         if (scene_surface.value()->focus_state() != mir_window_focus_state_unfocused)
         {
             new IdleInhibitorV1{id, ctx};
-            scene_surface.value()->add_observer(ctx->surface_observer);
         }
     }
 }
