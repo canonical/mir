@@ -29,10 +29,6 @@ namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace ms = mir::scene;
 
-namespace mir
-{
-namespace frontend
-{
 struct IdleInhibitV1Ctx
 {
     class SurfaceObserver : ms::NullSurfaceObserver
@@ -60,13 +56,12 @@ struct IdleInhibitV1Ctx
         };
     };
 
-    std::shared_ptr<Executor> const wayland_executor;
+    std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<ms::IdleHub> const idle_hub;
     std::shared_ptr<ms::SurfaceObserver> surface_observer;
 };
 
-class IdleInhibitManagerV1Global
-    : public wayland::IdleInhibitManagerV1::Global
+class IdleInhibitManagerV1Global : public mw::IdleInhibitManagerV1::Global
 {
 public:
     IdleInhibitManagerV1Global(
@@ -79,8 +74,7 @@ private:
     std::shared_ptr<IdleInhibitV1Ctx> const ctx;
 };
 
-class IdleInhibitManagerV1
-    : public wayland::IdleInhibitManagerV1
+class IdleInhibitManagerV1 : public mw::IdleInhibitManagerV1
 {
 public:
     IdleInhibitManagerV1(
@@ -94,8 +88,7 @@ private:
     std::shared_ptr<IdleInhibitV1Ctx> const& ctx;
 };
 
-class IdleInhibitorV1
-    : public wayland::IdleInhibitorV1
+class IdleInhibitorV1 : public mw::IdleInhibitorV1
 {
 public:
     IdleInhibitorV1(
@@ -131,8 +124,6 @@ private:
     void IdleInhibitorV1::StateObserver::active()
     {
     }
-}
-}
 
 auto mf::create_idle_inhibit_manager_v1(
         wl_display* display,
@@ -149,7 +140,7 @@ auto mf::create_idle_inhibit_manager_v1(
     return std::make_shared<IdleInhibitManagerV1Global>(display, std::move(ctx));
 }
 
-mf::IdleInhibitManagerV1Global::IdleInhibitManagerV1Global(
+IdleInhibitManagerV1Global::IdleInhibitManagerV1Global(
       wl_display *display,
       std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
     : Global{display, Version<1>()},
@@ -157,22 +148,22 @@ mf::IdleInhibitManagerV1Global::IdleInhibitManagerV1Global(
 {
 }
 
-void mf::IdleInhibitManagerV1Global::bind(wl_resource* new_resource)
+void IdleInhibitManagerV1Global::bind(wl_resource* new_resource)
 {
     new IdleInhibitManagerV1{new_resource, ctx};
 }
 
-mf::IdleInhibitManagerV1::IdleInhibitManagerV1(
+IdleInhibitManagerV1::IdleInhibitManagerV1(
         wl_resource *resource,
         std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
-        : wayland::IdleInhibitManagerV1{resource, Version<1>()},
+        : mw::IdleInhibitManagerV1{resource, Version<1>()},
           ctx{ctx}
 {
 }
 
-void mf::IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct wl_resource* surface)
+void IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct wl_resource* surface)
 {
-    auto wl_surface = WlSurface::from(surface);
+    auto wl_surface = mf::WlSurface::from(surface);
 
     if (auto const scene_surface = wl_surface->scene_surface(); scene_surface)
     {
@@ -184,16 +175,16 @@ void mf::IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct w
     }
 }
 
-mf::IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
-        : wayland::IdleInhibitorV1{resource, Version<1>()},
+IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
+        : mw::IdleInhibitorV1{resource, Version<1>()},
           ctx{ctx},
           state_observer{std::make_shared<StateObserver>(this)},
           wake_lock{ctx->idle_hub->inhibit_idle()}
 {
-    ctx->idle_hub->register_interest(state_observer, time::Duration(0));
+    ctx->idle_hub->register_interest(state_observer, mir::time::Duration(0));
 }
 
-mf::IdleInhibitorV1::~IdleInhibitorV1()
+IdleInhibitorV1::~IdleInhibitorV1()
 {
     ctx->idle_hub->unregister_interest(*state_observer);
 }
