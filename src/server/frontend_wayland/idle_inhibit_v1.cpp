@@ -12,8 +12,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Authored by: Grayson Guarino <grayson.guarino@canonical.com>
  */
 
 #include "idle_inhibit_v1.h"
@@ -53,9 +51,13 @@ struct IdleInhibitV1Ctx
         {
             (void)surf;
             if (attrib == mir_window_attrib_focus && value == mir_window_focus_state_unfocused)
-                ; // TODO
+            {
+                // TODO
+            }
             else if (attrib == mir_window_attrib_focus)
-                ; // TODO
+            {
+                // TODO
+            }
         };
     };
 
