@@ -117,13 +117,13 @@ private:
     std::shared_ptr<ms::IdleHub::WakeLock> const wake_lock;
 };
 
-    void IdleInhibitorV1::StateObserver::idle()
-    {
-    }
+void IdleInhibitorV1::StateObserver::idle()
+{
+}
 
-    void IdleInhibitorV1::StateObserver::active()
-    {
-    }
+void IdleInhibitorV1::StateObserver::active()
+{
+}
 
 auto mf::create_idle_inhibit_manager_v1(
         wl_display* display,
