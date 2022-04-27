@@ -27,10 +27,13 @@ environment:
     ARCH/ubuntu_arm64: arm64
     ARCH/ubuntu_armhf: armhf
     ARCH/rpi: armhf
+    DISTRO: ubuntu
+    DISTRO/debian_sid: debian
     RELEASE: focal
     RELEASE/ubuntu: focal
     RELEASE/ubuntu_impish: impish
-    RELEASE/ubuntu_devel: jammy
+    RELEASE/ubuntu_jammy: jammy
+    RELEASE/ubuntu_devel: kinetic
     RELEASE/debian_sid: sid
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true

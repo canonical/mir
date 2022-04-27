@@ -33,9 +33,12 @@ execute: |
     # set host and build environment up
     source <( dpkg-architecture --print-set --host-arch ${ARCH} )
 
+    DEBOOTSTRAP_SCRIPTS="/usr/share/debootstrap/scripts"
+
     MKSBUILD_OPTS=(
       mk-sbuild
       --eatmydata
+      --distro ${DISTRO}
       ${RELEASE}
     )
 
@@ -62,6 +65,11 @@ execute: |
 
       # Quirk for the eglexternalplatform-dev build dependency
       sed -i 's/\(eglexternalplatform-dev\)/\1:all/' debian/control
+    fi
+
+    # If release not in yet
+    if [ ! -e "${DEBOOTSTRAP_SCRIPTS}/${RELEASE}" ] && [[ "${SPREAD_VARIANT}" == *"ubuntu"* ]]; then
+      ln -vs "${DEBOOTSTRAP_SCRIPTS}/gutsy" "${DEBOOTSTRAP_SCRIPTS}/${RELEASE}"
     fi
 
     sg sbuild -c "${MKSBUILD_OPTS[*]}"
