@@ -26,11 +26,7 @@ namespace mir
 {
 namespace frontend
 {
-class OutputManager;
-
-auto create_xdg_output_manager_v1(struct wl_display* display, OutputManager* const output_manager)
-    -> std::shared_ptr<wayland::XdgOutputManagerV1::Global>;
-
+auto create_xdg_output_manager_v1(struct wl_display* display) -> std::shared_ptr<wayland::XdgOutputManagerV1::Global>;
 }
 }
 

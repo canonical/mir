@@ -211,22 +211,16 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<struct wl_resource*> 
     {
         shell::SurfaceSpecification mods;
         mods.state = scene_surface->state_tracker().with(mir_window_state_fullscreen).active_state();
-        auto const output_id = output_manager->output_id_for(
-            weak_client.value().raw_client(),
-            output.value_or(nullptr));
-        if (output_id)
+        if (auto const output_global = OutputGlobal::from(output.value_or(nullptr)))
         {
-            mods.output_id = output_id.value();
+            mods.output_id = output_global->current_config().id;
         }
         shell->modify_surface(session, scene_surface, mods);
     }
     else
     {
         spec().state = mir_window_state_fullscreen;
-        auto const output_id = output_manager->output_id_for(
-            weak_client.value().raw_client(),
-            output.value_or(nullptr));
-        if (output_id)
+        if (auto const output_id = OutputManager::output_id_for(output))
         {
             spec().output_id = output_id.value();
         }
@@ -463,14 +457,14 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
 
     // Send wl_surface.enter events for every output
     // TODO: send enter/leave when the surface actually enters and leaves outputs
-    output_manager->for_each_output([&](graphics::DisplayConfigurationOutput const& conf)
+    output_manager->current_config().for_each_output([&](graphics::DisplayConfigurationOutput const& conf)
         {
             auto const output = output_manager->output_for(conf.id);
             if (output)
             {
                 output.value()->for_each_output_bound_by(
                     weak_client.value().raw_client(),
-                    [&](mw::Output* output)
+                    [&](OutputInstance* output)
                     {
                         surface.value().send_enter_event(output->resource);
                     });

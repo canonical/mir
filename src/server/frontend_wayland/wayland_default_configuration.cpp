@@ -102,7 +102,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         }),
     make_extension_builder<mw::XdgOutputManagerV1>([](auto const& ctx)
         {
-            return create_xdg_output_manager_v1(ctx.display, ctx.output_manager);
+            return mf::create_xdg_output_manager_v1(ctx.display);
         }),
     make_extension_builder<mw::ForeignToplevelManagerV1>([](auto const& ctx)
         {
@@ -145,7 +145,6 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
             return mf::create_wlr_screencopy_manager_unstable_v1(
                 ctx.display,
                 ctx.wayland_executor,
-                *ctx.output_manager,
                 ctx.graphic_buffer_allocator,
                 ctx.screen_shooter);
         }),

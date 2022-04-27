@@ -86,6 +86,11 @@ mf::OutputInstance::~OutputInstance()
     }
 }
 
+auto mf::OutputInstance::from(wl_resource* output) -> OutputInstance*
+{
+    return dynamic_cast<OutputInstance*>(mw::Output::from(output));
+}
+
 void mf::OutputInstance::send_config(mg::DisplayConfigurationOutput const& config)
 {
     // TODO: send correct output transform
@@ -127,12 +132,39 @@ void mf::OutputInstance::send_config(mg::DisplayConfigurationOutput const& confi
 
 mf::OutputGlobal::OutputGlobal(wl_display* display, mg::DisplayConfigurationOutput const& initial_configuration)
     : Global{display, Version<3>{}},
-      current_config{initial_configuration}
+      output_config{initial_configuration}
 {
+}
+
+auto mf::OutputGlobal::from(wl_resource* output) -> OutputGlobal*
+{
+    auto const instance = OutputInstance::from(output);
+    return instance ? mw::as_nullable_ptr(instance->global) : nullptr;
+}
+
+auto mf::OutputGlobal::from_or_throw(wl_resource* output) -> OutputGlobal&
+{
+    auto const instance = OutputInstance::from(output);
+    if (!instance)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "wl_output@" +
+            std::to_string(wl_resource_get_id(output)) +
+            " is not a mir::frontend::OutputInstance"));
+    }
+    if (!instance->global)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "the output global associated with wl_output@" +
+            std::to_string(wl_resource_get_id(output)) +
+            " has been destroyed"));
+    }
+    return instance->global.value();
 }
 
 void mf::OutputGlobal::handle_configuration_changed(mg::DisplayConfigurationOutput const& config)
 {
+    output_config = config;
     for (auto const& client : instances)
     {
         for (auto const& instance : client.second)
@@ -144,7 +176,7 @@ void mf::OutputGlobal::handle_configuration_changed(mg::DisplayConfigurationOutp
 
 void mf::OutputGlobal::for_each_output_bound_by(
     wl_client* client,
-    std::function<void(wayland::Output*)> const& functor)
+    std::function<void(OutputInstance*)> const& functor)
 {
     auto const resources = instances.find(client);
 
@@ -161,7 +193,7 @@ void mf::OutputGlobal::bind(wl_resource* resource)
 {
     auto const instance = new OutputInstance(resource, this);
     instances[wl_resource_get_client(resource)].push_back(instance);
-    instance->send_config(current_config);
+    instance->send_config(output_config);
 }
 
 void mf::OutputGlobal::instance_destroyed(OutputInstance* instance)
@@ -221,28 +253,16 @@ mf::OutputManager::~OutputManager()
     registrar->unregister_interest(*display_config_observer);
 }
 
-auto mf::OutputManager::output_id_for(wl_client* client, wl_resource* output) const
+auto mf::OutputManager::output_id_for(std::optional<wl_resource*> output)
     -> std::optional<graphics::DisplayConfigurationOutputId>
 {
-    if (!output)
+    if (output)
     {
-        return std::nullopt;
+        if (auto const global = OutputGlobal::from(output.value()))
+        {
+            return global->current_config().id;
+        }
     }
-
-    for (auto const& dd : outputs)
-    {
-        bool found{false};
-        dd.second->for_each_output_bound_by(client, [&found, &output](wayland::Output* candidate)
-            {
-                if (candidate->resource == output)
-                {
-                    found = true;
-                }
-            });
-        if (found)
-            return dd.first;
-    }
-
     return std::nullopt;
 }
 
@@ -255,49 +275,9 @@ auto mf::OutputManager::output_for(graphics::DisplayConfigurationOutputId id) ->
         return std::nullopt;
 }
 
-auto mf::OutputManager::with_config_for(
-    wl_resource* output,
-    std::function<void(mg::DisplayConfigurationOutput const&)> const& functor) -> bool
-{
-    bool found = false;
-    if (auto const output_id = output_id_for(wl_resource_get_client(output), output))
-    {
-        for_each_output(
-            [&](mg::DisplayConfigurationOutput const& config)
-            {
-                if (config.id == output_id.value())
-                {
-                    if (found)
-                    {
-                        log_warning("Found multiple output configs with id %d", output_id.value().as_value());
-                    }
-                    else
-                    {
-                        functor(config);
-                        found = true;
-                    }
-                }
-            });
-    }
-
-    return found;
-}
-
-void mf::OutputManager::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
-{
-    if (current_config)
-    {
-        current_config->for_each_output(f);
-    }
-    else
-    {
-        fatal_error("OutputManager::for_each_output() can't run because it doesn't have a display config yet");
-    }
-}
-
 void mf::OutputManager::handle_configuration_change(std::shared_ptr<mg::DisplayConfiguration const> const& config)
 {
-    current_config = config;
+    display_config = config;
     config->for_each_output([this](mg::DisplayConfigurationOutput const& output_config)
         {
             auto output_iter = outputs.find(output_config.id);

@@ -21,7 +21,6 @@
 #include "xdg-output-unstable-v1_wrapper.h"
 #include "mir/log.h"
 #include "output_manager.h"
-#include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -36,24 +35,20 @@ namespace frontend
 class XdgOutputManagerV1 : public wayland::XdgOutputManagerV1::Global
 {
 public:
-    XdgOutputManagerV1(struct wl_display* display, OutputManager* const output_manager);
+    XdgOutputManagerV1(struct wl_display* display);
     ~XdgOutputManagerV1() = default;
 
 private:
     class Instance : public wayland::XdgOutputManagerV1
     {
     public:
-        Instance(wl_resource* new_resource, OutputManager* manager);
+        Instance(wl_resource* new_resource);
 
     private:
         void get_xdg_output(wl_resource* new_output, wl_resource* output) override;
-
-        OutputManager* const output_manager;
     };
 
     void bind(wl_resource* new_resource) override;
-
-    OutputManager* const output_manager;
 };
 
 class XdgOutputV1 : public wayland::XdgOutputV1
@@ -73,40 +68,31 @@ private:
 }
 }
 
-auto mf::create_xdg_output_manager_v1(struct wl_display* display, OutputManager* const output_manager)
+auto mf::create_xdg_output_manager_v1(struct wl_display* display)
     -> std::shared_ptr<mw::XdgOutputManagerV1::Global>
 {
-    return std::make_shared<XdgOutputManagerV1>(display, output_manager);
+    return std::make_shared<XdgOutputManagerV1>(display);
 }
 
-mf::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_display* display, mf::OutputManager* const output_manager)
-    : Global(display, Version<3>()),
-      output_manager{output_manager}
+mf::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_display* display)
+    : Global(display, Version<3>())
 {
 }
 
 void mf::XdgOutputManagerV1::bind(wl_resource* new_resource)
 {
-    new Instance{new_resource, output_manager};
+    new Instance{new_resource};
 }
 
-mf::XdgOutputManagerV1::Instance::Instance(wl_resource* new_resource, OutputManager* manager)
-    : XdgOutputManagerV1{new_resource, Version<3>()},
-      output_manager{manager}
+mf::XdgOutputManagerV1::Instance::Instance(wl_resource* new_resource)
+    : XdgOutputManagerV1{new_resource, Version<3>()}
 {
 }
 
 void mf::XdgOutputManagerV1::Instance::get_xdg_output(wl_resource* new_output, wl_resource* output)
 {
-    if (!output_manager->with_config_for(output,
-        [&](mg::DisplayConfigurationOutput const& config)
-        {
-            new XdgOutputV1{new_output, config, output};
-        }))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "No output for wl_output@" + std::to_string(wl_resource_get_id(output))));
-    }
+    auto const& output_config = OutputGlobal::from_or_throw(output).current_config();
+    new XdgOutputV1{new_output, output_config, output};
 }
 
 mf::XdgOutputV1::XdgOutputV1(
