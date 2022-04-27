@@ -122,8 +122,8 @@ ms::BasicIdleHub::WakeLock::WakeLock(std::shared_ptr<BasicIdleHub> idle_hub)
 
 ms::BasicIdleHub::WakeLock::~WakeLock()
 {
-    idle_hub.lock()->alarm->reschedule_in(std::chrono::duration_cast<std::chrono::milliseconds>(
-            idle_hub.lock()->alarm_timeout.value()));
+    if (auto const shared_hub = idle_hub.lock())
+        shared_hub->poke();
 }
 
 ms::BasicIdleHub::BasicIdleHub(
