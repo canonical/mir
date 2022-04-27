@@ -76,6 +76,7 @@ mf::OutputInstance::OutputInstance(wl_resource* resource, OutputGlobal* global)
     : Output{resource, Version<3>()},
       global{mw::make_weak(global)}
 {
+    global->add_listener(this);
 }
 
 mf::OutputInstance::~OutputInstance()
@@ -83,6 +84,7 @@ mf::OutputInstance::~OutputInstance()
     if (global)
     {
         global.value().instance_destroyed(this);
+        global.value().remove_listener(this);
     }
 }
 
@@ -91,7 +93,7 @@ auto mf::OutputInstance::from(wl_resource* output) -> OutputInstance*
     return dynamic_cast<OutputInstance*>(mw::Output::from(output));
 }
 
-void mf::OutputInstance::send_config(mg::DisplayConfigurationOutput const& config)
+auto mf::OutputInstance::output_config_changed(mg::DisplayConfigurationOutput const& config) -> bool
 {
     // TODO: send correct output transform
     //       this will cause some clients to send transformed buffers, which we must be able to deal with
@@ -124,6 +126,11 @@ void mf::OutputInstance::send_config(mg::DisplayConfigurationOutput const& confi
         send_scale_event(ceil(config.scale));
     }
 
+    return true;
+}
+
+void mf::OutputInstance::send_done()
+{
     if (version_supports_done())
     {
         send_done_event();
@@ -165,11 +172,22 @@ auto mf::OutputGlobal::from_or_throw(wl_resource* output) -> OutputGlobal&
 void mf::OutputGlobal::handle_configuration_changed(mg::DisplayConfigurationOutput const& config)
 {
     output_config = config;
-    for (auto const& client : instances)
+    bool needs_done = false;
+    for (auto& listener : listeners)
     {
-        for (auto const& instance : client.second)
+        if (listener->output_config_changed(config))
         {
-            instance->send_config(config);
+            needs_done = true;
+        }
+    }
+    if (needs_done)
+    {
+        for (auto const& client : instances)
+        {
+            for (auto const& instance : client.second)
+            {
+                instance->send_done();
+            }
         }
     }
 }
@@ -189,11 +207,24 @@ void mf::OutputGlobal::for_each_output_bound_by(
     }
 }
 
+void mf::OutputGlobal::add_listener(OutputConfigListener* listener)
+{
+    listeners.push_back(listener);
+}
+
+void mf::OutputGlobal::remove_listener(OutputConfigListener* listener)
+{
+    listeners.erase(
+        std::remove_if(listeners.begin(), listeners.end(), [&](auto candidate) { return candidate == listener; }),
+        listeners.end());
+}
+
 void mf::OutputGlobal::bind(wl_resource* resource)
 {
     auto const instance = new OutputInstance(resource, this);
     instances[wl_resource_get_client(resource)].push_back(instance);
-    instance->send_config(output_config);
+    instance->output_config_changed(output_config);
+    instance->send_done();
 }
 
 void mf::OutputGlobal::instance_destroyed(OutputInstance* instance)

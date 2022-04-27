@@ -37,7 +37,19 @@ namespace frontend
 class DisplayChanger;
 class OutputGlobal;
 
-class OutputInstance : public wayland::Output
+class OutputConfigListener
+{
+public:
+    // Returns true if the wl_output needs to send a done event
+    virtual auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool = 0;
+
+    OutputConfigListener() = default;
+    virtual ~OutputConfigListener() = default;
+    OutputConfigListener(OutputConfigListener const&) = delete;
+    OutputConfigListener& operator=(OutputConfigListener const&) = delete;
+};
+
+class OutputInstance : public wayland::Output, OutputConfigListener
 {
 public:
     OutputInstance(wl_resource* resource, OutputGlobal* global);
@@ -45,7 +57,8 @@ public:
 
     static auto from(wl_resource* output) -> OutputInstance*;
 
-    void send_config(graphics::DisplayConfigurationOutput const& initial_configuration);
+    auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
+    void send_done();
 
     wayland::Weak<OutputGlobal> const global;
 };
@@ -60,8 +73,10 @@ public:
 
     void handle_configuration_changed(graphics::DisplayConfigurationOutput const& config);
     void for_each_output_bound_by(wl_client* client, std::function<void(OutputInstance*)> const& functor);
-
     auto current_config() -> graphics::DisplayConfigurationOutput const& { return output_config; }
+
+    void add_listener(OutputConfigListener* listener);
+    void remove_listener(OutputConfigListener* listener);
 
 private:
     friend OutputInstance;
@@ -70,6 +85,7 @@ private:
     void instance_destroyed(OutputInstance* instance);
 
     graphics::DisplayConfigurationOutput output_config;
+    std::vector<OutputConfigListener*> listeners;
     std::unordered_map<wl_client*, std::vector<OutputInstance*>> instances;
 };
 
