@@ -215,16 +215,16 @@ void mf::Output::resource_destructor(wl_resource* resource)
     client_resource_list.erase(erase_from, client_resource_list.end());
 }
 
-struct mf::OutputManager::DisplayConfigObserver: public graphics::NullDisplayConfigurationObserver
+class mf::OutputManager::DisplayConfigObserver: public graphics::NullDisplayConfigurationObserver
 {
-    DisplayConfigObserver(OutputManager& manager)
-        : manager{manager}
+public:
+    DisplayConfigObserver(OutputManager& manager, std::shared_ptr<Executor> const& executor)
+        : manager{manager},
+          executor{executor}
     {
     }
 
 private:
-    OutputManager& manager;
-
     void initial_configuration(std::shared_ptr<graphics::DisplayConfiguration const> const& config) override
     {
         manager.handle_configuration_change(config);
@@ -234,6 +234,9 @@ private:
     {
         manager.handle_configuration_change(config);
     }
+
+    OutputManager& manager;
+    std::shared_ptr<Executor> const executor;
 };
 
 mf::OutputManager::OutputManager(
@@ -241,9 +244,8 @@ mf::OutputManager::OutputManager(
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& registrar)
     : display{display},
-      executor{executor},
       registrar{registrar},
-      display_config_observer{std::make_shared<DisplayConfigObserver>(*this)}
+      display_config_observer{std::make_shared<DisplayConfigObserver>(*this, executor)}
 {
     registrar->register_interest(display_config_observer, *executor);
 }
