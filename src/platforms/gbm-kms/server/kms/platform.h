@@ -61,6 +61,9 @@ private:
 
 class RenderingPlatform : public graphics::RenderingPlatform
 {
+public:
+    RenderingPlatform(udev::Device const& device, std::vector<std::shared_ptr<graphics::DisplayPlatform>> const& displays);
+
     auto create_buffer_allocator(
         graphics::Display const& output) -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
 };

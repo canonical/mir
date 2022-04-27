@@ -15,6 +15,7 @@
  */
 
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/platform.h"
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
 #include "platform.h"
@@ -40,6 +41,7 @@ char const* x11_window_title_option_name{"x11-window-title"};
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
+    mg::SupportedDevice const&,
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const&,
@@ -67,6 +69,8 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 }
 
 auto create_rendering_platform(
+    mg::SupportedDevice const&,
+    std::vector<std::shared_ptr<mg::DisplayPlatform>> const&,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {

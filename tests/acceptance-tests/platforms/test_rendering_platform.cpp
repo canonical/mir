@@ -77,3 +77,4 @@ TEST_P(RenderingPlatformTest, has_render_platform_entrypoints)
             << err.what();
     }
 }
+

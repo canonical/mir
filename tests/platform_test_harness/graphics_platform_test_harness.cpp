@@ -163,23 +163,32 @@ auto test_probe(mir::SharedLibrary const& dso, MinimalServerEnvironment& config)
     }
 }
 
-auto test_platform_construction(mir::SharedLibrary const& dso, MinimalServerEnvironment& env)
--> std::shared_ptr<mir::graphics::DisplayPlatform>
+auto test_platform_construction(mir::SharedLibrary const& dso, std::vector<mg::SupportedDevice> const& devices, MinimalServerEnvironment& env)
+    -> std::shared_ptr<mir::graphics::DisplayPlatform>
 {
     try
     {
         auto create_display_platform = dso.load_function<mg::CreateDisplayPlatform>(
             "create_display_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
-        auto display = create_display_platform(
-            env.options(),
-            env.emergency_cleanup_registry(),
-            env.console_services(),
-            env.display_report());
+        for (auto const& device : devices)
+        {
+            if (device.support_level >= mg::PlatformPriority::supported)
+            {
+                auto display = create_display_platform(
+                    device,
+                    env.options(),
+                    env.emergency_cleanup_registry(),
+                    env.console_services(),
+                    env.display_report());
 
-        std::cout << "Successfully constructed DisplayPlatform" << std::endl;
+                std::cout << "Successfully constructed DisplayPlatform" << std::endl;
 
-        return display;
+                return display;                
+            }
+        }
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Device probe didn't return any supported devices"}));
+        
     }
     catch (...)
     {
@@ -549,7 +558,7 @@ int main(int argc, char const** argv)
     try
     {
         auto devices = test_probe(platform_dso, config);
-        if (auto platform = test_platform_construction(platform_dso, config))
+        if (auto platform = test_platform_construction(platform_dso, devices, config))
         {
             if (auto display = test_display_construction(*platform, config))
             {
