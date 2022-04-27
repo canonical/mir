@@ -274,7 +274,7 @@ void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp c
     }
 }
 
-std::shared_ptr<ms::IdleHub::WakeLock> ms::BasicIdleHub::inhibit_idle()
+auto ms::BasicIdleHub::inhibit_idle() -> std::shared_ptr<ms::IdleHub::WakeLock>
 {
     if (wake_lock.expired()) // wake_lock is null
     {

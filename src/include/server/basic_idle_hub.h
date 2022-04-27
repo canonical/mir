@@ -73,7 +73,7 @@ public:
 
     void unregister_interest(IdleStateObserver const& observer) override;
 
-    std::shared_ptr<IdleHub::WakeLock> inhibit_idle() override; // Should this be implemented in IdleHub?
+    auto inhibit_idle() -> std::shared_ptr<IdleHub::WakeLock> override;
 
 private:
     struct Multiplexer;

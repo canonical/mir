@@ -74,7 +74,7 @@ public:
 
     virtual void unregister_interest(IdleStateObserver const& observer) = 0;
 
-    virtual std::shared_ptr<IdleHub::WakeLock> inhibit_idle() = 0;
+    virtual auto inhibit_idle() -> std::shared_ptr<IdleHub::WakeLock> = 0;
 
 private:
     IdleHub(IdleHub const&) = delete;
