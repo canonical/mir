@@ -21,9 +21,6 @@
 #include "mir/lockable_callback.h"
 #include "mir/linearising_executor.h"
 
-// TODO - remove
-#include "mir/log.h"
-
 #include <set>
 
 namespace ms = mir::scene;
