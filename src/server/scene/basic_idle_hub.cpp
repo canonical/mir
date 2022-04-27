@@ -273,15 +273,13 @@ void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp c
 
 auto ms::BasicIdleHub::inhibit_idle() -> std::shared_ptr<ms::IdleHub::WakeLock>
 {
-    if (wake_lock.expired()) // wake_lock is null
+    auto shared_wake_lock = wake_lock.lock();
+    if (!shared_wake_lock)
     {
-        auto shared_lock = std::make_shared<BasicIdleHub::WakeLock>(shared_from_this());
-        wake_lock = shared_lock;  // WHERE SHOULD I GO?
-        alarm->cancel(); // TODO - move this logic into state logic
-        return shared_lock;
+        std::lock_guard<std::mutex> lock(mutex);
+        shared_wake_lock = std::make_shared<BasicIdleHub::WakeLock>(shared_from_this());
+        wake_lock = shared_wake_lock;
+        alarm->cancel();
     }
-    else // wake_lock is not null
-    {
-        return wake_lock.lock();
-    }
+    return shared_wake_lock;
 }
