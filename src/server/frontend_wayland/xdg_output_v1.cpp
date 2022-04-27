@@ -143,10 +143,10 @@ mf::XdgOutputV1::XdgOutputV1(
      */
     if (wl_resource_get_version(resource) >= 3)
     {
-        // TODO: Use wrapper methods once wl_output is is using a wrapper
-        if (wl_resource_get_version(wl_output_resource) >= WL_OUTPUT_DONE_SINCE_VERSION)
+        auto const wl_output = mw::Output::from(wl_output_resource);
+        if (wl_output->version_supports_done())
         {
-            wl_output_send_done(wl_output_resource);
+            wl_output->send_done_event();
         }
         else
         {

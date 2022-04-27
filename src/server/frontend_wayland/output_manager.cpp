@@ -25,86 +25,33 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace mw = mir::wayland;
 using namespace mir::geometry;
-
-mf::Output::Output(wl_display* display, mg::DisplayConfigurationOutput const& initial_configuration) :
-    output{make_output(display)},
-    current_config{initial_configuration}
-{
-}
-
-mf::Output::~Output()
-{
-    // Notify all clients that the wl_output has gone away
-    wl_global_destroy(output);
-    /*
-     * The above call doesn't release the wl_resources any client
-     * has bound, merely tells them that the global has gone away.
-     * The server-side wl_resources have to remain valid so that
-     * the client can call wl_output::release on it.
-     *
-     * We therefore need to ensure that destroying the wl_resource-s
-     * doesn't result in attempting to access fields of the now-destroyed
-     * Output.
-     */
-    for (auto const& client : resource_map)
-    {
-        for (auto* resource : client.second)
-        {
-            wl_resource_set_destructor(resource, [](auto) {});
-        }
-    }
-}
-
-void mf::Output::handle_configuration_changed(mg::DisplayConfigurationOutput const& config)
-{
-    for (auto const& client : resource_map)
-    {
-        for (auto const& resource : client.second)
-        {
-            // Possibly not optimal
-            send_initial_config(resource, config);
-        }
-    }
-}
-
-void mf::Output::for_each_output_resource_bound_by(wl_client* client, std::function<void(wl_resource*)> const& functor)
-{
-    auto const resources = resource_map.find(client);
-
-    if (resources != resource_map.end())
-    {
-        for (auto const& resource : resources->second)
-        {
-            functor(resource);
-        }
-    }
-}
 
 namespace
 {
-auto as_subpixel_arrangement(MirSubpixelArrangement arrangement) -> wl_output_subpixel
+auto as_subpixel_arrangement(MirSubpixelArrangement arrangement) -> uint32_t
 {
     switch (arrangement)
     {
     default:
     case mir_subpixel_arrangement_unknown:
-        return WL_OUTPUT_SUBPIXEL_UNKNOWN;
+        return mw::Output::Subpixel::unknown;
 
     case mir_subpixel_arrangement_horizontal_rgb:
-        return WL_OUTPUT_SUBPIXEL_HORIZONTAL_RGB;
+        return mw::Output::Subpixel::horizontal_rgb;
 
     case mir_subpixel_arrangement_horizontal_bgr:
-        return WL_OUTPUT_SUBPIXEL_HORIZONTAL_BGR;
+        return mw::Output::Subpixel::horizontal_bgr;
 
     case mir_subpixel_arrangement_vertical_rgb:
-        return WL_OUTPUT_SUBPIXEL_VERTICAL_RGB;
+        return mw::Output::Subpixel::vertical_rgb;
 
     case mir_subpixel_arrangement_vertical_bgr:
-        return WL_OUTPUT_SUBPIXEL_VERTICAL_BGR;
+        return mw::Output::Subpixel::vertical_bgr;
 
     case mir_subpixel_arrangement_none:
-        return WL_OUTPUT_SUBPIXEL_NONE;
+        return mw::Output::Subpixel::none;
     }
 }
 
@@ -125,12 +72,25 @@ auto transform_size(Size const& size, MirOrientation orientation) -> Size
 }
 }
 
-void mf::Output::send_initial_config(wl_resource* client_resource, mg::DisplayConfigurationOutput const& config)
+mf::OutputInstance::OutputInstance(wl_resource* resource, OutputGlobal* global)
+    : Output{resource, Version<3>()},
+      global{mw::make_weak(global)}
+{
+}
+
+mf::OutputInstance::~OutputInstance()
+{
+    if (global)
+    {
+        global.value().instance_destroyed(this);
+    }
+}
+
+void mf::OutputInstance::send_config(mg::DisplayConfigurationOutput const& config)
 {
     // TODO: send correct output transform
     //       this will cause some clients to send transformed buffers, which we must be able to deal with
-    wl_output_send_geometry(
-        client_resource,
+    send_geometry_event(
         config.top_left.x.as_int(),
         config.top_left.y.as_int(),
         config.physical_size_mm.width.as_int(),
@@ -138,7 +98,7 @@ void mf::Output::send_initial_config(wl_resource* client_resource, mg::DisplayCo
         as_subpixel_arrangement(config.subpixel_arrangement),
         "Fake manufacturer",
         "Fake model",
-        WL_OUTPUT_TRANSFORM_NORMAL);
+        mw::Output::Transform::normal);
     for (size_t i = 0; i < config.modes.size(); ++i)
     {
         auto const& mode = config.modes[i];
@@ -146,73 +106,79 @@ void mf::Output::send_initial_config(wl_resource* client_resource, mg::DisplayCo
         // As we are not sending the display orientation as a transform (see above),
         // we doctor the size of each mode to match the extents
         auto const size = transform_size(mode.size, config.orientation);
-        wl_output_send_mode(
-            client_resource,
-            ((i == config.preferred_mode_index ? WL_OUTPUT_MODE_PREFERRED : 0) |
-             (i == config.current_mode_index ? WL_OUTPUT_MODE_CURRENT : 0)),
+        send_mode_event(
+            ((i == config.preferred_mode_index ? mw::Output::Mode::preferred : 0) |
+             (i == config.current_mode_index ? mw::Output::Mode::current : 0)),
              size.width.as_int(),
              size.height.as_int(),
             mode.vrefresh_hz * 1000);
     }
 
-    if (wl_resource_get_version(client_resource) >= WL_OUTPUT_SCALE_SINCE_VERSION)
-        wl_output_send_scale(client_resource, ceil(config.scale));
-
-    if (wl_resource_get_version(client_resource) >= WL_OUTPUT_DONE_SINCE_VERSION)
-        wl_output_send_done(client_resource);
-}
-
-wl_global* mf::Output::make_output(wl_display* display)
-{
-    return wl_global_create(
-        display,
-        &wl_output_interface,
-        3,
-        this, &on_bind);
-}
-
-namespace
-{
-void release_wl_output(wl_client*, wl_resource* releasing)
-{
-    wl_resource_destroy(releasing);
-}
-
-struct wl_output_interface const wl_output_impl{
-    &release_wl_output
-};
-}
-
-void mf::Output::on_bind(wl_client* client, void* data, uint32_t version, uint32_t id)
-{
-    auto output = reinterpret_cast<Output*>(data);
-    auto resource = wl_resource_create(
-        client, &wl_output_interface,
-        std::min(version, 3u), id);
-    if (resource == NULL)
+    if (version_supports_scale())
     {
-        wl_client_post_no_memory(client);
-        return;
+        send_scale_event(ceil(config.scale));
     }
 
-    output->resource_map[client].push_back(resource);
-    wl_resource_set_implementation(resource, &wl_output_impl, &(output->resource_map), mf::Output::resource_destructor);
-
-    send_initial_config(resource, output->current_config);
+    if (version_supports_done())
+    {
+        send_done_event();
+    }
 }
 
-void mf::Output::resource_destructor(wl_resource* resource)
+mf::OutputGlobal::OutputGlobal(wl_display* display, mg::DisplayConfigurationOutput const& initial_configuration)
+    : Global{display, Version<3>{}},
+      current_config{initial_configuration}
 {
-    auto& map = *reinterpret_cast<decltype(resource_map)*>(
-        wl_resource_get_user_data(resource));
+}
 
-    auto& client_resource_list = map[wl_resource_get_client(resource)];
-    auto erase_from = std::remove_if(
-        client_resource_list.begin(),
-        client_resource_list.end(),
-        [resource](auto candidate)
-            { return candidate == resource; });
-    client_resource_list.erase(erase_from, client_resource_list.end());
+void mf::OutputGlobal::handle_configuration_changed(mg::DisplayConfigurationOutput const& config)
+{
+    for (auto const& client : instances)
+    {
+        for (auto const& instance : client.second)
+        {
+            instance->send_config(config);
+        }
+    }
+}
+
+void mf::OutputGlobal::for_each_output_bound_by(
+    wl_client* client,
+    std::function<void(wayland::Output*)> const& functor)
+{
+    auto const resources = instances.find(client);
+
+    if (resources != instances.end())
+    {
+        for (auto const& resource : resources->second)
+        {
+            functor(resource);
+        }
+    }
+}
+
+void mf::OutputGlobal::bind(wl_resource* resource)
+{
+    auto const instance = new OutputInstance(resource, this);
+    instances[wl_resource_get_client(resource)].push_back(instance);
+    instance->send_config(current_config);
+}
+
+void mf::OutputGlobal::instance_destroyed(OutputInstance* instance)
+{
+    auto const iter = instances.find(instance->client);
+    if (iter == instances.end())
+    {
+        return;
+    }
+    auto& vec = iter->second;
+    vec.erase(
+        std::remove_if(vec.begin(), vec.end(), [&](auto candidate) { return candidate == instance; }),
+        vec.end());
+    if (vec.empty())
+    {
+        instances.erase(iter);
+    }
 }
 
 class mf::OutputManager::DisplayConfigObserver: public graphics::NullDisplayConfigurationObserver
@@ -266,10 +232,12 @@ auto mf::OutputManager::output_id_for(wl_client* client, wl_resource* output) co
     for (auto const& dd : outputs)
     {
         bool found{false};
-        dd.second->for_each_output_resource_bound_by(client, [&found, &output](wl_resource* resource)
+        dd.second->for_each_output_bound_by(client, [&found, &output](wayland::Output* candidate)
             {
-                if (output == resource)
+                if (candidate->resource == output)
+                {
                     found = true;
+                }
             });
         if (found)
             return dd.first;
@@ -278,7 +246,7 @@ auto mf::OutputManager::output_id_for(wl_client* client, wl_resource* output) co
     return std::nullopt;
 }
 
-auto mf::OutputManager::output_for(graphics::DisplayConfigurationOutputId id) -> std::optional<Output*>
+auto mf::OutputManager::output_for(graphics::DisplayConfigurationOutputId id) -> std::optional<OutputGlobal*>
 {
     auto const result = outputs.find(id);
     if (result != outputs.end())
@@ -346,7 +314,7 @@ void mf::OutputManager::handle_configuration_change(std::shared_ptr<mg::DisplayC
             }
             else if (output_config.used)
             {
-                outputs[output_config.id] = std::make_unique<Output>(display, output_config);
+                outputs[output_config.id] = std::make_unique<OutputGlobal>(display, output_config);
             }
         });
 }

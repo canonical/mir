@@ -34,6 +34,7 @@
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
+namespace mw = mir::wayland;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -467,11 +468,11 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
             auto const output = output_manager->output_for(conf.id);
             if (output)
             {
-                output.value()->for_each_output_resource_bound_by(
+                output.value()->for_each_output_bound_by(
                     weak_client.value().raw_client(),
-                    [&](wl_resource* resource)
+                    [&](mw::Output* output)
                     {
-                        surface.value().send_enter_event(resource);
+                        surface.value().send_enter_event(output->resource);
                     });
             }
         });
