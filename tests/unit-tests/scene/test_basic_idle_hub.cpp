@@ -268,18 +268,25 @@ TEST_F(BasicIdleHub, observer_marked_idle_after_shorter_timeout_removed_and_poke
     executor.execute();
 }
 
-TEST_F(BasicIdleHub, inhibit_idle_when_uninhibited)
+TEST_F(BasicIdleHub, inhibit_idle_inhibits_until_wake_lock_released)
 {
-    // TODO - write
-//    TEST_F(BasicIdleHub, observer_marked_active_after_poke)
-//    {
-//        auto const observer = std::make_shared<NiceMock<MockObserver>>();
-//        hub.register_interest(observer, executor, 5s);
-//        advance_by(6s);
-//        executor.execute();
-//        EXPECT_CALL(*observer, active());
-//        hub.poke();
-//        executor.execute();
-//    }
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    hub->register_interest(observer, executor, 5s);
+    // Check that it goes idle
+    EXPECT_CALL(*observer, idle());
+    advance_by(6s);
+    executor.execute();
+    // Check that it stays awake if idle inhibited
+    hub->poke();
+    {
+        auto wake_lock = hub->inhibit_idle(); // bad_weak_ptr error
+        EXPECT_CALL(*observer, active());
+        advance_by(6s);
+        executor.execute();
+    }
+    // Check that it goes idle when wake_lock goes out of scope
+    EXPECT_CALL(*observer, idle());
+    advance_by(6s);
+    executor.execute();
 
 }
