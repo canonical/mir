@@ -282,29 +282,4 @@ TEST_F(BasicIdleHub, inhibit_idle_when_uninhibited)
 //        executor.execute();
 //    }
 
-//    auto const observer = std::make_shared<StrictMock<MockObserver>>();
-//    hub.register_interest(observer, executor, 5s);
-//    advance_by(6s);
-//    executor.execute();
-//    hub.poke();
-////    hub.inhibit_idle();
-//    executor.execute();
-//    EXPECT_CALL(*observer, idle());
-//    advance_by(6s);
-//    executor.execute();
-}
-
-TEST_F(BasicIdleHub, inhibit_idle_remains_inhibited)
-{
-    // TODO - write
-}
-
-TEST_F(BasicIdleHub, resume_idle_after_inhibited)
-{
-    // TODO - write
-}
-
-TEST_F(BasicIdleHub, resume_idle_not_inhibited)
-{
-    // TODO - write
 }
