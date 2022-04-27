@@ -51,18 +51,20 @@ private:
     void bind(wl_resource* new_resource) override;
 };
 
-class XdgOutputV1 : public wayland::XdgOutputV1
+class XdgOutputV1 : public wayland::XdgOutputV1, OutputConfigListener
 {
 public:
     XdgOutputV1(
         wl_resource* new_resource,
-        graphics::DisplayConfigurationOutput const& config,
+        OutputGlobal& output_global,
         wl_resource* wl_output_resource);
+    ~XdgOutputV1();
 
 private:
-    void destroy();
+    auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
 
     float const geometry_scale;
+    wayland::Weak<OutputGlobal> const output_global;
 };
 
 }
@@ -91,35 +93,20 @@ mf::XdgOutputManagerV1::Instance::Instance(wl_resource* new_resource)
 
 void mf::XdgOutputManagerV1::Instance::get_xdg_output(wl_resource* new_output, wl_resource* output)
 {
-    auto const& output_config = OutputGlobal::from_or_throw(output).current_config();
-    new XdgOutputV1{new_output, output_config, output};
+    new XdgOutputV1{new_output, OutputGlobal::from_or_throw(output), output};
 }
 
 mf::XdgOutputV1::XdgOutputV1(
     wl_resource* new_resource,
-    mg::DisplayConfigurationOutput const& config,
+    OutputGlobal& output_global,
     wl_resource* wl_output_resource)
     : mw::XdgOutputV1(new_resource, Version<3>()),
-      geometry_scale{WlClient::from(client)->output_geometry_scale()}
+      geometry_scale{WlClient::from(client)->output_geometry_scale()},
+      output_global{mw::make_weak(&output_global)}
 {
-    auto extents = config.extents();
-    send_logical_position_event(
-        extents.top_left.x.as_int() * geometry_scale,
-        extents.top_left.y.as_int() * geometry_scale);
-    send_logical_size_event(
-        extents.size.width.as_int() * geometry_scale,
-        extents.size.height.as_int() * geometry_scale);
-    if (version_supports_name())
-    {
-        // TODO: Better output names that are consistant between sessions
-        auto output_name = "OUT-" + std::to_string(config.id.as_value());
-        send_name_event(output_name);
-    }
-    // not sending description is allowed
-    // if (version_supports_description())
-    // {
-    //     send_description_event("TODO: set this");
-    // }
+    output_global.add_listener(this);
+
+    output_config_changed(output_global.current_config());
 
     /* xdg-output-unstable-v1.xml:
      * For objects version 3 onwards, after all xdg_output properties have been
@@ -143,13 +130,46 @@ mf::XdgOutputV1::XdgOutputV1(
                 wl_resource_get_version(wl_output_resource));
         }
     }
-    else
+}
+
+mf::XdgOutputV1::~XdgOutputV1()
+{
+    if (output_global)
     {
-        /* xdg-output-unstable-v1.xml:
-         * For objects version 3 onwards, this event is deprecated. Compositors
-         * are not required to send it anymore and must send wl_output.done
-         * instead.
-         */
+        output_global.value().remove_listener(this);
+    }
+}
+
+auto mf::XdgOutputV1::output_config_changed(mg::DisplayConfigurationOutput const& config) -> bool
+{
+    auto extents = config.extents();
+    send_logical_position_event(
+        extents.top_left.x.as_int() * geometry_scale,
+        extents.top_left.y.as_int() * geometry_scale);
+    send_logical_size_event(
+        extents.size.width.as_int() * geometry_scale,
+        extents.size.height.as_int() * geometry_scale);
+    if (version_supports_name())
+    {
+        // TODO: Better output names that are consistant between sessions
+        auto output_name = "OUT-" + std::to_string(config.id.as_value());
+        send_name_event(output_name);
+    }
+    // not sending description is allowed
+    // if (version_supports_description())
+    // {
+    //     send_description_event("TODO: set this");
+    // }
+
+    /* xdg-output-unstable-v1.xml:
+    * For objects version 3 onwards, this event is deprecated. Compositors
+    * are not required to send it anymore and must send wl_output.done
+    * instead.
+    */
+    if (wl_resource_get_version(resource) < 3)
+    {
         send_done_event();
     }
+
+    return true;
 }
