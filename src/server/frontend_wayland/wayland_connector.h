@@ -46,6 +46,7 @@ class KeyboardObserver;
 namespace graphics
 {
 class GraphicBufferAllocator;
+class DisplayConfigurationObserver;
 }
 namespace geometry
 {
@@ -70,7 +71,6 @@ class WlSubcompositor;
 class WlApplication;
 class WlSeat;
 class OutputManager;
-class MirDisplay;
 class SessionAuthorizer;
 class WlDataDeviceManager;
 class WlSurface;
@@ -123,7 +123,6 @@ public:
 
     WaylandConnector(
         std::shared_ptr<shell::Shell> const& shell,
-        std::shared_ptr<MirDisplay> const& display_config,
         std::shared_ptr<time::Clock> const& clock,
         std::shared_ptr<input::InputDeviceHub> const& input_hub,
         std::shared_ptr<input::Seat> const& seat,
@@ -133,6 +132,7 @@ public:
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<SurfaceStack> const& surface_stack,
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar,
         std::shared_ptr<scene::Clipboard> const& clipboard,
         std::shared_ptr<scene::TextInputHub> const& text_input_hub,
         std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,

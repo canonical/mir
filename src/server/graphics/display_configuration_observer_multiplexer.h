@@ -21,6 +21,8 @@
 #include "mir/observer_multiplexer.h"
 #include "mir/graphics/display_configuration_observer.h"
 
+#include <mutex>
+
 namespace mir
 {
 namespace frontend
@@ -33,6 +35,8 @@ class DisplayConfigurationObserverMultiplexer : public ObserverMultiplexer<Displ
 {
 public:
     DisplayConfigurationObserverMultiplexer(std::shared_ptr<Executor> const& default_executor);
+
+    void register_interest(std::weak_ptr<DisplayConfigurationObserver> const& observer, Executor& executor) override;
 
     void initial_configuration(std::shared_ptr<DisplayConfiguration const> const& config) override;
 
@@ -59,6 +63,9 @@ public:
 
 private:
     std::shared_ptr<Executor> const executor;
+
+    std::mutex mutex;
+    std::shared_ptr<DisplayConfiguration const> current_config;
 };
 
 }

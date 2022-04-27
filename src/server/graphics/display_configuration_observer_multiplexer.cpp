@@ -19,15 +19,41 @@
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 
+mg::DisplayConfigurationObserverMultiplexer::DisplayConfigurationObserverMultiplexer(
+    std::shared_ptr<Executor> const& default_executor)
+    : ObserverMultiplexer(*default_executor),
+      executor{default_executor}
+{
+}
+
+void mg::DisplayConfigurationObserverMultiplexer::register_interest(
+    std::weak_ptr<DisplayConfigurationObserver> const& observer,
+    Executor& executor)
+{
+    std::lock_guard lock{mutex};
+    ObserverMultiplexer::register_interest(observer, executor);
+    auto const shared = observer.lock();
+    if (shared && current_config)
+    {
+        for_single_observer(*shared, &mg::DisplayConfigurationObserver::initial_configuration, current_config);
+    }
+}
+
 void mg::DisplayConfigurationObserverMultiplexer::initial_configuration(
     std::shared_ptr<mg::DisplayConfiguration const> const& config)
 {
+    std::lock_guard lock{mutex};
+    current_config = config;
     for_each_observer(&mg::DisplayConfigurationObserver::initial_configuration, config);
 }
 
 void mg::DisplayConfigurationObserverMultiplexer::configuration_applied(
     std::shared_ptr<mg::DisplayConfiguration const> const& config)
 {
+    {
+        std::lock_guard lock{mutex};
+        current_config = config;
+    }
     for_each_observer(&mg::DisplayConfigurationObserver::configuration_applied, config);
 }
 
@@ -69,11 +95,4 @@ void mg::DisplayConfigurationObserverMultiplexer::configuration_updated_for_sess
     std::shared_ptr<DisplayConfiguration const> const& config)
 {
     for_each_observer(&mg::DisplayConfigurationObserver::configuration_updated_for_session, session, config);
-}
-
-mg::DisplayConfigurationObserverMultiplexer::DisplayConfigurationObserverMultiplexer(
-    std::shared_ptr<Executor> const& default_executor)
-    : ObserverMultiplexer(*default_executor),
-      executor{default_executor}
-{
 }

@@ -7,7 +7,6 @@ include_directories(${mirwayland_includes})
 set(
   WAYLAND_SOURCES
 
-  mir_display.cpp               mir_display.h
   wayland_default_configuration.cpp
   wayland_connector.cpp         wayland_connector.h
   wl_client.cpp                 wl_client.h

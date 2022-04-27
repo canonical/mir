@@ -36,7 +36,7 @@ public:
     /**
      * Notification of the initial display configuration.
      *
-     * This is called exactly once, at server startup.
+     * This is called once per observer, at server startup or whenever the observer is registered.
      *
      * \param [in] config   The initial configuration
      */
