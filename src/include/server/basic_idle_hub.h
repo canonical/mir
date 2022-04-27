@@ -84,8 +84,8 @@ private:
 
     std::shared_ptr<time::Clock> const clock;
     std::unique_ptr<time::Alarm> const alarm;
-    std::weak_ptr<BasicIdleHub::WakeLock> wake_lock;
     std::mutex mutex;
+    std::weak_ptr<BasicIdleHub::WakeLock> wake_lock;
     /// Maps timeouts (times from last poke) to the multiplexers that need to be fired at those times.
     std::map<time::Duration, std::shared_ptr<Multiplexer>> timeouts;
     /// Should always be equal to timeouts.begin()->first, or nullopt if timeouts is empty. Only purpose is so we don't
