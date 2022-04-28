@@ -133,6 +133,9 @@ ms::BasicIdleHub::~BasicIdleHub()
 void ms::BasicIdleHub::poke()
 {
     std::lock_guard lock{mutex};
+    if (!wake_lock.expired())
+        return;
+
     poke_time = clock->now();
     schedule_alarm(lock, poke_time);
     if (!idle_multiplexers.empty())
