@@ -279,7 +279,53 @@ TEST_F(BasicIdleHub, inhibit_idle_inhibits_until_wake_lock_released)
     // Check that it stays awake if idle inhibited
     hub->poke();
     {
-        auto wake_lock = hub->inhibit_idle(); // bad_weak_ptr error
+        auto wake_lock = hub->inhibit_idle();
+        EXPECT_CALL(*observer, active());
+        advance_by(6s);
+        executor.execute();
+    }
+    // Check that it goes idle when wake_lock goes out of scope
+    EXPECT_CALL(*observer, idle());
+    advance_by(6s);
+    executor.execute();
+}
+
+TEST_F(BasicIdleHub, inhibit_idle_inhibits_when_a_wake_lock_is_held_twice_until_released)
+{
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    hub->register_interest(observer, executor, 5s);
+    // Check that it goes idle
+    EXPECT_CALL(*observer, idle());
+    advance_by(6s);
+    executor.execute();
+    // Check that it stays awake if idle inhibited
+    hub->poke();
+    {
+        auto wake_lock = hub->inhibit_idle();
+        auto wake_lock_2 = hub->inhibit_idle();
+        EXPECT_CALL(*observer, active());
+        advance_by(6s);
+        executor.execute();
+    }
+    // Check that it goes idle when wake_lock goes out of scope
+    EXPECT_CALL(*observer, idle());
+    advance_by(6s);
+    executor.execute();
+}
+
+TEST_F(BasicIdleHub, inhibit_idle_inhibits_when_a_wake_lock_is_held_then_released_then_held)
+{
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    hub->register_interest(observer, executor, 5s);
+    // Check that it goes idle
+    EXPECT_CALL(*observer, idle());
+    advance_by(6s);
+    executor.execute();
+    // Check that it stays awake if idle inhibited
+    hub->poke();
+    {
+        auto wake_lock = hub->inhibit_idle();
+        auto wake_lock_2 = hub->inhibit_idle();
         EXPECT_CALL(*observer, active());
         advance_by(6s);
         executor.execute();
@@ -289,4 +335,40 @@ TEST_F(BasicIdleHub, inhibit_idle_inhibits_until_wake_lock_released)
     advance_by(6s);
     executor.execute();
 
+    // Check that it stays awake if idle inhibited a second time
+    hub->poke();
+    {
+        auto wake_lock = hub->inhibit_idle();
+        auto wake_lock_2 = hub->inhibit_idle();
+        EXPECT_CALL(*observer, active());
+        advance_by(6s);
+        executor.execute();
+    }
+    // Check that it goes idle when wake_lock goes out of scope
+    EXPECT_CALL(*observer, idle());
+    advance_by(6s);
+    executor.execute();
 }
+
+TEST_F(BasicIdleHub, when_a_wake_lock_is_held_calling_poke_does_not_restart_idle_timeout)
+{
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    hub->register_interest(observer, executor, 5s);
+    EXPECT_CALL(*observer, active()).Times(AnyNumber());
+
+    {
+        auto const wake_lock = hub->inhibit_idle();
+        EXPECT_CALL(*observer, idle()).Times(0);
+
+        hub->poke();
+        advance_by(6s);
+        executor.execute();
+
+        Mock::VerifyAndClearExpectations(observer.get());
+    }
+
+    EXPECT_CALL(*observer, idle()).Times(AnyNumber());
+    advance_by(6s);
+    executor.execute();
+}
+
