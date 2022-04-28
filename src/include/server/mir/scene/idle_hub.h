@@ -56,6 +56,8 @@ public:
     public:
         WakeLock() = default;
         virtual ~WakeLock() = default;
+        WakeLock(WakeLock const&) = delete;
+        WakeLock& operator=(WakeLock const&) = delete;
     };
 
     /// Wakes Mir if it's not already awake, and starts the timer from now
