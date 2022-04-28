@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "basic_idle_hub.h"
+#include "src/server/scene/basic_idle_hub.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/fake_alarm_factory.h"
 #include "mir/test/doubles/explicit_executor.h"
