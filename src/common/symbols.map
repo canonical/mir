@@ -497,6 +497,7 @@ MIR_COMMON_2.8 {
     typeinfo?for?mir::ThreadPoolExecutor;
     vtable?for?mir::ThreadPoolExecutor;
     mir::thread_pool_executor;
+    mir::immediate_executor;
   };
   local: *;
 };

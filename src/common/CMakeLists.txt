@@ -36,6 +36,8 @@ list(APPEND MIR_COMMON_SOURCES
   ${PROJECT_SOURCE_DIR}/include/common/mir/thread_pool_executor.h
   linearising_executor.cpp
   ${PROJECT_SOURCE_DIR}/include/common/mir/linearising_executor.h
+  immediate_executor.cpp
+  ${PROJECT_SOURCE_DIR}/include/common/mir/immediate_executor.h
 )
 
 set(
