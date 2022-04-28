@@ -112,17 +112,6 @@ struct ms::BasicIdleHub::PendingRegistration
     std::set<IdleStateObserver const*> observers;
 };
 
-ms::BasicIdleHub::WakeLock::WakeLock(std::shared_ptr<BasicIdleHub> idle_hub)
-        : idle_hub{idle_hub}
-{
-}
-
-ms::BasicIdleHub::WakeLock::~WakeLock()
-{
-    if (auto const shared_hub = idle_hub.lock())
-        shared_hub->poke();
-}
-
 ms::BasicIdleHub::BasicIdleHub(
     std::shared_ptr<time::Clock> const& clock,
     mt::AlarmFactory& alarm_factory)
@@ -271,15 +260,34 @@ void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp c
     }
 }
 
-auto ms::BasicIdleHub::inhibit_idle() -> std::shared_ptr<ms::IdleHub::WakeLock>
+auto ms::BasicIdleHub::inhibit_idle() -> std::shared_ptr<WakeLock>
 {
-    auto shared_wake_lock = wake_lock.lock();
-    if (!shared_wake_lock)
+    struct WakeLock: public IdleHub::WakeLock
     {
-        std::lock_guard<std::mutex> lock(mutex);
-        shared_wake_lock = std::make_shared<BasicIdleHub::WakeLock>(shared_from_this());
-        wake_lock = shared_wake_lock;
-        alarm->cancel();
+        WakeLock(std::weak_ptr<IdleHub> idle_hub) : idle_hub{std::move(idle_hub)}
+        {
+        }
+
+        ~WakeLock()
+        {
+            if (auto const shared_hub = idle_hub.lock())
+                shared_hub->poke();
+        }
+
+    private:
+        std::weak_ptr<IdleHub> const idle_hub;
+    };
+
+    std::lock_guard<std::mutex> lock(mutex);
+    if (auto const shared_wake_lock = wake_lock.lock()) // wake_lock is already held
+    {
+        return shared_wake_lock;
     }
-    return shared_wake_lock;
+    else // wake_lock is not being held
+    {
+        auto result = std::make_shared<WakeLock>(shared_from_this());
+        alarm->cancel();
+        wake_lock = result;
+        return result;
+    }
 }

@@ -49,17 +49,6 @@ public:
 
     ~BasicIdleHub();
 
-    struct WakeLock: public IdleHub::WakeLock
-    {
-    public:
-        WakeLock(std::shared_ptr<BasicIdleHub> idle_hub);
-
-        ~WakeLock() override;
-
-    private:
-        std::weak_ptr<BasicIdleHub> const idle_hub;
-    };
-
     void poke() override;
 
     void register_interest(
