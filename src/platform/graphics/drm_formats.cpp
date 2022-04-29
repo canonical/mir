@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <drm_fourcc.h>
 #include <stdexcept>
+#include <memory>
 #include <array>
 #include <boost/throw_exception.hpp>
 
