@@ -22,6 +22,7 @@
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/geometry/displacement.h"
 #include "mir/renderer/sw/pixel_source.h"
+#include "mir/observer_multiplexer.h"
 
 #include "mir/scene/scene_report.h"
 #include "mir/scene/null_surface_observer.h"
@@ -41,102 +42,109 @@ namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
 
-void ms::SurfaceObservers::attrib_changed(Surface const* surf, MirWindowAttrib attrib, int value)
+class ms::BasicSurface::Multiplexer : public ObserverMultiplexer<SurfaceObserver>
 {
-    for_each_observer(&SurfaceObserver::attrib_changed, surf, attrib, value);
-}
+public:
+    Multiplexer()
+        : ObserverMultiplexer{immediate_executor}
+    {
+    }
 
-void ms::SurfaceObservers::window_resized_to(Surface const* surf, geometry::Size const& window_size)
-{
-    for_each_observer(&SurfaceObserver::window_resized_to, surf, window_size);
-}
+    void attrib_changed(Surface const* surf, MirWindowAttrib attrib, int value) override
+    {
+        for_each_observer(&SurfaceObserver::attrib_changed, surf, attrib, value);
+    }
 
-void ms::SurfaceObservers::content_resized_to(Surface const* surf, geometry::Size const& content_size)
-{
-    for_each_observer(&SurfaceObserver::content_resized_to, surf, content_size);
-}
+    void window_resized_to(Surface const* surf, geometry::Size const& window_size) override
+    {
+        for_each_observer(&SurfaceObserver::window_resized_to, surf, window_size);
+    }
 
-void ms::SurfaceObservers::moved_to(Surface const* surf, geometry::Point const& top_left)
-{
-    for_each_observer(&SurfaceObserver::moved_to, surf, top_left);
-}
+    void content_resized_to(Surface const* surf, geometry::Size const& content_size) override
+    {
+        for_each_observer(&SurfaceObserver::content_resized_to, surf, content_size);
+    }
 
-void ms::SurfaceObservers::hidden_set_to(Surface const* surf, bool hide)
-{
-    for_each_observer(&SurfaceObserver::hidden_set_to, surf, hide);
-}
+    void moved_to(Surface const* surf, geometry::Point const& top_left) override
+    {
+        for_each_observer(&SurfaceObserver::moved_to, surf, top_left);
+    }
 
-void ms::SurfaceObservers::frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage)
-{
-    for_each_observer(&SurfaceObserver::frame_posted, surf, frames_available, damage);
-}
+    void hidden_set_to(Surface const* surf, bool hide) override
+    {
+        for_each_observer(&SurfaceObserver::hidden_set_to, surf, hide);
+    }
 
-void ms::SurfaceObservers::alpha_set_to(Surface const* surf, float alpha)
-{
-    for_each_observer(&SurfaceObserver::alpha_set_to, surf, alpha);
-}
+    void frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage) override
+    {
+        for_each_observer(&SurfaceObserver::frame_posted, surf, frames_available, damage);
+    }
 
-void ms::SurfaceObservers::orientation_set_to(Surface const* surf, MirOrientation orientation)
-{
-    for_each_observer(&SurfaceObserver::orientation_set_to, surf, orientation);
-}
+    void alpha_set_to(Surface const* surf, float alpha) override
+    {
+        for_each_observer(&SurfaceObserver::alpha_set_to, surf, alpha);
+    }
 
-void ms::SurfaceObservers::transformation_set_to(Surface const* surf, glm::mat4 const& t)
-{
-    for_each_observer(&SurfaceObserver::transformation_set_to, surf, t);
-}
+    void orientation_set_to(Surface const* surf, MirOrientation orientation) override
+    {
+        for_each_observer(&SurfaceObserver::orientation_set_to, surf, orientation);
+    }
 
-void ms::SurfaceObservers::cursor_image_set_to(
-    Surface const* surf,
-    std::weak_ptr<mir::graphics::CursorImage> const& image)
-{
-    for_each_observer(&SurfaceObserver::cursor_image_set_to, surf, image);
-}
+    void transformation_set_to(Surface const* surf, glm::mat4 const& t) override
+    {
+        for_each_observer(&SurfaceObserver::transformation_set_to, surf, t);
+    }
 
-void ms::SurfaceObservers::reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode)
-{
-    for_each_observer(&SurfaceObserver::reception_mode_set_to, surf, mode);
-}
+    void reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode) override
+    {
+        for_each_observer(&SurfaceObserver::reception_mode_set_to, surf, mode);
+    }
 
-void ms::SurfaceObservers::client_surface_close_requested(Surface const* surf)
-{
-    for_each_observer(&SurfaceObserver::client_surface_close_requested, surf);
-}
+    void cursor_image_set_to(Surface const* surf, std::weak_ptr<graphics::CursorImage> const& image) override
+    {
+        for_each_observer(&SurfaceObserver::cursor_image_set_to, surf, image);
+    }
 
-void ms::SurfaceObservers::renamed(Surface const* surf, std::string const& name)
-{
-    for_each_observer(&SurfaceObserver::renamed, surf, name);
-}
+    void client_surface_close_requested(Surface const* surf) override
+    {
+        for_each_observer(&SurfaceObserver::client_surface_close_requested, surf);
+    }
 
-void ms::SurfaceObservers::cursor_image_removed(Surface const* surf)
-{
-    for_each_observer(&SurfaceObserver::cursor_image_removed, surf);
-}
+    void renamed(Surface const* surf, std::string const& name) override
+    {
+        for_each_observer(&SurfaceObserver::renamed, surf, name);
+    }
 
-void ms::SurfaceObservers::placed_relative(Surface const* surf, geometry::Rectangle const& placement)
-{
-    for_each_observer(&SurfaceObserver::placed_relative, surf, placement);
-}
+    void cursor_image_removed(Surface const* surf) override
+    {
+        for_each_observer(&SurfaceObserver::cursor_image_removed, surf);
+    }
 
-void ms::SurfaceObservers::input_consumed(Surface const* surf, std::shared_ptr<MirEvent const> const& event)
-{
-    for_each_observer(&SurfaceObserver::input_consumed, surf, event);
-}
+    void placed_relative(Surface const* surf, geometry::Rectangle const& placement) override
+    {
+        for_each_observer(&SurfaceObserver::placed_relative, surf, placement);
+    }
 
-void ms::SurfaceObservers::start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle)
-{
-    for_each_observer(&SurfaceObserver::start_drag_and_drop, surf, handle);
-}
+    void input_consumed(Surface const* surf, std::shared_ptr<MirEvent const> const& event) override
+    {
+        for_each_observer(&SurfaceObserver::input_consumed, surf, event);
+    }
 
-void ms::SurfaceObservers::depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer)
-{
-    for_each_observer(&SurfaceObserver::depth_layer_set_to, surf, depth_layer);
-}
+    void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) override
+    {
+        for_each_observer(&SurfaceObserver::start_drag_and_drop, surf, handle);
+    }
 
-void ms::SurfaceObservers::application_id_set_to(Surface const* surf, std::string const& application_id)
-{
-    for_each_observer(&SurfaceObserver::application_id_set_to, surf, application_id);
-}
+    void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) override
+    {
+        for_each_observer(&SurfaceObserver::depth_layer_set_to, surf, depth_layer);
+    }
+
+    void application_id_set_to(Surface const* surf, std::string const& application_id) override
+    {
+        for_each_observer(&SurfaceObserver::application_id_set_to, surf, application_id);
+    }
+};
 
 namespace
 {
@@ -150,10 +158,6 @@ std::shared_ptr<mc::BufferStream> default_stream(std::list<ms::StreamInfo> const
         return layers.front().stream;
 }
 
-auto weak(std::shared_ptr<ms::SurfaceObservers>& observers) -> std::weak_ptr<ms::SurfaceObservers>
-{
-    return observers;
-}
 }
 
 ms::BasicSurface::BasicSurface(
@@ -179,6 +183,7 @@ ms::BasicSurface::BasicSurface(
             .confine_pointer_state = confinement_state,
         }
     },
+    observers(std::make_shared<Multiplexer>()),
     session_{session},
     surface_buffer_stream(default_stream(layers)),
     report(report),
@@ -945,7 +950,7 @@ void mir::scene::BasicSurface::update_frame_posted_callbacks(State& state)
     {
         auto const position = geom::Point{} + state.margins.left + state.margins.top + layer.displacement;
         layer.stream->set_frame_posted_callback(
-            [this, observers=weak(observers), position, explicit_size=layer.size, stream=layer.stream.get()]
+            [this, observers=std::weak_ptr{observers}, position, explicit_size=layer.size, stream=layer.stream.get()]
                 (auto const&)
             {
                 auto const logical_size = explicit_size ? explicit_size.value() : stream->stream_size();

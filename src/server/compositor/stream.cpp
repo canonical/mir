@@ -19,6 +19,7 @@
 #include "dropping_schedule.h"
 #include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
+#include <math.h>
 
 #include <cmath>
 
