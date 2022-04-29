@@ -37,7 +37,7 @@ struct IdleInhibitV1Ctx
 class IdleInhibitManagerV1Global : public mw::IdleInhibitManagerV1::Global
 {
 public:
-    IdleInhibitManagerV1Global(wl_display* display, std::shared_ptr<IdleInhibitV1Ctx> const& ctx);
+    IdleInhibitManagerV1Global(wl_display* display, std::shared_ptr<IdleInhibitV1Ctx> const ctx);
 
 private:
     void bind(wl_resource* new_resource) override;
@@ -98,12 +98,12 @@ auto mf::create_idle_inhibit_manager_v1(
 -> std::shared_ptr<mw::IdleInhibitManagerV1::Global>
 {
     auto ctx = std::make_shared<IdleInhibitV1Ctx>(IdleInhibitV1Ctx{wayland_executor, idle_hub});
-    return std::make_shared<IdleInhibitManagerV1Global>(display, ctx);
+    return std::make_shared<IdleInhibitManagerV1Global>(display, std::move(ctx));
 }
 
 IdleInhibitManagerV1Global::IdleInhibitManagerV1Global(
     wl_display *display,
-    std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
+    std::shared_ptr<IdleInhibitV1Ctx> const ctx)
     : Global{display, Version<1>()},
       ctx{ctx}
 {
