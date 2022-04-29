@@ -19,7 +19,6 @@
 #include "wl_surface.h"
 #include "wl_seat.h"
 #include "mir/log.h"
-#include "mir/fatal.h"
 
 #include <xkbcommon/xkbcommon.h>
 #include <cstring> // memcpy

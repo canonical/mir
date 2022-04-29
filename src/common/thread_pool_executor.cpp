@@ -19,7 +19,6 @@
 #include "mir/thread_name.h"
 
 #include <thread>
-#include <array>
 #include <memory>
 #include <atomic>
 #include <list>

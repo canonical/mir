@@ -32,7 +32,6 @@
 #include "mir/input/parameter_keymap.h"
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/input/keyboard_observer.h"
-#include "mir/events/input_event.h"
 #include "mir/scene/surface.h"
 
 #include <mutex>

@@ -189,13 +189,9 @@ bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                (val1.scale == val2.scale) &&
                (val1.form_factor == val2.form_factor)};
 
-    if (equal)
+    for (auto i = begin(val1.modes), j = begin(val2.modes); i != end(val1.modes) && equal; ++i, ++j)
     {
-        for (size_t i = 0; i < val1.modes.size(); i++)
-        {
-            equal = equal && (val1.modes[i] == val2.modes[i]);
-            if (!equal) break;
-        }
+        equal = *i == *j;
     }
 
     return equal;
