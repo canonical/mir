@@ -19,9 +19,7 @@
 #include <cstdint>
 #include <drm_fourcc.h>
 #include <stdexcept>
-#include <memory>
 #include <array>
-#include <algorithm>
 #include <boost/throw_exception.hpp>
 
 #ifdef MIR_HAVE_DRM_GET_MODIFIER_NAME

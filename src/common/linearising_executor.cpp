@@ -19,7 +19,6 @@
 
 #include <deque>
 #include <mutex>
-#include <thread>
 #include <condition_variable>
 
 namespace

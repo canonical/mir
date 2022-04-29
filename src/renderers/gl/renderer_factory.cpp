@@ -17,8 +17,6 @@
 #include "renderer_factory.h"
 #include "renderer.h"
 
-#include <boost/throw_exception.hpp>
-
 namespace mrg = mir::renderer::gl;
 
 std::unique_ptr<mir::renderer::Renderer>

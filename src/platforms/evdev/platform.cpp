@@ -24,7 +24,6 @@
 #include "mir/dispatch/readable_fd.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
-#include "mir/module_properties.h"
 #include "mir/console_services.h"
 
 #include "mir/input/input_device_registry.h"
