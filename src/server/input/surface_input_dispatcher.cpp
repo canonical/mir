@@ -53,7 +53,7 @@ struct InputDispatcherSceneObserver :
 
     void surface_added(std::shared_ptr<ms::Surface> const& surface) override
     {
-        surface->register_interest(shared_from_this());
+        surface->register_interest(shared_from_this(), mir::immediate_executor);
     }
 
     void surface_removed(std::shared_ptr<ms::Surface> const& surface) override

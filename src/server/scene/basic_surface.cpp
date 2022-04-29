@@ -46,7 +46,7 @@ class ms::BasicSurface::Multiplexer : public ObserverMultiplexer<SurfaceObserver
 {
 public:
     Multiplexer()
-        : ObserverMultiplexer{immediate_executor}
+        : ObserverMultiplexer{linearising_executor}
     {
     }
 
