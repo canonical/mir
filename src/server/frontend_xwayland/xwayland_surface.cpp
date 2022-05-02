@@ -1089,6 +1089,7 @@ void mf::XWaylandSurface::inform_client_of_geometry(
     while (inflight_configures.size() > 1000)
     {
         inflight_configures.pop_front();
+        log_warning("%s inflight_configures buffer capped", connection->window_debug_string(window).c_str());
     }
     lock.unlock();
 
