@@ -35,7 +35,8 @@ Emitter Event::prototype() const
 {
     return Lines{
         (min_version > 0 ? Lines{
-            {"bool version_supports_", name, "();"}
+            {"bool version_supports_", name, "();"},
+            {"void send_", name, "_event_if_supported(", mir_args(), ") const;"},
         } : Emitter{nullptr}),
         {"void send_", name, "_event(", mir_args(), ") const;"}
     };
@@ -45,26 +46,35 @@ Emitter Event::prototype() const
 Emitter Event::impl() const
 {
     Emitter const version_high_enough{"wl_resource_get_version(resource) >= ", std::to_string(min_version)};
+    Lines const post_event{
+        mir2wl_converters(),
+        {"wl_resource_post_event(", wl_call_args(), ");"},
+    };
     return Lines{
         (min_version > 0 ? Lines{
             {"bool mw::", class_name, "::version_supports_", name, "()"},
             Block{
                 {"return ", version_high_enough, ";"}
             },
+            empty_line,
+            {"void mw::", class_name, "::send_", name, "_event_if_supported(", mir_args(), ") const"},
+            Block{
+                {"if (", version_high_enough, ")"},
+                Block{post_event},
+            },
             empty_line
         } : Emitter{nullptr}),
         {"void mw::", class_name, "::send_", name, "_event(", mir_args(), ") const"},
         Block{
             (min_version > 0 ? Lines{
-                {"if (!(", version_high_enough, "))"},
+                {"if (", version_high_enough, ")"},
+                Block{post_event},
+                "else",
                 Block{
                     {"tried_to_send_unsupported_event(",
                         "client, resource, \"", name, "\", ", std::to_string(min_version), ");"},
-                    "return;",
                 },
-            } : Emitter{nullptr}),
-            mir2wl_converters(),
-            {"wl_resource_post_event(", wl_call_args(), ");"},
+            } : post_event),
         }
     };
 }
