@@ -277,8 +277,10 @@ public:
 
     void send_offer_event(std::string const& mime_type) const;
     bool version_supports_source_actions();
+    void send_source_actions_event_if_supported(uint32_t source_actions) const;
     void send_source_actions_event(uint32_t source_actions) const;
     bool version_supports_action();
+    void send_action_event_if_supported(uint32_t dnd_action) const;
     void send_action_event(uint32_t dnd_action) const;
 
     struct wl_client* const client;
@@ -324,10 +326,13 @@ public:
     void send_send_event(std::string const& mime_type, mir::Fd fd) const;
     void send_cancelled_event() const;
     bool version_supports_dnd_drop_performed();
+    void send_dnd_drop_performed_event_if_supported() const;
     void send_dnd_drop_performed_event() const;
     bool version_supports_dnd_finished();
+    void send_dnd_finished_event_if_supported() const;
     void send_dnd_finished_event() const;
     bool version_supports_action();
+    void send_action_event_if_supported(uint32_t dnd_action) const;
     void send_action_event(uint32_t dnd_action) const;
 
     struct wl_client* const client;
@@ -611,6 +616,7 @@ public:
 
     void send_capabilities_event(uint32_t capabilities) const;
     bool version_supports_name();
+    void send_name_event_if_supported(std::string const& name) const;
     void send_name_event(std::string const& name) const;
 
     struct wl_client* const client;
@@ -667,12 +673,16 @@ public:
     void send_button_event(uint32_t serial, uint32_t time, uint32_t button, uint32_t state) const;
     void send_axis_event(uint32_t time, uint32_t axis, double value) const;
     bool version_supports_frame();
+    void send_frame_event_if_supported() const;
     void send_frame_event() const;
     bool version_supports_axis_source();
+    void send_axis_source_event_if_supported(uint32_t axis_source) const;
     void send_axis_source_event(uint32_t axis_source) const;
     bool version_supports_axis_stop();
+    void send_axis_stop_event_if_supported(uint32_t time, uint32_t axis) const;
     void send_axis_stop_event(uint32_t time, uint32_t axis) const;
     bool version_supports_axis_discrete();
+    void send_axis_discrete_event_if_supported(uint32_t axis, int32_t discrete) const;
     void send_axis_discrete_event(uint32_t axis, int32_t discrete) const;
 
     struct wl_client* const client;
@@ -740,6 +750,7 @@ public:
     void send_key_event(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const;
     void send_modifiers_event(uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) const;
     bool version_supports_repeat_info();
+    void send_repeat_info_event_if_supported(int32_t rate, int32_t delay) const;
     void send_repeat_info_event(int32_t rate, int32_t delay) const;
 
     struct wl_client* const client;
@@ -790,8 +801,10 @@ public:
     void send_frame_event() const;
     void send_cancel_event() const;
     bool version_supports_shape();
+    void send_shape_event_if_supported(int32_t id, double major, double minor) const;
     void send_shape_event(int32_t id, double major, double minor) const;
     bool version_supports_orientation();
+    void send_orientation_event_if_supported(int32_t id, double orientation) const;
     void send_orientation_event(int32_t id, double orientation) const;
 
     struct wl_client* const client;
@@ -828,8 +841,10 @@ public:
     void send_geometry_event(int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const;
     void send_mode_event(uint32_t flags, int32_t width, int32_t height, int32_t refresh) const;
     bool version_supports_done();
+    void send_done_event_if_supported() const;
     void send_done_event() const;
     bool version_supports_scale();
+    void send_scale_event_if_supported(int32_t factor) const;
     void send_scale_event(int32_t factor) const;
 
     struct wl_client* const client;
