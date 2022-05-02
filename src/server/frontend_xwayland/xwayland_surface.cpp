@@ -1086,6 +1086,10 @@ void mf::XWaylandSurface::inform_client_of_geometry(
     }
     cached.geometry = geometry;
     inflight_configures.push_back(geometry);
+    while (inflight_configures.size() > 1000)
+    {
+        inflight_configures.pop_front();
+    }
     lock.unlock();
 
     if (verbose_xwayland_logging_enabled())
