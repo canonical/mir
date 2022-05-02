@@ -95,10 +95,7 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
 
 void mf::WlKeyboard::send_repeat_info(int32_t rate, int32_t delay)
 {
-    if (version_supports_repeat_info())
-    {
-        send_repeat_info_event(rate, delay);
-    }
+    send_repeat_info_event_if_supported(rate, delay);
 }
 
 void mf::WlKeyboard::send_keymap_xkb_v1(mir::Fd const& fd, size_t length)
