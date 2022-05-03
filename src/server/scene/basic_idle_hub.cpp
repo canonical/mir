@@ -134,7 +134,9 @@ void ms::BasicIdleHub::poke()
 {
     std::lock_guard lock{mutex};
     if (!wake_lock.expired())
+    {
         return;
+    }
 
     poke_time = clock->now();
     schedule_alarm(lock, poke_time);
@@ -274,7 +276,9 @@ auto ms::BasicIdleHub::inhibit_idle() -> std::shared_ptr<WakeLock>
         ~WakeLock()
         {
             if (auto const shared_hub = idle_hub.lock())
+            {
                 shared_hub->poke();
+            }
         }
 
     private:

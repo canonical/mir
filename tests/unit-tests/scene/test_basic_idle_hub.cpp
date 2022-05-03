@@ -41,8 +41,7 @@ struct BasicIdleHub: Test
 {
     mtd::AdvanceableClock clock;
     mtd::FakeAlarmFactory alarm_factory{};
-    std::shared_ptr<ms::BasicIdleHub> hub{std::make_shared<ms::BasicIdleHub>(
-        mt::fake_shared(clock), alarm_factory)};
+    std::shared_ptr<ms::BasicIdleHub> hub{std::make_shared<ms::BasicIdleHub>(mt::fake_shared(clock), alarm_factory)};
     mtd::ExplicitExecutor executor;
 
     void advance_by(mir::time::Duration step)
@@ -371,4 +370,3 @@ TEST_F(BasicIdleHub, when_a_wake_lock_is_held_calling_poke_does_not_restart_idle
     advance_by(6s);
     executor.execute();
 }
-
