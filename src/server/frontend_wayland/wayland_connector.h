@@ -186,15 +186,6 @@ private:
     // Only accessed on event loop
     std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>> mutable connect_handlers;
 };
-
-auto create_wl_shell(
-    wl_display* display,
-    Executor& wayland_executor,
-    std::shared_ptr<shell::Shell> const& shell,
-    WlSeat* seat,
-    OutputManager* const output_manager) -> std::shared_ptr<wayland::Shell::Global>;
-
-auto get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>;
 }
 }
 
