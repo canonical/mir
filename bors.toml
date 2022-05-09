@@ -5,8 +5,8 @@ status = [
           "BuildAndTest (google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_jammy)",
           "BuildAndTest (google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64)",
           "BuildAndTest (google:ubuntu-20.04-64:spread/build/ubuntu:clang)",
-          "BuildAndTest (google:fedora-34-64:spread/build/fedora:amd64)",
           "BuildAndTest (google:fedora-35-64:spread/build/fedora:amd64)",
+          "BuildAndTest (google:fedora-36-64:spread/build/fedora:amd64)",
 ]
 block-labels = [ "no-merge" ]
 timeout-sec = 3600
