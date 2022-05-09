@@ -38,7 +38,7 @@ namespace doubles
 
 namespace
 {
-void memcpy_from_shm_buffer(struct wl_shm_buffer* buffer)
+inline void memcpy_from_shm_buffer(struct wl_shm_buffer* buffer)
 {
     auto const height = wl_shm_buffer_get_height(buffer);
     auto const stride = wl_shm_buffer_get_stride(buffer);
