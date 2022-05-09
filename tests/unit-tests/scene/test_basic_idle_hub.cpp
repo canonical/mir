@@ -283,7 +283,19 @@ TEST_F(BasicIdleHub, inhibit_idle_inhibits_until_wake_lock_released)
         advance_by(6s);
         executor.execute();
     }
-    // Check that it goes idle when wake_lock goes out of scope
+}
+
+TEST_F(BasicIdleHub, when_a_wake_lock_is_released_idle_timeout_is_restarted)
+{
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    hub->register_interest(observer, executor, 5s);
+
+    {
+        auto const wake_lock = hub->inhibit_idle();
+        advance_by(6s);
+        executor.execute();
+    }
+
     EXPECT_CALL(*observer, idle());
     advance_by(6s);
     executor.execute();
