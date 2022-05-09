@@ -306,10 +306,6 @@ TEST_F(BasicIdleHub, inhibit_idle_inhibits_when_a_wake_lock_is_held_twice_until_
         advance_by(6s);
         executor.execute();
     }
-    // Check that it goes idle when wake_lock goes out of scope
-    EXPECT_CALL(*observer, idle());
-    advance_by(6s);
-    executor.execute();
 }
 
 TEST_F(BasicIdleHub, inhibit_idle_inhibits_when_a_wake_lock_is_held_then_released_then_held)
@@ -362,11 +358,5 @@ TEST_F(BasicIdleHub, when_a_wake_lock_is_held_calling_poke_does_not_restart_idle
         hub->poke();
         advance_by(6s);
         executor.execute();
-
-        Mock::VerifyAndClearExpectations(observer.get());
     }
-
-    EXPECT_CALL(*observer, idle()).Times(AnyNumber());
-    advance_by(6s);
-    executor.execute();
 }
