@@ -37,7 +37,7 @@ struct IdleInhibitV1Ctx
 class IdleInhibitManagerV1Global : public mw::IdleInhibitManagerV1::Global
 {
 public:
-    IdleInhibitManagerV1Global(wl_display* display, std::shared_ptr<IdleInhibitV1Ctx> const ctx);
+    IdleInhibitManagerV1Global(wl_display* display, std::shared_ptr<IdleInhibitV1Ctx> ctx);
 
 private:
     void bind(wl_resource* new_resource) override;
