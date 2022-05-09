@@ -34,8 +34,8 @@ namespace frontend
 {
 auto create_idle_inhibit_manager_v1(
     wl_display* display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<scene::IdleHub> const& idle_hub)
+    std::shared_ptr<Executor> wayland_executor,
+    std::shared_ptr<scene::IdleHub> idle_hub)
 -> std::shared_ptr<wayland::IdleInhibitManagerV1::Global>;
 }
 }

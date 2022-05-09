@@ -48,7 +48,7 @@ private:
 class IdleInhibitManagerV1 : public mw::IdleInhibitManagerV1
 {
 public:
-    IdleInhibitManagerV1(wl_resource* resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx);
+    IdleInhibitManagerV1(wl_resource* resource, std::shared_ptr<IdleInhibitV1Ctx>  ctx);
 
 private:
     void create_inhibitor(struct wl_resource* id, struct wl_resource* surface) override;
@@ -93,11 +93,13 @@ void IdleInhibitorV1::StateObserver::active()
 
 auto mf::create_idle_inhibit_manager_v1(
     wl_display* display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<ms::IdleHub> const& idle_hub)
+    std::shared_ptr<Executor> wayland_executor,
+    std::shared_ptr<ms::IdleHub> idle_hub)
 -> std::shared_ptr<mw::IdleInhibitManagerV1::Global>
 {
-    auto ctx = std::make_shared<IdleInhibitV1Ctx>(IdleInhibitV1Ctx{wayland_executor, idle_hub});
+    auto ctx = std::make_shared<IdleInhibitV1Ctx>(IdleInhibitV1Ctx{
+        std::move(wayland_executor),
+        std::move(idle_hub)});
     return std::make_shared<IdleInhibitManagerV1Global>(display, std::move(ctx));
 }
 
@@ -116,9 +118,9 @@ void IdleInhibitManagerV1Global::bind(wl_resource* new_resource)
 
 IdleInhibitManagerV1::IdleInhibitManagerV1(
         wl_resource *resource,
-        std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
+        std::shared_ptr<IdleInhibitV1Ctx> ctx)
         : mw::IdleInhibitManagerV1{resource, Version<1>()},
-          ctx{ctx}
+          ctx{std::move(ctx)}
 {
 }
 
