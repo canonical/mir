@@ -53,7 +53,7 @@ public:
 private:
     void create_inhibitor(struct wl_resource* id, struct wl_resource* surface) override;
 
-    std::shared_ptr<IdleInhibitV1Ctx> const& ctx;
+    std::shared_ptr<IdleInhibitV1Ctx> const ctx;
 };
 
 class IdleInhibitorV1 : public mw::IdleInhibitorV1
