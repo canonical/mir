@@ -32,7 +32,7 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
-#include "egl_context_executor.h"
+#include "mir/graphics/egl_context_executor.h"
 #include "mir/executor.h"
 #include "shm_buffer.h"
 #include "buffer_allocator.h"

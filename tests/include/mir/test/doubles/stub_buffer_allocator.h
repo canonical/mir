@@ -22,7 +22,7 @@
 #include "mir_test_framework/stub_platform_native_buffer.h"
 #include "mir_toolkit/client_types.h"
 #include "src/platforms/common/server/buffer_from_wl_shm.h"
-#include "src/platforms/common/server/egl_context_executor.h"
+#include "mir/graphics/egl_context_executor.h"
 #include "mir/test/doubles/null_gl_context.h"
 #include <wayland-server.h>
 

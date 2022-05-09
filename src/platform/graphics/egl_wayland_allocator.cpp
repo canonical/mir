@@ -29,6 +29,7 @@
 #include "mir/executor.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
+#include "mir/graphics/egl_context_executor.h"
 
 #include <GLES2/gl2.h>
 
@@ -107,19 +108,17 @@ public:
     // Note: Must be called with a current EGL context
     WaylandTexBuffer(
         wl_resource* buffer,
-        std::shared_ptr<mir::renderer::gl::Context> ctx,
         mg::EGLExtensions const& extensions,
+        std::shared_ptr<mir::graphics::common::EGLContextExecutor> egl_delegate,
         std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release,
-        std::shared_ptr<mir::Executor> wayland_executor)
-        : ctx{std::move(ctx)},
-          tex{get_tex_id()},
+        std::function<void()>&& on_release)
+        : tex{get_tex_id()},
           on_consumed{std::move(on_consumed)},
           on_release{std::move(on_release)},
           size_{get_wl_buffer_size(buffer, extensions)},
           layout_{get_texture_layout(buffer, extensions)},
           egl_format{get_wl_egl_format(buffer, extensions)},
-          wayland_executor{std::move(wayland_executor)}
+          egl_delegate{std::move(egl_delegate)}
     {
         if (egl_format != EGL_TEXTURE_RGB && egl_format != EGL_TEXTURE_RGBA)
         {
@@ -160,14 +159,10 @@ public:
 
     ~WaylandTexBuffer()
     {
-        wayland_executor->spawn(
-            [context = ctx, tex = tex]()
+        egl_delegate->spawn(
+            [tex = tex]()
             {
-              context->make_current();
-
               glDeleteTextures(1, &tex);
-
-              context->release_current();
             });
 
         on_release();
@@ -242,7 +237,6 @@ public:
     {
     }
 private:
-    std::shared_ptr<mir::renderer::gl::Context> const ctx;
     GLuint const tex;
 
     std::mutex consumed_mutex;
@@ -253,7 +247,7 @@ private:
     Layout const layout_;
     EGLint const egl_format;
 
-    std::shared_ptr<mir::Executor> const wayland_executor;
+    std::shared_ptr<mir::graphics::common::EGLContextExecutor> const egl_delegate;
 };
 }
 
@@ -279,15 +273,13 @@ auto mg::wayland::buffer_from_resource(
     wl_resource* buffer,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release,
-    std::shared_ptr<mir::renderer::gl::Context> ctx,
     mg::EGLExtensions const& extensions,
-    std::shared_ptr<mir::Executor> wayland_executor) -> std::unique_ptr<mg::Buffer>
+    std::shared_ptr<mir::graphics::common::EGLContextExecutor> egl_delegate) -> std::unique_ptr<mg::Buffer>
 {
     return std::make_unique<WaylandTexBuffer>(
         buffer,
-        ctx,
         extensions,
+        std::move(egl_delegate),
         std::move(on_consumed),
-        std::move(on_release),
-        wayland_executor);
+        std::move(on_release));
 }

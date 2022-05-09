@@ -17,7 +17,7 @@
 #include "buffer_allocator.h"
 #include "shm_buffer.h"
 #include "display.h"
-#include "egl_context_executor.h"
+#include "mir/graphics/egl_context_executor.h"
 #include "buffer_from_wl_shm.h"
 
 #include <mir/anonymous_shm_file.h>
@@ -190,9 +190,8 @@ auto mgw::BufferAllocator::buffer_from_resource(
         buffer,
         std::move(on_consumed),
         std::move(on_release),
-        ctx,
         *egl_extensions,
-        wayland_executor);
+        egl_delegate);
 }
 
 auto mgw::BufferAllocator::buffer_from_shm(

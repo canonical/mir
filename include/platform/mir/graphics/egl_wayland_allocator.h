@@ -41,6 +41,11 @@ namespace graphics
 class Buffer;
 class EGLExtensions;
 
+namespace common
+{
+class EGLContextExecutor;
+}
+
 namespace wayland
 {
 void bind_display(EGLDisplay egl_dpy, wl_display* wl_dpy, EGLExtensions const& extensions);
@@ -50,9 +55,8 @@ auto buffer_from_resource(
     wl_resource* buffer,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release,
-    std::shared_ptr<renderer::gl::Context> ctx,
     EGLExtensions const& extensions,
-    std::shared_ptr<Executor> wayland_executor) -> std::unique_ptr<Buffer>;
+    std::shared_ptr<common::EGLContextExecutor> egl_executor) -> std::unique_ptr<Buffer>;
 
 }
 }

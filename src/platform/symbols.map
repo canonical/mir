@@ -205,5 +205,11 @@ MIR_PLATFORM_2.8 {
  
     mir::udev::Device::clone*;
     mir::udev::Context::char_device_from_devnum*;
+
+    mir::graphics::common::EGLContextExecutor::EGLContextExecutor*;
+    mir::graphics::common::EGLContextExecutor::?EGLContextExecutor*;
+    mir::graphics::common::EGLContextExecutor::spawn*;
+    typeinfo?for?mir::graphics::common::EGLContextExecutor;
+    vtable?for?mir::graphics::common::EGLContextExecutor;
    };
 } MIRPLATFORM_2.7;
