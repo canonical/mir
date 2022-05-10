@@ -51,14 +51,7 @@ public:
     virtual ~IdleHub() = default;
 
     /// Lock that is held by the surface which is inhibiting idle
-    struct WakeLock
-    {
-    public:
-        WakeLock() = default;
-        virtual ~WakeLock() = default;
-        WakeLock(WakeLock const&) = delete;
-        WakeLock& operator=(WakeLock const&) = delete;
-    };
+    struct WakeLock;
 
     /// Wakes Mir if it's not already awake, and starts the timer from now
     virtual void poke() = 0;

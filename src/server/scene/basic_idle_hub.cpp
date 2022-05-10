@@ -265,25 +265,26 @@ void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp c
     }
 }
 
+struct ms::IdleHub::WakeLock
+{
+    WakeLock(std::weak_ptr<IdleHub> idle_hub) : idle_hub{std::move(idle_hub)}
+    {
+    }
+
+    ~WakeLock()
+    {
+        if (auto const shared_hub = idle_hub.lock())
+        {
+            shared_hub->poke();
+        }
+    }
+
+private:
+    std::weak_ptr<IdleHub> const idle_hub;
+};
+
 auto ms::BasicIdleHub::inhibit_idle() -> std::shared_ptr<WakeLock>
 {
-    struct WakeLock: public IdleHub::WakeLock
-    {
-        WakeLock(std::weak_ptr<IdleHub> idle_hub) : idle_hub{std::move(idle_hub)}
-        {
-        }
-
-        ~WakeLock()
-        {
-            if (auto const shared_hub = idle_hub.lock())
-            {
-                shared_hub->poke();
-            }
-        }
-
-    private:
-        std::weak_ptr<IdleHub> const idle_hub;
-    };
 
     std::lock_guard<std::mutex> lock(mutex);
     if (auto const shared_wake_lock = wake_lock.lock()) // wake_lock is already held
