@@ -19,6 +19,7 @@
 #include "mir/graphics/renderable.h"
 
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_input_scene.h"
 #include "mir/test/doubles/explicit_executor.h"
 
