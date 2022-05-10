@@ -15,7 +15,7 @@
  */
 
 #include "src/platforms/common/server/shm_buffer.h"
-#include "src/platforms/common/server/egl_context_executor.h"
+#include "mir/graphics/egl_context_executor.h"
 #include "mir/renderer/gl/context.h"
 
 #include "mir/test/doubles/mock_gl.h"

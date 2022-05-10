@@ -15,7 +15,7 @@
  */
 
 #include "buffer_allocator.h"
-#include "egl_context_executor.h"
+#include "mir/graphics/egl_context_executor.h"
 #include "shm_buffer.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/raii.h"
@@ -214,10 +214,9 @@ std::shared_ptr<mg::Buffer> mgx::BufferAllocator::buffer_from_resource(
 
     if (auto dmabuf = dmabuf_extension->buffer_from_resource(
         buffer,
-        ctx,
         std::function<void()>{on_consumed},
         std::function<void()>{on_release},
-        wayland_executor))
+        egl_delegate))
     {
         return dmabuf;
     }
@@ -225,9 +224,8 @@ std::shared_ptr<mg::Buffer> mgx::BufferAllocator::buffer_from_resource(
         buffer,
         std::move(on_consumed),
         std::move(on_release),
-        ctx,
         *egl_extensions,
-        wayland_executor);
+        egl_delegate);
 }
 
 auto mgx::BufferAllocator::buffer_from_shm(

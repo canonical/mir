@@ -20,7 +20,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/egl_extensions.h"
-#include "egl_context_executor.h"
+#include "mir/graphics/egl_context_executor.h"
 
 #include "wayland-eglstream-controller.h"
 
