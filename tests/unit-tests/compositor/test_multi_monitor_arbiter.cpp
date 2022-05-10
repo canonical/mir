@@ -17,6 +17,7 @@
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_buffer.h"
 #include "src/server/compositor/multi_monitor_arbiter.h"
 #include "src/server/compositor/schedule.h"
 
