@@ -15,6 +15,7 @@
  */
 
 #include "src/server/shell/basic_idle_handler.h"
+#include "mir/executor.h"
 #include "mir/test/doubles/mock_idle_hub.h"
 #include "mir/test/doubles/stub_input_scene.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
