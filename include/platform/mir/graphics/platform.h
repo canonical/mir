@@ -144,12 +144,15 @@ struct SupportedDevice
 };
 
 typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatform)(
+    mir::graphics::SupportedDevice const& device,
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::graphics::DisplayReport> const& report);
 
 typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderPlatform)(
+    mir::graphics::SupportedDevice const& device,
+    std::vector<std::shared_ptr<mir::graphics::DisplayPlatform>> const& displays,
     mir::options::Option const& options,
     mir::EmergencyCleanupRegistry& emergency_cleanup_registry);
 
@@ -189,12 +192,15 @@ extern "C"
  * \ingroup platform_enablement
  */
 mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
+    mir::graphics::SupportedDevice const& device,
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::graphics::DisplayReport> const& report);
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
+    mir::graphics::SupportedDevice const& device,
+    std::vector<std::shared_ptr<mir::graphics::DisplayPlatform>> const& displays,
     mir::options::Option const& options,
     mir::EmergencyCleanupRegistry& emergency_cleanup_registry);
 

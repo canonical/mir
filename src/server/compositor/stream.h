@@ -18,11 +18,10 @@
 #define MIR_COMPOSITOR_STREAM_H_
 
 #include "mir/compositor/buffer_stream.h"
-#include "mir/scene/surface_observers.h"
-#include "mir/frontend/buffer_stream_id.h"
-#include "mir/lockable_callback.h"
 #include "mir/geometry/size.h"
 #include "multi_monitor_arbiter.h"
+
+#include <atomic>
 #include <mutex>
 #include <memory>
 #include <set>

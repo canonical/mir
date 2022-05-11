@@ -123,17 +123,11 @@ mf::XdgOutputV1::XdgOutputV1(
     send_logical_size_event(
         extents.size.width.as_int() * geometry_scale,
         extents.size.height.as_int() * geometry_scale);
-    if (version_supports_name())
-    {
-        // TODO: Better output names that are consistant between sessions
-        auto output_name = "OUT-" + std::to_string(config.id.as_value());
-        send_name_event(output_name);
-    }
+    // TODO: Better output names that are consistant between sessions
+    auto output_name = "OUT-" + std::to_string(config.id.as_value());
+    send_name_event_if_supported(output_name);
     // not sending description is allowed
-    // if (version_supports_description())
-    // {
-    //     send_description_event("TODO: set this");
-    // }
+    // send_description_event_if_supported("TODO: set this");
 
     /* xdg-output-unstable-v1.xml:
      * For objects version 3 onwards, after all xdg_output properties have been

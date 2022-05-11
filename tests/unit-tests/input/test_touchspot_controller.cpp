@@ -21,6 +21,7 @@
 #include "mir/graphics/renderable.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_scene.h"
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/stub_input_scene.h"

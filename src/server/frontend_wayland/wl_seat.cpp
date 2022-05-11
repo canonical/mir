@@ -32,7 +32,6 @@
 #include "mir/input/parameter_keymap.h"
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/input/keyboard_observer.h"
-#include "mir/events/input_event.h"
 #include "mir/scene/surface.h"
 
 #include <mutex>
@@ -298,8 +297,7 @@ mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
 {
     // TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
     send_capabilities_event(Capability::pointer | Capability::keyboard | Capability::touch);
-    if (version_supports_name())
-        send_name_event("seat0");
+    send_name_event_if_supported("seat0");
 }
 
 void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)

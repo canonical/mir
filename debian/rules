@@ -37,12 +37,6 @@ ifeq ($(filter noopt,$(DEB_BUILD_OPTIONS)),noopt)
 	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
 endif
 
-# Disable LTO on jammy due to failing to build
-ifneq ($(filter jammy,$(DEB_DISTRIBUTION)),)
-	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
-	DEB_BUILD_MAINT_OPTIONS += optimize=-lto
-endif
-
 # We can't guarantee non-Ubuntu builds will build against WLCS packages we
 # control, so disable it on non-Ubuntu builds
 ifeq ($(filter Ubuntu,$(DEB_VENDOR)),)
@@ -51,7 +45,11 @@ endif
 
 # Disable miral tests on Launchpad riscv64 (MirServer/mir#2375)
 ifeq ($(USER) $(DEB_HOST_ARCH),buildd riscv64)
-	COMMON_CONFIGURE_OPTIONS += -DMIR_BUILD_MIRAL_TESTS=OFF
+  COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_MIRAL_TESTS=OFF
+  # Disable unit tests on Launchpad riscv64 jammy kinetic
+  ifneq ($(filter jammy kinetic,$(DEB_DISTRIBUTION)),)
+    COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_UNIT_TESTS=OFF
+  endif
 endif
 
 export DEB_BUILD_MAINT_OPTIONS

@@ -216,6 +216,7 @@ public:
 };
 
 void internal_error_processing_request(wl_client* client, char const* method_name);
+void tried_to_send_unsupported_event(wl_client* client, wl_resource* resource, char const* event, int required_version);
 
 }
 }

@@ -490,5 +490,7 @@ global:
     typeinfo?for?mir::wayland::IdleInhibitorV1;
     vtable?for?mir::wayland::IdleInhibitorV1;
     virtual?thunk?to?mir::wayland::IdleInhibitorV1::?IdleInhibitorV1*;
+
+    mir::wayland::tried_to_send_unsupported_event*;
   };
 } MIRWAYLAND_2.5;

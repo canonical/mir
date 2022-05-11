@@ -17,7 +17,6 @@
 #include "basic_surface.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/shell/input_targeter.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/pixel_format_utils.h"
@@ -31,8 +30,6 @@
 
 #include <stdexcept>
 #include <algorithm>
-
-#include <string.h> // memcpy
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;

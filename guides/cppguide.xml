@@ -3234,57 +3234,25 @@ Thomas Voss
         else do_that();
       </BAD_CODE_SNIPPET>
       <p>
-        In general, curly braces are not required for single-line
-        statements, but they are allowed if you like them;
-        conditional or loop statements with complex conditions or
-        statements may be more readable with curly braces. Some
-
-        projects
-        require that an <CODE>if</CODE> must always always have an
-        accompanying brace.
+        Curly braces are preferred if the statement is on a different line than
+        the condition.
       </p>
       <CODE_SNIPPET>
-        if (condition)
-            do_something();  // 4 space indent.
-
         if (condition)
         {
             do_something();  // 4 space indent.
         }
       </CODE_SNIPPET>
-      <p>
-        However, if one part of an <code>if</code>-<code>else</code>
-        statement uses curly braces, the other part must too:
-      </p>
       <BAD_CODE_SNIPPET>
-        // Not allowed - curly on IF but not ELSE
+        // Not allowed - single line IF statements without curly braces
         if (condition)
-        {
             foo;
-        }
-        else
-            bar;
 
-        // Not allowed - curly on ELSE but not IF
         if (condition)
             foo;
         else
-        {
             bar;
-        }
       </BAD_CODE_SNIPPET>
-      <CODE_SNIPPET>
-        // Curly braces around both IF and ELSE required because
-        // one of the clauses used braces.
-        if (condition)
-        {
-            foo;
-        }
-        else
-        {
-            bar;
-        }
-      </CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
 

@@ -487,7 +487,6 @@ void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::fu
 
 mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<msh::Shell> const& shell,
-    std::shared_ptr<MirDisplay> const& display_config,
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<mi::Seat> const& seat,
@@ -497,6 +496,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<SurfaceStack> const& surface_stack,
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar,
     std::shared_ptr<ms::Clipboard> const& clipboard,
     std::shared_ptr<ms::TextInputHub> const& text_input_hub,
     std::shared_ptr<ms::IdleHub> const& idle_hub,
@@ -559,8 +559,8 @@ mf::WaylandConnector::WaylandConnector(
         enable_key_repeat);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
-        display_config,
-        executor);
+        executor,
+        display_config_registrar);
 
     data_device_manager_global = std::make_unique<WlDataDeviceManager>(display.get(), executor, clipboard);
 

@@ -52,6 +52,7 @@ char const* bypass_option_name{"bypass"};
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
+    mg::SupportedDevice const&,
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
@@ -76,12 +77,14 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 }
 
 auto create_rendering_platform(
+    mg::SupportedDevice const& device,
+    std::vector<std::shared_ptr<mg::DisplayPlatform>> const& displays,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
     mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
-    return mir::make_module_ptr<mgg::RenderingPlatform>();
+    return mir::make_module_ptr<mgg::RenderingPlatform>(*device.device, displays);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)

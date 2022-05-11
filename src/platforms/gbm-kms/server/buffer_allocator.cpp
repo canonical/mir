@@ -19,7 +19,7 @@
 #include "mir/anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "display_helpers.h"
-#include "egl_context_executor.h"
+#include "mir/graphics/egl_context_executor.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"
@@ -227,10 +227,9 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::buffer_from_resource(
 
     if (auto dmabuf = dmabuf_extension->buffer_from_resource(
         buffer,
-        ctx,
         std::function<void()>{on_consumed},
         std::function<void()>{on_release},
-        wayland_executor))
+        egl_delegate))
     {
         return dmabuf;
     }
@@ -238,9 +237,8 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::buffer_from_resource(
         buffer,
         std::move(on_consumed),
         std::move(on_release),
-        ctx,
         *egl_extensions,
-        wayland_executor);
+        egl_delegate);
 }
 
 auto mgg::BufferAllocator::buffer_from_shm(

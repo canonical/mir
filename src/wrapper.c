@@ -53,17 +53,15 @@ int main(int argc, char** argv)
         ++dest;
     }
     pivot_max = dest_max - pivot;
-
-    strncpy(pivot, "../lib/client-modules/", pivot_max);
     *dest_max = '\0';
+
+    strncpy(pivot, "../lib/", pivot_max);
+    appendenv("LD_LIBRARY_PATH", path);
+    printf("LD_LIBRARY_PATH=%s\n", getenv("LD_LIBRARY_PATH"));
 
     strncpy(pivot+7, "server-modules/", pivot_max-7);
     setenv("MIR_SERVER_PLATFORM_PATH", path, 1);
     printf("MIR_SERVER_PLATFORM_PATH=%s\n", path);
-
-    pivot[6] = '\0';  /* truncate lib/client-modules to just lib */
-    appendenv("LD_LIBRARY_PATH", path);
-    printf("LD_LIBRARY_PATH=%s\n", getenv("LD_LIBRARY_PATH"));
 
     snprintf(pivot, pivot_max, EXECUTABLE_FORMAT, name);
     *dest_max = '\0';
