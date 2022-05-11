@@ -809,9 +809,24 @@ bool mw::DataOffer::version_supports_source_actions()
     return wl_resource_get_version(resource) >= 3;
 }
 
+void mw::DataOffer::send_source_actions_event_if_supported(uint32_t source_actions) const
+{
+    if (wl_resource_get_version(resource) >= 3)
+    {
+        wl_resource_post_event(resource, Opcode::source_actions, source_actions);
+    }
+}
+
 void mw::DataOffer::send_source_actions_event(uint32_t source_actions) const
 {
-    wl_resource_post_event(resource, Opcode::source_actions, source_actions);
+    if (wl_resource_get_version(resource) >= 3)
+    {
+        wl_resource_post_event(resource, Opcode::source_actions, source_actions);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "source_actions", 3);
+    }
 }
 
 bool mw::DataOffer::version_supports_action()
@@ -819,9 +834,24 @@ bool mw::DataOffer::version_supports_action()
     return wl_resource_get_version(resource) >= 3;
 }
 
+void mw::DataOffer::send_action_event_if_supported(uint32_t dnd_action) const
+{
+    if (wl_resource_get_version(resource) >= 3)
+    {
+        wl_resource_post_event(resource, Opcode::action, dnd_action);
+    }
+}
+
 void mw::DataOffer::send_action_event(uint32_t dnd_action) const
 {
-    wl_resource_post_event(resource, Opcode::action, dnd_action);
+    if (wl_resource_get_version(resource) >= 3)
+    {
+        wl_resource_post_event(resource, Opcode::action, dnd_action);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "action", 3);
+    }
 }
 
 bool mw::DataOffer::is_instance(wl_resource* resource)
@@ -973,9 +1003,24 @@ bool mw::DataSource::version_supports_dnd_drop_performed()
     return wl_resource_get_version(resource) >= 3;
 }
 
+void mw::DataSource::send_dnd_drop_performed_event_if_supported() const
+{
+    if (wl_resource_get_version(resource) >= 3)
+    {
+        wl_resource_post_event(resource, Opcode::dnd_drop_performed);
+    }
+}
+
 void mw::DataSource::send_dnd_drop_performed_event() const
 {
-    wl_resource_post_event(resource, Opcode::dnd_drop_performed);
+    if (wl_resource_get_version(resource) >= 3)
+    {
+        wl_resource_post_event(resource, Opcode::dnd_drop_performed);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "dnd_drop_performed", 3);
+    }
 }
 
 bool mw::DataSource::version_supports_dnd_finished()
@@ -983,9 +1028,24 @@ bool mw::DataSource::version_supports_dnd_finished()
     return wl_resource_get_version(resource) >= 3;
 }
 
+void mw::DataSource::send_dnd_finished_event_if_supported() const
+{
+    if (wl_resource_get_version(resource) >= 3)
+    {
+        wl_resource_post_event(resource, Opcode::dnd_finished);
+    }
+}
+
 void mw::DataSource::send_dnd_finished_event() const
 {
-    wl_resource_post_event(resource, Opcode::dnd_finished);
+    if (wl_resource_get_version(resource) >= 3)
+    {
+        wl_resource_post_event(resource, Opcode::dnd_finished);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "dnd_finished", 3);
+    }
 }
 
 bool mw::DataSource::version_supports_action()
@@ -993,9 +1053,24 @@ bool mw::DataSource::version_supports_action()
     return wl_resource_get_version(resource) >= 3;
 }
 
+void mw::DataSource::send_action_event_if_supported(uint32_t dnd_action) const
+{
+    if (wl_resource_get_version(resource) >= 3)
+    {
+        wl_resource_post_event(resource, Opcode::action, dnd_action);
+    }
+}
+
 void mw::DataSource::send_action_event(uint32_t dnd_action) const
 {
-    wl_resource_post_event(resource, Opcode::action, dnd_action);
+    if (wl_resource_get_version(resource) >= 3)
+    {
+        wl_resource_post_event(resource, Opcode::action, dnd_action);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "action", 3);
+    }
 }
 
 bool mw::DataSource::is_instance(wl_resource* resource)
@@ -2323,10 +2398,26 @@ bool mw::Seat::version_supports_name()
     return wl_resource_get_version(resource) >= 2;
 }
 
+void mw::Seat::send_name_event_if_supported(std::string const& name) const
+{
+    if (wl_resource_get_version(resource) >= 2)
+    {
+        const char* name_resolved = name.c_str();
+        wl_resource_post_event(resource, Opcode::name, name_resolved);
+    }
+}
+
 void mw::Seat::send_name_event(std::string const& name) const
 {
-    const char* name_resolved = name.c_str();
-    wl_resource_post_event(resource, Opcode::name, name_resolved);
+    if (wl_resource_get_version(resource) >= 2)
+    {
+        const char* name_resolved = name.c_str();
+        wl_resource_post_event(resource, Opcode::name, name_resolved);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "name", 2);
+    }
 }
 
 bool mw::Seat::is_instance(wl_resource* resource)
@@ -2498,9 +2589,24 @@ bool mw::Pointer::version_supports_frame()
     return wl_resource_get_version(resource) >= 5;
 }
 
+void mw::Pointer::send_frame_event_if_supported() const
+{
+    if (wl_resource_get_version(resource) >= 5)
+    {
+        wl_resource_post_event(resource, Opcode::frame);
+    }
+}
+
 void mw::Pointer::send_frame_event() const
 {
-    wl_resource_post_event(resource, Opcode::frame);
+    if (wl_resource_get_version(resource) >= 5)
+    {
+        wl_resource_post_event(resource, Opcode::frame);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "frame", 5);
+    }
 }
 
 bool mw::Pointer::version_supports_axis_source()
@@ -2508,9 +2614,24 @@ bool mw::Pointer::version_supports_axis_source()
     return wl_resource_get_version(resource) >= 5;
 }
 
+void mw::Pointer::send_axis_source_event_if_supported(uint32_t axis_source) const
+{
+    if (wl_resource_get_version(resource) >= 5)
+    {
+        wl_resource_post_event(resource, Opcode::axis_source, axis_source);
+    }
+}
+
 void mw::Pointer::send_axis_source_event(uint32_t axis_source) const
 {
-    wl_resource_post_event(resource, Opcode::axis_source, axis_source);
+    if (wl_resource_get_version(resource) >= 5)
+    {
+        wl_resource_post_event(resource, Opcode::axis_source, axis_source);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "axis_source", 5);
+    }
 }
 
 bool mw::Pointer::version_supports_axis_stop()
@@ -2518,9 +2639,24 @@ bool mw::Pointer::version_supports_axis_stop()
     return wl_resource_get_version(resource) >= 5;
 }
 
+void mw::Pointer::send_axis_stop_event_if_supported(uint32_t time, uint32_t axis) const
+{
+    if (wl_resource_get_version(resource) >= 5)
+    {
+        wl_resource_post_event(resource, Opcode::axis_stop, time, axis);
+    }
+}
+
 void mw::Pointer::send_axis_stop_event(uint32_t time, uint32_t axis) const
 {
-    wl_resource_post_event(resource, Opcode::axis_stop, time, axis);
+    if (wl_resource_get_version(resource) >= 5)
+    {
+        wl_resource_post_event(resource, Opcode::axis_stop, time, axis);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "axis_stop", 5);
+    }
 }
 
 bool mw::Pointer::version_supports_axis_discrete()
@@ -2528,9 +2664,24 @@ bool mw::Pointer::version_supports_axis_discrete()
     return wl_resource_get_version(resource) >= 5;
 }
 
+void mw::Pointer::send_axis_discrete_event_if_supported(uint32_t axis, int32_t discrete) const
+{
+    if (wl_resource_get_version(resource) >= 5)
+    {
+        wl_resource_post_event(resource, Opcode::axis_discrete, axis, discrete);
+    }
+}
+
 void mw::Pointer::send_axis_discrete_event(uint32_t axis, int32_t discrete) const
 {
-    wl_resource_post_event(resource, Opcode::axis_discrete, axis, discrete);
+    if (wl_resource_get_version(resource) >= 5)
+    {
+        wl_resource_post_event(resource, Opcode::axis_discrete, axis, discrete);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "axis_discrete", 5);
+    }
 }
 
 bool mw::Pointer::is_instance(wl_resource* resource)
@@ -2675,9 +2826,24 @@ bool mw::Keyboard::version_supports_repeat_info()
     return wl_resource_get_version(resource) >= 4;
 }
 
+void mw::Keyboard::send_repeat_info_event_if_supported(int32_t rate, int32_t delay) const
+{
+    if (wl_resource_get_version(resource) >= 4)
+    {
+        wl_resource_post_event(resource, Opcode::repeat_info, rate, delay);
+    }
+}
+
 void mw::Keyboard::send_repeat_info_event(int32_t rate, int32_t delay) const
 {
-    wl_resource_post_event(resource, Opcode::repeat_info, rate, delay);
+    if (wl_resource_get_version(resource) >= 4)
+    {
+        wl_resource_post_event(resource, Opcode::repeat_info, rate, delay);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "repeat_info", 4);
+    }
 }
 
 bool mw::Keyboard::is_instance(wl_resource* resource)
@@ -2807,11 +2973,28 @@ bool mw::Touch::version_supports_shape()
     return wl_resource_get_version(resource) >= 6;
 }
 
+void mw::Touch::send_shape_event_if_supported(int32_t id, double major, double minor) const
+{
+    if (wl_resource_get_version(resource) >= 6)
+    {
+        wl_fixed_t major_resolved{wl_fixed_from_double(major)};
+        wl_fixed_t minor_resolved{wl_fixed_from_double(minor)};
+        wl_resource_post_event(resource, Opcode::shape, id, major_resolved, minor_resolved);
+    }
+}
+
 void mw::Touch::send_shape_event(int32_t id, double major, double minor) const
 {
-    wl_fixed_t major_resolved{wl_fixed_from_double(major)};
-    wl_fixed_t minor_resolved{wl_fixed_from_double(minor)};
-    wl_resource_post_event(resource, Opcode::shape, id, major_resolved, minor_resolved);
+    if (wl_resource_get_version(resource) >= 6)
+    {
+        wl_fixed_t major_resolved{wl_fixed_from_double(major)};
+        wl_fixed_t minor_resolved{wl_fixed_from_double(minor)};
+        wl_resource_post_event(resource, Opcode::shape, id, major_resolved, minor_resolved);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "shape", 6);
+    }
 }
 
 bool mw::Touch::version_supports_orientation()
@@ -2819,10 +3002,26 @@ bool mw::Touch::version_supports_orientation()
     return wl_resource_get_version(resource) >= 6;
 }
 
+void mw::Touch::send_orientation_event_if_supported(int32_t id, double orientation) const
+{
+    if (wl_resource_get_version(resource) >= 6)
+    {
+        wl_fixed_t orientation_resolved{wl_fixed_from_double(orientation)};
+        wl_resource_post_event(resource, Opcode::orientation, id, orientation_resolved);
+    }
+}
+
 void mw::Touch::send_orientation_event(int32_t id, double orientation) const
 {
-    wl_fixed_t orientation_resolved{wl_fixed_from_double(orientation)};
-    wl_resource_post_event(resource, Opcode::orientation, id, orientation_resolved);
+    if (wl_resource_get_version(resource) >= 6)
+    {
+        wl_fixed_t orientation_resolved{wl_fixed_from_double(orientation)};
+        wl_resource_post_event(resource, Opcode::orientation, id, orientation_resolved);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "orientation", 6);
+    }
 }
 
 bool mw::Touch::is_instance(wl_resource* resource)
@@ -2953,9 +3152,24 @@ bool mw::Output::version_supports_done()
     return wl_resource_get_version(resource) >= 2;
 }
 
+void mw::Output::send_done_event_if_supported() const
+{
+    if (wl_resource_get_version(resource) >= 2)
+    {
+        wl_resource_post_event(resource, Opcode::done);
+    }
+}
+
 void mw::Output::send_done_event() const
 {
-    wl_resource_post_event(resource, Opcode::done);
+    if (wl_resource_get_version(resource) >= 2)
+    {
+        wl_resource_post_event(resource, Opcode::done);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "done", 2);
+    }
 }
 
 bool mw::Output::version_supports_scale()
@@ -2963,9 +3177,24 @@ bool mw::Output::version_supports_scale()
     return wl_resource_get_version(resource) >= 2;
 }
 
+void mw::Output::send_scale_event_if_supported(int32_t factor) const
+{
+    if (wl_resource_get_version(resource) >= 2)
+    {
+        wl_resource_post_event(resource, Opcode::scale, factor);
+    }
+}
+
 void mw::Output::send_scale_event(int32_t factor) const
 {
-    wl_resource_post_event(resource, Opcode::scale, factor);
+    if (wl_resource_get_version(resource) >= 2)
+    {
+        wl_resource_post_event(resource, Opcode::scale, factor);
+    }
+    else
+    {
+        tried_to_send_unsupported_event(client, resource, "scale", 2);
+    }
 }
 
 bool mw::Output::is_instance(wl_resource* resource)

@@ -908,16 +908,13 @@ public:
             auto [format, modifiers, external_only] = (*(this->formats))[i];
 
             send_format_event(format);
-            if (version_supports_modifier())
+            for (auto j = 0u; j < modifiers.size(); ++j)
             {
-                for (auto j = 0u; j < modifiers.size(); ++j)
-                {
-                    auto const modifier = modifiers[j];
-                    send_modifier_event(
-                        format,
-                        modifier >> 32,
-                        modifier & 0xFFFFFFFF);
-                }
+                auto const modifier = modifiers[j];
+                send_modifier_event_if_supported(
+                    format,
+                    modifier >> 32,
+                    modifier & 0xFFFFFFFF);
             }
         }
     }
