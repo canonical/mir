@@ -285,7 +285,6 @@ private:
 
 auto ms::BasicIdleHub::inhibit_idle() -> std::shared_ptr<WakeLock>
 {
-
     std::lock_guard<std::mutex> lock(mutex);
     if (auto const shared_wake_lock = wake_lock.lock()) // wake_lock is already held
     {

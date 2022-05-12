@@ -128,7 +128,9 @@ void IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct wl_re
     if (auto const scene_surface = wl_surface->scene_surface(); scene_surface)
     {
         if (scene_surface.value()->focus_state() != mir_window_focus_state_unfocused)
+        {
             new IdleInhibitorV1{id, ctx};
+        }
     }
 }
 
