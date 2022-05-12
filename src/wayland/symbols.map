@@ -492,5 +492,19 @@ global:
     virtual?thunk?to?mir::wayland::IdleInhibitorV1::?IdleInhibitorV1*;
 
     mir::wayland::tried_to_send_unsupported_event*;
+
+    mir::wayland::TextInputManagerV1::*;
+    non-virtual?thunk?to?mir::wayland::TextInputManagerV1::*;
+    typeinfo?for?mir::wayland::TextInputManagerV1;
+    vtable?for?mir::wayland::TextInputManagerV1;
+    typeinfo?for?mir::wayland::TextInputManagerV1::Global;
+    vtable?for?mir::wayland::TextInputManagerV1::Global;
+    virtual?thunk?to?mir::wayland::TextInputManagerV1::?TextInputManagerV1*;
+
+    mir::wayland::TextInputV1::*;
+    non-virtual?thunk?to?mir::wayland::TextInputV1::*;
+    typeinfo?for?mir::wayland::TextInputV1;
+    vtable?for?mir::wayland::TextInputV1;
+    virtual?thunk?to?mir::wayland::TextInputV1::?TextInputV1*;
   };
 } MIRWAYLAND_2.5;
