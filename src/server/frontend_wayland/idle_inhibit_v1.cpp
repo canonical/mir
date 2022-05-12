@@ -66,16 +66,13 @@ public:
 private:
     struct StateObserver : ms::IdleStateObserver
     {
-        StateObserver(IdleInhibitorV1* idle_inhibitor)
-                : idle_inhibitor{idle_inhibitor}
+        StateObserver()
         {
         }
 
         void idle() override;
 
         void active() override;
-
-        IdleInhibitorV1 const* idle_inhibitor;
     };
 
     std::shared_ptr<IdleInhibitV1Ctx> const ctx;
@@ -131,14 +128,16 @@ void IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct wl_re
     if (auto const scene_surface = wl_surface->scene_surface(); scene_surface)
     {
         if (scene_surface.value()->focus_state() != mir_window_focus_state_unfocused)
+        {
             new IdleInhibitorV1{id, ctx};
+        }
     }
 }
 
 IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
     : mw::IdleInhibitorV1{resource, Version<1>()},
       ctx{ctx},
-      state_observer{std::make_shared<StateObserver>(this)},
+      state_observer{std::make_shared<StateObserver>()},
       wake_lock{ctx->idle_hub->inhibit_idle()}
 {
     ctx->idle_hub->register_interest(state_observer, mir::time::Duration(0));
