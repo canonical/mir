@@ -368,8 +368,11 @@ static void shutdown(int signum)
     }
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    (void)argc;
+    (void)argv;
+
     struct wl_display* display = wl_display_connect(NULL);
     struct globals* globals;
     globals = calloc(sizeof *globals, 1);
