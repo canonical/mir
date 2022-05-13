@@ -298,7 +298,7 @@ TEST_F(BasicIdleHub, when_a_wake_lock_is_released_idle_timeout_is_restarted)
     executor.execute();
 }
 
-TEST_F(BasicIdleHub, inhibit_idle_inhibits_when_a_wake_lock_is_held_twice_until_released)
+TEST_F(BasicIdleHub, when_two_wake_locks_are_held_idle_timeout_is_suspended)
 {
     auto const observer = std::make_shared<NiceMock<MockObserver>>();
     hub->register_interest(observer, executor, 5s);
@@ -311,10 +311,42 @@ TEST_F(BasicIdleHub, inhibit_idle_inhibits_when_a_wake_lock_is_held_twice_until_
         advance_by(6s);
         executor.execute();
     }
+}
+
+TEST_F(BasicIdleHub, when_two_wake_locks_are_held_and_released_idle_timeout_is_resumed)
+{
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    hub->register_interest(observer, executor, 5s);
+    hub->poke();
+
+    {
+        auto wake_lock = hub->inhibit_idle();
+        auto wake_lock_2 = hub->inhibit_idle();
+        advance_by(6s);
+        executor.execute();
+    }
 
     EXPECT_CALL(*observer, idle());
     advance_by(6s);
     executor.execute();
+}
+
+TEST_F(BasicIdleHub, when_one_of_two_wake_locks_is_released_idle_timeout_is_suspended)
+{
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    hub->register_interest(observer, executor, 5s);
+    hub->poke();
+
+    {
+        auto wake_lock = hub->inhibit_idle();
+        {
+            auto wake_lock_2 = hub->inhibit_idle();
+        }
+
+        EXPECT_CALL(*observer, active());
+        advance_by(6s);
+        executor.execute();
+    }
 }
 
 TEST_F(BasicIdleHub, inhibit_idle_inhibits_when_a_wake_lock_is_held_then_released_then_held)
@@ -325,7 +357,6 @@ TEST_F(BasicIdleHub, inhibit_idle_inhibits_when_a_wake_lock_is_held_then_release
 
     {
         auto wake_lock = hub->inhibit_idle();
-        EXPECT_CALL(*observer, idle()).Times(0);
         advance_by(6s);
         executor.execute();
     }
