@@ -295,7 +295,7 @@ auto probe_display_platform(
                 EGLint num_configs;
                 if (eglChooseConfig(display, config_attribs, &config, 1, &num_configs) != EGL_TRUE)
                 {
-                    mir::log_warning("Failed to create EGL context");
+                    mir::log_warning("Failed to create EGL context: no EGL_STREAM_BIT_KHR configs supported");
                     continue;
                 }
                 EGLContext ctx{EGL_NO_CONTEXT};
@@ -319,7 +319,7 @@ auto probe_display_platform(
 
                 if (ctx == EGL_NO_CONTEXT)
                 {
-                    mir::log_warning("Failed to create EGL context");
+                    mir::log_warning("Failed to create EGL context: %s", mg::egl_category().message(eglGetError()).c_str());
                     continue;
                 }
 
