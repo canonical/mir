@@ -492,7 +492,12 @@ global:
     virtual?thunk?to?mir::wayland::IdleInhibitorV1::?IdleInhibitorV1*;
 
     mir::wayland::tried_to_send_unsupported_event*;
+  };
+} MIRWAYLAND_2.5;
 
+MIRWAYLAND_2.9 {
+global:
+  extern "C++" {
     mir::wayland::TextInputManagerV1::*;
     non-virtual?thunk?to?mir::wayland::TextInputManagerV1::*;
     typeinfo?for?mir::wayland::TextInputManagerV1;
