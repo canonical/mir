@@ -177,18 +177,26 @@ auto probe_display_platform(
             {
                 // Check we can acquire the device...
                 mir::Fd drm_fd;
-                auto const devnum = mge::devnum_for_device(device);
+                try
+                {
+                    auto const devnum = mge::devnum_for_device(device);
 
-                auto device_holder = console->acquire_device(
-                    major(devnum), minor(devnum),
-                    std::make_unique<mgc::OneShotDeviceObserver>(drm_fd)).get();
+                    auto device_holder = console->acquire_device(
+                        major(devnum), minor(devnum),
+                        std::make_unique<mgc::OneShotDeviceObserver>(drm_fd)).get();
 
-                supported_devices.emplace_back(
-                    mg::SupportedDevice{
-                        udev->char_device_from_devnum(devnum),
-                        mg::PlatformPriority::unsupported,
-                        nullptr
-                    });
+                    supported_devices.emplace_back(
+                        mg::SupportedDevice{
+                            udev->char_device_from_devnum(devnum),
+                            mg::PlatformPriority::unsupported,
+                            nullptr
+                        });
+                }
+                catch (std::exception const& e)
+                {
+                    mir::log_info("Failed to query DRM node for EGLDevice: %s", e.what());
+                    continue;
+                }
 
                 if (drm_fd == mir::Fd::invalid)
                 {
@@ -416,11 +424,18 @@ auto probe_rendering_platform(
     for (auto i = 0; i <= device_count; ++i)
     {
         auto const& device = devices[i];
-        supported_devices.emplace_back(mg::SupportedDevice{
-            udev->char_device_from_devnum(mge::devnum_for_device(device)),
-            mg::PlatformPriority::unsupported,
-            nullptr
-        });
+        try
+        {
+            supported_devices.emplace_back(mg::SupportedDevice{
+                udev->char_device_from_devnum(mge::devnum_for_device(device)),
+                mg::PlatformPriority::unsupported,
+                nullptr
+            });
+        }
+        catch (std::exception const& e)
+        {
+            mir::log_debug("Failed to find kernel device for EGLDevice: %s", e.what());
+        }
 
         EGLDisplay display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
 
