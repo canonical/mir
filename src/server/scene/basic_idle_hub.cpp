@@ -133,6 +133,11 @@ ms::BasicIdleHub::~BasicIdleHub()
 void ms::BasicIdleHub::poke()
 {
     std::lock_guard lock{mutex};
+    if (!wake_lock.expired())
+    {
+        return;
+    }
+
     poke_time = clock->now();
     schedule_alarm(lock, poke_time);
     if (!idle_multiplexers.empty())
@@ -257,5 +262,39 @@ void ms::BasicIdleHub::schedule_alarm(ProofOfMutexLock const&, time::Timestamp c
     {
         alarm->cancel();
         alarm_timeout = std::nullopt;
+    }
+}
+
+struct ms::IdleHub::WakeLock
+{
+    WakeLock(std::weak_ptr<IdleHub> idle_hub) : idle_hub{std::move(idle_hub)}
+    {
+    }
+
+    ~WakeLock()
+    {
+        if (auto const shared_hub = idle_hub.lock())
+        {
+            shared_hub->poke();
+        }
+    }
+
+private:
+    std::weak_ptr<IdleHub> const idle_hub;
+};
+
+auto ms::BasicIdleHub::inhibit_idle() -> std::shared_ptr<WakeLock>
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    if (auto const shared_wake_lock = wake_lock.lock()) // wake_lock is already held
+    {
+        return shared_wake_lock;
+    }
+    else // wake_lock is not being held
+    {
+        auto result = std::make_shared<WakeLock>(shared_from_this());
+        alarm->cancel();
+        wake_lock = result;
+        return result;
     }
 }
