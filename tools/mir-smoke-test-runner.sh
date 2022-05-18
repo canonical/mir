@@ -21,6 +21,12 @@ if [ -z "$XDG_RUNTIME_DIR" ]; then
   export XDG_RUNTIME_DIR=/tmp
 fi
 
+# Support for running in a Wayland-only environment
+if [ -O "${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY:-wayland-0}" ] && [ -z "$DISPLAY" ]; then
+  echo Setting up MIR_SERVER_WAYLAND_HOST for Wayland platform
+  export MIR_SERVER_WAYLAND_HOST="${WAYLAND_DISPLAY:-wayland-0}"
+fi
+
 # Start with eglinfo for the system
 echo Running eglinfo client
 date --utc --iso-8601=seconds | xargs echo "[timestamp] Start :" ${client}
