@@ -134,7 +134,7 @@ class TextInputV1
     : public mw::TextInputV1
 {
 public:
-    TextInputV1(wl_resource* resource, std::shared_ptr<TextInputV1Ctx>  ctx);
+    TextInputV1(wl_resource* resource, std::shared_ptr<TextInputV1Ctx> ctx);
     ~TextInputV1();
 
 private:
@@ -227,7 +227,9 @@ void TextInputManagerV1Global::bind(wl_resource* new_resource)
     new TextInputManagerV1{new_resource, ctx};
 }
 
-TextInputManagerV1::TextInputManagerV1(wl_resource *resource, std::shared_ptr<TextInputV1Ctx> ctx)
+TextInputManagerV1::TextInputManagerV1(
+    wl_resource *resource,
+    std::shared_ptr<TextInputV1Ctx> ctx)
     : mw::TextInputManagerV1{resource, Version<1>()},
       ctx{std::move(ctx)}
 {
@@ -256,17 +258,49 @@ TextInputV1::~TextInputV1()
     delete this->seat.value();
 }
 
+void TextInputV1::send_text_change(ms::TextInputChange const& change)
+{
+    auto const client_serial = find_client_serial(change.serial);
+    if (!pending_state || !current_surface || !client_serial)
+    {
+        // We are no longer enabled, or we don't have a valid serial
+        return;
+    }
+    if (change.preedit_text || change.preedit_cursor_begin || change.preedit_cursor_end)
+    {
+        send_preedit_cursor_event(change.preedit_cursor_begin.value_or(0));
+        // TODO - Is using .value() directly unsafe here?
+        send_preedit_string_event(client_serial.value(), change.preedit_text.value_or(""), "");
+    }
+    if (change.delete_before || change.delete_after)
+    {
+        send_delete_surrounding_text_event(change.delete_before.value_or(0), change.delete_after.value_or(0));
+    }
+    if(change.commit_text)
+    {
+        // TODO - Is using .value() directly unsafe here?
+        send_commit_string_event(client_serial.value(), change.commit_text.value());
+    }
 }
 
 auto TextInputV1::find_client_serial(ms::TextInputStateSerial state_serial) const -> std::optional<uint32_t>
 {
-    // TODO
-    return std::optional<uint32_t>();
+    // Loop in reverse order because the serial we're looking for will generally be at the end
+    for (auto it = state_serials.rbegin(); it != state_serials.rend(); it++)
+    {
+        if (it->second == state_serial)
+        {
+            return it->first;
+        }
+    }
+    return std::nullopt;
 }
 
 void TextInputV1::activate(wl_resource *seat, wl_resource *surface)
 {
-    // TODO
+    // TODO - test
+    (void)surface;
+    this->seat = std::optional<mf::WlSeat*>(mf::WlSeat::from(seat));
 }
 
 void TextInputV1::deactivate(wl_resource *seat)
@@ -288,35 +322,68 @@ void TextInputV1::hide_input_panel()
 
 void TextInputV1::reset()
 {
-    // TODO
+    // TODO - Is this right? Don't think so!
+    pending_state.reset();
 }
 
 void TextInputV1::set_surrounding_text(const std::string &text, uint32_t cursor, uint32_t anchor)
 {
-    // TODO
+    if (pending_state)
+    {
+        pending_state->surrounding_text = text;
+        pending_state->cursor = cursor;
+        pending_state->anchor = anchor;
+    }
 }
 
 void TextInputV1::set_content_type(uint32_t hint, uint32_t purpose)
 {
-    // TODO
+    if (pending_state)
+    {
+        pending_state->content_hint.emplace(wayland_to_mir_content_hint(hint));
+        pending_state->content_purpose = wayland_to_mir_content_purpose(purpose);
+    }
 }
 
 void TextInputV1::set_cursor_rectangle(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    // TODO
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
 }
 
 void TextInputV1::set_preferred_language(const std::string &language)
 {
-    // TODO
+    // Ignored, input methods decide language for themselves
+    (void)language;
 }
 
 void TextInputV1::commit_state(uint32_t serial)
 {
-    // TODO
+    // TODO - test
+    (void)serial;
+
+    commit_count++;
+    if (pending_state && current_surface)
+    {
+        auto const new_serial = ctx->text_input_hub->set_handler_state(handler, on_new_input_field, *pending_state);
+        state_serials.push_back({commit_count, new_serial});
+        while (state_serials.size() > max_remembered_serials)
+        {
+            state_serials.pop_front();
+        }
+    }
+    else
+    {
+        ctx->text_input_hub->deactivate_handler(handler);
+    }
+    on_new_input_field = false;
 }
 
 void TextInputV1::invoke_action(uint32_t button, uint32_t index)
 {
     // TODO
+    (void)button;
+    (void)index;
 }
