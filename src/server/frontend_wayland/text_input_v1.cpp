@@ -16,7 +16,7 @@
 
 #include "text_input_v1.h"
 
-//#include "wl_seat.h" - TODO - Remove??
+#include "wl_seat.h"
 #include "wl_surface.h"
 #include "mir/executor.h"
 #include "mir/scene/text_input_hub.h"
@@ -164,7 +164,7 @@ private:
     static size_t constexpr max_remembered_serials{10};
 
     std::shared_ptr<TextInputV1Ctx> const ctx;
-//    mf::WlSeat& seat;
+    std::optional<mf::WlSeat*> seat;
     std::shared_ptr<Handler> const handler;
     mw::Weak<mf::WlSurface> current_surface;
     /// Set to true if and only if the text input has been enabled since the last commit
@@ -243,13 +243,18 @@ TextInputV1::TextInputV1(
     wl_resource *resource,
     std::shared_ptr<TextInputV1Ctx> ctx)
     : mw::TextInputV1{resource, Version<1>()},
-      ctx{std::move(ctx)}
+      ctx{std::move(ctx)},
+      seat{}
 {
 
 }
 
-void TextInputV1::send_text_change(const ms::TextInputChange &change)
+TextInputV1::~TextInputV1()
 {
+    on_new_input_field = false;
+    pending_state.reset();
+    delete this->seat.value();
+}
 
 }
 
@@ -266,7 +271,9 @@ void TextInputV1::activate(wl_resource *seat, wl_resource *surface)
 
 void TextInputV1::deactivate(wl_resource *seat)
 {
-    // TODO
+    // TODO - test and decide if this is correct (implemented from V2)
+    (void)seat;
+    delete this;
 }
 
 void TextInputV1::show_input_panel()
