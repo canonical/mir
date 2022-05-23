@@ -177,11 +177,12 @@ auto probe_display_platform(
             {
                 // Check we can acquire the device...
                 mir::Fd drm_fd;
+                std::unique_ptr<mir::Device> device_holder;
                 try
                 {
                     auto const devnum = mge::devnum_for_device(device);
 
-                    auto device_holder = console->acquire_device(
+                    device_holder = console->acquire_device(
                         major(devnum), minor(devnum),
                         std::make_unique<mgc::OneShotDeviceObserver>(drm_fd)).get();
 
