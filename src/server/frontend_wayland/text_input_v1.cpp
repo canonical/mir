@@ -21,6 +21,8 @@
 #include "mir/executor.h"
 #include "mir/scene/text_input_hub.h"
 
+#include "mir/log.h" // TODO - remove after debugging
+
 #include <memory>
 #include <boost/throw_exception.hpp>
 #include <deque>
@@ -220,10 +222,12 @@ TextInputManagerV1Global::TextInputManagerV1Global(
     : Global{display, Version<1>()},
       ctx{std::move(ctx)}
 {
+    mir::log_info("TextInputManagerV1Global created!");
 }
 
 void TextInputManagerV1Global::bind(wl_resource* new_resource)
 {
+    mir::log_info("TextInputManagerV1Global::bind() called!");
     new TextInputManagerV1{new_resource, ctx};
 }
 
@@ -233,11 +237,12 @@ TextInputManagerV1::TextInputManagerV1(
     : mw::TextInputManagerV1{resource, Version<1>()},
       ctx{std::move(ctx)}
 {
-
+    mir::log_info("TextInputManagerV1 created!");
 }
 
 void TextInputManagerV1::create_text_input(wl_resource *id)
 {
+    mir::log_info("TextInputManagerV1::create_text_input() called!");
     new TextInputV1{id, ctx};
 }
 
@@ -248,11 +253,12 @@ TextInputV1::TextInputV1(
       ctx{std::move(ctx)},
       seat{}
 {
-
+    mir::log_info("TextInputV1 created!");
 }
 
 TextInputV1::~TextInputV1()
 {
+    mir::log_info("TextInputManagerV1 destroyed!");
     on_new_input_field = false;
     pending_state.reset();
     delete this->seat.value();
@@ -299,6 +305,7 @@ auto TextInputV1::find_client_serial(ms::TextInputStateSerial state_serial) cons
 void TextInputV1::activate(wl_resource *seat, wl_resource *surface)
 {
     // TODO - test
+    mir::log_info("TextInputV1::activate() called!");
     (void)surface;
     this->seat = std::optional<mf::WlSeat*>(mf::WlSeat::from(seat));
 }
