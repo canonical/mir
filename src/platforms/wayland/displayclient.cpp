@@ -88,7 +88,8 @@ public:
     DisplayClient const* const owner;
 
     wl_surface* const surface;
-    wl_shell_surface* window{nullptr};
+    xdg_surface* shell_surface{nullptr};
+    xdg_toplevel* shell_toplevel{nullptr};
 
     EGLContext eglctx{EGL_NO_CONTEXT};
     EGLSurface eglsurface{EGL_NO_SURFACE};
@@ -260,18 +261,31 @@ mgw::DisplayClient::Output::Output(
 mgw::DisplayClient::Output::~Output()
 {
     if (output)
+    {
         wl_output_destroy(output);
+    }
 
-    if (window)
-        wl_shell_surface_destroy(window);
+    if (shell_toplevel)
+    {
+        xdg_toplevel_destroy(shell_toplevel);
+    }
+
+    if (shell_surface)
+    {
+        xdg_surface_destroy(shell_surface);
+    }
 
     wl_surface_destroy(surface);
 
     if (eglsurface != EGL_NO_SURFACE)
+    {
         eglDestroySurface(owner->egldisplay, eglsurface);
+    }
 
     if (eglctx != EGL_NO_CONTEXT)
+    {
         eglDestroyContext(owner->egldisplay, eglctx);
+    }
 }
 
 
@@ -294,17 +308,24 @@ void mgw::DisplayClient::Output::done(void* data, struct wl_output* /*wl_output*
 
 void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(DisplayBuffer & )> const& f)
 {
-    if (!window)
+    if (!shell_surface)
     {
-        static wl_shell_surface_listener const shell_surface_listener{
-            [](void*, wl_shell_surface* shell_surface, uint32_t serial){ wl_shell_surface_pong(shell_surface, serial); },
-            [](void*, wl_shell_surface*, uint32_t, int32_t, int32_t){},
-            [](void*, wl_shell_surface*){}
+        static xdg_surface_listener const shell_surface_listener{
+            [](void*, xdg_surface* /*shell_surface*/, uint32_t /*serial*/){},
         };
+        shell_surface = xdg_wm_base_get_xdg_surface(owner->shell, surface);
+        xdg_surface_add_listener(shell_surface, &shell_surface_listener, this);
 
-        window = wl_shell_get_shell_surface(owner->shell, surface);
-        wl_shell_surface_add_listener(window, &shell_surface_listener, this);
-        wl_shell_surface_set_fullscreen(window, WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, output);
+        static xdg_toplevel_listener const shell_toplevel_listener{
+            [](void */*data*/, xdg_toplevel */*xdg_toplevel*/,
+                int32_t /*width*/, int32_t /*height*/,
+                wl_array */*states*/){},
+            [](void */*data*/, xdg_toplevel */*xdg_toplevel*/){},
+        };
+        shell_toplevel = xdg_surface_get_toplevel(shell_surface);
+        xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
+
+        xdg_toplevel_set_fullscreen(shell_toplevel, output);
         wl_surface_set_buffer_scale(surface, round(dcout.scale));
         wl_display_dispatch(owner->display);
 
@@ -552,9 +573,14 @@ void mgw::DisplayClient::new_global(
                     [self](Output const& output) { self->on_new_output(&output); },
                     [self](Output const& output) { self->on_output_changed(&output); })));
     }
-    else if (strcmp(interface, "wl_shell") == 0)
+    else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
-        self->shell = static_cast<decltype(self->shell)>(wl_registry_bind(registry, id, &wl_shell_interface, std::min(version, 1u)));
+        static xdg_wm_base_listener const shell_listener{
+            [](void*, xdg_wm_base* shell, uint32_t serial){ xdg_wm_base_pong(shell, serial); },
+        };
+        self->shell = static_cast<decltype(self->shell)>(
+            wl_registry_bind(registry, id, &xdg_wm_base_interface, std::min(version, 1u)));
+        xdg_wm_base_add_listener(self->shell, &shell_listener, self);
     }
 }
 
