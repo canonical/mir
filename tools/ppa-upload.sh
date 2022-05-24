@@ -2,6 +2,12 @@
 
 set -e
 
+LP_CREDS="$1"
+if [ -z "${LP_CREDS}" ]; then
+  echo "ERROR: pass the Launchpad credentials file as argument" >&2
+  exit 2
+fi
+
 if [ -z "${RELEASE}" ]; then
   echo "ERROR: RELEASE environment variable needs to be set to the" >&2
   echo "  target Ubuntu version." >&2
@@ -86,7 +92,7 @@ try:
     authorization_engine=RequestTokenAuthorizationEngine("production",
                                                          "mir-ci"),
     credential_store=UnencryptedFileCredentialStore(
-      os.path.expanduser("~/.launchpadlib/credentials")
+      os.path.expanduser("${LP_CREDS}")
     )
   )
 except NotImplementedError:
