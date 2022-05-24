@@ -18,6 +18,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/log.h"
+#include "mir/version.h"
 
 class miroil::SurfaceObserverImpl : public mir::scene::SurfaceObserver
 {
@@ -43,6 +44,10 @@ public:
   void hidden_set_to(mir::scene::Surface const *surf, bool hide) override;
   void input_consumed(mir::scene::Surface const *surf,
                       MirEvent const *event) override;
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 6, 0)
+  void keymap_changed(mir::scene::Surface const* surf, MirInputDeviceId id, std::string const& model,
+                      std::string const& layout, std::string const& variant, std::string const& options) override;
+#endif
   void moved_to(mir::scene::Surface const *surf,
                 mir::geometry::Point const &top_left) override;
   void orientation_set_to(mir::scene::Surface const *surf,
@@ -126,6 +131,14 @@ void miroil::SurfaceObserverImpl::input_consumed(mir::scene::Surface const* surf
     listener->input_consumed(surf, event);
 }
 
+#if MIR_SERVER_VERSION < MIR_VERSION_NUMBER(2, 6, 0)
+void miroil::SurfaceObserverImpl::keymap_changed(mir::scene::Surface const* surf, MirInputDeviceId id, std::string const& model,
+                            std::string const& layout, std::string const& variant, std::string const& options)
+{
+    listener->keymap_changed(surf, id, model, layout, variant, options);
+}
+#endif
+
 void miroil::SurfaceObserverImpl::moved_to(mir::scene::Surface const* surf, mir::geometry::Point const& top_left)
 {
     listener->moved_to(surf, top_left);
@@ -179,8 +192,12 @@ void miroil::Surface::add_observer(std::shared_ptr<SurfaceObserver> const& obser
 
 bool miroil::Surface::is_confined_to_window()
 {
+#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(2, 6, 0)
     return (wrapped->confine_pointer_state() == mir_pointer_confined_oneshot ||
             wrapped->confine_pointer_state() == mir_pointer_confined_persistent);
+#else
+    return false;
+#endif
 }
 
 void miroil::Surface::remove_observer(std::shared_ptr<miroil::SurfaceObserver> const& observer)
