@@ -17,6 +17,8 @@
 #include "wayland_display.h"
 
 #include <mir/options/option.h>
+#include <boost/throw_exception.hpp>
+#include <optional>
 
 namespace mpw = mir::platform::wayland;
 
@@ -46,10 +48,26 @@ void mpw::add_connection_options(boost::program_options::options_description& co
 
 auto mpw::connection(options::Option const& options) -> struct wl_display*
 {
-    static auto const wayland_display = std::make_unique<WaylandDisplay>(options.is_set(wayland_host_option_name) ?
-        options.get<std::string>(wayland_host_option_name).c_str() : nullptr);
+    auto const wayland_host = options.is_set(wayland_host_option_name) ?
+        std::make_optional(options.get<std::string>(wayland_host_option_name)) :
+        std::nullopt;
 
-    return wayland_display->wl_display;
+    static auto const wayland_display = std::make_unique<WaylandDisplay>(
+        wayland_host ? wayland_host->c_str() : nullptr);
+
+    if (wayland_display->wl_display)
+    {
+        return wayland_display->wl_display;
+    }
+    else if (wayland_host)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "Failed to connect to Wayland display '" + wayland_host.value() + "'"));
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to connect to default Wayland display"));
+    }
 }
 
 auto mir::platform::wayland::connection_options_supplied(mir::options::Option const& options) -> bool

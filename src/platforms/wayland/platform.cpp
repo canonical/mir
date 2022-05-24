@@ -20,8 +20,6 @@
 
 #include "mir/graphics/egl_error.h"
 
-#include <boost/throw_exception.hpp>
-
 namespace mg = mir::graphics;
 namespace mgw = mir::graphics::wayland;
 using namespace std::literals;
@@ -30,10 +28,6 @@ mgw::Platform::Platform(struct wl_display* const wl_display, std::shared_ptr<mg:
     wl_display{wl_display},
     report{report}
 {
-    if (!wl_display)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to connect to wayland"));
-    }
 }
 
 mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
