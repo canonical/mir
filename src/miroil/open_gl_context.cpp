@@ -15,6 +15,7 @@
  */
 
 #include "miroil/open_gl_context.h"
+#include <stdexcept>
 
 // mir
 #include <mir/server.h>

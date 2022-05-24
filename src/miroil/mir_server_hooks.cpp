@@ -25,6 +25,8 @@
 #include <mir/input/cursor_images.h>
 #include <mir/version.h>
 
+#include <stdexcept>
+
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 
