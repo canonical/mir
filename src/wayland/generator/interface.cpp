@@ -163,11 +163,19 @@ Emitter Interface::implementation() const
                 {"mw::", generated_name, "* ", nmspace, "from(struct wl_resource* resource)"},
                 Block{
                     Lines{
-                        {"if (wl_resource_instance_of(resource, &", wl_name, "_interface_data, ", generated_name, "::Thunks::request_vtable))"},
+                        {"if (resource &&"},
+                        {"    wl_resource_instance_of(resource, &",
+                            wl_name,
+                            "_interface_data, ",
+                            generated_name,
+                            "::Thunks::request_vtable))"},
                         Block{
                             {"return static_cast<", generated_name, "*>(wl_resource_get_user_data(resource));"}
                         },
-                        {"return nullptr;"}
+                        "else",
+                        Block{
+                            {"return nullptr;"}
+                        },
                     },
                 }
             },

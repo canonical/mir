@@ -21,7 +21,6 @@
 #include "xdg-output-unstable-v1_wrapper.h"
 #include "mir/log.h"
 #include "output_manager.h"
-#include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -36,85 +35,112 @@ namespace frontend
 class XdgOutputManagerV1 : public wayland::XdgOutputManagerV1::Global
 {
 public:
-    XdgOutputManagerV1(struct wl_display* display, OutputManager* const output_manager);
+    XdgOutputManagerV1(struct wl_display* display);
     ~XdgOutputManagerV1() = default;
 
 private:
     class Instance : public wayland::XdgOutputManagerV1
     {
     public:
-        Instance(wl_resource* new_resource, OutputManager* manager);
+        Instance(wl_resource* new_resource);
 
     private:
         void get_xdg_output(wl_resource* new_output, wl_resource* output) override;
-
-        OutputManager* const output_manager;
     };
 
     void bind(wl_resource* new_resource) override;
-
-    OutputManager* const output_manager;
 };
 
-class XdgOutputV1 : public wayland::XdgOutputV1
+class XdgOutputV1 : public wayland::XdgOutputV1, OutputConfigListener
 {
 public:
     XdgOutputV1(
         wl_resource* new_resource,
-        graphics::DisplayConfigurationOutput const& config,
+        OutputGlobal& output_global,
         wl_resource* wl_output_resource);
+    ~XdgOutputV1();
 
 private:
-    void destroy();
+    auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
 
     float const geometry_scale;
+    wayland::Weak<OutputGlobal> const output_global;
 };
 
 }
 }
 
-auto mf::create_xdg_output_manager_v1(struct wl_display* display, OutputManager* const output_manager)
+auto mf::create_xdg_output_manager_v1(struct wl_display* display)
     -> std::shared_ptr<mw::XdgOutputManagerV1::Global>
 {
-    return std::make_shared<XdgOutputManagerV1>(display, output_manager);
+    return std::make_shared<XdgOutputManagerV1>(display);
 }
 
-mf::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_display* display, mf::OutputManager* const output_manager)
-    : Global(display, Version<3>()),
-      output_manager{output_manager}
+mf::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_display* display)
+    : Global(display, Version<3>())
 {
 }
 
 void mf::XdgOutputManagerV1::bind(wl_resource* new_resource)
 {
-    new Instance{new_resource, output_manager};
+    new Instance{new_resource};
 }
 
-mf::XdgOutputManagerV1::Instance::Instance(wl_resource* new_resource, OutputManager* manager)
-    : XdgOutputManagerV1{new_resource, Version<3>()},
-      output_manager{manager}
+mf::XdgOutputManagerV1::Instance::Instance(wl_resource* new_resource)
+    : XdgOutputManagerV1{new_resource, Version<3>()}
 {
 }
 
 void mf::XdgOutputManagerV1::Instance::get_xdg_output(wl_resource* new_output, wl_resource* output)
 {
-    if (!output_manager->with_config_for(output,
-        [&](mg::DisplayConfigurationOutput const& config)
-        {
-            new XdgOutputV1{new_output, config, output};
-        }))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "No output for wl_output@" + std::to_string(wl_resource_get_id(output))));
-    }
+    new XdgOutputV1{new_output, OutputGlobal::from_or_throw(output), output};
 }
 
 mf::XdgOutputV1::XdgOutputV1(
     wl_resource* new_resource,
-    mg::DisplayConfigurationOutput const& config,
+    OutputGlobal& output_global,
     wl_resource* wl_output_resource)
     : mw::XdgOutputV1(new_resource, Version<3>()),
-      geometry_scale{WlClient::from(client)->output_geometry_scale()}
+      geometry_scale{WlClient::from(client)->output_geometry_scale()},
+      output_global{mw::make_weak(&output_global)}
+{
+    output_global.add_listener(this);
+
+    output_config_changed(output_global.current_config());
+
+    /* xdg-output-unstable-v1.xml:
+     * For objects version 3 onwards, after all xdg_output properties have been
+     * sent (when the object is created and when properties are updated), a
+     * wl_output.done event is sent. This allows changes to the output
+     * properties to be seen as atomic, even if they happen via multiple events.
+     */
+    if (wl_resource_get_version(resource) >= 3)
+    {
+        auto const wl_output = mw::Output::from(wl_output_resource);
+        if (wl_output->version_supports_done())
+        {
+            wl_output->send_done_event();
+        }
+        else
+        {
+            log_warning(
+                "xdg_output_v1 is v%d (meaning Mir must send wl_output.done), "
+                "but wl_output is only v%d (meaning it can't)",
+                wl_resource_get_version(resource),
+                wl_resource_get_version(wl_output_resource));
+        }
+    }
+}
+
+mf::XdgOutputV1::~XdgOutputV1()
+{
+    if (output_global)
+    {
+        output_global.value().remove_listener(this);
+    }
+}
+
+auto mf::XdgOutputV1::output_config_changed(mg::DisplayConfigurationOutput const& config) -> bool
 {
     auto extents = config.extents();
     send_logical_position_event(
@@ -130,34 +156,14 @@ mf::XdgOutputV1::XdgOutputV1(
     // send_description_event_if_supported("TODO: set this");
 
     /* xdg-output-unstable-v1.xml:
-     * For objects version 3 onwards, after all xdg_output properties have been
-     * sent (when the object is created and when properties are updated), a
-     * wl_output.done event is sent. This allows changes to the output
-     * properties to be seen as atomic, even if they happen via multiple events.
-     */
-    if (wl_resource_get_version(resource) >= 3)
+    * For objects version 3 onwards, this event is deprecated. Compositors
+    * are not required to send it anymore and must send wl_output.done
+    * instead.
+    */
+    if (wl_resource_get_version(resource) < 3)
     {
-        // TODO: Use wrapper methods once wl_output is is using a wrapper
-        if (wl_resource_get_version(wl_output_resource) >= WL_OUTPUT_DONE_SINCE_VERSION)
-        {
-            wl_output_send_done(wl_output_resource);
-        }
-        else
-        {
-            log_warning(
-                "xdg_output_v1 is v%d (meaning Mir must send wl_output.done), "
-                "but wl_output is only v%d (meaning it can't)",
-                wl_resource_get_version(resource),
-                wl_resource_get_version(wl_output_resource));
-        }
-    }
-    else
-    {
-        /* xdg-output-unstable-v1.xml:
-         * For objects version 3 onwards, this event is deprecated. Compositors
-         * are not required to send it anymore and must send wl_output.done
-         * instead.
-         */
         send_done_event();
     }
+
+    return true;
 }

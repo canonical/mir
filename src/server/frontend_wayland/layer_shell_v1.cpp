@@ -259,7 +259,7 @@ void mf::LayerShellV1::Instance::get_layer_surface(
     new LayerSurfaceV1(
         new_layer_surface,
         WlSurface::from(surface),
-        shell->output_manager->output_id_for(client, output.value_or(nullptr)),
+        OutputManager::output_id_for(output),
         *shell,
         layer_shell_layer_to_mir_depth_layer(layer));
 }
