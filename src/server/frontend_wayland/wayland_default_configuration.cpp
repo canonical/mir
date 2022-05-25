@@ -32,6 +32,7 @@
 #include "text_input_v3.h"
 #include "text_input_v2.h"
 #include "input_method_v2.h"
+#include "idle_inhibit_v1.h"
 #include "wlr_screencopy_v1.h"
 
 #include "mir/graphics/platform.h"
@@ -103,7 +104,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         }),
     make_extension_builder<mw::XdgOutputManagerV1>([](auto const& ctx)
         {
-            return create_xdg_output_manager_v1(ctx.display, ctx.output_manager);
+            return mf::create_xdg_output_manager_v1(ctx.display);
         }),
     make_extension_builder<mw::ForeignToplevelManagerV1>([](auto const& ctx)
         {
@@ -141,12 +142,18 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.text_input_hub,
                 ctx.composite_event_filter);
         }),
+    make_extension_builder<mw::IdleInhibitManagerV1>([](auto const& ctx)
+        {
+            return mf::create_idle_inhibit_manager_v1(
+                ctx.display,
+                ctx.wayland_executor,
+                ctx.idle_hub);
+        }),
     make_extension_builder<mw::WlrScreencopyManagerV1>([](auto const& ctx)
         {
             return mf::create_wlr_screencopy_manager_unstable_v1(
                 ctx.display,
                 ctx.wayland_executor,
-                *ctx.output_manager,
                 ctx.graphic_buffer_allocator,
                 ctx.screen_shooter);
         }),
@@ -288,6 +295,7 @@ std::shared_ptr<mf::Connector>
                 the_display_configuration_observer_registrar(),
                 the_clipboard(),
                 the_text_input_hub(),
+                the_idle_hub(),
                 the_screen_shooter(),
                 the_main_loop(),
                 arw_socket,

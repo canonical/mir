@@ -18,7 +18,7 @@
 #include "shm_buffer.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
-#include "egl_context_executor.h"
+#include "mir/graphics/egl_context_executor.h"
 
 #define MIR_LOG_COMPONENT "gfx-common"
 #include "mir/log.h"

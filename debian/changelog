@@ -1,3 +1,39 @@
+mir (2.8.0) UNRELEASED; urgency=medium
+
+  * New upstream release 2.8.0
+
+   - ABI summary:
+      . miral ABI unchanged at 4
+      . mircommon ABI bumped to 9
+      . mircookie ABI unchanged at 2
+      . mircore ABI unchanged at 1
+      . miroil ABI unchanged at 1
+      . mirplatform ABI unchanged at 23
+      . mirserver ABI bumped to 58
+      . mirwayland ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 20
+      . mirinputplatform ABI unchanged at 8
+    - Enhancements:
+      . Move generated protocol code to build directory (#2300)
+      . Allow --app-env-amend to be supplied multiple times (#2333)
+      . Make window title a configuration option (#2349)
+      . Add fatal_error if unable to bind Wayland socket (#2350)
+      . Add `mold` to the list of supported linkers (#2353)
+      . Platform refactoring towards hybrid GPU support (#2358, #2378, #2407)
+      . Implement wlr_screencopy_unstable_v1 for screenshots (#2383)
+      . Refactor out mf::MirDisplay (#2406)
+    - Bugs fixed:
+      . Synchronize buffer swaps to video frame in egl spinner (Fixes #2154)
+      . Do not give menus keyboard focus (Fixes #2324)
+      . Refactor Wayland keyboard input (Fixes #2331)
+      . Further simplify and correct keyboard focus setting (Fixes #2338)
+      . wl_pointer: do not send events when not compatible (Fixes #2341)
+      . Kill clients with error instead of sending unsupported (Fixes #2343)
+      . Initialize sig_handler_desc.sa_mask (#2386)
+      . Fix ThreadedDispatcherSignalTest.keeps_dispatching... (Fixes #2377)
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Thu, 12 May 2022 13:57:38 +0200
+
 mir (2.7.0) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]

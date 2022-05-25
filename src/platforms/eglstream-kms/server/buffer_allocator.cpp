@@ -33,6 +33,7 @@
 #include "mir/renderer/gl/context_source.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/raii.h"
+#include "mir/wayland/wayland_base.h"
 
 #define MIR_LOG_COMPONENT "platform-eglstream-kms"
 #include "mir/log.h"
@@ -307,10 +308,11 @@ private:
 }
 
 void mge::BufferAllocator::create_buffer_eglstream_resource(
-    wl_client* /*client*/,
+    wl_client* client,
     wl_resource* eglstream_controller_resource,
     wl_resource* /*surface*/,
     wl_resource* buffer)
+try
 {
     auto const allocator = static_cast<mge::BufferAllocator*>(
         wl_resource_get_user_data(eglstream_controller_resource));
@@ -333,6 +335,10 @@ void mge::BufferAllocator::create_buffer_eglstream_resource(
     BoundEGLStream::associate_stream(buffer, allocator->wayland_ctx, stream);
 
     allocator->wayland_ctx->release_current();
+}
+catch (std::exception const& err)
+{
+    mir::wayland::internal_error_processing_request(client,  "create_buffer_eglstream_resource");
 }
 
 struct wl_eglstream_controller_interface const mge::BufferAllocator::impl{

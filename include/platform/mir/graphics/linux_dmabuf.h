@@ -17,6 +17,7 @@
 #ifndef MIR_PLATFORM_GBM_KMS_LINUX_DMABUF_H_
 #define MIR_PLATFORM_GBM_KMS_LINUX_DMABUF_H_
 
+#include "egl_context_executor.h"
 #include "linux-dmabuf-unstable-v1_wrapper.h"
 
 #include <EGL/egl.h>
@@ -27,8 +28,6 @@
 
 namespace mir
 {
-class Executor;
-
 namespace renderer
 {
 namespace gl
@@ -39,6 +38,10 @@ class Context;
 
 namespace graphics
 {
+namespace common
+{
+class EGLContextExecutor;
+}
 
 class DmaBufFormatDescriptors;
 
@@ -53,10 +56,9 @@ public:
 
     std::shared_ptr<Buffer> buffer_from_resource(
         wl_resource* buffer,
-        std::shared_ptr<renderer::gl::Context> ctx,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release,
-        std::shared_ptr<Executor> wayland_executor);
+        std::shared_ptr<common::EGLContextExecutor> egl_delegate);
 
 private:
     class Instance;

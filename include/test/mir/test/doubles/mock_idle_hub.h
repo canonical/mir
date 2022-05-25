@@ -37,6 +37,7 @@ struct MockIdleHub : mir::scene::IdleHub
         mir::NonBlockingExecutor&,
         time::Duration));
     MOCK_METHOD1(unregister_interest, void(mir::scene::IdleStateObserver const&));
+    MOCK_METHOD(std::shared_ptr<IdleHub::WakeLock>, inhibit_idle, ());
 };
 
 }

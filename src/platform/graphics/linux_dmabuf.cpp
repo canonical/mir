@@ -28,7 +28,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/dmabuf_buffer.h"
-#include "mir/executor.h"
+#include "mir/graphics/egl_context_executor.h"
 
 #define MIR_LOG_COMPONENT "linux-dmabuf-import"
 #include "mir/log.h"
@@ -44,6 +44,7 @@
 #include <wayland-server.h>
 
 namespace mg = mir::graphics;
+namespace mgc = mg::common;
 namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 
@@ -757,13 +758,11 @@ public:
     WaylandDmabufTexBuffer(
         WlDmaBufBuffer& source,
         mg::EGLExtensions const& extensions,
-        std::shared_ptr<mir::renderer::gl::Context> ctx,
         EGLDisplay dpy,
+        std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
         std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release,
-        std::shared_ptr<mir::Executor> wayland_executor)
-        : ctx{std::move(ctx)},
-          tex{get_tex_id()},
+        std::function<void()>&& on_release)
+        : tex{get_tex_id()},
           desc{source.descriptor()},
           on_consumed{std::move(on_consumed)},
           on_release{std::move(on_release)},
@@ -773,7 +772,7 @@ public:
           planes_{source.planes()},
           modifier_{source.modifier()},
           fourcc{source.format()},
-          wayland_executor{std::move(wayland_executor)}
+          egl_delegate{std::move(egl_delegate)}
     {
         eglBindAPI(EGL_OPENGL_ES_API);
 
@@ -792,14 +791,10 @@ public:
 
     ~WaylandDmabufTexBuffer() override
     {
-        wayland_executor->spawn(
-            [context = ctx, tex = tex]()
+        egl_delegate->spawn(
+            [tex = tex]()
             {
-              context->make_current();
-
               glDeleteTextures(1, &tex);
-
-              context->release_current();
             });
 
         on_release();
@@ -874,7 +869,6 @@ public:
     }
 
 private:
-    std::shared_ptr<mir::renderer::gl::Context> const ctx;
     GLuint const tex;
     BufferGLDescription const& desc;
 
@@ -890,7 +884,7 @@ private:
     std::optional<uint64_t> const modifier_;
     uint32_t const fourcc;
 
-    std::shared_ptr<mir::Executor> const wayland_executor;
+    std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
 };
 
 
@@ -914,16 +908,13 @@ public:
             auto [format, modifiers, external_only] = (*(this->formats))[i];
 
             send_format_event(format);
-            if (version_supports_modifier())
+            for (auto j = 0u; j < modifiers.size(); ++j)
             {
-                for (auto j = 0u; j < modifiers.size(); ++j)
-                {
-                    auto const modifier = modifiers[j];
-                    send_modifier_event(
-                        format,
-                        modifier >> 32,
-                        modifier & 0xFFFFFFFF);
-                }
+                auto const modifier = modifiers[j];
+                send_modifier_event_if_supported(
+                    format,
+                    modifier >> 32,
+                    modifier & 0xFFFFFFFF);
             }
         }
     }
@@ -952,10 +943,9 @@ mg::LinuxDmaBufUnstable::LinuxDmaBufUnstable(
 
 auto mg::LinuxDmaBufUnstable::buffer_from_resource(
     wl_resource* buffer,
-    std::shared_ptr<renderer::gl::Context> ctx,
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release,
-    std::shared_ptr<Executor> wayland_executor)
+    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
     -> std::shared_ptr<Buffer>
 {
     if (auto dmabuf = WlDmaBufBuffer::maybe_dmabuf_from_wl_buffer(buffer))
@@ -963,11 +953,10 @@ auto mg::LinuxDmaBufUnstable::buffer_from_resource(
         return std::make_shared<WaylandDmabufTexBuffer>(
             *dmabuf,
             *egl_extensions,
-            std::move(ctx),
             dpy,
+            std::move(egl_delegate),
             std::move(on_consumed),
-            std::move(on_release),
-            std::move(wayland_executor));
+            std::move(on_release));
     }
     return nullptr;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Canonical Ltd.
+ * Copyright © 2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,20 +14,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_FRONTEND_XDG_OUTPUT_V1_H
-#define MIR_FRONTEND_XDG_OUTPUT_V1_H
+#ifndef MIR_FRONTEND_IDLE_INHIBIT_V1_H_
+#define MIR_FRONTEND_IDLE_INHIBIT_V1_H_
 
-#include "xdg-output-unstable-v1_wrapper.h"
+#include "idle-inhibit-unstable-v1_wrapper.h"
+#include "mir/scene/idle_hub.h"
+
 #include <memory>
-
-struct wl_display;
 
 namespace mir
 {
+class Executor;
+namespace scene
+{
+class IdleHub;
+}
 namespace frontend
 {
-auto create_xdg_output_manager_v1(struct wl_display* display) -> std::shared_ptr<wayland::XdgOutputManagerV1::Global>;
+auto create_idle_inhibit_manager_v1(
+    wl_display* display,
+    std::shared_ptr<Executor> wayland_executor,
+    std::shared_ptr<scene::IdleHub> idle_hub)
+-> std::shared_ptr<wayland::IdleInhibitManagerV1::Global>;
 }
 }
 
-#endif // MIR_FRONTEND_XDG_OUTPUT_V1_H
+#endif // MIR_FRONTEND_IDLE_INHIBIT_V1_H_

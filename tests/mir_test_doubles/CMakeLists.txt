@@ -27,6 +27,8 @@ set(
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/stub_console_services.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_gl_config.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_display_configuration_policy.h
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/stub_buffer_allocator.h
+  stub_buffer_allocator.cpp
 )
 
 set(MIR_TEST_DOUBLES_UDEV_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/mock_udev.cpp)

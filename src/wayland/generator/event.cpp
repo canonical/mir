@@ -33,31 +33,63 @@ Emitter Event::opcode_declare() const
 // TODO: Decide whether to resolve wl_resource* to wrapped types (ie: Region, Surface, etc).
 Emitter Event::prototype() const
 {
-    return Lines{
-        (min_version > 0 ? Lines{
-            {"bool version_supports_", name, "();"}
-        } : Emitter{nullptr}),
-        {"void send_", name, "_event(", mir_args(), ") const;"}
-    };
+    if (min_version > 0)
+    {
+        return Lines{
+            {"bool version_supports_", name, "();"},
+            {"void send_", name, "_event_if_supported(", mir_args(), ") const;"},
+            {"void send_", name, "_event(", mir_args(), ") const;"},
+        };
+    }
+    else
+    {
+        return Lines{
+            {"void send_", name, "_event(", mir_args(), ") const;"},
+        };
+    }
 }
 
 // TODO: Decide whether to resolve wl_resource* to wrapped types (ie: Region, Surface, etc).
 Emitter Event::impl() const
 {
-    return Lines{
-        (min_version > 0 ? Lines{
+    Emitter const version_high_enough{"wl_resource_get_version(resource) >= ", std::to_string(min_version)};
+    Lines const post_event{
+        mir2wl_converters(),
+        {"wl_resource_post_event(", wl_call_args(), ");"},
+    };
+    if (min_version > 0)
+    {
+        return Lines{
             {"bool mw::", class_name, "::version_supports_", name, "()"},
             Block{
-                {"return wl_resource_get_version(resource) >= ", std::to_string(min_version), ";"}
+                {"return ", version_high_enough, ";"}
             },
-            empty_line
-        } : Emitter{nullptr}),
-        {"void mw::", class_name, "::send_", name, "_event(", mir_args(), ") const"},
-        Block{
-            mir2wl_converters(),
-            {"wl_resource_post_event(", wl_call_args(), ");"},
-        }
-    };
+            empty_line,
+            {"void mw::", class_name, "::send_", name, "_event_if_supported(", mir_args(), ") const"},
+            Block{
+                {"if (", version_high_enough, ")"},
+                Block{post_event},
+            },
+            empty_line,
+            {"void mw::", class_name, "::send_", name, "_event(", mir_args(), ") const"},
+            Block{
+                {"if (", version_high_enough, ")"},
+                Block{post_event},
+                "else",
+                Block{
+                    {"tried_to_send_unsupported_event(",
+                        "client, resource, \"", name, "\", ", std::to_string(min_version), ");"},
+                },
+            },
+        };
+    }
+    else
+    {
+        return Lines{
+            {"void mw::", class_name, "::send_", name, "_event(", mir_args(), ") const"},
+            Block{post_event},
+        };
+    }
 }
 
 Emitter Event::mir2wl_converters() const

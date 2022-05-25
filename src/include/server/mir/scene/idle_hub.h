@@ -50,6 +50,9 @@ public:
     IdleHub() = default;
     virtual ~IdleHub() = default;
 
+    /// Lock that is held by the surface which is inhibiting idle
+    struct WakeLock;
+
     /// Wakes Mir if it's not already awake, and starts the timer from now
     virtual void poke() = 0;
 
@@ -65,6 +68,8 @@ public:
         time::Duration timeout) = 0;
 
     virtual void unregister_interest(IdleStateObserver const& observer) = 0;
+
+    virtual auto inhibit_idle() -> std::shared_ptr<IdleHub::WakeLock> = 0;
 
 private:
     IdleHub(IdleHub const&) = delete;
