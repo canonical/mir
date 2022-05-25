@@ -300,7 +300,7 @@ auto mu::Context::device_from_syspath(std::string const& syspath) -> std::unique
 
 auto mu::Context::char_device_from_devnum(dev_t devnum) -> std::unique_ptr<Device>
 {
-    return std::make_unique<DeviceImpl>(udev_device_new_from_devnum(context, 'C', devnum));
+    return std::make_unique<DeviceImpl>(udev_device_new_from_devnum(context, 'c', devnum));
 }
 
 udev* mu::Context::ctx() const

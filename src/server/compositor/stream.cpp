@@ -20,10 +20,11 @@
 #include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
 
+#include <cmath>
+
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
-namespace ms = mir::scene;
 namespace geom = mir::geometry;
 
 enum class mc::Stream::ScheduleMode {

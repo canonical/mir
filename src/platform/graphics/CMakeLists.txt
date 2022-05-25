@@ -31,6 +31,8 @@ add_library(mirplatformgraphicscommon OBJECT
   ${DRM_FORMATS_BIG_ENDIAN_FILE}
   drm_formats.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/drm_formats.h
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/egl_context_executor.h
+  egl_context_executor.cpp
 )
 
 mir_generate_protocol_wrapper(mirplatformgraphicscommon "zwp_" protocol/linux-dmabuf-unstable-v1.xml)

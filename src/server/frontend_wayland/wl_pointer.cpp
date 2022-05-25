@@ -394,9 +394,9 @@ void mf::WlPointer::relative_motion(MirPointerEvent const* event)
 
 void mf::WlPointer::maybe_frame()
 {
-    if (needs_frame && version_supports_frame())
+    if (needs_frame)
     {
-        send_frame_event();
+        send_frame_event_if_supported();
     }
     needs_frame = false;
 }

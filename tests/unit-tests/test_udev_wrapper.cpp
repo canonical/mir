@@ -146,6 +146,24 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectMajorMinorNumbers)
     EXPECT_THAT(minor(devnum), Eq(42));
 }
 
+TEST_F(UdevWrapperTest, UdevCharDeviceFromDevnumWorks)
+{
+    // Workaround spurious failures seen with UMOCKDEV_VERSION=0.14.1 (on Focal)
+    if (UMOCKDEV_VERSION < 1.17)
+        return;
+
+    using namespace testing;
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    mir::udev::Context ctx;
+    // DRM devices have major 226, minors starting from 0
+    auto dev = ctx.char_device_from_devnum(makedev(226, 0));
+
+    dev_t devnum = dev->devnum();
+    EXPECT_THAT(major(devnum), Eq(226));
+    EXPECT_THAT(minor(devnum), Eq(0));
+    EXPECT_THAT(dev->devnode(), StrEq("/dev/dri/card0"));
+}
 
 TEST_F(UdevWrapperTest, UdevDeviceComparisonIsReflexive)
 {

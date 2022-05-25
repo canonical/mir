@@ -22,7 +22,6 @@
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/cursor.h"
 
-#include "mir/test/doubles/stub_display_buffer.h"
 #include "mir/test/doubles/stub_renderer.h"
 
 #include "mir/renderer/renderer_factory.h"

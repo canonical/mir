@@ -1,5 +1,4 @@
 #include <miroil/mir_prompt_session.h>
-#include <mir/uncaught.h>
 
 miroil::MirPromptSession::MirPromptSession(::MirPromptSession * prompt_session)
 {

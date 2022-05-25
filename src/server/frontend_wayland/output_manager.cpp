@@ -17,7 +17,6 @@
 #include "output_manager.h"
 #include "wayland_executor.h"
 
-#include <mir/frontend/display_changer.h>
 #include <mir/observer_registrar.h>
 #include <mir/log.h>
 

@@ -187,6 +187,9 @@ mir_add_wrapped_executable(mir_umock_unit_tests NOINSTALL
   ${MIR_PLATFORM_OBJECTS}
 )
 
+string(REGEX MATCH "^[0-9]*\.[0-9]*" UMOCKDEV_VERSION_MINOR ${UMOCKDEV_VERSION})
+set_source_files_properties(${UMOCK_UNIT_TEST_SOURCES} PROPERTIES COMPILE_DEFINITIONS UMOCKDEV_VERSION=${UMOCKDEV_VERSION_MINOR})
+
 add_dependencies(mir_umock_unit_tests GMock)
 
 set_target_properties(

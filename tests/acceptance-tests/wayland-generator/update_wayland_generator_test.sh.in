@@ -1,0 +1,5 @@
+#!/bin/bash
+set -euox pipefail
+
+cp "@GENERATED_HEADER@" "@EXPECTED_HEADER@"
+cp "@GENERATED_SRC@" "@EXPECTED_SRC@"

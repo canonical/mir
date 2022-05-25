@@ -168,10 +168,7 @@ mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
         area.size.width.as_uint32_t(),
         area.size.height.as_uint32_t(),
         stride.as_uint32_t());
-    if (version_supports_buffer_done())
-    {
-        send_buffer_done_event();
-    }
+    send_buffer_done_event_if_supported();
 }
 
 void mf::WlrScreencopyFrameV1::copy(struct wl_resource* buffer)
