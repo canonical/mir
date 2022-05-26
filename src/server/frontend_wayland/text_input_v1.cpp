@@ -338,7 +338,8 @@ void TextInputV1::activate(wl_resource *seat, wl_resource *surface)
 void TextInputV1::deactivate(wl_resource *seat)
 {
     (void)seat;
-    delete this;
+    on_new_input_field = false;
+    pending_state.reset();
 }
 
 void TextInputV1::show_input_panel()
