@@ -212,7 +212,7 @@ protected:
 
         mir::shell::SurfaceSpecification mods;
 
-        if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
+        if (flags & mw::ShellSurface::Transient::inactive)
             mods.type = mir_window_type_gloss;
         if (auto parent = parent_surface.scene_surface())
             mods.parent = parent.value();
@@ -234,8 +234,10 @@ protected:
         std::optional<geometry::Point> const& /*new_top_left*/,
         geometry::Size const& new_size) override
     {
-        wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, new_size.width.as_int(),
-                                        new_size.height.as_int());
+        send_configure_event(
+            mw::ShellSurface::Resize::none,
+            new_size.width.as_int(),
+            new_size.height.as_int());
     }
 
     void handle_close_request() override
@@ -263,7 +265,7 @@ protected:
 
         mir::shell::SurfaceSpecification mods;
 
-        if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
+        if (flags & mw::ShellSurface::Transient::inactive)
             mods.type = mir_window_type_gloss;
         if (auto parent = parent_surface.scene_surface())
             mods.parent = parent.value();
@@ -303,35 +305,35 @@ protected:
 
         switch (edges)
         {
-        case WL_SHELL_SURFACE_RESIZE_TOP:
+        case mw::ShellSurface::Resize::top:
             edge = mir_resize_edge_north;
             break;
 
-        case WL_SHELL_SURFACE_RESIZE_BOTTOM:
+        case mw::ShellSurface::Resize::bottom:
             edge = mir_resize_edge_south;
             break;
 
-        case WL_SHELL_SURFACE_RESIZE_LEFT:
+        case mw::ShellSurface::Resize::left:
             edge = mir_resize_edge_west;
             break;
 
-        case WL_SHELL_SURFACE_RESIZE_TOP_LEFT:
+        case mw::ShellSurface::Resize::top_left:
             edge = mir_resize_edge_northwest;
             break;
 
-        case WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT:
+        case mw::ShellSurface::Resize::bottom_left:
             edge = mir_resize_edge_southwest;
             break;
 
-        case WL_SHELL_SURFACE_RESIZE_RIGHT:
+        case mw::ShellSurface::Resize::right:
             edge = mir_resize_edge_east;
             break;
 
-        case WL_SHELL_SURFACE_RESIZE_TOP_RIGHT:
+        case mw::ShellSurface::Resize::top_right:
             edge = mir_resize_edge_northeast;
             break;
 
-        case WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT:
+        case mw::ShellSurface::Resize::bottom_right:
             edge = mir_resize_edge_southeast;
             break;
 

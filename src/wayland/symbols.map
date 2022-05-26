@@ -494,3 +494,10 @@ global:
     mir::wayland::tried_to_send_unsupported_event*;
   };
 } MIRWAYLAND_2.5;
+
+MIRWAYLAND_2.9 {
+global:
+  extern "C++" {
+    virtual?thunk?to?mir::wayland::Output::?Output*;
+  };
+} MIRWAYLAND_2.8;
