@@ -137,7 +137,7 @@ class TextInputV1
       private mf::WlSeat::FocusListener
 {
 public:
-    TextInputV1(wl_resource* resource, std::shared_ptr<TextInputV1Ctx> ctx);
+    TextInputV1(wl_resource* resource, std::shared_ptr<TextInputV1Ctx> const& ctx);
     ~TextInputV1();
 
 private:
@@ -245,10 +245,9 @@ void TextInputManagerV1::create_text_input(wl_resource *id)
 
 TextInputV1::TextInputV1(
     wl_resource* resource,
-    std::shared_ptr<TextInputV1Ctx> ctx)
+    std::shared_ptr<TextInputV1Ctx> const& ctx)
     : mw::TextInputV1{resource, Version<1>()},
-      ctx{std::move(ctx)},
-      seat{}
+      ctx{ctx},
 {
 }
 
