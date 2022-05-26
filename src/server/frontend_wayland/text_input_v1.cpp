@@ -133,7 +133,8 @@ private:
 };
 
 class TextInputV1
-    : public mw::TextInputV1
+    : public mw::TextInputV1,
+      private mf::WlSeat::FocusListener
 {
 public:
     TextInputV1(wl_resource* resource, std::shared_ptr<TextInputV1Ctx> ctx);
@@ -187,8 +188,8 @@ private:
     /// Returns the client serial (aka the commit count) that corresponds to the given state serial
     auto find_client_serial(ms::TextInputStateSerial state_serial) const -> std::optional<uint32_t>;
 
-//    /// From WlSeat::FocusListener -- TODO - remove?
-//    void focus_on(mf::WlSurface* surface) override;
+   /// From WlSeat::FocusListener
+   void focus_on(mf::WlSurface* surface) override;
 
     /// From wayland::TextInputV1
     /// @{
@@ -258,7 +259,12 @@ TextInputV1::TextInputV1(
 
 TextInputV1::~TextInputV1()
 {
-    mir::log_info("TextInputManagerV1 destroyed!");
+    if (seat)
+    {
+        seat.value()->remove_focus_listener(client, this);
+        delete seat.value();
+    }
+
     on_new_input_field = false;
     pending_state.reset();
     delete this->seat.value();
@@ -302,12 +308,40 @@ auto TextInputV1::find_client_serial(ms::TextInputStateSerial state_serial) cons
     return std::nullopt;
 }
 
+void TextInputV1::focus_on(mf::WlSurface* surface)
+{
+    if (current_surface)
+    {
+        send_leave_event();
+    }
+    current_surface = mw::make_weak(surface);
+    if (surface)
+    {
+        send_enter_event(surface->resource);
+    }
+    else
+    {
+        deactivate(nullptr); // TODO - Is this right?
+    }
+}
+
 void TextInputV1::activate(wl_resource *seat, wl_resource *surface)
 {
-    // TODO - test
-    mir::log_info("TextInputV1::activate() called!");
     (void)surface;
-    this->seat = std::optional<mf::WlSeat*>(mf::WlSeat::from(seat));
+
+    auto const wl_seat = mf::WlSeat::from(seat);
+    if (!wl_seat)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("failed to resolve WlSeat activating TextInputV1"));
+    }
+    this->seat = std::optional<mf::WlSeat*>(wl_seat);
+    this->seat.value()->add_focus_listener(client, this);
+
+    if (current_surface)
+    {
+        on_new_input_field = true;
+        pending_state.emplace();
+    }
 }
 
 void TextInputV1::deactivate(wl_resource *seat)
