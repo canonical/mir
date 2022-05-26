@@ -223,12 +223,10 @@ TextInputManagerV1Global::TextInputManagerV1Global(
     : Global{display, Version<1>()},
       ctx{std::move(ctx)}
 {
-    mir::log_info("TextInputManagerV1Global created!");
 }
 
 void TextInputManagerV1Global::bind(wl_resource* new_resource)
 {
-    mir::log_info("TextInputManagerV1Global::bind() called!");
     new TextInputManagerV1{new_resource, ctx};
 }
 
@@ -238,23 +236,20 @@ TextInputManagerV1::TextInputManagerV1(
     : mw::TextInputManagerV1{resource, Version<1>()},
       ctx{std::move(ctx)}
 {
-    mir::log_info("TextInputManagerV1 created!");
 }
 
 void TextInputManagerV1::create_text_input(wl_resource *id)
 {
-    mir::log_info("TextInputManagerV1::create_text_input() called!");
     new TextInputV1{id, ctx};
 }
 
 TextInputV1::TextInputV1(
-    wl_resource *resource,
+    wl_resource* resource,
     std::shared_ptr<TextInputV1Ctx> ctx)
     : mw::TextInputV1{resource, Version<1>()},
       ctx{std::move(ctx)},
       seat{}
 {
-    mir::log_info("TextInputV1 created!");
 }
 
 TextInputV1::~TextInputV1()
@@ -267,7 +262,6 @@ TextInputV1::~TextInputV1()
 
     on_new_input_field = false;
     pending_state.reset();
-    delete this->seat.value();
 }
 
 void TextInputV1::send_text_change(ms::TextInputChange const& change)
@@ -281,16 +275,14 @@ void TextInputV1::send_text_change(ms::TextInputChange const& change)
     if (change.preedit_text || change.preedit_cursor_begin || change.preedit_cursor_end)
     {
         send_preedit_cursor_event(change.preedit_cursor_begin.value_or(0));
-        // TODO - Is using .value() directly unsafe here?
         send_preedit_string_event(client_serial.value(), change.preedit_text.value_or(""), "");
     }
     if (change.delete_before || change.delete_after)
     {
         send_delete_surrounding_text_event(change.delete_before.value_or(0), change.delete_after.value_or(0));
     }
-    if(change.commit_text)
+    if (change.commit_text)
     {
-        // TODO - Is using .value() directly unsafe here?
         send_commit_string_event(client_serial.value(), change.commit_text.value());
     }
 }
@@ -346,7 +338,6 @@ void TextInputV1::activate(wl_resource *seat, wl_resource *surface)
 
 void TextInputV1::deactivate(wl_resource *seat)
 {
-    // TODO - test and decide if this is correct (implemented from V2)
     (void)seat;
     delete this;
 }
@@ -379,7 +370,6 @@ void TextInputV1::hide_input_panel()
 
 void TextInputV1::reset()
 {
-    // TODO - Is this right? Don't think so!
     pending_state.reset();
 }
 
