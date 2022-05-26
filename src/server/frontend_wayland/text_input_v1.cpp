@@ -353,12 +353,28 @@ void TextInputV1::deactivate(wl_resource *seat)
 
 void TextInputV1::show_input_panel()
 {
-    // TODO
+    commit_count++;
+    pending_state.emplace(); // TODO - This makes sure that pending_state is ALWAYS true, making the next check redundant. Consult with Sophie.
+
+    if (pending_state && current_surface)
+    {
+        auto const new_serial = ctx->text_input_hub->set_handler_state(handler, on_new_input_field, *pending_state);
+        state_serials.push_back({commit_count, new_serial});
+        while (state_serials.size() > max_remembered_serials)
+        {
+            state_serials.pop_front();
+        }
+    }
+    else
+    {
+        ctx->text_input_hub->deactivate_handler(handler);
+    }
+    on_new_input_field = false;
 }
 
 void TextInputV1::hide_input_panel()
 {
-    // TODO
+    ctx->text_input_hub->deactivate_handler(handler);
 }
 
 void TextInputV1::reset()
@@ -402,24 +418,8 @@ void TextInputV1::set_preferred_language(const std::string &language)
 
 void TextInputV1::commit_state(uint32_t serial)
 {
-    // TODO - test
+    // TODO
     (void)serial;
-
-    commit_count++;
-    if (pending_state && current_surface)
-    {
-        auto const new_serial = ctx->text_input_hub->set_handler_state(handler, on_new_input_field, *pending_state);
-        state_serials.push_back({commit_count, new_serial});
-        while (state_serials.size() > max_remembered_serials)
-        {
-            state_serials.pop_front();
-        }
-    }
-    else
-    {
-        ctx->text_input_hub->deactivate_handler(handler);
-    }
-    on_new_input_field = false;
 }
 
 void TextInputV1::invoke_action(uint32_t button, uint32_t index)
