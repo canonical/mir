@@ -208,11 +208,11 @@ private:
 
 auto mf::create_text_input_manager_v1(
     wl_display *display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<scene::TextInputHub> const& text_input_hub)
+    std::shared_ptr<Executor> wayland_executor,
+    std::shared_ptr<scene::TextInputHub> text_input_hub)
 -> std::shared_ptr<wayland::TextInputManagerV1::Global>
 {
-    auto ctx = std::make_shared<TextInputV1Ctx>(TextInputV1Ctx{wayland_executor, text_input_hub});
+    auto ctx = std::make_shared<TextInputV1Ctx>(TextInputV1Ctx{std::move(wayland_executor), std::move(text_input_hub)});
     return std::make_shared<TextInputManagerV1Global>(display, std::move(ctx));
 }
 
