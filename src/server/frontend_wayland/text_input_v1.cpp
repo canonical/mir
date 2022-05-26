@@ -248,6 +248,7 @@ TextInputV1::TextInputV1(
     std::shared_ptr<TextInputV1Ctx> const& ctx)
     : mw::TextInputV1{resource, Version<1>()},
       ctx{ctx},
+      handler{std::make_shared<Handler>(this, ctx->wayland_executor)}
 {
 }
 
