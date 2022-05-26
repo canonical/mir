@@ -511,5 +511,7 @@ global:
     typeinfo?for?mir::wayland::TextInputV1;
     vtable?for?mir::wayland::TextInputV1;
     virtual?thunk?to?mir::wayland::TextInputV1::?TextInputV1*;
+
+    virtual?thunk?to?mir::wayland::Output::?Output*;
   };
-} MIRWAYLAND_2.5;
+} MIRWAYLAND_2.8;

@@ -177,18 +177,27 @@ auto probe_display_platform(
             {
                 // Check we can acquire the device...
                 mir::Fd drm_fd;
-                auto const devnum = mge::devnum_for_device(device);
+                std::unique_ptr<mir::Device> device_holder;
+                try
+                {
+                    auto const devnum = mge::devnum_for_device(device);
 
-                auto device_holder = console->acquire_device(
-                    major(devnum), minor(devnum),
-                    std::make_unique<mgc::OneShotDeviceObserver>(drm_fd)).get();
+                    device_holder = console->acquire_device(
+                        major(devnum), minor(devnum),
+                        std::make_unique<mgc::OneShotDeviceObserver>(drm_fd)).get();
 
-                supported_devices.emplace_back(
-                    mg::SupportedDevice{
-                        udev->char_device_from_devnum(devnum),
-                        mg::PlatformPriority::unsupported,
-                        nullptr
-                    });
+                    supported_devices.emplace_back(
+                        mg::SupportedDevice{
+                            udev->char_device_from_devnum(devnum),
+                            mg::PlatformPriority::unsupported,
+                            nullptr
+                        });
+                }
+                catch (std::exception const& e)
+                {
+                    mir::log_info("Failed to query DRM node for EGLDevice: %s", e.what());
+                    continue;
+                }
 
                 if (drm_fd == mir::Fd::invalid)
                 {
@@ -287,7 +296,7 @@ auto probe_display_platform(
                 EGLint num_configs;
                 if (eglChooseConfig(display, config_attribs, &config, 1, &num_configs) != EGL_TRUE)
                 {
-                    mir::log_warning("Failed to create EGL context");
+                    mir::log_warning("Failed to create EGL context: no EGL_STREAM_BIT_KHR configs supported");
                     continue;
                 }
                 EGLContext ctx{EGL_NO_CONTEXT};
@@ -311,7 +320,7 @@ auto probe_display_platform(
 
                 if (ctx == EGL_NO_CONTEXT)
                 {
-                    mir::log_warning("Failed to create EGL context");
+                    mir::log_warning("Failed to create EGL context: %s", mg::egl_category().message(eglGetError()).c_str());
                     continue;
                 }
 
@@ -416,11 +425,18 @@ auto probe_rendering_platform(
     for (auto i = 0; i <= device_count; ++i)
     {
         auto const& device = devices[i];
-        supported_devices.emplace_back(mg::SupportedDevice{
-            udev->char_device_from_devnum(mge::devnum_for_device(device)),
-            mg::PlatformPriority::unsupported,
-            nullptr
-        });
+        try
+        {
+            supported_devices.emplace_back(mg::SupportedDevice{
+                udev->char_device_from_devnum(mge::devnum_for_device(device)),
+                mg::PlatformPriority::unsupported,
+                nullptr
+            });
+        }
+        catch (std::exception const& e)
+        {
+            mir::log_debug("Failed to find kernel device for EGLDevice: %s", e.what());
+        }
 
         EGLDisplay display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
 

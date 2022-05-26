@@ -39,11 +39,8 @@ namespace frontend
 struct WlrScreencopyV1Ctx
 {
     std::shared_ptr<Executor> const wayland_executor;
-    OutputManager& output_manager;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<compositor::ScreenShooter> const screen_shooter;
-
-    auto extents_of_output(wl_resource* output) -> geom::Rectangle;
 };
 
 class WlrScreencopyManagerV1Global
@@ -102,31 +99,15 @@ private:
 auto mf::create_wlr_screencopy_manager_unstable_v1(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
-    OutputManager& output_manager,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<compositor::ScreenShooter> const& screen_shooter)
 -> std::shared_ptr<wayland::WlrScreencopyManagerV1::Global>
 {
     auto ctx = std::shared_ptr<WlrScreencopyV1Ctx>{new WlrScreencopyV1Ctx{
         wayland_executor,
-        output_manager,
         allocator,
         screen_shooter}};
     return std::make_shared<WlrScreencopyManagerV1Global>(display, std::move(ctx));
-}
-
-auto mf::WlrScreencopyV1Ctx::extents_of_output(wl_resource* output) -> geom::Rectangle
-{
-    geom::Rectangle extents;
-    if (!output_manager.with_config_for(output, [&](mg::DisplayConfigurationOutput const& config)
-        {
-            extents = config.extents();
-        }))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "No output for wl_output@" + std::to_string(wl_resource_get_id(output))));
-    }
-    return extents;
 }
 
 mf::WlrScreencopyManagerV1Global::WlrScreencopyManagerV1Global(
@@ -156,7 +137,8 @@ void mf::WlrScreencopyManagerV1::capture_output(
     struct wl_resource* output)
 {
     (void)overlay_cursor;
-    new WlrScreencopyFrameV1{frame, ctx, ctx->extents_of_output(output)};
+    auto const extents = OutputGlobal::from_or_throw(output).current_config().extents();
+    new WlrScreencopyFrameV1{frame, ctx, extents};
 }
 
 void mf::WlrScreencopyManagerV1::capture_output_region(
@@ -167,8 +149,8 @@ void mf::WlrScreencopyManagerV1::capture_output_region(
     int32_t width, int32_t height)
 {
     (void)overlay_cursor;
-    auto const intersection = geom::Rectangle{{x, y}, {width, height}}
-        .intersection_with(ctx->extents_of_output(output));
+    auto const extents = OutputGlobal::from_or_throw(output).current_config().extents();
+    auto const intersection = geom::Rectangle{{x, y}, {width, height}}.intersection_with(extents);
     new WlrScreencopyFrameV1{frame, ctx, intersection};
 }
 

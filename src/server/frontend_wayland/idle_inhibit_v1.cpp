@@ -64,29 +64,9 @@ public:
     ~IdleInhibitorV1();
 
 private:
-    struct StateObserver : ms::IdleStateObserver
-    {
-        StateObserver()
-        {
-        }
-
-        void idle() override;
-
-        void active() override;
-    };
-
     std::shared_ptr<IdleInhibitV1Ctx> const ctx;
-    std::shared_ptr<StateObserver> const state_observer;
     std::shared_ptr<ms::IdleHub::WakeLock> const wake_lock;
 };
-
-void IdleInhibitorV1::StateObserver::idle()
-{
-}
-
-void IdleInhibitorV1::StateObserver::active()
-{
-}
 
 auto mf::create_idle_inhibit_manager_v1(
     wl_display* display,
@@ -137,13 +117,10 @@ void IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct wl_re
 IdleInhibitorV1::IdleInhibitorV1(wl_resource *resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx)
     : mw::IdleInhibitorV1{resource, Version<1>()},
       ctx{ctx},
-      state_observer{std::make_shared<StateObserver>()},
       wake_lock{ctx->idle_hub->inhibit_idle()}
 {
-    ctx->idle_hub->register_interest(state_observer, mir::time::Duration(0));
 }
 
 IdleInhibitorV1::~IdleInhibitorV1()
 {
-    ctx->idle_hub->unregister_interest(*state_observer);
 }
