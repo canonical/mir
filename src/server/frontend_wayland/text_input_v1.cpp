@@ -58,47 +58,47 @@ auto wayland_to_mir_content_purpose(uint32_t purpose) -> ms::TextInputContentPur
 {
     switch (purpose)
     {
-        case mw::TextInputV1::ContentPurpose::normal:
-            return ms::TextInputContentPurpose::normal;
+    case mw::TextInputV1::ContentPurpose::normal:
+        return ms::TextInputContentPurpose::normal;
 
-        case mw::TextInputV1::ContentPurpose::alpha:
-            return ms::TextInputContentPurpose::alpha;
+    case mw::TextInputV1::ContentPurpose::alpha:
+        return ms::TextInputContentPurpose::alpha;
 
-        case mw::TextInputV1::ContentPurpose::digits:
-            return ms::TextInputContentPurpose::digits;
+    case mw::TextInputV1::ContentPurpose::digits:
+        return ms::TextInputContentPurpose::digits;
 
-        case mw::TextInputV1::ContentPurpose::number:
-            return ms::TextInputContentPurpose::number;
+    case mw::TextInputV1::ContentPurpose::number:
+        return ms::TextInputContentPurpose::number;
 
-        case mw::TextInputV1::ContentPurpose::phone:
-            return ms::TextInputContentPurpose::phone;
+    case mw::TextInputV1::ContentPurpose::phone:
+        return ms::TextInputContentPurpose::phone;
 
-        case mw::TextInputV1::ContentPurpose::url:
-            return ms::TextInputContentPurpose::url;
+    case mw::TextInputV1::ContentPurpose::url:
+        return ms::TextInputContentPurpose::url;
 
-        case mw::TextInputV1::ContentPurpose::email:
-            return ms::TextInputContentPurpose::email;
+    case mw::TextInputV1::ContentPurpose::email:
+        return ms::TextInputContentPurpose::email;
 
-        case mw::TextInputV1::ContentPurpose::name:
-            return ms::TextInputContentPurpose::name;
+    case mw::TextInputV1::ContentPurpose::name:
+        return ms::TextInputContentPurpose::name;
 
-        case mw::TextInputV1::ContentPurpose::password:
-            return ms::TextInputContentPurpose::password;
+    case mw::TextInputV1::ContentPurpose::password:
+        return ms::TextInputContentPurpose::password;
 
-        case mw::TextInputV1::ContentPurpose::date:
-            return ms::TextInputContentPurpose::date;
+    case mw::TextInputV1::ContentPurpose::date:
+        return ms::TextInputContentPurpose::date;
 
-        case mw::TextInputV1::ContentPurpose::time:
-            return ms::TextInputContentPurpose::time;
+    case mw::TextInputV1::ContentPurpose::time:
+        return ms::TextInputContentPurpose::time;
 
-        case mw::TextInputV1::ContentPurpose::datetime:
-            return ms::TextInputContentPurpose::datetime;
+    case mw::TextInputV1::ContentPurpose::datetime:
+        return ms::TextInputContentPurpose::datetime;
 
-        case mw::TextInputV1::ContentPurpose::terminal:
-            return ms::TextInputContentPurpose::terminal;
+    case mw::TextInputV1::ContentPurpose::terminal:
+        return ms::TextInputContentPurpose::terminal;
 
-        default:
-            BOOST_THROW_EXCEPTION(std::invalid_argument{"Invalid text content purpose " + std::to_string(purpose)});
+    default:
+        BOOST_THROW_EXCEPTION(std::invalid_argument{"Invalid text content purpose " + std::to_string(purpose)});
     }
 }
 
