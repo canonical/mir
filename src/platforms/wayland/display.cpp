@@ -168,12 +168,17 @@ auto mgw::Display::last_frame_on(unsigned) const -> Frame
 
 auto mgw::Display::create_gl_context() const -> std::unique_ptr<mrg::Context>
 {
+    EGLint const static context_attr[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
     class GlContext : public mir::renderer::gl::Context
     {
     public:
         GlContext(EGLDisplay egldisplay, EGLConfig eglconfig, EGLContext eglctx) :
             egldisplay{egldisplay},
-            eglctx{eglCreateContext(egldisplay, eglconfig, eglctx, nullptr)} {}
+            eglctx{eglCreateContext(egldisplay, eglconfig, eglctx, context_attr)} {}
 
         ~GlContext()
         {
