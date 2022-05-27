@@ -29,6 +29,7 @@ set(
   wl_keyboard.cpp               wl_keyboard.h
   wl_pointer.cpp                wl_pointer.h
   wl_touch.cpp                  wl_touch.h
+  wl_shell.cpp                  wl_shell.h
   xdg_shell_v6.cpp              xdg_shell_v6.h
   xdg_shell_stable.cpp          xdg_shell_stable.h
   xdg_output_v1.cpp             xdg_output_v1.h

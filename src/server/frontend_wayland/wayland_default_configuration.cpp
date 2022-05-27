@@ -18,6 +18,7 @@
 #include "mir/frontend/wayland.h"
 
 #include "wayland_connector.h"
+#include "wl_shell.h"
 #include "xdg_shell_v6.h"
 #include "xdg_shell_stable.h"
 #include "layer_shell_v1.h"
