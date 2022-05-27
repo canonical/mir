@@ -143,7 +143,7 @@ public:
 private:
     struct Handler : ms::TextInputChangeHandler
     {
-        Handler(TextInputV1* const text_input, std::shared_ptr<mir::Executor> const wayland_executor)
+        Handler(TextInputV1* const text_input, std::shared_ptr<mir::Executor> wayland_executor)
             : text_input{text_input},
               wayland_executor{wayland_executor}
         {
