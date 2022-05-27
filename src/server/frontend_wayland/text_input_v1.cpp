@@ -112,7 +112,7 @@ class TextInputManagerV1Global
     : public mw::TextInputManagerV1::Global
 {
 public:
-    TextInputManagerV1Global(wl_display* display, std::shared_ptr<TextInputV1Ctx> ctx);
+    TextInputManagerV1Global(wl_display* display, std::unique_ptr<TextInputV1Ctx> ctx);
 
 private:
     void bind(wl_resource* new_resource) override;
@@ -211,15 +211,15 @@ auto mf::create_text_input_manager_v1(
     wl_display *display,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<scene::TextInputHub> text_input_hub)
--> std::shared_ptr<wayland::TextInputManagerV1::Global>
+-> std::unique_ptr<wayland::TextInputManagerV1::Global>
 {
-    auto ctx = std::make_shared<TextInputV1Ctx>(TextInputV1Ctx{std::move(wayland_executor), std::move(text_input_hub)});
-    return std::make_shared<TextInputManagerV1Global>(display, std::move(ctx));
+    auto ctx = std::make_unique<TextInputV1Ctx>(TextInputV1Ctx{std::move(wayland_executor), std::move(text_input_hub)});
+    return std::make_unique<TextInputManagerV1Global>(display, std::move(ctx));
 }
 
 TextInputManagerV1Global::TextInputManagerV1Global(
     wl_display* display,
-    std::shared_ptr<TextInputV1Ctx> ctx)
+    std::unique_ptr<TextInputV1Ctx> ctx)
     : Global{display, Version<1>()},
       ctx{std::move(ctx)}
 {
