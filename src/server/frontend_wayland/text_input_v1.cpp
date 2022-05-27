@@ -208,7 +208,7 @@ private:
 };
 
 auto mf::create_text_input_manager_v1(
-    wl_display *display,
+    wl_display* display,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<scene::TextInputHub> text_input_hub)
 -> std::unique_ptr<wayland::TextInputManagerV1::Global>
@@ -317,17 +317,17 @@ void TextInputV1::focus_on(mf::WlSurface* surface)
     }
 }
 
-void TextInputV1::activate(wl_resource *seat, wl_resource *surface)
+void TextInputV1::activate(wl_resource *seat_resource, wl_resource *surface)
 {
     (void)surface;
 
-    auto const wl_seat = mf::WlSeat::from(seat);
+    auto const wl_seat = mf::WlSeat::from(seat_resource);
     if (!wl_seat)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("failed to resolve WlSeat activating TextInputV1"));
     }
-    this->seat = std::optional<mf::WlSeat*>(wl_seat);
-    this->seat.value()->add_focus_listener(client, this);
+    this->seat = std::make_optional(wl_seat);
+    wl_seat->add_focus_listener(client, this);
 
     if (current_surface)
     {
