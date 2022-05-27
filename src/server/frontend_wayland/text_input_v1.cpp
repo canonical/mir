@@ -145,7 +145,7 @@ private:
     {
         Handler(TextInputV1* const text_input, std::shared_ptr<mir::Executor> wayland_executor)
             : text_input{text_input},
-              wayland_executor{wayland_executor}
+              wayland_executor{std::move(wayland_executor)}
         {
         }
 
