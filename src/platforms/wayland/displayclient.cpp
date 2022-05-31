@@ -58,32 +58,6 @@ public:
 
     DisplayConfigurationOutput dcout;
 
-    static void done(void* data, wl_output* output);
-
-    static void geometry(
-        void* data,
-        wl_output* wl_output,
-        int32_t x,
-        int32_t y,
-        int32_t physical_width,
-        int32_t physical_height,
-        int32_t subpixel,
-        const char* make,
-        const char* model,
-        int32_t transform);
-
-    static void mode(
-        void* data,
-        wl_output* wl_output,
-        uint32_t flags,
-        int32_t width,
-        int32_t height,
-        int32_t refresh);
-
-    static void scale(void* data, wl_output* wl_output, int32_t factor);
-
-    static wl_output_listener const output_listener;
-
     wl_output* const output;
     DisplayClient const* const owner;
 
@@ -95,6 +69,20 @@ public:
     EGLSurface eglsurface{EGL_NO_SURFACE};
 
     std::function<void(Output const&)> on_done;
+
+    // wl_output events
+    void geometry(
+        int32_t x,
+        int32_t y,
+        int32_t physical_width,
+        int32_t physical_height,
+        int32_t subpixel,
+        const char* make,
+        const char* model,
+        int32_t transform);
+    void mode(uint32_t flags, int32_t width, int32_t height, int32_t refresh);
+    void scale(int32_t factor);
+    void done();
 
     // DisplaySyncGroup implementation
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& /*f*/) override;
@@ -123,9 +111,74 @@ static EGLint const ctxattribs[] =
     };
 }
 
+mgw::DisplayClient::Output::Output(
+    wl_output* output,
+    DisplayClient* owner,
+    std::function<void(Output const&)> on_constructed,
+    std::function<void(Output const&)> on_change) :
+    output{output},
+    owner{owner},
+    surface{wl_compositor_create_surface(owner->compositor)},
+    on_done{[this, on_constructed = std::move(on_constructed), on_change=std::move(on_change)]
+        (Output const& o) mutable { on_constructed(o), on_done = std::move(on_change); }}
+{
+    // If building against newer Wayland protocol definitions we may miss trailing fields
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+    static wl_output_listener const output_listener{
+        [](void* self, auto, auto... args) { static_cast<Output*>(self)->geometry(args...); },
+        [](void* self, auto, auto... args) { static_cast<Output*>(self)->mode(args...); },
+        [](void* self, auto, auto... args) { static_cast<Output*>(self)->done(args...); },
+        [](void* self, auto, auto... args) { static_cast<Output*>(self)->scale(args...); },
+    };
+    #pragma GCC diagnostic pop
+    wl_output_add_listener(output, &output_listener, this);
+
+    dcout.id = (DisplayConfigurationOutputId)owner->bound_outputs.size();
+    dcout.card_id = DisplayConfigurationCardId{1};
+    dcout.type = DisplayConfigurationOutputType::unknown;
+    dcout.pixel_formats = {mir_pixel_format_argb_8888,mir_pixel_format_xrgb_8888};
+    dcout.current_format = mir_pixel_format_xrgb_8888;
+    dcout.connected = true;
+    dcout.used = true;
+    dcout.power_mode = mir_power_mode_on;
+    dcout.orientation = MirOrientation::mir_orientation_normal;
+    dcout.scale = 1.0;
+    dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
+    dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
+}
+
+mgw::DisplayClient::Output::~Output()
+{
+    if (output)
+    {
+        wl_output_destroy(output);
+    }
+
+    if (shell_toplevel)
+    {
+        xdg_toplevel_destroy(shell_toplevel);
+    }
+
+    if (shell_surface)
+    {
+        xdg_surface_destroy(shell_surface);
+    }
+
+    wl_surface_destroy(surface);
+
+    if (eglsurface != EGL_NO_SURFACE)
+    {
+        eglDestroySurface(owner->egldisplay, eglsurface);
+    }
+
+    if (eglctx != EGL_NO_CONTEXT)
+    {
+        eglDestroyContext(owner->egldisplay, eglctx);
+    }
+}
+
 void mgw::DisplayClient::Output::geometry(
-    void* data,
-    struct wl_output* /*wl_output*/,
     int32_t x,
     int32_t y,
     int32_t physical_width,
@@ -135,9 +188,6 @@ void mgw::DisplayClient::Output::geometry(
     const char */*model*/,
     int32_t transform)
 {
-    auto output = static_cast<Output*>(data);
-
-    auto& dcout = output->dcout;
     dcout.top_left = {x, y};
     dcout.physical_size_mm = {physical_width, physical_height};
 
@@ -192,16 +242,8 @@ void mgw::DisplayClient::Output::geometry(
     }
 }
 
-void mgw::DisplayClient::Output::mode(
-    void *data,
-    struct wl_output* /*wl_output*/,
-    uint32_t flags,
-    int32_t width,
-    int32_t height,
-    int32_t refresh)
+void mgw::DisplayClient::Output::mode(uint32_t flags, int32_t width, int32_t height, int32_t refresh)
 {
-    auto const output = static_cast<Output*>(data);
-    auto& dcout = output->dcout;
     auto& modes = dcout.modes;
 
     auto const mode = DisplayConfigurationMode{{width, height}, refresh/1000.0};
@@ -224,86 +266,14 @@ void mgw::DisplayClient::Output::mode(
     }
 }
 
-void mgw::DisplayClient::Output::scale(void* data, wl_output* /*wl_output*/, int32_t factor)
+void mgw::DisplayClient::Output::scale(int32_t factor)
 {
-    auto const output = static_cast<Output*>(data);
-    auto& dcout = output->dcout;
     dcout.scale = factor;
 }
 
-mgw::DisplayClient::Output::Output(
-    wl_output* output,
-    DisplayClient* owner,
-    std::function<void(Output const&)> on_constructed,
-    std::function<void(Output const&)> on_change) :
-    output{output},
-    owner{owner},
-    surface{wl_compositor_create_surface(owner->compositor)},
-    on_done{[this, on_constructed = std::move(on_constructed), on_change=std::move(on_change)]
-        (Output const& o) mutable { on_constructed(o), on_done = std::move(on_change); }}
+void mgw::DisplayClient::Output::done()
 {
-    wl_output_add_listener(output, &output_listener, this);
-
-    dcout.id = (DisplayConfigurationOutputId)owner->bound_outputs.size();
-    dcout.card_id = DisplayConfigurationCardId{1};
-    dcout.type = DisplayConfigurationOutputType::unknown;
-    dcout.pixel_formats = {mir_pixel_format_argb_8888,mir_pixel_format_xrgb_8888};
-    dcout.current_format = mir_pixel_format_xrgb_8888;
-    dcout.connected = true;
-    dcout.used = true;
-    dcout.power_mode = mir_power_mode_on;
-    dcout.orientation = MirOrientation::mir_orientation_normal;
-    dcout.scale = 1.0;
-    dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
-    dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
-}
-
-mgw::DisplayClient::Output::~Output()
-{
-    if (output)
-    {
-        wl_output_destroy(output);
-    }
-
-    if (shell_toplevel)
-    {
-        xdg_toplevel_destroy(shell_toplevel);
-    }
-
-    if (shell_surface)
-    {
-        xdg_surface_destroy(shell_surface);
-    }
-
-    wl_surface_destroy(surface);
-
-    if (eglsurface != EGL_NO_SURFACE)
-    {
-        eglDestroySurface(owner->egldisplay, eglsurface);
-    }
-
-    if (eglctx != EGL_NO_CONTEXT)
-    {
-        eglDestroyContext(owner->egldisplay, eglctx);
-    }
-}
-
-
-// If building against newer Wayland protocol definitions we may miss trailing fields
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-wl_output_listener const mgw::DisplayClient::Output::output_listener = {
-    &geometry,
-    &mode,
-    &done,
-    &scale,
-};
-#pragma GCC diagnostic pop
-
-void mgw::DisplayClient::Output::done(void* data, struct wl_output* /*wl_output*/)
-{
-    auto output = static_cast<Output*>(data);
-    output->on_done(*output);
+    on_done(*this);
 }
 
 void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(DisplayBuffer & )> const& f)
