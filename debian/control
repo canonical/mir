@@ -55,11 +55,10 @@ Build-Depends: cmake,
                eglexternalplatform-dev,
                systemtap-sdt-dev,
                wlcs
-Standards-Version: 3.9.4
-Homepage: https://launchpad.net/mir
-# If you aren't a member of ~mir-team but need to upload packaging changes,
-# just go ahead. ~mir-team will notice and sync up the code again.
-Vcs-Bzr: https://code.launchpad.net/mir
+Standards-Version: 4.6.1
+Homepage: https://mir-server.io/
+Vcs-Browser: https://github.com/MirServer/mir/
+Vcs-Git: https://github.com/MirServer/mir
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
