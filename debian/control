@@ -14,16 +14,12 @@ Build-Depends: cmake,
                libboost-iostreams-dev,
                libboost-program-options-dev,
                libboost-system-dev,
-               libboost-thread-dev,
                libboost-filesystem-dev,
-               protobuf-compiler,
                libdrm-dev,
                libegl1-mesa-dev,
                libgles2-mesa-dev,
-               libgl1-mesa-dev [amd64 i386],
                libgbm-dev,
                libglm-dev,
-               libprotobuf-dev,
                libgoogle-glog-dev,
                liblttng-ust-dev,
                libxkbcommon-dev (>= 0.5),
@@ -40,10 +36,7 @@ Build-Depends: cmake,
                libevdev-dev,
                libinput-dev (>= 0.21),
                uuid-dev,
-               python3:native,
-               dh-python,
                nettle-dev,
-               libcapnp-dev,
                libepoxy-dev,
                python3-pil:native,
                linux-libc-dev,
@@ -62,11 +55,10 @@ Build-Depends: cmake,
                eglexternalplatform-dev,
                systemtap-sdt-dev,
                wlcs
-Standards-Version: 3.9.4
-Homepage: https://launchpad.net/mir
-# If you aren't a member of ~mir-team but need to upload packaging changes,
-# just go ahead. ~mir-team will notice and sync up the code again.
-Vcs-Bzr: https://code.launchpad.net/mir
+Standards-Version: 4.6.1
+Homepage: https://mir-server.io/
+Vcs-Browser: https://github.com/MirServer/mir/
+Vcs-Git: https://github.com/MirServer/mir
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
@@ -116,7 +108,6 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmircommon9 (= ${binary:Version}),
          libmircore-dev (= ${binary:Version}),
-         libprotobuf-dev (>= 2.4.1),
          libxkbcommon-dev,
          ${misc:Depends},
 Breaks: mircommon-dev (<< 0.6)
