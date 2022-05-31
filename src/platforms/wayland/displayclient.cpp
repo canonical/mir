@@ -311,7 +311,7 @@ void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(Disp
     if (!shell_surface)
     {
         static xdg_surface_listener const shell_surface_listener{
-            [](auto...){},
+            [](void*, auto xdg_surface, auto serial) { xdg_surface_ack_configure(xdg_surface, serial); },
         };
         shell_surface = xdg_wm_base_get_xdg_surface(owner->shell, surface);
         xdg_surface_add_listener(shell_surface, &shell_surface_listener, this);
