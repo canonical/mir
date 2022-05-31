@@ -84,6 +84,10 @@ public:
     void scale(int32_t factor);
     void done();
 
+    // XDG shell events
+    void toplevel_configure(int32_t width, int32_t height, wl_array* states);
+    void surface_configure(uint32_t serial);
+
     // DisplaySyncGroup implementation
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& /*f*/) override;
     void post() override;
@@ -276,18 +280,30 @@ void mgw::DisplayClient::Output::done()
     on_done(*this);
 }
 
+void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t height, wl_array* states)
+{
+    (void)width;
+    (void)height;
+    (void)states;
+}
+
+void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
+{
+    xdg_surface_ack_configure(shell_surface, serial);
+}
+
 void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(DisplayBuffer & )> const& f)
 {
     if (!shell_surface)
     {
         static xdg_surface_listener const shell_surface_listener{
-            [](void*, auto xdg_surface, auto serial) { xdg_surface_ack_configure(xdg_surface, serial); },
+            [](void* self, auto, auto... args) { static_cast<Output*>(self)->surface_configure(args...); },
         };
         shell_surface = xdg_wm_base_get_xdg_surface(owner->shell, surface);
         xdg_surface_add_listener(shell_surface, &shell_surface_listener, this);
 
         static xdg_toplevel_listener const shell_toplevel_listener{
-            [](auto...){},
+            [](void* self, auto, auto... args) { static_cast<Output*>(self)->toplevel_configure(args...); },
             [](auto...){},
         };
         shell_toplevel = xdg_surface_get_toplevel(shell_surface);
