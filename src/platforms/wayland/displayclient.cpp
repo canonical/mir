@@ -311,16 +311,14 @@ void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(Disp
     if (!shell_surface)
     {
         static xdg_surface_listener const shell_surface_listener{
-            [](void*, xdg_surface* /*shell_surface*/, uint32_t /*serial*/){},
+            [](auto...){},
         };
         shell_surface = xdg_wm_base_get_xdg_surface(owner->shell, surface);
         xdg_surface_add_listener(shell_surface, &shell_surface_listener, this);
 
         static xdg_toplevel_listener const shell_toplevel_listener{
-            [](void */*data*/, xdg_toplevel */*xdg_toplevel*/,
-                int32_t /*width*/, int32_t /*height*/,
-                wl_array */*states*/){},
-            [](void */*data*/, xdg_toplevel */*xdg_toplevel*/){},
+            [](auto...){},
+            [](auto...){},
         };
         shell_toplevel = xdg_surface_get_toplevel(shell_surface);
         xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
