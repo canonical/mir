@@ -68,6 +68,8 @@ public:
     EGLContext eglctx{EGL_NO_CONTEXT};
     EGLSurface eglsurface{EGL_NO_SURFACE};
 
+    std::optional<geometry::Size> pending_toplevel_size;
+    bool surface_has_been_configured{false};
     std::function<void(Output const&)> on_done;
 
     // wl_output events
@@ -89,7 +91,7 @@ public:
     void surface_configure(uint32_t serial);
 
     // DisplaySyncGroup implementation
-    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& /*f*/) override;
+    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) override;
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
@@ -150,6 +152,11 @@ mgw::DisplayClient::Output::Output(
     dcout.scale = 1.0;
     dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
     dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
+
+    while (!surface_has_been_configured)
+    {
+        wl_display_roundtrip(owner->display);
+    }
 }
 
 mgw::DisplayClient::Output::~Output()
@@ -277,23 +284,6 @@ void mgw::DisplayClient::Output::scale(int32_t factor)
 
 void mgw::DisplayClient::Output::done()
 {
-    on_done(*this);
-}
-
-void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t height, wl_array* states)
-{
-    (void)width;
-    (void)height;
-    (void)states;
-}
-
-void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
-{
-    xdg_surface_ack_configure(shell_surface, serial);
-}
-
-void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(DisplayBuffer & )> const& f)
-{
     if (!shell_surface)
     {
         static xdg_surface_listener const shell_surface_listener{
@@ -311,16 +301,47 @@ void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(Disp
 
         xdg_toplevel_set_fullscreen(shell_toplevel, output);
         wl_surface_set_buffer_scale(surface, round(dcout.scale));
-        wl_display_dispatch(owner->display);
 
-        auto const& size = dcout.modes[dcout.current_mode_index].size;
+        // We call on_done() in the surface configure event handler
+        while (!surface_has_been_configured)
+        {
+            wl_display_roundtrip(owner->display);
+        }
+
+        auto const& size = dcout.extents().size * dcout.scale;
 
         eglsurface = eglCreatePlatformWindowSurface(
             owner->egldisplay,
             owner->eglconfig,
             wl_egl_window_create(surface, size.width.as_int(), size.height.as_int()), nullptr);
     }
+    else
+    {
+        on_done(*this);
+    }
+}
 
+void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t height, wl_array* states)
+{
+    (void)states;
+    pending_toplevel_size = geometry::Size{width, height};
+}
+
+void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
+{
+    if (pending_toplevel_size && (
+        !dcout.custom_logical_size || dcout.custom_logical_size != pending_toplevel_size.value()))
+    {
+        surface_has_been_configured = true;
+        dcout.custom_logical_size = pending_toplevel_size.value();
+        pending_toplevel_size.reset();
+        on_done(*this);
+    }
+    xdg_surface_ack_configure(shell_surface, serial);
+}
+
+void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(DisplayBuffer & )> const& f)
+{
     f(*this);
 }
 
@@ -335,7 +356,7 @@ auto mgw::DisplayClient::Output::recommended_sleep() const -> std::chrono::milli
 
 auto mgw::DisplayClient::Output::view_area() const -> geometry::Rectangle
 {
-    return dcout.extents();
+    return {dcout.extents().top_left, dcout.extents().size};
 }
 
 bool mgw::DisplayClient::Output::overlay(mir::graphics::RenderableList const&)
