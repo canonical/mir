@@ -21,8 +21,6 @@
 #include "mir/executor.h"
 #include "mir/scene/text_input_hub.h"
 
-#include "mir/log.h" // TODO - remove after debugging
-
 #include <memory>
 #include <boost/throw_exception.hpp>
 #include <deque>
