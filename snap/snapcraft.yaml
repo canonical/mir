@@ -75,7 +75,6 @@ parts:
     - libnuma1
     - libnvidia-egl-wayland1
     - libpng16-16
-    - libprotobuf-lite17
     - libsigc++-2.0-0v5
     - libunwind8
     - liburcu6

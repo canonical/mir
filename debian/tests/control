@@ -1,0 +1,3 @@
+Tests: wlcs
+Restrictions: allow-stderr, skippable
+Depends: wlcs, pkg-config, dpkg, mir-wlcs-integration, cmake, build-essential

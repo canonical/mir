@@ -1,2 +1,4 @@
-version=3
-https?://launchpad.net/mir/+download .*/mir-([0-9.]+~?.+?)\.tar\.gz
+version=4
+opts="pgpsigurlmangle=s/$/.asc/" \
+  https://github.com/MirServer/mir/releases \
+  https://github.com/MirServer/mir/releases/download/v.*/mir-@ANY_VERSION@@ARCHIVE_EXT@
