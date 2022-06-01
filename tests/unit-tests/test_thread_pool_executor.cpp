@@ -73,6 +73,7 @@ TEST(ThreadPoolExecutor, work_executed_from_within_work_item_is_not_blocked_by_w
 
 TEST(ThreadPoolExecutorDeathTest, unhandled_exception_in_work_item_causes_termination_by_default)
 {
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     EXPECT_DEATH(
         {
             mir::thread_pool_executor.spawn(

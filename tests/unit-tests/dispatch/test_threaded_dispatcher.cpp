@@ -257,6 +257,7 @@ TEST_F(ThreadedDispatcherDeathTest, exceptions_in_threadpool_trigger_termination
 {
     using namespace testing;
     using namespace std::chrono_literals;
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
     constexpr char const* exception_msg = "Ducks! Ducks attack!";
 
@@ -402,6 +403,7 @@ TEST_F(ThreadedDispatcherDeathTest, destroying_dispatcher_from_a_callback_is_an_
 {
     using namespace testing;
     using namespace std::literals::chrono_literals;
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
     MIR_EXPECT_EXIT(
     {
