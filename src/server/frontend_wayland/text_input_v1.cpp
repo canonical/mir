@@ -174,13 +174,13 @@ private:
     bool on_new_input_field{false};
     /// nullopt if the state is inactive, otherwise holds the pending and/or committed state
     std::optional<ms::TextInputState> pending_state;
-    /// The first value is the number of commits we had received when a state was submitted to the text input hub. The
-    /// second value is the serial the hub gave us for that state. When we get a change from the input method we match
-    /// it's state serial to the corresponding commit count, which is the serial we send to the client. We only remember
-    /// a small number of serials.
-    std::deque<std::pair<uint32_t, ms::TextInputStateSerial>> state_serials;
-    /// The number of commits we've received
-    uint32_t commit_count{0};
+
+    struct SerialPair
+    {
+        uint32_t client_serial;
+        ms::TextInputStateSerial hub_serial;
+    };
+    std::deque<SerialPair> state_serials;
 
     /// Sends the text change to the client if possible
     void send_text_change(ms::TextInputChange const& change);
@@ -292,9 +292,9 @@ auto TextInputV1::find_client_serial(ms::TextInputStateSerial state_serial) cons
     // Loop in reverse order because the serial we're looking for will generally be at the end
     for (auto it = state_serials.rbegin(); it != state_serials.rend(); it++)
     {
-        if (it->second == state_serial)
+        if (it->hub_serial == state_serial)
         {
-            return it->first;
+            return it->client_serial;
         }
     }
     return std::nullopt;
