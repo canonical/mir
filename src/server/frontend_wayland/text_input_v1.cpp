@@ -311,7 +311,7 @@ void TextInputV1::focus_on(mf::WlSurface* surface)
     }
     else
     {
-        deactivate(nullptr); // TODO - Is this right?
+        deactivate(nullptr);
     }
 }
 
