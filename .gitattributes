@@ -3,3 +3,10 @@
 debian/*       export-ignore
 debian         export-ignore
 .github/*      export-ignore
+spread         export-ignore
+spread.yaml    export-ignore
+tools/make_release_tarball    export-ignore
+tools/ppa-upload.sh           export-ignore
+tools/process_snaps.py        export-ignore
+tools/requirements.txt        export-ignore
+bors.toml      export-ignore
