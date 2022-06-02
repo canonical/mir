@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -eu
+
+if [ -n "${DEB_HOST_GNU_TYPE:-}" ]; then
+    CROSS_COMPILE="$DEB_HOST_GNU_TYPE-"
+else
+    CROSS_COMPILE=
+fi
+
+if [ $(dpkg-architecture -q DEB_HOST_ARCH_ENDIAN) != "little" ]; then
+    # Mir doesn't handle rendering on big endian systems
+    exit 77
+fi
+
+# Extracting the list of known-failures requries stubbing out various bits of CMake functionality in PrintExcludedTests.cmake
+# If upstream CMakeLists.txt starts using more CMake functionality, the list of stubs might need to be extended.
+KNOWN_FAILURES=$(cmake -DUPSTREAM_WLCS_TESTCASE_FILE=tests/acceptance-tests/wayland/CMakeLists.txt -P debian/tests/PrintExcludedTests.cmake 2>&1) || (echo "Failed to extract list of known-failures: $KNOWN_FAILURES"; exit 1)
+
+for failure in $KNOWN_FAILURES
+do
+  FILTER=${FILTER:-}${FILTER:+:}${failure}
+done
+
+# Add extra failures from the autopkgtest infrastructure
+#
+# BufferTest.test_truncated_shm_file requries libwayland to be able to handle SIGSEGV from a signal
+# handler and continue.
+# This fails under some qemu targets and LXD.
+FILTER=${FILTER:-}${FILTER:+:}"BadBufferTest.test_truncated_shm_file"
+
+# These tests are incorrect (a correct implementation will fail them)
+# Fixed in next WLCS, with a different name so these exclusions should be safe
+FILTER=${FILTER:-}${FILTER:+:}"XdgPopupUnstableV6/XdgPopupTest.grabbed_popup_does_not_get_keyboard_focus/0"
+FILTER=${FILTER:-}${FILTER:+:}"XdgPopupStable/XdgPopupTest.grabbed_popup_does_not_get_keyboard_focus/0"
+
+
+$(${CROSS_COMPILE}pkg-config --variable test_runner wlcs) /usr/lib/$(dpkg-architecture -q DEB_HOST_MULTIARCH)/mir/miral_wlcs_integration.so --gtest_filter=-${FILTER}

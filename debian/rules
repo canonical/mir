@@ -6,7 +6,7 @@ include debian/opts.mk
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
 %:
-	dh $@ -Bbuild-$(DEB_HOST_ARCH) --parallel --fail-missing --with python3
+	dh $@ -Bbuild-$(DEB_HOST_ARCH) --parallel --fail-missing
 
 # Enable verbose debugging output from the testsuite
 export MIR_SERVER_LOGGING = on

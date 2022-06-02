@@ -76,6 +76,8 @@ configure_file(
 )
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
+add_subdirectory(protocol)
+
 set_target_properties(
     mirplatformwayland PROPERTIES
     OUTPUT_NAME graphics-wayland
