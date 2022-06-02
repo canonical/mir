@@ -31,6 +31,7 @@
 #include "virtual_keyboard_v1.h"
 #include "text_input_v3.h"
 #include "text_input_v2.h"
+#include "text_input_v1.h"
 #include "input_method_v2.h"
 #include "idle_inhibit_v1.h"
 #include "wlr_screencopy_v1.h"
@@ -125,6 +126,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     make_extension_builder<mw::VirtualKeyboardManagerV1>([](auto const& ctx)
         {
             return mf::create_virtual_keyboard_manager_v1(ctx.display, ctx.input_device_registry);
+        }),
+    make_extension_builder<mw::TextInputManagerV1>([](auto const& ctx)
+        {
+           return mf::create_text_input_manager_v1(ctx.display, ctx.wayland_executor, ctx.text_input_hub);
         }),
     make_extension_builder<mw::TextInputManagerV2>([](auto const& ctx)
         {
@@ -252,6 +257,7 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::XdgWmBase::interface_name,
         mw::XdgShellV6::interface_name,
         mw::XdgOutputManagerV1::interface_name,
+        mw::TextInputManagerV1::interface_name,
         mw::TextInputManagerV2::interface_name,
         mw::TextInputManagerV3::interface_name};
 }
