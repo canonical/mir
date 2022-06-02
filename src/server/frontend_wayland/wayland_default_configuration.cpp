@@ -257,6 +257,7 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::XdgWmBase::interface_name,
         mw::XdgShellV6::interface_name,
         mw::XdgOutputManagerV1::interface_name,
+        mw::TextInputManagerV1::interface_name,
         mw::TextInputManagerV2::interface_name,
         mw::TextInputManagerV3::interface_name};
 }
