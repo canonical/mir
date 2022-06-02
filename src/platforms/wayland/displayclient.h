@@ -25,6 +25,7 @@
 #include <mir/renderer/gl/render_target.h>
 #include <mir/graphics/gl_config.h>
 
+#include "protocol/xdg-shell-client.h"
 #include <wayland-client.h>
 #include <EGL/egl.h>
 
@@ -129,7 +130,7 @@ protected:
     void on_output_gone(Output const*);
 
     wl_compositor* compositor = nullptr;
-    wl_shell* shell = nullptr;
+    xdg_wm_base* shell = nullptr;
     wl_seat* seat = nullptr;
     wl_shm* shm = nullptr;
 
