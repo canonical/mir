@@ -301,6 +301,7 @@ void mgw::DisplayClient::Output::done()
 
         xdg_toplevel_set_fullscreen(shell_toplevel, output);
         wl_surface_set_buffer_scale(surface, round(dcout.scale));
+        wl_surface_commit(surface);
 
         // We call on_done() in the surface configure event handler
         while (!surface_has_been_configured)
@@ -308,7 +309,7 @@ void mgw::DisplayClient::Output::done()
             wl_display_roundtrip(owner->display);
         }
 
-        auto const& size = dcout.extents().size * dcout.scale;
+        auto const size = dcout.extents().size * dcout.scale;
 
         eglsurface = eglCreatePlatformWindowSurface(
             owner->egldisplay,
@@ -324,11 +325,14 @@ void mgw::DisplayClient::Output::done()
 void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t height, wl_array* states)
 {
     (void)states;
-    pending_toplevel_size = geometry::Size{width, height};
+    pending_toplevel_size = geometry::Size{
+        width ? width : 1280,
+        height ? height : 1024};
 }
 
 void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
 {
+    xdg_surface_ack_configure(shell_surface, serial);
     if (pending_toplevel_size && (
         !dcout.custom_logical_size || dcout.custom_logical_size != pending_toplevel_size.value()))
     {
@@ -337,7 +341,6 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
         pending_toplevel_size.reset();
         on_done(*this);
     }
-    xdg_surface_ack_configure(shell_surface, serial);
 }
 
 void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(DisplayBuffer & )> const& f)
