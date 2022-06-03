@@ -66,6 +66,7 @@ public:
     xdg_toplevel* shell_toplevel{nullptr};
 
     EGLContext eglctx{EGL_NO_CONTEXT};
+    wl_egl_window* egl_window{nullptr};
     EGLSurface eglsurface{EGL_NO_SURFACE};
 
     std::optional<geometry::Size> pending_toplevel_size;
@@ -181,6 +182,11 @@ mgw::DisplayClient::Output::~Output()
     if (eglsurface != EGL_NO_SURFACE)
     {
         eglDestroySurface(owner->egldisplay, eglsurface);
+    }
+
+    if (egl_window != nullptr)
+    {
+        wl_egl_window_destroy(egl_window);
     }
 
     if (eglctx != EGL_NO_CONTEXT)
@@ -310,11 +316,8 @@ void mgw::DisplayClient::Output::done()
         }
 
         auto const size = dcout.extents().size * dcout.scale;
-
-        eglsurface = eglCreatePlatformWindowSurface(
-            owner->egldisplay,
-            owner->eglconfig,
-            wl_egl_window_create(surface, size.width.as_int(), size.height.as_int()), nullptr);
+        egl_window = wl_egl_window_create(surface, size.width.as_int(), size.height.as_int());
+        eglsurface = eglCreatePlatformWindowSurface(owner->egldisplay, owner->eglconfig, egl_window, nullptr);
     }
     else
     {
@@ -340,6 +343,11 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
         dcout.custom_logical_size = pending_toplevel_size.value();
         pending_toplevel_size.reset();
         on_done(*this);
+        if (egl_window)
+        {
+            auto const size = dcout.extents().size * dcout.scale;
+            wl_egl_window_resize(egl_window, size.width.as_int(), size.height.as_int(), 0, 0);
+        }
     }
 }
 
