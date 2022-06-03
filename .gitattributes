@@ -1,8 +1,7 @@
 .gitattributes export-ignore
 .gitignore     export-ignore
-debian/*       export-ignore
 debian         export-ignore
-.github/*      export-ignore
+.github        export-ignore
 spread         export-ignore
 spread.yaml    export-ignore
 tools/make_release_tarball    export-ignore
