@@ -520,16 +520,15 @@ mgw::DisplayClient::DisplayClient(
     wl_display_roundtrip(display);
 }
 
-void mgw::DisplayClient::on_output_changed(Output const* /*output*/)
+void mgw::DisplayClient::on_display_config_changed()
 {
-}
-
-void mgw::DisplayClient::on_output_gone(Output const* /*output*/)
-{
-}
-
-void mgw::DisplayClient::on_new_output(Output const* /*output*/)
-{
+    std::unique_lock lock{config_change_handlers_mutex};
+    auto const handlers = config_change_handlers;
+    lock.unlock();
+    for (auto const& handler : handlers)
+    {
+        handler();
+    }
 }
 
 mgw::DisplayClient::~DisplayClient()
@@ -586,8 +585,8 @@ void mgw::DisplayClient::new_global(
                 std::make_unique<Output>(
                     output,
                     self,
-                    [self](Output const& output) { self->on_new_output(&output); },
-                    [self](Output const& output) { self->on_output_changed(&output); })));
+                    [self](Output const&) { self->on_display_config_changed(); },
+                    [self](Output const&) { self->on_display_config_changed(); })));
     }
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
@@ -611,8 +610,8 @@ void mgw::DisplayClient::remove_global(
     auto const output = self->bound_outputs.find(id);
     if (output != self->bound_outputs.end())
     {
-        self->on_output_gone(output->second.get());
         self->bound_outputs.erase(output);
+        self->on_display_config_changed();
     }
     // TODO: We should probably also delete any other globals we've bound to that disappear.
 }

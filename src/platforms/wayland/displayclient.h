@@ -125,9 +125,7 @@ protected:
         wl_fixed_t orientation);
 
     class Output;
-    void on_new_output(Output const*);
-    void on_output_changed(Output const*);
-    void on_output_gone(Output const*);
+    void on_display_config_changed();
 
     wl_compositor* compositor = nullptr;
     xdg_wm_base* shell = nullptr;
@@ -165,6 +163,8 @@ protected:
 
     std::mutex mutable outputs_mutex;
     std::unordered_map<uint32_t, std::unique_ptr<Output>> bound_outputs;
+    std::mutex mutable config_change_handlers_mutex;
+    std::vector<DisplayConfigurationChangeHandler> config_change_handlers;
 
     EGLDisplay egldisplay;
     EGLConfig eglconfig;
