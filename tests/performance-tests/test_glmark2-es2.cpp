@@ -127,10 +127,18 @@ struct GLMark2Wayland : AbstractGLMark2Test
 struct HostedGLMark2Wayland : GLMark2Wayland
 {
     static char const* const host_socket;
+    char host_output_filename[256];
     pid_t pid = 0;
 
     HostedGLMark2Wayland()
     {
+        const ::testing::TestInfo *const test_info =
+            ::testing::UnitTest::GetInstance()->current_test_info();
+
+        snprintf(host_output_filename, sizeof(host_output_filename) - 1,
+                 "/tmp/%s_%s_host.log",
+                 test_info->test_case_name(), test_info->name());
+
         if ((pid = fork()))
         {
             EXPECT_THAT(pid, Gt(0));
@@ -143,17 +151,9 @@ struct HostedGLMark2Wayland : GLMark2Wayland
             std::string const server_path{mtf::executable_path() + "/mir_demo_server"};
             args[0] = server_path.c_str();
 
-            const ::testing::TestInfo *const test_info =
-                ::testing::UnitTest::GetInstance()->current_test_info();
-
-            char output_filename[256];
-            snprintf(output_filename, sizeof(output_filename) - 1,
-                     "/tmp/%s_%s_host.log",
-                     test_info->test_case_name(), test_info->name());
-
-            printf("Saving host output to: %s\n", output_filename);
-            if (freopen(output_filename, "a", stdout)) { /* (void)freopen(...); doesn't work */ };
-            if (freopen(output_filename, "a", stderr)) { /* (void)freopen(...); doesn't work */ };
+            printf("Saving host output to: %s\n", host_output_filename);
+            if (freopen(host_output_filename, "a", stdout)) { /* (void)freopen(...); doesn't work */ };
+            if (freopen(host_output_filename, "a", stderr)) { /* (void)freopen(...); doesn't work */ };
 
             execv(server_path.c_str(), const_cast<char* const*>(args.data()));
         }
@@ -186,6 +186,21 @@ struct HostedGLMark2Wayland : GLMark2Wayland
         if (pid > 0)
         {
             kill(pid, SIGTERM);
+            std::ifstream host_logs(host_output_filename);
+            std::string line;
+            while (host_logs.good() && getline(host_logs, line))
+            {
+                if (const auto n = line.find("GL renderer:"); n != std::string::npos)
+                {
+                    RecordProperty("host_renderer", line.substr(n+13, line.size()));
+                    continue;
+                }
+                if (const auto n = line.find("Current mode"); n != std::string::npos)
+                {
+                    RecordProperty("host_mode", line.substr(n+13, line.size()));
+                    break;
+                }
+            }
         }
     }
 
