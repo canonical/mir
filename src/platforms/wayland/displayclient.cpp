@@ -70,7 +70,7 @@ public:
     EGLSurface eglsurface{EGL_NO_SURFACE};
 
     std::optional<geometry::Size> pending_toplevel_size;
-    bool surface_has_been_configured{false};
+    bool has_initialized{false};
     std::function<void()> on_done;
 
     // wl_output events
@@ -154,7 +154,7 @@ mgw::DisplayClient::Output::Output(
     dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
     dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
 
-    while (!surface_has_been_configured)
+    while (!has_initialized)
     {
         wl_display_roundtrip(owner->display);
     }
@@ -309,15 +309,7 @@ void mgw::DisplayClient::Output::done()
         wl_surface_set_buffer_scale(surface, round(dcout.scale));
         wl_surface_commit(surface);
 
-        // We call on_done() in the surface configure event handler
-        while (!surface_has_been_configured)
-        {
-            wl_display_roundtrip(owner->display);
-        }
-
-        auto const size = dcout.extents().size * dcout.scale;
-        egl_window = wl_egl_window_create(surface, size.width.as_int(), size.height.as_int());
-        eglsurface = eglCreatePlatformWindowSurface(owner->egldisplay, owner->eglconfig, egl_window, nullptr);
+        // After the next roundtrip the surface should be configured
     }
     else
     {
@@ -336,18 +328,24 @@ void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t heigh
 void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
 {
     xdg_surface_ack_configure(shell_surface, serial);
-    if (pending_toplevel_size && (
-        !dcout.custom_logical_size || dcout.custom_logical_size != pending_toplevel_size.value()))
+    bool const size_is_changed = pending_toplevel_size && (
+        !dcout.custom_logical_size || dcout.custom_logical_size.value() != pending_toplevel_size.value());
+    dcout.custom_logical_size = pending_toplevel_size.value();
+    pending_toplevel_size.reset();
+    auto const size = dcout.extents().size * dcout.scale;
+    if (!has_initialized)
     {
-        surface_has_been_configured = true;
-        dcout.custom_logical_size = pending_toplevel_size.value();
-        pending_toplevel_size.reset();
+        egl_window = wl_egl_window_create(surface, size.width.as_int(), size.height.as_int());
+        eglsurface = eglCreatePlatformWindowSurface(owner->egldisplay, owner->eglconfig, egl_window, nullptr);
+        has_initialized = true;
+    }
+    else if (egl_window && size_is_changed)
+    {
+        wl_egl_window_resize(egl_window, size.width.as_int(), size.height.as_int(), 0, 0);
+    }
+    if (size_is_changed)
+    {
         on_done();
-        if (egl_window)
-        {
-            auto const size = dcout.extents().size * dcout.scale;
-            wl_egl_window_resize(egl_window, size.width.as_int(), size.height.as_int(), 0, 0);
-        }
     }
 }
 
