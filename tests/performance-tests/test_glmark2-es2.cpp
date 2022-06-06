@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2020 Canonical Ltd.
+ * Copyright © 2014-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -69,11 +69,15 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
         std::string line;
         std::ofstream glmark2_output;
         int score = -1;
+        std::string renderer{"unknown"};
         glmark2_output.open(output_filename);
         while (p.get_line(line)) {
             int match;
             if (sscanf(line.c_str(), " glmark2 Score: %d", &match) == 1) {
                 score = match;
+            }
+            if (const auto n = line.find("GL_RENDERER:   "); n != std::string::npos) {
+                renderer = line.substr(n + 15, line.size());
             }
 
             glmark2_output << line << std::endl;
@@ -82,6 +86,7 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
         // Use GTest's structured annotation support to expose the score
         // to the test runner.
         RecordProperty("score", score);
+        RecordProperty("client_renderer", renderer);
         return score;
     }
 };
