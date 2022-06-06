@@ -22,6 +22,7 @@
 #undef _FILE_OFFSET_BITS
 
 #include "mir_test_framework/open_wrapper.h"
+#include "mir_test_framework/interposer_helper.h"
 
 #include <atomic>
 #include <list>
@@ -35,74 +36,8 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-using InterposerHandle = std::unique_ptr<void, void(*)(void*)>;
-
-template<typename Returns, typename... Args>
-class InterposerHandlers
-{
-public:
-    static auto add(std::function<std::optional<Returns>(Args...)> handler) -> InterposerHandle
-    {
-        handlers_added.store(true);
-        auto& me = instance();
-        std::lock_guard lock{me.mutex};
-        auto iterator = me.handlers.emplace(me.handlers.begin(), std::move(handler));
-        auto remove_callback = [](void* iterator)
-            {
-                auto to_remove = static_cast<std::list<mtf::OpenHandler>::iterator*>(iterator);
-                remove(to_remove);
-            };
-        return mtf::OpenHandlerHandle{
-            static_cast<void*>(new std::list<mtf::OpenHandler>::iterator{iterator}),
-            remove_callback};
-    }
-
-    static auto run(Args ...args) -> std::optional<Returns>
-    {
-        if (handlers_added)
-        {
-            auto& me = instance();
-            std::lock_guard lock{me.mutex};
-            for (auto const& handler: me.handlers)
-            {
-                if (auto val = handler(args...))
-                {
-                    return val;
-                }
-            }
-        }
-        return std::nullopt;
-    }
-
-private:
-    // We want to ensure that run() doesn't call instance() too early (e.g. during coverage setup)
-    // as that leads to destruction order issues. (https://github.com/MirServer/mir/issues/2387)
-    static std::atomic<bool> handlers_added;
-
-    static auto instance() -> InterposerHandlers&
-    {
-        // static local so we don't have to worry about initialization order
-        static InterposerHandlers open_handlers;
-        return open_handlers;
-    }
-
-    static void remove(std::list<mtf::OpenHandler>::iterator* to_remove)
-    {
-        auto& me = instance();
-        std::lock_guard lock{me.mutex};
-        me.handlers.erase(*to_remove);
-        delete to_remove;
-    }
-
-    std::mutex mutex;
-    std::list<std::function<std::optional<Returns>(Args...)>> handlers;
-};
-
-template<typename Returns, typename... Args>
-std::atomic<bool> InterposerHandlers<Returns, Args...>::handlers_added{false};
+using OpenInterposer = mtf::InterposerHandlers<int, char const*, int, std::optional<mode_t>>;
 }
-
-using OpenInterposer = InterposerHandlers<int, char const*, int, std::optional<mode_t>>;
 
 mtf::OpenHandlerHandle mtf::add_open_handler(OpenHandler handler)
 {
