@@ -35,10 +35,13 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-class OpenHandlers
+using InterposerHandle = std::unique_ptr<void, void(*)(void*)>;
+
+template<typename Returns, typename... Args>
+class InterposerHandlers
 {
 public:
-    static auto add(mtf::OpenHandler handler) -> mtf::OpenHandlerHandle
+    static auto add(std::function<std::optional<Returns>(Args...)> handler) -> InterposerHandle
     {
         handlers_added.store(true);
         auto& me = instance();
@@ -54,7 +57,7 @@ public:
             remove_callback};
     }
 
-    static auto run(char const* path, int flags, std::optional<mode_t> mode) -> std::optional<int>
+    static auto run(Args ...args) -> std::optional<Returns>
     {
         if (handlers_added)
         {
@@ -62,7 +65,7 @@ public:
             std::lock_guard lock{me.mutex};
             for (auto const& handler: me.handlers)
             {
-                if (auto val = handler(path, flags, mode))
+                if (auto val = handler(args...))
                 {
                     return val;
                 }
@@ -76,10 +79,10 @@ private:
     // as that leads to destruction order issues. (https://github.com/MirServer/mir/issues/2387)
     static std::atomic<bool> handlers_added;
 
-    static auto instance() -> OpenHandlers&
+    static auto instance() -> InterposerHandlers&
     {
         // static local so we don't have to worry about initialization order
-        static OpenHandlers open_handlers;
+        static InterposerHandlers open_handlers;
         return open_handlers;
     }
 
@@ -92,15 +95,18 @@ private:
     }
 
     std::mutex mutex;
-    std::list<mtf::OpenHandler> handlers;
+    std::list<std::function<std::optional<Returns>(Args...)>> handlers;
 };
 
-std::atomic<bool> OpenHandlers::handlers_added{false};
+template<typename Returns, typename... Args>
+std::atomic<bool> InterposerHandlers<Returns, Args...>::handlers_added{false};
 }
+
+using OpenInterposer = InterposerHandlers<int, char const*, int, std::optional<mode_t>>;
 
 mtf::OpenHandlerHandle mtf::add_open_handler(OpenHandler handler)
 {
-    return OpenHandlers::add(std::move(handler));
+    return OpenInterposer::add(std::move(handler));
 }
 
 int open(char const* path, int flags, ...)
@@ -118,7 +124,7 @@ int open(char const* path, int flags, ...)
         va_end(args);
     }
 
-    if (auto val = OpenHandlers::run(path, flags, mode_parameter))
+    if (auto val = OpenInterposer::run(path, flags, mode_parameter))
     {
         return *val;
     }
@@ -156,7 +162,7 @@ int open64(char const* path, int flags, ...)
         va_end(args);
     }
 
-    if (auto val = OpenHandlers::run(path, flags, mode_parameter))
+    if (auto val = OpenInterposer::run(path, flags, mode_parameter))
     {
         return *val;
     }
@@ -194,7 +200,7 @@ int __open(char const* path, int flags, ...)
         va_end(args);
     }
 
-    if (auto val = OpenHandlers::run(path, flags, mode_parameter))
+    if (auto val = OpenInterposer::run(path, flags, mode_parameter))
     {
         return *val;
     }
@@ -230,7 +236,7 @@ int __open64(char const* path, int flags, ...)
         va_end(args);
     }
 
-    if (auto val = OpenHandlers::run(path, flags, mode_parameter))
+    if (auto val = OpenInterposer::run(path, flags, mode_parameter))
     {
         return *val;
     }
@@ -253,7 +259,7 @@ int __open64(char const* path, int flags, ...)
 
 int __open_2(char const* path, int flags)
 {
-    if (auto val = OpenHandlers::run(path, flags, 0))
+    if (auto val = OpenInterposer::run(path, flags, 0))
     {
         return *val;
     }
@@ -272,7 +278,7 @@ int __open_2(char const* path, int flags)
 
 int __open64_2(char const* path, int flags)
 {
-    if (auto val = OpenHandlers::run(path, flags, 0))
+    if (auto val = OpenInterposer::run(path, flags, 0))
     {
         return *val;
     }
