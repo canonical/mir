@@ -255,7 +255,6 @@ TextInputV1::~TextInputV1()
     if (seat)
     {
         seat.value()->remove_focus_listener(client, this);
-        delete seat.value();
     }
 
     on_new_input_field = false;
