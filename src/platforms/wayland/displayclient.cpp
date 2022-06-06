@@ -46,8 +46,8 @@ public:
     Output(
         wl_output* output,
         DisplayClient* owner,
-        std::function<void(Output const&)> on_constructed,
-        std::function<void(Output const&)> on_change);
+        std::function<void()> on_constructed,
+        std::function<void()> on_change);
 
     ~Output();
 
@@ -71,7 +71,7 @@ public:
 
     std::optional<geometry::Size> pending_toplevel_size;
     bool surface_has_been_configured{false};
-    std::function<void(Output const&)> on_done;
+    std::function<void()> on_done;
 
     // wl_output events
     void geometry(
@@ -121,13 +121,13 @@ static EGLint const ctxattribs[] =
 mgw::DisplayClient::Output::Output(
     wl_output* output,
     DisplayClient* owner,
-    std::function<void(Output const&)> on_constructed,
-    std::function<void(Output const&)> on_change) :
+    std::function<void()> on_constructed,
+    std::function<void()> on_change) :
     output{output},
     owner{owner},
     surface{wl_compositor_create_surface(owner->compositor)},
     on_done{[this, on_constructed = std::move(on_constructed), on_change=std::move(on_change)]
-        (Output const& o) mutable { on_constructed(o), on_done = std::move(on_change); }}
+        () mutable { on_constructed(), on_done = std::move(on_change); }}
 {
     // If building against newer Wayland protocol definitions we may miss trailing fields
     #pragma GCC diagnostic push
@@ -321,7 +321,7 @@ void mgw::DisplayClient::Output::done()
     }
     else
     {
-        on_done(*this);
+        on_done();
     }
 }
 
@@ -342,7 +342,7 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
         surface_has_been_configured = true;
         dcout.custom_logical_size = pending_toplevel_size.value();
         pending_toplevel_size.reset();
-        on_done(*this);
+        on_done();
         if (egl_window)
         {
             auto const size = dcout.extents().size * dcout.scale;
@@ -585,8 +585,8 @@ void mgw::DisplayClient::new_global(
                 std::make_unique<Output>(
                     output,
                     self,
-                    [self](Output const&) { self->on_display_config_changed(); },
-                    [self](Output const&) { self->on_display_config_changed(); })));
+                    [self]() { self->on_display_config_changed(); },
+                    [self]() { self->on_display_config_changed(); })));
     }
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
