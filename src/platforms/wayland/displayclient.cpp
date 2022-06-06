@@ -367,7 +367,7 @@ auto mgw::DisplayClient::Output::recommended_sleep() const -> std::chrono::milli
 
 auto mgw::DisplayClient::Output::view_area() const -> geometry::Rectangle
 {
-    return {dcout.extents().top_left, dcout.extents().size};
+    return dcout.extents();
 }
 
 bool mgw::DisplayClient::Output::overlay(mir::graphics::RenderableList const&)
