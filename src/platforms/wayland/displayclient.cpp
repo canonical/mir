@@ -46,7 +46,6 @@ public:
     Output(
         wl_output* output,
         DisplayClient* owner,
-        std::function<void()> on_constructed,
         std::function<void()> on_change);
 
     ~Output();
@@ -71,7 +70,7 @@ public:
 
     std::optional<geometry::Size> pending_toplevel_size;
     bool has_initialized{false};
-    std::function<void()> on_done;
+    std::function<void()> on_change;
 
     // wl_output events
     void geometry(
@@ -121,13 +120,11 @@ static EGLint const ctxattribs[] =
 mgw::DisplayClient::Output::Output(
     wl_output* output,
     DisplayClient* owner,
-    std::function<void()> on_constructed,
     std::function<void()> on_change) :
     output{output},
     owner{owner},
     surface{wl_compositor_create_surface(owner->compositor)},
-    on_done{[this, on_constructed = std::move(on_constructed), on_change=std::move(on_change)]
-        () mutable { on_constructed(), on_done = std::move(on_change); }}
+    on_change{std::move(on_change)}
 {
     // If building against newer Wayland protocol definitions we may miss trailing fields
     #pragma GCC diagnostic push
@@ -153,11 +150,6 @@ mgw::DisplayClient::Output::Output(
     dcout.scale = 1.0;
     dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
     dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
-
-    while (!has_initialized)
-    {
-        wl_display_roundtrip(owner->display);
-    }
 }
 
 mgw::DisplayClient::Output::~Output()
@@ -313,7 +305,7 @@ void mgw::DisplayClient::Output::done()
     }
     else
     {
-        on_done();
+        on_change();
     }
 }
 
@@ -339,13 +331,13 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
         eglsurface = eglCreatePlatformWindowSurface(owner->egldisplay, owner->eglconfig, egl_window, nullptr);
         has_initialized = true;
     }
-    else if (egl_window && size_is_changed)
+    else if (size_is_changed)
     {
-        wl_egl_window_resize(egl_window, size.width.as_int(), size.height.as_int(), 0, 0);
-    }
-    if (size_is_changed)
-    {
-        on_done();
+        if (egl_window)
+        {
+            wl_egl_window_resize(egl_window, size.width.as_int(), size.height.as_int(), 0, 0);
+        }
+        on_change();
     }
 }
 
@@ -515,7 +507,24 @@ mgw::DisplayClient::DisplayClient(
     if (eglctx == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(egl_error("eglCreateContext failed"));
 
-    wl_display_roundtrip(display);
+    auto const has_uninitialized_output = [&]()
+        {
+            for (auto const& pair : bound_outputs)
+            {
+                if (!pair.second->has_initialized)
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+    // Roundtrip once to bind to all output globals, then keep roundtripping until surfaces for all outputs are
+    // initialized
+    do
+    {
+        wl_display_roundtrip(display);
+    } while (has_uninitialized_output());
 }
 
 void mgw::DisplayClient::on_display_config_changed()
@@ -583,7 +592,6 @@ void mgw::DisplayClient::new_global(
                 std::make_unique<Output>(
                     output,
                     self,
-                    [self]() { self->on_display_config_changed(); },
                     [self]() { self->on_display_config_changed(); })));
     }
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
