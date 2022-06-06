@@ -22,6 +22,7 @@
 #undef _FILE_OFFSET_BITS
 
 #include "mir_test_framework/open_wrapper.h"
+#include "mir_test_framework/interposer_helper.h"
 
 #include <atomic>
 #include <list>
@@ -35,72 +36,12 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-class OpenHandlers
-{
-public:
-    static auto add(mtf::OpenHandler handler) -> mtf::OpenHandlerHandle
-    {
-        handlers_added.store(true);
-        auto& me = instance();
-        std::lock_guard lock{me.mutex};
-        auto iterator = me.handlers.emplace(me.handlers.begin(), std::move(handler));
-        auto remove_callback = [](void* iterator)
-            {
-                auto to_remove = static_cast<std::list<mtf::OpenHandler>::iterator*>(iterator);
-                remove(to_remove);
-            };
-        return mtf::OpenHandlerHandle{
-            static_cast<void*>(new std::list<mtf::OpenHandler>::iterator{iterator}),
-            remove_callback};
-    }
-
-    static auto run(char const* path, int flags, std::optional<mode_t> mode) -> std::optional<int>
-    {
-        if (handlers_added)
-        {
-            auto& me = instance();
-            std::lock_guard lock{me.mutex};
-            for (auto const& handler: me.handlers)
-            {
-                if (auto val = handler(path, flags, mode))
-                {
-                    return val;
-                }
-            }
-        }
-        return std::nullopt;
-    }
-
-private:
-    // We want to ensure that run() doesn't call instance() too early (e.g. during coverage setup)
-    // as that leads to destruction order issues. (https://github.com/MirServer/mir/issues/2387)
-    static std::atomic<bool> handlers_added;
-
-    static auto instance() -> OpenHandlers&
-    {
-        // static local so we don't have to worry about initialization order
-        static OpenHandlers open_handlers;
-        return open_handlers;
-    }
-
-    static void remove(std::list<mtf::OpenHandler>::iterator* to_remove)
-    {
-        auto& me = instance();
-        std::lock_guard lock{me.mutex};
-        me.handlers.erase(*to_remove);
-        delete to_remove;
-    }
-
-    std::mutex mutex;
-    std::list<mtf::OpenHandler> handlers;
-};
-
-std::atomic<bool> OpenHandlers::handlers_added{false};
+using OpenInterposer = mtf::InterposerHandlers<int, char const*, int, std::optional<mode_t>>;
 }
 
 mtf::OpenHandlerHandle mtf::add_open_handler(OpenHandler handler)
 {
-    return OpenHandlers::add(std::move(handler));
+    return OpenInterposer::add(std::move(handler));
 }
 
 int open(char const* path, int flags, ...)
@@ -118,7 +59,7 @@ int open(char const* path, int flags, ...)
         va_end(args);
     }
 
-    if (auto val = OpenHandlers::run(path, flags, mode_parameter))
+    if (auto val = OpenInterposer::run(path, flags, mode_parameter))
     {
         return *val;
     }
@@ -156,7 +97,7 @@ int open64(char const* path, int flags, ...)
         va_end(args);
     }
 
-    if (auto val = OpenHandlers::run(path, flags, mode_parameter))
+    if (auto val = OpenInterposer::run(path, flags, mode_parameter))
     {
         return *val;
     }
@@ -194,7 +135,7 @@ int __open(char const* path, int flags, ...)
         va_end(args);
     }
 
-    if (auto val = OpenHandlers::run(path, flags, mode_parameter))
+    if (auto val = OpenInterposer::run(path, flags, mode_parameter))
     {
         return *val;
     }
@@ -230,7 +171,7 @@ int __open64(char const* path, int flags, ...)
         va_end(args);
     }
 
-    if (auto val = OpenHandlers::run(path, flags, mode_parameter))
+    if (auto val = OpenInterposer::run(path, flags, mode_parameter))
     {
         return *val;
     }
@@ -253,7 +194,7 @@ int __open64(char const* path, int flags, ...)
 
 int __open_2(char const* path, int flags)
 {
-    if (auto val = OpenHandlers::run(path, flags, 0))
+    if (auto val = OpenInterposer::run(path, flags, 0))
     {
         return *val;
     }
@@ -272,7 +213,7 @@ int __open_2(char const* path, int flags)
 
 int __open64_2(char const* path, int flags)
 {
-    if (auto val = OpenHandlers::run(path, flags, 0))
+    if (auto val = OpenInterposer::run(path, flags, 0))
     {
         return *val;
     }
