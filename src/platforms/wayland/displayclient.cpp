@@ -538,6 +538,12 @@ void mgw::DisplayClient::on_display_config_changed()
     }
 }
 
+void mgw::DisplayClient::delete_outputs_to_be_deleted()
+{
+    std::lock_guard{outputs_mutex};
+    outputs_to_be_deleted.clear();
+}
+
 mgw::DisplayClient::~DisplayClient()
 {
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -616,6 +622,7 @@ void mgw::DisplayClient::remove_global(
     auto const output = self->bound_outputs.find(id);
     if (output != self->bound_outputs.end())
     {
+        self->outputs_to_be_deleted.push_back(std::move(output->second));
         self->bound_outputs.erase(output);
         self->on_display_config_changed();
     }
