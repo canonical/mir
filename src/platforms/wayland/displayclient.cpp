@@ -58,7 +58,7 @@ public:
     DisplayConfigurationOutput dcout;
 
     wl_output* const output;
-    DisplayClient const* const owner;
+    DisplayClient* const owner;
 
     wl_surface* const surface;
     xdg_surface* shell_surface{nullptr};
@@ -393,15 +393,19 @@ void mgw::DisplayClient::Output::swap_buffers()
 {
     struct FrameSync
     {
-        explicit FrameSync(wl_surface* surface) :
-            callback{wl_surface_frame(surface)}
+        explicit FrameSync(wl_surface* surface):
+            surface{surface}
         {
+        }
+
+        void init()
+        {
+            callback = wl_surface_frame(surface);
             static struct wl_callback_listener const frame_listener =
                 {
                     [](void* data, auto... args)
                         { static_cast<FrameSync*>(data)->frame_done(args...); },
                 };
-
             wl_callback_add_listener(callback, &frame_listener, this);
         }
 
@@ -425,12 +429,19 @@ void mgw::DisplayClient::Output::swap_buffers()
             cv.wait_for(lock, std::chrono::milliseconds{100}, [this]{ return posted; });
         }
 
+        wl_surface* const surface;
+
+        wl_callback* callback;
         std::mutex mutex;
         bool posted = false;
         std::condition_variable cv;
+    };
 
-        wl_callback* const callback;
-    } frame_sync{surface};
+    auto const frame_sync = std::make_shared<FrameSync>(surface);
+    owner->spawn([frame_sync]()
+        {
+            frame_sync->init();
+        });
 
     // Avoid throttling compositing by blocking in eglSwapBuffers().
     // Instead we use the frame "done" notification.
@@ -439,7 +450,7 @@ void mgw::DisplayClient::Output::swap_buffers()
     if (eglSwapBuffers(owner->egldisplay, eglsurface) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(egl_error("Failed to perform buffer swap"));
 
-    frame_sync.wait_for_done();
+    frame_sync->wait_for_done();
 }
 
 void mgw::DisplayClient::Output::bind()

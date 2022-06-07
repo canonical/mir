@@ -30,6 +30,7 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include <thread>
+#include <deque>
 
 namespace mir
 {
@@ -148,10 +149,14 @@ private:
     std::chrono::nanoseconds touch_time;
 
     std::thread runner;
-    void run() const;
+    void run();
     void stop();
     auto get_touch_contact(int32_t id) -> decltype(touch_contacts)::iterator;
     void flush_wl() const;
+
+    std::mutex workqueue_mutex;
+    std::deque<std::function<void()>> workqueue;
+    void spawn(std::function<void()>&& work) override;
 };
 
 }

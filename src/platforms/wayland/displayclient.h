@@ -24,6 +24,7 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/renderer/gl/render_target.h>
 #include <mir/graphics/gl_config.h>
+#include <mir/executor.h>
 
 #include "protocol/xdg-shell-client.h"
 #include <wayland-client.h>
@@ -47,6 +48,7 @@ namespace wayland
 {
 
 class DisplayClient
+    : public Executor
 {
 public:
     DisplayClient(wl_display* display,
