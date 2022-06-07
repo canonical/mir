@@ -123,8 +123,10 @@ void mgw::Display::configure(DisplayConfiguration const& /*conf*/)
 
 void mgw::Display::register_configuration_change_handler(
     EventHandlerRegister& /*handlers*/,
-    DisplayConfigurationChangeHandler const& /*conf_change_handler*/)
+    DisplayConfigurationChangeHandler const& conf_change_handler)
 {
+    std::lock_guard lock{config_change_handlers_mutex};
+    config_change_handlers.push_back(conf_change_handler);
 }
 
 void mgw::Display::register_pause_resume_handlers(

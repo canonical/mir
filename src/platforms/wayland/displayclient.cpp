@@ -46,8 +46,7 @@ public:
     Output(
         wl_output* output,
         DisplayClient* owner,
-        std::function<void(Output const&)> on_constructed,
-        std::function<void(Output const&)> on_change);
+        std::function<void()> on_change);
 
     ~Output();
 
@@ -58,32 +57,6 @@ public:
 
     DisplayConfigurationOutput dcout;
 
-    static void done(void* data, wl_output* output);
-
-    static void geometry(
-        void* data,
-        wl_output* wl_output,
-        int32_t x,
-        int32_t y,
-        int32_t physical_width,
-        int32_t physical_height,
-        int32_t subpixel,
-        const char* make,
-        const char* model,
-        int32_t transform);
-
-    static void mode(
-        void* data,
-        wl_output* wl_output,
-        uint32_t flags,
-        int32_t width,
-        int32_t height,
-        int32_t refresh);
-
-    static void scale(void* data, wl_output* wl_output, int32_t factor);
-
-    static wl_output_listener const output_listener;
-
     wl_output* const output;
     DisplayClient const* const owner;
 
@@ -92,12 +65,33 @@ public:
     xdg_toplevel* shell_toplevel{nullptr};
 
     EGLContext eglctx{EGL_NO_CONTEXT};
+    wl_egl_window* egl_window{nullptr};
     EGLSurface eglsurface{EGL_NO_SURFACE};
 
-    std::function<void(Output const&)> on_done;
+    std::optional<geometry::Size> pending_toplevel_size;
+    bool has_initialized{false};
+    std::function<void()> on_change;
+
+    // wl_output events
+    void geometry(
+        int32_t x,
+        int32_t y,
+        int32_t physical_width,
+        int32_t physical_height,
+        int32_t subpixel,
+        const char* make,
+        const char* model,
+        int32_t transform);
+    void mode(uint32_t flags, int32_t width, int32_t height, int32_t refresh);
+    void scale(int32_t factor);
+    void done();
+
+    // XDG shell events
+    void toplevel_configure(int32_t width, int32_t height, wl_array* states);
+    void surface_configure(uint32_t serial);
 
     // DisplaySyncGroup implementation
-    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& /*f*/) override;
+    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) override;
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
@@ -123,9 +117,77 @@ static EGLint const ctxattribs[] =
     };
 }
 
+mgw::DisplayClient::Output::Output(
+    wl_output* output,
+    DisplayClient* owner,
+    std::function<void()> on_change) :
+    output{output},
+    owner{owner},
+    surface{wl_compositor_create_surface(owner->compositor)},
+    on_change{std::move(on_change)}
+{
+    // If building against newer Wayland protocol definitions we may miss trailing fields
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+    static wl_output_listener const output_listener{
+        [](void* self, auto, auto... args) { static_cast<Output*>(self)->geometry(args...); },
+        [](void* self, auto, auto... args) { static_cast<Output*>(self)->mode(args...); },
+        [](void* self, auto, auto... args) { static_cast<Output*>(self)->done(args...); },
+        [](void* self, auto, auto... args) { static_cast<Output*>(self)->scale(args...); },
+    };
+    #pragma GCC diagnostic pop
+    wl_output_add_listener(output, &output_listener, this);
+
+    dcout.id = (DisplayConfigurationOutputId)owner->bound_outputs.size();
+    dcout.card_id = DisplayConfigurationCardId{1};
+    dcout.type = DisplayConfigurationOutputType::unknown;
+    dcout.pixel_formats = {mir_pixel_format_argb_8888,mir_pixel_format_xrgb_8888};
+    dcout.current_format = mir_pixel_format_xrgb_8888;
+    dcout.connected = true;
+    dcout.used = true;
+    dcout.power_mode = mir_power_mode_on;
+    dcout.orientation = MirOrientation::mir_orientation_normal;
+    dcout.scale = 1.0;
+    dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
+    dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
+}
+
+mgw::DisplayClient::Output::~Output()
+{
+    if (output)
+    {
+        wl_output_destroy(output);
+    }
+
+    if (shell_toplevel)
+    {
+        xdg_toplevel_destroy(shell_toplevel);
+    }
+
+    if (shell_surface)
+    {
+        xdg_surface_destroy(shell_surface);
+    }
+
+    wl_surface_destroy(surface);
+
+    if (eglsurface != EGL_NO_SURFACE)
+    {
+        eglDestroySurface(owner->egldisplay, eglsurface);
+    }
+
+    if (egl_window != nullptr)
+    {
+        wl_egl_window_destroy(egl_window);
+    }
+
+    if (eglctx != EGL_NO_CONTEXT)
+    {
+        eglDestroyContext(owner->egldisplay, eglctx);
+    }
+}
+
 void mgw::DisplayClient::Output::geometry(
-    void* data,
-    struct wl_output* /*wl_output*/,
     int32_t x,
     int32_t y,
     int32_t physical_width,
@@ -135,9 +197,6 @@ void mgw::DisplayClient::Output::geometry(
     const char */*model*/,
     int32_t transform)
 {
-    auto output = static_cast<Output*>(data);
-
-    auto& dcout = output->dcout;
     dcout.top_left = {x, y};
     dcout.physical_size_mm = {physical_width, physical_height};
 
@@ -192,16 +251,8 @@ void mgw::DisplayClient::Output::geometry(
     }
 }
 
-void mgw::DisplayClient::Output::mode(
-    void *data,
-    struct wl_output* /*wl_output*/,
-    uint32_t flags,
-    int32_t width,
-    int32_t height,
-    int32_t refresh)
+void mgw::DisplayClient::Output::mode(uint32_t flags, int32_t width, int32_t height, int32_t refresh)
 {
-    auto const output = static_cast<Output*>(data);
-    auto& dcout = output->dcout;
     auto& modes = dcout.modes;
 
     auto const mode = DisplayConfigurationMode{{width, height}, refresh/1000.0};
@@ -224,100 +275,23 @@ void mgw::DisplayClient::Output::mode(
     }
 }
 
-void mgw::DisplayClient::Output::scale(void* data, wl_output* /*wl_output*/, int32_t factor)
+void mgw::DisplayClient::Output::scale(int32_t factor)
 {
-    auto const output = static_cast<Output*>(data);
-    auto& dcout = output->dcout;
     dcout.scale = factor;
 }
 
-mgw::DisplayClient::Output::Output(
-    wl_output* output,
-    DisplayClient* owner,
-    std::function<void(Output const&)> on_constructed,
-    std::function<void(Output const&)> on_change) :
-    output{output},
-    owner{owner},
-    surface{wl_compositor_create_surface(owner->compositor)},
-    on_done{[this, on_constructed = std::move(on_constructed), on_change=std::move(on_change)]
-        (Output const& o) mutable { on_constructed(o), on_done = std::move(on_change); }}
-{
-    wl_output_add_listener(output, &output_listener, this);
-
-    dcout.id = (DisplayConfigurationOutputId)owner->bound_outputs.size();
-    dcout.card_id = DisplayConfigurationCardId{1};
-    dcout.type = DisplayConfigurationOutputType::unknown;
-    dcout.pixel_formats = {mir_pixel_format_argb_8888,mir_pixel_format_xrgb_8888};
-    dcout.current_format = mir_pixel_format_xrgb_8888;
-    dcout.connected = true;
-    dcout.used = true;
-    dcout.power_mode = mir_power_mode_on;
-    dcout.orientation = MirOrientation::mir_orientation_normal;
-    dcout.scale = 1.0;
-    dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
-    dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
-}
-
-mgw::DisplayClient::Output::~Output()
-{
-    if (output)
-    {
-        wl_output_destroy(output);
-    }
-
-    if (shell_toplevel)
-    {
-        xdg_toplevel_destroy(shell_toplevel);
-    }
-
-    if (shell_surface)
-    {
-        xdg_surface_destroy(shell_surface);
-    }
-
-    wl_surface_destroy(surface);
-
-    if (eglsurface != EGL_NO_SURFACE)
-    {
-        eglDestroySurface(owner->egldisplay, eglsurface);
-    }
-
-    if (eglctx != EGL_NO_CONTEXT)
-    {
-        eglDestroyContext(owner->egldisplay, eglctx);
-    }
-}
-
-
-// If building against newer Wayland protocol definitions we may miss trailing fields
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-wl_output_listener const mgw::DisplayClient::Output::output_listener = {
-    &geometry,
-    &mode,
-    &done,
-    &scale,
-};
-#pragma GCC diagnostic pop
-
-void mgw::DisplayClient::Output::done(void* data, struct wl_output* /*wl_output*/)
-{
-    auto output = static_cast<Output*>(data);
-    output->on_done(*output);
-}
-
-void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(DisplayBuffer & )> const& f)
+void mgw::DisplayClient::Output::done()
 {
     if (!shell_surface)
     {
         static xdg_surface_listener const shell_surface_listener{
-            [](void*, auto xdg_surface, auto serial) { xdg_surface_ack_configure(xdg_surface, serial); },
+            [](void* self, auto, auto... args) { static_cast<Output*>(self)->surface_configure(args...); },
         };
         shell_surface = xdg_wm_base_get_xdg_surface(owner->shell, surface);
         xdg_surface_add_listener(shell_surface, &shell_surface_listener, this);
 
         static xdg_toplevel_listener const shell_toplevel_listener{
-            [](auto...){},
+            [](void* self, auto, auto... args) { static_cast<Output*>(self)->toplevel_configure(args...); },
             [](auto...){},
         };
         shell_toplevel = xdg_surface_get_toplevel(shell_surface);
@@ -325,16 +299,50 @@ void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(Disp
 
         xdg_toplevel_set_fullscreen(shell_toplevel, output);
         wl_surface_set_buffer_scale(surface, round(dcout.scale));
-        wl_display_dispatch(owner->display);
+        wl_surface_commit(surface);
 
-        auto const& size = dcout.modes[dcout.current_mode_index].size;
-
-        eglsurface = eglCreatePlatformWindowSurface(
-            owner->egldisplay,
-            owner->eglconfig,
-            wl_egl_window_create(surface, size.width.as_int(), size.height.as_int()), nullptr);
+        // After the next roundtrip the surface should be configured
     }
+    else
+    {
+        on_change();
+    }
+}
 
+void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t height, wl_array* states)
+{
+    (void)states;
+    pending_toplevel_size = geometry::Size{
+        width ? width : 1280,
+        height ? height : 1024};
+}
+
+void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
+{
+    xdg_surface_ack_configure(shell_surface, serial);
+    bool const size_is_changed = pending_toplevel_size && (
+        !dcout.custom_logical_size || dcout.custom_logical_size.value() != pending_toplevel_size.value());
+    dcout.custom_logical_size = pending_toplevel_size.value();
+    pending_toplevel_size.reset();
+    auto const size = dcout.extents().size * dcout.scale;
+    if (!has_initialized)
+    {
+        egl_window = wl_egl_window_create(surface, size.width.as_int(), size.height.as_int());
+        eglsurface = eglCreatePlatformWindowSurface(owner->egldisplay, owner->eglconfig, egl_window, nullptr);
+        has_initialized = true;
+    }
+    else if (size_is_changed)
+    {
+        if (egl_window)
+        {
+            wl_egl_window_resize(egl_window, size.width.as_int(), size.height.as_int(), 0, 0);
+        }
+        on_change();
+    }
+}
+
+void mgw::DisplayClient::Output::for_each_display_buffer(std::function<void(DisplayBuffer & )> const& f)
+{
     f(*this);
 }
 
@@ -499,19 +507,35 @@ mgw::DisplayClient::DisplayClient(
     if (eglctx == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(egl_error("eglCreateContext failed"));
 
-    wl_display_roundtrip(display);
+    auto const has_uninitialized_output = [&]()
+        {
+            for (auto const& pair : bound_outputs)
+            {
+                if (!pair.second->has_initialized)
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+    // Roundtrip once to bind to all output globals, then keep roundtripping until surfaces for all outputs are
+    // initialized
+    do
+    {
+        wl_display_roundtrip(display);
+    } while (has_uninitialized_output());
 }
 
-void mgw::DisplayClient::on_output_changed(Output const* /*output*/)
+void mgw::DisplayClient::on_display_config_changed()
 {
-}
-
-void mgw::DisplayClient::on_output_gone(Output const* /*output*/)
-{
-}
-
-void mgw::DisplayClient::on_new_output(Output const* /*output*/)
-{
+    std::unique_lock lock{config_change_handlers_mutex};
+    auto const handlers = config_change_handlers;
+    lock.unlock();
+    for (auto const& handler : handlers)
+    {
+        handler();
+    }
 }
 
 mgw::DisplayClient::~DisplayClient()
@@ -568,8 +592,7 @@ void mgw::DisplayClient::new_global(
                 std::make_unique<Output>(
                     output,
                     self,
-                    [self](Output const& output) { self->on_new_output(&output); },
-                    [self](Output const& output) { self->on_output_changed(&output); })));
+                    [self]() { self->on_display_config_changed(); })));
     }
     else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
@@ -593,8 +616,8 @@ void mgw::DisplayClient::remove_global(
     auto const output = self->bound_outputs.find(id);
     if (output != self->bound_outputs.end())
     {
-        self->on_output_gone(output->second.get());
         self->bound_outputs.erase(output);
+        self->on_display_config_changed();
     }
     // TODO: We should probably also delete any other globals we've bound to that disappear.
 }
