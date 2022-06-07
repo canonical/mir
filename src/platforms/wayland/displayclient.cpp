@@ -58,7 +58,7 @@ public:
     DisplayConfigurationOutput dcout;
 
     wl_output* const output;
-    DisplayClient const* const owner;
+    DisplayClient* const owner;
 
     wl_surface* const surface;
     xdg_surface* shell_surface{nullptr};

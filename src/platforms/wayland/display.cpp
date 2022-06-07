@@ -248,7 +248,7 @@ void mir::graphics::wayland::Display::keyboard_key(wl_keyboard*, uint32_t, uint3
     }
 }
 
-void mir::graphics::wayland::Display::run() const
+void mir::graphics::wayland::Display::run()
 try
 {
     enum FdIndices {
@@ -297,6 +297,16 @@ try
         {
             eventfd_t foo;
             eventfd_read(flush_signal, &foo);
+            std::unique_lock lock{workqueue_mutex};
+            while (!workqueue.empty())
+            {
+                auto const work = std::move(workqueue.front());
+                workqueue.pop_front();
+                lock.unlock();
+                work();
+                lock.lock();
+            }
+            lock.unlock();
             wl_display_flush(display);
         }
     }
@@ -318,6 +328,14 @@ void mir::graphics::wayland::Display::stop()
     {
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to shutdown"}));
     }
+}
+
+void mir::graphics::wayland::Display::spawn(std::function<void()>&& work)
+{
+    std::unique_lock<std::mutex> lock{workqueue_mutex};
+    workqueue.emplace_back(std::move(work));
+    lock.unlock();
+    flush_wl();
 }
 
 mir::graphics::wayland::Display::~Display()
