@@ -332,7 +332,7 @@ void mir::graphics::wayland::Display::stop()
 
 void mir::graphics::wayland::Display::spawn(std::function<void()>&& work)
 {
-    std::unique_lock<std::mutex> lock{workqueue_mutex};
+    std::unique_lock lock{workqueue_mutex};
     workqueue.emplace_back(std::move(work));
     lock.unlock();
     flush_wl();
