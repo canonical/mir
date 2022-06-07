@@ -119,6 +119,11 @@ public:
 
     /**
      * Sets a new output configuration.
+     *
+     * \note   A call to configure() may invalidate any and all existing DisplayBuffers. See
+     *         \ref apply_if_configuration_preserves_display_buffers for a configure that guarantees
+     *         preservation of all DisplayBuffers.
+     *         DisplayBuffers may \em only be invalidated by a call to configure.
      */
     virtual void configure(DisplayConfiguration const& conf) = 0;
 
