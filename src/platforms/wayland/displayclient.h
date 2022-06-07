@@ -126,6 +126,7 @@ protected:
 
     class Output;
     void on_display_config_changed();
+    void delete_outputs_to_be_deleted();
 
     wl_compositor* compositor = nullptr;
     xdg_wm_base* shell = nullptr;
@@ -162,6 +163,8 @@ protected:
     std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry;
 
     std::mutex mutable outputs_mutex;
+    // Outputs that will be dropped during the next Display::configure(). It is unsafe to actually drop them until then.
+    std::vector<std::unique_ptr<Output>> outputs_to_be_deleted;
     std::unordered_map<uint32_t, std::unique_ptr<Output>> bound_outputs;
     std::mutex mutable config_change_handlers_mutex;
     std::vector<DisplayConfigurationChangeHandler> config_change_handlers;

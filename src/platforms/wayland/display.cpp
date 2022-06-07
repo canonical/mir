@@ -119,6 +119,7 @@ auto mgw::Display::configuration() const -> std::unique_ptr<DisplayConfiguration
 
 void mgw::Display::configure(DisplayConfiguration const& /*conf*/)
 {
+    delete_outputs_to_be_deleted();
 }
 
 void mgw::Display::register_configuration_change_handler(
