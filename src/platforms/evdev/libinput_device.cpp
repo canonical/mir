@@ -361,10 +361,12 @@ mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* to
         if (data.action == mir_touch_action_down)
             data.action = mir_touch_action_change;
 
-        if (data.action == mir_touch_action_up)
+        if (data.action == mir_touch_action_up || data.down_notified)
             it = last_seen_properties.erase(it);
         else
             ++it;
+
+        data.down_notified = true;
     }
 
     // Sanity check: Bogus panels are sending sometimes empty events that all point

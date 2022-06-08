@@ -625,6 +625,38 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_does_not_ignore_valid_touch_ev
     process_events(touch_screen);
 }
 
+TEST_F(LibInputDeviceOnTouchScreen, process_event_with_two_downs_but_one_up)
+{
+    MirTouchId slot1 = 0;
+    float major = 0;
+    float minor = 0;
+    float pressure = 0.0f;
+    float x = 1;
+    float y = 1;
+    float orientation = 0;
+
+    touch_screen.start(&mock_sink, &mock_builder);
+
+    // Detect single touch down then single up
+    EXPECT_CALL(mock_builder, touch_event(_, _)).Times(2);
+    EXPECT_CALL(mock_sink, handle_input(_)).Times(2);
+
+    // Send first down
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot1, x, y, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+
+    // Send second down
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_2, slot1, x, y, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_2);
+
+    // Send single up
+    env.mock_libinput.setup_touch_up_event(fake_device, event_time_3, slot1);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_3);
+    process_events(touch_screen);
+}
+
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_down_events)
 {
     MirTouchId slot = 0;
