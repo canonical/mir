@@ -17,10 +17,8 @@ backends:
         halt-timeout: 2h
         systems:
             - ubuntu-20.04-64
-            - fedora-35-64:
-                image: fedora-35-64-base
-            - fedora-36-64:
-                  image: fedora-36-64-base
+            - fedora-35-64
+            - fedora-36-64
             - fedora-rawhide-64
 
 environment:
