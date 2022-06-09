@@ -347,21 +347,16 @@ mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* to
         auto & id = it->first;
         auto & data = it->second;
 
-        if (data.action != mir_touch_action_down || !data.down_notified)
-        {
-            contacts.push_back(
-                events::ContactState{
-                    id,
-                    data.action,
-                    tool,
-                    data.x,
-                    data.y,
-                    data.pressure,
-                    data.major,
-                    data.minor,
-                    data.orientation
-                });
-        }
+        contacts.push_back(events::ContactState{
+                           id,
+                           data.action,
+                           tool,
+                           data.x,
+                           data.y,
+                           data.pressure,
+                           data.major,
+                           data.minor,
+                           data.orientation});
 
         if (data.action == mir_touch_action_down)
         {
