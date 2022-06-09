@@ -347,26 +347,32 @@ mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* to
         auto & id = it->first;
         auto & data = it->second;
 
-        contacts.push_back(events::ContactState{
-                           id,
-                           data.action,
-                           tool,
-                           data.x,
-                           data.y,
-                           data.pressure,
-                           data.major,
-                           data.minor,
-                           data.orientation});
+        if (data.action != mir_touch_action_down || !data.down_notified)
+        {
+            contacts.push_back(
+                events::ContactState{
+                    id,
+                    data.action,
+                    tool,
+                    data.x,
+                    data.y,
+                    data.pressure,
+                    data.major,
+                    data.minor,
+                    data.orientation
+                });
+        }
 
         if (data.action == mir_touch_action_down)
+        {
             data.action = mir_touch_action_change;
+            data.down_notified = true;
+        }
 
-        if (data.action == mir_touch_action_up || data.down_notified)
+        if (data.action == mir_touch_action_up)
             it = last_seen_properties.erase(it);
         else
             ++it;
-
-        data.down_notified = true;
     }
 
     // Sanity check: Bogus panels are sending sometimes empty events that all point
@@ -387,7 +393,16 @@ mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* to
 void mie::LibInputDevice::handle_touch_down(libinput_event_touch* touch)
 {
     MirTouchId const id = libinput_event_touch_get_slot(touch);
-    update_contact_data(last_seen_properties[id], mir_touch_action_down, touch);
+    auto const it = last_seen_properties.find(id);
+
+    if (it == end(last_seen_properties) || !it->second.down_notified)
+    {
+        update_contact_data(last_seen_properties[id], mir_touch_action_down, touch);
+    }
+    else
+    {
+        update_contact_data(it->second, mir_touch_action_change, touch);
+    }
 }
 
 void mie::LibInputDevice::handle_touch_up(libinput_event_touch* touch)
@@ -399,7 +414,16 @@ void mie::LibInputDevice::handle_touch_up(libinput_event_touch* touch)
     //create a fake action.
     auto const it = last_seen_properties.find(id);
     if (it != end(last_seen_properties))
-        it->second.action = mir_touch_action_up;
+    {
+        if (it->second.down_notified)
+        {
+            it->second.action = mir_touch_action_up;
+        }
+        else
+        {
+            last_seen_properties.erase(it);
+        }
+    }
 }
 
 void mie::LibInputDevice::update_contact_data(ContactData & data, MirTouchAction action, libinput_event_touch* touch)
