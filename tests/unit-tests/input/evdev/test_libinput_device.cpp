@@ -657,8 +657,10 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_with_two_downs_but_one_up)
     touch_screen.start(&mock_sink, &mock_builder);
 
     // Detect single touch down then single up
-    EXPECT_CALL(mock_builder, touch_event(_, _)).Times(2);
-    EXPECT_CALL(mock_sink, handle_input(_)).Times(2);
+    EXPECT_CALL(mock_builder, touch_event(_, _)).Times(3);
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchContact(0, mir_touch_action_down, x, y))).Times(1);
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchContact(0, mir_touch_action_change, x, y))).Times(1);
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchUpEvent(x, y))).Times(1);
 
     // Send first down
     env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot1, x, y, major, minor,
