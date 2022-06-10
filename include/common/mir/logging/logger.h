@@ -19,7 +19,7 @@
 
 #include <memory>
 #include <string>
-#include <ostream>
+#include <iosfwd>
 
 namespace mir
 {
