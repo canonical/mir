@@ -26,5 +26,5 @@ void ml::DumbConsoleLogger::log(ml::Severity severity,
 {
     std::ostream& out = severity < ml::Severity::informational ? std::cerr : std::cout;
 
-    format_message(out, severity, message, component);
+    ml::format_message(out, severity, message, component);
 }

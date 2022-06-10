@@ -59,11 +59,11 @@ protected:
     virtual ~Logger() = default;
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
-    void format_message(std::ostream&, Severity, const std::string&, const std::string&);
 };
 
 void log(Severity severity, const std::string& message, const std::string& component);
 void set_logger(std::shared_ptr<Logger> const& new_logger);
+void format_message(std::ostream&, Severity, const std::string&, const std::string&);
 
 }
 }

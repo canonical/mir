@@ -38,7 +38,39 @@ void ml::Logger::log(char const* component, Severity severity, char const* forma
     log(severity, std::string{message}, std::string{component});
 }
 
-void ml::Logger::format_message(std::ostream& out, ml::Severity severity, const std::string& message, const std::string& component)
+namespace
+{
+std::mutex log_mutex;
+std::shared_ptr<ml::Logger> the_logger;
+
+std::shared_ptr<ml::Logger> get_logger()
+{
+    std::lock_guard lock{log_mutex};
+
+    if (!the_logger)
+        the_logger = std::make_shared<ml::DumbConsoleLogger>();
+
+    return the_logger;
+}
+}
+
+void ml::log(ml::Severity severity, const std::string& message, const std::string& component)
+{
+    auto const logger = get_logger();
+
+    logger->log(severity, message, component);
+}
+
+void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
+{
+    if (new_logger)
+    {
+        std::lock_guard lock{log_mutex};
+        the_logger = new_logger;
+    }
+}
+
+void ml::format_message(std::ostream& out, ml::Severity severity, const std::string& message, const std::string& component)
 {
     static const char* lut[5] =
     {
@@ -70,38 +102,6 @@ void ml::Logger::format_message(std::ostream& out, ml::Severity severity, const 
         << message
         << std::endl;
 
-}
-
-namespace
-{
-std::mutex log_mutex;
-std::shared_ptr<ml::Logger> the_logger;
-
-std::shared_ptr<ml::Logger> get_logger()
-{
-    std::lock_guard lock{log_mutex};
-
-    if (!the_logger)
-        the_logger = std::make_shared<ml::DumbConsoleLogger>();
-
-    return the_logger;
-}
-}
-
-void ml::log(ml::Severity severity, const std::string& message, const std::string& component)
-{
-    auto const logger = get_logger();
-
-    logger->log(severity, message, component);
-}
-
-void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
-{
-    if (new_logger)
-    {
-        std::lock_guard lock{log_mutex};
-        the_logger = new_logger;
-    }
 }
 
 namespace mir

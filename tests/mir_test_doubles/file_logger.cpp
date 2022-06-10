@@ -56,5 +56,5 @@ void mtd::FileLogger::log(mir::logging::Severity severity,
         out.reset();
     }
 
-    format_message(*out, severity, message, component);
+    ml::format_message(*out, severity, message, component);
 }
