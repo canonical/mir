@@ -14,13 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TEST_DOUBLES_FILE_LOGGER_H_
-#define MIR_TEST_DOUBLES_FILE_LOGGER_H_
+#ifndef MIR_TEST_DOUBLES_MULTI_LOGGER_H_
+#define MIR_TEST_DOUBLES_MULTI_LOGGER_H_
 
 #include "mir/logging/logger.h"
 
 #include <fstream>
 #include <string>
+#include <vector>
 
 namespace mir
 {
@@ -28,19 +29,19 @@ namespace test
 {
 namespace doubles
 {
-class FileLogger : public mir::logging::Logger
+class MultiLogger : public mir::logging::Logger
 {
 public:
-    FileLogger(const std::string& filename);
+    void add(std::shared_ptr<mir::logging::Logger> logger);
 
 protected:
     void log(mir::logging::Severity severity, const std::string& message, const std::string& component) override;
 
 private:
-    std::unique_ptr<std::ofstream> out;
+    std::vector<std::shared_ptr<mir::logging::Logger>> loggers;
 };
 }
 }
 }
 
-#endif // MIR_TEST_DOUBLES_FILE_LOGGER_H_
+#endif // MIR_TEST_DOUBLES_MULTI_LOGGER_H_

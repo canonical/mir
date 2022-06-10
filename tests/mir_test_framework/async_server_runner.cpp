@@ -18,12 +18,14 @@
 #include "mir_test_framework/command_line_server_configuration.h"
 
 #include "mir/fd.h"
+#include <mir/logging/dumb_console_logger.h>
 #include "mir/main_loop.h"
 #include "mir/options/option.h"
 #include <mir/report_exception.h>
 #include <mir/thread_name.h>
 #include <mir/test/doubles/file_logger.h>
-#include "mir/test/doubles/null_logger.h"
+#include <mir/test/doubles/multi_logger.h>
+#include <mir/test/doubles/null_logger.h>  // for mtd::logging_opt and _descr
 
 #include <boost/throw_exception.hpp>
 
@@ -59,24 +61,24 @@ mtf::AsyncServerRunner::AsyncServerRunner()
     server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
     server.override_the_logger([&]()
         {
-            std::shared_ptr<ml::Logger> result{};
+            auto logger = std::make_shared<mtd::MultiLogger>();
 
             try
             {
-                result = std::make_shared<mtd::FileLogger>(output_filename, server.get_options()->get<bool>(mtd::logging_opt));
+                logger->add(std::make_shared<mtd::FileLogger>(output_filename));
                 std::cerr << "Saving server logs to: " << output_filename << std::endl;
-
-                return result;
             }
             catch(const std::exception& e)
             {
                 std::cerr << e.what() << std::endl;
             }
 
-            if (!server.get_options()->get<bool>(mtd::logging_opt))
-                result = std::make_shared<mtd::NullLogger>();
+            if (server.get_options()->get<bool>(mtd::logging_opt))
+            {
+                logger->add(std::make_shared<ml::DumbConsoleLogger>());
+            }
 
-            return result;
+            return logger;
         });
 }
 

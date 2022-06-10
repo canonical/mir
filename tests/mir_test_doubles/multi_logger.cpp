@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/file_logger.h"
+#include "mir/test/doubles/multi_logger.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -25,29 +25,27 @@
 namespace ml = mir::logging;
 namespace mtd = mir::test::doubles;
 
-mtd::FileLogger::FileLogger(const std::string& filename)
-: out(std::make_unique<std::ofstream>(filename))
+void mtd::MultiLogger::add(std::shared_ptr<mir::logging::Logger> logger)
 {
-    if (!out->good())
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to open log file for writing"});
-    }
+    loggers.push_back(std::move(logger));
 }
 
-void mtd::FileLogger::log(mir::logging::Severity severity,
+void mtd::MultiLogger::log(mir::logging::Severity severity,
                           const std::string& message,
                           const std::string& component)
 {
-    if (!out)
+    for (auto it = loggers.begin(); it != loggers.end();)
     {
-        return;
+        try
+        {
+            (*it)->log(severity, message, component);
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << e.what() << std::endl;
+            it = loggers.erase(it);
+            continue;
+        }
+        it++;
     }
-
-    if (!out->good())
-    {
-        std::cerr << "Failed to write to log file" << std::endl;
-        out.reset();
-    }
-
-    ml::format_message(*out, severity, message, component);
 }
