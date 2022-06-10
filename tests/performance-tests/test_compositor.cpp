@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2020 Canonical Ltd.
+ * Copyright © 2016-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -15,6 +15,8 @@
  */
 
 #include "system_performance_test.h"
+
+#include <string>
 
 using namespace std::literals::chrono_literals;
 using namespace mir::test;
@@ -44,10 +46,19 @@ struct CompositorPerformance : SystemPerformanceTest
                     compositor_render_time = render_time;
                 }
             }
+            if (char const* renderer = strstr(line, "GL renderer: "))
+            {
+                server_renderer.assign(renderer + 13, strlen(renderer) - 14);
+            }
+            if (char const* mode = strstr(line, "Current mode"))
+            {
+                server_mode.assign(mode + 13, strlen(mode) - 14);
+            }
         }
     }
 
     float compositor_fps, compositor_render_time;
+    std::string server_renderer, server_mode;
 };
 } // anonymous namespace
 
@@ -61,6 +72,8 @@ TEST_F(CompositorPerformance, regression_test_1563287)
     read_compositor_report();
     RecordProperty("framerate", std::to_string(compositor_fps));
     RecordProperty("render_time", std::to_string(compositor_render_time));
+    RecordProperty("server_renderer", server_renderer);
+    RecordProperty("server_mode", server_mode);
     EXPECT_GE(compositor_fps, 0);
     EXPECT_GT(compositor_render_time, 0);
 }
