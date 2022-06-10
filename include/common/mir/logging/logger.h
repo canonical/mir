@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2015 Canonical Ltd.
+ * Copyright © 2012-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <ostream>
 
 namespace mir
 {
@@ -58,6 +59,7 @@ protected:
     virtual ~Logger() = default;
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
+    void format_message(std::ostream&, Severity, const std::string&, const std::string&);
 };
 
 void log(Severity severity, const std::string& message, const std::string& component);

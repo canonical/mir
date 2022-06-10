@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2015 Canonical Ltd.
+ * Copyright © 2014-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -17,9 +17,11 @@
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/logger.h"
 
+#include <iostream>
 #include <mutex>
 #include <cstdarg>
 #include <cstdio>
+#include <ctime>
 
 namespace ml = mir::logging;
 
@@ -34,6 +36,40 @@ void ml::Logger::log(char const* component, Severity severity, char const* forma
 
     // Inefficient, but maintains API: Constructing a std::string for message/component.
     log(severity, std::string{message}, std::string{component});
+}
+
+void ml::Logger::format_message(std::ostream& out, ml::Severity severity, const std::string& message, const std::string& component)
+{
+    static const char* lut[5] =
+    {
+        "< CRITICAL! > ",
+        "< - ERROR - > ",
+        "< -warning- > ",
+        "<information> ",
+        "< - debug - > "
+    };
+
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    char now[32];
+    auto offset = strftime(now, sizeof(now), "%F %T", localtime(&ts.tv_sec));
+    snprintf(now+offset, sizeof(now)-offset, ".%06ld", ts.tv_nsec / 1000);
+
+    if (!out || !out.good())
+    {
+        std::cerr << "Failed to write to log file: " << errno << std::endl;
+        return;
+    }
+
+    out << "["
+        << now
+        << "] "
+        << lut[static_cast<int>(severity)]
+        << component
+        << ": "
+        << message
+        << std::endl;
+
 }
 
 namespace
