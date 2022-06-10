@@ -52,11 +52,9 @@ mtf::AsyncServerRunner::AsyncServerRunner()
     const ::testing::TestInfo *const test_info =
             ::testing::UnitTest::GetInstance()->current_test_info();
 
-    char filename[256];
-    snprintf(filename, sizeof(filename) - 1,
-                "/tmp/%s_%s_server.log",
-                test_info->test_case_name(), test_info->name());
-    output_filename = filename;
+    std::ostringstream filename;
+    filename << "/tmp/" << test_info->test_case_name() << "_" << test_info->name() << "_server.log";
+    output_filename = filename.str();
 
     server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
     server.override_the_logger([&]()

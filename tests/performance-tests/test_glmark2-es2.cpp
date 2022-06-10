@@ -47,6 +47,7 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
 
     void TearDown() override {
         stop_server();
+        record_properties(output_filename, "server");
     }
 
     virtual char const *command() =0;
@@ -88,6 +89,35 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
         RecordProperty("score", score);
         RecordProperty("client_renderer", renderer);
         return score;
+    }
+
+    void record_properties(const std::string& log_filename, const std::string& prefix)
+    {
+        std::ifstream logs(log_filename);
+        if (!logs)
+        {
+            std::cerr << "Failed to open log file for analysis: " << log_filename << std::endl;
+            return;
+        }
+
+        std::string line;
+        while (logs.good() && getline(logs, line))
+        {
+            if (const auto n = line.find("GL renderer:"); n != std::string::npos)
+            {
+                std::ostringstream property;
+                property << prefix << "_renderer";
+                RecordProperty(property.str(), line.substr(n+13, line.size()));
+                continue;
+            }
+            if (const auto n = line.find("Current mode"); n != std::string::npos)
+            {
+                std::ostringstream property;
+                property << prefix << "_mode";
+                RecordProperty(property.str(), line.substr(n+13, line.size()));
+                break;
+            }
+        }
     }
 };
 
@@ -186,21 +216,7 @@ struct HostedGLMark2Wayland : GLMark2Wayland
         if (pid > 0)
         {
             kill(pid, SIGTERM);
-            std::ifstream host_logs(host_output_filename);
-            std::string line;
-            while (host_logs.good() && getline(host_logs, line))
-            {
-                if (const auto n = line.find("GL renderer:"); n != std::string::npos)
-                {
-                    RecordProperty("host_renderer", line.substr(n+13, line.size()));
-                    continue;
-                }
-                if (const auto n = line.find("Current mode"); n != std::string::npos)
-                {
-                    RecordProperty("host_mode", line.substr(n+13, line.size()));
-                    break;
-                }
-            }
+            record_properties(host_output_filename, "host");
         }
     }
 
