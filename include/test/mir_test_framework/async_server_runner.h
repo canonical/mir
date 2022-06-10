@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2017 Canonical Ltd.
+ * Copyright © 2014-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -48,6 +48,9 @@ public:
     void wait_for_server_exit();
 
     mir::Server server;
+
+protected:
+    std::string output_filename;
 
 private:
     std::list<TemporaryEnvironmentValue> env;

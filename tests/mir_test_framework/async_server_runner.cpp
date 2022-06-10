@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2017 Canonical Ltd.
+ * Copyright © 2014-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -22,6 +22,7 @@
 #include "mir/options/option.h"
 #include <mir/report_exception.h>
 #include <mir/thread_name.h>
+#include <mir/test/doubles/file_logger.h>
 #include "mir/test/doubles/null_logger.h"
 
 #include <boost/throw_exception.hpp>
@@ -48,10 +49,31 @@ mtf::AsyncServerRunner::AsyncServerRunner()
     unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing Wayland server
     configure_from_commandline(server);
 
+    const ::testing::TestInfo *const test_info =
+            ::testing::UnitTest::GetInstance()->current_test_info();
+
+    char filename[256];
+    snprintf(filename, sizeof(filename) - 1,
+                "/tmp/%s_%s_server.log",
+                test_info->test_case_name(), test_info->name());
+    output_filename = filename;
+
     server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
     server.override_the_logger([&]()
         {
             std::shared_ptr<ml::Logger> result{};
+
+            try
+            {
+                result = std::make_shared<mtd::FileLogger>(output_filename, server.get_options()->get<bool>(mtd::logging_opt));
+                std::cerr << "Saving server logs to: " << output_filename << std::endl;
+
+                return result;
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << std::endl;
+            }
 
             if (!server.get_options()->get<bool>(mtd::logging_opt))
                 result = std::make_shared<mtd::NullLogger>();
