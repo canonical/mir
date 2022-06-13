@@ -62,11 +62,11 @@ public:
     WlrScreencopyManagerV1(wl_resource* resource, std::shared_ptr<WlrScreencopyV1Ctx> const& ctx);
 
 private:
-    void capture_output(struct wl_resource* frame, int32_t overlay_cursor, struct wl_resource* output) override;
+    void capture_output(wl_resource* frame, int32_t overlay_cursor, wl_resource* output) override;
     void capture_output_region(
-        struct wl_resource* frame,
+        wl_resource* frame,
         int32_t overlay_cursor,
-        struct wl_resource* output,
+        wl_resource* output,
         int32_t x, int32_t y,
         int32_t width, int32_t height) override;
 
@@ -85,8 +85,8 @@ public:
 private:
     /// From wayland::WlrScreencopyFrameV1
     /// @{
-    void copy(struct wl_resource* buffer) override;
-    void copy_with_damage(struct wl_resource* buffer) override;
+    void copy(wl_resource* buffer) override;
+    void copy_with_damage(wl_resource* buffer) override;
     /// @}
 
     std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
@@ -132,9 +132,9 @@ mf::WlrScreencopyManagerV1::WlrScreencopyManagerV1(
 }
 
 void mf::WlrScreencopyManagerV1::capture_output(
-    struct wl_resource* frame,
+    wl_resource* frame,
     int32_t overlay_cursor,
-    struct wl_resource* output)
+    wl_resource* output)
 {
     (void)overlay_cursor;
     auto const extents = OutputGlobal::from_or_throw(output).current_config().extents();
@@ -142,9 +142,9 @@ void mf::WlrScreencopyManagerV1::capture_output(
 }
 
 void mf::WlrScreencopyManagerV1::capture_output_region(
-    struct wl_resource* frame,
+    wl_resource* frame,
     int32_t overlay_cursor,
-    struct wl_resource* output,
+    wl_resource* output,
     int32_t x, int32_t y,
     int32_t width, int32_t height)
 {
@@ -171,7 +171,7 @@ mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
     send_buffer_done_event_if_supported();
 }
 
-void mf::WlrScreencopyFrameV1::copy(struct wl_resource* buffer)
+void mf::WlrScreencopyFrameV1::copy(wl_resource* buffer)
 {
     auto const graphics_buffer = ctx->allocator->buffer_from_shm(buffer, ctx->wayland_executor, [](){});
     if (graphics_buffer->pixel_format() != mir_pixel_format_argb_8888)
@@ -234,7 +234,7 @@ void mf::WlrScreencopyFrameV1::copy(struct wl_resource* buffer)
         });
 }
 
-void mf::WlrScreencopyFrameV1::copy_with_damage(struct wl_resource* buffer)
+void mf::WlrScreencopyFrameV1::copy_with_damage(wl_resource* buffer)
 {
     // TODO
     copy(buffer);
