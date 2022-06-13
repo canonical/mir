@@ -83,6 +83,9 @@ public:
         geometry::Rectangle const& area);
 
 private:
+    void capture(wl_resource* buffer);
+    void report_result(std::optional<time::Timestamp> captured_time);
+
     /// From wayland::WlrScreencopyFrameV1
     /// @{
     void copy(wl_resource* buffer) override;
@@ -171,7 +174,7 @@ mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
     send_buffer_done_event_if_supported();
 }
 
-void mf::WlrScreencopyFrameV1::copy(wl_resource* buffer)
+void mf::WlrScreencopyFrameV1::capture(wl_resource* buffer)
 {
     auto const graphics_buffer = ctx->allocator->buffer_from_shm(buffer, ctx->wayland_executor, [](){});
     if (graphics_buffer->pixel_format() != mir_pixel_format_argb_8888)
@@ -215,27 +218,37 @@ void mf::WlrScreencopyFrameV1::copy(wl_resource* buffer)
                 {
                     if (self)
                     {
-                        if (captured_time)
-                        {
-                            self.value().send_flags_event(Flags::y_invert);
-
-                            WaylandTimespec const timespec{captured_time.value()};
-                            self.value().send_ready_event(
-                                timespec.tv_sec_hi,
-                                timespec.tv_sec_lo,
-                                timespec.tv_nsec);
-                        }
-                        else
-                        {
-                            self.value().send_failed_event();
-                        }
+                        self.value().report_result(captured_time);
                     }
                 });
         });
 }
 
+void mf::WlrScreencopyFrameV1::report_result(std::optional<time::Timestamp> captured_time)
+{
+    if (captured_time)
+    {
+        send_flags_event(Flags::y_invert);
+
+        WaylandTimespec const timespec{captured_time.value()};
+        send_ready_event(
+            timespec.tv_sec_hi,
+            timespec.tv_sec_lo,
+            timespec.tv_nsec);
+    }
+    else
+    {
+        send_failed_event();
+    }
+}
+
+void mf::WlrScreencopyFrameV1::copy(wl_resource* buffer)
+{
+    capture(buffer);
+}
+
 void mf::WlrScreencopyFrameV1::copy_with_damage(wl_resource* buffer)
 {
     // TODO
-    copy(buffer);
+    capture(buffer);
 }
