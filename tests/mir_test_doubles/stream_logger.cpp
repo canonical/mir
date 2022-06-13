@@ -25,8 +25,8 @@
 namespace ml = mir::logging;
 namespace mtd = mir::test::doubles;
 
-mtd::StreamLogger::StreamLogger(std::unique_ptr<std::ostream> out)
-: out(std::move(out))
+mtd::StreamLogger::StreamLogger(std::unique_ptr<std::ostream> stream)
+: out(std::move(stream))
 {
     if (!out || !out->good())
     {
