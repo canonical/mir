@@ -225,7 +225,7 @@ Description: Display Server for Ubuntu - wlcs integration
  .
  Contains libraries for integration with the wlcs test suite
 
-Package: libmircore1
+Package: libmircore2
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
