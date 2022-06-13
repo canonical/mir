@@ -83,8 +83,8 @@ public:
         geometry::Rectangle const& area);
 
 private:
-    void capture(wl_resource* buffer);
-    void report_result(std::optional<time::Timestamp> captured_time);
+    void capture(wl_resource* buffer, bool send_damage);
+    void report_result(std::optional<time::Timestamp> captured_time, bool send_damage);
 
     /// From wayland::WlrScreencopyFrameV1
     /// @{
@@ -174,7 +174,7 @@ mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
     send_buffer_done_event_if_supported();
 }
 
-void mf::WlrScreencopyFrameV1::capture(wl_resource* buffer)
+void mf::WlrScreencopyFrameV1::capture(wl_resource* buffer, bool send_damage)
 {
     auto const graphics_buffer = ctx->allocator->buffer_from_shm(buffer, ctx->wayland_executor, [](){});
     if (graphics_buffer->pixel_format() != mir_pixel_format_argb_8888)
@@ -211,24 +211,35 @@ void mf::WlrScreencopyFrameV1::capture(wl_resource* buffer)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Failed to get write-mappable buffer out of Wayland SHM buffer"));
     }
+    // TODO: if send_damage is true, do not capture until scene has changed
     ctx->screen_shooter->capture(std::move(target), area,
-        [wayland_executor=ctx->wayland_executor, self=mw::make_weak(this)](std::optional<time::Timestamp> captured_time)
+        [wayland_executor=ctx->wayland_executor, send_damage, self=mw::make_weak(this)]
+            (std::optional<time::Timestamp> captured_time)
         {
-            wayland_executor->spawn([self, captured_time]()
+            wayland_executor->spawn([self, captured_time, send_damage]()
                 {
                     if (self)
                     {
-                        self.value().report_result(captured_time);
+                        self.value().report_result(captured_time, send_damage);
                     }
                 });
         });
 }
 
-void mf::WlrScreencopyFrameV1::report_result(std::optional<time::Timestamp> captured_time)
+void mf::WlrScreencopyFrameV1::report_result(std::optional<time::Timestamp> captured_time, bool send_damage)
 {
     if (captured_time)
     {
         send_flags_event(Flags::y_invert);
+
+        if (send_damage)
+        {
+            send_damage_event(
+                area.top_left.x.as_uint32_t(),
+                area.top_left.y.as_uint32_t(),
+                area.size.width.as_uint32_t(),
+                area.size.height.as_uint32_t());
+        }
 
         WaylandTimespec const timespec{captured_time.value()};
         send_ready_event(
@@ -244,11 +255,10 @@ void mf::WlrScreencopyFrameV1::report_result(std::optional<time::Timestamp> capt
 
 void mf::WlrScreencopyFrameV1::copy(wl_resource* buffer)
 {
-    capture(buffer);
+    capture(buffer, false);
 }
 
 void mf::WlrScreencopyFrameV1::copy_with_damage(wl_resource* buffer)
 {
-    // TODO
-    capture(buffer);
+    capture(buffer, true);
 }
