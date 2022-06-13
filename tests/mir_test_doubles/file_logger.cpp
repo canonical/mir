@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/stream_logger.h"
+#include "mir/test/doubles/file_logger.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -25,23 +25,23 @@
 namespace ml = mir::logging;
 namespace mtd = mir::test::doubles;
 
-mtd::StreamLogger::StreamLogger(std::unique_ptr<std::ostream> stream)
-: out(std::move(stream))
+mtd::FileLogger::FileLogger(std::ofstream stream)
+: file{std::move(stream)}
 {
-    if (!out || !out->good())
+    if (!file.good())
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Received invalid stream for logging"});
+        BOOST_THROW_EXCEPTION(std::runtime_error{"Received invalid file stream for logging"});
     }
 }
 
-void mtd::StreamLogger::log(mir::logging::Severity severity,
+void mtd::FileLogger::log(mir::logging::Severity severity,
                           const std::string& message,
                           const std::string& component)
 {
-    if (!out->good())
+    if (!file.good())
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to write to log stream"});
+        BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to write to log file"});
     }
 
-    ml::format_message(*out, severity, message, component);
+    ml::format_message(file, severity, message, component);
 }

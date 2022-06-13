@@ -23,9 +23,9 @@
 #include "mir/options/option.h"
 #include <mir/report_exception.h>
 #include <mir/thread_name.h>
+#include <mir/test/doubles/file_logger.h>
 #include <mir/test/doubles/multi_logger.h>
 #include <mir/test/doubles/null_logger.h>  // for mtd::logging_opt and _descr
-#include <mir/test/doubles/stream_logger.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -66,8 +66,7 @@ mtf::AsyncServerRunner::AsyncServerRunner()
 
             try
             {
-                auto out = std::make_unique<std::ofstream>(output_filename);
-                logger->add(std::make_shared<mtd::StreamLogger>(std::move(out)));
+                logger->add(std::make_shared<mtd::FileLogger>(std::ofstream{output_filename}));
                 std::cerr << "Saving server logs to: " << output_filename << std::endl;
             }
             catch(const std::exception& e)
