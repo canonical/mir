@@ -71,10 +71,10 @@ void ms::SurfaceObservers::hidden_set_to(Surface const* surf, bool hide)
         { observer->hidden_set_to(surf, hide); });
 }
 
-void ms::SurfaceObservers::frame_posted(Surface const* surf, int frames_available, geometry::Size const& size)
+void ms::SurfaceObservers::frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& area)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->frame_posted(surf, frames_available, size); });
+        { observer->frame_posted(surf, frames_available, area); });
 }
 
 void ms::SurfaceObservers::alpha_set_to(Surface const* surf, float alpha)
@@ -263,16 +263,7 @@ ms::BasicSurface::BasicSurface(
     cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)},
     session_{session}
 {
-    auto callback = [this, observers=weak(observers)](auto const& size)
-        {
-            if (auto const o = observers.lock())
-                o->frame_posted(this, 1, size);
-        };
-
-    for (auto& layer : layers)
-    {
-        layer.stream->set_frame_posted_callback(callback);
-    }
+    update_frame_posted_callbacks(ProofOfMutexLock::Fake{});
     report->surface_created(this, surface_name);
 }
 
@@ -1073,15 +1064,16 @@ void mir::scene::BasicSurface::set_focus_mode(MirFocusMode focus_mode)
     focus_mode_ = focus_mode;
 }
 
-void mir::scene::BasicSurface::update_frame_posted_callbacks(ProofOfMutexLock const&)
+void mir::scene::BasicSurface::update_frame_posted_callbacks(ProofOfMutexLock const& lock)
 {
     for(auto& layer : layers)
     {
+        auto const position = content_top_left(lock) + layer.displacement;
         layer.stream->set_frame_posted_callback(
-            [this, observers = weak(observers)](auto const& size)
+            [this, observers = weak(observers), position](auto const& size)
             {
                 if (auto const o = observers.lock())
-                    o->frame_posted(this, 1, size);
+                    o->frame_posted(this, 1, geom::Rectangle{position, size});
             });
     }
 }

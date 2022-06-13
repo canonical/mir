@@ -65,6 +65,7 @@ public:
     MOCK_METHOD3(attrib_changed, void(ms::Surface const*, MirWindowAttrib, int));
     MOCK_METHOD2(window_resized_to, void(ms::Surface const*, geom::Size const&));
     MOCK_METHOD2(content_resized_to, void(ms::Surface const*, geom::Size const&));
+    MOCK_METHOD3(frame_posted, void(ms::Surface const*, int, geom::Rectangle const&));
     MOCK_METHOD2(hidden_set_to, void(ms::Surface const*, bool));
     MOCK_METHOD2(renamed, void(ms::Surface const*, char const*));
     MOCK_METHOD1(client_surface_close_requested, void(ms::Surface const*));
