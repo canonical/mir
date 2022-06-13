@@ -891,17 +891,11 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
     {
         std::lock_guard lock(guard);
         for(auto& layer : layers)
+        {
             layer.stream->set_frame_posted_callback([](auto){});
-
+        }
         layers = s;
-
-        for(auto& layer : layers)
-            layer.stream->set_frame_posted_callback(
-                [this, observers = weak(observers)](auto const& size)
-                {
-                    if (auto const o = observers.lock())
-                        o->frame_posted(this, 1, size);
-                });
+        update_frame_posted_callbacks(lock);
         surface_top_left = surface_rect.top_left;
     }
     observers->moved_to(this, surface_top_left);
@@ -1077,6 +1071,19 @@ void mir::scene::BasicSurface::set_focus_mode(MirFocusMode focus_mode)
 {
     std::lock_guard lock(guard);
     focus_mode_ = focus_mode;
+}
+
+void mir::scene::BasicSurface::update_frame_posted_callbacks(ProofOfMutexLock const&)
+{
+    for(auto& layer : layers)
+    {
+        layer.stream->set_frame_posted_callback(
+            [this, observers = weak(observers)](auto const& size)
+            {
+                if (auto const o = observers.lock())
+                    o->frame_posted(this, 1, size);
+            });
+    }
 }
 
 auto mir::scene::BasicSurface::content_size(ProofOfMutexLock const&) const -> geometry::Size

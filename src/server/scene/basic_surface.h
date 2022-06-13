@@ -177,6 +177,7 @@ private:
     MirWindowVisibility set_visibility(MirWindowVisibility v);
     int set_swap_interval(int);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
+    void update_frame_posted_callbacks(ProofOfMutexLock const&);
     auto content_size(ProofOfMutexLock const&) const -> geometry::Size;
     auto content_top_left(ProofOfMutexLock const&) const -> geometry::Point;
 
