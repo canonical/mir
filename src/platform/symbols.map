@@ -219,4 +219,4 @@ MIR_PLATFORM_2.9 {
   extern "C++" {
     mir::options::add_all_wayland_extensions_opt;
   };
-} MIRPLATFORM_2.8;
+} MIR_PLATFORM_2.8;
