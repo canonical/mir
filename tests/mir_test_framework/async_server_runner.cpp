@@ -41,22 +41,23 @@ namespace mt = mir::test;
 namespace
 {
 std::chrono::seconds const timeout{20};
+
+std::string const get_log_filename(const ::testing::TestInfo* test_info)
+{
+    std::ostringstream filename;
+    filename << "/tmp/" << test_info->test_case_name() << "_" << test_info->name() << "_server.log";
+    return filename.str();
+}
 }
 
 mtf::AsyncServerRunner::AsyncServerRunner()
+: output_filename{get_log_filename(::testing::UnitTest::GetInstance()->current_test_info())}
 {
     if (getenv("XDG_RUNTIME_DIR") == nullptr)
         add_to_environment("XDG_RUNTIME_DIR", "/tmp");
 
     unsetenv("WAYLAND_DISPLAY");    // We don't want to conflict with any existing Wayland server
     configure_from_commandline(server);
-
-    const ::testing::TestInfo *const test_info =
-            ::testing::UnitTest::GetInstance()->current_test_info();
-
-    std::ostringstream filename;
-    filename << "/tmp/" << test_info->test_case_name() << "_" << test_info->name() << "_server.log";
-    output_filename = filename.str();
 
     server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
     server.override_the_logger([&]()

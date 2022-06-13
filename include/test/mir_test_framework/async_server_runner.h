@@ -50,7 +50,7 @@ public:
     mir::Server server;
 
 protected:
-    std::string output_filename;
+    std::string const output_filename;
 
 private:
     std::list<TemporaryEnvironmentValue> env;
