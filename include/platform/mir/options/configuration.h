@@ -44,6 +44,7 @@ extern char const* const x11_display_opt;
 extern char const* const x11_scale_opt;
 extern char const* const wayland_extensions_opt;
 extern char const* const add_wayland_extensions_opt;
+extern char const* const add_all_wayland_extensions_opt;
 extern char const* const drop_wayland_extensions_opt;
 extern char const* const idle_timeout_opt;
 

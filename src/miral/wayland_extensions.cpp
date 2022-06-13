@@ -334,6 +334,16 @@ struct miral::WaylandExtensions::Self
             }
         }
 
+        if (server.get_options()->is_set(mo::add_all_wayland_extensions_opt))
+        {
+            for (auto const& extension : supported_extensions)
+            {
+                selected_extensions.insert(extension);
+                manually_enabled_extensions.insert(extension);
+                manually_disabled_extensions.erase(extension);
+            }
+        }
+
         if (server.get_options()->is_set(mo::drop_wayland_extensions_opt))
         {
             auto const dropped = Self::parse_extensions_option(
@@ -445,6 +455,11 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
         mo::add_wayland_extensions_opt,
         ("Additional Wayland extensions to enable. [" + Self::serialize_colon_list(non_default_extensions) + "]"),
         mir::OptionType::string);
+
+    server.add_configuration_option(
+        mo::add_all_wayland_extensions_opt,
+        ("Enable all Wayland extensions not explicitly dropped"),
+        mir::OptionType::null);
 
     server.add_configuration_option(
         mo::drop_wayland_extensions_opt,

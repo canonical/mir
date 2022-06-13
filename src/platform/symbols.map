@@ -213,3 +213,10 @@ MIR_PLATFORM_2.8 {
     vtable?for?mir::graphics::common::EGLContextExecutor;
    };
 } MIRPLATFORM_2.7;
+
+MIR_PLATFORM_2.9 {
+ global:
+  extern "C++" {
+    mir::options::add_all_wayland_extensions_opt;
+  };
+} MIRPLATFORM_2.8;
