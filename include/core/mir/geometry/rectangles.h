@@ -54,7 +54,6 @@ public:
 
 private:
     std::vector<Rectangle> rectangles;
-    Rectangle bounding_rectangle_; // TODO unused: delete on next ABI break
 };
 
 
