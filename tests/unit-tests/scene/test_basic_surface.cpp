@@ -1076,7 +1076,7 @@ TEST_F(BasicSurfaceTest, cursor_can_be_set_from_stream_that_started_empty)
     (*frame_posted_callback)({});
 }
 
-TEST_F(BasicSurfaceTest, frame_posted_given_stream_size)
+TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_size_when_frame_is_posted)
 {
     using namespace testing;
 
@@ -1095,7 +1095,7 @@ TEST_F(BasicSurfaceTest, frame_posted_given_stream_size)
     EXPECT_THAT(given_area.size, Eq(geom::Size{20, 30}));
 }
 
-TEST_F(BasicSurfaceTest, frame_posted_given_scaled_stream_size)
+TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_stream_size_when_stream_size_differs_from_buffer_size)
 {
     using namespace testing;
 
@@ -1114,7 +1114,7 @@ TEST_F(BasicSurfaceTest, frame_posted_given_scaled_stream_size)
     EXPECT_THAT(given_area.size, Eq(geom::Size{10, 15}));
 }
 
-TEST_F(BasicSurfaceTest, frame_posted_given_scaled_stream_info_size)
+TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_stream_info_size_when_stream_info_has_explicit_size)
 {
     using namespace testing;
 
@@ -1131,7 +1131,7 @@ TEST_F(BasicSurfaceTest, frame_posted_given_scaled_stream_info_size)
     EXPECT_THAT(given_area.size, Eq(geom::Size{10, 15}));
 }
 
-TEST_F(BasicSurfaceTest, frame_posted_given_surface_position)
+TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_surface_position_when_frame_is_posted)
 {
     using namespace testing;
 
@@ -1149,7 +1149,7 @@ TEST_F(BasicSurfaceTest, frame_posted_given_surface_position)
     EXPECT_THAT(given_area.top_left, Eq(geom::Point{60, 70}));
 }
 
-TEST_F(BasicSurfaceTest, frame_posted_given_correct_position_for_stream_with_offset)
+TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_offset_when_stream_info_has_offset)
 {
     using namespace testing;
 
@@ -1168,7 +1168,7 @@ TEST_F(BasicSurfaceTest, frame_posted_given_correct_position_for_stream_with_off
     EXPECT_THAT(given_area.top_left, Eq(geom::Point{63, 74}));
 }
 
-TEST_F(BasicSurfaceTest, frame_posted_given_correct_position_when_surface_has_margins)
+TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_offset_when_surface_has_margins)
 {
     using namespace testing;
 
