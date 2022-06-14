@@ -20,11 +20,11 @@
 
 namespace ml = mir::logging;
 
-void ml::DumbConsoleLogger::log(ml::Severity severity,
+void ml::DumbConsoleLogger::log(Severity severity,
                                 const std::string& message,
                                 const std::string& component)
 {
-    std::ostream& out = severity < ml::Severity::informational ? std::cerr : std::cout;
+    std::ostream& out = severity <Severity::informational ? std::cerr : std::cout;
 
-    ml::format_message(out, severity, message, component);
+    format_message(out, severity, message, component);
 }

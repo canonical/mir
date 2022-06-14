@@ -89,7 +89,8 @@ mtf::AsyncServerRunner::AsyncServerRunner()
                 }
             }
 
-            return std::make_shared<ml::DumbConsoleLogger>();
+            // If we return null then the default will be used
+            return {};
         });
 }
 

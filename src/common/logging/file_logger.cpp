@@ -31,7 +31,7 @@ void ml::FileLogger::log(Severity severity,
 {
     if (file.good())
     {
-        ml::format_message(file, severity, message, component);
+        format_message(file, severity, message, component);
     }
     else if (!file_bad.load())
     {
