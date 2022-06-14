@@ -291,8 +291,7 @@ ms::BasicSurface::BasicSurface(
 
 ms::BasicSurface::~BasicSurface() noexcept
 {
-    for(auto& layer : layers)
-        layer.stream->set_frame_posted_callback([](auto){});
+    clear_frame_posted_callbacks(ProofOfMutexLock::Fake{});
     report->surface_deleted(this, surface_name);
 }
 
@@ -307,6 +306,7 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
     {
         std::lock_guard lock(guard);
         surface_rect.top_left = top_left;
+        update_frame_posted_callbacks(lock);
     }
     observers->moved_to(this, top_left);
 }
@@ -881,10 +881,7 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
     geom::Point surface_top_left;
     {
         std::lock_guard lock(guard);
-        for(auto& layer : layers)
-        {
-            layer.stream->set_frame_posted_callback([](auto){});
-        }
+        clear_frame_posted_callbacks(lock);
         layers = s;
         update_frame_posted_callbacks(lock);
         surface_top_left = surface_rect.top_left;
@@ -1045,6 +1042,8 @@ void mir::scene::BasicSurface::set_window_margins(
         margins.bottom = bottom;
         margins.right  = right;
 
+        update_frame_posted_callbacks(lock);
+
         auto const size = content_size(lock);
         lock.unlock();
 
@@ -1064,9 +1063,17 @@ void mir::scene::BasicSurface::set_focus_mode(MirFocusMode focus_mode)
     focus_mode_ = focus_mode;
 }
 
+void mir::scene::BasicSurface::clear_frame_posted_callbacks(ProofOfMutexLock const&)
+{
+    for (auto& layer : layers)
+    {
+        layer.stream->set_frame_posted_callback([](auto){});
+    }
+}
+
 void mir::scene::BasicSurface::update_frame_posted_callbacks(ProofOfMutexLock const& lock)
 {
-    for(auto& layer : layers)
+    for (auto& layer : layers)
     {
         auto const position = content_top_left(lock) + layer.displacement;
         layer.stream->set_frame_posted_callback(
