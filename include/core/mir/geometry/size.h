@@ -25,92 +25,83 @@ namespace mir
 {
 namespace geometry
 {
-namespace detail
-{
-struct PointBase;
-struct SizeBase{}; ///< Used for determining if a type is a size
-}
 namespace generic
 {
-template<template<typename> typename T>
+template<typename T>
 struct Point;
-template<template<typename> typename T>
+template<typename T>
 struct Displacement;
 
-template<template<typename> typename T>
-struct Size : detail::SizeBase
+template<typename T>
+struct Size
 {
-    template<typename Tag>
-    using Corresponding = T<Tag>;
-
-    using PointType = Point<T>;
-    using DisplacementType = Displacement<T>;
+    using ValueType = T;
 
     constexpr Size() noexcept {}
     constexpr Size(Size const&) noexcept = default;
     Size& operator=(Size const&) noexcept = default;
 
-    template<typename S, typename std::enable_if<std::is_base_of<detail::SizeBase, S>::value, bool>::type = true>
-    explicit constexpr Size(S const& other) noexcept
-        : width{T<WidthTag>{other.width}},
-          height{T<HeightTag>{other.height}}
+    template<typename U>
+    explicit constexpr Size(Size<U> const& other) noexcept
+        : width{Width<T>{other.width}},
+          height{Height<T>{other.height}}
     {
     }
 
     template<typename WidthType, typename HeightType>
     constexpr Size(WidthType&& width, HeightType&& height) noexcept : width(width), height(height) {}
 
-    T<WidthTag> width;
-    T<HeightTag> height;
+    Width<T> width;
+    Height<T> height;
 };
 
-template<typename S, typename std::enable_if<std::is_base_of<detail::SizeBase, S>::value, bool>::type = true>
-inline constexpr bool operator == (S const& lhs, S const& rhs)
+template<typename T>
+inline constexpr bool operator == (Size<T> const& lhs, Size<T> const& rhs)
 {
     return lhs.width == rhs.width && lhs.height == rhs.height;
 }
 
-template<typename S, typename std::enable_if<std::is_base_of<detail::SizeBase, S>::value, bool>::type = true>
-inline constexpr bool operator != (S const& lhs, S const& rhs)
+template<typename T>
+inline constexpr bool operator != (Size<T> const& lhs, Size<T> const& rhs)
 {
     return lhs.width != rhs.width || lhs.height != rhs.height;
 }
 
-template<typename S, typename std::enable_if<std::is_base_of<detail::SizeBase, S>::value, bool>::type = true>
-std::ostream& operator<<(std::ostream& out, S const& value)
+template<typename T>
+std::ostream& operator<<(std::ostream& out, Size<T> const& value)
 {
     out << '(' << value.width << ", " << value.height << ')';
     return out;
 }
 
-template<typename Scalar, typename S, typename std::enable_if<std::is_base_of<detail::SizeBase, S>::value, bool>::type = true>
-inline constexpr S operator*(Scalar scale, S const& size)
+template<typename T, typename Scalar>
+inline constexpr Size<T> operator*(Scalar scale, Size<T> const& size)
 {
-    return S{scale*size.width, scale*size.height};
+    return Size<T>{scale*size.width, scale*size.height};
 }
 
-template<typename Scalar, typename S, typename std::enable_if<std::is_base_of<detail::SizeBase, S>::value, bool>::type = true>
-inline constexpr S operator*(S const& size, Scalar scale)
+template<typename T, typename Scalar>
+inline constexpr Size<T> operator*(Size<T> const& size, Scalar scale)
 {
     return scale*size;
 }
 
-template<typename Scalar, typename S, typename std::enable_if<std::is_base_of<detail::SizeBase, S>::value, bool>::type = true>
-inline constexpr S operator/(S const& size, Scalar scale)
+template<typename T, typename Scalar>
+inline constexpr Size<T> operator/(Size<T> const& size, Scalar scale)
 {
-    return S{size.width / scale, size.height / scale};
+    return Size<T>{size.width / scale, size.height / scale};
 }
 
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr typename P::SizeType as_size(P const& point)
+template<typename T>
+inline constexpr Size<T> as_size(Point<T> const& point)
 {
-    return typename P::SizeType{point.x.as_value(), point.y.as_value()};
+    return Size<T>{point.x.as_value(), point.y.as_value()};
 }
 
-template<typename S, typename std::enable_if<std::is_base_of<detail::SizeBase, S>::value, bool>::type = true>
-inline constexpr typename S::PointType as_point(S const& size)
+template<typename T>
+inline constexpr Point<T> as_point(Size<T> const& size)
 {
-    return typename S::PointType{size.width.as_value(), size.height.as_value()};
+    return Point<T>{size.width.as_value(), size.height.as_value()};
 }
 }
 }

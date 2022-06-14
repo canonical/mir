@@ -17,302 +17,244 @@
 #ifndef MIR_GEOMETRY_DIMENSIONS_H_
 #define MIR_GEOMETRY_DIMENSIONS_H_
 
+#include "forward.h"
+
 #include <iosfwd>
 #include <type_traits>
 #include <cstdint>
 
 namespace mir
 {
-/// Basic geometry types. Types for dimensions, displacements, etc.
-/// and the operations that they support.
 namespace geometry
 {
-
-/// These tag types determine what type of dimension a value holds and what operations are possible with it. They are
-/// only used as template paramaters, are never instantiated and should only require forward declarations, but some
-/// compiler versions seem to fail if they aren't given real declarations.
-/// @{
-struct WidthTag{};
-struct HeightTag{};
-struct XTag{};
-struct YTag{};
-struct DeltaXTag{};
-struct DeltaYTag{};
-/// @}
-
-namespace detail
-{
-struct ValueWrapperBase{}; // Used for determining if a type is a wrapper
-}
-
 namespace generic
 {
-template<typename T>
+template<typename T, typename Tag>
+/// Wraps a geometry value and prevents it from being accidentally used for invalid operations (such as setting a
+/// width to a height or adding two x positions together). Of course, explicit casts are possible to get around
+/// these restrictions (see the as_*() functions).
 struct Value
 {
-    /// Wraps a geometry value and prevents it from being accidentally used for invalid operations (such as setting a
-    /// width to a height or adding two x positions together). Of course, explicit casts are possible to get around
-    /// these restrictions (see the as_*() functions). int values (which are most values) should use the
-    /// derived IntWrapper class, and other types should use this directly.
-    template<typename Tag>
-    struct Wrapper: detail::ValueWrapperBase
+    using ValueType = T;
+    using TagType = Tag;
+
+    template <typename Q = T>
+    constexpr typename std::enable_if<std::is_integral<Q>::value, int>::type as_int() const
     {
-        using ValueType = T;
-        using TagType = Tag;
-        template<typename OtherTag>
-        using Corresponding = Wrapper<OtherTag>;
+        return this->value;
+    }
 
-        template <typename Q = T>
-        constexpr typename std::enable_if<std::is_integral<Q>::value, int>::type as_int() const
-        {
-            return this->value;
-        }
+    template <typename Q = T>
+    constexpr typename std::enable_if<std::is_integral<Q>::value, uint32_t>::type as_uint32_t() const
+    {
+        return this->value;
+    }
 
-        template <typename Q = T>
-        constexpr typename std::enable_if<std::is_integral<Q>::value, uint32_t>::type as_uint32_t() const
-        {
-            return this->value;
-        }
+    constexpr T as_value() const noexcept
+    {
+        return value;
+    }
 
-        constexpr T as_value() const noexcept
-        {
-            return value;
-        }
+    constexpr Value() noexcept : value{} {}
 
-        constexpr Wrapper() noexcept : value{} {}
+    Value& operator=(Value const& that) noexcept
+    {
+        value = that.value;
+        return *this;
+    }
 
-        Wrapper& operator=(Wrapper const& that) noexcept
-        {
-            value = that.value;
-            return *this;
-        }
+    constexpr Value(Value const& that) noexcept
+        : value{that.value}
+    {
+    }
 
-        constexpr Wrapper(Wrapper const& that) noexcept
-            : value{that.value}
-        {
-        }
+    template<typename U>
+    explicit constexpr Value(Value<U, Tag> const& value) noexcept
+        : value{static_cast<T>(value.as_value())}
+    {
+    }
 
-        template<typename W, typename std::enable_if<std::is_same<typename W::TagType, Tag>::value, bool>::type = true>
-        explicit constexpr Wrapper(W const& value) noexcept
-            : value{static_cast<T>(value.as_value())}
-        {
-        }
+    template<typename U, typename std::enable_if<std::is_scalar<U>::value, bool>::type = true>
+    explicit constexpr Value(U const& value) noexcept
+        : value{static_cast<T>(value)}
+    {
+    }
 
-        template<typename U, typename std::enable_if<std::is_scalar<U>::value, bool>::type = true>
-        explicit constexpr Wrapper(U const& value) noexcept
-            : value{static_cast<T>(value)}
-        {
-        }
+    inline constexpr auto operator == (Value<T, Tag> const& rhs) const -> bool
+    {
+        return value == rhs.as_value();
+    }
 
-        inline constexpr auto operator == (Wrapper<Tag> const& rhs) const -> bool
-        {
-            return value == rhs.as_value();
-        }
+    inline constexpr auto operator != (Value<T, Tag> const& rhs) const -> bool
+    {
+        return value != rhs.as_value();
+    }
 
-        inline constexpr auto operator != (Wrapper<Tag> const& rhs) const -> bool
-        {
-            return value != rhs.as_value();
-        }
+    inline constexpr auto operator <= (Value<T, Tag> const& rhs) const -> bool
+    {
+        return value <= rhs.as_value();
+    }
 
-        inline constexpr auto operator <= (Wrapper<Tag> const& rhs) const -> bool
-        {
-            return value <= rhs.as_value();
-        }
+    inline constexpr auto operator >= (Value<T, Tag> const& rhs) const -> bool
+    {
+        return value >= rhs.as_value();
+    }
 
-        inline constexpr auto operator >= (Wrapper<Tag> const& rhs) const -> bool
-        {
-            return value >= rhs.as_value();
-        }
+    inline constexpr auto operator < (Value<T, Tag> const& rhs) const -> bool
+    {
+        return value < rhs.as_value();
+    }
 
-        inline constexpr auto operator < (Wrapper<Tag> const& rhs) const -> bool
-        {
-            return value < rhs.as_value();
-        }
+    inline constexpr auto operator > (Value<T, Tag> const& rhs) const -> bool
+    {
+        return value > rhs.as_value();
+    }
 
-        inline constexpr auto operator > (Wrapper<Tag> const& rhs) const -> bool
-        {
-            return value > rhs.as_value();
-        }
-
-    protected:
-        T value;
-    };
-
-private:
-    Value();
+protected:
+    T value;
 };
 
-template<class GeometricType, typename Tag>
-using Corresponding = typename GeometricType::template Corresponding<Tag>;
-
-template<typename W, typename std::enable_if<std::is_base_of<detail::ValueWrapperBase, W>::value, bool>::type = true>
-std::ostream& operator<<(std::ostream& out, W const& value)
+template<typename T, typename Tag>
+std::ostream& operator<<(std::ostream& out, Value<T, Tag> const& value)
 {
     out << value.as_value();
     return out;
 }
 
-template<typename T> using Width = typename Value<T>::template Wrapper<WidthTag>;
-template<typename T> using Height = typename Value<T>::template Wrapper<HeightTag>;
-template<typename T> using X = typename Value<T>::template Wrapper<XTag>;
-template<typename T> using Y = typename Value<T>::template Wrapper<YTag>;
-template<typename T> using DeltaX = typename Value<T>::template Wrapper<DeltaXTag>;
-template<typename T> using DeltaY = typename Value<T>::template Wrapper<DeltaYTag>;
-} // namespace generic
-
-using Width = generic::Width<int>;
-using Height = generic::Height<int>;
-using X = generic::X<int>;
-using Y = generic::Y<int>;
-using DeltaX = generic::DeltaX<int>;
-using DeltaY = generic::DeltaY<int>;
-
-using WidthF = generic::Width<float>;
-using HeightF = generic::Height<float>;
-using XF = generic::X<float>;
-using YF = generic::Y<float>;
-using DeltaXF = generic::DeltaX<float>;
-using DeltaYF = generic::DeltaY<float>;
-
-// Just to be clear, mir::geometry::Stride is the stride of the buffer in bytes
-using Stride = generic::Value<int>::Wrapper<struct StrideTag>;
-
 // Adding deltas is fine
-template<template<typename> typename T>
-inline constexpr T<DeltaXTag> operator+(T<DeltaXTag> lhs, T<DeltaXTag> rhs){ return T<DeltaXTag>(lhs.as_value() + rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<DeltaYTag> operator+(T<DeltaYTag> lhs, T<DeltaYTag> rhs) { return T<DeltaYTag>(lhs.as_value() + rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<DeltaXTag> operator-(T<DeltaXTag> lhs, T<DeltaXTag> rhs) { return T<DeltaXTag>(lhs.as_value() - rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<DeltaYTag> operator-(T<DeltaYTag> lhs, T<DeltaYTag> rhs) { return T<DeltaYTag>(lhs.as_value() - rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<DeltaXTag> operator-(T<DeltaXTag> rhs) { return T<DeltaXTag>(-rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<DeltaYTag> operator-(T<DeltaYTag> rhs) { return T<DeltaYTag>(-rhs.as_value()); }
-template<template<typename> typename T>
-inline T<DeltaXTag>& operator+=(T<DeltaXTag>& lhs, T<DeltaXTag> rhs) { return lhs = lhs + rhs; }
-template<template<typename> typename T>
-inline T<DeltaYTag>& operator+=(T<DeltaYTag>& lhs, T<DeltaYTag> rhs) { return lhs = lhs + rhs; }
-template<template<typename> typename T>
-inline T<DeltaXTag>& operator-=(T<DeltaXTag>& lhs, T<DeltaXTag> rhs) { return lhs = lhs - rhs; }
-template<template<typename> typename T>
-inline T<DeltaYTag>& operator-=(T<DeltaYTag>& lhs, T<DeltaYTag> rhs) { return lhs = lhs - rhs; }
+template<typename T>
+inline constexpr DeltaX<T> operator+(DeltaX<T> lhs, DeltaX<T> rhs){ return DeltaX<T>(lhs.as_value() + rhs.as_value()); }
+template<typename T>
+inline constexpr DeltaY<T> operator+(DeltaY<T> lhs, DeltaY<T> rhs) { return DeltaY<T>(lhs.as_value() + rhs.as_value()); }
+template<typename T>
+inline constexpr DeltaX<T> operator-(DeltaX<T> lhs, DeltaX<T> rhs) { return DeltaX<T>(lhs.as_value() - rhs.as_value()); }
+template<typename T>
+inline constexpr DeltaY<T> operator-(DeltaY<T> lhs, DeltaY<T> rhs) { return DeltaY<T>(lhs.as_value() - rhs.as_value()); }
+template<typename T>
+inline constexpr DeltaX<T> operator-(DeltaX<T> rhs) { return DeltaX<T>(-rhs.as_value()); }
+template<typename T>
+inline constexpr DeltaY<T> operator-(DeltaY<T> rhs) { return DeltaY<T>(-rhs.as_value()); }
+template<typename T>
+inline DeltaX<T>& operator+=(DeltaX<T>& lhs, DeltaX<T> rhs) { return lhs = lhs + rhs; }
+template<typename T>
+inline DeltaY<T>& operator+=(DeltaY<T>& lhs, DeltaY<T> rhs) { return lhs = lhs + rhs; }
+template<typename T>
+inline DeltaX<T>& operator-=(DeltaX<T>& lhs, DeltaX<T> rhs) { return lhs = lhs - rhs; }
+template<typename T>
+inline DeltaY<T>& operator-=(DeltaY<T>& lhs, DeltaY<T> rhs) { return lhs = lhs - rhs; }
 
 // Adding deltas to co-ordinates is fine
-template<template<typename> typename T>
-inline constexpr T<XTag> operator+(T<XTag> lhs, T<DeltaXTag> rhs) { return T<XTag>(lhs.as_value() + rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<YTag> operator+(T<YTag> lhs, T<DeltaYTag> rhs) { return T<YTag>(lhs.as_value() + rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<XTag> operator-(T<XTag> lhs, T<DeltaXTag> rhs) { return T<XTag>(lhs.as_value() - rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<YTag> operator-(T<YTag> lhs, T<DeltaYTag> rhs) { return T<YTag>(lhs.as_value() - rhs.as_value()); }
-template<template<typename> typename T>
-inline T<XTag>& operator+=(T<XTag>& lhs, T<DeltaXTag> rhs) { return lhs = lhs + rhs; }
-template<template<typename> typename T>
-inline T<YTag>& operator+=(T<YTag>& lhs, T<DeltaYTag> rhs) { return lhs = lhs + rhs; }
-template<template<typename> typename T>
-inline T<XTag>& operator-=(T<XTag>& lhs, T<DeltaXTag> rhs) { return lhs = lhs - rhs; }
-template<template<typename> typename T>
-inline T<YTag>& operator-=(T<YTag>& lhs, T<DeltaYTag> rhs) { return lhs = lhs - rhs; }
+template<typename T>
+inline constexpr X<T> operator+(X<T> lhs, DeltaX<T> rhs) { return X<T>(lhs.as_value() + rhs.as_value()); }
+template<typename T>
+inline constexpr Y<T> operator+(Y<T> lhs, DeltaY<T> rhs) { return Y<T>(lhs.as_value() + rhs.as_value()); }
+template<typename T>
+inline constexpr X<T> operator-(X<T> lhs, DeltaX<T> rhs) { return X<T>(lhs.as_value() - rhs.as_value()); }
+template<typename T>
+inline constexpr Y<T> operator-(Y<T> lhs, DeltaY<T> rhs) { return Y<T>(lhs.as_value() - rhs.as_value()); }
+template<typename T>
+inline X<T>& operator+=(X<T>& lhs, DeltaX<T> rhs) { return lhs = lhs + rhs; }
+template<typename T>
+inline Y<T>& operator+=(Y<T>& lhs, DeltaY<T> rhs) { return lhs = lhs + rhs; }
+template<typename T>
+inline X<T>& operator-=(X<T>& lhs, DeltaX<T> rhs) { return lhs = lhs - rhs; }
+template<typename T>
+inline Y<T>& operator-=(Y<T>& lhs, DeltaY<T> rhs) { return lhs = lhs - rhs; }
 
 // Adding deltas to generic::Width and generic::Height is fine
-template<template<typename> typename T>
-inline constexpr T<WidthTag> operator+(T<WidthTag> lhs, T<DeltaXTag> rhs) { return T<WidthTag>(lhs.as_value() + rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<HeightTag> operator+(T<HeightTag> lhs, T<DeltaYTag> rhs) { return T<HeightTag>(lhs.as_value() + rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<WidthTag> operator-(T<WidthTag> lhs, T<DeltaXTag> rhs) { return T<WidthTag>(lhs.as_value() - rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<HeightTag> operator-(T<HeightTag> lhs, T<DeltaYTag> rhs) { return T<HeightTag>(lhs.as_value() - rhs.as_value()); }
-template<template<typename> typename T>
-inline T<WidthTag>& operator+=(T<WidthTag>& lhs, T<DeltaXTag> rhs) { return lhs = lhs + rhs; }
-template<template<typename> typename T>
-inline T<HeightTag>& operator+=(T<HeightTag>& lhs, T<DeltaYTag> rhs) { return lhs = lhs + rhs; }
-template<template<typename> typename T>
-inline T<WidthTag>& operator-=(T<WidthTag>& lhs, T<DeltaXTag> rhs) { return lhs = lhs - rhs; }
-template<template<typename> typename T>
-inline T<HeightTag>& operator-=(T<HeightTag>& lhs, T<DeltaYTag> rhs) { return lhs = lhs - rhs; }
+template<typename T>
+inline constexpr Width<T> operator+(Width<T> lhs, DeltaX<T> rhs) { return Width<T>(lhs.as_value() + rhs.as_value()); }
+template<typename T>
+inline constexpr Height<T> operator+(Height<T> lhs, DeltaY<T> rhs) { return Height<T>(lhs.as_value() + rhs.as_value()); }
+template<typename T>
+inline constexpr Width<T> operator-(Width<T> lhs, DeltaX<T> rhs) { return Width<T>(lhs.as_value() - rhs.as_value()); }
+template<typename T>
+inline constexpr Height<T> operator-(Height<T> lhs, DeltaY<T> rhs) { return Height<T>(lhs.as_value() - rhs.as_value()); }
+template<typename T>
+inline Width<T>& operator+=(Width<T>& lhs, DeltaX<T> rhs) { return lhs = lhs + rhs; }
+template<typename T>
+inline Height<T>& operator+=(Height<T>& lhs, DeltaY<T> rhs) { return lhs = lhs + rhs; }
+template<typename T>
+inline Width<T>& operator-=(Width<T>& lhs, DeltaX<T> rhs) { return lhs = lhs - rhs; }
+template<typename T>
+inline Height<T>& operator-=(Height<T>& lhs, DeltaY<T> rhs) { return lhs = lhs - rhs; }
 
 // Adding Widths and Heights is fine
-template<template<typename> typename T>
-inline constexpr T<WidthTag> operator+(T<WidthTag> lhs, T<WidthTag> rhs) { return T<WidthTag>(lhs.as_value() + rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<HeightTag> operator+(T<HeightTag> lhs, T<HeightTag> rhs) { return T<HeightTag>(lhs.as_value() + rhs.as_value()); }
-template<template<typename> typename T>
-inline T<WidthTag>& operator+=(T<WidthTag>& lhs, T<WidthTag> rhs) { return lhs = lhs + rhs; }
-template<template<typename> typename T>
-inline T<HeightTag>& operator+=(T<HeightTag>& lhs, T<HeightTag> rhs) { return lhs = lhs + rhs; }
+template<typename T>
+inline constexpr Width<T> operator+(Width<T> lhs, Width<T> rhs) { return Width<T>(lhs.as_value() + rhs.as_value()); }
+template<typename T>
+inline constexpr Height<T> operator+(Height<T> lhs, Height<T> rhs) { return Height<T>(lhs.as_value() + rhs.as_value()); }
+template<typename T>
+inline Width<T>& operator+=(Width<T>& lhs, Width<T> rhs) { return lhs = lhs + rhs; }
+template<typename T>
+inline Height<T>& operator+=(Height<T>& lhs, Height<T> rhs) { return lhs = lhs + rhs; }
 
 // Subtracting coordinates is fine
-template<template<typename> typename T>
-inline constexpr T<DeltaXTag> operator-(T<XTag> lhs, T<XTag> rhs) { return T<DeltaXTag>(lhs.as_value() - rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<DeltaYTag> operator-(T<YTag> lhs, T<YTag> rhs) { return T<DeltaYTag>(lhs.as_value() - rhs.as_value()); }
+template<typename T>
+inline constexpr DeltaX<T> operator-(X<T> lhs, X<T> rhs) { return DeltaX<T>(lhs.as_value() - rhs.as_value()); }
+template<typename T>
+inline constexpr DeltaY<T> operator-(Y<T> lhs, Y<T> rhs) { return DeltaY<T>(lhs.as_value() - rhs.as_value()); }
 
-//Subtracting T<WidthTag> and T<HeightTag> is fine
-template<template<typename> typename T>
-inline constexpr T<DeltaXTag> operator-(T<WidthTag> lhs, T<WidthTag> rhs) { return T<DeltaXTag>(lhs.as_value() - rhs.as_value()); }
-template<template<typename> typename T>
-inline constexpr T<DeltaYTag> operator-(T<HeightTag> lhs, T<HeightTag> rhs) { return T<DeltaYTag>(lhs.as_value() - rhs.as_value()); }
+//Subtracting Width<T> and Height<T> is fine
+template<typename T>
+inline constexpr DeltaX<T> operator-(Width<T> lhs, Width<T> rhs) { return DeltaX<T>(lhs.as_value() - rhs.as_value()); }
+template<typename T>
+inline constexpr DeltaY<T> operator-(Height<T> lhs, Height<T> rhs) { return DeltaY<T>(lhs.as_value() - rhs.as_value()); }
 
 // Multiplying by a scalar value is fine
-template<template<typename> typename T, typename Scalar>
-inline constexpr T<WidthTag> operator*(Scalar scale, T<WidthTag> const& w) { return T<WidthTag>{scale*w.as_value()}; }
-template<template<typename> typename T, typename Scalar>
-inline constexpr T<HeightTag> operator*(Scalar scale, T<HeightTag> const& h) { return T<HeightTag>{scale*h.as_value()}; }
-template<template<typename> typename T, typename Scalar>
-inline constexpr T<DeltaXTag> operator*(Scalar scale, T<DeltaXTag> const& dx) { return T<DeltaXTag>{scale*dx.as_value()}; }
-template<template<typename> typename T, typename Scalar>
-inline constexpr T<DeltaYTag> operator*(Scalar scale, T<DeltaYTag> const& dy) { return T<DeltaYTag>{scale*dy.as_value()}; }
-template<template<typename> typename T, typename Scalar>
-inline constexpr T<WidthTag> operator*(T<WidthTag> const& w, Scalar scale) { return scale*w; }
-template<template<typename> typename T, typename Scalar>
-inline constexpr T<HeightTag> operator*(T<HeightTag> const& h, Scalar scale) { return scale*h; }
-template<template<typename> typename T, typename Scalar>
-inline constexpr T<DeltaXTag> operator*(T<DeltaXTag> const& dx, Scalar scale) { return scale*dx; }
-template<template<typename> typename T, typename Scalar>
-inline constexpr T<DeltaYTag> operator*(T<DeltaYTag> const& dy, Scalar scale) { return scale*dy; }
+template<typename T, typename Scalar>
+inline constexpr Width<T> operator*(Scalar scale, Width<T> const& w) { return Width<T>{scale*w.as_value()}; }
+template<typename T, typename Scalar>
+inline constexpr Height<T> operator*(Scalar scale, Height<T> const& h) { return Height<T>{scale*h.as_value()}; }
+template<typename T, typename Scalar>
+inline constexpr DeltaX<T> operator*(Scalar scale, DeltaX<T> const& dx) { return DeltaX<T>{scale*dx.as_value()}; }
+template<typename T, typename Scalar>
+inline constexpr DeltaY<T> operator*(Scalar scale, DeltaY<T> const& dy) { return DeltaY<T>{scale*dy.as_value()}; }
+template<typename T, typename Scalar>
+inline constexpr Width<T> operator*(Width<T> const& w, Scalar scale) { return scale*w; }
+template<typename T, typename Scalar>
+inline constexpr Height<T> operator*(Height<T> const& h, Scalar scale) { return scale*h; }
+template<typename T, typename Scalar>
+inline constexpr DeltaX<T> operator*(DeltaX<T> const& dx, Scalar scale) { return scale*dx; }
+template<typename T, typename Scalar>
+inline constexpr DeltaY<T> operator*(DeltaY<T> const& dy, Scalar scale) { return scale*dy; }
 
 // Dividing by a scaler value is fine
-template<template<typename> typename T, typename Scalar>
-inline constexpr T<WidthTag> operator/(T<WidthTag> const& w, Scalar scale) { return T<WidthTag>{w.as_value() / scale}; }
-template<template<typename> typename T, typename Scalar>
-inline constexpr T<HeightTag> operator/(T<HeightTag> const& h, Scalar scale) { return T<HeightTag>{h.as_value() / scale}; }
-template<template<typename> typename T, typename Scalar>
-inline constexpr T<DeltaXTag> operator/(T<DeltaXTag> const& dx, Scalar scale) { return T<DeltaXTag>{dx.as_value() / scale}; }
-template<template<typename> typename T, typename Scalar>
-inline constexpr T<DeltaYTag> operator/(T<DeltaYTag> const& dy, Scalar scale) { return T<DeltaYTag>{dy.as_value() / scale}; }
+template<typename T, typename Scalar>
+inline constexpr Width<T> operator/(Width<T> const& w, Scalar scale) { return Width<T>{w.as_value() / scale}; }
+template<typename T, typename Scalar>
+inline constexpr Height<T> operator/(Height<T> const& h, Scalar scale) { return Height<T>{h.as_value() / scale}; }
+template<typename T, typename Scalar>
+inline constexpr DeltaX<T> operator/(DeltaX<T> const& dx, Scalar scale) { return DeltaX<T>{dx.as_value() / scale}; }
+template<typename T, typename Scalar>
+inline constexpr DeltaY<T> operator/(DeltaY<T> const& dy, Scalar scale) { return DeltaY<T>{dy.as_value() / scale}; }
+} // namespace
 
 // Converting between types is fine, as long as they are along the same axis
-template<template<typename> typename T>
-inline constexpr T<WidthTag> as_width(T<DeltaXTag> const& dx) { return T<WidthTag>{dx.as_value()}; }
-template<template<typename> typename T>
-inline constexpr T<HeightTag> as_height(T<DeltaYTag> const& dy) { return T<HeightTag>{dy.as_value()}; }
-template<template<typename> typename T>
-inline constexpr T<XTag> as_x(T<DeltaXTag> const& dx) { return T<XTag>{dx.as_value()}; }
-template<template<typename> typename T>
-inline constexpr T<YTag> as_y(T<DeltaYTag> const& dy) { return T<YTag>{dy.as_value()}; }
-template<template<typename> typename T>
-inline constexpr T<DeltaXTag> as_delta(T<XTag> const& x) { return T<DeltaXTag>{x.as_value()}; }
-template<template<typename> typename T>
-inline constexpr T<DeltaYTag> as_delta(T<YTag> const& y) { return T<DeltaYTag>{y.as_value()}; }
-template<template<typename> typename T>
-inline constexpr T<XTag> as_x(T<WidthTag> const& w) { return T<XTag>{w.as_value()}; }
-template<template<typename> typename T>
-inline constexpr T<YTag> as_y(T<HeightTag> const& h) { return T<YTag>{h.as_value()}; }
-template<template<typename> typename T>
-inline constexpr T<WidthTag> as_width(T<XTag> const& x) { return T<WidthTag>{x.as_value()}; }
-template<template<typename> typename T>
-inline constexpr T<HeightTag> as_height(T<YTag> const& y) { return T<HeightTag>{y.as_value()}; }
-template<template<typename> typename T>
-inline constexpr T<DeltaXTag> as_delta(T<WidthTag> const& w) { return T<DeltaXTag>{w.as_value()}; }
-template<template<typename> typename T>
-inline constexpr T<DeltaYTag> as_delta(T<HeightTag> const& h) { return T<DeltaYTag>{h.as_value()}; }
-
-template<typename Target, typename Source>
-inline constexpr Target dim_cast(Source s) { return Target(s.as_value()); }
+template<typename T>
+inline constexpr generic::Width<T> as_width(generic::DeltaX<T> const& dx) { return generic::Width<T>{dx.as_value()}; }
+template<typename T>
+inline constexpr generic::Height<T> as_height(generic::DeltaY<T> const& dy) { return generic::Height<T>{dy.as_value()}; }
+template<typename T>
+inline constexpr generic::X<T> as_x(generic::DeltaX<T> const& dx) { return generic::X<T>{dx.as_value()}; }
+template<typename T>
+inline constexpr generic::Y<T> as_y(generic::DeltaY<T> const& dy) { return generic::Y<T>{dy.as_value()}; }
+template<typename T>
+inline constexpr generic::DeltaX<T> as_delta(generic::X<T> const& x) { return generic::DeltaX<T>{x.as_value()}; }
+template<typename T>
+inline constexpr generic::DeltaY<T> as_delta(generic::Y<T> const& y) { return generic::DeltaY<T>{y.as_value()}; }
+template<typename T>
+inline constexpr generic::X<T> as_x(generic::Width<T> const& w) { return generic::X<T>{w.as_value()}; }
+template<typename T>
+inline constexpr generic::Y<T> as_y(generic::Height<T> const& h) { return generic::Y<T>{h.as_value()}; }
+template<typename T>
+inline constexpr generic::Width<T> as_width(generic::X<T> const& x) { return generic::Width<T>{x.as_value()}; }
+template<typename T>
+inline constexpr generic::Height<T> as_height(generic::Y<T> const& y) { return generic::Height<T>{y.as_value()}; }
+template<typename T>
+inline constexpr generic::DeltaX<T> as_delta(generic::Width<T> const& w) { return generic::DeltaX<T>{w.as_value()}; }
+template<typename T>
+inline constexpr generic::DeltaY<T> as_delta(generic::Height<T> const& h) { return generic::DeltaY<T>{h.as_value()}; }
 } // namespace geometry
 } // namespace mir
 

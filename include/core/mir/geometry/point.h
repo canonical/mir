@@ -25,78 +25,70 @@ namespace mir
 {
 namespace geometry
 {
-namespace detail
-{
-struct PointBase{}; ///< Used for determining if a type is a point
-}
 namespace generic
 {
-template<template<typename> typename T>
+template<typename T>
 struct Size;
-template<template<typename> typename T>
+template<typename T>
 struct Displacement;
 
-template<template<typename> typename T>
-struct Point : detail::PointBase
+template<typename T>
+struct Point
 {
-    template<typename Tag>
-    using Corresponding = T<Tag>;
-
-    using SizeType = Size<T>;
-    using DisplacementType = Displacement<T>;
+    using ValueType = T;
 
     constexpr Point() = default;
     constexpr Point(Point const&) = default;
     Point& operator=(Point const&) = default;
 
-    template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-    explicit constexpr Point(P const& other) noexcept
-        : x{T<XTag>{other.x}},
-          y{T<YTag>{other.y}}
+    template<typename U>
+    explicit constexpr Point(Point<U> const& other) noexcept
+        : x{X<T>{other.x}},
+          y{Y<T>{other.y}}
     {
     }
 
     template<typename XType, typename YType>
     constexpr Point(XType&& x, YType&& y) : x(x), y(y) {}
 
-    T<XTag> x;
-    T<YTag> y;
+    X<T> x;
+    Y<T> y;
 };
 
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr bool operator == (P const& lhs, P const& rhs)
+template<typename T>
+inline constexpr bool operator == (Point<T> const& lhs, Point<T> const& rhs)
 {
     return lhs.x == rhs.x && lhs.y == rhs.y;
 }
 
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr bool operator != (P const& lhs, P const& rhs)
+template<typename T>
+inline constexpr bool operator != (Point<T> const& lhs, Point<T> const& rhs)
 {
     return lhs.x != rhs.x || lhs.y != rhs.y;
 }
 
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr P operator+(P lhs, Corresponding<P, DeltaXTag> rhs) { return{lhs.x + rhs, lhs.y}; }
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr P operator+(P lhs, Corresponding<P, DeltaYTag> rhs) { return{lhs.x, lhs.y + rhs}; }
+template<typename T>
+inline constexpr Point<T> operator+(Point<T> lhs, DeltaX<T> rhs) { return{lhs.x + rhs, lhs.y}; }
+template<typename T>
+inline constexpr Point<T> operator+(Point<T> lhs, DeltaY<T> rhs) { return{lhs.x, lhs.y + rhs}; }
 
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr P operator-(P lhs, Corresponding<P, DeltaXTag> rhs) { return{lhs.x - rhs, lhs.y}; }
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr P operator-(P lhs, Corresponding<P, DeltaYTag> rhs) { return{lhs.x, lhs.y - rhs}; }
+template<typename T>
+inline constexpr Point<T> operator-(Point<T> lhs, DeltaX<T> rhs) { return{lhs.x - rhs, lhs.y}; }
+template<typename T>
+inline constexpr Point<T> operator-(Point<T> lhs, DeltaY<T> rhs) { return{lhs.x, lhs.y - rhs}; }
 
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline P& operator+=(P& lhs, Corresponding<P, DeltaXTag> rhs) { lhs.x += rhs; return lhs; }
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline P& operator+=(P& lhs, Corresponding<P, DeltaYTag> rhs) { lhs.y += rhs; return lhs; }
+template<typename T>
+inline Point<T>& operator+=(Point<T>& lhs, DeltaX<T> rhs) { lhs.x += rhs; return lhs; }
+template<typename T>
+inline Point<T>& operator+=(Point<T>& lhs, DeltaY<T> rhs) { lhs.y += rhs; return lhs; }
 
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline P& operator-=(P& lhs, Corresponding<P, DeltaXTag> rhs) { lhs.x -= rhs; return lhs; }
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline P& operator-=(P& lhs, Corresponding<P, DeltaYTag> rhs) { lhs.y -= rhs; return lhs; }
+template<typename T>
+inline Point<T>& operator-=(Point<T>& lhs, DeltaX<T> rhs) { lhs.x -= rhs; return lhs; }
+template<typename T>
+inline Point<T>& operator-=(Point<T>& lhs, DeltaY<T> rhs) { lhs.y -= rhs; return lhs; }
 
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-std::ostream& operator<<(std::ostream& out, P const& value)
+template<typename T>
+std::ostream& operator<<(std::ostream& out, Point<T> const& value)
 {
     out << value.x << ", " << value.y;
     return out;

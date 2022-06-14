@@ -83,16 +83,6 @@ TEST(geometry, generic_coordinates)
     EXPECT_EQ(dx18, y42 - y24);
 }
 
-TEST(geometry, generic_conversions)
-{
-    Width<int> w1{1};
-    DeltaX<int> dx1{1};
-
-    EXPECT_EQ(w1, mir::geometry::dim_cast<Width<int>>(dx1));
-    EXPECT_EQ(dx1, mir::geometry::dim_cast<DeltaX<int>>(w1));
-    EXPECT_NE(dx1, mir::geometry::dim_cast<DeltaX<int>>(X<int>()));
-}
-
 TEST(geometry, generic_signed_dimensions)
 {
     X<int> const x0{0};

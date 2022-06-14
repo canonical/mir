@@ -19,180 +19,171 @@
 
 #include "forward.h"
 #include "dimensions.h"
+#include "point.h"
 #include <ostream>
 
 namespace mir
 {
 namespace geometry
 {
-namespace detail
-{
-struct PointBase;
-struct SizeBase;
-struct DisplacementBase{}; ///< Used for determining if a type is a displacement
-}
 namespace generic
 {
-template<template<typename> typename T>
+template<typename T>
 struct Point;
 
-template<template<typename> typename T>
+template<typename T>
 struct Size;
 
-template<template<typename> typename T>
-struct Displacement : detail::DisplacementBase
+template<typename T>
+struct Displacement
 {
-    template<typename Tag>
-    using Corresponding = T<Tag>;
-
-    using PointType = Point<T>;
-    using SizeType = Size<T>;
+    using ValueType = T;
 
     constexpr Displacement() {}
     constexpr Displacement(Displacement const&) = default;
     Displacement& operator=(Displacement const&) = default;
 
-    template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-    explicit constexpr Displacement(D const& other) noexcept
-        : dx{T<DeltaXTag>{other.dx}},
-          dy{T<DeltaYTag>{other.dy}}
+    template<typename U>
+    explicit constexpr Displacement(Displacement<U> const& other) noexcept
+        : dx{DeltaX<T>{other.dx}},
+          dy{DeltaY<T>{other.dy}}
     {
     }
 
     template<typename DeltaXType, typename DeltaYType>
     constexpr Displacement(DeltaXType&& dx, DeltaYType&& dy) : dx{dx}, dy{dy} {}
 
-    template <typename Q = typename T<DeltaXTag>::ValueType>
+    template <typename Q = T>
     constexpr typename std::enable_if<std::is_integral<Q>::value, long long>::type length_squared() const
     {
         long long x = dx.as_value(), y = dy.as_value();
         return x * x + y * y;
     }
 
-    template <typename Q = typename T<DeltaXTag>::ValueType>
-    constexpr typename std::enable_if<!std::is_integral<Q>::value, long long>::type length_squared() const
+    template <typename Q = T>
+    constexpr typename std::enable_if<!std::is_integral<Q>::value, T>::type length_squared() const
     {
-        typename T<DeltaXTag>::ValueType x = dx.as_value(), y = dy.as_value();
+        T x = dx.as_value(), y = dy.as_value();
         return x * x + y * y;
     }
 
-    T<DeltaXTag> dx;
-    T<DeltaYTag> dy;
+    DeltaX<T> dx;
+    DeltaY<T> dy;
 };
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr bool operator==(D const& lhs, D const& rhs)
+template<typename T>
+inline constexpr bool operator==(Displacement<T> const& lhs, Displacement<T> const& rhs)
 {
     return lhs.dx == rhs.dx && lhs.dy == rhs.dy;
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr bool operator!=(D const& lhs, D const& rhs)
+template<typename T>
+inline constexpr bool operator!=(Displacement<T> const& lhs, Displacement<T> const& rhs)
 {
     return lhs.dx != rhs.dx || lhs.dy != rhs.dy;
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-std::ostream& operator<<(std::ostream& out, D const& value)
+template<typename T>
+std::ostream& operator<<(std::ostream& out, Displacement<T> const& value)
 {
     out << '(' << value.dx << ", " << value.dy << ')';
     return out;
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr D operator+(D const& lhs, D const& rhs)
+template<typename T>
+inline constexpr Displacement<T> operator+(Displacement<T> const& lhs, Displacement<T> const& rhs)
 {
-    return D{lhs.dx + rhs.dx, lhs.dy + rhs.dy};
+    return Displacement<T>{lhs.dx + rhs.dx, lhs.dy + rhs.dy};
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr D operator-(D const& lhs, D const& rhs)
+template<typename T>
+inline constexpr Displacement<T> operator-(Displacement<T> const& lhs, Displacement<T> const& rhs)
 {
-    return D{lhs.dx - rhs.dx, lhs.dy - rhs.dy};
+    return Displacement<T>{lhs.dx - rhs.dx, lhs.dy - rhs.dy};
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr D operator-(D const& rhs)
+template<typename T>
+inline constexpr Displacement<T> operator-(Displacement<T> const& rhs)
 {
-    return D{-rhs.dx, -rhs.dy};
+    return Displacement<T>{-rhs.dx, -rhs.dy};
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr typename D::PointType operator+(typename D::PointType const& lhs, D const& rhs)
+template<typename T>
+inline constexpr Point<T> operator+(Point<T> const& lhs, Displacement<T> const& rhs)
 {
-    return typename D::PointType{lhs.x + rhs.dx, lhs.y + rhs.dy};
+    return Point<T>{lhs.x + rhs.dx, lhs.y + rhs.dy};
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr typename D::PointType operator+(D const& lhs, typename D::PointType const& rhs)
+template<typename T>
+inline constexpr Point<T> operator+(Displacement<T> const& lhs, Point<T> const& rhs)
 {
-    return typename D::PointType{rhs.x + lhs.dx, rhs.y + lhs.dy};
+    return Point<T>{rhs.x + lhs.dx, rhs.y + lhs.dy};
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr typename D::PointType operator-(typename D::PointType const& lhs, D const& rhs)
+template<typename T>
+inline constexpr Point<T> operator-(Point<T> const& lhs, Displacement<T> const& rhs)
 {
-    return typename D::PointType{lhs.x - rhs.dx, lhs.y - rhs.dy};
+    return Point<T>{lhs.x - rhs.dx, lhs.y - rhs.dy};
 }
 
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr typename P::DisplacementType operator-(P const& lhs, P const& rhs)
+template<typename T>
+inline constexpr Displacement<T> operator-(Point<T> const& lhs, Point<T> const& rhs)
 {
-    return typename P::DisplacementType{lhs.x - rhs.x, lhs.y - rhs.y};
+    return Displacement<T>{lhs.x - rhs.x, lhs.y - rhs.y};
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr typename D::PointType& operator+=(typename D::PointType& lhs, D const& rhs)
+template<typename T>
+inline constexpr Point<T>& operator+=(Point<T>& lhs, Displacement<T> const& rhs)
 {
     return lhs = lhs + rhs;
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr typename D::PointType& operator-=(typename D::PointType& lhs, D const& rhs)
+template<typename T>
+inline constexpr Point<T>& operator-=(Point<T>& lhs, Displacement<T> const& rhs)
 {
     return lhs = lhs - rhs;
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline bool operator<(D const& lhs, D const& rhs)
+template<typename T>
+inline bool operator<(Displacement<T> const& lhs, Displacement<T> const& rhs)
 {
     return lhs.length_squared() < rhs.length_squared();
 }
 
-template<typename Scalar, typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr D operator*(Scalar scale, D const& disp)
+template<typename T, typename Scalar>
+inline constexpr Displacement<T> operator*(Scalar scale, Displacement<T> const& disp)
 {
-    return D{scale*disp.dx, scale*disp.dy};
+    return Displacement<T>{scale*disp.dx, scale*disp.dy};
 }
 
-template<typename Scalar, typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr D operator*(D const& disp, Scalar scale)
+template<typename T, typename Scalar>
+inline constexpr Displacement<T> operator*(Displacement<T> const& disp, Scalar scale)
 {
     return scale*disp;
 }
 
-template<typename S, typename std::enable_if<std::is_base_of<detail::SizeBase, S>::value, bool>::type = true>
-inline constexpr typename S::DisplacementType as_displacement(S const& size)
+template<typename T>
+inline constexpr Displacement<T> as_displacement(Size<T> const& size)
 {
-    return typename S::DisplacementType{size.width.as_value(), size.height.as_value()};
+    return Displacement<T>{size.width.as_value(), size.height.as_value()};
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr typename D::SizeType as_size(D const& disp)
+template<typename T>
+inline constexpr Size<T> as_size(Displacement<T> const& disp)
 {
-    return typename D::SizeType{disp.dx.as_value(), disp.dy.as_value()};
+    return Size<T>{disp.dx.as_value(), disp.dy.as_value()};
 }
 
-template<typename P, typename std::enable_if<std::is_base_of<detail::PointBase, P>::value, bool>::type = true>
-inline constexpr typename P::DisplacementType as_displacement(P const& point)
+template<typename T>
+inline constexpr Displacement<T> as_displacement(Point<T> const& point)
 {
-    return typename P::DisplacementType{point.x.as_value(), point.y.as_value()};
+    return Displacement<T>{point.x.as_value(), point.y.as_value()};
 }
 
-template<typename D, typename std::enable_if<std::is_base_of<detail::DisplacementBase, D>::value, bool>::type = true>
-inline constexpr typename D::PointType as_point(D const& disp)
+template<typename T>
+inline constexpr Point<T> as_point(Displacement<T> const& disp)
 {
-    return typename D::PointType{disp.dx.as_value(), disp.dy.as_value()};
+    return Point<T>{disp.dx.as_value(), disp.dy.as_value()};
 }
 }
 }

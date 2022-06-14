@@ -28,18 +28,14 @@ namespace mir
 {
 namespace geometry
 {
-namespace detail
-{
-struct RectangleBase{}; ///< Used for determining if a type is a rectangle
-}
 namespace generic
 {
-template<typename P, typename S>
-struct Rectangle : detail::RectangleBase
+template<typename T>
+struct Rectangle
 {
     constexpr Rectangle() = default;
 
-    constexpr Rectangle(P const& top_left, S const& size)
+    constexpr Rectangle(Point<T> const& top_left, Size<T> const& size)
         : top_left{top_left}, size{size}
     {
     }
@@ -50,22 +46,22 @@ struct Rectangle : detail::RectangleBase
      * Note that the returned point is *not* included in the rectangle
      * area, that is, the rectangle is represented as [top_left,bottom_right).
      */
-    P bottom_right() const
+    Point<T> bottom_right() const
     {
         return top_left + as_displacement(size);
     }
 
-    P top_right() const
+    Point<T> top_right() const
     {
         return top_left + as_delta(size.width);
     }
 
-    P bottom_left() const
+    Point<T> bottom_left() const
     {
         return top_left + as_delta(size.height);
     }
 
-    bool contains(P const& p) const
+    bool contains(Point<T> const& p) const
     {
         if (size.width == decltype(size.width){} || size.height == decltype(size.height){})
             return false;
@@ -81,7 +77,7 @@ struct Rectangle : detail::RectangleBase
      * Note that an empty rectangle can still contain other empty rectangles,
      * which are treated as points or lines of thickness zero.
      */
-    bool contains(Rectangle<P, S> const& r) const
+    bool contains(Rectangle<T> const& r) const
     {
         return r.left() >= left() &&
                r.left() + as_delta(r.size.width) <= left() + as_delta(size.width) &&
@@ -89,7 +85,7 @@ struct Rectangle : detail::RectangleBase
                r.top() + as_delta(r.size.height) <= top() + as_delta(size.height);
     }
 
-    bool overlaps(Rectangle<P, S> const& r) const
+    bool overlaps(Rectangle<T> const& r) const
     {
         bool disjoint = r.left() >= right()
                      || r.right() <= left()
@@ -102,17 +98,17 @@ struct Rectangle : detail::RectangleBase
         return !disjoint;
     }
 
-    Corresponding<P, XTag> left() const   { return top_left.x; }
-    Corresponding<P, XTag> right() const  { return bottom_right().x; }
-    Corresponding<P, YTag> top() const    { return top_left.y; }
-    Corresponding<P, YTag> bottom() const { return bottom_right().y; }
+    X<T> left() const   { return top_left.x; }
+    X<T> right() const  { return bottom_right().x; }
+    Y<T> top() const    { return top_left.y; }
+    Y<T> bottom() const { return bottom_right().y; }
 
-    P top_left;
-    S size;
+    Point<T> top_left;
+    Size<T> size;
 };
 
-template<typename R, typename std::enable_if<std::is_base_of<detail::RectangleBase, R>::value, bool>::type = true>
-R intersection_of(R const& a, R const& b)
+template<typename T>
+Rectangle<T> intersection_of(Rectangle<T> const& a, Rectangle<T> const& b)
 {
     auto const max_left   = std::max(a.left(),   b.left());
     auto const min_right  = std::min(a.right(),  b.right());
@@ -127,20 +123,20 @@ R intersection_of(R const& a, R const& b)
         return {};
 }
 
-template<typename P, typename S>
-inline constexpr bool operator == (Rectangle<P, S> const& lhs, Rectangle<P, S> const& rhs)
+template<typename T>
+inline constexpr bool operator == (Rectangle<T> const& lhs, Rectangle<T> const& rhs)
 {
     return lhs.top_left == rhs.top_left && lhs.size == rhs.size;
 }
 
-template<typename P, typename S>
-inline constexpr bool operator != (Rectangle<P, S> const& lhs, Rectangle<P, S> const& rhs)
+template<typename T>
+inline constexpr bool operator != (Rectangle<T> const& lhs, Rectangle<T> const& rhs)
 {
     return lhs.top_left != rhs.top_left || lhs.size != rhs.size;
 }
 
-template<typename P, typename S>
-std::ostream& operator<<(std::ostream& out, Rectangle<P, S> const& value)
+template<typename T>
+std::ostream& operator<<(std::ostream& out, Rectangle<T> const& value)
 {
     out << '(' << value.top_left << ", " << value.size << ')';
     return out;
