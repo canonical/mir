@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2017 Canonical Ltd.
+ * Copyright © 2014-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -18,6 +18,9 @@
 #include "mir_test_framework/command_line_server_configuration.h"
 
 #include "mir/fd.h"
+#include <mir/logging/dumb_console_logger.h>
+#include <mir/logging/file_logger.h>
+#include <mir/logging/multi_logger.h>
 #include "mir/main_loop.h"
 #include "mir/options/option.h"
 #include <mir/report_exception.h>
@@ -38,9 +41,17 @@ namespace mt = mir::test;
 namespace
 {
 std::chrono::seconds const timeout{20};
+
+std::string const get_log_filename(const ::testing::TestInfo* test_info)
+{
+    std::ostringstream filename;
+    filename << "/tmp/" << test_info->test_case_name() << "_" << test_info->name() << "_server.log";
+    return filename.str();
+}
 }
 
 mtf::AsyncServerRunner::AsyncServerRunner()
+: output_filename{get_log_filename(::testing::UnitTest::GetInstance()->current_test_info())}
 {
     if (getenv("XDG_RUNTIME_DIR") == nullptr)
         add_to_environment("XDG_RUNTIME_DIR", "/tmp");
@@ -49,14 +60,37 @@ mtf::AsyncServerRunner::AsyncServerRunner()
     configure_from_commandline(server);
 
     server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
-    server.override_the_logger([&]()
+    server.override_the_logger([&]() -> std::shared_ptr<ml::Logger>
         {
-            std::shared_ptr<ml::Logger> result{};
+            std::ofstream out{output_filename};
+            if (out.good())
+            {
+                std::cerr << "Saving server logs to: " << output_filename << std::endl;
+                if (server.get_options()->get<bool>(mtd::logging_opt))
+                {
+                    return std::make_shared<ml::MultiLogger>(
+                        std::initializer_list<std::shared_ptr<ml::Logger>>{
+                            std::make_shared<ml::DumbConsoleLogger>(),
+                            std::make_shared<ml::FileLogger>(std::move(out))
+                        }
+                    );
+                }
+                else
+                {
+                    return std::make_shared<ml::FileLogger>(std::move(out));
+                }
+            }
+            else
+            {
+                std::cerr << "Failed to open log file: " << output_filename << std::endl;
+                if (!server.get_options()->get<bool>(mtd::logging_opt))
+                {
+                    return std::make_shared<mtd::NullLogger>();
+                }
+            }
 
-            if (!server.get_options()->get<bool>(mtd::logging_opt))
-                result = std::make_shared<mtd::NullLogger>();
-
-            return result;
+            // If we return null then the default will be used
+            return {};
         });
 }
 
