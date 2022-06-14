@@ -20,6 +20,7 @@
 #include "mir/logging/logger.h"
 
 #include <fstream>
+#include <initializer_list>
 #include <string>
 #include <vector>
 
@@ -30,13 +31,13 @@ namespace logging
 class MultiLogger : public mir::logging::Logger
 {
 public:
-    void add(std::shared_ptr<mir::logging::Logger> logger);
+    MultiLogger(std::initializer_list<std::shared_ptr<Logger>> loggers);
 
 protected:
     void log(mir::logging::Severity severity, std::string const& message, std::string const& component) override;
 
 private:
-    std::vector<std::shared_ptr<mir::logging::Logger>> loggers;
+    std::vector<std::shared_ptr<mir::logging::Logger>> const loggers;
 };
 }
 }

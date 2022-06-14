@@ -505,7 +505,6 @@ MIR_COMMON_2.9 {
   extern "C++" {
     mir::logging::format_message*;
     mir::logging::FileLogger::log*;
-    mir::logging::MultiLogger::add*;
     mir::logging::MultiLogger::log*;
     non-virtual?thunk?to?mir::logging::FileLogger::log*;
     non-virtual?thunk?to?mir::logging::MultiLogger::log*;

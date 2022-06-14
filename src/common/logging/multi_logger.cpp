@@ -25,27 +25,17 @@
 
 namespace ml = mir::logging;
 
-void ml::MultiLogger::add(std::shared_ptr<Logger> logger)
+ml::MultiLogger::MultiLogger(std::initializer_list<std::shared_ptr<Logger>> loggers)
+: loggers{loggers}
 {
-    loggers.push_back(std::move(logger));
 }
 
 void ml::MultiLogger::log(Severity severity,
                           std::string const& message,
                           std::string const& component)
 {
-    for (auto it = loggers.begin(); it != loggers.end();)
+    for (auto& logger : loggers)
     {
-        try
-        {
-            (*it)->log(severity, message, component);
-        }
-        catch (const std::exception& e)
-        {
-            std::cerr << e.what() << std::endl;
-            it = loggers.erase(it);
-            continue;
-        }
-        it++;
+        logger->log(severity, message, component);
     }
 }
