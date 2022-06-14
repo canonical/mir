@@ -153,7 +153,7 @@ void mf::WlrScreencopyManagerV1::capture_output_region(
 {
     (void)overlay_cursor;
     auto const extents = OutputGlobal::from_or_throw(output).current_config().extents();
-    auto const intersection = geom::Rectangle{{x, y}, {width, height}}.intersection_with(extents);
+    auto const intersection = intersection_of(geom::Rectangle{{x, y}, {width, height}}, extents);
     new WlrScreencopyFrameV1{frame, ctx, intersection};
 }
 

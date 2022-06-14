@@ -30,11 +30,6 @@ namespace geometry
 struct Rectangle : generic::Rectangle<Point, Size>
 {
     using generic::Rectangle<Point, Size>::Rectangle;
-
-    Rectangle intersection_with(Rectangle const& r) const
-    {
-        return intersection_of(*this, r);
-    }
 };
 }
 }
