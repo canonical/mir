@@ -299,7 +299,7 @@ mrg::Renderer::Program::Program(GLuint program_id)
 
 mrg::Renderer::Renderer(RenderTarget& render_target)
     : render_target(render_target),
-      clear_color{0.0f, 0.0f, 0.0f, 0.0f},
+      clear_color{0.0f, 0.0f, 0.0f, 1.0f},
       program_factory{std::make_unique<ProgramFactory>()},
       display_transform(1)
 {
