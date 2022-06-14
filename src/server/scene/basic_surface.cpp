@@ -1077,10 +1077,14 @@ void mir::scene::BasicSurface::update_frame_posted_callbacks(ProofOfMutexLock co
     {
         auto const position = content_top_left(lock) + layer.displacement;
         layer.stream->set_frame_posted_callback(
-            [this, observers = weak(observers), position](auto const& size)
+            [this, observers=weak(observers), position, explicit_size=layer.size, stream=layer.stream.get()]
+                (auto const&)
             {
+                auto const logical_size = explicit_size ? explicit_size.value() : stream->stream_size();
                 if (auto const o = observers.lock())
-                    o->frame_posted(this, 1, geom::Rectangle{position, size});
+                {
+                    o->frame_posted(this, 1, geom::Rectangle{position, logical_size});
+                }
             });
     }
 }
