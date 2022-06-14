@@ -1,6 +1,7 @@
 libmircore.so.2 libmircore2 #MINVER#
  MIR_CORE_2.9@MIR_CORE_2.9 2.9.0
- (c++)"mir::AnonymousShmFile::AnonymousShmFile(unsigned long)@MIR_CORE_2.9" 2.9.0
+ (c++|arch-bits=64)"mir::AnonymousShmFile::AnonymousShmFile(unsigned long)@MIR_CORE_2.9" 2.9.0
+ (c++|arch-bits=32)"mir::AnonymousShmFile::AnonymousShmFile(unsigned int)@MIR_CORE_2.9" 2.9.0
  (c++)"mir::AnonymousShmFile::base_ptr() const@MIR_CORE_2.9" 2.9.0
  (c++)"mir::AnonymousShmFile::fd() const@MIR_CORE_2.9" 2.9.0
  (c++)"mir::AnonymousShmFile::~AnonymousShmFile()@MIR_CORE_2.9" 2.9.0
