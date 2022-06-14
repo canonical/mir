@@ -17,12 +17,6 @@
 
 #include "mir/logging/multi_logger.h"
 
-#include <boost/throw_exception.hpp>
-
-#include <iostream>
-#include <ctime>
-#include <cstdio>
-
 namespace ml = mir::logging;
 
 ml::MultiLogger::MultiLogger(std::initializer_list<std::shared_ptr<Logger>> loggers)
