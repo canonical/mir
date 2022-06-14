@@ -89,7 +89,7 @@ mtf::AsyncServerRunner::AsyncServerRunner()
                 }
             }
 
-            return nullptr;
+            return std::make_shared<ml::DumbConsoleLogger>();
         });
 }
 
