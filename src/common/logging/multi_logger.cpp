@@ -28,7 +28,7 @@ void ml::MultiLogger::log(Severity severity,
                           std::string const& message,
                           std::string const& component)
 {
-    for (auto& logger : loggers)
+    for (auto const& logger : loggers)
     {
         logger->log(severity, message, component);
     }
