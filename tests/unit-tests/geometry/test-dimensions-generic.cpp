@@ -14,14 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/dimensions_generic.h"
+#include "mir/geometry/dimensions.h"
 
 #include "boost/throw_exception.hpp"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 using namespace mir::geometry::generic;
-using namespace mir::geometry;
 
 TEST(geometry, generic_casting_between_same_tag)
 {

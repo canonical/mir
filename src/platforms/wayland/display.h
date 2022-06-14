@@ -24,8 +24,6 @@
 #include <mir/graphics/display.h>
 #include <mir/graphics/display_report.h>
 #include <mir/renderer/gl/context_source.h>
-#include <mir/geometry/point_f.h>
-#include <mir/geometry/displacement_f.h>
 
 #include <xkbcommon/xkbcommon.h>
 

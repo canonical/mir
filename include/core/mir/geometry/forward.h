@@ -17,7 +17,7 @@
 #ifndef MIR_GEOMETRY_FORWARD_H_
 #define MIR_GEOMETRY_FORWARD_H_
 
-#include "dimensions_generic.h"
+#include "dimensions.h"
 
 namespace mir
 {
@@ -42,6 +42,11 @@ using Point = generic::Point<generic::Value<int>::Wrapper>;
 using Size = generic::Size<generic::Value<int>::Wrapper>;
 using Displacement = generic::Displacement<generic::Value<int>::Wrapper>;
 using Rectangle = generic::Rectangle<Point, Size>;
+
+using PointF = generic::Point<generic::Value<float>::Wrapper>;
+using SizeF = generic::Size<generic::Value<float>::Wrapper>;
+using DisplacementF = generic::Displacement<generic::Value<float>::Wrapper>;
+using RectangleF = generic::Rectangle<PointF, SizeF>;
 }
 }
 
