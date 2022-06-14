@@ -32,12 +32,6 @@ struct Displacement : generic::Displacement<detail::IntWrapper>
     using SizeType = Size;
 
     using generic::Displacement<detail::IntWrapper>::Displacement;
-
-    long long length_squared() const
-    {
-        long long x = dx.as_int(), y = dy.as_int();
-        return x * x + y * y;
-    }
 };
 }
 }

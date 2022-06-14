@@ -61,6 +61,20 @@ struct Displacement : detail::DisplacementBase
     template<typename DeltaXType, typename DeltaYType>
     constexpr Displacement(DeltaXType&& dx, DeltaYType&& dy) : dx{dx}, dy{dy} {}
 
+    template <typename Q = typename T<DeltaXTag>::ValueType>
+    constexpr typename std::enable_if<std::is_integral<Q>::value, long long>::type length_squared() const
+    {
+        long long x = dx.as_value(), y = dy.as_value();
+        return x * x + y * y;
+    }
+
+    template <typename Q = typename T<DeltaXTag>::ValueType>
+    constexpr typename std::enable_if<!std::is_integral<Q>::value, long long>::type length_squared() const
+    {
+        typename T<DeltaXTag>::ValueType x = dx.as_value(), y = dy.as_value();
+        return x * x + y * y;
+    }
+
     T<DeltaXTag> dx;
     T<DeltaYTag> dy;
 };
