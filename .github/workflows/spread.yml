@@ -43,6 +43,7 @@ jobs:
                     "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_impish"
                     "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_jammy"
                     "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_arm64"
+                    "google:ubuntu-20.04-64:spread/build/sbuild:ubuntu_armhf"
                     "google:ubuntu-20.04-64:spread/build/ubuntu:rpi"
                     "google:ubuntu-20.04-64:spread/build/ubuntu:clang"
                     "google:fedora-35-64:spread/build/fedora:amd64"
