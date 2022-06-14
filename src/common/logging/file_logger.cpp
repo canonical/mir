@@ -16,11 +16,7 @@
 
 #include "mir/logging/file_logger.h"
 
-#include <boost/throw_exception.hpp>
-
 #include <iostream>
-#include <ctime>
-#include <cstdio>
 
 namespace ml = mir::logging;
 

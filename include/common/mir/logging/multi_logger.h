@@ -19,7 +19,6 @@
 
 #include "mir/logging/logger.h"
 
-#include <fstream>
 #include <initializer_list>
 #include <string>
 #include <vector>
