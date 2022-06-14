@@ -17,6 +17,7 @@
 #ifndef MIR_GEOMETRY_DIMENSIONS_H_
 #define MIR_GEOMETRY_DIMENSIONS_H_
 
+#include "forward.h"
 #include "dimensions_generic.h"
 
 #include <cstdint>
@@ -27,30 +28,15 @@ namespace mir
 /// and the operations that they support.
 namespace geometry
 {
-namespace detail
-{
-template<typename Tag>
-class IntWrapper : public generic::Value<int>::Wrapper<Tag>
-{
-public:
-    template<typename OtherTag>
-    using Corresponding = IntWrapper<OtherTag>;
-
-    using generic::Value<int>::Wrapper<Tag>::Wrapper;
-
-    constexpr IntWrapper() {}
-};
-} // namespace detail
-
-typedef detail::IntWrapper<WidthTag> Width;
-typedef detail::IntWrapper<HeightTag> Height;
+using Width = generic::Width<int>;
+using Height = generic::Height<int>;
 // Just to be clear, mir::geometry::Stride is the stride of the buffer in bytes
-typedef detail::IntWrapper<struct StrideTag> Stride;
+using Stride = generic::Value<int>::Wrapper<struct StrideTag>;
 
-typedef detail::IntWrapper<XTag> X;
-typedef detail::IntWrapper<YTag> Y;
-typedef detail::IntWrapper<DeltaXTag> DeltaX;
-typedef detail::IntWrapper<DeltaYTag> DeltaY;
+using X = generic::X<int>;
+using Y = generic::Y<int>;
+using DeltaX = generic::DeltaX<int>;
+using DeltaY = generic::DeltaY<int>;
 }
 }
 

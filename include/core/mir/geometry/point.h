@@ -17,21 +17,8 @@
 #ifndef MIR_GEOMETRY_POINT_H_
 #define MIR_GEOMETRY_POINT_H_
 
+#include "forward.h"
 #include "point_generic.h"
 #include "dimensions.h"
 
-namespace mir
-{
-namespace geometry
-{
-struct Size;
-struct Displacement;
-struct Point : generic::Point<detail::IntWrapper>
-{
-    using SizeType = Size;
-    using DisplacementType = Displacement;
-    using generic::Point<detail::IntWrapper>::Point;
-};
-}
-}
 #endif /* MIR_GEOMETRY_POINT_H_ */

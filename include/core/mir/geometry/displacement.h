@@ -17,23 +17,10 @@
 #ifndef MIR_GEOMETRY_DISPLACEMENT_H_
 #define MIR_GEOMETRY_DISPLACEMENT_H_
 
+#include "forward.h"
 #include "displacement_generic.h"
 #include "dimensions.h"
 #include "point.h"
 #include "size.h"
-
-namespace mir
-{
-namespace geometry
-{
-struct Displacement : generic::Displacement<detail::IntWrapper>
-{
-    using PointType = Point;
-    using SizeType = Size;
-
-    using generic::Displacement<detail::IntWrapper>::Displacement;
-};
-}
-}
 
 #endif /* MIR_GEOMETRY_DISPLACEMENT_H_ */

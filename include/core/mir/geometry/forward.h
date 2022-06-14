@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -17,16 +17,32 @@
 #ifndef MIR_GEOMETRY_FORWARD_H_
 #define MIR_GEOMETRY_FORWARD_H_
 
+#include "dimensions_generic.h"
+
 namespace mir
 {
 namespace geometry
 {
-// Declarations of geometric concepts I think we'll need
+namespace generic
+{
+template<template<typename> typename T>
 struct Point;
+
+template<template<typename> typename T>
 struct Size;
-class Displacement;
+
+template<template<typename> typename T>
+struct Displacement;
+
+template<typename P, typename S>
 struct Rectangle;
+}
+
+using Point = generic::Point<generic::Value<int>::Wrapper>;
+using Size = generic::Size<generic::Value<int>::Wrapper>;
+using Displacement = generic::Displacement<generic::Value<int>::Wrapper>;
+using Rectangle = generic::Rectangle<Point, Size>;
 }
 }
 
-#endif /* FORWARD_H_ */
+#endif // MIR_GEOMETRY_FORWARD_H_

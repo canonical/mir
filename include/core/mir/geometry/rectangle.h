@@ -17,21 +17,10 @@
 #ifndef MIR_GEOMETRY_RECTANGLE_H_
 #define MIR_GEOMETRY_RECTANGLE_H_
 
+#include "forward.h"
 #include "rectangle_generic.h"
 #include "point.h"
 #include "size.h"
 #include "displacement.h"
-
-namespace mir
-{
-namespace geometry
-{
-
-struct Rectangle : generic::Rectangle<Point, Size>
-{
-    using generic::Rectangle<Point, Size>::Rectangle;
-};
-}
-}
 
 #endif /* MIR_GEOMETRY_RECTANGLE_H_ */
