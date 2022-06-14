@@ -60,17 +60,15 @@ mtf::AsyncServerRunner::AsyncServerRunner()
     configure_from_commandline(server);
 
     server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
-    server.override_the_logger([&]()
+    server.override_the_logger([&]() -> std::shared_ptr<ml::Logger>
         {
-            std::shared_ptr<ml::Logger> result{};
-
             std::ofstream out{output_filename};
             if (out.good())
             {
                 std::cerr << "Saving server logs to: " << output_filename << std::endl;
                 if (server.get_options()->get<bool>(mtd::logging_opt))
                 {
-                    result = std::make_shared<ml::MultiLogger>(
+                    return std::make_shared<ml::MultiLogger>(
                         std::initializer_list<std::shared_ptr<ml::Logger>>{
                             std::make_shared<ml::DumbConsoleLogger>(),
                             std::make_shared<ml::FileLogger>(std::move(out))
@@ -79,7 +77,7 @@ mtf::AsyncServerRunner::AsyncServerRunner()
                 }
                 else
                 {
-                    result = std::make_shared<ml::FileLogger>(std::move(out));
+                    return std::make_shared<ml::FileLogger>(std::move(out));
                 }
             }
             else
@@ -87,10 +85,11 @@ mtf::AsyncServerRunner::AsyncServerRunner()
                 std::cerr << "Failed to open log file: " << output_filename << std::endl;
                 if (!server.get_options()->get<bool>(mtd::logging_opt))
                 {
-                  result = std::make_shared<mtd::NullLogger>();
+                    return std::make_shared<mtd::NullLogger>();
                 }
             }
-            return result;
+
+            return nullptr;
         });
 }
 
