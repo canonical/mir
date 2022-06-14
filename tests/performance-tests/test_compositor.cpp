@@ -16,6 +16,7 @@
 
 #include "system_performance_test.h"
 
+#include <fstream>
 #include <string>
 
 using namespace std::literals::chrono_literals;
@@ -34,8 +35,32 @@ struct CompositorPerformance : SystemPerformanceTest
     void read_compositor_report()
     {
         char line[256];
+
+        const ::testing::TestInfo *const test_info =
+                ::testing::UnitTest::GetInstance()->current_test_info();
+
+        char output_filename[256];
+        snprintf(output_filename, sizeof(output_filename) - 1,
+                 "/tmp/%s_%s_server.log",
+                 test_info->test_case_name(), test_info->name());
+        std::ofstream out{output_filename};
+
+        if (out.good())
+        {
+            std::cerr << "Saving server logs to: " << output_filename << std::endl;
+        }
+        else
+        {
+            std::cerr << "Failed to open log file: " << output_filename << std::endl;
+        }
+
         while (fgets(line, sizeof(line), server_output))
         {
+            if (out.good())
+            {
+                out << line;
+            }
+
             if (char const* perf = strstr(line, "averaged "))
             {
                 float fps, render_time;
