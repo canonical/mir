@@ -30,6 +30,7 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/fake_shared.h"
+#include "mir/test/geometry_matchers.h"
 
 #include "src/server/report/null_report_factory.h"
 
@@ -1090,10 +1091,8 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_size_when_frame
     ON_CALL(*buffer_stream, stream_size())
         .WillByDefault(Return(stream_size));
 
-    geom::Rectangle given_area;
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, _)).WillOnce(SaveArg<2>(&given_area));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::SizeEq(stream_size)));
     buffer_stream->frame_posted_callback(stream_size);
-    EXPECT_THAT(given_area.size, Eq(stream_size));
 }
 
 TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_stream_size_when_stream_size_differs_from_buffer_size)
@@ -1110,10 +1109,8 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_stream_size_when_stream
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
-    geom::Rectangle given_area;
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, _)).WillOnce(SaveArg<2>(&given_area));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::SizeEq(stream_size)));
     buffer_stream->frame_posted_callback(stream_size * 2);
-    EXPECT_THAT(given_area.size, Eq(stream_size));
 }
 
 TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_stream_info_size_when_stream_info_has_explicit_size)
@@ -1131,10 +1128,8 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_stream_info_size_when_s
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, stream_info_size}});
 
-    geom::Rectangle given_area;
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, _)).WillOnce(SaveArg<2>(&given_area));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::SizeEq(stream_info_size)));
     buffer_stream->frame_posted_callback(stream_size);
-    EXPECT_THAT(given_area.size, Eq(stream_info_size));
 }
 
 TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_surface_position_when_frame_is_posted)
@@ -1148,11 +1143,9 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_surface_position_when_f
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
-    geom::Rectangle given_area;
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, _)).WillOnce(SaveArg<2>(&given_area));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::TopLeftEq(surface_position)));
     surface.move_to(surface_position);
     buffer_stream->frame_posted_callback({20, 30});
-    EXPECT_THAT(given_area.top_left, Eq(surface_position));
 }
 
 TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_offset_when_stream_info_has_offset)
@@ -1169,11 +1162,9 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_offset_when_str
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, stream_info_offset, {}}});
 
-    geom::Rectangle given_area;
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, _)).WillOnce(SaveArg<2>(&given_area));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::TopLeftEq(surface_position + stream_info_offset)));
     surface.move_to(surface_position);
     buffer_stream->frame_posted_callback({20, 30});
-    EXPECT_THAT(given_area.top_left, Eq(surface_position + stream_info_offset));
 }
 
 TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_offset_when_surface_has_margins)
@@ -1190,12 +1181,10 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_offset_when_sur
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
-    geom::Rectangle given_area;
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, _)).WillOnce(SaveArg<2>(&given_area));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::TopLeftEq(surface_position + margin_top + margin_left)));
     surface.move_to(surface_position);
     surface.set_window_margins(margin_top, margin_left, margin_bottom, margin_right);
     buffer_stream->frame_posted_callback({20, 30});
-    EXPECT_THAT(given_area.top_left, Eq(surface_position + margin_top + margin_left));
 }
 
 TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)
