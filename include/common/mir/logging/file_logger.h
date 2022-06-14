@@ -19,6 +19,7 @@
 
 #include "mir/logging/logger.h"
 
+#include <atomic>
 #include <fstream>
 #include <string>
 
@@ -36,6 +37,7 @@ protected:
 
 private:
     std::ofstream file;
+    std::atomic_bool file_bad{false};
 };
 }
 }

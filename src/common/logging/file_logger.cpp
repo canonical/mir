@@ -27,20 +27,19 @@ namespace ml = mir::logging;
 ml::FileLogger::FileLogger(std::ofstream stream)
 : file{std::move(stream)}
 {
-    if (!file.good())
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Received invalid file stream for logging"});
-    }
 }
 
 void ml::FileLogger::log(Severity severity,
                          std::string const& message,
                          std::string const& component)
 {
-    if (!file.good())
+    if (file.good())
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to write to log file"});
+        ml::format_message(file, severity, message, component);
     }
-
-    ml::format_message(file, severity, message, component);
+    else if (!file_bad.load())
+    {
+        std::cerr << "Failed to write to log file" << std::endl;
+        file_bad.store(true);
+    }
 }
