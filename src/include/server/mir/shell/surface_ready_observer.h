@@ -25,7 +25,6 @@
 namespace mir
 {
 namespace scene { class Session; class Surface; }
-namespace geometry { struct Size; }
 
 namespace shell
 {

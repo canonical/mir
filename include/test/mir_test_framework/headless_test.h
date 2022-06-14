@@ -17,6 +17,7 @@
 #ifndef MIR_TEST_FRAMEWORK_HEADLESS_TEST_H_
 #define MIR_TEST_FRAMEWORK_HEADLESS_TEST_H_
 
+#include "mir/geometry/forward.h"
 #include "mir_test_framework/async_server_runner.h"
 
 #include <gtest/gtest.h>
@@ -24,7 +25,6 @@
 
 namespace mir { class SharedLibrary; }
 namespace mir { namespace graphics { class Display; }}
-namespace mir { namespace geometry { struct Rectangle; }}
 
 namespace mir_test_framework
 {

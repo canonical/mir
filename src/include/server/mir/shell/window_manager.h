@@ -20,12 +20,12 @@
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/event.h"
+#include "mir/geometry/forward.h"
 
 #include <memory>
 
 namespace mir
 {
-namespace geometry { struct Rectangle; }
 namespace scene { class Session; class Surface; }
 namespace shell
 {

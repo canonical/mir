@@ -18,6 +18,7 @@
 #define MIR_SCENE_SIMPLE_OBSERVER_H_
 
 #include "mir/scene/observer.h"
+#include "mir/geometry/forward.h"
 
 #include <functional>
 #include <map>
@@ -25,7 +26,6 @@
 
 namespace mir
 {
-namespace geometry { struct Rectangle; }
 namespace scene
 {
 class SurfaceObserver;

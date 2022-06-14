@@ -34,10 +34,6 @@
 
 namespace mir
 {
-namespace geometry
-{
-struct Rectangle;
-}
 namespace graphics
 {
 class CursorImage;

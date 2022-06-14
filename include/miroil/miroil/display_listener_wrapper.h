@@ -16,10 +16,12 @@
 
 #ifndef MIROIL_DISPLAY_LISTENER_WRAPPER_H
 #define MIROIL_DISPLAY_LISTENER_WRAPPER_H
+
+#include "mir/geometry/forward.h"
+
 #include <memory>
 
 namespace mir { 
-    namespace geometry { struct Rectangle; } 
     namespace compositor { class DisplayListener; }
 }
 
