@@ -25,7 +25,7 @@
 #include "mir/options/option.h"
 #include <mir/report_exception.h>
 #include <mir/thread_name.h>
-#include <mir/test/doubles/null_logger.h>  // for mtd::logging_opt and _descr
+#include "mir/test/doubles/null_logger.h"
 
 #include <boost/throw_exception.hpp>
 
