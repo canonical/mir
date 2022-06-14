@@ -34,8 +34,8 @@ ml::FileLogger::FileLogger(std::ofstream stream)
 }
 
 void ml::FileLogger::log(Severity severity,
-                         const std::string& message,
-                         const std::string& component)
+                         std::string const& message,
+                         std::string const& component)
 {
     if (!file.good())
     {

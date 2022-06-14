@@ -31,8 +31,8 @@ void ml::MultiLogger::add(std::shared_ptr<Logger> logger)
 }
 
 void ml::MultiLogger::log(Severity severity,
-                          const std::string& message,
-                          const std::string& component)
+                          std::string const& message,
+                          std::string const& component)
 {
     for (auto it = loggers.begin(); it != loggers.end();)
     {

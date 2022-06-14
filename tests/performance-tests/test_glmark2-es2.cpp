@@ -91,7 +91,7 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
         return score;
     }
 
-    void record_properties(const std::string& log_filename, const std::string& prefix)
+    void record_properties(std::string const& log_filename, std::string const& prefix)
     {
         std::ifstream logs(log_filename);
         if (!logs)

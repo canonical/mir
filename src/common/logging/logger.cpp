@@ -70,7 +70,7 @@ void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
     }
 }
 
-void ml::format_message(std::ostream& out, ml::Severity severity, const std::string& message, const std::string& component)
+void ml::format_message(std::ostream& out, ml::Severity severity, std::string const& message, std::string const& component)
 {
     static const char* lut[5] =
     {

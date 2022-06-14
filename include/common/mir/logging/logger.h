@@ -63,7 +63,7 @@ protected:
 
 void log(Severity severity, const std::string& message, const std::string& component);
 void set_logger(std::shared_ptr<Logger> const& new_logger);
-void format_message(std::ostream&, Severity, const std::string&, const std::string&);
+void format_message(std::ostream& stream, Severity severity, std::string const& message, std::string const& component);
 
 }
 }
