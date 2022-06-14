@@ -19,6 +19,7 @@
 
 #include <iosfwd>
 #include <type_traits>
+#include <cstdint>
 
 namespace mir
 {
@@ -63,6 +64,12 @@ struct Value
 
         template <typename Q = T>
         constexpr typename std::enable_if<std::is_integral<Q>::value, int>::type as_int() const
+        {
+            return this->value;
+        }
+
+        template <typename Q = T>
+        constexpr typename std::enable_if<std::is_integral<Q>::value, uint32_t>::type as_uint32_t() const
         {
             return this->value;
         }

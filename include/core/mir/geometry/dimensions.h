@@ -39,11 +39,6 @@ public:
     using generic::Value<int>::Wrapper<Tag>::Wrapper;
 
     constexpr IntWrapper() {}
-
-    constexpr uint32_t as_uint32_t() const  // TODO: Deprecate this later
-    {
-        return (uint32_t)this->value;
-    }
 };
 } // namespace detail
 
