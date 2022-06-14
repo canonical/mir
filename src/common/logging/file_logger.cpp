@@ -2,19 +2,19 @@
  * Copyright © 2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 or 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/test/doubles/file_logger.h"
+#include "mir/logging/file_logger.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -23,9 +23,8 @@
 #include <cstdio>
 
 namespace ml = mir::logging;
-namespace mtd = mir::test::doubles;
 
-mtd::FileLogger::FileLogger(std::ofstream stream)
+ml::FileLogger::FileLogger(std::ofstream stream)
 : file{std::move(stream)}
 {
     if (!file.good())
@@ -34,9 +33,9 @@ mtd::FileLogger::FileLogger(std::ofstream stream)
     }
 }
 
-void mtd::FileLogger::log(mir::logging::Severity severity,
-                          const std::string& message,
-                          const std::string& component)
+void ml::FileLogger::log(Severity severity,
+                         const std::string& message,
+                         const std::string& component)
 {
     if (!file.good())
     {
