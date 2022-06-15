@@ -1,13 +1,15 @@
 libmiroil.so.1 libmiroil1 #MINVER#
  MIROIL_1.0@MIROIL_1.0 2.7.0
+ _ZN6miroil22DisplayListenerWrapper11add_displayERKN3mir8geometry7generic9RectangleIiEE@MIROIL_1.0 2.8.0
+ _ZN6miroil22DisplayListenerWrapper14remove_displayERKN3mir8geometry7generic9RectangleIiEE@MIROIL_1.0 2.8.0
  (c++)"miroil::Compositor::~Compositor()@MIROIL_1.0" 2.7.0
  (c++)"miroil::DisplayConfigurationControllerWrapper::DisplayConfigurationControllerWrapper(std::shared_ptr<mir::shell::DisplayConfigurationController> const&)@MIROIL_1.0" 2.7.0
  (c++)"miroil::DisplayConfigurationControllerWrapper::set_base_configuration(std::shared_ptr<mir::graphics::DisplayConfiguration> const&)@MIROIL_1.0" 2.7.0
  (c++)"miroil::DisplayConfigurationPolicy::DisplayConfigurationPolicy()@MIROIL_1.0" 2.7.0
  (c++)"miroil::DisplayConfigurationPolicy::~DisplayConfigurationPolicy()@MIROIL_1.0" 2.7.0
  (c++)"miroil::DisplayListenerWrapper::DisplayListenerWrapper(std::shared_ptr<mir::compositor::DisplayListener> const&)@MIROIL_1.0" 2.7.0
- (c++)"miroil::DisplayListenerWrapper::add_display(mir::geometry::Rectangle const&)@MIROIL_1.0" 2.7.0
- (c++)"miroil::DisplayListenerWrapper::remove_display(mir::geometry::Rectangle const&)@MIROIL_1.0" 2.7.0
+#MISSING: 2.8.0# (c++)"miroil::DisplayListenerWrapper::add_display(mir::geometry::Rectangle const&)@MIROIL_1.0" 2.7.0
+#MISSING: 2.8.0# (c++)"miroil::DisplayListenerWrapper::remove_display(mir::geometry::Rectangle const&)@MIROIL_1.0" 2.7.0
  (c++)"miroil::DisplayListenerWrapper::~DisplayListenerWrapper()@MIROIL_1.0" 2.7.0
  (c++)"miroil::Edid::Descriptor::string_value[abi:cxx11]() const@MIROIL_1.0" 2.7.0
  (c++)"miroil::Edid::parse_data(std::vector<unsigned char, std::allocator<unsigned char> > const&)@MIROIL_1.0" 2.7.0
