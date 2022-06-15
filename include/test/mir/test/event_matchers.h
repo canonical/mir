@@ -66,6 +66,23 @@ template<typename T> auto inline event_types_match(
     return true;
 }
 
+/// Takes in a Mir*EventModifiers and an int bitmask and determines if they are the same.
+/// If not, the discrepancy is logged to the MatchResultListener.
+template<typename T> auto inline modifiers_match(
+    T const& left,
+    int right,
+    testing::MatchResultListener* result_listener)
+-> bool
+{
+    if (left != right)
+    {
+        *result_listener << "Left modifiers (" << left << ") do not match right modifiers (" << right << ")";
+        return false;
+    }
+
+    return true;
+}
+
 /// Checks if a Mir*Event is a nullptr. 
 /// If true, this is logged to the MatchResultListener.
 template<typename T> auto inline event_is_nullptr(
@@ -208,7 +225,7 @@ MATCHER_P(KeyWithModifiers, modifiers, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
     
-    if(mir_keyboard_event_modifiers(kev) != modifiers)
+    if(!modifiers_match(mir_keyboard_event_modifiers(kev), modifiers, result_listener))
     {
         return false;
     }
@@ -506,6 +523,10 @@ MATCHER_P(PointerEventWithModifiers, modifiers, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
+    if (!modifiers_match(mir_pointer_event_modifiers(pev), modifiers, result_listener))
+        return false;
+
+    return true;
 }
 
 MATCHER_P2(PointerEventWithDiff, expect_dx, expect_dy, "")
