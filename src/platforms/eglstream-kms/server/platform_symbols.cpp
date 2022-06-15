@@ -477,17 +477,17 @@ auto probe_rendering_platform(
                     missing_extensions.push_back(extension);
                 }
             }
-            if (!missing_extensions.empty())
+
+            for (auto const missing_extension: missing_extensions)
             {
-                for (auto const missing_extension: missing_extensions)
-                {
-                    mir::log_info("EGLDevice found but unsuitable. Missing extension %s", missing_extension);
-                }
-                continue;
+                mir::log_info("EGLDevice found but unsuitable. Missing extension %s", missing_extension);
             }
 
-            // We've got EGL, and we've got the necessary EGL extensions. We're good.
-            supported_devices.back().support_level = mg::PlatformPriority::best;
+            if (missing_extensions.empty())
+            {
+                // We've got EGL, and we've got the necessary EGL extensions. We're good.
+                supported_devices.back().support_level = mg::PlatformPriority::best;
+            }
         }
     }
     if (supported_devices.empty())
