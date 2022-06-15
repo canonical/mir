@@ -83,6 +83,23 @@ template<typename T> auto inline modifiers_match(
     return true;
 }
 
+/// Takes in two xkb_keysym_t values and determines if they are the same.
+/// If not, the discrepancy is logged to the MatchResultListener.
+auto inline keysyms_match(
+    xkb_keysym_t left,
+    xkb_keysym_t right,
+    testing::MatchResultListener* result_listener)
+-> bool
+{
+    if (left != right)
+    {
+        *result_listener << "Left keysym does not match right keysym";
+        return false;
+    }
+
+    return true;
+}
+
 /// Checks if a Mir*Event is a nullptr. 
 /// If true, this is logged to the MatchResultListener.
 template<typename T> auto inline event_is_nullptr(
@@ -239,7 +256,7 @@ MATCHER_P(KeyOfSymbol, keysym, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
 
-    if(mir_keyboard_event_keysym(kev) != static_cast<xkb_keysym_t>(keysym))
+    if(!keysyms_match(mir_keyboard_event_keysym(kev), static_cast<xkb_keysym_t>(keysym), result_listener))
         return false;
 
     return true;
