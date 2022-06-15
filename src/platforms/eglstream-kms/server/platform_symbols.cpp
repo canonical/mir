@@ -163,7 +163,7 @@ auto probe_display_platform(
     }
 
     std::vector<mg::SupportedDevice> supported_devices;
-    for (auto i = 0; i <= device_count; ++i)
+    for (auto i = 0; i != device_count; ++i)
     {
         auto const& device = devices[i];
         auto device_extensions = eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
@@ -422,7 +422,7 @@ auto probe_rendering_platform(
     }
 
     std::vector<mg::SupportedDevice> supported_devices;
-    for (auto i = 0; i <= device_count; ++i)
+    for (auto i = 0; i != device_count; ++i)
     {
         auto const& device = devices[i];
         try
