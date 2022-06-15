@@ -100,6 +100,23 @@ auto inline keysyms_match(
     return true;
 }
 
+/// Takes in two scan codes and determines if they are the same.
+/// If not, the discrepancy is logged to the MatchResultListener.
+auto inline scan_codes_match(
+        int left,
+        int right,
+        testing::MatchResultListener* result_listener)
+-> bool
+{
+    if (left != right)
+    {
+        *result_listener << "Left scan code (" << left << ") does not match right scan code (" << right << ")";
+        return false;
+    }
+
+    return true;
+}
+
 /// Checks if a Mir*Event is a nullptr. 
 /// If true, this is logged to the MatchResultListener.
 template<typename T> auto inline event_is_nullptr(
@@ -280,7 +297,7 @@ MATCHER_P(KeyOfScanCode, code, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
 
-    if(mir_keyboard_event_scan_code(kev) != code)
+    if(!scan_codes_match(mir_keyboard_event_scan_code(kev), code, result_listener))
         return false;
 
     return true;
@@ -307,10 +324,10 @@ MATCHER_P(MirKeyboardEventMatches, event, "")
     if (event_is_nullptr(expected, result_listener) || event_is_nullptr(actual, result_listener))
         return false;
 
-    return mir_keyboard_event_action(expected) == mir_keyboard_event_action(actual) &&
-        mir_keyboard_event_keysym(expected) == mir_keyboard_event_keysym(actual) &&
-        mir_keyboard_event_scan_code(expected) == mir_keyboard_event_scan_code(actual) &&
-        mir_keyboard_event_modifiers(expected) == mir_keyboard_event_modifiers(actual);
+    return actions_match(mir_keyboard_event_action(expected), mir_keyboard_event_action(actual), result_listener) &&
+        keysyms_match(mir_keyboard_event_keysym(expected), mir_keyboard_event_keysym(actual), result_listener) &&
+        scan_codes_match(mir_keyboard_event_scan_code(expected), mir_keyboard_event_scan_code(actual), result_listener) &&
+        modifiers_match(mir_keyboard_event_modifiers(expected), mir_keyboard_event_modifiers(actual), result_listener);
 }
 
 MATCHER_P(MirTouchEventMatches, event, "")
