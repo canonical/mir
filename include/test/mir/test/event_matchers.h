@@ -32,6 +32,23 @@
 void PrintTo(MirEvent const& event, std::ostream *os);
 void PrintTo(MirEvent const* event, std::ostream *os);
 
+/// Takes in two mir_*_action_* values and determines if they are the same.
+/// If not, the discrepancy is logged to the MatchResultListener.
+template<typename T> auto inline actions_match(
+    T const& left,
+    T const& right,
+    testing::MatchResultListener* result_listener)
+-> bool
+{   
+    if (left != right)
+    {
+        *result_listener << "Left action (" << get_enum_value(left) << ") does not match right action (" << get_enum_value(right) << ")";
+        return false;
+    }
+
+    return true;
+}
+
 /// Checks if a Mir*Event is a nullptr. 
 /// If true, this is logged to the MatchResultListener.
 template<typename T> auto inline event_is_nullptr(
@@ -138,7 +155,7 @@ MATCHER(KeyDownEvent, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
     
-    if (mir_keyboard_event_action(kev) != mir_keyboard_action_down)
+    if (!actions_match(mir_keyboard_event_action(kev), mir_keyboard_action_down, result_listener))
         return false;
 
     return true;
@@ -150,7 +167,7 @@ MATCHER(KeyRepeatEvent, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
     
-    if (mir_keyboard_event_action(kev) != mir_keyboard_action_repeat)
+    if (!actions_match(mir_keyboard_event_action(kev), mir_keyboard_action_repeat, result_listener))
         return false;
 
     return true;
@@ -162,7 +179,7 @@ MATCHER(KeyUpEvent, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
     
-    if (mir_keyboard_event_action(kev) != mir_keyboard_action_up)
+    if (!actions_match(mir_keyboard_event_action(kev), mir_keyboard_action_up, result_listener))
         return false;
 
     return true;
@@ -274,9 +291,11 @@ MATCHER(PointerEnterEvent, "")
     auto pev = maybe_pointer_event(to_address(arg));
     if (event_is_nullptr(pev, result_listener))
         return false;
-    if (mir_pointer_event_action(pev) == mir_pointer_action_enter)
-        return true;
-    return false;
+
+    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_enter, result_listener))
+        return false;
+
+    return true;
 }
 
 MATCHER(PointerLeaveEvent, "")
@@ -285,8 +304,10 @@ MATCHER(PointerLeaveEvent, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
-        return true;
-    return false;
+    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_leave, result_listener))
+        return false;
+
+    return true;
 }
 
 inline bool button_event_matches(MirPointerEvent const* pev, float x, float y, MirPointerAction action, MirPointerButtons button_state,
@@ -295,6 +316,7 @@ inline bool button_event_matches(MirPointerEvent const* pev, float x, float y, M
     if (event_is_nullptr(pev, result_listener))
         return false;
     
+    if (check_action && !actions_match(mir_pointer_event_action(pev), action, result_listener))
         return false;
     if (check_buttons && mir_pointer_event_buttons(pev) != button_state)
         return false;
@@ -317,6 +339,7 @@ MATCHER_P2(ButtonDownEventWithButton, pos, button, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
         
+    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_button_down, result_listener))
         return false;
     if (mir_pointer_event_button_state(pev, static_cast<MirPointerButton>(button)) == false)
         return false;
@@ -351,6 +374,7 @@ MATCHER_P2(ButtonUpEventWithButton, pos, button, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
     
+    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_button_up, result_listener))
         return false;
     if (mir_pointer_event_button_state(pev, button) == true)
         return false;
@@ -368,6 +392,7 @@ MATCHER_P2(PointerAxisChange, scroll_axis, value, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
+    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_motion, result_listener))
         return false;
     if (mir_pointer_event_axis_value(pev, scroll_axis) != value)
         return false;
@@ -380,7 +405,7 @@ MATCHER_P2(TouchEvent, x, y, "")
     if (event_is_nullptr(tev, result_listener))
         return false;
 
-    if (mir_touch_event_action(tev, 0) != mir_touch_action_down)
+    if (!actions_match(mir_touch_event_action(tev, 0), mir_touch_action_down, result_listener))
         return false;
     if (std::abs(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) - x) > 0.5f)
         return false;
@@ -396,9 +421,9 @@ MATCHER_P4(TouchContact, slot, action, x, y, "")
     if (event_is_nullptr(tev, result_listener))
         return false;
 
-    if (mir_touch_event_action(tev, slot) != action)
+    if (!actions_match(mir_touch_event_action(tev, slot), action, result_listener))
         return false;
-    if (std::abs(mir_touch_event_axis_value(tev, slot, mir_touch_axis_x) - x) > 0.5f)
+
         return false;
     if (std::abs(mir_touch_event_axis_value(tev, slot, mir_touch_axis_y) - y) > 0.5f)
         return false;
@@ -412,9 +437,9 @@ MATCHER_P2(TouchUpEvent, x, y, "")
     if (event_is_nullptr(tev, result_listener))
         return false;
 
-    if (mir_touch_event_action(tev, 0) != mir_touch_action_up)
+    if (!actions_match(mir_touch_event_action(tev, 0), mir_touch_action_up, result_listener))
         return false;
-    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) != x)
+
         return false;
     if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) != y)
         return false;
@@ -428,7 +453,9 @@ MATCHER_P2(PointerEventWithPosition, x, y, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
+    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_motion, result_listener))
         return false;
+
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
@@ -442,6 +469,7 @@ MATCHER_P2(PointerEnterEventWithPosition, x, y, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
+    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_enter, result_listener))
         return false;
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
@@ -465,7 +493,9 @@ MATCHER_P2(PointerEventWithDiff, expect_dx, expect_dy, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
+    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_motion, result_listener))
         return false;
+
     auto const error = 0.00001f;
     auto const actual_dx = mir_pointer_event_axis_value(pev,
                                                 mir_pointer_axis_relative_x);
@@ -484,6 +514,7 @@ MATCHER_P2(PointerEnterEventWithDiff, expect_dx, expect_dy, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
+    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_enter, result_listener))
         return false;
     auto const error = 0.00001f;
     auto const actual_dx = mir_pointer_event_axis_value(pev,
@@ -504,7 +535,7 @@ MATCHER_P4(TouchEventInDirection, x0, y0, x1, y1, "")
     if (event_is_nullptr(tev, result_listener))
         return false;
 
-    if (mir_touch_event_action(tev, 0) != mir_touch_action_change)
+    if (!actions_match(mir_touch_event_action(tev, 0), mir_touch_action_change, result_listener)) // TODO
         return false;
 
     auto x2 = mir_touch_event_axis_value(tev, 0, mir_touch_axis_x);
@@ -529,7 +560,7 @@ MATCHER(TouchMovementEvent, "")
     if (event_is_nullptr(tev, result_listener))
         return false;
 
-    if (mir_touch_event_action(tev, 0) != mir_touch_action_change)
+    if (!actions_match(mir_touch_event_action(tev, 0), mir_touch_action_change, result_listener))
         return false;
 
     return true;
@@ -541,7 +572,7 @@ MATCHER(PointerMovementEvent, "")
     if (event_is_nullptr(pev, *result_listener))
         return false;
 
-    if (mir_pointer_event_action(pev) != mir_pointer_action_motion)
+    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_motion, result_listener))
         return false;
 
     return true;
