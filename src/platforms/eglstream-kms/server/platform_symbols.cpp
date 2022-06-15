@@ -436,6 +436,7 @@ auto probe_rendering_platform(
         catch (std::exception const& e)
         {
             mir::log_debug("Failed to find kernel device for EGLDevice: %s", e.what());
+            continue;
         }
 
         EGLDisplay display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
