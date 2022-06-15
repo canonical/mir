@@ -49,6 +49,23 @@ template<typename T> auto inline actions_match(
     return true;
 }
 
+/// Takes in two Mir*EventTypes and determines if they are the same.
+/// If not, the discrepancy is logged to the MatchResultListener.
+template<typename T> auto inline event_types_match(
+    T const& left,
+    T const& right,
+    testing::MatchResultListener* result_listener)
+-> bool
+{
+    if (left != right)
+    {
+        *result_listener << "Left event type (" << left << ") does not match right event type (" << right << ")";
+        return false;
+    }
+
+    return true;
+}
+
 /// Checks if a Mir*Event is a nullptr. 
 /// If true, this is logged to the MatchResultListener.
 template<typename T> auto inline event_is_nullptr(
@@ -237,11 +254,15 @@ MATCHER_P(KeyOfScanCode, code, "")
 
 MATCHER(KeybaordResyncEvent, "")
 {
-    if (mir_event_get_type(arg.get()) != mir_event_type_input)
+    if (!event_types_match(mir_event_get_type(arg.get()), mir_event_type_input, result_listener))
     {
         return false;
     }
-    return mir_input_event_get_type(mir_event_get_input_event(arg.get())) == mir_input_event_type_keyboard_resync;
+
+    return event_types_match(
+        mir_input_event_get_type(mir_event_get_input_event(arg.get())), 
+        mir_input_event_type_keyboard_resync, 
+        result_listener);
 }
 
 MATCHER_P(MirKeyboardEventMatches, event, "")
@@ -581,8 +602,9 @@ MATCHER(PointerMovementEvent, "")
 MATCHER_P2(WindowEvent, attrib, value, "")
 {
     auto as_address = to_address(arg);
-    if (mir_event_get_type(as_address) != mir_event_type_window)
+    if (!event_types_match(mir_event_get_type(as_address), mir_event_type_window, result_listener))
         return false;
+    
     auto surface_ev = mir_event_get_window_event(as_address);
     auto window_attrib = mir_window_event_get_attribute(surface_ev);
     if (window_attrib != attrib)
@@ -595,9 +617,9 @@ MATCHER_P2(WindowEvent, attrib, value, "")
 MATCHER_P(OrientationEvent, direction, "")
 {
     auto as_address = to_address(arg);
-    if (mir_event_get_type(as_address) != mir_event_type_orientation)
+    if (!event_types_match(mir_event_get_type(as_address), mir_event_type_orientation, result_listener))
         return false;
-    auto oev = mir_event_get_orientation_event(as_address);
+    
     if (mir_orientation_event_get_direction(oev) != direction)
         return false;
     return true;
@@ -605,8 +627,9 @@ MATCHER_P(OrientationEvent, direction, "")
 
 MATCHER_P(InputDeviceIdMatches, device_id, "")
 {
-    if (mir_event_get_type(to_address(arg)) != mir_event_type_input)
+    if (!event_types_match(mir_event_get_type(to_address(arg)), mir_event_type_input, result_listener))
         return false;
+    
     auto input_event = mir_event_get_input_event(to_address(arg));
     return mir_input_event_get_device_id(input_event) == device_id;
 }
@@ -652,8 +675,9 @@ MATCHER_P(DeviceStateWithPressedKeys, keys, "")
 MATCHER_P2(DeviceStateWithPosition, x, y, "")
 {
     auto as_address = to_address(arg);
-    if (mir_event_get_type(as_address) != mir_event_type_input_device_state)
+    if (!event_types_match(mir_event_get_type(as_address), mir_event_type_input_device_state, result_listener))
         return false;
+    
     auto device_state = mir_event_get_input_device_state_event(as_address);
     return x == mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_x) &&
         y == mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_y);
