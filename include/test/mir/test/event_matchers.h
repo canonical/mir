@@ -32,6 +32,29 @@
 void PrintTo(MirEvent const& event, std::ostream *os);
 void PrintTo(MirEvent const* event, std::ostream *os);
 
+auto get_enum_value(MirEventType event)
+-> char const*;
+auto get_enum_value(MirInputEventType event)
+-> char const*;
+auto get_enum_value(MirInputEventModifier modifier)
+-> char const*;
+auto get_enum_value(MirKeyboardAction action) 
+-> char const*;
+auto get_enum_value(MirTouchAction action) 
+-> char const*;
+auto get_enum_value(MirTouchAxis axis)
+-> char const*;
+auto get_enum_value(MirTouchTooltype tooltype)
+-> char const*;
+auto get_enum_value(MirPointerAction action) 
+-> char const*;
+auto get_enum_value(MirPointerAxis axis)
+-> char const*;
+auto get_enum_value(MirPointerButton button)
+-> char const*;
+auto get_enum_value(MirPointerAxisSource source)
+-> char const*;
+
 namespace mir
 {
 namespace test
