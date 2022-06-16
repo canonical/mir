@@ -51,8 +51,8 @@ public:
     virtual void content_resized_to(Surface const* surf, geometry::Size const& content_size) = 0;
     virtual void moved_to(Surface const* surf, geometry::Point const& top_left) = 0;
     virtual void hidden_set_to(Surface const* surf, bool hide) = 0;
-    /// area is given in logical, global coordinates
-    virtual void frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& area) = 0;
+    /// damage is given in logical, global coordinates
+    virtual void frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage) = 0;
     virtual void alpha_set_to(Surface const* surf, float alpha) = 0;
     virtual void orientation_set_to(Surface const* surf, MirOrientation orientation) = 0;
     virtual void transformation_set_to(Surface const* surf, glm::mat4 const& t) = 0;

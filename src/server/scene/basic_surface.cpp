@@ -71,10 +71,10 @@ void ms::SurfaceObservers::hidden_set_to(Surface const* surf, bool hide)
         { observer->hidden_set_to(surf, hide); });
 }
 
-void ms::SurfaceObservers::frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& area)
+void ms::SurfaceObservers::frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->frame_posted(surf, frames_available, area); });
+        { observer->frame_posted(surf, frames_available, damage); });
 }
 
 void ms::SurfaceObservers::alpha_set_to(Surface const* surf, float alpha)
