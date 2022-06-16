@@ -168,6 +168,16 @@ template<typename T> auto axis_value_within_threshold(
     return true;
 }
 
+// If false, the discrepancy is logged to the MatchResultListener.
+auto touch_counts_match(
+    unsigned int expected,
+    unsigned int actual,
+    testing::MatchResultListener* result_listener)
+-> bool
+{
+    if (expected != actual)
+    {
+        *result_listener << "Expected touch count (" << expected << ") does not match actual (" << actual << ")";
         return false;
     }
 
