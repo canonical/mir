@@ -194,7 +194,7 @@ auto get_enum_value(MirPointerAxis axis)
     }
 }
 
-auto get_enum_value(MirPointerButton button)
+auto get_enum_value(MirPointerButtons button)
 -> char const*
 {
     switch(button)
@@ -209,7 +209,7 @@ auto get_enum_value(MirPointerButton button)
     STRINGIFY(mir_pointer_button_task)
 
     default:
-        throw std::logic_error("Invalid MirPointerButton in mir::test::get_enum_value()");
+        throw std::logic_error("Invalid MirPointerButtons in mir::test::get_enum_value()");
     }
 }
 
