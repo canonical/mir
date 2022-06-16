@@ -551,6 +551,201 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
     process_events(mouse);
 }
 
+TEST_F(LibInputDeviceOnTouchScreen, process_event_ignores_uncorrelated_touch_up_events)
+{
+    MirTouchId slot = 3;
+
+    InSequence seq;
+    EXPECT_CALL(mock_builder, touch_event(_, _)).Times(0);
+    EXPECT_CALL(mock_sink, handle_input(_)).Times(0);
+
+    touch_screen.start(&mock_sink, &mock_builder);
+    env.mock_libinput.setup_touch_up_event(fake_device, event_time_1, slot);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+    process_events(touch_screen);
+}
+
+TEST_F(LibInputDeviceOnTouchScreen, process_event_ignores_excessive_touch_events_on_coordinate_0_0)
+{
+    MirTouchId slot1 = 0, slot2 = 1, slot3 = 2;
+    float major = 0;
+    float minor = 0;
+    float pressure = 0.0f;
+    float x = 0;
+    float y = 0;
+    float orientation = 0;
+
+    InSequence seq;
+    EXPECT_CALL(mock_builder, touch_event(_, _)).Times(0);
+    EXPECT_CALL(mock_sink, handle_input(_)).Times(0);
+
+    touch_screen.start(&mock_sink, &mock_builder);
+
+    //Add 2 touches on coordinate 0,0 - this should be detected as a spurious touch
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot1, x, y, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_up_event(fake_device, event_time_1, slot1);
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot2, x, y, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_up_event(fake_device, event_time_1, slot2);
+
+    //Add another valid touch event to make sure the frame is really not processed
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot3, 1, 1, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_up_event(fake_device, event_time_1, slot3);
+
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+    process_events(touch_screen);
+}
+
+TEST_F(LibInputDeviceOnTouchScreen, process_event_does_not_ignore_valid_touch_events_on_coordinate_0_0)
+{
+    MirTouchId slot1 = 0, slot2 = 1;
+    float major = 0;
+    float minor = 0;
+    float pressure = 0.0f;
+    float x = 0;
+    float y = 0;
+    float orientation = 0;
+
+    InSequence seq;
+    EXPECT_CALL(mock_builder, touch_event(_, _)).Times(1);
+    EXPECT_CALL(mock_sink, handle_input(_)).Times(1);
+
+    touch_screen.start(&mock_sink, &mock_builder);
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot1, x, y, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_up_event(fake_device, event_time_1, slot1);
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot2, 1, 1, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+    process_events(touch_screen);
+}
+
+TEST_F(LibInputDeviceOnTouchScreen, process_event_ignores_touch_down_then_touch_up_in_same_frame)
+{
+    MirTouchId slot2 = 1;
+    float major = 0;
+    float minor = 0;
+    float pressure = 0.0f;
+    float orientation = 0;
+
+    InSequence seq;
+    EXPECT_CALL(mock_builder, touch_event(_, _)).Times(0);
+    EXPECT_CALL(mock_sink, handle_input(_)).Times(0);
+
+    touch_screen.start(&mock_sink, &mock_builder);
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot2, 1, 1, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_up_event(fake_device, event_time_1, slot2);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+    process_events(touch_screen);
+}
+
+TEST_F(LibInputDeviceOnTouchScreen, process_event_with_two_downs_but_one_up)
+{
+    MirTouchId slot1 = 0;
+    float major = 0;
+    float minor = 0;
+    float pressure = 0.0f;
+    float x = 1;
+    float y = 1;
+    float orientation = 0;
+
+    touch_screen.start(&mock_sink, &mock_builder);
+
+    // Send first down
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot1, x, y, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+
+    // Send second down
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_2, slot1, x, y, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_2);
+
+    // Send single up
+    env.mock_libinput.setup_touch_up_event(fake_device, event_time_3, slot1);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_3);
+
+    // Detect single touch down, a move, then single up
+    EXPECT_CALL(mock_builder, touch_event(_, _)).Times(3);
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchContact(0, mir_touch_action_down, x, y))).Times(1);
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchContact(0, mir_touch_action_change, x, y))).Times(1);
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchUpEvent(x, y))).Times(1);
+
+    process_events(touch_screen);
+}
+
+TEST_F(LibInputDeviceOnTouchScreen, ignore_second_down_in_same_frame_then_detect_up)
+{
+    MirTouchId slot1 = 0;
+    float major = 0;
+    float minor = 0;
+    float pressure = 0.0f;
+    float x = 1;
+    float y = 1;
+    float orientation = 0;
+
+    touch_screen.start(&mock_sink, &mock_builder);
+
+    // Send first down
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot1, x, y, major, minor,
+                                        pressure, orientation);
+
+    // Send second down
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot1, x, y, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+
+    // Send single up
+    env.mock_libinput.setup_touch_up_event(fake_device, event_time_2, slot1);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_2);
+
+    // Detect single touch down, then single up
+    EXPECT_CALL(mock_builder, touch_event(_, _)).Times(2);
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchContact(0, mir_touch_action_down, x, y))).Times(1);
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchUpEvent(x, y))).Times(1);
+
+    process_events(touch_screen);
+}
+
+
+TEST_F(LibInputDeviceOnTouchScreen, process_event_spurious_frame_when_down)
+{
+    MirTouchId slot1 = 0, slot2 = 1;
+    float major = 0;
+    float minor = 0;
+    float pressure = 0.0f;
+    float x = 1;
+    float y = 1;
+    float orientation = 0;
+
+    touch_screen.start(&mock_sink, &mock_builder);
+
+    // Send first down
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot1, x, y, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+
+    // Send spurious down+up
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_2, slot1, 0, 0, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_up_event(fake_device, event_time_2, slot1);
+
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_2, slot2, 0, 0, major, minor,
+                                        pressure, orientation);
+    env.mock_libinput.setup_touch_up_event(fake_device, event_time_2, slot2);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_2);
+
+    // Detect single touch down, a move then single up
+    EXPECT_CALL(mock_builder, touch_event(_, _)).Times(2);
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchContact(0, mir_touch_action_down, x, y))).Times(1);
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchUpEvent(0, 0))).Times(1);
+
+    process_events(touch_screen);
+}
+
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_down_events)
 {
     MirTouchId slot = 0;
