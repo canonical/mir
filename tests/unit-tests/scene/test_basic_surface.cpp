@@ -1077,7 +1077,7 @@ TEST_F(BasicSurfaceTest, cursor_can_be_set_from_stream_that_started_empty)
     (*frame_posted_callback)({});
 }
 
-TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_size_when_frame_is_posted)
+TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_with_correct_size)
 {
     using namespace testing;
 
@@ -1094,7 +1094,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_size_when_frame
     buffer_stream->frame_posted_callback(rect.size);
 }
 
-TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_stream_size_when_stream_size_differs_from_buffer_size)
+TEST_F(BasicSurfaceTest, when_stream_size_differs_from_buffer_size_an_observer_is_notified_of_frame_with_stream_size)
 {
     using namespace testing;
     geom::Size const stream_size{rect.size * 1.5};
@@ -1112,7 +1112,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_stream_size_when_stream
     buffer_stream->frame_posted_callback(stream_size * 2);
 }
 
-TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_stream_info_size_when_stream_info_has_explicit_size)
+TEST_F(BasicSurfaceTest, when_stream_info_has_explicit_size_an_observer_is_notified_of_frame_with_stream_info_size)
 {
     using namespace testing;
     geom::Size const stream_info_size{rect.size * 1.5};
@@ -1131,7 +1131,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_stream_info_size_when_s
     buffer_stream->frame_posted_callback(stream_size);
 }
 
-TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_surface_position_when_frame_is_posted)
+TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_with_surface_position)
 {
     using namespace testing;
 
@@ -1145,7 +1145,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_surface_position_when_f
     buffer_stream->frame_posted_callback(rect.size);
 }
 
-TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_surface_position_after_surface_has_moved)
+TEST_F(BasicSurfaceTest, when_surface_has_moved_an_observer_is_notified_of_frame_with_new_surface_position)
 {
     using namespace testing;
     geom::Point const new_position{rect.top_left + geom::Displacement{25, 35}};
@@ -1161,7 +1161,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_surface_position_after_
     buffer_stream->frame_posted_callback(rect.size);
 }
 
-TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_offset_when_stream_info_has_offset)
+TEST_F(BasicSurfaceTest, when_stream_info_has_offset_an_observer_is_notified_of_frame_with_correct_offset)
 {
     using namespace testing;
     geom::Displacement const stream_info_offset{7, 10};
@@ -1177,7 +1177,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_offset_when_str
     buffer_stream->frame_posted_callback(rect.size);
 }
 
-TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_offset_when_surface_has_margins)
+TEST_F(BasicSurfaceTest, when_surface_has_margins_an_observer_is_notified_of_frame_with_correct_offset)
 {
     using namespace testing;
     geom::DeltaY const margin_top{4}, margin_bottom{6};
