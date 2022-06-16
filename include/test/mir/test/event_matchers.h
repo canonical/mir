@@ -150,6 +150,24 @@ template<typename T, typename U, typename V> auto axis_values_match(
     return true;
 }
 
+// If false, the discrepancy is logged to the MatchResultListener.
+template<typename T> auto axis_value_within_threshold(
+    float expected_deviation,
+    float actual_deviation,
+    float threshold,
+    T axis_type,
+    testing::MatchResultListener* result_listener)
+-> bool
+{
+    if (std::abs(actual_deviation - expected_deviation) > threshold)
+    {
+        *result_listener << get_enum_value(axis_type) << " actual deviation (" << actual_deviation << ") is not within threshold (" << threshold << ") of expected (" << expected_deviation << (")");
+        return false;
+    }
+
+    return true;
+}
+
         return false;
     }
 
@@ -558,9 +576,14 @@ MATCHER_P2(TouchEvent, x, y, "")
 
     if (!enums_match(mir_touch_action_down, mir_touch_event_action(tev, 0), result_listener))
         return false;
-    if (std::abs(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) - x) > 0.5f)
+
+    auto const threshold = 0.5f;
+    auto const actual_x = mir_touch_event_axis_value(tev, 0, mir_touch_axis_x);
+    if (!axis_value_within_threshold(x, actual_x, threshold, mir_touch_axis_x, result_listener))
         return false;
-    if (std::abs(mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) - y) > 0.5f)
+
+    auto const actual_y = mir_touch_event_axis_value(tev, 0, mir_touch_axis_y);
+    if (!axis_value_within_threshold(y, actual_y, threshold, mir_touch_axis_y, result_listener))
         return false;
 
     return true;
@@ -575,8 +598,13 @@ MATCHER_P4(TouchContact, slot, action, x, y, "")
     if (!enums_match(action, mir_touch_event_action(tev, slot), result_listener))
         return false;
 
+    auto const threshold = 0.5f;
+    auto const actual_x = mir_touch_event_axis_value(tev, slot, mir_touch_axis_x);
+    if (!axis_value_within_threshold(x, actual_x, threshold, mir_touch_axis_x, result_listener))
         return false;
-    if (std::abs(mir_touch_event_axis_value(tev, slot, mir_touch_axis_y) - y) > 0.5f)
+
+    auto const actual_y = mir_touch_event_axis_value(tev, slot, mir_touch_axis_y);
+    if (!axis_value_within_threshold(y, actual_y, threshold, mir_touch_axis_y, result_listener))
         return false;
 
     return true;
@@ -667,12 +695,14 @@ MATCHER_P2(PointerEventWithDiff, expect_dx, expect_dy, "")
     auto const error = 0.00001f;
     auto const actual_dx = mir_pointer_event_axis_value(pev,
                                                 mir_pointer_axis_relative_x);
-    if (std::abs(expect_dx - actual_dx) > error)
+    if (!axis_value_within_threshold(expect_dx, actual_dx, error, mir_pointer_axis_relative_x, result_listener))
         return false;
+    
     auto const actual_dy = mir_pointer_event_axis_value(pev,
                                                 mir_pointer_axis_relative_y);
-    if (std::abs(expect_dy - actual_dy) > error)
+    if (!axis_value_within_threshold(expect_dy, actual_dy, error, mir_pointer_axis_relative_y, result_listener))
         return false;
+    
     return true;
 }
 
@@ -687,12 +717,14 @@ MATCHER_P2(PointerEnterEventWithDiff, expect_dx, expect_dy, "")
     auto const error = 0.00001f;
     auto const actual_dx = mir_pointer_event_axis_value(pev,
                                                 mir_pointer_axis_relative_x);
-    if (std::abs(expect_dx - actual_dx) > error)
+    if (!axis_value_within_threshold(expect_dx, actual_dx, error, mir_pointer_axis_relative_x, result_listener))
         return false;
+    
     auto const actual_dy = mir_pointer_event_axis_value(pev,
                                                 mir_pointer_axis_relative_y);
-    if (std::abs(expect_dy - actual_dy) > error)
+    if (!axis_value_within_threshold(expect_dy, actual_dy, error, mir_pointer_axis_relative_y, result_listener))
         return false;
+    
     return true;
 }
 
@@ -828,6 +860,10 @@ MATCHER_P2(DeviceStateWithPosition, x, y, "")
     
     auto device_state = mir_event_get_input_device_state_event(as_address);
 
+    auto const actual_x = mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_x);
+    auto const actual_y = mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_y);
+    return axis_value_within_threshold(x, actual_x, 0.0f, mir_pointer_axis_x, result_listener) &&
+        axis_value_within_threshold(y, actual_y, 0.0f, mir_pointer_axis_y, result_listener);
 }
 
 MATCHER_P(RectanglesMatches, rectangles, "")
