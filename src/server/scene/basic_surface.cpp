@@ -263,7 +263,7 @@ ms::BasicSurface::BasicSurface(
     cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)},
     session_{session}
 {
-    update_frame_posted_callbacks(ProofOfMutexLock::Fake{});
+    update_frame_posted_callbacks(ProofOfMutexLock::is_not_required_here);
     report->surface_created(this, surface_name);
 }
 
@@ -291,7 +291,7 @@ ms::BasicSurface::BasicSurface(
 
 ms::BasicSurface::~BasicSurface() noexcept
 {
-    clear_frame_posted_callbacks(ProofOfMutexLock::Fake{});
+    clear_frame_posted_callbacks(ProofOfMutexLock::is_not_required_here);
     report->surface_deleted(this, surface_name);
 }
 
