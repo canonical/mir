@@ -306,7 +306,6 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
     {
         std::lock_guard lock(guard);
         surface_rect.top_left = top_left;
-        update_frame_posted_callbacks(lock);
     }
     observers->moved_to(this, top_left);
 }
@@ -1071,11 +1070,11 @@ void mir::scene::BasicSurface::clear_frame_posted_callbacks(ProofOfMutexLock con
     }
 }
 
-void mir::scene::BasicSurface::update_frame_posted_callbacks(ProofOfMutexLock const& lock)
+void mir::scene::BasicSurface::update_frame_posted_callbacks(ProofOfMutexLock const&)
 {
     for (auto& layer : layers)
     {
-        auto const position = content_top_left(lock) + layer.displacement;
+        auto const position = geom::Point{} + margins.left + margins.top + layer.displacement;
         layer.stream->set_frame_posted_callback(
             [this, observers=weak(observers), position, explicit_size=layer.size, stream=layer.stream.get()]
                 (auto const&)

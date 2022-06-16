@@ -178,7 +178,7 @@ private:
     int set_swap_interval(int);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
     void clear_frame_posted_callbacks(ProofOfMutexLock const&);
-    void update_frame_posted_callbacks(ProofOfMutexLock const& lock);
+    void update_frame_posted_callbacks(ProofOfMutexLock const&);
     auto content_size(ProofOfMutexLock const&) const -> geometry::Size;
     auto content_top_left(ProofOfMutexLock const&) const -> geometry::Point;
 
