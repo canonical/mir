@@ -59,7 +59,7 @@ auto get_enum_value(MirPointerAxisSource source)
 
 /// Takes in two enums with get_enum_value() implemented and determines if they are the same.
 /// If false, the discrepancy is logged to the MatchResultListener.
-template<typename T> auto enums_match(
+template<typename T> auto inline enums_match(
     T const& expected,
     T const& actual,
     testing::MatchResultListener* result_listener)
@@ -76,7 +76,7 @@ template<typename T> auto enums_match(
 }
 
 /// If false, the discrepancy is logged to the MatchResultListener.
-auto touch_ids_match(
+auto inline touch_ids_match(
     MirTouchId const& expected,
     MirTouchId const& actual,
     testing::MatchResultListener* result_listener)
@@ -93,7 +93,7 @@ auto touch_ids_match(
 
 /// Takes in a Mir*EventModifiers and an int bitmask and determines if they are the same.
 /// If not, the discrepancy is logged to the MatchResultListener.
-template<typename T> auto modifiers_match(
+template<typename T> auto inline modifiers_match(
     T const& expected,
     int actual,
     testing::MatchResultListener* result_listener)
@@ -109,7 +109,7 @@ template<typename T> auto modifiers_match(
 }
 
 // If false, the discrepancy is logged to the MatchResultListener.
-auto keysyms_match(
+auto inline keysyms_match(
     xkb_keysym_t expected,
     xkb_keysym_t actual,
     testing::MatchResultListener* result_listener)
@@ -125,7 +125,7 @@ auto keysyms_match(
 }
 
 // If false, the discrepancy is logged to the MatchResultListener.
-auto scan_codes_match(
+auto inline scan_codes_match(
         int expected,
         int actual,
         testing::MatchResultListener* result_listener)
@@ -141,7 +141,7 @@ auto scan_codes_match(
 }
 
 // If false, the discrepancy is logged to the MatchResultListener.
-auto button_states_match(
+auto inline button_states_match(
     bool expected,
     bool actual,
     testing::MatchResultListener* result_listener)
@@ -157,7 +157,7 @@ auto button_states_match(
 }
 
 // If false, the discrepancy is logged to the MatchResultListener.
-template<typename T, typename U, typename V> auto axis_values_match(
+template<typename T, typename U, typename V> auto inline axis_values_match(
     T expected,
     U actual,
     V axis,
@@ -174,7 +174,7 @@ template<typename T, typename U, typename V> auto axis_values_match(
 }
 
 // If false, the discrepancy is logged to the MatchResultListener.
-template<typename T> auto axis_value_within_threshold(
+template<typename T> auto inline axis_value_within_threshold(
     float expected_deviation,
     float actual_deviation,
     float threshold,
@@ -192,7 +192,7 @@ template<typename T> auto axis_value_within_threshold(
 }
 
 // If false, the discrepancy is logged to the MatchResultListener.
-auto touch_counts_match(
+auto inline touch_counts_match(
     unsigned int expected,
     unsigned int actual,
     testing::MatchResultListener* result_listener)
@@ -209,7 +209,7 @@ auto touch_counts_match(
 
 /// Checks if a Mir*Event is a nullptr. 
 /// If true, this is logged to the MatchResultListener.
-template<typename T> auto event_is_nullptr(
+template<typename T> auto inline event_is_nullptr(
     T const* event, 
     testing::MatchResultListener* result_listener)
 -> bool
