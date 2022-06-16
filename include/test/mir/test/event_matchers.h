@@ -133,6 +133,23 @@ auto button_states_match(
     return true;
 }
 
+// If false, the discrepancy is logged to the MatchResultListener.
+template<typename T, typename U, typename V> auto axis_values_match(
+    T expected,
+    U actual,
+    V axis,
+    testing::MatchResultListener* result_listener)
+-> bool
+{
+    if (expected != actual)
+    {
+        *result_listener << "Expected " << get_enum_value(axis) << " value (" << expected << ") does not match actual (" << actual << ")";
+        return false;
+    }
+
+    return true;
+}
+
         return false;
     }
 
@@ -353,24 +370,42 @@ MATCHER_P(MirKeyboardEventMatches, event, "")
 
 MATCHER_P(MirTouchEventMatches, event, "")
 {
-    auto expected = maybe_touch_event(to_address(event));
-    auto actual = maybe_touch_event(to_address(arg));
-    
-    if (event_is_nullptr(expected, result_listener) || event_is_nullptr(actual, result_listener))
+    auto expected_touch_event = maybe_touch_event(to_address(event));
+    auto actual_touch_event = maybe_touch_event(to_address(arg));
+    if (event_is_nullptr(expected_touch_event, result_listener) || event_is_nullptr(actual_touch_event, result_listener))
         return false;
 
-    auto tc = mir_touch_event_point_count(actual);
-    if (mir_touch_event_point_count(expected) != tc)
+    auto const expected_touch_count = mir_touch_event_point_count(expected_touch_event);
+    auto const actual_touch_count = mir_touch_event_point_count(actual_touch_event);
+    if (!touch_counts_match(expected_touch_count, actual_touch_count, result_listener))
         return false;
 
-    for (unsigned i = 0; i != tc; i++)
+    for (unsigned i = 0; i != actual_touch_count; i++)
     {
+        auto const expected_touch_id = mir_touch_event_id(expected_touch_event, i);
+        auto const actual_touch_id = mir_touch_event_id(actual_touch_event, i);
+
+        auto const expected_touch_event_action = mir_touch_event_action(expected_touch_event, i);
+        auto const actual_touch_event_action = mir_touch_event_action(actual_touch_event, i);
+
+        auto const expected_x = mir_touch_event_axis_value(expected_touch_event, i, mir_touch_axis_x);
+        auto const actual_x = mir_touch_event_axis_value(actual_touch_event, i, mir_touch_axis_x);
+
+        auto const expected_y = mir_touch_event_axis_value(expected_touch_event, i, mir_touch_axis_y);
+        auto const actual_y = mir_touch_event_axis_value(actual_touch_event, i, mir_touch_axis_y);
+
+        auto const expected_touch_tooltype = mir_touch_event_tooltype(expected_touch_event, i);
+        auto const actual_touch_tooltype = mir_touch_event_tooltype(actual_touch_event, i);
+
             !enums_match(expected_touch_event_action, actual_touch_event_action, result_listener) ||
             !enums_match(expected_touch_tooltype, actual_touch_tooltype, result_listener) ||
+            !axis_values_match(expected_x, actual_x, mir_touch_axis_x, result_listener) ||
+            !axis_values_match(expected_y, actual_y, mir_touch_axis_y, result_listener))
         {
             return false;
         }
     }
+
     return true;
 }
 
@@ -410,10 +445,15 @@ inline bool button_event_matches(MirPointerEvent const* pev, float x, float y, M
     auto const actual_button_state = mir_pointer_event_buttons(pev);
     if (check_buttons && !button_states_match(button_state, actual_button_state, result_listener))
         return false;
-    if (check_axes && mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
+
+    auto const actual_x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x);
+    if (check_axes && !axis_values_match(x, actual_x, mir_pointer_axis_x, result_listener))
         return false;
-    if (check_axes && mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
+
+    auto const actual_y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y);
+    if (check_axes && !axis_values_match(y, actual_y, mir_pointer_axis_y, result_listener))
         return false;
+
     return true;
 }
 
@@ -435,10 +475,17 @@ MATCHER_P2(ButtonDownEventWithButton, pos, button, "")
     auto const actual_button_state = mir_pointer_event_button_state(pev, static_cast<MirPointerButton>(button));
     if (!button_states_match(true, actual_button_state, result_listener))
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_int())
+    
+    auto const expected_x = pos.x.as_int();
+    auto const actual_x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x);
+    if (!axis_values_match(expected_x, actual_x, mir_pointer_axis_x, result_listener))
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_int())
+
+    auto const expected_y = pos.y.as_int();
+    auto const actual_y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y);
+    if (!axis_values_match(expected_y, actual_y, mir_pointer_axis_y, result_listener))
         return false;
+    
     return true;
 }
 
@@ -472,10 +519,17 @@ MATCHER_P2(ButtonUpEventWithButton, pos, button, "")
     auto const actual_button_state = mir_pointer_event_button_state(pev, button);
     if (!button_states_match(false, actual_button_state, result_listener))
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_int())
+
+    auto const expected_x = pos.x.as_int();
+    auto const actual_x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x);
+    if (!axis_values_match(expected_x, actual_x, mir_pointer_axis_x, result_listener)) 
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_int())
+
+    auto const expected_y = pos.y.as_int();
+    auto const actual_y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y);
+    if (!axis_values_match(expected_y, actual_y, mir_pointer_axis_y, result_listener))
         return false;
+    
     return true;
 }
 
@@ -488,8 +542,11 @@ MATCHER_P2(PointerAxisChange, scroll_axis, value, "")
 
     if (!enums_match(mir_pointer_action_motion, mir_pointer_event_action(pev), result_listener))
         return false;
-    if (mir_pointer_event_axis_value(pev, scroll_axis) != value)
+
+    auto actual_axis_value = mir_pointer_event_axis_value(pev, scroll_axis);
+    if (!axis_values_match(value, actual_axis_value, scroll_axis, result_listener))
         return false;
+
     return true;
 }
 
@@ -534,8 +591,12 @@ MATCHER_P2(TouchUpEvent, x, y, "")
     if (!enums_match(mir_touch_action_up, mir_touch_event_action(tev, 0), result_listener))
         return false;
 
+    auto actual_x = mir_touch_event_axis_value(tev, 0, mir_touch_axis_x);
+    if (!axis_values_match(x, actual_x, mir_touch_axis_x, result_listener))
         return false;
-    if (mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) != y)
+
+    auto actual_y = mir_touch_event_axis_value(tev, 0, mir_touch_axis_y);
+    if (!axis_values_match(y, actual_y, mir_touch_axis_y, result_listener))
         return false;
 
     return true;
@@ -550,10 +611,14 @@ MATCHER_P2(PointerEventWithPosition, x, y, "")
     if (!enums_match(mir_pointer_action_motion, mir_pointer_event_action(pev), result_listener))
         return false;
 
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
+    auto actual_x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x);
+    if (!axis_values_match(x, actual_x, mir_pointer_axis_x, result_listener))
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
+
+    auto actual_y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y);
+    if (!axis_values_match(y, actual_y, mir_pointer_axis_y, result_listener))
         return false;
+    
     return true;
 }
 
@@ -565,10 +630,15 @@ MATCHER_P2(PointerEnterEventWithPosition, x, y, "")
 
     if (!enums_match(mir_pointer_action_enter, mir_pointer_event_action(pev), result_listener))
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
+
+    auto actual_x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x);
+    if (!axis_values_match(x, actual_x, mir_pointer_axis_x, result_listener))
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
+
+    auto actual_y = mir_pointer_event_axis_value(pev, mir_pointer_axis_y);
+    if (!axis_values_match(y, actual_y, mir_pointer_axis_y, result_listener))
         return false;
+    
     return true;
 }
 
