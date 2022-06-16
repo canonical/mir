@@ -1091,7 +1091,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_size_when_frame
     ON_CALL(*buffer_stream, stream_size())
         .WillByDefault(Return(stream_size));
 
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::SizeEq(stream_size)));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectSizeEq(stream_size)));
     buffer_stream->frame_posted_callback(stream_size);
 }
 
@@ -1109,7 +1109,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_stream_size_when_stream
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::SizeEq(stream_size)));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectSizeEq(stream_size)));
     buffer_stream->frame_posted_callback(stream_size * 2);
 }
 
@@ -1128,7 +1128,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_stream_info_size_when_s
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, stream_info_size}});
 
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::SizeEq(stream_info_size)));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectSizeEq(stream_info_size)));
     buffer_stream->frame_posted_callback(stream_size);
 }
 
@@ -1143,7 +1143,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_surface_position_when_f
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::TopLeftEq(surface_position)));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(surface_position)));
     surface.move_to(surface_position);
     buffer_stream->frame_posted_callback({20, 30});
 }
@@ -1162,7 +1162,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_offset_when_str
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, stream_info_offset, {}}});
 
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::TopLeftEq(surface_position + stream_info_offset)));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(surface_position + stream_info_offset)));
     surface.move_to(surface_position);
     buffer_stream->frame_posted_callback({20, 30});
 }
@@ -1181,7 +1181,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_frame_with_correct_offset_when_sur
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::TopLeftEq(surface_position + margin_top + margin_left)));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(surface_position + margin_top + margin_left)));
     surface.move_to(surface_position);
     surface.set_window_margins(margin_top, margin_left, margin_bottom, margin_right);
     buffer_stream->frame_posted_callback({20, 30});
