@@ -52,17 +52,16 @@ template<typename T> auto enums_match(
     return true;
 }
 
-/// Takes in two Mir*EventTypes and determines if they are the same.
-/// If not, the discrepancy is logged to the MatchResultListener.
-template<typename T> auto inline event_types_match(
-    T const& left,
-    T const& right,
+/// If false, the discrepancy is logged to the MatchResultListener.
+auto touch_ids_match(
+    MirTouchId const& expected,
+    MirTouchId const& actual,
     testing::MatchResultListener* result_listener)
 -> bool
 {
-    if (left != right)
+    if (expected != actual)
     {
-        *result_listener << "Left event type (" << left << ") does not match right event type (" << right << ")";
+        *result_listener << "Expected MirTouchId (" << expected << ") does not match actual (" << actual << ")";
         return false;
     }
 
@@ -71,49 +70,52 @@ template<typename T> auto inline event_types_match(
 
 /// Takes in a Mir*EventModifiers and an int bitmask and determines if they are the same.
 /// If not, the discrepancy is logged to the MatchResultListener.
-template<typename T> auto inline modifiers_match(
-    T const& left,
-    int right,
+template<typename T> auto modifiers_match(
+    T const& expected,
+    int actual,
     testing::MatchResultListener* result_listener)
 -> bool
 {
-    if (left != right)
+    if (expected != actual)
     {
-        *result_listener << "Left modifiers (" << left << ") do not match right modifiers (" << right << ")";
+        *result_listener << "Expected modifiers (" << expected << ") do not match actual (" << actual << ")";
         return false;
     }
 
     return true;
 }
 
-/// Takes in two xkb_keysym_t values and determines if they are the same.
-/// If not, the discrepancy is logged to the MatchResultListener.
-auto inline keysyms_match(
-    xkb_keysym_t left,
-    xkb_keysym_t right,
+// If false, the discrepancy is logged to the MatchResultListener.
+auto keysyms_match(
+    xkb_keysym_t expected,
+    xkb_keysym_t actual,
     testing::MatchResultListener* result_listener)
 -> bool
 {
-    if (left != right)
+    if (expected != actual)
     {
-        *result_listener << "Left keysym does not match right keysym";
+        *result_listener << "Expected keysym (" << expected << ") does not match actual (" << actual << ")";
         return false;
     }
 
     return true;
 }
 
-/// Takes in two scan codes and determines if they are the same.
-/// If not, the discrepancy is logged to the MatchResultListener.
-auto inline scan_codes_match(
-        int left,
-        int right,
+// If false, the discrepancy is logged to the MatchResultListener.
+auto scan_codes_match(
+        int expected,
+        int actual,
         testing::MatchResultListener* result_listener)
 -> bool
 {
-    if (left != right)
+    if (expected != actual)
     {
-        *result_listener << "Left scan code (" << left << ") does not match right scan code (" << right << ")";
+        *result_listener << "Expected scan code (" << expected << ") does not match actual (" << actual << ")";
+        return false;
+    }
+
+    return true;
+}
         return false;
     }
 
@@ -275,7 +277,7 @@ MATCHER_P(KeyOfSymbol, keysym, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
 
-    if(!keysyms_match(mir_keyboard_event_keysym(kev), static_cast<xkb_keysym_t>(keysym), result_listener))
+    if(!keysyms_match(static_cast<xkb_keysym_t>(keysym), mir_keyboard_event_keysym(kev), result_listener))
         return false;
 
     return true;
@@ -299,7 +301,7 @@ MATCHER_P(KeyOfScanCode, code, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
 
-    if(!scan_codes_match(mir_keyboard_event_scan_code(kev), code, result_listener))
+    if(!scan_codes_match(code, mir_keyboard_event_scan_code(kev), result_listener))
         return false;
 
     return true;
