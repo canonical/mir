@@ -20,8 +20,6 @@ jobs:
 
     - name: Install Snapcraft
       uses: samuelmeuli/action-snapcraft@v1
-      with:
-        snapcraft_token: ${{ secrets.SNAPCRAFT_TOKEN }}
 
     - name: Check out code
       uses: actions/checkout@v2
@@ -41,6 +39,8 @@ jobs:
     - name: Publish the snap
       # Only run if we have access to secrets.
       if: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
+      env:
+        SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
       run: |
         snapcraft upload *.snap --release "edge/pr${{ github.event.number }}"
 

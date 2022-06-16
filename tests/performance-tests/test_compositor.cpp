@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2020 Canonical Ltd.
+ * Copyright © 2016-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -15,6 +15,9 @@
  */
 
 #include "system_performance_test.h"
+
+#include <fstream>
+#include <string>
 
 using namespace std::literals::chrono_literals;
 using namespace mir::test;
@@ -32,8 +35,32 @@ struct CompositorPerformance : SystemPerformanceTest
     void read_compositor_report()
     {
         char line[256];
+
+        const ::testing::TestInfo *const test_info =
+                ::testing::UnitTest::GetInstance()->current_test_info();
+
+        char output_filename[256];
+        snprintf(output_filename, sizeof(output_filename) - 1,
+                 "/tmp/%s_%s_server.log",
+                 test_info->test_case_name(), test_info->name());
+        std::ofstream out{output_filename};
+
+        if (out.good())
+        {
+            std::cerr << "Saving server logs to: " << output_filename << std::endl;
+        }
+        else
+        {
+            std::cerr << "Failed to open log file: " << output_filename << std::endl;
+        }
+
         while (fgets(line, sizeof(line), server_output))
         {
+            if (out.good())
+            {
+                out << line;
+            }
+
             if (char const* perf = strstr(line, "averaged "))
             {
                 float fps, render_time;
@@ -44,10 +71,19 @@ struct CompositorPerformance : SystemPerformanceTest
                     compositor_render_time = render_time;
                 }
             }
+            if (char const* renderer = strstr(line, "GL renderer: "))
+            {
+                server_renderer.assign(renderer + 13, strlen(renderer) - 14);
+            }
+            if (char const* mode = strstr(line, "Current mode"))
+            {
+                server_mode.assign(mode + 13, strlen(mode) - 14);
+            }
         }
     }
 
     float compositor_fps, compositor_render_time;
+    std::string server_renderer, server_mode;
 };
 } // anonymous namespace
 
@@ -61,6 +97,8 @@ TEST_F(CompositorPerformance, regression_test_1563287)
     read_compositor_report();
     RecordProperty("framerate", std::to_string(compositor_fps));
     RecordProperty("render_time", std::to_string(compositor_render_time));
+    RecordProperty("server_renderer", server_renderer);
+    RecordProperty("server_mode", server_mode);
     EXPECT_GE(compositor_fps, 0);
     EXPECT_GT(compositor_render_time, 0);
 }

@@ -1,4 +1,4 @@
-set(MIRCORE_ABI 1)
+set(MIRCORE_ABI 2)
 
 # We don't need libmircore to have an unused dependency on libpthread
 string (REPLACE " -pthread " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})

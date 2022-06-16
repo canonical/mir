@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2022 Canonical Ltd.
+ * Copyright © 2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -14,17 +14,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/logging/dumb_console_logger.h"
+#include "mir/logging/file_logger.h"
 
 #include <iostream>
 
 namespace ml = mir::logging;
 
-void ml::DumbConsoleLogger::log(Severity severity,
-                                const std::string& message,
-                                const std::string& component)
+ml::FileLogger::FileLogger(std::ofstream stream)
+: file{std::move(stream)}
 {
-    std::ostream& out = severity <Severity::informational ? std::cerr : std::cout;
+}
 
-    format_message(out, severity, message, component);
+void ml::FileLogger::log(Severity severity,
+                         std::string const& message,
+                         std::string const& component)
+{
+    if (file.good())
+    {
+        format_message(file, severity, message, component);
+    }
+    else if (!file_bad.load())
+    {
+        std::cerr << "Failed to write to log file" << std::endl;
+        file_bad.store(true);
+    }
 }

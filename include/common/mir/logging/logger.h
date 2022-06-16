@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2015 Canonical Ltd.
+ * Copyright © 2012-2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <iosfwd>
 
 namespace mir
 {
@@ -62,6 +63,7 @@ protected:
 
 void log(Severity severity, const std::string& message, const std::string& component);
 void set_logger(std::shared_ptr<Logger> const& new_logger);
+void format_message(std::ostream& stream, Severity severity, std::string const& message, std::string const& component);
 
 }
 }

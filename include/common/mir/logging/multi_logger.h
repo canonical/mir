@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2022 Canonical Ltd.
+ * Copyright © 2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -14,17 +14,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/logging/dumb_console_logger.h"
+#ifndef MIR_LOGGING_MULTI_LOGGER_H_
+#define MIR_LOGGING_MULTI_LOGGER_H_
 
-#include <iostream>
+#include "mir/logging/logger.h"
 
-namespace ml = mir::logging;
+#include <initializer_list>
+#include <string>
+#include <vector>
 
-void ml::DumbConsoleLogger::log(Severity severity,
-                                const std::string& message,
-                                const std::string& component)
+namespace mir
 {
-    std::ostream& out = severity <Severity::informational ? std::cerr : std::cout;
+namespace logging
+{
+class MultiLogger : public mir::logging::Logger
+{
+public:
+    MultiLogger(std::initializer_list<std::shared_ptr<Logger>> loggers);
 
-    format_message(out, severity, message, component);
+protected:
+    void log(mir::logging::Severity severity, std::string const& message, std::string const& component) override;
+
+private:
+    std::vector<std::shared_ptr<mir::logging::Logger>> const loggers;
+};
 }
+}
+
+#endif // MIR_LOGGING_MULTI_LOGGER_H_
