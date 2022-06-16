@@ -116,6 +116,23 @@ auto scan_codes_match(
 
     return true;
 }
+
+// If false, the discrepancy is logged to the MatchResultListener.
+auto button_states_match(
+    bool expected,
+    bool actual,
+    testing::MatchResultListener* result_listener)
+-> bool
+{
+    if (expected != actual)
+    {
+        *result_listener << "Expected button state (" << expected << ") does not match actual (" << actual << ")";
+        return false;
+    }
+
+    return true;
+}
+
         return false;
     }
 
@@ -389,7 +406,9 @@ inline bool button_event_matches(MirPointerEvent const* pev, float x, float y, M
     
     if (check_action && !enums_match(mir_pointer_event_action(pev), action, result_listener))
         return false;
-    if (check_buttons && mir_pointer_event_buttons(pev) != button_state)
+
+    auto const actual_button_state = mir_pointer_event_buttons(pev);
+    if (check_buttons && !button_states_match(button_state, actual_button_state, result_listener))
         return false;
     if (check_axes && mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
@@ -412,7 +431,9 @@ MATCHER_P2(ButtonDownEventWithButton, pos, button, "")
         
     if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_button_down, result_listener))
         return false;
-    if (mir_pointer_event_button_state(pev, static_cast<MirPointerButton>(button)) == false)
+
+    auto const actual_button_state = mir_pointer_event_button_state(pev, static_cast<MirPointerButton>(button));
+    if (!button_states_match(true, actual_button_state, result_listener))
         return false;
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_int())
         return false;
@@ -447,7 +468,9 @@ MATCHER_P2(ButtonUpEventWithButton, pos, button, "")
     
     if (!enums_match(mir_pointer_action_button_up, mir_pointer_event_action(pev), result_listener))
         return false;
-    if (mir_pointer_event_button_state(pev, button) == true)
+
+    auto const actual_button_state = mir_pointer_event_button_state(pev, button);
+    if (!button_states_match(false, actual_button_state, result_listener))
         return false;
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_int())
         return false;
