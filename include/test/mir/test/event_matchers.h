@@ -21,6 +21,8 @@
 
 #include "mir_toolkit/event.h"
 
+#include <boost/type_index.hpp>
+
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -32,17 +34,18 @@
 void PrintTo(MirEvent const& event, std::ostream *os);
 void PrintTo(MirEvent const* event, std::ostream *os);
 
-/// Takes in two mir_*_action_* values and determines if they are the same.
-/// If not, the discrepancy is logged to the MatchResultListener.
-template<typename T> auto inline actions_match(
-    T const& left,
-    T const& right,
+/// Takes in two enums with get_enum_value() implemented and determines if they are the same.
+/// If false, the discrepancy is logged to the MatchResultListener.
+template<typename T> auto enums_match(
+    T const& expected,
+    T const& actual,
     testing::MatchResultListener* result_listener)
 -> bool
-{   
-    if (left != right)
+{
+    auto type_name = boost::typeindex::type_id<T>().pretty_name();
+    if (expected != actual)
     {
-        *result_listener << "Left action (" << get_enum_value(left) << ") does not match right action (" << get_enum_value(right) << ")";
+        *result_listener << "Expected " << type_name << " (" << get_enum_value(expected) << ") does not match actual (" << get_enum_value(actual) << ")";
         return false;
     }
 
@@ -223,7 +226,7 @@ MATCHER(KeyDownEvent, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
     
-    if (!actions_match(mir_keyboard_event_action(kev), mir_keyboard_action_down, result_listener))
+    if (!enums_match(mir_keyboard_action_down, mir_keyboard_event_action(kev), result_listener))
         return false;
 
     return true;
@@ -235,7 +238,7 @@ MATCHER(KeyRepeatEvent, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
     
-    if (!actions_match(mir_keyboard_event_action(kev), mir_keyboard_action_repeat, result_listener))
+    if (!enums_match(mir_keyboard_action_repeat, mir_keyboard_event_action(kev), result_listener))
         return false;
 
     return true;
@@ -247,7 +250,7 @@ MATCHER(KeyUpEvent, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
     
-    if (!actions_match(mir_keyboard_event_action(kev), mir_keyboard_action_up, result_listener))
+    if (!enums_match(mir_keyboard_action_up, mir_keyboard_event_action(kev), result_listener))
         return false;
 
     return true;
@@ -259,8 +262,7 @@ MATCHER_P(KeyWithModifiers, modifiers, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
     
-    if(!modifiers_match(mir_keyboard_event_modifiers(kev), modifiers, result_listener))
-    {
+    if(!modifiers_match(modifiers, mir_keyboard_event_modifiers(kev), result_listener))
         return false;
     }
     
@@ -305,14 +307,14 @@ MATCHER_P(KeyOfScanCode, code, "")
 
 MATCHER(KeybaordResyncEvent, "")
 {
-    if (!event_types_match(mir_event_get_type(arg.get()), mir_event_type_input, result_listener))
+    if (!enums_match(mir_event_type_input, mir_event_get_type(arg.get()), result_listener))
     {
         return false;
     }
 
-    return event_types_match(
+    return enums_match(
+        mir_input_event_type_keyboard_resync,
         mir_input_event_get_type(mir_event_get_input_event(arg.get())), 
-        mir_input_event_type_keyboard_resync, 
         result_listener);
 }
 
@@ -324,7 +326,7 @@ MATCHER_P(MirKeyboardEventMatches, event, "")
     if (event_is_nullptr(expected, result_listener) || event_is_nullptr(actual, result_listener))
         return false;
 
-    return actions_match(mir_keyboard_event_action(expected), mir_keyboard_event_action(actual), result_listener) &&
+    return enums_match(mir_keyboard_event_action(expected), mir_keyboard_event_action(actual), result_listener) &&
         keysyms_match(mir_keyboard_event_keysym(expected), mir_keyboard_event_keysym(actual), result_listener) &&
         scan_codes_match(mir_keyboard_event_scan_code(expected), mir_keyboard_event_scan_code(actual), result_listener) &&
         modifiers_match(mir_keyboard_event_modifiers(expected), mir_keyboard_event_modifiers(actual), result_listener);
@@ -344,13 +346,8 @@ MATCHER_P(MirTouchEventMatches, event, "")
 
     for (unsigned i = 0; i != tc; i++)
     {
-        if (mir_touch_event_id(actual, i) !=  mir_touch_event_id(expected, i) ||
-            mir_touch_event_action(actual, i) !=  mir_touch_event_action(expected, i) ||
-            mir_touch_event_tooltype(actual, i) != mir_touch_event_tooltype(expected, i) ||
-            mir_touch_event_axis_value(actual, i, mir_touch_axis_x) != 
-                mir_touch_event_axis_value(expected, i, mir_touch_axis_x) ||
-            mir_touch_event_axis_value(actual, i, mir_touch_axis_y) != 
-                mir_touch_event_axis_value(expected, i, mir_touch_axis_y))
+            !enums_match(expected_touch_event_action, actual_touch_event_action, result_listener) ||
+            !enums_match(expected_touch_tooltype, actual_touch_tooltype, result_listener) ||
         {
             return false;
         }
@@ -364,7 +361,7 @@ MATCHER(PointerEnterEvent, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
-    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_enter, result_listener))
+    if (!enums_match(mir_pointer_action_enter, mir_pointer_event_action(pev), result_listener))
         return false;
 
     return true;
@@ -376,7 +373,7 @@ MATCHER(PointerLeaveEvent, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
-    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_leave, result_listener))
+    if (!enums_match(mir_pointer_action_leave, mir_pointer_event_action(pev), result_listener))
         return false;
 
     return true;
@@ -388,7 +385,7 @@ inline bool button_event_matches(MirPointerEvent const* pev, float x, float y, M
     if (event_is_nullptr(pev, result_listener))
         return false;
     
-    if (check_action && !actions_match(mir_pointer_event_action(pev), action, result_listener))
+    if (check_action && !enums_match(mir_pointer_event_action(pev), action, result_listener))
         return false;
     if (check_buttons && mir_pointer_event_buttons(pev) != button_state)
         return false;
@@ -446,7 +443,7 @@ MATCHER_P2(ButtonUpEventWithButton, pos, button, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
     
-    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_button_up, result_listener))
+    if (!enums_match(mir_pointer_action_button_up, mir_pointer_event_action(pev), result_listener))
         return false;
     if (mir_pointer_event_button_state(pev, button) == true)
         return false;
@@ -464,7 +461,7 @@ MATCHER_P2(PointerAxisChange, scroll_axis, value, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
-    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_motion, result_listener))
+    if (!enums_match(mir_pointer_action_motion, mir_pointer_event_action(pev), result_listener))
         return false;
     if (mir_pointer_event_axis_value(pev, scroll_axis) != value)
         return false;
@@ -477,7 +474,7 @@ MATCHER_P2(TouchEvent, x, y, "")
     if (event_is_nullptr(tev, result_listener))
         return false;
 
-    if (!actions_match(mir_touch_event_action(tev, 0), mir_touch_action_down, result_listener))
+    if (!enums_match(mir_touch_action_down, mir_touch_event_action(tev, 0), result_listener))
         return false;
     if (std::abs(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) - x) > 0.5f)
         return false;
@@ -493,7 +490,7 @@ MATCHER_P4(TouchContact, slot, action, x, y, "")
     if (event_is_nullptr(tev, result_listener))
         return false;
 
-    if (!actions_match(mir_touch_event_action(tev, slot), action, result_listener))
+    if (!enums_match(action, mir_touch_event_action(tev, slot), result_listener))
         return false;
 
         return false;
@@ -509,7 +506,7 @@ MATCHER_P2(TouchUpEvent, x, y, "")
     if (event_is_nullptr(tev, result_listener))
         return false;
 
-    if (!actions_match(mir_touch_event_action(tev, 0), mir_touch_action_up, result_listener))
+    if (!enums_match(mir_touch_action_up, mir_touch_event_action(tev, 0), result_listener))
         return false;
 
         return false;
@@ -525,7 +522,7 @@ MATCHER_P2(PointerEventWithPosition, x, y, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
-    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_motion, result_listener))
+    if (!enums_match(mir_pointer_action_motion, mir_pointer_event_action(pev), result_listener))
         return false;
 
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
@@ -541,7 +538,7 @@ MATCHER_P2(PointerEnterEventWithPosition, x, y, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
-    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_enter, result_listener))
+    if (!enums_match(mir_pointer_action_enter, mir_pointer_event_action(pev), result_listener))
         return false;
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
@@ -569,7 +566,7 @@ MATCHER_P2(PointerEventWithDiff, expect_dx, expect_dy, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
-    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_motion, result_listener))
+    if (!enums_match(mir_pointer_action_motion, mir_pointer_event_action(pev), result_listener))
         return false;
 
     auto const error = 0.00001f;
@@ -590,7 +587,7 @@ MATCHER_P2(PointerEnterEventWithDiff, expect_dx, expect_dy, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
-    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_enter, result_listener))
+    if (!enums_match(mir_pointer_action_enter, mir_pointer_event_action(pev), result_listener))
         return false;
     auto const error = 0.00001f;
     auto const actual_dx = mir_pointer_event_axis_value(pev,
@@ -611,7 +608,7 @@ MATCHER_P4(TouchEventInDirection, x0, y0, x1, y1, "")
     if (event_is_nullptr(tev, result_listener))
         return false;
 
-    if (!actions_match(mir_touch_event_action(tev, 0), mir_touch_action_change, result_listener)) // TODO
+    if (!enums_match(mir_touch_action_change, mir_touch_event_action(tev, 0), result_listener))
         return false;
 
     auto x2 = mir_touch_event_axis_value(tev, 0, mir_touch_axis_x);
@@ -636,7 +633,7 @@ MATCHER(TouchMovementEvent, "")
     if (event_is_nullptr(tev, result_listener))
         return false;
 
-    if (!actions_match(mir_touch_event_action(tev, 0), mir_touch_action_change, result_listener))
+    if (!enums_match(mir_touch_action_change, mir_touch_event_action(tev, 0), result_listener))
         return false;
 
     return true;
@@ -648,7 +645,7 @@ MATCHER(PointerMovementEvent, "")
     if (event_is_nullptr(pev, *result_listener))
         return false;
 
-    if (!actions_match(mir_pointer_event_action(pev), mir_pointer_action_motion, result_listener))
+    if (!enums_match(mir_pointer_action_motion, mir_pointer_event_action(pev), result_listener))
         return false;
 
     return true;
@@ -657,7 +654,7 @@ MATCHER(PointerMovementEvent, "")
 MATCHER_P2(WindowEvent, attrib, value, "")
 {
     auto as_address = to_address(arg);
-    if (!event_types_match(mir_event_get_type(as_address), mir_event_type_window, result_listener))
+    if (!enums_match(mir_event_type_window, mir_event_get_type(as_address), result_listener))
         return false;
     
     auto surface_ev = mir_event_get_window_event(as_address);
@@ -672,7 +669,7 @@ MATCHER_P2(WindowEvent, attrib, value, "")
 MATCHER_P(OrientationEvent, direction, "")
 {
     auto as_address = to_address(arg);
-    if (!event_types_match(mir_event_get_type(as_address), mir_event_type_orientation, result_listener))
+    if (!enums_match(mir_event_type_orientation, mir_event_get_type(as_address), result_listener))
         return false;
     
     if (mir_orientation_event_get_direction(oev) != direction)
@@ -682,7 +679,7 @@ MATCHER_P(OrientationEvent, direction, "")
 
 MATCHER_P(InputDeviceIdMatches, device_id, "")
 {
-    if (!event_types_match(mir_event_get_type(to_address(arg)), mir_event_type_input, result_listener))
+    if (!enums_match(mir_event_type_input, mir_event_get_type(to_address(arg)), result_listener))
         return false;
     
     auto input_event = mir_event_get_input_event(to_address(arg));
@@ -692,16 +689,17 @@ MATCHER_P(InputDeviceIdMatches, device_id, "")
 MATCHER(InputDeviceStateEvent, "")
 {
     auto as_address = to_address(arg);
-    if (mir_event_get_type(as_address) == mir_event_type_input_device_state)
-        return true;
-    return false;
+    if (!enums_match(mir_event_type_input_device_state, mir_event_get_type(as_address), result_listener))
+        return false;
+
 }
 
 MATCHER_P(DeviceStateWithPressedKeys, keys, "")
 {
     auto as_address = to_address(arg);
-    if (mir_event_get_type(as_address) != mir_event_type_input_device_state)
+    if (!enums_match(mir_event_type_input_device_state, mir_event_get_type(as_address), result_listener))
         return false;
+
     auto device_state = mir_event_get_input_device_state_event(as_address);
     for (size_t index = 0, count = mir_input_device_state_event_device_count(device_state);
          index != count; ++index)
@@ -730,12 +728,11 @@ MATCHER_P(DeviceStateWithPressedKeys, keys, "")
 MATCHER_P2(DeviceStateWithPosition, x, y, "")
 {
     auto as_address = to_address(arg);
-    if (!event_types_match(mir_event_get_type(as_address), mir_event_type_input_device_state, result_listener))
+    if (!enums_match(mir_event_type_input_device_state, mir_event_get_type(as_address), result_listener))
         return false;
     
     auto device_state = mir_event_get_input_device_state_event(as_address);
-    return x == mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_x) &&
-        y == mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_y);
+
 }
 
 MATCHER_P(RectanglesMatches, rectangles, "")
