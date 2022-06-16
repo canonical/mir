@@ -526,19 +526,19 @@ MATCHER_P2(ButtonDownEventWithButton, pos, button, "")
 MATCHER_P2(ButtonUpEvent, x, y, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
-    return button_event_matches(pev, result_listener, x, y, mir_pointer_action_button_up, 0, true, false, result_listener);
+    return button_event_matches(pev, result_listener, x, y, mir_pointer_action_button_up, 0, true, false);
 }
 
 MATCHER_P3(ButtonsDown, x, y, buttons, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
-    return button_event_matches(pev, result_listener, x, y, mir_pointer_action_button_down, buttons, false, result_listener);
+    return button_event_matches(pev, result_listener, x, y, mir_pointer_action_button_down, buttons, false);
 }
 
 MATCHER_P3(ButtonsUp, x, y, buttons, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
-    return button_event_matches(pev, result_listener, x, y, mir_pointer_action_button_up, buttons, false, result_listener);
+    return button_event_matches(pev, result_listener, x, y, mir_pointer_action_button_up, buttons, false);
 }
 
 MATCHER_P2(ButtonUpEventWithButton, pos, button, "")
