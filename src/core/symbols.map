@@ -1,6 +1,17 @@
-MIR_CORE_0.25 {
+MIR_CORE_2.9 {
  global:
   extern "C++" {
+    mir::AnonymousShmFile::?AnonymousShmFile*;
+    mir::AnonymousShmFile::AnonymousShmFile*;
+    mir::AnonymousShmFile::base_ptr*;
+    mir::AnonymousShmFile::fd*;
+    mir::Fd::Fd*;
+    mir::Fd::invalid*;
+    mir::Fd::operator*;
+    mir::ShmFile::?ShmFile*;
+    mir::ShmFile::ShmFile*;
+    mir::ShmFile::base_ptr*;
+    mir::ShmFile::fd*;
     mir::fatal_error*;
     mir::fatal_error_abort*;
     mir::fatal_error_except*;
@@ -8,15 +19,16 @@ MIR_CORE_0.25 {
     mir::geometry::Displacement::operator*;
     mir::geometry::Length::Length*;
     mir::geometry::Length::operator*;
-    mir::geometry::operator*;
-    mir::geometry::Point::operator*;
     mir::geometry::Point::Point*;
+    mir::geometry::Point::operator*;
+    mir::geometry::Rectangle::Rectangle*;
     mir::geometry::Rectangle::bottom_left*;
     mir::geometry::Rectangle::bottom_right*;
     mir::geometry::Rectangle::contains*;
     mir::geometry::Rectangle::intersection_with*;
     mir::geometry::Rectangle::overlaps*;
-    mir::geometry::Rectangle::Rectangle*;
+    mir::geometry::Rectangle::top_right*;
+    mir::geometry::Rectangles::Rectangles*;
     mir::geometry::Rectangles::add*;
     mir::geometry::Rectangles::begin*;
     mir::geometry::Rectangles::bounding_rectangle*;
@@ -24,14 +36,17 @@ MIR_CORE_0.25 {
     mir::geometry::Rectangles::confine*;
     mir::geometry::Rectangles::end*;
     mir::geometry::Rectangles::operator*;
-    mir::geometry::Rectangles::Rectangles*;
     mir::geometry::Rectangles::remove*;
     mir::geometry::Rectangles::size*;
-    mir::geometry::Rectangle::top_right*;
-    mir::geometry::Size::operator*;
     mir::geometry::Size::Size*;
+    mir::geometry::Size::operator*;
+    mir::geometry::operator*;
+    mir::mir_depth_layer_get_index?MirDepthLayer?;
     typeinfo?for?MirBufferPackage;
+    typeinfo?for?mir::AnonymousShmFile;
     typeinfo?for?mir::FatalErrorStrategy;
+    typeinfo?for?mir::Fd;
+    typeinfo?for?mir::ShmFile;
     typeinfo?for?mir::geometry::Displacement;
     typeinfo?for?mir::geometry::Length;
     typeinfo?for?mir::geometry::Point;
@@ -39,7 +54,10 @@ MIR_CORE_0.25 {
     typeinfo?for?mir::geometry::Rectangles;
     typeinfo?for?mir::geometry::Size;
     vtable?for?MirBufferPackage;
+    vtable?for?mir::AnonymousShmFile;
     vtable?for?mir::FatalErrorStrategy;
+    vtable?for?mir::Fd;
+    vtable?for?mir::ShmFile;
     vtable?for?mir::geometry::Displacement;
     vtable?for?mir::geometry::Length;
     vtable?for?mir::geometry::Point;
@@ -47,36 +65,5 @@ MIR_CORE_0.25 {
     vtable?for?mir::geometry::Rectangles;
     vtable?for?mir::geometry::Size;
   };
+local: *;
 };
-
-MIR_CORE_1.0 {
- global:
-  extern "C++" {
-    mir::Fd::Fd*;
-    mir::Fd::invalid*;
-    mir::Fd::operator*;
-    mir::AnonymousShmFile::AnonymousShmFile*;
-    mir::AnonymousShmFile::?AnonymousShmFile*;
-    mir::AnonymousShmFile::base_ptr*;
-    mir::AnonymousShmFile::fd*;
-    mir::ShmFile::ShmFile*;
-    mir::ShmFile::?ShmFile*;
-    mir::ShmFile::base_ptr*;
-    mir::ShmFile::fd*;
-
-    typeinfo?for?mir::Fd;
-    typeinfo?for?mir::AnonymousShmFile;
-    typeinfo?for?mir::ShmFile;
-    vtable?for?mir::Fd;
-    vtable?for?mir::AnonymousShmFile;
-    vtable?for?mir::ShmFile;
-  };
-  local: *;
-} MIR_CORE_0.25;
-
-MIR_CORE_1.1 {
- global:
-  extern "C++" {
-    mir::mir_depth_layer_get_index?MirDepthLayer?;
-  };
-} MIR_CORE_1.0;
