@@ -1131,7 +1131,7 @@ TEST_F(BasicSurfaceTest, when_stream_info_has_explicit_size_an_observer_is_notif
     buffer_stream->frame_posted_callback(stream_size);
 }
 
-TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_with_surface_position)
+TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_at_origin)
 {
     using namespace testing;
 
@@ -1141,23 +1141,7 @@ TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_w
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(rect.top_left)));
-    buffer_stream->frame_posted_callback(rect.size);
-}
-
-TEST_F(BasicSurfaceTest, when_surface_has_moved_an_observer_is_notified_of_frame_with_new_surface_position)
-{
-    using namespace testing;
-    geom::Point const new_position{rect.top_left + geom::Displacement{25, 35}};
-
-    NiceMock<MockSurfaceObserver> mock_surface_observer;
-    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
-    surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
-
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(rect.top_left)));
-    surface.move_to(new_position);
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(geom::Point{})));
     buffer_stream->frame_posted_callback(rect.size);
 }
 
@@ -1173,7 +1157,7 @@ TEST_F(BasicSurfaceTest, when_stream_info_has_offset_an_observer_is_notified_of_
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, stream_info_offset, {}}});
 
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(rect.top_left + stream_info_offset)));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(geom::Point{} + stream_info_offset)));
     buffer_stream->frame_posted_callback(rect.size);
 }
 
@@ -1190,7 +1174,7 @@ TEST_F(BasicSurfaceTest, when_surface_has_margins_an_observer_is_notified_of_fra
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
-    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(rect.top_left + margin_top + margin_left)));
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(geom::Point{} + margin_top + margin_left)));
     surface.set_window_margins(margin_top, margin_left, margin_bottom, margin_right);
     buffer_stream->frame_posted_callback({20, 30});
 }
