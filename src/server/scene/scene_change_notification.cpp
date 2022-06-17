@@ -14,9 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "legacy_surface_change_notification.h"
+#include "surface_change_notification.h"
 
-#include "mir/scene/legacy_scene_change_notification.h"
+#include "mir/scene/scene_change_notification.h"
 #include "mir/scene/surface.h"
 #include "mir/geometry/displacement.h"
 
@@ -25,7 +25,7 @@
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 
-ms::LegacySceneChangeNotification::LegacySceneChangeNotification(
+ms::SceneChangeNotification::SceneChangeNotification(
     std::function<void()> const& scene_notify_change,
     std::function<void(int frames, geom::Rectangle const& damage)> const& damage_notify_change) :
     scene_notify_change(scene_notify_change),
@@ -33,12 +33,12 @@ ms::LegacySceneChangeNotification::LegacySceneChangeNotification(
 {
 }
 
-ms::LegacySceneChangeNotification::~LegacySceneChangeNotification()
+ms::SceneChangeNotification::~SceneChangeNotification()
 {
     end_observation();
 }
 
-void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surface)
+void ms::SceneChangeNotification::add_surface_observer(ms::Surface* surface)
 {
     auto notifier = [surface, this, was_visible = false] () mutable
         {
@@ -47,14 +47,14 @@ void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surfac
             was_visible = surface->visible();
         };
 
-    auto observer = std::make_shared<LegacySurfaceChangeNotification>(surface, notifier, damage_notify_change);
+    auto observer = std::make_shared<SurfaceChangeNotification>(surface, notifier, damage_notify_change);
     surface->add_observer(observer);
 
     std::unique_lock lg(surface_observers_guard);
     surface_observers[surface] = observer;
 }
 
-void ms::LegacySceneChangeNotification::surface_added(std::shared_ptr<ms::Surface> const& surface)
+void ms::SceneChangeNotification::surface_added(std::shared_ptr<ms::Surface> const& surface)
 {
     add_surface_observer(surface.get());
 
@@ -63,12 +63,12 @@ void ms::LegacySceneChangeNotification::surface_added(std::shared_ptr<ms::Surfac
         scene_notify_change();
 }
 
-void ms::LegacySceneChangeNotification::surface_exists(std::shared_ptr<ms::Surface> const& surface)
+void ms::SceneChangeNotification::surface_exists(std::shared_ptr<ms::Surface> const& surface)
 {
     add_surface_observer(surface.get());
 }
     
-void ms::LegacySceneChangeNotification::surface_removed(std::shared_ptr<ms::Surface> const& surface)
+void ms::SceneChangeNotification::surface_removed(std::shared_ptr<ms::Surface> const& surface)
 {
     {
         std::unique_lock lg(surface_observers_guard);
@@ -84,17 +84,17 @@ void ms::LegacySceneChangeNotification::surface_removed(std::shared_ptr<ms::Surf
         scene_notify_change();
 }
 
-void ms::LegacySceneChangeNotification::surfaces_reordered(SurfaceSet const&)
+void ms::SceneChangeNotification::surfaces_reordered(SurfaceSet const&)
 {
     scene_notify_change();
 }
 
-void ms::LegacySceneChangeNotification::scene_changed()
+void ms::SceneChangeNotification::scene_changed()
 {
     scene_notify_change();
 }
 
-void ms::LegacySceneChangeNotification::end_observation()
+void ms::SceneChangeNotification::end_observation()
 {
     std::unique_lock lg(surface_observers_guard);
     for (auto &kv : surface_observers)

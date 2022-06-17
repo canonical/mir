@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/scene/legacy_scene_change_notification.h"
+#include "mir/scene/scene_change_notification.h"
 #include "mir/scene/surface_observer.h"
 
 #include "mir/test/fake_shared.h"
@@ -38,7 +38,7 @@ struct MockBufferCallback
     MOCK_METHOD2(invoke, void(int, mir::geometry::Rectangle const&));
 };
 
-struct LegacySceneChangeNotificationTest : public testing::Test
+struct SceneChangeNotificationTest : public testing::Test
 {
     void SetUp() override
     {
@@ -56,35 +56,35 @@ struct LegacySceneChangeNotificationTest : public testing::Test
 }; 
 }
 
-TEST_F(LegacySceneChangeNotificationTest, fowards_all_observations_to_callback)
+TEST_F(SceneChangeNotificationTest, fowards_all_observations_to_callback)
 {
     EXPECT_CALL(scene_callback, invoke()).Times(2);
 
-    ms::LegacySceneChangeNotification observer(scene_change_callback, buffer_change_callback);
+    ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(surface);
     observer.surface_removed(surface);
     observer.surfaces_reordered({});
 }
 
-TEST_F(LegacySceneChangeNotificationTest, registers_observer_with_surfaces)
+TEST_F(SceneChangeNotificationTest, registers_observer_with_surfaces)
 {
     EXPECT_CALL(*surface, add_observer(testing::_))
         .Times(1);
 
-    ms::LegacySceneChangeNotification observer(scene_change_callback, buffer_change_callback);
+    ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(surface);
 }
 
-TEST_F(LegacySceneChangeNotificationTest, registers_observer_with_existing_surfaces)
+TEST_F(SceneChangeNotificationTest, registers_observer_with_existing_surfaces)
 {
     EXPECT_CALL(*surface, add_observer(testing::_))
         .Times(1);
 
-    ms::LegacySceneChangeNotification observer(scene_change_callback, buffer_change_callback);
+    ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_exists(surface);
 }
 
-TEST_F(LegacySceneChangeNotificationTest, observes_surface_changes)
+TEST_F(SceneChangeNotificationTest, observes_surface_changes)
 {
     using namespace ::testing;
     std::shared_ptr<ms::SurfaceObserver> surface_observer;
@@ -95,12 +95,12 @@ TEST_F(LegacySceneChangeNotificationTest, observes_surface_changes)
     EXPECT_CALL(scene_callback, invoke()).Times(0);
     EXPECT_CALL(buffer_callback, invoke(buffer_num, _)).Times(1);
 
-    ms::LegacySceneChangeNotification observer(scene_change_callback, buffer_change_callback);
+    ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(surface);
     surface_observer->frame_posted(surface.get(), buffer_num, {});
 }
 
-TEST_F(LegacySceneChangeNotificationTest, redraws_on_rename)
+TEST_F(SceneChangeNotificationTest, redraws_on_rename)
 {
     using namespace ::testing;
 
@@ -110,13 +110,13 @@ TEST_F(LegacySceneChangeNotificationTest, redraws_on_rename)
         .WillOnce(SaveArg<0>(&surface_observer));
     EXPECT_CALL(scene_callback, invoke()).Times(1);
 
-    ms::LegacySceneChangeNotification observer(scene_change_callback,
+    ms::SceneChangeNotification observer(scene_change_callback,
                                                buffer_change_callback);
     observer.surface_added(surface);
     surface_observer->renamed(surface.get(), "Something New");
 }
 
-TEST_F(LegacySceneChangeNotificationTest, destroying_observer_unregisters_surface_observers)
+TEST_F(SceneChangeNotificationTest, destroying_observer_unregisters_surface_observers)
 {
     using namespace ::testing;
     
@@ -125,12 +125,12 @@ TEST_F(LegacySceneChangeNotificationTest, destroying_observer_unregisters_surfac
     EXPECT_CALL(*surface, remove_observer(_))
         .Times(1);
     {
-        ms::LegacySceneChangeNotification observer(scene_change_callback, buffer_change_callback);
+        ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
         observer.surface_added(surface);
     }
 }
 
-TEST_F(LegacySceneChangeNotificationTest, ending_observation_unregisters_observers)
+TEST_F(SceneChangeNotificationTest, ending_observation_unregisters_observers)
 {
     using namespace ::testing;
     EXPECT_CALL(*surface, add_observer(_))
@@ -138,7 +138,7 @@ TEST_F(LegacySceneChangeNotificationTest, ending_observation_unregisters_observe
     EXPECT_CALL(*surface, remove_observer(_))
         .Times(1);
 
-    ms::LegacySceneChangeNotification observer(scene_change_callback, buffer_change_callback);
+    ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(surface);
     observer.end_observation();
 

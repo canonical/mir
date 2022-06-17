@@ -16,7 +16,7 @@
 
 
 #include "src/server/scene/basic_surface.h"
-#include "src/server/scene/legacy_surface_change_notification.h"
+#include "src/server/scene/surface_change_notification.h"
 
 #include "mir/events/event_private.h"
 #include "mir/frontend/event_sink.h"
@@ -99,8 +99,8 @@ struct BasicSurfaceTest : public testing::Test
         std::shared_ptr<mg::CursorImage>(),
         report};
 
-    std::shared_ptr<ms::LegacySurfaceChangeNotification> observer =
-        std::make_shared<ms::LegacySurfaceChangeNotification>(
+    std::shared_ptr<ms::SurfaceChangeNotification> observer =
+        std::make_shared<ms::SurfaceChangeNotification>(
             &surface,
             mock_change_cb,
             [this](int, geom::Rectangle const&){mock_change_cb();});
