@@ -16,17 +16,21 @@
 
 #include "legacy_surface_change_notification.h"
 
+#include "mir/scene/surface.h"
+
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::LegacySurfaceChangeNotification::LegacySurfaceChangeNotification(
+    ms::Surface* surface,
     std::function<void()> const& notify_scene_change,
-    std::function<void(int)> const& notify_buffer_change) :
+    std::function<void(int, geom::Rectangle const&)> const& notify_buffer_change) :
     notify_scene_change(notify_scene_change),
     notify_buffer_change(notify_buffer_change)
 {
+    top_left = surface->top_left();
 }
 
 void ms::LegacySurfaceChangeNotification::content_resized_to(Surface const*, geometry::Size const&)
@@ -34,8 +38,9 @@ void ms::LegacySurfaceChangeNotification::content_resized_to(Surface const*, geo
     notify_scene_change();
 }
 
-void ms::LegacySurfaceChangeNotification::moved_to(Surface const*, geometry::Point const&)
+void ms::LegacySurfaceChangeNotification::moved_to(Surface const*, geometry::Point const& new_top_left)
 {
+    top_left = new_top_left;
     notify_scene_change();
 }
 
@@ -44,9 +49,12 @@ void ms::LegacySurfaceChangeNotification::hidden_set_to(Surface const*, bool)
     notify_scene_change();
 }
 
-void ms::LegacySurfaceChangeNotification::frame_posted(Surface const*, int frames_available, geometry::Rectangle const&)
+void ms::LegacySurfaceChangeNotification::frame_posted(
+    Surface const*,
+    int frames_available,
+    geometry::Rectangle const& damage)
 {
-    notify_buffer_change(frames_available);
+    notify_buffer_change(frames_available, {top_left + as_displacement(damage.top_left), damage.size});
 }
 
 void ms::LegacySurfaceChangeNotification::alpha_set_to(Surface const*, float)

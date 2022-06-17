@@ -27,15 +27,6 @@ namespace geom = mir::geometry;
 
 ms::LegacySceneChangeNotification::LegacySceneChangeNotification(
     std::function<void()> const& scene_notify_change,
-    std::function<void(int)> const& buffer_notify_change)
-    : scene_notify_change(scene_notify_change),
-      buffer_notify_change(buffer_notify_change)
-      
-{
-}
-
-ms::LegacySceneChangeNotification::LegacySceneChangeNotification(
-    std::function<void()> const& scene_notify_change,
     std::function<void(int frames, geom::Rectangle const& damage)> const& damage_notify_change) :
     scene_notify_change(scene_notify_change),
     damage_notify_change(damage_notify_change)
@@ -47,49 +38,6 @@ ms::LegacySceneChangeNotification::~LegacySceneChangeNotification()
     end_observation();
 }
 
-namespace
-{
-class NonLegacySurfaceChangeNotification : public ms::LegacySurfaceChangeNotification
-{
-public:
-    NonLegacySurfaceChangeNotification(
-        std::function<void()> const& notify_scene_change,
-        std::function<void(int frames, geom::Rectangle const& damage)> const& damage_notify_change,
-        ms::Surface* surface);
-
-    void moved_to(ms::Surface const* surf, const geom::Point&) override;
-    void frame_posted(ms::Surface const* surf, int frames_available, const geom::Rectangle& area) override;
-
-private:
-    geom::Point top_left;
-    std::function<void(int frames, geom::Rectangle const& damage)> const damage_notify_change;
-};
-
-NonLegacySurfaceChangeNotification::NonLegacySurfaceChangeNotification(
-    std::function<void()> const& notify_scene_change,
-    std::function<void(int frames, geom::Rectangle const& damage)> const& damage_notify_change,
-    ms::Surface* surface) :
-    ms::LegacySurfaceChangeNotification(notify_scene_change, {}),
-    damage_notify_change(damage_notify_change)
-{
-    top_left = surface->top_left();
-}
-
-void NonLegacySurfaceChangeNotification::moved_to(ms::Surface const* surf, const geom::Point& top_left)
-{
-    this->top_left = top_left;
-    ms::LegacySurfaceChangeNotification::moved_to(surf, top_left);
-}
-
-void NonLegacySurfaceChangeNotification::frame_posted(
-    ms::Surface const*,
-    int frames_available,
-    geom::Rectangle const& damage)
-{
-    damage_notify_change(frames_available, {top_left + as_displacement(damage.top_left), damage.size});
-}
-}
-
 void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surface)
 {
     auto notifier = [surface, this, was_visible = false] () mutable
@@ -99,22 +47,11 @@ void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surfac
             was_visible = surface->visible();
         };
 
-    if (buffer_notify_change)
-    {
-        auto observer = std::make_shared<LegacySurfaceChangeNotification>(notifier, buffer_notify_change);
-        surface->add_observer(observer);
+    auto observer = std::make_shared<LegacySurfaceChangeNotification>(surface, notifier, damage_notify_change);
+    surface->add_observer(observer);
 
-        std::unique_lock lg(surface_observers_guard);
-        surface_observers[surface] = observer;
-    }
-    else
-    {
-        auto observer = std::make_shared<NonLegacySurfaceChangeNotification>(notifier, damage_notify_change, surface);
-        surface->add_observer(observer);
-
-        std::unique_lock lg(surface_observers_guard);
-        surface_observers[surface] = observer;
-    }
+    std::unique_lock lg(surface_observers_guard);
+    surface_observers[surface] = observer;
 }
 
 void ms::LegacySceneChangeNotification::surface_added(std::shared_ptr<ms::Surface> const& surface)
@@ -122,7 +59,7 @@ void ms::LegacySceneChangeNotification::surface_added(std::shared_ptr<ms::Surfac
     add_surface_observer(surface.get());
 
     // If the surface already has content we need to (re)composite
-    if (!buffer_notify_change && surface->visible())
+    if (surface->visible())
         scene_notify_change();
 }
 

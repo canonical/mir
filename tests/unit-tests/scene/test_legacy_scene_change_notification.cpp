@@ -35,7 +35,7 @@ struct MockSceneCallback
 };
 struct MockBufferCallback
 {
-    MOCK_METHOD1(invoke, void(int));
+    MOCK_METHOD2(invoke, void(int, mir::geometry::Rectangle const&));
 };
 
 struct LegacySceneChangeNotificationTest : public testing::Test
@@ -47,7 +47,10 @@ struct LegacySceneChangeNotificationTest : public testing::Test
     }
     testing::NiceMock<MockSceneCallback> scene_callback;
     testing::NiceMock<MockBufferCallback> buffer_callback;
-    std::function<void(int)> buffer_change_callback{[this](int arg){buffer_callback.invoke(arg);}};
+    std::function<void(int, mir::geometry::Rectangle const&)> buffer_change_callback{[this](int arg, mir::geometry::Rectangle const& damage)
+        {
+            buffer_callback.invoke(arg, damage);
+        }};
     std::function<void()> scene_change_callback{[this](){scene_callback.invoke();}};
     std::shared_ptr<testing::NiceMock<mtd::MockSurface>> surface;
 }; 
@@ -90,7 +93,7 @@ TEST_F(LegacySceneChangeNotificationTest, observes_surface_changes)
    
     int buffer_num{3}; 
     EXPECT_CALL(scene_callback, invoke()).Times(0);
-    EXPECT_CALL(buffer_callback, invoke(buffer_num)).Times(1);
+    EXPECT_CALL(buffer_callback, invoke(buffer_num, _)).Times(1);
 
     ms::LegacySceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(surface);

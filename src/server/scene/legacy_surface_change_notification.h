@@ -29,11 +29,12 @@ class LegacySurfaceChangeNotification : public mir::scene::NullSurfaceObserver
 {
 public:
     LegacySurfaceChangeNotification(
+        scene::Surface* surface,
         std::function<void()> const& notify_scene_change,
-        std::function<void(int)> const& notify_buffer_change);
+        std::function<void(int, geometry::Rectangle const&)> const& notify_buffer_change);
 
     void content_resized_to(Surface const* surf, geometry::Size const&) override;
-    void moved_to(Surface const* surf, geometry::Point const&) override;
+    void moved_to(Surface const* surf, geometry::Point const& new_top_left) override;
     void hidden_set_to(Surface const* surf, bool) override;
     void frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage) override;
     void alpha_set_to(Surface const* surf, float) override;
@@ -42,8 +43,9 @@ public:
     void renamed(Surface const* surf, char const*) override;
 
 private:
+    geometry::Point top_left;
     std::function<void()> const notify_scene_change;
-    std::function<void(int)> const notify_buffer_change;
+    std::function<void(int, geometry::Rectangle const&)> const notify_buffer_change;
 };
 }
 }
