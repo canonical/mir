@@ -41,6 +41,7 @@ struct WlrScreencopyV1Ctx
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<compositor::ScreenShooter> const screen_shooter;
+    std::shared_ptr<SurfaceStack> const surface_stack;
 };
 
 class WlrScreencopyManagerV1Global
@@ -103,13 +104,15 @@ auto mf::create_wlr_screencopy_manager_unstable_v1(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<compositor::ScreenShooter> const& screen_shooter)
+    std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
+    std::shared_ptr<SurfaceStack> const& surface_stack)
 -> std::shared_ptr<wayland::WlrScreencopyManagerV1::Global>
 {
     auto ctx = std::shared_ptr<WlrScreencopyV1Ctx>{new WlrScreencopyV1Ctx{
         wayland_executor,
         allocator,
-        screen_shooter}};
+        screen_shooter,
+        surface_stack}};
     return std::make_shared<WlrScreencopyManagerV1Global>(display, std::move(ctx));
 }
 

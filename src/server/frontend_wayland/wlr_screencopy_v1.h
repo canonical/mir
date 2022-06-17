@@ -35,12 +35,14 @@ class GraphicBufferAllocator;
 namespace frontend
 {
 class OutputManager;
+class SurfaceStack;
 
 auto create_wlr_screencopy_manager_unstable_v1(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<compositor::ScreenShooter> const& screen_shooter)
+    std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
+    std::shared_ptr<SurfaceStack> const& surface_stack)
 -> std::shared_ptr<wayland::WlrScreencopyManagerV1::Global>;
 }
 }
