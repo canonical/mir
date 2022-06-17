@@ -36,17 +36,6 @@ public:
     }
     ProofOfMutexLock(ProofOfMutexLock const&) = delete;
     ProofOfMutexLock operator=(ProofOfMutexLock const&) = delete;
-
-    class Fake;
-
-protected:
-    ProofOfMutexLock() {}
-};
-
-class ProofOfMutexLock::Fake : public ProofOfMutexLock
-{
-public:
-    Fake() {}
 };
 } // namespace mir
 
