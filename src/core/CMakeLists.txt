@@ -8,7 +8,6 @@ add_library(mircore SHARED
     fatal.cpp
     fd.cpp
     depth_layer.cpp
-    proof_of_mutex_lock.cpp
     geometry/rectangles.cpp
     ${PROJECT_SOURCE_DIR}/include/core/mir/anonymous_shm_file.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/int_wrapper.h

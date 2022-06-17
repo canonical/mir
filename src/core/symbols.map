@@ -64,8 +64,6 @@ MIR_CORE_2.9 {
     vtable?for?mir::geometry::Rectangle;
     vtable?for?mir::geometry::Rectangles;
     vtable?for?mir::geometry::Size;
-    mir::ProofOfMutexLock::ProofOfMutexLock*;
-    mir::ProofOfMutexLock::is_not_required_here;
   };
 local: *;
 };

@@ -20,7 +20,6 @@
 #include "mir/time/clock.h"
 #include "mir/lockable_callback.h"
 #include "mir/linearising_executor.h"
-#include "mir/fatal.h"
 
 #include <set>
 

@@ -16,6 +16,7 @@
 #ifndef MIR_PROOF_OF_MUTEX_LOCK_H_
 #define MIR_PROOF_OF_MUTEX_LOCK_H_
 
+#include "fatal.h"
 #include <mutex>
 
 namespace mir
@@ -25,16 +26,27 @@ namespace mir
 class ProofOfMutexLock
 {
 public:
-    /// Can be used in places such as constructors and destructors when it is safe to assume the mutex is uncontested
-    static ProofOfMutexLock const& is_not_required_here;
-
     ProofOfMutexLock(std::lock_guard<std::mutex> const&) {}
-    ProofOfMutexLock(std::unique_lock<std::mutex> const& lock);
+    ProofOfMutexLock(std::unique_lock<std::mutex> const& lock)
+    {
+        if (!lock.owns_lock())
+        {
+            fatal_error("ProofOfMutexLock created with unlocked unique_lock");
+        }
+    }
     ProofOfMutexLock(ProofOfMutexLock const&) = delete;
     ProofOfMutexLock operator=(ProofOfMutexLock const&) = delete;
 
+    class Fake;
+
 protected:
     ProofOfMutexLock() {}
+};
+
+class ProofOfMutexLock::Fake : public ProofOfMutexLock
+{
+public:
+    Fake() {}
 };
 } // namespace mir
 
