@@ -58,7 +58,7 @@ struct SceneChangeNotificationTest : public testing::Test
 
 TEST_F(SceneChangeNotificationTest, fowards_all_observations_to_callback)
 {
-    EXPECT_CALL(scene_callback, invoke()).Times(2);
+    EXPECT_CALL(scene_callback, invoke()).Times(3);
 
     ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(surface);
@@ -92,7 +92,7 @@ TEST_F(SceneChangeNotificationTest, observes_surface_changes)
         .WillOnce(SaveArg<0>(&surface_observer));
    
     int buffer_num{3}; 
-    EXPECT_CALL(scene_callback, invoke()).Times(0);
+    EXPECT_CALL(scene_callback, invoke()).Times(1);
     EXPECT_CALL(buffer_callback, invoke(buffer_num, _)).Times(1);
 
     ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
@@ -108,11 +108,12 @@ TEST_F(SceneChangeNotificationTest, redraws_on_rename)
 
     EXPECT_CALL(*surface, add_observer(_)).Times(1)
         .WillOnce(SaveArg<0>(&surface_observer));
-    EXPECT_CALL(scene_callback, invoke()).Times(1);
 
     ms::SceneChangeNotification observer(scene_change_callback,
                                                buffer_change_callback);
     observer.surface_added(surface);
+
+    EXPECT_CALL(scene_callback, invoke()).Times(1);
     surface_observer->renamed(surface.get(), "Something New");
 }
 
