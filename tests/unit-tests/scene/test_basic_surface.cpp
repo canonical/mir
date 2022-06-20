@@ -16,7 +16,7 @@
 
 
 #include "src/server/scene/basic_surface.h"
-#include "src/server/scene/legacy_surface_change_notification.h"
+#include "src/server/scene/surface_change_notification.h"
 
 #include "mir/events/event_private.h"
 #include "mir/frontend/event_sink.h"
@@ -87,8 +87,6 @@ struct BasicSurfaceTest : public testing::Test
         std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     void const* compositor_id{nullptr};
-    std::shared_ptr<ms::LegacySurfaceChangeNotification> observer =
-        std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb, [this](int){mock_change_cb();});
     std::list<ms::StreamInfo> streams { { mock_buffer_stream, {}, {} } };
 
     ms::BasicSurface surface{
@@ -100,6 +98,12 @@ struct BasicSurfaceTest : public testing::Test
         streams,
         std::shared_ptr<mg::CursorImage>(),
         report};
+
+    std::shared_ptr<ms::SurfaceChangeNotification> observer =
+        std::make_shared<ms::SurfaceChangeNotification>(
+            &surface,
+            mock_change_cb,
+            [this](int, geom::Rectangle const&){mock_change_cb();});
 
     BasicSurfaceTest()
     {

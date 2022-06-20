@@ -14,8 +14,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_SCENE_LEGACY_SURFACE_CHANGE_NOTIFICATION_H_
-#define MIR_SCENE_LEGACY_SURFACE_CHANGE_NOTIFICATION_H_
+#ifndef MIR_SCENE_SURFACE_CHANGE_NOTIFICATION_H_
+#define MIR_SCENE_SURFACE_CHANGE_NOTIFICATION_H_
 
 #include "mir/scene/null_surface_observer.h"
 
@@ -25,15 +25,16 @@ namespace mir
 {
 namespace scene
 {
-class LegacySurfaceChangeNotification : public mir::scene::NullSurfaceObserver
+class SurfaceChangeNotification : public mir::scene::NullSurfaceObserver
 {
 public:
-    LegacySurfaceChangeNotification(
+    SurfaceChangeNotification(
+        scene::Surface* surface,
         std::function<void()> const& notify_scene_change,
-        std::function<void(int)> const& notify_buffer_change);
+        std::function<void(int, geometry::Rectangle const&)> const& notify_buffer_change);
 
     void content_resized_to(Surface const* surf, geometry::Size const&) override;
-    void moved_to(Surface const* surf, geometry::Point const&) override;
+    void moved_to(Surface const* surf, geometry::Point const& new_top_left) override;
     void hidden_set_to(Surface const* surf, bool) override;
     void frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage) override;
     void alpha_set_to(Surface const* surf, float) override;
@@ -42,10 +43,11 @@ public:
     void renamed(Surface const* surf, char const*) override;
 
 private:
+    geometry::Point top_left;
     std::function<void()> const notify_scene_change;
-    std::function<void(int)> const notify_buffer_change;
+    std::function<void(int, geometry::Rectangle const&)> const notify_buffer_change;
 };
 }
 }
 
-#endif // MIR_SCENE_LEGACY_SURFACE_CHANGE_NOTIFICATION_H_
+#endif // MIR_SCENE_SURFACE_CHANGE_NOTIFICATION_H_
