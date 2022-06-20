@@ -155,69 +155,6 @@ void ms::SurfaceObservers::application_id_set_to(Surface const* surf, std::strin
                  { observer->application_id_set_to(surf, application_id); });
 }
 
-struct ms::CursorStreamImageAdapter
-{
-    CursorStreamImageAdapter(ms::BasicSurface &surface)
-        : surface(surface)
-    {
-    }
-
-    ~CursorStreamImageAdapter()
-    {
-        reset();
-    }
-
-    void reset()
-    {
-        if (stream)
-        {
-            stream->set_frame_posted_callback([](auto){});
-            stream.reset();
-        }
-    }
-
-    void update(std::shared_ptr<mf::BufferStream> const& new_stream, geom::Displacement const& new_hotspot)
-    {
-        if (new_stream == stream && new_hotspot == hotspot)
-        {
-            return;
-        }
-        else if (new_stream != stream)
-        {
-            if (stream)
-                stream->set_frame_posted_callback([](auto){});
-
-            stream = std::dynamic_pointer_cast<mc::BufferStream>(new_stream);
-            stream->set_frame_posted_callback(
-                [this](auto)
-                {
-                    this->post_cursor_image_from_current_buffer();
-                });
-        }
-
-        hotspot = new_hotspot;
-        post_cursor_image_from_current_buffer();
-    }
-
-private:
-    void post_cursor_image_from_current_buffer() const
-    {
-        if (stream->has_submitted_buffer())
-        {
-            surface.set_cursor_from_buffer(stream->lock_compositor_buffer(this), hotspot);
-        }
-        else
-        {
-            surface.remove_cursor_image();
-        }
-    }
-
-    ms::BasicSurface& surface;
-
-    std::shared_ptr<mc::BufferStream> stream;
-    geom::Displacement hotspot;
-};
-
 namespace
 {
 //TODO: the concept of default stream is going away very soon.
@@ -260,7 +197,6 @@ ms::BasicSurface::BasicSurface(
     wayland_surface_{wayland_surface},
     layers(layers),
     confine_pointer_state_(state),
-    cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)},
     session_{session}
 {
     update_frame_posted_callbacks(std::lock_guard{guard});
@@ -622,7 +558,6 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
 {
     {
         std::lock_guard lock(guard);
-        cursor_stream_adapter->reset();
 
         cursor_image_ = image;
     }
@@ -691,19 +626,6 @@ void ms::BasicSurface::set_cursor_from_buffer(
         cursor_image_ = image;
     }
     observers->cursor_image_set_to(this, *image);
-}
-
-// In order to set the cursor image from a buffer stream, we use an adapter pattern,
-// which observes buffers from the stream and copies them 1 by 1 to cursor images.
-// We must be careful, when setting a new cursor image with ms::BasicSurface::set_cursor_image
-// we need to reset the stream adapter (to halt the observation and allow the new static image
-// to be set). Likewise from the adapter we must use set_cursor_from_buffer as
-// opposed to the public set_cursor_from_image in order to avoid resetting the stream
-// adapter.
-void ms::BasicSurface::set_cursor_stream(std::shared_ptr<mf::BufferStream> const& stream,
-                                         geom::Displacement const& hotspot)
-{
-    cursor_stream_adapter->update(stream, hotspot);
 }
 
 auto ms::BasicSurface::wayland_surface() -> mw::Weak<mf::WlSurface> const&

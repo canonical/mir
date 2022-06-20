@@ -122,9 +122,6 @@ public:
     void remove_cursor_image(); // Removes the cursor image without resetting the stream
     std::shared_ptr<graphics::CursorImage> cursor_image() const override;
 
-    /// \deprecated can be removed along with mirclient
-    void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const& stream,
-                           geometry::Displacement const& hotspot) override;
     void set_cursor_from_buffer(std::shared_ptr<graphics::Buffer> buffer,
                                 geometry::Displacement const& hotspot);
 
@@ -207,9 +204,6 @@ private:
     MirWindowVisibility visibility_ = mir_window_visibility_occluded;
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
     MirPointerConfinementState confine_pointer_state_ = mir_pointer_unconfined;
-
-    /// \deprecated can be removed along with mirclient
-    std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;
 
     MirDepthLayer depth_layer_ = mir_depth_layer_application;
     std::optional<geometry::Rectangle> clip_area_;

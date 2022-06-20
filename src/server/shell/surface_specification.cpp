@@ -146,8 +146,6 @@ void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
         confine_pointer = that.confine_pointer;
     if (that.cursor_image.is_set())
         cursor_image = that.cursor_image;
-    if (that.stream_cursor.is_set())
-        stream_cursor = that.stream_cursor;
     if (that.depth_layer.is_set())
         depth_layer = that.depth_layer;
     if (that.attached_edges.is_set())
@@ -203,7 +201,6 @@ bool msh::operator==(
         lhs.streams == rhs.streams &&
         lhs.confine_pointer == rhs.confine_pointer &&
         lhs.cursor_image == rhs.cursor_image &&
-        lhs.stream_cursor == rhs.stream_cursor &&
         lhs.depth_layer == rhs.depth_layer &&
         lhs.attached_edges == rhs.attached_edges &&
         lhs.exclusive_rect == rhs.exclusive_rect &&
