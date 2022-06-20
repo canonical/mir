@@ -57,10 +57,6 @@ public:
     virtual auto primary_buffer_stream() const -> std::shared_ptr<frontend::BufferStream> = 0;
 
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
-    /// \deprecated can be removed along with mirclient
-    virtual void set_cursor_stream(
-        std::shared_ptr<frontend::BufferStream> const& image,
-        geometry::Displacement const& hotspot) = 0;
 
     /// Returned value is only safe to use on the Wayland thread
     virtual auto wayland_surface() -> wayland::Weak<WlSurface> const& = 0;
