@@ -39,7 +39,7 @@ public:
   void depth_layer_set_to(mir::scene::Surface const *surf,
                           MirDepthLayer depth_layer) override;
   void frame_posted(mir::scene::Surface const *surf, int frames_available,
-                    mir::geometry::Size const &size) override;
+                    mir::geometry::Rectangle const& area) override;
   void hidden_set_to(mir::scene::Surface const *surf, bool hide) override;
   void input_consumed(mir::scene::Surface const *surf,
                       MirEvent const *event) override;
@@ -111,9 +111,9 @@ void miroil::SurfaceObserverImpl::depth_layer_set_to(mir::scene::Surface const* 
     listener->depth_layer_set_to(surf, depth_layer);
 }
 
-void miroil::SurfaceObserverImpl::frame_posted(mir::scene::Surface const* surf, int frames_available, mir::geometry::Size const& size)
+void miroil::SurfaceObserverImpl::frame_posted(mir::scene::Surface const* surf, int frames_available, mir::geometry::Rectangle const& area)
 {
-    listener->frame_posted(surf, frames_available, size);
+    listener->frame_posted(surf, frames_available, area.size);
 }
 
 void miroil::SurfaceObserverImpl::hidden_set_to(mir::scene::Surface const* surf, bool hide)

@@ -30,6 +30,7 @@ namespace doubles
 struct MockBufferStream : public compositor::BufferStream
 {
     int buffers_ready_{0};
+    std::function<void(geometry::Size const&)> frame_posted_callback;
     int buffers_ready(void const*)
     {
         if (buffers_ready_)
@@ -51,6 +52,8 @@ struct MockBufferStream : public compositor::BufferStream
             .WillByDefault(testing::Return(mir_pixel_format_abgr_8888));
         ON_CALL(*this, stream_size())
             .WillByDefault(testing::Return(geometry::Size{0,0}));
+        ON_CALL(*this, set_frame_posted_callback(testing::_))
+            .WillByDefault(testing::Invoke([&](auto const& callback){ frame_posted_callback = callback; }));
     }
     std::shared_ptr<StubBuffer> buffer { std::make_shared<StubBuffer>() };
     MOCK_METHOD1(acquire_client_buffer, void(std::function<void(graphics::Buffer* buffer)>));

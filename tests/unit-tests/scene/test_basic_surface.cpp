@@ -30,6 +30,7 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/fake_shared.h"
+#include "mir/test/geometry_matchers.h"
 
 #include "src/server/report/null_report_factory.h"
 
@@ -65,6 +66,7 @@ public:
     MOCK_METHOD3(attrib_changed, void(ms::Surface const*, MirWindowAttrib, int));
     MOCK_METHOD2(window_resized_to, void(ms::Surface const*, geom::Size const&));
     MOCK_METHOD2(content_resized_to, void(ms::Surface const*, geom::Size const&));
+    MOCK_METHOD3(frame_posted, void(ms::Surface const*, int, geom::Rectangle const&));
     MOCK_METHOD2(hidden_set_to, void(ms::Surface const*, bool));
     MOCK_METHOD2(renamed, void(ms::Surface const*, char const*));
     MOCK_METHOD1(client_surface_close_requested, void(ms::Surface const*));
@@ -1073,6 +1075,108 @@ TEST_F(BasicSurfaceTest, cursor_can_be_set_from_stream_that_started_empty)
     surface.set_cursor_stream(buffer_stream, {});
     stub_buffer = std::make_shared<mtd::StubBuffer>();
     (*frame_posted_callback)({});
+}
+
+TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_with_correct_size)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+
+    surface.resize({100, 150}); // should not affect frame_posted notification
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
+    ON_CALL(*buffer_stream, stream_size())
+        .WillByDefault(Return(rect.size));
+
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectSizeEq(rect.size)));
+    buffer_stream->frame_posted_callback(rect.size);
+}
+
+TEST_F(BasicSurfaceTest, when_stream_size_differs_from_buffer_size_an_observer_is_notified_of_frame_with_stream_size)
+{
+    using namespace testing;
+    geom::Size const stream_size{rect.size * 1.5};
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    std::function<void(geom::Size const&)> frame_posted_callback;
+    ON_CALL(*buffer_stream, stream_size())
+        .WillByDefault(Return(stream_size));
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
+
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectSizeEq(stream_size)));
+    buffer_stream->frame_posted_callback(stream_size * 2);
+}
+
+TEST_F(BasicSurfaceTest, when_stream_info_has_explicit_size_an_observer_is_notified_of_frame_with_stream_info_size)
+{
+    using namespace testing;
+    geom::Size const stream_info_size{rect.size * 1.5};
+    geom::Size const stream_size{stream_info_size * 2};
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    std::function<void(geom::Size const&)> frame_posted_callback;
+    ON_CALL(*buffer_stream, stream_size())
+        .WillByDefault(Return(stream_size));
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_streams({ms::StreamInfo{buffer_stream, {}, stream_info_size}});
+
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectSizeEq(stream_info_size)));
+    buffer_stream->frame_posted_callback(stream_size);
+}
+
+TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_at_origin)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
+
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(geom::Point{})));
+    buffer_stream->frame_posted_callback(rect.size);
+}
+
+TEST_F(BasicSurfaceTest, when_stream_info_has_offset_an_observer_is_notified_of_frame_with_correct_offset)
+{
+    using namespace testing;
+    geom::Displacement const stream_info_offset{7, 10};
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    std::function<void(geom::Size const&)> frame_posted_callback;
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_streams({ms::StreamInfo{buffer_stream, stream_info_offset, {}}});
+
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(geom::Point{} + stream_info_offset)));
+    buffer_stream->frame_posted_callback(rect.size);
+}
+
+TEST_F(BasicSurfaceTest, when_surface_has_margins_an_observer_is_notified_of_frame_with_correct_offset)
+{
+    using namespace testing;
+    geom::DeltaY const margin_top{4}, margin_bottom{6};
+    geom::DeltaX const margin_left{3}, margin_right{5};
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    std::function<void(geom::Size const&)> frame_posted_callback;
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
+
+    EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(geom::Point{} + margin_top + margin_left)));
+    surface.set_window_margins(margin_top, margin_left, margin_bottom, margin_right);
+    buffer_stream->frame_posted_callback({20, 30});
 }
 
 TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)

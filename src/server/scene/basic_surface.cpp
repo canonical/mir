@@ -71,10 +71,10 @@ void ms::SurfaceObservers::hidden_set_to(Surface const* surf, bool hide)
         { observer->hidden_set_to(surf, hide); });
 }
 
-void ms::SurfaceObservers::frame_posted(Surface const* surf, int frames_available, geometry::Size const& size)
+void ms::SurfaceObservers::frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->frame_posted(surf, frames_available, size); });
+        { observer->frame_posted(surf, frames_available, damage); });
 }
 
 void ms::SurfaceObservers::alpha_set_to(Surface const* surf, float alpha)
@@ -263,16 +263,7 @@ ms::BasicSurface::BasicSurface(
     cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)},
     session_{session}
 {
-    auto callback = [this, observers=weak(observers)](auto const& size)
-        {
-            if (auto const o = observers.lock())
-                o->frame_posted(this, 1, size);
-        };
-
-    for (auto& layer : layers)
-    {
-        layer.stream->set_frame_posted_callback(callback);
-    }
+    update_frame_posted_callbacks(std::lock_guard{guard});
     report->surface_created(this, surface_name);
 }
 
@@ -300,8 +291,7 @@ ms::BasicSurface::BasicSurface(
 
 ms::BasicSurface::~BasicSurface() noexcept
 {
-    for(auto& layer : layers)
-        layer.stream->set_frame_posted_callback([](auto){});
+    clear_frame_posted_callbacks(std::lock_guard{guard});
     report->surface_deleted(this, surface_name);
 }
 
@@ -890,18 +880,9 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
     geom::Point surface_top_left;
     {
         std::lock_guard lock(guard);
-        for(auto& layer : layers)
-            layer.stream->set_frame_posted_callback([](auto){});
-
+        clear_frame_posted_callbacks(lock);
         layers = s;
-
-        for(auto& layer : layers)
-            layer.stream->set_frame_posted_callback(
-                [this, observers = weak(observers)](auto const& size)
-                {
-                    if (auto const o = observers.lock())
-                        o->frame_posted(this, 1, size);
-                });
+        update_frame_posted_callbacks(lock);
         surface_top_left = surface_rect.top_left;
     }
     observers->moved_to(this, surface_top_left);
@@ -1060,6 +1041,8 @@ void mir::scene::BasicSurface::set_window_margins(
         margins.bottom = bottom;
         margins.right  = right;
 
+        update_frame_posted_callbacks(lock);
+
         auto const size = content_size(lock);
         lock.unlock();
 
@@ -1077,6 +1060,32 @@ void mir::scene::BasicSurface::set_focus_mode(MirFocusMode focus_mode)
 {
     std::lock_guard lock(guard);
     focus_mode_ = focus_mode;
+}
+
+void mir::scene::BasicSurface::clear_frame_posted_callbacks(ProofOfMutexLock const&)
+{
+    for (auto& layer : layers)
+    {
+        layer.stream->set_frame_posted_callback([](auto){});
+    }
+}
+
+void mir::scene::BasicSurface::update_frame_posted_callbacks(ProofOfMutexLock const&)
+{
+    for (auto& layer : layers)
+    {
+        auto const position = geom::Point{} + margins.left + margins.top + layer.displacement;
+        layer.stream->set_frame_posted_callback(
+            [this, observers=weak(observers), position, explicit_size=layer.size, stream=layer.stream.get()]
+                (auto const&)
+            {
+                auto const logical_size = explicit_size ? explicit_size.value() : stream->stream_size();
+                if (auto const o = observers.lock())
+                {
+                    o->frame_posted(this, 1, geom::Rectangle{position, logical_size});
+                }
+            });
+    }
 }
 
 auto mir::scene::BasicSurface::content_size(ProofOfMutexLock const&) const -> geometry::Size

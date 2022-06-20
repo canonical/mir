@@ -94,7 +94,7 @@ TEST_F(LegacySceneChangeNotificationTest, observes_surface_changes)
 
     ms::LegacySceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(surface);
-    surface_observer->frame_posted(surface.get(), buffer_num, mir::geometry::Size{0, 0});
+    surface_observer->frame_posted(surface.get(), buffer_num, {});
 }
 
 TEST_F(LegacySceneChangeNotificationTest, redraws_on_rename)

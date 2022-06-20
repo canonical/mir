@@ -44,7 +44,7 @@ void ms::LegacySurfaceChangeNotification::hidden_set_to(Surface const*, bool)
     notify_scene_change();
 }
 
-void ms::LegacySurfaceChangeNotification::frame_posted(Surface const*, int frames_available, geometry::Size const&)
+void ms::LegacySurfaceChangeNotification::frame_posted(Surface const*, int frames_available, geometry::Rectangle const&)
 {
     notify_buffer_change(frames_available);
 }
