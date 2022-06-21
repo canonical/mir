@@ -49,6 +49,12 @@ struct FrameParams
         return area == other.area && output == other.output;
     }
 };
+
+auto damage_affects_area(std::optional<geom::Rectangle> const& damage, geom::Rectangle const& area) -> bool
+{
+    // If damage is null, assumed everything is potentially damaged
+    return !damage || intersection_of(area, damage.value()).size != geom::Size{};
+}
 }
 
 namespace mir
@@ -103,12 +109,19 @@ private:
 
     std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
 
+    struct PendingFrame
+    {
+        FrameParams params;
+        wayland::Weak<WlrScreencopyFrameV1> frame;
+    };
+
     /// Only accessed from the Wayland thread
     /// @{
     /// Created the first time a frame from this manager calls .copy_with_damage
     std::shared_ptr<scene::SceneChangeNotification> change_notifier;
-    wayland::Weak<WlrScreencopyFrameV1> pending_frame;
-    bool damage_since_frame{true};
+    /// Frames that are waiting for damage before they are captured. If the frame object is null that means no damage
+    /// has been received since a previous frame with the same params.
+    std::vector<PendingFrame> pending_frames;
     /// @}
 };
 
@@ -193,31 +206,43 @@ mf::WlrScreencopyManagerV1::~WlrScreencopyManagerV1()
     {
         ctx->surface_stack->remove_observer(change_notifier);
     }
-    if (pending_frame)
+    for (auto const& frame : pending_frames)
     {
-        pending_frame.value().capture(std::nullopt);
+        if (frame.frame)
+        {
+            frame.frame.value().capture(std::nullopt);
+        }
     }
 }
 
 void mf::WlrScreencopyManagerV1::maybe_wait_for_damage(FrameParams const& params, WlrScreencopyFrameV1* frame)
 {
-    (void)params;
     if (!change_notifier)
     {
         // We create the change notifier the first time a client requests a frame with damage
         create_change_notifier();
     }
-    if (damage_since_frame)
+    auto const matching = std::find_if(
+        begin(pending_frames),
+        end(pending_frames),
+        [&](auto item){ return item.params == params; });
+    if (matching != end(pending_frames))
     {
-        frame->capture(std::nullopt);
+        if (matching->frame)
+        {
+            // We do not allow multiple frames to be pending for the same params, so if there is already a pending frame
+            // for the given params it gets captured now with a zero-size damage rect.
+            matching->frame.value().capture(geom::Rectangle{matching->params.area.top_left, {}});
+        }
+        // The frame will be captured next time there is relevant damage
+        matching->frame = mw::make_weak(frame);
     }
     else
     {
-        if (pending_frame)
-        {
-            pending_frame.value().capture(std::nullopt);
-        }
-        pending_frame = mw::make_weak(frame);
+        // We capture the given frame immediately, and also push an empty pending frame so that if we get another
+        // capture request with the same params it will wait for damage since this frame.
+        frame->capture(std::nullopt);
+        pending_frames.push_back({params, {}});
     }
 }
 
@@ -241,14 +266,26 @@ void mf::WlrScreencopyManagerV1::create_change_notifier()
 
 void mf::WlrScreencopyManagerV1::scene_changed(std::optional<geom::Rectangle> const& damage)
 {
-    if (pending_frame)
+    // Erase damaged pending frames that are null so if a new frame is captured with the same params it does not wait
+    // for additional damage
+    pending_frames.erase(
+        std::remove_if(
+            begin(pending_frames),
+            end(pending_frames),
+            [&](auto const& pending)
+            {
+                return !pending.frame && damage_affects_area(damage, pending.params.area);
+            }),
+        end(pending_frames));
+
+    // Capture damaged pending frames, leaving them with a null frame object
+    for (auto& pending : pending_frames)
     {
-        pending_frame.value().capture(damage);
-        damage_since_frame = false;
-    }
-    else
-    {
-        damage_since_frame = true;
+        if (pending.frame && damage_affects_area(damage, pending.params.area))
+        {
+            pending.frame.value().capture(damage);
+            pending.frame = {};
+        }
     }
 }
 
