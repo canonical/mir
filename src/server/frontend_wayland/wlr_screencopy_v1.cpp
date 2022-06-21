@@ -22,6 +22,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/scene/scene_change_notification.h"
 #include "mir/frontend/surface_stack.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/executor.h"
 #include "wayland_wrapper.h"
 #include "wayland_timespec.h"
@@ -49,12 +50,6 @@ struct FrameParams
         return area == other.area && output == other.output;
     }
 };
-
-auto damage_affects_area(std::optional<geom::Rectangle> const& damage, geom::Rectangle const& area) -> bool
-{
-    // If damage is null, assumed everything is potentially damaged
-    return !damage || intersection_of(area, damage.value()).size != geom::Size{};
-}
 }
 
 namespace mir
@@ -94,7 +89,6 @@ public:
 
 private:
     void create_change_notifier();
-    void scene_changed(std::optional<geom::Rectangle> const& damage);
 
     /// From wayland::WlrScreencopyManagerV1
     /// @{
@@ -109,10 +103,35 @@ private:
 
     std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
 
-    struct PendingFrame
+    enum class DamageAmount
     {
-        FrameParams params;
-        wayland::Weak<WlrScreencopyFrameV1> frame;
+        none,
+        partial,
+        full,
+    };
+
+    /// Used to track damage to an area for a single manager (and thus a single client)
+    class CaptureArea
+    {
+    public:
+        CaptureArea(FrameParams const& params);
+        ~CaptureArea();
+
+        /// Adds the given damage (damages everything if null), and captures the frame if needed
+        void apply_damage(std::optional<geom::Rectangle> const& damage);
+        void add_frame(WlrScreencopyFrameV1* frame);
+
+        FrameParams const params;
+
+    private:
+        void capture_frame();
+
+        /// The amount of damage since the last frame was captured (should be none unless pending_frame is null)
+        DamageAmount damage_amount;
+        /// Only has meaning when damage_amount is partial
+        geom::Rectangle damage_rect;
+        /// The frame that will be captured once this capture area takes damage
+        wayland::Weak<WlrScreencopyFrameV1> pending_frame;
     };
 
     /// Only accessed from the Wayland thread
@@ -121,7 +140,7 @@ private:
     std::shared_ptr<scene::SceneChangeNotification> change_notifier;
     /// Frames that are waiting for damage before they are captured. If the frame object is null that means no damage
     /// has been received since a previous frame with the same params.
-    std::vector<PendingFrame> pending_frames;
+    std::vector<CaptureArea> capture_areas;
     /// @}
 };
 
@@ -206,13 +225,6 @@ mf::WlrScreencopyManagerV1::~WlrScreencopyManagerV1()
     {
         ctx->surface_stack->remove_observer(change_notifier);
     }
-    for (auto const& frame : pending_frames)
-    {
-        if (frame.frame)
-        {
-            frame.frame.value().capture(std::nullopt);
-        }
-    }
 }
 
 void mf::WlrScreencopyManagerV1::maybe_wait_for_damage(FrameParams const& params, WlrScreencopyFrameV1* frame)
@@ -222,27 +234,26 @@ void mf::WlrScreencopyManagerV1::maybe_wait_for_damage(FrameParams const& params
         // We create the change notifier the first time a client requests a frame with damage
         create_change_notifier();
     }
-    auto const matching = std::find_if(
-        begin(pending_frames),
-        end(pending_frames),
-        [&](auto item){ return item.params == params; });
-    if (matching != end(pending_frames))
+    auto const area = std::find_if(
+        begin(capture_areas),
+        end(capture_areas),
+        [&](auto area){ return area.params == params; });
+    if (area != end(capture_areas))
     {
-        if (matching->frame)
-        {
-            // We do not allow multiple frames to be pending for the same params, so if there is already a pending frame
-            // for the given params it gets captured now with a zero-size damage rect.
-            matching->frame.value().capture(geom::Rectangle{matching->params.area.top_left, {}});
-        }
-        // The frame will be captured next time there is relevant damage
-        matching->frame = mw::make_weak(frame);
+        area->add_frame(frame);
     }
     else
     {
-        // We capture the given frame immediately, and also push an empty pending frame so that if we get another
+        // We capture the given frame immediately, and also push an empty capture area so that if we get another
         // capture request with the same params it will wait for damage since this frame.
         frame->capture(std::nullopt);
-        pending_frames.push_back({params, {}});
+        capture_areas.emplace_back(params);
+        // If an unusually high number of capture areas have been created for some reason, clear the list rather than
+        // getting bogged down (it's ok, worst case scenario waiting for damage doesn't work)
+        if (capture_areas.size() > 100)
+        {
+            capture_areas.clear();
+        }
     }
 }
 
@@ -254,7 +265,10 @@ void mf::WlrScreencopyManagerV1::create_change_notifier()
                 {
                     if (self)
                     {
-                        self.value().scene_changed(damage);
+                        for (auto& area : self.value().capture_areas)
+                        {
+                            area.apply_damage(damage);
+                        }
                     }
                 });
         };
@@ -262,31 +276,6 @@ void mf::WlrScreencopyManagerV1::create_change_notifier()
         [callback](){ callback(std::nullopt); },
         [callback=std::move(callback)](int, geom::Rectangle const& damage){ callback(damage); });
     ctx->surface_stack->add_observer(change_notifier);
-}
-
-void mf::WlrScreencopyManagerV1::scene_changed(std::optional<geom::Rectangle> const& damage)
-{
-    // Erase damaged pending frames that are null so if a new frame is captured with the same params it does not wait
-    // for additional damage
-    pending_frames.erase(
-        std::remove_if(
-            begin(pending_frames),
-            end(pending_frames),
-            [&](auto const& pending)
-            {
-                return !pending.frame && damage_affects_area(damage, pending.params.area);
-            }),
-        end(pending_frames));
-
-    // Capture damaged pending frames, leaving them with a null frame object
-    for (auto& pending : pending_frames)
-    {
-        if (pending.frame && damage_affects_area(damage, pending.params.area))
-        {
-            pending.frame.value().capture(damage);
-            pending.frame = {};
-        }
-    }
 }
 
 void mf::WlrScreencopyManagerV1::capture_output(
@@ -310,6 +299,90 @@ void mf::WlrScreencopyManagerV1::capture_output_region(
     auto const extents = OutputGlobal::from_or_throw(output).current_config().extents();
     auto const intersection = geom::Rectangle{{x, y}, {width, height}}.intersection_with(extents);
     new WlrScreencopyFrameV1{frame, this, ctx, {intersection, output}};
+}
+
+mf::WlrScreencopyManagerV1::CaptureArea::CaptureArea(FrameParams const& params)
+    : params{params},
+      damage_amount{DamageAmount::none}
+{
+}
+
+mf::WlrScreencopyManagerV1::CaptureArea::~CaptureArea()
+{
+
+}
+
+void mf::WlrScreencopyManagerV1::CaptureArea::apply_damage(std::optional<geom::Rectangle> const& damage)
+{
+    if (damage && damage_amount != DamageAmount::full)
+    {
+        auto const intersection = intersection_of(damage.value(), params.area);
+        if (intersection.size == geom::Size{})
+        {
+            return;
+        }
+
+        if (damage_amount == DamageAmount::partial)
+        {
+            damage_rect = geom::Rectangles{damage_rect, intersection}.bounding_rectangle();
+        }
+        else // damage_amount == DamageAmount::none
+        {
+            damage_amount = DamageAmount::partial;
+            damage_rect = intersection;
+        }
+    }
+    else
+    {
+        // If damage amount is already full, or if damage is nullopt (and thus full damage should be applied)
+        damage_amount = DamageAmount::full;
+    }
+
+    if (pending_frame)
+    {
+        capture_frame();
+    }
+}
+
+void mf::WlrScreencopyManagerV1::CaptureArea::add_frame(WlrScreencopyFrameV1* frame)
+{
+    if (pending_frame)
+    {
+        // Do not allow multiple frames to build up, instead capture now
+        capture_frame();
+    }
+    pending_frame = mw::make_weak(frame);
+    if (damage_amount != DamageAmount::none)
+    {
+        capture_frame();
+    }
+}
+
+void mf::WlrScreencopyManagerV1::CaptureArea::capture_frame()
+{
+    if (!pending_frame)
+    {
+        return;
+    }
+
+    switch(damage_amount)
+    {
+    case DamageAmount::none:
+    {
+        auto const zero_size_damage = geom::Rectangle{params.area.top_left, {}};
+        pending_frame.value().capture(zero_size_damage);
+    }   break;
+
+    case DamageAmount::partial:
+        pending_frame.value().capture(damage_rect);
+        break;
+
+    case DamageAmount::full:
+        pending_frame.value().capture(std::nullopt);
+    }
+
+    damage_amount = DamageAmount::none;
+    pending_frame = {};
 }
 
 mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
