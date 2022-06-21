@@ -87,6 +87,9 @@ public:
     void maybe_wait_for_damage(FrameParams const& params, WlrScreencopyFrameV1* frame);
 
 private:
+    void create_change_notifier();
+    void scene_changed(std::optional<geom::Rectangle> const& damage);
+
     /// From wayland::WlrScreencopyManagerV1
     /// @{
     void capture_output(wl_resource* frame, int32_t overlay_cursor, wl_resource* output) override;
@@ -99,6 +102,14 @@ private:
     /// @}
 
     std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
+
+    /// Only accessed from the Wayland thread
+    /// @{
+    /// Created the first time a frame from this manager calls .copy_with_damage
+    std::shared_ptr<scene::SceneChangeNotification> change_notifier;
+    wayland::Weak<WlrScreencopyFrameV1> pending_frame;
+    bool damage_since_frame{true};
+    /// @}
 };
 
 class WlrScreencopyFrameV1
@@ -178,12 +189,67 @@ mf::WlrScreencopyManagerV1::WlrScreencopyManagerV1(
 
 mf::WlrScreencopyManagerV1::~WlrScreencopyManagerV1()
 {
+    if (change_notifier)
+    {
+        ctx->surface_stack->remove_observer(change_notifier);
+    }
+    if (pending_frame)
+    {
+        pending_frame.value().capture(std::nullopt);
+    }
 }
 
 void mf::WlrScreencopyManagerV1::maybe_wait_for_damage(FrameParams const& params, WlrScreencopyFrameV1* frame)
 {
     (void)params;
-    frame->capture(std::nullopt);
+    if (!change_notifier)
+    {
+        // We create the change notifier the first time a client requests a frame with damage
+        create_change_notifier();
+    }
+    if (damage_since_frame)
+    {
+        frame->capture(std::nullopt);
+    }
+    else
+    {
+        if (pending_frame)
+        {
+            pending_frame.value().capture(std::nullopt);
+        }
+        pending_frame = mw::make_weak(frame);
+    }
+}
+
+void mf::WlrScreencopyManagerV1::create_change_notifier()
+{
+    auto callback = [this](std::optional<geom::Rectangle> const& damage)
+        {
+            ctx->wayland_executor->spawn([self=mw::make_weak(this), damage]()
+                {
+                    if (self)
+                    {
+                        self.value().scene_changed(damage);
+                    }
+                });
+        };
+    change_notifier = std::make_shared<ms::SceneChangeNotification>(
+        [callback](){ callback(std::nullopt); },
+        [callback=std::move(callback)](int, geom::Rectangle const& damage){ callback(damage); });
+    ctx->surface_stack->add_observer(change_notifier);
+}
+
+void mf::WlrScreencopyManagerV1::scene_changed(std::optional<geom::Rectangle> const& damage)
+{
+    if (pending_frame)
+    {
+        pending_frame.value().capture(damage);
+        damage_since_frame = false;
+    }
+    else
+    {
+        damage_since_frame = true;
+    }
 }
 
 void mf::WlrScreencopyManagerV1::capture_output(
