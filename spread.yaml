@@ -28,10 +28,9 @@ environment:
     ARCH/rpi: armhf
     DISTRO: ubuntu
     DISTRO/debian_sid: debian
-    RELEASE: focal
-    RELEASE/ubuntu: focal
+    RELEASE: jammy
+    RELEASE/ubuntu_focal: focal
     RELEASE/ubuntu_impish: impish
-    RELEASE/ubuntu_jammy: jammy
     RELEASE/ubuntu_devel: kinetic
     RELEASE/debian_sid: sid
     PROPOSED: false
