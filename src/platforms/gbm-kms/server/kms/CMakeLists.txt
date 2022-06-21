@@ -41,7 +41,6 @@ add_library(
   real_kms_output_container.cpp
   egl_helper.h
   egl_helper.cpp
-  mutex.h
   quirks.cpp
   quirks.h
 )

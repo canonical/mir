@@ -23,7 +23,7 @@
 #include "mir/geometry/displacement.h"
 
 #include "mir_toolkit/common.h"
-#include "mutex.h"
+#include "mir/mutex.h"
 
 #include <gbm.h>
 
