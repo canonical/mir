@@ -40,7 +40,10 @@ void ms::SurfaceChangeNotification::content_resized_to(Surface const*, geometry:
 
 void ms::SurfaceChangeNotification::moved_to(Surface const*, geometry::Point const& new_top_left)
 {
-    top_left = new_top_left;
+    {
+        std::lock_guard lock{mutex};
+        top_left = new_top_left;
+    }
     notify_scene_change();
 }
 
@@ -54,7 +57,10 @@ void ms::SurfaceChangeNotification::frame_posted(
     int frames_available,
     geometry::Rectangle const& damage)
 {
-    notify_buffer_change(frames_available, {top_left + as_displacement(damage.top_left), damage.size});
+    std::unique_lock lock{mutex};
+    geom::Rectangle global_damage{top_left + as_displacement(damage.top_left), damage.size};
+    lock.unlock();
+    notify_buffer_change(frames_available, global_damage);
 }
 
 void ms::SurfaceChangeNotification::alpha_set_to(Surface const*, float)
