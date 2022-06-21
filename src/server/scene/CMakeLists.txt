@@ -18,8 +18,8 @@ ADD_LIBRARY(
   surface_event_source.cpp
   null_surface_observer.cpp
   null_observer.cpp
-  legacy_scene_change_notification.cpp
-  legacy_surface_change_notification.cpp
+  scene_change_notification.cpp
+  surface_change_notification.cpp
   prompt_session_container.cpp
   prompt_session_impl.cpp
   prompt_session_manager_impl.cpp

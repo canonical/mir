@@ -254,20 +254,6 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
         }
     }
 
-    if (modifications.stream_cursor.is_set())
-    {
-        auto const& cursor = modifications.stream_cursor.value();
-        if (auto const stream = cursor.stream.lock())
-        {
-            auto hotspot = cursor.hotspot;
-            surface->set_cursor_stream(stream, hotspot);
-        }
-        else
-        {
-            surface->set_cursor_image({});
-        }
-    }
-
     if (modifications.confine_pointer.is_set())
     {
         auto const prev_state = surface->confine_pointer_state();
