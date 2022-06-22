@@ -309,7 +309,7 @@ mf::WlrScreencopyManagerV1::CaptureArea::CaptureArea(FrameParams const& params)
 
 mf::WlrScreencopyManagerV1::CaptureArea::~CaptureArea()
 {
-
+    capture_frame();
 }
 
 void mf::WlrScreencopyManagerV1::CaptureArea::apply_damage(std::optional<geom::Rectangle> const& damage)
@@ -317,19 +317,17 @@ void mf::WlrScreencopyManagerV1::CaptureArea::apply_damage(std::optional<geom::R
     if (damage && damage_amount != DamageAmount::full)
     {
         auto const intersection = intersection_of(damage.value(), params.area);
-        if (intersection.size == geom::Size{})
+        if (intersection.size != geom::Size{})
         {
-            return;
-        }
-
-        if (damage_amount == DamageAmount::partial)
-        {
-            damage_rect = geom::Rectangles{damage_rect, intersection}.bounding_rectangle();
-        }
-        else // damage_amount == DamageAmount::none
-        {
-            damage_amount = DamageAmount::partial;
-            damage_rect = intersection;
+            if (damage_amount == DamageAmount::partial)
+            {
+                damage_rect = geom::Rectangles{damage_rect, intersection}.bounding_rectangle();
+            }
+            else // damage_amount == DamageAmount::none
+            {
+                damage_amount = DamageAmount::partial;
+                damage_rect = intersection;
+            }
         }
     }
     else
@@ -338,7 +336,7 @@ void mf::WlrScreencopyManagerV1::CaptureArea::apply_damage(std::optional<geom::R
         damage_amount = DamageAmount::full;
     }
 
-    if (pending_frame)
+    if (damage_amount != DamageAmount::none)
     {
         capture_frame();
     }
@@ -346,11 +344,8 @@ void mf::WlrScreencopyManagerV1::CaptureArea::apply_damage(std::optional<geom::R
 
 void mf::WlrScreencopyManagerV1::CaptureArea::add_frame(WlrScreencopyFrameV1* frame)
 {
-    if (pending_frame)
-    {
-        // Do not allow multiple frames to build up, instead capture now
-        capture_frame();
-    }
+    // Do not allow multiple frames to build up, instead capture now
+    capture_frame();
     pending_frame = mw::make_weak(frame);
     if (damage_amount != DamageAmount::none)
     {
