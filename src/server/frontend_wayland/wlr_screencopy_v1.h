@@ -18,6 +18,8 @@
 #define MIR_FRONTEND_WLR_SCREENCOPY_V1_H
 
 #include "wlr-screencopy-unstable-v1_wrapper.h"
+#include "mir/geometry/forward.h"
+#include "mir/wayland/wayland_base.h"
 
 #include <memory>
 
@@ -32,6 +34,10 @@ namespace graphics
 {
 class GraphicBufferAllocator;
 }
+namespace scene
+{
+class SceneChangeNotification;
+}
 namespace frontend
 {
 class OutputManager;
@@ -44,6 +50,50 @@ auto create_wlr_screencopy_manager_unstable_v1(
     std::shared_ptr<compositor::ScreenShooter> const& screen_shooter,
     std::shared_ptr<SurfaceStack> const& surface_stack)
 -> std::shared_ptr<wayland::WlrScreencopyManagerV1::Global>;
+
+/// Tracks damage and captures frames when needed. Each instance used by a single manager (and thus a single client).
+class WlrScreencopyDamageTracker : public wayland::LifetimeTracker
+{
+public:
+    struct FrameParams;
+
+    class Frame
+    {
+    public:
+        virtual ~Frame() = default;
+        virtual auto destroyed_flag() const -> std::shared_ptr<bool const> = 0;
+        virtual auto parameters() const -> FrameParams const& = 0;
+        virtual void capture(std::optional<geometry::Rectangle> const& damage) = 0;
+    };
+
+    WlrScreencopyDamageTracker(Executor& wayland_executor, SurfaceStack& surface_stack);
+    ~WlrScreencopyDamageTracker();
+
+    void capture_on_damage(Frame* frame);
+
+private:
+    void create_change_notifier();
+
+    enum class DamageAmount
+    {
+        none,
+        partial,
+        full,
+    };
+
+    /// Used to track damage to a specific area
+    class Area;
+
+    Executor& wayland_executor;
+    SurfaceStack& surface_stack;
+
+    /// Created on first use, so that screencopy managers that are not requested to copy frames with damage do not
+    /// incur the overhead of a scene change notifier
+    std::shared_ptr<scene::SceneChangeNotification> change_notifier;
+    /// Frames that are waiting for damage before they are captured. If the frame object is null that means no damage
+    /// has been received since a previous frame with the same params.
+    std::vector<Area> areas;
+};
 }
 }
 
