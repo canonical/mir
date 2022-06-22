@@ -148,8 +148,6 @@ auto inline buttons_states_match(
     return true;
 }
 
-bool buttons_states_match(bool, bool, testing::MatchResultListener* result_listener) = delete;
-
 /// NOTE: This is for MirPointerButton, not the similarly named MirPointerButtons.
 /// If false, the discrepancy is logged to the MatchResultListener.f
 auto inline button_states_match(
