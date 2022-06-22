@@ -132,15 +132,39 @@ auto inline scan_codes_match(
 }
 
 /// If false, the discrepancy is logged to the MatchResultListener.
+auto inline buttons_states_match(
+    MirPointerButtons expected,
+    MirPointerButtons actual,
+    testing::MatchResultListener* result_listener)
+-> bool
+{
+    if (expected != actual)
+    {
+        *result_listener << "Expected buttons state (0x" << std::hex << expected 
+        << ") does not match actual (0x" << std::hex << actual << ")";
+        return false;
+    }
+
+    return true;
+}
+
+bool buttons_states_match(auto, auto, testing::MatchResultListener* result_listener) = delete;
+
+/// NOTE: This is for MirPointerButton, not the similarly named MirPointerButtons.
+/// If false, the discrepancy is logged to the MatchResultListener.f
 auto inline button_states_match(
     bool expected,
     bool actual,
     testing::MatchResultListener* result_listener)
 -> bool
 {
+        
+    auto expected_state = expected ? "up" : "down";
+    auto actual_state = actual ? "up" : "down";
     if (expected != actual)
     {
-        *result_listener << "Expected button state (" << expected << ") does not match actual (" << actual << ")";
+        *result_listener << "Expected button state (" << expected_state 
+        << ") does not match actual (" << actual_state << ")";
         return false;
     }
 
@@ -469,8 +493,8 @@ inline bool button_event_matches(
     if (check_action && !enums_match(mir_pointer_event_action(pev), action, result_listener))
         return false;
 
-    auto const actual_button_state = mir_pointer_event_buttons(pev);
-    if (check_buttons && !button_states_match(button_state, actual_button_state, result_listener))
+    auto const actual_buttons_state = mir_pointer_event_buttons(pev);
+    if (check_buttons && !buttons_states_match(button_state, actual_buttons_state, result_listener))
         return false;
 
     auto const actual_x = mir_pointer_event_axis_value(pev, mir_pointer_axis_x);
@@ -499,7 +523,7 @@ MATCHER_P2(ButtonDownEventWithButton, pos, button, "")
     if (!enums_match(mir_pointer_action_button_down, mir_pointer_event_action(pev), result_listener))
         return false;
 
-    auto const actual_button_state = mir_pointer_event_button_state(pev, static_cast<MirPointerButton>(button));
+    auto const actual_button_state = mir_pointer_event_button_state(pev, button);
     if (!button_states_match(true, actual_button_state, result_listener))
         return false;
     
