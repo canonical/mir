@@ -20,6 +20,7 @@
 #include "mir/scene/null_surface_observer.h"
 
 #include <functional>
+#include <mutex>
 
 namespace mir
 {
@@ -43,9 +44,11 @@ public:
     void renamed(Surface const* surf, char const*) override;
 
 private:
-    geometry::Point top_left;
     std::function<void()> const notify_scene_change;
     std::function<void(int, geometry::Rectangle const&)> const notify_buffer_change;
+
+    std::mutex mutex;
+    geometry::Point top_left;
 };
 }
 }
