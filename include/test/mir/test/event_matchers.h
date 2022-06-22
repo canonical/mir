@@ -34,28 +34,17 @@
 void PrintTo(MirEvent const& event, std::ostream *os);
 void PrintTo(MirEvent const* event, std::ostream *os);
 
-auto get_enum_value(MirEventType event)
--> char const*;
-auto get_enum_value(MirInputEventType event)
--> char const*;
-auto get_enum_value(MirInputEventModifier modifier)
--> char const*;
-auto get_enum_value(MirKeyboardAction action) 
--> char const*;
-auto get_enum_value(MirTouchAction action) 
--> char const*;
-auto get_enum_value(MirTouchAxis axis)
--> char const*;
-auto get_enum_value(MirTouchTooltype tooltype)
--> char const*;
-auto get_enum_value(MirPointerAction action) 
--> char const*;
-auto get_enum_value(MirPointerAxis axis)
--> char const*;
-auto get_enum_value(MirPointerButtons button)
--> char const*;
-auto get_enum_value(MirPointerAxisSource source)
--> char const*;
+auto get_enum_value(MirEventType event) -> char const*;
+auto get_enum_value(MirInputEventType event) -> char const*;
+auto get_enum_value(MirInputEventModifier modifier) -> char const*;
+auto get_enum_value(MirKeyboardAction action) -> char const*;
+auto get_enum_value(MirTouchAction action) -> char const*;
+auto get_enum_value(MirTouchAxis axis) -> char const*;
+auto get_enum_value(MirTouchTooltype tooltype) -> char const*;
+auto get_enum_value(MirPointerAction action) -> char const*;
+auto get_enum_value(MirPointerAxis axis) -> char const*;
+auto get_enum_value(MirPointerButtons button) -> char const*;
+auto get_enum_value(MirPointerAxisSource source) -> char const*;
 
 /// Takes in two enums with get_enum_value() implemented and determines if they are the same.
 /// If false, the discrepancy is logged to the MatchResultListener.
@@ -68,7 +57,9 @@ template<typename T> auto inline enums_match(
     auto type_name = boost::typeindex::type_id<T>().pretty_name();
     if (expected != actual)
     {
-        *result_listener << "Expected " << type_name << " (" << get_enum_value(expected) << ") does not match actual (" << get_enum_value(actual) << ")";
+        *result_listener << "Expected " << type_name << " (" << get_enum_value(expected) 
+        << ") does not match actual (" << get_enum_value(actual) << ")";
+
         return false;
     }
 
@@ -108,7 +99,7 @@ template<typename T> auto inline modifiers_match(
     return true;
 }
 
-// If false, the discrepancy is logged to the MatchResultListener.
+/// If false, the discrepancy is logged to the MatchResultListener.
 auto inline keysyms_match(
     xkb_keysym_t expected,
     xkb_keysym_t actual,
@@ -124,7 +115,7 @@ auto inline keysyms_match(
     return true;
 }
 
-// If false, the discrepancy is logged to the MatchResultListener.
+/// If false, the discrepancy is logged to the MatchResultListener.
 auto inline scan_codes_match(
         int expected,
         int actual,
@@ -140,7 +131,7 @@ auto inline scan_codes_match(
     return true;
 }
 
-// If false, the discrepancy is logged to the MatchResultListener.
+/// If false, the discrepancy is logged to the MatchResultListener.
 auto inline button_states_match(
     bool expected,
     bool actual,
@@ -156,7 +147,7 @@ auto inline button_states_match(
     return true;
 }
 
-// If false, the discrepancy is logged to the MatchResultListener.
+/// If false, the discrepancy is logged to the MatchResultListener.
 template<typename T, typename U, typename V> auto inline axis_values_match(
     T expected,
     U actual,
@@ -166,14 +157,15 @@ template<typename T, typename U, typename V> auto inline axis_values_match(
 {
     if (expected != actual)
     {
-        *result_listener << "Expected " << get_enum_value(axis) << " value (" << expected << ") does not match actual (" << actual << ")";
+        *result_listener << "Expected " << get_enum_value(axis) << " value (" 
+        << expected << ") does not match actual (" << actual << ")";
         return false;
     }
 
     return true;
 }
 
-// If false, the discrepancy is logged to the MatchResultListener.
+/// If false, the discrepancy is logged to the MatchResultListener.
 template<typename T> auto inline axis_value_within_threshold(
     float expected_deviation,
     float actual_deviation,
@@ -184,14 +176,15 @@ template<typename T> auto inline axis_value_within_threshold(
 {
     if (std::abs(actual_deviation - expected_deviation) > threshold)
     {
-        *result_listener << get_enum_value(axis_type) << " actual deviation (" << actual_deviation << ") is not within threshold (" << threshold << ") of expected (" << expected_deviation << (")");
+        *result_listener << get_enum_value(axis_type) << " actual deviation (" << actual_deviation 
+        << ") is not within threshold (" << threshold << ") of expected (" << expected_deviation << (")");
         return false;
     }
 
     return true;
 }
 
-// If false, the discrepancy is logged to the MatchResultListener.
+/// If false, the discrepancy is logged to the MatchResultListener.
 auto inline touch_counts_match(
     unsigned int expected,
     unsigned int actual,
