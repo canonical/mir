@@ -41,6 +41,11 @@ endif
 # control, so disable it on non-Ubuntu builds
 ifeq ($(filter Ubuntu,$(DEB_VENDOR)),)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_WLCS_TESTS=OFF
+else
+  # Disable wlcs tests on Launchpad armhf, arm64 (MirServer/mir#2474)
+  ifneq ($(filter armhf arm64,$(DEB_HOST_ARCH)),)
+    COMMON_CONFIGURE_OPTIONS += -DMIR_RUN_WLCS_TESTS=OFF
+  endif
 endif
 
 # Disable miral tests on Launchpad riscv64 (MirServer/mir#2375)
