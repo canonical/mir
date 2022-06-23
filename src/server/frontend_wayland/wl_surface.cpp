@@ -216,6 +216,26 @@ void mf::WlSurface::remove_subsurface(WlSubsurface* child)
         children.end());
 }
 
+void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling, bool above)
+{
+    if (!child)
+    {
+        // Unlikely, but resulting error would be hard to catch otherwise
+        fatal_error("subsurface null");
+    }
+    auto iter = std::find_if(begin(children), end(children), [&](WlSubsurface* subsurface)
+        {
+            auto const surface = subsurface ? subsurface->surface : this;
+            return surface == sibling;
+        });
+    if (!above)
+    {
+        // place below
+        iter--;
+    }
+    children.insert(iter, child);
+}
+
 void mf::WlSurface::refresh_surface_data_now()
 {
     role->refresh_surface_data_now();
