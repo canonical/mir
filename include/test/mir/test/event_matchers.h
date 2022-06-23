@@ -169,6 +169,9 @@ auto inline button_states_match(
     return true;
 }
 
+template<typename T, typename S>
+bool button_states_match(T, S, testing::MatchResultListener* result_listener) = delete;
+
 /// If false, the discrepancy is logged to the MatchResultListener.
 template<typename T, typename U, typename V> auto inline axis_values_match(
     T expected,
