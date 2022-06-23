@@ -292,7 +292,7 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
         state->surface_rect.size = new_size;
         auto const content_size_ = content_size(*state);
 
-        mutable_state.drop(std::move(state));
+        state.drop();
 
         observers->window_resized_to(this, new_size);
         observers->content_resized_to(this, content_size_);
@@ -401,7 +401,7 @@ MirWindowType ms::BasicSurface::set_type(MirWindowType t)
     {
         state->type = t;
 
-        mutable_state.drop(std::move(state));
+        state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_type, t);
     }
@@ -429,7 +429,7 @@ MirWindowState ms::BasicSurface::set_state(MirWindowState s)
     {
         state->state = state->state.with_active_state(s);
 
-        mutable_state.drop(std::move(state));
+        state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_state, s);
     }
@@ -452,7 +452,7 @@ int ms::BasicSurface::set_swap_interval(int interval)
         for (auto& info : state->layers)
             info.stream->allow_framedropping(allow_dropping);
 
-        mutable_state.drop(std::move(state));
+        state.drop();
         observers->attrib_changed(this, mir_window_attrib_swapinterval, interval);
     }
 
@@ -471,7 +471,7 @@ MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMod
     {
         state->pref_orientation_mode = new_orientation_mode;
 
-        mutable_state.drop(std::move(state));
+        state.drop();
         observers->attrib_changed(this, mir_window_attrib_preferred_orientation, new_orientation_mode);
     }
 
@@ -628,7 +628,7 @@ int ms::BasicSurface::set_dpi(int new_dpi)
     {
         state->dpi = new_dpi;
 
-        mutable_state.drop(std::move(state));
+        state.drop();
         observers->attrib_changed(this, mir_window_attrib_dpi, new_dpi);
     }
 
@@ -654,7 +654,7 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
                 info.stream->drop_old_buffers();
         }
 
-        mutable_state.drop(std::move(state));
+        state.drop();
 
         observers->attrib_changed(this, mir_window_attrib_visibility, new_visibility);
     }
@@ -765,7 +765,7 @@ void ms::BasicSurface::rename(std::string const& title)
     {
         state->surface_name = title;
 
-        mutable_state.drop(std::move(state));
+        state.drop();
 
         observers->renamed(this, title.c_str());
     }
@@ -877,7 +877,7 @@ void mir::scene::BasicSurface::set_focus_state(MirWindowFocusState new_state)
     {
         state->focus = new_state;
 
-        mutable_state.drop(std::move(state));
+        state.drop();
         observers->attrib_changed(this, mir_window_attrib_focus, new_state);
     }
 }
@@ -894,7 +894,7 @@ void mir::scene::BasicSurface::set_application_id(std::string const& application
     {
         state->application_id = application_id;
 
-        mutable_state.drop(std::move(state));
+        state.drop();
         observers->application_id_set_to(this, application_id);
     }
 }
@@ -930,7 +930,7 @@ void mir::scene::BasicSurface::set_window_margins(
 
         auto const size = content_size(*state);
 
-        mutable_state.drop(std::move(state));
+        state.drop();
 
         observers->content_resized_to(this, size);
     }

@@ -38,13 +38,6 @@ public:
     {
     }
 
-    MutexGuard(MutexGuard&& from) noexcept
-        : value{from.value},
-          lock{std::move(lock)}
-    {
-        from.value = nullptr;
-    }
-
     ~MutexGuard() noexcept(false)
     {
         if (lock.owns_lock())
@@ -57,10 +50,18 @@ public:
     {
         return *value;
     }
+
     Guarded* operator->()
     {
         return value;
     }
+
+    void drop()
+    {
+        value = nullptr;
+        lock.unlock();
+    }
+
 private:
     Guarded* value;
     std::unique_lock<std::mutex> lock;
