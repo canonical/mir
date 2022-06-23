@@ -37,7 +37,6 @@ execute: |
 
     MKSBUILD_OPTS=(
       mk-sbuild
-      --eatmydata
       --distro ${DISTRO}
       ${RELEASE}
     )
@@ -77,7 +76,7 @@ execute: |
     echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk
 
     # Running the tests under QEMU fails to entirely correctly support libwayland's SIGSEGV handler
-    if [[ ${DEB_HOST_ARCH} == arm* ]]; then
+    if [[ ${DEB_HOST_ARCH} == armhf ]]; then
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DMIR_BAD_BUFFER_TEST_ENVIRONMENT_BROKEN=ON" >> debian/opts.mk
     fi
 
