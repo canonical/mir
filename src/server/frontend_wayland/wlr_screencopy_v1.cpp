@@ -52,6 +52,9 @@ public:
     FrameParams const params;
 
 private:
+    Area(Area const&) = delete;
+    Area& operator=(Area const&) = delete;
+
     void capture_frame();
 
     /// The amount of damage since the last frame was captured (should be none unless pending_frame is null)
@@ -198,17 +201,17 @@ void mf::WlrScreencopyV1DamageTracker::capture_on_damage(Frame* frame)
     auto const area = std::find_if(
         begin(areas),
         end(areas),
-        [&](auto area){ return area.params == frame_params; });
+        [&](auto& area){ return area->params == frame_params; });
     if (area != end(areas))
     {
-        area->add_frame(frame);
+        (*area)->add_frame(frame);
     }
     else
     {
         // We capture the given frame immediately, and also push an empty capture area so that if we get another
         // capture request with the same params it will wait for damage since this frame.
         frame->capture(std::nullopt);
-        areas.emplace_back(frame_params);
+        areas.push_back(std::make_unique<Area>(frame_params));
         // If an unusually high number of capture areas have been created for some reason, clear the list rather than
         // getting bogged down (it's ok, worst case scenario waiting for damage doesn't work)
         if (areas.size() > 100)
@@ -228,7 +231,7 @@ void mf::WlrScreencopyV1DamageTracker::create_change_notifier()
                     {
                         for (auto& area : weak_self.value().areas)
                         {
-                            area.apply_damage(damage);
+                            area->apply_damage(damage);
                         }
                     }
                 });

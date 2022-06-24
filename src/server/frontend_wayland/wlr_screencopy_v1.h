@@ -101,7 +101,7 @@ private:
     std::shared_ptr<scene::SceneChangeNotification> change_notifier;
     /// Frames that are waiting for damage before they are captured. If the frame object is null that means no damage
     /// has been received since a previous frame with the same params.
-    std::vector<Area> areas;
+    std::vector<std::unique_ptr<Area>> areas;
 };
 }
 }
