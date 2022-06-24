@@ -38,6 +38,13 @@ public:
     {
     }
 
+    MutexGuard(MutexGuard&& from) noexcept
+        : value{from.value},
+          lock{std::move(lock)}
+    {
+        from.value = nullptr;
+    }
+
     ~MutexGuard() noexcept(false)
     {
         if (lock.owns_lock())
