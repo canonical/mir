@@ -56,6 +56,12 @@ public:
         return value;
     }
 
+    /**
+     * Relinquish access to the mutex-guarded data
+     *
+     * This prevents further access to the contained data and unlocks
+     * the associated mutex.
+     */
     void drop()
     {
         value = nullptr;
