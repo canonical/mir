@@ -52,7 +52,7 @@ auto create_wlr_screencopy_manager_unstable_v1(
 -> std::shared_ptr<wayland::WlrScreencopyManagerV1::Global>;
 
 /// Tracks damage and captures frames when needed. Each instance used by a single manager (and thus a single client).
-class WlrScreencopyDamageTracker : public wayland::LifetimeTracker
+class WlrScreencopyV1DamageTracker : public wayland::LifetimeTracker
 {
 public:
     struct FrameParams;
@@ -66,8 +66,8 @@ public:
         virtual void capture(std::optional<geometry::Rectangle> const& damage) = 0;
     };
 
-    WlrScreencopyDamageTracker(Executor& wayland_executor, SurfaceStack& surface_stack);
-    ~WlrScreencopyDamageTracker();
+    WlrScreencopyV1DamageTracker(Executor& wayland_executor, SurfaceStack& surface_stack);
+    ~WlrScreencopyV1DamageTracker();
 
     void capture_on_damage(Frame* frame);
 

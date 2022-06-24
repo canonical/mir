@@ -49,7 +49,7 @@ struct mf::WlrScreencopyDamageTracker::FrameParams
     }
 };
 
-class mf::WlrScreencopyDamageTracker::Area
+class mf::WlrScreencopyV1DamageTracker::Area
 {
 public:
     explicit Area(FrameParams const& params);
@@ -105,7 +105,7 @@ class WlrScreencopyManagerV1
 public:
     WlrScreencopyManagerV1(wl_resource* resource, std::shared_ptr<WlrScreencopyV1Ctx> const& ctx);
 
-    void capture_on_damage(WlrScreencopyDamageTracker::Frame* frame);
+    void capture_on_damage(WlrScreencopyV1DamageTracker::Frame* frame);
 
 private:
     /// From wayland::WlrScreencopyManagerV1
@@ -120,24 +120,24 @@ private:
     /// @}
 
     std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
-    WlrScreencopyDamageTracker damage_tracker;
+    WlrScreencopyV1DamageTracker damage_tracker;
 };
 
 class WlrScreencopyFrameV1
     : public wayland::WlrScreencopyFrameV1,
-      WlrScreencopyDamageTracker::Frame
+      WlrScreencopyV1DamageTracker::Frame
 {
 public:
     WlrScreencopyFrameV1(
         wl_resource* resource,
         WlrScreencopyManagerV1* manager,
         std::shared_ptr<WlrScreencopyV1Ctx> const& ctx,
-        WlrScreencopyDamageTracker::FrameParams const& params);
+        WlrScreencopyV1DamageTracker::FrameParams const& params);
 
-    /// From WlrScreencopyDamageTracker::Frame
+    /// From WlrScreencopyV1DamageTracker::Frame
     /// @{
     auto destroyed_flag() const -> std::shared_ptr<bool const> override { return LifetimeTracker::destroyed_flag(); }
-    auto parameters() const -> WlrScreencopyDamageTracker::FrameParams const& override { return params; }
+    auto parameters() const -> WlrScreencopyV1DamageTracker::FrameParams const& override { return params; }
     void capture(std::optional<geometry::Rectangle> const& damage) override;
     /// @}
 
@@ -153,7 +153,7 @@ private:
 
     wayland::Weak<WlrScreencopyManagerV1> const manager;
     std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
-    WlrScreencopyDamageTracker::FrameParams const params;
+    WlrScreencopyV1DamageTracker::FrameParams const params;
     geometry::Stride const stride;
 
     /// Only accessed from the Wayland thread
@@ -182,13 +182,13 @@ auto mf::create_wlr_screencopy_manager_unstable_v1(
     return std::make_shared<WlrScreencopyManagerV1Global>(display, std::move(ctx));
 }
 
-mf::WlrScreencopyDamageTracker::WlrScreencopyDamageTracker(Executor& wayland_executor, SurfaceStack& surface_stack)
+mf::WlrScreencopyV1DamageTracker::WlrScreencopyV1DamageTracker(Executor& wayland_executor, SurfaceStack& surface_stack)
     : wayland_executor{wayland_executor},
       surface_stack{surface_stack}
 {
 }
 
-mf::WlrScreencopyDamageTracker::~WlrScreencopyDamageTracker()
+mf::WlrScreencopyV1DamageTracker::~WlrScreencopyV1DamageTracker()
 {
     if (change_notifier)
     {
@@ -196,7 +196,7 @@ mf::WlrScreencopyDamageTracker::~WlrScreencopyDamageTracker()
     }
 }
 
-void mf::WlrScreencopyDamageTracker::capture_on_damage(Frame* frame)
+void mf::WlrScreencopyV1DamageTracker::capture_on_damage(Frame* frame)
 {
     if (!change_notifier)
     {
@@ -227,7 +227,7 @@ void mf::WlrScreencopyDamageTracker::capture_on_damage(Frame* frame)
     }
 }
 
-void mf::WlrScreencopyDamageTracker::create_change_notifier()
+void mf::WlrScreencopyV1DamageTracker::create_change_notifier()
 {
     auto callback = [this, weak_self=mw::make_weak(this)](std::optional<geom::Rectangle> const& damage)
         {
@@ -248,18 +248,18 @@ void mf::WlrScreencopyDamageTracker::create_change_notifier()
     surface_stack.add_observer(change_notifier);
 }
 
-mf::WlrScreencopyDamageTracker::Area::Area(FrameParams const& params)
+mf::WlrScreencopyV1DamageTracker::Area::Area(FrameParams const& params)
     : params{params},
       damage_amount{DamageAmount::none}
 {
 }
 
-mf::WlrScreencopyDamageTracker::Area::~Area()
+mf::WlrScreencopyV1DamageTracker::Area::~Area()
 {
     capture_frame();
 }
 
-void mf::WlrScreencopyDamageTracker::Area::apply_damage(std::optional<geom::Rectangle> const& damage)
+void mf::WlrScreencopyV1DamageTracker::Area::apply_damage(std::optional<geom::Rectangle> const& damage)
 {
     if (damage && damage_amount != DamageAmount::full)
     {
@@ -289,7 +289,7 @@ void mf::WlrScreencopyDamageTracker::Area::apply_damage(std::optional<geom::Rect
     }
 }
 
-void mf::WlrScreencopyDamageTracker::Area::add_frame(Frame* frame)
+void mf::WlrScreencopyV1DamageTracker::Area::add_frame(Frame* frame)
 {
     // Do not allow multiple frames to build up, instead capture now
     capture_frame();
@@ -300,7 +300,7 @@ void mf::WlrScreencopyDamageTracker::Area::add_frame(Frame* frame)
     }
 }
 
-void mf::WlrScreencopyDamageTracker::Area::capture_frame()
+void mf::WlrScreencopyV1DamageTracker::Area::capture_frame()
 {
     if (!pending_frame)
     {
@@ -349,7 +349,7 @@ mf::WlrScreencopyManagerV1::WlrScreencopyManagerV1(
 {
 }
 
-void mf::WlrScreencopyManagerV1::capture_on_damage(WlrScreencopyDamageTracker::Frame* frame)
+void mf::WlrScreencopyManagerV1::capture_on_damage(WlrScreencopyV1DamageTracker::Frame* frame)
 {
     damage_tracker.capture_on_damage(frame);
 }
@@ -381,7 +381,7 @@ mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
     wl_resource* resource,
     WlrScreencopyManagerV1* manager,
     std::shared_ptr<WlrScreencopyV1Ctx> const& ctx,
-    WlrScreencopyDamageTracker::FrameParams const& params)
+    WlrScreencopyV1DamageTracker::FrameParams const& params)
     : wayland::WlrScreencopyFrameV1{resource, Version<3>()},
       manager{manager},
       ctx{ctx},
