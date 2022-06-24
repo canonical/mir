@@ -38,17 +38,6 @@ namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 
-struct mf::WlrScreencopyDamageTracker::FrameParams
-{
-    geom::Rectangle area;
-    wl_resource* output;
-
-    auto operator==(FrameParams const& other) const -> bool
-    {
-        return area == other.area && output == other.output;
-    }
-};
-
 class mf::WlrScreencopyV1DamageTracker::Area
 {
 public:

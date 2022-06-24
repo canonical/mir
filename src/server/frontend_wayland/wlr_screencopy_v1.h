@@ -18,8 +18,8 @@
 #define MIR_FRONTEND_WLR_SCREENCOPY_V1_H
 
 #include "wlr-screencopy-unstable-v1_wrapper.h"
-#include "mir/geometry/forward.h"
 #include "mir/wayland/wayland_base.h"
+#include "mir/geometry/rectangle.h"
 
 #include <memory>
 
@@ -55,7 +55,16 @@ auto create_wlr_screencopy_manager_unstable_v1(
 class WlrScreencopyV1DamageTracker : public wayland::LifetimeTracker
 {
 public:
-    struct FrameParams;
+    struct FrameParams
+    {
+        geometry::Rectangle area;
+        wl_resource* output;
+
+        auto operator==(FrameParams const& other) const -> bool
+        {
+            return area == other.area && output == other.output;
+        }
+    };
 
     class Frame
     {
