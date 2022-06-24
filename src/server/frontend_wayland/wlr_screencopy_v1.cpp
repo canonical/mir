@@ -127,12 +127,14 @@ public:
     /// @{
     auto destroyed_flag() const -> std::shared_ptr<bool const> override { return LifetimeTracker::destroyed_flag(); }
     auto parameters() const -> WlrScreencopyV1DamageTracker::FrameParams const& override { return params; }
-    void capture(std::optional<geometry::Rectangle> const& damage) override;
+    void capture(std::optional<geometry::Rectangle> const& local_damage) override;
     /// @}
 
 private:
     void prepare_target(wl_resource* buffer);
-    void report_result(std::optional<time::Timestamp> captured_time, std::optional<geom::Rectangle> const& damage);
+    void report_result(
+        std::optional<time::Timestamp> captured_time,
+        std::optional<geom::Rectangle> const& local_damage);
 
     /// From wayland::WlrScreencopyFrameV1
     /// @{
@@ -255,14 +257,17 @@ void mf::WlrScreencopyV1DamageTracker::Area::apply_damage(std::optional<geom::Re
         auto const intersection = intersection_of(damage.value(), params.area);
         if (intersection.size != geom::Size{})
         {
+            geom::Rectangle const local_damage{
+                intersection.top_left - as_displacement(params.area.top_left),
+                intersection.size};
             if (damage_amount == DamageAmount::partial)
             {
-                damage_rect = geom::Rectangles{damage_rect, intersection}.bounding_rectangle();
+                damage_rect = geom::Rectangles{damage_rect, local_damage}.bounding_rectangle();
             }
             else // damage_amount == DamageAmount::none
             {
                 damage_amount = DamageAmount::partial;
-                damage_rect = intersection;
+                damage_rect = local_damage;
             }
         }
     }
@@ -300,8 +305,8 @@ void mf::WlrScreencopyV1DamageTracker::Area::capture_frame()
     {
     case DamageAmount::none:
     {
-        auto const zero_size_damage = geom::Rectangle{params.area.top_left, {}};
-        pending_frame.value().capture(zero_size_damage);
+        // Capture with a zero-sized damage rect
+        pending_frame.value().capture({});
     }   break;
 
     case DamageAmount::partial:
@@ -385,7 +390,7 @@ mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
     send_buffer_done_event_if_supported();
 }
 
-void mf::WlrScreencopyFrameV1::capture(std::optional<geom::Rectangle> const& damage)
+void mf::WlrScreencopyFrameV1::capture(std::optional<geom::Rectangle> const& local_damage)
 {
     if (!target)
     {
@@ -394,14 +399,14 @@ void mf::WlrScreencopyFrameV1::capture(std::optional<geom::Rectangle> const& dam
             copy_has_been_called ? "has" : "has not");
     }
     ctx->screen_shooter->capture(std::move(target), params.area,
-        [wayland_executor=ctx->wayland_executor, damage, self=mw::make_weak(this)]
+        [wayland_executor=ctx->wayland_executor, local_damage, self=mw::make_weak(this)]
             (std::optional<time::Timestamp> captured_time)
         {
-            wayland_executor->spawn([self, captured_time, damage]()
+            wayland_executor->spawn([self, captured_time, local_damage]()
                 {
                     if (self)
                     {
-                        self.value().report_result(captured_time, damage);
+                        self.value().report_result(captured_time, local_damage);
                     }
                 });
         });
@@ -456,7 +461,7 @@ void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
 
 void mf::WlrScreencopyFrameV1::report_result(
     std::optional<time::Timestamp> captured_time,
-    std::optional<geom::Rectangle> const& damage)
+    std::optional<geom::Rectangle> const& local_damage)
 {
     if (captured_time)
     {
@@ -464,17 +469,12 @@ void mf::WlrScreencopyFrameV1::report_result(
 
         if (should_send_damage)
         {
-            geom::Rectangle const damage_in_area{damage ?
-                intersection_of(damage.value(), params.area) :
-                params.area};
-            geom::Rectangle const local_damage{
-                damage_in_area.top_left - as_displacement(params.area.top_left),
-                damage_in_area.size};
+            geom::Rectangle const damage = local_damage.value_or(geom::Rectangle{{}, params.area.size});
             send_damage_event(
-                local_damage.top_left.x.as_uint32_t(),
-                local_damage.top_left.y.as_uint32_t(),
-                local_damage.size.width.as_uint32_t(),
-                local_damage.size.height.as_uint32_t());
+                damage.top_left.x.as_uint32_t(),
+                damage.top_left.y.as_uint32_t(),
+                damage.size.width.as_uint32_t(),
+                damage.size.height.as_uint32_t());
         }
 
         WaylandTimespec const timespec{captured_time.value()};
