@@ -351,7 +351,7 @@ TEST_F(PopupWindowPlacement, given_aux_rect_near_right_side_and_offset_placement
     modification.window_placement_gravity() = mir_placement_gravity_northwest;
     modification.aux_rect_placement_gravity() = mir_placement_gravity_northeast;
 
-    auto const expected_position = on_left_edge() + Displacement{-1*x_offset, y_offset};
+    Point const expected_position = on_left_edge() + Displacement{-1*x_offset, y_offset};
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
     basic_window_manager.modify_window(basic_window_manager.info_for(child), modification);
@@ -369,7 +369,7 @@ TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_and_offset_placement_is_
     modification.window_placement_gravity() = mir_placement_gravity_northwest;
     modification.aux_rect_placement_gravity() = mir_placement_gravity_southwest;
 
-    auto const expected_position = on_top_edge() + Displacement{x_offset, -1*y_offset};
+    Point const expected_position = on_top_edge() + Displacement{x_offset, -1*y_offset};
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
     basic_window_manager.modify_window(basic_window_manager.info_for(child), modification);
@@ -386,7 +386,7 @@ TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_right_and_offset_placeme
     modification.window_placement_gravity() = mir_placement_gravity_northwest;
     modification.aux_rect_placement_gravity() = mir_placement_gravity_southeast;
 
-    auto const expected_position = aux_rect_position().top_left - as_displacement(child.size()) - displacement;
+    Point const expected_position = aux_rect_position().top_left - as_displacement(child.size()) - displacement;
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
     basic_window_manager.modify_window(basic_window_manager.info_for(child), modification);
@@ -460,7 +460,7 @@ TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_right_and_offset_placeme
     modification.window_placement_gravity() = mir_placement_gravity_northwest;
     modification.aux_rect_placement_gravity() = mir_placement_gravity_southwest;
 
-    auto const expected_position = display_area.bottom_right() - as_displacement(child.size());
+    Point const expected_position = display_area.bottom_right() - as_displacement(child.size());
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
     basic_window_manager.modify_window(basic_window_manager.info_for(child), modification);
@@ -474,7 +474,7 @@ TEST_F(PopupWindowPlacement, given_aux_rect_near_right_side_placement_can_resize
     modification.window_placement_gravity() = mir_placement_gravity_northwest;
     modification.aux_rect_placement_gravity() = mir_placement_gravity_northeast;
 
-    auto const expected_position = aux_rect_position().top_right();
+    Point const expected_position = aux_rect_position().top_right();
     Size const expected_size{as_size(display_area.bottom_right()-aux_rect_position().bottom_right()).width, child.size().height};
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
@@ -510,7 +510,7 @@ TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_placement_can_resize_in_
     modification.window_placement_gravity() = mir_placement_gravity_northwest;
     modification.aux_rect_placement_gravity() = mir_placement_gravity_southwest;
 
-    auto const expected_position = aux_rect_position().bottom_left();
+    Point const expected_position = aux_rect_position().bottom_left();
     Size const expected_size{child.size().width, as_size(display_area.bottom_left()-aux_rect_position().bottom_left()).height};
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
@@ -544,8 +544,8 @@ TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_right_and_offset_placeme
     modification.window_placement_gravity() = mir_placement_gravity_northwest;
     modification.aux_rect_placement_gravity() = mir_placement_gravity_southeast;
 
-    auto const expected_position = aux_rect_position().bottom_right();
-    auto const expected_size = as_size(display_area.bottom_right()-expected_position);
+    Point const expected_position = aux_rect_position().bottom_right();
+    Size const expected_size = as_size(display_area.bottom_right()-expected_position);
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
     EXPECT_CALL(*window_manager_policy, advise_resize(_, expected_size));

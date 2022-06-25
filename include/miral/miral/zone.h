@@ -17,9 +17,10 @@
 #ifndef MIRAL_ZONE_H
 #define MIRAL_ZONE_H
 
+#include "legacy_geometry.h"
+
 #include <mir_toolkit/common.h>
 
-#include <mir/geometry/rectangle.h>
 #include <mir/int_wrapper.h>
 
 #include <memory>

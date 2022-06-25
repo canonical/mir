@@ -17,9 +17,10 @@
 #ifndef MIRAL_OUTPUT_H
 #define MIRAL_OUTPUT_H
 
+#include "legacy_geometry.h"
+
 #include <mir_toolkit/common.h>
 
-#include <mir/geometry/rectangle.h>
 #include <mir/int_wrapper.h>
 
 #include <memory>

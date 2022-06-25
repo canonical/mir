@@ -17,10 +17,10 @@
 #ifndef MIRAL_WINDOW_SPECIFICATION_H
 #define MIRAL_WINDOW_SPECIFICATION_H
 
+#include "legacy_geometry.h"
+
 #include <mir_toolkit/common.h>
 
-#include <mir/geometry/displacement.h>
-#include <mir/geometry/rectangles.h>
 #include <mir/optional_value.h>
 #include <mir/int_wrapper.h>
 

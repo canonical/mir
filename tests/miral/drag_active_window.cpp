@@ -72,8 +72,8 @@ TEST_P(ForMoveableTypes, moves)
     create_window_of_type(GetParam());
 
     Displacement const movement{10, 10};
-    auto const initial_position = window.top_left();
-    auto const expected_position = initial_position + movement;
+    Point const initial_position = window.top_left();
+    Point const expected_position = initial_position + movement;
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
 
@@ -139,8 +139,8 @@ TEST_F(DragWindow, can_drag_satellite)
     create_window_of_type(mir_window_type_satellite);
 
     Displacement const movement{10, 10};
-    auto const initial_position = window.top_left();
-    auto const expected_position = initial_position + movement;
+    Point const initial_position = window.top_left();
+    Point const expected_position = initial_position + movement;
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
 

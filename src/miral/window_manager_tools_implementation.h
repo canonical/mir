@@ -18,9 +18,7 @@
 #define MIRAL_WINDOW_MANAGER_TOOLS_IMPLEMENTATION_H
 
 #include "miral/application.h"
-
-#include <mir/geometry/displacement.h>
-#include <mir/geometry/rectangle.h>
+#include "miral/legacy_geometry.h"
 
 #include <functional>
 #include <memory>

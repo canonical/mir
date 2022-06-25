@@ -78,10 +78,12 @@ using DeltaYF = generic::DeltaY<float>;
 // Just to be clear, mir::geometry::Stride is the stride of the buffer in bytes
 using Stride = generic::Value<int, StrideTag>;
 
+#ifndef LEGACY_MIRAL_GEOMETRY_TYPES
 using Point = generic::Point<int>;
 using Size = generic::Size<int>;
 using Displacement = generic::Displacement<int>;
 using Rectangle = generic::Rectangle<int>;
+#endif // LEGACY_MIRAL_GEOMETRY_TYPES
 
 using PointF = generic::Point<float>;
 using SizeF = generic::Size<float>;

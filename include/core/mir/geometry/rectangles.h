@@ -33,18 +33,18 @@ class Rectangles
 {
 public:
     Rectangles();
-    Rectangles(std::initializer_list<Rectangle> const& rects);
+    Rectangles(std::initializer_list<generic::Rectangle<int>> const& rects);
     /* We want to keep implicit copy and move methods */
 
-    void add(Rectangle const& rect);
+    void add(generic::Rectangle<int> const& rect);
     /// removes at most one matching rectangle
-    void remove(Rectangle const& rect);
+    void remove(generic::Rectangle<int> const& rect);
     void clear();
-    Rectangle bounding_rectangle() const;
+    generic::Rectangle<int> bounding_rectangle() const;
     void confine(Point& point) const;
 
-    typedef std::vector<Rectangle>::const_iterator const_iterator;
-    typedef std::vector<Rectangle>::size_type size_type;
+    typedef std::vector<generic::Rectangle<int>>::const_iterator const_iterator;
+    typedef std::vector<generic::Rectangle<int>>::size_type size_type;
     const_iterator begin() const;
     const_iterator end() const;
     size_type size() const;
@@ -53,7 +53,7 @@ public:
     bool operator!=(Rectangles const& rect) const;
 
 private:
-    std::vector<Rectangle> rectangles;
+    std::vector<generic::Rectangle<int>> rectangles;
 };
 
 

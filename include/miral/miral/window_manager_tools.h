@@ -19,8 +19,7 @@
 
 #include "miral/application.h"
 #include "window_info.h"
-
-#include <mir/geometry/displacement.h>
+#include "legacy_geometry.h"
 
 #include <functional>
 #include <memory>

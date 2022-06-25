@@ -19,6 +19,7 @@
 
 #include "miral/window.h"
 #include "miral/window_specification.h"
+#include "legacy_geometry.h"
 
 #include <mir/geometry/rectangles.h>
 #include <mir/optional_value.h>

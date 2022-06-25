@@ -17,6 +17,8 @@
 #ifndef MIRAL_WINDOW_MANAGEMENT_POLICY_H
 #define MIRAL_WINDOW_MANAGEMENT_POLICY_H
 
+#include "legacy_geometry.h"
+
 #include <mir/geometry/displacement.h>
 #include <mir/geometry/rectangles.h>
 #include <mir_toolkit/common.h>

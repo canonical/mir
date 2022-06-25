@@ -18,9 +18,7 @@
 #define MIRAL_WINDOW_H
 
 #include "miral/application.h"
-
-#include <mir/geometry/point.h>
-#include <mir/geometry/size.h>
+#include "legacy_geometry.h"
 
 #include <memory>
 

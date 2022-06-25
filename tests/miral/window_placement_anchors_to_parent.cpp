@@ -108,7 +108,7 @@ TEST_F(WindowPlacementAnchorsToParent, given_rect_anchor_right_of_parent_client_
         mir_placement_gravity_northwest,
         MirPlacementHints(mir_placement_hints_slide_y|mir_placement_hints_resize_x));
 
-    auto const expected_position = parent_position + Displacement{parent_width, parent_height/2};
+    Point const expected_position = parent_position + Displacement{parent_width, parent_height/2};
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
     EXPECT_CALL(*window_manager_policy, advise_resize(_, _)).Times(0);
@@ -128,7 +128,7 @@ TEST_F(WindowPlacementAnchorsToParent, given_rect_anchor_above_parent_client_is_
         mir_placement_gravity_southeast,
         mir_placement_hints_slide_x);
 
-    auto const expected_position = parent_position + DeltaX{parent_width/2 + rect_size}
+    Point const expected_position = parent_position + DeltaX{parent_width/2 + rect_size}
                                    - as_displacement(initial_child_size);
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
@@ -151,7 +151,7 @@ TEST_F(WindowPlacementAnchorsToParent, given_offset_right_of_parent_client_is_an
 
     modification.aux_rect_placement_offset() = Displacement{rect_size, 0};
 
-    auto const expected_position = parent_position + Displacement{parent_width, parent_height/2};
+    Point const expected_position = parent_position + Displacement{parent_width, parent_height/2};
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
     EXPECT_CALL(*window_manager_policy, advise_resize(_, _)).Times(0);
@@ -173,7 +173,7 @@ TEST_F(WindowPlacementAnchorsToParent, given_offset_above_parent_client_is_ancho
 
     modification.aux_rect_placement_offset() = Displacement{0, -rect_size};
 
-    auto const expected_position = parent_position + DeltaX{parent_width/2 + rect_size}
+    Point const expected_position = parent_position + DeltaX{parent_width/2 + rect_size}
                                    - as_displacement(initial_child_size);
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
@@ -196,7 +196,7 @@ TEST_F(WindowPlacementAnchorsToParent, given_rect_and_offset_below_left_parent_c
 
     modification.aux_rect_placement_offset() = Displacement{-rect_size, rect_size};
 
-    auto const expected_position = parent_position + DeltaY{parent_height} - as_displacement(initial_child_size).dx;
+    Point const expected_position = parent_position + DeltaY{parent_height} - as_displacement(initial_child_size).dx;
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
     EXPECT_CALL(*window_manager_policy, advise_resize(_, _)).Times(0);
