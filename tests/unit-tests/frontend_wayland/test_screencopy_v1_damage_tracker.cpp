@@ -119,7 +119,7 @@ TEST_F(DamageTrackerV1, captures_first_frame_immediately_when_requested)
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, captures_second_frame_after_scene_changed)
+TEST_F(DamageTrackerV1, when_scene_changed_second_frame_is_captured)
 {
     geom::Rectangle const area{{}, {20, 30}};
     capture_frame_with_area(area);
@@ -133,7 +133,7 @@ TEST_F(DamageTrackerV1, captures_second_frame_after_scene_changed)
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, captures_second_frame_after_area_damaged)
+TEST_F(DamageTrackerV1, when_area_damaged_second_frame_is_captured)
 {
     geom::Rectangle const area{{}, {20, 30}};
     capture_frame_with_area(area);
@@ -147,7 +147,7 @@ TEST_F(DamageTrackerV1, captures_second_frame_after_area_damaged)
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, captures_frame_with_correct_damage_when_area_inside_capture_area_damaged)
+TEST_F(DamageTrackerV1, when_area_inside_capture_area_is_damaged_frame_is_captured_with_correct_damage)
 {
     geom::Rectangle const capture_area{{}, {20, 30}};
     geom::Rectangle const area_inside_capture_area{{2, 4}, {5, 7}};
@@ -194,7 +194,7 @@ TEST_F(DamageTrackerV1, damage_is_relative_to_capture_area_position)
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, frame_is_not_captured_when_damage_is_outside_its_area)
+TEST_F(DamageTrackerV1, when_damage_is_outside_of_frames_area_frame_is_not_captured)
 {
     geom::Rectangle const area{{}, {20, 30}};
     geom::Rectangle const damage{{25, 0}, {5, 5}};
@@ -209,7 +209,7 @@ TEST_F(DamageTrackerV1, frame_is_not_captured_when_damage_is_outside_its_area)
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, captures_second_frame_immediately_if_scene_has_changed_since_first_frame)
+TEST_F(DamageTrackerV1, when_scene_has_changed_since_first_frame_the_second_frame_is_captured_immediately)
 {
     geom::Rectangle const area{{}, {20, 30}};
     capture_frame_with_area(area);
@@ -223,7 +223,7 @@ TEST_F(DamageTrackerV1, captures_second_frame_immediately_if_scene_has_changed_s
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, captures_second_frame_immediately_if_area_has_been_damaged_since_first_frame)
+TEST_F(DamageTrackerV1, when_area_has_been_damaged_since_first_frame_the_second_frame_is_captured_immediately)
 {
     geom::Rectangle const area{{}, {20, 30}};
     capture_frame_with_area(area);
@@ -237,7 +237,7 @@ TEST_F(DamageTrackerV1, captures_second_frame_immediately_if_area_has_been_damag
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, waits_for_damage_to_capture_third_frame_after_second_frame_captured_immediately)
+TEST_F(DamageTrackerV1, when_second_frame_is_captured_immediately_the_third_frame_is_not_captured_until_there_is_damage)
 {
     geom::Rectangle const area{{}, {20, 30}};
     capture_frame_with_area(area);
@@ -269,7 +269,7 @@ TEST_F(DamageTrackerV1, captures_third_frame_immediately_after_getting_damage)
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, captures_correct_frame_when_there_are_multiple_frames_and_only_one_is_damaged)
+TEST_F(DamageTrackerV1, when_there_are_multiple_frames_and_only_one_is_damaged_the_correct_frame_is_captured)
 {
     geom::Rectangle const area_a{{ 0, 0}, {20, 30}};
     geom::Rectangle const area_b{{25, 0}, {20, 30}};
@@ -296,7 +296,7 @@ TEST_F(DamageTrackerV1, captures_correct_frame_when_there_are_multiple_frames_an
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, captures_pending_frames_when_tracker_is_destroyed)
+TEST_F(DamageTrackerV1, when_tracker_is_destroyed_pending_frames_area_captured)
 {
     geom::Rectangle const area_a{{ 0, 0}, {20, 30}};
     geom::Rectangle const area_b{{25, 0}, {20, 30}};
@@ -339,7 +339,7 @@ TEST_F(DamageTrackerV1, creating_new_areas_does_not_result_in_pending_frames_bei
     }
 }
 
-TEST_F(DamageTrackerV1, captures_immediately_when_additional_frame_is_queued_with_same_area_as_pending_frame)
+TEST_F(DamageTrackerV1, when_additional_frame_is_queued_with_same_area_then_pending_frame_is_captured_immediately)
 {
     geom::Rectangle const area{{}, {20, 30}};
     capture_frame_with_area(area);
@@ -354,7 +354,7 @@ TEST_F(DamageTrackerV1, captures_immediately_when_additional_frame_is_queued_wit
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, allows_multiple_pending_frames_with_the_same_area_if_outputs_are_different)
+TEST_F(DamageTrackerV1, when_outputs_are_different_allows_multiple_pending_frames_with_the_same_area)
 {
     geom::Rectangle const area{{}, {20, 30}};
     capture_frame_with_area(area);
@@ -389,7 +389,7 @@ TEST_F(DamageTrackerV1, allows_multiple_pending_frames_with_the_same_area_if_out
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, captures_second_frame_on_second_area_immediately_when_second_area_is_already_damaged_and_first_area_has_pending_frame)
+TEST_F(DamageTrackerV1, when_second_area_is_already_damaged_and_first_area_has_pending_frame_second_frame_is_captured_on_second_area_immediately)
 {
     geom::Rectangle const area_a{{ 0, 0}, {20, 30}};
     geom::Rectangle const area_b{{25, 0}, {20, 30}};
@@ -410,7 +410,7 @@ TEST_F(DamageTrackerV1, captures_second_frame_on_second_area_immediately_when_se
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, captures_with_full_damage_when_partial_damage_is_followed_by_full_damage)
+TEST_F(DamageTrackerV1, when_partial_damage_is_followed_by_full_damage_frame_is_captured_with_full_damage)
 {
     geom::Rectangle const area{{}, {20, 30}};
     capture_frame_with_area(area);
@@ -427,7 +427,7 @@ TEST_F(DamageTrackerV1, captures_with_full_damage_when_partial_damage_is_followe
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, captures_with_full_damage_when_full_damage_is_followed_by_partial_damage)
+TEST_F(DamageTrackerV1, when_full_damage_is_followed_by_partial_damage_frame_is_captured_with_full_damage)
 {
     geom::Rectangle const area{{}, {20, 30}};
     capture_frame_with_area(area);
@@ -444,7 +444,7 @@ TEST_F(DamageTrackerV1, captures_with_full_damage_when_full_damage_is_followed_b
     executor.execute();
 }
 
-TEST_F(DamageTrackerV1, captured_with_combined_area_when_multiple_damages_happen_before_capture)
+TEST_F(DamageTrackerV1, when_multiple_damages_happen_before_capture_frame_is_captured_with_combined_damage_areas)
 {
     geom::Rectangle const area{{}, {20, 30}};
     geom::Rectangle const damage_a{{0, 5}, {10, 6}};
