@@ -211,13 +211,13 @@ void mf::WlrScreencopyV1DamageTracker::capture_on_damage(Frame* frame)
         // We capture the given frame immediately, and also push an empty capture area so that if we get another
         // capture request with the same params it will wait for damage since this frame.
         frame->capture(std::nullopt);
-        areas.push_back(std::make_unique<Area>(frame_params));
         // If an unusually high number of capture areas have been created for some reason, clear the list rather than
         // getting bogged down (it's ok, worst case scenario waiting for damage doesn't work)
         if (areas.size() > 100)
         {
             areas.clear();
         }
+        areas.push_back(std::make_unique<Area>(frame_params));
     }
 }
 
