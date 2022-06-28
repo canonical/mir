@@ -138,6 +138,9 @@ using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
 struct AbstractShell : Test
 {
     NiceMock<mtd::MockSurface> mock_surface;
+    NiceMock<mtd::MockSurface> mock_surface1;
+    NiceMock<mtd::MockSurface> mock_surface2;
+    NiceMock<mtd::MockSurface> mock_surface_child;
     NiceMock<mtd::MockSurfaceStack> surface_stack;
     ms::SessionContainer session_container;
     NiceMock<MockSessionEventSink> session_event_sink;
@@ -550,10 +553,9 @@ TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
 {
     auto const session0 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
     auto const session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Bla", std::shared_ptr<mf::EventSink>());
-    NiceMock<mtd::MockSurface> dummy_surface;
-    ON_CALL(dummy_surface, size()).WillByDefault(Return(geom::Size{}));
+    ON_CALL(mock_surface1, size()).WillByDefault(Return(geom::Size{}));
     EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(AnyNumber())
-        .WillOnce(Return(mt::fake_shared(dummy_surface)))
+        .WillOnce(Return(mt::fake_shared(mock_surface1)))
         .WillOnce(Return(mt::fake_shared(mock_surface)));
 
     auto const params0 = mt::make_surface_spec(session0->create_buffer_stream(properties));
@@ -803,7 +805,6 @@ TEST_F(AbstractShell, when_remaining_session_has_no_surface_focus_next_session_d
 
 TEST_F(AbstractShell, focus_can_be_set)
 {
-    NiceMock<mtd::MockSurface> mock_surface1;
     EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(AnyNumber())
         .WillOnce(Return(mt::fake_shared(mock_surface1)))
         .WillOnce(Return(mt::fake_shared(mock_surface)));
@@ -825,8 +826,6 @@ TEST_F(AbstractShell, focus_can_be_set)
 
 TEST_F(AbstractShell, setting_focus_to_child_makes_parent_active)
 {
-    NiceMock<mtd::MockSurface> mock_surface1;
-    NiceMock<mtd::MockSurface> mock_surface2;
     ON_CALL(mock_surface1, parent())
         .WillByDefault(Return(mt::fake_shared(mock_surface)));
     EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(AnyNumber())
@@ -856,7 +855,6 @@ TEST_F(AbstractShell, does_not_give_keyboard_focus_to_menu)
 {
     auto const surface_parent = create_surface(mock_surface);
 
-    NiceMock<mtd::MockSurface> mock_surface_child;
     auto const surface_child = create_surface(mock_surface_child);
     ON_CALL(mock_surface_child, parent())
         .WillByDefault(Return(surface_parent));
@@ -874,7 +872,6 @@ TEST_F(AbstractShell, does_not_give_keyboard_focus_to_tip)
 {
     auto const surface_parent = create_surface(mock_surface);
 
-    NiceMock<mtd::MockSurface> mock_surface_child;
     auto const surface_child = create_surface(mock_surface_child);
     ON_CALL(mock_surface_child, parent())
         .WillByDefault(Return(surface_parent));
@@ -892,14 +889,12 @@ TEST_F(AbstractShell, does_not_deactivate_parent_when_switching_children)
 {
     auto const surface_parent = create_surface(mock_surface);
 
-    NiceMock<mtd::MockSurface> mock_surface_child_a;
-    auto const surface_child_a = create_surface(mock_surface_child_a);
-    ON_CALL(mock_surface_child_a, parent())
+    auto const surface_child_a = create_surface(mock_surface1);
+    ON_CALL(mock_surface1, parent())
         .WillByDefault(Return(surface_parent));
 
-    NiceMock<mtd::MockSurface> mock_surface_child_b;
-    auto const surface_child_b = create_surface(mock_surface_child_b);
-    ON_CALL(mock_surface_child_b, parent())
+    auto const surface_child_b = create_surface(mock_surface2);
+    ON_CALL(mock_surface2, parent())
         .WillByDefault(Return(surface_parent));
 
     msh::FocusController& focus_controller = shell;
@@ -913,7 +908,6 @@ TEST_F(AbstractShell, makes_parent_active_when_switching_to_child)
 {
     auto const surface_parent = create_surface(mock_surface);
 
-    NiceMock<mtd::MockSurface> mock_surface_child;
     auto const surface_child = create_surface(mock_surface_child);
     ON_CALL(mock_surface_child, parent())
         .WillByDefault(Return(surface_parent));
@@ -940,7 +934,6 @@ TEST_F(AbstractShell, makes_parent_focused_when_switching_back_from_child)
 {
     auto const surface_parent = create_surface(mock_surface);
 
-    NiceMock<mtd::MockSurface> mock_surface_child;
     auto const surface_child = create_surface(mock_surface_child);
     ON_CALL(mock_surface_child, parent())
         .WillByDefault(Return(surface_parent));
@@ -966,24 +959,22 @@ TEST_F(AbstractShell, removing_focus_from_menu_closes_it)
 {
     auto const surface_parent = create_surface(mock_surface);
 
-    NiceMock<mtd::MockSurface> mock_surface_menu;
-    auto const surface_menu = create_surface(mock_surface_menu);
-    ON_CALL(mock_surface_menu, parent())
+    auto const surface_menu = create_surface(mock_surface1);
+    ON_CALL(mock_surface1, parent())
         .WillByDefault(Return(surface_parent));
-    ON_CALL(mock_surface_menu, type())
+    ON_CALL(mock_surface1, type())
         .WillByDefault(Return(mir_window_type_menu));
 
     msh::FocusController& focus_controller = shell;
     focus_controller.set_focus_to(surface_menu->session().lock(), surface_menu);
 
-    EXPECT_CALL(mock_surface_menu, request_client_surface_close());
+    EXPECT_CALL(mock_surface1, request_client_surface_close());
     focus_controller.set_focus_to(surface_parent->session().lock(), surface_parent);
 }
 
 // Regression test for https://github.com/MirServer/mir/issues/2279
 TEST_F(AbstractShell, focus_next_session_allows_later_focusing_same_window)
 {
-    NiceMock<mtd::MockSurface> mock_surface1;
     EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(AnyNumber())
         .WillOnce(Return(mt::fake_shared(mock_surface1)))
         .WillOnce(Return(mt::fake_shared(mock_surface)));
