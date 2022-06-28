@@ -107,8 +107,19 @@ public:
         return MutexGuard<Guarded>{std::unique_lock{mutex}, value};
     }
 
+    /**
+     * Lock the mutex and return an accessor for the protected data.
+     *
+     * \return A smart-pointer-esque accessor for the contained data.
+     *         While code has access to the MutexGuard it is guaranteed to have exclusive
+     *         access to the contained data.
+     */
+    MutexGuard<Guarded const> lock() const
+    {
+        return MutexGuard<Guarded const>{std::unique_lock{mutex}, value};
+    }
 private:
-    std::mutex mutex;
+    std::mutex mutable mutex;
     Guarded value;
 };
 
