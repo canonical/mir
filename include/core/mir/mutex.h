@@ -45,13 +45,7 @@ public:
         from.value = nullptr;
     }
 
-    ~MutexGuard() noexcept(false)
-    {
-        if (lock.owns_lock())
-        {
-            lock.unlock();
-        }
-    }
+    ~MutexGuard() = default;
 
     Guarded& operator*()
     {
