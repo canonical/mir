@@ -324,8 +324,8 @@ struct miral::WaylandExtensions::Self
 
         if (server.get_options()->is_set(mo::add_wayland_extensions_opt))
         {
-            auto const added = Self::parse_extensions_option(
-                server.get_options()->get<std::string>(mo::add_wayland_extensions_opt));
+            auto const value = server.get_options()->get<std::string>(mo::add_wayland_extensions_opt);
+            auto const added = value == "all" ? supported_extensions : Self::parse_extensions_option(value);
             for (auto const& extension : added)
             {
                 selected_extensions.insert(extension);
@@ -443,7 +443,8 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
 
     server.add_configuration_option(
         mo::add_wayland_extensions_opt,
-        ("Additional Wayland extensions to enable. [" + Self::serialize_colon_list(non_default_extensions) + "]"),
+        ("Additional Wayland extensions to enable, or `all` to enable all supported extensions. [" +
+         Self::serialize_colon_list(non_default_extensions) + "]"),
         mir::OptionType::string);
 
     server.add_configuration_option(
