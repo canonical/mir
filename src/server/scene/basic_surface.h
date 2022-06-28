@@ -219,7 +219,7 @@ private:
 
         MirFocusMode focus_mode = mir_focus_mode_focusable;
     };
-    mir::Mutex<State> mutable mutable_state;
+    mir::Mutex<State> mutable_state;
 
     std::weak_ptr<Session> const session_;
 
