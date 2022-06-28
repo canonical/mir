@@ -29,7 +29,7 @@ void ms::NullSurfaceObserver::alpha_set_to(Surface const*, float) {}
 void ms::NullSurfaceObserver::orientation_set_to(Surface const*, MirOrientation) {}
 void ms::NullSurfaceObserver::transformation_set_to(Surface const*, glm::mat4 const&) {}
 void ms::NullSurfaceObserver::reception_mode_set_to(Surface const*, input::InputReceptionMode) {}
-void ms::NullSurfaceObserver::cursor_image_set_to(Surface const*, graphics::CursorImage const&) {}
+void ms::NullSurfaceObserver::cursor_image_set_to(Surface const*, std::weak_ptr<mir::graphics::CursorImage> const&) {}
 void ms::NullSurfaceObserver::client_surface_close_requested(Surface const*) {}
 void ms::NullSurfaceObserver::renamed(Surface const*, std::string const&) {}
 void ms::NullSurfaceObserver::cursor_image_removed(Surface const*) {}

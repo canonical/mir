@@ -81,7 +81,7 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
     {
         cursor_controller->update_cursor_image();
     }
-    void cursor_image_set_to(ms::Surface const*, const mir::graphics::CursorImage&) override
+    void cursor_image_set_to(ms::Surface const*, std::weak_ptr<mir::graphics::CursorImage> const&) override
     {
         cursor_controller->update_cursor_image();
     }

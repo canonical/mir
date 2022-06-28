@@ -35,7 +35,7 @@ public:
                           mir::geometry::Size const &content_size) override;
   void cursor_image_removed(mir::scene::Surface const *surf) override;
   void cursor_image_set_to(mir::scene::Surface const *surf,
-                           mir::graphics::CursorImage const &image) override;
+                           std::weak_ptr<mir::graphics::CursorImage> const& image) override;
   void depth_layer_set_to(mir::scene::Surface const *surf,
                           MirDepthLayer depth_layer) override;
   void frame_posted(mir::scene::Surface const *surf, int frames_available,
@@ -101,9 +101,12 @@ void miroil::SurfaceObserverImpl::cursor_image_removed(mir::scene::Surface const
     listener->cursor_image_removed(surf);
 }
 
-void miroil::SurfaceObserverImpl::cursor_image_set_to(mir::scene::Surface const* surf, mir::graphics::CursorImage const& image)
+void miroil::SurfaceObserverImpl::cursor_image_set_to(mir::scene::Surface const* surf, std::weak_ptr<mir::graphics::CursorImage> const& image)
 {
-    listener->cursor_image_set_to(surf, image);
+    if (auto const locked = image.lock())
+    {
+        listener->cursor_image_set_to(surf, *locked);
+    }
 }
 
 void miroil::SurfaceObserverImpl::depth_layer_set_to(mir::scene::Surface const* surf, MirDepthLayer depth_layer)
