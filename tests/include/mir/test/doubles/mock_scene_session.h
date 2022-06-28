@@ -36,39 +36,39 @@ namespace doubles
 
 struct MockSceneSession : public scene::Session
 {
-    MOCK_METHOD4(create_surface,
-        std::shared_ptr<scene::Surface>(
-            std::shared_ptr<Session> const&,
-            wayland::Weak<frontend::WlSurface> const&,
-            shell::SurfaceSpecification const&,
-            std::shared_ptr<scene::SurfaceObserver> const&));
-    MOCK_METHOD1(destroy_surface, void(std::shared_ptr<scene::Surface> const&));
-    MOCK_CONST_METHOD1(surface_after, std::shared_ptr<scene::Surface>(std::shared_ptr<scene::Surface> const&));
+    MOCK_METHOD(std::shared_ptr<scene::Surface>, create_surface, (
+        std::shared_ptr<Session> const&,
+        wayland::Weak<frontend::WlSurface> const&,
+        shell::SurfaceSpecification const&,
+        std::shared_ptr<scene::SurfaceObserver> const&), (override));
+    MOCK_METHOD(void, destroy_surface, (std::shared_ptr<scene::Surface> const&), (override));
+    MOCK_METHOD(std::shared_ptr<scene::Surface>, surface_after, (
+        std::shared_ptr<scene::Surface> const&), (const override));
 
-    MOCK_CONST_METHOD0(default_surface, std::shared_ptr<scene::Surface>());
+    MOCK_METHOD(std::shared_ptr<scene::Surface>, default_surface, (), (const override));
 
-    MOCK_CONST_METHOD0(name, std::string());
-    MOCK_CONST_METHOD0(process_id, pid_t());
-    MOCK_CONST_METHOD0(socket_fd, Fd());
+    MOCK_METHOD(std::string, name, (), (const override));
+    MOCK_METHOD(pid_t, process_id, (), (const override));
+    MOCK_METHOD(Fd, socket_fd, (), (const override));
 
-    MOCK_METHOD0(hide, void());
-    MOCK_METHOD0(show, void());
+    MOCK_METHOD(void, hide, (), (override));
+    MOCK_METHOD(void, show, (), (override));
 
-    MOCK_METHOD1(send_error, void(ClientVisibleError const&));
-    MOCK_METHOD1(send_input_config, void(MirInputConfig const&));
+    MOCK_METHOD(void, send_error, (ClientVisibleError const&), (override));
+    MOCK_METHOD(void, send_input_config, (MirInputConfig const&), (override));
 
-    MOCK_METHOD1(set_lifecycle_state, void(MirLifecycleState state));
+    MOCK_METHOD(void, set_lifecycle_state, (MirLifecycleState state), (override));
 
-    MOCK_METHOD0(start_prompt_session, void());
-    MOCK_METHOD0(stop_prompt_session, void());
-    MOCK_METHOD0(suspend_prompt_session, void());
-    MOCK_METHOD0(resume_prompt_session, void());
+    MOCK_METHOD(void, start_prompt_session, (), (override));
+    MOCK_METHOD(void, stop_prompt_session, (), (override));
+    MOCK_METHOD(void, suspend_prompt_session, (), (override));
+    MOCK_METHOD(void, resume_prompt_session, (), (override));
 
-    MOCK_METHOD1(create_buffer_stream, std::shared_ptr<compositor::BufferStream>(graphics::BufferProperties const&));
-    MOCK_METHOD1(destroy_buffer_stream, void(std::shared_ptr<frontend::BufferStream> const&));
+    MOCK_METHOD(std::shared_ptr<compositor::BufferStream>, create_buffer_stream, (
+        graphics::BufferProperties const&), (override));
+    MOCK_METHOD(void, destroy_buffer_stream, (std::shared_ptr<frontend::BufferStream> const&), (override));
     
-    MOCK_METHOD2(configure_streams, void(scene::Surface&, std::vector<shell::StreamSpecification> const&));
-    MOCK_METHOD1(destroy_surface, void (std::weak_ptr<scene::Surface> const&));
+    MOCK_METHOD(void, configure_streams, (scene::Surface&, std::vector<shell::StreamSpecification> const&), (override));
 };
 
 }
