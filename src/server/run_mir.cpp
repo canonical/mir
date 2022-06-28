@@ -23,7 +23,7 @@
 #include "mir/frontend/connector.h"
 #include "mir/raii.h"
 #include "mir/emergency_cleanup.h"
-#include "mir/thread_pool_executor.h"
+#include "mir/executor.h"
 
 #include <atomic>
 #include <mutex>

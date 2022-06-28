@@ -22,7 +22,7 @@
 #include <thread>
 #include <future>
 
-#include "mir/thread_pool_executor.h"
+#include "mir/executor.h"
 #include "mir/test/signal.h"
 #include "mir/test/current_thread_name.h"
 

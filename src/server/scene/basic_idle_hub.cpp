@@ -19,7 +19,7 @@
 #include "mir/time/alarm_factory.h"
 #include "mir/time/clock.h"
 #include "mir/lockable_callback.h"
-#include "mir/linearising_executor.h"
+#include "mir/executor.h"
 
 #include <set>
 
