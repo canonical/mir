@@ -102,7 +102,7 @@ public:
      *          While code has access to the MutexGuard it is guaranteed to have exclusive
      *          access to the contained data.
      */
-    MutexGuard<Guarded> lock()
+    auto lock() -> MutexGuard<Guarded>
     {
         return MutexGuard<Guarded>{std::unique_lock{mutex}, value};
     }
@@ -114,7 +114,7 @@ public:
      *         While code has access to the MutexGuard it is guaranteed to have exclusive
      *         access to the contained data.
      */
-    MutexGuard<Guarded const> lock() const
+    auto lock() const -> MutexGuard<Guarded const>
     {
         return MutexGuard<Guarded const>{std::unique_lock{mutex}, value};
     }
