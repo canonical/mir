@@ -35,14 +35,14 @@ public:
                           mir::geometry::Size const &content_size) override;
   void cursor_image_removed(mir::scene::Surface const *surf) override;
   void cursor_image_set_to(mir::scene::Surface const *surf,
-                           mir::graphics::CursorImage const &image) override;
+                           std::weak_ptr<mir::graphics::CursorImage> const& image) override;
   void depth_layer_set_to(mir::scene::Surface const *surf,
                           MirDepthLayer depth_layer) override;
   void frame_posted(mir::scene::Surface const *surf, int frames_available,
                     mir::geometry::Rectangle const& area) override;
   void hidden_set_to(mir::scene::Surface const *surf, bool hide) override;
   void input_consumed(mir::scene::Surface const *surf,
-                      MirEvent const *event) override;
+                      std::shared_ptr<MirEvent const> const& event) override;
   void moved_to(mir::scene::Surface const *surf,
                 mir::geometry::Point const &top_left) override;
   void orientation_set_to(mir::scene::Surface const *surf,
@@ -52,7 +52,7 @@ public:
   void
   reception_mode_set_to(mir::scene::Surface const * /*surf*/,
                         mir::input::InputReceptionMode /*mode*/) override{};
-  void renamed(mir::scene::Surface const *surf, char const *name) override;
+  void renamed(mir::scene::Surface const *surf, std::string const& name) override;
   void start_drag_and_drop(mir::scene::Surface const *surf,
                            std::vector<uint8_t> const &handle) override;
   void transformation_set_to(mir::scene::Surface const *surf,
@@ -101,9 +101,12 @@ void miroil::SurfaceObserverImpl::cursor_image_removed(mir::scene::Surface const
     listener->cursor_image_removed(surf);
 }
 
-void miroil::SurfaceObserverImpl::cursor_image_set_to(mir::scene::Surface const* surf, mir::graphics::CursorImage const& image)
+void miroil::SurfaceObserverImpl::cursor_image_set_to(mir::scene::Surface const* surf, std::weak_ptr<mir::graphics::CursorImage> const& image)
 {
-    listener->cursor_image_set_to(surf, image);
+    if (auto const locked = image.lock())
+    {
+        listener->cursor_image_set_to(surf, *locked);
+    }
 }
 
 void miroil::SurfaceObserverImpl::depth_layer_set_to(mir::scene::Surface const* surf, MirDepthLayer depth_layer)
@@ -121,9 +124,9 @@ void miroil::SurfaceObserverImpl::hidden_set_to(mir::scene::Surface const* surf,
     listener->hidden_set_to(surf, hide);
 }
 
-void miroil::SurfaceObserverImpl::input_consumed(mir::scene::Surface const* surf, MirEvent const* event)
+void miroil::SurfaceObserverImpl::input_consumed(mir::scene::Surface const* surf, std::shared_ptr<MirEvent const> const& event)
 {
-    listener->input_consumed(surf, event);
+    listener->input_consumed(surf, event.get());
 }
 
 void miroil::SurfaceObserverImpl::moved_to(mir::scene::Surface const* surf, mir::geometry::Point const& top_left)
@@ -141,9 +144,9 @@ void miroil::SurfaceObserverImpl::placed_relative(mir::scene::Surface const* sur
     listener->placed_relative(surf, placement);
 }
 
-void miroil::SurfaceObserverImpl::renamed(mir::scene::Surface const* surf, char const* name)
+void miroil::SurfaceObserverImpl::renamed(mir::scene::Surface const* surf, std::string const& name)
 {
-    listener->renamed(surf, name);
+    listener->renamed(surf, name.c_str());
 }
 
 void miroil::SurfaceObserverImpl::start_drag_and_drop(mir::scene::Surface const* surf, std::vector<uint8_t> const& handle)

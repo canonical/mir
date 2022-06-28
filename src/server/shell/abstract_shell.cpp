@@ -514,7 +514,7 @@ void msh::AbstractShell::set_keyboard_focus_surface(
         update_confinement_for(new_keyboard_focus_surface);
 
         input_targeter->set_focus(new_keyboard_focus_surface);
-        new_keyboard_focus_surface->consume(seat->create_device_state().get());
+        new_keyboard_focus_surface->consume(seat->create_device_state());
         new_keyboard_focus_surface->add_observer(focus_surface_observer);
     }
     else

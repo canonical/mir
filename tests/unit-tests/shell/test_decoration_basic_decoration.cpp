@@ -175,7 +175,7 @@ struct DecorationBasicDecoration
 
     void decoration_event(mir::EventUPtr event)
     {
-        decoration_surface.consume(event.get());
+        decoration_surface.consume(std::move(event));
         executor.execute();
     }
 

@@ -38,13 +38,13 @@ public:
     void alpha_set_to(Surface const* surf, float alpha) override;
     void orientation_set_to(Surface const* surf, MirOrientation orientation) override;
     void transformation_set_to(Surface const* surf, glm::mat4 const& t) override;
-    void cursor_image_set_to(Surface const* surf, graphics::CursorImage const& image) override;
+    void cursor_image_set_to(Surface const* surf, std::weak_ptr<mir::graphics::CursorImage> const& image) override;
     void reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode) override;
     void client_surface_close_requested(Surface const* surf) override;
-    void renamed(Surface const* surf, char const* name) override;
+    void renamed(Surface const* surf, std::string const& name) override;
     void cursor_image_removed(Surface const* surf) override;
     void placed_relative(Surface const* surf, geometry::Rectangle const& placement) override;
-    void input_consumed(Surface const* surf, MirEvent const* event) override;
+    void input_consumed(Surface const* surf, std::shared_ptr<MirEvent const> const& event) override;
     void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) override;
     void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) override;
     void application_id_set_to(Surface const* surf, std::string const& application_id) override;

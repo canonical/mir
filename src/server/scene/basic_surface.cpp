@@ -95,7 +95,9 @@ void ms::SurfaceObservers::transformation_set_to(Surface const* surf, glm::mat4 
         { observer->transformation_set_to(surf, t); });
 }
 
-void ms::SurfaceObservers::cursor_image_set_to(Surface const* surf, graphics::CursorImage const& image)
+void ms::SurfaceObservers::cursor_image_set_to(
+    Surface const* surf,
+    std::weak_ptr<mir::graphics::CursorImage> const& image)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
         { observer->cursor_image_set_to(surf, image); });
@@ -113,7 +115,7 @@ void ms::SurfaceObservers::client_surface_close_requested(Surface const* surf)
         { observer->client_surface_close_requested(surf); });
 }
 
-void ms::SurfaceObservers::renamed(Surface const* surf, char const* name)
+void ms::SurfaceObservers::renamed(Surface const* surf, std::string const& name)
 {
     for_each([&surf, name](std::shared_ptr<SurfaceObserver> const& observer)
         { observer->renamed(surf, name); });
@@ -131,7 +133,7 @@ void ms::SurfaceObservers::placed_relative(Surface const* surf, geometry::Rectan
                  { observer->placed_relative(surf, placement); });
 }
 
-void ms::SurfaceObservers::input_consumed(Surface const* surf, MirEvent const* event)
+void ms::SurfaceObservers::input_consumed(Surface const* surf, std::shared_ptr<MirEvent const> const& event)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
                  { observer->input_consumed(surf, event); });
@@ -563,7 +565,7 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
     }
 
     if (image)
-        observers->cursor_image_set_to(this, *image);
+        observers->cursor_image_set_to(this, image);
     else
         observers->cursor_image_removed(this);
 }
@@ -625,7 +627,7 @@ void ms::BasicSurface::set_cursor_from_buffer(
         std::lock_guard lock(guard);
         cursor_image_ = image;
     }
-    observers->cursor_image_set_to(this, *image);
+    observers->cursor_image_set_to(this, image);
 }
 
 auto ms::BasicSurface::wayland_surface() -> mw::Weak<mf::WlSurface> const&
@@ -780,7 +782,7 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
     return max_buf;
 }
 
-void ms::BasicSurface::consume(MirEvent const* event)
+void ms::BasicSurface::consume(std::shared_ptr<MirEvent const> const& event)
 {
     observers->input_consumed(this, event);
 }

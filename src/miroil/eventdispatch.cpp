@@ -17,11 +17,13 @@
 #include "miroil/eventdispatch.h"
 #include <miral/window.h>
 #include <mir/scene/surface.h>
+#include <mir/events/event_builders.h>
+#include <mir/events/input_event.h>
 
 void miroil::dispatch_input_event(const miral::Window& window, const MirInputEvent* event)
 {
-    auto e = reinterpret_cast<MirEvent const*>(event); // naughty
-
     if (auto surface = std::shared_ptr<mir::scene::Surface>(window))
-        surface->consume(e);
+    {
+        surface->consume(mir::events::clone_event(*event));
+    }
 }

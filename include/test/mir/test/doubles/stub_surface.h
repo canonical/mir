@@ -42,7 +42,7 @@ struct StubSurface : scene::Surface
     geometry::Point top_left() const override { return {}; }
     geometry::Rectangle input_bounds() const override { return {}; }
     bool input_area_contains(geometry::Point const&) const override { return false; }
-    void consume(MirEvent const*) override {}
+    void consume(std::shared_ptr<MirEvent const> const&) override {}
     void set_alpha(float) override {}
     void set_orientation(MirOrientation) override {}
     void set_transformation(glm::mat4 const&) override {}

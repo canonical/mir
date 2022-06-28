@@ -41,7 +41,7 @@ public:
     void alpha_set_to(Surface const* surf, float) override;
     void transformation_set_to(Surface const* surf, glm::mat4 const&) override;
     void reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode) override;
-    void renamed(Surface const* surf, char const*) override;
+    void renamed(Surface const* surf, std::string const&) override;
 
 private:
     std::function<void()> const notify_scene_change;

@@ -115,7 +115,7 @@ private:
     /// Surface observer
     ///@{
     void attrib_changed(scene::Surface const*, MirWindowAttrib attrib, int) override;
-    void renamed(scene::Surface const*, char const* name) override;
+    void renamed(scene::Surface const*, std::string const& name) override;
     void application_id_set_to(scene::Surface const*, std::string const& application_id) override;
     ///@}
 
@@ -459,11 +459,10 @@ void mf::ForeignSurfaceObserver::attrib_changed(const scene::Surface*, MirWindow
     }
 }
 
-void mf::ForeignSurfaceObserver::renamed(ms::Surface const*, char const* name_c_str)
+void mf::ForeignSurfaceObserver::renamed(ms::Surface const*, std::string const& name)
 {
     std::lock_guard lock{mutex};
 
-    std::string name = name_c_str;
     with_toplevel_handle(lock, [name](ForeignToplevelHandleV1& handle)
         {
             handle.send_title_event(name);

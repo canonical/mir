@@ -144,7 +144,7 @@ struct StubInputSurface : public mtd::StubSurface
         {
             std::unique_lock lk(observer_guard);
             for (auto o : observers)
-                o->cursor_image_set_to(this, *image);
+                o->cursor_image_set_to(this, image);
         }
     }
 
