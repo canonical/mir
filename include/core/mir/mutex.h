@@ -47,12 +47,12 @@ public:
 
     ~MutexGuard() = default;
 
-    Guarded& operator*()
+    auto operator*() const -> Guarded&
     {
         return *value;
     }
 
-    Guarded* operator->()
+    auto operator->() const -> Guarded*
     {
         return value;
     }
