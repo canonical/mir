@@ -107,15 +107,6 @@ public:
         return MutexGuard<Guarded>{std::unique_lock{mutex}, value};
     }
 
-    /**
-     * Unlock an acquired mutex
-     *
-     * This is a convenience method for cases when the mutex must be dropped
-     * but cannot easily be made to leave scope.
-     */
-    static void drop(MutexGuard<Guarded> /*to_drop*/)
-    {
-    }
 private:
     std::mutex mutex;
     Guarded value;
