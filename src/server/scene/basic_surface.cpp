@@ -185,7 +185,7 @@ ms::BasicSurface::BasicSurface(
     std::list<StreamInfo> const& layers,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
-    mutable_state{
+    synchronised_state{
         State {
             .surface_name = name,
             .surface_rect = rect,
@@ -204,7 +204,7 @@ ms::BasicSurface::BasicSurface(
     parent_(parent),
     wayland_surface_{wayland_surface}
 {
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     update_frame_posted_callbacks(*state);
     report->surface_created(this, state->surface_name);
 }
@@ -233,42 +233,42 @@ ms::BasicSurface::BasicSurface(
 
 ms::BasicSurface::~BasicSurface() noexcept
 {
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     clear_frame_posted_callbacks(*state);
     report->surface_deleted(this, state->surface_name);
 }
 
 std::string ms::BasicSurface::name() const
 {
-    return mutable_state.lock()->surface_name;
+    return synchronised_state.lock()->surface_name;
 }
 
 void ms::BasicSurface::move_to(geometry::Point const& top_left)
 {
-    mutable_state.lock()->surface_rect.top_left = top_left;
+    synchronised_state.lock()->surface_rect.top_left = top_left;
     observers->moved_to(this, top_left);
 }
 
 void ms::BasicSurface::set_hidden(bool hide)
 {
-    mutable_state.lock()->hidden = hide;
+    synchronised_state.lock()->hidden = hide;
     observers->hidden_set_to(this, hide);
 }
 
 mir::geometry::Size ms::BasicSurface::window_size() const
 {
-    return mutable_state.lock()->surface_rect.size;
+    return synchronised_state.lock()->surface_rect.size;
 }
 
 mir::geometry::Displacement ms::BasicSurface::content_offset() const
 {
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     return geom::Displacement{state->margins.left, state->margins.top};
 }
 
 mir::geometry::Size ms::BasicSurface::content_size() const
 {
-    return content_size(*mutable_state.lock());
+    return content_size(*synchronised_state.lock());
 }
 
 std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const
@@ -279,7 +279,7 @@ std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() cons
 
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
-    mutable_state.lock()->custom_input_rectangles = input_rectangles;
+    synchronised_state.lock()->custom_input_rectangles = input_rectangles;
 }
 
 void ms::BasicSurface::resize(geom::Size const& desired_size)
@@ -288,7 +288,7 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
     if (new_size.width <= geom::Width{0})   new_size.width = geom::Width{1};
     if (new_size.height <= geom::Height{0}) new_size.height = geom::Height{1};
 
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     if (new_size != state->surface_rect.size)
     {
         state->surface_rect.size = new_size;
@@ -303,19 +303,19 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
 
 geom::Point ms::BasicSurface::top_left() const
 {
-    return mutable_state.lock()->surface_rect.top_left;
+    return synchronised_state.lock()->surface_rect.top_left;
 }
 
 geom::Rectangle ms::BasicSurface::input_bounds() const
 {
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     return geom::Rectangle{content_top_left(*state), content_size(*state)};
 }
 
 // TODO: Does not account for transformation().
 bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
 
     if (!visible(*state))
         return false;
@@ -346,7 +346,7 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 
 void ms::BasicSurface::set_alpha(float alpha)
 {
-    mutable_state.lock()->surface_alpha = alpha;
+    synchronised_state.lock()->surface_alpha = alpha;
     observers->alpha_set_to(this, alpha);
 }
 
@@ -357,13 +357,13 @@ void ms::BasicSurface::set_orientation(MirOrientation orientation)
 
 void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 {
-    mutable_state.lock()->transformation_matrix = t;
+    synchronised_state.lock()->transformation_matrix = t;
     observers->transformation_set_to(this, t);
 }
 
 bool ms::BasicSurface::visible() const
 {
-    return visible(*mutable_state.lock());
+    return visible(*synchronised_state.lock());
 }
 
 bool ms::BasicSurface::visible(State const& state) const
@@ -376,18 +376,18 @@ bool ms::BasicSurface::visible(State const& state) const
 
 mi::InputReceptionMode ms::BasicSurface::reception_mode() const
 {
-    return mutable_state.lock()->input_mode;
+    return synchronised_state.lock()->input_mode;
 }
 
 void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
 {
-    mutable_state.lock()->input_mode = mode;
+    synchronised_state.lock()->input_mode = mode;
     observers->reception_mode_set_to(this, mode);
 }
 
 MirWindowType ms::BasicSurface::type() const
 {
-    return mutable_state.lock()->type;
+    return synchronised_state.lock()->type;
 }
 
 MirWindowType ms::BasicSurface::set_type(MirWindowType t)
@@ -398,7 +398,7 @@ MirWindowType ms::BasicSurface::set_type(MirWindowType t)
             "type."));
     }
 
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     if (state->type != t)
     {
         state->type = t;
@@ -413,12 +413,12 @@ MirWindowType ms::BasicSurface::set_type(MirWindowType t)
 
 MirWindowState ms::BasicSurface::state() const
 {
-    return mutable_state.lock()->state.active_state();
+    return synchronised_state.lock()->state.active_state();
 }
 
 auto ms::BasicSurface::state_tracker() const -> SurfaceStateTracker
 {
-    return mutable_state.lock()->state;
+    return synchronised_state.lock()->state;
 }
 
 MirWindowState ms::BasicSurface::set_state(MirWindowState s)
@@ -426,7 +426,7 @@ MirWindowState ms::BasicSurface::set_state(MirWindowState s)
     if (s < mir_window_state_unknown || s >= mir_window_states)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
 
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     if (state->state.active_state() != s)
     {
         state->state = state->state.with_active_state(s);
@@ -446,7 +446,7 @@ int ms::BasicSurface::set_swap_interval(int interval)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid swapinterval"));
     }
 
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     if (state->swap_interval != interval)
     {
         state->swap_interval = interval;
@@ -468,7 +468,7 @@ MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMod
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation mode"));
     }
 
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     if (state->pref_orientation_mode != new_orientation_mode)
     {
         state->pref_orientation_mode = new_orientation_mode;
@@ -515,7 +515,7 @@ int ms::BasicSurface::configure(MirWindowAttrib attrib, int value)
 
 int ms::BasicSurface::query(MirWindowAttrib attrib) const
 {
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     switch (attrib)
     {
         case mir_window_attrib_type: return state->type;
@@ -542,7 +542,7 @@ void ms::BasicSurface::show()
 
 void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& image)
 {
-    mutable_state.lock()->cursor_image = image;
+    synchronised_state.lock()->cursor_image = image;
 
     if (image)
         observers->cursor_image_set_to(this, image);
@@ -552,13 +552,13 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
 
 void ms::BasicSurface::remove_cursor_image()
 {
-    mutable_state.lock()->cursor_image = nullptr;
+    synchronised_state.lock()->cursor_image = nullptr;
     observers->cursor_image_removed(this);
 }
 
 std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
 {
-    return mutable_state.lock()->cursor_image;
+    return synchronised_state.lock()->cursor_image;
 }
 
 namespace
@@ -599,7 +599,7 @@ void ms::BasicSurface::set_cursor_from_buffer(
     geom::Displacement const& hotspot)
 {
     auto image = std::make_shared<CursorImageFromBuffer>(buffer, hotspot);
-    mutable_state.lock()->cursor_image = image;
+    synchronised_state.lock()->cursor_image = image;
     observers->cursor_image_set_to(this, image);
 }
 
@@ -615,7 +615,7 @@ void ms::BasicSurface::request_client_surface_close()
 
 int ms::BasicSurface::dpi() const
 {
-    return mutable_state.lock()->dpi;
+    return synchronised_state.lock()->dpi;
 }
 
 int ms::BasicSurface::set_dpi(int new_dpi)
@@ -625,7 +625,7 @@ int ms::BasicSurface::set_dpi(int new_dpi)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid DPI value"));
     }
 
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     if (state->dpi != new_dpi)
     {
         state->dpi = new_dpi;
@@ -645,7 +645,7 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid visibility value"));
     }
 
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     if (state->visibility != new_visibility)
     {
         state->visibility = new_visibility;
@@ -748,7 +748,7 @@ private:
 
 int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 {
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     auto max_buf = 0;
     for (auto const& info : state->layers)
         max_buf = std::max(max_buf, info.stream->buffers_ready_for_compositor(id));
@@ -762,7 +762,7 @@ void ms::BasicSurface::consume(std::shared_ptr<MirEvent const> const& event)
 
 void ms::BasicSurface::rename(std::string const& title)
 {
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     if (state->surface_name != title)
     {
         state->surface_name = title;
@@ -777,7 +777,7 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 {
     geom::Point surface_top_left;
     {
-        auto state = mutable_state.lock();
+        auto state = synchronised_state.lock();
         clear_frame_posted_callbacks(*state);
         state->layers = s;
         update_frame_posted_callbacks(*state);
@@ -788,7 +788,7 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
 {
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     mg::RenderableList list;
     
     if (state->clip_area)
@@ -821,12 +821,12 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
 
 void ms::BasicSurface::set_confine_pointer_state(MirPointerConfinementState state)
 {
-    mutable_state.lock()->confine_pointer_state = state;
+    synchronised_state.lock()->confine_pointer_state = state;
 }
 
 MirPointerConfinementState ms::BasicSurface::confine_pointer_state() const
 {
-    return mutable_state.lock()->confine_pointer_state;
+    return synchronised_state.lock()->confine_pointer_state;
 }
 
 void ms::BasicSurface::placed_relative(geometry::Rectangle const& placement)
@@ -841,28 +841,28 @@ void mir::scene::BasicSurface::start_drag_and_drop(std::vector<uint8_t> const& h
 
 auto mir::scene::BasicSurface::depth_layer() const -> MirDepthLayer
 {
-    return mutable_state.lock()->depth_layer;
+    return synchronised_state.lock()->depth_layer;
 }
 
 void mir::scene::BasicSurface::set_depth_layer(MirDepthLayer depth_layer)
 {
-    mutable_state.lock()->depth_layer = depth_layer;
+    synchronised_state.lock()->depth_layer = depth_layer;
     observers->depth_layer_set_to(this, depth_layer);
 }
 
 std::optional<geom::Rectangle> mir::scene::BasicSurface::clip_area() const
 {
-    return mutable_state.lock()->clip_area;
+    return synchronised_state.lock()->clip_area;
 }
 
 void mir::scene::BasicSurface::set_clip_area(std::optional<geom::Rectangle> const& area)
 {
-    mutable_state.lock()->clip_area = area;
+    synchronised_state.lock()->clip_area = area;
 }
 
 auto mir::scene::BasicSurface::focus_state() const -> MirWindowFocusState
 {
-    return mutable_state.lock()->focus;
+    return synchronised_state.lock()->focus;
 }
 
 void mir::scene::BasicSurface::set_focus_state(MirWindowFocusState new_state)
@@ -874,7 +874,7 @@ void mir::scene::BasicSurface::set_focus_state(MirWindowFocusState new_state)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid focus state."));
     }
 
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     if (state->focus != new_state)
     {
         state->focus = new_state;
@@ -886,12 +886,12 @@ void mir::scene::BasicSurface::set_focus_state(MirWindowFocusState new_state)
 
 auto mir::scene::BasicSurface::application_id() const -> std::string
 {
-    return mutable_state.lock()->application_id;
+    return synchronised_state.lock()->application_id;
 }
 
 void mir::scene::BasicSurface::set_application_id(std::string const& application_id)
 {
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     if (state->application_id != application_id)
     {
         state->application_id = application_id;
@@ -917,7 +917,7 @@ void mir::scene::BasicSurface::set_window_margins(
     bottom = std::max(bottom, geom::DeltaY{});
     right  = std::max(right,  geom::DeltaX{});
 
-    auto state = mutable_state.lock();
+    auto state = synchronised_state.lock();
     if (top    != state->margins.top    ||
         left   != state->margins.left   ||
         bottom != state->margins.bottom ||
@@ -940,12 +940,12 @@ void mir::scene::BasicSurface::set_window_margins(
 
 auto mir::scene::BasicSurface::focus_mode() const -> MirFocusMode
 {
-    return mutable_state.lock()->focus_mode;
+    return synchronised_state.lock()->focus_mode;
 }
 
 void mir::scene::BasicSurface::set_focus_mode(MirFocusMode focus_mode)
 {
-    mutable_state.lock()->focus_mode = focus_mode;
+    synchronised_state.lock()->focus_mode = focus_mode;
 }
 
 void mir::scene::BasicSurface::clear_frame_posted_callbacks(State& state)
