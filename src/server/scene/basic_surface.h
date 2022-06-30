@@ -24,7 +24,7 @@
 #include "mir/wayland/wayland_base.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/common.h"
-#include "mir/mutex.h"
+#include "mir/synchronised.h"
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -219,7 +219,7 @@ private:
 
         MirFocusMode focus_mode = mir_focus_mode_focusable;
     };
-    mir::Mutex<State> synchronised_state;
+    mir::Synchronised<State> synchronised_state;
 
     std::weak_ptr<Session> const session_;
 

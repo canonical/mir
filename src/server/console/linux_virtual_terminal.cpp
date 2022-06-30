@@ -21,6 +21,7 @@
 #include "mir/emergency_cleanup_registry.h"
 #include "ioctl_vt_switcher.h"
 #include "mir/raii.h"
+#include "mir/synchronised.h"
 
 #define MIR_LOG_COMPONTENT "VT-handler"
 #include "mir/log.h"
@@ -64,11 +65,11 @@ public:
         }
 
     private:
-        DeviceListIterable(Synchronised<std::vector<Device*>>::Locked&& devices)
+        DeviceListIterable(Synchronised<std::vector<Device*>>::Locked<std::vector<Device*>>&& devices)
             : devices{std::move(devices)}
         {
         }
-        Synchronised<std::vector<Device*>>::Locked devices;
+        Synchronised<std::vector<Device*>>::Locked<std::vector<Device*>> const devices;
     };
 
     DeviceListIterable as_iterable()
