@@ -57,7 +57,7 @@ public:
     public:
         LockedImpl(LockedImpl&& from) noexcept
             : value{from.value},
-              lock{std::move(lock)}
+              lock{std::move(from.lock)}
         {
             from.value = nullptr;
         }
