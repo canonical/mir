@@ -52,17 +52,17 @@ public:
      *       they are derived from.
      */
     template<typename U>
-    class Locked
+    class LockedImpl
     {
     public:
-        Locked(Locked&& from) noexcept
+        LockedImpl(LockedImpl&& from) noexcept
             : value{from.value},
               lock{std::move(lock)}
         {
             from.value = nullptr;
         }
 
-        ~Locked() = default;
+        ~LockedImpl() = default;
 
         auto operator*() const -> U&
         {
@@ -88,7 +88,7 @@ public:
 
     private:
         friend class Synchronised;
-        Locked(std::unique_lock<std::mutex>&& lock, U& value)
+        LockedImpl(std::unique_lock<std::mutex>&& lock, U& value)
             : value{&value},
               lock{std::move(lock)}
         {
@@ -97,6 +97,16 @@ public:
         U* value;
         std::unique_lock<std::mutex> lock;
     };
+
+    /**
+     * Smart-pointer-esque accessor for the protected data.
+     *
+     * Ensures exclusive access to the referenced data.
+     *
+     * \note Instances of Locked must not outlive the Synchronised
+     *       they are derived from.
+     */
+    using Locked = LockedImpl<T>;
     /**
      * Lock the data and return an accessor.
      *
@@ -104,21 +114,32 @@ public:
      *         While code has access to a live Locked instance it is
      *         guaranteed to have unique access to the contained data.
      */
-    auto lock() -> Locked<T>
+    auto lock() -> Locked
     {
-        return Locked<T>{std::unique_lock{mutex}, value};
+        return LockedImpl<T>{std::unique_lock{mutex}, value};
     }
 
     /**
+     * Smart-pointer-esque accessor for the protected data.
+     *
+     * Provides const access to the protected data, with the guarantee
+     * that no changes to the data can be made while this handle
+     * is live.
+     *
+     * \note Instances of Locked must not outlive the Synchronised
+     *       they are derived from.
+     */
+    using LockedView = LockedImpl<T const>;
+     /**
      * Lock the data and return an accessor.
      *
      * \return A smart-pointer-esque accessor for the contained data.
      *         While code has access to a live Locked instance it is
      *         guaranteed to have unique access to the contained data.
      */
-    auto lock() const -> Locked<T const>
+    auto lock() const -> LockedView
     {
-        return Locked<T const>{std::unique_lock{mutex}, value};
+        return LockedImpl<T const>{std::unique_lock{mutex}, value};
     }
 private:
     std::mutex mutable mutex;

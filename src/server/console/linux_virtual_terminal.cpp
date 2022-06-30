@@ -65,11 +65,11 @@ public:
         }
 
     private:
-        DeviceListIterable(Synchronised<std::vector<Device*>>::Locked<std::vector<Device*>>&& devices)
+        DeviceListIterable(Synchronised<std::vector<Device*>>::Locked&& devices)
             : devices{std::move(devices)}
         {
         }
-        Synchronised<std::vector<Device*>>::Locked<std::vector<Device*>> const devices;
+        Synchronised<std::vector<Device*>>::Locked const devices;
     };
 
     DeviceListIterable as_iterable()
