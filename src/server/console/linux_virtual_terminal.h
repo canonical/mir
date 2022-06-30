@@ -19,8 +19,6 @@
 
 #include "mir/console_services.h"
 
-#include "mir/synchronised.h"
-
 #include <memory>
 #include <linux/vt.h>
 #include <termios.h>
