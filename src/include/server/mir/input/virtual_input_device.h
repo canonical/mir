@@ -19,8 +19,10 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
+#include "mir/synchronised.h"
 
 #include <functional>
+#include <optional>
 
 namespace mir
 {
@@ -35,7 +37,7 @@ public:
     void if_started_then(std::function<void(InputSink*, EventBuilder*)> const& fn);
 
 private:
-    void start(InputSink* new_sink, EventBuilder* new_builder) override;
+    void start(InputSink* sink, EventBuilder* builder) override;
     void stop() override;
     auto get_device_info() -> InputDeviceInfo override { return info; }
     auto get_pointer_settings() const -> optional_value<PointerSettings> override;
@@ -47,9 +49,13 @@ private:
 
     InputDeviceInfo const info;
 
-    std::mutex mutex;
-    InputSink* sink{nullptr};
-    EventBuilder* builder{nullptr};
+    struct State
+    {
+        InputSink* sink;
+        EventBuilder* builder;
+    };
+
+    Synchronised<std::optional<State>> state;
 };
 
 }

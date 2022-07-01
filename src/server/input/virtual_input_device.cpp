@@ -41,25 +41,21 @@ mi::VirtualInputDevice::VirtualInputDevice(std::string const& name, DeviceCapabi
 
 void mi::VirtualInputDevice::if_started_then(std::function<void(InputSink*, EventBuilder*)> const& fn)
 {
-    std::lock_guard lock{mutex};
-    if (sink && builder)
+    auto const lock = state.lock();
+    if (auto const locked = *lock)
     {
-        fn(sink, builder);
+        fn(locked->sink, locked->builder);
     }
 }
 
-void mi::VirtualInputDevice::start(InputSink* new_sink, EventBuilder* new_builder)
+void mi::VirtualInputDevice::start(InputSink* sink, EventBuilder* builder)
 {
-    std::lock_guard lock{mutex};
-    sink = new_sink;
-    builder = new_builder;
+    *state.lock() = State{sink, builder};
 }
 
 void mi::VirtualInputDevice::stop()
 {
-    std::lock_guard lock{mutex};
-    sink = nullptr;
-    builder = nullptr;
+    *state.lock() = std::nullopt;
 }
 
 auto mi::VirtualInputDevice::get_pointer_settings() const -> optional_value<PointerSettings>
