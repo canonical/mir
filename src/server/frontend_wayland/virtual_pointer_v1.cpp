@@ -16,10 +16,24 @@
 
 #include "virtual_pointer_v1.h"
 #include "wayland_wrapper.h"
+#include "wl_pointer.h"
+
+#include "mir/input/virtual_input_device.h"
+#include "mir/input/input_device_registry.h"
+#include "mir/input/device.h"
+#include "mir/input/input_sink.h"
+#include "mir/input/event_builder.h"
+#include "mir/geometry/displacement_f.h"
+#include "mir/geometry/point_f.h"
+#include "mir/log.h"
+
+#include <boost/throw_exception.hpp>
+#include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace mi = mir::input;
+namespace geom = mir::geometry;
 
 namespace mir
 {
@@ -63,6 +77,7 @@ class VirtualPointerV1
 {
 public:
     VirtualPointerV1(wl_resource* resource, std::shared_ptr<VirtualPointerV1Ctx> const& ctx);
+    ~VirtualPointerV1();
 
 private:
     void motion(uint32_t time, double dx, double dy) override;
@@ -75,6 +90,28 @@ private:
     void axis_discrete(uint32_t time, uint32_t axis, double value, int32_t discrete) override;
 
     std::shared_ptr<VirtualPointerV1Ctx> const ctx;
+    std::shared_ptr<input::VirtualInputDevice> const pointer_device;
+
+    struct Pending
+    {
+        Pending(geometry::PointF position, MirPointerButtons buttons_pressed)
+            : position{position},
+              buttons_pressed{buttons_pressed}
+        {
+        }
+
+        std::optional<mi::EventBuilder::Timestamp> timestamp;
+        geometry::PointF position; ///< Goes from 0-1 along each axis
+        MirPointerAxisSource axis_source{mir_pointer_axis_source_none};
+        geometry::DisplacementF scroll_precise;
+        geometry::Displacement scroll_discrete;
+        bool scroll_stop_x{false}, scroll_stop_y{false};
+        MirPointerButtons buttons_pressed;
+    };
+
+    MirPointerButtons buttons_pressed{0};
+    geometry::PointF position;
+    Pending pending{position, buttons_pressed};
 };
 }
 }
@@ -132,21 +169,26 @@ mf::VirtualPointerV1::VirtualPointerV1(
     wl_resource* resource,
     std::shared_ptr<VirtualPointerV1Ctx> const& ctx)
     : wayland::VirtualPointerV1{resource, Version<2>()},
-      ctx{ctx}
+      ctx{ctx},
+      pointer_device{std::make_shared<mi::VirtualInputDevice>("virtual-pointer", mi::DeviceCapability::pointer)}
 {
+    ctx->device_registry->add_device(pointer_device);
+}
+
+mf::VirtualPointerV1::~VirtualPointerV1()
+{
+    ctx->device_registry->remove_device(pointer_device);
 }
 
 void mf::VirtualPointerV1::motion(uint32_t time, double dx, double dy)
 {
-    (void)time;
-    (void)dx;
-    (void)dy;
-    // TODO
+    pending.timestamp = std::chrono::milliseconds{time};
+    pending.position += geom::DisplacementF{dx, dy};
 }
 
 void mf::VirtualPointerV1::motion_absolute(uint32_t time, uint32_t x, uint32_t y, uint32_t x_extent, uint32_t y_extent)
 {
-    (void)time;
+    pending.timestamp = std::chrono::milliseconds{time};
     (void)x;
     (void)y;
     (void)x_extent;
@@ -156,44 +198,173 @@ void mf::VirtualPointerV1::motion_absolute(uint32_t time, uint32_t x, uint32_t y
 
 void mf::VirtualPointerV1::button(uint32_t time, uint32_t button, uint32_t state)
 {
-    (void)time;
-    (void)button;
-    (void)state;
-    // TODO
+    pending.timestamp = std::chrono::milliseconds{time};
+    if (auto const mir_button = WlPointer::linux_button_to_mir_button(button))
+    {
+        switch (state)
+        {
+        case mw::Pointer::ButtonState::pressed:
+            pending.buttons_pressed |= mir_button.value();
+            break;
+
+        case mw::Pointer::ButtonState::released:
+            pending.buttons_pressed &= ~mir_button.value();
+            break;
+
+        default:
+            BOOST_THROW_EXCEPTION(
+                mw::ProtocolError(resource, mw::generic_error_code, "Invalid button state %d", state));
+        }
+    }
+    else
+    {
+        // Since the set of allowed buttons is not clearly defined, we warn instead of throwing a protocol error
+        log_warning("%s.button given unknown button %d", interface_name, button);
+    }
 }
 
 void mf::VirtualPointerV1::axis(uint32_t time, uint32_t axis, double value)
 {
-    (void)time;
-    (void)axis;
-    (void)value;
-    // TODO
+    pending.timestamp = std::chrono::milliseconds{time};
+    switch (axis)
+    {
+    case mw::Pointer::Axis::horizontal_scroll:
+        pending.scroll_precise.dx += geom::DeltaXF{value};
+        break;
+
+    case mw::Pointer::Axis::vertical_scroll:
+        pending.scroll_precise.dy += geom::DeltaYF{value};
+        break;
+
+    default:
+        BOOST_THROW_EXCEPTION(
+            mw::ProtocolError(resource, Error::invalid_axis, "Unknown axis %d", axis));
+    }
 }
 
 void mf::VirtualPointerV1::frame()
 {
-    // TODO
+    pointer_device->if_started_then([&](input::InputSink* sink, input::EventBuilder* builder)
+        {
+            if (position != pending.position)
+            {
+                auto const delta = pending.position - position;
+                sink->handle_input(builder->pointer_event(
+                    pending.timestamp,
+                    mir_pointer_action_motion,
+                    buttons_pressed,
+                    pending.position.x.as_value(), pending.position.y.as_value(),
+                    0, 0,
+                    delta.dx.as_value(), delta.dy.as_value()));
+            }
+
+            if (pending.scroll_discrete != geom::Displacement{})
+            {
+                sink->handle_input(builder->pointer_axis_discrete_scroll_event(
+                    pending.axis_source,
+                    pending.timestamp,
+                    mir_pointer_action_motion,
+                    buttons_pressed,
+                    pending.scroll_precise.dx.as_value(), pending.scroll_precise.dy.as_value(),
+                    pending.scroll_discrete.dx.as_value(), pending.scroll_discrete.dy.as_value()));
+            }
+            else if (pending.scroll_precise != geom::DisplacementF{})
+            {
+                sink->handle_input(builder->pointer_axis_event(
+                    pending.axis_source,
+                    pending.timestamp,
+                    mir_pointer_action_motion,
+                    buttons_pressed,
+                    pending.position.x.as_value(), pending.position.y.as_value(),
+                    pending.scroll_precise.dx.as_value(), pending.scroll_precise.dy.as_value(),
+                    0, 0));
+            }
+
+            if (pending.scroll_stop_x || pending.scroll_stop_y)
+            {
+                sink->handle_input(builder->pointer_axis_with_stop_event(
+                    pending.axis_source,
+                    pending.timestamp,
+                    mir_pointer_action_motion,
+                    buttons_pressed,
+                    pending.position.x.as_value(), pending.position.y.as_value(),
+                    0, 0,
+                    pending.scroll_stop_x, pending.scroll_stop_y,
+                    0, 0));
+            }
+
+            auto const pressed_buttons = pending.buttons_pressed & ~buttons_pressed;
+            auto const released_buttons = ~pending.buttons_pressed & buttons_pressed;
+
+            if (released_buttons)
+            {
+                auto const buttons_after_release = pending.buttons_pressed & buttons_pressed;
+                sink->handle_input(builder->pointer_event(
+                    pending.timestamp,
+                    mir_pointer_action_button_up,
+                    buttons_after_release,
+                    0, 0, 0, 0));
+            }
+
+            if (pressed_buttons)
+            {
+                sink->handle_input(builder->pointer_event(
+                    pending.timestamp,
+                    mir_pointer_action_button_down,
+                    pending.buttons_pressed,
+                    0, 0, 0, 0));
+            }
+        });
+    buttons_pressed = pending.buttons_pressed;
+    position = pending.position;
+    pending = Pending{position, buttons_pressed};
 }
 
 void mf::VirtualPointerV1::axis_source(uint32_t axis_source)
 {
-    (void)axis_source;
-    // TODO
+    switch (axis_source)
+    {
+    case mw::Pointer::AxisSource::wheel: pending.axis_source = mir_pointer_axis_source_wheel; break;
+    case mw::Pointer::AxisSource::finger: pending.axis_source = mir_pointer_axis_source_finger; break;
+    case mw::Pointer::AxisSource::continuous: pending.axis_source = mir_pointer_axis_source_continuous; break;
+    case mw::Pointer::AxisSource::wheel_tilt: pending.axis_source = mir_pointer_axis_source_wheel_tilt; break;
+    default:
+        BOOST_THROW_EXCEPTION(
+            mw::ProtocolError(resource, Error::invalid_axis_source, "Unknown axis source %d", axis_source));
+    }
 }
 
 void mf::VirtualPointerV1::axis_stop(uint32_t time, uint32_t axis)
 {
-    (void)time;
-    (void)axis;
-    // TODO
+    pending.timestamp = std::chrono::milliseconds{time};
+    switch (axis)
+    {
+    case mw::Pointer::Axis::horizontal_scroll: pending.scroll_stop_x = true; break;
+    case mw::Pointer::Axis::vertical_scroll: pending.scroll_stop_y = true; break;
+    default:
+        BOOST_THROW_EXCEPTION(
+            mw::ProtocolError(resource, Error::invalid_axis, "Unknown axis %d", axis));
+    }
 }
 
 void mf::VirtualPointerV1::axis_discrete(uint32_t time, uint32_t axis, double value, int32_t discrete)
 {
-    (void)time;
-    (void)axis;
-    (void)value;
-    (void)discrete;
-    // TODO
+    pending.timestamp = std::chrono::milliseconds{time};
+    switch (axis)
+    {
+    case mw::Pointer::Axis::horizontal_scroll:
+        pending.scroll_discrete.dx += geom::DeltaX{discrete};
+        pending.scroll_precise.dx += geom::DeltaXF{value};
+        break;
+
+    case mw::Pointer::Axis::vertical_scroll:
+        pending.scroll_discrete.dy += geom::DeltaY{discrete};
+        pending.scroll_precise.dy += geom::DeltaYF{value};
+        break;
+
+    default:
+        BOOST_THROW_EXCEPTION(
+            mw::ProtocolError(resource, Error::invalid_axis, "Unknown axis %d", axis));
+    }
 }
 
