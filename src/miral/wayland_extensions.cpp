@@ -462,7 +462,7 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
 
     server.add_configuration_option(
         mo::add_wayland_extensions_opt,
-        ("Wayland extensions to enable, in addition to default extensions. Use `all` to enable all supported extensions."),
+        ("Wayland extensions to enable in addition to default extensions. Use `all` to enable all supported extensions."),
         mir::OptionType::string);
 
     server.add_configuration_option(
