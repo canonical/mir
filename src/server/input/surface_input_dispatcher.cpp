@@ -22,6 +22,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/events/event_builders.h"
+#include "mir/events/pointer_event.h"
 #include "mir_toolkit/mir_cookie.h"
 
 #include <boost/throw_exception.hpp>
@@ -443,20 +444,11 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
 {
     auto surface_displacement = surface->input_bounds().top_left;
     auto const* input_ev = mir_pointer_event_input_event(pev);
-
-    auto event = mev::make_pointer_event(
-        mir_input_event_get_device_id(input_ev),
-        std::chrono::nanoseconds(mir_input_event_get_event_time(input_ev)),
-        std::vector<uint8_t>{},
-        mir_pointer_event_modifiers(pev),
-        action, mir_pointer_event_buttons(pev),
-        mir_pointer_event_axis_value(pev, mir_pointer_axis_x) - surface_displacement.x.as_int(),
-        mir_pointer_event_axis_value(pev, mir_pointer_axis_y) - surface_displacement.y.as_int(),
-        mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll),
-        mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll),
-        mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
-        mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
-
+    auto event = mev::clone_event(*mir_input_event_get_event(input_ev));
+    auto const pointer_ev = static_cast<MirPointerEvent*>(event.get());
+    pointer_ev->set_action(action);
+    pointer_ev->set_x(pointer_ev->x() - surface_displacement.x.as_value());
+    pointer_ev->set_y(pointer_ev->y() - surface_displacement.y.as_value());
     if (!drag_and_drop_handle.empty())
         mev::set_drag_and_drop_handle(*event, drag_and_drop_handle);
     surface->consume(std::move(event));
