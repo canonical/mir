@@ -149,8 +149,6 @@ public:
 
     bool handle(MirEvent const& event) override;
 
-    void update_focused_surface_confined_region();
-
     void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) override;
     void clear_drag_and_drop_handle() override;
 
@@ -163,6 +161,8 @@ protected:
     std::shared_ptr<input::Seat> const seat;
 
 private:
+    class SurfaceConfinementUpdater;
+
     std::shared_ptr<ShellReport> const report;
 
     std::mutex mutable focus_mutex;
@@ -171,7 +171,7 @@ private:
     std::vector<std::weak_ptr<scene::Surface>> notified_active_surfaces;
     std::weak_ptr<scene::Surface> last_requested_focus_surface;
     std::weak_ptr<scene::Surface> notified_keyboard_focus_surface;
-    std::shared_ptr<scene::SurfaceObserver> const focus_surface_observer;
+    std::shared_ptr<SurfaceConfinementUpdater> const surface_confinement_updater;
 
     void notify_active_surfaces(
         std::unique_lock<std::mutex> const&,

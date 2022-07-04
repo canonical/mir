@@ -42,33 +42,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-
-struct UpdateConfinementOnSurfaceChanges : ms::NullSurfaceObserver
-{
-    UpdateConfinementOnSurfaceChanges(msh::AbstractShell* shell) :
-        shell(shell)
-    {
-    }
-
-    void content_resized_to(ms::Surface const*, geom::Size const& /*content_size*/) override
-    {
-        update_confinement_region();
-    }
-
-    void moved_to(ms::Surface const*, geom::Point const& /*top_left*/) override
-    {
-        update_confinement_region();
-    }
-
-private:
-    void update_confinement_region()
-    {
-        shell->update_focused_surface_confined_region();
-    }
-
-    msh::AbstractShell* shell;
-};
-
 auto get_non_popup_parent(std::shared_ptr<ms::Surface> surface) -> std::shared_ptr<ms::Surface>
 {
     while (surface)
@@ -97,6 +70,55 @@ auto get_ancestry(std::shared_ptr<ms::Surface> surface) -> std::vector<std::shar
 }
 }
 
+class msh::AbstractShell::SurfaceConfinementUpdater : public scene::NullSurfaceObserver
+{
+public:
+    SurfaceConfinementUpdater(input::Seat* const seat)
+        : seat{seat}
+    {
+    }
+
+    void set_focus_surface(std::shared_ptr<scene::Surface> const& surface)
+    {
+        std::lock_guard lock{mutex};
+        focus_surface = surface;
+    }
+
+private:
+    void content_resized_to(scene::Surface const*, geom::Size const& /*content_size*/) override
+    {
+        update_confinement_region();
+    }
+
+    void moved_to(scene::Surface const*, geom::Point const& /*top_left*/) override
+    {
+        update_confinement_region();
+    }
+
+    void update_confinement_region()
+    {
+        std::lock_guard lock{mutex};
+
+        if (auto const current_focus = focus_surface.lock())
+        {
+            switch (current_focus->confine_pointer_state())
+            {
+            case mir_pointer_confined_oneshot:
+            case mir_pointer_confined_persistent:
+                seat->set_confinement_regions({current_focus->input_bounds()});
+                break;
+
+            default:
+                break;
+            }
+        }
+    }
+
+    input::Seat* const seat; ///< Shared ownership is held by the shell that owns us
+    std::mutex mutex;
+    std::weak_ptr<scene::Surface> focus_surface;
+};
+
 msh::AbstractShell::AbstractShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
     std::shared_ptr<msh::SurfaceStack> const& surface_stack,
@@ -113,7 +135,7 @@ msh::AbstractShell::AbstractShell(
     window_manager(wm_builder(this)),
     seat(seat),
     report(report),
-    focus_surface_observer(std::make_shared<UpdateConfinementOnSurfaceChanges>(this)),
+    surface_confinement_updater(std::make_shared<SurfaceConfinementUpdater>(seat.get())),
     decoration_manager(decoration_manager)
 {
 }
@@ -121,22 +143,9 @@ msh::AbstractShell::AbstractShell(
 msh::AbstractShell::~AbstractShell() noexcept
 {
     decoration_manager->undecorate_all();
-}
-
-void msh::AbstractShell::update_focused_surface_confined_region()
-{
-    if (auto const current_focus = focus_surface.lock())
+    if (auto const current_keyboard_focus = notified_keyboard_focus_surface.lock())
     {
-        switch (current_focus->confine_pointer_state())
-        {
-        case mir_pointer_confined_oneshot:
-        case mir_pointer_confined_persistent:
-            seat->set_confinement_regions({current_focus->input_bounds()});
-            break;
-
-        default:
-            break;
-        }
+        current_keyboard_focus->remove_observer(surface_confinement_updater);
     }
 }
 
@@ -495,7 +504,7 @@ void msh::AbstractShell::set_keyboard_focus_surface(
 
     if (current_keyboard_focus)
     {
-        current_keyboard_focus->remove_observer(focus_surface_observer);
+        current_keyboard_focus->remove_observer(surface_confinement_updater);
 
         switch (current_keyboard_focus->confine_pointer_state())
         {
@@ -515,7 +524,8 @@ void msh::AbstractShell::set_keyboard_focus_surface(
 
         input_targeter->set_focus(new_keyboard_focus_surface);
         new_keyboard_focus_surface->consume(seat->create_device_state());
-        new_keyboard_focus_surface->add_observer(focus_surface_observer);
+        surface_confinement_updater->set_focus_surface(new_keyboard_focus_surface);
+        new_keyboard_focus_surface->add_observer(surface_confinement_updater);
     }
     else
     {
@@ -605,7 +615,7 @@ bool msh::AbstractShell::handle(MirEvent const& event)
 
     case mir_input_event_type_keyboard_resync:
         return false;
-    
+
     case mir_input_event_types:
         abort();
         return false;
