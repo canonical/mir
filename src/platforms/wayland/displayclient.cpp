@@ -824,6 +824,9 @@ void mgw::DisplayClient::touch_orientation(
 // if the new capabilities do not contain the relevant capability.
 void mgw::DisplayClient::seat_capabilities(wl_seat* seat, uint32_t capabilities)
 {
+// If building against newer Wayland protocol definitions we may miss trailing fields
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
     if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
         static wl_pointer_listener pointer_listener =
             {
@@ -876,6 +879,7 @@ void mgw::DisplayClient::seat_capabilities(wl_seat* seat, uint32_t capabilities)
 
         wl_touch_add_listener(wl_seat_get_touch(seat), &touch_listener, this);
     }
+#pragma GCC diagnostic pop
 }
 
 void mgw::DisplayClient::seat_name(wl_seat* /*seat*/, const char */*name*/)
