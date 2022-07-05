@@ -58,6 +58,7 @@ protected:
 class WlPointer : public wayland::Pointer, private CommitHandler
 {
 public:
+    static auto linux_button_to_mir_button(int linux_button) -> std::optional<MirPointerButtons>;
 
     WlPointer(wl_resource* new_resource);
 
