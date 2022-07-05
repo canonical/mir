@@ -497,7 +497,6 @@ MIR_COMMON_2.8 {
     typeinfo?for?mir::ThreadPoolExecutor;
     vtable?for?mir::ThreadPoolExecutor;
     mir::thread_pool_executor;
-    mir::immediate_executor;
   };
   local: *;
 };
@@ -513,5 +512,6 @@ MIR_COMMON_2.9 {
     typeinfo?for?mir::logging::MultiLogger;
     vtable?for?mir::logging::FileLogger;
     vtable?for?mir::logging::MultiLogger;
+    mir::immediate_executor;
   };
 } MIR_COMMON_2.8;
