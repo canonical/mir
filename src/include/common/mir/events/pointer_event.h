@@ -18,6 +18,8 @@
 #define MIR_COMMON_POINTER_EVENT_H_
 
 #include "mir/events/input_event.h"
+#include "mir/geometry/displacement_f.h"
+#include "mir/geometry/point_f.h"
 
 #include <optional>
 
@@ -87,21 +89,16 @@ struct MirPointerEvent : MirInputEvent
     MirBlob* dnd_handle() const;
 
 private:
-    MirPointerAxisSource axis_source_ = mir_pointer_axis_source_none;
-    float x_ = 0.0;
-    float y_ = 0.0;
-    bool has_absolute_position_ = false;
-    float dx_ = 0.0;
-    float dy_ = 0.0;
-    float vscroll_ = 0.0;
-    float hscroll_ = 0.0;
-    bool hscroll_stop_ = false;
-    bool vscroll_stop_ = false;
-    float hscroll_discrete_ = 0.0;
-    float vscroll_discrete_ = 0.0;
+    std::optional<mir::geometry::PointF> position_;
+    mir::geometry::DisplacementF motion_;
+    MirPointerAxisSource axis_source_;
+    mir::geometry::DisplacementF scroll_;
+    mir::geometry::Displacement scroll_discrete_;
+    mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> scroll_stop_;
 
     MirPointerAction action_ = {};
-    MirPointerButtons buttons_= {};
+    MirPointerButtons buttons_ = {};
+
     std::optional<std::vector<uint8_t>> dnd_handle_;
 };
 
