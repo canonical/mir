@@ -130,7 +130,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         }),
     make_extension_builder<mw::VirtualPointerManagerV1>([](auto const& ctx)
         {
-            return mf::create_virtual_pointer_manager_v1(ctx.display, ctx.input_device_registry);
+            return mf::create_virtual_pointer_manager_v1(ctx.display, ctx.output_manager, ctx.input_device_registry);
         }),
     make_extension_builder<mw::TextInputManagerV1>([](auto const& ctx)
         {

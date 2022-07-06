@@ -29,8 +29,11 @@ class InputDeviceRegistry;
 }
 namespace frontend
 {
+class OutputManager;
+
 auto create_virtual_pointer_manager_v1(
     wl_display* display,
+    OutputManager* output_manager,
     std::shared_ptr<input::InputDeviceRegistry> const& device_registry)
 -> std::shared_ptr<wayland::VirtualPointerManagerV1::Global>;
 }

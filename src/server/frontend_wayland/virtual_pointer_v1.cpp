@@ -17,6 +17,7 @@
 #include "virtual_pointer_v1.h"
 #include "wayland_wrapper.h"
 #include "wl_pointer.h"
+#include "output_manager.h"
 
 #include "mir/input/virtual_input_device.h"
 #include "mir/input/input_device_registry.h"
@@ -25,6 +26,7 @@
 #include "mir/input/event_builder.h"
 #include "mir/geometry/displacement_f.h"
 #include "mir/geometry/point_f.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
@@ -33,6 +35,7 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace mi = mir::input;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 namespace mir
@@ -41,6 +44,7 @@ namespace frontend
 {
 struct VirtualPointerV1Ctx
 {
+    OutputManager* const output_manager;
     std::shared_ptr<mi::InputDeviceRegistry> const device_registry;
 };
 
@@ -63,11 +67,11 @@ public:
     VirtualPointerManagerV1(wl_resource* resource, std::shared_ptr<VirtualPointerV1Ctx> const& ctx);
 
 private:
-    void create_virtual_pointer(std::optional<struct wl_resource*> const& seat, struct wl_resource* id) override;
+    void create_virtual_pointer(std::optional<wl_resource*> const& seat, wl_resource* id) override;
     void create_virtual_pointer_with_output(
-        std::optional<struct wl_resource*> const& seat,
-        std::optional<struct wl_resource*> const& output,
-        struct wl_resource* id) override;
+        std::optional<wl_resource*> const& seat,
+        std::optional<wl_resource*> const& output,
+        wl_resource* id) override;
 
     std::shared_ptr<VirtualPointerV1Ctx> const ctx;
 };
@@ -76,7 +80,10 @@ class VirtualPointerV1
     : public wayland::VirtualPointerV1
 {
 public:
-    VirtualPointerV1(wl_resource* resource, std::shared_ptr<VirtualPointerV1Ctx> const& ctx);
+    VirtualPointerV1(
+        wl_resource* resource,
+        std::optional<wl_resource*> output,
+        std::shared_ptr<VirtualPointerV1Ctx> const& ctx);
     ~VirtualPointerV1();
 
 private:
@@ -89,8 +96,11 @@ private:
     void axis_stop(uint32_t time, uint32_t axis) override;
     void axis_discrete(uint32_t time, uint32_t axis, double value, int32_t discrete) override;
 
+    void update_absolute_motion_area();
+
     std::shared_ptr<VirtualPointerV1Ctx> const ctx;
     std::shared_ptr<input::VirtualInputDevice> const pointer_device;
+    mw::Weak<OutputGlobal> const output;
 
     struct Pending
     {
@@ -101,7 +111,8 @@ private:
         }
 
         std::optional<mi::EventBuilder::Timestamp> timestamp;
-        geometry::PointF position; ///< Goes from 0-1 along each axis
+        bool has_absolute_motion{false};
+        geometry::PointF position;
         MirPointerAxisSource axis_source{mir_pointer_axis_source_none};
         geometry::DisplacementF scroll_precise;
         geometry::Displacement scroll_discrete;
@@ -109,6 +120,7 @@ private:
         MirPointerButtons buttons_pressed;
     };
 
+    geometry::Rectangle absolute_motion_area;
     MirPointerButtons buttons_pressed{0};
     geometry::PointF position;
     Pending pending{position, buttons_pressed};
@@ -118,10 +130,11 @@ private:
 
 auto mf::create_virtual_pointer_manager_v1(
     wl_display* display,
+    OutputManager* output_manager,
     std::shared_ptr<mi::InputDeviceRegistry> const& device_registry)
 -> std::shared_ptr<mw::VirtualPointerManagerV1::Global>
 {
-    auto ctx = std::shared_ptr<VirtualPointerV1Ctx>{new VirtualPointerV1Ctx{device_registry}};
+    auto ctx = std::shared_ptr<VirtualPointerV1Ctx>{new VirtualPointerV1Ctx{output_manager, device_registry}};
     return std::make_shared<VirtualPointerManagerV1Global>(display, std::move(ctx));
 }
 
@@ -147,31 +160,36 @@ mf::VirtualPointerManagerV1::VirtualPointerManagerV1(
 }
 
 void mf::VirtualPointerManagerV1::create_virtual_pointer(
-    std::optional<struct wl_resource*> const& seat,
-    struct wl_resource* id)
+    std::optional<wl_resource*> const& seat,
+    wl_resource* id)
 {
     (void)seat;
-    new VirtualPointerV1{id, ctx};
+    new VirtualPointerV1{id, std::nullopt, ctx};
 }
 
 void mf::VirtualPointerManagerV1::create_virtual_pointer_with_output(
-    std::optional<struct wl_resource*> const& seat,
-    std::optional<struct wl_resource*> const& output,
-    struct wl_resource* id)
+    std::optional<wl_resource*> const& seat,
+    std::optional<wl_resource*> const& output,
+    wl_resource* id)
 {
     (void)seat;
     (void)output;
-    new VirtualPointerV1{id, ctx};
+    new VirtualPointerV1{id, output, ctx};
 }
 
 
 mf::VirtualPointerV1::VirtualPointerV1(
     wl_resource* resource,
+    std::optional<wl_resource*> output,
     std::shared_ptr<VirtualPointerV1Ctx> const& ctx)
     : wayland::VirtualPointerV1{resource, Version<2>()},
       ctx{ctx},
-      pointer_device{std::make_shared<mi::VirtualInputDevice>("virtual-pointer", mi::DeviceCapability::pointer)}
+      pointer_device{std::make_shared<mi::VirtualInputDevice>("virtual-pointer", mi::DeviceCapability::pointer)},
+      output{ctx->output_manager->output_for(
+          ctx->output_manager->output_id_for(output).value_or(
+              mg::DisplayConfigurationOutputId{})).value_or(nullptr)}
 {
+    update_absolute_motion_area();
     ctx->device_registry->add_device(pointer_device);
 }
 
@@ -184,16 +202,16 @@ void mf::VirtualPointerV1::motion(uint32_t time, double dx, double dy)
 {
     pending.timestamp = std::chrono::milliseconds{time};
     pending.position += geom::DisplacementF{dx, dy};
+    // Leave has_absolute_motion true if we previously got a .motion_absolute request in this frame
 }
 
 void mf::VirtualPointerV1::motion_absolute(uint32_t time, uint32_t x, uint32_t y, uint32_t x_extent, uint32_t y_extent)
 {
     pending.timestamp = std::chrono::milliseconds{time};
-    (void)x;
-    (void)y;
-    (void)x_extent;
-    (void)y_extent;
-    // TODO
+    auto const local_x = geom::DeltaXF{x} * absolute_motion_area.size.width.as_value() / x_extent;
+    auto const local_y = geom::DeltaYF{y} * absolute_motion_area.size.height.as_value() / y_extent;
+    pending.position = geom::PointF{absolute_motion_area.top_left} + local_x + local_y;
+    pending.has_absolute_motion = true;
 }
 
 void mf::VirtualPointerV1::button(uint32_t time, uint32_t button, uint32_t state)
@@ -368,3 +386,29 @@ void mf::VirtualPointerV1::axis_discrete(uint32_t time, uint32_t axis, double va
     }
 }
 
+void mf::VirtualPointerV1::update_absolute_motion_area()
+{
+    if (output)
+    {
+        absolute_motion_area = output.value().current_config().extents();
+    }
+    else
+    {
+        // Set absolute_motion_area to the bounding box of all outputs
+        bool first_output = true;
+        ctx->output_manager->current_config().for_each_output([&](mg::DisplayConfigurationOutput const& output)
+            {
+                if (first_output)
+                {
+                    absolute_motion_area = output.extents();
+                    first_output = false;
+                }
+                else
+                {
+                    absolute_motion_area = geom::Rectangles{
+                        absolute_motion_area,
+                        output.extents()}.bounding_rectangle();
+                }
+            });
+    }
+}
