@@ -25,7 +25,7 @@
 #include "null_screen_shooter.h"
 #include "mir/main_loop.h"
 #include "mir/graphics/display.h"
-#include "mir/thread_pool_executor.h"
+#include "mir/executor.h"
 #include "mir/renderer/gl/basic_buffer_render_target.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/renderer/renderer.h"

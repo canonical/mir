@@ -26,18 +26,12 @@ namespace mir
 {
 namespace scene
 {
-class ClipboardObserverMultiplexer: mir::Executor, public ObserverMultiplexer<ClipboardObserver>
+class ClipboardObserverMultiplexer: public ObserverMultiplexer<ClipboardObserver>
 {
 public:
     ClipboardObserverMultiplexer()
-        : ObserverMultiplexer{static_cast<Executor&>(*this)}
+        : ObserverMultiplexer{immediate_executor}
     {
-    }
-
-    // By default, dispatch events immediately. The user can override this behavior by setting their own executor.
-    void spawn(std::function<void()>&& work) override
-    {
-        work();
     }
 
     void paste_source_set(std::shared_ptr<ClipboardSource> const& source) override

@@ -39,15 +39,11 @@ namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
 
-struct ms::SessionManager::SessionObservers : mir::Executor, mir::ObserverMultiplexer<ms::SessionListener>
+struct ms::SessionManager::SessionObservers : mir::ObserverMultiplexer<ms::SessionListener>
 {
     SessionObservers()
-        : ObserverMultiplexer<ms::SessionListener>(static_cast<Executor&>(*this))
+        : ObserverMultiplexer(immediate_executor)
     {
-    }
-    void spawn(std::function<void()>&& work) override
-    {
-        work();
     }
 
     void starting(std::shared_ptr<Session> const& session) override

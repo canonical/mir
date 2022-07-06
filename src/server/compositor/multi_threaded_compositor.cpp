@@ -29,7 +29,7 @@
 #include "mir/raii.h"
 #include "mir/unwind_helpers.h"
 #include "mir/thread_name.h"
-#include "mir/thread_pool_executor.h"
+#include "mir/executor.h"
 
 #include <thread>
 #include <chrono>

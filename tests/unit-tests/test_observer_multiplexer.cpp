@@ -157,15 +157,6 @@ private:
     std::queue<std::function<void()>> work_queue;
 };
 
-class ImmediateExecutor : public mir::Executor
-{
-public:
-    void spawn(std::function<void()>&& work) override
-    {
-        work();
-    }
-};
-
 class TestObserverMultiplexer : public mir::ObserverMultiplexer<TestObserver>
 {
 public:
@@ -278,8 +269,7 @@ TEST(ObserverMultiplexer, can_remove_observer_from_callback_with_immediate_execu
     auto observer_one = std::make_shared<NiceMock<MockObserver>>();
     auto observer_two = std::make_shared<NiceMock<MockObserver>>();
 
-    ImmediateExecutor executor;
-    TestObserverMultiplexer multiplexer{executor};
+    TestObserverMultiplexer multiplexer{mir::immediate_executor};
 
     EXPECT_CALL(*observer_one, observation_made(StrEq(value)))
         .WillOnce(Invoke(
@@ -305,8 +295,7 @@ TEST(ObserverMultiplexer, observer_not_called_after_unregistered_from_other_obse
     auto observer_one = std::make_shared<NiceMock<MockObserver>>();
     auto observer_two = std::make_shared<NiceMock<MockObserver>>();
 
-    ImmediateExecutor executor;
-    TestObserverMultiplexer multiplexer{executor};
+    TestObserverMultiplexer multiplexer{mir::immediate_executor};
 
     EXPECT_CALL(*observer_one, observation_made(StrEq(value)))
         .WillOnce(Invoke(
