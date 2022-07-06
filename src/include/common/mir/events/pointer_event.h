@@ -30,16 +30,16 @@ struct MirPointerEvent : MirInputEvent
     MirPointerEvent();
     MirPointerEvent(MirInputDeviceId dev,
                     std::chrono::nanoseconds et,
-                    MirInputEventModifiers mods,
                     std::vector<uint8_t> const& cookie,
+                    MirInputEventModifiers mods,
                     MirPointerAction action,
                     MirPointerButtons buttons,
-                    float x,
-                    float y,
-                    float dx,
-                    float dy,
-                    float vscroll,
-                    float hscroll);
+                    std::optional<mir::geometry::PointF> position,
+                    mir::geometry::DisplacementF motion,
+                    MirPointerAxisSource axis_source,
+                    mir::geometry::DisplacementF scroll,
+                    mir::geometry::Displacement scroll_discrete,
+                    mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> scroll_stop);
 
     auto clone() const -> MirPointerEvent* override;
 

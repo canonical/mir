@@ -254,8 +254,14 @@ mir::EventUPtr mev::make_pointer_event(
     float relative_x_value,
     float relative_y_value)
 {
-    auto e = new_event<MirPointerEvent>(device_id, timestamp, modifiers, cookie, action, buttons_pressed, x_axis_value,
-                                        y_axis_value, relative_x_value, relative_y_value, vscroll_value, hscroll_value);
+    auto e = new_event<MirPointerEvent>(
+        device_id, timestamp, cookie, modifiers, action, buttons_pressed,
+        geom::PointF{x_axis_value, y_axis_value},
+        geom::DisplacementF{relative_x_value, relative_y_value},
+        mir_pointer_axis_source_none,
+        geom::DisplacementF{vscroll_value, hscroll_value},
+        geom::Displacement{},
+        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{});
     return make_uptr_event(e);
 }
 
@@ -275,10 +281,13 @@ mir::EventUPtr mir::events::make_pointer_axis_event(
     float relative_y_value)
 {
     auto const e = new_event<MirPointerEvent>(
-        device_id, timestamp, modifiers, cookie, action, buttons_pressed, x_axis_value,
-        y_axis_value, relative_x_value, relative_y_value, vscroll_value, hscroll_value);
-    e->set_axis_source(axis_source);
-
+        device_id, timestamp, cookie, modifiers, action, buttons_pressed,
+        geom::PointF{x_axis_value, y_axis_value},
+        geom::DisplacementF{relative_x_value, relative_y_value},
+        axis_source,
+        geom::DisplacementF{vscroll_value, hscroll_value},
+        geom::Displacement{},
+        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{});
     return make_uptr_event(e);
 }
 
@@ -300,12 +309,13 @@ mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
     float relative_y_value)
 {
     auto const e = new_event<MirPointerEvent>(
-        device_id, timestamp, modifiers, cookie, action, buttons_pressed, x_axis_value,
-        y_axis_value, relative_x_value, relative_y_value, vscroll_value, hscroll_value);
-    e->set_axis_source(axis_source);
-    e->set_hscroll_stop(hscroll_stop);
-    e->set_vscroll_stop(vscroll_stop);
-
+        device_id, timestamp, cookie, modifiers, action, buttons_pressed,
+        geom::PointF{x_axis_value, y_axis_value},
+        geom::DisplacementF{relative_x_value, relative_y_value},
+        axis_source,
+        geom::DisplacementF{vscroll_value, hscroll_value},
+        geom::Displacement{},
+        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{hscroll_stop, vscroll_stop});
     return make_uptr_event(e);
 }
 
@@ -323,11 +333,13 @@ mir::EventUPtr mir::events::make_pointer_axis_discrete_scroll_event(
     float vscroll_discrete)
 {
     auto const e = new_event<MirPointerEvent>(
-        device_id, timestamp, modifiers, mac, action, buttons_pressed, 0, 0, 0, 0, vscroll_value, hscroll_value);
-    e->set_axis_source(axis_source);
-    e->set_hscroll_discrete(hscroll_discrete);
-    e->set_vscroll_discrete(vscroll_discrete);
-
+        device_id, timestamp, mac, modifiers, action, buttons_pressed,
+        std::nullopt,
+        geom::DisplacementF{},
+        axis_source,
+        geom::DisplacementF{vscroll_value, hscroll_value},
+        geom::Displacement{hscroll_discrete, vscroll_discrete},
+        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{});
     return make_uptr_event(e);
 }
 
