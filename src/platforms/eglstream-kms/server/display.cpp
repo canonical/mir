@@ -26,7 +26,6 @@
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/gl_config.h"
-#include "mir/graphics/virtual_output.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/transformation.h"
@@ -430,11 +429,6 @@ void mge::Display::resume()
 std::shared_ptr<mg::Cursor> mge::Display::create_hardware_cursor()
 {
     // TODO: Find the cursor plane, and use it.
-    return nullptr;
-}
-
-std::unique_ptr<mg::VirtualOutput> mge::Display::create_virtual_output(int /*width*/, int /*height*/)
-{
     return nullptr;
 }
 

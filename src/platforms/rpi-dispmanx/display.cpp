@@ -30,7 +30,6 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/gl_config.h"
-#include "mir/graphics/virtual_output.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/signal_blocker.h"
 
@@ -269,13 +268,6 @@ auto mg::rpi::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
     // an automatically-enabled optimisation when there's a HW plane that can contain it?
 
     return {};
-}
-
-auto mg::rpi::Display::create_virtual_output(int /*width*/, int /*height*/) -> std::unique_ptr<VirtualOutput>
-{
-    // TODO: Is this an interface we need
-    // TODO: Implement this; dispmanx is perfectly happy to do offscreen rendering
-    return {nullptr};
 }
 
 auto mg::rpi::Display::last_frame_on(unsigned /*output_id*/) const -> Frame
