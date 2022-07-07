@@ -26,6 +26,8 @@
 #include "mir/input/buffer_keymap.h"
 #include "mir/log.h"
 
+#include <cstring>
+
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace mi = mir::input;
