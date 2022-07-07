@@ -24,6 +24,7 @@
 #include "mir/input/device.h"
 #include "mir/input/input_sink.h"
 #include "mir/input/event_builder.h"
+#include "mir/events/pointer_event.h"
 #include "mir/geometry/displacement_f.h"
 #include "mir/geometry/point_f.h"
 #include "mir/geometry/rectangles.h"
@@ -267,13 +268,16 @@ void mf::VirtualPointerV1::frame()
             if (position != pending.position)
             {
                 auto const delta = pending.position - position;
-                sink->handle_input(builder->pointer_event(
+                auto event = builder->pointer_event(
                     pending.timestamp,
                     mir_pointer_action_motion,
                     buttons_pressed,
                     pending.position.x.as_value(), pending.position.y.as_value(),
                     0, 0,
-                    delta.dx.as_value(), delta.dy.as_value()));
+                    delta.dx.as_value(), delta.dy.as_value());
+                auto const pointer_event = static_cast<MirPointerEvent*>(event.get());
+                pointer_event->set_has_absolute_position(pending.has_absolute_motion);
+                sink->handle_input(std::move(event));
             }
 
             if (pending.scroll_discrete != geom::Displacement{})
