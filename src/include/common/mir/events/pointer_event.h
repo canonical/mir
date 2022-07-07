@@ -50,6 +50,9 @@ struct MirPointerEvent : MirInputEvent
     float y() const;
     void set_y(float y);
 
+    bool has_absolute_position() const;
+    void set_has_absolute_position(bool value);
+
     float dx() const;
     void set_dx(float x);
 
@@ -87,6 +90,7 @@ private:
     MirPointerAxisSource axis_source_ = mir_pointer_axis_source_none;
     float x_ = 0.0;
     float y_ = 0.0;
+    bool has_absolute_position_ = false;
     float dx_ = 0.0;
     float dy_ = 0.0;
     float vscroll_ = 0.0;
