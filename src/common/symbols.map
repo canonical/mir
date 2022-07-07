@@ -513,5 +513,7 @@ MIR_COMMON_2.9 {
     vtable?for?mir::logging::FileLogger;
     vtable?for?mir::logging::MultiLogger;
     mir::immediate_executor;
+    MirPointerEvent::has_absolute_position*;
+    MirPointerEvent::set_has_absolute_position*;
   };
 } MIR_COMMON_2.8;

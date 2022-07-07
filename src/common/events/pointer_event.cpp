@@ -83,6 +83,16 @@ void MirPointerEvent::set_y(float y)
     y_ = y;
 }
 
+bool MirPointerEvent::has_absolute_position() const
+{
+    return has_absolute_position_;
+}
+
+void MirPointerEvent::set_has_absolute_position(bool value)
+{
+    has_absolute_position_ = value;
+}
+
 float MirPointerEvent::dx() const
 {
     return dx_;
