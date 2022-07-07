@@ -54,7 +54,6 @@ public:
     void pause() override;
     void resume() override;
     std::shared_ptr<Cursor> create_hardware_cursor() override;
-    std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
     Frame last_frame_on(unsigned output_id) const override;
 
     auto create_gl_context() const -> std::unique_ptr<renderer::gl::Context> override;

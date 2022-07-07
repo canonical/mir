@@ -19,7 +19,6 @@
 #include "mir/graphics/display_configuration.h"
 #include <mir/graphics/display_configuration_policy.h>
 #include "mir/graphics/egl_error.h"
-#include "mir/graphics/virtual_output.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/atomic_frame.h"
@@ -297,11 +296,6 @@ void mgx::Display::resume()
 }
 
 auto mgx::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
-{
-    return nullptr;
-}
-
-std::unique_ptr<mg::VirtualOutput> mgx::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
     return nullptr;
 }

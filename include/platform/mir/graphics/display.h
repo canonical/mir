@@ -33,7 +33,6 @@ class DisplayBuffer;
 class DisplayConfiguration;
 class Cursor;
 class EventHandlerRegister;
-class VirtualOutput;
 
 typedef std::function<bool()> DisplayPauseHandler;
 typedef std::function<bool()> DisplayResumeHandler;
@@ -168,12 +167,6 @@ public:
      * Create a hardware cursor object.
      */
     virtual std::shared_ptr<Cursor> create_hardware_cursor() = 0;
-
-    /**
-     * Creates a virtual output
-     *  \returns null if the implementation does not support virtual outputs
-     */
-    virtual std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) = 0;
 
     /**
      * Returns timing information for the last frame displayed on a given
