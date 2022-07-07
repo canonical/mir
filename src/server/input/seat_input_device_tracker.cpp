@@ -22,6 +22,7 @@
 #include "mir/input/seat_observer.h"
 #include "mir/geometry/displacement.h"
 #include "mir/events/event_builders.h"
+#include "mir/events/pointer_event.h"
 #include "mir/time/clock.h"
 
 #include "input_modifier_utils.h"
@@ -244,8 +245,16 @@ void mi::SeatInputDeviceTracker::confine_pointer()
 
 void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
 {
-    cursor_x += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x);
-    cursor_y += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y);
+    if (event->has_absolute_position())
+    {
+        cursor_x = mir_pointer_event_axis_value(event, mir_pointer_axis_x);
+        cursor_y = mir_pointer_event_axis_value(event, mir_pointer_axis_y);
+    }
+    else
+    {
+        cursor_x += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x);
+        cursor_y += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y);
+    }
 
     confine_pointer();
 
