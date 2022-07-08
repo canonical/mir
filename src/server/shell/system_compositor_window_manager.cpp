@@ -18,7 +18,6 @@
 
 #include "mir/shell/display_layout.h"
 #include "mir/shell/focus_controller.h"
-#include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/surface_specification.h"
 
 #include "mir/scene/session.h"
@@ -40,7 +39,14 @@ msh::SystemCompositorWindowManager::SystemCompositorWindowManager(
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator) :
     focus_controller{focus_controller},
     display_layout{display_layout},
-    session_coordinator{session_coordinator}
+    session_coordinator{session_coordinator},
+    surface_ready_tracker{[this](std::shared_ptr<ms::Surface> const& surface)
+        {
+            if (auto const session = surface->session().lock())
+            {
+                on_session_ready(session);
+            }
+        }}
 {
 }
 
@@ -87,17 +93,8 @@ auto msh::SystemCompositorWindowManager::add_surface(
     placed_parameters.height = rect.size.height;
 
     auto const surface = build(session, placed_parameters);
+    surface_ready_tracker.register_surface(surface);
 
-    auto const session_ready_observer = std::make_shared<SurfaceReadyObserver>(
-        [this](std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& /*surface*/)
-            {
-                on_session_ready(session);
-            },
-        session,
-        surface);
-
-    surface->add_observer(session_ready_observer);
-    
     std::lock_guard lock{mutex};
     output_map[surface] = params.output_id.value();
 
@@ -139,7 +136,10 @@ void msh::SystemCompositorWindowManager::remove_surface(
     std::weak_ptr<ms::Surface> const& surface)
 {
     if (auto const locked = surface.lock())
+    {
+        surface_ready_tracker.unregister_surface(*locked);
         session->destroy_surface(locked);
+    }
 
     std::lock_guard lock{mutex};
     output_map.erase(surface);

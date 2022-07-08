@@ -19,6 +19,7 @@
 
 #include "mir/shell/window_manager.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/shell/surface_ready_registrar.h"
 
 #include <map>
 #include <mutex>
@@ -116,6 +117,8 @@ private:
         std::shared_ptr<scene::Surface> const& surface,
         MirWindowAttrib attrib,
         int value) override;
+
+    SurfaceReadyRegistrar surface_ready_tracker;
 
     using OutputMap = std::map<std::weak_ptr<scene::Surface>, graphics::DisplayConfigurationOutputId, std::owner_less<std::weak_ptr<scene::Surface>>>;
 

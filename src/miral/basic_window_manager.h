@@ -32,6 +32,7 @@
 #include <mir/observer_registrar.h>
 #include <mir/shell/abstract_shell.h>
 #include <mir/shell/window_manager.h>
+#include <mir/shell/surface_ready_registrar.h>
 
 #include <boost/bimap.hpp>
 #include <boost/bimap/multiset_of.hpp>
@@ -235,6 +236,7 @@ private:
     mir::shell::FocusController* const focus_controller;
     std::shared_ptr<mir::shell::DisplayLayout> const display_layout;
     std::shared_ptr<mir::shell::PersistentSurfaceStore> const persistent_surface_store;
+    mir::shell::SurfaceReadyRegistrar surface_ready_tracker;
 
     // Workspaces may die without any sync with the BWM mutex
     struct DeadWorkspaces

@@ -8,7 +8,7 @@ set(
   graphics_display_layout.h
   default_configuration.cpp
   shell_wrapper.cpp
-  surface_ready_observer.cpp
+  surface_ready_registrar.cpp
   system_compositor_window_manager.cpp
   default_persistent_surface_store.cpp
   persistent_surface_store.cpp

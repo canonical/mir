@@ -476,9 +476,6 @@ MIR_SERVER_2.8 {
     mir::shell::SurfaceInfo::must_have_parent*;
     mir::shell::SurfaceInfo::must_not_have_parent*;
     mir::shell::SurfaceInfo::needs_titlebar*;
-    mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;
-    mir::shell::SurfaceReadyObserver::SurfaceReadyObserver*;
-    mir::shell::SurfaceReadyObserver::frame_posted*;
     mir::shell::SurfaceSpecification::is_empty*;
     mir::shell::SurfaceStack::?SurfaceStack*;
     mir::shell::SurfaceStack::SurfaceStack*;
@@ -681,7 +678,6 @@ MIR_SERVER_2.8 {
     non-virtual?thunk?to?mir::shell::ShellWrapper::start_prompt_session_for*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::stop_prompt_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::surface_at*;
-    non-virtual?thunk?to?mir::shell::SurfaceReadyObserver::frame_posted*;
     non-virtual?thunk?to?mir::shell::SurfaceStack::?SurfaceStack*;
     non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::add_surface*;
     non-virtual?thunk?to?mir::shell::SurfaceStackWrapper::raise*;
@@ -785,7 +781,6 @@ MIR_SERVER_2.8 {
     typeinfo?for?mir::shell::StreamSpecification;
     typeinfo?for?mir::shell::SurfaceAspectRatio;
     typeinfo?for?mir::shell::SurfaceInfo;
-    typeinfo?for?mir::shell::SurfaceReadyObserver;
     typeinfo?for?mir::shell::SurfaceSpecification;
     typeinfo?for?mir::shell::SurfaceStack;
     typeinfo?for?mir::shell::SurfaceStackWrapper;
@@ -905,7 +900,6 @@ MIR_SERVER_2.8 {
     vtable?for?mir::shell::StreamSpecification;
     vtable?for?mir::shell::SurfaceAspectRatio;
     vtable?for?mir::shell::SurfaceInfo;
-    vtable?for?mir::shell::SurfaceReadyObserver;
     vtable?for?mir::shell::SurfaceSpecification;
     vtable?for?mir::shell::SurfaceStack;
     vtable?for?mir::shell::SurfaceStackWrapper;
@@ -915,6 +909,14 @@ MIR_SERVER_2.8 {
     vtable?for?mir::shell::WindowManagerTools;
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::AlarmFactory;
+    mir::DefaultServerConfiguration::the_keyboard_observer_registrar*;
+    mir::DefaultServerConfiguration::the_keyboard_observer_registrar*;
+    mir::shell::SurfaceReadyRegistrar::?SurfaceReadyRegistrar*;
+    mir::shell::SurfaceReadyRegistrar::SurfaceReadyRegistrar*;
+    typeinfo?for?mir::shell::SurfaceReadyRegistrar;
+    vtable?for?mir::shell::SurfaceReadyRegistrar;
+    mir::shell::SurfaceReadyRegistrar::register_surface*;
+    mir::shell::SurfaceReadyRegistrar::unregister_surface*;
+    mir::shell::SurfaceReadyRegistrar::clear*;
   };
- local: *;
 };

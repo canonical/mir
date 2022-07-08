@@ -24,7 +24,6 @@
 #include <mir/scene/surface.h>
 #include <mir/shell/display_layout.h>
 #include <mir/shell/persistent_surface_store.h>
-#include <mir/shell/surface_ready_observer.h>
 #include <mir/shell/surface_specification.h>
 
 #include <boost/throw_exception.hpp>
@@ -86,6 +85,11 @@ miral::BasicWindowManager::BasicWindowManager(
     focus_controller(focus_controller),
     display_layout(display_layout),
     persistent_surface_store{persistent_surface_store},
+    surface_ready_tracker{[this](std::shared_ptr<scene::Surface> const& surface)
+        {
+            Locker lock{this};
+            policy->handle_window_ready(info_for(surface));
+        }},
     policy(build(WindowManagerTools{this})),
     display_config_monitor{std::make_shared<DisplayConfigurationListeners>()}
 {
@@ -170,11 +174,7 @@ auto miral::BasicWindowManager::add_surface(
     }
     else
     {
-        scene_surface->add_observer(std::make_shared<shell::SurfaceReadyObserver>(
-            [this, &window_info](std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&)
-                { Locker lock{this}; policy->handle_window_ready(window_info); },
-            session,
-            scene_surface));
+        surface_ready_tracker.register_surface(scene_surface);
     }
 
     if (parent && spec.aux_rect().is_set() && spec.placement_hints().is_set())
@@ -209,6 +209,11 @@ void miral::BasicWindowManager::remove_surface(
     std::weak_ptr<scene::Surface> const& surface)
 {
     Locker lock{this};
+    if (auto const locked = surface.lock())
+    {
+        surface_ready_tracker.unregister_surface(*locked);
+    }
+
     if (app_info.find(session) == app_info.end())
     {
         log_debug(
