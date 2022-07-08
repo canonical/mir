@@ -175,7 +175,7 @@ void miroil::Surface::add_observer(std::shared_ptr<SurfaceObserver> const& obser
     if (it == observers.end()) {
         std::shared_ptr<SurfaceObserverImpl> impl = std::make_shared<SurfaceObserverImpl>(observer);
         
-        wrapped->add_observer(impl);
+        wrapped->register_interest(impl);
         observers.insert({observer, impl});
     }
 }
@@ -190,7 +190,7 @@ void miroil::Surface::remove_observer(std::shared_ptr<miroil::SurfaceObserver> c
 {
     auto it = observers.find(observer);
     if (it != observers.end()) {        
-        wrapped->remove_observer(it->second);
+        wrapped->unregister_interest(*it->second);
         observers.erase(it);        
     }
 }

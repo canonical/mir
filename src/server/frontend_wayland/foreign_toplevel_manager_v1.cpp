@@ -265,7 +265,7 @@ void mf::ForeignSceneObserver::create_surface_observer(std::shared_ptr<scene::Su
 {
     std::lock_guard lock{mutex};
     auto observer = std::make_shared<ForeignSurfaceObserver>(wayland_executor, manager, surface);
-    surface->add_observer(observer);
+    surface->register_interest(observer);
     auto insert_result = surface_observers.insert(std::make_pair(surface, observer));
     if (!insert_result.second)
     {
@@ -284,7 +284,7 @@ void mf::ForeignSceneObserver::clear_surface_observers()
         pair.second->cease_and_desist();
         if (auto const surface = pair.first.lock())
         {
-            surface->remove_observer(pair.second);
+            surface->unregister_interest(*pair.second);
         }
     }
     surface_observers.clear();

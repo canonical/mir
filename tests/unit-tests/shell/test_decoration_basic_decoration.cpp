@@ -158,7 +158,7 @@ struct DecorationBasicDecoration
                 {
                     creation_params = params;
                     decoration_surface.resize({params.width.value(), params.height.value()});
-                    decoration_surface.add_observer(observer);
+                    decoration_surface.register_interest(observer);
                     return mt::fake_shared(decoration_surface);
                 }));
         ON_CALL(*session, create_buffer_stream(_))

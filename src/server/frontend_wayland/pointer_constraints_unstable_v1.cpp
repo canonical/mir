@@ -297,7 +297,7 @@ mir::frontend::LockedPointerV1::LockedPointerV1(
     weak_scene_surface{scene_surface},
     my_surface_observer{std::make_shared<MyWaylandSurfaceObserver>(this, wayland_executor)}
 {
-    scene_surface->add_observer(my_surface_observer);
+    scene_surface->register_interest(my_surface_observer);
 
     shell::SurfaceSpecification mods;
 
@@ -337,7 +337,7 @@ mir::frontend::LockedPointerV1::~LockedPointerV1()
     mark_destroyed();
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        scene_surface->remove_observer(my_surface_observer);
+        scene_surface->unregister_interest(*my_surface_observer);
         shell::SurfaceSpecification mods;
         mods.confine_pointer = MirPointerConfinementState::mir_pointer_unconfined;
         shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
@@ -364,7 +364,7 @@ mir::frontend::ConfinedPointerV1::ConfinedPointerV1(
     weak_scene_surface(scene_surface),
     my_surface_observer{std::make_shared<SurfaceObserver>(this, wayland_executor)}
 {
-    scene_surface->add_observer(my_surface_observer);
+    scene_surface->register_interest(my_surface_observer);
 
     shell::SurfaceSpecification mods;
 
@@ -403,7 +403,7 @@ mir::frontend::ConfinedPointerV1::~ConfinedPointerV1()
     mark_destroyed();
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        scene_surface->remove_observer(my_surface_observer);
+        scene_surface->unregister_interest(*my_surface_observer);
         shell::SurfaceSpecification mods;
         mods.confine_pointer = MirPointerConfinementState::mir_pointer_unconfined;
         shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);

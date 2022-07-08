@@ -110,7 +110,7 @@ auto ms::ApplicationSession::create_surface(
     surface_stack->add_surface(surface, input_mode);
 
     if (observer)
-        surface->add_observer(observer);
+        surface->register_interest(observer);
 
     {
         std::unique_lock lock(surfaces_and_streams_mutex);

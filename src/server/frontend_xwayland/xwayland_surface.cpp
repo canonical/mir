@@ -490,7 +490,7 @@ void mf::XWaylandSurface::close()
 
     if (scene_surface && observer)
     {
-        scene_surface->remove_observer(observer);
+        scene_surface->unregister_interest(*observer);
     }
 
     if (scene_surface)

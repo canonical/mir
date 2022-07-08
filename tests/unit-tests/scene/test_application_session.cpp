@@ -688,14 +688,14 @@ namespace
 class ObserverPreservingSurface : public mtd::MockSurface
 {
 public:
-    void add_observer(std::shared_ptr<mir::scene::SurfaceObserver> const &observer) override
+    void register_interest(std::weak_ptr<mir::scene::SurfaceObserver> const& observer) override
     {
-        return BasicSurface::add_observer(observer);
+        return BasicSurface::register_interest(observer);
     }
 
-    void remove_observer(std::weak_ptr<mir::scene::SurfaceObserver> const &observer) override
+    void unregister_interest(mir::scene::SurfaceObserver const& observer) override
     {
-        return BasicSurface::remove_observer(observer);
+        return BasicSurface::unregister_interest(observer);
     }
 };
 

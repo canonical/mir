@@ -145,7 +145,7 @@ msh::AbstractShell::~AbstractShell() noexcept
     decoration_manager->undecorate_all();
     if (auto const current_keyboard_focus = notified_keyboard_focus_surface.lock())
     {
-        current_keyboard_focus->remove_observer(surface_confinement_updater);
+        current_keyboard_focus->unregister_interest(*surface_confinement_updater);
     }
 }
 
@@ -509,7 +509,7 @@ void msh::AbstractShell::set_keyboard_focus_surface(
 
     if (current_keyboard_focus)
     {
-        current_keyboard_focus->remove_observer(surface_confinement_updater);
+        current_keyboard_focus->unregister_interest(*surface_confinement_updater);
 
         switch (current_keyboard_focus->confine_pointer_state())
         {
@@ -530,7 +530,7 @@ void msh::AbstractShell::set_keyboard_focus_surface(
         input_targeter->set_focus(new_keyboard_focus_surface);
         new_keyboard_focus_surface->consume(seat->create_device_state());
         surface_confinement_updater->set_focus_surface(new_keyboard_focus_surface);
-        new_keyboard_focus_surface->add_observer(surface_confinement_updater);
+        new_keyboard_focus_surface->register_interest(surface_confinement_updater);
     }
     else
     {

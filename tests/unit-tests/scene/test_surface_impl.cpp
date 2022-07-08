@@ -180,7 +180,7 @@ TEST_F(Surface, emits_resize_events)
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
 
-    surface->add_observer(observer);
+    surface->register_interest(observer);
 
     auto e = mev::make_window_resize_event(stub_id, new_size);
     EXPECT_CALL(*sink, handle_event(MirResizeEventEq(e.get())))
@@ -200,7 +200,7 @@ TEST_F(Surface, emits_resize_events_only_on_change)
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
 
-    surface->add_observer(observer);
+    surface->register_interest(observer);
 
     auto e = mev::make_window_resize_event(stub_id, new_size);
     EXPECT_CALL(*sink, handle_event(MirResizeEventEq(e.get())))
@@ -238,7 +238,7 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, mt::fake_shared(sink));
 
-    surface->add_observer(observer);
+    surface->register_interest(observer);
 
     surface->configure(mir_window_attrib_focus, mir_window_focus_state_focused);
     surface->configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
@@ -256,7 +256,7 @@ TEST_F(Surface, emits_client_close_events)
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
 
-    surface->add_observer(observer);
+    surface->register_interest(observer);
 
     MirCloseWindowEvent e;
     e.to_close_window()->set_surface_id(stub_id.as_value());

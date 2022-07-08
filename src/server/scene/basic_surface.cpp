@@ -43,118 +43,99 @@ namespace mrs = mir::renderer::software;
 
 void ms::SurfaceObservers::attrib_changed(Surface const* surf, MirWindowAttrib attrib, int value)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->attrib_changed(surf, attrib, value); });
+    for_each_observer(&SurfaceObserver::attrib_changed, surf, attrib, value);
 }
 
 void ms::SurfaceObservers::window_resized_to(Surface const* surf, geometry::Size const& window_size)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->window_resized_to(surf, window_size); });
+    for_each_observer(&SurfaceObserver::window_resized_to, surf, window_size);
 }
 
 void ms::SurfaceObservers::content_resized_to(Surface const* surf, geometry::Size const& content_size)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->content_resized_to(surf, content_size); });
+    for_each_observer(&SurfaceObserver::content_resized_to, surf, content_size);
 }
 
 void ms::SurfaceObservers::moved_to(Surface const* surf, geometry::Point const& top_left)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->moved_to(surf, top_left); });
+    for_each_observer(&SurfaceObserver::moved_to, surf, top_left);
 }
 
 void ms::SurfaceObservers::hidden_set_to(Surface const* surf, bool hide)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->hidden_set_to(surf, hide); });
+    for_each_observer(&SurfaceObserver::hidden_set_to, surf, hide);
 }
 
 void ms::SurfaceObservers::frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->frame_posted(surf, frames_available, damage); });
+    for_each_observer(&SurfaceObserver::frame_posted, surf, frames_available, damage);
 }
 
 void ms::SurfaceObservers::alpha_set_to(Surface const* surf, float alpha)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->alpha_set_to(surf, alpha); });
+    for_each_observer(&SurfaceObserver::alpha_set_to, surf, alpha);
 }
 
 void ms::SurfaceObservers::orientation_set_to(Surface const* surf, MirOrientation orientation)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->orientation_set_to(surf, orientation); });
+    for_each_observer(&SurfaceObserver::orientation_set_to, surf, orientation);
 }
 
 void ms::SurfaceObservers::transformation_set_to(Surface const* surf, glm::mat4 const& t)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->transformation_set_to(surf, t); });
+    for_each_observer(&SurfaceObserver::transformation_set_to, surf, t);
 }
 
 void ms::SurfaceObservers::cursor_image_set_to(
     Surface const* surf,
     std::weak_ptr<mir::graphics::CursorImage> const& image)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->cursor_image_set_to(surf, image); });
+    for_each_observer(&SurfaceObserver::cursor_image_set_to, surf, image);
 }
 
 void ms::SurfaceObservers::reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->reception_mode_set_to(surf, mode); });
+    for_each_observer(&SurfaceObserver::reception_mode_set_to, surf, mode);
 }
 
 void ms::SurfaceObservers::client_surface_close_requested(Surface const* surf)
 {
-    for_each([&surf](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->client_surface_close_requested(surf); });
+    for_each_observer(&SurfaceObserver::client_surface_close_requested, surf);
 }
 
 void ms::SurfaceObservers::renamed(Surface const* surf, std::string const& name)
 {
-    for_each([&surf, name](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->renamed(surf, name); });
+    for_each_observer(&SurfaceObserver::renamed, surf, name);
 }
 
 void ms::SurfaceObservers::cursor_image_removed(Surface const* surf)
 {
-    for_each([&surf](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->cursor_image_removed(surf); });
+    for_each_observer(&SurfaceObserver::cursor_image_removed, surf);
 }
 
 void ms::SurfaceObservers::placed_relative(Surface const* surf, geometry::Rectangle const& placement)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-                 { observer->placed_relative(surf, placement); });
+    for_each_observer(&SurfaceObserver::placed_relative, surf, placement);
 }
 
 void ms::SurfaceObservers::input_consumed(Surface const* surf, std::shared_ptr<MirEvent const> const& event)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-                 { observer->input_consumed(surf, event); });
+    for_each_observer(&SurfaceObserver::input_consumed, surf, event);
 }
 
 void ms::SurfaceObservers::start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-                 { observer->start_drag_and_drop(surf, handle); });
+    for_each_observer(&SurfaceObserver::start_drag_and_drop, surf, handle);
 }
 
 void ms::SurfaceObservers::depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-                 { observer->depth_layer_set_to(surf, depth_layer); });
+    for_each_observer(&SurfaceObserver::depth_layer_set_to, surf, depth_layer);
 }
 
 void ms::SurfaceObservers::application_id_set_to(Surface const* surf, std::string const& application_id)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-                 { observer->application_id_set_to(surf, application_id); });
+    for_each_observer(&SurfaceObserver::application_id_set_to, surf, application_id);
 }
 
 namespace
@@ -236,6 +217,21 @@ ms::BasicSurface::~BasicSurface() noexcept
     auto state = synchronised_state.lock();
     clear_frame_posted_callbacks(*state);
     report->surface_deleted(this, state->surface_name);
+}
+
+void ms::BasicSurface::register_interest(std::weak_ptr<SurfaceObserver> const& observer)
+{
+    observers->register_interest(observer);
+}
+
+void ms::BasicSurface::register_interest(std::weak_ptr<SurfaceObserver> const& observer, Executor& executor)
+{
+    observers->register_interest(observer, executor);
+}
+
+void ms::BasicSurface::unregister_interest(SurfaceObserver const& observer)
+{
+    observers->unregister_interest(observer);
 }
 
 std::string ms::BasicSurface::name() const
@@ -662,19 +658,6 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
     }
 
     return new_visibility;
-}
-
-void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
-{
-    observers->add(observer);
-}
-
-void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& observer)
-{
-    auto o = observer.lock();
-    if (!o)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (previously destroyed)"));
-    observers->remove(o);
 }
 
 std::shared_ptr<ms::Surface> ms::BasicSurface::parent() const

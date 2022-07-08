@@ -25,6 +25,7 @@
 #include <mutex>
 #include <memory>
 #include <set>
+#include <atomic>
 
 namespace mir
 {

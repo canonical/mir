@@ -196,7 +196,7 @@ TEST_F(BasicSurfaceTest, update_top_left)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    surface.add_observer(observer);
+    surface.register_interest(observer);
 
     EXPECT_EQ(rect.top_left, surface.top_left());
 
@@ -212,7 +212,7 @@ TEST_F(BasicSurfaceTest, update_size)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    surface.add_observer(observer);
+    surface.register_interest(observer);
 
     EXPECT_EQ(rect.size, surface.window_size());
     EXPECT_NE(new_size, surface.window_size());
@@ -241,7 +241,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_window_resize)
     EXPECT_CALL(mock_surface_observer, window_resized_to(_, new_size))
         .Times(1);
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
     surface.resize(new_size);
 }
 
@@ -257,7 +257,7 @@ TEST_F(BasicSurfaceTest, observer_notified_of_content_resize)
     EXPECT_CALL(mock_surface_observer, content_resized_to(_, new_size))
         .Times(1);
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
     surface.resize(new_size);
 }
 
@@ -277,7 +277,7 @@ TEST_F(BasicSurfaceTest, resize_notifications_only_sent_when_size_changed)
     EXPECT_CALL(mock_surface_observer, content_resized_to(_, _))
         .Times(1);
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
     surface.resize(rect.size);
     surface.resize(new_size);
     surface.resize(new_size);
@@ -301,7 +301,7 @@ TEST_F(BasicSurfaceTest, only_content_is_notified_of_resize_when_frame_geometry_
     EXPECT_CALL(mock_surface_observer, content_resized_to(_, new_content_size))
         .Times(1);
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
     surface.set_window_margins(top, left, bottom, right);
 }
 
@@ -406,7 +406,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    surface.add_observer(observer);
+    surface.register_interest(observer);
 
     auto renderables = surface.generate_renderables(compositor_id);
     ASSERT_THAT(renderables.size(), testing::Eq(1));
@@ -472,7 +472,7 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    surface.add_observer(observer);
+    surface.register_interest(observer);
 
     surface.set_hidden(true);
 }
@@ -492,7 +492,7 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         std::shared_ptr<mg::CursorImage>(),
         report};
 
-    surface.add_observer(observer);
+    surface.register_interest(observer);
 
     std::vector<geom::Point> contained_pt
     {
@@ -566,7 +566,7 @@ TEST_F(BasicSurfaceTest, set_input_region)
         {{geom::X{1}, geom::Y{1}}, {geom::Width{1}, geom::Height{1}}}  //region1
     };
 
-    surface.add_observer(observer);
+    surface.register_interest(observer);
 
     surface.set_input_region(rectangles);
 
@@ -870,7 +870,7 @@ TEST_P(BasicSurfaceAttributeTest, notifies_about_attrib_changes)
     EXPECT_CALL(mock_surface_observer, attrib_changed(_, attribute, value2))
         .Times(1);
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
 
     surface.configure(attribute, value1);
     surface.configure(attribute, value2);
@@ -890,7 +890,7 @@ TEST_P(BasicSurfaceAttributeTest, does_not_notify_if_attrib_is_unchanged)
     EXPECT_CALL(mock_surface_observer, attrib_changed(_, attribute, another_value))
         .Times(1);
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
 
     surface.configure(attribute, default_value);
     surface.configure(attribute, another_value);
@@ -953,7 +953,7 @@ TEST_F(BasicSurfaceTest, notifies_about_focus_state_changes)
     EXPECT_CALL(mock_surface_observer, attrib_changed(_, mir_window_attrib_focus, mir_window_focus_state_unfocused))
         .Times(1);
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
 
     surface.set_focus_state(mir_window_focus_state_focused);
     surface.set_focus_state(mir_window_focus_state_unfocused);
@@ -968,7 +968,7 @@ TEST_F(BasicSurfaceTest, does_not_notify_if_focus_state_is_unchanged)
     EXPECT_CALL(mock_surface_observer, attrib_changed(_, mir_window_attrib_focus, mir_window_focus_state_focused))
         .Times(1);
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
 
     surface.set_focus_state(mir_window_focus_state_unfocused); // will not notify, since it is default
     surface.set_focus_state(mir_window_focus_state_focused);
@@ -995,7 +995,7 @@ TEST_F(BasicSurfaceTest, notifies_about_cursor_image_change)
     auto cursor_image = std::make_shared<mtd::StubCursorImage>();
     EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_, _));
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
     surface.set_cursor_image(cursor_image);
 }
 
@@ -1008,7 +1008,7 @@ TEST_F(BasicSurfaceTest, notifies_about_cursor_image_removal)
     EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_, _)).Times(0);
     EXPECT_CALL(mock_surface_observer, cursor_image_removed(_));
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
     surface.set_cursor_image({});
 }
 
@@ -1020,7 +1020,7 @@ TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_w
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     surface.resize({100, 150}); // should not affect frame_posted notification
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
     ON_CALL(*buffer_stream, stream_size())
         .WillByDefault(Return(rect.size));
@@ -1040,7 +1040,7 @@ TEST_F(BasicSurfaceTest, when_stream_size_differs_from_buffer_size_an_observer_i
     ON_CALL(*buffer_stream, stream_size())
         .WillByDefault(Return(stream_size));
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
     EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectSizeEq(stream_size)));
@@ -1059,7 +1059,7 @@ TEST_F(BasicSurfaceTest, when_stream_info_has_explicit_size_an_observer_is_notif
     ON_CALL(*buffer_stream, stream_size())
         .WillByDefault(Return(stream_size));
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, stream_info_size}});
 
     EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectSizeEq(stream_info_size)));
@@ -1073,7 +1073,7 @@ TEST_F(BasicSurfaceTest, when_frame_is_posted_an_observer_is_notified_of_frame_a
     NiceMock<MockSurfaceObserver> mock_surface_observer;
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
     EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(geom::Point{})));
@@ -1089,7 +1089,7 @@ TEST_F(BasicSurfaceTest, when_stream_info_has_offset_an_observer_is_notified_of_
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::function<void(geom::Size const&)> frame_posted_callback;
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, stream_info_offset, {}}});
 
     EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(geom::Point{} + stream_info_offset)));
@@ -1106,7 +1106,7 @@ TEST_F(BasicSurfaceTest, when_surface_has_margins_an_observer_is_notified_of_fra
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::function<void(geom::Size const&)> frame_posted_callback;
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
     surface.set_streams({ms::StreamInfo{buffer_stream, {}, {}}});
 
     EXPECT_CALL(mock_surface_observer, frame_posted(_, _, mt::RectTopLeftEq(geom::Point{} + margin_top + margin_left)));
@@ -1132,7 +1132,7 @@ TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)
         .WillOnce(InvokeWithoutArgs(async_state_changer))
         .WillOnce(Return());
 
-    surface.add_observer(observer);
+    surface.register_interest(observer);
 
     surface.set_hidden(true);
 }
@@ -1160,7 +1160,7 @@ TEST_F(BasicSurfaceTest, notifies_about_application_id_changes)
     EXPECT_CALL(mock_surface_observer, application_id_set_to(_, id))
         .Times(1);
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
 
     surface.set_application_id(id);
 }
@@ -1175,7 +1175,7 @@ TEST_F(BasicSurfaceTest, does_not_notify_if_application_id_is_unchanged)
     EXPECT_CALL(mock_surface_observer, application_id_set_to(_, id))
         .Times(1);
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
 
     surface.set_application_id("");
     surface.set_application_id(id);
@@ -1195,15 +1195,15 @@ TEST_F(BasicSurfaceTest, observer_can_remove_itself_within_notification)
     EXPECT_CALL(observer3, hidden_set_to(_, true)).Times(2);
 
     auto const remove_observer = [&]{
-        surface.remove_observer(mt::fake_shared(observer2));
+        surface.unregister_interest(observer2);
     };
 
     EXPECT_CALL(observer2, hidden_set_to(_, true)).Times(1)
         .WillOnce(InvokeWithoutArgs(remove_observer));
 
-    surface.add_observer(mt::fake_shared(observer1));
-    surface.add_observer(mt::fake_shared(observer2));
-    surface.add_observer(mt::fake_shared(observer3));
+    surface.register_interest(mt::fake_shared(observer1));
+    surface.register_interest(mt::fake_shared(observer2));
+    surface.register_interest(mt::fake_shared(observer3));
 
     surface.set_hidden(true);
     surface.set_hidden(true);
@@ -1217,7 +1217,7 @@ TEST_F(BasicSurfaceTest, notifies_of_client_close_request)
 
     EXPECT_CALL(mock_surface_observer, client_surface_close_requested(_)).Times(1);
 
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
 
     surface.request_client_surface_close();
 }
@@ -1227,7 +1227,7 @@ TEST_F(BasicSurfaceTest, notifies_of_rename)
     using namespace testing;
 
     MockSurfaceObserver mock_surface_observer;
-    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.register_interest(mt::fake_shared(mock_surface_observer));
 
     EXPECT_CALL(mock_surface_observer, renamed(_, StrEq("Steve")));
 
@@ -1625,7 +1625,7 @@ TEST_F(BasicSurfaceTest, notifies_when_first_visible)
 {
     using namespace testing;
     auto observer = std::make_shared<VisibilityObserver>();
-    surface.add_observer(observer);
+    surface.register_interest(observer);
 
     EXPECT_THAT(observer->exposes(), Eq(0));
     EXPECT_THAT(observer->hides(), Eq(0));

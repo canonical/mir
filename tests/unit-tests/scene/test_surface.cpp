@@ -123,7 +123,7 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
 
-    surface.add_observer(observer);
+    surface.register_interest(observer);
 
     ASSERT_THAT(surface.window_size(), Ne(new_size));
 
@@ -140,7 +140,7 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
 
-    surface.add_observer(observer);
+    surface.register_interest(observer);
 
     ASSERT_THAT(surface.window_size(), Ne(new_size));
 
@@ -208,7 +208,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
 
-    surface.add_observer(observer);
+    surface.register_interest(observer);
 
     EXPECT_CALL(*mock_event_sink, handle_event(mt::MirKeyboardEventMatches(key_event.get()))).Times(1);
     EXPECT_CALL(*mock_event_sink, handle_event(mt::MirTouchEventMatches(touch_event.get()))).Times(1);

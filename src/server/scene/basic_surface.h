@@ -79,6 +79,10 @@ public:
 
     ~BasicSurface() noexcept;
 
+    void register_interest(std::weak_ptr<SurfaceObserver> const& observer) override;
+    void register_interest(std::weak_ptr<SurfaceObserver> const& observer, Executor& executor) override;
+    void unregister_interest(SurfaceObserver const& observer) override;
+
     std::string name() const override;
     void move_to(geometry::Point const& top_left) override;
 
@@ -131,9 +135,6 @@ public:
     void request_client_surface_close() override;
 
     std::shared_ptr<Surface> parent() const override;
-
-    void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
-    void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;
 
     int dpi() const;
 
