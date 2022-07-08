@@ -22,6 +22,7 @@
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/renderable.h"
 #include "mir/depth_layer.h"
+#include "mir/executor.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -266,7 +267,7 @@ void ms::SurfaceStack::add_surface(
         RecursiveWriteLock lg(guard);
         insert_surface_at_top_of_depth_layer(surface);
         create_rendering_tracker_for(surface);
-        surface->register_interest(surface_observer);
+        surface->register_interest(surface_observer, immediate_executor);
     }
     surface->set_reception_mode(input_mode);
     observers.surface_added(surface);
