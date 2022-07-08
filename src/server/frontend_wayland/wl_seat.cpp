@@ -192,7 +192,7 @@ mf::WlSeat::WlSeat(
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     std::shared_ptr<mi::Seat> const& seat,
     bool enable_key_repeat)
-    :   Global(display, Version<6>()),
+    :   Global(display, Version<8>()),
         keymap{std::make_shared<input::ParameterKeymap>()},
         config_observer{
             std::make_shared<ConfigObserver>(
@@ -292,7 +292,7 @@ void mf::WlSeat::set_focus_to(WlSurface* new_surface)
 }
 
 mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
-    : mw::Seat(new_resource, Version<6>()),
+    : mw::Seat(new_resource, Version<8>()),
       seat{seat}
 {
     // TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
