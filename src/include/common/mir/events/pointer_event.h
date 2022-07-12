@@ -74,6 +74,12 @@ struct MirPointerEvent : MirInputEvent
     float hscroll_discrete() const;
     void set_hscroll_discrete(float h);
 
+    float vscroll_value120() const;
+    void set_vscroll_value120(float v);
+
+    float hscroll_value120() const;
+    void set_hscroll_value120(float h);
+
     MirPointerAction action() const;
     void set_action(MirPointerAction action);
 
@@ -95,6 +101,8 @@ private:
     bool vscroll_stop_ = false;
     float hscroll_discrete_ = 0.0;
     float vscroll_discrete_ = 0.0;
+    float hscroll_value120_ = 0.0;
+    float vscroll_value120_ = 0.0;
 
     MirPointerAction action_ = {};
     MirPointerButtons buttons_= {};

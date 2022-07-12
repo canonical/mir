@@ -216,3 +216,23 @@ void MirPointerEvent::set_hscroll_discrete(float h)
 {
     hscroll_discrete_ = h;
 }
+
+float MirPointerEvent::vscroll_value120() const
+{
+    return vscroll_value120_;
+}
+
+void MirPointerEvent::set_vscroll_value120(float v)
+{
+    vscroll_value120_ = v;
+}
+
+float MirPointerEvent::hscroll_value120() const
+{
+    return hscroll_value120_;
+}
+
+void MirPointerEvent::set_hscroll_value120(float h)
+{
+    hscroll_value120_ = h;
+}
