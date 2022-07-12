@@ -188,6 +188,8 @@ auto get_enum_value(MirPointerAxis axis)
     STRINGIFY(mir_pointer_axis_relative_y)
     STRINGIFY(mir_pointer_axis_vscroll_discrete)
     STRINGIFY(mir_pointer_axis_hscroll_discrete)
+    STRINGIFY(mir_pointer_axis_vscroll_value120)
+    STRINGIFY(mir_pointer_axis_hscroll_value120)
 
     default:
         throw std::logic_error("Invalid MirPointerAxis in mir::test::get_enum_value()");
