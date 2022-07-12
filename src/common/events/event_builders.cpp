@@ -331,6 +331,28 @@ mir::EventUPtr mir::events::make_pointer_axis_discrete_scroll_event(
     return make_uptr_event(e);
 }
 
+mir::EventUPtr mir::events::make_pointer_axis_value120_scroll_event(
+    MirPointerAxisSource axis_source,
+    MirInputDeviceId device_id,
+    std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& mac,
+    MirInputEventModifiers modifiers,
+    MirPointerAction action,
+    MirPointerButtons buttons_pressed,
+    float hscroll_value,
+    float vscroll_value,
+    float hscroll_value120,
+    float vscroll_value120)
+{
+    auto const e = new_event<MirPointerEvent>(
+        device_id, timestamp, modifiers, mac, action, buttons_pressed, 0, 0, 0, 0, vscroll_value, hscroll_value);
+    e->set_axis_source(axis_source);
+    e->set_hscroll_value120(hscroll_value120);
+    e->set_vscroll_value120(vscroll_value120);
+
+    return make_uptr_event(e);
+}
+
 mir::EventUPtr mev::make_input_configure_event(
     std::chrono::nanoseconds timestamp,
     MirPointerButtons pointer_buttons,
