@@ -582,6 +582,17 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_hi_res_scroll)
     process_events(mouse);
 }
 
+TEST_F(LibInputDeviceOnMouse, hi_res_scroll_does_not_combine_with_discrete)
+{
+    InSequence seq;
+    // expect two scroll events..
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 1.0f)));
+
+    mouse.start(&mock_sink, &mock_builder);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, {}, 1.0f, {}, 1, 0.0f, 120.0f);
+    process_events(mouse);
+}
+
 TEST_F(LibInputDeviceOnTouchScreen, process_event_ignores_uncorrelated_touch_up_events)
 {
     MirTouchId slot = 3;
