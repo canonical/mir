@@ -6,6 +6,12 @@ else ()
   add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
 endif ()
 
+if ("${LIBINPUT_VERSION}" VERSION_LESS "1.19")
+  add_compile_definitions(MIR_LIBINPUT_HAS_VALUE120=0)
+else ()
+  add_compile_definitions(MIR_LIBINPUT_HAS_VALUE120=1)
+endif ()
+
 include_directories(
   ${LIBINPUT_CFLAGS} 
   ${PROJECT_SOURCE_DIR}/src/include/platform # udev Context
