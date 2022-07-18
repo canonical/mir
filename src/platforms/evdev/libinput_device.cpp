@@ -322,7 +322,7 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
                 0.0;
         #else
             auto const hscroll_value120 = 0.0;
-            auto const vscroll_value120 = 0.0
+            auto const vscroll_value120 = 0.0;
         #endif
 
         if (hscroll_value120 == 0.0 && vscroll_value120 == 0.0)
