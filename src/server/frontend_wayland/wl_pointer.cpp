@@ -272,12 +272,8 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
     else if (h_scroll_discrete && version_supports_axis_value120())
     {
         auto value120 = h_scroll_discrete * 120;
-        // "The value120 must not be zero"
-        if (value120 != 0) 
-        {
-            send_axis_value120_event(Axis::horizontal_scroll, value120);
-            needs_frame = true;
-        }
+        send_axis_value120_event(Axis::horizontal_scroll, value120);
+        needs_frame = true;
     }
     else if (h_scroll_discrete && version_supports_axis_discrete())
     {
@@ -293,12 +289,8 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
     else if (v_scroll_discrete && version_supports_axis_value120())
     {
         auto value120 = v_scroll_discrete * 120;
-        // "The value120 must not be zero"
-        if (value120 != 0) 
-        {
-            send_axis_value120_event(Axis::vertical_scroll, value120);
-            needs_frame = true;
-        }
+        send_axis_value120_event(Axis::vertical_scroll, value120);
+        needs_frame = true;
     }
     else if (v_scroll_discrete && version_supports_axis_discrete())
     {
