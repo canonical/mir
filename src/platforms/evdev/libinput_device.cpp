@@ -310,6 +310,7 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
             libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) ?
             libinput_event_pointer_get_axis_value_discrete(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) :
             0.0;
+
         #if MIR_LIBINPUT_HAS_VALUE120
             auto const hscroll_value120 =
                 libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL) ?
@@ -321,9 +322,8 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
                 0.0;
         #else
             auto const hscroll_value120 = 0.0;
-            auto const vscroll_value120 = 0.0;
+            auto const vscroll_value120 = 0.0
         #endif
-
 
         if (hscroll_value120 == 0.0 && vscroll_value120 == 0.0)
         {

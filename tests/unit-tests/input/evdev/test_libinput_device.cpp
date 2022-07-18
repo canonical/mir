@@ -121,7 +121,7 @@ struct MockEventBuilder : mi::EventBuilder
                     axis_source, timestamp, action, buttons_pressed, hscroll_value, vscroll_value,
                     hscroll_discrete, vscroll_discrete);
             });
-        
+#if MIR_LIBINPUT_HAS_VALUE120
         ON_CALL(*this, pointer_axis_value120_scroll_event(_, _, _, _, _, _, _, _)).WillByDefault(
             [this](MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
                    MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value,
@@ -131,6 +131,7 @@ struct MockEventBuilder : mi::EventBuilder
                     axis_source, timestamp, action, buttons_pressed, hscroll_value, vscroll_value,
                     hscroll_value120, vscroll_value120);
             });
+#endif
     }
     using EventBuilder::Timestamp;
 
@@ -569,11 +570,15 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_hi_res_scroll)
 {
     InSequence seq;
     // expect two scroll events..
+#if MIR_LIBINPUT_HAS_VALUE120
     EXPECT_CALL(mock_builder, pointer_axis_value120_scroll_event(
         mir_pointer_axis_source_wheel, {time_stamp_1}, mir_pointer_action_motion, 0, 0.0f, 1.0f, 0.0f, 120.0f));
+#endif
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 1.0f)));
+#if MIR_LIBINPUT_HAS_VALUE120
     EXPECT_CALL(mock_builder, pointer_axis_value120_scroll_event(
         mir_pointer_axis_source_wheel, {time_stamp_2}, mir_pointer_action_motion, 0, -1.0f, 0.0f, -120.0f, 0.0f));
+#endif
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, -1.0f)));
 
     mouse.start(&mock_sink, &mock_builder);

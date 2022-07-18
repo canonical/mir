@@ -830,10 +830,12 @@ libinput_event* mtd::MockLibInput::setup_axis_event(
         .WillByDefault(Return(vertical_discrete));
     ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
         .WillByDefault(Return(horizontal_discrete));
+#if MIR_LIBINPUT_HAS_VALUE120
     ON_CALL(*this, libinput_event_pointer_get_scroll_value_v120(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
         .WillByDefault(Return(vertical_value120));
     ON_CALL(*this, libinput_event_pointer_get_scroll_value_v120(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
         .WillByDefault(Return(horizontal_value120));
+#endif
     ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
         .WillByDefault(Return(vertical.value_or(0.0)));
     ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
