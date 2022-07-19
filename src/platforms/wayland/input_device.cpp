@@ -177,13 +177,12 @@ void miw::PointerInputDevice::pointer_press(
             event_time,
             mir_pointer_action_button_down,
             button_state,
-            cached_pos.x.as_value(),
-            cached_pos.y.as_value(),
-            scroll.dx.as_value(),
-            scroll.dy.as_value(),
-            movement.dx.as_value(),
-            movement.dy.as_value()
-        );
+            cached_pos,
+            movement,
+            mir_pointer_axis_source_none,
+            scroll,
+            {},
+            {});
     });
 }
 
@@ -203,13 +202,12 @@ void miw::PointerInputDevice::pointer_release(
             event_time,
             mir_pointer_action_button_up,
             button_state,
-            cached_pos.x.as_value(),
-            cached_pos.y.as_value(),
-            scroll.dx.as_value(),
-            scroll.dy.as_value(),
-            movement.dx.as_value(),
-            movement.dy.as_value()
-        );
+            cached_pos,
+            movement,
+            mir_pointer_axis_source_none,
+            scroll,
+            {},
+            {});
     });
 }
 
@@ -226,13 +224,12 @@ void miw::PointerInputDevice::pointer_motion(
             event_time,
             mir_pointer_action_motion,
             button_state,
-            cached_pos.x.as_value(),
-            cached_pos.y.as_value(),
-            scroll.dx.as_value(),
-            scroll.dy.as_value(),
-            movement.dx.as_value(),
-            movement.dy.as_value()
-        );
+            cached_pos,
+            movement,
+            mir_pointer_axis_source_none,
+            scroll,
+            {},
+            {});
     });
 }
 
@@ -246,18 +243,16 @@ void miw::PointerInputDevice::pointer_axis_motion(
     {
         auto const movement = pos - cached_pos;
         cached_pos = pos;
-        return b->pointer_axis_event(
-            pointer_axis_source,
+        return b->pointer_event(
             event_time,
             mir_pointer_action_motion,
             button_state,
-            cached_pos.x.as_value(),
-            cached_pos.y.as_value(),
-            scroll.dx.as_value(),
-            scroll.dy.as_value(),
-            movement.dx.as_value(),
-            movement.dy.as_value()
-        );
+            cached_pos,
+            movement,
+            pointer_axis_source,
+            scroll,
+            {},
+            {});
     });
 }
 
