@@ -327,13 +327,6 @@ set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
-# This copy is used by users of mirplatforminputevdev
-if ("${LIBINPUT_VERSION}" VERSION_LESS "1.1")
-  add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=0)
-else ()
-  add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
-endif ()
-
 add_subdirectory(examples/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
