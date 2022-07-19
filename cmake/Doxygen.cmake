@@ -1,13 +1,13 @@
 # Check if doxygen is present and add 'make doc' target
-find_package(Doxygen)
+find_package(Doxygen>1.8)
 
 option(
   BUILD_DOXYGEN
   "Build Doxygen documentation as part of the default build"
-  OFF
+  OFF`
 )
 
-if(DOXYGEN_FOUND AND (DOXYGEN_VERSION VERSION_GREATER "1.8"))
+if(DOXYGEN_FOUND)
   message(STATUS "doxygen ${DOXYGEN_VERSION} (>= 1.8.0) available - enabling make target doc")
   EXECUTE_PROCESS(COMMAND "date" "-u" OUTPUT_VARIABLE DATE_TODAY)
   EXECUTE_PROCESS(COMMAND "date" "+%Y" OUTPUT_VARIABLE YEAR_TODAY)
