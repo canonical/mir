@@ -267,7 +267,7 @@ find_package(GLM REQUIRED)
 find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
 
-pkg_check_modules(LTTNG_UST REQUIRED lttng-ust)
+pkg_check_modules(LTTNG_UST REQUIRED lttng-ust>=2.9)
 pkg_check_modules(UDEV REQUIRED libudev)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 pkg_check_modules(GIO REQUIRED gio-2.0 gio-unix-2.0)
