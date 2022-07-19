@@ -6,10 +6,8 @@ else ()
   add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
 endif ()
 
-if ("${LIBINPUT_VERSION}" VERSION_LESS "1.19")
-  add_compile_definitions(MIR_LIBINPUT_HAS_VALUE120=0)
-else ()
-  add_compile_definitions(MIR_LIBINPUT_HAS_VALUE120=1)
+if ("${LIBINPUT_VERSION}" VERSION_GREATER_EQUAL "1.19")
+  add_compile_definitions(MIR_LIBINPUT_HAS_VALUE120)
 endif ()
 
 include_directories(
