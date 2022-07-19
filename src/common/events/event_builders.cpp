@@ -244,6 +244,35 @@ mir::EventUPtr mev::make_pointer_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
     std::vector<uint8_t> const& cookie,
+    MirInputEventModifiers mods,
+    MirPointerAction action,
+    MirPointerButtons buttons,
+    std::optional<geom::PointF> position,
+    geom::DisplacementF motion,
+    MirPointerAxisSource axis_source,
+    geom::DisplacementF scroll,
+    geom::Displacement scroll_discrete,
+    geom::generic::Displacement<geom::generic::Value<bool>::Wrapper> scroll_stop)
+{
+    return make_uptr_event(new_event<MirPointerEvent>(
+        device_id,
+        timestamp,
+        cookie,
+        mods,
+        action,
+        buttons,
+        position,
+        motion,
+        axis_source,
+        scroll,
+        scroll_discrete,
+        scroll_stop));
+}
+
+mir::EventUPtr mev::make_pointer_event(
+    MirInputDeviceId device_id,
+    std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& cookie,
     MirInputEventModifiers modifiers,
     MirPointerAction action,
     MirPointerButtons buttons_pressed,
@@ -254,7 +283,7 @@ mir::EventUPtr mev::make_pointer_event(
     float relative_x_value,
     float relative_y_value)
 {
-    auto e = new_event<MirPointerEvent>(
+    return make_pointer_event(
         device_id, timestamp, cookie, modifiers, action, buttons_pressed,
         geom::PointF{x_axis_value, y_axis_value},
         geom::DisplacementF{relative_x_value, relative_y_value},
@@ -262,7 +291,6 @@ mir::EventUPtr mev::make_pointer_event(
         geom::DisplacementF{vscroll_value, hscroll_value},
         geom::Displacement{},
         geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{});
-    return make_uptr_event(e);
 }
 
 mir::EventUPtr mir::events::make_pointer_axis_event(
@@ -280,7 +308,7 @@ mir::EventUPtr mir::events::make_pointer_axis_event(
     float relative_x_value,
     float relative_y_value)
 {
-    auto const e = new_event<MirPointerEvent>(
+    return make_pointer_event(
         device_id, timestamp, cookie, modifiers, action, buttons_pressed,
         geom::PointF{x_axis_value, y_axis_value},
         geom::DisplacementF{relative_x_value, relative_y_value},
@@ -288,7 +316,6 @@ mir::EventUPtr mir::events::make_pointer_axis_event(
         geom::DisplacementF{vscroll_value, hscroll_value},
         geom::Displacement{},
         geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{});
-    return make_uptr_event(e);
 }
 
 mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
@@ -308,7 +335,7 @@ mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
     float relative_x_value,
     float relative_y_value)
 {
-    auto const e = new_event<MirPointerEvent>(
+    return make_pointer_event(
         device_id, timestamp, cookie, modifiers, action, buttons_pressed,
         geom::PointF{x_axis_value, y_axis_value},
         geom::DisplacementF{relative_x_value, relative_y_value},
@@ -316,7 +343,6 @@ mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
         geom::DisplacementF{vscroll_value, hscroll_value},
         geom::Displacement{},
         geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{hscroll_stop, vscroll_stop});
-    return make_uptr_event(e);
 }
 
 mir::EventUPtr mir::events::make_pointer_axis_discrete_scroll_event(
@@ -332,7 +358,7 @@ mir::EventUPtr mir::events::make_pointer_axis_discrete_scroll_event(
     float hscroll_discrete,
     float vscroll_discrete)
 {
-    auto const e = new_event<MirPointerEvent>(
+    return make_pointer_event(
         device_id, timestamp, mac, modifiers, action, buttons_pressed,
         std::nullopt,
         geom::DisplacementF{},
@@ -340,7 +366,6 @@ mir::EventUPtr mir::events::make_pointer_axis_discrete_scroll_event(
         geom::DisplacementF{vscroll_value, hscroll_value},
         geom::Displacement{hscroll_discrete, vscroll_discrete},
         geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{});
-    return make_uptr_event(e);
 }
 
 mir::EventUPtr mev::make_input_configure_event(
