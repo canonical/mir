@@ -1,5 +1,5 @@
 # Check if doxygen is present and add 'make doc' target
-find_package(Doxygen>1.8)
+find_package(Doxygen 1.8.0)
 
 option(
   BUILD_DOXYGEN
