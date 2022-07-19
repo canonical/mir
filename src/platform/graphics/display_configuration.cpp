@@ -138,7 +138,6 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput c
 
 std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfiguration const& val)
 {
-    val.for_each_card([&out](auto card) { out << card << std::endl; });
     val.for_each_output([&out](DisplayConfigurationOutput const& output) { out << output << std::endl; });
 
     return out;
@@ -208,13 +207,11 @@ bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const&
     std::vector<DisplayConfigurationCard> lhs_cards;
     std::vector<DisplayConfigurationOutput> lhs_outputs;
 
-    lhs.for_each_card([&lhs_cards](DisplayConfigurationCard const& card) { lhs_cards.emplace_back(card); });
     lhs.for_each_output([&lhs_outputs](DisplayConfigurationOutput const& output) { lhs_outputs.emplace_back(output); });
 
     std::vector<DisplayConfigurationCard> rhs_cards;
     std::vector<DisplayConfigurationOutput> rhs_outputs;
 
-    rhs.for_each_card([&rhs_cards](DisplayConfigurationCard const& card) { rhs_cards.emplace_back(card); });
     rhs.for_each_output([&rhs_outputs](DisplayConfigurationOutput const& output) { rhs_outputs.emplace_back(output); });
 
     return lhs_cards == rhs_cards && lhs_outputs == rhs_outputs;
