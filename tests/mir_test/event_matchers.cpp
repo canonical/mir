@@ -186,8 +186,6 @@ auto get_enum_value(MirPointerAxis axis)
     STRINGIFY(mir_pointer_axis_hscroll)
     STRINGIFY(mir_pointer_axis_relative_x)
     STRINGIFY(mir_pointer_axis_relative_y)
-    STRINGIFY(mir_pointer_axis_vscroll_discrete)
-    STRINGIFY(mir_pointer_axis_hscroll_discrete)
     STRINGIFY(mir_pointer_axis_vscroll_value120)
     STRINGIFY(mir_pointer_axis_hscroll_value120)
 

@@ -299,10 +299,6 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
        return pev->vscroll();
    case mir_pointer_axis_hscroll:
        return pev->hscroll();
-   case mir_pointer_axis_vscroll_discrete:
-       return pev->vscroll_discrete();
-   case mir_pointer_axis_hscroll_discrete:
-       return pev->hscroll_discrete();
     case mir_pointer_axis_vscroll_value120:
         return pev->vscroll_value120();
     case mir_pointer_axis_hscroll_value120:
@@ -325,8 +321,6 @@ bool mir_pointer_event_axis_stop(MirPointerEvent const* pev, MirPointerAxis axis
    case mir_pointer_axis_y:
    case mir_pointer_axis_relative_x:
    case mir_pointer_axis_relative_y:
-   case mir_pointer_axis_vscroll_discrete:
-   case mir_pointer_axis_hscroll_discrete:
        return false;
    default:
        mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
