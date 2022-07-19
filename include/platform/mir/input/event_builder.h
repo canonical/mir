@@ -49,6 +49,7 @@ public:
         xkb_keysym_t keysym,
         int scan_code) = 0;
 
+    [[deprecated("use the pointer_event() that includes all properties instead")]]
     virtual EventUPtr pointer_event(
         std::optional<Timestamp> timestamp,
         MirPointerAction action,
@@ -56,6 +57,7 @@ public:
         float hscroll_value, float vscroll_value,
         float relative_x_value, float relative_y_value) = 0;
 
+    [[deprecated("use the pointer_event() that includes all properties instead")]]
     virtual EventUPtr pointer_event(
         std::optional<Timestamp> timestamp,
         MirPointerAction action,
@@ -64,6 +66,7 @@ public:
         float hscroll_value, float vscroll_value,
         float relative_x_value, float relative_y_value) = 0;
 
+    [[deprecated("use the pointer_event() that includes all properties instead")]]
     virtual EventUPtr pointer_axis_event(
         MirPointerAxisSource axis_source,
         std::optional<Timestamp> timestamp,
@@ -73,6 +76,7 @@ public:
         float hscroll_value, float vscroll_value,
         float relative_x_value, float relative_y_value) = 0;
 
+    [[deprecated("use the pointer_event() that includes all properties instead")]]
     virtual EventUPtr pointer_axis_discrete_scroll_event(
         MirPointerAxisSource axis_source,
         std::optional<Timestamp> timestamp,
@@ -85,6 +89,7 @@ public:
         std::optional<Timestamp> timestamp,
         std::vector<mir::events::ContactState> const& contacts) = 0;
 
+    [[deprecated("use the pointer_event() that includes all properties instead")]]
     virtual EventUPtr pointer_axis_with_stop_event(
         MirPointerAxisSource axis_source,
         std::optional<Timestamp> timestamp,
