@@ -269,7 +269,8 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
     }
     else if (h_scroll_value120 && version_supports_axis_discrete())
     {
-        send_axis_value120_event(Axis::horizontal_scroll, (h_scroll_value120 / 120));
+        auto const h_value_discrete = get_discrete_from_value120(Axis::horizontal_scroll, h_scroll_value120);
+        send_axis_value120_event(Axis::horizontal_scroll, h_value_discrete);
         needs_frame = true;
     }
 
@@ -280,7 +281,8 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
     }
     else if (v_scroll_value120 && version_supports_axis_discrete())
     {
-        send_axis_value120_event(Axis::vertical_scroll, (v_scroll_value120 / 120));
+        auto const v_value_discrete = get_discrete_from_value120(Axis::vertical_scroll, v_scroll_value120);
+        send_axis_value120_event(Axis::vertical_scroll, v_value_discrete);
         needs_frame = true;
     }
 
@@ -534,6 +536,36 @@ void mf::WlPointer::on_commit(WlSurface* surface)
                 cursor->apply_to(&surface_under_cursor.value());
         }
     }
+}
+
+float mf::WlPointer::get_discrete_from_value120(uint32_t axis, float value120)
+{
+    int* counter;
+    switch (axis)
+    {
+    case Axis::horizontal_scroll:
+        counter = &h_value120_counter;
+        break;
+    case Axis::vertical_scroll:
+        counter = &v_value120_counter;
+        break;
+    default:
+        BOOST_THROW_EXCEPTION(std::runtime_error{
+            "Invalid axis given to update_value120_counter()"});
+    }
+
+    *counter += value120;
+    auto const discrete = *counter % 120;
+    if (*counter >= 120)
+    {
+        *counter -= discrete * 120;
+    }
+    else if (*counter <= -120)
+    {
+        *counter += discrete * 120;
+    }
+
+    return discrete;
 }
 
 WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot, mf::CommitHandler* commit_handler)

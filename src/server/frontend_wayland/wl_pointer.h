@@ -86,6 +86,9 @@ private:
     void maybe_frame();
     /// The cursor surface has committed
     void on_commit(WlSurface* surface) override;
+    /// Adds value120 to a counter when the client expects discrete events
+    /// Returns a discrete value if the counter fills to a full value120
+    float get_discrete_from_value120(uint32_t axis, float value120);
 
     /// Wayland request handlers
     ///@{
@@ -104,6 +107,9 @@ private:
     std::unique_ptr<Cursor> cursor;
     wayland::Weak<wayland::RelativePointerV1> relative_pointer;
     geometry::Displacement cursor_hotspot;
+
+    int h_value120_counter = 0;
+    int v_value120_counter = 0;
 };
 
 }
