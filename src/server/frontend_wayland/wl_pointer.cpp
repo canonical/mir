@@ -540,32 +540,28 @@ void mf::WlPointer::on_commit(WlSurface* surface)
 
 float mf::WlPointer::get_discrete_from_value120(uint32_t axis, float value120)
 {
-    int* counter;
+    auto const lambda = [](int& counter, float value120) {
+        counter += value120;
+        auto const discrete = counter / 120;
+
+        if (counter >= 120 || counter <= -120)
+        {
+            counter = counter % discrete;
+        }
+
+        return discrete;
+    };
+
     switch (axis)
     {
     case Axis::horizontal_scroll:
-        counter = &h_value120_counter;
-        break;
+        return lambda(h_value120_counter, value120);
     case Axis::vertical_scroll:
-        counter = &v_value120_counter;
-        break;
+        return lambda(v_value120_counter, value120);
     default:
         BOOST_THROW_EXCEPTION(std::runtime_error{
             "Invalid axis given to update_value120_counter()"});
     }
-
-    *counter += value120;
-    auto const discrete = *counter % 120;
-    if (*counter >= 120)
-    {
-        *counter -= discrete * 120;
-    }
-    else if (*counter <= -120)
-    {
-        *counter += discrete * 120;
-    }
-
-    return discrete;
 }
 
 WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot, mf::CommitHandler* commit_handler)
