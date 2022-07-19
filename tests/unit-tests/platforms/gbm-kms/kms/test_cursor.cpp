@@ -189,11 +189,6 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
             });
     }
 
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const override
-    {
-        stub_config.for_each_card(f);
-    }
-
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
     {
         stub_config.for_each_output(f);

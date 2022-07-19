@@ -273,10 +273,6 @@ mtd::StubDisplayConfig::StubDisplayConfig(
 {
 }
 
-void mtd::StubDisplayConfig::for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> /*f*/) const
-{
-}
-
 void mtd::StubDisplayConfig::for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const
 {
     for (auto& disp : outputs)
