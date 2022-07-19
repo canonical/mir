@@ -540,13 +540,13 @@ void mf::WlPointer::on_commit(WlSurface* surface)
 
 float mf::WlPointer::get_discrete_from_value120(uint32_t axis, float value120)
 {
-    auto const lambda = [](int& counter, float value120) {
+    auto const get_discrete = [](int& counter, float value120) {
         counter += value120;
         auto const discrete = counter / 120;
 
         if (counter >= 120 || counter <= -120)
         {
-            counter = counter % discrete;
+            counter = counter % 120;
         }
 
         return discrete;
@@ -555,12 +555,12 @@ float mf::WlPointer::get_discrete_from_value120(uint32_t axis, float value120)
     switch (axis)
     {
     case Axis::horizontal_scroll:
-        return lambda(h_value120_counter, value120);
+        return get_discrete(h_value120_counter, value120);
     case Axis::vertical_scroll:
-        return lambda(v_value120_counter, value120);
+        return get_discrete(v_value120_counter, value120);
     default:
         BOOST_THROW_EXCEPTION(std::runtime_error{
-            "Invalid axis given to update_value120_counter()"});
+            "Invalid axis given to get_discrete_from_value120()"});
     }
 }
 
