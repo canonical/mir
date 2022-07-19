@@ -65,109 +65,54 @@ void MirPointerEvent::set_buttons(MirPointerButtons buttons)
     buttons_ = buttons;
 }
 
-float MirPointerEvent::x() const
+auto MirPointerEvent::position() const -> std::optional<mir::geometry::PointF>
 {
-    return position_.value_or(geom::PointF{}).x.as_value();
+    return position_;
 }
 
-void MirPointerEvent::set_x(float x)
+void MirPointerEvent::set_position(std::optional<mir::geometry::PointF> value)
 {
-    if (!position_)
-    {
-        position_.emplace();
-    }
-    position_.value().x = geom::XF{x};
+    position_ = value;
 }
 
-float MirPointerEvent::y() const
+auto MirPointerEvent::motion() const -> mir::geometry::DisplacementF
 {
-    return position_.value_or(geom::PointF{}).y.as_value();
+    return motion_;
 }
 
-void MirPointerEvent::set_y(float y)
+void MirPointerEvent::set_motion(mir::geometry::DisplacementF value)
 {
-    if (!position_)
-    {
-        position_.emplace();
-    }
-    position_.value().y = geom::YF{y};
+    motion_ = value;
 }
 
-bool MirPointerEvent::has_absolute_position() const
+auto MirPointerEvent::scroll() const -> mir::geometry::DisplacementF
 {
-    return position_.operator bool();
+    return scroll_;
 }
 
-void MirPointerEvent::set_has_absolute_position(bool value)
+void MirPointerEvent::set_scroll(mir::geometry::DisplacementF value)
 {
-    if (value && !position_)
-    {
-        position_ = geom::PointF{};
-    }
-    else if (!value && position_)
-    {
-        position_ = std::nullopt;
-    }
+    scroll_ = value;
 }
 
-float MirPointerEvent::dx() const
+auto MirPointerEvent::scroll_discrete() const -> mir::geometry::Displacement
 {
-    return motion_.dx.as_value();
+    return scroll_discrete_;
 }
 
-void MirPointerEvent::set_dx(float dx)
+void MirPointerEvent::set_scroll_discrete(mir::geometry::Displacement value)
 {
-    motion_.dx = geom::DeltaXF{dx};
+    scroll_discrete_ = value;
 }
 
-float MirPointerEvent::dy() const
+auto MirPointerEvent::scroll_stop() const -> mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper>
 {
-    return motion_.dy.as_value();
+    return scroll_stop_;
 }
 
-void MirPointerEvent::set_dy(float dy)
+void MirPointerEvent::set_scroll_stop(mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> value)
 {
-    motion_.dy = geom::DeltaYF{dy};
-}
-
-float MirPointerEvent::vscroll() const
-{
-    return scroll_.dy.as_value();
-}
-
-void MirPointerEvent::set_vscroll(float vs)
-{
-    scroll_.dy = geom::DeltaYF{vs};
-}
-
-float MirPointerEvent::hscroll() const
-{
-    return scroll_.dx.as_value();
-}
-
-void MirPointerEvent::set_hscroll(float hs)
-{
-    scroll_.dx = geom::DeltaXF{hs};
-}
-
-bool MirPointerEvent::vscroll_stop() const
-{
-    return scroll_stop_.dy.as_value();
-}
-
-void MirPointerEvent::set_vscroll_stop(bool stop)
-{
-    scroll_stop_.dy = geom::generic::DeltaY<bool>{stop};
-}
-
-bool MirPointerEvent::hscroll_stop() const
-{
-    return scroll_stop_.dx.as_value();
-}
-
-void MirPointerEvent::set_hscroll_stop(bool stop)
-{
-    scroll_stop_.dx = geom::generic::DeltaX<bool>{stop};
+    scroll_stop_ = value;
 }
 
 MirPointerAction MirPointerEvent::action() const
@@ -222,24 +167,4 @@ auto MirPointerEvent::axis_source() const -> MirPointerAxisSource
 void MirPointerEvent::set_axis_source(MirPointerAxisSource source)
 {
     axis_source_ = source;
-}
-
-float MirPointerEvent::vscroll_discrete() const
-{
-    return scroll_discrete_.dy.as_value();
-}
-
-void MirPointerEvent::set_vscroll_discrete(float v)
-{
-    scroll_discrete_.dy = geom::DeltaY{v};
-}
-
-float MirPointerEvent::hscroll_discrete() const
-{
-    return scroll_discrete_.dx.as_value();
-}
-
-void MirPointerEvent::set_hscroll_discrete(float h)
-{
-    scroll_discrete_.dx = geom::DeltaX{h};
 }

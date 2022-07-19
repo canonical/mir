@@ -185,8 +185,7 @@ void mev::set_cursor_position(MirEvent& event, float x, float y)
         event.to_input()->input_type() != mir_input_event_type_pointer)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
 
-    event.to_input()->to_pointer()->set_x(x);
-    event.to_input()->to_pointer()->set_y(y);
+    event.to_input()->to_pointer()->set_position({{x, y}});
 }
 
 void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
@@ -400,8 +399,10 @@ void mev::transform_positions(MirEvent& event, mir::geometry::Displacement const
         if (input_type == mir_input_event_type_pointer)
         {
             auto pev = event.to_input()->to_pointer();
-            pev->set_x(pev->x() - movement.dx.as_int());
-            pev->set_y(pev->y() - movement.dy.as_int());
+            if (auto const position = pev->position())
+            {
+                pev->set_position(position.value() - geom::DisplacementF{movement});
+            }
         }
         else if (input_type == mir_input_event_type_touch)
         {
@@ -425,8 +426,10 @@ void mev::scale_positions(MirEvent& event, float scale)
         if (input_type == mir_input_event_type_pointer)
         {
             auto pev = event.to_input()->to_pointer();
-            pev->set_x(pev->x() * scale);
-            pev->set_y(pev->y() * scale);
+            if (auto const position = pev->position())
+            {
+                pev->set_position(as_point(as_displacement(position.value()) * scale));
+            }
         }
         else if (input_type == mir_input_event_type_touch)
         {

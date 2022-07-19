@@ -46,38 +46,20 @@ struct MirPointerEvent : MirInputEvent
     auto axis_source() const -> MirPointerAxisSource;
     void set_axis_source(MirPointerAxisSource source);
 
-    float x() const;
-    void set_x(float x);
+    auto position() const -> std::optional<mir::geometry::PointF>;
+    void set_position(std::optional<mir::geometry::PointF> value);
 
-    float y() const;
-    void set_y(float y);
+    auto motion() const -> mir::geometry::DisplacementF;
+    void set_motion(mir::geometry::DisplacementF value);
 
-    bool has_absolute_position() const;
-    void set_has_absolute_position(bool value);
+    auto scroll() const -> mir::geometry::DisplacementF;
+    void set_scroll(mir::geometry::DisplacementF value);
 
-    float dx() const;
-    void set_dx(float x);
+    auto scroll_discrete() const -> mir::geometry::Displacement;
+    void set_scroll_discrete(mir::geometry::Displacement value);
 
-    float dy() const;
-    void set_dy(float y);
-
-    float vscroll() const;
-    void set_vscroll(float v);
-
-    float hscroll() const;
-    void set_hscroll(float h);
-
-    bool vscroll_stop() const;
-    void set_vscroll_stop(bool stop);
-
-    bool hscroll_stop() const;
-    void set_hscroll_stop(bool stop);
-
-    float vscroll_discrete() const;
-    void set_vscroll_discrete(float v);
-
-    float hscroll_discrete() const;
-    void set_hscroll_discrete(float h);
+    auto scroll_stop() const -> mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper>;
+    void set_scroll_stop(mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> value);
 
     MirPointerAction action() const;
     void set_action(MirPointerAction action);
