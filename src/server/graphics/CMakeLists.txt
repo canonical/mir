@@ -14,6 +14,8 @@ add_library(
   display_configuration_observer_multiplexer.h
   platform_probe.cpp
   platform_probe.h
+  multiplexing_display.h
+  multiplexing_display.cpp
 )
 
 target_link_libraries(mirgraphics
