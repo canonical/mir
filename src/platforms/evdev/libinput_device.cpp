@@ -316,7 +316,7 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
             libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL) ?
             libinput_event_pointer_get_axis_value_discrete(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL) :
             0.0;
-        auto const vscroll_value120 =
+        auto const vscroll_discrete =
             libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) ?
             libinput_event_pointer_get_axis_value_discrete(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) :
             0.0;

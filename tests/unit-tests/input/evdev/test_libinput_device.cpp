@@ -554,7 +554,6 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
 TEST_F(LibInputDeviceOnMouse, hi_res_scroll_does_not_combine_with_discrete)
 {
     InSequence seq;
-    // expect two scroll events..
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 1.0f)));
 
     mouse.start(&mock_sink, &mock_builder);
