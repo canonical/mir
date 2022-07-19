@@ -15,7 +15,6 @@ jobs:
       matrix:
         release:
         - "20.04"
-        - "21.10"
         - "22.04"
         - "devel"
 
