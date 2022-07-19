@@ -181,12 +181,6 @@ mge::KMSDisplayConfiguration::KMSDisplayConfiguration(
 {
 }
 
-void mge::KMSDisplayConfiguration::for_each_card(
-    std::function<void(DisplayConfigurationCard const&)> f) const
-{
-    f(card);
-}
-
 void mge::KMSDisplayConfiguration::for_each_output(
     std::function<void(DisplayConfigurationOutput const&)> f) const
 {
