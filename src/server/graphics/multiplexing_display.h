@@ -39,11 +39,6 @@ public:
         EventHandlerRegister& handlers,
         DisplayConfigurationChangeHandler const& conf_change_handler) override;
 
-    void register_pause_resume_handlers(
-        EventHandlerRegister& handlers,
-        DisplayPauseHandler const& pause_handler,
-        DisplayResumeHandler const& resume_handler) override;
-
     void pause() override;
 
     void resume() override;

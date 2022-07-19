@@ -116,13 +116,6 @@ void mg::MultiplexingDisplay::register_configuration_change_handler(
 {
 }
 
-void mg::MultiplexingDisplay::register_pause_resume_handlers(
-    EventHandlerRegister& /*handlers*/,
-    DisplayPauseHandler const& /*pause_handler*/,
-    DisplayResumeHandler const& /*resume_handler*/)
-{
-}
-
 void mg::MultiplexingDisplay::pause()
 {
 }
