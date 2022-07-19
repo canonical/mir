@@ -19,6 +19,9 @@
 
 #include "mir_toolkit/event.h"
 #include "mir/events/contact_state.h"
+#include "mir/geometry/displacement.h"
+#include "mir/geometry/point_f.h"
+#include "mir/geometry/displacement_f.h"
 #include <memory>
 #include <chrono>
 #include <vector>
@@ -91,6 +94,18 @@ public:
         float hscroll_value, float vscroll_value,
         bool hscroll_stop, bool vscroll_stop,
         float relative_x_value, float relative_y_value) = 0;
+
+    virtual EventUPtr pointer_event(
+        std::optional<Timestamp> timestamp,
+        MirPointerAction action,
+        MirPointerButtons buttons,
+        std::optional<mir::geometry::PointF> position,
+        mir::geometry::DisplacementF motion,
+        MirPointerAxisSource axis_source,
+        mir::geometry::DisplacementF scroll,
+        mir::geometry::Displacement scroll_discrete,
+        mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> scroll_stop) = 0;
+
 protected:
     EventBuilder(EventBuilder const&) = delete;
     EventBuilder& operator=(EventBuilder const&) = delete;

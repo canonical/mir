@@ -87,7 +87,7 @@ struct MockEventBuilder : mi::EventBuilder
                 return builder.pointer_event(time, action, buttons, hscroll, vscroll, relative_x, relative_y);
             });
 
-        ON_CALL(*this, pointer_event(_, _, _, _, _, _, _, _, _)).WillByDefault(
+        ON_CALL(*this, old_pointer_event(_, _, _, _, _, _, _, _, _)).WillByDefault(
             [this](std::optional<Timestamp> time, MirPointerAction action, MirPointerButtons buttons,
                    float x, float y, float hscroll, float vscroll, float relative_x, float relative_y)
             {
@@ -128,7 +128,7 @@ struct MockEventBuilder : mi::EventBuilder
     MOCK_METHOD(mir::EventUPtr, touch_event, (std::optional<Timestamp>, std::vector<mir::events::ContactState> const&));
     MOCK_METHOD(mir::EventUPtr, pointer_event,
                 (std::optional<Timestamp>, MirPointerAction, MirPointerButtons, float, float, float, float));
-    MOCK_METHOD(mir::EventUPtr, pointer_event,
+    MOCK_METHOD(mir::EventUPtr, old_pointer_event,
                 (std::optional<Timestamp>, MirPointerAction, MirPointerButtons, float, float, float, float, float, float));
     MOCK_METHOD(mir::EventUPtr, pointer_axis_event,
                 (MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
@@ -143,6 +143,23 @@ struct MockEventBuilder : mi::EventBuilder
                 (MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
                  MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value, float hscroll_discrete,
                  float vscroll_discrete));
+    MOCK_METHOD(mir::EventUPtr, pointer_event,
+                (std::optional<Timestamp>, MirPointerAction, MirPointerButtons, std::optional<mir::geometry::PointF>,
+                 mir::geometry::DisplacementF, MirPointerAxisSource, mir::geometry::DisplacementF,
+                 mir::geometry::Displacement,
+                 mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper>), (override));
+
+    // Overloaded mock methods with the same number of arguments are hard to use, wrap it instead
+    mir::EventUPtr pointer_event(
+        std::optional<Timestamp> timestamp,
+        MirPointerAction action,
+        MirPointerButtons buttons_pressed,
+        float x, float y,
+        float hscroll, float vscroll,
+        float relative_x, float relative_y) override
+    {
+        return old_pointer_event(timestamp, action, buttons_pressed, x, y, hscroll, vscroll, relative_x, relative_y);
+    }
 };
 
 struct LibInputDevice : public ::testing::Test

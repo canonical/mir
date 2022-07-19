@@ -93,6 +93,17 @@ public:
         MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value, float hscroll_discrete,
         float vscroll_discrete) override;
 
+    EventUPtr pointer_event(
+        std::optional<Timestamp> timestamp,
+        MirPointerAction action,
+        MirPointerButtons buttons,
+        std::optional<mir::geometry::PointF> position,
+        mir::geometry::DisplacementF motion,
+        MirPointerAxisSource axis_source,
+        mir::geometry::DisplacementF scroll,
+        mir::geometry::Displacement scroll_discrete,
+        mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> scroll_stop) override;
+
 private:
     auto calibrate_timestamp(std::optional<Timestamp> source_timestamp) -> Timestamp;
 
