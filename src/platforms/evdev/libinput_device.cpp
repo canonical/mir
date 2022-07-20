@@ -289,8 +289,8 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
         (has_y_scroll ? libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) : 0) *
             vertical_scroll_scale};
     geom::generic::Displacement<geom::generic::Value<bool>::Wrapper> const scroll_stop{
-        has_x_scroll && scroll.dx != geom::DeltaXF{},
-        has_y_scroll && scroll.dy != geom::DeltaYF{}};
+        has_x_scroll && scroll.dx == geom::DeltaXF{},
+        has_y_scroll && scroll.dy == geom::DeltaYF{}};
     auto const has_discrete = libinput_event_pointer_get_axis_source(pointer) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL;
     geom::Displacement const scroll_discrete{
         (has_x_scroll && has_discrete) ?
