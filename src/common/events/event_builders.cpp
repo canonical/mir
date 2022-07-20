@@ -287,7 +287,7 @@ mir::EventUPtr mev::make_pointer_event(
         geom::PointF{x_axis_value, y_axis_value},
         geom::DisplacementF{relative_x_value, relative_y_value},
         mir_pointer_axis_source_none,
-        geom::DisplacementF{vscroll_value, hscroll_value},
+        geom::DisplacementF{hscroll_value, vscroll_value},
         geom::Displacement{},
         geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{});
 }
@@ -312,7 +312,7 @@ mir::EventUPtr mir::events::make_pointer_axis_event(
         geom::PointF{x_axis_value, y_axis_value},
         geom::DisplacementF{relative_x_value, relative_y_value},
         axis_source,
-        geom::DisplacementF{vscroll_value, hscroll_value},
+        geom::DisplacementF{hscroll_value, vscroll_value},
         geom::Displacement{},
         geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{});
 }
@@ -339,7 +339,7 @@ mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
         geom::PointF{x_axis_value, y_axis_value},
         geom::DisplacementF{relative_x_value, relative_y_value},
         axis_source,
-        geom::DisplacementF{vscroll_value, hscroll_value},
+        geom::DisplacementF{hscroll_value, vscroll_value},
         geom::Displacement{},
         geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{hscroll_stop, vscroll_stop});
 }
@@ -362,7 +362,7 @@ mir::EventUPtr mir::events::make_pointer_axis_discrete_scroll_event(
         std::nullopt,
         geom::DisplacementF{},
         axis_source,
-        geom::DisplacementF{vscroll_value, hscroll_value},
+        geom::DisplacementF{hscroll_value, vscroll_value},
         geom::Displacement{hscroll_discrete, vscroll_discrete},
         geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{});
 }
