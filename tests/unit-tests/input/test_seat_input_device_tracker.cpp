@@ -82,6 +82,30 @@ struct SeatInputDeviceTracker : ::testing::Test
     std::chrono::nanoseconds arbitrary_timestamp;
 };
 
+auto motion_event(mi::EventBuilder& builder, float x, float y) -> mir::EventUPtr
+{
+    return builder.pointer_event(
+        std::chrono::nanoseconds{},
+        mir_pointer_action_motion,
+        0,
+        std::nullopt,
+        {x, y},
+        mir_pointer_axis_source_none,
+        {}, {}, {});
+}
+
+auto button_event(mi::EventBuilder& builder, MirPointerAction action, MirPointerButtons buttons) -> mir::EventUPtr
+{
+    return builder.pointer_event(
+        std::chrono::nanoseconds{},
+        action,
+        buttons,
+        std::nullopt,
+        {},
+        mir_pointer_axis_source_none,
+        {}, {}, {});
+}
+
 }
 
 TEST_F(SeatInputDeviceTracker, throws_on_unknown_device)
@@ -160,8 +184,7 @@ TEST_F(SeatInputDeviceTracker, pointer_movement_updates_cursor)
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x, move_y)).Times(1);
 
     tracker.add_device(some_device);
-    tracker.dispatch(some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f,
-                                                        move_x, move_y));
+    tracker.dispatch(motion_event(some_device_builder, move_x, move_y));
 }
 
 TEST_F(SeatInputDeviceTracker, slow_pointer_movement_updates_cursor)
@@ -176,9 +199,9 @@ TEST_F(SeatInputDeviceTracker, slow_pointer_movement_updates_cursor)
     tracker.add_device(some_device);
 
     for (float x = step; x <= target; x += step)
-        tracker.dispatch(some_device_builder.pointer_event(
-            arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f,
-            step, step));
+    {
+        tracker.dispatch(motion_event(some_device_builder, step, step));
+    }
 }
 
 TEST_F(SeatInputDeviceTracker, pointer_movement_from_different_devices_change_cursor_position)
@@ -191,12 +214,9 @@ TEST_F(SeatInputDeviceTracker, pointer_movement_from_different_devices_change_cu
     tracker.add_device(some_device);
     tracker.add_device(another_device);
 
-    tracker.dispatch(
-        some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 23, 20));
-    tracker.dispatch(
-        another_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 18, -10));
-    tracker.dispatch(
-        another_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 2, 10));
+    tracker.dispatch(motion_event(some_device_builder, 23, 20));
+    tracker.dispatch(motion_event(another_device_builder, 18, -10));
+    tracker.dispatch(motion_event(another_device_builder, 2, 10));
 }
 
 TEST_F(SeatInputDeviceTracker, tracks_a_single_button_state_for_multiple_pointing_devices)
@@ -213,14 +233,10 @@ TEST_F(SeatInputDeviceTracker, tracks_a_single_button_state_for_multiple_pointin
     tracker.add_device(some_device);
     tracker.add_device(another_device);
 
-    tracker.dispatch(some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_button_down,
-                                                        mir_pointer_button_primary, 0, 0, 0, 0));
-    tracker.dispatch(another_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_button_down,
-                                                           mir_pointer_button_secondary, 0, 0, 0, 0));
-    tracker.dispatch(
-        some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_button_up, no_buttons, 0, 0, 0, 0));
-    tracker.dispatch(another_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_button_up,
-                                                           no_buttons, 0, 0, 0, 0));
+    tracker.dispatch(button_event(some_device_builder, mir_pointer_action_button_down, mir_pointer_button_primary));
+    tracker.dispatch(button_event(another_device_builder, mir_pointer_action_button_down, mir_pointer_button_secondary));
+    tracker.dispatch(button_event(some_device_builder, mir_pointer_action_button_up, no_buttons));
+    tracker.dispatch(button_event(another_device_builder, mir_pointer_action_button_up, no_buttons));
 }
 
 TEST_F(SeatInputDeviceTracker, pointing_device_removal_removes_pressed_button_state)
@@ -235,13 +251,10 @@ TEST_F(SeatInputDeviceTracker, pointing_device_removal_removes_pressed_button_st
 
     tracker.add_device(some_device);
     tracker.add_device(another_device);
-    tracker.dispatch(some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_button_down,
-                                                        mir_pointer_button_primary, 0, 0, 0, 0));
-    tracker.dispatch(another_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_button_down,
-                                                           mir_pointer_button_secondary, 0, 0, 0, 0));
+    tracker.dispatch(button_event(some_device_builder, mir_pointer_action_button_down, mir_pointer_button_primary));
+    tracker.dispatch(button_event(another_device_builder, mir_pointer_action_button_down, mir_pointer_button_secondary));
     tracker.remove_device(some_device);
-    tracker.dispatch(another_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion,
-                                                           mir_pointer_button_secondary, 0, 0, 0, 0));
+    tracker.dispatch(button_event(another_device_builder, mir_pointer_action_motion, mir_pointer_button_secondary));
 }
 
 TEST_F(SeatInputDeviceTracker, inconsistent_key_down_dropped)
@@ -281,10 +294,8 @@ TEST_F(SeatInputDeviceTracker, pointer_confinement_bounds_mouse_inside)
     geom::Rectangle rec{{0, 0}, {max_w_h, max_w_h}}; 
     tracker.set_confinement_regions({rec});
     tracker.add_device(some_device);
-    tracker.dispatch(some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f,
-                                                    move_x, move_y));
-    tracker.dispatch(some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f,
-                                                    max_w_h * 2, max_w_h * 2));
+    tracker.dispatch(motion_event(some_device_builder, move_x, move_y));
+    tracker.dispatch(motion_event(some_device_builder, max_w_h * 2, max_w_h * 2));
 }
 
 TEST_F(SeatInputDeviceTracker, reset_pointer_confinement_allows_movement_past)
@@ -298,10 +309,8 @@ TEST_F(SeatInputDeviceTracker, reset_pointer_confinement_allows_movement_past)
     geom::Rectangle rec{{0, 0}, {max_w_h, max_w_h}}; 
     tracker.set_confinement_regions({rec});
     tracker.add_device(some_device);
-    tracker.dispatch(some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f,
-                                                    move_x, move_y));
+    tracker.dispatch(motion_event(some_device_builder, move_x, move_y));
 
     tracker.reset_confinement_regions();
-    tracker.dispatch(some_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f,
-                                                    max_w_h * 2, max_w_h * 2));
+    tracker.dispatch(motion_event(some_device_builder, max_w_h * 2, max_w_h * 2));
 }
