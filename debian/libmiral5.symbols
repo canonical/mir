@@ -1,4 +1,4 @@
-libmiral.so.4 libmiral4 #MINVER#
+libmiral.so.5 libmiral5 #MINVER#
  MIRAL_3.0@MIRAL_3.0 3.0.0
  (c++)"miral::AddInitCallback::AddInitCallback(std::function<void ()> const&)@MIRAL_3.0" 3.0.0
  (c++)"miral::AddInitCallback::operator()(mir::Server&) const@MIRAL_3.0" 3.0.0
