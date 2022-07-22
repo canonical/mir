@@ -46,6 +46,7 @@ class Workspace;
 using namespace mir::geometry;
 
 /// The interface through which the window management policy is determined.
+/// \remark Since MirAL 2.4
 class WindowManagementPolicy
 {
 public:
@@ -212,7 +213,7 @@ public:
      * @param windows   the windows
      */
     virtual void advise_adding_to_workspace(
-        std::shared_ptr<Workspace> const& workspace,
+        std::shared_ptr<miral::Workspace> const& workspace,
         std::vector<Window> const& windows);
 
     /** Notification that windows are being removed from a workspace.
@@ -223,7 +224,7 @@ public:
      * @param windows   the windows
      */
     virtual void advise_removing_from_workspace(
-        std::shared_ptr<Workspace> const& workspace,
+        std::shared_ptr<miral::Workspace> const& workspace,
         std::vector<Window> const& windows);
 /** @} */
 

@@ -54,10 +54,11 @@ class Workspace;
 class WindowManagerToolsImplementation;
 
 /// Window management functions for querying and updating MirAL's model
+/// \remark Since MirAL 2.4
 class WindowManagerTools
 {
 public:
-    explicit WindowManagerTools(WindowManagerToolsImplementation* tools);
+    explicit WindowManagerTools(miral::WindowManagerToolsImplementation* tools);
     WindowManagerTools(WindowManagerTools const&);
     WindowManagerTools& operator=(WindowManagerTools const&);
     ~WindowManagerTools();
@@ -194,21 +195,21 @@ public:
      * \remark the tools hold only a weak_ptr<> to the workspace - there is no need for an explicit "destroy".
      * @return a shared_ptr owning the workspace
      */
-    auto create_workspace() -> std::shared_ptr<Workspace>;
+    auto create_workspace() -> std::shared_ptr<miral::Workspace>;
 
     /**
      * Add the tree containing window to a workspace
      * @param window    the window
      * @param workspace the workspace;
      */
-    void add_tree_to_workspace(Window const& window, std::shared_ptr<Workspace> const& workspace);
+    void add_tree_to_workspace(Window const& window, std::shared_ptr<miral::Workspace> const& workspace);
 
     /**
      * Remove the tree containing window from a workspace
      * @param window    the window
      * @param workspace the workspace;
      */
-    void remove_tree_from_workspace(Window const& window, std::shared_ptr<Workspace> const& workspace);
+    void remove_tree_from_workspace(Window const& window, std::shared_ptr<miral::Workspace> const& workspace);
 
     /**
      * Moves all the content from one workspace to another
@@ -216,8 +217,8 @@ public:
      * @param to_workspace the workspace to move the windows to;
      */
     void move_workspace_content_to_workspace(
-        std::shared_ptr<Workspace> const& to_workspace,
-        std::shared_ptr<Workspace> const& from_workspace);
+        std::shared_ptr<miral::Workspace> const& to_workspace,
+        std::shared_ptr<miral::Workspace> const& from_workspace);
 
     /**
      * invoke callback with each workspace containing window
@@ -227,7 +228,7 @@ public:
      */
     void for_each_workspace_containing(
         Window const& window,
-        std::function<void(std::shared_ptr<Workspace> const& workspace)> const& callback);
+        std::function<void(std::shared_ptr<miral::Workspace> const& workspace)> const& callback);
 
     /**
      * invoke callback with each window contained in workspace
@@ -236,7 +237,7 @@ public:
      * @param callback
      */
     void for_each_window_in_workspace(
-        std::shared_ptr<Workspace> const& workspace,
+        std::shared_ptr<miral::Workspace> const& workspace,
         std::function<void(Window const& window)> const& callback);
 
 /** @} */

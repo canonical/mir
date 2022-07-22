@@ -32,6 +32,7 @@ namespace scene { class Surface; }
 namespace miral
 {
 /// Handle class to manage a Mir surface. It may be null (e.g. default initialized)
+/// \remark Since MirAL 3.0
 class Window
 {
 public:
@@ -72,9 +73,13 @@ private:
     friend bool operator<(Window const& lhs, Window const& rhs);
 };
 
+/// \remark Since MirAL 2.4
 bool operator==(Window const& lhs, Window const& rhs);
+/// \remark Since MirAL 2.4
 bool operator==(std::shared_ptr<mir::scene::Surface> const& lhs, Window const& rhs);
+/// \remark Since MirAL 2.4
 bool operator==(Window const& lhs, std::shared_ptr<mir::scene::Surface> const& rhs);
+/// \remark Since MirAL 2.4
 bool operator<(Window const& lhs, Window const& rhs);
 
 inline bool operator!=(Window const& lhs, Window const& rhs) { return !(lhs == rhs); }

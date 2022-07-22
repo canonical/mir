@@ -34,6 +34,7 @@ namespace miral
 {
 
 /// Runner for applying initialization options to Mir.
+/// \remark Since MirAL 2.4
 class MirRunner
 {
 public:
@@ -58,7 +59,7 @@ public:
     /// Apply the supplied initialization options and run the Mir server.
     /// @returns EXIT_SUCCESS or EXIT_FAILURE according to whether the server ran successfully
     /// \note blocks until the Mir server exits
-    auto run_with(std::initializer_list<std::function<void(::mir::Server&)>> options) -> int;
+    auto run_with(std::initializer_list<std::function<void(mir::Server&)>> options) -> int;
 
     /// Tell the Mir server to exit
     void stop();

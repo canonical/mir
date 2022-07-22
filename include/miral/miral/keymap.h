@@ -25,6 +25,7 @@ namespace mir { class Server; }
 namespace miral
 {
 /// Load a keymap
+/// \remark Since MirAL 2.4
 class Keymap
 {
 public:

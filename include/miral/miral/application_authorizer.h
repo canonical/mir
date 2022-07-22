@@ -26,6 +26,7 @@ namespace mir { namespace frontend { class SessionCredentials; } }
 
 namespace miral
 {
+/// \remark Since MirAL 2.4
 class ApplicationCredentials
 {
 public:
@@ -58,6 +59,7 @@ public:
     virtual bool set_base_input_configuration_is_allowed(ApplicationCredentials const& creds) = 0;
 };
 
+/// \remark Since MirAL 2.4
 class BasicSetApplicationAuthorizer
 {
 public:
@@ -72,6 +74,7 @@ private:
     std::shared_ptr<Self> self;
 };
 
+/// \remark Since MirAL 2.4
 template<typename Policy>
 class SetApplicationAuthorizer : public BasicSetApplicationAuthorizer
 {

@@ -114,7 +114,7 @@ public:
     using Filter = std::function<bool(Application const& app, char const* protocol)>;
 
     /// \remark Since MirAL 3.4
-    using EnableCallback = std::function<bool(EnableInfo const& info)>;
+    using EnableCallback = std::function<bool(EnableInfo const&)>;
 
     /// Set an extension filter callback to control the extensions available to specific clients. Deprecated in favor of
     /// conditionally_enable(), and not be used in conjunction with conditionally_enable().
