@@ -4,7 +4,7 @@ find_package(Doxygen 1.8.0)
 option(
   BUILD_DOXYGEN
   "Build Doxygen documentation as part of the default build"
-  OFF`
+  OFF
 )
 
 if(DOXYGEN_FOUND)
