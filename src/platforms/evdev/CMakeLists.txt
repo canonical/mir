@@ -1,10 +1,4 @@
-pkg_check_modules(LIBINPUT REQUIRED libinput)
-
-if ("${LIBINPUT_VERSION}" VERSION_LESS "1.1")
-  add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=0)
-else ()
-  add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
-endif ()
+pkg_check_modules(LIBINPUT REQUIRED libinput>=1.1)
 
 include_directories(
   ${LIBINPUT_CFLAGS} 
