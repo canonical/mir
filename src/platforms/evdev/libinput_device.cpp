@@ -101,6 +101,18 @@ auto get_scroll_axis(libinput_event_pointer* event, libinput_pointer_axis axis, 
             0};
     return {precise, discrete, stop};
 }
+
+auto get_axis_source(libinput_pointer_axis_source source) -> MirPointerAxisSource
+{
+    switch (source)
+    {
+    case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL:        return mir_pointer_axis_source_wheel;
+    case LIBINPUT_POINTER_AXIS_SOURCE_FINGER:       return mir_pointer_axis_source_finger;
+    case LIBINPUT_POINTER_AXIS_SOURCE_CONTINUOUS:   return mir_pointer_axis_source_continuous;
+    case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL_TILT:   return mir_pointer_axis_source_wheel_tilt;
+    default:                                        return mir_pointer_axis_source_none;
+    }
+}
 }
 
 struct mie::LibInputDevice::ContactExtension
@@ -311,39 +323,19 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
         pointer,
         LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL,
         vertical_scroll_scale);
+    auto const axis_source = get_axis_source(libinput_event_pointer_get_axis_source(pointer));
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
 
-    auto builder_pointer_axis_event = [&, this](MirPointerAxisSource axis_source)
-        {
-            return builder->pointer_event(
-                time,
-                action,
-                button_state,
-                std::nullopt,
-                {},
-                axis_source,
-                h_scroll,
-                v_scroll);
-        };
-
-    switch (libinput_event_pointer_get_axis_source(pointer))
-    {
-    case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL:
-        return builder_pointer_axis_event(mir_pointer_axis_source_wheel);
-
-    case LIBINPUT_POINTER_AXIS_SOURCE_FINGER:
-        return builder_pointer_axis_event(mir_pointer_axis_source_finger);
-
-    case LIBINPUT_POINTER_AXIS_SOURCE_CONTINUOUS:
-        return builder_pointer_axis_event(mir_pointer_axis_source_continuous);
-
-    case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL_TILT:
-        return builder_pointer_axis_event(mir_pointer_axis_source_wheel_tilt);
-
-    default:
-        return builder_pointer_axis_event(mir_pointer_axis_source_none);
-    }
+    return builder->pointer_event(
+        time,
+        action,
+        button_state,
+        std::nullopt,
+        {},
+        axis_source,
+        h_scroll,
+        v_scroll);
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* touch)
