@@ -183,9 +183,9 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     }
 };
 
-auto motion_event(mi::EventBuilder* builder, float x, float y) -> mir::EventUPtr
+auto motion_event(mi::EventBuilder& builder, float x, float y) -> mir::EventUPtr
 {
-    return builder->pointer_event(
+    return builder.pointer_event(
         0ns,
         mir_pointer_action_motion,
         0,
@@ -196,9 +196,9 @@ auto motion_event(mi::EventBuilder* builder, float x, float y) -> mir::EventUPtr
         {});
 }
 
-auto button_event(mi::EventBuilder* builder, MirPointerAction action, MirPointerButtons buttons) -> mir::EventUPtr
+auto button_event(mi::EventBuilder& builder, MirPointerAction action, MirPointerButtons buttons) -> mir::EventUPtr
 {
-    return builder->pointer_event(
+    return builder.pointer_event(
         0ns,
         action,
         buttons,
@@ -288,9 +288,9 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_pointer_position)
     capture_input_sink(device, sink, builder);
 
     hub.add_device(mt::fake_shared(device));
-    sink->handle_input(motion_event(builder, 10.0f, 10.0f));
-    sink->handle_input(motion_event(builder, 10.0f, 10.0f));
-    sink->handle_input(motion_event(builder, -10.0f, 10.0f));
+    sink->handle_input(motion_event(*builder, 10.0f, 10.0f));
+    sink->handle_input(motion_event(*builder, 10.0f, 10.0f));
+    sink->handle_input(motion_event(*builder, -10.0f, 10.0f));
 }
 
 TEST_F(SingleSeatInputDeviceHubSetup, confines_pointer_movement)
@@ -305,8 +305,8 @@ TEST_F(SingleSeatInputDeviceHubSetup, confines_pointer_movement)
     capture_input_sink(device, sink, builder);
     hub.add_device(mt::fake_shared(device));
 
-    sink->handle_input(motion_event(builder, 10.0f, 20.0f));
-    sink->handle_input(motion_event(builder, 10.0f, 10.0f));
+    sink->handle_input(motion_event(*builder, 10.0f, 20.0f));
+    sink->handle_input(motion_event(*builder, 10.0f, 10.0f));
 }
 
 TEST_F(SingleSeatInputDeviceHubSetup, forwards_pointer_updates_to_cursor_listener)
@@ -318,7 +318,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_pointer_updates_to_cursor_listene
     capture_input_sink(device, sink, builder);
     hub.add_device(mt::fake_shared(device));
 
-    auto event = motion_event(builder, move_x, move_y);
+    auto event = motion_event(*builder, move_x, move_y);
 
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x, move_y)).Times(1);
 
@@ -413,7 +413,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_unifies_modifier_state_accross_
     const MirInputEventModifiers r_alt_modifier = mir_input_event_modifier_alt_right | mir_input_event_modifier_alt;
     auto key =
         key_event_builder->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_RIGHTALT);
-    auto motion = motion_event(mouse_event_builder, 12, 40);
+    auto motion = motion_event(*mouse_event_builder, 12, 40);
 
     EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(r_alt_modifier)));
     EXPECT_CALL(mock_dispatcher, dispatch(mt::PointerEventWithModifiers(r_alt_modifier)));
@@ -462,8 +462,8 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_reduces_modifier_state_accross_
     auto ctrl_down = key_event_builder_2->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_LEFTCTRL);
     auto ctrl_up = key_event_builder_2->key_event(arbitrary_timestamp, mir_keyboard_action_up, 0, KEY_LEFTCTRL);
 
-    auto motion_1 = motion_event(mouse_event_builder, 12, 40);
-    auto motion_2 = motion_event(mouse_event_builder, 18, 10);
+    auto motion_1 = motion_event(*mouse_event_builder, 12, 40);
+    auto motion_2 = motion_event(*mouse_event_builder, 18, 10);
 
     EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(r_alt_modifier)));
     EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(l_ctrl_modifier)));
@@ -493,9 +493,9 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_cursor_position_from_multi
     hub.add_device(mt::fake_shared(device));
     hub.add_device(mt::fake_shared(another_device));
 
-    auto motion_1 = motion_event(mouse_event_builder_1, 23, 20);
-    auto motion_2 = motion_event(mouse_event_builder_2, 18, -10);
-    auto motion_3 = motion_event(mouse_event_builder_2, 2, 10);
+    auto motion_1 = motion_event(*mouse_event_builder_1, 23, 20);
+    auto motion_2 = motion_event(*mouse_event_builder_2, 18, -10);
+    auto motion_3 = motion_event(*mouse_event_builder_2, 2, 10);
 
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(23, 20));
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(41, 10));
@@ -521,10 +521,10 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_button_state_from_multiple
     hub.add_device(mt::fake_shared(device));
     hub.add_device(mt::fake_shared(another_device));
 
-    auto motion_1 = button_event(mouse_event_builder_1, mir_pointer_action_button_down, mir_pointer_button_primary);
-    auto motion_2 = button_event(mouse_event_builder_2, mir_pointer_action_button_down, mir_pointer_button_secondary);
-    auto motion_3 = button_event(mouse_event_builder_1, mir_pointer_action_button_up, no_buttons);
-    auto motion_4 = button_event(mouse_event_builder_2, mir_pointer_action_button_up, no_buttons);
+    auto motion_1 = button_event(*mouse_event_builder_1, mir_pointer_action_button_down, mir_pointer_button_primary);
+    auto motion_2 = button_event(*mouse_event_builder_2, mir_pointer_action_button_down, mir_pointer_button_secondary);
+    auto motion_3 = button_event(*mouse_event_builder_1, mir_pointer_action_button_up, no_buttons);
+    auto motion_4 = button_event(*mouse_event_builder_2, mir_pointer_action_button_up, no_buttons);
 
     InSequence seq;
     EXPECT_CALL(mock_dispatcher, dispatch(mt::ButtonsDown(x, y, mir_pointer_button_primary)));
