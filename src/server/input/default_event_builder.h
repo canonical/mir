@@ -100,9 +100,8 @@ public:
         std::optional<mir::geometry::PointF> position,
         mir::geometry::DisplacementF motion,
         MirPointerAxisSource axis_source,
-        mir::geometry::DisplacementF scroll,
-        mir::geometry::Displacement scroll_discrete,
-        mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> scroll_stop) override;
+        events::ScrollAxisV1<mir::geometry::DeltaXTag> h_scroll,
+        events::ScrollAxisV1<mir::geometry::DeltaYTag> v_scroll) override;
 
 private:
     auto calibrate_timestamp(std::optional<Timestamp> source_timestamp) -> Timestamp;

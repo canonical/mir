@@ -159,9 +159,8 @@ mir::EventUPtr mir::input::DefaultEventBuilder::pointer_event(
     std::optional<mir::geometry::PointF> position,
     mir::geometry::DisplacementF motion,
     MirPointerAxisSource axis_source,
-    mir::geometry::DisplacementF scroll,
-    mir::geometry::Displacement scroll_discrete,
-    mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> scroll_stop)
+    events::ScrollAxisV1<mir::geometry::DeltaXTag> h_scroll,
+    events::ScrollAxisV1<mir::geometry::DeltaYTag> v_scroll)
 {
     std::vector<uint8_t> vec_cookie{};
     auto const timestamp = calibrate_timestamp(source_timestamp);
@@ -180,9 +179,8 @@ mir::EventUPtr mir::input::DefaultEventBuilder::pointer_event(
         position,
         motion,
         axis_source,
-        scroll,
-        scroll_discrete,
-        scroll_stop);
+        h_scroll,
+        v_scroll);
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::touch_event(

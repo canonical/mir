@@ -169,7 +169,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
     auto button_event = builder->pointer_event(
         event_time, action, buttons,
         std::nullopt, {},
-        mir_pointer_axis_source_none, scroll, {}, {});
+        mir_pointer_axis_source_none,
+        {scroll.dx, {}, false},
+        {scroll.dy, {}, false});
     button_event->to_input()->set_event_time(event_time);
 
     if (!sink)
@@ -210,7 +212,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
     auto pointer_event = builder->pointer_event(
         event_time, mir_pointer_action_motion, buttons,
         std::nullopt, motion,
-        mir_pointer_axis_source_none, scroll, {}, {});
+        mir_pointer_axis_source_none,
+        {scroll.dx, {}, false},
+        {scroll.dy, {}, false});
     pointer_event->to_input()->set_event_time(event_time);
 
     sink->handle_input(std::move(pointer_event));

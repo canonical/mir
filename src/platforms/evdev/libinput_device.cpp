@@ -46,6 +46,7 @@
 namespace md = mir::dispatch;
 namespace mi = mir::input;
 namespace mie = mi::evdev;
+namespace mev = mir::events;
 namespace geom = mir::geometry;
 using namespace std::literals::chrono_literals;
 
@@ -81,6 +82,24 @@ template<typename T> auto load_function(char const* sym)
         throw std::runtime_error("no valid function address");
 
     return result;
+}
+
+template<typename Tag>
+auto get_scroll_axis(libinput_event_pointer* event, libinput_pointer_axis axis, float scale) -> mev::ScrollAxis<Tag>
+{
+    if (!libinput_event_pointer_has_axis(event, axis))
+    {
+        return {};
+    }
+
+    mir::geometry::generic::Value<float>::Wrapper<Tag> const precise{
+        libinput_event_pointer_get_axis_value(event, axis) * scale};
+    auto const stop = precise.as_value() == 0;
+    mir::geometry::generic::Value<int>::Wrapper<Tag> const discrete{
+        libinput_event_pointer_get_axis_source(event) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL ?
+            libinput_event_pointer_get_axis_value_discrete(event, axis) :
+            0};
+    return {precise, discrete, stop};
 }
 }
 
@@ -227,7 +246,8 @@ mir::EventUPtr mie::LibInputDevice::convert_button_event(libinput_event_pointer*
         std::nullopt,
         {},
         mir_pointer_axis_source_none,
-        {}, {}, {});
+        {},
+        {});
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer* pointer)
@@ -244,7 +264,8 @@ mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer*
         std::nullopt,
         geom::DisplacementF{libinput_event_pointer_get_dx(pointer), libinput_event_pointer_get_dy(pointer)},
         mir_pointer_axis_source_none,
-        {}, {}, {});
+        {},
+        {});
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event_pointer* pointer)
@@ -273,7 +294,8 @@ mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event
         pointer_pos,
         movement,
         mir_pointer_axis_source_none,
-        {}, {}, {});
+        {},
+        {});
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* pointer)
@@ -281,22 +303,14 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
     std::chrono::nanoseconds const time = std::chrono::microseconds(libinput_event_pointer_get_time_usec(pointer));
     auto const action = mir_pointer_action_motion;
 
-    auto const has_x_scroll = libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
-    auto const has_y_scroll = libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
-    geom::DisplacementF const scroll{
-        (has_x_scroll ? libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL) : 0) *
-            horizontal_scroll_scale,
-        (has_y_scroll ? libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) : 0) *
-            vertical_scroll_scale};
-    geom::generic::Displacement<geom::generic::Value<bool>::Wrapper> const scroll_stop{
-        has_x_scroll && scroll.dx == geom::DeltaXF{},
-        has_y_scroll && scroll.dy == geom::DeltaYF{}};
-    auto const has_discrete = libinput_event_pointer_get_axis_source(pointer) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL;
-    geom::Displacement const scroll_discrete{
-        (has_x_scroll && has_discrete) ?
-            libinput_event_pointer_get_axis_value_discrete(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL) : 0,
-        (has_y_scroll && has_discrete) ?
-            libinput_event_pointer_get_axis_value_discrete(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) : 0};
+    auto const h_scroll = get_scroll_axis<geom::DeltaXTag>(
+        pointer,
+        LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL,
+        horizontal_scroll_scale);
+    auto const v_scroll = get_scroll_axis<geom::DeltaYTag>(
+        pointer,
+        LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL,
+        vertical_scroll_scale);
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
 
@@ -309,9 +323,8 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
                 std::nullopt,
                 {},
                 axis_source,
-                scroll,
-                scroll_discrete,
-                scroll_stop);
+                h_scroll,
+                v_scroll);
         };
 
     switch (libinput_event_pointer_get_axis_source(pointer))

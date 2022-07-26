@@ -249,11 +249,10 @@ mir::EventUPtr mev::make_pointer_event(
     std::optional<geom::PointF> position,
     geom::DisplacementF motion,
     MirPointerAxisSource axis_source,
-    geom::DisplacementF scroll,
-    geom::Displacement scroll_discrete,
-    geom::generic::Displacement<geom::generic::Value<bool>::Wrapper> scroll_stop)
+    events::ScrollAxisV1<mir::geometry::DeltaXTag> h_scroll,
+    events::ScrollAxisV1<mir::geometry::DeltaYTag> v_scroll)
 {
-    return make_uptr_event(new_event<MirPointerEvent>(
+    return make_uptr_event(new MirPointerEvent(
         device_id,
         timestamp,
         cookie,
@@ -263,9 +262,8 @@ mir::EventUPtr mev::make_pointer_event(
         position,
         motion,
         axis_source,
-        scroll,
-        scroll_discrete,
-        scroll_stop));
+        h_scroll,
+        v_scroll));
 }
 
 mir::EventUPtr mev::make_pointer_event(
@@ -287,9 +285,8 @@ mir::EventUPtr mev::make_pointer_event(
         geom::PointF{x_axis_value, y_axis_value},
         geom::DisplacementF{relative_x_value, relative_y_value},
         mir_pointer_axis_source_none,
-        geom::DisplacementF{hscroll_value, vscroll_value},
-        geom::Displacement{},
-        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{});
+        {geom::DeltaXF{hscroll_value}, {}, false},
+        {geom::DeltaYF{vscroll_value}, {}, false});
 }
 
 mir::EventUPtr mir::events::make_pointer_axis_event(
@@ -312,9 +309,8 @@ mir::EventUPtr mir::events::make_pointer_axis_event(
         geom::PointF{x_axis_value, y_axis_value},
         geom::DisplacementF{relative_x_value, relative_y_value},
         axis_source,
-        geom::DisplacementF{hscroll_value, vscroll_value},
-        geom::Displacement{},
-        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{});
+        {geom::DeltaXF{hscroll_value}, {}, false},
+        {geom::DeltaYF{vscroll_value}, {}, false});
 }
 
 mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
@@ -339,9 +335,8 @@ mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
         geom::PointF{x_axis_value, y_axis_value},
         geom::DisplacementF{relative_x_value, relative_y_value},
         axis_source,
-        geom::DisplacementF{hscroll_value, vscroll_value},
-        geom::Displacement{},
-        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{hscroll_stop, vscroll_stop});
+        {geom::DeltaXF{hscroll_value}, {}, hscroll_stop},
+        {geom::DeltaYF{vscroll_value}, {}, vscroll_stop});
 }
 
 mir::EventUPtr mir::events::make_pointer_axis_discrete_scroll_event(
@@ -362,9 +357,8 @@ mir::EventUPtr mir::events::make_pointer_axis_discrete_scroll_event(
         std::nullopt,
         geom::DisplacementF{},
         axis_source,
-        geom::DisplacementF{hscroll_value, vscroll_value},
-        geom::Displacement{hscroll_discrete, vscroll_discrete},
-        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{});
+        {geom::DeltaXF{hscroll_value}, geom::DeltaX{hscroll_discrete}, false},
+        {geom::DeltaYF{vscroll_value}, geom::DeltaY{vscroll_discrete}, false});
 }
 
 mir::EventUPtr mev::make_input_configure_event(

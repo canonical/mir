@@ -250,7 +250,8 @@ TEST(PointerInputEventProperties, axis_values_copied)
     float x = 7, y = 9.3, hscroll = 13, vscroll = 17;
     MirPointerEvent old_ev;
     old_ev.set_position({{x, y}});
-    old_ev.set_scroll({hscroll, vscroll});
+    old_ev.set_h_scroll({mir::geometry::DeltaXF{hscroll}, {}, false});
+    old_ev.set_v_scroll({mir::geometry::DeltaYF{vscroll}, {}, false});
 
     auto pev = mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(x, mir_pointer_event_axis_value(pev, mir_pointer_axis_x));

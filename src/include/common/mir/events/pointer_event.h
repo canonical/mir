@@ -18,7 +18,7 @@
 #define MIR_COMMON_POINTER_EVENT_H_
 
 #include "mir/events/input_event.h"
-#include "mir/geometry/displacement_f.h"
+#include "mir/events/scroll_axis.h"
 #include "mir/geometry/point_f.h"
 
 #include <optional>
@@ -37,9 +37,8 @@ struct MirPointerEvent : MirInputEvent
                     std::optional<mir::geometry::PointF> position,
                     mir::geometry::DisplacementF motion,
                     MirPointerAxisSource axis_source,
-                    mir::geometry::DisplacementF scroll,
-                    mir::geometry::Displacement scroll_discrete,
-                    mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> scroll_stop);
+                    mir::events::ScrollAxisH h_scroll,
+                    mir::events::ScrollAxisV v_scroll);
 
     auto clone() const -> MirPointerEvent* override;
 
@@ -52,14 +51,11 @@ struct MirPointerEvent : MirInputEvent
     auto motion() const -> mir::geometry::DisplacementF;
     void set_motion(mir::geometry::DisplacementF value);
 
-    auto scroll() const -> mir::geometry::DisplacementF;
-    void set_scroll(mir::geometry::DisplacementF value);
+    auto h_scroll() const -> mir::events::ScrollAxisH;
+    void set_h_scroll(mir::events::ScrollAxisH value);
 
-    auto scroll_discrete() const -> mir::geometry::Displacement;
-    void set_scroll_discrete(mir::geometry::Displacement value);
-
-    auto scroll_stop() const -> mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper>;
-    void set_scroll_stop(mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> value);
+    auto v_scroll() const -> mir::events::ScrollAxisV;
+    void set_v_scroll(mir::events::ScrollAxisV value);
 
     MirPointerAction action() const;
     void set_action(MirPointerAction action);
@@ -74,9 +70,8 @@ private:
     std::optional<mir::geometry::PointF> position_;
     mir::geometry::DisplacementF motion_;
     MirPointerAxisSource axis_source_;
-    mir::geometry::DisplacementF scroll_;
-    mir::geometry::Displacement scroll_discrete_;
-    mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> scroll_stop_;
+    mir::events::ScrollAxisH h_scroll_;
+    mir::events::ScrollAxisV v_scroll_;
 
     MirPointerAction action_ = {};
     MirPointerButtons buttons_ = {};

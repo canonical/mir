@@ -192,7 +192,8 @@ auto motion_event(mi::EventBuilder* builder, float x, float y) -> mir::EventUPtr
         std::nullopt,
         {x, y},
         mir_pointer_axis_source_none,
-        {}, {}, {});
+        {},
+        {});
 }
 
 auto button_event(mi::EventBuilder* builder, MirPointerAction action, MirPointerButtons buttons) -> mir::EventUPtr
@@ -204,7 +205,8 @@ auto button_event(mi::EventBuilder* builder, MirPointerAction action, MirPointer
         std::nullopt,
         {},
         mir_pointer_axis_source_none,
-        {}, {}, {});
+        {},
+        {});
 }
 
 }

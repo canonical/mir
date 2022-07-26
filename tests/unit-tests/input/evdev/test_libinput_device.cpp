@@ -80,7 +80,7 @@ struct MockEventBuilder : mi::EventBuilder
                 return builder.touch_event(time, contacts);
             });
 
-        ON_CALL(*this, pointer_event(_, _, _, _, _, _, _, _, _)).WillByDefault(
+        ON_CALL(*this, pointer_event(_, _, _, _, _, _, _, _)).WillByDefault(
             [this](
                 std::optional<Timestamp> timestamp,
                 MirPointerAction action,
@@ -88,14 +88,13 @@ struct MockEventBuilder : mi::EventBuilder
                 std::optional<mir::geometry::PointF> position,
                 mir::geometry::DisplacementF motion,
                 MirPointerAxisSource axis_source,
-                mir::geometry::DisplacementF scroll,
-                mir::geometry::Displacement scroll_discrete,
-                mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> scroll_stop)
+                mir::events::ScrollAxisV1<mir::geometry::DeltaXTag> h_scroll,
+                mir::events::ScrollAxisV1<mir::geometry::DeltaYTag> v_scroll)
             {
                 return builder.pointer_event(
                     timestamp, action, buttons,
                     position, motion,
-                    axis_source, scroll, scroll_discrete, scroll_stop);
+                    axis_source, h_scroll, v_scroll);
             });
     }
     using EventBuilder::Timestamp;
@@ -104,9 +103,8 @@ struct MockEventBuilder : mi::EventBuilder
     MOCK_METHOD(mir::EventUPtr, touch_event, (std::optional<Timestamp>, std::vector<mir::events::ContactState> const&));
     MOCK_METHOD(mir::EventUPtr, pointer_event,
                 (std::optional<Timestamp>, MirPointerAction, MirPointerButtons, std::optional<mir::geometry::PointF>,
-                 mir::geometry::DisplacementF, MirPointerAxisSource, mir::geometry::DisplacementF,
-                 mir::geometry::Displacement,
-                 mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper>), (override));
+                 mir::geometry::DisplacementF, MirPointerAxisSource, mir::events::ScrollAxisV1<mir::geometry::DeltaXTag>,
+                 mir::events::ScrollAxisV1<mir::geometry::DeltaYTag>), (override));
 
     mir::EventUPtr pointer_event(
         std::optional<Timestamp>,
@@ -563,17 +561,15 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
         {time_stamp_1}, mir_pointer_action_motion, 0,
         Eq(std::nullopt), geom::DisplacementF{},
         mir_pointer_axis_source_wheel,
-        geom::DisplacementF{0, -20},
-        geom::Displacement{0, 2},
-        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{}));
+        mev::ScrollAxisH{},
+        mev::ScrollAxisV{geom::DeltaYF{-20}, geom::DeltaY{2}, false}));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -20.0f)));
     EXPECT_CALL(mock_builder, pointer_event(
         {time_stamp_2}, mir_pointer_action_motion, 0,
         Eq(std::nullopt), geom::DisplacementF{},
         mir_pointer_axis_source_wheel,
-        geom::DisplacementF{5, 0},
-        geom::Displacement{1, 0},
-        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{}));
+        mev::ScrollAxisH{geom::DeltaXF{5}, geom::DeltaX{1}, false},
+        mev::ScrollAxisV{{}, {}, false}));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 5.0f)));
 
     mouse.start(&mock_sink, &mock_builder);
@@ -993,17 +989,15 @@ TEST_F(LibInputDeviceOnTouchpad, process_event_handles_scroll)
         {time_stamp_1}, mir_pointer_action_motion, 0,
         Eq(std::nullopt), geom::DisplacementF{},
         mir_pointer_axis_source_finger,
-        geom::DisplacementF{0, -10},
-        geom::Displacement{},
-        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{}));
+        mev::ScrollAxisH{},
+        mev::ScrollAxisV{geom::DeltaYF{-10}, {}, false}));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -10.0f)));
     EXPECT_CALL(mock_builder, pointer_event(
         {time_stamp_2}, mir_pointer_action_motion, 0,
         Eq(std::nullopt), geom::DisplacementF{},
         mir_pointer_axis_source_finger,
-        geom::DisplacementF{1, 0},
-        geom::Displacement{},
-        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{}));
+        mev::ScrollAxisH{geom::DeltaXF{1}, {}, false},
+        mev::ScrollAxisV{}));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 1.0f)));
 
     env.mock_libinput.setup_finger_axis_event(fake_device, event_time_1, {}, -10.0);
@@ -1020,17 +1014,15 @@ TEST_F(LibInputDeviceOnTouchpad, process_event_handles_stop)
         {time_stamp_1}, mir_pointer_action_motion, 0,
         Eq(std::nullopt), geom::DisplacementF{},
         mir_pointer_axis_source_finger,
-        geom::DisplacementF{0, -10},
-        geom::Displacement{},
-        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{false, false}));
+        mev::ScrollAxisH{},
+        mev::ScrollAxisV{geom::DeltaYF{-10}, {}, false}));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -10.0f)));
     EXPECT_CALL(mock_builder, pointer_event(
         {time_stamp_2}, mir_pointer_action_motion, 0,
         Eq(std::nullopt), geom::DisplacementF{},
         mir_pointer_axis_source_finger,
-        geom::DisplacementF{},
-        geom::Displacement{},
-        geom::generic::Displacement<geom::generic::Value<bool>::Wrapper>{false, true}));
+        mev::ScrollAxisH{},
+        mev::ScrollAxisV{{}, {}, true}));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 0.0f)));
 
     env.mock_libinput.setup_finger_axis_event(fake_device, event_time_1, {}, -10.0);

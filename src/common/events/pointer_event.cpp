@@ -20,6 +20,7 @@
 #include <boost/throw_exception.hpp>
 
 namespace geom = mir::geometry;
+namespace mev = mir::events;
 
 MirPointerEvent::MirPointerEvent() :
     MirInputEvent{mir_input_event_type_pointer}
@@ -35,16 +36,14 @@ MirPointerEvent::MirPointerEvent(MirInputDeviceId dev,
                     std::optional<geom::PointF> position,
                     geom::DisplacementF motion,
                     MirPointerAxisSource axis_source,
-                    geom::DisplacementF scroll,
-                    geom::Displacement scroll_discrete,
-                    geom::generic::Displacement<geom::generic::Value<bool>::Wrapper> scroll_stop)
+                    mev::ScrollAxisH h_scroll,
+                    mev::ScrollAxisV v_scroll)
     : MirInputEvent(mir_input_event_type_pointer, dev, et, mods, cookie),
       position_{position},
       motion_{motion},
       axis_source_{axis_source},
-      scroll_{scroll},
-      scroll_discrete_{scroll_discrete},
-      scroll_stop_{scroll_stop},
+      h_scroll_{h_scroll},
+      v_scroll_{v_scroll},
       action_{action},
       buttons_{buttons}
 {
@@ -85,34 +84,24 @@ void MirPointerEvent::set_motion(mir::geometry::DisplacementF value)
     motion_ = value;
 }
 
-auto MirPointerEvent::scroll() const -> mir::geometry::DisplacementF
+auto MirPointerEvent::h_scroll() const -> mev::ScrollAxis<mir::geometry::DeltaXTag>
 {
-    return scroll_;
+    return h_scroll_;
 }
 
-void MirPointerEvent::set_scroll(mir::geometry::DisplacementF value)
+void MirPointerEvent::set_h_scroll(mev::ScrollAxis<mir::geometry::DeltaXTag> value)
 {
-    scroll_ = value;
+    h_scroll_ = value;
 }
 
-auto MirPointerEvent::scroll_discrete() const -> mir::geometry::Displacement
+auto MirPointerEvent::v_scroll() const -> mev::ScrollAxis<mir::geometry::DeltaYTag>
 {
-    return scroll_discrete_;
+    return v_scroll_;
 }
 
-void MirPointerEvent::set_scroll_discrete(mir::geometry::Displacement value)
+void MirPointerEvent::set_v_scroll(mev::ScrollAxis<mir::geometry::DeltaYTag> value)
 {
-    scroll_discrete_ = value;
-}
-
-auto MirPointerEvent::scroll_stop() const -> mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper>
-{
-    return scroll_stop_;
-}
-
-void MirPointerEvent::set_scroll_stop(mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> value)
-{
-    scroll_stop_ = value;
+    v_scroll_ = value;
 }
 
 MirPointerAction MirPointerEvent::action() const

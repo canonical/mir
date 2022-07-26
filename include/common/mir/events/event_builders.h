@@ -25,6 +25,7 @@
 #include "mir/geometry/displacement.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/events/input_device_state.h"
+#include "mir/events/scroll_axis.h"
 #include "mir/events/contact_state.h"
 #include "mir/geometry/point_f.h"
 #include "mir/geometry/displacement_f.h"
@@ -109,9 +110,8 @@ EventUPtr make_pointer_event(
     std::optional<mir::geometry::PointF> position,
     mir::geometry::DisplacementF motion,
     MirPointerAxisSource axis_source,
-    mir::geometry::DisplacementF scroll,
-    mir::geometry::Displacement scroll_discrete,
-    mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> scroll_stop);
+    events::ScrollAxisV1<mir::geometry::DeltaXTag> h_scroll,
+    events::ScrollAxisV1<mir::geometry::DeltaYTag> v_scroll);
 
 // Pointer event
 EventUPtr make_pointer_event(

@@ -19,7 +19,7 @@
 
 #include "mir_toolkit/event.h"
 #include "mir/events/contact_state.h"
-#include "mir/geometry/displacement.h"
+#include "mir/events/scroll_axis.h"
 #include "mir/geometry/point_f.h"
 #include "mir/geometry/displacement_f.h"
 #include <memory>
@@ -107,9 +107,8 @@ public:
         std::optional<mir::geometry::PointF> position,
         mir::geometry::DisplacementF motion,
         MirPointerAxisSource axis_source,
-        mir::geometry::DisplacementF scroll,
-        mir::geometry::Displacement scroll_discrete,
-        mir::geometry::generic::Displacement<mir::geometry::generic::Value<bool>::Wrapper> scroll_stop) = 0;
+        events::ScrollAxisV1<mir::geometry::DeltaXTag> h_scroll,
+        events::ScrollAxisV1<mir::geometry::DeltaYTag> v_scroll) = 0;
 
 protected:
     EventBuilder(EventBuilder const&) = delete;

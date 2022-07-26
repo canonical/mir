@@ -517,11 +517,9 @@ MIR_COMMON_2.9 {
     MirPointerEvent::set_position*;
     MirPointerEvent::motion*;
     MirPointerEvent::set_motion*;
-    MirPointerEvent::scroll*;
-    MirPointerEvent::set_scroll*;
-    MirPointerEvent::scroll_discrete*;
-    MirPointerEvent::set_scroll_discrete*;
-    MirPointerEvent::scroll_stop*;
-    MirPointerEvent::set_scroll_stop*;
+    MirPointerEvent::h_scroll*;
+    MirPointerEvent::set_h_scroll*;
+    MirPointerEvent::v_scroll*;
+    MirPointerEvent::set_v_scroll*;
   };
 } MIR_COMMON_2.8;

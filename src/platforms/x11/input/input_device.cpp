@@ -171,7 +171,8 @@ void mix::XInputDevice::pointer_press(EventTime event_time, int button, mir::geo
         pointer_pos,
         movement,
         mir_pointer_axis_source_none,
-        {}, {}, {}));
+        {},
+        {}));
 }
 
 void mix::XInputDevice::pointer_release(EventTime event_time, int button, mir::geometry::PointF pos)
@@ -186,7 +187,8 @@ void mix::XInputDevice::pointer_release(EventTime event_time, int button, mir::g
         pointer_pos,
         movement,
         mir_pointer_axis_source_none,
-        {}, {}, {}));
+        {},
+        {}));
 }
 
 void mix::XInputDevice::pointer_motion(EventTime event_time, mir::geometry::PointF pos)
@@ -200,7 +202,8 @@ void mix::XInputDevice::pointer_motion(EventTime event_time, mir::geometry::Poin
         pointer_pos,
         movement,
         mir_pointer_axis_source_none,
-        {}, {}, {}));
+        {},
+        {}));
 }
 
 void mix::XInputDevice::pointer_axis_motion(
@@ -218,6 +221,6 @@ void mix::XInputDevice::pointer_axis_motion(
         pointer_pos,
         movement,
         axis_source,
-        scroll,
-        {}, {}));
+        {scroll.dx, {}, false},
+        {scroll.dy, {}, false}));
 }

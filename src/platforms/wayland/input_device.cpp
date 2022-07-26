@@ -180,9 +180,8 @@ void miw::PointerInputDevice::pointer_press(
             cached_pos,
             movement,
             mir_pointer_axis_source_none,
-            scroll,
-            {},
-            {});
+            {scroll.dx, {}, {}},
+            {scroll.dy, {}, {}});
     });
 }
 
@@ -205,9 +204,8 @@ void miw::PointerInputDevice::pointer_release(
             cached_pos,
             movement,
             mir_pointer_axis_source_none,
-            scroll,
-            {},
-            {});
+            {scroll.dx, {}, false},
+            {scroll.dy, {}, false});
     });
 }
 
@@ -227,9 +225,8 @@ void miw::PointerInputDevice::pointer_motion(
             cached_pos,
             movement,
             mir_pointer_axis_source_none,
-            scroll,
-            {},
-            {});
+            {scroll.dx, {}, false},
+            {scroll.dy, {}, false});
     });
 }
 
@@ -250,9 +247,8 @@ void miw::PointerInputDevice::pointer_axis_motion(
             cached_pos,
             movement,
             pointer_axis_source,
-            scroll,
-            {},
-            {});
+            {scroll.dx, {}, false},
+            {scroll.dy, {}, false});
     });
 }
 
