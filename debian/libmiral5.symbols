@@ -259,9 +259,6 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::WindowManagerTools::window_at(mir::geometry::Point) const@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagerTools::~WindowManagerTools()@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowSpecification::WindowSpecification()@MIRAL_3.6" 3.6.0
-# This symbol disappered in 3.6.0 (Mir 2.6.0), but could not have been used by outside code,
-# as mir::scene::SurfaceCreationParameters is not constructible outside the Mir codebase.
-# (c++)"miral::WindowSpecification::WindowSpecification(mir::scene::SurfaceCreationParameters const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowSpecification::WindowSpecification(mir::shell::SurfaceSpecification const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowSpecification::WindowSpecification(miral::WindowSpecification const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowSpecification::application_id[abi:cxx11]() const@MIRAL_3.6" 3.6.0
@@ -321,9 +318,6 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::WindowSpecification::top_left()@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowSpecification::type() const@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowSpecification::type()@MIRAL_3.6" 3.6.0
-# This symbol disappered in 3.6.0 (Mir 2.6.0), but could not have been used by outside code,
-# as mir::scene::SurfaceCreationParameters is not constructible outside the Mir codebase.
-# (c++)"miral::WindowSpecification::update(mir::scene::SurfaceCreationParameters&) const@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowSpecification::userdata() const@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowSpecification::userdata()@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowSpecification::width_inc() const@MIRAL_3.6" 3.6.0
