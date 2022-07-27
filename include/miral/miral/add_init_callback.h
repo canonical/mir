@@ -26,6 +26,7 @@ namespace miral
 /// Add a callback to be invoked when the server has been initialized, but 
 /// before it starts.
 /// If multiple callbacks are added they will be invoked in the sequence added.
+/// \remark Since MirAL 3.0
 class AddInitCallback
 {
 public:

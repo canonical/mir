@@ -163,9 +163,10 @@ public:
     ///@}
 
     /// How the window should gain and lose focus
-    /// \remark Since MirAL 3.3
     ///@{
+    /// \remark Since MirAL 3.3
     auto focus_mode() const -> mir::optional_value<MirFocusMode> const&;
+    /// \remark Since MirAL 3.3
     auto focus_mode() -> mir::optional_value<MirFocusMode>&;
     ///@}
 

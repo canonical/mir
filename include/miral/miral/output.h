@@ -105,6 +105,7 @@ public:
     /// A positive number if this output is part of a logical output group (aka a display wall)
     /// A single display area will stretch across all outputs in a group
     /// Zero if this output is not part of a logical group
+    /// \remark Since MirAL 3.2
     auto logical_group_id() const -> int;
 
 private:

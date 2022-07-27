@@ -188,6 +188,7 @@ int mir_keyboard_event_scan_code(MirKeyboardEvent const* event);
  *
  *   \param [in] event The key event
  *   \return           The text
+ *   \remark Since MirAL 3.0
  */
 char const* mir_keyboard_event_key_text(MirKeyboardEvent const* event);
 

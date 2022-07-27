@@ -27,6 +27,7 @@ namespace miral
 /// terminator will be called following receipt of SIGTERM or SIGINT.
 /// The default terminator stop()s the server, replacements should probably
 /// do the same in addition to any additional shutdown logic.
+/// \remark Since MirAL 3.0
 class SetTerminator
 {
 public:
