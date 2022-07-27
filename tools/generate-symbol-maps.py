@@ -60,18 +60,26 @@ def with_types_fixed(nodes):
 def without_arg_names(nodes):
     # Strip argument names from std::function
     result = []
-    has_name = False
+    has_type = False
+    has_const = False
     for child in nodes:
         if child == ',':
-            has_name = False
+            has_type = False
+            has_const = False
             result.append(child)
-        elif not is_identifier(child) or child in ['const']:
+        elif has_const and (child == '*' or child == '&'):
+            result.append('const')
+            result.append(child)
+            has_const = False
+        elif not is_identifier(child):
             result.append(child)
         elif child in ['long', 'unsigned', 'short', 'int', 'double', 'float']:
-            has_name = True
+            has_type = True
             result.append(child)
-        elif not has_name:
-            has_name = True
+        elif child == 'const':
+            has_const = True
+        elif not has_type:
+            has_type = True
             result.append(child)
     return result
 
@@ -165,6 +173,10 @@ def resolve_type(symbols, node):
                 result += child.childNodes[0].data
             else:
                 result += symbols.get_type(refid)
+    if result == 'auto':
+        args_str = node.getElementsByTagName('argsstring')[0].firstChild.data
+        if '->' in args_str:
+            result = args_str.split('->', 1)[1].strip()
     if node.getElementsByTagName('array'):
         result += '*'
     return result
@@ -190,7 +202,11 @@ def handle_function(symbols, node, export_info):
     args = []
     for param in node.getElementsByTagName('param'):
         args.append(format_type(resolve_type(symbols, param)))
-    sym = full_name + '(' + ', '.join(args) + ')' + (' const' if const else '')
+    type_str = resolve_type(symbols, node)
+    abi = ''
+    if 'std::string' in type_str:
+        abi = '[abi:cxx11]'
+    sym = full_name + abi + '(' + ', '.join(args) + ')' + (' const' if const else '')
     lib, version_major, version_minor = export_info
     symbols.add_symbol(lib, sym, version_major, version_minor)
 
@@ -198,7 +214,7 @@ def handle_node(symbols, node, export_info):
     kind = node.attributes['kind'].value
     id = node.attributes['id'].value
     try:
-        if kind == 'class':
+        if kind == 'class' or kind == 'struct':
             handle_class(symbols, node, export_info)
         elif kind == 'function':
             handle_function(symbols, node, export_info)
@@ -209,11 +225,19 @@ def handle_node(symbols, node, export_info):
         raise
 
 def handle_class(symbols, node, export_info):
+    has_virtual = False
     for member in node.getElementsByTagName('memberdef'):
         if member.attributes['kind'].value == 'function' and member.attributes['prot'].value != 'private':
+            if member.attributes['virt'].value == 'virtual' or member.attributes['virt'].value == 'pure-virtual':
+                has_virtual = True
             # Ignore functions that are explicitly exported
             if not get_exported_info(member):
                 handle_node(symbols, member, export_info)
+    if has_virtual:
+        class_name = node.getElementsByTagName('compoundname')[0].firstChild.data
+        lib, version_major, version_minor = export_info
+        symbols.add_symbol(lib, 'vtable for ' + class_name, version_major, version_minor)
+        symbols.add_symbol(lib, 'typeinfo for ' + class_name, version_major, version_minor)
 
 def handle_symbols(symbols, toplevel):
     for node in toplevel.getElementsByTagName('simplesect'):
