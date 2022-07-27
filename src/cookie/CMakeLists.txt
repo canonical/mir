@@ -31,7 +31,8 @@ set_target_properties(mircookie
 )
 
 target_link_libraries(mircookie
-  ${NETTLE_LDFLAGS} ${NETTLE_LIBS}
+  PRIVATE
+    ${NETTLE_LDFLAGS}
 )
 
 install(
