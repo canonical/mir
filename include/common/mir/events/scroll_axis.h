@@ -60,7 +60,9 @@ inline bool operator==(ScrollAxisV1<Tag> const& lhs, ScrollAxisV1<Tag> const & r
 using ScrollAxisV1H = ScrollAxisV1<geometry::DeltaXTag>;
 using ScrollAxisV1V = ScrollAxisV1<geometry::DeltaYTag>;
 
-/// The current version of the ScrollAxis struct
+/// The current version of the ScrollAxis struct. When bumping to a new version make sure all existing ABI-stable
+/// functions are changed to explicitly use the old version. The implementation of ABI-stable functions (unlike the
+/// declaration) should already explicitly use a particlar version.
 template<typename Tag>
 using ScrollAxis = ScrollAxisV1<Tag>;
 using ScrollAxisH = ScrollAxis<geometry::DeltaXTag>;
