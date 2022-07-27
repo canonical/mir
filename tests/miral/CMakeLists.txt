@@ -79,7 +79,7 @@ set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLA
 
 target_link_libraries(miral-test
     mir-test-assist
-    ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
+    ${WAYLAND_CLIENT_LDFLAGS}
     ${UUID_LDFLAGS} ${UUID_LIBRARIES}
 )
 
