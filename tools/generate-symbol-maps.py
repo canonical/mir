@@ -13,6 +13,8 @@ from xml.dom import minidom
 help_text = __doc__
 
 exported_info_re = re.compile(r'since (\w+) (\d+)\.(\d+)', flags=re.I)
+symbol_re = re.compile(r'^[^\w\s:]$')
+identifier_re = re.compile(r'^[\w:]+$')
 
 def get_exported_info(parent):
     for node in parent.getElementsByTagName('simplesect'):
@@ -26,67 +28,126 @@ def get_exported_info(parent):
                 return lib, version_major, version_minor
     return None
 
-def drop_function_arg_names(text):
-    parts = ['']
-    opening = set(['<', '('])
-    closing = set(['>', ')'])
-    keywords = set(['const', 'struct'])
-    i = 0
-    has_name = False
-    while i < len(text):
-        # handle nested expressions
-        if text[i] in opening:
-            level = 1
-            start = i
-            while level and i < len(text) - 1:
-                i += 1
-                if text[i] in opening:
-                    level += 1
-                if text[i] in closing:
-                    level -= 1
-            inner = drop_function_arg_names(text[start + 1:i])
-            if parts and parts[-1] == 'std::vector':
-                inner = inner + ',std::allocator<' + inner + ' >'
-            parts += [text[start] + inner + text[i], '']
-        elif re.match(r'[\w:]', text[i]):
-            parts[-1] += text[i]
-            has_name = True
+def is_symbol(node):
+    return isinstance(node, str) and symbol_re.match(node)
+
+def is_identifier(node):
+    return isinstance(node, str) and identifier_re.match(node)
+
+def with_types_fixed(nodes):
+    result = []
+    prev = None
+    for node in nodes:
+        if node == 'std::string':
+            result += parse_type(
+                'std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>'
+            ).children
+        elif prev == 'std::vector':
+            assert isinstance(node, Node) and node.children[0] == '<' and node.children[-1] == '>'
+            vec_type = Node(node.children[1:-1]).emit()
+            result.append(parse_type('<' + vec_type + ', std::allocator<' + vec_type + '>>'))
+        elif prev == 'std::unique_ptr':
+            assert isinstance(node, Node) and node.children[0] == '<' and node.children[-1] == '>'
+            ptr_type = Node(node.children[1:-1]).emit()
+            result.append(parse_type('<' + ptr_type + ', std::default_delete<' + ptr_type + '>>'))
+        elif isinstance(node, str) and node.startswith('::'):
+            result.append(node[2:])
         else:
-            parts += [text[i], '']
-        i += 1
-    result = ''
-    # Only allow one arbitrary name unless separated by a comma
-    has_user_id = False
-    for part in parts:
-        if re.match(r'[\w:]+', part) and part not in keywords:
-            if has_user_id:
-                # This is a function arg name, drop it
-                pass
-            else:
-                result += part
-                has_user_id = True
-        elif part == 'long':
-            has_user_id = True
-        else:
-            if part == ',':
-                has_user_id = False
-            result += part
+            result.append(node)
+        prev = node
     return result
 
+def without_arg_names(nodes):
+    # Strip argument names from std::function
+    result = []
+    has_name = False
+    for child in nodes:
+        if child == ',':
+            has_name = False
+            result.append(child)
+        elif not is_identifier(child) or child in ['const']:
+            result.append(child)
+        elif child in ['long', 'unsigned', 'short', 'int', 'double', 'float']:
+            has_name = True
+            result.append(child)
+        elif not has_name:
+            has_name = True
+            result.append(child)
+    return result
+
+class Node:
+    # children is a list containing AstNodes, symbol strings and identifier strings (see symbol_re and identifier_re)
+    def __init__(self, children):
+        assert children, 'node created with no children'
+        for child in children:
+            assert isinstance(child, Node) or is_symbol(child) or is_identifier(child), (
+                'invalid AST node ' + repr(child)
+            )
+        self.children = children
+
+    def fix(self):
+        self.children = [child for child in self.children if child != 'struct']
+        self.children = with_types_fixed(self.children)
+        self.children = without_arg_names(self.children)
+        for child in self.children:
+            if isinstance(child, Node):
+                child.fix()
+
+    def emit(self):
+        result = ''
+        for i in range(len(self.children)):
+            node = self.children[i]
+            if i:
+                prev = self.children[i - 1]
+                if is_identifier(prev) and is_identifier(node):
+                    result += ' '
+                elif isinstance(prev, Node) and prev.children[-1] == '>' and node == '>':
+                    result += ' '
+                elif isinstance(prev, Node) and prev.children[-1] == ')' and is_identifier(node):
+                    result += ' '
+                elif node == 'const':
+                    result += ' '
+                elif isinstance(node, Node) and node.children[0] == '(':
+                    result += ' '
+            if isinstance(node, Node):
+                result += node.emit()
+            else:
+                result += node
+            if node == ',':
+                result += ' '
+        return result
+
+def parse_type(text):
+    nodes = ['']
+    opening = set(['<', '('])
+    closing = set(['>', ')'])
+    brace_level = 0
+    pending = ''
+    first_char = True
+    for c in text:
+        if c in opening and not first_char:
+            brace_level += 1
+            pending += c
+        elif brace_level:
+            pending += c
+            if c in closing:
+                brace_level -= 1
+                if brace_level == 0:
+                    nodes += [parse_type(pending), '']
+                    pending = ''
+        elif is_symbol(c):
+            nodes += [c, '']
+        elif is_identifier(c):
+            nodes[-1] += c
+        else:
+            nodes.append('')
+        first_char = False
+    return Node([node for node in nodes if node])
+
 def format_type(text):
-    # Remove all unimportant whitespace
-    special_chars = r'([\*&<>\(\),])'
-    text = re.sub(r'\s+' + special_chars, '\\1', text)
-    text = re.sub(special_chars + r'\s+', '\\1', text)
-    text = re.sub(r'\s\s+', ' ', text)
-    text = drop_function_arg_names(text)
-    text = re.sub(r'([>,])', '\\1 ', text)
-    text = re.sub(r'(\()', ' \\1', text)
-    text = re.sub(r'\s*\)', ')', text)
-    text = re.sub(r'struct\s*', '', text)
-    text = re.sub(r'std::string', 'std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >', text)
-    text = text.strip()
-    return text
+    ast = parse_type(text)
+    ast.fix()
+    return ast.emit()
 
 def resolve_type(symbols, node):
     result = ''
