@@ -16,7 +16,7 @@ add_executable(mir_wayland_generator
 )
 
 target_link_libraries(mir_wayland_generator
-  ${XMLPP_LDFLAGS} ${XMLPP_LIBRARIES}
+  ${XMLPP_LDFLAGS}
 )
 
 install(TARGETS mir_wayland_generator

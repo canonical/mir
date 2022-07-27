@@ -22,6 +22,6 @@ target_link_libraries(server_platform_common
     mircore
     ${KMS_UTILS_STATIC_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
-    ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
-    ${GL_LDFLAGS} ${GL_LIBRARIES}
+    ${WAYLAND_SERVER_LDFLAGS}
+    ${GL_LDFLAGS}
 )

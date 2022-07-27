@@ -49,7 +49,7 @@ set_target_properties(
 target_link_libraries(mirplatforminputevdev
   mirplatform # udev wrapper
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
-  ${LIBINPUT_LDFLAGS} ${LIBINPUT_LIBRARIES}
+  ${LIBINPUT_LDFLAGS}
 )
 
 install(TARGETS mirplatforminputevdev LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})

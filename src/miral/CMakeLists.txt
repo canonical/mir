@@ -99,8 +99,8 @@ target_link_libraries(miral-internal
     PRIVATE
         mirserver
         ${WAYLAND_CLIENT_LDFLAGS}
-        ${YAML_LIBRARIES}
-        ${GIO_LIBRARIES}
+        ${YAML_LDFLAGS}
+        ${GIO_LDFLAGS}
 )
 
 target_include_directories(miral
