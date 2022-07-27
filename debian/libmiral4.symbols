@@ -389,7 +389,6 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::window_for(wl_resource*)@MIRAL_3.0" 3.0.0
  (c++)"typeinfo for miral::CanonicalWindowManagerPolicy@MIRAL_3.0" 3.0.0
  (c++)"typeinfo for miral::MinimalWindowManager@MIRAL_3.0" 3.0.0
- (c++)"typeinfo for miral::WaylandExtensions::Context@MIRAL_3.0" 3.0.0
  (c++)"typeinfo for miral::WindowManagementPolicy@MIRAL_3.0" 3.0.0
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_3.0" 3.0.0
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_3.0" 3.0.0
@@ -420,3 +419,8 @@ libmiral.so.4 libmiral4 #MINVER#
  (c++)"miral::socket_fd_of(std::shared_ptr<mir::scene::Session> const&)@MIRAL_3.4" 3.4.0
  MIRAL_3.5@MIRAL_3.5 3.5.0
  (c++)"miral::WaylandExtensions::zwlr_screencopy_manager_v1@MIRAL_3.5" 3.5.0
+ MIRAL_3.6@MIRAL_3.6 3.6.0
+ (c++)"miral::WaylandExtensions::Context::Context()@MIRAL_3.6" 3.6.0
+ (c++)"miral::WaylandExtensions::Context::~Context()@MIRAL_3.6" 3.6.0
+ (c++)"vtable for miral::WaylandExtensions::Context@MIRAL_3.6" 3.6.0
+ (c++)"typeinfo for miral::WaylandExtensions::Context@MIRAL_3.6" 3.6.0
