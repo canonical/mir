@@ -50,6 +50,8 @@ def with_types_fixed(nodes):
             assert isinstance(node, Node) and node.children[0] == '<' and node.children[-1] == '>'
             ptr_type = Node(node.children[1:-1]).emit()
             result.append(parse_type('<' + ptr_type + ', std::default_delete<' + ptr_type + '>>'))
+        elif node == 'uint8_t':
+            result += ['unsigned', 'char']
         elif isinstance(node, str) and node.startswith('::'):
             result.append(node[2:])
         else:
@@ -58,7 +60,7 @@ def with_types_fixed(nodes):
     return result
 
 def without_arg_names(nodes):
-    # Strip argument names from std::function
+    # Strip argument names from std::function type
     result = []
     has_type = False
     has_const = False
@@ -73,7 +75,7 @@ def without_arg_names(nodes):
             has_const = False
         elif not is_identifier(child):
             result.append(child)
-        elif child in ['long', 'unsigned', 'short', 'int', 'double', 'float']:
+        elif child in ['long', 'unsigned', 'short', 'char', 'int', 'double', 'float']:
             has_type = True
             result.append(child)
         elif child == 'const':
@@ -298,7 +300,7 @@ def write_symbols_map_file(path, name, lib):
             f.write(stanza + ' {\n')
             f.write('global:\n')
             f.write('  extern "C++" {\n')
-            for sym in symbols:
+            for sym in sorted(list(symbols), key=str.lower):
                 f.write('    "' + sym + '";\n')
             f.write('  };\n')
             if prev_stanza is None:
@@ -328,8 +330,8 @@ class Symbols:
 
     def add_symbol(self, lib, sym, version_major, version_minor):
         self.libs.setdefault(lib, {})
-        self.libs[lib].setdefault((version_major, version_minor), [])
-        self.libs[lib][(version_major, version_minor)].append(sym)
+        self.libs[lib].setdefault((version_major, version_minor), set())
+        self.libs[lib][(version_major, version_minor)].add(sym)
 
     def add_type(self, id, resolver):
         self.types[id] = resolver
