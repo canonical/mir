@@ -35,7 +35,7 @@ namespace miral
 ///
 /// \note Except for re-ordering implied by "pre_init()" the callbacks will be
 /// invoked in the order supplied.
-/// \remark Since MirAL 2.4
+/// \remark Since MirAL 3.0
 class CommandLineOption
 {
 public:
@@ -114,7 +114,7 @@ private:
  *  Update the option to be called back *before* Mir initialization starts
  *
  *  \param clo  the option
- *  \remark Since MirAL 2.4
+ *  \remark Since MirAL 3.0
  */
 auto pre_init(CommandLineOption const& clo) -> CommandLineOption;
 }

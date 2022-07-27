@@ -32,7 +32,7 @@ class CommandLineOption;
 /// The config file (miral::MirRunner::display_config_file()) is located via
 /// the XDG Base Directory Specification. Vis:
 ///($XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS)
-/// \remark Since MirAL 2.4
+/// \remark Since MirAL 3.0
 class DisplayConfiguration
 {
 public:

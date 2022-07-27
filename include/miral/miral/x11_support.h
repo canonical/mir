@@ -24,7 +24,7 @@ namespace mir { class Server; }
 namespace miral
 {
 /// Add a user configuration option for X11 support.
-/// \remark Since MirAL 2.4
+/// \remark Since MirAL 3.0
 class X11Support
 {
 public:

@@ -30,7 +30,7 @@ using namespace mir::geometry;
 
 /// A rectangular area of the display.
 /// Not tied to a specific output.
-/// \remark Since MirAL 2.4
+/// \remark Since MirAL 3.0
 class Zone
 {
 public:

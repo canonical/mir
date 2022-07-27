@@ -54,7 +54,7 @@ class Workspace;
 class WindowManagerToolsImplementation;
 
 /// Window management functions for querying and updating MirAL's model
-/// \remark Since MirAL 2.4
+/// \remark Since MirAL 3.0
 class WindowManagerTools
 {
 public:
@@ -148,7 +148,7 @@ public:
     void focus_next_application();
 
     /// make the previous application active
-    /// \remark Since MirAL 2.5
+    /// \remark Since MirAL 3.0
     void focus_prev_application();
 
     /// make the next surface active within the active application

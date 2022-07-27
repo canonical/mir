@@ -30,7 +30,7 @@ namespace miral
 {
 using namespace mir::geometry;
 
-/// \remark Since MirAL 2.4
+/// \remark Since MirAL 3.0
 class Output
 {
 public:
@@ -111,12 +111,12 @@ private:
     std::shared_ptr<mir::graphics::DisplayConfigurationOutput> self;
 };
 
-/// \remark Since MirAL 2.4
+/// \remark Since MirAL 3.0
 bool operator==(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs);
 inline bool operator!=(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs)
 { return !(lhs == rhs); }
 
-/// \remark Since MirAL 2.4
+/// \remark Since MirAL 3.0
 auto equivalent_display_area(Output const& lhs, Output const& rhs) -> bool;
 }
 
