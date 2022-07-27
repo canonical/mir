@@ -103,7 +103,9 @@ for raw_line in debian_symbols_raw.splitlines():
     cpp_groups = re.search(
         r'(?P<prefix>\(c\+\+.*\))"(?P<cpp_sym>[^@]*)@(?P<lib>\w+)_(?P<version>[\d\.]+)" (?P<outer_version>[\d\.]+)',
         raw_line)
-    if cpp_groups:
+    if raw_line.strip().startswith('#'):
+        pass
+    elif cpp_groups:
         prefix = cpp_groups.group('prefix')
         cpp_sym = cpp_groups.group('cpp_sym')
         cpp_name, cpp_types = split_name_and_types(cpp_sym)
@@ -120,8 +122,6 @@ for raw_line in debian_symbols_raw.splitlines():
         debian_symbols.setdefault(cpp_name, [])
         debian_symbols[cpp_name].append(
             Symbol(prefix, cpp_name, cpp_types, lib_id, version))
-    elif raw_line.strip().startswith('#'):
-        pass
     else:
         print('could not parse "' + raw_line + '" in ' + debian_symbols_path)
 only_in_debian = set()
