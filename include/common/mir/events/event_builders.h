@@ -110,8 +110,8 @@ EventUPtr make_pointer_event(
     std::optional<mir::geometry::PointF> position,
     mir::geometry::DisplacementF motion,
     MirPointerAxisSource axis_source,
-    events::ScrollAxisV1<mir::geometry::DeltaXTag> h_scroll,
-    events::ScrollAxisV1<mir::geometry::DeltaYTag> v_scroll);
+    events::ScrollAxisV1H h_scroll,
+    events::ScrollAxisV1V v_scroll);
 
 // Pointer event
 EventUPtr make_pointer_event(

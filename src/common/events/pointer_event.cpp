@@ -84,22 +84,22 @@ void MirPointerEvent::set_motion(mir::geometry::DisplacementF value)
     motion_ = value;
 }
 
-auto MirPointerEvent::h_scroll() const -> mev::ScrollAxis<mir::geometry::DeltaXTag>
+auto MirPointerEvent::h_scroll() const -> mev::ScrollAxisH
 {
     return h_scroll_;
 }
 
-void MirPointerEvent::set_h_scroll(mev::ScrollAxis<mir::geometry::DeltaXTag> value)
+void MirPointerEvent::set_h_scroll(mev::ScrollAxisH value)
 {
     h_scroll_ = value;
 }
 
-auto MirPointerEvent::v_scroll() const -> mev::ScrollAxis<mir::geometry::DeltaYTag>
+auto MirPointerEvent::v_scroll() const -> mev::ScrollAxisV
 {
     return v_scroll_;
 }
 
-void MirPointerEvent::set_v_scroll(mev::ScrollAxis<mir::geometry::DeltaYTag> value)
+void MirPointerEvent::set_v_scroll(mev::ScrollAxisV value)
 {
     v_scroll_ = value;
 }

@@ -57,11 +57,14 @@ inline bool operator==(ScrollAxisV1<Tag> const& lhs, ScrollAxisV1<Tag> const & r
            lhs.stop == lhs.stop;
 }
 
+using ScrollAxisV1H = ScrollAxisV1<geometry::DeltaXTag>;
+using ScrollAxisV1V = ScrollAxisV1<geometry::DeltaYTag>;
+
 /// The current version of the ScrollAxis struct
 template<typename Tag>
 using ScrollAxis = ScrollAxisV1<Tag>;
-using ScrollAxisH = ScrollAxisV1<geometry::DeltaXTag>;
-using ScrollAxisV = ScrollAxisV1<geometry::DeltaYTag>;
+using ScrollAxisH = ScrollAxis<geometry::DeltaXTag>;
+using ScrollAxisV = ScrollAxis<geometry::DeltaYTag>;
 
 }
 }

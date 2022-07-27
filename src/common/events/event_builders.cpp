@@ -249,8 +249,8 @@ mir::EventUPtr mev::make_pointer_event(
     std::optional<geom::PointF> position,
     geom::DisplacementF motion,
     MirPointerAxisSource axis_source,
-    events::ScrollAxisV1<mir::geometry::DeltaXTag> h_scroll,
-    events::ScrollAxisV1<mir::geometry::DeltaYTag> v_scroll)
+    events::ScrollAxisV1H h_scroll,
+    events::ScrollAxisV1V v_scroll)
 {
     return make_uptr_event(new MirPointerEvent(
         device_id,

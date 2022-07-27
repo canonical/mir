@@ -88,8 +88,8 @@ struct MockEventBuilder : mi::EventBuilder
                 std::optional<mir::geometry::PointF> position,
                 mir::geometry::DisplacementF motion,
                 MirPointerAxisSource axis_source,
-                mir::events::ScrollAxisV1<mir::geometry::DeltaXTag> h_scroll,
-                mir::events::ScrollAxisV1<mir::geometry::DeltaYTag> v_scroll)
+                mir::events::ScrollAxisH h_scroll,
+                mir::events::ScrollAxisV v_scroll)
             {
                 return builder.pointer_event(
                     timestamp, action, buttons,
@@ -103,8 +103,8 @@ struct MockEventBuilder : mi::EventBuilder
     MOCK_METHOD(mir::EventUPtr, touch_event, (std::optional<Timestamp>, std::vector<mir::events::ContactState> const&));
     MOCK_METHOD(mir::EventUPtr, pointer_event,
                 (std::optional<Timestamp>, MirPointerAction, MirPointerButtons, std::optional<mir::geometry::PointF>,
-                 mir::geometry::DisplacementF, MirPointerAxisSource, mir::events::ScrollAxisV1<mir::geometry::DeltaXTag>,
-                 mir::events::ScrollAxisV1<mir::geometry::DeltaYTag>), (override));
+                 mir::geometry::DisplacementF, MirPointerAxisSource, mir::events::ScrollAxisV1H,
+                 mir::events::ScrollAxisV1V), (override));
 
     mir::EventUPtr pointer_event(
         std::optional<Timestamp>,
