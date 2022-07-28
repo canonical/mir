@@ -29,6 +29,7 @@ namespace geometry
 {
 
 /// A collection of rectangles (with possible duplicates).
+/// \remark Since MirCore 0.25
 class Rectangles
 {
 public:
@@ -57,7 +58,7 @@ private:
     Rectangle bounding_rectangle_; // TODO unused: delete on next ABI break
 };
 
-
+/// \remark Since MirCore 0.25
 std::ostream& operator<<(std::ostream& out, Rectangles const& value);
 
 }

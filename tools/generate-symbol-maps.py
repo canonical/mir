@@ -24,6 +24,11 @@ libraries = {
         os.path.join(mir_root, 'src', 'miral', 'symbols.map'),
         (3, 0),
     ),
+    'MirCore': LibInfo(
+        'MIR_CORE',
+        os.path.join(mir_root, 'src', 'core', 'symbols.map'),
+        (2, 9),
+    ),
 }
 
 help_text = __doc__
