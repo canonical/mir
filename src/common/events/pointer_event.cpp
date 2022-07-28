@@ -19,6 +19,9 @@
 
 #include <boost/throw_exception.hpp>
 
+namespace geom = mir::geometry;
+namespace mev = mir::events;
+
 MirPointerEvent::MirPointerEvent() :
     MirInputEvent{mir_input_event_type_pointer}
 {
@@ -26,25 +29,23 @@ MirPointerEvent::MirPointerEvent() :
 
 MirPointerEvent::MirPointerEvent(MirInputDeviceId dev,
                     std::chrono::nanoseconds et,
-                    MirInputEventModifiers mods,
                     std::vector<uint8_t> const& cookie,
+                    MirInputEventModifiers mods,
                     MirPointerAction action,
                     MirPointerButtons buttons,
-                    float x,
-                    float y,
-                    float dx,
-                    float dy,
-                    float vscroll,
-                    float hscroll) :
-    MirInputEvent(mir_input_event_type_pointer, dev, et, mods, cookie),
-    x_{x},
-    y_{y},
-    dx_{dx},
-    dy_{dy},
-    vscroll_{vscroll},
-    hscroll_{hscroll},
-    action_{action},
-    buttons_{buttons}
+                    std::optional<geom::PointF> position,
+                    geom::DisplacementF motion,
+                    MirPointerAxisSource axis_source,
+                    mev::ScrollAxisH h_scroll,
+                    mev::ScrollAxisV v_scroll)
+    : MirInputEvent(mir_input_event_type_pointer, dev, et, mods, cookie),
+      position_{position},
+      motion_{motion},
+      axis_source_{axis_source},
+      h_scroll_{h_scroll},
+      v_scroll_{v_scroll},
+      action_{action},
+      buttons_{buttons}
 {
 }
 
@@ -63,84 +64,44 @@ void MirPointerEvent::set_buttons(MirPointerButtons buttons)
     buttons_ = buttons;
 }
 
-float MirPointerEvent::x() const
+auto MirPointerEvent::position() const -> std::optional<mir::geometry::PointF>
 {
-    return x_;
+    return position_;
 }
 
-void MirPointerEvent::set_x(float x)
+void MirPointerEvent::set_position(std::optional<mir::geometry::PointF> value)
 {
-    x_ = x;
+    position_ = value;
 }
 
-float MirPointerEvent::y() const
+auto MirPointerEvent::motion() const -> mir::geometry::DisplacementF
 {
-    return y_;
+    return motion_;
 }
 
-void MirPointerEvent::set_y(float y)
+void MirPointerEvent::set_motion(mir::geometry::DisplacementF value)
 {
-    y_ = y;
+    motion_ = value;
 }
 
-float MirPointerEvent::dx() const
+auto MirPointerEvent::h_scroll() const -> mev::ScrollAxisH
 {
-    return dx_;
+    return h_scroll_;
 }
 
-void MirPointerEvent::set_dx(float dx)
+void MirPointerEvent::set_h_scroll(mev::ScrollAxisH value)
 {
-    dx_ = dx;
+    h_scroll_ = value;
 }
 
-float MirPointerEvent::dy() const
+auto MirPointerEvent::v_scroll() const -> mev::ScrollAxisV
 {
-    return dy_;
+    return v_scroll_;
 }
 
-void MirPointerEvent::set_dy(float dy)
+void MirPointerEvent::set_v_scroll(mev::ScrollAxisV value)
 {
-    dy_ = dy;
-}
-
-float MirPointerEvent::vscroll() const
-{
-    return vscroll_;
-}
-
-void MirPointerEvent::set_vscroll(float vs)
-{
-    vscroll_ = vs;
-}
-
-float MirPointerEvent::hscroll() const
-{
-    return hscroll_;
-}
-
-void MirPointerEvent::set_hscroll(float hs)
-{
-    hscroll_ = hs;
-}
-
-bool MirPointerEvent::vscroll_stop() const
-{
-    return vscroll_stop_;
-}
-
-void MirPointerEvent::set_vscroll_stop(bool stop)
-{
-    vscroll_stop_ = stop;
-}
-
-bool MirPointerEvent::hscroll_stop() const
-{
-    return hscroll_stop_;
-}
-
-void MirPointerEvent::set_hscroll_stop(bool stop)
-{
-    hscroll_stop_ = stop;
+    v_scroll_ = value;
 }
 
 MirPointerAction MirPointerEvent::action() const
@@ -195,24 +156,4 @@ auto MirPointerEvent::axis_source() const -> MirPointerAxisSource
 void MirPointerEvent::set_axis_source(MirPointerAxisSource source)
 {
     axis_source_ = source;
-}
-
-float MirPointerEvent::vscroll_discrete() const
-{
-    return vscroll_discrete_;
-}
-
-void MirPointerEvent::set_vscroll_discrete(float v)
-{
-    vscroll_discrete_ = v;
-}
-
-float MirPointerEvent::hscroll_discrete() const
-{
-    return hscroll_discrete_;
-}
-
-void MirPointerEvent::set_hscroll_discrete(float h)
-{
-    hscroll_discrete_ = h;
 }
