@@ -58,6 +58,8 @@ class WindowManagerToolsImplementation;
 class WindowManagerTools
 {
 public:
+    // For unknwon reasons, an explicit miral:: prefix is required here for doxygen and thus the symbol generator to
+    // come up with the right namespace
     explicit WindowManagerTools(miral::WindowManagerToolsImplementation* tools);
     WindowManagerTools(WindowManagerTools const&);
     WindowManagerTools& operator=(WindowManagerTools const&);
