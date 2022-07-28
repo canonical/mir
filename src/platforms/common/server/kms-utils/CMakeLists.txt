@@ -14,5 +14,5 @@ add_library(${KMS_UTILS_STATIC_LIBRARY} STATIC
 )
 
 target_link_libraries(${KMS_UTILS_STATIC_LIBRARY}
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+  ${DRM_LDFLAGS}
 )
