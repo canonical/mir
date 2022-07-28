@@ -64,7 +64,9 @@ def with_types_fixed(nodes):
     result = []
     prev = None
     for node in nodes:
-        if node == 'std::string':
+        if node == 'struct':
+            pass
+        elif node == 'std::string':
             result += parse_type(
                 'std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>'
             ).children
@@ -124,7 +126,6 @@ class Node:
         self.children = children
 
     def fix(self):
-        self.children = [child for child in self.children if child != 'struct']
         self.children = with_types_fixed(self.children)
         self.children = without_arg_names(self.children)
         for child in self.children:
@@ -212,8 +213,9 @@ def resolve_type(symbols, node):
     return result
 
 def handle_variable(symbols, node, export_info):
+    name = node.getElementsByTagName('name')[0].firstChild.data
     definition = node.getElementsByTagName('definition')[0].firstChild.data
-    sym = re.search(r'[\w:]+$', definition).group(0)
+    sym = re.search(r'[\w:]*' + re.escape(name), definition).group(0)
     symbols.add_symbol(export_info, sym)
 
 def handle_function(symbols, node, export_info):
