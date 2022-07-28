@@ -26,7 +26,7 @@ namespace miral
 {
 class Window;
 
-/// \remark Since MirAL 3.0
+/// \remark Since MirAL 2.4
 struct ApplicationInfo
 {
     ApplicationInfo();

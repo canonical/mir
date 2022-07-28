@@ -23,7 +23,7 @@
 namespace miral
 {
 /// Minimal implementation of a floating window management policy
-/// \remark Since MirAL 3.0
+/// \remark Since MirAL 2.5
 class MinimalWindowManager : public WindowManagementPolicy
 {
 public:

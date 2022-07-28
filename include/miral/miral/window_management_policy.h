@@ -46,7 +46,7 @@ class Workspace;
 using namespace mir::geometry;
 
 /// The interface through which the window management policy is determined.
-/// \remark Since MirAL 3.0
+/// \remark Since MirAL 2.4
 class WindowManagementPolicy
 {
 public:

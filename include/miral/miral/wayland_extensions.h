@@ -42,7 +42,7 @@ class Window;
 ///   * The server can add support for additional extensions
 ///   * The server can specify the configuration defaults
 ///   * Mir's option handling allows the defaults to be overridden
-/// \remark Since MirAL 3.0
+/// \remark Since MirAL 2.4
 class WaylandExtensions
 {
 public:
@@ -77,7 +77,7 @@ public:
     };
 
     /// A Builder creates and registers an extension protocol.
-    /// \remark Since MirAL 3.0
+    /// \remark Since MirAL 2.5
     struct Builder
     {
         /// Name of the protocol extension's Wayland global
@@ -110,7 +110,7 @@ public:
         std::unique_ptr<Self> const self;
     };
 
-    /// \remark Since MirAL 3.0
+    /// \remark Since MirAL 2.5
     using Filter = std::function<bool(Application const& app, char const* protocol)>;
 
     /// \remark Since MirAL 3.4
@@ -118,7 +118,7 @@ public:
 
     /// Set an extension filter callback to control the extensions available to specific clients. Deprecated in favor of
     /// conditionally_enable(), and not be used in conjunction with conditionally_enable().
-    /// \remark Since MirAL 3.0
+    /// \remark Since MirAL 2.5
     /// \deprecated In MirAL 3.4, use conditionally_enable() instead
     [[deprecated("use conditionally_enable() instead")]]
     void set_filter(Filter const& extension_filter);
@@ -132,11 +132,11 @@ public:
     /// It is recommended to use this in conjunction with set_filter() as malicious
     /// clients could potentially use this protocol to steal input focus or
     /// otherwise bother the user.
-    /// \remark Since MirAL 3.0
+    /// \remark Since MirAL 2.6
     static char const* const zwlr_layer_shell_v1;
 
     /// Allows clients to retrieve additional information about outputs
-    /// \remark Since MirAL 3.0
+    /// \remark Since MirAL 2.6
     static char const* const zxdg_output_manager_v1;
 
     /// Allows a client to get information and gain control over all toplevels of all clients
@@ -174,34 +174,34 @@ public:
     /** @} */
 
     /// Add a bespoke Wayland extension both to "supported" and "enabled by default".
-    /// \remark Since MirAL 3.0
+    /// \remark Since MirAL 2.5
     void add_extension(Builder const& builder);
 
     /// Add a bespoke Wayland extension both to "supported" but not "enabled by default".
-    /// \remark Since MirAL 3.0
+    /// \remark Since MirAL 2.5
     void add_extension_disabled_by_default(Builder const& builder);
 
     /// The set of Wayland extensions that Mir recommends.
     /// Also the set that is enabled by default upon construction of a WaylandExtensions object.
-    /// \remark Since MirAL 3.0
+    /// \remark Since MirAL 2.6
     static auto recommended() -> std::set<std::string>;
 
     /// The set of Wayland extensions that core Mir supports.
     /// Does not include bespoke extensions
     /// A superset of recommended()
-    /// \remark Since MirAL 3.0
+    /// \remark Since MirAL 2.6
     static auto supported() -> std::set<std::string>;
 
     /// Enable a Wayland extension by default. The user can still disable it with the drop-wayland-extensions or
     /// wayland-extensions options. The extension can be forced to be enabled regardless of user options with
     /// conditionally_enable().
-    /// \remark Since MirAL 3.0
+    /// \remark Since MirAL 2.6
     auto enable(std::string name) -> WaylandExtensions&;
 
     /// Disable a Wayland extension by default. The user can still enable it with the add-wayland-extensions or
     /// wayland-extensions options. The extension can be forced to be disabled regardless of user options with
     /// conditionally_enable().
-    /// \remark Since MirAL 3.0
+    /// \remark Since MirAL 2.6
     auto disable(std::string name) -> WaylandExtensions&;
 
     /// Enable a Wayland extension only when the callback returns true. The callback can use info.user_preference()
@@ -217,12 +217,12 @@ private:
 
 /// Get the MirAL application for a wl_client.
 /// \return The application (null if no application is found)
-/// \remark Since MirAL 3.0
+/// \remark Since MirAL 2.5
 auto application_for(wl_client* client) -> Application;
 
 /// Get the MirAL application for a wl_resource.
 /// \return The application (null if no application is found)
-/// \remark Since MirAL 3.0
+/// \remark Since MirAL 2.5
 auto application_for(wl_resource* resource) -> Application;
 
 /// Get the MirAL Window for a Wayland Surface, XdgSurface, etc.
@@ -231,7 +231,7 @@ auto application_for(wl_resource* resource) -> Application;
 /// miral::Window).
 ///
 /// \return The window (null if no window is found)
-/// \remark Since MirAL 3.0
+/// \remark Since MirAL 2.5
 auto window_for(wl_resource* surface) -> Window;
 }
 

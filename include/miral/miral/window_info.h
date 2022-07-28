@@ -27,7 +27,7 @@
 
 namespace miral
 {
-/// \remark Since MirAL 3.0
+/// \remark Since MirAL 2.4
 struct WindowInfo
 {
     using AspectRatio = WindowSpecification::AspectRatio;
@@ -123,7 +123,7 @@ struct WindowInfo
 
     /// The D-bus service name and basename of the app's .desktop file
     /// See http://standards.freedesktop.org/desktop-entry-spec/
-    /// \remark Since MirAL 3.0
+    /// \remark Since MirAL 2.8
     ///@{
     auto application_id() const -> std::string;
     ///@}

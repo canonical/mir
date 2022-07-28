@@ -24,7 +24,7 @@ namespace miral
 /** Enable the display configuration options.
  *   * display-config  {clone,sidebyside,single,static=<filename>}
  *   * translucent     {on,off}
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 void display_configuration_options(mir::Server& server);
 }

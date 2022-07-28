@@ -48,7 +48,7 @@ inline auto add_window_manager_policy(std::string const& name, Args&... args) ->
         { return std::make_unique<Policy>(tools, args...); }};
 }
 
-/// \remark Since MirAL 3.0
+/// \remark Since MirAL 2.4
 class WindowManagerOptions
 {
 public:

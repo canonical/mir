@@ -24,7 +24,7 @@ namespace mir { class Server; }
 namespace miral
 {
 /// Load an X-cursor theme, either the supplied default, or through the --cursor-theme config option
-/// \remark Since MirAL 3.0
+/// \remark Since MirAL 2.4
 class CursorTheme
 {
 public:

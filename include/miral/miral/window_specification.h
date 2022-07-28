@@ -38,7 +38,7 @@ using namespace mir::geometry;
 namespace detail { struct SessionsBufferStreamIdTag; }
 typedef mir::IntWrapper<detail::SessionsBufferStreamIdTag> BufferStreamId;
 
-/// \remark Since MirAL 3.0
+/// \remark Since MirAL 2.4
 class WindowSpecification
 {
 public:

@@ -45,7 +45,7 @@ namespace toolkit
  *
  * \param [in] event The event
  * \return           The event type
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 MirEventType mir_event_get_type(MirEvent const* event);
 
@@ -56,7 +56,7 @@ MirEventType mir_event_get_type(MirEvent const* event);
  *
  * \param [in] event The event
  * \return           The associated MirInputEvent
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 MirInputEvent const* mir_event_get_input_event(MirEvent const* event);
 
@@ -73,7 +73,7 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* event);
  *
  * \param [in] event The input event
  * \return           A timestamp in nanoseconds-since-epoch
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 int64_t mir_input_event_get_event_time(MirInputEvent const* event);
 
@@ -82,7 +82,7 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* event);
  *
  * \param [in] event The input event
  * \return           The input event type
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 MirInputEventType mir_input_event_get_type(MirInputEvent const* event);
 
@@ -92,7 +92,7 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* event);
  * \param[in] event The input event
  * \return          The MirKeyboardEvent or NULL if event type is not
  *                  mir_input_event_type_key
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* event);
 
@@ -102,7 +102,7 @@ MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* 
  * \param[in] event The input event
  * \return          The MirTouchEvent or NULL if event type is not
  *                  mir_input_event_type_touch
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* event);
 
@@ -112,7 +112,7 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* event)
  * \param[in] event The input event
  * \return          The MirPointerEvent or NULL if event type is not
  *                  mir_input_event_type_pointer
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* event);
 
@@ -121,7 +121,7 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
  *
  * \param [in] ev The input event
  * \return        True if the input event contains a cookie
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 bool mir_input_event_has_cookie(MirInputEvent const* ev);
 
@@ -140,7 +140,7 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev);
  *
  * \param[in] event The input event
  * \return          The MirEvent
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 MirEvent const* mir_input_event_get_event(MirInputEvent const* event);
 
@@ -149,7 +149,7 @@ MirEvent const* mir_input_event_get_event(MirInputEvent const* event);
  *
  *  \param [in] event The key event
  *  \return           The associated action
- *  \remark Since MirAL 3.0
+ *  \remark Since MirAL 2.4
  */
 MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* event);
 
@@ -165,7 +165,7 @@ xkb_keysym_t mir_keyboard_event_keysym(MirKeyboardEvent const* event);
 
 /**
  *   \deprecated       Returns the same thing as mir_keyboard_event_keysym(), which should be used instead.
- *   \remark Since MirAL 3.0
+ *   \remark Since MirAL 2.4
  */
 xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* event);
 
@@ -175,7 +175,7 @@ xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* event);
  *
  *   \param [in] event The key event
  *   \return           The scancode
- *   \remark Since MirAL 3.0
+ *   \remark Since MirAL 2.4
  */
 int mir_keyboard_event_scan_code(MirKeyboardEvent const* event);
 
@@ -197,7 +197,7 @@ char const* mir_keyboard_event_key_text(MirKeyboardEvent const* event);
  *
  *   \param [in] event The key event
  *   \return           The modifier mask
- *   \remark Since MirAL 3.0
+ *   \remark Since MirAL 2.4
  */
 MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* event);
 
@@ -206,7 +206,7 @@ MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* even
  *
  * \param [in] event The keyboard event
  * \return           The input event
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 MirInputEvent const* mir_keyboard_event_input_event(MirKeyboardEvent const* event);
 
@@ -215,7 +215,7 @@ MirInputEvent const* mir_keyboard_event_input_event(MirKeyboardEvent const* even
  *
  *   \param [in] event The key event
  *   \return           The modifier mask
- *   \remark Since MirAL 3.0
+ *   \remark Since MirAL 2.4
  */
 MirInputEventModifiers mir_touch_event_modifiers(MirTouchEvent const* event);
 
@@ -225,7 +225,7 @@ MirInputEventModifiers mir_touch_event_modifiers(MirTouchEvent const* event);
  *
  *   \param [in] event The touch event
  *   \return           The number of touches
- *   \remark Since MirAL 3.0
+ *   \remark Since MirAL 2.4
  */
 unsigned int mir_touch_event_point_count(MirTouchEvent const* event);
 
@@ -235,7 +235,7 @@ unsigned int mir_touch_event_point_count(MirTouchEvent const* event);
  *  \param [in] event       The touch event
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 ID of the touch at index
- *  \remark Since MirAL 3.0
+ *  \remark Since MirAL 2.4
  */
 MirTouchId mir_touch_event_id(MirTouchEvent const* event, unsigned int touch_index);
 
@@ -245,7 +245,7 @@ MirTouchId mir_touch_event_id(MirTouchEvent const* event, unsigned int touch_ind
  *  \param [in] event       The touch event
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 Action performed for the touch at index.
- *  \remark Since MirAL 3.0
+ *  \remark Since MirAL 2.4
  */
 MirTouchAction mir_touch_event_action(MirTouchEvent const* event, unsigned int touch_index);
 
@@ -255,7 +255,7 @@ MirTouchAction mir_touch_event_action(MirTouchEvent const* event, unsigned int t
  *  \param [in] event       The touch event
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 Tooltype used for the touch at index
- *  \remark Since MirAL 3.0
+ *  \remark Since MirAL 2.4
  */
 MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event, unsigned int touch_index);
 
@@ -267,7 +267,7 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event, unsigned i
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \param [in] axis        The axis to retreive a value from
  *  \return                 The value of the given axis
- *  \remark Since MirAL 3.0
+ *  \remark Since MirAL 2.4
  */
 float mir_touch_event_axis_value(MirTouchEvent const* event, unsigned int touch_index, MirTouchAxis axis);
 
@@ -276,7 +276,7 @@ float mir_touch_event_axis_value(MirTouchEvent const* event, unsigned int touch_
  *
  * \param [in] event The touch event
  * \return           The input event
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 MirInputEvent const* mir_touch_event_input_event(MirTouchEvent const* event);
 
@@ -286,7 +286,7 @@ MirInputEvent const* mir_touch_event_input_event(MirTouchEvent const* event);
  *
  *   \param [in] event The pointer event
  *   \return           The modifier mask
- *   \remark Since MirAL 3.0
+ *   \remark Since MirAL 2.4
  */
 MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* event);
 
@@ -295,7 +295,7 @@ MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* event)
  *
  *  \param [in] event       The pointer event
  *  \return                 Action performed by the pointer
- *  \remark Since MirAL 3.0
+ *  \remark Since MirAL 2.4
  */
 MirPointerAction mir_pointer_event_action(MirPointerEvent const* event);
 
@@ -306,7 +306,7 @@ MirPointerAction mir_pointer_event_action(MirPointerEvent const* event);
  * \param [in] button        The button to check
  *
  * \return                   Whether the given button is depressed
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 bool mir_pointer_event_button_state(MirPointerEvent const* event,
     MirPointerButton button);
@@ -317,7 +317,7 @@ bool mir_pointer_event_button_state(MirPointerEvent const* event,
  * \param [in] event         The pointer event
  *
  * \return                   The button state
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* event);
 
@@ -327,7 +327,7 @@ MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* event);
  *  \param [in] event       The pointer event
  *  \param [in] axis        The axis to retreive a value from
  *  \return                 The value of the given axis
- *  \remark Since MirAL 3.0
+ *  \remark Since MirAL 2.4
  */
 float mir_pointer_event_axis_value(MirPointerEvent const* event,
     MirPointerAxis axis);
@@ -337,7 +337,7 @@ float mir_pointer_event_axis_value(MirPointerEvent const* event,
  *
  * \param [in] event The pointer event
  * \return           The input event
- * \remark Since MirAL 3.0
+ * \remark Since MirAL 2.4
  */
 MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event);
 }

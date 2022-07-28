@@ -26,7 +26,7 @@ namespace mir { class Server; }
 
 namespace miral
 {
-/// \remark Since MirAL 3.0
+/// \remark Since MirAL 2.4
 class AppendEventFilter
 {
 public:
