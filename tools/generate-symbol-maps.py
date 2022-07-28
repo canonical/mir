@@ -10,11 +10,33 @@ import os
 import re
 from xml.dom import minidom
 
+mir_root = os.path.dirname(os.path.dirname(__file__))
+
+class LibInfo:
+    def __init__(self, stanza_prefix, symbols_map_path, last_abi_break):
+        self.stanza_prefix = stanza_prefix
+        self.symbols_map_path = symbols_map_path
+        self.last_abi_break = last_abi_break
+
+libraries = {
+    'MirAL': LibInfo(
+        'MIRAL',
+        os.path.join(mir_root, 'src', 'miral', 'symbols.map'),
+        (3, 0),
+    ),
+}
+
 help_text = __doc__
 
 exported_info_re = re.compile(r'since (\w+) (\d+)\.(\d+)', flags=re.I)
 symbol_re = re.compile(r'^[^\w\s:]$')
 identifier_re = re.compile(r'^[\w:]+$')
+
+class ExportInfo:
+    def __init__(self, lib, version):
+        self.lib = lib
+        self.version = version
+        assert len(version) == 2 and isinstance(version[0], int) and isinstance(version[1], int)
 
 def get_exported_info(parent):
     for node in parent.getElementsByTagName('simplesect'):
@@ -23,9 +45,8 @@ def get_exported_info(parent):
             result = exported_info_re.search(text)
             if result:
                 lib = result.group(1)
-                version_major = result.group(2)
-                version_minor = result.group(3)
-                return lib, version_major, version_minor
+                version = (int(result.group(2)), int(result.group(3)))
+                return ExportInfo(lib, version)
     return None
 
 def is_symbol(node):
@@ -186,8 +207,7 @@ def resolve_type(symbols, node):
 def handle_variable(symbols, node, export_info):
     definition = node.getElementsByTagName('definition')[0].firstChild.data
     sym = re.search(r'[\w:]+$', definition).group(0)
-    lib, version_major, version_minor = export_info
-    symbols.add_symbol(lib, sym, version_major, version_minor)
+    symbols.add_symbol(export_info, sym)
 
 def handle_function(symbols, node, export_info):
     definition = node.getElementsByTagName('definition')[0].firstChild.data
@@ -209,8 +229,7 @@ def handle_function(symbols, node, export_info):
     if 'std::string' in type_str:
         abi = '[abi:cxx11]'
     sym = full_name + abi + '(' + ', '.join(args) + ')' + (' const' if const else '')
-    lib, version_major, version_minor = export_info
-    symbols.add_symbol(lib, sym, version_major, version_minor)
+    symbols.add_symbol(export_info, sym)
 
 def handle_node(symbols, node, export_info):
     kind = node.attributes['kind'].value
@@ -237,9 +256,8 @@ def handle_class(symbols, node, export_info):
                 handle_node(symbols, member, export_info)
     if has_virtual:
         class_name = node.getElementsByTagName('compoundname')[0].firstChild.data
-        lib, version_major, version_minor = export_info
-        symbols.add_symbol(lib, 'vtable for ' + class_name, version_major, version_minor)
-        symbols.add_symbol(lib, 'typeinfo for ' + class_name, version_major, version_minor)
+        symbols.add_symbol(export_info, 'vtable for ' + class_name)
+        symbols.add_symbol(export_info, 'typeinfo for ' + class_name)
 
 def handle_symbols(symbols, toplevel):
     for node in toplevel.getElementsByTagName('simplesect'):
@@ -291,16 +309,24 @@ def parse_all_xml(path):
             files.append((filename, minidom.parse(filename)))
     return files
 
-def write_symbols_map_file(path, name, lib):
-    with open(path, 'w') as f:
+def write_symbols_map_file(info, lib):
+    print('writing ' + info.symbols_map_path + '...')
+    with open(info.symbols_map_path, 'w') as f:
+        stanzas = []
+        for version, symbols in sorted(list(lib.items())):
+            if version < info.last_abi_break:
+                version = info.last_abi_break
+            if not stanzas or stanzas[-1][0] != version:
+                stanzas.append([version, []])
+            stanzas[-1][1] += sorted(list(symbols), key=str.lower);
         prev_stanza = None
-        for (major, minor), symbols in sorted(list(lib.items())):
-            stanza = name + '_' + str(major) + '.' + str(minor)
+        for (major, minor), symbols in stanzas:
+            stanza = info.stanza_prefix + '_' + str(major) + '.' + str(minor)
             print('writing ' + stanza + '...')
             f.write(stanza + ' {\n')
             f.write('global:\n')
             f.write('  extern "C++" {\n')
-            for sym in sorted(list(symbols), key=str.lower):
+            for sym in symbols:
                 f.write('    "' + sym + '";\n')
             f.write('  };\n')
             if prev_stanza is None:
@@ -312,12 +338,9 @@ def write_symbols_map_file(path, name, lib):
             prev_stanza = stanza
 
 def write_symbols_map_files(symbols):
-    mir_root = os.path.dirname(os.path.dirname(__file__))
     for name, lib in sorted(list(symbols.libs.items())):
-        if name == 'MirAL':
-            path = os.path.join(mir_root, 'src', 'miral', 'symbols.map')
-            print('writing ' + path + '...')
-            write_symbols_map_file(path, 'MIRAL', lib)
+        if name in libraries:
+            write_symbols_map_file(libraries[name], lib)
         else:
             assert False, 'Unknown lib name ' + repr(name)
 
@@ -328,10 +351,10 @@ class Symbols:
         # Used to prevent recursive type lookup
         self.currently_resolving = set()
 
-    def add_symbol(self, lib, sym, version_major, version_minor):
-        self.libs.setdefault(lib, {})
-        self.libs[lib].setdefault((version_major, version_minor), set())
-        self.libs[lib][(version_major, version_minor)].add(sym)
+    def add_symbol(self, export_info, sym):
+        self.libs.setdefault(export_info.lib, {})
+        self.libs[export_info.lib].setdefault(export_info.version, set())
+        self.libs[export_info.lib][export_info.version].add(sym)
 
     def add_type(self, id, resolver):
         self.types[id] = resolver
@@ -359,7 +382,7 @@ if __name__ == "__main__":
         print(help_text)
         exit()
 
-    assert len(sys.argv) == 2, 'requires 1 arg'
+    assert len(sys.argv) == 2, 'requires 1 arg (<build-dir>/doc/xml)'
     assert os.path.isdir(sys.argv[1]), sys.argv[1] + ' is not a directory'
 
     symbols = Symbols()
