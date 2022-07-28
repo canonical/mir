@@ -93,6 +93,8 @@ public:
         MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value, float hscroll_discrete,
         float vscroll_discrete) override;
 
+    // Intentionally uses ScrollAxisV1* instad of ScrollAxis* as a reminder that a new copy of this function will be
+    // needed for each ScrollAxis struct version.
     EventUPtr pointer_event(
         std::optional<Timestamp> timestamp,
         MirPointerAction action,

@@ -239,6 +239,8 @@ void mev::add_touch(
     tev->set_action(current_index, action);
 }
 
+// Intentionally uses ScrollAxisV1* instad of ScrollAxis* as a reminder that a new copy of this function will be needed
+// for each ScrollAxis struct version.
 mir::EventUPtr mev::make_pointer_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
