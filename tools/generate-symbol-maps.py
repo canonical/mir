@@ -49,6 +49,11 @@ def get_exported_info(parent):
                 return ExportInfo(lib, version)
     return None
 
+def generate_specific_sym(sym, tag):
+    sym = re.sub(r'{' + re.escape(tag) + r'=([^}]*)}', r'\1', sym)
+    sym = re.sub(r'{[^}]*}', '', sym)
+    return sym
+
 def is_symbol(node):
     return isinstance(node, str) and symbol_re.match(node)
 
@@ -73,6 +78,8 @@ def with_types_fixed(nodes):
             result.append(parse_type('<' + ptr_type + ', std::default_delete<' + ptr_type + '>>'))
         elif node == 'uint8_t':
             result += ['unsigned', 'char']
+        elif node == 'size_t':
+            result.append(parse_type('{64bit=unsigned long}{32bit=unsigned int}'))
         elif isinstance(node, str) and node.startswith('::'):
             result.append(node[2:])
         else:
@@ -150,8 +157,8 @@ class Node:
 
 def parse_type(text):
     nodes = ['']
-    opening = set(['<', '('])
-    closing = set(['>', ')'])
+    opening = set(['<', '(', '{'])
+    closing = set(['>', ')', '}'])
     brace_level = 0
     pending = ''
     first_char = True
@@ -327,7 +334,11 @@ def write_symbols_map_file(info, lib):
             f.write('global:\n')
             f.write('  extern "C++" {\n')
             for sym in symbols:
-                f.write('    "' + sym + '";\n')
+                bit64 = generate_specific_sym(sym, '64bit')
+                bit32 = generate_specific_sym(sym, '32bit')
+                f.write('    "' + bit64 + '";\n')
+                if bit32 != bit64:
+                    f.write('    "' + bit32 + '";\n')
             f.write('  };\n')
             if prev_stanza is None:
                 f.write('local: *;\n')
