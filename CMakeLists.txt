@@ -362,4 +362,8 @@ if (TARGET doc)
   add_custom_target(doc-show
           xdg-open ${CMAKE_BINARY_DIR}/doc/html/index.html
           DEPENDS doc)
+
+  add_custom_target(generate-symbol-maps
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate-symbol-maps.py ${CMAKE_BINARY_DIR}/doc/xml/
+    DEPENDS doc)
 endif()
