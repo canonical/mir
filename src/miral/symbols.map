@@ -1,8 +1,6 @@
 MIRAL_3.0 {
 global:
   extern "C++" {
-    "::SetApplicationAuthorizer(typename..., Args const&...)";
-    "::the_custom_application_authorizer() const";
     "miral::AppendEventFilter::AppendEventFilter(std::function<int (MirEvent const*)> const&)";
     "miral::AppendEventFilter::operator()(mir::Server&)";
     "miral::ApplicationCredentials::ApplicationCredentials(mir::frontend::SessionCredentials const&)";

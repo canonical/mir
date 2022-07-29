@@ -74,7 +74,6 @@ private:
     std::shared_ptr<Self> self;
 };
 
-/// \remark Since MirAL 2.4
 template<typename Policy>
 class SetApplicationAuthorizer : public BasicSetApplicationAuthorizer
 {
