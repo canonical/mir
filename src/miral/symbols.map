@@ -400,6 +400,12 @@ global:
     "miral::SetTerminator::~SetTerminator()";
     "miral::toolkit::mir_keyboard_event_key_text(MirKeyboardEvent const*)";
     "miral::WaylandExtensions::all_supported[abi:cxx11]() const";
+    "miral::WaylandExtensions::Context::Context()";
+    "miral::WaylandExtensions::Context::Context(miral::WaylandExtensions::Context const&)";
+    "miral::WaylandExtensions::Context::display() const";
+    "miral::WaylandExtensions::Context::operator=(miral::WaylandExtensions::Context const&)";
+    "miral::WaylandExtensions::Context::run_on_wayland_mainloop(std::function<void ()>&&) const";
+    "miral::WaylandExtensions::Context::~Context()";
     "miral::Window::application() const";
     "miral::Window::move_to(mir::geometry::Point)";
     "miral::Window::operator bool() const";
@@ -412,6 +418,8 @@ global:
     "miral::Window::Window(std::shared_ptr<mir::scene::Session> const&, std::shared_ptr<mir::scene::Surface> const&)";
     "miral::Window::~Window()";
     "miral::WindowManagerTools::active_application_zone() const";
+    "typeinfo for miral::WaylandExtensions::Context";
+    "vtable for miral::WaylandExtensions::Context";
   };
 local: *;
 };
@@ -462,18 +470,4 @@ global:
     "miral::WaylandExtensions::zwlr_screencopy_manager_v1";
   };
 } MIRAL_3.4;
-
-MIRAL_3.6 {
-global:
-  extern "C++" {
-    "miral::WaylandExtensions::Context::Context()";
-    "miral::WaylandExtensions::Context::Context(miral::WaylandExtensions::Context const&)";
-    "miral::WaylandExtensions::Context::display() const";
-    "miral::WaylandExtensions::Context::operator=(miral::WaylandExtensions::Context const&)";
-    "miral::WaylandExtensions::Context::run_on_wayland_mainloop(std::function<void ()>&&) const";
-    "miral::WaylandExtensions::Context::~Context()";
-    "typeinfo for miral::WaylandExtensions::Context";
-    "vtable for miral::WaylandExtensions::Context";
-  };
-} MIRAL_3.5;
 

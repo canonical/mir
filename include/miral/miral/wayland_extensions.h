@@ -62,7 +62,7 @@ public:
     auto all_supported() const -> std::set<std::string>;
 
     /// Context information useful for implementing Wayland extensions
-    /// \remark Since MirAL 3.6
+    /// \remark Since MirAL 3.0
     class Context
     {
     public:
