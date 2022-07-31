@@ -117,7 +117,18 @@ global:
     miral::CanonicalWindowManagerPolicy::handle_window_ready*;
     miral::CanonicalWindowManagerPolicy::place_new_window*;
     miral::CommandLineOption::?CommandLineOption*;
-    miral::CommandLineOption::CommandLineOption*;
+#    miral::CommandLineOption::CommandLineOption*;
+    "miral::CommandLineOption::CommandLineOption(miral::CommandLineOption const&)";
+    "miral::CommandLineOption::CommandLineOption(std::function<void (bool)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)";
+    "miral::CommandLineOption::CommandLineOption(std::function<void (bool)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)";
+    "miral::CommandLineOption::CommandLineOption(std::function<void (double)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, double)";
+    "miral::CommandLineOption::CommandLineOption(std::function<void (int)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)";
+    "miral::CommandLineOption::CommandLineOption(std::function<void (mir::optional_value<bool> const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)";
+    "miral::CommandLineOption::CommandLineOption(std::function<void (mir::optional_value<int> const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)";
+    "miral::CommandLineOption::CommandLineOption(std::function<void (mir::optional_value<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)";
+    "miral::CommandLineOption::CommandLineOption(std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*)";
+    "miral::CommandLineOption::CommandLineOption(std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)";
+    "miral::CommandLineOption::CommandLineOption(typename, Lambda&&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)";
     miral::CommandLineOption::operator*;
     miral::CursorTheme::?CursorTheme*;
     miral::CursorTheme::CursorTheme*;
@@ -557,9 +568,21 @@ global:
 } MIRAL_3.3;
 
 MIRAL_3.5 {
-global:'''
+global:
+  extern "C++" {
+    miral::WaylandExtensions::zwlr_screencopy_manager_v1*;
+    typeinfo?for?miral::WaylandExtensions::EnableInfo;
+    vtable?for?miral::WaylandExtensions::EnableInfo;
+  };
+} MIRAL_3.4;
 
-END_NEW_STANZA = '} MIRAL_3.4;'
+MIRAL_3.6 {
+global:
+  extern "C++" {
+    "miral::CommandLineOption::CommandLineOption(std::function<void (std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)"'''
+
+END_NEW_STANZA = '''  };
+} MIRAL_3.5;'''
 
 def _print_report():
     print(OLD_STANZAS)
