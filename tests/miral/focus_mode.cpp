@@ -50,7 +50,8 @@ struct FocusMode : mt::TestWindowManagerTools
 
         creation_parameters.type = mir_window_type_normal;
         creation_parameters.set_size({600, 400});
-        basic_window_manager.add_surface(session, creation_parameters, &create_surface);
+        auto const surface = basic_window_manager.add_surface(session, creation_parameters, &create_surface);
+        basic_window_manager.surface_ready(surface);
 
         // Clear the expectations used to capture parent & child
         Mock::VerifyAndClearExpectations(window_manager_policy);
