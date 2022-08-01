@@ -18,7 +18,6 @@
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/virtual_output.h"
 #include "mir/renderer/gl/context_source.h"
 #include "mir/test/doubles/null_gl_context.h"
 #include "mir/test/doubles/null_display_configuration.h"
@@ -65,10 +64,6 @@ class NullDisplay : public graphics::Display
     std::shared_ptr<graphics::Cursor> create_hardware_cursor() override
     {
          return {}; 
-    }
-    std::unique_ptr<graphics::VirtualOutput> create_virtual_output(int /*width*/, int /*height*/) override
-    {
-        return nullptr;
     }
     std::unique_ptr<renderer::gl::Context> create_gl_context() const override
     {

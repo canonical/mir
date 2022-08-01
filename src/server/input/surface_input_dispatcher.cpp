@@ -442,15 +442,19 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
                                                        MirPointerEvent const* pev,
                                                        MirPointerAction action)
 {
-    auto surface_displacement = surface->input_bounds().top_left;
+    geom::DisplacementF const surface_displacement{as_displacement(surface->input_bounds().top_left)};
     auto const* input_ev = mir_pointer_event_input_event(pev);
     auto event = mev::clone_event(*mir_input_event_get_event(input_ev));
     auto const pointer_ev = static_cast<MirPointerEvent*>(event.get());
     pointer_ev->set_action(action);
-    pointer_ev->set_x(pointer_ev->x() - surface_displacement.x.as_value());
-    pointer_ev->set_y(pointer_ev->y() - surface_displacement.y.as_value());
+    if (pointer_ev->position())
+    {
+        pointer_ev->set_position(pointer_ev->position().value() - surface_displacement);
+    }
     if (!drag_and_drop_handle.empty())
+    {
         mev::set_drag_and_drop_handle(*event, drag_and_drop_handle);
+    }
     surface->consume(std::move(event));
 }
 

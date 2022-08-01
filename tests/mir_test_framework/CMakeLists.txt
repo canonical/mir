@@ -154,7 +154,7 @@ target_link_libraries(
   mir-test-framework-static
   mir-test-doubles-static
   PUBLIC
-  ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
+  ${UMOCKDEV_LDFLAGS}
 )
 
 set_target_properties(

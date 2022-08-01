@@ -31,10 +31,6 @@ namespace doubles
 struct MockDisplayConfiguration : public graphics::DisplayConfiguration
 {
     MOCK_CONST_METHOD1(
-        for_each_card,
-        void(std::function<void(graphics::DisplayConfigurationCard const&)>));
-
-    MOCK_CONST_METHOD1(
         for_each_output,
         void(std::function<void(graphics::DisplayConfigurationOutput const&)>));
 

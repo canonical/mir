@@ -23,7 +23,6 @@
 #include <mir/fatal.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/egl_error.h>
-#include <mir/graphics/virtual_output.h>
 #include <mir/log.h>
 #include <mir/renderer/gl/context.h>
 
@@ -151,11 +150,6 @@ auto mgw::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
     cursor = std::make_shared<platform::wayland::Cursor>(compositor, shm, [this]{ flush_wl(); });
     return cursor;
-}
-
-auto mgw::Display::create_virtual_output(int /*width*/, int /*height*/) -> std::unique_ptr<VirtualOutput>
-{
-    return {};
 }
 
 bool mgw::Display::apply_if_configuration_preserves_display_buffers(DisplayConfiguration const& /*conf*/)

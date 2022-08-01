@@ -245,15 +245,15 @@ void mi::SeatInputDeviceTracker::confine_pointer()
 
 void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
 {
-    if (event->has_absolute_position())
+    if (auto const position = event->position())
     {
-        cursor_x = mir_pointer_event_axis_value(event, mir_pointer_axis_x);
-        cursor_y = mir_pointer_event_axis_value(event, mir_pointer_axis_y);
+        cursor_x = position.value().x.as_value();
+        cursor_y = position.value().y.as_value();
     }
     else
     {
-        cursor_x += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x);
-        cursor_y += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y);
+        cursor_x += event->motion().dx.as_value();
+        cursor_y += event->motion().dy.as_value();
     }
 
     confine_pointer();

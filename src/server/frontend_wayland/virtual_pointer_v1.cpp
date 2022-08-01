@@ -37,6 +37,7 @@ namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace mi = mir::input;
 namespace mg = mir::graphics;
+namespace mev = mir::events;
 namespace geom = mir::geometry;
 
 namespace mir
@@ -115,9 +116,8 @@ private:
         bool has_absolute_motion{false};
         geometry::PointF position;
         MirPointerAxisSource axis_source{mir_pointer_axis_source_none};
-        geometry::DisplacementF scroll_precise;
-        geometry::Displacement scroll_discrete;
-        bool scroll_stop_x{false}, scroll_stop_y{false};
+        events::ScrollAxisH scroll_h;
+        events::ScrollAxisV scroll_v;
         MirPointerButtons buttons_pressed;
     };
 
@@ -248,11 +248,11 @@ void mf::VirtualPointerV1::axis(uint32_t time, uint32_t axis, double value)
     switch (axis)
     {
     case mw::Pointer::Axis::horizontal_scroll:
-        pending.scroll_precise.dx += geom::DeltaXF{value};
+        pending.scroll_h.precise += geom::DeltaXF{value};
         break;
 
     case mw::Pointer::Axis::vertical_scroll:
-        pending.scroll_precise.dy += geom::DeltaYF{value};
+        pending.scroll_v.precise += geom::DeltaYF{value};
         break;
 
     default:
@@ -265,54 +265,25 @@ void mf::VirtualPointerV1::frame()
 {
     pointer_device->if_started_then([&](input::InputSink* sink, input::EventBuilder* builder)
         {
-            if (position != pending.position)
+            if (pending.has_absolute_motion ||
+                position != pending.position ||
+                pending.scroll_h != mev::ScrollAxisH{} ||
+                pending.scroll_v != mev::ScrollAxisV{})
             {
                 auto const delta = pending.position - position;
+                auto const absolute_motion = pending.has_absolute_motion ?
+                    std::make_optional(pending.position) :
+                    std::nullopt;
                 auto event = builder->pointer_event(
                     pending.timestamp,
                     mir_pointer_action_motion,
                     buttons_pressed,
-                    pending.position.x.as_value(), pending.position.y.as_value(),
-                    0, 0,
-                    delta.dx.as_value(), delta.dy.as_value());
-                auto const pointer_event = static_cast<MirPointerEvent*>(event.get());
-                pointer_event->set_has_absolute_position(pending.has_absolute_motion);
+                    absolute_motion,
+                    delta,
+                    pending.axis_source,
+                    pending.scroll_h,
+                    pending.scroll_v);
                 sink->handle_input(std::move(event));
-            }
-
-            if (pending.scroll_discrete != geom::Displacement{})
-            {
-                sink->handle_input(builder->pointer_axis_discrete_scroll_event(
-                    pending.axis_source,
-                    pending.timestamp,
-                    mir_pointer_action_motion,
-                    buttons_pressed,
-                    pending.scroll_precise.dx.as_value(), pending.scroll_precise.dy.as_value(),
-                    pending.scroll_discrete.dx.as_value(), pending.scroll_discrete.dy.as_value()));
-            }
-            else if (pending.scroll_precise != geom::DisplacementF{})
-            {
-                sink->handle_input(builder->pointer_axis_event(
-                    pending.axis_source,
-                    pending.timestamp,
-                    mir_pointer_action_motion,
-                    buttons_pressed,
-                    pending.position.x.as_value(), pending.position.y.as_value(),
-                    pending.scroll_precise.dx.as_value(), pending.scroll_precise.dy.as_value(),
-                    0, 0));
-            }
-
-            if (pending.scroll_stop_x || pending.scroll_stop_y)
-            {
-                sink->handle_input(builder->pointer_axis_with_stop_event(
-                    pending.axis_source,
-                    pending.timestamp,
-                    mir_pointer_action_motion,
-                    buttons_pressed,
-                    pending.position.x.as_value(), pending.position.y.as_value(),
-                    0, 0,
-                    pending.scroll_stop_x, pending.scroll_stop_y,
-                    0, 0));
             }
 
             auto const pressed_buttons = pending.buttons_pressed & ~buttons_pressed;
@@ -325,7 +296,7 @@ void mf::VirtualPointerV1::frame()
                     pending.timestamp,
                     mir_pointer_action_button_up,
                     buttons_after_release,
-                    0, 0, 0, 0));
+                    {}, {}, mir_pointer_axis_source_none, {}, {}));
             }
 
             if (pressed_buttons)
@@ -334,7 +305,7 @@ void mf::VirtualPointerV1::frame()
                     pending.timestamp,
                     mir_pointer_action_button_down,
                     pending.buttons_pressed,
-                    0, 0, 0, 0));
+                    {}, {}, mir_pointer_axis_source_none, {}, {}));
             }
         });
     buttons_pressed = pending.buttons_pressed;
@@ -361,8 +332,8 @@ void mf::VirtualPointerV1::axis_stop(uint32_t time, uint32_t axis)
     pending.timestamp = std::chrono::milliseconds{time};
     switch (axis)
     {
-    case mw::Pointer::Axis::horizontal_scroll: pending.scroll_stop_x = true; break;
-    case mw::Pointer::Axis::vertical_scroll: pending.scroll_stop_y = true; break;
+    case mw::Pointer::Axis::horizontal_scroll: pending.scroll_h.stop = true; break;
+    case mw::Pointer::Axis::vertical_scroll: pending.scroll_v.stop = true; break;
     default:
         BOOST_THROW_EXCEPTION(
             mw::ProtocolError(resource, Error::invalid_axis, "Unknown axis %d", axis));
@@ -375,13 +346,15 @@ void mf::VirtualPointerV1::axis_discrete(uint32_t time, uint32_t axis, double va
     switch (axis)
     {
     case mw::Pointer::Axis::horizontal_scroll:
-        pending.scroll_discrete.dx += geom::DeltaX{discrete};
-        pending.scroll_precise.dx += geom::DeltaXF{value};
+        // TODO: replace with geom::DeltaX{...} once geom cleanup lands
+        pending.scroll_h.discrete += geom::generic::DeltaX<int>{discrete};
+        pending.scroll_h.precise += geom::DeltaXF{value};
         break;
 
     case mw::Pointer::Axis::vertical_scroll:
-        pending.scroll_discrete.dy += geom::DeltaY{discrete};
-        pending.scroll_precise.dy += geom::DeltaYF{value};
+        // TODO: replace with geom::DeltaX{...} once geom cleanup lands
+        pending.scroll_v.discrete += geom::generic::DeltaY<int>{discrete};
+        pending.scroll_v.precise += geom::DeltaYF{value};
         break;
 
     default:

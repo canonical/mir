@@ -40,7 +40,6 @@ jobs:
           if ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}; then
             TASKS+='"google:ubuntu-22.04-64:spread/build/sbuild:debian_sid"
                     "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu"
-                    "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_impish"
                     "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_jammy"
                     "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_arm64"
                     "google:ubuntu-22.04-64:spread/build/sbuild:ubuntu_armhf"

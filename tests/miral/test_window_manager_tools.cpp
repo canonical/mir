@@ -246,11 +246,6 @@ struct FakeDisplayConfiguration : public mir::graphics::DisplayConfiguration
     {
     }
 
-    void for_each_card(std::function<void(mir::graphics::DisplayConfigurationCard const&)> /*f*/) const override
-    {
-        throw std::runtime_error("FakeDisplayConfiguration::for_each_card is not implemented");
-    }
-
     void for_each_output(std::function<void(mir::graphics::DisplayConfigurationOutput const&)> f) const override
     {
         for (auto const& output : outputs)

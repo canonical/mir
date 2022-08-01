@@ -246,15 +246,7 @@ mgg::GBMSurfaceUPtr mgmh::GBMHelper::create_scanout_surface(
 
     if (sharable)
     {
-#ifdef MIR_NO_HYBRID_SUPPORT
-        BOOST_THROW_EXCEPTION((
-            std::runtime_error{
-                "Mir built without hybrid support, but configuration requires hybrid outputs.\n"
-                "This will not work unless Mir is rebuilt against Mesa >= 11.0"}
-            ));
-#else
         format_flags |= GBM_BO_USE_LINEAR;
-#endif
     }
 
     auto surface_raw = gbm_surface_create(device, width, height, gbm_format, format_flags);

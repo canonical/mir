@@ -32,7 +32,6 @@ environment:
     DISTRO/debian_sid: debian
     RELEASE: focal
     RELEASE/ubuntu: focal
-    RELEASE/ubuntu_impish: impish
     RELEASE/ubuntu_jammy: jammy
     RELEASE/ubuntu_devel: kinetic
     RELEASE/debian_sid: sid
