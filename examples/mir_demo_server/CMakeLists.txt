@@ -30,5 +30,5 @@ target_link_libraries(mir_demo_server
   exampleserverconfig
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
-  ${Boost_LIBRARIES}
+  ${Boost_LDFLAGS}
 )

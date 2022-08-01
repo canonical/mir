@@ -26,6 +26,7 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace mir
 {
@@ -46,17 +47,18 @@ public:
     virtual void content_resized_to(Surface const* surf, geometry::Size const& content_size) = 0;
     virtual void moved_to(Surface const* surf, geometry::Point const& top_left) = 0;
     virtual void hidden_set_to(Surface const* surf, bool hide) = 0;
-    virtual void frame_posted(Surface const* surf, int frames_available, geometry::Size const& size) = 0;
+    /// damage is given in surface-local logical coordinates
+    virtual void frame_posted(Surface const* surf, int frames_available, geometry::Rectangle const& damage) = 0;
     virtual void alpha_set_to(Surface const* surf, float alpha) = 0;
     virtual void orientation_set_to(Surface const* surf, MirOrientation orientation) = 0;
     virtual void transformation_set_to(Surface const* surf, glm::mat4 const& t) = 0;
     virtual void reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode) = 0;
-    virtual void cursor_image_set_to(Surface const* surf, graphics::CursorImage const& image) = 0;
+    virtual void cursor_image_set_to(Surface const* surf, std::weak_ptr<mir::graphics::CursorImage> const& image) = 0;
     virtual void client_surface_close_requested(Surface const* surf) = 0;
-    virtual void renamed(Surface const* surf, char const* name) = 0;
+    virtual void renamed(Surface const* surf, std::string const& name) = 0;
     virtual void cursor_image_removed(Surface const* surf) = 0;
     virtual void placed_relative(Surface const* surf, geometry::Rectangle const& placement) = 0;
-    virtual void input_consumed(Surface const* surf, MirEvent const* event) = 0;
+    virtual void input_consumed(Surface const* surf, std::shared_ptr<MirEvent const> const& event) = 0;
     virtual void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) = 0;
     virtual void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) = 0;
     virtual void application_id_set_to(Surface const* surf, std::string const& application_id) = 0;

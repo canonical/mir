@@ -24,17 +24,17 @@ void ms::NullSurfaceObserver::window_resized_to(Surface const*, geometry::Size c
 void ms::NullSurfaceObserver::content_resized_to(Surface const*, geometry::Size const&) {}
 void ms::NullSurfaceObserver::moved_to(Surface const*, geometry::Point const&) {}
 void ms::NullSurfaceObserver::hidden_set_to(Surface const*, bool) {}
-void ms::NullSurfaceObserver::frame_posted(Surface const*, int, geometry::Size const&) {}
+void ms::NullSurfaceObserver::frame_posted(Surface const*, int, geometry::Rectangle const&) {}
 void ms::NullSurfaceObserver::alpha_set_to(Surface const*, float) {}
 void ms::NullSurfaceObserver::orientation_set_to(Surface const*, MirOrientation) {}
 void ms::NullSurfaceObserver::transformation_set_to(Surface const*, glm::mat4 const&) {}
 void ms::NullSurfaceObserver::reception_mode_set_to(Surface const*, input::InputReceptionMode) {}
-void ms::NullSurfaceObserver::cursor_image_set_to(Surface const*, graphics::CursorImage const&) {}
+void ms::NullSurfaceObserver::cursor_image_set_to(Surface const*, std::weak_ptr<mir::graphics::CursorImage> const&) {}
 void ms::NullSurfaceObserver::client_surface_close_requested(Surface const*) {}
-void ms::NullSurfaceObserver::renamed(Surface const*, char const*) {}
+void ms::NullSurfaceObserver::renamed(Surface const*, std::string const&) {}
 void ms::NullSurfaceObserver::cursor_image_removed(Surface const*) {}
 void ms::NullSurfaceObserver::placed_relative(Surface const*, geometry::Rectangle const&) {}
-void ms::NullSurfaceObserver::input_consumed(Surface const*, MirEvent const*) {}
+void ms::NullSurfaceObserver::input_consumed(Surface const*, std::shared_ptr<MirEvent const> const&) {}
 void ms::NullSurfaceObserver::start_drag_and_drop(Surface const*, std::vector<uint8_t> const&) {}
 void ms::NullSurfaceObserver::depth_layer_set_to(Surface const*, MirDepthLayer) {}
 void ms::NullSurfaceObserver::application_id_set_to(Surface const*, std::string const&) {}

@@ -164,19 +164,15 @@ void mix::XInputDevice::pointer_press(EventTime event_time, int button, mir::geo
     button_state |= to_mir_button(button);
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
-    sink->handle_input(
-        builder->pointer_event(
-            event_time,
-            mir_pointer_action_button_down,
-            button_state,
-            pointer_pos.x.as_value(),
-            pointer_pos.y.as_value(),
-            0,
-            0,
-            movement.dx.as_value(),
-            movement.dy.as_value()
-            )
-        );
+    sink->handle_input(builder->pointer_event(
+        event_time,
+        mir_pointer_action_button_down,
+        button_state,
+        pointer_pos,
+        movement,
+        mir_pointer_axis_source_none,
+        {},
+        {}));
 }
 
 void mix::XInputDevice::pointer_release(EventTime event_time, int button, mir::geometry::PointF pos)
@@ -184,39 +180,30 @@ void mix::XInputDevice::pointer_release(EventTime event_time, int button, mir::g
     button_state &= ~to_mir_button(button);
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
-    sink->handle_input(
-        builder->pointer_event(
-            event_time,
-            mir_pointer_action_button_up,
-            button_state,
-            pointer_pos.x.as_value(),
-            pointer_pos.y.as_value(),
-            0,
-            0,
-            movement.dx.as_value(),
-            movement.dy.as_value()
-            )
-        );
-
+    sink->handle_input(builder->pointer_event(
+        event_time,
+        mir_pointer_action_button_up,
+        button_state,
+        pointer_pos,
+        movement,
+        mir_pointer_axis_source_none,
+        {},
+        {}));
 }
 
 void mix::XInputDevice::pointer_motion(EventTime event_time, mir::geometry::PointF pos)
 {
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
-    sink->handle_input(
-        builder->pointer_event(
-            event_time,
-            mir_pointer_action_motion,
-            button_state,
-            pointer_pos.x.as_value(),
-            pointer_pos.y.as_value(),
-            0,
-            0,
-            movement.dx.as_value(),
-            movement.dy.as_value()
-            )
-        );
+    sink->handle_input(builder->pointer_event(
+        event_time,
+        mir_pointer_action_motion,
+        button_state,
+        pointer_pos,
+        movement,
+        mir_pointer_axis_source_none,
+        {},
+        {}));
 }
 
 void mix::XInputDevice::pointer_axis_motion(
@@ -227,18 +214,13 @@ void mix::XInputDevice::pointer_axis_motion(
 {
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
-    sink->handle_input(
-        builder->pointer_axis_event(
-            axis_source,
-            event_time,
-            mir_pointer_action_motion,
-            button_state,
-            pointer_pos.x.as_value(),
-            pointer_pos.y.as_value(),
-            scroll.dx.as_value(),
-            scroll.dy.as_value(),
-            movement.dx.as_value(),
-            movement.dy.as_value()
-            )
-        );
+    sink->handle_input(builder->pointer_event(
+        event_time,
+        mir_pointer_action_motion,
+        button_state,
+        pointer_pos,
+        movement,
+        axis_source,
+        {scroll.dx, {}, false},
+        {scroll.dy, {}, false}));
 }

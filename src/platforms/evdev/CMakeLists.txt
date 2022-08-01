@@ -1,10 +1,4 @@
-pkg_check_modules(LIBINPUT REQUIRED libinput)
-
-if ("${LIBINPUT_VERSION}" VERSION_LESS "1.1")
-  add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=0)
-else ()
-  add_compile_definitions(MIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
-endif ()
+pkg_check_modules(LIBINPUT REQUIRED libinput>=1.1)
 
 include_directories(
   ${LIBINPUT_CFLAGS} 
@@ -55,7 +49,7 @@ set_target_properties(
 target_link_libraries(mirplatforminputevdev
   mirplatform # udev wrapper
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
-  ${LIBINPUT_LDFLAGS} ${LIBINPUT_LIBRARIES}
+  ${LIBINPUT_LDFLAGS}
 )
 
 install(TARGETS mirplatforminputevdev LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})

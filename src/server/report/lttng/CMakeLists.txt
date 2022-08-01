@@ -9,10 +9,6 @@ add_compile_options(
   -Wno-error=unused-parameter
 )
 
-if (LTTNG_UST_VERSION VERSION_GREATER 2.9)
-    add_compile_definitions(MIR_LTTNG_HAS_VOID_TRACEPOINTS)
-endif()
-
 # lttng relies on a gcc extension to support backward-compatible code, So...
 check_cxx_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments MIR_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
 if ("${CMAKE_CXX_COMPILER}" MATCHES ".*clang.*" AND MIR_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)

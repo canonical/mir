@@ -43,11 +43,11 @@ struct msd::InputManager::Observer
 
     /// Overrides from NullSurfaceObserver
     /// @{
-    void input_consumed(ms::Surface const*, MirEvent const* event) override
+    void input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const& event) override
     {
-        if (mir_event_get_type(event) != mir_event_type_input)
+        if (mir_event_get_type(event.get()) != mir_event_type_input)
             return;
-        MirInputEvent const* const input_ev = mir_event_get_input_event(event);
+        MirInputEvent const* const input_ev = mir_event_get_input_event(event.get());
         auto const timestamp = std::chrono::nanoseconds{mir_input_event_get_event_time(input_ev)};
         switch (mir_input_event_get_type(input_ev))
         {

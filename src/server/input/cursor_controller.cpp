@@ -58,7 +58,7 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
     {
         cursor_controller->update_cursor_image();
     }
-    void frame_posted(ms::Surface const*, int, geom::Size const&) override
+    void frame_posted(ms::Surface const*, int, geom::Rectangle const&) override
     {
         // The first frame posted will trigger a cursor update, since it
         // changes the visibility status of the surface, and can thus affect
@@ -81,7 +81,7 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
     {
         cursor_controller->update_cursor_image();
     }
-    void cursor_image_set_to(ms::Surface const*, const mir::graphics::CursorImage&) override
+    void cursor_image_set_to(ms::Surface const*, std::weak_ptr<mir::graphics::CursorImage> const&) override
     {
         cursor_controller->update_cursor_image();
     }

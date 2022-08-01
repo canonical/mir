@@ -49,7 +49,7 @@ public:
     virtual bool input_area_contains(geometry::Point const& point) const = 0;
     virtual std::shared_ptr<graphics::CursorImage> cursor_image() const = 0;
     virtual InputReceptionMode reception_mode() const = 0;
-    virtual void consume(MirEvent const* event) = 0;
+    virtual void consume(std::shared_ptr<MirEvent const> const& event) = 0;
 
 protected:
     Surface() = default;

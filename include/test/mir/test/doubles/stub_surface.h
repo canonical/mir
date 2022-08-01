@@ -42,7 +42,7 @@ struct StubSurface : scene::Surface
     geometry::Point top_left() const override { return {}; }
     geometry::Rectangle input_bounds() const override { return {}; }
     bool input_area_contains(geometry::Point const&) const override { return false; }
-    void consume(MirEvent const*) override {}
+    void consume(std::shared_ptr<MirEvent const> const&) override {}
     void set_alpha(float) override {}
     void set_orientation(MirOrientation) override {}
     void set_transformation(glm::mat4 const&) override {}
@@ -61,7 +61,6 @@ struct StubSurface : scene::Surface
     void show() override {}
     void set_cursor_image(std::shared_ptr<graphics::CursorImage> const&) override {}
     std::shared_ptr<graphics::CursorImage> cursor_image() const override { return nullptr; }
-    void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) override {}
     auto wayland_surface() -> wayland::Weak<frontend::WlSurface> const& override { abort(); }
     void request_client_surface_close() override {}
     std::shared_ptr<Surface> parent() const override { return nullptr; }

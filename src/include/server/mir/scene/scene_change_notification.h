@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_SCENE_SIMPLE_OBSERVER_H_
-#define MIR_SCENE_SIMPLE_OBSERVER_H_
+#ifndef MIR_SCENE_SCENE_CHANGE_NOTIFICATION_H_
+#define MIR_SCENE_SCENE_CHANGE_NOTIFICATION_H_
 
 #include "mir/scene/observer.h"
 #include "mir/geometry/forward.h"
@@ -33,18 +33,14 @@ class SurfaceObserver;
 // A simple implementation of surface observer which forwards all changes to a provided callback.
 // Also installs surface observers on each added surface which in turn forward each change to 
 // said callback.
-class LegacySceneChangeNotification : public Observer
+class SceneChangeNotification : public Observer
 {
 public:
-    LegacySceneChangeNotification(
-        std::function<void()> const& scene_notify_change,
-        std::function<void(int)> const& buffer_notify_change);
-
-    LegacySceneChangeNotification(
+    SceneChangeNotification(
         std::function<void()> const& scene_notify_change,
         std::function<void(int frames, mir::geometry::Rectangle const& damage)> const& damage_notify_change);
 
-    ~LegacySceneChangeNotification();
+    ~SceneChangeNotification();
 
     void surface_added(std::shared_ptr<Surface> const& surface) override;
     void surface_removed(std::shared_ptr<Surface> const& surface) override;
@@ -57,7 +53,6 @@ public:
 
 private:
     std::function<void()> const scene_notify_change;
-    std::function<void(int)> const buffer_notify_change;
     std::function<void(int frames, mir::geometry::Rectangle const& damage)> const damage_notify_change;
 
     std::mutex surface_observers_guard;
@@ -69,4 +64,4 @@ private:
 }
 } // namespace mir
 
-#endif // MIR_SCENE_SIMPLE_OBSERVER_H_
+#endif // MIR_SCENE_SCENE_CHANGE_NOTIFICATION_H_

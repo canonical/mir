@@ -25,12 +25,14 @@
 #include "mir/geometry/displacement.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/events/input_device_state.h"
+#include "mir/events/scroll_axis.h"
 #include "mir/events/contact_state.h"
 
 #include <memory>
 #include <functional>
 #include <chrono>
 #include <vector>
+#include <optional>
 
 namespace mir
 {
@@ -94,6 +96,20 @@ void add_touch(
     float touch_major_value,
     float touch_minor_value,
     float size_value);
+
+// Pointer event with all properties, using Mir geometry types
+EventUPtr make_pointer_event(
+    MirInputDeviceId device_id,
+    std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& cookie,
+    MirInputEventModifiers mods,
+    MirPointerAction action,
+    MirPointerButtons buttons,
+    std::optional<mir::geometry::PointF> position,
+    mir::geometry::DisplacementF motion,
+    MirPointerAxisSource axis_source,
+    events::ScrollAxisH h_scroll,
+    events::ScrollAxisV v_scroll);
 
 // Pointer event
 EventUPtr make_pointer_event(

@@ -261,7 +261,7 @@ public:
         update();
     }
 
-    void renamed(ms::Surface const*, char const* /*name*/) override
+    void renamed(ms::Surface const*, std::string const& /*name*/) override
     {
         update();
     }

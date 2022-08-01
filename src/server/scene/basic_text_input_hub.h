@@ -26,18 +26,12 @@ namespace mir
 {
 namespace scene
 {
-class TextInputStateObserverMultiplexer: mir::Executor, public ObserverMultiplexer<TextInputStateObserver>
+class TextInputStateObserverMultiplexer: public ObserverMultiplexer<TextInputStateObserver>
 {
 public:
     TextInputStateObserverMultiplexer()
-        : ObserverMultiplexer{static_cast<Executor&>(*this)}
+        : ObserverMultiplexer{immediate_executor}
     {
-    }
-
-    // By default, dispatch events immediately. The user can override this behavior by setting their own executor.
-    void spawn(std::function<void()>&& work) override
-    {
-        work();
     }
 
     void activated(TextInputStateSerial serial, bool new_input_field, TextInputState const& state) override

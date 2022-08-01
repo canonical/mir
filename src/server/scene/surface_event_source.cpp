@@ -80,7 +80,7 @@ void ms::SurfaceEventSource::placed_relative(Surface const*, geometry::Rectangle
     event_sink->handle_event(mev::make_window_placement_event(id, placement));
 }
 
-void ms::SurfaceEventSource::input_consumed(Surface const*, MirEvent const* event)
+void ms::SurfaceEventSource::input_consumed(Surface const*, std::shared_ptr<MirEvent const> const& event)
 {
     auto ev = mev::clone_event(*event);
     mev::set_window_id(*ev, id.as_value());

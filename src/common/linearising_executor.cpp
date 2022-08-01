@@ -14,8 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/linearising_executor.h"
-#include "mir/thread_pool_executor.h"
+#include "mir/executor.h"
 
 #include <deque>
 #include <mutex>

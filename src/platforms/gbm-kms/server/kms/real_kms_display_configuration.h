@@ -40,7 +40,6 @@ public:
     RealKMSDisplayConfiguration(RealKMSDisplayConfiguration const& conf);
     RealKMSDisplayConfiguration& operator=(RealKMSDisplayConfiguration const& conf);
 
-    void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
     std::unique_ptr<DisplayConfiguration> clone() const override;

@@ -163,7 +163,7 @@ auto probe_display_platform(
     }
 
     std::vector<mg::SupportedDevice> supported_devices;
-    for (auto i = 0; i <= device_count; ++i)
+    for (auto i = 0; i != device_count; ++i)
     {
         auto const& device = devices[i];
         auto device_extensions = eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
@@ -422,7 +422,7 @@ auto probe_rendering_platform(
     }
 
     std::vector<mg::SupportedDevice> supported_devices;
-    for (auto i = 0; i <= device_count; ++i)
+    for (auto i = 0; i != device_count; ++i)
     {
         auto const& device = devices[i];
         try
@@ -436,6 +436,7 @@ auto probe_rendering_platform(
         catch (std::exception const& e)
         {
             mir::log_debug("Failed to find kernel device for EGLDevice: %s", e.what());
+            continue;
         }
 
         EGLDisplay display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, device, nullptr);
@@ -476,17 +477,17 @@ auto probe_rendering_platform(
                     missing_extensions.push_back(extension);
                 }
             }
-            if (!missing_extensions.empty())
+
+            for (auto const missing_extension: missing_extensions)
             {
-                for (auto const missing_extension: missing_extensions)
-                {
-                    mir::log_info("EGLDevice found but unsuitable. Missing extension %s", missing_extension);
-                }
-                continue;
+                mir::log_info("EGLDevice found but unsuitable. Missing extension %s", missing_extension);
             }
 
-            // We've got EGL, and we've got the necessary EGL extensions. We're good.
-            supported_devices.back().support_level = mg::PlatformPriority::best;
+            if (missing_extensions.empty())
+            {
+                // We've got EGL, and we've got the necessary EGL extensions. We're good.
+                supported_devices.back().support_level = mg::PlatformPriority::best;
+            }
         }
     }
     if (supported_devices.empty())

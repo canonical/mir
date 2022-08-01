@@ -23,7 +23,7 @@
 #include "mir/geometry/displacement.h"
 
 #include "mir_toolkit/common.h"
-#include "mutex.h"
+#include "mir/synchronised.h"
 
 #include <gbm.h>
 
@@ -126,7 +126,7 @@ private:
     };
 
     using image_buffer = std::tuple<uint32_t, int, GBMBOWrapper>;
-    Mutex<std::vector<image_buffer>> buffers;
+    Synchronised<std::vector<image_buffer>> buffers;
 
     uint32_t min_buffer_width;
     uint32_t min_buffer_height;

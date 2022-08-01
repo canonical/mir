@@ -22,14 +22,14 @@
 #include "mir/compositor/display_listener.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositor_report.h"
-#include "mir/scene/legacy_scene_change_notification.h"
+#include "mir/scene/scene_change_notification.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/scene/surface.h"
 #include "mir/terminate_with_current_exception.h"
 #include "mir/raii.h"
 #include "mir/unwind_helpers.h"
 #include "mir/thread_name.h"
-#include "mir/thread_pool_executor.h"
+#include "mir/executor.h"
 
 #include <thread>
 #include <chrono>
@@ -287,7 +287,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       fixed_composite_delay{fixed_composite_delay},
       compose_on_start{compose_on_start}
 {
-    observer = std::make_shared<ms::LegacySceneChangeNotification>(
+    observer = std::make_shared<ms::SceneChangeNotification>(
     [this]()
     {
         schedule_compositing(1);

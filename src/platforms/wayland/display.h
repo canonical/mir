@@ -89,8 +89,6 @@ public:
 
     auto create_hardware_cursor() -> std::shared_ptr<Cursor>override;
 
-    auto create_virtual_output(int width, int height) -> std::unique_ptr<VirtualOutput> override;
-
     auto last_frame_on(unsigned output_id) const -> Frame override;
 
     auto create_gl_context() const -> std::unique_ptr<mir::renderer::gl::Context> override;

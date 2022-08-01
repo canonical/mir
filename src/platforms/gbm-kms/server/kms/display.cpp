@@ -26,7 +26,6 @@
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/event_handler_register.h"
 
-#include "mir/graphics/virtual_output.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/transformation.h"
@@ -378,11 +377,6 @@ void mgg::Display::clear_connected_unused_outputs()
             kms_output->set_gamma(conf_output.gamma);
         }
     });
-}
-
-std::unique_ptr<mg::VirtualOutput> mgg::Display::create_virtual_output(int /*width*/, int /*height*/)
-{
-    return nullptr;
 }
 
 std::unique_ptr<mir::renderer::gl::Context> mgg::Display::create_gl_context() const

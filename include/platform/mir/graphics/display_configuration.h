@@ -210,8 +210,6 @@ class DisplayConfiguration
 public:
     virtual ~DisplayConfiguration() = default;
 
-    /** Executes a function object for each card in the configuration. */
-    virtual void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const = 0;
     /** Executes a function object for each output in the configuration. */
     virtual void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const = 0;
     virtual void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) = 0;

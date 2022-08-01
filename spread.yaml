@@ -8,6 +8,7 @@ backends:
             - alpine-3.15
             - alpine-edge
             - ubuntu-20.04
+            - ubuntu-22.04
             - fedora-35
             - fedora-36
     google:
@@ -17,6 +18,7 @@ backends:
         halt-timeout: 2h
         systems:
             - ubuntu-20.04-64
+            - ubuntu-22.04-64
             - fedora-35-64
             - fedora-36-64
             - fedora-rawhide-64
@@ -30,7 +32,6 @@ environment:
     DISTRO/debian_sid: debian
     RELEASE: focal
     RELEASE/ubuntu: focal
-    RELEASE/ubuntu_impish: impish
     RELEASE/ubuntu_jammy: jammy
     RELEASE/ubuntu_devel: kinetic
     RELEASE/debian_sid: sid
@@ -47,6 +48,7 @@ environment:
     BUILD_TYPE/ubsan,ubsan_clang: UBSanitizer
     NOCHECK: ""
     NOCHECK/asan,tsan,ubsan,asan_clang,tsan_clang,ubsan_clang: nocheck
+    CTEST_OUTPUT_ON_FAILURE: 1
 
 prepare: |
     # NOTE: This part of the code needs to be in spread.yaml as it runs before

@@ -23,7 +23,7 @@
 #include "mir/geometry/point.h"
 #include "mir/observer_registrar.h"
 #include "mir/observer_multiplexer.h"
-#include "mir/linearising_executor.h"
+#include "mir/executor.h"
 
 #include <memory>
 #include <mutex>

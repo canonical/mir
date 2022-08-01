@@ -5,8 +5,7 @@ include_directories(
 
 add_subdirectory(kms-utils/)
 
-if (MIR_BUILD_PLATFORM_GBM_KMS AND
-    (GBM_VERSION VERSION_GREATER 11.0.0))
+if (MIR_BUILD_PLATFORM_GBM_KMS)
   add_subdirectory(kms/)
 endif()
 

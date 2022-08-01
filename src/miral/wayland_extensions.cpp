@@ -180,7 +180,7 @@ struct miral::WaylandExtensions::Self
         return extension;
     }
 
-    static auto serialize_colon_list(std::vector<std::string> extensions) -> std::string
+    static auto serialize_list(std::vector<std::string> extensions, std::string const& joiner) -> std::string
     {
         bool at_start = true;
         std::string result;
@@ -189,7 +189,7 @@ struct miral::WaylandExtensions::Self
             if (at_start)
                 at_start = false;
             else
-                result += ":";
+                result += joiner;
             result += extension;
         }
         return result;
@@ -208,9 +208,9 @@ struct miral::WaylandExtensions::Self
         {
             throw mir::AbnormalExit{
                 "Unsupported wayland extensions: " +
-                serialize_colon_list(errors) +
-                ". Supported extensions are: " +
-                serialize_colon_list({begin(supported_extensions), end(supported_extensions)})};
+                serialize_list(errors, ":") +
+                ". " +
+                describe_extensions()};
         }
     }
 
@@ -324,8 +324,8 @@ struct miral::WaylandExtensions::Self
 
         if (server.get_options()->is_set(mo::add_wayland_extensions_opt))
         {
-            auto const added = Self::parse_extensions_option(
-                server.get_options()->get<std::string>(mo::add_wayland_extensions_opt));
+            auto const value = server.get_options()->get<std::string>(mo::add_wayland_extensions_opt);
+            auto const added = value == "all" ? supported_extensions : Self::parse_extensions_option(value);
             for (auto const& extension : added)
             {
                 selected_extensions.insert(extension);
@@ -399,6 +399,23 @@ struct miral::WaylandExtensions::Self
         }
     }
 
+    auto describe_extensions() const -> std::string
+    {
+        std::vector<std::string> non_default_extensions;
+        for (auto const& extension : supported_extensions)
+        {
+            if (default_extensions.find(extension) == default_extensions.end())
+            {
+                non_default_extensions.push_back(extension);
+            }
+        }
+        std::string const joiner = "\n  ";
+        return "Default extensions:" + joiner +
+            serialize_list({default_extensions.begin(), default_extensions.end()}, joiner) +
+            "\nAdditional supported extensions:" + joiner +
+            serialize_list(non_default_extensions, joiner);
+    }
+
     std::set<std::string> const recommended_extensions;
     std::vector<Builder> wayland_extension_hooks;
     std::map<std::string, EnableCallback> conditional_extensions;
@@ -438,17 +455,19 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
 
     server.add_configuration_option(
         mo::wayland_extensions_opt,
-        ("Exhaustive list of all Wayland extensions to enable. [" + Self::serialize_colon_list(supported_extensions) + "]"),
+        ("Colon-separated list of Wayland extensions to enable. "
+         "If used, default extensions will NOT be enabled unless specified. " +
+         self->describe_extensions()),
         mir::OptionType::string);
 
     server.add_configuration_option(
         mo::add_wayland_extensions_opt,
-        ("Additional Wayland extensions to enable. [" + Self::serialize_colon_list(non_default_extensions) + "]"),
+        ("Wayland extensions to enable in addition to default extensions. Use `all` to enable all supported extensions."),
         mir::OptionType::string);
 
     server.add_configuration_option(
         mo::drop_wayland_extensions_opt,
-        ("Wayland extensions to disable. [" + Self::serialize_colon_list(default_extensions) + "]"),
+        ("Wayland extensions to disable."),
         mir::OptionType::string);
 
     server.add_pre_init_callback([self=self, &server]

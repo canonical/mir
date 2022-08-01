@@ -1,4 +1,4 @@
-# Copyright © 2013 Canonical Ltd.
+# Copyright © 2013-2022 Canonical Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 2 or 3 as
@@ -14,7 +14,9 @@
 
 add_library(mirsharedlogging OBJECT
   dumb_console_logger.cpp
+  file_logger.cpp
   input_timestamp.cpp
+  multi_logger.cpp
   shared_library_prober_report.cpp
   logger.cpp
 )

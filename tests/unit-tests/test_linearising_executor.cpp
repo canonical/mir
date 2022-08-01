@@ -19,7 +19,7 @@
 #include <thread>
 #include <atomic>
 
-#include "mir/linearising_executor.h"
+#include "mir/executor.h"
 #include "mir/test/signal.h"
 
 using namespace std::literals::chrono_literals;

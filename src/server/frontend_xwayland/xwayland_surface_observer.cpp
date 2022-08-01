@@ -88,10 +88,11 @@ void mf::XWaylandSurfaceObserver::client_surface_close_requested(ms::Surface con
     wm_surface->scene_surface_close_requested();
 }
 
-void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, MirEvent const* event)
+void mf::XWaylandSurfaceObserver::input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const& event)
 {
-    if (mir_event_get_type(event) == mir_event_type_input)
+    if (mir_event_get_type(event.get()) == mir_event_type_input)
     {
+        // Must clone the event so we can scale the positions to XWayland scale
         std::shared_ptr<MirEvent> owned_event = mev::clone_event(*event);
         mev::scale_positions(*owned_event, scale);
 

@@ -76,6 +76,17 @@ struct miral::CommandLineOption::Self
     }
 
     template<typename Value_t>
+    Self(std::function<void(std::vector<Value_t> const& value)> callback,
+         std::string const& option,
+         std::string const& description) :
+        setup{[=](mir::Server& server)
+                  { server.add_configuration_option(option, description, mir::OptionType::strings); }},
+        callback{[=](mir::Server& server)
+                     { callback(server.get_options()->get<std::vector<Value_t>>(option.c_str())); }}
+    {
+    }
+
+    template<typename Value_t>
     Self(std::function<void(mir::optional_value<Value_t> const& value)> callback,
          std::string const& option,
          std::string const& description) :
@@ -185,6 +196,14 @@ miral::CommandLineOption::CommandLineOption(
     std::string const& description) :
     self{std::make_shared<Self>(callback, option, description)}
 {
+}
+
+miral::CommandLineOption::CommandLineOption(
+    std::function<void(std::vector<std::string> const&)> callback, std::string const& option,
+    std::string const& description) :
+    self{std::make_shared<Self>(callback, option, description)}
+{
+
 }
 
 auto miral::pre_init(CommandLineOption const& clo) -> CommandLineOption

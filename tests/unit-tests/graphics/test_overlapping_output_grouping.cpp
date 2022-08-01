@@ -57,17 +57,6 @@ public:
     {
     }
 
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const override
-    {
-        mg::DisplayConfigurationCard card
-        {
-            mg::DisplayConfigurationCardId{1},
-            outputs.size()
-        };
-
-        f(card);
-    }
-
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
     {
         uint32_t i = 1;

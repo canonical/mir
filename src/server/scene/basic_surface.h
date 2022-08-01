@@ -24,6 +24,7 @@
 #include "mir/wayland/wayland_base.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/common.h"
+#include "mir/synchronised.h"
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -100,7 +101,7 @@ public:
     geometry::Point top_left() const override;
     geometry::Rectangle input_bounds() const override;
     bool input_area_contains(geometry::Point const& point) const override;
-    void consume(MirEvent const* event) override;
+    void consume(std::shared_ptr<MirEvent const> const& event) override;
     void set_alpha(float alpha) override;
     void set_orientation(MirOrientation orientation) override;
     void set_transformation(glm::mat4 const&) override;
@@ -122,9 +123,6 @@ public:
     void remove_cursor_image(); // Removes the cursor image without resetting the stream
     std::shared_ptr<graphics::CursorImage> cursor_image() const override;
 
-    /// \deprecated can be removed along with mirclient
-    void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const& stream,
-                           geometry::Displacement const& hotspot) override;
     void set_cursor_from_buffer(std::shared_ptr<graphics::Buffer> buffer,
                                 geometry::Displacement const& hotspot);
 
@@ -170,59 +168,65 @@ public:
     void set_focus_mode(MirFocusMode focus_mode) override;
 
 private:
-    bool visible(ProofOfMutexLock const&) const;
+    struct State;
+
+    bool visible(State const& state) const;
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
     MirWindowState set_state(MirWindowState s);
     int set_dpi(int);
     MirWindowVisibility set_visibility(MirWindowVisibility v);
     int set_swap_interval(int);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
-    auto content_size(ProofOfMutexLock const&) const -> geometry::Size;
-    auto content_top_left(ProofOfMutexLock const&) const -> geometry::Point;
+    void clear_frame_posted_callbacks(State& state);
+    void update_frame_posted_callbacks(State& state);
+    auto content_size(State const& state) const -> geometry::Size;
+    auto content_top_left(State const& state) const -> geometry::Point;
 
     std::shared_ptr<SurfaceObservers> observers = std::make_shared<SurfaceObservers>();
-    std::mutex mutable guard;
-    std::string surface_name;
-    geometry::Rectangle surface_rect;
-    glm::mat4 transformation_matrix;
-    float surface_alpha;
-    bool hidden;
-    input::InputReceptionMode input_mode;
-    std::vector<geometry::Rectangle> custom_input_rectangles;
+
+    struct State
+    {
+        std::string surface_name;
+        geometry::Rectangle surface_rect;
+        glm::mat4 transformation_matrix;
+        float surface_alpha;
+        bool hidden;
+        input::InputReceptionMode input_mode;
+        std::vector<geometry::Rectangle> custom_input_rectangles{};
+        std::shared_ptr<graphics::CursorImage> cursor_image;
+
+        std::list<StreamInfo> layers;
+        // Surface attributes:
+        MirWindowType type = mir_window_type_normal;
+        SurfaceStateTracker state{mir_window_state_restored};
+        int swap_interval = 1;
+        MirWindowFocusState focus = mir_window_focus_state_unfocused;
+        int dpi = 0;
+        MirWindowVisibility visibility = mir_window_visibility_occluded;
+        MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
+        MirPointerConfinementState confine_pointer_state = mir_pointer_unconfined;
+        MirDepthLayer depth_layer = mir_depth_layer_application;
+
+        std::optional<geometry::Rectangle> clip_area{std::nullopt};
+        std::string application_id{""};
+
+        struct {
+            geometry::DeltaY top;
+            geometry::DeltaX left;
+            geometry::DeltaY bottom;
+            geometry::DeltaX right;
+        } margins{};
+
+        MirFocusMode focus_mode = mir_focus_mode_focusable;
+    };
+    mir::Synchronised<State> synchronised_state;
+
+    std::weak_ptr<Session> const session_;
+
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
-    std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
     wayland::Weak<frontend::WlSurface> const wayland_surface_;
-
-    std::list<StreamInfo> layers;
-    // Surface attributes:
-    MirWindowType type_ = mir_window_type_normal;
-    SurfaceStateTracker state_{mir_window_state_restored};
-    int swapinterval_ = 1;
-    MirWindowFocusState focus_ = mir_window_focus_state_unfocused;
-    int dpi_ = 0;
-    MirWindowVisibility visibility_ = mir_window_visibility_occluded;
-    MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
-    MirPointerConfinementState confine_pointer_state_ = mir_pointer_unconfined;
-
-    /// \deprecated can be removed along with mirclient
-    std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;
-
-    MirDepthLayer depth_layer_ = mir_depth_layer_application;
-    std::optional<geometry::Rectangle> clip_area_;
-    std::string application_id_;
-
-    std::weak_ptr<Session> session_;
-
-    struct {
-        geometry::DeltaY top;
-        geometry::DeltaX left;
-        geometry::DeltaY bottom;
-        geometry::DeltaX right;
-    } margins;
-
-    MirFocusMode focus_mode_ = mir_focus_mode_focusable;
 };
 
 }

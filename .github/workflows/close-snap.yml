@@ -13,12 +13,13 @@ jobs:
     steps:
     - name: Install Snapcraft
       uses: samuelmeuli/action-snapcraft@v1
-      with:
-        snapcraft_token: ${{ secrets.SNAPCRAFT_TOKEN }}
 
+    # Could use canonical/actions/close-snap, but that would be quite verbose
     - name: Close obsolete channels
+      env:
+        SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
       run: |
         snapcraft close mir-core20 "edge/pr${{ github.event.number }}" || true
-        for snap in mir-core20 mir-kiosk mir-test-tools egmde-confined-desktop; do
+        for snap in mir-kiosk mir-test-tools egmde-confined-desktop ubuntu-frame; do
           snapcraft close "$snap" "edge/mir-pr${{ github.event.number }}" || true
         done

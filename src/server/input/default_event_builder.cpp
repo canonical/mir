@@ -152,6 +152,37 @@ mir::EventUPtr mir::input::DefaultEventBuilder::pointer_axis_discrete_scroll_eve
         hscroll_value, vscroll_value, hscroll_discrete, vscroll_discrete);
 }
 
+mir::EventUPtr mir::input::DefaultEventBuilder::pointer_event(
+    std::optional<Timestamp> source_timestamp,
+    MirPointerAction action,
+    MirPointerButtons buttons,
+    std::optional<mir::geometry::PointF> position,
+    mir::geometry::DisplacementF motion,
+    MirPointerAxisSource axis_source,
+    events::ScrollAxisV1H h_scroll,
+    events::ScrollAxisV1V v_scroll)
+{
+    std::vector<uint8_t> vec_cookie{};
+    auto const timestamp = calibrate_timestamp(source_timestamp);
+    if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
+    {
+        auto const cookie = cookie_authority->make_cookie(timestamp.count());
+        vec_cookie = cookie->serialize();
+    }
+    return me::make_pointer_event(
+        device_id,
+        timestamp,
+        vec_cookie,
+        mir_input_event_modifier_none,
+        action,
+        buttons,
+        position,
+        motion,
+        axis_source,
+        h_scroll,
+        v_scroll);
+}
+
 mir::EventUPtr mi::DefaultEventBuilder::touch_event(
     std::optional<Timestamp> source_timestamp,
     std::vector<events::ContactState> const& contacts)

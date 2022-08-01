@@ -160,7 +160,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.display,
                 ctx.wayland_executor,
                 ctx.graphic_buffer_allocator,
-                ctx.screen_shooter);
+                ctx.screen_shooter,
+                ctx.surface_stack);
         }),
 };
 
