@@ -40,3 +40,9 @@ TEST(CommandLineOption, can_take_lambdas)
     auto optional_string_flag = miral::CommandLineOption(
         [](mir::optional_value<std::string> const& /*value*/) {}, "optional-string", "Set an optional string flag");
 }
+
+TEST(CommandLineOption, can_take_repeated_strings)
+{
+    auto foo = miral::CommandLineOption(
+        [](std::vector<std::string> const&) {}, "option", "can be repeated");
+}
