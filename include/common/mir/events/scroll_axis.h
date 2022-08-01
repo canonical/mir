@@ -57,6 +57,12 @@ inline bool operator==(ScrollAxisV1<Tag> const& lhs, ScrollAxisV1<Tag> const & r
            lhs.stop == lhs.stop;
 }
 
+template<typename Tag>
+inline bool operator!=(ScrollAxisV1<Tag> const& lhs, ScrollAxisV1<Tag> const & rhs)
+{
+    return !(lhs != rhs);
+}
+
 using ScrollAxisV1H = ScrollAxisV1<geometry::DeltaXTag>;
 using ScrollAxisV1V = ScrollAxisV1<geometry::DeltaYTag>;
 
