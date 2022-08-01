@@ -2,7 +2,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
-set(MIRAL_ABI 4)
+set(MIRAL_ABI 5)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
