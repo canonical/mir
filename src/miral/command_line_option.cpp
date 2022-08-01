@@ -86,7 +86,9 @@ struct miral::CommandLineOption::Self
                 auto const options = server.get_options();
 
                 if (options->is_set(option.c_str()))
+                {
                     callback(options->get<std::vector<Value_t>>(option.c_str()));
+                }
             }}
     {
     }
