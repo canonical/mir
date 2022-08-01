@@ -935,7 +935,6 @@ public:
     explicit WaylandDisplayConfiguration(std::vector<DisplayConfigurationOutput> && outputs);
     WaylandDisplayConfiguration(WaylandDisplayConfiguration const&);
 
-    void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
     auto clone() const -> std::unique_ptr<DisplayConfiguration> override;
@@ -982,12 +981,6 @@ mgw::WaylandDisplayConfiguration::WaylandDisplayConfiguration(WaylandDisplayConf
     DisplayConfiguration(),
     outputs{rhs.outputs}
 {
-}
-
-void mgw::WaylandDisplayConfiguration::for_each_card(
-    std::function<void(DisplayConfigurationCard const&)> f) const
-{
-    f(card);
 }
 
 void mgw::WaylandDisplayConfiguration::for_each_output(

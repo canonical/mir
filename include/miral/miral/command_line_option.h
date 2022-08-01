@@ -88,6 +88,12 @@ public:
         std::string const& option,
         std::string const& description);
 
+    // \remark Since MirAL 3.6
+    CommandLineOption(
+        std::function<void(std::vector<std::string> const& values)> callback,
+        std::string const& option,
+        std::string const& description);
+
     template<typename Lambda>
     CommandLineOption(
             Lambda&& callback,

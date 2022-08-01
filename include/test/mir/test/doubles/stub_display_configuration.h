@@ -84,8 +84,6 @@ public:
         std::vector<graphics::DisplayConfigurationCard> const& cards,
         std::vector<graphics::DisplayConfigurationOutput> const& outputs);
 
-    void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> f) const override;
-
     void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const override;
 
     void for_each_output(std::function<void(graphics::UserDisplayConfigurationOutput&)> f) override;

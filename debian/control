@@ -466,7 +466,7 @@ Description: Display server for Ubuntu - GL Renderer development files
  Contains header files that define the interfaces through which platforms and
  renderers access the functionality needed to render with GL.
 
-Package: libmiral4
+Package: libmiral5
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -484,7 +484,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiral4 (= ${libmiral4:Version}),
+Depends: libmiral5 (= ${libmiral5:Version}),
 # ${source:Version} is technically incorrect, but Launchpad doesn't do BinNMUs
 # so it's harmless.
          libmircommon-dev (= ${source:Version}),

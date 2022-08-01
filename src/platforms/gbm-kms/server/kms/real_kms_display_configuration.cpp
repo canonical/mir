@@ -63,12 +63,6 @@ mgg::RealKMSDisplayConfiguration& mgg::RealKMSDisplayConfiguration::operator=(
     return *this;
 }
 
-void mgg::RealKMSDisplayConfiguration::for_each_card(
-    std::function<void(DisplayConfigurationCard const&)> f) const
-{
-    f(card);
-}
-
 void mgg::RealKMSDisplayConfiguration::for_each_output(
     std::function<void(DisplayConfigurationOutput const&)> f) const
 {

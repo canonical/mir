@@ -72,11 +72,6 @@ mgx::DisplayConfiguration::DisplayConfiguration(DisplayConfiguration const& othe
 {
 }
 
-void mgx::DisplayConfiguration::for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
-{
-    f(card);
-}
-
 void mgx::DisplayConfiguration::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
 {
     for (auto const& output : configuration)
