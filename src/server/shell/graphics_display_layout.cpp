@@ -95,7 +95,7 @@ geom::Rectangle msh::GraphicsDisplayLayout::get_output_for(geometry::Rectangle& 
         group.for_each_display_buffer([&](mg::DisplayBuffer const& db)
             {
                 auto const& screen = db.view_area();
-                auto const& overlap = rect.intersection_with(screen);
+                auto const& overlap = intersection_of(rect, screen);
                 int area = overlap.size.width.as_int() *
                            overlap.size.height.as_int();
 

@@ -18,12 +18,13 @@
 #ifndef MIR_SHELL_SURFACE_COORDINATOR_H_
 #define MIR_SHELL_SURFACE_COORDINATOR_H_
 
+#include "mir/geometry/forward.h"
+
 #include <memory>
 #include <set>
 
 namespace mir
 {
-namespace geometry { class Point; }
 namespace input { enum class InputReceptionMode; }
 namespace scene
 {

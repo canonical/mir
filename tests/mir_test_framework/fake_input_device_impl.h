@@ -23,8 +23,8 @@
 #include "mir/input/pointer_settings.h"
 #include "mir/input/touchscreen_settings.h"
 #include "mir/input/input_device_info.h"
-#include "mir/geometry/point_f.h"
-#include "mir/geometry/displacement_f.h"
+#include "mir/geometry/point.h"
+#include "mir/geometry/displacement.h"
 
 #include <mutex>
 #include <functional>

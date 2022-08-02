@@ -17,9 +17,10 @@
 #ifndef MIR_COMPOSITOR_DISPLAY_LISTENER_H_
 #define MIR_COMPOSITOR_DISPLAY_LISTENER_H_
 
+#include "mir/geometry/forward.h"
+
 namespace mir
 {
-namespace geometry { struct Rectangle; }
 namespace compositor
 {
 class DisplayListener

@@ -21,10 +21,6 @@
 
 namespace mir
 {
-namespace geometry
-{
-struct Rectangle;
-}
 namespace shell
 {
 

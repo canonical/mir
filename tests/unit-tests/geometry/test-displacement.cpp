@@ -15,7 +15,7 @@
  */
 
 #include "mir/geometry/displacement.h"
-#include "mir/geometry/displacement_f.h"
+#include "mir/geometry/point.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

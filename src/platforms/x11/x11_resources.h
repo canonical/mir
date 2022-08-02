@@ -17,6 +17,8 @@
 #ifndef MIR_X11_RESOURCES_H_
 #define MIR_X11_RESOURCES_H_
 
+#include "mir/geometry/forward.h"
+
 #include <xcb/xcb.h>
 #include <optional>
 #include <unordered_map>
@@ -27,10 +29,6 @@ typedef struct _XDisplay Display;
 
 namespace mir
 {
-namespace geometry
-{
-struct Size;
-}
 namespace graphics
 {
 struct DisplayConfigurationOutput;
