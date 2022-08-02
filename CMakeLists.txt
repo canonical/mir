@@ -345,7 +345,8 @@ if (MIR_ENABLE_TESTS)
     COMMAND /bin/sh -c "cd ${PROJECT_SOURCE_DIR} && tools/update_package_abis.sh --check --verbose")
 
   mir_add_test(NAME symbols-up-to-date
-    COMMAND /bin/sh -c "make generate-symbol-maps && cd ${PROJECT_SOURCE_DIR} && find . -name 'symbols.map' -or -name '*.symbols' | xargs git diff --exit-code")
+    COMMAND /bin/sh -c "find ${CMAKE_CURRENT_SOURCE_DIR} -name 'symbols.map' -or -name '*.symbols' | xargs git diff --exit-code"
+    DEPENDS generate-symbol-maps)
 endif ()
 
 enable_coverage_report(mirserver)
