@@ -50,6 +50,10 @@ struct ScrollAxisV1
                stop     == other.stop;
     }
 
+    auto operator!=(ScrollAxisV1 const& other) const -> bool {
+        return !(*this == other);
+    }
+
     mir::geometry::generic::Value<float, Tag> precise;
     mir::geometry::generic::Value<int, Tag> discrete;
     bool stop;
