@@ -63,6 +63,9 @@ private:
     WlSurface* const wl_surface;
     float const scale;
 
+    /// Only read and set on the Wayland thread
+    bool surface_marked_ready{false};
+
     /// Overrides from WlSurfaceRole
     /// @{
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;

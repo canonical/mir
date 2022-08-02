@@ -71,6 +71,8 @@ private:
             std::shared_ptr<scene::Session> const& session,
             shell::SurfaceSpecification const& params)> const& build) -> std::shared_ptr<scene::Surface> override;
 
+    void surface_ready(std::shared_ptr<scene::Surface> const& surface) override;
+
     void modify_surface(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
