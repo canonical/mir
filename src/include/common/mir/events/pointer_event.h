@@ -18,6 +18,8 @@
 #define MIR_COMMON_POINTER_EVENT_H_
 
 #include "mir/events/input_event.h"
+#include "mir/events/scroll_axis.h"
+#include "mir/geometry/point_f.h"
 
 #include <optional>
 
@@ -28,51 +30,32 @@ struct MirPointerEvent : MirInputEvent
     MirPointerEvent();
     MirPointerEvent(MirInputDeviceId dev,
                     std::chrono::nanoseconds et,
-                    MirInputEventModifiers mods,
                     std::vector<uint8_t> const& cookie,
+                    MirInputEventModifiers mods,
                     MirPointerAction action,
                     MirPointerButtons buttons,
-                    float x,
-                    float y,
-                    float dx,
-                    float dy,
-                    float vscroll,
-                    float hscroll);
+                    std::optional<mir::geometry::PointF> position,
+                    mir::geometry::DisplacementF motion,
+                    MirPointerAxisSource axis_source,
+                    mir::events::ScrollAxisH h_scroll,
+                    mir::events::ScrollAxisV v_scroll);
 
     auto clone() const -> MirPointerEvent* override;
 
     auto axis_source() const -> MirPointerAxisSource;
     void set_axis_source(MirPointerAxisSource source);
 
-    float x() const;
-    void set_x(float x);
+    auto position() const -> std::optional<mir::geometry::PointF>;
+    void set_position(std::optional<mir::geometry::PointF> value);
 
-    float y() const;
-    void set_y(float y);
+    auto motion() const -> mir::geometry::DisplacementF;
+    void set_motion(mir::geometry::DisplacementF value);
 
-    float dx() const;
-    void set_dx(float x);
+    auto h_scroll() const -> mir::events::ScrollAxisH;
+    void set_h_scroll(mir::events::ScrollAxisH value);
 
-    float dy() const;
-    void set_dy(float y);
-
-    float vscroll() const;
-    void set_vscroll(float v);
-
-    float hscroll() const;
-    void set_hscroll(float h);
-
-    bool vscroll_stop() const;
-    void set_vscroll_stop(bool stop);
-
-    bool hscroll_stop() const;
-    void set_hscroll_stop(bool stop);
-
-    float vscroll_discrete() const;
-    void set_vscroll_discrete(float v);
-
-    float hscroll_discrete() const;
-    void set_hscroll_discrete(float h);
+    auto v_scroll() const -> mir::events::ScrollAxisV;
+    void set_v_scroll(mir::events::ScrollAxisV value);
 
     MirPointerAction action() const;
     void set_action(MirPointerAction action);
@@ -84,20 +67,15 @@ struct MirPointerEvent : MirInputEvent
     MirBlob* dnd_handle() const;
 
 private:
-    MirPointerAxisSource axis_source_ = mir_pointer_axis_source_none;
-    float x_ = 0.0;
-    float y_ = 0.0;
-    float dx_ = 0.0;
-    float dy_ = 0.0;
-    float vscroll_ = 0.0;
-    float hscroll_ = 0.0;
-    bool hscroll_stop_ = false;
-    bool vscroll_stop_ = false;
-    float hscroll_discrete_ = 0.0;
-    float vscroll_discrete_ = 0.0;
+    std::optional<mir::geometry::PointF> position_;
+    mir::geometry::DisplacementF motion_;
+    MirPointerAxisSource axis_source_;
+    mir::events::ScrollAxisH h_scroll_;
+    mir::events::ScrollAxisV v_scroll_;
 
     MirPointerAction action_ = {};
-    MirPointerButtons buttons_= {};
+    MirPointerButtons buttons_ = {};
+
     std::optional<std::vector<uint8_t>> dnd_handle_;
 };
 

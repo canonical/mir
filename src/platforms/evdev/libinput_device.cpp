@@ -46,6 +46,8 @@
 namespace md = mir::dispatch;
 namespace mi = mir::input;
 namespace mie = mi::evdev;
+namespace mev = mir::events;
+namespace geom = mir::geometry;
 using namespace std::literals::chrono_literals;
 
 namespace
@@ -80,6 +82,36 @@ template<typename T> auto load_function(char const* sym)
         throw std::runtime_error("no valid function address");
 
     return result;
+}
+
+template<typename Tag>
+auto get_scroll_axis(libinput_event_pointer* event, libinput_pointer_axis axis, float scale) -> mev::ScrollAxis<Tag>
+{
+    if (!libinput_event_pointer_has_axis(event, axis))
+    {
+        return {};
+    }
+
+    mir::geometry::generic::Value<float>::Wrapper<Tag> const precise{
+        libinput_event_pointer_get_axis_value(event, axis) * scale};
+    auto const stop = precise.as_value() == 0;
+    mir::geometry::generic::Value<int>::Wrapper<Tag> const discrete{
+        libinput_event_pointer_get_axis_source(event) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL ?
+            libinput_event_pointer_get_axis_value_discrete(event, axis) :
+            0};
+    return {precise, discrete, stop};
+}
+
+auto get_axis_source(libinput_pointer_axis_source source) -> MirPointerAxisSource
+{
+    switch (source)
+    {
+    case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL:        return mir_pointer_axis_source_wheel;
+    case LIBINPUT_POINTER_AXIS_SOURCE_FINGER:       return mir_pointer_axis_source_finger;
+    case LIBINPUT_POINTER_AXIS_SOURCE_CONTINUOUS:   return mir_pointer_axis_source_continuous;
+    case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL_TILT:   return mir_pointer_axis_source_wheel_tilt;
+    default:                                        return mir_pointer_axis_source_none;
+    }
 }
 }
 
@@ -211,10 +243,6 @@ mir::EventUPtr mie::LibInputDevice::convert_button_event(libinput_event_pointer*
 
     auto const do_not_swap_buttons = mir_pointer_handedness_right;
     auto const pointer_button = mie::to_pointer_button(button, do_not_swap_buttons);
-    auto const relative_x_value = 0.0f;
-    auto const relative_y_value = 0.0f;
-    auto const hscroll_value = 0.0f;
-    auto const vscroll_value = 0.0f;
 
     report->received_event_from_kernel(time.count(), EV_KEY, pointer_button, action);
 
@@ -223,22 +251,33 @@ mir::EventUPtr mie::LibInputDevice::convert_button_event(libinput_event_pointer*
     else
         button_state = MirPointerButton(button_state & ~uint32_t(pointer_button));
 
-    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, relative_x_value, relative_y_value);
+    return builder->pointer_event(
+        time,
+        action,
+        button_state,
+        std::nullopt,
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer* pointer)
 {
     std::chrono::nanoseconds const time = std::chrono::microseconds(libinput_event_pointer_get_time_usec(pointer));
     auto const action = mir_pointer_action_motion;
-    auto const hscroll_value = 0.0f;
-    auto const vscroll_value = 0.0f;
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
 
-    return builder->pointer_event(time, action, button_state,
-                                  hscroll_value, vscroll_value,
-                                  libinput_event_pointer_get_dx(pointer),
-                                  libinput_event_pointer_get_dy(pointer));
+    return builder->pointer_event(
+        time,
+        action,
+        button_state,
+        std::nullopt,
+        geom::DisplacementF{libinput_event_pointer_get_dx(pointer), libinput_event_pointer_get_dy(pointer)},
+        mir_pointer_axis_source_none,
+        {},
+        {});
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event_pointer* pointer)
@@ -246,89 +285,57 @@ mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event
     // a pointing device that emits absolute coordinates
     std::chrono::nanoseconds const time = std::chrono::microseconds(libinput_event_pointer_get_time_usec(pointer));
     auto const action = mir_pointer_action_motion;
-    auto const hscroll_value = 0.0f;
-    auto const vscroll_value = 0.0f;
     // either the bounding box .. or the specific output ..
     auto const screen = sink->bounding_rectangle();
     uint32_t const width = screen.size.width.as_int();
     uint32_t const height = screen.size.height.as_int();
-    auto abs_x = libinput_event_pointer_get_absolute_x_transformed(pointer, width);
-    auto abs_y = libinput_event_pointer_get_absolute_y_transformed(pointer, height);
 
     report->received_event_from_kernel(time.count(), EV_ABS, 0, 0);
+
     auto const old_pointer_pos = pointer_pos;
-    pointer_pos = mir::geometry::Point{abs_x, abs_y};
+    pointer_pos = {
+        libinput_event_pointer_get_absolute_x_transformed(pointer, width),
+        libinput_event_pointer_get_absolute_y_transformed(pointer, height),
+    };
     auto const movement = pointer_pos - old_pointer_pos;
 
-    return builder->pointer_event(time, action, button_state, abs_x, abs_y, hscroll_value, vscroll_value,
-                                  movement.dx.as_int(), movement.dy.as_int());
+    return builder->pointer_event(
+        time,
+        action,
+        button_state,
+        pointer_pos,
+        movement,
+        mir_pointer_axis_source_none,
+        {},
+        {});
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* pointer)
 {
     std::chrono::nanoseconds const time = std::chrono::microseconds(libinput_event_pointer_get_time_usec(pointer));
     auto const action = mir_pointer_action_motion;
-    auto const relative_x_value = 0.0f;
-    auto const relative_y_value = 0.0f;
 
-    auto hscroll_value = 0.0f;
-    auto vscroll_value = 0.0f;
-    auto hscroll_stop = false;
-    auto vscroll_stop = false;
-    if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
-    {
-        hscroll_value = horizontal_scroll_scale *
-                        libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
-        hscroll_stop = hscroll_value == 0;
-    }
-
-    if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
-    {
-        vscroll_value = vertical_scroll_scale *
-                        libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
-        vscroll_stop = vscroll_value == 0;
-    }
+    auto const h_scroll = get_scroll_axis<geom::DeltaXTag>(
+        pointer,
+        LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL,
+        horizontal_scroll_scale);
+    auto const v_scroll = get_scroll_axis<geom::DeltaYTag>(
+        pointer,
+        LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL,
+        vertical_scroll_scale);
+    auto const axis_source = get_axis_source(libinput_event_pointer_get_axis_source(pointer));
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
 
-    auto builder_pointer_axis_event = [&, this](MirPointerAxisSource axis_source)
-        {
-            return builder->pointer_axis_with_stop_event(
-                axis_source, time, action, button_state, 0, 0, hscroll_value, vscroll_value,
-                hscroll_stop, vscroll_stop, relative_x_value, relative_y_value);
-        };
-
-    switch (libinput_event_pointer_get_axis_source(pointer))
-    {
-    case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL:
-    {
-        auto const hscroll_discrete =
-            libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL) ?
-            libinput_event_pointer_get_axis_value_discrete(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL) :
-            0.0;
-        auto const vscroll_discrete =
-            libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) ?
-            libinput_event_pointer_get_axis_value_discrete(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) :
-            0.0;
-
-        return builder->pointer_axis_discrete_scroll_event(
-            mir_pointer_axis_source_wheel, time, action, button_state, hscroll_value, vscroll_value,
-            hscroll_discrete, vscroll_discrete);
-    }
-
-    case LIBINPUT_POINTER_AXIS_SOURCE_FINGER:
-        return builder_pointer_axis_event(mir_pointer_axis_source_finger);
-
-    case LIBINPUT_POINTER_AXIS_SOURCE_CONTINUOUS:
-        return builder_pointer_axis_event(mir_pointer_axis_source_continuous);
-
-    case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL_TILT:
-        return builder_pointer_axis_event(mir_pointer_axis_source_wheel_tilt);
-
-    default:
-        return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, relative_x_value,
-                                      relative_y_value);
-    }
+    return builder->pointer_event(
+        time,
+        action,
+        button_state,
+        std::nullopt,
+        {},
+        axis_source,
+        h_scroll,
+        v_scroll);
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* touch)

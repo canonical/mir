@@ -22,7 +22,7 @@ libraries = {
     'MirAL': LibInfo(
         'MIRAL',
         os.path.join(mir_root, 'src', 'miral', 'symbols.map'),
-        (3, 0),
+        (3, 6),
     ),
     'MirCore': LibInfo(
         'MIR_CORE',

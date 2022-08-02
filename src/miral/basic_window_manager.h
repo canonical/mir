@@ -81,6 +81,8 @@ public:
             mir::shell::SurfaceSpecification const& params)> const& build)
     -> std::shared_ptr<mir::scene::Surface> override;
 
+    void surface_ready(std::shared_ptr<mir::scene::Surface> const& surface) override;
+
     void modify_surface(
         std::shared_ptr<mir::scene::Session> const& session,
         std::shared_ptr<mir::scene::Surface> const& surface,

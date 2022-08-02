@@ -38,6 +38,7 @@
 namespace mi = mir::input;
 namespace mie = mi::evdev;
 namespace md = mir::dispatch;
+namespace geom = mir::geometry;
 namespace mtf = mir_test_framework;
 namespace synthesis = mir::input::synthesis;
 
@@ -165,13 +166,12 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now().time_since_epoch()));
     auto action = update_buttons(button.action, mie::to_pointer_button(button.button, settings.handedness));
-    auto button_event = builder->pointer_event(event_time,
-                                               action,
-                                               buttons,
-                                               scroll.x.as_int(),
-                                               scroll.y.as_int(),
-                                               0.0f,
-                                               0.0f);
+    auto button_event = builder->pointer_event(
+        event_time, action, buttons,
+        std::nullopt, {},
+        mir_pointer_axis_source_none,
+        {scroll.dx, {}, false},
+        {scroll.dy, {}, false});
     button_event->to_input()->set_event_time(event_time);
 
     if (!sink)
@@ -205,16 +205,16 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
     // expected results. Default settings of the device lead to no
     // scaling at all.
     auto const acceleration = settings.cursor_acceleration_bias + 1.0;
-    auto const rel_x = pointer.rel_x * acceleration;
-    auto const rel_y = pointer.rel_y * acceleration;
+    geom::DisplacementF const motion{
+        pointer.rel_x * acceleration,
+        pointer.rel_y * acceleration};
 
-    auto pointer_event = builder->pointer_event(event_time,
-                                                mir_pointer_action_motion,
-                                                buttons,
-                                                scroll.x.as_int(),
-                                                scroll.y.as_int(),
-                                                rel_x,
-                                                rel_y);
+    auto pointer_event = builder->pointer_event(
+        event_time, mir_pointer_action_motion, buttons,
+        std::nullopt, motion,
+        mir_pointer_axis_source_none,
+        {scroll.dx, {}, false},
+        {scroll.dy, {}, false});
     pointer_event->to_input()->set_event_time(event_time);
 
     sink->handle_input(std::move(pointer_event));

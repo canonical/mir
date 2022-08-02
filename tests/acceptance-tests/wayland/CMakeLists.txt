@@ -12,7 +12,7 @@ target_link_libraries(
   miral_wlcs_integration
 
   mir-test-assist
-  ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
+  ${WAYLAND_CLIENT_LDFLAGS}
 )
 
 set(SYMBOL_FILE ${CMAKE_CURRENT_SOURCE_DIR}/symbol.map)

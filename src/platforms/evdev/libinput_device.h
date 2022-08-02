@@ -24,7 +24,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/touchscreen_settings.h"
-#include "mir/geometry/point.h"
+#include "mir/geometry/point_f.h"
 
 #include <vector>
 #include <map>
@@ -86,7 +86,7 @@ private:
     EventBuilder* builder{nullptr};
 
     InputDeviceInfo info;
-    mir::geometry::Point pointer_pos;
+    mir::geometry::PointF pointer_pos;
     MirPointerButtons button_state;
     double vertical_scroll_scale{1.0};
     double horizontal_scroll_scale{1.0};

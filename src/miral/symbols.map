@@ -1,4 +1,4 @@
-MIRAL_3.0 {
+MIRAL_3.6 {
 global:
   extern "C++" {
     "miral::AppendEventFilter::AppendEventFilter(std::function<int (MirEvent const*)> const&)";
@@ -41,6 +41,7 @@ global:
     "miral::CommandLineOption::CommandLineOption(std::function<void (mir::optional_value<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)";
     "miral::CommandLineOption::CommandLineOption(std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*)";
     "miral::CommandLineOption::CommandLineOption(std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)";
+    "miral::CommandLineOption::CommandLineOption(std::function<void (std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)";
     "miral::CommandLineOption::CommandLineOption(typename, Lambda&&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)";
     "miral::CommandLineOption::operator()(mir::Server&) const";
     "miral::CommandLineOption::operator=(miral::CommandLineOption const&)";
@@ -418,27 +419,8 @@ global:
     "miral::WindowManagerTools::active_application_zone() const";
     "typeinfo for miral::WaylandExtensions::Context";
     "vtable for miral::WaylandExtensions::Context";
-  };
-local: *;
-};
-
-MIRAL_3.1 {
-global:
-  extern "C++" {
     "miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1";
-  };
-} MIRAL_3.0;
-
-MIRAL_3.2 {
-global:
-  extern "C++" {
     "miral::Output::logical_group_id() const";
-  };
-} MIRAL_3.1;
-
-MIRAL_3.3 {
-global:
-  extern "C++" {
     "miral::PrintTo(miral::Window const&, std::ostream*)";
     "miral::toolkit::mir_keyboard_event_keysym(MirKeyboardEvent const*)";
     "miral::WaylandExtensions::zwp_input_method_v2";
@@ -446,12 +428,6 @@ global:
     "miral::WindowInfo::focus_mode() const";
     "miral::WindowSpecification::focus_mode()";
     "miral::WindowSpecification::focus_mode() const";
-  };
-} MIRAL_3.2;
-
-MIRAL_3.4 {
-global:
-  extern "C++" {
     "miral::socket_fd_of(std::shared_ptr<mir::scene::Session> const&)";
     "miral::WaylandExtensions::conditionally_enable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::function<bool (miral::WaylandExtensions::EnableInfo const&)> const&)";
     "miral::WaylandExtensions::EnableInfo::app() const";
@@ -459,13 +435,8 @@ global:
     "miral::WaylandExtensions::EnableInfo::user_preference() const";
     "miral::WaylandExtensions::zwp_input_method_manager_v2";
     "miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1";
-  };
-} MIRAL_3.3;
-
-MIRAL_3.5 {
-global:
-  extern "C++" {
     "miral::WaylandExtensions::zwlr_screencopy_manager_v1";
   };
-} MIRAL_3.4;
+local: *;
+};
 

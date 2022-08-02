@@ -513,5 +513,13 @@ MIR_COMMON_2.9 {
     vtable?for?mir::logging::FileLogger;
     vtable?for?mir::logging::MultiLogger;
     mir::immediate_executor;
+    MirPointerEvent::position*;
+    MirPointerEvent::set_position*;
+    MirPointerEvent::motion*;
+    MirPointerEvent::set_motion*;
+    MirPointerEvent::h_scroll*;
+    MirPointerEvent::set_h_scroll*;
+    MirPointerEvent::v_scroll*;
+    MirPointerEvent::set_v_scroll*;
   };
 } MIR_COMMON_2.8;

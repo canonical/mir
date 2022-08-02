@@ -127,6 +127,7 @@ private:
     std::shared_ptr<scene::Session> const session;
     OutputManager* output_manager;
     std::shared_ptr<WaylandSurfaceObserver> const observer;
+    bool scene_surface_marked_ready{false};
     std::weak_ptr<scene::Surface> weak_scene_surface;
 
     /// The explicitly set (not taken from the surface buffer size) uncommitted window size

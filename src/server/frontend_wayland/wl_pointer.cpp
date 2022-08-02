@@ -187,8 +187,8 @@ void mir::frontend::WlPointer::event(MirPointerEvent const* event, WlSurface& ro
             buttons(event);
             break;
         case mir_pointer_action_enter:
-            leave(event); // If we're currently on a surface, leave it
             enter_or_motion(event, root_surface);
+            axis(event);
             break;
         case mir_pointer_action_leave:
             leave(event);

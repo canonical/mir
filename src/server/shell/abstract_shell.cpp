@@ -216,6 +216,11 @@ auto msh::AbstractShell::create_surface(
     return result;
 }
 
+void msh::AbstractShell::surface_ready(std::shared_ptr<ms::Surface> const& surface)
+{
+    window_manager->surface_ready(surface);
+}
+
 void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications)
 {
     auto wm_relevant_mods = modifications;
