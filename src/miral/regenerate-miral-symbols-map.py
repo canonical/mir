@@ -530,13 +530,11 @@ global:
     miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1*;
     miral::WaylandExtensions::zwlr_screencopy_manager_v1*;
     typeinfo?for?miral::WaylandExtensions::EnableInfo;
-    vtable?for?miral::WaylandExtensions::EnableInfo;
-  };
-local: *;
-};
-global:'''
+    vtable?for?miral::WaylandExtensions::EnableInfo;'''
 
-END_NEW_STANZA = ''
+END_NEW_STANZA = '''  };
+local: *;
+};'''
 #END_NEW_STANZA = '} MIRAL_3.6;'
 
 def _print_report():

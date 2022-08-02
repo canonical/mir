@@ -391,6 +391,15 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
         committed_height_set_explicitly = true;
     pending_explicit_width = std::nullopt;
     pending_explicit_height = std::nullopt;
+
+    if (!scene_surface_marked_ready && surface.value().buffer_size())
+    {
+        if (auto const scene_surface = weak_scene_surface.lock())
+        {
+            shell->surface_ready(scene_surface);
+            scene_surface_marked_ready = true;
+        }
+    }
 }
 
 void mf::WindowWlSurfaceRole::surface_destroyed()

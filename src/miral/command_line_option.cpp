@@ -82,7 +82,14 @@ struct miral::CommandLineOption::Self
         setup{[=](mir::Server& server)
                   { server.add_configuration_option(option, description, mir::OptionType::strings); }},
         callback{[=](mir::Server& server)
-                     { callback(server.get_options()->get<std::vector<Value_t>>(option.c_str())); }}
+            {
+                auto const options = server.get_options();
+
+                if (options->is_set(option.c_str()))
+                {
+                    callback(options->get<std::vector<Value_t>>(option.c_str()));
+                }
+            }}
     {
     }
 

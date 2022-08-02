@@ -24,7 +24,6 @@
 #include <mir/scene/surface.h>
 #include <mir/shell/display_layout.h>
 #include <mir/shell/persistent_surface_store.h>
-#include <mir/shell/surface_ready_observer.h>
 #include <mir/shell/surface_specification.h>
 
 #include <boost/throw_exception.hpp>
@@ -163,20 +162,6 @@ auto miral::BasicWindowManager::add_surface(
 
     policy->advise_new_window(window_info);
 
-    std::shared_ptr<scene::Surface> const scene_surface = window_info.window();
-    if (scene_surface->visible())
-    {
-        policy->handle_window_ready(window_info);
-    }
-    else
-    {
-        scene_surface->add_observer(std::make_shared<shell::SurfaceReadyObserver>(
-            [this, &window_info](std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&)
-                { Locker lock{this}; policy->handle_window_ready(window_info); },
-            session,
-            scene_surface));
-    }
-
     if (parent && spec.aux_rect().is_set() && spec.placement_hints().is_set())
     {
         Rectangle relative_placement{window.top_left() - (parent.top_left()-Point{}), window.size()};
@@ -185,6 +170,12 @@ auto miral::BasicWindowManager::add_surface(
     }
 
     return surface;
+}
+
+void miral::BasicWindowManager::surface_ready(std::shared_ptr<scene::Surface> const& surface)
+{
+    Locker lock{this};
+    policy->handle_window_ready(info_for(surface));
 }
 
 void miral::BasicWindowManager::modify_surface(

@@ -86,6 +86,8 @@ public:
         SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<scene::Surface> = 0;
 
+    virtual void surface_ready(std::shared_ptr<scene::Surface> const& surface) = 0;
+
     virtual void modify_surface(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,

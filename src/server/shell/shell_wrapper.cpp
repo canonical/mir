@@ -91,6 +91,11 @@ auto msh::ShellWrapper::create_surface(
     return wrapped->create_surface(session, wayland_surface, params, observer);
 }
 
+void msh::ShellWrapper::surface_ready(std::shared_ptr<ms::Surface> const& surface)
+{
+    wrapped->surface_ready(surface);
+}
+
 void msh::ShellWrapper::modify_surface(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
