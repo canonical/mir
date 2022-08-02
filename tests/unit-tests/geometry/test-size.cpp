@@ -15,7 +15,6 @@
  */
 
 #include "mir/geometry/size.h"
-#include "mir/geometry/size_f.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

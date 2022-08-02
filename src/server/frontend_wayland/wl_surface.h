@@ -24,6 +24,7 @@
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
+#include "mir/geometry/rectangle.h"
 
 #include <vector>
 #include <map>
@@ -43,10 +44,6 @@ class Session;
 namespace shell
 {
 struct StreamSpecification;
-}
-namespace geometry
-{
-class Rectangle;
 }
 namespace compositor
 {

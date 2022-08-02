@@ -38,7 +38,6 @@ namespace frontend
 class WlSurface;
 class EventSink;
 }
-namespace geometry { struct Rectangle; }
 namespace scene
 {
 class PromptSession;

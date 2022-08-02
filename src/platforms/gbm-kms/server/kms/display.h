@@ -32,10 +32,6 @@
 namespace mir
 {
 class ConsoleServices;
-namespace geometry
-{
-struct Rectangle;
-}
 namespace graphics
 {
 

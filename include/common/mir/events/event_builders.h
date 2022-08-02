@@ -27,8 +27,6 @@
 #include "mir/events/input_device_state.h"
 #include "mir/events/scroll_axis.h"
 #include "mir/events/contact_state.h"
-#include "mir/geometry/point_f.h"
-#include "mir/geometry/displacement_f.h"
 
 #include <memory>
 #include <functional>

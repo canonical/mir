@@ -48,10 +48,6 @@ namespace graphics
 class GraphicBufferAllocator;
 class DisplayConfigurationObserver;
 }
-namespace geometry
-{
-struct Size;
-}
 namespace shell
 {
 class Shell;

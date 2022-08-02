@@ -18,6 +18,7 @@
 #define MIR_COMPOSITOR_MULTI_THREADED_COMPOSITOR_H_
 
 #include "mir/compositor/compositor.h"
+#include "mir/geometry/forward.h"
 
 #include <mutex>
 #include <memory>
@@ -28,7 +29,6 @@
 
 namespace mir
 {
-namespace geometry { struct Rectangle; }
 namespace graphics
 {
 class Display;

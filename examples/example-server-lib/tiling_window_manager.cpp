@@ -571,7 +571,7 @@ void TilingWindowManagerPolicy::update_surfaces(ApplicationInfo& info, Rectangle
                 if (!new_placement.overlaps(new_tile))
                     new_placement.top_left = new_tile.top_left;
 
-                new_placement = new_placement.intersection_with(new_tile);
+                new_placement = intersection_of(new_placement, new_tile);
 
                 WindowSpecification modifications;
                 modifications.top_left() = new_placement.top_left;

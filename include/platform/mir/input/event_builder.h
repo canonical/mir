@@ -20,8 +20,6 @@
 #include "mir_toolkit/event.h"
 #include "mir/events/contact_state.h"
 #include "mir/events/scroll_axis.h"
-#include "mir/geometry/point_f.h"
-#include "mir/geometry/displacement_f.h"
 #include <memory>
 #include <chrono>
 #include <vector>
