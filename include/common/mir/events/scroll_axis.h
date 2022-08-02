@@ -44,24 +44,16 @@ struct ScrollAxisV1
     {
     }
 
+    auto operator==(ScrollAxisV1 const& other) const -> bool {
+        return precise  == other.precise &&
+               discrete == other.discrete &&
+               stop     == other.stop;
+    }
+
     mir::geometry::generic::Value<float>::Wrapper<Tag> precise;
     mir::geometry::generic::Value<int>::Wrapper<Tag> discrete;
     bool stop;
 };
-
-template<typename Tag>
-inline bool operator==(ScrollAxisV1<Tag> const& lhs, ScrollAxisV1<Tag> const & rhs)
-{
-    return lhs.precise == rhs.precise &&
-           lhs.discrete == rhs.discrete &&
-           lhs.stop == lhs.stop;
-}
-
-template<typename Tag>
-inline bool operator!=(ScrollAxisV1<Tag> const& lhs, ScrollAxisV1<Tag> const & rhs)
-{
-    return !(lhs != rhs);
-}
 
 using ScrollAxisV1H = ScrollAxisV1<geometry::DeltaXTag>;
 using ScrollAxisV1V = ScrollAxisV1<geometry::DeltaYTag>;
