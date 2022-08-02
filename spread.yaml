@@ -48,6 +48,7 @@ environment:
     BUILD_TYPE/ubsan,ubsan_clang: UBSanitizer
     NOCHECK: ""
     NOCHECK/asan,tsan,ubsan,asan_clang,tsan_clang,ubsan_clang: nocheck
+    CTEST_OUTPUT_ON_FAILURE: 1
 
 prepare: |
     # NOTE: This part of the code needs to be in spread.yaml as it runs before

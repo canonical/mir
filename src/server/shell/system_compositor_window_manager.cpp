@@ -18,7 +18,6 @@
 
 #include "mir/shell/display_layout.h"
 #include "mir/shell/focus_controller.h"
-#include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/surface_specification.h"
 
 #include "mir/scene/session.h"
@@ -88,20 +87,18 @@ auto msh::SystemCompositorWindowManager::add_surface(
 
     auto const surface = build(session, placed_parameters);
 
-    auto const session_ready_observer = std::make_shared<SurfaceReadyObserver>(
-        [this](std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& /*surface*/)
-            {
-                on_session_ready(session);
-            },
-        session,
-        surface);
-
-    surface->add_observer(session_ready_observer);
-    
     std::lock_guard lock{mutex};
     output_map[surface] = params.output_id.value();
 
     return surface;
+}
+
+void msh::SystemCompositorWindowManager::surface_ready(std::shared_ptr<ms::Surface> const& surface)
+{
+    if (auto const session = surface->session().lock())
+    {
+        on_session_ready(session);
+    }
 }
 
 void msh::SystemCompositorWindowManager::modify_surface(

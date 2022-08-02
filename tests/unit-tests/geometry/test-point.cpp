@@ -15,7 +15,6 @@
  */
 
 #include "mir/geometry/point.h"
-#include "mir/geometry/point_f.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -30,16 +30,16 @@ libmircore.so.2 libmircore2 #MINVER#
  (c++)"mir::geometry::Rectangle::Rectangle(mir::geometry::Rectangle const&)@MIR_CORE_2.9" 2.9.0
  (c++)"mir::geometry::Rectangle::Rectangle(mir::geometry::Rectangle&&)@MIR_CORE_2.9" 2.9.0
  (c++)"mir::geometry::Rectangles::Rectangles()@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::Rectangles(std::initializer_list<mir::geometry::Rectangle> const&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::add(mir::geometry::Rectangle const&)@MIR_CORE_2.9" 2.9.0
+ (c++)"mir::geometry::Rectangles::Rectangles(std::initializer_list<mir::geometry::generic::Rectangle<int> > const&)@MIR_CORE_2.9" 2.9.0
+ (c++)"mir::geometry::Rectangles::add(mir::geometry::generic::Rectangle<int> const&)@MIR_CORE_2.9" 2.9.0
  (c++)"mir::geometry::Rectangles::begin() const@MIR_CORE_2.9" 2.9.0
  (c++)"mir::geometry::Rectangles::bounding_rectangle() const@MIR_CORE_2.9" 2.9.0
  (c++)"mir::geometry::Rectangles::clear()@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::confine(mir::geometry::Point&) const@MIR_CORE_2.9" 2.9.0
+ (c++)"mir::geometry::Rectangles::confine(mir::geometry::generic::Point<int>&) const@MIR_CORE_2.9" 2.9.0
  (c++)"mir::geometry::Rectangles::end() const@MIR_CORE_2.9" 2.9.0
  (c++)"mir::geometry::Rectangles::operator!=(mir::geometry::Rectangles const&) const@MIR_CORE_2.9" 2.9.0
  (c++)"mir::geometry::Rectangles::operator==(mir::geometry::Rectangles const&) const@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::remove(mir::geometry::Rectangle const&)@MIR_CORE_2.9" 2.9.0
+ (c++)"mir::geometry::Rectangles::remove(mir::geometry::generic::Rectangle<int> const&)@MIR_CORE_2.9" 2.9.0
  (c++)"mir::geometry::Rectangles::size() const@MIR_CORE_2.9" 2.9.0
  (c++)"mir::geometry::Size::Size()@MIR_CORE_2.9" 2.9.0
  (c++)"mir::geometry::Size::Size(mir::geometry::Size const&)@MIR_CORE_2.9" 2.9.0
@@ -52,3 +52,4 @@ libmircore.so.2 libmircore2 #MINVER#
  (c++)"typeinfo for mir::ShmFile@MIR_CORE_2.9" 2.9.0
  (c++)"vtable for mir::AnonymousShmFile@MIR_CORE_2.9" 2.9.0
  (c++)"vtable for mir::ShmFile@MIR_CORE_2.9" 2.9.0
+

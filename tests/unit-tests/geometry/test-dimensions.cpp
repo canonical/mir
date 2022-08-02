@@ -76,17 +76,6 @@ TEST(geometry, coordinates)
     EXPECT_EQ(dx18, y42 - y24);
 }
 
-TEST(geometry, conversions)
-{
-    using namespace geom;
-    Width w1{1};
-    DeltaX dx1{1};
-
-    EXPECT_EQ(w1, dim_cast<Width>(dx1));
-    EXPECT_EQ(dx1, dim_cast<DeltaX>(w1));
-    EXPECT_NE(dx1, dim_cast<DeltaX>(X()));
-}
-
 TEST(geometry, signed_dimensions)
 {
     using namespace geom;

@@ -46,6 +46,7 @@ struct MockWindowManager : shell::WindowManager
             std::shared_ptr<scene::Session> const& session,
             shell::SurfaceSpecification const& params)> const& build));
 
+    MOCK_METHOD(void, surface_ready, (std::shared_ptr<scene::Surface> const&), (override));
     MOCK_METHOD3(modify_surface, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, shell::SurfaceSpecification const&));
     MOCK_METHOD2(remove_surface, void(std::shared_ptr<scene::Session> const&, std::weak_ptr<scene::Surface> const&));
 

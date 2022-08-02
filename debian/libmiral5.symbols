@@ -25,8 +25,8 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::BasicSetApplicationAuthorizer::~BasicSetApplicationAuthorizer()@MIRAL_3.6" 3.6.0
  (c++)"miral::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(miral::WindowManagerTools const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::CanonicalWindowManagerPolicy::advise_focus_gained(miral::WindowInfo const&)@MIRAL_3.6" 3.6.0
- (c++)"miral::CanonicalWindowManagerPolicy::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::Displacement)@MIRAL_3.6" 3.6.0
- (c++)"miral::CanonicalWindowManagerPolicy::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::Rectangle const&)@MIRAL_3.6" 3.6.0
+ (c++)"miral::CanonicalWindowManagerPolicy::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::generic::Displacement<int>)@MIRAL_3.6" 3.6.0
+ (c++)"miral::CanonicalWindowManagerPolicy::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::generic::Rectangle<int> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::CanonicalWindowManagerPolicy::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::CanonicalWindowManagerPolicy::handle_raise_window(miral::WindowInfo&)@MIRAL_3.6" 3.6.0
  (c++)"miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(miral::WindowInfo&)@MIRAL_3.6" 3.6.0
@@ -80,8 +80,8 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::MinimalWindowManager::begin_pointer_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::MinimalWindowManager::begin_touch_move(miral::WindowInfo const&, MirInputEvent const*)@MIRAL_3.6" 3.6.0
  (c++)"miral::MinimalWindowManager::begin_touch_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_3.6" 3.6.0
- (c++)"miral::MinimalWindowManager::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::Displacement)@MIRAL_3.6" 3.6.0
- (c++)"miral::MinimalWindowManager::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::Rectangle const&)@MIRAL_3.6" 3.6.0
+ (c++)"miral::MinimalWindowManager::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::generic::Displacement<int>)@MIRAL_3.6" 3.6.0
+ (c++)"miral::MinimalWindowManager::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::generic::Rectangle<int> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const*)@MIRAL_3.6" 3.6.0
  (c++)"miral::MinimalWindowManager::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::MinimalWindowManager::handle_pointer_event(MirPointerEvent const*)@MIRAL_3.6" 3.6.0
@@ -153,11 +153,11 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::Window::Window()@MIRAL_3.6" 3.6.0
  (c++)"miral::Window::Window(std::shared_ptr<mir::scene::Session> const&, std::shared_ptr<mir::scene::Surface> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::Window::application() const@MIRAL_3.6" 3.6.0
- (c++)"miral::Window::move_to(mir::geometry::Point)@MIRAL_3.6" 3.6.0
+ (c++)"miral::Window::move_to(mir::geometry::generic::Point<int>)@MIRAL_3.6" 3.6.0
  (c++)"miral::Window::operator bool() const@MIRAL_3.6" 3.6.0
  (c++)"miral::Window::operator std::shared_ptr<mir::scene::Surface>() const@MIRAL_3.6" 3.6.0
  (c++)"miral::Window::operator std::weak_ptr<mir::scene::Surface>() const@MIRAL_3.6" 3.6.0
- (c++)"miral::Window::resize(mir::geometry::Size const&)@MIRAL_3.6" 3.6.0
+ (c++)"miral::Window::resize(mir::geometry::generic::Size<int> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::Window::size() const@MIRAL_3.6" 3.6.0
  (c++)"miral::Window::top_left() const@MIRAL_3.6" 3.6.0
  (c++)"miral::Window::~Window()@MIRAL_3.6" 3.6.0
@@ -170,9 +170,9 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::WindowInfo::can_morph_to(MirWindowType) const@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowInfo::children() const@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowInfo::clip_area() const@MIRAL_3.6" 3.6.0
- (c++)"miral::WindowInfo::clip_area(mir::optional_value<mir::geometry::Rectangle> const&)@MIRAL_3.6" 3.6.0
+ (c++)"miral::WindowInfo::clip_area(mir::optional_value<mir::geometry::generic::Rectangle<int> > const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowInfo::confine_pointer() const@MIRAL_3.6" 3.6.0
- (c++)"miral::WindowInfo::constrain_resize(mir::geometry::Point&, mir::geometry::Size&) const@MIRAL_3.6" 3.6.0
+ (c++)"miral::WindowInfo::constrain_resize(mir::geometry::generic::Point<int>&, mir::geometry::generic::Size<int>&) const@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowInfo::depth_layer() const@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowInfo::exclusive_rect() const@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowInfo::has_output_id() const@MIRAL_3.6" 3.6.0
@@ -211,7 +211,7 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::WindowManagementPolicy::advise_end()@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagementPolicy::advise_focus_gained(miral::WindowInfo const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagementPolicy::advise_focus_lost(miral::WindowInfo const&)@MIRAL_3.6" 3.6.0
- (c++)"miral::WindowManagementPolicy::advise_move_to(miral::WindowInfo const&, mir::geometry::Point)@MIRAL_3.6" 3.6.0
+ (c++)"miral::WindowManagementPolicy::advise_move_to(miral::WindowInfo const&, mir::geometry::generic::Point<int>)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagementPolicy::advise_new_app(miral::ApplicationInfo&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagementPolicy::advise_new_window(miral::WindowInfo const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagementPolicy::advise_output_create(miral::Output const&)@MIRAL_3.6" 3.6.0
@@ -219,7 +219,7 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::WindowManagementPolicy::advise_output_update(miral::Output const&, miral::Output const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagementPolicy::advise_raise(std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const&, std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_3.6" 3.6.0
- (c++)"miral::WindowManagementPolicy::advise_resize(miral::WindowInfo const&, mir::geometry::Size const&)@MIRAL_3.6" 3.6.0
+ (c++)"miral::WindowManagementPolicy::advise_resize(miral::WindowInfo const&, mir::geometry::generic::Size<int> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagementPolicy::advise_state_change(miral::WindowInfo const&, MirWindowState)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagerOptions::operator()(mir::Server&) const@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagerTools::WindowManagerTools(miral::WindowManagerTools const&)@MIRAL_3.6" 3.6.0
@@ -231,8 +231,8 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::WindowManagerTools::ask_client_to_close(miral::Window const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagerTools::count_applications() const@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagerTools::create_workspace()@MIRAL_3.6" 3.6.0
- (c++)"miral::WindowManagerTools::drag_active_window(mir::geometry::Displacement)@MIRAL_3.6" 3.6.0
- (c++)"miral::WindowManagerTools::drag_window(miral::Window const&, mir::geometry::Displacement)@MIRAL_3.6" 3.6.0
+ (c++)"miral::WindowManagerTools::drag_active_window(mir::geometry::generic::Displacement<int>)@MIRAL_3.6" 3.6.0
+ (c++)"miral::WindowManagerTools::drag_window(miral::Window const&, mir::geometry::generic::Displacement<int>)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagerTools::end_drag_and_drop()@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagerTools::find_application(std::function<bool (miral::ApplicationInfo const&)> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagerTools::focus_next_application()@MIRAL_3.6" 3.6.0
@@ -257,7 +257,7 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::WindowManagerTools::remove_tree_from_workspace(miral::Window const&, std::shared_ptr<miral::Workspace> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagerTools::select_active_window(miral::Window const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagerTools::start_drag_and_drop(miral::WindowInfo&, std::vector<unsigned char, std::allocator<unsigned char> > const&)@MIRAL_3.6" 3.6.0
- (c++)"miral::WindowManagerTools::window_at(mir::geometry::Point) const@MIRAL_3.6" 3.6.0
+ (c++)"miral::WindowManagerTools::window_at(mir::geometry::generic::Point<int>) const@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowManagerTools::~WindowManagerTools()@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowSpecification::WindowSpecification()@MIRAL_3.6" 3.6.0
  (c++)"miral::WindowSpecification::WindowSpecification(mir::shell::SurfaceSpecification const&)@MIRAL_3.6" 3.6.0
@@ -331,10 +331,10 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::X11Support::operator()(mir::Server&) const@MIRAL_3.6" 3.6.0
  (c++)"miral::X11Support::operator=(miral::X11Support const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::X11Support::~X11Support()@MIRAL_3.6" 3.6.0
- (c++)"miral::Zone::Zone(mir::geometry::Rectangle const&)@MIRAL_3.6" 3.6.0
+ (c++)"miral::Zone::Zone(mir::geometry::generic::Rectangle<int> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::Zone::Zone(miral::Zone const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::Zone::extents() const@MIRAL_3.6" 3.6.0
- (c++)"miral::Zone::extents(mir::geometry::Rectangle const&)@MIRAL_3.6" 3.6.0
+ (c++)"miral::Zone::extents(mir::geometry::generic::Rectangle<int> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::Zone::is_same_zone(miral::Zone const&) const@MIRAL_3.6" 3.6.0
  (c++)"miral::Zone::operator=(miral::Zone const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::Zone::operator==(miral::Zone const&) const@MIRAL_3.6" 3.6.0

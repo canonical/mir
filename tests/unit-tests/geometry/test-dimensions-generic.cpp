@@ -14,14 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/geometry/dimensions_generic.h"
+#include "mir/geometry/dimensions.h"
 
 #include "boost/throw_exception.hpp"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 using namespace mir::geometry::generic;
-using namespace mir::geometry;
 
 TEST(geometry, generic_casting_between_same_tag)
 {
@@ -82,16 +81,6 @@ TEST(geometry, generic_coordinates)
     DeltaY<int> dx18{18};
 
     EXPECT_EQ(dx18, y42 - y24);
-}
-
-TEST(geometry, generic_conversions)
-{
-    Width<int> w1{1};
-    DeltaX<int> dx1{1};
-
-    EXPECT_EQ(w1, mir::geometry::dim_cast<Width<int>>(dx1));
-    EXPECT_EQ(dx1, mir::geometry::dim_cast<DeltaX<int>>(w1));
-    EXPECT_NE(dx1, mir::geometry::dim_cast<DeltaX<int>>(X<int>()));
 }
 
 TEST(geometry, generic_signed_dimensions)

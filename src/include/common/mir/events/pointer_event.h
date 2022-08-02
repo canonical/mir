@@ -19,7 +19,6 @@
 
 #include "mir/events/input_event.h"
 #include "mir/events/scroll_axis.h"
-#include "mir/geometry/point_f.h"
 
 #include <optional>
 

@@ -30,11 +30,6 @@
 
 namespace mir
 {
-namespace geometry
-{
-struct Size;
-struct Point;
-}
 namespace graphics
 {
 class CursorImage;

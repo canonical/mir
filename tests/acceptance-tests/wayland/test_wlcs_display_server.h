@@ -25,7 +25,6 @@
 namespace mir
 {
 class Executor;
-namespace geometry { class Point; }
 namespace test  { class Signal; }
 }
 

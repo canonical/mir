@@ -25,8 +25,6 @@
 #include "mir/input/input_sink.h"
 #include "mir/input/event_builder.h"
 #include "mir/events/pointer_event.h"
-#include "mir/geometry/displacement_f.h"
-#include "mir/geometry/point_f.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/log.h"
 

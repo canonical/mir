@@ -35,8 +35,8 @@ struct ScrollAxisV1
     }
 
     ScrollAxisV1(
-        mir::geometry::generic::Value<float>::Wrapper<Tag> precise,
-        mir::geometry::generic::Value<int>::Wrapper<Tag> discrete,
+        mir::geometry::generic::Value<float, Tag> precise,
+        mir::geometry::generic::Value<int, Tag> discrete,
         bool stop)
         : precise{precise},
           discrete{discrete},
@@ -50,8 +50,8 @@ struct ScrollAxisV1
                stop     == other.stop;
     }
 
-    mir::geometry::generic::Value<float>::Wrapper<Tag> precise;
-    mir::geometry::generic::Value<int>::Wrapper<Tag> discrete;
+    mir::geometry::generic::Value<float, Tag> precise;
+    mir::geometry::generic::Value<int, Tag> discrete;
     bool stop;
 };
 

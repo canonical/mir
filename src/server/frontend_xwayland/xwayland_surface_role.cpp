@@ -158,6 +158,12 @@ void mf::XWaylandSurfaceRole::commit(WlSurfaceState const& state)
         {
             shell->modify_surface(session, surface.value(), spec);
         }
+
+        if (should_be_mapped && !surface_marked_ready)
+        {
+            shell->surface_ready(surface.value());
+            surface_marked_ready = true;
+        }
     }
 }
 

@@ -136,7 +136,7 @@ auto mf::WlSurface::subsurface_at(geom::Point point) -> std::optional<WlSurface*
     geom::Rectangle surface_rect = {geom::Point{}, buffer_size_.value_or(geom::Size{})};
     for (auto& rect : input_shape.value_or(std::vector<geom::Rectangle>{surface_rect}))
     {
-        if (rect.intersection_with(surface_rect).contains(point))
+        if (intersection_of(rect, surface_rect).contains(point))
             return this;
     }
     return std::nullopt;
@@ -203,7 +203,7 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
         for (auto rect : input_shape.value())
         {
             rect.top_left = rect.top_left + offset;
-            rect = rect.intersection_with(surface_rect); // clip to surface
+            rect = intersection_of(rect, surface_rect); // clip to surface
             input_shape_accumulator.push_back(rect);
         }
 

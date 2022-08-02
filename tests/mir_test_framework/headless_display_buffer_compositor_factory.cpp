@@ -63,7 +63,7 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
             mg::RenderableList renderables;
             for (auto it = elements.rbegin(); it != elements.rend(); it++)
             {
-                auto const area = (*it)->renderable()->screen_position().intersection_with(display_area);
+                auto const area = intersection_of((*it)->renderable()->screen_position(), display_area);
                 bool offscreen = (area == geom::Rectangle{});
                 bool occluded = false;
                 for(auto& r : renderables)
