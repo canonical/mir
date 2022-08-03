@@ -160,6 +160,18 @@ struct NullCursor : mf::WlPointer::Cursor
 };
 }
 
+auto mf::WlPointer::linux_button_to_mir_button(int linux_button) -> std::optional<MirPointerButtons>
+{
+    for (auto const& mapping : button_mapping)
+    {
+        if (mapping.second == linux_button)
+        {
+            return mapping.first;
+        }
+    }
+    return std::nullopt;
+}
+
 mf::WlPointer::WlPointer(wl_resource* new_resource)
     : Pointer(new_resource, Version<6>()),
       display{wl_client_get_display(client)},

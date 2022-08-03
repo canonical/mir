@@ -513,5 +513,19 @@ global:
     virtual?thunk?to?mir::wayland::TextInputV1::?TextInputV1*;
 
     virtual?thunk?to?mir::wayland::Output::?Output*;
+
+    mir::wayland::VirtualPointerManagerV1::*;
+    non-virtual?thunk?to?mir::wayland::VirtualPointerManagerV1::*;
+    typeinfo?for?mir::wayland::VirtualPointerManagerV1;
+    vtable?for?mir::wayland::VirtualPointerManagerV1;
+    typeinfo?for?mir::wayland::VirtualPointerManagerV1::Global;
+    vtable?for?mir::wayland::VirtualPointerManagerV1::Global;
+    virtual?thunk?to?mir::wayland::VirtualPointerManagerV1::?VirtualPointerManagerV1*;
+
+    mir::wayland::VirtualPointerV1::*;
+    non-virtual?thunk?to?mir::wayland::VirtualPointerV1::*;
+    typeinfo?for?mir::wayland::VirtualPointerV1;
+    vtable?for?mir::wayland::VirtualPointerV1;
+    virtual?thunk?to?mir::wayland::VirtualPointerV1::?VirtualPointerV1*;
   };
 } MIRWAYLAND_2.8;
