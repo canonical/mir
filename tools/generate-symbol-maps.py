@@ -8,6 +8,7 @@ USAGE: python3 generate-symbols-maps.py <build/doc/xml/>
 import sys
 import os
 import re
+import subprocess
 from xml.dom import minidom
 
 mir_root = os.path.dirname(os.path.dirname(__file__))
@@ -323,44 +324,71 @@ def parse_all_xml(path):
             files.append((filename, minidom.parse(filename)))
     return files
 
-def write_symbols_map_file(info, lib):
-    print('writing ' + info.symbols_map_path + '...')
-    with open(info.symbols_map_path, 'w') as f:
-        stanzas = []
-        for version, symbols in sorted(list(lib.items())):
-            if version < info.last_abi_break:
-                version = info.last_abi_break
-            if not stanzas or stanzas[-1][0] != version:
-                stanzas.append([version, []])
-            stanzas[-1][1] += sorted(list(symbols), key=str.lower);
-        prev_stanza = None
-        for (major, minor), symbols in stanzas:
-            stanza = info.stanza_prefix + '_' + str(major) + '.' + str(minor)
-            print('writing ' + stanza + '...')
-            f.write(stanza + ' {\n')
-            f.write('global:\n')
-            f.write('  extern "C++" {\n')
-            for sym in symbols:
-                bit64 = generate_specific_sym(sym, '64bit')
-                bit32 = generate_specific_sym(sym, '32bit')
-                f.write('    "' + bit64 + '";\n')
-                if bit32 != bit64:
-                    f.write('    "' + bit32 + '";\n')
-            f.write('  };\n')
-            if prev_stanza is None:
-                f.write('local: *;\n')
-                f.write('};\n')
-            else:
-                f.write('} ' + prev_stanza + ';\n')
-            f.write('\n')
-            prev_stanza = stanza
+def generate_symbols_map_file(info, lib):
+    result = ''
+    stanzas = []
+    for version, symbols in sorted(list(lib.items())):
+        if version < info.last_abi_break:
+            version = info.last_abi_break
+        if not stanzas or stanzas[-1][0] != version:
+            stanzas.append([version, []])
+        stanzas[-1][1] += sorted(list(symbols), key=str.lower);
+    prev_stanza = None
+    for (major, minor), symbols in stanzas:
+        stanza = info.stanza_prefix + '_' + str(major) + '.' + str(minor)
+        print('generating ' + stanza + '...')
+        result += stanza + ' {\n'
+        result += 'global:\n'
+        result += '  extern "C++" {\n'
+        for sym in symbols:
+            bit64 = generate_specific_sym(sym, '64bit')
+            bit32 = generate_specific_sym(sym, '32bit')
+            result += '    "' + bit64 + '";\n'
+            if bit32 != bit64:
+                result += '    "' + bit32 + '";\n'
+        result += '  };\n'
+        if prev_stanza is None:
+            result += 'local: *;\n'
+            result += '};\n'
+        else:
+            result += '} ' + prev_stanza + ';\n'
+        result += '\n'
+        prev_stanza = stanza
+    return result
 
 def write_symbols_map_files(symbols):
+    print('writing symbols.map files...')
     for name, lib in sorted(list(symbols.libs.items())):
         if name in libraries:
-            write_symbols_map_file(libraries[name], lib)
+            contents = generate_symbols_map_file(libraries[name], lib)
+            path = libraries[name].symbols_map_path
+            print('writing ' + path + '...')
+            with open(path, 'w') as f:
+                f.write(contents)
         else:
             assert False, 'Unknown lib name ' + repr(name)
+
+def check_symbols_map_files(symbols):
+    print('checking symbols.map files...')
+    errors = ''
+    for name, lib in sorted(list(symbols.libs.items())):
+        if name in libraries:
+            contents = generate_symbols_map_file(libraries[name], lib)
+            existing = libraries[name].symbols_map_path
+            created = existing + '.new'
+            print('checking ' + existing + '...')
+            with open(created, 'w') as f:
+                f.write(contents)
+            result = subprocess.run(
+                ['diff', existing, created],
+                capture_output=True,
+                encoding='utf-8')
+            os.remove(created)
+            if result.stdout:
+                errors += '\n' + existing + ' did not match:\n' + '-' * 80 + '\n\n' + result.stdout + '\n'
+        else:
+            assert False, 'Unknown lib name ' + repr(name)
+    assert not errors, errors
 
 class Symbols:
     def __init__(self):
@@ -395,13 +423,37 @@ class Symbols:
                 result += '\n'
         return result
 
+def show_usage():
+    print(
+        'USAGE: ' + os.path.basename(__file__) + ' <build-dir>/doc/xml <command>\n' +
+        'COMMANDS:\n' +
+        '  --write: update symbols files\n' +
+        '  --check: check existing symbols files\n')
+
 if __name__ == "__main__":
     if '-h' in sys.argv or '--help' in sys.argv:
         print(help_text)
         exit()
 
-    assert len(sys.argv) == 2, 'requires 1 arg (<build-dir>/doc/xml)'
-    assert os.path.isdir(sys.argv[1]), sys.argv[1] + ' is not a directory'
+    if '--help' in sys.argv or '-h' in sys.argv:
+        show_usage()
+        exit(0)
+    if len(sys.argv) != 3:
+        print('incorrect number of args')
+        show_usage()
+        exit(1)
+    if not os.path.isdir(sys.argv[1]):
+        print(sys.argv[1] + ' is not a directory')
+        show_usage()
+        exit(1)
+    if sys.argv[2] == '--write':
+        symbol_fn = write_symbols_map_files
+    elif sys.argv[2] == '--check':
+        symbol_fn = check_symbols_map_files
+    else:
+        print('invalid command ' + sys.argv[2])
+        show_usage()
+        exit(1)
 
     symbols = Symbols()
     print('looking for XML files...')
@@ -420,6 +472,5 @@ if __name__ == "__main__":
         except:
             print('error in ' + filename)
             raise
-    print('writing symbols.map files...')
-    write_symbols_map_files(symbols)
+    symbol_fn(symbols)
     print('done')
