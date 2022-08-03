@@ -1,55 +1,55 @@
 libmircore.so.2 libmircore2 #MINVER#
- MIR_CORE_2.9@MIR_CORE_2.9 2.9.0
- (c++|arch-bits=64)"mir::AnonymousShmFile::AnonymousShmFile(unsigned long)@MIR_CORE_2.9" 2.9.0
- (c++|arch-bits=32)"mir::AnonymousShmFile::AnonymousShmFile(unsigned int)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::AnonymousShmFile::base_ptr() const@MIR_CORE_2.9" 2.9.0
- (c++)"mir::AnonymousShmFile::fd() const@MIR_CORE_2.9" 2.9.0
- (c++)"mir::AnonymousShmFile::~AnonymousShmFile()@MIR_CORE_2.9" 2.9.0
- (c++)"mir::Fd::Fd()@MIR_CORE_2.9" 2.9.0
- (c++)"mir::Fd::Fd(int)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::Fd::Fd(mir::Fd&&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::Fd::Fd(mir::IntOwnedFd)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::Fd::operator int() const@MIR_CORE_2.9" 2.9.0
- (c++)"mir::Fd::operator=(mir::Fd)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::ShmFile::ShmFile()@MIR_CORE_2.9" 2.9.0
- (c++)"mir::ShmFile::~ShmFile()@MIR_CORE_2.9" 2.9.0
- (c++)"mir::fatal_error@MIR_CORE_2.9" 2.9.0
- (c++)"mir::fatal_error_abort(char const*, ...)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::fatal_error_except(char const*, ...)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Displacement::Displacement<int, int>(int&&, int&&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Displacement::Displacement<mir::geometry::detail::IntWrapper<mir::geometry::DeltaXTag>, mir::geometry::detail::IntWrapper<mir::geometry::DeltaYTag> >(mir::geometry::detail::IntWrapper<mir::geometry::DeltaXTag>&&, mir::geometry::detail::IntWrapper<mir::geometry::DeltaYTag>&&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Displacement::operator=(mir::geometry::Displacement const&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Point::Point()@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Point::Point(mir::geometry::Point const&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Point::Point(mir::geometry::Point&&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Point::Point<mir::geometry::detail::IntWrapper<mir::geometry::XTag>, mir::geometry::detail::IntWrapper<mir::geometry::YTag> >(mir::geometry::detail::IntWrapper<mir::geometry::XTag>&&, mir::geometry::detail::IntWrapper<mir::geometry::YTag>&&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Point::operator=(mir::geometry::Point const&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Point::operator=(mir::geometry::Point&&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangle::Rectangle()@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangle::Rectangle(mir::geometry::Point const&, mir::geometry::Size const&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangle::Rectangle(mir::geometry::Rectangle const&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangle::Rectangle(mir::geometry::Rectangle&&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::Rectangles()@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::Rectangles(std::initializer_list<mir::geometry::generic::Rectangle<int> > const&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::add(mir::geometry::generic::Rectangle<int> const&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::begin() const@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::bounding_rectangle() const@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::clear()@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::confine(mir::geometry::generic::Point<int>&) const@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::end() const@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::operator!=(mir::geometry::Rectangles const&) const@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::operator==(mir::geometry::Rectangles const&) const@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::remove(mir::geometry::generic::Rectangle<int> const&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Rectangles::size() const@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Size::Size()@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Size::Size(mir::geometry::Size const&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Size::Size(mir::geometry::Size&&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Size::Size<int, int>(int&&, int&&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::Size::operator=(mir::geometry::Size&&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::geometry::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::geometry::Rectangles const&)@MIR_CORE_2.9" 2.9.0
- (c++)"mir::mir_depth_layer_get_index(MirDepthLayer)@MIR_CORE_2.9" 2.9.0
- (c++)"typeinfo for mir::AnonymousShmFile@MIR_CORE_2.9" 2.9.0
- (c++)"typeinfo for mir::ShmFile@MIR_CORE_2.9" 2.9.0
- (c++)"vtable for mir::AnonymousShmFile@MIR_CORE_2.9" 2.9.0
- (c++)"vtable for mir::ShmFile@MIR_CORE_2.9" 2.9.0
+ MIR_CORE_2.9@MIR_CORE_2.9 2.8.0
+ (c++|arch-bits=64)"mir::AnonymousShmFile::AnonymousShmFile(unsigned long)@MIR_CORE_2.9" 2.8.0
+ (c++|arch-bits=32)"mir::AnonymousShmFile::AnonymousShmFile(unsigned int)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::AnonymousShmFile::base_ptr() const@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::AnonymousShmFile::fd() const@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::AnonymousShmFile::~AnonymousShmFile()@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::Fd::Fd()@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::Fd::Fd(int)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::Fd::Fd(mir::Fd&&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::Fd::Fd(mir::IntOwnedFd)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::Fd::operator int() const@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::Fd::operator=(mir::Fd)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::ShmFile::ShmFile()@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::ShmFile::~ShmFile()@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::fatal_error@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::fatal_error_abort(char const*, ...)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::fatal_error_except(char const*, ...)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Displacement::Displacement<int, int>(int&&, int&&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Displacement::Displacement<mir::geometry::detail::IntWrapper<mir::geometry::DeltaXTag>, mir::geometry::detail::IntWrapper<mir::geometry::DeltaYTag> >(mir::geometry::detail::IntWrapper<mir::geometry::DeltaXTag>&&, mir::geometry::detail::IntWrapper<mir::geometry::DeltaYTag>&&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Displacement::operator=(mir::geometry::Displacement const&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Point::Point()@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Point::Point(mir::geometry::Point const&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Point::Point(mir::geometry::Point&&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Point::Point<mir::geometry::detail::IntWrapper<mir::geometry::XTag>, mir::geometry::detail::IntWrapper<mir::geometry::YTag> >(mir::geometry::detail::IntWrapper<mir::geometry::XTag>&&, mir::geometry::detail::IntWrapper<mir::geometry::YTag>&&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Point::operator=(mir::geometry::Point const&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Point::operator=(mir::geometry::Point&&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangle::Rectangle()@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangle::Rectangle(mir::geometry::Point const&, mir::geometry::Size const&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangle::Rectangle(mir::geometry::Rectangle const&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangle::Rectangle(mir::geometry::Rectangle&&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangles::Rectangles()@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangles::Rectangles(std::initializer_list<mir::geometry::generic::Rectangle<int> > const&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangles::add(mir::geometry::generic::Rectangle<int> const&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangles::begin() const@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangles::bounding_rectangle() const@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangles::clear()@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangles::confine(mir::geometry::generic::Point<int>&) const@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangles::end() const@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangles::operator!=(mir::geometry::Rectangles const&) const@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangles::operator==(mir::geometry::Rectangles const&) const@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangles::remove(mir::geometry::generic::Rectangle<int> const&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Rectangles::size() const@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Size::Size()@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Size::Size(mir::geometry::Size const&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Size::Size(mir::geometry::Size&&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Size::Size<int, int>(int&&, int&&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::Size::operator=(mir::geometry::Size&&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::geometry::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::geometry::Rectangles const&)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::mir_depth_layer_get_index(MirDepthLayer)@MIR_CORE_2.9" 2.8.0
+ (c++)"typeinfo for mir::AnonymousShmFile@MIR_CORE_2.9" 2.8.0
+ (c++)"typeinfo for mir::ShmFile@MIR_CORE_2.9" 2.8.0
+ (c++)"vtable for mir::AnonymousShmFile@MIR_CORE_2.9" 2.8.0
+ (c++)"vtable for mir::ShmFile@MIR_CORE_2.9" 2.8.0
 
