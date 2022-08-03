@@ -145,7 +145,7 @@ msh::AbstractShell::~AbstractShell() noexcept
     decoration_manager->undecorate_all();
     if (auto const current_keyboard_focus = notified_keyboard_focus_surface.lock())
     {
-        current_keyboard_focus->remove_observer(surface_confinement_updater);
+        current_keyboard_focus->unregister_interest(*surface_confinement_updater);
     }
 }
 
@@ -190,12 +190,13 @@ auto msh::AbstractShell::create_surface(
     std::shared_ptr<ms::Session> const& session,
     wayland::Weak<frontend::WlSurface> const& wayland_surface,
     SurfaceSpecification const& spec,
-    std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<ms::Surface>
+    std::shared_ptr<ms::SurfaceObserver> const& observer,
+    Executor* observer_executor) -> std::shared_ptr<ms::Surface>
 {
     // Instead of a shared pointer, a local variable could be used and the lambda could capture a reference to it
     // This should be safe, but could be the source of nasty bugs and crashes if the wm did something unexpected
     auto const should_decorate = std::make_shared<bool>(false);
-    auto const build = [observer, should_decorate, wayland_surface](
+    auto const build = [observer, observer_executor, should_decorate, wayland_surface](
             std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const& placed_params)
         {
@@ -203,7 +204,7 @@ auto msh::AbstractShell::create_surface(
             {
                 *should_decorate = true;
             }
-            return session->create_surface(session, wayland_surface, placed_params, observer);
+            return session->create_surface(session, wayland_surface, placed_params, observer, observer_executor);
         };
 
     auto const result = window_manager->add_surface(session, spec, build);
@@ -509,7 +510,7 @@ void msh::AbstractShell::set_keyboard_focus_surface(
 
     if (current_keyboard_focus)
     {
-        current_keyboard_focus->remove_observer(surface_confinement_updater);
+        current_keyboard_focus->unregister_interest(*surface_confinement_updater);
 
         switch (current_keyboard_focus->confine_pointer_state())
         {
@@ -530,7 +531,7 @@ void msh::AbstractShell::set_keyboard_focus_surface(
         input_targeter->set_focus(new_keyboard_focus_surface);
         new_keyboard_focus_surface->consume(seat->create_device_state());
         surface_confinement_updater->set_focus_surface(new_keyboard_focus_surface);
-        new_keyboard_focus_surface->add_observer(surface_confinement_updater);
+        new_keyboard_focus_surface->register_interest(surface_confinement_updater);
     }
     else
     {

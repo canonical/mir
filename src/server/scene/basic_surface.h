@@ -18,9 +18,7 @@
 #define MIR_SCENE_BASIC_SURFACE_H_
 
 #include "mir/scene/surface.h"
-#include "mir/basic_observers.h"
 #include "mir/proof_of_mutex_lock.h"
-#include "mir/scene/surface_observers.h"
 #include "mir/wayland/wayland_base.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_toolkit/common.h"
@@ -79,6 +77,10 @@ public:
 
     ~BasicSurface() noexcept;
 
+    void register_interest(std::weak_ptr<SurfaceObserver> const& observer) override;
+    void register_interest(std::weak_ptr<SurfaceObserver> const& observer, Executor& executor) override;
+    void unregister_interest(SurfaceObserver const& observer) override;
+
     std::string name() const override;
     void move_to(geometry::Point const& top_left) override;
 
@@ -132,9 +134,6 @@ public:
 
     std::shared_ptr<Surface> parent() const override;
 
-    void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
-    void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;
-
     int dpi() const;
 
     void rename(std::string const& title) override;
@@ -169,6 +168,7 @@ public:
 
 private:
     struct State;
+    class Multiplexer;
 
     bool visible(State const& state) const;
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
@@ -181,8 +181,6 @@ private:
     void update_frame_posted_callbacks(State& state);
     auto content_size(State const& state) const -> geometry::Size;
     auto content_top_left(State const& state) const -> geometry::Point;
-
-    std::shared_ptr<SurfaceObservers> observers = std::make_shared<SurfaceObservers>();
 
     struct State
     {
@@ -221,8 +219,8 @@ private:
     };
     mir::Synchronised<State> synchronised_state;
 
+    std::shared_ptr<Multiplexer> const observers;
     std::weak_ptr<Session> const session_;
-
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;

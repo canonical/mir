@@ -100,7 +100,6 @@ class ForeignSurfaceObserver
 {
 public:
     ForeignSurfaceObserver(
-        std::shared_ptr<Executor> const& wayland_executor,
         wayland::Weak<ForeignToplevelManagerV1> manager,
         std::shared_ptr<scene::Surface> const& surface);
     ~ForeignSurfaceObserver();
@@ -119,7 +118,6 @@ private:
     void application_id_set_to(scene::Surface const*, std::string const& application_id) override;
     ///@}
 
-    std::shared_ptr<Executor> const wayland_executor;
     wayland::Weak<ForeignToplevelManagerV1> const manager;
 
     std::mutex mutex;
@@ -264,8 +262,8 @@ void mf::ForeignSceneObserver::end_observation()
 void mf::ForeignSceneObserver::create_surface_observer(std::shared_ptr<scene::Surface> const& surface)
 {
     std::lock_guard lock{mutex};
-    auto observer = std::make_shared<ForeignSurfaceObserver>(wayland_executor, manager, surface);
-    surface->add_observer(observer);
+    auto observer = std::make_shared<ForeignSurfaceObserver>(manager, surface);
+    surface->register_interest(observer, *wayland_executor);
     auto insert_result = surface_observers.insert(std::make_pair(surface, observer));
     if (!insert_result.second)
     {
@@ -284,7 +282,7 @@ void mf::ForeignSceneObserver::clear_surface_observers()
         pair.second->cease_and_desist();
         if (auto const surface = pair.first.lock())
         {
-            surface->remove_observer(pair.second);
+            surface->unregister_interest(*pair.second);
         }
     }
     surface_observers.clear();
@@ -293,11 +291,9 @@ void mf::ForeignSceneObserver::clear_surface_observers()
 // ForeignSurfaceObserver
 
 mf::ForeignSurfaceObserver::ForeignSurfaceObserver(
-    std::shared_ptr<Executor> const& wayland_executor,
     mw::Weak<ForeignToplevelManagerV1> manager,
     std::shared_ptr<scene::Surface> const& surface)
-    : wayland_executor{wayland_executor},
-      manager{manager},
+    : manager{manager},
       weak_surface{surface}
 {
     std::lock_guard lock{mutex};
@@ -320,16 +316,9 @@ void mf::ForeignSurfaceObserver::with_toplevel_handle(
     std::lock_guard<std::mutex>&,
     std::function<void(ForeignToplevelHandleV1&)>&& action)
 {
-    if (handle)
+    if (handle && *handle)
     {
-        wayland_executor->spawn(
-            [handle = handle, action = std::move(action)]()
-            {
-                if (*handle)
-                {
-                    action(handle->value());
-                }
-            });
+        action(handle->value());
     }
 }
 
@@ -383,23 +372,20 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
             auto const focused = surface->focus_state();
             auto const state = surface->state_tracker();
 
-            wayland_executor->spawn([manager = manager, handle = handle, surface, name, app_id, focused, state]()
-                {
-                    // If the manager has been destroyed we can't create a toplevel handle
-                    if (!manager)
-                        return;
+            // If the manager has been destroyed we can't create a toplevel handle
+            if (!manager)
+                return;
 
-                    // Remember Wayland objects manage their own lifetime
-                    auto const handle_ptr = new ForeignToplevelHandleV1{manager.value(), surface};
-                    *handle = mw::make_weak(handle_ptr);
+            // Remember Wayland objects manage their own lifetime
+            auto const handle_ptr = new ForeignToplevelHandleV1{manager.value(), surface};
+            *handle = mw::make_weak(handle_ptr);
 
-                    if (!name.empty())
-                        handle->value().send_title_event(name);
-                    if (!app_id.empty())
-                        handle->value().send_app_id_event(app_id);
-                    handle->value().send_state(focused, state);
-                    handle->value().send_done_event();
-                });
+            if (!name.empty())
+                handle->value().send_title_event(name);
+            if (!app_id.empty())
+                handle->value().send_app_id_event(app_id);
+            handle->value().send_state(focused, state);
+            handle->value().send_done_event();
         }
         else
         {

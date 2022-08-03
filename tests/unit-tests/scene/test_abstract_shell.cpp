@@ -200,6 +200,7 @@ struct AbstractShell : Test
             session,
             {},
             mt::make_surface_spec(session->create_buffer_stream(properties)),
+            nullptr,
             nullptr);
     }
 
@@ -257,11 +258,11 @@ TEST_F(AbstractShell, close_session_removes_existing_session_surfaces_from_windo
 
     auto const session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
     auto const created_surface1 = shell.create_surface(session, {},
-        mt::make_surface_spec(session->create_buffer_stream(properties)), nullptr);
+        mt::make_surface_spec(session->create_buffer_stream(properties)), nullptr, nullptr);
     auto const created_surface2 = shell.create_surface(session, {},
-        mt::make_surface_spec(session->create_buffer_stream(properties)), nullptr);
+        mt::make_surface_spec(session->create_buffer_stream(properties)), nullptr, nullptr);
     auto const created_surface3 = shell.create_surface(session, {},
-        mt::make_surface_spec(session->create_buffer_stream(properties)), nullptr);
+        mt::make_surface_spec(session->create_buffer_stream(properties)), nullptr, nullptr);
 
     session->destroy_surface(created_surface2);
 
@@ -282,7 +283,7 @@ TEST_F(AbstractShell, create_surface_provides_create_parameters_to_window_manage
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
     EXPECT_CALL(*wm, add_surface(session, params, _));
 
-    shell.create_surface(session, {}, params, nullptr);
+    shell.create_surface(session, {}, params, nullptr, nullptr);
 }
 
 TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_parameters)
@@ -302,7 +303,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
             std::function<std::shared_ptr<ms::Surface>(std::shared_ptr<ms::Session> const& session, msh::SurfaceSpecification const&)> const& build)
             { return build(session, params); }));
 
-    shell.create_surface(session, {}, params, nullptr);
+    shell.create_surface(session, {}, params, nullptr, nullptr);
 }
 
 TEST_F(AbstractShell, create_surface_allows_window_manager_to_enable_ssd)
@@ -327,7 +328,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_enable_ssd)
                 return build(session, modified_params);
             }));
 
-    shell.create_surface(session, {}, params, nullptr);
+    shell.create_surface(session, {}, params, nullptr, nullptr);
 }
 
 TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
@@ -353,7 +354,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
                 return build(session, modified_params);
             }));
 
-    shell.create_surface(session, {}, params, nullptr);
+    shell.create_surface(session, {}, params, nullptr, nullptr);
 }
 
 TEST_F(AbstractShell, create_surface_sets_surfaces_session)
@@ -368,7 +369,7 @@ TEST_F(AbstractShell, create_surface_sets_surfaces_session)
 
     auto params = mt::make_surface_spec(session->create_buffer_stream(properties));
 
-    shell.create_surface(session, {}, params, nullptr);
+    shell.create_surface(session, {}, params, nullptr, nullptr);
 }
 
 TEST_F(AbstractShell, destroy_surface_removes_surface_from_window_manager)
@@ -377,7 +378,7 @@ TEST_F(AbstractShell, destroy_surface_removes_surface_from_window_manager)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
 
-    auto const surface = shell.create_surface(session, {}, params, nullptr);
+    auto const surface = shell.create_surface(session, {}, params, nullptr, nullptr);
 
     EXPECT_CALL(*wm, remove_surface(session, WeakPtrTo(surface)));
 
@@ -484,7 +485,7 @@ TEST_F(AbstractShell, setting_surface_state_is_handled_by_window_manager)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
 
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto const surface = shell.create_surface(session, {}, params, nullptr);
+    auto const surface = shell.create_surface(session, {}, params, nullptr, nullptr);
 
     MirWindowState const state{mir_window_state_fullscreen};
 
@@ -520,8 +521,8 @@ TEST_F(AbstractShell, as_focus_controller_focus_next_session_notifies_session_ev
     auto session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Bla", std::shared_ptr<mf::EventSink>());
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
     auto const params2 = mt::make_surface_spec(session->create_buffer_stream(properties));
-    shell.create_surface(session, {}, params, nullptr);
-    shell.create_surface(session1, {}, params2, nullptr);
+    shell.create_surface(session, {}, params, nullptr, nullptr);
+    shell.create_surface(session1, {}, params2, nullptr, nullptr);
 
     focus_controller.set_focus_to(session, {});
 
@@ -536,8 +537,8 @@ TEST_F(AbstractShell, as_focus_controller_focused_session_follows_focus)
     auto session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Bla", std::shared_ptr<mf::EventSink>());
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
     auto const params2 = mt::make_surface_spec(session->create_buffer_stream(properties));
-    shell.create_surface(session, {}, params, nullptr);
-    shell.create_surface(session1, {}, params2, nullptr);
+    shell.create_surface(session, {}, params, nullptr, nullptr);
+    shell.create_surface(session1, {}, params2, nullptr, nullptr);
 
     msh::FocusController& focus_controller = shell;
 
@@ -560,8 +561,8 @@ TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
 
     auto const params0 = mt::make_surface_spec(session0->create_buffer_stream(properties));
     auto const params1 = mt::make_surface_spec(session1->create_buffer_stream(properties));
-    auto const surface0 = shell.create_surface(session0, {}, params0, nullptr);
-    auto const surface1 = shell.create_surface(session1, {}, params1, nullptr);
+    auto const surface0 = shell.create_surface(session0, {}, params0, nullptr, nullptr);
+    auto const surface1 = shell.create_surface(session1, {}, params1, nullptr, nullptr);
 
     msh::FocusController& focus_controller = shell;
 
@@ -598,9 +599,9 @@ TEST_F(AbstractShell, as_focus_controller_focus_next_session_skips_surfaceless_s
     auto session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Surfaceless", std::shared_ptr<mf::EventSink>());
     auto session2 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Bla", std::shared_ptr<mf::EventSink>());
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto created_surface = shell.create_surface(session, {}, params, nullptr);
+    auto created_surface = shell.create_surface(session, {}, params, nullptr, nullptr);
     auto const params2 = mt::make_surface_spec(session2->create_buffer_stream(properties));
-    shell.create_surface(session2, {}, params2, nullptr);
+    shell.create_surface(session2, {}, params2, nullptr, nullptr);
 
     focus_controller.set_focus_to(session, created_surface);
 
@@ -616,7 +617,7 @@ TEST_F(AbstractShell,
     auto session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
     auto session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Surfaceless", std::shared_ptr<mf::EventSink>());
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr);
+    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
 
     focus_controller.set_focus_to(session, surface);
 
@@ -633,7 +634,7 @@ TEST_F(AbstractShell, modify_surface_with_only_streams_doesnt_call_into_wm)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
 
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr);
+    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
 
     msh::SurfaceSpecification stream_modification;
     stream_modification.streams = std::vector<msh::StreamSpecification>{};
@@ -650,7 +651,7 @@ TEST_F(AbstractShell, modify_surface_does_not_call_wm_for_empty_changes)
 
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
 
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr);
+    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
 
     msh::SurfaceSpecification stream_modification;
 
@@ -673,7 +674,7 @@ TEST_F(AbstractShell, size_gets_adjusted_for_windows_with_margins)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
 
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr);
+    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
     surface->resize({50, 50});
     surface->set_window_margins(top, left, bottom, right);
 
@@ -704,7 +705,7 @@ TEST_F(AbstractShell, max_size_gets_adjusted_for_windows_with_margins)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
 
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr);
+    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
     surface->resize({50, 50});
     surface->set_window_margins(top, left, bottom, right);
 
@@ -735,7 +736,7 @@ TEST_F(AbstractShell, min_size_gets_adjusted_for_windows_with_margins)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
 
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr);
+    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
     surface->resize({50, 50});
     surface->set_window_margins(top, left, bottom, right);
 
@@ -767,7 +768,7 @@ TEST_F(AbstractShell, aux_rect_gets_adjusted_for_windows_with_margins)
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
 
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr);
+    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
     surface->resize(content_size);
     surface->set_window_margins(top, left, bottom, right);
 
@@ -793,7 +794,7 @@ TEST_F(AbstractShell, when_remaining_session_has_no_surface_focus_next_session_d
             shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "another_session", std::shared_ptr<mf::EventSink>());
 
         auto creation_params = mt::make_surface_spec(another_session->create_buffer_stream(properties));
-        auto surface = shell.create_surface(another_session, {}, creation_params, nullptr);
+        auto surface = shell.create_surface(another_session, {}, creation_params, nullptr, nullptr);
 
         shell.set_focus_to(another_session, surface);
 
@@ -812,8 +813,8 @@ TEST_F(AbstractShell, focus_can_be_set)
     msh::FocusController& focus_controller = shell;
     auto const session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto const created_surface1 = shell.create_surface(session, {}, params, nullptr);
-    auto const created_surface2 = shell.create_surface(session, {}, params, nullptr);
+    auto const created_surface1 = shell.create_surface(session, {}, params, nullptr, nullptr);
+    auto const created_surface2 = shell.create_surface(session, {}, params, nullptr, nullptr);
 
     focus_controller.set_focus_to(session, created_surface2);
     EXPECT_THAT(created_surface1->focus_state(), Eq(mir_window_focus_state_unfocused));
@@ -836,9 +837,9 @@ TEST_F(AbstractShell, setting_focus_to_child_makes_parent_active)
     msh::FocusController& focus_controller = shell;
     auto const session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
     auto const params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto const parent_surface = shell.create_surface(session, {}, params, nullptr);
-    auto const child_surface = shell.create_surface(session, {}, params, nullptr);
-    auto const other_surface = shell.create_surface(session, {}, params, nullptr);
+    auto const parent_surface = shell.create_surface(session, {}, params, nullptr, nullptr);
+    auto const child_surface = shell.create_surface(session, {}, params, nullptr, nullptr);
+    auto const other_surface = shell.create_surface(session, {}, params, nullptr, nullptr);
 
     ASSERT_THAT(child_surface->parent(), Eq(parent_surface));
 
@@ -983,9 +984,9 @@ TEST_F(AbstractShell, focus_next_session_allows_later_focusing_same_window)
     auto session1 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane", std::shared_ptr<mf::EventSink>());
     auto session2 = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Bla", std::shared_ptr<mf::EventSink>());
     auto const params1 = mt::make_surface_spec(session1->create_buffer_stream(properties));
-    auto created_surface1 = shell.create_surface(session1, {}, params1, nullptr);
+    auto created_surface1 = shell.create_surface(session1, {}, params1, nullptr, nullptr);
     auto const params2 = mt::make_surface_spec(session2->create_buffer_stream(properties));
-    auto created_surface2 = shell.create_surface(session2, {}, params2, nullptr);
+    auto created_surface2 = shell.create_surface(session2, {}, params2, nullptr, nullptr);
 
     focus_controller.set_focus_to(session1, created_surface1);
     focus_controller.focus_next_session();
@@ -1026,7 +1027,7 @@ TEST_F(AbstractShell, as_focus_controller_emits_input_device_state_event_on_focu
 
     auto session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "some", std::shared_ptr<mf::EventSink>());
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
-    auto surface = shell.create_surface(session, {}, creation_params, nullptr);
+    auto surface = shell.create_surface(session, {}, creation_params, nullptr, nullptr);
 
     msh::FocusController& focus_controller = shell;
     focus_controller.set_focus_to(session, surface);

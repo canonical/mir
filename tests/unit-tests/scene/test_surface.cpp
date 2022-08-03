@@ -24,6 +24,7 @@
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/mock_input_surface.h"
 #include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/explicit_executor.h"
 #include "mir/test/event_matchers.h"
 
 #include <gmock/gmock.h>
@@ -59,7 +60,7 @@ struct SurfaceCreation : public ::testing::Test
     {
     }
 
-    virtual void SetUp()
+    void SetUp() override
     {
         using namespace testing;
 
@@ -73,12 +74,17 @@ struct SurfaceCreation : public ::testing::Test
             .WillByDefault(InvokeArgument<0>(&stub_buffer));
     }
 
+    void TearDown() override
+    {
+        executor.execute();
+    }
+
     std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
-    std::list<ms::StreamInfo> streams{ { mock_buffer_stream, {}, {} } }; 
+    std::list<ms::StreamInfo> streams{ { mock_buffer_stream, {}, {} } };
     std::function<void()> change_notification;
     int notification_count = 0;
     mtd::StubBuffer stub_buffer;
-    
+
     std::string surface_name = "test_surfaceA";
     MirPixelFormat pf = mir_pixel_format_abgr_8888;
     geom::Size size = geom::Size{43, 420};
@@ -86,6 +92,11 @@ struct SurfaceCreation : public ::testing::Test
     geom::Rectangle rect = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size};
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     ms::BasicSurface surface;
+    std::shared_ptr<mt::doubles::MockEventSink> const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
+    ms::OutputPropertiesCache cache;
+    std::shared_ptr<ms::SurfaceEventSource> observer =
+        std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
+    mtd::ExplicitExecutor executor;
 };
 
 }
@@ -119,11 +130,7 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
     using namespace testing;
     geom::Size const new_size{123, 456};
 
-    auto const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
-    ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
-
-    surface.add_observer(observer);
+    surface.register_interest(observer, executor);
 
     ASSERT_THAT(surface.window_size(), Ne(new_size));
 
@@ -136,16 +143,14 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
 {
     using namespace testing;
     geom::Size const new_size{123, 456};
-    auto const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
-    ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
 
-    surface.add_observer(observer);
+    surface.register_interest(observer, executor);
 
     ASSERT_THAT(surface.window_size(), Ne(new_size));
 
     EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(1);
     surface.resize(new_size);
+    executor.execute();
     EXPECT_THAT(surface.window_size(), Eq(new_size));
 
     Mock::VerifyAndClearExpectations(mock_buffer_stream.get());
@@ -185,15 +190,6 @@ TEST_F(SurfaceCreation, impossible_resize_clamps)
 TEST_F(SurfaceCreation, consume_calls_send_event)
 {
     using namespace testing;
-    ms::BasicSurface surface(
-        nullptr /* session */,
-        {} /* wayland_surface */,
-        surface_name,
-        rect,
-        mir_pointer_unconfined,
-        streams,
-        std::shared_ptr<mg::CursorImage>(),
-        report);
 
     auto key_event = mev::make_key_event(
         MirInputDeviceId(0), std::chrono::nanoseconds(0), std::vector<uint8_t>{},
@@ -204,15 +200,12 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     mev::add_touch(*touch_event, 0, mir_touch_action_down, mir_touch_tooltype_finger, 0, 0,
         0, 0, 0, 0);
 
-    auto const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
-    ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
-
-    surface.add_observer(observer);
+    surface.register_interest(observer, executor);
 
     EXPECT_CALL(*mock_event_sink, handle_event(mt::MirKeyboardEventMatches(key_event.get()))).Times(1);
     EXPECT_CALL(*mock_event_sink, handle_event(mt::MirTouchEventMatches(touch_event.get()))).Times(1);
 
     surface.consume(std::move(key_event));
     surface.consume(std::move(touch_event));
+    executor.execute();
 }

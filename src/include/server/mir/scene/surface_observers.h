@@ -17,7 +17,7 @@
 #ifndef MIR_SCENE_SURFACE_OBSERVERS_H_
 #define MIR_SCENE_SURFACE_OBSERVERS_H_
 
-#include "mir/basic_observers.h"
+#include "mir/observer_multiplexer.h"
 #include "mir/scene/surface_observer.h"
 
 namespace mir
@@ -25,12 +25,13 @@ namespace mir
 namespace scene
 {
 
-class SurfaceObservers : public SurfaceObserver, BasicObservers<SurfaceObserver>
+class SurfaceObservers : public ObserverMultiplexer<SurfaceObserver>
 {
 public:
-    using BasicObservers<SurfaceObserver>::add;
-    using BasicObservers<SurfaceObserver>::remove;
-    using BasicObservers<SurfaceObserver>::for_each;
+    SurfaceObservers()
+        : ObserverMultiplexer{immediate_executor}
+    {
+    }
 
     void attrib_changed(Surface const* surf, MirWindowAttrib attrib, int value) override;
     void window_resized_to(Surface const* surf, geometry::Size const& window_size) override;

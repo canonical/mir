@@ -148,19 +148,24 @@ struct StubInputSurface : public mtd::StubSurface
         }
     }
 
-    void add_observer(std::shared_ptr<ms::SurfaceObserver> const& observer) override
+    void register_interest(std::weak_ptr<ms::SurfaceObserver> const& observer, mir::Executor&) override
+    {
+        register_interest(observer);
+    }
+
+    void register_interest(std::weak_ptr<ms::SurfaceObserver> const& observer) override
     {
         std::unique_lock lk(observer_guard);
 
-        observers.push_back(observer);
+        observers.push_back(observer.lock());
     }
 
-    void remove_observer(std::weak_ptr<ms::SurfaceObserver> const& observer) override
+    void unregister_interest(ms::SurfaceObserver const& observer) override
     {
-        auto o = observer.lock();
-        assert(o);
-
-        auto it = std::find(observers.begin(), observers.end(), o);
+        auto it = std::find_if(observers.begin(), observers.end(), [&observer](auto item)
+            {
+                return item.get() == &observer;
+            });
         observers.erase(it);
     }
 

@@ -53,7 +53,7 @@ struct InputDispatcherSceneObserver :
 
     void surface_added(std::shared_ptr<ms::Surface> const& surface) override
     {
-        surface->add_observer(shared_from_this());
+        surface->register_interest(shared_from_this(), mir::immediate_executor);
     }
 
     void surface_removed(std::shared_ptr<ms::Surface> const& surface) override
@@ -63,7 +63,7 @@ struct InputDispatcherSceneObserver :
 
     void surface_exists(std::shared_ptr<ms::Surface> const& surface) override
     {
-        surface->add_observer(shared_from_this());
+        surface->register_interest(shared_from_this());
     }
 
     void attrib_changed(ms::Surface const*, MirWindowAttrib /*attrib*/, int /*value*/) override
@@ -159,17 +159,8 @@ mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> co
 mi::SurfaceInputDispatcher::~SurfaceInputDispatcher()
 {
     scene->remove_observer(scene_observer);
-    scene->for_each(
-        [this](auto surface)
-        {
-            // Everything *should* be a scene::Surface, but let's not crash if it isn't.
-            if (auto scene_surf = std::dynamic_pointer_cast<ms::Surface>(surface))
-            {
-                // We *know* scene_observer is an InputDispatcherSceneObserver
-                scene_surf->remove_observer(
-                    std::static_pointer_cast<InputDispatcherSceneObserver>(scene_observer));
-            }
-        });
+
+    // It's safe to destroy a surface observer without unregistering it
 }
 
 namespace

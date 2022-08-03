@@ -22,6 +22,7 @@
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/renderable.h"
 #include "mir/depth_layer.h"
+#include "mir/executor.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -141,7 +142,7 @@ ms::SurfaceStack::~SurfaceStack() noexcept(true)
     {
         for (auto const& surface : layer)
         {
-            surface->remove_observer(surface_observer);
+            surface->unregister_interest(*surface_observer);
         }
     }
 }
@@ -266,7 +267,7 @@ void ms::SurfaceStack::add_surface(
         RecursiveWriteLock lg(guard);
         insert_surface_at_top_of_depth_layer(surface);
         create_rendering_tracker_for(surface);
-        surface->add_observer(surface_observer);
+        surface->register_interest(surface_observer, immediate_executor);
     }
     surface->set_reception_mode(input_mode);
     observers.surface_added(surface);
@@ -290,7 +291,7 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
             {
                 layer.erase(surface);
                 rendering_trackers.erase(keep_alive.get());
-                keep_alive->remove_observer(surface_observer);
+                keep_alive->unregister_interest(*surface_observer);
                 found_surface = true;
                 break;
             }

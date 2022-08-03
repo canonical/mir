@@ -26,6 +26,7 @@
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
+#include "mir/test/doubles/explicit_executor.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -86,54 +87,51 @@ struct MockSceneObserver : public ms::Observer
     MOCK_METHOD0(end_observation, void());
 };
 
+struct StubSurface : public ms::BasicSurface
+{
+    StubSurface(std::shared_ptr<mc::BufferStream> stream, mir::Executor& executor) :
+        ms::BasicSurface(
+            {},
+            {},
+            "stub",
+            {{},{}},
+            mir_pointer_unconfined,
+            std::list<ms::StreamInfo> { { stream, {}, {} } },
+            {},
+            mr::null_scene_report()),
+        executor{executor}
+    {
+    }
+
+    void register_interest(std::weak_ptr<ms::SurfaceObserver> const& observer)
+    {
+        BasicSurface::register_interest(observer, executor);
+    }
+
+    void register_interest(std::weak_ptr<ms::SurfaceObserver> const& observer, mir::Executor&)
+    {
+        register_interest(observer);
+    }
+
+    mir::Executor& executor;
+};
+
 struct SurfaceStack : public ::testing::Test
 {
-    void SetUp()
+    void SetUp() override
     {
         using namespace testing;
 
-        stub_surface1 = std::make_shared<ms::BasicSurface>(
-            nullptr /* session */,
-            mw::Weak<mf::WlSurface>{},
-            std::string("stub"),
-            geom::Rectangle{{},{}},
-            mir_pointer_unconfined,
-            std::list<ms::StreamInfo> { { stub_buffer_stream1, {}, {} } },
-            std::shared_ptr<mg::CursorImage>(),
-            report);
-
-        stub_surface2 = std::make_shared<ms::BasicSurface>(
-            nullptr /* session */,
-            mw::Weak<mf::WlSurface>{},
-            std::string("stub"),
-            geom::Rectangle{{},{}},
-            mir_pointer_unconfined,
-            std::list<ms::StreamInfo> { { stub_buffer_stream2, {}, {} } },
-            std::shared_ptr<mg::CursorImage>(),
-            report);
-
-        
-        stub_surface3 = std::make_shared<ms::BasicSurface>(
-            nullptr /* session */,
-            mw::Weak<mf::WlSurface>{},
-            std::string("stub"),
-            geom::Rectangle{{},{}},
-            mir_pointer_unconfined,
-            std::list<ms::StreamInfo> { { stub_buffer_stream3, {}, {} } },
-            std::shared_ptr<mg::CursorImage>(),
-            report);
-
-        
-        invisible_stub_surface = std::make_shared<ms::BasicSurface>(
-            nullptr /* session */,
-            mw::Weak<mf::WlSurface>{},
-            std::string("stub"),
-            geom::Rectangle{{},{}},
-            mir_pointer_unconfined,
-            std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
-            std::shared_ptr<mg::CursorImage>(),
-            report);
+        stub_surface1 = std::make_shared<StubSurface>(stub_buffer_stream1, executor);
+        stub_surface2 = std::make_shared<StubSurface>(stub_buffer_stream2, executor);
+        stub_surface3 = std::make_shared<StubSurface>(stub_buffer_stream3, executor);
+        invisible_stub_surface = std::make_shared<StubSurface>(std::make_shared<mtd::StubBufferStream>(), executor);
         invisible_stub_surface->hide();
+    }
+
+    void TearDown() override
+    {
+        executor.execute();
     }
 
     std::shared_ptr<mc::BufferStream> stub_buffer_stream1 = std::make_shared<mtd::StubBufferStream>();
@@ -148,6 +146,7 @@ struct SurfaceStack : public ::testing::Test
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     ms::SurfaceStack stack{report};
     void const* compositor_id{&stack};
+    mtd::ExplicitExecutor executor;
 };
 
 }
@@ -432,7 +431,7 @@ TEST_F(SurfaceStack, generate_elementelements)
             std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
             std::shared_ptr<mg::CursorImage>(),
             report);
-        
+
         surfaces.emplace_back(surface);
         stack.add_surface(surface, mi::InputReceptionMode::normal);
     }
@@ -708,20 +707,13 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
 
 namespace
 {
-struct MockConfigureSurface : public ms::BasicSurface
+struct MockConfigureSurface : StubSurface
 {
-    MockConfigureSurface() :
-        ms::BasicSurface(
-            {},
-            {},
-            {},
-            {{},{}},
-            mir_pointer_unconfined,
-            std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
-            {},
-            mir::report::null_scene_report())
+    MockConfigureSurface(mir::Executor& executor) :
+        StubSurface{std::make_shared<mtd::StubBufferStream>(), executor}
     {
     }
+
     MOCK_METHOD2(configure, int(MirWindowAttrib, int));
 };
 }
@@ -735,9 +727,9 @@ TEST_F(SurfaceStack, occludes_not_rendered_surface)
     stack.register_compositor(compositor_id);
     stack.register_compositor(compositor_id2);
 
-    auto const mock_surface = std::make_shared<MockConfigureSurface>();
+    auto const mock_surface = std::make_shared<MockConfigureSurface>(executor);
     mock_surface->show();
-    
+
     stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -760,8 +752,8 @@ TEST_F(SurfaceStack, exposes_rendered_surface)
     stack.register_compositor(compositor_id);
     stack.register_compositor(compositor_id2);
 
-    auto const mock_surface = std::make_shared<MockConfigureSurface>();
-        stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
+    auto const mock_surface = std::make_shared<MockConfigureSurface>(executor);
+    stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
 
     auto const elements = stack.scene_elements_for(compositor_id);
     ASSERT_THAT(elements.size(), Eq(1u));
@@ -785,7 +777,7 @@ TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_re
     stack.register_compositor(compositor_id2);
     stack.register_compositor(compositor_id3);
 
-    auto const mock_surface = std::make_shared<MockConfigureSurface>();
+    auto const mock_surface = std::make_shared<MockConfigureSurface>(executor);
     stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
 
     auto const elements = stack.scene_elements_for(compositor_id);
@@ -801,6 +793,7 @@ TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_re
     elements.back()->occluded();
     elements2.back()->rendered();
     elements3.back()->rendered();
+    executor.execute();
 
     Mock::VerifyAndClearExpectations(mock_surface.get());
 
@@ -1122,6 +1115,7 @@ TEST_F(SurfaceStack, changing_depth_layer_causes_reorder)
 
     stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    executor.execute();
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -1136,6 +1130,7 @@ TEST_F(SurfaceStack, changing_depth_layer_causes_reorder)
         .Times(1);
 
     stub_surface1->set_depth_layer(mir_depth_layer_above);
+    executor.execute();
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),
@@ -1245,9 +1240,12 @@ TEST_F(SurfaceStack, all_depth_layers_are_handled)
     stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
+    executor.execute();
+
     for (auto i = 1u; i < depth_layers_in_order.size(); i++)
     {
         stub_surface1->set_depth_layer(depth_layers_in_order[i]);
+        executor.execute();
         stack.raise(stub_surface2);
 
         EXPECT_THAT(
@@ -1258,6 +1256,7 @@ TEST_F(SurfaceStack, all_depth_layers_are_handled)
             << depth_layer_names[i] << " not kept on top of " << depth_layer_names[i - 1];
 
         stub_surface2->set_depth_layer(depth_layers_in_order[i]);
+        executor.execute();
 
         EXPECT_THAT(
             stack.scene_elements_for(compositor_id),
