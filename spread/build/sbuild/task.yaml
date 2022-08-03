@@ -8,6 +8,7 @@ variants:
 - debian*
 
 summary: Build Deb packages
+kill-timeout: 90m
 
 execute: |
     cd $SPREAD_PATH
