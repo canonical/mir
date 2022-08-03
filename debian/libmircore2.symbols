@@ -11,6 +11,8 @@ libmircore.so.2 libmircore2 #MINVER#
  (c++)"mir::Fd::Fd(mir::IntOwnedFd)@MIR_CORE_2.9" 2.8.0
  (c++)"mir::Fd::operator int() const@MIR_CORE_2.9" 2.8.0
  (c++)"mir::Fd::operator=(mir::Fd)@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::ShmFile::ShmFile()@MIR_CORE_2.9" 2.8.0
+ (c++)"mir::ShmFile::~ShmFile()@MIR_CORE_2.9" 2.8.0
  (c++)"mir::fatal_error@MIR_CORE_2.9" 2.8.0
  (c++)"mir::fatal_error_abort(char const*, ...)@MIR_CORE_2.9" 2.8.0
  (c++)"mir::fatal_error_except(char const*, ...)@MIR_CORE_2.9" 2.8.0
@@ -31,3 +33,4 @@ libmircore.so.2 libmircore2 #MINVER#
  (c++)"typeinfo for mir::AnonymousShmFile@MIR_CORE_2.9" 2.8.0
  (c++)"typeinfo for mir::ShmFile@MIR_CORE_2.9" 2.8.0
  (c++)"vtable for mir::AnonymousShmFile@MIR_CORE_2.9" 2.8.0
+ (c++)"vtable for mir::ShmFile@MIR_CORE_2.9" 2.8.0
