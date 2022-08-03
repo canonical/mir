@@ -30,6 +30,7 @@ namespace miral
 /// If set_command_line_handler is not called the default action is to exit by
 /// throwing mir::AbnormalExit (which will be handled by the exception handler prior to
 /// exiting run().
+/// \remark Since MirAL 3.0
 class SetCommandLineHandler
 {
 public:

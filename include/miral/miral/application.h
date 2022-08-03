@@ -31,9 +31,13 @@ namespace miral
 {
 using Application = std::shared_ptr<mir::scene::Session>;
 
+/// \remark Since MirAL 2.4
 void apply_lifecycle_state_to(Application const& application, MirLifecycleState state);
+/// \remark Since MirAL 2.4
 void kill(Application const& application, int sig);
+/// \remark Since MirAL 2.4
 auto name_of(Application const& application) -> std::string;
+/// \remark Since MirAL 2.4
 auto pid_of(Application const& application) -> pid_t;
 
 /// Returns the file descriptor of the client's socket connection, or -1 if there is no client socket. May be used for

@@ -28,6 +28,7 @@ struct IntOwnedFd
 {
     int int_owned_fd;
 };
+/// \remark Since MirCore 1.0
 class Fd
 {
 public:

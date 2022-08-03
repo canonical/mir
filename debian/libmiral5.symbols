@@ -384,6 +384,9 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::window_for(wl_resource*)@MIRAL_3.6" 3.6.0
  (c++)"typeinfo for miral::CanonicalWindowManagerPolicy@MIRAL_3.6" 3.6.0
  (c++)"typeinfo for miral::MinimalWindowManager@MIRAL_3.6" 3.6.0
+ (c++)"miral::WaylandExtensions::Context::Context()@MIRAL_3.6" 3.6.0
+ (c++)"miral::WaylandExtensions::Context::~Context()@MIRAL_3.6" 3.6.0
+ (c++)"vtable for miral::WaylandExtensions::Context@MIRAL_3.6" 3.6.0
  (c++)"typeinfo for miral::WaylandExtensions::Context@MIRAL_3.6" 3.6.0
  (c++)"typeinfo for miral::WindowManagementPolicy@MIRAL_3.6" 3.6.0
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_3.6" 3.6.0

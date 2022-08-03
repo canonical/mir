@@ -21,7 +21,7 @@
 
 namespace mir
 {
-
+/// \remark Since MirCore 1.0
 class ShmFile
 {
 public:

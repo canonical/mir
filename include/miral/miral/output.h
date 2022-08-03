@@ -30,6 +30,7 @@ namespace miral
 {
 using namespace mir::geometry;
 
+/// \remark Since MirAL 2.4
 class Output
 {
 public:
@@ -104,16 +105,19 @@ public:
     /// A positive number if this output is part of a logical output group (aka a display wall)
     /// A single display area will stretch across all outputs in a group
     /// Zero if this output is not part of a logical group
+    /// \remark Since MirAL 3.2
     auto logical_group_id() const -> int;
 
 private:
     std::shared_ptr<mir::graphics::DisplayConfigurationOutput> self;
 };
 
+/// \remark Since MirAL 2.4
 bool operator==(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs);
 inline bool operator!=(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs)
 { return !(lhs == rhs); }
 
+/// \remark Since MirAL 2.4
 auto equivalent_display_area(Output const& lhs, Output const& rhs) -> bool;
 }
 

@@ -27,6 +27,7 @@ namespace detail
 {
 }
 
+/// \remark Since MirCore 1.0
 class AnonymousShmFile : public ShmFile
 {
 public:

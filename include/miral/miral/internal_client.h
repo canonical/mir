@@ -33,6 +33,7 @@ namespace miral
  *
  *  \param client_code              code implementing the internal client
  *  \param connection_notification  handler for registering the server-side application
+ *  \remark Since MirAL 2.4
  */
 class StartupInternalClient
 {
@@ -54,6 +55,7 @@ private:
     std::shared_ptr<Self> internal_client;
 };
 
+/// \remark Since MirAL 2.4
 class InternalClientLauncher
 {
 public:

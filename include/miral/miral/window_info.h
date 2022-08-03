@@ -27,6 +27,7 @@
 
 namespace miral
 {
+/// \remark Since MirAL 2.4
 struct WindowInfo
 {
     using AspectRatio = WindowSpecification::AspectRatio;

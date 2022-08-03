@@ -23,6 +23,7 @@
 namespace miral
 {
 /// Widely accepted defaults for window management
+/// \remark Since MirAL 2.4
 class CanonicalWindowManagerPolicy  : public WindowManagementPolicy
 {
 public:

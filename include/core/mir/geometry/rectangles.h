@@ -29,6 +29,7 @@ namespace geometry
 {
 
 /// A collection of rectangles (with possible duplicates).
+/// \remark Since MirCore 0.25
 class Rectangles
 {
 public:
@@ -56,7 +57,7 @@ private:
     std::vector<Rectangle> rectangles;
 };
 
-
+/// \remark Since MirCore 0.25
 std::ostream& operator<<(std::ostream& out, Rectangles const& value);
 
 }

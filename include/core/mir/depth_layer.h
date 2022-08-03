@@ -28,6 +28,7 @@ namespace mir
 * As the name implies, the returned value is usable as an array index (0 is returned for the bottommost layer and there
 * are no gaps between layers). The values returned for each layer are in no way stable across Mir versions, and are only
 * meaningful relative to each other.
+* \remark Since MirCore 1.1
 */
 auto mir_depth_layer_get_index(MirDepthLayer depth_layer) -> unsigned int;
 

@@ -343,6 +343,10 @@ if (MIR_ENABLE_TESTS)
 
   mir_add_test(NAME package-abis
     COMMAND /bin/sh -c "cd ${PROJECT_SOURCE_DIR} && tools/update_package_abis.sh --check --verbose")
+
+  mir_add_test(NAME symbols-up-to-date
+    COMMAND /bin/sh -c "${CMAKE_CURRENT_SOURCE_DIR}/tools/generate-symbol-maps.py ${CMAKE_BINARY_DIR}/doc/xml/ --check"
+    DEPENDS doc)
 endif ()
 
 enable_coverage_report(mirserver)
@@ -362,4 +366,8 @@ if (TARGET doc)
   add_custom_target(doc-show
           xdg-open ${CMAKE_BINARY_DIR}/doc/html/index.html
           DEPENDS doc)
+
+  add_custom_target(generate-symbol-maps
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/generate-symbol-maps.py ${CMAKE_BINARY_DIR}/doc/xml/ --write
+    DEPENDS doc)
 endif()

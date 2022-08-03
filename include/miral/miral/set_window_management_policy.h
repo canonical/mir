@@ -30,6 +30,7 @@ namespace miral
 class WindowManagerTools;
 class WindowManagementPolicy;
 
+/// \remark Since MirAL 2.4
 class SetWindowManagementPolicy
 {
 public:

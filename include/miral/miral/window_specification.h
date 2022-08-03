@@ -38,6 +38,7 @@ using namespace mir::geometry;
 namespace detail { struct SessionsBufferStreamIdTag; }
 typedef mir::IntWrapper<detail::SessionsBufferStreamIdTag> BufferStreamId;
 
+/// \remark Since MirAL 2.4
 class WindowSpecification
 {
 public:
@@ -162,9 +163,10 @@ public:
     ///@}
 
     /// How the window should gain and lose focus
-    /// \remark Since MirAL 3.3
     ///@{
+    /// \remark Since MirAL 3.3
     auto focus_mode() const -> mir::optional_value<MirFocusMode> const&;
+    /// \remark Since MirAL 3.3
     auto focus_mode() -> mir::optional_value<MirFocusMode>&;
     ///@}
 

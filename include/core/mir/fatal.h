@@ -31,6 +31,7 @@ namespace mir
  * Note the reason parameter is a simple char* so its value is clearly visible
  * in stack trace output.
  * \remark There is no attempt to make this thread-safe, if it needs to be changed
+ * \remark Since MirCore 0.25
  * that should be done before spinning up the Mir server.
  *   \param [in] reason  A printf-style format string.
  */
@@ -39,6 +40,7 @@ extern void (*fatal_error)(char const* reason, ...);
 /**
  * Throws an exception that will typically kill the Mir server and propagate from
  * mir::run_mir.
+ * \remark Since MirCore 0.25
  *   \param [in] reason  A printf-style format string.
  */
 void fatal_error_except(char const* reason, ...);
@@ -46,6 +48,7 @@ void fatal_error_except(char const* reason, ...);
 /**
  * An alternative to fatal_error_except() that kills the program and dump core
  * as cleanly as possible.
+ * \remark Since MirCore 0.25
  *   \param [in] reason  A printf-style format string.
  */
 [[noreturn]]

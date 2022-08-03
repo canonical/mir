@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export CTEST_OUTPUT_ON_FAILURE=1
+
 print_help_and_exit()
 {
     local prog=$(basename $0)
