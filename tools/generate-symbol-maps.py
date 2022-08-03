@@ -388,7 +388,9 @@ def check_symbols_map_files(symbols):
                 errors += '\n' + existing + ' did not match:\n' + '-' * 80 + '\n\n' + result.stdout + '\n'
         else:
             assert False, 'Unknown lib name ' + repr(name)
-    assert not errors, errors
+    if errors:
+        errors += '\n    FIX BY RUNNING: make generate-symbol-maps'
+        raise RuntimeError(errors)
 
 class Symbols:
     def __init__(self):
