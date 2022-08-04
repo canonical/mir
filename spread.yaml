@@ -1,6 +1,6 @@
 project: mir
 
-kill-timeout: 45m
+kill-timeout: 60m
 
 backends:
     lxd:
@@ -18,7 +18,8 @@ backends:
         halt-timeout: 2h
         systems:
             - ubuntu-20.04-64
-            - ubuntu-22.04-64
+            - ubuntu-22.04-64:
+                storage: 15G
             - fedora-35-64
             - fedora-36-64
             - fedora-rawhide-64
