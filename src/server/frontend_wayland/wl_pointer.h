@@ -22,6 +22,7 @@
 
 #include "mir/geometry/point.h"
 #include "mir/geometry/displacement.h"
+#include "mir/events/scroll_axis.h"
 
 #include <chrono>
 #include <functional>
@@ -77,7 +78,10 @@ private:
 
     void leave(std::optional<MirPointerEvent const*> event);
     void buttons(MirPointerEvent const* event);
-    void axis(MirPointerEvent const* event);
+    /// Returns true if any axis events were sent
+    template<typename Tag>
+    auto axis(MirPointerEvent const* event, events::ScrollAxis<Tag> axis, uint32_t wayland_axis) -> bool;
+    void axes(MirPointerEvent const* event);
     /// Handles finding the correct subsurface and position on that subsurface if needed
     /// Giving it an already transformed surface and position is also fine
     void enter_or_motion(MirPointerEvent const* event, WlSurface& root_surface);
