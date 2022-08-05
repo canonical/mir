@@ -346,12 +346,14 @@ void mf::VirtualPointerV1::axis_discrete(uint32_t time, uint32_t axis, double va
     case mw::Pointer::Axis::horizontal_scroll:
         // TODO: replace with geom::DeltaX{...} once geom cleanup lands
         pending.scroll_h.discrete += geom::generic::DeltaX<int>{discrete};
+        pending.scroll_h.value120 += geom::generic::DeltaX<int>{discrete * 120};
         pending.scroll_h.precise += geom::DeltaXF{value};
         break;
 
     case mw::Pointer::Axis::vertical_scroll:
         // TODO: replace with geom::DeltaX{...} once geom cleanup lands
         pending.scroll_v.discrete += geom::generic::DeltaY<int>{discrete};
+        pending.scroll_v.value120 += geom::generic::DeltaY<int>{discrete * 120};
         pending.scroll_v.precise += geom::DeltaYF{value};
         break;
 
