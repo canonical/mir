@@ -569,8 +569,8 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 5.0f)));
 
     mouse.start(&mock_sink, &mock_builder);
-    env.mock_libinput.setup_axis_event(fake_device, event_time_1, {}, -20.0, 0, 2);
-    env.mock_libinput.setup_axis_event(fake_device, event_time_2, 5.0, {}, 1, 0);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, {}, -20.0, 0, 2, 0, 240);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_2, 5.0, {}, 1, 0, 120, 0);
     process_events(mouse);
 }
 
