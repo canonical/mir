@@ -19,8 +19,8 @@
 
 #include <mir/fd.h>
 #include <mir/events/contact_state.h>
-#include <mir/geometry/point_f.h>
-#include <mir/geometry/displacement_f.h>
+#include <mir/geometry/point.h>
+#include <mir/geometry/displacement.h>
 
 #include <xkbcommon/xkbcommon.h>
 

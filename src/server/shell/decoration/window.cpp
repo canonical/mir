@@ -285,10 +285,10 @@ msd::WindowSurfaceObserverManager::WindowSurfaceObserverManager(
     : surface_{window_surface},
       observer{std::make_shared<Observer>(decoration)}
 {
-    surface_->add_observer(observer);
+    surface_->register_interest(observer);
 }
 
 msd::WindowSurfaceObserverManager::~WindowSurfaceObserverManager()
 {
-    surface_->remove_observer(observer);
+    surface_->unregister_interest(*observer);
 }

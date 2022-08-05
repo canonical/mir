@@ -72,6 +72,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
       shell{shell},
       session{weak_client.value().client_session()},
       output_manager{output_manager},
+      wayland_executor{wayland_executor},
       observer{std::make_shared<WaylandSurfaceObserver>(wayland_executor, seat, surface, this)},
       committed_min_size{0, 0},
       committed_max_size{max_possible_size}
@@ -391,6 +392,15 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
         committed_height_set_explicitly = true;
     pending_explicit_width = std::nullopt;
     pending_explicit_height = std::nullopt;
+
+    if (!scene_surface_marked_ready && surface.value().buffer_size())
+    {
+        if (auto const scene_surface = weak_scene_surface.lock())
+        {
+            shell->surface_ready(scene_surface);
+            scene_surface_marked_ready = true;
+        }
+    }
 }
 
 void mf::WindowWlSurfaceRole::surface_destroyed()
@@ -434,7 +444,7 @@ void mf::WindowWlSurfaceRole::create_scene_surface()
     mods.input_shape = std::vector<geom::Rectangle>{};
     surface.value().populate_surface_data(mods.streams.value(), mods.input_shape.value(), {});
 
-    auto const scene_surface = shell->create_surface(session, surface, mods, observer);
+    auto const scene_surface = shell->create_surface(session, surface, mods, observer, &wayland_executor);
     weak_scene_surface = scene_surface;
 
     if (mods.min_width)  committed_min_size.width  = mods.min_width.value();

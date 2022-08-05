@@ -141,12 +141,12 @@ msd::InputManager::InputManager(
 {
     set_cursor(mir_resize_edge_none);
     update_window_state(window_state);
-    decoration_surface->add_observer(observer);
+    decoration_surface->register_interest(observer);
 }
 
 msd::InputManager::~InputManager()
 {
-    decoration_surface->remove_observer(observer);
+    decoration_surface->unregister_interest(*observer);
 }
 
 void msd::InputManager::update_window_state(WindowState const& window_state)

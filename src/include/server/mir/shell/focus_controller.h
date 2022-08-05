@@ -17,6 +17,8 @@
 #ifndef MIR_SHELL_FOCUS_CONTROLLER_H_
 #define MIR_SHELL_FOCUS_CONTROLLER_H_
 
+#include "mir/geometry/forward.h"
+
 #include <stddef.h>
 #include <memory>
 #include <set>
@@ -24,7 +26,6 @@
 
 namespace mir
 {
-namespace geometry { struct Point; }
 namespace scene { class Session; class Surface; }
 
 namespace shell

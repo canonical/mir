@@ -19,13 +19,13 @@
 
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
+#include "mir/geometry/forward.h"
 
 #include <memory>
 #include <set>
 
 namespace mir
 {
-namespace geometry { struct Rectangle; }
 namespace scene { class PromptSession; class Session; class Surface; }
 
 namespace shell

@@ -64,8 +64,9 @@ struct StubSurface : scene::Surface
     auto wayland_surface() -> wayland::Weak<frontend::WlSurface> const& override { abort(); }
     void request_client_surface_close() override {}
     std::shared_ptr<Surface> parent() const override { return nullptr; }
-    void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) override {}
-    void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) override {}
+    void register_interest(std::weak_ptr<scene::SurfaceObserver> const&) override {}
+    void register_interest(std::weak_ptr<scene::SurfaceObserver> const&, Executor&) override {}
+    void unregister_interest(scene::SurfaceObserver const&) override {}
     void rename(std::string const&) override {}
     void set_confine_pointer_state(MirPointerConfinementState) override {}
     MirPointerConfinementState confine_pointer_state() const override { return mir_pointer_unconfined; }

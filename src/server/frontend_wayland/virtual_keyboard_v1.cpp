@@ -19,19 +19,13 @@
 
 #include "mir/input/event_builder.h"
 #include "mir/input/input_sink.h"
-#include "mir/input/input_device_info.h"
-#include "mir/input/pointer_settings.h"
-#include "mir/input/touchpad_settings.h"
-#include "mir/input/touchscreen_settings.h"
 #include "mir/input/input_device_registry.h"
-#include "mir/input/input_device.h"
 #include "mir/input/device.h"
+#include "mir/input/virtual_input_device.h"
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/input/buffer_keymap.h"
 #include "mir/log.h"
 
-#include <mutex>
-#include <atomic>
 #include <cstring>
 
 namespace mf = mir::frontend;
@@ -40,14 +34,6 @@ namespace mi = mir::input;
 
 namespace
 {
-auto unique_keyboard_name() -> std::string
-{
-    static std::atomic<int> next_id = 0;
-    auto const id = next_id.fetch_add(1);
-    auto const result = "virt-key-" + std::to_string(id);
-    return result;
-}
-
 auto mir_keyboard_action(uint32_t wayland_state) -> MirKeyboardAction
 {
     switch (wayland_state)
@@ -141,57 +127,6 @@ private:
     std::shared_ptr<VirtualKeyboardV1Ctx> const ctx;
 };
 
-class VirtualKeyboardDevice
-    : public input::InputDevice
-{
-public:
-    VirtualKeyboardDevice()
-        : info{"virtual-keyboard", unique_keyboard_name(), mi::DeviceCapability::keyboard}
-    {
-    }
-
-    void use(std::function<void(input::InputSink*, input::EventBuilder*)> const& fn)
-    {
-        std::lock_guard lock{mutex};
-        if (sink && builder)
-        {
-            fn(sink, builder);
-        }
-    }
-
-private:
-    void start(input::InputSink* new_sink, input::EventBuilder* new_builder) override
-    {
-        std::lock_guard lock{mutex};
-        sink = new_sink;
-        builder = new_builder;
-    }
-
-    void stop() override
-    {
-        std::lock_guard lock{mutex};
-        sink = nullptr;
-        builder = nullptr;
-    }
-
-    auto get_device_info() -> input::InputDeviceInfo override
-    {
-        return info;
-    }
-
-    auto get_pointer_settings() const -> optional_value<input::PointerSettings> override { return {}; }
-    void apply_settings(input::PointerSettings const&) override {}
-    auto get_touchpad_settings() const -> optional_value<input::TouchpadSettings> override { return {}; }
-    void apply_settings(input::TouchpadSettings const&) override {}
-    auto get_touchscreen_settings() const -> optional_value<input::TouchscreenSettings> override { return {}; }
-    void apply_settings(input::TouchscreenSettings const&) override {}
-
-    std::mutex mutex;
-    input::InputSink* sink{nullptr};
-    input::EventBuilder* builder{nullptr};
-    input::InputDeviceInfo info;
-};
-
 class VirtualKeyboardV1
     : public wayland::VirtualKeyboardV1
 {
@@ -205,7 +140,7 @@ private:
     void modifiers(uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) override;
 
     std::shared_ptr<VirtualKeyboardV1Ctx> const ctx;
-    std::shared_ptr<VirtualKeyboardDevice> const keyboard_device;
+    std::shared_ptr<input::VirtualInputDevice> const keyboard_device;
     std::weak_ptr<input::Device> const device_handle;
 };
 }
@@ -252,7 +187,7 @@ mf::VirtualKeyboardV1::VirtualKeyboardV1(
     std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx)
     : wayland::VirtualKeyboardV1{resource, Version<1>()},
       ctx{ctx},
-      keyboard_device{std::make_shared<VirtualKeyboardDevice>()},
+      keyboard_device{std::make_shared<mi::VirtualInputDevice>("virtual-keyboard", mi::DeviceCapability::keyboard)},
       device_handle{ctx->device_registry->add_device(keyboard_device)}
 {
 }
@@ -275,7 +210,7 @@ void mf::VirtualKeyboardV1::keymap(uint32_t format, mir::Fd fd, uint32_t size)
 void mf::VirtualKeyboardV1::key(uint32_t time, uint32_t key, uint32_t state)
 {
     std::chrono::nanoseconds nano = std::chrono::milliseconds{time};
-    keyboard_device->use([&](input::InputSink* sink, input::EventBuilder* builder)
+    keyboard_device->if_started_then([&](input::InputSink* sink, input::EventBuilder* builder)
         {
             sink->handle_input(builder->key_event(nano, mir_keyboard_action(state), 0, key));
         });

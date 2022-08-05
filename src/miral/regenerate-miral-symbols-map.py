@@ -81,7 +81,7 @@ def _report(publish, symbol):
     else:
         print('NOPUBLISH: {}'.format(symbol))
 
-OLD_STANZAS = '''MIRAL_3.0 {
+OLD_STANZAS = '''MIRAL_3.6 {
 global:
   extern "C++" {
     miral::AddInitCallback::?AddInitCallback*;
@@ -512,27 +512,8 @@ global:
     vtable?for?miral::WindowSpecification::AspectRatio;
     vtable?for?miral::X11Support;
     vtable?for?miral::Zone;
-  };
-local: *;
-};
-
-MIRAL_3.1 {
-global:
-  extern "C++" {
     miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1*;
-  };
-} MIRAL_3.0;
-
-MIRAL_3.2 {
-global:
-  extern "C++" {
     miral::Output::logical_group_id*;
-  };
-} MIRAL_3.1;
-
-MIRAL_3.3 {
-global:
-  extern "C++" {
     miral::PrintTo*;
     miral::WaylandExtensions::zwp_input_method_v2*;
     miral::WaylandExtensions::zwp_virtual_keyboard_v1*;
@@ -540,12 +521,6 @@ global:
     miral::WindowSpecification::focus_mode*;
     miral::toolkit::mir_keyboard_event_keysym*;
     miral::WindowSpecification::apply_to*;
-  };
-} MIRAL_3.2;
-
-MIRAL_3.4 {
-global:
-  extern "C++" {
     miral::socket_fd_of*;
     miral::WaylandExtensions::conditionally_enable*;
     miral::WaylandExtensions::EnableInfo::app*;
@@ -553,13 +528,14 @@ global:
     miral::WaylandExtensions::EnableInfo::user_preference*;
     miral::WaylandExtensions::zwp_input_method_manager_v2*;
     miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1*;
-  };
-} MIRAL_3.3;
+    miral::WaylandExtensions::zwlr_screencopy_manager_v1*;
+    typeinfo?for?miral::WaylandExtensions::EnableInfo;
+    vtable?for?miral::WaylandExtensions::EnableInfo;'''
 
-MIRAL_3.5 {
-global:'''
-
-END_NEW_STANZA = '} MIRAL_3.4;'
+END_NEW_STANZA = '''  };
+local: *;
+};'''
+#END_NEW_STANZA = '} MIRAL_3.6;'
 
 def _print_report():
     print(OLD_STANZAS)

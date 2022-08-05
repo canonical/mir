@@ -16,6 +16,7 @@
 
 #include "src/server/frontend_wayland/wlr_screencopy_v1.h"
 #include "mir/scene/observer.h"
+#include "mir/scene/surface_observer.h"
 #include "mir/test/doubles/mock_frontend_surface_stack.h"
 #include "mir/test/doubles/mock_surface.h"
 #include "mir/test/doubles/explicit_executor.h"
@@ -65,7 +66,7 @@ struct DamageTrackerV1 : Test
     mtd::ExplicitExecutor executor;
     mf::WlrScreencopyV1DamageTracker tracker{executor, surface_stack};
     std::shared_ptr<ms::Observer> scene_observer;
-    std::shared_ptr<ms::SurfaceObserver> surface_observer;
+    std::weak_ptr<ms::SurfaceObserver> surface_observer;
 
     void SetUp() override
     {
@@ -75,7 +76,7 @@ struct DamageTrackerV1 : Test
                 scene_observer = observer;
                 observer->surface_exists(mt::fake_shared(surface));
             }));
-        ON_CALL(surface, add_observer(_)).WillByDefault(SaveArg<0>(&surface_observer));
+        ON_CALL(surface, register_interest(_)).WillByDefault(SaveArg<0>(&surface_observer));
     }
 
     void TearDown() override
@@ -98,8 +99,9 @@ struct DamageTrackerV1 : Test
 
     void damage_area(geom::Rectangle const& damage)
     {
-        ASSERT_THAT(surface_observer, NotNull());
-        surface_observer->frame_posted(&surface, 1, damage);
+        auto const locked = surface_observer.lock();
+        ASSERT_THAT(locked, NotNull());
+        locked->frame_posted(&surface, 1, damage);
     }
 };
 }

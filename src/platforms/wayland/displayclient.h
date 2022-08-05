@@ -87,7 +87,7 @@ protected:
     virtual void pointer_frame(wl_pointer* pointer);
     virtual void pointer_axis_source(wl_pointer* pointer, uint32_t axis_source);
     virtual void pointer_axis_stop(wl_pointer* pointer, uint32_t time, uint32_t axis);
-    virtual void pointer_axis_value120(wl_pointer* pointer, uint32_t axis, int32_t value120);
+    virtual void pointer_axis_discrete(wl_pointer* pointer, uint32_t axis, int32_t discrete);
 
     virtual void touch_down(
         wl_touch* touch,

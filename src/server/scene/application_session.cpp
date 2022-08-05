@@ -81,7 +81,8 @@ auto ms::ApplicationSession::create_surface(
     std::shared_ptr<Session> const& session,
     wayland::Weak<frontend::WlSurface> const& wayland_surface,
     shell::SurfaceSpecification const& the_params,
-    std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<Surface>
+    std::shared_ptr<ms::SurfaceObserver> const& observer,
+    Executor* observer_executor) -> std::shared_ptr<Surface>
 {
     if (session && session.get() != this)
         fatal_error("Incorrect session");
@@ -109,8 +110,14 @@ auto ms::ApplicationSession::create_surface(
     auto const input_mode = params.input_mode.is_set() ? params.input_mode.value() : input::InputReceptionMode::normal;
     surface_stack->add_surface(surface, input_mode);
 
-    if (observer)
-        surface->add_observer(observer);
+    if (observer && observer_executor)
+    {
+        surface->register_interest(observer, *observer_executor);
+    }
+    else if (observer)
+    {
+        surface->register_interest(observer);
+    }
 
     {
         std::unique_lock lock(surfaces_and_streams_mutex);

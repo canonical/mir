@@ -40,7 +40,8 @@ struct MockSceneSession : public scene::Session
         std::shared_ptr<Session> const&,
         wayland::Weak<frontend::WlSurface> const&,
         shell::SurfaceSpecification const&,
-        std::shared_ptr<scene::SurfaceObserver> const&), (override));
+        std::shared_ptr<scene::SurfaceObserver> const&,
+        Executor*), (override));
     MOCK_METHOD(void, destroy_surface, (std::shared_ptr<scene::Surface> const&), (override));
     MOCK_METHOD(std::shared_ptr<scene::Surface>, surface_after, (
         std::shared_ptr<scene::Surface> const&), (const override));

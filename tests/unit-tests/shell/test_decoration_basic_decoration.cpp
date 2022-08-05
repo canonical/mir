@@ -75,7 +75,7 @@ struct StubCursorImages
 struct MockSurface
     : ms::BasicSurface
 {
-    MockSurface(std::shared_ptr<ms::Session> const& session)
+    MockSurface(std::shared_ptr<ms::Session> const& session, mir::Executor& executor)
         : ms::BasicSurface{
               session,
               {},
@@ -84,11 +84,24 @@ struct MockSurface
               mir_pointer_unconfined,
               { { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {0, 0}, {} } },
               {},
-              mir::report::null_scene_report()}
+              mir::report::null_scene_report()},
+          executor{executor}
     {
     }
 
+    void register_interest(std::weak_ptr<ms::SurfaceObserver> const& observer)
+    {
+        BasicSurface::register_interest(observer, executor);
+    }
+
+    void register_interest(std::weak_ptr<ms::SurfaceObserver> const& observer, mir::Executor&)
+    {
+        register_interest(observer);
+    }
+
     MOCK_METHOD0(request_client_surface_close, void());
+
+    mir::Executor& executor;
 };
 
 struct MockShell
@@ -133,11 +146,12 @@ struct MockShell
         uint64_t,
         MirResizeEdge));
 
-    MOCK_METHOD4(create_surface, std::shared_ptr<ms::Surface>(
+    MOCK_METHOD5(create_surface, std::shared_ptr<ms::Surface>(
         std::shared_ptr<ms::Session> const&,
         mw::Weak<mf::WlSurface> const&,
         msh::SurfaceSpecification const&,
-        std::shared_ptr<ms::SurfaceObserver> const&));
+        std::shared_ptr<ms::SurfaceObserver> const&,
+        mir::Executor*));
 
     MOCK_METHOD2(destroy_surface, void(
         std::shared_ptr<ms::Session> const&,
@@ -149,16 +163,17 @@ struct DecorationBasicDecoration
 {
     void SetUp() override
     {
-        ON_CALL(shell, create_surface(_, _, _, _))
+        ON_CALL(shell, create_surface(_, _, _, _, _))
             .WillByDefault(Invoke([this](
                     std::shared_ptr<ms::Session> const&,
                     mw::Weak<mf::WlSurface> const&,
                     msh::SurfaceSpecification const& params,
-                    std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<ms::Surface>
+                    std::shared_ptr<ms::SurfaceObserver> const& observer,
+                    mir::Executor*) -> std::shared_ptr<ms::Surface>
                 {
                     creation_params = params;
                     decoration_surface.resize({params.width.value(), params.height.value()});
-                    decoration_surface.add_observer(observer);
+                    decoration_surface.register_interest(observer);
                     return mt::fake_shared(decoration_surface);
                 }));
         ON_CALL(*session, create_buffer_stream(_))
@@ -191,8 +206,8 @@ struct DecorationBasicDecoration
     StubCursorImages cursor_images;
     std::shared_ptr<msd::BasicDecoration> basic_decoration;
     std::shared_ptr<NiceMock<mtd::MockSceneSession>> session{std::make_shared<NiceMock<mtd::MockSceneSession>>()};
-    StrictMock<MockSurface> window_surface{session};
-    StrictMock<MockSurface> decoration_surface{session};
+    StrictMock<MockSurface> window_surface{session, executor};
+    StrictMock<MockSurface> decoration_surface{session, executor};
     msh::SurfaceSpecification creation_params;
     NiceMock<mtd::MockBufferStream> buffer_stream;
 };

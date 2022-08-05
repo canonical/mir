@@ -175,7 +175,7 @@ target_link_libraries(
   mircommon
 
   ${Boost_LIBRARIES}
-  ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
+  ${WAYLAND_SERVER_LDFLAGS}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 

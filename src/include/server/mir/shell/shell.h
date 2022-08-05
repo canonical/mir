@@ -28,6 +28,7 @@
 
 namespace mir
 {
+class Executor;
 namespace wayland
 {
 template<typename>
@@ -38,7 +39,6 @@ namespace frontend
 class WlSurface;
 class EventSink;
 }
-namespace geometry { struct Rectangle; }
 namespace scene
 {
 class PromptSession;
@@ -85,7 +85,10 @@ public:
         std::shared_ptr<scene::Session> const& session,
         wayland::Weak<frontend::WlSurface> const& wayland_surface,
         SurfaceSpecification const& params,
-        std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<scene::Surface> = 0;
+        std::shared_ptr<scene::SurfaceObserver> const& observer,
+        Executor* observer_executor) -> std::shared_ptr<scene::Surface> = 0;
+
+    virtual void surface_ready(std::shared_ptr<scene::Surface> const& surface) = 0;
 
     virtual void modify_surface(
         std::shared_ptr<scene::Session> const& session,

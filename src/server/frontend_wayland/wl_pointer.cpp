@@ -160,6 +160,18 @@ struct NullCursor : mf::WlPointer::Cursor
 };
 }
 
+auto mf::WlPointer::linux_button_to_mir_button(int linux_button) -> std::optional<MirPointerButtons>
+{
+    for (auto const& mapping : button_mapping)
+    {
+        if (mapping.second == linux_button)
+        {
+            return mapping.first;
+        }
+    }
+    return std::nullopt;
+}
+
 mf::WlPointer::WlPointer(wl_resource* new_resource)
     : Pointer(new_resource, Version<8>()),
       display{wl_client_get_display(client)},
@@ -187,8 +199,8 @@ void mir::frontend::WlPointer::event(MirPointerEvent const* event, WlSurface& ro
             buttons(event);
             break;
         case mir_pointer_action_enter:
-            leave(event); // If we're currently on a surface, leave it
             enter_or_motion(event, root_surface);
+            axis(event);
             break;
         case mir_pointer_action_leave:
             leave(event);
@@ -249,6 +261,8 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
     auto const v_scroll = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll);
     auto const h_scroll_stop = mir_pointer_event_axis_stop(event, mir_pointer_axis_hscroll);
     auto const v_scroll_stop = mir_pointer_event_axis_stop(event, mir_pointer_axis_vscroll);
+    auto const h_scroll_discrete = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll_discrete);
+    auto const v_scroll_discrete = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll_discrete);
     auto const h_scroll_value120 = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll_value120);
     auto const v_scroll_value120 = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll_value120);
     auto const axis_source = wayland_axis_source(mir_pointer_event_axis_source(event));
@@ -262,32 +276,36 @@ void mf::WlPointer::axis(MirPointerEvent const* event)
         needs_frame = true;
     }
 
-    if (h_scroll_value120 && version_supports_axis_value120())
+    if (h_scroll_value120)
     {
-        send_axis_value120_event(Axis::horizontal_scroll, h_scroll_value120);
-        needs_frame=true;
-    }
-    else if (h_scroll_value120 && version_supports_axis_discrete())
-    {
-        auto const h_value_discrete = get_discrete_from_value120(Axis::horizontal_scroll, h_scroll_value120);
-        send_axis_value120_event(Axis::horizontal_scroll, h_value_discrete);
-        needs_frame = true;
-    }
-
-    if (v_scroll_value120 && version_supports_axis_value120())
-    {
-        send_axis_value120_event(Axis::vertical_scroll, v_scroll_value120);
-        needs_frame=true;
-    }
-    else if (v_scroll_value120 && version_supports_axis_discrete())
-    {
-        auto const v_value_discrete = get_discrete_from_value120(Axis::vertical_scroll, v_scroll_value120);
-        send_axis_value120_event(Axis::vertical_scroll, v_value_discrete);
-        needs_frame = true;
+        if (version_supports_axis_value120())
+        {
+            send_axis_value120_event(Axis::horizontal_scroll, h_scroll_value120);
+            needs_frame=true;
+        }
+        else if (h_scroll_discrete && version_supports_axis_discrete())
+        {
+            send_axis_discrete_event(Axis::horizontal_scroll, h_scroll_discrete);
+            needs_frame = true;
+        }
     }
 
-    // If we sent value120 scroll events, we're required to also send corresponding non-value120 ones (even if their
-    // values are 0 for some reason)
+    if (v_scroll_value120)
+    {
+        if (version_supports_axis_value120())
+        {
+            send_axis_value120_event(Axis::vertical_scroll, v_scroll_value120);
+            needs_frame=true;
+        }
+        else if (v_scroll_discrete && version_supports_axis_discrete())
+        {
+            send_axis_discrete_event(Axis::vertical_scroll, v_scroll_discrete);
+            needs_frame = true;
+        }
+    }
+
+    // If we sent value120 scroll events, we're required to also send a non-value120 event on the same axis, evin if the
+    // value is 0.
 
     if (h_scroll || h_scroll_value120)
     {
@@ -535,32 +553,6 @@ void mf::WlPointer::on_commit(WlSurface* surface)
             if (surface_under_cursor)
                 cursor->apply_to(&surface_under_cursor.value());
         }
-    }
-}
-
-float mf::WlPointer::get_discrete_from_value120(uint32_t axis, float value120)
-{
-    auto const get_discrete = [](int& counter, float value120) {
-        counter += value120;
-        auto const discrete = counter / 120;
-
-        if (counter >= 120 || counter <= -120)
-        {
-            counter = counter % 120;
-        }
-
-        return discrete;
-    };
-
-    switch (axis)
-    {
-    case Axis::horizontal_scroll:
-        return get_discrete(h_value120_counter, value120);
-    case Axis::vertical_scroll:
-        return get_discrete(v_value120_counter, value120);
-    default:
-        BOOST_THROW_EXCEPTION(std::runtime_error{
-            "Invalid axis given to get_discrete_from_value120()"});
     }
 }
 

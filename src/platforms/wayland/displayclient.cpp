@@ -754,7 +754,7 @@ void mgw::DisplayClient::pointer_axis_stop(wl_pointer* /*pointer*/, uint32_t /*t
 {
 }
 
-void mgw::DisplayClient::pointer_axis_value120(wl_pointer* /*pointer*/, uint32_t /*axis*/, int32_t /*value120*/)
+void mgw::DisplayClient::pointer_axis_discrete(wl_pointer* /*pointer*/, uint32_t /*axis*/, int32_t /*discrete*/)
 {
 }
 
@@ -838,7 +838,7 @@ void mgw::DisplayClient::seat_capabilities(wl_seat* seat, uint32_t capabilities)
                 [](void* self, auto... args) { static_cast<DisplayClient*>(self)->pointer_frame(args...); },
                 [](void* self, auto... args) { static_cast<DisplayClient*>(self)->pointer_axis_source(args...); },
                 [](void* self, auto... args) { static_cast<DisplayClient*>(self)->pointer_axis_stop(args...); },
-                [](void* self, auto... args) { static_cast<DisplayClient*>(self)->pointer_axis_value120(args...); },
+                [](void* self, auto... args) { static_cast<DisplayClient*>(self)->pointer_axis_discrete(args...); },
             };
 
         struct wl_pointer *pointer = wl_seat_get_pointer(seat);

@@ -18,6 +18,7 @@
 #define MIR_SCENE_SCENE_CHANGE_NOTIFICATION_H_
 
 #include "mir/scene/observer.h"
+#include "mir/geometry/forward.h"
 
 #include <functional>
 #include <map>
@@ -25,7 +26,6 @@
 
 namespace mir
 {
-namespace geometry { struct Rectangle; }
 namespace scene
 {
 class SurfaceObserver;
@@ -56,7 +56,7 @@ private:
     std::function<void(int frames, mir::geometry::Rectangle const& damage)> const damage_notify_change;
 
     std::mutex surface_observers_guard;
-    std::map<Surface*, std::weak_ptr<SurfaceObserver>> surface_observers;
+    std::map<Surface*, std::shared_ptr<SurfaceObserver>> surface_observers;
     
     void add_surface_observer(Surface* surface);
 };

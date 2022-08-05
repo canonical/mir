@@ -153,7 +153,8 @@ struct StubStubSession : mir::test::doubles::StubSession
         std::shared_ptr<mir::scene::Session> const& /*session*/,
         mir::wayland::Weak<mir::frontend::WlSurface> const& /*wayland_surface*/,
         mir::shell::SurfaceSpecification const& params,
-        std::shared_ptr<mir::scene::SurfaceObserver> const& /*observer*/) -> std::shared_ptr<mir::scene::Surface> override
+        std::shared_ptr<mir::scene::SurfaceObserver> const& /*observer*/,
+        mir::Executor*) -> std::shared_ptr<mir::scene::Surface> override
     {
         auto id = mir::frontend::SurfaceId{next_surface_id.fetch_add(1)};
         auto surface = std::make_shared<StubSurface>(
@@ -311,7 +312,7 @@ auto mt::TestWindowManagerTools::create_surface(
 {
     // This type is Mir-internal, I hope we don't need to create it here
     std::shared_ptr<mir::scene::SurfaceObserver> const observer;
-    return session->create_surface(nullptr, {}, params, observer);
+    return session->create_surface(nullptr, {}, params, observer, nullptr);
 }
 
 auto mt::TestWindowManagerTools::create_fake_display_configuration(std::vector<miral::Rectangle> const& outputs)

@@ -222,11 +222,11 @@ TEST(geometry, rectangle_intersection)
 
     for (auto const& test_case : test_data)
     {
-        EXPECT_THAT(rect_base.intersection_with(test_case.rect),
+        EXPECT_THAT(intersection_of(rect_base, test_case.rect),
                     Eq(test_case.intersection))
             << "test_case.rect = " << test_case.rect;
 
-        EXPECT_THAT(test_case.rect.intersection_with(rect_base),
+        EXPECT_THAT(intersection_of(test_case.rect, rect_base),
                     Eq(test_case.intersection))
             << "test_case.rect = " << test_case.rect;
     }

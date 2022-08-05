@@ -112,7 +112,7 @@ struct UpdateCursorOnSceneChanges : ms::Observer
     void add_surface_observer(ms::Surface* surface)
     {
         auto const observer = std::make_shared<UpdateCursorOnSurfaceChanges>(cursor_controller);
-        surface->add_observer(observer);
+        surface->register_interest(observer);
 
         {
             std::unique_lock lg(surface_observers_guard);
@@ -133,7 +133,7 @@ struct UpdateCursorOnSceneChanges : ms::Observer
             auto it = surface_observers.find(surface.get());
             if (it != surface_observers.end())
             {
-                surface->remove_observer(it->second);
+                surface->unregister_interest(*it->second);
                 surface_observers.erase(it);
             }
         }
@@ -161,9 +161,10 @@ struct UpdateCursorOnSceneChanges : ms::Observer
         std::unique_lock lg(surface_observers_guard);
         for (auto &kv : surface_observers)
         {
-                auto surface = kv.first;
-                if (surface)
-                    surface->remove_observer(kv.second);
+                if (auto surface = kv.first)
+                {
+                    surface->unregister_interest(*kv.second);
+                }
         }
         surface_observers.clear();
     }
@@ -172,7 +173,7 @@ private:
     mi::CursorController* const cursor_controller;
 
     std::mutex surface_observers_guard;
-    std::map<ms::Surface*, std::weak_ptr<ms::SurfaceObserver>> surface_observers;
+    std::map<ms::Surface*, std::shared_ptr<ms::SurfaceObserver>> surface_observers;
 };
 
 std::shared_ptr<mi::Surface> topmost_surface_containing_point(

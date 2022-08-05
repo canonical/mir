@@ -19,7 +19,6 @@
 
 #include "mir/graphics/display.h"
 #include "mir/geometry/size.h"
-#include "mir/geometry/size_f.h"
 #include "mir/renderer/gl/context_source.h"
 #include "mir_toolkit/common.h"
 #include "egl_helper.h"

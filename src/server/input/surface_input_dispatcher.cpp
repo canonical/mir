@@ -22,6 +22,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/events/event_builders.h"
+#include "mir/events/pointer_event.h"
 #include "mir_toolkit/mir_cookie.h"
 
 #include <boost/throw_exception.hpp>
@@ -52,7 +53,7 @@ struct InputDispatcherSceneObserver :
 
     void surface_added(std::shared_ptr<ms::Surface> const& surface) override
     {
-        surface->add_observer(shared_from_this());
+        surface->register_interest(shared_from_this(), mir::immediate_executor);
     }
 
     void surface_removed(std::shared_ptr<ms::Surface> const& surface) override
@@ -62,7 +63,7 @@ struct InputDispatcherSceneObserver :
 
     void surface_exists(std::shared_ptr<ms::Surface> const& surface) override
     {
-        surface->add_observer(shared_from_this());
+        surface->register_interest(shared_from_this());
     }
 
     void attrib_changed(ms::Surface const*, MirWindowAttrib /*attrib*/, int /*value*/) override
@@ -158,17 +159,8 @@ mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> co
 mi::SurfaceInputDispatcher::~SurfaceInputDispatcher()
 {
     scene->remove_observer(scene_observer);
-    scene->for_each(
-        [this](auto surface)
-        {
-            // Everything *should* be a scene::Surface, but let's not crash if it isn't.
-            if (auto scene_surf = std::dynamic_pointer_cast<ms::Surface>(surface))
-            {
-                // We *know* scene_observer is an InputDispatcherSceneObserver
-                scene_surf->remove_observer(
-                    std::static_pointer_cast<InputDispatcherSceneObserver>(scene_observer));
-            }
-        });
+
+    // It's safe to destroy a surface observer without unregistering it
 }
 
 namespace
@@ -441,24 +433,19 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
                                                        MirPointerEvent const* pev,
                                                        MirPointerAction action)
 {
-    auto surface_displacement = surface->input_bounds().top_left;
+    geom::DisplacementF const surface_displacement{as_displacement(surface->input_bounds().top_left)};
     auto const* input_ev = mir_pointer_event_input_event(pev);
-
-    auto event = mev::make_pointer_event(
-        mir_input_event_get_device_id(input_ev),
-        std::chrono::nanoseconds(mir_input_event_get_event_time(input_ev)),
-        std::vector<uint8_t>{},
-        mir_pointer_event_modifiers(pev),
-        action, mir_pointer_event_buttons(pev),
-        mir_pointer_event_axis_value(pev, mir_pointer_axis_x) - surface_displacement.x.as_int(),
-        mir_pointer_event_axis_value(pev, mir_pointer_axis_y) - surface_displacement.y.as_int(),
-        mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll),
-        mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll),
-        mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x),
-        mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y));
-
+    auto event = mev::clone_event(*mir_input_event_get_event(input_ev));
+    auto const pointer_ev = static_cast<MirPointerEvent*>(event.get());
+    pointer_ev->set_action(action);
+    if (pointer_ev->position())
+    {
+        pointer_ev->set_position(pointer_ev->position().value() - surface_displacement);
+    }
     if (!drag_and_drop_handle.empty())
+    {
         mev::set_drag_and_drop_handle(*event, drag_and_drop_handle);
+    }
     surface->consume(std::move(event));
 }
 

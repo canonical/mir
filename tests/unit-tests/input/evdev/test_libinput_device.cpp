@@ -80,46 +80,21 @@ struct MockEventBuilder : mi::EventBuilder
                 return builder.touch_event(time, contacts);
             });
 
-        ON_CALL(*this, pointer_event(_, _, _, _, _, _, _)).WillByDefault(
-            [this](std::optional<Timestamp> time, MirPointerAction action, MirPointerButtons buttons,
-                   float hscroll, float vscroll, float relative_x, float relative_y)
+        ON_CALL(*this, pointer_event(_, _, _, _, _, _, _, _)).WillByDefault(
+            [this](
+                std::optional<Timestamp> timestamp,
+                MirPointerAction action,
+                MirPointerButtons buttons,
+                std::optional<mir::geometry::PointF> position,
+                mir::geometry::DisplacementF motion,
+                MirPointerAxisSource axis_source,
+                mir::events::ScrollAxisH h_scroll,
+                mir::events::ScrollAxisV v_scroll)
             {
-                return builder.pointer_event(time, action, buttons, hscroll, vscroll, relative_x, relative_y);
-            });
-
-        ON_CALL(*this, pointer_event(_, _, _, _, _, _, _, _, _)).WillByDefault(
-            [this](std::optional<Timestamp> time, MirPointerAction action, MirPointerButtons buttons,
-                   float x, float y, float hscroll, float vscroll, float relative_x, float relative_y)
-            {
-                return builder.pointer_event(time, action, buttons, x, y, hscroll, vscroll, relative_x, relative_y);
-            });
-
-        ON_CALL(*this, pointer_axis_event(_, _, _, _, _, _, _, _, _, _)).WillByDefault(
-            [this](MirPointerAxisSource axis_source, std::optional<Timestamp> time, MirPointerAction action,
-                   MirPointerButtons buttons, float x, float y, float hscroll, float vscroll, float relative_x, float relative_y)
-            {
-                return builder.pointer_axis_event(
-                    axis_source, time, action, buttons, x, y, hscroll, vscroll, relative_x, relative_y);
-            });
-
-        ON_CALL(*this, pointer_axis_with_stop_event(_, _, _, _, _, _, _, _, _, _, _, _)).WillByDefault(
-            [this](MirPointerAxisSource axis_source, std::optional<Timestamp> time, MirPointerAction action,
-                   MirPointerButtons buttons, float x, float y, float hscroll, float vscroll,
-                   bool hscroll_stop, bool vscroll_stop, float relative_x, float relative_y)
-            {
-                return builder.pointer_axis_with_stop_event(
-                    axis_source, time, action, buttons, x, y, hscroll, vscroll, vscroll_stop, hscroll_stop,
-                    relative_x, relative_y);
-            });
-
-        ON_CALL(*this, pointer_axis_value120_scroll_event(_, _, _, _, _, _, _, _)).WillByDefault(
-            [this](MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
-                   MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value,
-                   float hscroll_value120, float vscroll_value120)
-            {
-                return builder.pointer_axis_value120_scroll_event(
-                    axis_source, timestamp, action, buttons_pressed, hscroll_value, vscroll_value,
-                    hscroll_value120, vscroll_value120);
+                return builder.pointer_event(
+                    timestamp, action, buttons,
+                    position, motion,
+                    axis_source, h_scroll, v_scroll);
             });
     }
     using EventBuilder::Timestamp;
@@ -127,22 +102,66 @@ struct MockEventBuilder : mi::EventBuilder
     MOCK_METHOD(mir::EventUPtr, key_event, (std::optional<Timestamp>, MirKeyboardAction, xkb_keysym_t, int));
     MOCK_METHOD(mir::EventUPtr, touch_event, (std::optional<Timestamp>, std::vector<mir::events::ContactState> const&));
     MOCK_METHOD(mir::EventUPtr, pointer_event,
-                (std::optional<Timestamp>, MirPointerAction, MirPointerButtons, float, float, float, float));
-    MOCK_METHOD(mir::EventUPtr, pointer_event,
-                (std::optional<Timestamp>, MirPointerAction, MirPointerButtons, float, float, float, float, float, float));
-    MOCK_METHOD(mir::EventUPtr, pointer_axis_event,
-                (MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
-                 MirPointerButtons buttons_pressed, float x_position, float y_position,
-                 float hscroll_value, float vscroll_value, float relative_x_value, float relative_y_value));
-    MOCK_METHOD(mir::EventUPtr, pointer_axis_with_stop_event,
-                (MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
-                 MirPointerButtons buttons_pressed, float x_position, float y_position,
-                 float hscroll_value, float vscroll_value, bool hscroll_stop, bool vscroll_stop,
-                 float relative_x_value, float relative_y_value));
-    MOCK_METHOD(mir::EventUPtr, pointer_axis_value120_scroll_event,
-                (MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
-                 MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value, float hscroll_value120,
-                 float vscroll_value120));
+                (std::optional<Timestamp>, MirPointerAction, MirPointerButtons, std::optional<mir::geometry::PointF>,
+                 mir::geometry::DisplacementF, MirPointerAxisSource, mir::events::ScrollAxisH,
+                 mir::events::ScrollAxisV), (override));
+
+    mir::EventUPtr pointer_event(
+        std::optional<Timestamp>,
+        MirPointerAction,
+        MirPointerButtons,
+        float, float,
+        float, float) override
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("deprecated event builder method called"));
+    }
+
+    mir::EventUPtr pointer_event(
+        std::optional<Timestamp>,
+        MirPointerAction,
+        MirPointerButtons,
+        float, float,
+        float, float,
+        float, float) override
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("deprecated event builder method called"));
+    }
+
+    mir::EventUPtr pointer_axis_event(
+        MirPointerAxisSource,
+        std::optional<Timestamp>,
+        MirPointerAction,
+        MirPointerButtons,
+        float, float,
+        float, float,
+        float, float) override
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("deprecated event builder method called"));
+    }
+
+    mir::EventUPtr pointer_axis_with_stop_event(
+        MirPointerAxisSource,
+        std::optional<Timestamp>,
+        MirPointerAction,
+        MirPointerButtons,
+        float, float,
+        float, float,
+        bool, bool,
+        float, float) override
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("deprecated event builder method called"));
+    }
+
+    mir::EventUPtr pointer_axis_discrete_scroll_event(
+        MirPointerAxisSource,
+        std::optional<Timestamp>,
+        MirPointerAction,
+        MirPointerButtons,
+        float, float,
+        float, float) override
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("deprecated event builder method called"));
+    }
 };
 
 struct LibInputDevice : public ::testing::Test
@@ -201,14 +220,10 @@ struct LibInputDevice : public ::testing::Test
             .WillByDefault(Return(accel_speed));
         ON_CALL(env.mock_libinput, libinput_device_config_left_handed_get(dev))
             .WillByDefault(Return(handedness == mir_pointer_handedness_left));
-#if MIR_LIBINPUT_HAS_ACCEL_PROFILE
         ON_CALL(env.mock_libinput, libinput_device_config_accel_get_profile(dev))
             .WillByDefault(Return((profile == mir_pointer_acceleration_none) ?
                                       LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT :
                                       LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE));
-#else
-        (void)profile;
-#endif
     }
 
     void setup_touchpad_configuration(libinput_device* dev,
@@ -538,22 +553,49 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
 {
     InSequence seq;
     // expect two scroll events..
-    EXPECT_CALL(mock_builder, pointer_axis_value120_scroll_event(
-        mir_pointer_axis_source_wheel, {time_stamp_1}, mir_pointer_action_motion, 0, 0.0f, 1.0f, 0.0f, 120.0f));
-    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 1.0f)));
-    EXPECT_CALL(mock_builder, pointer_axis_value120_scroll_event(
-        mir_pointer_axis_source_wheel, {time_stamp_2}, mir_pointer_action_motion, 0, -1.0f, 0.0f, -120.0f, 0.0f));
-    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, -1.0f)));
+    EXPECT_CALL(mock_builder, pointer_event(
+        {time_stamp_1}, mir_pointer_action_motion, 0,
+        Eq(std::nullopt), geom::DisplacementF{},
+        mir_pointer_axis_source_wheel,
+        mev::ScrollAxisH{},
+        mev::ScrollAxisV{geom::DeltaYF{-20}, geom::DeltaY{2}, geom::DeltaY{240}, false}));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -20.0f)));
+    EXPECT_CALL(mock_builder, pointer_event(
+        {time_stamp_2}, mir_pointer_action_motion, 0,
+        Eq(std::nullopt), geom::DisplacementF{},
+        mir_pointer_axis_source_wheel,
+        mev::ScrollAxisH{geom::DeltaXF{5}, geom::DeltaX{1}, geom::DeltaX{120}, false},
+        mev::ScrollAxisV{{}, {}, false}));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 5.0f)));
 
     mouse.start(&mock_sink, &mock_builder);
-    env.mock_libinput.setup_axis_event(fake_device, event_time_1, {}, 1.0f, {}, {}, 0.0, 120.0f);
-    env.mock_libinput.setup_axis_event(fake_device, event_time_2, -1.0f, {}, {}, {}, -120.0f, 0);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, {}, -20.0, 0, 2);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_2, 5.0, {}, 1, 0);
+    process_events(mouse);
+}
+
+TEST_F(LibInputDeviceOnMouse, hi_res_scroll_is_picked_up)
+{
+#ifdef MIR_LIBINPUT_HAS_VALUE120
+    auto const expected = 165;
+#else
+    auto const expected = 120;
+#endif
+
+    EXPECT_CALL(mock_builder, pointer_event(
+        {time_stamp_1}, mir_pointer_action_motion, 0,
+        Eq(std::nullopt), geom::DisplacementF{},
+        mir_pointer_axis_source_wheel,
+        mev::ScrollAxisH{},
+        mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{1}, geom::DeltaY{expected}, false}));
+
+    mouse.start(&mock_sink, &mock_builder);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, {}, 1.0f, {}, 1, 0.0f, 165);
     process_events(mouse);
 }
 
 TEST_F(LibInputDeviceOnMouse, hi_res_scroll_does_not_combine_with_discrete)
 {
-    InSequence seq;
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 1.0f)));
 
     mouse.start(&mock_sink, &mock_builder);
@@ -918,9 +960,7 @@ TEST_F(LibInputDeviceOnMouse, applies_pointer_settings)
     settings.acceleration = mir_pointer_acceleration_none;
 
     EXPECT_CALL(env.mock_libinput, libinput_device_config_accel_set_speed(mouse.device(), 1.1)).Times(1);
-#if MIR_LIBINPUT_HAS_ACCEL_PROFILE
     EXPECT_CALL(env.mock_libinput, libinput_device_config_accel_set_profile(mouse.device(), LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT)).Times(1);
-#endif
     EXPECT_CALL(env.mock_libinput, libinput_device_config_left_handed_set(mouse.device(), true)).Times(1);
 
     mouse.apply_settings(settings);
@@ -968,13 +1008,19 @@ TEST_F(LibInputDeviceOnTouchpad, process_event_handles_scroll)
 {
     InSequence seq;
     // expect two scroll events..
-    EXPECT_CALL(mock_builder, pointer_axis_with_stop_event(
-        mir_pointer_axis_source_finger, {time_stamp_1}, mir_pointer_action_motion, 0,
-        0, 0, 0.0f, -10.0f, false, false, 0.0f, 0.0f));
+    EXPECT_CALL(mock_builder, pointer_event(
+        {time_stamp_1}, mir_pointer_action_motion, 0,
+        Eq(std::nullopt), geom::DisplacementF{},
+        mir_pointer_axis_source_finger,
+        mev::ScrollAxisH{},
+        mev::ScrollAxisV{geom::DeltaYF{-10}, {}, false}));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -10.0f)));
-    EXPECT_CALL(mock_builder, pointer_axis_with_stop_event(
-        mir_pointer_axis_source_finger, {time_stamp_2}, mir_pointer_action_motion, 0,
-        0, 0, 1.0f, 0.0f, false, false, 0.0f, 0.0f));
+    EXPECT_CALL(mock_builder, pointer_event(
+        {time_stamp_2}, mir_pointer_action_motion, 0,
+        Eq(std::nullopt), geom::DisplacementF{},
+        mir_pointer_axis_source_finger,
+        mev::ScrollAxisH{geom::DeltaXF{1}, {}, false},
+        mev::ScrollAxisV{}));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 1.0f)));
 
     env.mock_libinput.setup_finger_axis_event(fake_device, event_time_1, {}, -10.0);
@@ -987,13 +1033,19 @@ TEST_F(LibInputDeviceOnTouchpad, process_event_handles_stop)
 {
     InSequence seq;
     // expect two scroll events..
-    EXPECT_CALL(mock_builder, pointer_axis_with_stop_event(
-        mir_pointer_axis_source_finger, {time_stamp_1}, mir_pointer_action_motion, 0,
-        0, 0, 0.0f, -10.0f, false, false, 0.0f, 0.0f));
+    EXPECT_CALL(mock_builder, pointer_event(
+        {time_stamp_1}, mir_pointer_action_motion, 0,
+        Eq(std::nullopt), geom::DisplacementF{},
+        mir_pointer_axis_source_finger,
+        mev::ScrollAxisH{},
+        mev::ScrollAxisV{geom::DeltaYF{-10}, {}, false}));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -10.0f)));
-    EXPECT_CALL(mock_builder, pointer_axis_with_stop_event(
-        mir_pointer_axis_source_finger, {time_stamp_2}, mir_pointer_action_motion, 0,
-        0, 0, 0.0f, 0.0f, false, true, 0.0f, 0.0f));
+    EXPECT_CALL(mock_builder, pointer_event(
+        {time_stamp_2}, mir_pointer_action_motion, 0,
+        Eq(std::nullopt), geom::DisplacementF{},
+        mir_pointer_axis_source_finger,
+        mev::ScrollAxisH{},
+        mev::ScrollAxisV{{}, {}, true}));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 0.0f)));
 
     env.mock_libinput.setup_finger_axis_event(fake_device, event_time_1, {}, -10.0);

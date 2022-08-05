@@ -48,7 +48,7 @@ void ms::SceneChangeNotification::add_surface_observer(ms::Surface* surface)
         };
 
     auto observer = std::make_shared<SurfaceChangeNotification>(surface, notifier, damage_notify_change);
-    surface->add_observer(observer);
+    surface->register_interest(observer);
 
     std::unique_lock lg(surface_observers_guard);
     surface_observers[surface] = observer;
@@ -75,7 +75,7 @@ void ms::SceneChangeNotification::surface_removed(std::shared_ptr<ms::Surface> c
         auto it = surface_observers.find(surface.get());
         if (it != surface_observers.end())
         {
-            surface->remove_observer(it->second);
+            surface->unregister_interest(*it->second);
             surface_observers.erase(it);
         }
     }
@@ -101,7 +101,9 @@ void ms::SceneChangeNotification::end_observation()
     {
         auto surface = kv.first;
         if (surface)
-            surface->remove_observer(kv.second);
+        {
+            surface->unregister_interest(*kv.second);
+        }
     }
     surface_observers.clear();
 }

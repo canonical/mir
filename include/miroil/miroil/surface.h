@@ -24,7 +24,6 @@
 namespace mir { 
     namespace scene { class Surface; } 
     namespace shell { class InputTargeter; }
-    namespace geometry { struct Rectangle; }
     namespace graphics { class CursorImage; }
     namespace compositor { class BufferStream; }
 }

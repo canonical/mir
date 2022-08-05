@@ -22,6 +22,7 @@
 #include "mir/frontend/surface.h"
 #include "mir/compositor/compositor_id.h"
 #include "mir/optional_value.h"
+#include "mir/observer_registrar.h"
 #include "surface_state_tracker.h"
 
 #include <vector>
@@ -30,7 +31,6 @@
 namespace mir
 {
 namespace shell { class InputTargeter; }
-namespace geometry { struct Rectangle; }
 namespace graphics { class CursorImage; }
 namespace compositor { class BufferStream; }
 namespace scene
@@ -47,7 +47,8 @@ class Session;
 
 class Surface :
     public input::Surface,
-    public frontend::Surface
+    public frontend::Surface,
+    public ObserverRegistrar<SurfaceObserver>
 {
 public:
     // resolve ambiguous member function names
@@ -95,9 +96,6 @@ public:
     
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override = 0;
     virtual std::shared_ptr<graphics::CursorImage> cursor_image() const override = 0;
-
-    virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
-    virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) = 0;
 
     virtual void set_reception_mode(input::InputReceptionMode mode) = 0;
 

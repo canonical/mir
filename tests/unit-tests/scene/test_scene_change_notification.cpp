@@ -68,7 +68,7 @@ TEST_F(SceneChangeNotificationTest, fowards_all_observations_to_callback)
 
 TEST_F(SceneChangeNotificationTest, registers_observer_with_surfaces)
 {
-    EXPECT_CALL(*surface, add_observer(testing::_))
+    EXPECT_CALL(*surface, register_interest(testing::_))
         .Times(1);
 
     ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
@@ -77,7 +77,7 @@ TEST_F(SceneChangeNotificationTest, registers_observer_with_surfaces)
 
 TEST_F(SceneChangeNotificationTest, registers_observer_with_existing_surfaces)
 {
-    EXPECT_CALL(*surface, add_observer(testing::_))
+    EXPECT_CALL(*surface, register_interest(testing::_))
         .Times(1);
 
     ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
@@ -87,8 +87,8 @@ TEST_F(SceneChangeNotificationTest, registers_observer_with_existing_surfaces)
 TEST_F(SceneChangeNotificationTest, observes_surface_changes)
 {
     using namespace ::testing;
-    std::shared_ptr<ms::SurfaceObserver> surface_observer;
-    EXPECT_CALL(*surface, add_observer(_)).Times(1)
+    std::weak_ptr<ms::SurfaceObserver> surface_observer;
+    EXPECT_CALL(*surface, register_interest(_)).Times(1)
         .WillOnce(SaveArg<0>(&surface_observer));
    
     int buffer_num{3}; 
@@ -97,16 +97,16 @@ TEST_F(SceneChangeNotificationTest, observes_surface_changes)
 
     ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(surface);
-    surface_observer->frame_posted(surface.get(), buffer_num, {});
+    surface_observer.lock()->frame_posted(surface.get(), buffer_num, {});
 }
 
 TEST_F(SceneChangeNotificationTest, redraws_on_rename)
 {
     using namespace ::testing;
 
-    std::shared_ptr<ms::SurfaceObserver> surface_observer;
+    std::weak_ptr<ms::SurfaceObserver> surface_observer;
 
-    EXPECT_CALL(*surface, add_observer(_)).Times(1)
+    EXPECT_CALL(*surface, register_interest(_)).Times(1)
         .WillOnce(SaveArg<0>(&surface_observer));
 
     ms::SceneChangeNotification observer(scene_change_callback,
@@ -114,16 +114,16 @@ TEST_F(SceneChangeNotificationTest, redraws_on_rename)
     observer.surface_added(surface);
 
     EXPECT_CALL(scene_callback, invoke()).Times(1);
-    surface_observer->renamed(surface.get(), "Something New");
+    surface_observer.lock()->renamed(surface.get(), "Something New");
 }
 
 TEST_F(SceneChangeNotificationTest, destroying_observer_unregisters_surface_observers)
 {
     using namespace ::testing;
     
-    EXPECT_CALL(*surface, add_observer(_))
+    EXPECT_CALL(*surface, register_interest(_))
         .Times(1);
-    EXPECT_CALL(*surface, remove_observer(_))
+    EXPECT_CALL(*surface, unregister_interest(_))
         .Times(1);
     {
         ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);
@@ -134,9 +134,9 @@ TEST_F(SceneChangeNotificationTest, destroying_observer_unregisters_surface_obse
 TEST_F(SceneChangeNotificationTest, ending_observation_unregisters_observers)
 {
     using namespace ::testing;
-    EXPECT_CALL(*surface, add_observer(_))
+    EXPECT_CALL(*surface, register_interest(_))
         .Times(1);
-    EXPECT_CALL(*surface, remove_observer(_))
+    EXPECT_CALL(*surface, unregister_interest(_))
         .Times(1);
 
     ms::SceneChangeNotification observer(scene_change_callback, buffer_change_callback);

@@ -32,7 +32,6 @@ class Logger;
 namespace geometry
 {
 class Rectangles;
-class Rectangle;
 }
 namespace report
 {

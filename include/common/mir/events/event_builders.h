@@ -25,12 +25,14 @@
 #include "mir/geometry/displacement.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/events/input_device_state.h"
+#include "mir/events/scroll_axis.h"
 #include "mir/events/contact_state.h"
 
 #include <memory>
 #include <functional>
 #include <chrono>
 #include <vector>
+#include <optional>
 
 namespace mir
 {
@@ -95,6 +97,20 @@ void add_touch(
     float touch_minor_value,
     float size_value);
 
+// Pointer event with all properties, using Mir geometry types
+EventUPtr make_pointer_event(
+    MirInputDeviceId device_id,
+    std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& cookie,
+    MirInputEventModifiers mods,
+    MirPointerAction action,
+    MirPointerButtons buttons,
+    std::optional<mir::geometry::PointF> position,
+    mir::geometry::DisplacementF motion,
+    MirPointerAxisSource axis_source,
+    events::ScrollAxisH h_scroll,
+    events::ScrollAxisV v_scroll);
+
 // Pointer event
 EventUPtr make_pointer_event(
     MirInputDeviceId device_id,
@@ -144,8 +160,8 @@ EventUPtr make_pointer_axis_with_stop_event(
     float relative_x_value,
     float relative_y_value);
 
-// Pointer axis hi-res scroll event
-EventUPtr make_pointer_axis_value120_scroll_event(
+// Pointer axis discrete scroll event
+EventUPtr make_pointer_axis_discrete_scroll_event(
     MirPointerAxisSource axis_source,
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
@@ -155,8 +171,8 @@ EventUPtr make_pointer_axis_value120_scroll_event(
     MirPointerButtons buttons_pressed,
     float hscroll_value,
     float vscroll_value,
-    float hscroll_value120,
-    float vscroll_value120);
+    float hscroll_discrete,
+    float vscroll_discrete);
 
 // Input configuration event
 EventUPtr make_input_configure_event(

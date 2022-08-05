@@ -39,7 +39,7 @@ bool renderable_is_occluded(
         return false;  // Weirdly transformed. Assume never occluded.
 
     auto const& window = renderable.screen_position();
-    auto const& clipped_window = window.intersection_with(area);
+    auto const& clipped_window = intersection_of(window, area);
 
     if (clipped_window == empty)
         return true;  // Not in the area; definitely occluded.

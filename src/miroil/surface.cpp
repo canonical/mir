@@ -18,6 +18,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/log.h"
+#include "mir/executor.h"
 
 class miroil::SurfaceObserverImpl : public mir::scene::SurfaceObserver
 {
@@ -175,7 +176,7 @@ void miroil::Surface::add_observer(std::shared_ptr<SurfaceObserver> const& obser
     if (it == observers.end()) {
         std::shared_ptr<SurfaceObserverImpl> impl = std::make_shared<SurfaceObserverImpl>(observer);
         
-        wrapped->add_observer(impl);
+        wrapped->register_interest(impl, mir::immediate_executor);
         observers.insert({observer, impl});
     }
 }
@@ -190,7 +191,7 @@ void miroil::Surface::remove_observer(std::shared_ptr<miroil::SurfaceObserver> c
 {
     auto it = observers.find(observer);
     if (it != observers.end()) {        
-        wrapped->remove_observer(it->second);
+        wrapped->unregister_interest(*it->second);
         observers.erase(it);        
     }
 }

@@ -24,6 +24,7 @@
 #include "mir/input/touchscreen_settings.h"
 #include "mir/input/input_device_info.h"
 #include "mir/geometry/point.h"
+#include "mir/geometry/displacement.h"
 
 #include <mutex>
 #include <functional>
@@ -100,7 +101,8 @@ private:
         mir::input::EventBuilder* builder{nullptr};
         mir::input::InputDeviceInfo info;
         std::shared_ptr<mir::dispatch::Dispatchable> const queue;
-        mir::geometry::Point pos, scroll;
+        mir::geometry::PointF pos;
+        mir::geometry::DisplacementF scroll;
         MirPointerButtons buttons;
         mir::input::PointerSettings settings;
         mir::input::TouchscreenSettings touchscreen;

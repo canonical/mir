@@ -73,6 +73,7 @@ MIR_COMMON_2.8 {
     mir::events::make_input_configure_event*;
     mir::events::make_key_event*;
     mir::events::make_keymap_event*;
+    mir::events::make_pointer_axis_discrete_scroll_event*;
     mir::events::make_pointer_axis_event*;
     mir::events::make_pointer_event*;
     mir::events::make_prompt_session_state_event*;
@@ -512,6 +513,13 @@ MIR_COMMON_2.9 {
     vtable?for?mir::logging::FileLogger;
     vtable?for?mir::logging::MultiLogger;
     mir::immediate_executor;
-    mir::events::make_pointer_axis_value120_scroll_event*;
+    MirPointerEvent::position*;
+    MirPointerEvent::set_position*;
+    MirPointerEvent::motion*;
+    MirPointerEvent::set_motion*;
+    MirPointerEvent::h_scroll*;
+    MirPointerEvent::set_h_scroll*;
+    MirPointerEvent::v_scroll*;
+    MirPointerEvent::set_v_scroll*;
   };
 } MIR_COMMON_2.8;

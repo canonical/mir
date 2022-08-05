@@ -29,7 +29,6 @@ namespace mir
 namespace geometry
 {
 class Rectangles;
-class Rectangle;
 }
 namespace input
 {

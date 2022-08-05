@@ -34,6 +34,7 @@
 
 
 namespace ml = mir::logging;
+namespace geom = mir::geometry;
 
 
 namespace
@@ -288,21 +289,25 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
    switch (axis)
    {
    case mir_pointer_axis_x:
-       return pev->x();
+       return pev->position().value_or(geom::PointF{}).x.as_value();
    case mir_pointer_axis_y:
-       return pev->y();
+       return pev->position().value_or(geom::PointF{}).y.as_value();
    case mir_pointer_axis_relative_x:
-       return pev->dx();
+       return pev->motion().dx.as_value();
    case mir_pointer_axis_relative_y:
-       return pev->dy();
+       return pev->motion().dy.as_value();
    case mir_pointer_axis_vscroll:
-       return pev->vscroll();
+       return pev->v_scroll().precise.as_value();
    case mir_pointer_axis_hscroll:
-       return pev->hscroll();
-    case mir_pointer_axis_vscroll_value120:
-        return pev->vscroll_value120();
-    case mir_pointer_axis_hscroll_value120:
-        return pev->hscroll_value120();
+       return pev->h_scroll().precise.as_value();
+   case mir_pointer_axis_vscroll_discrete:
+       return pev->v_scroll().discrete.as_value();
+   case mir_pointer_axis_hscroll_discrete:
+       return pev->h_scroll().discrete.as_value();
+   case mir_pointer_axis_vscroll_value120:
+       return pev->v_scroll().value120.as_value();
+   case mir_pointer_axis_hscroll_value120:
+       return pev->h_scroll().value120.as_value();
    default:
        mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
        abort();
@@ -314,13 +319,17 @@ bool mir_pointer_event_axis_stop(MirPointerEvent const* pev, MirPointerAxis axis
    switch (axis)
    {
    case mir_pointer_axis_vscroll:
-       return pev->vscroll_stop();
+       return pev->v_scroll().stop;
    case mir_pointer_axis_hscroll:
-       return pev->hscroll_stop();
+       return pev->h_scroll().stop;
    case mir_pointer_axis_x:
    case mir_pointer_axis_y:
    case mir_pointer_axis_relative_x:
    case mir_pointer_axis_relative_y:
+   case mir_pointer_axis_vscroll_discrete:
+   case mir_pointer_axis_hscroll_discrete:
+   case mir_pointer_axis_vscroll_value120:
+   case mir_pointer_axis_hscroll_value120:
        return false;
    default:
        mir::log_critical("Invalid axis enumeration " + std::to_string(axis));

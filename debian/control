@@ -466,7 +466,7 @@ Description: Display server for Ubuntu - GL Renderer development files
  Contains header files that define the interfaces through which platforms and
  renderers access the functionality needed to render with GL.
 
-Package: libmiral4
+Package: libmiral5
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -484,7 +484,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiral4 (= ${libmiral4:Version}),
+Depends: libmiral5 (= ${libmiral5:Version}),
 # ${source:Version} is technically incorrect, but Launchpad doesn't do BinNMUs
 # so it's harmless.
          libmircommon-dev (= ${source:Version}),
@@ -496,7 +496,7 @@ Description: Developer files for the Mir ABI-stable abstraction layer
  Contains header files required for development using the MirAL abstraction
  layer.
 
-Package: libmiroil1
+Package: libmiroil2
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -513,7 +513,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiroil1 (= ${binary:Version}),
+Depends: libmiroil2 (= ${binary:Version}),
          ${misc:Depends},
 Description: Developer files for the Mir Lomiri compatibility library
  MirOil provides the Lomiri compatibility API.

@@ -88,10 +88,22 @@ public:
         bool hscroll_stop, bool vscroll_stop,
         float relative_x_value, float relative_y_value) override;
 
-    EventUPtr pointer_axis_value120_scroll_event(
+    EventUPtr pointer_axis_discrete_scroll_event(
         MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
-        MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value, float hscroll_value120,
-        float vscroll_value120) override;
+        MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value, float hscroll_discrete,
+        float vscroll_discrete) override;
+
+    // Intentionally uses ScrollAxisV1* instad of ScrollAxis* as a reminder that a new copy of this function will be
+    // needed for each ScrollAxis struct version.
+    EventUPtr pointer_event(
+        std::optional<Timestamp> timestamp,
+        MirPointerAction action,
+        MirPointerButtons buttons,
+        std::optional<mir::geometry::PointF> position,
+        mir::geometry::DisplacementF motion,
+        MirPointerAxisSource axis_source,
+        events::ScrollAxisV1H h_scroll,
+        events::ScrollAxisV1V v_scroll) override;
 
 private:
     auto calibrate_timestamp(std::optional<Timestamp> source_timestamp) -> Timestamp;

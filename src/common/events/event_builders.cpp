@@ -185,8 +185,7 @@ void mev::set_cursor_position(MirEvent& event, float x, float y)
         event.to_input()->input_type() != mir_input_event_type_pointer)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
 
-    event.to_input()->to_pointer()->set_x(x);
-    event.to_input()->to_pointer()->set_y(y);
+    event.to_input()->to_pointer()->set_position({{x, y}});
 }
 
 void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
@@ -240,6 +239,35 @@ void mev::add_touch(
     tev->set_action(current_index, action);
 }
 
+// Intentionally uses ScrollAxisV1* instad of ScrollAxis* as a reminder that a new copy of this function will be needed
+// for each ScrollAxis struct version.
+mir::EventUPtr mev::make_pointer_event(
+    MirInputDeviceId device_id,
+    std::chrono::nanoseconds timestamp,
+    std::vector<uint8_t> const& cookie,
+    MirInputEventModifiers mods,
+    MirPointerAction action,
+    MirPointerButtons buttons,
+    std::optional<geom::PointF> position,
+    geom::DisplacementF motion,
+    MirPointerAxisSource axis_source,
+    events::ScrollAxisV1H h_scroll,
+    events::ScrollAxisV1V v_scroll)
+{
+    return make_uptr_event(new MirPointerEvent(
+        device_id,
+        timestamp,
+        cookie,
+        mods,
+        action,
+        buttons,
+        position,
+        motion,
+        axis_source,
+        h_scroll,
+        v_scroll));
+}
+
 mir::EventUPtr mev::make_pointer_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
@@ -254,9 +282,13 @@ mir::EventUPtr mev::make_pointer_event(
     float relative_x_value,
     float relative_y_value)
 {
-    auto e = new_event<MirPointerEvent>(device_id, timestamp, modifiers, cookie, action, buttons_pressed, x_axis_value,
-                                        y_axis_value, relative_x_value, relative_y_value, vscroll_value, hscroll_value);
-    return make_uptr_event(e);
+    return make_pointer_event(
+        device_id, timestamp, cookie, modifiers, action, buttons_pressed,
+        geom::PointF{x_axis_value, y_axis_value},
+        geom::DisplacementF{relative_x_value, relative_y_value},
+        mir_pointer_axis_source_none,
+        {geom::DeltaXF{hscroll_value}, {}, false},
+        {geom::DeltaYF{vscroll_value}, {}, false});
 }
 
 mir::EventUPtr mir::events::make_pointer_axis_event(
@@ -274,12 +306,13 @@ mir::EventUPtr mir::events::make_pointer_axis_event(
     float relative_x_value,
     float relative_y_value)
 {
-    auto const e = new_event<MirPointerEvent>(
-        device_id, timestamp, modifiers, cookie, action, buttons_pressed, x_axis_value,
-        y_axis_value, relative_x_value, relative_y_value, vscroll_value, hscroll_value);
-    e->set_axis_source(axis_source);
-
-    return make_uptr_event(e);
+    return make_pointer_event(
+        device_id, timestamp, cookie, modifiers, action, buttons_pressed,
+        geom::PointF{x_axis_value, y_axis_value},
+        geom::DisplacementF{relative_x_value, relative_y_value},
+        axis_source,
+        {geom::DeltaXF{hscroll_value}, {}, false},
+        {geom::DeltaYF{vscroll_value}, {}, false});
 }
 
 mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
@@ -299,17 +332,16 @@ mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
     float relative_x_value,
     float relative_y_value)
 {
-    auto const e = new_event<MirPointerEvent>(
-        device_id, timestamp, modifiers, cookie, action, buttons_pressed, x_axis_value,
-        y_axis_value, relative_x_value, relative_y_value, vscroll_value, hscroll_value);
-    e->set_axis_source(axis_source);
-    e->set_hscroll_stop(hscroll_stop);
-    e->set_vscroll_stop(vscroll_stop);
-
-    return make_uptr_event(e);
+    return make_pointer_event(
+        device_id, timestamp, cookie, modifiers, action, buttons_pressed,
+        geom::PointF{x_axis_value, y_axis_value},
+        geom::DisplacementF{relative_x_value, relative_y_value},
+        axis_source,
+        {geom::DeltaXF{hscroll_value}, {}, hscroll_stop},
+        {geom::DeltaYF{vscroll_value}, {}, vscroll_stop});
 }
 
-mir::EventUPtr mir::events::make_pointer_axis_value120_scroll_event(
+mir::EventUPtr mir::events::make_pointer_axis_discrete_scroll_event(
     MirPointerAxisSource axis_source,
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
@@ -319,16 +351,16 @@ mir::EventUPtr mir::events::make_pointer_axis_value120_scroll_event(
     MirPointerButtons buttons_pressed,
     float hscroll_value,
     float vscroll_value,
-    float hscroll_value120,
-    float vscroll_value120)
+    float hscroll_discrete,
+    float vscroll_discrete)
 {
-    auto const e = new_event<MirPointerEvent>(
-        device_id, timestamp, modifiers, mac, action, buttons_pressed, 0, 0, 0, 0, vscroll_value, hscroll_value);
-    e->set_axis_source(axis_source);
-    e->set_hscroll_value120(hscroll_value120);
-    e->set_vscroll_value120(vscroll_value120);
-
-    return make_uptr_event(e);
+    return make_pointer_event(
+        device_id, timestamp, mac, modifiers, action, buttons_pressed,
+        std::nullopt,
+        geom::DisplacementF{},
+        axis_source,
+        {geom::DeltaXF{hscroll_value}, geom::DeltaX{hscroll_discrete}, false},
+        {geom::DeltaYF{vscroll_value}, geom::DeltaY{vscroll_discrete}, false});
 }
 
 mir::EventUPtr mev::make_input_configure_event(
@@ -363,8 +395,10 @@ void mev::transform_positions(MirEvent& event, mir::geometry::Displacement const
         if (input_type == mir_input_event_type_pointer)
         {
             auto pev = event.to_input()->to_pointer();
-            pev->set_x(pev->x() - movement.dx.as_int());
-            pev->set_y(pev->y() - movement.dy.as_int());
+            if (auto const position = pev->position())
+            {
+                pev->set_position(position.value() - geom::DisplacementF{movement});
+            }
         }
         else if (input_type == mir_input_event_type_touch)
         {
@@ -388,8 +422,10 @@ void mev::scale_positions(MirEvent& event, float scale)
         if (input_type == mir_input_event_type_pointer)
         {
             auto pev = event.to_input()->to_pointer();
-            pev->set_x(pev->x() * scale);
-            pev->set_y(pev->y() * scale);
+            if (auto const position = pev->position())
+            {
+                pev->set_position(as_point(as_displacement(position.value()) * scale));
+            }
         }
         else if (input_type == mir_input_event_type_touch)
         {
