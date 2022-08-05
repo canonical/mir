@@ -90,6 +90,7 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
         auto const serial = wl_display_next_serial(wl_client_get_display(client));
         send_enter_event(serial, surface->raw_resource(), &key_state);
         wl_array_release(&key_state);
+        send_modifiers_event(serial, depressed_modifiers, latched_modifiers, locked_modifiers, group_modifiers);
     }
 }
 
@@ -112,6 +113,11 @@ void mf::WlKeyboard::send_key(uint32_t timestamp, int scancode, bool down)
 
 void mf::WlKeyboard::send_modifiers(uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group)
 {
+    depressed_modifiers = depressed;
+    latched_modifiers = latched;
+    locked_modifiers = locked;
+    group_modifiers = group;
+
     auto const serial = wl_display_get_serial(wl_client_get_display(client));
     send_modifiers_event(serial, depressed, latched, locked, group);
 }
