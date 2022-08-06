@@ -58,8 +58,6 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
         send_leave_event(serial, focused_surface.value().raw_resource());
     }
 
-    focused_surface = mw::make_weak(surface);
-
     if (surface)
     {
         // TODO: Send the surface's keymap here
@@ -92,6 +90,8 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
         wl_array_release(&key_state);
         send_modifiers_event(serial, depressed_modifiers, latched_modifiers, locked_modifiers, group_modifiers);
     }
+
+    focused_surface = mw::make_weak(surface);
 }
 
 void mf::WlKeyboard::send_repeat_info(int32_t rate, int32_t delay)
@@ -118,6 +118,9 @@ void mf::WlKeyboard::send_modifiers(uint32_t depressed, uint32_t latched, uint32
     locked_modifiers = locked;
     group_modifiers = group;
 
-    auto const serial = wl_display_get_serial(wl_client_get_display(client));
-    send_modifiers_event(serial, depressed, latched, locked, group);
+    if (focused_surface)
+    {
+        auto const serial = wl_display_get_serial(wl_client_get_display(client));
+        send_modifiers_event(serial, depressed, latched, locked, group);
+    }
 }
