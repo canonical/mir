@@ -129,6 +129,14 @@ if (MIR_BUILD_PLATFORM_GBM_KMS)
   add_compile_definitions(MIR_BUILD_PLATFORM_GBM_KMS)
 endif()
 
+if (MIR_BUILD_PLATFORM_X11)
+  add_compile_definitions(MIR_BUILD_PLATFORM_X11)
+endif()
+
+if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+  add_compile_definitions(MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+endif()
+
 # public headers (only public headers should be accessed by acceptance tests)
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/miral
@@ -150,6 +158,9 @@ cmake_dependent_option(MIR_BUILD_INTERPROCESS_TESTS
   "Build interprocess acceptance tests as part of default testing" ON
   "MIR_BUILD_ACCEPTANCE_TESTS" OFF)
 
+if (MIR_BUILD_UNIT_TESTS)
+  add_subdirectory(unit-tests/)
+endif (MIR_BUILD_UNIT_TESTS)
 
 if (MIR_BUILD_ACCEPTANCE_TESTS)
   add_subdirectory(acceptance-tests/)
@@ -172,10 +183,6 @@ include_directories(
 if (MIR_BUILD_INTEGRATION_TESTS)
   add_subdirectory(integration-tests/)
 endif (MIR_BUILD_INTEGRATION_TESTS)
-
-if (MIR_BUILD_UNIT_TESTS)
-  add_subdirectory(unit-tests/)
-endif (MIR_BUILD_UNIT_TESTS)
 
 if (MIR_BUILD_PLATFORM_TEST_HARNESS)
   add_subdirectory(platform_test_harness/)

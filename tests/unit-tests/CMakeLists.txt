@@ -4,18 +4,6 @@ add_compile_definitions(
   MIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
 )
 
-if (MIR_BUILD_PLATFORM_GBM_KMS)
-  add_compile_definitions(MIR_BUILD_PLATFORM_GBM_KMS)
-endif()
-
-if (MIR_BUILD_PLATFORM_X11)
-  add_compile_definitions(MIR_BUILD_PLATFORM_X11)
-endif()
-
-if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-  add_compile_definitions(MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-endif()
-
 include_directories(
   ${CMAKE_SOURCE_DIR}
 
@@ -32,6 +20,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/gl
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
   ${PROJECT_SOURCE_DIR}/src/platforms/common/server
+  ${PROJECT_SOURCE_DIR}/tests/include
   ${GLIB_INCLUDE_DIRS}
   ${GIO_INCLUDE_DIRS}
 )
@@ -44,9 +33,6 @@ set_target_properties(
   OUTPUT_NAME example
   PREFIX ""
 )
-
-# Umockdev uses glib, which uses the deprecated "register" allocation specifier
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
 set(UMOCK_UNIT_TEST_SOURCES test_udev_wrapper.cpp)
 

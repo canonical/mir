@@ -34,17 +34,12 @@ mir_add_wrapped_executable(mir_integration_tests NOINSTALL
 if (MIR_USE_PRECOMPILED_HEADERS)
   target_precompile_headers(
     mir_integration_tests
-    PRIVATE
-      <gmock/gmock.h>
-      <gtest/gtest.h>
-      <vector>
-      <string>
-      <exception>
-      <memory>
+    REUSE_FROM
+    mir_unit_tests
   )
 endif()
 
-add_dependencies(mir_integration_tests GMock)
+add_dependencies(mir_integration_tests GMock mir_unit_tests)
 
 target_link_libraries(
   mir_integration_tests

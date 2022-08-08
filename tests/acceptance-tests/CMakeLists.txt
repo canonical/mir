@@ -35,17 +35,12 @@ target_link_libraries(
 if (MIR_USE_PRECOMPILED_HEADERS)
   target_precompile_headers(
     mir_acceptance_tests
-    PRIVATE
-      <gmock/gmock.h>
-      <gtest/gtest.h>
-      <vector>
-      <string>
-      <exception>
-      <memory>
+    REUSE_FROM
+    mir_unit_tests
   )
 endif()
 
-add_dependencies(mir_acceptance_tests GMock)
+add_dependencies(mir_acceptance_tests GMock mir_unit_tests)
 
 target_link_libraries(mir_acceptance_tests
   mir-test-assist
