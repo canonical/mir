@@ -168,7 +168,8 @@ void mf::KeyboardHelper::set_keymap(std::shared_ptr<mi::Keymap> const& new_keyma
         compiled_keymap.get(),
         XKB_KEYMAP_FORMAT_TEXT_V1),
         free};
-    auto length = strlen(buffer.get());
+    // so the null terminator is included
+    auto length = strlen(buffer.get()) + 1;
 
     mir::AnonymousShmFile shm_buffer{length};
     memcpy(shm_buffer.base_ptr(), buffer.get(), length);
