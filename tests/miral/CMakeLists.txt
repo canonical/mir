@@ -55,7 +55,7 @@ set_source_files_properties(static_display_config.cpp PROPERTIES COMPILE_FLAGS
     "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/common")
 
 target_include_directories(miral-test-internal
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/miral)
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/miral ${PROJECT_SOURCE_DIR}/tests/include)
 
 target_link_libraries(miral-test-internal
     miral-internal
