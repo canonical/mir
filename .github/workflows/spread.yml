@@ -76,17 +76,9 @@ jobs:
 
     - name: Set up Spread
       run: |
-        set -e
-        if ${{ !startsWith(matrix.spread-task, 'lxd:') }}; then
-          sudo snap install spread
-          timeout 600 sh -c 'while snap changes | grep Doing; do sleep 5; done'
-          sudo snap connect spread:home
-        else
-          curl -s -O https://people.canonical.com/~chrishr/spread.snap
-          sudo snap install --dangerous spread.snap
-          sudo snap connect spread:lxd lxd:lxd
-          echo "LXD_DIR=/var/snap/lxd/common/lxd" >> $GITHUB_ENV
-        fi
+        wget https://storage.googleapis.com/snapd-spread-tests/spread/spread-amd64.tar.gz
+        tar xzf spread-amd64.tar.gz -C ..
+        chmod +x ../spread
 
     - name: Check out code
       uses: actions/checkout@v2
@@ -94,4 +86,4 @@ jobs:
     - name: Run Spread task
       env:
         SPREAD_GOOGLE_KEY: ${{ secrets.SPREAD_GOOGLE_KEY }}
-      run: snap run spread -v ${{ matrix.spread-task }}
+      run: ../spread -v ${{ matrix.spread-task }}
