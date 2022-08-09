@@ -83,8 +83,7 @@ auto load_keymap(uint32_t format, mir::Fd fd, size_t size) -> std::shared_ptr<mi
         }
     }
 
-    // Keymaps seem to be null-terminated. It's unclear if they're supposed to be or not. Either way, BufferKeymap does
-    // not expect a null-terminated keymap
+    // Keymaps are null-terminated, BufferKeymap does not expect a null-terminated buffer
     while (buffer.back() == '\0')
     {
         buffer.pop_back();
