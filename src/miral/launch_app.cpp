@@ -20,6 +20,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <unistd.h>
+#include <signal.h>
 
 #include <cstring>
 #include <stdexcept>
@@ -110,6 +111,11 @@ auto miral::launch_app_env(
             exec_args.push_back(arg.c_str());
 
         exec_args.push_back(nullptr);
+
+        mir::log_debug("Restoring sigmask");
+        sigset_t all_signals;
+        sigfillset(&all_signals);
+        pthread_sigmask(SIG_UNBLOCK, &all_signals, nullptr);
 
         execvp(exec_args[0], const_cast<char*const*>(exec_args.data()));
 
