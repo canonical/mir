@@ -14,6 +14,7 @@ include_directories(
 
 set(
   INTEGRATION_TESTS_SRCS
+  test_custom_input_dispatcher.cpp
   test_touchspot_visualization.cpp
   test_surface_stack_with_compositor.cpp
   test_display_server_main_loop_events.cpp

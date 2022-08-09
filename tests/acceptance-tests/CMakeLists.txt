@@ -16,7 +16,6 @@ set(
   server_configuration_options.cpp
   server_stop_callback.cpp
   test_command_line_handling.cpp
-  test_custom_input_dispatcher.cpp
   test_input_device_hub.cpp
   test_seat_report.cpp
 )
