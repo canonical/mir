@@ -123,6 +123,8 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::Output::used() const@MIRAL_3.6" 3.6.0
  (c++)"miral::Output::valid() const@MIRAL_3.6" 3.6.0
  (c++)"miral::Output::~Output()@MIRAL_3.6" 3.6.0
+ (c++)"miral::PrependEventFilter::PrependEventFilter(std::function<bool (MirEvent const*)> const&)@MIRAL_3.6" 3.6.0
+ (c++)"miral::PrependEventFilter::operator()(mir::Server&)@MIRAL_3.6" 3.6.0
  (c++)"miral::SetCommandLineHandler::SetCommandLineHandler(std::function<void (int, char const* const*)> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::SetCommandLineHandler::operator()(mir::Server&) const@MIRAL_3.6" 3.6.0
  (c++)"miral::SetCommandLineHandler::~SetCommandLineHandler()@MIRAL_3.6" 3.6.0
