@@ -159,3 +159,36 @@ TEST(MultiplexingDisplay, configuration_is_union_of_all_displays)
     expected_outputs.insert(expected_outputs.end(), third_display_conf.begin(), third_display_conf.end());
     EXPECT_THAT(visible_conf, UnorderedElementsAreArray(expected_outputs));
 }
+
+TEST(MultiplexingDisplay, dispatches_configure_to_associated_platform)
+{
+    using namespace testing;
+
+    DisplayConfigurationOutputGenerator gen1{5}, gen2{42};
+
+    auto d1 = std::make_unique<NiceMock<mtd::MockDisplay>>();
+    auto d2 = std::make_unique<NiceMock<mtd::MockDisplay>>();
+
+    auto conf1 = std::make_unique<mtd::StubDisplayConfig>(
+        std::vector<mg::DisplayConfigurationOutput>{ gen1.generate_output(), gen1.generate_output() });
+    auto conf2 = std::make_unique<mtd::StubDisplayConfig>(
+        std::vector<mg::DisplayConfigurationOutput>{ gen2.generate_output() });
+
+    // Each Display should get a configure() call with only its own configuration
+    EXPECT_CALL(*d1, configure(Address(conf1.get())));
+    EXPECT_CALL(*d2, configure(Address(conf2.get())));
+
+    EXPECT_CALL(*d1, configuration())
+        .WillOnce(Invoke([&conf1]() mutable { return std::move(conf1); }));
+    EXPECT_CALL(*d2, configuration())
+        .WillOnce(Invoke([&conf2]() mutable { return std::move(conf2); }));
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    displays.push_back(std::move(d1));
+    displays.push_back(std::move(d2));
+
+    mg::MultiplexingDisplay display{std::move(displays)};
+    auto conf = display.configuration();
+
+    display.configure(*conf);
+}
