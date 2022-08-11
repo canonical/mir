@@ -181,6 +181,12 @@ typedef enum {
     mir_pointer_axis_vscroll_discrete = 6,
 /* Relative axis containing physical mouse wheel clicks reported by the horizontal scroll wheel */
     mir_pointer_axis_hscroll_discrete = 7,
+/* Relative axis containing fractional values of 120 for high-res scrolling as reported by the vertical scroll wheel */
+/* When a discrete value is given (libinput < 1.19), value120 is determined by multiplying (discrete * 120) */
+    mir_pointer_axis_vscroll_value120 = 8,
+/* Relative axis containing fractional values of 120 for high-res scrolling as reported by the horizontal scroll wheel */
+/* When a discrete value is given (libinput < 1.19), value120 is determined by multiplying (discrete * 120) */
+    mir_pointer_axis_hscroll_value120 = 9,
 
     mir_pointer_axes
 } MirPointerAxis;

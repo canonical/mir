@@ -521,5 +521,6 @@ MIR_COMMON_2.9 {
     MirPointerEvent::set_h_scroll*;
     MirPointerEvent::v_scroll*;
     MirPointerEvent::set_v_scroll*;
+    MirPointerEvent::axis_source*;
   };
 } MIR_COMMON_2.8;

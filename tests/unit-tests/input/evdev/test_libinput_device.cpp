@@ -558,19 +558,48 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
         Eq(std::nullopt), geom::DisplacementF{},
         mir_pointer_axis_source_wheel,
         mev::ScrollAxisH{},
-        mev::ScrollAxisV{geom::DeltaYF{-20}, geom::DeltaY{2}, false}));
+        mev::ScrollAxisV{geom::DeltaYF{-20}, geom::DeltaY{2}, geom::DeltaY{240}, false}));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -20.0f)));
     EXPECT_CALL(mock_builder, pointer_event(
         {time_stamp_2}, mir_pointer_action_motion, 0,
         Eq(std::nullopt), geom::DisplacementF{},
         mir_pointer_axis_source_wheel,
-        mev::ScrollAxisH{geom::DeltaXF{5}, geom::DeltaX{1}, false},
+        mev::ScrollAxisH{geom::DeltaXF{5}, geom::DeltaX{1}, geom::DeltaX{120}, false},
         mev::ScrollAxisV{{}, {}, false}));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 5.0f)));
 
     mouse.start(&mock_sink, &mock_builder);
-    env.mock_libinput.setup_axis_event(fake_device, event_time_1, {}, -20.0, 0, 2);
-    env.mock_libinput.setup_axis_event(fake_device, event_time_2, 5.0, {}, 1, 0);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, {}, -20.0, 0, 2, 0, 240);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_2, 5.0, {}, 1, 0, 120, 0);
+    process_events(mouse);
+}
+
+TEST_F(LibInputDeviceOnMouse, hi_res_scroll_is_picked_up)
+{
+#ifdef MIR_LIBINPUT_HAS_VALUE120
+    auto const expected = 165;
+#else
+    auto const expected = 120;
+#endif
+
+    EXPECT_CALL(mock_builder, pointer_event(
+        {time_stamp_1}, mir_pointer_action_motion, 0,
+        Eq(std::nullopt), geom::DisplacementF{},
+        mir_pointer_axis_source_wheel,
+        mev::ScrollAxisH{},
+        mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{1}, geom::DeltaY{expected}, false}));
+
+    mouse.start(&mock_sink, &mock_builder);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, {}, 1.0f, {}, 1, 0.0f, 165);
+    process_events(mouse);
+}
+
+TEST_F(LibInputDeviceOnMouse, hi_res_scroll_does_not_combine_with_discrete)
+{
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 1.0f)));
+
+    mouse.start(&mock_sink, &mock_builder);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, {}, 1.0f, {}, 1, 0.0f, 120.0f);
     process_events(mouse);
 }
 

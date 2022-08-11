@@ -99,7 +99,17 @@ auto get_scroll_axis(libinput_event_pointer* event, libinput_pointer_axis axis, 
         libinput_event_pointer_get_axis_source(event) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL ?
             libinput_event_pointer_get_axis_value_discrete(event, axis) :
             0};
-    return {precise, discrete, stop};
+    mir::geometry::generic::Value<int, Tag> const value120{
+#ifdef MIR_LIBINPUT_HAS_VALUE120
+        libinput_event_pointer_get_axis_source(event) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL ?
+            libinput_event_pointer_get_scroll_value_v120(event, axis) :
+            0
+#else
+        discrete.as_value() * 120
+#endif
+    };
+
+    return {precise, discrete, value120, stop};
 }
 
 auto get_axis_source(libinput_pointer_axis_source source) -> MirPointerAxisSource
