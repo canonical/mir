@@ -29,7 +29,9 @@ namespace miral
 class AppendEventFilter
 {
 public:
-    AppendEventFilter(std::function<int(MirEvent const* event)> const& filter);
+    /// The supplied filter should return true if and only if it handles the event
+    /// \remark the filter return type changed to bool in MirAL 3.6
+    explicit AppendEventFilter(std::function<bool(MirEvent const* event)> const& filter);
 
     void operator()(mir::Server& server);
 

@@ -3,7 +3,7 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"miral::AddInitCallback::AddInitCallback(std::function<void ()> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::AddInitCallback::operator()(mir::Server&) const@MIRAL_3.6" 3.6.0
  (c++)"miral::AddInitCallback::~AddInitCallback()@MIRAL_3.6" 3.6.0
- (c++)"miral::AppendEventFilter::AppendEventFilter(std::function<int (MirEvent const*)> const&)@MIRAL_3.6" 3.6.0
+ (c++)"miral::AppendEventFilter::AppendEventFilter(std::function<bool (MirEvent const*)> const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::AppendEventFilter::operator()(mir::Server&)@MIRAL_3.6" 3.6.0
  (c++)"miral::ApplicationCredentials::ApplicationCredentials(mir::frontend::SessionCredentials const&)@MIRAL_3.6" 3.6.0
  (c++)"miral::ApplicationCredentials::gid() const@MIRAL_3.6" 3.6.0

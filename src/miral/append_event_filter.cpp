@@ -23,7 +23,7 @@
 class miral::AppendEventFilter::Filter : public mir::input::EventFilter
 {
 public:
-    Filter(std::function<int(MirEvent const* event)> const& filter) :
+    Filter(std::function<bool(MirEvent const* event)> const& filter) :
         filter{filter} {}
 
     bool handle(MirEvent const& event) override
@@ -32,10 +32,10 @@ public:
     }
 
 private:
-    std::function<int(MirEvent const* event)> const filter;
+    std::function<bool(MirEvent const* event)> const filter;
 };
 
-miral::AppendEventFilter::AppendEventFilter(std::function<int(MirEvent const* event)> const& filter) :
+miral::AppendEventFilter::AppendEventFilter(std::function<bool(MirEvent const* event)> const& filter) :
     filter{std::make_shared<Filter>(filter)}
 {
 }
