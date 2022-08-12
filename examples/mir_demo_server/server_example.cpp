@@ -136,6 +136,7 @@ try
             .enable(miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1)
             .enable(miral::WaylandExtensions::zxdg_output_manager_v1)
             .enable(miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1)
+            .enable(miral::WaylandExtensions::zwlr_virtual_pointer_manager_v1)
             .enable(miral::WaylandExtensions::zwp_input_method_manager_v2)
             .enable(miral::WaylandExtensions::zwlr_screencopy_manager_v1),
         miral::set_window_management_policy<miral::MinimalWindowManager>(),
