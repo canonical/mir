@@ -24,17 +24,9 @@
 #include "mir_test_framework/interposer_helper.h"
 
 #include <boost/throw_exception.hpp>
-#include <sys/syscall.h>
+#include <dlfcn.h>
 
 namespace mtf = mir_test_framework;
-
-#ifdef SYS_mmap
-// 64-bit
-#define MMAP_SYSCALL SYS_mmap
-#else
-// 32-bit
-#define MMAP_SYSCALL SYS_mmap2
-#endif
 
 namespace
 {
@@ -53,15 +45,15 @@ void* mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
         return *val;
     }
 
-    if (offset)
-    {
-        // The libc mmap() function we're implementing takes an offset in bytes, but the mmap2 version of the syscall
-        // present on 32-bit systems takes an offset in 4kB units. It might be possible to do the right thing, but since
-        // this is just for tests and we shouldn't use offset, simply error.
-        BOOST_THROW_EXCEPTION((std::runtime_error{"wrapped mmap called with offset"}));
-    }
+    void* (*real_mmap)(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
+    *(void **)(&real_mmap) = dlsym(RTLD_NEXT, "mmap");
 
-    // We previously loaded the mmap symbol from libc, but this broke on armhf for unknown reasons. Instead, call the
-    // syscall it wraps directly.
-    return (void*)syscall(MMAP_SYSCALL, addr, length, prot, flags, fd, offset);
+    if (!real_mmap)
+    {
+        using namespace std::literals::string_literals;
+        // Oops! What has gone on here?!
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find mmap() symbol: "s + dlerror()}));
+    }
+    return (*real_mmap)(addr, length, prot, flags, fd, offset);
 }
+
