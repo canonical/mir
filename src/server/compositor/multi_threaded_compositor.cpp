@@ -189,10 +189,6 @@ public:
     catch(...)
     {
         started.set_exception(std::current_exception());
-
-        //Move the promise so that the promise destructor occurs here rather than in the thread
-        //destroying CompositingFunctor, mostly to appease TSan
-        auto promise = std::move(started);
     }
 
     void schedule_compositing(int num_frames)
