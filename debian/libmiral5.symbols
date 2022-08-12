@@ -408,3 +408,4 @@ libmiral.so.5 libmiral5 #MINVER#
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_3.6" 3.6.0
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_3.6" 3.6.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_3.6" 3.6.0
+ (c++)"miral::Zone::id() const@MIRAL_3.6" 3.6.0
