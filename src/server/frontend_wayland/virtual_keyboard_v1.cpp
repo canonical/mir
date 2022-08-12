@@ -27,6 +27,7 @@
 #include "mir/log.h"
 
 #include <cstring>
+#include <sys/mman.h>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
@@ -57,31 +58,14 @@ auto load_keymap(uint32_t format, mir::Fd fd, size_t size) -> std::shared_ptr<mi
         BOOST_THROW_EXCEPTION(std::runtime_error("invalid keymap format " + std::to_string(format)));
     }
 
-    std::vector<char> buffer(size);
-    char* current = buffer.data();
-    size_t remaining = size;
-    while (remaining > 0)
+    void* const data = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (data == MAP_FAILED)
     {
-        auto const result = read(fd, current, remaining);
-        if (result < 0)
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error(
-                "failed to read from keymap fd: " +
-                std::string{strerror(errno)}));
-        }
-        else if (result == 0)
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error(
-                "keymap fd hit EOF " +
-                std::to_string(remaining) +
-                " bytes before specified size"));
-        }
-        else
-        {
-            current += result;
-            remaining -= result;
-        }
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "failed to mmap keymap fd"));
     }
+    std::vector<char> buffer(size);
+    memcpy(buffer.data(), data, size);
+    munmap(data, size);
 
     // Keymaps are null-terminated, BufferKeymap does not expect a null-terminated buffer
     while (buffer.back() == '\0')
