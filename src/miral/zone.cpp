@@ -78,3 +78,8 @@ void miral::Zone::extents(Rectangle const& extents)
 {
     self->extents = extents;
 }
+
+auto miral::Zone::id() const -> int
+{
+    return self->id.as_value();
+}

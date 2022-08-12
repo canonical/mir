@@ -55,6 +55,9 @@ public:
     /// Does not make this a different zone
     void extents(Rectangle const& extents);
 
+    /// An arbitrary number that uniquely identifies this zone, reguardless of how it is resized and moved
+    auto id() const -> int;
+
 private:
     class Self;
     std::unique_ptr<Self> self;
