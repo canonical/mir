@@ -64,6 +64,7 @@ add_library(miral SHARED
     window_management_options.cpp       ${miral_include}/miral/window_management_options.h
     window_specification.cpp            ${miral_include}/miral/window_specification.h
     internal_client.cpp                 ${miral_include}/miral/internal_client.h
+    prepend_event_filter.cpp            ${miral_include}/miral/prepend_event_filter.h
     set_command_line_handler.cpp        ${miral_include}/miral/set_command_line_handler.h
     set_terminator.cpp                  ${miral_include}/miral/set_terminator.h
     set_window_management_policy.cpp    ${miral_include}/miral/set_window_management_policy.h

@@ -450,6 +450,16 @@ global:
     vtable?for?miral::WaylandExtensions::EnableInfo;
   extern "C++" {
     miral::ExternalClientLauncher::split_command*;
+    miral::EventHandlerRegister::?EventHandlerRegister*;
+    miral::EventHandlerRegister::EventHandlerRegister*;
+    miral::EventHandlerRegister::register_fd_handler*;
+    miral::EventHandlerRegister::unregister_fd_handler*;
+    miral::PrependEventFilter::PrependEventFilter*;
+    miral::PrependEventFilter::operator*;
+    typeinfo?for?miral::EventHandlerRegister;
+    typeinfo?for?miral::PrependEventFilter;
+    vtable?for?miral::EventHandlerRegister;
+    vtable?for?miral::PrependEventFilter;
   };
   };
 local: *;

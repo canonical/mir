@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2020 Canonical Ltd.
+ * Copyright © 2022 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -26,14 +26,14 @@ namespace mir { class Server; }
 
 namespace miral
 {
-class AppendEventFilter
+class PrependEventFilter
 {
 public:
-    /// Append an event filter (after any existing filters, including the window manager).
+    /// Prepend an event filter (before any existing filters, including the window manager).
     /// The supplied filter should return true if and only if it handles the event as filters
     /// later in the list will not be called.
-    /// \remark the filter return type changed to bool in MirAL 3.6
-    explicit AppendEventFilter(std::function<bool(MirEvent const* event)> const& filter);
+    /// \remark Since MirAL 3.6
+    explicit PrependEventFilter(std::function<bool(MirEvent const* event)> const& filter);
 
     void operator()(mir::Server& server);
 
