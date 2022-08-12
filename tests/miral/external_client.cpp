@@ -222,3 +222,22 @@ TEST_F(ExternalClient, another_strange_override_does_nothing)
     EXPECT_THAT(client_env_x11_value("NO_AT_BRIDGE"), StrEq("1"));
     EXPECT_THAT(client_env_x11_value("_JAVA_AWT_WM_NONREPARENTING"), StrEq("1"));
 }
+
+TEST_F(ExternalClient, split_command)
+{
+    struct { std::string command; std::vector<std::string> command_line; } const test_cases[] =
+        {
+            { "bash", {"bash"}},
+            { "bash -c 'exit 1'", {"bash", "-c", "exit 1"}},
+            { "bash -c \"exit 1\"", {"bash", "-c", "exit 1"}},
+            { "wofi --show drun --location top_left", {"wofi", "--show", "drun", "--location", "top_left"}},
+            { "swaybg -i \"/usr/share/backgrounds/warty-final-ubuntu.png\"",
+              {"swaybg", "-i", "/usr/share/backgrounds/warty-final-ubuntu.png"}},
+        };
+
+    for (auto const& test : test_cases)
+    {
+        EXPECT_THAT(miral::ExternalClientLauncher::split_command(test.command), Eq(test.command_line))
+            << "test.command=\"" + test.command + "\"";
+    }
+}
