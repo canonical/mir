@@ -43,6 +43,7 @@ char const* const miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1{"zwp
 char const* const miral::WaylandExtensions::zwp_input_method_v2{"zwp_input_method_manager_v2"};
 char const* const miral::WaylandExtensions::zwp_input_method_manager_v2{"zwp_input_method_manager_v2"};
 char const* const miral::WaylandExtensions::zwlr_screencopy_manager_v1{"zwlr_screencopy_manager_v1"};
+char const* const miral::WaylandExtensions::zwlr_virtual_pointer_manager_v1{"zwlr_virtual_pointer_manager_v1"};
 
 namespace
 {
