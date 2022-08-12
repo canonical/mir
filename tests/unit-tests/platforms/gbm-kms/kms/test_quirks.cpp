@@ -23,6 +23,7 @@
 #include "mir/udev/wrapper.h"
 #include "mir_test_framework/udev_environment.h"
 #include "src/platforms/gbm-kms/server/kms/quirks.h"
+#include "mir_test_framework/temporary_environment_value.h"
 
 namespace mtf = mir_test_framework;
 namespace mgg = mir::graphics::gbm;
@@ -62,6 +63,10 @@ public:
 
     mtf::UdevEnvironment udev;
     boost::program_options::options_description description;
+
+    // Need a clean environment for kms probe
+    mtf::TemporaryEnvironmentValue mesa_disable_modeset_probe{"MIR_MESA_KMS_DISABLE_MODESET_PROBE", nullptr};
+    mtf::TemporaryEnvironmentValue gbm_disable_modeset_probe{"MIR_GBM_KMS_DISABLE_MODESET_PROBE", nullptr};
 };
 
 
@@ -145,3 +150,115 @@ TEST_F(Quirks, specifying_multiple_quirks_is_additive)
     ASSERT_TRUE(seen_card[1]);
 }
 
+
+TEST_F(Quirks, default_requires_modesetting_support)
+{
+    mgg::Quirks::add_quirks_option(description);
+    mgg::Quirks quirks{*parsed_options_from_args({""})};
+
+    auto const enumerator = make_drm_device_enumerator();
+
+    bool seen_card[] = {false, false};
+    for (auto const& device : *enumerator)
+    {
+        printf("Device: %s\n", device.devnode());
+        if (device.devnode() && strstr(device.devnode(), "card0"))
+        {
+            seen_card[0] = true;
+            EXPECT_TRUE(quirks.require_modesetting_support(device));
+        }
+        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        {
+            seen_card[1] = true;
+            EXPECT_TRUE(quirks.require_modesetting_support(device));
+        }
+    }
+
+    ASSERT_TRUE(seen_card[0]);
+    ASSERT_TRUE(seen_card[1]);
+}
+
+TEST_F(Quirks, disable_kms_probe_selectively_disables_modesetting_support)
+{
+    mgg::Quirks::add_quirks_option(description);
+    mgg::Quirks quirks{*parsed_options_from_args({"--driver-quirks=disable-kms-probe:amdgpu"})};
+
+    auto const enumerator = make_drm_device_enumerator();
+
+    bool seen_card[] = {false, false};
+    for (auto const& device : *enumerator)
+    {
+        printf("Device: %s\n", device.devnode());
+        if (device.devnode() && strstr(device.devnode(), "card0"))
+        {
+            seen_card[0] = true;
+            EXPECT_TRUE(quirks.require_modesetting_support(device));
+        }
+        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        {
+            seen_card[1] = true;
+            EXPECT_FALSE(quirks.require_modesetting_support(device));
+        }
+    }
+
+    ASSERT_TRUE(seen_card[0]);
+    ASSERT_TRUE(seen_card[1]);
+}
+
+TEST_F(Quirks, mesa_disable_modeset_probe_globally_disables_modesetting_support)
+{
+    mtf::TemporaryEnvironmentValue mesa_disable_modeset_probe{"MIR_MESA_KMS_DISABLE_MODESET_PROBE", "1"};
+
+    mgg::Quirks::add_quirks_option(description);
+    mgg::Quirks quirks{*parsed_options_from_args({""})};
+
+    auto const enumerator = make_drm_device_enumerator();
+
+    bool seen_card[] = {false, false};
+    for (auto const& device : *enumerator)
+    {
+        printf("Device: %s\n", device.devnode());
+        if (device.devnode() && strstr(device.devnode(), "card0"))
+        {
+            seen_card[0] = true;
+            EXPECT_FALSE(quirks.require_modesetting_support(device));
+        }
+        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        {
+            seen_card[1] = true;
+            EXPECT_FALSE(quirks.require_modesetting_support(device));
+        }
+    }
+
+    ASSERT_TRUE(seen_card[0]);
+    ASSERT_TRUE(seen_card[1]);
+}
+
+TEST_F(Quirks, gbm_disable_modeset_probe_globally_disables_modesetting_support)
+{
+    mtf::TemporaryEnvironmentValue gbm_disable_modeset_probe{"MIR_GBM_KMS_DISABLE_MODESET_PROBE", "1"};
+
+    mgg::Quirks::add_quirks_option(description);
+    mgg::Quirks quirks{*parsed_options_from_args({""})};
+
+    auto const enumerator = make_drm_device_enumerator();
+
+    bool seen_card[] = {false, false};
+    for (auto const& device : *enumerator)
+    {
+        printf("Device: %s\n", device.devnode());
+        if (device.devnode() && strstr(device.devnode(), "card0"))
+        {
+            seen_card[0] = true;
+            EXPECT_FALSE(quirks.require_modesetting_support(device));
+        }
+        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        {
+            seen_card[1] = true;
+            EXPECT_FALSE(quirks.require_modesetting_support(device));
+        }
+    }
+
+    ASSERT_TRUE(seen_card[0]);
+    ASSERT_TRUE(seen_card[1]);
+}
