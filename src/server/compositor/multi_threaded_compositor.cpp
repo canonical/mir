@@ -189,10 +189,6 @@ public:
     catch(...)
     {
         started.set_exception(std::current_exception());
-
-        //Move the promise so that the promise destructor occurs here rather than in the thread
-        //destroying CompositingFunctor, mostly to appease TSan
-        auto promise = std::move(started);
     }
 
     void schedule_compositing(int num_frames)
@@ -385,8 +381,21 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
         thread_functors.push_back(std::move(thread_functor));
     });
 
+    std::exception_ptr x;
     for (auto& functor : thread_functors)
+    try
+    {
         functor->wait_until_started();
+    }
+    catch (...)
+    {
+        x = std::current_exception();
+    }
+
+    if (x)
+    {
+        rethrow_exception(x);
+    }
 }
 
 void mc::MultiThreadedCompositor::destroy_compositing_threads()
