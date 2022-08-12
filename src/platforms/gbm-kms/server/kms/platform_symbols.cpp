@@ -236,12 +236,11 @@ auto probe_display_platform(
                         break;
 
                     case ENOSYS:
-                        if (getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") == nullptr)
+                        if (quirks.require_modesetting_support(device))
                         {
                             throw std::runtime_error{std::string{"Device "}+device.devnode()+" does not support KMS"};
                         }
 
-                        mir::log_debug("MIR_MESA_KMS_DISABLE_MODESET_PROBE is set");
                         // Falls through.
                     case EINVAL:
                         mir::log_warning(

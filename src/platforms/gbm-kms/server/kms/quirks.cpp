@@ -135,9 +135,35 @@ public:
         return should_skip_driver || should_skip_devnode;
     }
 
+    auto require_modesetting_support(mir::udev::Device const& device) const -> bool
+    {
+        auto const devnode = value_or(device.devnode(), "");
+        auto const parent_device = device.parent();
+        auto const driver =
+            [&]()
+            {
+                if (parent_device)
+                {
+                    return value_or(parent_device->driver(), "");
+                }
+                mir::log_warning("udev device has no parent! Unable to determine driver for quirks.");
+                return "<UNKNOWN>";
+            }();
+        mir::log_debug("Quirks: checking device with devnode: %s, driver %s", device.devnode(), driver);
+
+        bool const should_skip_modesetting_support = skip_modesetting_support.count(driver);
+        if (should_skip_modesetting_support)
+        {
+            mir::log_info("Quirks: skipping modesetting check %s (matches driver quirk %s)", devnode, driver);
+        }
+        return !should_skip_modesetting_support;
+    }
+
 private:
     std::unordered_set<std::string> drivers_to_skip;
     std::unordered_set<std::string> devnodes_to_skip;
+    // hard coded for testing
+    std::unordered_set<std::string> skip_modesetting_support = { "virtio_gpu" };
 };
 
 mgg::Quirks::Quirks(const options::Option& options)
@@ -158,4 +184,22 @@ void mgg::Quirks::add_quirks_option(boost::program_options::options_description&
         (quirks_option_name,
          boost::program_options::value<std::vector<std::string>>(),
          "[platform-specific] Driver quirks to apply (may be specified multiple times; multiple quirks are combined)");
+}
+
+auto mir::graphics::gbm::Quirks::require_modesetting_support(mir::udev::Device const& device) const -> bool
+{
+    if (getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") != nullptr)
+    {
+        mir::log_debug("MIR_MESA_KMS_DISABLE_MODESET_PROBE is set");
+        return false;
+    }
+    else if (getenv("MIR_GBM_KMS_DISABLE_MODESET_PROBE")  != nullptr)
+    {
+        mir::log_debug("MIR_GBM_KMS_DISABLE_MODESET_PROBE is set");
+        return false;
+    }
+    else
+    {
+        return impl->require_modesetting_support(device);
+    }
 }
