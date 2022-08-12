@@ -163,6 +163,12 @@ public:
     /// \remark Since MirAL 3.5
     static char const* const zwlr_screencopy_manager_v1;
 
+    /// Allows clients to act as a virtual pointer, useful for remote control and automation.
+    /// Clients are not required to display anything to send pointer events using this extension,
+    /// so malicious clients could use it to take actions without user input.
+    /// \remark Since MirAL 3.6
+    static char const* const zwlr_virtual_pointer_manager_v1;
+
     /**
      * \remark Since MirAL 3.3
      * \deprecated Use the *_manager_* versions instead
