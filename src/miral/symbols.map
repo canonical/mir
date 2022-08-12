@@ -448,7 +448,6 @@ global:
     miral::WaylandExtensions::zwlr_screencopy_manager_v1*;
     typeinfo?for?miral::WaylandExtensions::EnableInfo;
     vtable?for?miral::WaylandExtensions::EnableInfo;
-  extern "C++" {
     miral::ExternalClientLauncher::split_command*;
     miral::EventHandlerRegister::?EventHandlerRegister*;
     miral::EventHandlerRegister::EventHandlerRegister*;
@@ -460,7 +459,6 @@ global:
     typeinfo?for?miral::PrependEventFilter;
     vtable?for?miral::EventHandlerRegister;
     vtable?for?miral::PrependEventFilter;
-  };
   };
 local: *;
 };
