@@ -449,6 +449,7 @@ global:
     typeinfo?for?miral::WaylandExtensions::EnableInfo;
     vtable?for?miral::WaylandExtensions::EnableInfo;
   extern "C++" {
+    miral::ExternalClientLauncher::split_command*;
     miral::EventHandlerRegister::?EventHandlerRegister*;
     miral::EventHandlerRegister::EventHandlerRegister*;
     miral::EventHandlerRegister::register_fd_handler*;

@@ -323,6 +323,11 @@ set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
+# Used to fall back to discrete scrolling if hi-res not implemented
+if ("${LIBINPUT_VERSION}" VERSION_GREATER_EQUAL "1.19")
+  add_compile_definitions(MIR_LIBINPUT_HAS_VALUE120)
+endif ()
+
 add_subdirectory(examples/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)

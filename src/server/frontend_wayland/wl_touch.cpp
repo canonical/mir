@@ -30,7 +30,7 @@ namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 
 mf::WlTouch::WlTouch(wl_resource* new_resource, std::shared_ptr<time::Clock> const& clock)
-    : Touch(new_resource, Version<6>()),
+    : Touch(new_resource, Version<8>()),
       clock{clock}
 {
 }

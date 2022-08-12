@@ -148,4 +148,83 @@ void miral::ExternalClientLauncher::snapcraft_launch(const std::string& desktop_
     open_desktop_entry(desktop_file);
 }
 
+auto miral::ExternalClientLauncher::split_command(std::string const& command) -> std::vector<std::string>
+{
+    std::vector<std::string> split_command;
+
+    {
+        std::string token;
+        char in_quote = '\0';
+        bool escaping = false;
+
+        auto push_token = [&]()
+            {
+            if (!token.empty())
+            {
+                split_command.push_back(std::move(token));
+                token.clear();
+            }
+            };
+
+        for (auto c : command)
+        {
+            if (escaping)
+            {
+                // end escape
+                escaping = false;
+                token += c;
+                continue;
+            }
+
+            switch (c)
+            {
+            case '\\':
+                // start escape
+                escaping = true;
+                continue;
+
+            case '\'':
+            case '\"':
+                if (in_quote == '\0')
+                {
+                    // start quoted sequence
+                    in_quote = c;
+                    continue;
+                }
+                else if (c == in_quote)
+                {
+                    // end quoted sequence
+                    in_quote = '\0';
+                    continue;
+                }
+                else
+                {
+                    break;
+                }
+
+            default:
+                break;
+            }
+
+            if (!isspace(c) || in_quote)
+            {
+                token += c;
+            }
+            else
+            {
+                push_token();
+            }
+        }
+
+        push_token();
+    }
+
+    return split_command;
+}
+
+auto miral::ExternalClientLauncher::launch(std::string const& command) const -> pid_t
+{
+    return launch(split_command(command));
+}
+
 miral::ExternalClientLauncher::~ExternalClientLauncher() = default;

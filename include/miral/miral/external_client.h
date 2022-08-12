@@ -51,6 +51,16 @@ public:
     /// \remark Since MirAL 3.0
     void snapcraft_launch(std::string const& desktop_file) const;
 
+    /// Split out the tokens of a (possibly escaped) command
+    /// \remark Since MirAL 3.6
+    static auto split_command(std::string const& command) -> std::vector<std::string>;
+
+    /// Launch with client environment configured for Wayland.
+    /// If X11 is enabled, then DISPLAY will also be set accordingly.
+    /// \return The pid of the process that was launched.
+    /// \remark Since MirAL 3.6
+    auto launch(std::string const& command) const -> pid_t;
+
 private:
     struct Self;
     std::shared_ptr<Self> self;
