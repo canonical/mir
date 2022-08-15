@@ -39,13 +39,10 @@ public:
     Zone& operator=(Zone const& other); ///< Copies private data by value
     ~Zone();
 
-    /// Returns false if any properties are different (even if they are the same zone)
-    /// Will always return false if they are different zones (even if they have the same extents)
+    /// Returns true only if all properties including IDs match
     auto operator==(Zone const& other) const -> bool;
 
-    /// Multiple zone objects with different extents may be the "same" zone. For example, the arguments of
-    /// miral::WindowManagementPolicy::advise_output_update() are old and new instances of the same zone, so
-    /// updated.is_same_zone(original) will return true even though the extents may not be equal.
+    /// Returns if true if zone IDs match, even if extents are different
     auto is_same_zone(Zone const& other) const -> bool;
 
     /// The area of this zone in global display coordinates
@@ -54,6 +51,10 @@ public:
     /// Set the extents of this zone
     /// Does not make this a different zone
     void extents(Rectangle const& extents);
+
+    /// An arbitrary number that uniquely identifies this zone, reguardless of how it is resized and moved
+    /// \remark Since MirAL 3.6
+    auto id() const -> int;
 
 private:
     class Self;
