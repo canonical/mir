@@ -142,7 +142,7 @@ mgmh::DRMHelper::open_all_devices(
                     continue;
                 }
 
-                // Falls through.
+                [[fallthrough]];
             case EINVAL:
                 mir::log_warning(
                     "Failed to detect whether device %s supports KMS, but continuing anyway",

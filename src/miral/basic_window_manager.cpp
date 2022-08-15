@@ -1308,7 +1308,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
         if (modifications.output_id().is_set() &&
            (!window_info.has_output_id() || modifications.output_id().value() != window_info.output_id()))
                 break;
-        // Falls through.
+        [[fallthrough]];
     default:
         if (new_state == window_info.state())
             return;

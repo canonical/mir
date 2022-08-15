@@ -241,7 +241,7 @@ auto probe_display_platform(
                             throw std::runtime_error{std::string{"Device "}+device.devnode()+" does not support KMS"};
                         }
 
-                        // Falls through.
+                        [[fallthrough]];
                     case EINVAL:
                         mir::log_warning(
                             "Failed to detect whether device %s supports KMS, continuing with lower confidence",
