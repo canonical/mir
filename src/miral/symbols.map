@@ -51,10 +51,6 @@ global:
     miral::DisplayConfiguration::list_layouts*;
     miral::DisplayConfiguration::operator*;
     miral::DisplayConfiguration::select_layout*;
-    miral::EventHandlerRegister::?EventHandlerRegister*;
-    miral::EventHandlerRegister::EventHandlerRegister*;
-    miral::EventHandlerRegister::register_fd_handler*;
-    miral::EventHandlerRegister::unregister_fd_handler*;
     miral::ExternalClientLauncher::?ExternalClientLauncher*;
     miral::ExternalClientLauncher::ExternalClientLauncher*;
     miral::ExternalClientLauncher::launch*;
@@ -398,7 +394,6 @@ global:
     typeinfo?for?miral::CommandLineOption;
     typeinfo?for?miral::CursorTheme;
     typeinfo?for?miral::DisplayConfiguration;
-    typeinfo?for?miral::EventHandlerRegister;
     typeinfo?for?miral::ExternalClientLauncher;
     typeinfo?for?miral::InternalClientLauncher;
     typeinfo?for?miral::Keymap;
@@ -435,7 +430,6 @@ global:
     vtable?for?miral::CommandLineOption;
     vtable?for?miral::CursorTheme;
     vtable?for?miral::DisplayConfiguration;
-    vtable?for?miral::EventHandlerRegister;
     vtable?for?miral::ExternalClientLauncher;
     vtable?for?miral::InternalClientLauncher;
     vtable?for?miral::Keymap;
