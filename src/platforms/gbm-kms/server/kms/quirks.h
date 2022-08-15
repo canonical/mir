@@ -48,6 +48,12 @@ public:
     [[nodiscard]]
     auto should_skip(udev::Device const& device) const -> bool;
 
+    /**
+     * Should we require this device to have modesetting support?
+     */
+    [[nodiscard]]
+    auto require_modesetting_support(udev::Device const& device) const -> bool;
+
     static void add_quirks_option(boost::program_options::options_description& config);
 
 private:
