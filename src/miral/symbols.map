@@ -1,4 +1,10 @@
 MIRAL_3.6 {
+# WaylandExtensions::Context ctor and dtor symbols are inline
+# but can be exported by unoptimized builds.
+# This makes the "regenerate" script hide them:
+#    miral::WaylandExtensions::Context::?Context*;
+#    miral::WaylandExtensions::Context::Context*;
+#    vtable?for?miral::WaylandExtensions::Context;
 global:
   extern "C++" {
     miral::AddInitCallback::?AddInitCallback*;
@@ -128,8 +134,6 @@ global:
     miral::StartupInternalClient::StartupInternalClient*;
     miral::StartupInternalClient::operator*;
     miral::WaylandExtensions::?WaylandExtensions*;
-    miral::WaylandExtensions::Context::?Context*;
-    miral::WaylandExtensions::Context::Context*;
     miral::WaylandExtensions::Context::operator*;
     miral::WaylandExtensions::EnableInfo::app*;
     miral::WaylandExtensions::EnableInfo::name*;
@@ -445,7 +449,6 @@ global:
     vtable?for?miral::StartupInternalClient;
     vtable?for?miral::WaylandExtensions;
     vtable?for?miral::WaylandExtensions::Builder;
-    vtable?for?miral::WaylandExtensions::Context;
     vtable?for?miral::WaylandExtensions::EnableInfo;
     vtable?for?miral::Window;
     vtable?for?miral::WindowInfo;
