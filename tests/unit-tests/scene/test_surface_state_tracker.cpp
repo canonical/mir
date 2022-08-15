@@ -30,7 +30,7 @@ auto precedence(MirWindowState state) -> int
     switch (state)
     {
     case mir_window_state_restored: return 1;
-    case mir_window_state_horizmaximized: // fallthrough
+    case mir_window_state_horizmaximized: [[fallthrough]];
     case mir_window_state_vertmaximized: return 2;
     case mir_window_state_maximized: return 3;
     case mir_window_state_attached: return 4;
