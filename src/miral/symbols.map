@@ -298,9 +298,9 @@ global:
     miral::Zone::?Zone*;
     miral::Zone::Zone*;
     miral::Zone::extents*;
+    miral::Zone::id*;
     miral::Zone::is_same_zone*;
     miral::Zone::operator*;
-    miral::Zone::id*;
     miral::application_for*;
     miral::apply_lifecycle_state_to*;
     miral::display_configuration_options*;
