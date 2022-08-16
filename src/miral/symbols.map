@@ -148,6 +148,7 @@ global:
     miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1*;
     miral::WaylandExtensions::zwlr_layer_shell_v1*;
     miral::WaylandExtensions::zwlr_screencopy_manager_v1*;
+    miral::WaylandExtensions::zwlr_virtual_pointer_manager_v1*;
     miral::WaylandExtensions::zwp_input_method_manager_v2*;
     miral::WaylandExtensions::zwp_input_method_v2*;
     miral::WaylandExtensions::zwp_virtual_keyboard_manager_v1*;
@@ -297,9 +298,9 @@ global:
     miral::Zone::?Zone*;
     miral::Zone::Zone*;
     miral::Zone::extents*;
+    miral::Zone::id*;
     miral::Zone::is_same_zone*;
     miral::Zone::operator*;
-    miral::Zone::id*;
     miral::application_for*;
     miral::apply_lifecycle_state_to*;
     miral::display_configuration_options*;
