@@ -27,7 +27,7 @@ if(DOXYGEN_FOUND)
     set(ALL "ALL")
   endif()
   add_custom_target(doc ${ALL}
-                    COMMAND rm -rf ${CMAKE_BINARY_DIR}/doc/{html,xml}
+                    COMMAND rm -rf ${CMAKE_BINARY_DIR}/doc/html ${CMAKE_BINARY_DIR}/doc/xml
                     COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile
                     SOURCES ${PROJECT_BINARY_DIR}/Doxyfile
                     DEPENDS guides)
