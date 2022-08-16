@@ -59,23 +59,30 @@ public:
         for (auto const& quirk : options.get<std::vector<std::string>>(quirks_option_name))
         {
             auto const disable_kms_probe = "disable-kms-probe:";
+            auto const skip_devnode = "skip:devnode:";
+            auto const skip_driver = "skip:driver:";
+            auto const allow_devnode = "allow:devnode:";
+            auto const allow_driver = "allow:driver:";
 
-            if (quirk.starts_with("skip:"))
+            if (quirk.starts_with(skip_devnode))
             {
-                // Quirk format is skip:(devnode|driver):value
-                auto type_delimeter_pos = quirk.find(':', 5);
-                auto const type = quirk.substr(5, type_delimeter_pos - 5);
-                auto const value = quirk.substr(type_delimeter_pos + 1);
-                if (type == "devnode")
-                {
-                    devnodes_to_skip.insert(value);
-                    continue;
-                }
-                else if (type == "driver")
-                {
-                    drivers_to_skip.insert(value);
-                    continue;
-                }
+                devnodes_to_skip.insert(quirk.substr(strlen(skip_devnode)));
+                continue;
+            }
+            else if (quirk.starts_with(skip_driver))
+            {
+                drivers_to_skip.insert(quirk.substr(strlen(skip_driver)));
+                continue;
+            }
+            else if (quirk.starts_with(allow_devnode))
+            {
+                devnodes_to_skip.erase(quirk.substr(strlen(allow_devnode)));
+                continue;
+            }
+            else if (quirk.starts_with(allow_driver))
+            {
+                drivers_to_skip.erase(quirk.substr(strlen(allow_driver)));
+                continue;
             }
             else if (quirk.starts_with(disable_kms_probe))
             {
@@ -87,7 +94,7 @@ public:
             // If we didn't `continue` above, we're ignoring...
             mir::log_warning(
                 "Ignoring unexpected value for %s option: %s "
-                "(expects value of the form “skip:<type>:<value>” or ”disable-kms-probe:<value>”)",
+                "(expects value of the form “skip:<type>:<value>”, “allow:<type>:<value>” or ”disable-kms-probe:<value>”)",
                 quirks_option_name,
                 quirk.c_str());
         }
@@ -146,7 +153,9 @@ public:
     }
 
 private:
-    std::unordered_set<std::string> drivers_to_skip;
+    // Mir's gbm-kms support isn't (yet) working with nvidia
+    // Mir's gbm-kms support isn't (yet) working with evdi
+    std::unordered_set<std::string> drivers_to_skip = { "nvidia", "evdi" };
     std::unordered_set<std::string> devnodes_to_skip;
     // We know this is currently useful for virtio_gpu
     std::unordered_set<std::string> skip_modesetting_support = { "virtio_gpu" };
