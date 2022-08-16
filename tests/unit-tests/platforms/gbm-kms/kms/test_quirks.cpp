@@ -150,6 +150,113 @@ TEST_F(Quirks, specifying_multiple_quirks_is_additive)
     ASSERT_TRUE(seen_card[1]);
 }
 
+TEST_F(Quirks, allowing_a_driver_overrides_previous_skip)
+{
+    mgg::Quirks::add_quirks_option(description);
+    mgg::Quirks quirks{*parsed_options_from_args({"--driver-quirks=skip:driver:amdgpu", "--driver-quirks=allow:driver:amdgpu"})};
+
+    auto const enumerator = make_drm_device_enumerator();
+
+    bool seen_card[] = {false, false};
+    for (auto const& device : *enumerator)
+    {
+        if (device.devnode() && strstr(device.devnode(), "card0"))
+        {
+            seen_card[0] = true;
+            EXPECT_FALSE(quirks.should_skip(device));
+        }
+        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        {
+            seen_card[1] = true;
+            // The quirk skipping the “amdgpu” driver, should be overridden by the "allow"
+            EXPECT_FALSE(quirks.should_skip(device));
+        }
+    }
+
+    ASSERT_TRUE(seen_card[0]);
+    ASSERT_TRUE(seen_card[1]);
+}
+
+TEST_F(Quirks, skipping_a_driver_overrides_previous_allow)
+{
+    mgg::Quirks::add_quirks_option(description);
+    mgg::Quirks quirks{*parsed_options_from_args({"--driver-quirks=allow:driver:amdgpu", "--driver-quirks=skip:driver:amdgpu"})};
+
+    auto const enumerator = make_drm_device_enumerator();
+
+    bool seen_card[] = {false, false};
+    for (auto const& device : *enumerator)
+    {
+        if (device.devnode() && strstr(device.devnode(), "card0"))
+        {
+            seen_card[0] = true;
+            EXPECT_FALSE(quirks.should_skip(device));
+        }
+        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        {
+            seen_card[1] = true;
+            // The quirk allowing the “amdgpu” driver, should be overridden by the "skip"
+            EXPECT_TRUE(quirks.should_skip(device));
+        }
+    }
+
+    ASSERT_TRUE(seen_card[0]);
+    ASSERT_TRUE(seen_card[1]);
+}
+
+TEST_F(Quirks, allowing_a_devnode_overrides_previous_skip)
+{
+    mgg::Quirks::add_quirks_option(description);
+    mgg::Quirks quirks{*parsed_options_from_args({"--driver-quirks=skip:devnode:/dev/dri/card0", "--driver-quirks=allow:devnode:/dev/dri/card0"})};
+
+    auto const enumerator = make_drm_device_enumerator();
+
+    bool seen_card[] = {false, false};
+    for (auto const& device : *enumerator)
+    {
+        if (device.devnode() && strstr(device.devnode(), "card0"))
+        {
+            seen_card[0] = true;
+            // The quirk skipping "/dev/dri/card0", should be overridden by the "allow"
+            EXPECT_FALSE(quirks.should_skip(device));
+        }
+        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        {
+            seen_card[1] = true;
+            EXPECT_FALSE(quirks.should_skip(device));
+        }
+    }
+
+    ASSERT_TRUE(seen_card[0]);
+    ASSERT_TRUE(seen_card[1]);
+}
+
+TEST_F(Quirks, skipping_a_devnode_overrides_previous_allow)
+{
+    mgg::Quirks::add_quirks_option(description);
+    mgg::Quirks quirks{*parsed_options_from_args({"--driver-quirks=allow:devnode:/dev/dri/card0", "--driver-quirks=skip:devnode:/dev/dri/card0"})};
+
+    auto const enumerator = make_drm_device_enumerator();
+
+    bool seen_card[] = {false, false};
+    for (auto const& device : *enumerator)
+    {
+        if (device.devnode() && strstr(device.devnode(), "card0"))
+        {
+            seen_card[0] = true;
+            // The quirk allowing "/dev/dri/card0", should be overridden by the "skip"
+            EXPECT_TRUE(quirks.should_skip(device));
+        }
+        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        {
+            seen_card[1] = true;
+            EXPECT_FALSE(quirks.should_skip(device));
+        }
+    }
+
+    ASSERT_TRUE(seen_card[0]);
+    ASSERT_TRUE(seen_card[1]);
+}
 
 TEST_F(Quirks, default_requires_modesetting_support)
 {
