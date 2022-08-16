@@ -484,7 +484,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiral5 (= ${libmiral5:Version}),
+Depends: libmiral5,
 Description: MirAL binary metapackage
  MirAL provides an ABI-stable abstraction layer for Mir based shells,
  insulating them from mirserver ABI breaks.
