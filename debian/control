@@ -479,12 +479,25 @@ Description: Display server for Ubuntu - ABI preserving abstraction layer
  .
  Contains the shared library containing MirAL abstraction layer.
 
-Package: libmiral-dev
+Package: libmiral-bin
 Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmiral5 (= ${libmiral5:Version}),
+Description: MirAL binary metapackage
+ MirAL provides an ABI-stable abstraction layer for Mir based shells,
+ insulating them from mirserver ABI breaks.
+ .
+ This package depends on the latest shared library containing MirAL abstraction
+ layer.
+
+Package: libmiral-dev
+Section: libdevel
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libmiral-bin (= ${libmiral-bin:Version}),
 # ${source:Version} is technically incorrect, but Launchpad doesn't do BinNMUs
 # so it's harmless.
          libmircommon-dev (= ${source:Version}),
