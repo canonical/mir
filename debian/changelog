@@ -1,7 +1,7 @@
-mir (2.7.0) UNRELEASED; urgency=medium
+mir (2.9.0) UNRELEASED; urgency=medium
 
   [ Alan Griffiths ]
-  * New upstream release 2.7.0
+  * New upstream release 2.9.0
 
     - ABI summary:
       . miral ABI bumped to 5
