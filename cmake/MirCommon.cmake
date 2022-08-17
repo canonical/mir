@@ -283,7 +283,7 @@ function (mir_check_no_unreleased_symbols TARGET DEPENDENT_TARGET)
     #
     # Cut first five lines which don't contain any symbol information
     # Cut any lines for undefined symbols
-    # Cut adress and flags which are fixed width
+    # Cut address and flags which are fixed width
     # Convert tabs to spaces
     # Whitespace between fields is collapsed to one character
     # Extract the symbol version (3rd field)
