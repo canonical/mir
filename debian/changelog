@@ -1,3 +1,56 @@
+mir (2.7.0) UNRELEASED; urgency=medium
+
+  [ Alan Griffiths ]
+  * New upstream release 2.7.0
+
+    - ABI summary:
+      . miral ABI bumped to 5
+      . mircommon ABI unchanged at 9
+      . mircookie ABI unchanged at 2
+      . mircore ABI bumped to 2
+      . miroil ABI bumped to 2
+      . mirplatform ABI unchanged at 23
+      . mirserver ABI unchanged at 58
+      . mirwayland ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 20
+      . mirinputplatform ABI unchanged at 8
+    - Enhancements:
+      . [Wayland] Implement zwp_idle_inhibit_manager_v1
+      . [Wayland] Implement zwlr_virtual_pointer_v1
+      . [Wayland] Implement zwp_text_input_manager_v1 (Electron works with OSK)
+      . [Wayland] Bump wl_seat to v8 and implement hi-res scrolling (Fixes: #2176,
+        Fixes: #2499)
+      . [Wayland platform] improve failed to connect error
+      . [Wayland platform] Port to xdg-shell (Fixes #1903, Fixes: #2434)
+      . [MirAL] Allow `--add-wayland-extenions all`
+      . [MirAL] Allow servers to get repeated string options
+      . [MirAL] Improvement to ExternalClientLauncher: Don't force clients to
+        split command lines themselves
+      . [MirAL] Tidy up event filtering API
+      . [MirAL] Expose miral::Zone::id()
+      . [Input] Filter 2 distinct bogus touch event scenarios (UBports)
+      . [gbm-kms] new driver quirk to disable KMS modeset probe
+      . [gbm-kms] Add defaults to driver-quirks for nvidia and evdi (Fixes: #2467)
+      . [gbm-kms] Add defaults to driver-quirks for vc4-drm and v3d
+      . [mir-smoke-test-runner] Enable working in a Wayland only environment
+    - Bugs fixed:
+      . Fix ABI breakage of libmircore.so.1 with v2.8.0 vs v1.8.2 (Fixes #2465)
+      . [Wayland] Text Input v2: do not use commit count as serial
+      . [Wayland] Send keyboard modifiers after keyboard enter
+        (Fixes: #2535, Fixes: #2025)
+      . [Wayland] wlr-screencopy-v1: send .damage event as required (wayvnc fix)
+      . [Wayland] wlr-screencopy-v1: Waits until the copy area has been damaged
+        in `.copy_with_damage` request (wayvnc fix)
+      . [MirAL] Unblock signals before execing child processes (Fixes: #1284)
+      . [eglstream-kms] Kill clients, not Mir, when they submit bad EGLStreams
+        (Fixes: #2061)
+      . [eglstream-kms] Handle EGL errors in devnum_for_device (Fixes: #2426)
+      . [test clients] Explicitly ask for a GLESv2 context (Fixes: #2440)
+      . [renderers/gl] Clear framebuffer to opaque black (Fixes: #2427)
+      . CMake cleanup for locally built dependencies (Fixes: #2507, Fixes: #2261)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 17 Aug 2022 09:54:13 +0000
+
 mir (2.8.0) UNRELEASED; urgency=medium
 
   * New upstream release 2.8.0
