@@ -101,7 +101,7 @@ auto get_scroll_axis(libinput_event_pointer* event, libinput_pointer_axis axis, 
             0};
     mir::geometry::generic::Value<int, Tag> const value120{
 #ifdef MIR_LIBINPUT_HAS_VALUE120
-        libinput_event_pointer_get_axis_source(event) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL ?
+        libinput_event_get_type(libinput_event_pointer_get_base_event(event)) == LIBINPUT_EVENT_POINTER_SCROLL_WHEEL ?
             libinput_event_pointer_get_scroll_value_v120(event, axis) :
             0
 #else
@@ -197,7 +197,19 @@ void mie::LibInputDevice::process_event(libinput_event* event)
         case LIBINPUT_EVENT_POINTER_BUTTON:
             sink->handle_input(convert_button_event(libinput_event_get_pointer_event(event)));
             break;
-        case LIBINPUT_EVENT_POINTER_AXIS:
+#ifdef MIR_LIBINPUT_HAS_VALUE120
+        case LIBINPUT_EVENT_POINTER_SCROLL_WHEEL:
+        case LIBINPUT_EVENT_POINTER_SCROLL_FINGER:
+        case LIBINPUT_EVENT_POINTER_SCROLL_CONTINUOUS:
+#else
+    /*
+	 * This event is deprecated as of libinput 1.19. Use
+	 * @ref LIBINPUT_EVENT_POINTER_SCROLL_WHEEL,
+	 * @ref LIBINPUT_EVENT_POINTER_SCROLL_FINGER, and
+	 * @ref LIBINPUT_EVENT_POINTER_SCROLL_CONTINUOUS instead.
+     */
+     case LIBINPUT_EVENT_POINTER_AXIS:
+#endif
             sink->handle_input(convert_axis_event(libinput_event_get_pointer_event(event)));
             break;
         // touch events are processed as a batch of changes over all touch pointts
