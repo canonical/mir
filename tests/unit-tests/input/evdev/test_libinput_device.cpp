@@ -586,9 +586,11 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
 TEST_F(LibInputDeviceOnMouse, hi_res_scroll_is_picked_up)
 {
 #ifdef MIR_LIBINPUT_HAS_VALUE120
-    auto const expected = 165;
+    auto const expected_v120 = 165;
+    auto const expected_discrete = 0;
 #else
-    auto const expected = 120;
+    auto const expected_v120 = 0;
+    auto const expected_discrete = 1;
 #endif
 
     EXPECT_CALL(mock_builder, pointer_event(
@@ -596,7 +598,7 @@ TEST_F(LibInputDeviceOnMouse, hi_res_scroll_is_picked_up)
         Eq(std::nullopt), geom::DisplacementF{},
         mir_pointer_axis_source_wheel,
         mev::ScrollAxisH{},
-        mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{0}, geom::DeltaY{expected}, false}));
+        mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{expected_discrete}, geom::DeltaY{expected_v120}, false}));
 
     mouse.start(&mock_sink, &mock_builder);
     env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 165);
