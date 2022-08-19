@@ -91,21 +91,23 @@ auto get_scroll_axis(libinput_event_pointer* event, libinput_pointer_axis axis, 
     {
         return {};
     }
+    auto const libinput_event_type = libinput_event_get_type(libinput_event_pointer_get_base_event(event));
 
     mir::geometry::generic::Value<float, Tag> const precise{
         libinput_event_pointer_get_axis_value(event, axis) * scale};
     auto const stop = precise.as_value() == 0;
     mir::geometry::generic::Value<int, Tag> const discrete{
-        libinput_event_pointer_get_axis_source(event) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL ?
-            libinput_event_pointer_get_axis_value_discrete(event, axis) :
-            0};
+        (libinput_event_type == LIBINPUT_EVENT_POINTER_AXIS &&
+            libinput_event_pointer_get_axis_source(event) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL) ?
+        libinput_event_pointer_get_axis_value_discrete(event, axis) :
+        0};
     mir::geometry::generic::Value<int, Tag> const value120{
 #ifdef MIR_LIBINPUT_HAS_VALUE120
-        libinput_event_get_type(libinput_event_pointer_get_base_event(event)) == LIBINPUT_EVENT_POINTER_SCROLL_WHEEL ?
-            libinput_event_pointer_get_scroll_value_v120(event, axis) :
-            0
+        libinput_event_type == LIBINPUT_EVENT_POINTER_SCROLL_WHEEL ?
+        libinput_event_pointer_get_scroll_value_v120(event, axis) :
+        0
 #else
-        discrete.as_value() * 120
+        0
 #endif
     };
 

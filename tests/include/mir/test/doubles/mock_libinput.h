@@ -54,7 +54,6 @@ public:
     libinput_event* setup_pointer_scroll_wheel_event(
         libinput_device* dev, uint64_t event_time,
         std::optional<double> horizontal, std::optional<double> vertical,
-        double horizontal_discrete, double vertical_discrete,
         double horizontal_value120, double vertical_value120);
     libinput_event* setup_finger_axis_event(
         libinput_device* dev, uint64_t event_time,
