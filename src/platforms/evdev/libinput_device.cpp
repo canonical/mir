@@ -91,32 +91,45 @@ auto get_scroll_axis(libinput_event_pointer* event, libinput_pointer_axis axis, 
     {
         return {};
     }
+
+#ifdef MIR_LIBINPUT_HAS_VALUE120
     auto const libinput_event_type = libinput_event_get_type(libinput_event_pointer_get_base_event(event));
 
+    mir::geometry::generic::Value<float, Tag> const precise{
+        libinput_event_pointer_get_scroll_value(event, axis) * scale};
+    auto const stop = precise.as_value() == 0;
+    mir::geometry::generic::Value<int, Tag> const discrete{0};
+    mir::geometry::generic::Value<int, Tag> const value120{
+        libinput_event_type == LIBINPUT_EVENT_POINTER_SCROLL_WHEEL ?
+        libinput_event_pointer_get_scroll_value_v120(event, axis) :
+        0
+    };
+#else
     mir::geometry::generic::Value<float, Tag> const precise{
         libinput_event_pointer_get_axis_value(event, axis) * scale};
     auto const stop = precise.as_value() == 0;
     mir::geometry::generic::Value<int, Tag> const discrete{
-        (libinput_event_type == LIBINPUT_EVENT_POINTER_AXIS &&
-            libinput_event_pointer_get_axis_source(event) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL) ?
+        libinput_event_pointer_get_axis_source(event) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL ?
         libinput_event_pointer_get_axis_value_discrete(event, axis) :
         0};
-    mir::geometry::generic::Value<int, Tag> const value120{
-#ifdef MIR_LIBINPUT_HAS_VALUE120
-        libinput_event_type == LIBINPUT_EVENT_POINTER_SCROLL_WHEEL ?
-        libinput_event_pointer_get_scroll_value_v120(event, axis) :
-        0
-#else
-        0
+    mir::geometry::generic::Value<int, Tag> const value120{0};
 #endif
-    };
 
     return {precise, discrete, value120, stop};
 }
 
-auto get_axis_source(libinput_pointer_axis_source source) -> MirPointerAxisSource
+auto get_axis_source(libinput_event_pointer* pointer) -> MirPointerAxisSource
 {
-    switch (source)
+#ifdef MIR_LIBINPUT_HAS_VALUE120
+    switch (libinput_event_get_type(libinput_event_pointer_get_base_event(pointer)))
+    {
+    case LIBINPUT_EVENT_POINTER_SCROLL_WHEEL:       return mir_pointer_axis_source_wheel;
+    case LIBINPUT_EVENT_POINTER_SCROLL_FINGER:      return mir_pointer_axis_source_finger;
+    case LIBINPUT_EVENT_POINTER_SCROLL_CONTINUOUS:  return mir_pointer_axis_source_continuous;
+    default:                                        return mir_pointer_axis_source_none;
+    }
+#else
+    switch (libinput_event_pointer_get_axis_source(pointer))
     {
     case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL:        return mir_pointer_axis_source_wheel;
     case LIBINPUT_POINTER_AXIS_SOURCE_FINGER:       return mir_pointer_axis_source_finger;
@@ -124,6 +137,7 @@ auto get_axis_source(libinput_pointer_axis_source source) -> MirPointerAxisSourc
     case LIBINPUT_POINTER_AXIS_SOURCE_WHEEL_TILT:   return mir_pointer_axis_source_wheel_tilt;
     default:                                        return mir_pointer_axis_source_none;
     }
+#endif
 }
 }
 
@@ -347,7 +361,7 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
         pointer,
         LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL,
         vertical_scroll_scale);
-    auto const axis_source = get_axis_source(libinput_event_pointer_get_axis_source(pointer));
+    auto const axis_source = get_axis_source(pointer);
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
 

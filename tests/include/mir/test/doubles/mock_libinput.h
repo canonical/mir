@@ -96,6 +96,7 @@ public:
     MOCK_METHOD2(libinput_event_pointer_get_axis_value_discrete, double(libinput_event_pointer*, libinput_pointer_axis));
     MOCK_METHOD2(libinput_event_pointer_get_scroll_value_v120, double(libinput_event_pointer*, libinput_pointer_axis));
     MOCK_METHOD(libinput_event*, libinput_event_pointer_get_base_event, (libinput_event_pointer* event));
+    MOCK_METHOD(double, libinput_event_pointer_get_scroll_value, (libinput_event_pointer* event, libinput_pointer_axis axis));
     MOCK_METHOD2(libinput_event_pointer_has_axis,int(libinput_event_pointer *,libinput_pointer_axis));
 
     MOCK_METHOD1(libinput_event_touch_get_time, uint32_t(libinput_event_touch*));
