@@ -571,11 +571,11 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
     // expect two scroll events..
 
 #ifdef MIR_LIBINPUT_HAS_VALUE120
-    mev::ScrollAxisV const scroll_axis_v_1{geom::DeltaYF{-20}, geom::DeltaY{0}, geom::DeltaY{240}, false};
-    mev::ScrollAxisH const scroll_axis_h_2{geom::DeltaXF{5}, geom::DeltaX{0}, geom::DeltaX{120}, false};
+    mev::ScrollAxisV const scroll_axis_v_1{geom::DeltaYF{-20}, geom::DeltaY{2}, geom::DeltaY{240}, false};
+    mev::ScrollAxisH const scroll_axis_h_2{geom::DeltaXF{5}, geom::DeltaX{1}, geom::DeltaX{120}, false};
 #else
-    mev::ScrollAxisV const scroll_axis_v_1{geom::DeltaYF{-20}, geom::DeltaY{2}, geom::DeltaY{0}, false};
-    mev::ScrollAxisH const scroll_axis_h_2{geom::DeltaXF{5}, geom::DeltaX{1}, geom::DeltaX{0}, false};
+    mev::ScrollAxisV const scroll_axis_v_1{geom::DeltaYF{-20}, geom::DeltaY{2}, geom::DeltaY{240}, false};
+    mev::ScrollAxisH const scroll_axis_h_2{geom::DeltaXF{5}, geom::DeltaX{1}, geom::DeltaX{120}, false};
 #endif
 
     EXPECT_CALL(mock_builder, pointer_event(
@@ -636,11 +636,23 @@ TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_can_be_multiple_discrete_step
 
     EXPECT_CALL(mock_builder, pointer_event(
         _, _, _, _, _, _, _,
-        mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{2}, geom::DeltaY{270}, false}));
-    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 270.0f);
+        mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{2}, geom::DeltaY{240}, false}));
+    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 240.0f);
     process_events(mouse);
 }
 
+TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_can_be_negative)
+{
+    mouse.start(&mock_sink, &mock_builder);
+
+    EXPECT_CALL(mock_builder, pointer_event(
+        _, _, _, _, _, _, _,
+        mev::ScrollAxisV{geom::DeltaYF{-1}, geom::DeltaY{-2}, geom::DeltaY{-240}, false}));
+    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, -1.0f, 0.0f, -240.0f);
+    process_events(mouse);
+}
+
+#ifdef MIR_LIBINPUT_HAS_VALUE120
 TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_is_accumulated)
 {
     mouse.start(&mock_sink, &mock_builder);
@@ -651,6 +663,7 @@ TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_is_accumulated)
     env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 50.0f);
     process_events(mouse);
 
+    Mock::VerifyAndClearExpectations(fake_device);
     EXPECT_CALL(mock_builder, pointer_event(
         _, _, _, _, _, _, _,
         mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{0}, geom::DeltaY{50}, false}));
@@ -664,6 +677,27 @@ TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_is_accumulated)
     env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 50.0f);
     process_events(mouse);
 }
+#endif
+
+#ifdef MIR_LIBINPUT_HAS_VALUE120
+TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_is_accumulated_negative)
+{
+    mouse.start(&mock_sink, &mock_builder);
+
+    EXPECT_CALL(mock_builder, pointer_event(
+        _, _, _, _, _, _, _,
+        mev::ScrollAxisV{geom::DeltaYF{-1}, geom::DeltaY{-2}, geom::DeltaY{-350}, false}));
+    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, -1.0f, 0.0f, -350.0f);
+    process_events(mouse);
+
+    Mock::VerifyAndClearExpectations(fake_device);
+    EXPECT_CALL(mock_builder, pointer_event(
+        _, _, _, _, _, _, _,
+        mev::ScrollAxisV{geom::DeltaYF{-1}, geom::DeltaY{-1}, geom::DeltaY{-10}, false}));
+    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, -1.0f, 0.0f, -10.0f);
+    process_events(mouse);
+}
+#endif
 
 TEST_F(LibInputDeviceOnTouchScreen, process_event_ignores_uncorrelated_touch_up_events)
 {
