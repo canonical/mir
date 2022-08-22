@@ -88,6 +88,7 @@ template<typename Tag>
 auto get_scroll_axis(
     libinput_event_pointer* event,
     libinput_pointer_axis axis,
+    geom::generic::Value<int, Tag>& accumulator,
     geom::generic::Value<float, Tag> scale) -> mev::ScrollAxis<Tag>
 {
     if (!libinput_event_pointer_has_axis(event, axis))
@@ -101,13 +102,16 @@ auto get_scroll_axis(
     mir::geometry::generic::Value<float, Tag> const precise{
         libinput_event_pointer_get_scroll_value(event, axis) * scale};
     auto const stop = precise.as_value() == 0;
-    mir::geometry::generic::Value<int, Tag> const discrete{0};
     mir::geometry::generic::Value<int, Tag> const value120{
         libinput_event_type == LIBINPUT_EVENT_POINTER_SCROLL_WHEEL ?
         libinput_event_pointer_get_scroll_value_v120(event, axis) :
         0
     };
+    accumulator += value120;
+    mir::geometry::generic::Value<int, Tag> const discrete{accumulator / 120};
+    accumulator = geom::generic::Value<int, Tag>{accumulator.as_value() % 120};
 #else
+    (void)accumulator;
     mir::geometry::generic::Value<float, Tag> const precise{
         libinput_event_pointer_get_axis_value(event, axis) * scale};
     auto const stop = precise.as_value() == 0;
@@ -115,7 +119,7 @@ auto get_scroll_axis(
         libinput_event_pointer_get_axis_source(event) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL ?
         libinput_event_pointer_get_axis_value_discrete(event, axis) :
         0};
-    mir::geometry::generic::Value<int, Tag> const value120{0};
+    mir::geometry::generic::Value<int, Tag> const value120{discrete * 120};
 #endif
 
     return {precise, discrete, value120, stop};
@@ -359,10 +363,12 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
     auto const h_scroll = get_scroll_axis(
         pointer,
         LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL,
+        horizontal_scroll_value120_accum /* passed as non-const ref */,
         horizontal_scroll_scale);
     auto const v_scroll = get_scroll_axis(
         pointer,
         LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL,
+        vertical_scroll_value120_accum /* passed as non-const ref */,
         vertical_scroll_scale);
     auto const axis_source = get_axis_source(pointer);
 
