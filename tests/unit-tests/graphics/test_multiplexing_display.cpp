@@ -192,3 +192,98 @@ TEST(MultiplexingDisplay, dispatches_configure_to_associated_platform)
 
     display.configure(*conf);
 }
+
+MATCHER_P(IsConfigurationOfCard, cardid, "")
+{
+    bool matches{true};
+    arg.for_each_output(
+        [&matches, this](auto const& output)
+        {
+            matches &= output.card_id == mg::DisplayConfigurationCardId{cardid};
+        });
+    return matches;
+}
+
+TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_succeeds_if_all_succeed)
+{
+    using namespace testing;
+
+    DisplayConfigurationOutputGenerator gen1{5}, gen2{42};
+
+    auto d1 = std::make_unique<NiceMock<mtd::MockDisplay>>();
+    auto d2 = std::make_unique<NiceMock<mtd::MockDisplay>>();
+
+    ON_CALL(*d1, configuration())
+        .WillByDefault(
+            Invoke(
+                [&gen1]()
+                {
+                    return std::make_unique<mtd::StubDisplayConfig>(
+                        std::vector<mg::DisplayConfigurationOutput>{ gen1.generate_output(), gen1.generate_output() });
+                 }));
+    ON_CALL(*d2, configuration())
+        .WillByDefault(
+            Invoke(
+                [&gen2]()
+                {
+                    return std::make_unique<mtd::StubDisplayConfig>(
+                        std::vector<mg::DisplayConfigurationOutput>{ gen2.generate_output() });
+                 }));
+
+    // Each Display should get a configure() call with only its own configuration
+    EXPECT_CALL(*d1, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(5)))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*d2, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(42)))
+        .WillOnce(Return(true));
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    displays.push_back(std::move(d1));
+    displays.push_back(std::move(d2));
+
+    mg::MultiplexingDisplay display{std::move(displays)};
+    auto conf = display.configuration();
+
+    display.apply_if_configuration_preserves_display_buffers(*conf);
+}
+
+TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_fails_if_any_fail)
+{
+    using namespace testing;
+
+    DisplayConfigurationOutputGenerator gen1{5}, gen2{42};
+
+    auto d1 = std::make_unique<NiceMock<mtd::MockDisplay>>();
+    auto d2 = std::make_unique<NiceMock<mtd::MockDisplay>>();
+
+    ON_CALL(*d1, configuration())
+        .WillByDefault(
+            Invoke(
+                [&gen1]()
+                {
+                    return std::make_unique<mtd::StubDisplayConfig>(
+                        std::vector<mg::DisplayConfigurationOutput>{ gen1.generate_output(), gen1.generate_output() });
+                 }));
+    ON_CALL(*d2, configuration())
+        .WillByDefault(
+            Invoke(
+                [&gen2]()
+                {
+                    return std::make_unique<mtd::StubDisplayConfig>(
+                        std::vector<mg::DisplayConfigurationOutput>{ gen2.generate_output() });
+                 }));
+
+    // Each Display should get a configure() call with only its own configuration
+    EXPECT_CALL(*d1, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(5)))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*d2, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(42)))
+        .WillOnce(Return(false));
+
+    std::vector<std::unique_ptr<mg::Display>> displays;
+    displays.push_back(std::move(d1));
+    displays.push_back(std::move(d2));
+
+    mg::MultiplexingDisplay display{std::move(displays)};
+    auto conf = display.configuration();
+
+    EXPECT_THAT(display.apply_if_configuration_preserves_display_buffers(*conf), Eq(false));
+}
