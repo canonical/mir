@@ -51,6 +51,22 @@ namespace mev = mir::events;
 namespace mtd = mt::doubles;
 namespace geom = mir::geometry;
 
+namespace mir
+{
+namespace events
+{
+template<typename Tag>
+std::ostream& operator<<(std::ostream& out, mev::ScrollAxisV1<Tag> const& axis)
+{
+    return out
+        << "precise: " << axis.precise
+        << ", discrete: " << axis.discrete
+        << ", value120: " << axis.value120
+        << ", stop: " << axis.stop;
+}
+}
+}
+
 namespace
 {
 using namespace ::testing;
