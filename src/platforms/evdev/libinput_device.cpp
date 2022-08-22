@@ -218,13 +218,13 @@ void mie::LibInputDevice::process_event(libinput_event* event)
         case LIBINPUT_EVENT_POINTER_SCROLL_FINGER:
         case LIBINPUT_EVENT_POINTER_SCROLL_CONTINUOUS:
 #else
-    /*
-	 * This event is deprecated as of libinput 1.19. Use
-	 * @ref LIBINPUT_EVENT_POINTER_SCROLL_WHEEL,
-	 * @ref LIBINPUT_EVENT_POINTER_SCROLL_FINGER, and
-	 * @ref LIBINPUT_EVENT_POINTER_SCROLL_CONTINUOUS instead.
-     */
-     case LIBINPUT_EVENT_POINTER_AXIS:
+        /*
+        * This event is deprecated as of libinput 1.19. Use
+        * @ref LIBINPUT_EVENT_POINTER_SCROLL_WHEEL,
+        * @ref LIBINPUT_EVENT_POINTER_SCROLL_FINGER, and
+        * @ref LIBINPUT_EVENT_POINTER_SCROLL_CONTINUOUS instead.
+        */
+        case LIBINPUT_EVENT_POINTER_AXIS:
 #endif
             sink->handle_input(convert_axis_event(libinput_event_get_pointer_event(event)));
             break;
