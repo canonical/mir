@@ -587,9 +587,9 @@ TEST_F(LibInputDeviceOnMouse, hi_res_scroll_is_picked_up)
 {
 #ifdef MIR_LIBINPUT_HAS_VALUE120
     auto const expected_v120 = 165;
-    auto const expected_discrete = 0;
+    auto const expected_discrete = 1;
 #else
-    auto const expected_v120 = 0;
+    auto const expected_v120 = 120;
     auto const expected_discrete = 1;
 #endif
 
