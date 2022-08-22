@@ -16,6 +16,9 @@
 
 #include "mir/test/doubles/mock_libinput.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mtd = mir::test::doubles;
 using namespace testing;
 
@@ -875,9 +878,21 @@ libinput_event* mtd::MockLibInput::setup_pointer_scroll_wheel_event(
     ON_CALL(*this, libinput_event_pointer_get_scroll_value_v120(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
         .WillByDefault(Return(horizontal_value120));
     ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
-        .WillByDefault(Return(0));
+        .WillByDefault(
+            InvokeWithoutArgs(
+                []() -> double
+                {
+                    BOOST_THROW_EXCEPTION((
+                        std::logic_error{"axis_value_discrete only returns a non-zero value on EVENT_POINTER_AXIS events"}));
+                }));
     ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
-        .WillByDefault(Return(0));
+        .WillByDefault(
+            InvokeWithoutArgs(
+                []() -> double
+                {
+                    BOOST_THROW_EXCEPTION((
+                        std::logic_error{"axis_value_discrete only returns a non-zero value on EVENT_POINTER_AXIS events"}));
+                }));
 #else
     ON_CALL(*this, libinput_event_get_type(event))
         .WillByDefault(Return(LIBINPUT_EVENT_POINTER_AXIS));
