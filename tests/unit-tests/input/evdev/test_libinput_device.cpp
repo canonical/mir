@@ -293,7 +293,10 @@ struct LibInputDevice : public ::testing::Test
     void process_events(mie::LibInputDevice& device)
     {
         for (auto event : env.mock_libinput.events)
+        {
             device.process_event(event);
+        }
+        env.mock_libinput.events.clear();
     }
 };
 
