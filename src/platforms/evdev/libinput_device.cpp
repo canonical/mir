@@ -85,7 +85,10 @@ template<typename T> auto load_function(char const* sym)
 }
 
 template<typename Tag>
-auto get_scroll_axis(libinput_event_pointer* event, libinput_pointer_axis axis, float scale) -> mev::ScrollAxis<Tag>
+auto get_scroll_axis(
+    libinput_event_pointer* event,
+    libinput_pointer_axis axis,
+    geom::generic::Value<float, Tag> scale) -> mev::ScrollAxis<Tag>
 {
     if (!libinput_event_pointer_has_axis(event, axis))
     {
@@ -353,11 +356,11 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
     std::chrono::nanoseconds const time = std::chrono::microseconds(libinput_event_pointer_get_time_usec(pointer));
     auto const action = mir_pointer_action_motion;
 
-    auto const h_scroll = get_scroll_axis<geom::DeltaXTag>(
+    auto const h_scroll = get_scroll_axis(
         pointer,
         LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL,
         horizontal_scroll_scale);
-    auto const v_scroll = get_scroll_axis<geom::DeltaYTag>(
+    auto const v_scroll = get_scroll_axis(
         pointer,
         LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL,
         vertical_scroll_scale);
@@ -601,8 +604,8 @@ mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settin
     else
         settings.acceleration = mir_pointer_acceleration_adaptive;
     settings.cursor_acceleration_bias = libinput_device_config_accel_get_speed(dev);
-    settings.vertical_scroll_scale = vertical_scroll_scale;
-    settings.horizontal_scroll_scale = horizontal_scroll_scale;
+    settings.vertical_scroll_scale = vertical_scroll_scale.as_value();
+    settings.horizontal_scroll_scale = horizontal_scroll_scale.as_value();
     return settings;
 }
 
@@ -619,8 +622,8 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
 
     libinput_device_config_accel_set_speed(dev, settings.cursor_acceleration_bias);
     libinput_device_config_left_handed_set(dev, mir_pointer_handedness_left == settings.handedness);
-    vertical_scroll_scale = settings.vertical_scroll_scale;
-    horizontal_scroll_scale = settings.horizontal_scroll_scale;
+    vertical_scroll_scale = geom::DeltaYF{settings.vertical_scroll_scale};
+    horizontal_scroll_scale = geom::DeltaXF{settings.horizontal_scroll_scale};
 
     libinput_device_config_accel_set_profile(dev, accel_profile);
 }
