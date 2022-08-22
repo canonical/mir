@@ -614,6 +614,41 @@ TEST_F(LibInputDeviceOnMouse, hi_res_scroll_does_not_combine_with_precise)
     process_events(mouse);
 }
 
+TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_can_be_multiple_discrete_steps)
+{
+    mouse.start(&mock_sink, &mock_builder);
+
+    EXPECT_CALL(mock_builder, pointer_event(
+        _, _, _, _, _, _, _,
+        mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{2}, geom::DeltaY{270}, false}));
+    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 270.0f);
+    process_events(mouse);
+}
+
+TEST_F(LibInputDeviceOnMouse, hi_res_scroll_scroll_is_accumulated)
+{
+    mouse.start(&mock_sink, &mock_builder);
+
+    EXPECT_CALL(mock_builder, pointer_event(
+        _, _, _, _, _, _, _,
+        mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{0}, geom::DeltaY{50}, false}));
+    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 50.0f);
+    process_events(mouse);
+
+    EXPECT_CALL(mock_builder, pointer_event(
+        _, _, _, _, _, _, _,
+        mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{0}, geom::DeltaY{50}, false}));
+    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 50.0f);
+    process_events(mouse);
+
+    Mock::VerifyAndClearExpectations(fake_device);
+    EXPECT_CALL(mock_builder, pointer_event(
+        _, _, _, _, _, _, _,
+        mev::ScrollAxisV{geom::DeltaYF{1}, geom::DeltaY{1}, geom::DeltaY{50}, false}));
+    env.mock_libinput.setup_pointer_scroll_wheel_event(fake_device, event_time_1, {}, 1.0f, 0.0f, 50.0f);
+    process_events(mouse);
+}
+
 TEST_F(LibInputDeviceOnTouchScreen, process_event_ignores_uncorrelated_touch_up_events)
 {
     MirTouchId slot = 3;
